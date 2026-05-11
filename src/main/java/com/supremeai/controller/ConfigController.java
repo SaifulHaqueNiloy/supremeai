@@ -1,9 +1,12 @@
 package com.supremeai.controller;
 
+import com.supremeai.response.ApiResponse;
+import com.google.firebase.FirebaseApp;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +45,6 @@ public class ConfigController {
         config.put("storageBucket", storageBucket);
         config.put("messagingSenderId", messagingSenderId);
         config.put("appId", appId);
-        config.put("projectId", projectId);
         return config;
     }
 
@@ -60,7 +62,7 @@ public class ConfigController {
         Map<String, Object> diagnosis = new HashMap<>();
         diagnosis.put("projectId", projectId);
         diagnosis.put("authDomain", authDomain);
-        diagnosis.put("firebaseAppInitialized", !com.google.firebase.FirebaseApp.getApps().isEmpty());
+        diagnosis.put("firebaseAppInitialized", !FirebaseApp.getApps().isEmpty());
         return Mono.just(ApiResponse.ok(diagnosis));
     }
 }

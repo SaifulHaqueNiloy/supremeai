@@ -162,8 +162,9 @@ class OrchestrationProvider with ChangeNotifier {
     }
   }
 
-  void _clearError() {
+  void clearError() {
     _error = null;
+    notifyListeners();
   }
 
   Future<void> orchestrateRequirement(String requirement, String token, {String? geminiKey}) async {

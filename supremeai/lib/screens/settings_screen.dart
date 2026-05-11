@@ -107,9 +107,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   hintText: 'supremeai/gemini-1.5-flash',
                 ),
               ),
-              const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _shareMode,
+const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _shareMode,
                 items: const [
                   DropdownMenuItem(
                       value: 'manual', child: Text('Manual share')),
@@ -124,37 +124,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: const InputDecoration(labelText: 'Share mode'),
               ),
               const SizedBox(height: 12),
-              SwitchListTile(
+SwitchListTile(
                 title: const Text('Full authority mode'),
                 subtitle: const Text(
                     'Allows all core tools without extra confirmation'),
                 value: _fullAuthority,
                 onChanged: (value) => setState(() => _fullAuthority = value),
               ),
-SwitchListTile(
-                 title: const Text('Allow external directory access'),
-                 subtitle:
-                     const Text('Can access directories outside workspace'),
-                 value: _externalDirectory,
-                 onChanged: (value) =>
-                     setState(() => _externalDirectory = value),
-               ),
-               const SizedBox(height: 12),
-               DropdownButtonFormField<String>(
-                 value: _themeMode,
-                 decoration: const InputDecoration(labelText: 'Theme'),
-                 items: const [
-                   DropdownMenuItem(
-                       value: 'system', child: Text('System default')),
-                   DropdownMenuItem(
-                       value: 'light', child: Text('Light mode')),
-                   DropdownMenuItem(value: 'dark', child: Text('Dark mode')),
-                 ],
-                 onChanged: (value) {
-                   if (value == null) return;
-                   setState(() => _themeMode = value);
-                 },
-               ),
+              SwitchListTile(
+                title: const Text('Allow external directory access'),
+                subtitle:
+                    const Text('Can access directories outside workspace'),
+                value: _externalDirectory,
+                onChanged: (value) =>
+                    setState(() => _externalDirectory = value),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _themeMode,
+                decoration: const InputDecoration(labelText: 'Theme'),
+                items: const [
+                  DropdownMenuItem(
+                      value: 'system', child: Text('System default')),
+                  DropdownMenuItem(
+                      value: 'light', child: Text('Light mode')),
+                  DropdownMenuItem(value: 'dark', child: Text('Dark mode')),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() => _themeMode = value);
+                },
+              ),
               const SizedBox(height: 12),
               if (settingsProvider.error != null)
                 Text(

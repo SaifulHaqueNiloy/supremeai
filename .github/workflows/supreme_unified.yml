@@ -51,8 +51,12 @@ env:
   GCP_REGION: 'us-central1'
   
   # Build Optimization
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.configureondemand=true -Dorg.gradle.vfs.watch=true"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: "true"
+  # Gradle Daemon Reuse
+  GRADLE_DAEMON_IDLE_TIMEOUT: "300000"
+  # JVM Options for faster builds
+  JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseStringDeduplication"
 
 jobs: # --------------------------------------------------------------------------------
   # 🔍 PHASE 1: INITIALIZATION & ANALYSIS
@@ -249,7 +253,7 @@ jobs: # ------------------------------------------------------------------------
           distribution: 'temurin'
           cache: 'gradle'
       - name: 🔨 Build & Test
-        run: ./gradlew clean build jacocoTestReport --no-daemon
+        run: ./gradlew clean build jacocoTestReport --no-daemon --parallel --configure-on-demand
       - name: 🔐 Google Auth
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
         uses: google-github-actions/auth@v2
@@ -284,8 +288,10 @@ jobs: # ------------------------------------------------------------------------
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --memory 2Gi \
-            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }},FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY || 'AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8' }},FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'supremeai-a.firebaseapp.com' }},FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/' }},FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET || 'supremeai-a.firebasestorage.app' }},FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '565236080752' }},FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID || '1:565236080752:web:572bb9313db9afb355d4b5' }}" \
+            --memory 4Gi \
+            --cpu 2 \
+            --concurrency 80 \
+            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
             --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
             --quiet
 
@@ -314,7 +320,7 @@ jobs: # ------------------------------------------------------------------------
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '565236080752' }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || '1:565236080752:web:572bb9313db9afb355d4b5' }}
         run: |
-          npm ci
+          npm ci --prefer-offline
           npm run build
       - name: 💙 Setup Flutter
         uses: subosito/flutter-action@v2
@@ -325,12 +331,12 @@ jobs: # ------------------------------------------------------------------------
       - name: 🔨 Build Mobile Web
         working-directory: supremeai
         run: |
-          flutter pub get
-          flutter build web --release --base-href /mobile/
+          flutter pub get --offline || flutter pub get
+          flutter build web --release --base-href /mobile/ --dart-define=DART_VM_OPTIONS="--enable-asserts=false"
       - name: 🤖 Build Android APK (Conditional)
-        if: github.event_name != 'pull_request'
-        working-directory: supremeai
-        run: flutter build apk --release
+         if: github.event_name != 'pull_request'
+         working-directory: supremeai
+         run: flutter build apk --release --split-per-abi
       - name: 🔐 Google Auth
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
         uses: google-github-actions/auth@v2
@@ -383,9 +389,8 @@ jobs: # ------------------------------------------------------------------------
         run: |
           cp ../LICENSE . || echo "License not found"
           cp ../README.md . || echo "README not found"
-          npm install
-          npm run compile
-          npx vsce package --out supremeai-vscode.vsix
+          npm ci --prefer-offline
+          npm run compile --if-present
       - name: ☕ Setup Java (IntelliJ)
         uses: actions/setup-java@v4
         with:
@@ -397,7 +402,7 @@ jobs: # ------------------------------------------------------------------------
           mkdir -p gradle/wrapper
           cp ../gradle/wrapper/gradle-wrapper.jar gradle/wrapper/
           chmod +x gradlew
-          ./gradlew buildPlugin --no-daemon
+          ./gradlew buildPlugin --no-daemon --parallel --configure-on-demand
       - name: 📦 Archive Extensions
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4

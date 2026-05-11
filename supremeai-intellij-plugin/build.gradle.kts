@@ -47,7 +47,8 @@ kotlin {
             "-Xsuppress-version-warnings",
             "-Xallow-kotlin-package",
             "-Xcontext-receivers",
-            "-opt-in=org.jetbrains.kotlin.analysis.api.KaExperimentalApi"
+            "-opt-in=org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+            "-Xbackend-threads=8"
         )
     }
 }

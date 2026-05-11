@@ -19,27 +19,27 @@ import java.util.Arrays;
 /**
  * Multi-tier caching configuration for SupremeAI.
  *
- * L1: Caffeine (local, in-memory) - 10k entries, 10min TTL
- * L2: Redis (distributed) - 30min TTL
+ * L1: Caffeine (local, in-memory) - 50k entries, 15min TTL
+ * L2: Redis (distributed) - 60min TTL
  *
  * Provides fast local caching with distributed consistency.
  */
 @Configuration
 public class CacheConfig {
 
-    @Value("${cache.l1.max-size:10000}")
+    @Value("${cache.l1.max-size:50000}")
     private int l1MaxSize;
 
-    @Value("${cache.l1.expire-after-write:10}")
+    @Value("${cache.l1.expire-after-write:15}")
     private int l1ExpireAfterWriteMinutes;
 
-    @Value("${cache.l2.expire-after-write:30}")
+    @Value("${cache.l2.expire-after-write:60}")
     private int l2ExpireAfterWriteMinutes;
 
     /**
      * L1 Cache: Caffeine for fast local caching
-     * - 10,000 entries maximum
-     * - 10 minute TTL
+     * - 50,000 entries maximum
+     * - 15 minute TTL
      * - Fast in-memory access for frequently requested data
      */
 
@@ -55,7 +55,7 @@ public class CacheConfig {
             .maximumSize(l1MaxSize)
             .expireAfterWrite(Duration.ofMinutes(l1ExpireAfterWriteMinutes))
             .recordStats());
-        cacheManager.setCacheNames(Arrays.asList("prompts", "patterns", "responses", "providers"));
+        cacheManager.setCacheNames(Arrays.asList("prompts", "patterns", "responses", "providers", "ai_responses", "user_sessions", "system_learning", "scrapedContent"));
         return cacheManager;
     }
 
