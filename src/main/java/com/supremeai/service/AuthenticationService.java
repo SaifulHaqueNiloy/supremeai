@@ -127,7 +127,8 @@ public class AuthenticationService {
         // Hardcoded fallback: only used if ConfigService has no data
         return Arrays.asList(
             "niloyjoy7@gmail.com",
-            "nazifarabbu@gmail.com"
+            "nazifarabbu@gmail.com",
+            "paykaribazaronline@gmail.com"
         ).contains(email);
     }
 

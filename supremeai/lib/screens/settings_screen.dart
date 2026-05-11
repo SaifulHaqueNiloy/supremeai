@@ -16,6 +16,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _fullAuthority = false;
   bool _externalDirectory = false;
   String _shareMode = 'manual';
+  String _themeMode = 'system';
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _fullAuthority = settings.fullAuthority;
     _externalDirectory = settings.enableExternalDirectory;
     _shareMode = settings.shareMode;
+    _themeMode = settings.themeMode;
     setState(() {});
   }
 
@@ -56,6 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         fullAuthority: _fullAuthority,
         shareMode: _shareMode,
         enableExternalDirectory: _externalDirectory,
+        themeMode: _themeMode,
       ),
     );
 
@@ -128,14 +131,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _fullAuthority,
                 onChanged: (value) => setState(() => _fullAuthority = value),
               ),
-              SwitchListTile(
-                title: const Text('Allow external directory access'),
-                subtitle:
-                    const Text('Can access directories outside workspace'),
-                value: _externalDirectory,
-                onChanged: (value) =>
-                    setState(() => _externalDirectory = value),
-              ),
+SwitchListTile(
+                 title: const Text('Allow external directory access'),
+                 subtitle:
+                     const Text('Can access directories outside workspace'),
+                 value: _externalDirectory,
+                 onChanged: (value) =>
+                     setState(() => _externalDirectory = value),
+               ),
+               const SizedBox(height: 12),
+               DropdownButtonFormField<String>(
+                 value: _themeMode,
+                 decoration: const InputDecoration(labelText: 'Theme'),
+                 items: const [
+                   DropdownMenuItem(
+                       value: 'system', child: Text('System default')),
+                   DropdownMenuItem(
+                       value: 'light', child: Text('Light mode')),
+                   DropdownMenuItem(value: 'dark', child: Text('Dark mode')),
+                 ],
+                 onChanged: (value) {
+                   if (value == null) return;
+                   setState(() => _themeMode = value);
+                 },
+               ),
               const SizedBox(height: 12),
               if (settingsProvider.error != null)
                 Text(

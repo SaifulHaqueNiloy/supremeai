@@ -80,6 +80,7 @@ public class AuthenticationController {
          return authenticationService.firebaseLogin(idToken, remoteAddr)
              .map(data -> {
                  User user = (User) data.get("user");
+                 log.info("Firebase login successful for user: {}", user.getEmail());
                  establishSession(user, httpRequest);
                  
                  Map<String, Object> response = new HashMap<>(data);

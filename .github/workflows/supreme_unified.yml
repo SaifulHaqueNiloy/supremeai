@@ -285,7 +285,7 @@ jobs: # ------------------------------------------------------------------------
             --platform managed \
             --allow-unauthenticated \
             --memory 2Gi \
-            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
+            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }},FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY || 'AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8' }},FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'supremeai-a.firebaseapp.com' }},FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/' }},FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET || 'supremeai-a.firebasestorage.app' }},FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '565236080752' }},FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID || '1:565236080752:web:572bb9313db9afb355d4b5' }}" \
             --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
             --quiet
 
@@ -305,6 +305,14 @@ jobs: # ------------------------------------------------------------------------
           cache-dependency-path: dashboard/package-lock.json
       - name: 🔨 Build Dashboard
         working-directory: dashboard
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || 'AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8' }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'supremeai-a.firebaseapp.com' }}
+          VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/' }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || 'supremeai-a' }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET || 'supremeai-a.firebasestorage.app' }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '565236080752' }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || '1:565236080752:web:572bb9313db9afb355d4b5' }}
         run: |
           npm ci
           npm run build
