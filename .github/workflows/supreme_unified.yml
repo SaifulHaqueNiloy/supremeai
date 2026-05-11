@@ -334,9 +334,9 @@ jobs: # ------------------------------------------------------------------------
           flutter pub get --offline || flutter pub get
           flutter build web --release --base-href /mobile/ --dart-define=DART_VM_OPTIONS="--enable-asserts=false"
       - name: 🤖 Build Android APK (Conditional)
-         if: github.event_name != 'pull_request'
-         working-directory: supremeai
-         run: flutter build apk --release --split-per-abi
+        if: github.event_name != 'pull_request'
+        working-directory: supremeai
+        run: flutter build apk --release --split-per-abi
       - name: 🔐 Google Auth
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
         uses: google-github-actions/auth@v2
