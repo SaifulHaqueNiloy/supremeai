@@ -245,7 +245,15 @@ public class VisionService {
             .map(response -> {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-                String text = (String) ((Map<?, ?>) ((Map<?, ?>) choices.get(0).get("message")).get("content")).toString();
+                if (choices == null || choices.isEmpty()) {
+                    return VisionAnalysisResult.error("OpenAI API returned empty choices");
+                }
+                Map<?, ?> message = (Map<?, ?>) choices.get(0).get("message");
+                if (message == null) {
+                    return VisionAnalysisResult.error("OpenAI API returned null message");
+                }
+                Object content = message.get("content");
+                String text = content != null ? content.toString() : "";
                 return VisionAnalysisResult.success(text, "openai-" + model);
             });
     }
@@ -271,8 +279,15 @@ public class VisionService {
             .map(response -> {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
-                Object content = ((Map<?, ?>) candidates.get(0).get("content")).get("parts");
-                return VisionAnalysisResult.success(content.toString(), model);
+                if (candidates == null || candidates.isEmpty()) {
+                    return VisionAnalysisResult.error("Gemini API returned empty candidates");
+                }
+                Map<?, ?> content = (Map<?, ?>) candidates.get(0).get("content");
+                if (content == null) {
+                    return VisionAnalysisResult.error("Gemini API returned null content");
+                }
+                Object parts = content.get("parts");
+                return VisionAnalysisResult.success(parts != null ? parts.toString() : "", model);
             });
     }
 

@@ -93,48 +93,88 @@ public class SystemConfigSeeder {
             "deploy", "ask"
         ));
 
-        // AI provider configurations (GCP Deployed Landscape)
-        config.setProviders(Map.of(
-            "gemini", Map.of(
+        // AI provider configurations (Comprehensive All-in-One Landscape)
+        config.setProviders(Map.ofEntries(
+            Map.entry("gemini", Map.of(
                 "enabled", true,
                 "model", "gemini-1.5-flash",
                 "description", "Primary Orchestrator & Multimodal Specialist (1M Context)",
                 "maxTokens", 1000000,
                 "rotationThreshold", 0.85,
                 "priority", 1
-            ),
-            "openai", Map.of(
+            )),
+            Map.entry("hf_codellama", Map.of(
                 "enabled", true,
-                "model", "gpt-4o-mini",
-                "description", "Structured Data & Logic Verification",
-                "maxTokens", 128000,
+                "model", "CodeLlama-34b-Instruct-hf",
+                "description", "HF - Primary Code Generation (Serverless)",
+                "maxTokens", 16000,
                 "rotationThreshold", 0.80,
                 "priority", 2
-            ),
-            "anthropic", Map.of(
+            )),
+            Map.entry("hf_mistral", Map.of(
                 "enabled", true,
-                "model", "claude-3-haiku-20240307",
-                "description", "Safety Monitoring & Refined Communication",
-                "maxTokens", 200000,
+                "model", "Mistral-7B-Instruct-v0.3",
+                "description", "HF - Major Chat & Conversation (Instruct)",
+                "maxTokens", 32000,
                 "rotationThreshold", 0.80,
                 "priority", 3
-            ),
-            "vertex_llama", Map.of(
+            )),
+            Map.entry("hf_llama3", Map.of(
                 "enabled", true,
-                "model", "llama-3.1",
-                "description", "Llama 3.1 - State-of-the-art open model (Low Latency)",
-                "maxTokens", 128000,
+                "model", "Meta-Llama-3-8B-Instruct",
+                "description", "HF - Google Alternative / Bengali Support",
+                "maxTokens", 8192,
                 "rotationThreshold", 0.70,
                 "priority", 4
-            ),
-            "deepseek", Map.of(
+            )),
+            Map.entry("hf_phi_vision", Map.of(
                 "enabled", true,
-                "model", "deepseek-v4pro",
-                "description", "Advanced Coding & Technical Architect (GCloud Pro)",
-                "maxTokens", 64000,
+                "model", "Phi-3-vision-128k-instruct",
+                "description", "HF - Specialized Vision & Image Analysis",
+                "maxTokens", 128000,
                 "rotationThreshold", 0.80,
                 "priority", 5
-            )
+            )),
+            Map.entry("hf_e5_large", Map.of(
+                "enabled", true,
+                "model", "multilingual-e5-large",
+                "description", "HF - Multilingual Embeddings for RAG",
+                "maxTokens", 512,
+                "rotationThreshold", 0.90,
+                "priority", 6
+            )),
+            Map.entry("render_phi2", Map.of(
+                "enabled", true,
+                "model", "phi-2",
+                "description", "Render - Fast Response / Free Tier Docker",
+                "maxTokens", 2048,
+                "rotationThreshold", 0.60,
+                "priority", 7
+            )),
+            Map.entry("render_tinyllama", Map.of(
+                "enabled", true,
+                "model", "tinyllama-1.1b",
+                "description", "Render - Emergency Fallback (Always Free)",
+                "maxTokens", 1024,
+                "rotationThreshold", 0.50,
+                "priority", 8
+            )),
+            Map.entry("openai", Map.of(
+                "enabled", true,
+                "model", "gpt-4o-mini",
+                "description", "Backup - Structured Data & Logic Verification",
+                "maxTokens", 128000,
+                "rotationThreshold", 0.80,
+                "priority", 9
+            )),
+            Map.entry("deepseek", Map.of(
+                "enabled", true,
+                "model", "deepseek-v4pro",
+                "description", "Professional Coding & Technical Architect",
+                "maxTokens", 64000,
+                "rotationThreshold", 0.80,
+                "priority", 10
+            ))
         ));
 
         log.debug("[CONFIG_SEED] Built default config: model={} maintenance={}",

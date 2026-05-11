@@ -631,13 +631,13 @@ return "package com.example.generated.controller;\n\n" +
     private String generateApplicationProperties(String database) {
         return "spring.application.name=generated-app\n" +
                "server.port=8080\n\n" +
-               "spring.datasource.url=jdbc:postgresql://localhost:5432/generated_app\n" +
-               "spring.datasource.username=postgres\n" +
-               "spring.datasource.password=postgres\n" +
+               "spring.datasource.url=${DATABASE_URL:jdbc:postgresql://localhost:5432/generated_app}\n" +
+               "spring.datasource.username=${DATABASE_USERNAME:postgres}\n" +
+               "spring.datasource.password=${DATABASE_PASSWORD:change-me-in-production}\n" +
                "spring.jpa.hibernate.ddl-auto=update\n" +
                "spring.jpa.show-sql=true\n" +
                "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n\n" +
-               "app.jwt.secret=mySecretKey12345678901234567890123456789012\n" +
+               "app.jwt.secret=${JWT_SECRET:generate-a-secure-random-secret}\n" +
                "app.jwt.expiration=86400000\n";
     }
 }

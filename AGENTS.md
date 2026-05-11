@@ -72,29 +72,25 @@ This is a monorepo featuring a multi-agent system for automated app generation.
 - `UserLanguagePreferenceService` ভাষা পছন্দ সংরক্ষণ করে
 - API রেসপন্সেও ভাষা অনুযায়ী বাংলা উপযোগী হবে
 
-## AI Model Registry & Landscape (GCP Deployed)
+## AI Model Registry & Landscape (Comprehensive All-in-One)
 
-SupremeAI utilizes a dynamic registry of 5 primary AI models deployed on Google Cloud Platform to ensure redundancy, cost-efficiency, and specialized task handling.
+SupremeAI utilizes a dynamic registry of primary GCP models and a secondary "All-in-One" suite of free-tier models (HuggingFace/Render) to ensure 100% uptime and cost-efficiency.
 
-### 1. Gemini 1.5 Flash (Google)
-- **Role**: Primary Orchestrator & Multimodal Specialist.
-- **Why it's best**: Massive context window (1M+ tokens) and lightning-fast speed for analyzing entire repository structures. Native integration with Vertex AI.
+### 1. Primary Orchestrators (GCP/OpenAI)
+- **Gemini 1.5 Flash**: Primary Orchestrator & Multimodal Specialist (1M Context).
+- **GPT-4o-mini**: Structured Data & Logic Verification backup.
+- **DeepSeek-V4Pro**: Professional Coding & Technical Architect.
 
-### 2. GPT-4o-mini (OpenAI)
-- **Role**: Structured Data & Logic Verification.
-- **Why it's best**: Unbeatable reasoning efficiency for its size. Perfect for generating complex JSON schemas and validating agent outputs.
+### 2. Fallback & Development Suite (HuggingFace Serverless)
+- **CodeLlama-34b**: Primary fallback for code generation.
+- **Mistral-7B-v0.3**: Major chat and conversational instruction tuning.
+- **Llama-3-8B**: Specialized for Bengali language and conversational nuance.
+- **Phi-3-Vision**: Specialized endpoint for lightweight image analysis.
+- **Multilingual-E5**: High-performance embeddings for RAG tasks.
 
-### 3. Claude 3 Haiku (Anthropic)
-- **Role**: Safety Monitoring & Refined Communication.
-- **Why it's best**: Best-in-class safety filters and nuanced understanding of human instructions. Ideal for user-facing chat and content moderation.
-
-### 4. Llama 3.1 (Vertex/GCloud)
-- **Role**: Code Execution & Local Tooling.
-- **Why it's best**: State-of-the-art open model performance. Deployed on Cloud Run for low-latency code generation and automated script execution.
-
-### 5. DeepSeek-V4Pro (GCloud Deployed)
-- **Role**: Advanced Coding & Technical Architect.
-- **Why it's best**: Specialized high-performance version of DeepSeek optimized for complex technical reasoning and large-scale architecture tasks. Deployed as a dedicated Cloud Run service for maximum reliability.
+### 3. Emergency & Fast Response (Render Free Tier)
+- **Phi-2 / Phi-3**: Fast response models running on Docker (Render).
+- **TinyLlama-1.1B**: Always-on emergency fallback for basic connectivity tests.
 
 ## Zero-Hardcode Orchestration Policy
 

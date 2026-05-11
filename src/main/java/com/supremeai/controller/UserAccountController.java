@@ -49,8 +49,17 @@ public class UserAccountController {
             return ResponseEntity.badRequest().body(Map.of("error", "email and password are required"));
         }
 
-        if (password.length() < 6) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Password must be at least 6 characters (Firebase requirement)"));
+        if (password == null || password.length() < 8) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password must be at least 8 characters"));
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password must contain at least one uppercase letter"));
+        }
+        if (!password.matches(".*[a-z].*")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password must contain at least one lowercase letter"));
+        }
+        if (!password.matches(".*\\d.*")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password must contain at least one digit"));
         }
 
         try {

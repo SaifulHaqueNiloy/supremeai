@@ -109,11 +109,23 @@ public class AIProviderFactory {
                 return new SupremeCloudProvider(key, "render_tinyllama", "tinyllama-1.1b", System.getenv().getOrDefault("RENDER_TINYLLAMA_URL", "https://tinyllama.onrender.com"));
             case "render_phi3":
                 return new SupremeCloudProvider(key, "render_phi3", "phi-3-mini", System.getenv().getOrDefault("RENDER_PHI3_URL", "https://phi3.onrender.com"));
+            case "render_phi2":
+                return new SupremeCloudProvider(key, "render_phi2", "phi-2", System.getenv().getOrDefault("RENDER_PHI2_URL", "https://phi2.onrender.com"));
             case "render_qwen":
                 return new SupremeCloudProvider(key, "render_qwen", "qwen-0.5b", System.getenv().getOrDefault("RENDER_QWEN_URL", "https://qwen.onrender.com"));
 
+            // HuggingFace Specialized Models (Vision & Embedding)
+            case "hf_phi_vision":
+                return new SupremeCloudProvider(key, "hf_phi_vision", "microsoft/Phi-3-vision-128k-instruct", "https://api-inference.huggingface.co/models/microsoft/Phi-3-vision-128k-instruct");
+            case "hf_paligemma":
+                return new SupremeCloudProvider(key, "hf_paligemma", "google/paligemma-3b-mix-448", "https://api-inference.huggingface.co/models/google/paligemma-3b-mix-448");
+            case "hf_e5_large":
+                return new SupremeCloudProvider(key, "hf_e5_large", "intfloat/multilingual-e5-large", "https://api-inference.huggingface.co/models/intfloat/multilingual-e5-large");
+            case "hf_bge":
+                return new SupremeCloudProvider(key, "hf_bge", "BAAI/bge-large-en-v1.5", "https://api-inference.huggingface.co/models/BAAI/bge-large-en-v1.5");
+
             default:
-                throw new IllegalArgumentException("Unknown AI provider: " + name + ". Supported: gpt4, claude, gemini, groq, deepseek, ollama, huggingface, kimi, mistral, stepfun, codegeex4, gcp_qwen, gcp_llama, gcp_phi, gcp_nomic, hf_deepseek, hf_mistral, hf_llama, hf_codellama, hf_phi, render_tinyllama, render_phi3, render_qwen");
+                throw new IllegalArgumentException("Unknown AI provider: " + name + ". Supported: gpt4, claude, gemini, groq, deepseek, ollama, huggingface, kimi, mistral, stepfun, codegeex4, gcp_qwen, gcp_llama, gcp_phi, gcp_nomic, hf_deepseek, hf_mistral, hf_llama, hf_codellama, hf_phi, hf_phi_vision, hf_paligemma, hf_e5_large, hf_bge, render_tinyllama, render_phi3, render_phi2, render_qwen");
         }
     }
 
@@ -163,7 +175,7 @@ public class AIProviderFactory {
      */
     public AIProvider getDefaultProvider() {
         // Preferred providers in order (free tier first)
-        String[] preferredProviders = {"gcp_qwen", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "gemini", "groq", "huggingface", "codegeex4", "stepfun", "deepseek", "gpt4", "claude", "mistral", "render_tinyllama", "render_phi3", "render_qwen"};
+        String[] preferredProviders = {"gcp_qwen", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "hf_phi_vision", "hf_paligemma", "hf_e5_large", "gemini", "groq", "huggingface", "codegeex4", "stepfun", "deepseek", "gpt4", "claude", "mistral", "render_tinyllama", "render_phi3", "render_phi2", "render_qwen"};
 
         // Try preferred providers first
         for (String providerName : preferredProviders) {
@@ -224,7 +236,7 @@ public class AIProviderFactory {
      * Get list of all supported provider names
      */
     public String[] getSupportedProviders() {
-        return new String[]{"gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun", "codegeex4", "gcp_qwen", "gcp_llama", "gcp_phi", "gcp_nomic", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "render_tinyllama", "render_phi3", "render_qwen"};
+        return new String[]{"gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun", "codegeex4", "gcp_qwen", "gcp_llama", "gcp_phi", "gcp_nomic", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "hf_phi_vision", "hf_paligemma", "hf_e5_large", "hf_bge", "render_tinyllama", "render_phi3", "render_phi2", "render_qwen"};
     }
 
     /**
