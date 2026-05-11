@@ -1,14 +1,17 @@
 package com.supremeai.controller;
 
 import org.junit.jupiter.api.Test;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class ConfigControllerTest {
 
-    private final ConfigController controller = new ConfigController();
+    @Autowired
+    private ConfigController controller;
 
     @Test
     void getFirebaseConfig_shouldReturnAllRequiredFields() {

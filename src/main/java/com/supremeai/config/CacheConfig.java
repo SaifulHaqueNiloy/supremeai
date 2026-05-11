@@ -19,27 +19,27 @@ import java.util.Arrays;
 /**
  * Multi-tier caching configuration for SupremeAI.
  *
- * L1: Caffeine (local, in-memory) - 50k entries, 15min TTL
- * L2: Redis (distributed) - 60min TTL
+ * L1: Caffeine (local, in-memory) - 100k entries, 30min TTL
+ * L2: Redis (distributed) - 120min TTL
  *
  * Provides fast local caching with distributed consistency.
  */
 @Configuration
 public class CacheConfig {
 
-    @Value("${cache.l1.max-size:50000}")
+    @Value("${cache.l1.max-size:100000}")
     private int l1MaxSize;
 
-    @Value("${cache.l1.expire-after-write:15}")
+    @Value("${cache.l1.expire-after-write:30}")
     private int l1ExpireAfterWriteMinutes;
 
-    @Value("${cache.l2.expire-after-write:60}")
+    @Value("${cache.l2.expire-after-write:120}")
     private int l2ExpireAfterWriteMinutes;
 
     /**
      * L1 Cache: Caffeine for fast local caching
-     * - 50,000 entries maximum
-     * - 15 minute TTL
+     * - 100,000 entries maximum
+     * - 30 minute TTL
      * - Fast in-memory access for frequently requested data
      */
 

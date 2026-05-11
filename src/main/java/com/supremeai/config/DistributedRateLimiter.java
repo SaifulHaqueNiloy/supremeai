@@ -92,7 +92,7 @@ public class DistributedRateLimiter {
                     String.valueOf(permits)
             );
 
-            Long result = redisTemplate.execute(script, keys, args.toArray(new String[0]));
+            Long result = redisTemplate.execute(script, keys, (Object[]) args.toArray(new String[0]));
             boolean allowed = result != null && result == 1L;
 
             if (!allowed) {

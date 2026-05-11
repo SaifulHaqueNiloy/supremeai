@@ -169,7 +169,7 @@ class OrchestrationProvider with ChangeNotifier {
 
   Future<void> orchestrateRequirement(String requirement, String token, {String? geminiKey}) async {
     _isLoading = true;
-    _clearError();
+    clearError();
     notifyListeners();
 
     // Try backend first
@@ -258,7 +258,7 @@ class OrchestrationProvider with ChangeNotifier {
     }
 
     _isLoading = true;
-    _clearError();
+    clearError();
     notifyListeners();
 
     try {
