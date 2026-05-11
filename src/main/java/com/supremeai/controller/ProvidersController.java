@@ -151,4 +151,37 @@ public class ProvidersController extends BaseAdminController<APIProvider, String
                 })
                 .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.<String>error("Provider not found")));
     }
+
+    @PatchMapping("/{id}/capability")
+    public Mono<ResponseEntity<ApiResponse<APIProvider>>> patchCapability(
+            @PathVariable String id, 
+            @RequestBody Map<String, Boolean> capabilities) {
+        String adminUserId = getCurrentAdminUserId();
+        return providerRepository.findById(id)
+                .flatMap(provider -> {
+                    if (capabilities.containsKey("canCommunicate")) {
+                        provider.setCanCommunicate(capabilities.get("canCommunicate"));
+                    }
+                    if (capabilities.containsKey("canExecuteTasks")) {
+                        provider.setCanExecuteTasks(capabilities.get("canExecuteTasks"));
+                    }
+                    if (capabilities.containsKey("canParticipateInVoting")) {
+                        provider.setCanParticipateInVoting(capabilities.get("canParticipateInVoting"));
+                    }
+                    
+                    return providerRepository.save(provider)
+                            .flatMap(saved -> {
+                                ActivityLog log = new ActivityLog();
+                                log.setUser(adminUserId);
+                                log.setAction("UPDATE_CAPABILITY");
+                                log.setCategory("PROVIDER_MANAGEMENT");
+                                log.setSeverity("INFO");
+                                log.setOutcome("SUCCESS");
+                                log.setDetails("Updated capabilities for provider: " + id + " (Comm: " + saved.isCanCommunicate() + ", Task: " + saved.isCanExecuteTasks() + ", Vote: " + saved.isCanParticipateInVoting() + ")");
+                                return activityLogRepository.save(log).thenReturn(saved);
+                            });
+                })
+                .map(saved -> ResponseEntity.ok(ApiResponse.ok(saved)))
+                .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.<APIProvider>error("Provider not found")));
+    }
 }

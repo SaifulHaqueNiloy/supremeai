@@ -5,16 +5,18 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
- * Generic SupremeCloudProvider for all GCP Cloud Run and HF Dedicated Endpoints.
- * Uses ProviderMetadataService to dynamically resolve URLs and Models.
+ * Generic SupremeCloudProvider for all GCP Cloud Run, HF Inference Endpoints, and Render deployments.
+ * Supports both OpenAI-compatible and HF Inference API formats.
  */
 public class SupremeCloudProvider extends AbstractHttpProvider {
 
     private final String providerName;
+    private final boolean isHfInference;
 
     public SupremeCloudProvider(String apiKey, String providerName, String defaultModel, String baseUrl) {
-        super(apiKey, baseUrl.endsWith("/") ? baseUrl + "api/generate" : baseUrl + "/api/generate", defaultModel);
+        super(apiKey, baseUrl, defaultModel);
         this.providerName = providerName;
+        this.isHfInference = providerName.startsWith("hf_") && baseUrl.contains("api-inference.huggingface.co");
     }
 
     @Override
@@ -23,21 +25,39 @@ public class SupremeCloudProvider extends AbstractHttpProvider {
     }
 
     @Override
+    protected String getRequestUrl() {
+        if (isHfInference) {
+            return baseUrl; // HF inference uses URL directly
+        }
+        return baseUrl.endsWith("/") ? baseUrl + "api/generate" : baseUrl + "/api/generate";
+    }
+
+    @Override
     public Map<String, Object> getCapabilities() {
         return Map.of(
             "name", providerName,
             "model", getModel(),
-            "type", "cloud-native"
+            "type", isHfInference ? "huggingface-inference" : "cloud-native"
         );
     }
 
     @Override
     protected Map<String, Object> createRequestBody(String prompt) {
+        if (isHfInference) {
+            return Map.of(
+                "inputs", prompt,
+                "parameters", Map.of(
+                    "max_new_tokens", 512,
+                    "temperature", 0.7,
+                    "return_full_text", false
+                )
+            );
+        }
         return Map.of(
-                "model", getModel(),
-                "messages", List.of(Map.of("role", "user", "content", prompt)),
-                "max_tokens", 1024,
-                "temperature", 0.7
+            "model", getModel(),
+            "messages", List.of(Map.of("role", "user", "content", prompt)),
+            "max_tokens", 1024,
+            "temperature", 0.7
         );
     }
 
@@ -45,11 +65,21 @@ public class SupremeCloudProvider extends AbstractHttpProvider {
     @SuppressWarnings("unchecked")
     protected String extractResponse(String responseBody) throws Exception {
         if (responseBody == null || responseBody.isBlank()) {
-            return "No response from cloud-native AI: " + providerName;
+            return "No response from " + providerName;
+        }
+        
+        if (isHfInference) {
+            Map<String, Object> response = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+            if (response.containsKey("generated_text")) {
+                return (String) response.get("generated_text");
+            }
+            if (response.containsKey("error")) {
+                return "HF Error: " + response.get("error");
+            }
+            return "Empty HF response";
         }
         
         Map<String, Object> response = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
-            
         List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
         if (choices != null && !choices.isEmpty()) {
             Map<String, Object> first = choices.get(0);

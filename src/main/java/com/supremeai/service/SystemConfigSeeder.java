@@ -93,40 +93,45 @@ public class SystemConfigSeeder {
             "deploy", "ask"
         ));
 
-        // AI provider configurations
+        // AI provider configurations (GCP Deployed Landscape)
         config.setProviders(Map.of(
-            "openai", Map.of(
-                "enabled", true,
-                "model", "gpt-4o-mini",
-                "maxTokens", 4096,
-                "rotationThreshold", 0.80,
-                "priority", 2
-            ),
             "gemini", Map.of(
                 "enabled", true,
                 "model", "gemini-1.5-flash",
-                "maxTokens", 8192,
-                "rotationThreshold", 0.80,
+                "description", "Primary Orchestrator & Multimodal Specialist (1M Context)",
+                "maxTokens", 1000000,
+                "rotationThreshold", 0.85,
                 "priority", 1
+            ),
+            "openai", Map.of(
+                "enabled", true,
+                "model", "gpt-4o-mini",
+                "description", "Structured Data & Logic Verification",
+                "maxTokens", 128000,
+                "rotationThreshold", 0.80,
+                "priority", 2
             ),
             "anthropic", Map.of(
                 "enabled", true,
                 "model", "claude-3-haiku-20240307",
-                "maxTokens", 4096,
+                "description", "Safety Monitoring & Refined Communication",
+                "maxTokens", 200000,
                 "rotationThreshold", 0.80,
                 "priority", 3
             ),
-            "groq", Map.of(
+            "vertex_llama", Map.of(
                 "enabled", true,
-                "model", "llama3-8b-8192",
-                "maxTokens", 8192,
-                "rotationThreshold", 0.80,
+                "model", "llama-3.1",
+                "description", "Llama 3.1 - State-of-the-art open model (Low Latency)",
+                "maxTokens", 128000,
+                "rotationThreshold", 0.70,
                 "priority", 4
             ),
             "deepseek", Map.of(
-                "enabled", false,
-                "model", "deepseek-chat",
-                "maxTokens", 4096,
+                "enabled", true,
+                "model", "deepseek-v4pro",
+                "description", "Advanced Coding & Technical Architect (GCloud Pro)",
+                "maxTokens", 64000,
                 "rotationThreshold", 0.80,
                 "priority", 5
             )

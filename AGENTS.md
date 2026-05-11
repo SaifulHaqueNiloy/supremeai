@@ -71,3 +71,36 @@ This is a monorepo featuring a multi-agent system for automated app generation.
 - ব্যবহারকারীর ব্রাউজার/সিস্টেম ভাষা অনুযায়ী স্বয়ংক্রিয়ভাবে বাংলা দেখানো হবে
 - `UserLanguagePreferenceService` ভাষা পছন্দ সংরক্ষণ করে
 - API রেসপন্সেও ভাষা অনুযায়ী বাংলা উপযোগী হবে
+
+## AI Model Registry & Landscape (GCP Deployed)
+
+SupremeAI utilizes a dynamic registry of 5 primary AI models deployed on Google Cloud Platform to ensure redundancy, cost-efficiency, and specialized task handling.
+
+### 1. Gemini 1.5 Flash (Google)
+- **Role**: Primary Orchestrator & Multimodal Specialist.
+- **Why it's best**: Massive context window (1M+ tokens) and lightning-fast speed for analyzing entire repository structures. Native integration with Vertex AI.
+
+### 2. GPT-4o-mini (OpenAI)
+- **Role**: Structured Data & Logic Verification.
+- **Why it's best**: Unbeatable reasoning efficiency for its size. Perfect for generating complex JSON schemas and validating agent outputs.
+
+### 3. Claude 3 Haiku (Anthropic)
+- **Role**: Safety Monitoring & Refined Communication.
+- **Why it's best**: Best-in-class safety filters and nuanced understanding of human instructions. Ideal for user-facing chat and content moderation.
+
+### 4. Llama 3.1 (Vertex/GCloud)
+- **Role**: Code Execution & Local Tooling.
+- **Why it's best**: State-of-the-art open model performance. Deployed on Cloud Run for low-latency code generation and automated script execution.
+
+### 5. DeepSeek-V4Pro (GCloud Deployed)
+- **Role**: Advanced Coding & Technical Architect.
+- **Why it's best**: Specialized high-performance version of DeepSeek optimized for complex technical reasoning and large-scale architecture tasks. Deployed as a dedicated Cloud Run service for maximum reliability.
+
+## Zero-Hardcode Orchestration Policy
+
+- **Dynamic Discovery**: All AI models are fetched from the `AIProviderDiscoveryService`.
+- **Admin Control**: The dashboard must allow administrators to:
+  - Enable/Disable providers.
+  - Assign roles (Communication, Execution, Voting) dynamically.
+  - Update API endpoints and keys without code changes.
+- **Fallback Logic**: If a high-priority model fails, the system automatically rotates to the next available provider based on the dynamic config.

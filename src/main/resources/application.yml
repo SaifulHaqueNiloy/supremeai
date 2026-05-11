@@ -59,6 +59,11 @@ supremeai:
     groq: ${GROQ_API_KEY:}
     supreme-cloud: ${SUPREME_CLOUD_API_KEY:}
     custom-supreme-ai: ${CUSTOM_SUPREME_AI_KEY:}
+    hf_api_key: ${HF_API_KEY:}
+    # Render endpoints (set these after deploying)
+    render_tinyllama_url: ${RENDER_TINYLLAMA_URL:}
+    render_phi3_url: ${RENDER_PHI3_URL:}
+    render_qwen_url: ${RENDER_QWEN_URL:}
 
 ai:
   providers:

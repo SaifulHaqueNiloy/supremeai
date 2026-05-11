@@ -58,11 +58,6 @@ public class MultiAIVotingService {
     private final ExecutorService ensembleExecutor = Executors.newFixedThreadPool(20);
     private final java.util.concurrent.ExecutorService decisionExecutor;
 
-    // Constants from TenAIVotingSystem
-    public static final String[] TEN_AI_MODELS = {
-        "gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun"
-    };
-
     // Constants from MultiAIConsensusService
     private static final int MAX_RETRIES = 2;
     private static final long RETRY_BACKOFF_MS = 250L;
@@ -71,7 +66,14 @@ public class MultiAIVotingService {
     private final List<ConsensusVote> consensusHistory = new CopyOnWriteArrayList<>();
 
     // Performance trackers from TenAIVotingSystem
-    private final Map<String, ModelPerformanceTracker> performanceTrackers = new ConcurrentHashMap<>();
+private final Map<String, ModelPerformanceTracker> performanceTrackers = new ConcurrentHashMap<>();
+
+    // Default provider names for initialization (dynamic at runtime)
+    public static final String[] DEFAULT_PROVIDERS = {
+        "gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun"
+    };
+
+    public static final String[] ALL_PROVIDERS = DEFAULT_PROVIDERS;
 
     @Value("${supremeai.active.providers:groq,openai,anthropic,ollama}")
     private String activeProviders;
@@ -80,13 +82,13 @@ public class MultiAIVotingService {
 
     @Autowired
     public MultiAIVotingService(@org.springframework.beans.factory.annotation.Qualifier("votingTaskExecutor")
-                                org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor votingTaskExecutor) {
+                                 org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor votingTaskExecutor) {
         this.decisionExecutor = votingTaskExecutor.getThreadPoolExecutor();
         initializePerformanceTrackers();
     }
 
     private void initializePerformanceTrackers() {
-        for (String model : TEN_AI_MODELS) {
+        for (String model : DEFAULT_PROVIDERS) {
             performanceTrackers.put(model, new ModelPerformanceTracker(model));
         }
     }
@@ -123,7 +125,7 @@ public class MultiAIVotingService {
             if (dynamicModels != null && !dynamicModels.isEmpty()) {
                 selectedModels = dynamicModels;
             } else {
-                selectedModels = Arrays.asList(TEN_AI_MODELS);
+                selectedModels = new ArrayList<>(Arrays.asList(DEFAULT_PROVIDERS));
             }
         }
 

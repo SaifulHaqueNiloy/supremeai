@@ -2,6 +2,7 @@
 // UNIFIED ADMIN DASHBOARD - Single Source of Truth Contract
 
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Layout, Menu, Alert, Badge, Space, Tabs, Button, Modal, Input, message, Avatar, Dropdown, Typography, Divider, FloatButton, Progress, Tag, Tooltip, List } from 'antd';
 import { 
     RobotOutlined, 
@@ -32,30 +33,24 @@ import {
     CheckCircleFilled,
     SafetyCertificateOutlined,
     ThunderboltOutlined,
-    ChromeOutlined
+    ChromeOutlined,
+    MonitorOutlined,
+    EyeOutlined,
+    UploadOutlined,
+    BarChartOutlined,
+    FileTextOutlined,
+    LoadingOutlined
 } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
-import PhasesOverview from '../components/PhasesOverview';
-import AIAgentsDashboard from '../components/AIAgentsDashboard';
-import ExploitationDashboard from '../components/ExploitationDashboard';
-import ChatWithAI from '../components/ChatWithAI';
-import SystemLearningDashboard from '../components/SystemLearningDashboard';
-import RequirementsDashboard from '../components/RequirementsDashboard';
-import AdminOCRCard from '../components/AdminOCRCard';
 import APIManagement from '../components/APIManagement';
-import AdminProtocolMatrix from '../components/AdminProtocolMatrix';
-import AdminHistoryMatrix from '../components/AdminHistoryMatrix';
-import AdminConfigMatrix from '../components/AdminConfigMatrix';
-import VPNManagement from '../components/VPNManagement';
-import TelemetryBar from '../components/TelemetryBar';
-import GlassKPICard from '../components/GlassKPICard';
-import NeuralTerminal, { LogEntry } from '../components/NeuralTerminal';
-import ResourceGauges from '../components/ResourceGauges';
-import SystemHealthMatrix from '../components/SystemHealthMatrix';
-import OperationalAnalytics from '../components/OperationalAnalytics';
-import AuditLog from '../components/AuditLog';
-import NeuralNetworkFlow from '../components/NeuralNetworkFlow';
-import BrowserActivityDashboard from '../components/BrowserActivityDashboard';
+import ScenarioOrchestration from '../components/ScenarioOrchestration';
+import ThreeDashboard from '../components/ThreeDashboard';
+import ChatWithAI from '../components/ChatWithAI';
+import ConsensusMap from '../components/ConsensusMap';
+import QuotaTraffic from '../components/QuotaTraffic';
+import KnowledgeHub from '../components/KnowledgeHub';
+import SelfHealingLogs from '../components/SelfHealingLogs';
+import LearningHub from '../components/LearningHub';
 import { notification } from 'antd';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -86,8 +81,9 @@ ChartJS.register(
   Filler
 );
 
-const { Header, Content, Sider } = Layout;
+const { Header, Content } = Layout;
 
+// Helper icons for dynamic rendering if needed
 const getIcon = (iconName: string) => {
     switch (iconName) {
         case 'DashboardOutlined': return <DashboardOutlined />;
@@ -115,20 +111,15 @@ const getIcon = (iconName: string) => {
 };
 
 const AdminDashboardUnified: React.FC = () => {
-    const [selectedKey, setSelectedKey] = useState('providers');
+    const { t } = useTranslation();
     const [contract, setContract] = useState<DashboardContract | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [chatVisible, setChatVisible] = useState(false);
-    const [liveStream, setLiveStream] = useState<LogEntry[]>([]);
+    const [liveStream, setLiveStream] = useState<any[]>([]);
 
     useEffect(() => {
-        // AI COMMAND HOTKEY: Shift+A to toggle AI Orchestrator view (if multiple were present)
-        // For now, it's the only view.
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key.toLowerCase() === 'a' && e.shiftKey && (e.target as HTMLElement).tagName !== 'INPUT') {
-                setSelectedKey('providers');
-            }
             if (e.key.toLowerCase() === 'c' && (e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
                 setChatVisible(prev => !prev);
             }
@@ -216,22 +207,7 @@ const AdminDashboardUnified: React.FC = () => {
         window.location.reload();
     };
 
-    const menuGroups = useMemo(() => {
-        return [
-            {
-                key: 'ai-orchestration',
-                label: 'AI ORCHESTRATION',
-                type: 'group' as const,
-                children: [
-                    {
-                        key: 'providers',
-                        icon: <RobotOutlined className="text-emerald-500" />,
-                        label: <span className="text-[10px] font-black uppercase tracking-[0.1em]">Model Scenarios</span>,
-                    }
-                ]
-            }
-        ];
-    }, []);
+
 
     if (loading) return (
         <div className="h-screen bg-[#050505] flex flex-col items-center justify-center font-mono">
@@ -246,58 +222,21 @@ const AdminDashboardUnified: React.FC = () => {
 
     return (
         <Layout className="min-h-screen bg-[#050505] text-white">
-            {/* Sidebar Navigation */}
-            <Sider
-                breakpoint="lg"
-                collapsedWidth="64"
-                onBreakpoint={(broken) => {
-                    console.log('Breakpoint broken:', broken);
-                }}
-                className="bg-[#080808] border-r border-white/5 h-screen sticky top-0"
-                width={260}
-            >
-                <div className="h-16 flex items-center justify-center border-b border-white/5 mb-4">
-                    <Avatar 
-                        size={32} 
-                        className="bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 font-black text-[12px]"
-                    >S</Avatar>
-                </div>
-                <Menu
-                    theme="dark"
-                    mode="inline"
-                    selectedKeys={[selectedKey]}
-                    onClick={({ key }) => setSelectedKey(key)}
-                    className="bg-transparent border-none"
-                    items={menuGroups}
-                />
-                <div className="flex flex-col items-center gap-4 mt-auto pb-4">
-                    <Tooltip title="Logout" placement="right">
-                        <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} className="text-white/20 hover:text-red-500" />
-                    </Tooltip>
-                </div>
-            </Sider>
-
             <Layout className="bg-transparent flex flex-col flex-1">
                 <Header className="bg-black/90 backdrop-blur-2xl border-b border-white/5 h-16 px-6 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-6">
-                        <div className="hidden lg:flex flex-col gap-0.5 min-w-[200px]">
+                        <div className="flex flex-col gap-0.5 min-w-[200px]">
                             <span className="text-[12px] font-black uppercase tracking-[0.2em] text-white">SupremeAI Command Center</span>
                             <span className="text-[9px] font-black text-yellow-400 uppercase tracking-[0.3em]">AI_MODEL_SCENARIO_PROTOCOL</span>
                         </div>
-                        <div className="flex lg:hidden items-center gap-2">
-                             <Avatar size={32} className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">S</Avatar>
-                             <span className="text-[10px] font-black uppercase tracking-widest text-white">Command</span>
-                        </div>
                         <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <div className="flex flex-col">
-                                <span className="text-[9px] text-cyan-400 uppercase font-black tracking-widest">REGISTRY</span>
-                                <span className="text-[12px] text-white font-mono font-bold">{providers.length} MODELS_SYNCED</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-white font-black uppercase tracking-tighter">SERVER_UPTIME</span>
-                                <span className="text-[14px] text-yellow-400 font-mono font-bold">{stats.serverUptime || '00:00:00'}</span>
-                            </div>
+                        <div className="hidden sm:flex flex-col">
+                            <span className="text-[9px] text-cyan-400 uppercase font-black tracking-widest">REGISTRY</span>
+                            <span className="text-[12px] text-white font-mono font-bold">OPTIMIZED_SYNC</span>
+                        </div>
+                        <div className="hidden md:flex flex-col">
+                            <span className="text-[10px] text-white font-black uppercase tracking-tighter">SERVER_UPTIME</span>
+                            <span className="text-[14px] text-yellow-400 font-mono font-bold">{stats.serverUptime || '00:00:00'}</span>
                         </div>
                     </div>
                     
@@ -322,8 +261,16 @@ const AdminDashboardUnified: React.FC = () => {
                         <div className="h-6 w-[1px] bg-white/5 mx-1"></div>
                         <div className="flex items-center gap-2 px-2 py-1 bg-white/[0.03] border border-white/10 rounded-full hover:bg-white/10 transition-all cursor-pointer">
                             <Avatar size={28} className="bg-white text-black border-2 border-white font-bold text-[12px]">AD</Avatar>
-                            <span className="hidden sm:inline-block text-[12px] font-black uppercase tracking-tighter text-white mr-1">ADMIN_USER</span>
+                            <span className="hidden sm:inline-block text-[12px] font-black uppercase tracking-tighter text-white mr-1">ADMIN</span>
                         </div>
+                        <Tooltip title="Logout">
+                            <Button 
+                                type="text" 
+                                icon={<LogoutOutlined />} 
+                                onClick={handleLogout} 
+                                className="text-white/40 hover:text-red-500 border border-white/5" 
+                            />
+                        </Tooltip>
                     </div>
                 </Header>
 
@@ -348,12 +295,133 @@ const AdminDashboardUnified: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Main AI Management View */}
-                        <div className="glass-card p-0 border border-white/5 bg-transparent overflow-hidden">
-                            <APIManagement />
+                        {/* Main AI Management View with Tabs */}
+                        <div className="glass-card p-6 border border-white/5 bg-black/20">
+                            <Tabs 
+                                defaultActiveKey="registry" 
+                                className="dark-tabs"
+                                items={[
+                                    {
+                                        key: 'registry',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <DatabaseOutlined /> {t('dashboard.pillar_registry')}
+                                            </span>
+                                        ),
+                                        children: <APIManagement />
+                                    },
+                                    {
+                                        key: 'orchestration',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <NodeIndexOutlined /> {t('dashboard.pillar_orchestration')}
+                                            </span>
+                                        ),
+                                        children: <ScenarioOrchestration />
+                                    },
+                                    {
+                                        key: 'telemetry',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <BarChartOutlined /> {t('dashboard.pillar_telemetry')}
+                                            </span>
+                                        ),
+                                        children: (
+                                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+                                                <div className="lg:col-span-2 glass-card border border-white/5 overflow-hidden relative group">
+                                                    <div className="absolute top-4 left-4 z-[110] flex flex-col gap-1">
+                                                        <span className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.2em] drop-shadow-md">System Neural Map</span>
+                                                        <span className="text-[8px] text-white/40 uppercase font-mono drop-shadow-md">Real-time Node Interaction Stream</span>
+                                                    </div>
+                                                    <ThreeDashboard />
+                                                </div>
+                                                <div className="space-y-6 overflow-y-auto custom-scrollbar pr-2">
+                                                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
+                                                        <h4 className="text-[10px] font-black uppercase text-white/40 mb-4 tracking-widest flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                                            Neural Latency Matrix
+                                                        </h4>
+                                                        <div className="space-y-4">
+                                                            {[
+                                                                { label: 'GPT-4o', value: '142ms', color: 'emerald' },
+                                                                { label: 'Claude 3.5', value: '189ms', color: 'blue' },
+                                                                { label: 'Gemini 1.5', value: '256ms', color: 'purple' }
+                                                            ].map((m, i) => (
+                                                                <div key={i} className="flex flex-col gap-1">
+                                                                    <div className="flex justify-between text-[10px] font-mono uppercase">
+                                                                        <span className="text-white/60">{m.label}</span>
+                                                                        <span className={`text-${m.color}-500`}>{m.value}</span>
+                                                                    </div>
+                                                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                                                        <div className={`h-full bg-${m.color}-500/50`} style={{ width: `${Math.random() * 40 + 60}%` }} />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
+                                                        <h4 className="text-[10px] font-black uppercase text-white/40 mb-4 tracking-widest flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                                                            Ensemble Voting
+                                                        </h4>
+                                                        <div className="py-8 text-center border border-dashed border-white/5 rounded-lg">
+                                                            <SafetyCertificateOutlined className="text-2xl text-purple-500/20 mb-2" />
+                                                            <p className="text-[9px] text-white/20 uppercase">Stream Waiting for active consensus session</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    },
+                                    {
+                                        key: 'consensus',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <SafetyCertificateOutlined /> {t('dashboard.pillar_consensus')}
+                                            </span>
+                                        ),
+                                        children: <ConsensusMap />
+                                    },
+                                    {
+                                        key: 'traffic',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <GlobalOutlined /> {t('dashboard.pillar_traffic')}
+                                            </span>
+                                        ),
+                                        children: <QuotaTraffic />
+                                    },
+                                    {
+                                        key: 'knowledge',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <BulbOutlined /> {t('dashboard.pillar_knowledge')}
+                                            </span>
+                                        ),
+                                        children: <KnowledgeHub />
+                                    },
+                                    {
+                                        key: 'logs',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <BugOutlined /> {t('dashboard.pillar_healing')}
+                                            </span>
+                                        ),
+                                        children: <SelfHealingLogs />
+                                    },
+                                    {
+                                        key: 'learning',
+                                        label: (
+                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                                <RocketOutlined /> {t('dashboard.pillar_learning')}
+                                            </span>
+                                        ),
+                                        children: <LearningHub />
+                                    }
+                                ]}
+                            />
                         </div>
                     </div>
-                    )}
                 </Content>
 
                 <Modal

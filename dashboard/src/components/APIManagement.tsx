@@ -1,5 +1,6 @@
 // APIManagement.tsx - ULTRA-DENSE PROVIDER MATRIX with INTERNET DISCOVERY
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table, Button, Modal, Form, Input, Select, Space, Tooltip, Popconfirm, message, List, Avatar, Badge, Spin, Tag, Switch } from 'antd';
 import { 
     PlusOutlined, 
@@ -36,6 +37,7 @@ interface APIProvider {
 }
 
 const APIManagement: React.FC = () => {
+    const { t } = useTranslation();
     const [providers, setProviders] = useState<APIProvider[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -132,7 +134,7 @@ const APIManagement: React.FC = () => {
                 method,
                 body: JSON.stringify({
                     ...values,
-                    status: 'inactive', // Default to inactive until tested
+                    status: editingId ? values.status : 'inactive',
                     lastTested: new Date().toISOString()
                 }),
             });
@@ -146,6 +148,24 @@ const APIManagement: React.FC = () => {
             }
         } catch (error) {
             message.error('REGISTRY_WRITE_FAILURE');
+        }
+    };
+
+    const toggleRole = async (id: string, type: string, enabled: boolean) => {
+        try {
+            const response = await authUtils.fetchWithAuth(`/api/admin/providers/${id}/capability`, {
+                method: 'PATCH',
+                body: JSON.stringify({ type, enabled }),
+            });
+
+            if (response.ok) {
+                message.success(`ROLE_${type.toUpperCase()}_${enabled ? 'ASSIGNED' : 'REVOKED'}`);
+                fetchProviders();
+            } else {
+                throw new Error('FAILED_TO_UPDATE_CAPABILITY');
+            }
+        } catch (error) {
+            message.error('CAPABILITY_SYNC_FAILED');
         }
     };
 
@@ -201,10 +221,42 @@ const APIManagement: React.FC = () => {
             title: <span className="text-[9px] uppercase tracking-tighter opacity-50">Capabilities</span>,
             key: 'capabilities',
             render: (_: any, r: APIProvider) => (
-                <div className="flex gap-1">
-                    {r.canCommunicate && <Tooltip title="Scenario: Communication Helper"><Tag color="blue" className="m-0 text-[8px] px-1 py-0 border-0 bg-blue-500/10 text-blue-400">COMM</Tag></Tooltip>}
-                    {r.canExecuteTasks && <Tooltip title="Scenario: Task Executor"><Tag color="emerald" className="m-0 text-[8px] px-1 py-0 border-0 bg-emerald-500/10 text-emerald-400">TASK</Tag></Tooltip>}
-                    {r.canParticipateInVoting && <Tooltip title="Scenario: Voting Participant"><Tag color="purple" className="m-0 text-[8px] px-1 py-0 border-0 bg-purple-500/10 text-purple-400">VOTE</Tag></Tooltip>}
+                <div className="flex gap-4">
+                    <Tooltip title={t('dashboard.role_communication')}>
+                        <div className="flex flex-col items-center gap-1">
+                            <Switch 
+                                size="small" 
+                                checked={r.canCommunicate} 
+                                onChange={(checked) => toggleRole(r.id, 'communication', checked)}
+                                className="scale-75"
+                            />
+                            <span className={`text-[7px] font-black uppercase ${r.canCommunicate ? 'text-blue-400' : 'text-white/20'}`}>Comm</span>
+                        </div>
+                    </Tooltip>
+                    <Tooltip title={t('dashboard.role_execution')}>
+                        <div className="flex flex-col items-center gap-1">
+                            <Switch 
+                                size="small" 
+                                checked={r.canExecuteTasks} 
+                                onChange={(checked) => toggleRole(r.id, 'execution', checked)}
+                                className="scale-75"
+                                style={{ backgroundColor: r.canExecuteTasks ? '#10b981' : undefined }}
+                            />
+                            <span className={`text-[7px] font-black uppercase ${r.canExecuteTasks ? 'text-emerald-400' : 'text-white/20'}`}>Task</span>
+                        </div>
+                    </Tooltip>
+                    <Tooltip title={t('dashboard.role_voting')}>
+                        <div className="flex flex-col items-center gap-1">
+                            <Switch 
+                                size="small" 
+                                checked={r.canParticipateInVoting} 
+                                onChange={(checked) => toggleRole(r.id, 'voting', checked)}
+                                className="scale-75"
+                                style={{ backgroundColor: r.canParticipateInVoting ? '#a855f7' : undefined }}
+                            />
+                            <span className={`text-[7px] font-black uppercase ${r.canParticipateInVoting ? 'text-purple-400' : 'text-white/20'}`}>Vote</span>
+                        </div>
+                    </Tooltip>
                 </div>
             )
         },
@@ -297,7 +349,7 @@ const APIManagement: React.FC = () => {
             <div className="bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden">
                 <div className="px-4 py-2 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Intelligence Registry</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">{t('dashboard.pillar_registry')}</span>
                         <span className="text-[8px] text-white/20 uppercase font-bold">Trace-Accountable Provider Matrix</span>
                     </div>
                     <Button 

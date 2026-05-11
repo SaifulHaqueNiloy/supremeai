@@ -89,7 +89,7 @@ public class IntelligenceController {
 
             List<String> models = request.getModels();
             if (models == null || models.isEmpty()) {
-                models = List.of(MultiAIVotingService.TEN_AI_MODELS);
+                models = List.of(MultiAIVotingService.DEFAULT_PROVIDERS);
             }
 
             long timeoutMs = request.getTimeoutMs() > 0 ? request.getTimeoutMs() : 15000;
@@ -107,7 +107,7 @@ public class IntelligenceController {
             response.put("verdict", result.getVerdict());
             response.put("processingTimeMs", result.getProcessingTimeMs());
             response.put("totalModelsUsed", result.getTotalModelsUsed());
-            response.put("totalModelsAvailable", MultiAIVotingService.TEN_AI_MODELS.length);
+            response.put("totalModelsAvailable", MultiAIVotingService.ALL_PROVIDERS.length);
 
             // Add individual votes
             List<Map<String, Object>> votes = result.getAllVotes().stream()
@@ -140,9 +140,9 @@ public class IntelligenceController {
     @GetMapping("/models")
     public ResponseEntity<?> getAvailableModels() {
         Map<String, Object> response = new HashMap<>();
-        response.put("totalModels", MultiAIVotingService.TEN_AI_MODELS.length);
-        response.put("models", MultiAIVotingService.TEN_AI_MODELS);
-        response.put("description", "10 AI Models available for ensemble voting");
+        response.put("totalModels", MultiAIVotingService.ALL_PROVIDERS.length);
+        response.put("models", MultiAIVotingService.ALL_PROVIDERS);
+        response.put("description", "Multiple AI Models available for ensemble voting - dynamic list");
         return ResponseEntity.ok(response);
     }
 

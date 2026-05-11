@@ -4,6 +4,8 @@ import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { CoreEngine } from './components/CoreEngine';
 import { Activity, Cpu, Shield, Zap, Terminal as TerminalIcon, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import AdminDashboardUnified from './pages/AdminDashboardUnified';
 
 interface ModelStatus {
   id: string;
@@ -22,14 +24,15 @@ const models_list: ModelStatus[] = [
   { id: 'deepseek', name: 'DeepSeek Coder', status: 'loading', latency: 0, memory: '8GB', type: 'Logic' },
 ];
 
-function App() {
+const MainVisualizer = () => {
   const [models, setModels] = useState<ModelStatus[]>(models_list);
   const [activeModel, setActiveModel] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
   const fetchHealth = async () => {
     try {
-      const response = await fetch('/telemetry/health');
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${API_BASE}/telemetry/health`);
       const data = await response.json();
       if (data.models) {
         setModels(data.models);
@@ -59,7 +62,7 @@ function App() {
   }, []);
 
   return (
-    <div className="app-container" style={{ height: '100vh', width: '100vw', position: 'relative' }}>
+    <div className="app-container" style={{ height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden' }}>
       <div className="bg-grid"></div>
       <div className="scanline"></div>
 
@@ -155,7 +158,7 @@ function App() {
       </div>
     </div>
   );
-}
+};
 
 const HUDMetric = ({ icon, label, value, color }: { icon: any, label: string, value: string, color: string }) => (
   <div className="glass-panel" style={{ padding: '10px 15px', display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -166,5 +169,23 @@ const HUDMetric = ({ icon, label, value, color }: { icon: any, label: string, va
     </div>
   </div>
 );
+
+function App() {
+  // Use basename if hosted in a subdirectory (like /admin/ on Firebase)
+  const basename = window.location.pathname.startsWith('/admin') ? '/admin' : '';
+  
+  return (
+    <BrowserRouter basename={basename}>
+      <Routes>
+        {/* The AdminDashboardUnified is now the primary entry point for the dashboard app */}
+        <Route path="/" element={<AdminDashboardUnified />} />
+        {/* Legacy/Visualization view kept at a specific path if needed */}
+        <Route path="/visualizer" element={<MainVisualizer />} />
+        {/* Catch-all redirects to the unified dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
 
 export default App;

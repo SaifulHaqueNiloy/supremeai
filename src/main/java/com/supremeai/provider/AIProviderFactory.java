@@ -93,9 +93,27 @@ public class AIProviderFactory {
                 return new SupremeCloudProvider(key, "gcp_nomic", "nomic-embed-text", "https://supreme-ai-nomic-embed-565236080752.us-central1.run.app");
             case "hf_deepseek":
                 return new SupremeCloudProvider(key, "hf_deepseek", "deepseek-coder-v2", "https://supreme-ai-deepseek-pro-565236080752.us-central1.run.app");
+            
+            // HuggingFace Serverless Inference Endpoints (uses HF Inference API format)
+            case "hf_mistral":
+                return new SupremeCloudProvider(key, "hf_mistral", "mistralai/Mistral-7B-Instruct-v0.3", "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3");
+            case "hf_llama":
+                return new SupremeCloudProvider(key, "hf_llama", "meta-llama/Meta-Llama-3-8B-Instruct", "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct");
+            case "hf_codellama":
+                return new SupremeCloudProvider(key, "hf_codellama", "codellama/CodeLlama-7B-Instruct-hf", "https://api-inference.huggingface.co/models/codellama/CodeLlama-7B-Instruct-hf");
+            case "hf_phi":
+                return new SupremeCloudProvider(key, "hf_phi", "microsoft/Phi-3-mini-4k-instruct", "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct");
+            
+            // Render Free Tier Endpoints (configure URLs via environment)
+            case "render_tinyllama":
+                return new SupremeCloudProvider(key, "render_tinyllama", "tinyllama-1.1b", System.getenv().getOrDefault("RENDER_TINYLLAMA_URL", "https://tinyllama.onrender.com"));
+            case "render_phi3":
+                return new SupremeCloudProvider(key, "render_phi3", "phi-3-mini", System.getenv().getOrDefault("RENDER_PHI3_URL", "https://phi3.onrender.com"));
+            case "render_qwen":
+                return new SupremeCloudProvider(key, "render_qwen", "qwen-0.5b", System.getenv().getOrDefault("RENDER_QWEN_URL", "https://qwen.onrender.com"));
 
             default:
-                throw new IllegalArgumentException("Unknown AI provider: " + name + ". Supported: gpt4, claude, gemini, groq, deepseek, ollama, huggingface, kimi, mistral, stepfun, codegeex4, gcp_qwen, gcp_llama, gcp_phi, hf_deepseek");
+                throw new IllegalArgumentException("Unknown AI provider: " + name + ". Supported: gpt4, claude, gemini, groq, deepseek, ollama, huggingface, kimi, mistral, stepfun, codegeex4, gcp_qwen, gcp_llama, gcp_phi, gcp_nomic, hf_deepseek, hf_mistral, hf_llama, hf_codellama, hf_phi, render_tinyllama, render_phi3, render_qwen");
         }
     }
 
@@ -145,7 +163,7 @@ public class AIProviderFactory {
      */
     public AIProvider getDefaultProvider() {
         // Preferred providers in order (free tier first)
-        String[] preferredProviders = {"gcp_qwen", "hf_deepseek", "gemini", "groq", "huggingface", "codegeex4", "stepfun", "deepseek", "gpt4", "claude", "mistral"};
+        String[] preferredProviders = {"gcp_qwen", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "gemini", "groq", "huggingface", "codegeex4", "stepfun", "deepseek", "gpt4", "claude", "mistral", "render_tinyllama", "render_phi3", "render_qwen"};
 
         // Try preferred providers first
         for (String providerName : preferredProviders) {
@@ -206,7 +224,7 @@ public class AIProviderFactory {
      * Get list of all supported provider names
      */
     public String[] getSupportedProviders() {
-        return new String[]{"gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun", "codegeex4", "gcp_qwen", "gcp_llama", "gcp_phi", "hf_deepseek"};
+        return new String[]{"gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun", "codegeex4", "gcp_qwen", "gcp_llama", "gcp_phi", "gcp_nomic", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "render_tinyllama", "render_phi3", "render_qwen"};
     }
 
     /**
