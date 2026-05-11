@@ -123,7 +123,12 @@ const AdminDashboardUnified: React.FC = () => {
     const [liveStream, setLiveStream] = useState<LogEntry[]>([]);
 
     useEffect(() => {
+        // AI COMMAND HOTKEY: Shift+A to toggle AI Orchestrator view (if multiple were present)
+        // For now, it's the only view.
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() === 'a' && e.shiftKey && (e.target as HTMLElement).tagName !== 'INPUT') {
+                setSelectedKey('providers');
+            }
             if (e.key.toLowerCase() === 'c' && (e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
                 setChatVisible(prev => !prev);
             }
@@ -212,22 +217,27 @@ const AdminDashboardUnified: React.FC = () => {
     };
 
     const menuGroups = useMemo(() => {
-        if (!contract) return [];
         return [
             {
-                key: 'ai',
-                label: 'INTELLIGENCE',
+                key: 'ai-orchestration',
+                label: 'AI ORCHESTRATION',
                 type: 'group' as const,
-                children: contract.navigation
-                    .filter(i => i.key === 'providers')
-                    .map(item => ({
-                        key: item.key,
-                        icon: getIcon(item.icon),
-                        label: <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{item.label}</span>,
-                    }))
+                children: [
+                    {
+                        key: 'providers',
+                        icon: <RobotOutlined className="text-emerald-500" />,
+                        label: <span className="text-[10px] font-black uppercase tracking-[0.1em]">Model Registry</span>,
+                    },
+                    {
+                        key: 'chat',
+                        icon: <MessageOutlined className="text-cyan-500" />,
+                        label: <span className="text-[10px] font-black uppercase tracking-[0.1em]">Neural Link</span>,
+                        onClick: () => setChatVisible(true)
+                    }
+                ]
             }
         ];
-    }, [contract]);
+    }, []);
 
     if (loading) return (
         <div className="h-screen bg-[#050505] flex flex-col items-center justify-center font-mono">
@@ -278,7 +288,7 @@ const AdminDashboardUnified: React.FC = () => {
                     <div className="flex items-center gap-6">
                         <div className="hidden lg:flex flex-col gap-0.5 min-w-[200px]">
                             <span className="text-[12px] font-black uppercase tracking-[0.2em] text-white">SupremeAI Command Center</span>
-                            <span className="text-[9px] font-black text-yellow-400 uppercase tracking-[0.3em]">MASTER_OPERATIONAL_AUTHORITY</span>
+                            <span className="text-[9px] font-black text-yellow-400 uppercase tracking-[0.3em]">AI_MODEL_SCENARIO_PROTOCOL</span>
                         </div>
                         <div className="flex lg:hidden items-center gap-2">
                              <Avatar size={32} className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">S</Avatar>
@@ -287,8 +297,8 @@ const AdminDashboardUnified: React.FC = () => {
                         <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
                         <div className="hidden md:flex items-center gap-4">
                             <div className="flex flex-col">
-                                <span className="text-[9px] text-cyan-400 uppercase font-black tracking-widest">CAPACITY</span>
-                                <span className="text-[12px] text-white font-mono font-bold">{stats.activeConnections || 0} NODES_ACTIVE</span>
+                                <span className="text-[9px] text-cyan-400 uppercase font-black tracking-widest">REGISTRY</span>
+                                <span className="text-[12px] text-white font-mono font-bold">{providers.length} MODELS_SYNCED</span>
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-[10px] text-white font-black uppercase tracking-tighter">SERVER_UPTIME</span>
@@ -324,171 +334,31 @@ const AdminDashboardUnified: React.FC = () => {
                 </Header>
 
                 <Content className="p-6 overflow-y-auto min-h-[calc(100vh-64px)] bg-[#0c0c0c]">
-                    {selectedKey === 'overview' ? (
-                        <div className="flex flex-col gap-6 max-w-[1800px] mx-auto animate-fade-in h-full">
-                            {/* Header Section / Sub-Navigation */}
-                            <div className="flex items-center justify-between px-2">
+                    <div className="space-y-6 max-w-[1600px] mx-auto animate-fade-in">
+                        {/* Module Header */}
+                        <div className="glass-card px-6 py-4 flex items-center justify-between border-l-4 border-emerald-500 bg-black/40">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                                    <RobotOutlined className="text-lg" />
+                                </div>
                                 <div className="flex flex-col">
-                                    <h2 className="text-2xl font-black uppercase tracking-[0.1em] text-white m-0">COMMAND_CENTER</h2>
-                                    <span className="text-[11px] text-yellow-400 uppercase tracking-[0.3em] font-bold">SYSTEM_STATUS: NOMINAL // ALL_SYSTEMS_FUNCTIONAL</span>
-                                </div>
-                                <div className="flex items-center gap-4 bg-white/10 border border-white/20 rounded-full px-6 py-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                        <span className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">LIVE_TELEMETRY</span>
-                                    </div>
-                                    <Divider type="vertical" className="bg-white/20" />
-                                    <span className="text-[11px] font-black text-white">{new Date().toLocaleTimeString()}</span>
+                                    <h1 className="text-lg font-black uppercase tracking-[0.2em] text-white m-0">AI Model Scenario Management</h1>
+                                    <p className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest m-0">Orchestrate Communication, Execution & Voting Protocols</p>
                                 </div>
                             </div>
-
-                            {/* Main Visualization Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[400px]">
-                                {/* Top Left: Telemetry (Analytics) */}
-                                <div className="col-span-1 md:col-span-4 glass-card p-0 overflow-hidden relative group">
-                                    <div className="absolute top-4 left-6 z-10">
-                                        <span className="text-[12px] font-black text-white uppercase tracking-widest bg-black px-2">ANALYTICS_STREAM</span>
-                                    </div>
-                                    <OperationalAnalytics />
-                                </div>
-
-                                {/* Top Center: Neural Flow */}
-                                <div className="col-span-1 md:col-span-5 relative">
-                                    <NeuralNetworkFlow />
-                                </div>
-
-                                {/* Top Right: Neural Terminal */}
-                                <div className="col-span-1 md:col-span-3 flex flex-col min-h-[300px]">
-                                    <NeuralTerminal logs={liveStream} />
-                                </div>
-                            </div>
-
-                            {/* KPI Matrix Row */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <GlassKPICard 
-                                    label="Neural Flux"
-                                    value={stats.activeUsers || 1240}
-                                    subValue="Requests / Sec"
-                                    icon={<ThunderboltOutlined />}
-                                    color="#10b981"
-                                    trend="up"
-                                    change="+12.5%"
-                                />
-                                <GlassKPICard 
-                                    label="Brain Capacity"
-                                    value="84.2GB"
-                                    subValue="Synced Data"
-                                    icon={<DatabaseOutlined />}
-                                    color="#a855f7"
-                                    trend="neutral"
-                                    change="Stable"
-                                />
-                                <GlassKPICard 
-                                    label="System Latency"
-                                    value={`${stats.latency || 24}ms`}
-                                    subValue="Edge Response"
-                                    icon={<GlobalOutlined />}
-                                    color="#3b82f6"
-                                    trend="up"
-                                    change="-4ms"
-                                />
-                                <GlassKPICard 
-                                    label="Success Rate"
-                                    value={`${stats.successRate || 99.9}%`}
-                                    subValue="Task Integrity"
-                                    icon={<CheckCircleOutlined />}
-                                    color="#f59e0b"
-                                    trend="neutral"
-                                    change="+0.02%"
-                                />
-                            </div>
-
-                            {/* Bottom Health & Resource Section */}
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                <div className="col-span-1 lg:col-span-8 glass-card p-6">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex flex-col">
-                                            <span className="text-[12px] font-black text-white uppercase tracking-widest">GLOBAL_NODE_HEALTH_MATRIX</span>
-                                            <span className="text-[10px] text-yellow-400 font-bold uppercase tracking-[0.2em]">CLUSTER_HEALTH_DISTRIBUTION // ACTIVE</span>
-                                        </div>
-                                        <Button type="link" size="small" className="text-[10px] uppercase font-bold text-cyan-400">View Node Details</Button>
-                                    </div>
-                                    <SystemHealthMatrix nodes={contract?.stats.systemHealthNodes || []} />
-                                </div>
-                                <div className="col-span-1 lg:col-span-4 glass-card p-6">
-                                    <div className="mb-6">
-                                        <span className="text-[12px] font-black text-white uppercase tracking-widest">RESOURCE_ALLOCATION</span>
-                                    </div>
-                                    <ResourceGauges />
+                            <div className="hidden md:flex items-center gap-6">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Registry Status</span>
+                                    <Tag color="emerald" className="m-0 text-[10px] font-black border-0 rounded bg-emerald-500/10 text-emerald-500">SYNC_OPTIMAL</Tag>
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="space-y-6 max-w-[1600px] mx-auto animate-fade-in">
-                            {/* Module Header */}
-                            <div className="glass-card px-6 py-4 flex items-center justify-between border-l-4 border-emerald-500">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-emerald-500 shadow-xl">
-                                        {selectedKey.includes('ai') ? <RobotOutlined /> : <RocketOutlined />}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <h1 className="text-sm font-black uppercase tracking-widest text-white">{selectedKey.replace('-', ' ')}</h1>
-                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-wider">Subsystem Active // Resource Allocation Optimal</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-emerald-500/5 border border-emerald-500/10 px-3 py-1.5 rounded-lg flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter">Sync Verified</span>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Module Content */}
-                            <div className="glass-card p-4 min-h-[600px] relative">
-                                {selectedKey === 'ai-agents' && <AIAgentsDashboard />}
-                                {selectedKey === 'system-learning' && <SystemLearningDashboard />}
-                                {selectedKey === 'requirements' && <RequirementsDashboard />}
-                                {selectedKey === 'ocr' && <AdminOCRCard />}
-                                {selectedKey === 'exploitation-techniques' && <ExploitationDashboard />}
-                                {selectedKey === 'phases' && <PhasesOverview />}
-                                {selectedKey === 'providers' && <APIManagement />}
-                                {selectedKey === 'rules' && <AdminProtocolMatrix />}
-                                {selectedKey === 'history' && <AdminHistoryMatrix />}
-                                {selectedKey === 'config' && <AdminConfigMatrix />}
-                                {selectedKey === 'vpn' && <VPNManagement />}
-                                {selectedKey === 'audit' && <AuditLog />}
-                                {selectedKey === 'browser-activity' && <BrowserActivityDashboard />}
-                                
-                                {selectedKey === 'api-endpoints' && contract.apiEndpoints && (
-                                    <div className="space-y-6 p-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[11px] font-black uppercase tracking-widest text-white/60">System API Registry</span>
-                                            <Tag color="cyan" className="m-0 text-[9px] font-black border-0 rounded-lg px-3 py-1 bg-cyan-400/10 text-cyan-400">v3.4.0-STABLE</Tag>
-                                        </div>
-                                        <Tabs
-                                            size="small"
-                                            className="dark-tabs"
-                                            items={Object.entries(contract.apiEndpoints).map(([cat, end]) => ({
-                                                key: cat,
-                                                label: cat,
-                                                children: (
-                                                    <div className="bg-black/20 rounded-xl border border-white/5 overflow-hidden">
-                                                        <div className="px-4 py-2 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
-                                                            <span className="text-[10px] font-mono text-white/30 uppercase">{cat}_SCHEMA_V1</span>
-                                                            <Button type="link" size="small" className="text-[10px] p-0 font-bold uppercase h-auto">Copy Definition</Button>
-                                                        </div>
-                                                        <pre className="p-6 font-mono text-[11px] text-cyan-400/80 overflow-auto max-h-[500px] custom-scrollbar selection:bg-cyan-400/30">
-                                                            {JSON.stringify(end, null, 2)}
-                                                        </pre>
-                                                    </div>
-                                                )
-                                            }))}
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                        {/* Main AI Management View */}
+                        <div className="glass-card p-0 border border-white/5 bg-transparent overflow-hidden">
+                            <APIManagement />
                         </div>
+                    </div>
                     )}
                 </Content>
 

@@ -54,8 +54,7 @@ env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: "true"
 
-jobs:
-  # --------------------------------------------------------------------------------
+job  # --------------------------------------------------------------------------------
   # 🔍 PHASE 1: INITIALIZATION & ANALYSIS
   # --------------------------------------------------------------------------------
   initialize:
@@ -148,6 +147,58 @@ jobs:
             echo "failed_jobs=$FAILED_JOBS" >> $GITHUB_OUTPUT
           fi
 
+  codeflow-analysis:
+    name: 🔍 CodeFlow Repository Analysis
+    needs: [initialize]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🧪 Run Analysis & Generate Badges
+        id: codeflow
+        run: |
+          mkdir -p .github/codeflow-reports
+          
+          # Basic Metrics
+          TOTAL_FILES=$(find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.java" \) ! -path "*/node_modules/*" ! -path "*/.git/*" | wc -l)
+          TOTAL_LINES=$(find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.java" \) ! -path "*/node_modules/*" ! -path "*/.git/*" -exec cat {} \; | wc -l)
+          
+          # Security Check (Simplified)
+          SECURITY_ISSUE=$(grep -rE "password|secret|key|eval\(" . --include="*.js" --include="*.ts" --include="*.java" | grep -v node_modules | head -1 || true)
+          HEALTH_SCORE=$([ -z "$SECURITY_ISSUE" ] && echo "100" || echo "85")
+          
+          # Output Results
+          echo "health_score=${HEALTH_SCORE}" >> $GITHUB_OUTPUT
+          echo "total_files=${TOTAL_FILES}" >> $GITHUB_OUTPUT
+          echo "total_lines=${TOTAL_LINES}" >> $GITHUB_OUTPUT
+
+      - name: 📝 Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const health = '${{ steps.codeflow.outputs.health_score }}';
+            const body = `## 🔍 SupremeAI CodeFlow Analysis\n\n- **Health Score**: ${health}/100\n- **Files Analyzed**: ${{ steps.codeflow.outputs.total_files }}\n- **Total Lines**: ${{ steps.codeflow.outputs.total_lines }}\n\n*Automated by SupremeAI Command Center*`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
   infrastructure-check:
     name: 🏗️ Infrastructure Validation
     needs: [initialize]
@@ -185,7 +236,7 @@ jobs:
   
   backend-pipeline:
     name: ☕ Backend (Build & Deploy)
-    needs: [initialize, security-scan, infrastructure-check]
+    needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
     if: needs.initialize.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -240,7 +291,7 @@ jobs:
 
   frontend-pipeline:
     name: ⚛️ Frontend & Mobile (Build & Deploy)
-    needs: [initialize, security-scan, infrastructure-check]
+    needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
     if: needs.initialize.outputs.dashboard == 'true' || needs.initialize.outputs.mobile == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -353,8 +404,6 @@ jobs:
   # 🚀 PHASE 3: DEPLOYMENT
   # --------------------------------------------------------------------------------
   
-
-
   deploy-functions:
     name: 🚀 Deploy Functions
     needs: [cloud-functions, infrastructure-check]
@@ -400,10 +449,10 @@ jobs:
   # --------------------------------------------------------------------------------
   # 📊 PHASE 5: SUMMARY & NOTIFICATION
   # --------------------------------------------------------------------------------
-
+  
   workflow-summary:
     name: 📊 Pipeline Summary
-    needs: [backend-pipeline, frontend-pipeline, deploy-functions, ide-extensions, health-check]
+    needs: [backend-pipeline, frontend-pipeline, deploy-functions, ide-extensions, health-check, codeflow-analysis]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -412,10 +461,11 @@ jobs:
           echo "### 🚀 SupremeAI CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Status | Artifacts |" >> $GITHUB_STEP_SUMMARY
           echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeFlow Analysis | ${{ needs.codeflow-analysis.result }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| Backend | ${{ needs.backend-pipeline.result }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | ${{ needs.frontend-pipeline.result }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| Functions | ${{ needs.deploy-functions.result }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| IDE Plugins | ${{ needs.ide-extensions.result }} | `ide-extensions` |" >> $GITHUB_STEP_SUMMARY
+          echo "| IDE Plugins | ${{ needs.ide-extensions.result }} | ide-extensions |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 📥 Latest Artifacts available for 1 day." >> $GITHUB_STEP_SUMMARY
 
@@ -433,5 +483,8 @@ jobs:
             curl -X POST https://supremeai-lhlwyikwlq-uc.a.run.app/api/webhooks/github \
               -H "Content-Type: application/json" \
               -H "X-Webhook-Secret: $SUPREMEAI_WEBHOOK_SECRET" \
+              -d '{"status": "completed", "runId": "${{ github.run_id }}", "repo": "${{ github.repository }}"}' || echo "Webhook failed"
+          fi
+ $SUPREMEAI_WEBHOOK_SECRET" \
               -d '{"status": "completed", "runId": "${{ github.run_id }}", "repo": "${{ github.repository }}"}' || echo "Webhook failed"
           fi
