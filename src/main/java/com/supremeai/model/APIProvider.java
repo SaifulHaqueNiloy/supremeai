@@ -31,6 +31,8 @@ public class APIProvider {
     private boolean canCommunicate = true;
     private boolean canExecuteTasks = true;
     private boolean canParticipateInVoting = true;
+    private String deploymentSource = "API"; // API, GCLOUD, LOCAL, OLLAMA
+
 
     public APIProvider() {}
 
@@ -88,4 +90,7 @@ public class APIProvider {
 
     public boolean isCanParticipateInVoting() { return canParticipateInVoting; }
     public void setCanParticipateInVoting(boolean canParticipateInVoting) { this.canParticipateInVoting = canParticipateInVoting; }
+
+    public String getDeploymentSource() { return deploymentSource; }
+    public void setDeploymentSource(String deploymentSource) { this.deploymentSource = deploymentSource; }
 }
