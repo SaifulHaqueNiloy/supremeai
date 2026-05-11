@@ -485,6 +485,3 @@ jobs: # ------------------------------------------------------------------------
               -H "X-Webhook-Secret: $SUPREMEAI_WEBHOOK_SECRET" \
               -d '{"status": "completed", "runId": "${{ github.run_id }}", "repo": "${{ github.repository }}"}' || echo "Webhook failed"
           fi
- $SUPREMEAI_WEBHOOK_SECRET" \
-              -d '{"status": "completed", "runId": "${{ github.run_id }}", "repo": "${{ github.repository }}"}' || echo "Webhook failed"
-          fi
