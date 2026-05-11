@@ -32,6 +32,7 @@ interface APIProvider {
     canCommunicate?: boolean;
     canExecuteTasks?: boolean;
     canParticipateInVoting?: boolean;
+    deploymentSource?: 'api' | 'gcloud' | 'local' | 'ollama';
 }
 
 const APIManagement: React.FC = () => {
@@ -160,7 +161,12 @@ const APIManagement: React.FC = () => {
                         {r.status === 'dead' && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />}
                     </div>
                     <div className="flex flex-col leading-tight">
-                        <span className="text-[11px] font-bold text-white/90">{r.name}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-white/90">{r.name}</span>
+                            <Tag color={r.deploymentSource === 'gcloud' ? 'purple' : 'blue'} className="m-0 text-[7px] px-1 py-0 border-0 bg-opacity-10 leading-normal">
+                                {r.deploymentSource?.toUpperCase() || 'API'}
+                            </Tag>
+                        </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[9px] font-mono text-white/30 uppercase tracking-tighter">{r.type}</span>
                             {r.accountEmail && (
@@ -196,9 +202,9 @@ const APIManagement: React.FC = () => {
             key: 'capabilities',
             render: (_: any, r: APIProvider) => (
                 <div className="flex gap-1">
-                    {r.canCommunicate && <Tooltip title="Communication Mode"><Tag color="blue" className="m-0 text-[8px] px-1 py-0 border-0 bg-blue-500/10 text-blue-400">COMM</Tag></Tooltip>}
-                    {r.canExecuteTasks && <Tooltip title="Task Execution Mode"><Tag color="emerald" className="m-0 text-[8px] px-1 py-0 border-0 bg-emerald-500/10 text-emerald-400">TASK</Tag></Tooltip>}
-                    {r.canParticipateInVoting && <Tooltip title="Voting Participant"><Tag color="purple" className="m-0 text-[8px] px-1 py-0 border-0 bg-purple-500/10 text-purple-400">VOTE</Tag></Tooltip>}
+                    {r.canCommunicate && <Tooltip title="Scenario: Communication Helper"><Tag color="blue" className="m-0 text-[8px] px-1 py-0 border-0 bg-blue-500/10 text-blue-400">COMM</Tag></Tooltip>}
+                    {r.canExecuteTasks && <Tooltip title="Scenario: Task Executor"><Tag color="emerald" className="m-0 text-[8px] px-1 py-0 border-0 bg-emerald-500/10 text-emerald-400">TASK</Tag></Tooltip>}
+                    {r.canParticipateInVoting && <Tooltip title="Scenario: Voting Participant"><Tag color="purple" className="m-0 text-[8px] px-1 py-0 border-0 bg-purple-500/10 text-purple-400">VOTE</Tag></Tooltip>}
                 </div>
             )
         },
@@ -382,7 +388,7 @@ const APIManagement: React.FC = () => {
 
                     {/* Right: Configuration Form */}
                     <Form form={form} layout="vertical" onFinish={handleAction}>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <Form.Item name="name" label={<span className="text-[9px] font-black text-white/40 uppercase">Model Identity</span>} rules={[{ required: true }]}>
                                 <Input className="dark-input font-mono" placeholder="gpt-4o" />
                             </Form.Item>
@@ -391,6 +397,14 @@ const APIManagement: React.FC = () => {
                                     <Select.Option value="llm">NEURAL_LANGUAGE</Select.Option>
                                     <Select.Option value="image">VISUAL_SYNTHESIS</Select.Option>
                                     <Select.Option value="voice">AUDITORY_LOGIC</Select.Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item name="deploymentSource" label={<span className="text-[9px] font-black text-white/40 uppercase">Deployment Source</span>} initialValue="api">
+                                <Select className="dark-select">
+                                    <Select.Option value="api">PUBLIC_API</Select.Option>
+                                    <Select.Option value="gcloud">GCLOUD_DEPLOYED</Select.Option>
+                                    <Select.Option value="local">LOCAL_HOSTED</Select.Option>
+                                    <Select.Option value="ollama">OLLAMA_NODE</Select.Option>
                                 </Select>
                             </Form.Item>
                         </div>

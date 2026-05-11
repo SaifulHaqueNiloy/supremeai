@@ -226,13 +226,7 @@ const AdminDashboardUnified: React.FC = () => {
                     {
                         key: 'providers',
                         icon: <RobotOutlined className="text-emerald-500" />,
-                        label: <span className="text-[10px] font-black uppercase tracking-[0.1em]">Model Registry</span>,
-                    },
-                    {
-                        key: 'chat',
-                        icon: <MessageOutlined className="text-cyan-500" />,
-                        label: <span className="text-[10px] font-black uppercase tracking-[0.1em]">Neural Link</span>,
-                        onClick: () => setChatVisible(true)
+                        label: <span className="text-[10px] font-black uppercase tracking-[0.1em]">Model Scenarios</span>,
                     }
                 ]
             }
