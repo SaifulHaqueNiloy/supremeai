@@ -45,6 +45,7 @@ public class AIFallbackOrchestrator {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final Map<AIProviderType, CircuitBreaker> providerCircuitBreakers = new EnumMap<>(AIProviderType.class);
+    private final com.supremeai.repository.ProviderRepository providerRepository;
 
     private final List<AIProviderType> allProviders = Arrays.asList(
             // Tier 1: High Performance External
@@ -74,7 +75,9 @@ public class AIFallbackOrchestrator {
                                   GlobalKnowledgeBase knowledgeBase, CodeImmunitySystem immunitySystem,
                                   AIProfiler aiProfiler, RetryableAIExecutor retryExecutor,
                                   ApiKeyRotationService keyRotationService,
-                                  AIProviderFactory providerFactory) {
+                                  AIProviderFactory providerFactory,
+                                  com.supremeai.repository.ProviderRepository providerRepository) {
+        this.providerRepository = providerRepository;
         this.quotaManager = quotaManager;
         this.knowledgeBase = knowledgeBase;
         this.immunitySystem = immunitySystem;
@@ -125,10 +128,44 @@ public class AIFallbackOrchestrator {
         AIProviderType expertProvider = aiProfiler.getBestAIForTask(taskCategory);
 
         List<AIProviderType> dynamicChain = new ArrayList<>();
-        dynamicChain.add(expertProvider);
+        if (expertProvider != null) {
+            dynamicChain.add(expertProvider);
+        }
+
+        // Add dynamic providers from DB
+        try {
+            List<com.supremeai.model.APIProvider> dbProviders = providerRepository.findAll()
+                .filter(p -> "active".equals(p.getStatus()))
+                .filter(p -> {
+                    if ("CHAT".equalsIgnoreCase(taskCategory) || "COMMUNICATION".equalsIgnoreCase(taskCategory)) {
+                        return p.isCanCommunicate();
+                    } else {
+                        return p.isCanExecuteTasks();
+                    }
+                })
+                .sort(java.util.Comparator.comparingInt(com.supremeai.model.APIProvider::getPriority))
+                .collectList()
+                .block(java.time.Duration.ofSeconds(3));
+            
+            if (dbProviders != null) {
+                for (com.supremeai.model.APIProvider dbp : dbProviders) {
+                    try {
+                        AIProviderType type = AIProviderType.valueOf(dbp.getType().toUpperCase());
+                        if (!dynamicChain.contains(type)) {
+                            dynamicChain.add(type);
+                        }
+                    } catch (Exception e) {
+                        // Custom provider not in enum, we might need a different way to handle them
+                        // For now, only handle standard providers that are in the database
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to load dynamic providers: {}", e.getMessage());
+        }
 
         for (AIProviderType p : allProviders) {
-            if (p != expertProvider) dynamicChain.add(p);
+            if (!dynamicChain.contains(p)) dynamicChain.add(p);
         }
 
         // STEP 3: EXECUTE WITH CIRCUIT BREAKER + RETRY
@@ -323,6 +360,11 @@ public class AIFallbackOrchestrator {
             case MISTRAL: return "mistral";
             case STEPFUN: return "stepfun";
             case OLLAMA: return "ollama";
+            case CLOUD_QWEN: return "gcp_qwen";
+            case CLOUD_LLAMA: return "gcp_llama";
+            case CLOUD_DEEPSEEK: return "hf_deepseek";
+            case CLOUD_PHI: return "gcp_phi";
+            case CLOUD_NOMIC: return "gcp_nomic";
             default: return provider.name().toLowerCase();
         }
     }

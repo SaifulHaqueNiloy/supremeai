@@ -1,9 +1,9 @@
 package com.supremeai.service;
 
-import com.supremeai.ai.client.OpenAIClient;
+import com.supremeai.fallback.AIFallbackOrchestrator;
 import com.supremeai.model.EntityDefinition;
 import com.supremeai.model.FieldDefinition;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,13 +17,10 @@ import java.util.stream.Collectors;
 @Service
 public class CodeGenerationServiceEnhanced {
 
-    @Value("${openai.api.key:#{null}}")
-    private String openAiApiKey;
+    @Autowired
+    private AIFallbackOrchestrator aiFallbackOrchestrator;
     
-    private final OpenAIClient openAIClient;
-    
-    public CodeGenerationServiceEnhanced(OpenAIClient openAIClient) {
-        this.openAIClient = openAIClient;
+    public CodeGenerationServiceEnhanced() {
     }
     
     /**
@@ -114,23 +111,21 @@ public class CodeGenerationServiceEnhanced {
      * Generate entity class using AI for optimal structure
      */
     private String generateEntityWithAI(EntityDefinition entity) {
-        if (openAiApiKey != null && !openAiApiKey.isEmpty()) {
-            try {
-                String prompt = "Generate a Spring Boot JPA entity class for: " + 
-                               entity.getName() + " with fields: " + 
-                               entity.getFields().stream()
-                                   .map(f -> f.getName() + ":" + f.getType())
-                                   .collect(Collectors.joining(", ")) +
-                               ". Include proper annotations, relationships, " +
-                               "validation, and Lombok annotations.";
-                
-                String aiResponse = openAIClient.generate(prompt);
-                if (aiResponse != null && !aiResponse.isEmpty()) {
-                    return aiResponse;
-                }
-            } catch (Exception e) {
-                // Fallback to template generation
+        try {
+            String prompt = "Generate a Spring Boot JPA entity class for: " + 
+                           entity.getName() + " with fields: " + 
+                           entity.getFields().stream()
+                               .map(f -> f.getName() + ":" + f.getType())
+                               .collect(Collectors.joining(", ")) +
+                           ". Include proper annotations, relationships, " +
+                           "validation, and Lombok annotations.";
+            
+            String aiResponse = aiFallbackOrchestrator.executeWithSupremeIntelligence("CODE_GEN", "entity_gen", prompt);
+            if (aiResponse != null && !aiResponse.isEmpty()) {
+                return aiResponse;
             }
+        } catch (Exception e) {
+            // Fallback to template generation
         }
         
         // Fallback: Template-based generation

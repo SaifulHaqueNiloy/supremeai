@@ -115,7 +115,7 @@ const getIcon = (iconName: string) => {
 };
 
 const AdminDashboardUnified: React.FC = () => {
-    const [selectedKey, setSelectedKey] = useState('overview');
+    const [selectedKey, setSelectedKey] = useState('providers');
     const [contract, setContract] = useState<DashboardContract | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -215,45 +215,16 @@ const AdminDashboardUnified: React.FC = () => {
         if (!contract) return [];
         return [
             {
-                key: 'dashboard',
-                label: 'STATS',
-                type: 'group' as const,
-                children: contract.navigation
-                    .filter(i => ['overview', 'metrics', 'analytics'].includes(i.key))
-                    .map(item => ({
-                        key: item.key,
-                        icon: getIcon(item.icon),
-                        label: <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>,
-                    }))
-            },
-            {
                 key: 'ai',
                 label: 'INTELLIGENCE',
                 type: 'group' as const,
                 children: contract.navigation
-                    .filter(i => ['ai-agents', 'providers', 'system-learning', 'ai-systems'].includes(i.key))
+                    .filter(i => i.key === 'providers')
                     .map(item => ({
-                        key: item.key === 'ai-systems' ? 'ai-agents' : item.key,
+                        key: item.key,
                         icon: getIcon(item.icon),
                         label: <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{item.label}</span>,
                     }))
-            },
-            {
-                key: 'ops',
-                label: 'OPERATIONS',
-                type: 'group' as const,
-                children: [
-                    ...contract.navigation
-                        .filter(i => ['requirements', 'ocr', 'exploitation-techniques', 'phases', 'vpn', 'audit', 'browser-activity'].includes(i.key))
-                        .map(item => ({
-                            key: item.key,
-                            icon: getIcon(item.icon),
-                            label: <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{item.label}</span>,
-                        })),
-                    { key: 'rules', icon: <SafetyCertificateOutlined />, label: <span className="text-[9px] font-bold uppercase tracking-[0.1em]">Rules</span> },
-                    { key: 'history', icon: <HistoryOutlined />, label: <span className="text-[9px] font-bold uppercase tracking-[0.1em]">History</span> },
-                    { key: 'config', icon: <SettingOutlined />, label: <span className="text-[9px] font-bold uppercase tracking-[0.1em]">Config</span> }
-                ]
             }
         ];
     }, [contract]);

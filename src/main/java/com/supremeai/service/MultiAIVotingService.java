@@ -51,6 +51,9 @@ public class MultiAIVotingService {
     @Autowired
     private KnowledgeFeedbackService feedbackService;
 
+    @Autowired
+    private com.supremeai.repository.ProviderRepository providerRepository;
+
     // Executors
     private final ExecutorService ensembleExecutor = Executors.newFixedThreadPool(20);
     private final java.util.concurrent.ExecutorService decisionExecutor;
@@ -110,7 +113,18 @@ public class MultiAIVotingService {
     @Cacheable(value = "ai_responses", key = "#prompt + '_10ai_vote'")
     public VotingResult executeEnsembleVoting(String prompt, List<String> selectedModels, long timeoutMs) {
         if (selectedModels == null || selectedModels.isEmpty()) {
-            selectedModels = Arrays.asList(TEN_AI_MODELS);
+            // Fetch dynamic models from repository
+            List<String> dynamicModels = providerRepository.findAll()
+                .filter(p -> "active".equals(p.getStatus()) && p.isCanParticipateInVoting())
+                .map(p -> p.getName().toLowerCase())
+                .collectList()
+                .block(java.time.Duration.ofSeconds(5));
+            
+            if (dynamicModels != null && !dynamicModels.isEmpty()) {
+                selectedModels = dynamicModels;
+            } else {
+                selectedModels = Arrays.asList(TEN_AI_MODELS);
+            }
         }
 
         logger.info("Starting ensemble voting with {} models for prompt: {}",
@@ -201,7 +215,16 @@ public class MultiAIVotingService {
     public VotingDecision conductDecisionVote(String question, String context) {
         logger.info("Starting decision voting for question: {}", question);
 
-        List<String> providerList = Arrays.asList(activeProviders.split(","));
+        List<String> providerList = providerRepository.findAll()
+                .filter(p -> "active".equals(p.getStatus()) && p.isCanParticipateInVoting())
+                .map(p -> p.getName().toLowerCase())
+                .collectList()
+                .block(java.time.Duration.ofSeconds(5));
+        
+        if (providerList == null || providerList.isEmpty()) {
+            providerList = Arrays.asList(activeProviders.split(","));
+        }
+
         List<CompletableFuture<ProviderVote>> futures = new ArrayList<>();
 
         for (String providerName : providerList) {
@@ -322,11 +345,18 @@ public class MultiAIVotingService {
         }
 
         if (providerNames.size() < count) {
-            String[] allDefaults = providerFactory.getAllProviderNames();
-            for (String p : allDefaults) {
-                if (providerNames.size() >= count) break;
-                if (!providerNames.contains(p)) {
-                    providerNames.add(p);
+            List<String> dynamicDefaults = providerRepository.findAll()
+                .filter(p -> "active".equals(p.getStatus()) && p.isCanParticipateInVoting())
+                .map(p -> p.getName().toLowerCase())
+                .collectList()
+                .block(java.time.Duration.ofSeconds(5));
+                
+            if (dynamicDefaults != null) {
+                for (String p : dynamicDefaults) {
+                    if (providerNames.size() >= count) break;
+                    if (!providerNames.contains(p)) {
+                        providerNames.add(p);
+                    }
                 }
             }
         }

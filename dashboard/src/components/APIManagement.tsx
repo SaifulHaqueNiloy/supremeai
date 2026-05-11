@@ -1,6 +1,6 @@
 // APIManagement.tsx - ULTRA-DENSE PROVIDER MATRIX with INTERNET DISCOVERY
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Tooltip, Popconfirm, message, List, Avatar, Badge, Spin } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Space, Tooltip, Popconfirm, message, List, Avatar, Badge, Spin, Tag, Switch } from 'antd';
 import { 
     PlusOutlined, 
     DeleteOutlined, 
@@ -29,6 +29,9 @@ interface APIProvider {
     apiCount?: number;
     usageLimit?: number;
     currentUsage?: number;
+    canCommunicate?: boolean;
+    canExecuteTasks?: boolean;
+    canParticipateInVoting?: boolean;
 }
 
 const APIManagement: React.FC = () => {
@@ -41,6 +44,11 @@ const APIManagement: React.FC = () => {
     const [validating, setValidating] = useState<string | null>(null);
     const [form] = Form.useForm();
     const [editingId, setEditingId] = useState<string | null>(null);
+    
+    // Watch fields for real-time UI updates in modal
+    const canCommunicate = Form.useWatch('canCommunicate', form);
+    const canExecuteTasks = Form.useWatch('canExecuteTasks', form);
+    const canParticipateInVoting = Form.useWatch('canParticipateInVoting', form);
 
     useEffect(() => {
         fetchProviders();
@@ -180,6 +188,17 @@ const APIManagement: React.FC = () => {
                             style={{ width: `${Math.min(100, (r.currentUsage || 0) / (r.usageLimit || 100) * 100)}%` }}
                         />
                     </div>
+                </div>
+            )
+        },
+        {
+            title: <span className="text-[9px] uppercase tracking-tighter opacity-50">Capabilities</span>,
+            key: 'capabilities',
+            render: (_: any, r: APIProvider) => (
+                <div className="flex gap-1">
+                    {r.canCommunicate && <Tooltip title="Communication Mode"><Tag color="blue" className="m-0 text-[8px] px-1 py-0 border-0 bg-blue-500/10 text-blue-400">COMM</Tag></Tooltip>}
+                    {r.canExecuteTasks && <Tooltip title="Task Execution Mode"><Tag color="emerald" className="m-0 text-[8px] px-1 py-0 border-0 bg-emerald-500/10 text-emerald-400">TASK</Tag></Tooltip>}
+                    {r.canParticipateInVoting && <Tooltip title="Voting Participant"><Tag color="purple" className="m-0 text-[8px] px-1 py-0 border-0 bg-purple-500/10 text-purple-400">VOTE</Tag></Tooltip>}
                 </div>
             )
         },
@@ -392,6 +411,36 @@ const APIManagement: React.FC = () => {
                         <Form.Item name="models" label={<span className="text-[9px] font-black text-white/40 uppercase">Attached Capabilities</span>}>
                             <Select mode="tags" className="dark-select" placeholder="Add model identifiers..." />
                         </Form.Item>
+
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                            <Form.Item name="canCommunicate" valuePropName="checked" noStyle>
+                                <div 
+                                    className={`p-2 rounded border cursor-pointer transition-all flex flex-col items-center gap-1 ${canCommunicate ? 'bg-blue-500/20 border-blue-500/50' : 'bg-white/[0.02] border-white/5'}`} 
+                                    onClick={() => form.setFieldsValue({ canCommunicate: !canCommunicate })}
+                                >
+                                    <ThunderboltOutlined className={canCommunicate ? 'text-blue-400' : 'text-white/20'} />
+                                    <span className="text-[8px] font-black uppercase text-center leading-tight">Communication</span>
+                                </div>
+                            </Form.Item>
+                            <Form.Item name="canExecuteTasks" valuePropName="checked" noStyle>
+                                <div 
+                                    className={`p-2 rounded border cursor-pointer transition-all flex flex-col items-center gap-1 ${canExecuteTasks ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-white/[0.02] border-white/5'}`} 
+                                    onClick={() => form.setFieldsValue({ canExecuteTasks: !canExecuteTasks })}
+                                >
+                                    <CloudServerOutlined className={canExecuteTasks ? 'text-emerald-400' : 'text-white/20'} />
+                                    <span className="text-[8px] font-black uppercase text-center leading-tight">Task execution</span>
+                                </div>
+                            </Form.Item>
+                            <Form.Item name="canParticipateInVoting" valuePropName="checked" noStyle>
+                                <div 
+                                    className={`p-2 rounded border cursor-pointer transition-all flex flex-col items-center gap-1 ${canParticipateInVoting ? 'bg-purple-500/20 border-purple-500/50' : 'bg-white/[0.02] border-white/5'}`} 
+                                    onClick={() => form.setFieldsValue({ canParticipateInVoting: !canParticipateInVoting })}
+                                >
+                                    <SafetyCertificateOutlined className={canParticipateInVoting ? 'text-purple-400' : 'text-white/20'} />
+                                    <span className="text-[8px] font-black uppercase text-center leading-tight">Ensemble voting</span>
+                                </div>
+                            </Form.Item>
+                        </div>
 
                         <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg flex items-center justify-between">
                             <div className="flex flex-col">

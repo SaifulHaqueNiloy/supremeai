@@ -27,6 +27,10 @@ public class APIProvider {
     private java.util.List<String> capabilities = new java.util.ArrayList<>();
     private java.util.List<String> languages = new java.util.ArrayList<>();
     private Integer priority = 10;
+    
+    private boolean canCommunicate = true;
+    private boolean canExecuteTasks = true;
+    private boolean canParticipateInVoting = true;
 
     public APIProvider() {}
 
@@ -75,4 +79,13 @@ public class APIProvider {
 
     public String getAccountEmail() { return accountEmail; }
     public void setAccountEmail(String accountEmail) { this.accountEmail = accountEmail; }
+
+    public boolean isCanCommunicate() { return canCommunicate; }
+    public void setCanCommunicate(boolean canCommunicate) { this.canCommunicate = canCommunicate; }
+
+    public boolean isCanExecuteTasks() { return canExecuteTasks; }
+    public void setCanExecuteTasks(boolean canExecuteTasks) { this.canExecuteTasks = canExecuteTasks; }
+
+    public boolean isCanParticipateInVoting() { return canParticipateInVoting; }
+    public void setCanParticipateInVoting(boolean canParticipateInVoting) { this.canParticipateInVoting = canParticipateInVoting; }
 }

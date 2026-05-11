@@ -5,6 +5,8 @@ import com.supremeai.repository.*;
 import org.springframework.stereotype.Service;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import com.supremeai.fallback.AIFallbackOrchestrator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -19,6 +21,7 @@ public class ChatProcessingService {
     private final ChatCommandRepository chatCommandRepository;
     private final ChatConfirmationRepository chatConfirmationRepository;
     private final ChatHistoryRepository chatHistoryRepository;
+    private final AIFallbackOrchestrator fallbackOrchestrator;
 
     // In-memory pending confirmations (like Flask)
     private final Map<String, PendingItem> pendingConfirmations = new ConcurrentHashMap<>();
@@ -28,13 +31,15 @@ public class ChatProcessingService {
                                  ChatPlanRepository chatPlanRepository,
                                  ChatCommandRepository chatCommandRepository,
                                  ChatConfirmationRepository chatConfirmationRepository,
-                                 ChatHistoryRepository chatHistoryRepository) {
+                                 ChatHistoryRepository chatHistoryRepository,
+                                 AIFallbackOrchestrator fallbackOrchestrator) {
         this.chatClassifier = chatClassifier;
         this.chatRuleRepository = chatRuleRepository;
         this.chatPlanRepository = chatPlanRepository;
         this.chatCommandRepository = chatCommandRepository;
         this.chatConfirmationRepository = chatConfirmationRepository;
         this.chatHistoryRepository = chatHistoryRepository;
+        this.fallbackOrchestrator = fallbackOrchestrator;
     }
 
     public Mono<Map<String, Object>> processMessage(String userId, String message, boolean isAdmin) {
@@ -82,7 +87,27 @@ public class ChatProcessingService {
                         });
                 }
 
-                return Mono.just(result);
+                // For NORMAL chat, generate an AI response using the fallback orchestrator
+                return Mono.fromCallable(() -> {
+                    try {
+                        return fallbackOrchestrator.executeWithSupremeIntelligence(
+                            "chat", "casual_chat", message, userId
+                        );
+                    } catch (Exception e) {
+                        return "আমি দুঃখিত, এই মুহূর্তে আমি উত্তর দিতে পারছি না। (AI Error: " + e.getMessage() + ")";
+                    }
+                }).subscribeOn(Schedulers.boundedElastic())
+                .flatMap(aiResponse -> {
+                    ChatMessage aiMsg = new ChatMessage();
+                    aiMsg.setId(generateId("chat_ai"));
+                    aiMsg.setUserId(userId);
+                    aiMsg.setContent(aiResponse);
+                    aiMsg.setRole("ai");
+                    aiMsg.setTimestamp(LocalDateTime.now());
+                    
+                    result.put("response", aiResponse);
+                    return chatHistoryRepository.save(aiMsg).thenReturn(result);
+                });
             });
     }
 

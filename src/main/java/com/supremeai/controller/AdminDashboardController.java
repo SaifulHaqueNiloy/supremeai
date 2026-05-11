@@ -169,33 +169,13 @@ private final ContextualAIRankingService contextualRankingService;
         
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> navigation = (List<Map<String, Object>>) uiMetadata.getOrDefault("navigation", List.of(
-                createNavItem("overview", "Dashboard", "📊", "System overview and key performance metrics", true),
-                createNavItem("ai-agents", "AI Agents", "🤖", "Monitor and assign autonomous agents", true),
-                createNavItem("system-learning", "Intelligence", "🧠", "Knowledge harvester and system evolution status", true),
-                createNavItem("requirements", "Requirements", "📝", "Requirement elicitation and analysis", true),
-                createNavItem("ocr", "OCR Vision", "👁️", "Neural vision and document processing", true),
-                createNavItem("exploitation-techniques", "Defense Hub", "🛡️", "Exploitation and defense analysis", true),
-                createNavItem("vpn", "VPN Security", "🔒", "Secure tunnel and proxy orchestration", true),
-                createNavItem("audit", "Audit Logs", "📝", "Full traceability of system and admin actions", true),
-                createNavItem("phases", "Roadmap", "🗺️", "Implementation progress and feature roadmap", true),
-                createNavItem("providers", "AI Providers", "🔌", "Manage LLM and AI service connections", true),
-                createNavItem("rules", "Protocols", "⚖️", "System governance and behavioral rules", true),
-                createNavItem("config", "System Config", "⚙️", "Global platform and system configurations", true)
+                createNavItem("providers", "AI Provider Hub", "🔌", "Manage LLM and AI service connections", true)
         ));
         contract.put("navigation", navigation);
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> components = (List<Map<String, Object>>) uiMetadata.getOrDefault("components", List.of(
-                createComponent("studio", "SupremeAI Studio", "🚀", "Development", true, Map.of("endpoint", "/api/orchestrate/requirement")),
-                createComponent("phases", "Roadmap Overview", "🗺️", "Management", true, Map.of()),
-                createComponent("ai-agents", "AI Agent Assignment", "🤖", "AI Systems", true, Map.of("endpoint", "/api/admin/agents")),
-                createComponent("projects", "Project Manager", "📦", "Development", true, Map.of("endpoint", "/api/admin/projects")),
-                createComponent("metrics", "System Metrics", "📊", "Operations", true, Map.of("endpoint", "/api/admin/metrics")),
-                createComponent("learning", "System Learning", "📚", "Intelligence", true, Map.of("endpoint", "/api/admin/learning")),
-                createComponent("vpn", "VPN Orchestrator", "🔒", "Infrastructure", true, Map.of("endpoint", "/api/admin/vpn")),
-                createComponent("audit", "Audit Explorer", "📝", "Security", true, Map.of("endpoint", "/api/admin/audit")),
-                createComponent("settings", "Global Settings", "⚙️", "Admin", true, Map.of("endpoint", "/api/admin/settings")),
-                createComponent("exploitation-techniques", "Exploitation Dashboard", "⚔️", "Security", true, Map.of("endpoint", "/api/admin/security/exploitation"))
+                createComponent("providers", "AI Provider Hub", "🔌", "Intelligence", true, Map.of("endpoint", "/api/admin/providers/configured"))
         ));
         contract.put("components", components);
 

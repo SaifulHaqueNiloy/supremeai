@@ -13,6 +13,10 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Collectors;
 
 /**
@@ -107,16 +111,16 @@ public class AIProviderDiscoveryService {
     }
 
     /**
-     * Scans for local or cloud-deployed models (e.g. Ollama, Local endpoints).
+     * Scans for local or cloud-deployed models (e.g. Ollama, Cloud Run endpoints).
      */
     public Flux<Map<String, Object>> scanDeployments() {
-        // Ping localhost:11434 for Ollama
-        return webClient.get()
+        Flux<Map<String, Object>> ollamaModels = webClient.get()
                 .uri(ollamaEndpoint + "/api/tags")
                 .retrieve()
                 .bodyToMono(Map.class)
                 .flatMapMany(m -> {
                     List<Map<String, Object>> models = (List<Map<String, Object>>) m.get("models");
+                    if (models == null) return Flux.empty();
                     return Flux.fromIterable(models.stream()
                             .map(model -> Map.<String, Object>of(
                                 "name", model.get("name"),
@@ -127,6 +131,47 @@ public class AIProviderDiscoveryService {
                             .collect(Collectors.toList()));
                 })
                 .onErrorResume(e -> Flux.empty());
+
+        Flux<Map<String, Object>> cloudRunModels = Flux.defer(() -> {
+            try {
+                Process process = Runtime.getRuntime().exec("gcloud run services list --format=json");
+                return Mono.fromCallable(() -> {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                        String json = reader.lines().collect(Collectors.joining("\n"));
+                        ObjectMapper mapper = new ObjectMapper();
+                        List<Map<String, Object>> services = mapper.readValue(json, List.class);
+                        
+                        return services.stream()
+                            .filter(s -> {
+                                String name = (String) ((Map) s.get("metadata")).get("name");
+                                String n = name.toLowerCase();
+                                return n.contains("ai") || n.contains("model") || n.contains("llama") || 
+                                       n.contains("mistral") || n.contains("gpt") || n.contains("embed") ||
+                                       n.contains("vision");
+                            })
+                            .map(s -> {
+                                Map metadata = (Map) s.get("metadata");
+                                Map status = (Map) s.get("status");
+                                String name = (String) metadata.get("name");
+                                String url = (String) status.get("url");
+                                return Map.<String, Object>of(
+                                    "name", name,
+                                    "provider", "google-cloud",
+                                    "type", "llm",
+                                    "baseUrl", url,
+                                    "description", "Cloud Run Deployment: " + name
+                                );
+                            })
+                            .collect(Collectors.toList());
+                    }
+                }).flatMapMany(Flux::fromIterable);
+            } catch (Exception e) {
+                logger.error("Failed to scan Cloud Run services: {}", e.getMessage());
+                return Flux.empty();
+            }
+        });
+
+        return Flux.merge(ollamaModels, cloudRunModels);
     }
 }
 
