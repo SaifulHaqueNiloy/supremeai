@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboardUnified from './pages/AdminDashboardUnified';
 import ModernAdminDashboard from './pages/ModernAdminDashboard';
+import LoginPage from './pages/LoginPage';
 
 interface ModelStatus {
   id: string;
@@ -175,6 +176,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Authentication */}
+        <Route path="/login" element={<LoginPage />} />
         {/* Modern clean admin dashboard */}
         <Route path="/" element={<ModernAdminDashboard />} />
         {/* Legacy 3D visualizer */}

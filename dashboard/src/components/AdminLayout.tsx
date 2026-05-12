@@ -167,7 +167,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ title, children }) => {
           </Link>
         </div>
 
-        <nav style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', overflow: 'auto' }}>
+        <nav className="no-scrollbar" style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', overflow: 'auto' }}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.key;
             return (

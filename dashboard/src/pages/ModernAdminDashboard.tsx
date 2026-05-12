@@ -1,6 +1,6 @@
 // ModernAdminDashboard.tsx - Cinematic AI Command Center
 import React, { useState, useEffect, useRef } from 'react';
-import { Layout, Menu, Button, Avatar, theme, Badge, Typography, Space, Tooltip, Progress } from 'antd';
+import { Layout, Menu, Button, Avatar, theme, Badge, Typography, Space, Tooltip, Progress, ConfigProvider, Drawer, message } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DashboardOutlined,
@@ -10,8 +10,10 @@ import {
   SettingOutlined,
   BulbOutlined,
   LogoutOutlined,
+  LoginOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  MenuOutlined,
   ThunderboltOutlined,
   GlobalOutlined,
   SafetyOutlined,
@@ -154,7 +156,7 @@ const TerminalLogs = () => {
       <div style={{ overflowY: 'auto', height: '180px' }}>
         {logs.map((log, i) => (
           <div key={i} style={{ marginBottom: 4, opacity: (i + 1) / logs.length, fontSize: 11 }}>
-            <span style={{ color: log.includes('WARN') ? '#f59e0b' : log.includes('SYSTEM') ? '#bc13fe' : '#00f3ff' }}>{"> "}</span>
+            <span style={{ color: log.includes('WARN') ? 'var(--warning)' : log.includes('SYSTEM') ? 'var(--neon-purple)' : 'var(--neon-blue)' }}>{"> "}</span>
             {log}
           </div>
         ))}
@@ -200,12 +202,12 @@ const RestrictedDemo: React.FC<{title: string; description: string; icon: React.
     <div className="pulsing" style={{ marginBottom: 32 }}>
       <LockOutlined style={{ fontSize: 80, color: '#f59e0b', opacity: 0.8 }} />
     </div>
-    <Title level={2} style={{ color: '#f59e0b', marginBottom: 16, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+    <Title level={2} style={{ color: 'var(--warning)', marginBottom: 16, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
       অ্যাক্সেস প্রত্যাখ্যান করা হয়েছে
     </Title>
-    <p style={{ color: 'rgba(255,255,255,0.7)', maxWidth: 600, margin: '0 auto 40px', fontSize: 18, lineHeight: 1.8 }}>
-      নিরাপত্তা প্রোটোকল <Text code style={{ color: '#f59e0b' }}>LVL-4</Text> সক্রিয়। 
-      মডিউল <Text strong style={{ color: '#fff' }}>{title}</Text> শুধুমাত্র প্রশাসকদের জন্য এনক্রিপ্ট করা হয়েছে।
+    <p style={{ color: 'var(--text-dim)', maxWidth: 600, margin: '0 auto 40px', fontSize: 18, lineHeight: 1.8 }}>
+      নিরাপত্তা প্রোটোকল <Text code style={{ color: 'var(--warning)' }}>LVL-4</Text> সক্রিয়। 
+      মডিউল <Text strong style={{ color: 'var(--text-main)' }}>{title}</Text> শুধুমাত্র প্রশাসকদের জন্য এনক্রিপ্ট করা হয়েছে।
     </p>
     <Space size="large">
       <Button
@@ -236,6 +238,7 @@ export default function ModernAdminDashboard() {
   const [darkMode, setDarkMode] = useState(true);
   const [chatFont, setChatFont] = useState(localStorage.getItem('chatFont') || 'font-mono');
   const [mounted, setMounted] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -285,7 +288,7 @@ export default function ModernAdminDashboard() {
       <div style={{ height: '100%', padding: '0 0 40px 0' }}>
         {(() => {
           switch (activeKey) {
-            case 'dashboard': return <DashboardHome />;
+            case 'dashboard': return <DashboardHome isAdmin={isAdmin} setActiveKey={setActiveKey} />;
             case 'ai': return <ChatWithAI chatFont={chatFont} />;
             case 'projects': return <AdminProjects />;
             
@@ -309,191 +312,176 @@ export default function ModernAdminDashboard() {
             case 'ocr': return <AdminOCR />;
             
             case 'settings': return isAdmin ? <AdminSettings darkMode={darkMode} setDarkMode={setDarkMode} chatFont={chatFont} setChatFont={setChatFont} /> : <UserSettings darkMode={darkMode} setDarkMode={setDarkMode} chatFont={chatFont} setChatFont={setChatFont} />;
-            default: return <DashboardHome />;
+            default: return <DashboardHome isAdmin={isAdmin} setActiveKey={setActiveKey} />;
           }
         })()}
       </div>
     );
   };
 
-  function DashboardHome() {
-    return (
-      <div style={{ padding: '20px 40px', position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48 }}>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Title level={1} className="text-gradient" style={{ margin: 0, fontSize: 48, fontWeight: 800, letterSpacing: '-1px' }}>
-              SupremeAI অর্কেস্ট্রেটর
-            </Title>
-            <Space align="center" style={{ marginTop: 8 }}>
-              <div className="cyber-badge">সক্রিয়</div>
-              <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, letterSpacing: 1, textTransform: 'uppercase' }}>
-                কার্নেল আইডি: <Text style={{ color: 'var(--neon-blue)' }}>SAI-X900</Text> | ভার্সন: <Text style={{ color: '#bc13fe' }}>4.2.0</Text>
-              </Text>
-            </Space>
-          </motion.div>
-          
-          <div style={{ width: 200 }}>
-             <NeuralCore />
-          </div>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: 32
-        }}>
-          {/* Main Controls */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-            <motion.div whileHover={{ scale: 1.02 }} className="ai-card" style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
-                <RobotOutlined style={{ fontSize: 32, color: 'var(--neon-blue)' }} />
-                <Waveform />
-              </div>
-              <Title level={3} style={{ color: '#fff', marginBottom: 12 }}>নিউরাল নেক্সাস</Title>
-              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, fontSize: 15, marginBottom: 24 }}>
-                সিস্টেম ইন্টেলিজেন্সের সাথে সরাসরি যোগাযোগ করুন। মাল্টি-মোডাল ফ্লো এবং এজেন্টিক যুক্তি কার্যকর করুন।
-              </p>
-              <Button className="cyber-button" icon={<ThunderboltOutlined />} onClick={() => setActiveKey('ai')} style={{ width: '100%' }}>
-                লিঙ্ক শুরু করুন
-              </Button>
-            </motion.div>
-
-            <TerminalLogs />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-            {/* Dynamic Metrics */}
-            <motion.div className="ai-card glass-panel" style={{ background: 'rgba(188, 19, 254, 0.05)' }}>
-               <Title level={4} style={{ color: '#fff', marginBottom: 20 }}>সিস্টেম লোড ম্যাট্রিক্স</Title>
-               <div style={{ marginBottom: 20 }}>
-                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'rgba(255,255,255,0.5)'}}>নিউরাল প্রসেসিং (NPU)</Text><Text style={{color:'var(--neon-purple)'}}>64%</Text></div>
-                 <Progress percent={64} status="active" strokeColor="var(--neon-purple)" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
-               </div>
-               <div style={{ marginBottom: 20 }}>
-                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'rgba(255,255,255,0.5)'}}>মেমোরি অ্যালোকোশন</Text><Text style={{color:'var(--neon-blue)'}}>42%</Text></div>
-                 <Progress percent={42} status="active" strokeColor="var(--neon-blue)" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
-               </div>
-               <div>
-                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'rgba(255,255,255,0.5)'}}>কোয়ান্টাম ক্যাশে</Text><Text style={{color:'#10b981'}}>89%</Text></div>
-                 <Progress percent={89} status="active" strokeColor="#10b981" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
-               </div>
-            </motion.div>
-
-            {/* Quick Actions */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-               <Button className="glass-panel" icon={<GlobalOutlined />} onClick={() => setActiveKey('vpn')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>নোডস</Button>
-               <Button className="glass-panel" icon={<SafetyOutlined />} onClick={() => setActiveKey('security')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>সিকিউর</Button>
-               <Button className="glass-panel" icon={<BarChartOutlined />} onClick={() => setActiveKey('monitoring')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>মেট্রিক্স</Button>
-               <Button className="glass-panel" icon={<ToolOutlined />} onClick={() => setActiveKey('settings')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>শেল</Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Statistics Bar */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-panel" 
-          style={{ marginTop: 40, padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <div style={{ display: 'flex', gap: 60 }}>
-            <div>
-              <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>আপটাইম</Text>
-              <Title level={4} style={{ color: 'var(--neon-blue)', margin: 0 }}>99.998%</Title>
-            </div>
-            <div>
-              <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>ল্যাটেন্সি</Text>
-              <Title level={4} style={{ color: 'var(--neon-purple)', margin: 0 }}>24ms</Title>
-            </div>
-            <div>
-              <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>এজেন্ট</Text>
-              <Title level={4} style={{ color: '#fff', margin: 0 }}>1,204</Title>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase' }}>সিকিউরিটি লেভেল</Text>
-            <Text style={{ color: isAdmin ? '#10b981' : '#f59e0b', fontWeight: 800 }}>{isAdmin ? 'কার্নেল_অ্যাক্সেস_অনুমোদিত' : 'সীমাবদ্ধ_অ্যাক্সেস'}</Text>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   if (!mounted) return null;
 
   return (
-    <Layout className="animated-bg" style={{ minHeight: '100vh', overflow: 'hidden', position: 'relative' }}>
-      <div className="bg-grid" />
-      <div className="hex-grid" />
-      <DataStream />
-      <div className="scanline" />
-      
-      <Sider 
-        collapsible 
-        collapsed={collapsed} 
-        onCollapse={setCollapsed} 
-        theme="dark"
-        className="glass-panel"
-        width={260}
-        style={{ 
-          margin: 16, 
-          borderRadius: 16, 
-          height: 'calc(100vh - 32px)',
-          border: '1px solid rgba(255,255,255,0.05)',
-          background: 'rgba(0,0,0,0.6)',
-          zIndex: 10
-        }}
-      >
-        <div style={{
-          height: 80,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.05)'
-        }}>
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            style={{
-              background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-purple))',
-              padding: '10px 16px',
-              borderRadius: 8,
-              boxShadow: '0 0 20px rgba(0, 243, 255, 0.4)',
-              color: '#000',
-              fontWeight: 900,
-              fontSize: collapsed ? 14 : 20,
-              letterSpacing: 3,
-              fontFamily: 'JetBrains Mono, monospace'
-            }}
-          >
-            {collapsed ? 'S' : 'SUPREME'}
-          </motion.div>
-        </div>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: '#00f3ff',
+          colorBgBase: '#020205',
+          colorTextBase: '#ffffff',
+          borderRadius: 8,
+          colorLink: '#00f3ff',
+        },
+        components: {
+          Layout: {
+            colorBgHeader: 'rgba(0,0,0,0.6)',
+            colorBgBody: 'transparent',
+            colorBgTrigger: '#00f3ff',
+          },
+          Menu: {
+            colorItemBg: 'transparent',
+            colorItemText: '#cbd5e1',
+            colorItemTextSelected: '#00f3ff',
+            colorItemSelectedBg: 'rgba(0, 243, 255, 0.1)',
+          },
+          Progress: {
+            remainingColor: 'rgba(255,255,255,0.05)',
+          },
+          Table: {
+            colorBgContainer: 'rgba(13, 13, 18, 0.5)',
+            colorTextHeading: '#00f3ff',
+          }
+        }
+      }}
+    >
+      <Layout className="animated-bg" style={{ minHeight: '100vh', overflow: 'hidden', position: 'relative' }}>
+        <div className="bg-grid" />
+        <div className="hex-grid" />
+        <DataStream />
+        <div className="scanline" />
         
-        <Menu
-          mode="inline"
-          selectedKeys={[activeKey]}
-          onClick={(e) => setActiveKey(e.key)}
-          items={menuItems}
+        <Sider
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
           theme="dark"
-          style={{ background: 'transparent', borderRight: 'none', marginTop: 24 }}
-        />
-        
-        {!collapsed && (
+          className="glass-panel responsive-sidebar"
+          width={260}
+          breakpoint="lg"
+          collapsedWidth={0}
+          style={{
+            margin: 16,
+            borderRadius: 16,
+            height: 'calc(100vh - 32px)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 10
+          }}
+        >
+          <div style={{
+            height: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 24px',
+            borderBottom: '1px solid rgba(255,255,255,0.05)'
+          }}>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-purple))',
+                padding: '10px 16px',
+                borderRadius: 8,
+                boxShadow: '0 0 20px rgba(0, 243, 255, 0.4)',
+                color: '#000',
+                fontWeight: 900,
+                fontSize: collapsed ? 14 : 20,
+                letterSpacing: 3,
+                fontFamily: 'JetBrains Mono, monospace'
+              }}
+            >
+              {collapsed ? 'S' : 'SUPREME'}
+            </motion.div>
+          </div>
+          
+          <Menu
+            mode="inline"
+            selectedKeys={[activeKey]}
+            onClick={(e) => setActiveKey(e.key)}
+            items={menuItems}
+            theme="dark"
+            style={{ background: 'transparent', borderRight: 'none', marginTop: 24 }}
+          />
+          
+          {!collapsed && (
+            <div style={{ position: 'absolute', bottom: 80, left: 24, right: 24 }}>
+              <div style={{ padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>অথোরাইজেশন ট্রেস</Text>
+                <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+                  {[1,2,3,4,5,6,7,8].map(i => (
+                    <div key={i} style={{ 
+                      height: 6, 
+                      flex: 1, 
+                      background: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? 'var(--neon-blue)' : 'rgba(255,255,255,0.05)',
+                      boxShadow: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? '0 0 10px var(--neon-blue)' : 'none',
+                      borderRadius: 1
+                    }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </Sider>
+
+        <Drawer
+          title={null}
+          placement="left"
+          closable={false}
+          open={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
+          className="mobile-drawer"
+          width={260}
+          bodyStyle={{ padding: 0, background: 'rgba(0,0,0,0.8)' }}
+        >
+          <div style={{
+            height: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 24px',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-purple))',
+            color: '#000',
+            fontWeight: 900,
+            fontSize: 20,
+            letterSpacing: 3,
+            fontFamily: 'JetBrains Mono, monospace'
+          }}>
+            SUPREME
+          </div>
+
+          <Menu
+            mode="inline"
+            selectedKeys={[activeKey]}
+            onClick={(e) => {
+              setActiveKey(e.key);
+              setMobileDrawerOpen(false);
+            }}
+            items={menuItems}
+            theme="dark"
+            style={{ background: 'transparent', borderRight: 'none', marginTop: 24 }}
+          />
+
           <div style={{ position: 'absolute', bottom: 80, left: 24, right: 24 }}>
             <div style={{ padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
               <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>অথোরাইজেশন ট্রেস</Text>
               <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
                 {[1,2,3,4,5,6,7,8].map(i => (
-                  <div key={i} style={{ 
-                    height: 6, 
-                    flex: 1, 
+                  <div key={i} style={{
+                    height: 6,
+                    flex: 1,
                     background: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? 'var(--neon-blue)' : 'rgba(255,255,255,0.05)',
                     boxShadow: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? '0 0 10px var(--neon-blue)' : 'none',
                     borderRadius: 1
@@ -502,64 +490,208 @@ export default function ModernAdminDashboard() {
               </div>
             </div>
           </div>
-        )}
-      </Sider>
+        </Drawer>
 
-      <Layout style={{ background: 'transparent' }}>
-        <Header style={{
-          padding: '0 40px',
-          background: 'rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(20px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          height: 80,
-          zIndex: 5
-        }}>
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20 }}
-          />
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            <div style={{ textAlign: 'right' }}>
-              <Text style={{ display: 'block', color: '#fff', fontWeight: 600, fontSize: 15, letterSpacing: 1 }}>
-                {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
-              </Text>
-              <Text style={{ fontSize: 12, color: isAdmin ? '#10b981' : (isAuthenticated ? 'var(--neon-purple)' : 'rgba(255,255,255,0.4)'), fontFamily: 'JetBrains Mono' }}>
-                ID_AUTH: {Math.random().toString(36).substring(7).toUpperCase()}
-              </Text>
-            </div>
+        <Layout className="responsive-layout" style={{ background: 'transparent' }}>
+          <Header className="responsive-header" style={{
+            padding: '0 40px',
+            background: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            height: 80,
+            zIndex: 5
+          }}>
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              className="mobile-menu-button"
+              style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20, display: 'none' }}
+            />
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileDrawerOpen(true)}
+              className="mobile-menu-button"
+              style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20 }}
+            />
             
-            <Tooltip title="নিউরাল ডিসকানেক্ট">
-              <Avatar
-                size={52}
-                icon={<LogoutOutlined />}
-                className="glow-blue"
-                style={{
-                  background: 'rgba(0, 243, 255, 0.1)',
-                  border: '1px solid var(--neon-blue)',
-                  color: 'var(--neon-blue)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }}
-                onClick={() => {
-                  authUtils.clearAuth();
-                  window.location.href = '/';
-                }}
-              />
-            </Tooltip>
-          </div>
-        </Header>
-        
-        <Content style={{ overflow: 'auto', position: 'relative' }}>
-          {renderContent()}
-        </Content>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+              <div style={{ textAlign: 'right' }}>
+                <Text style={{ display: 'block', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, letterSpacing: 1 }}>
+                  {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
+                </Text>
+                <Text style={{ fontSize: 12, color: isAdmin ? 'var(--success)' : (isAuthenticated ? 'var(--neon-purple)' : 'var(--text-dim)'), fontFamily: 'var(--font-mono)' }}>
+                  {isAuthenticated ? `USER: ${user?.email || 'Unknown'}` : 'MODE: GUEST'}
+                </Text>
+              </div>
+
+              <Space>
+                {!isAuthenticated && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<LoginOutlined />}
+                    onClick={() => window.location.href = '/login'}
+                    style={{
+                      background: 'var(--neon-blue)',
+                      border: 'none',
+                      fontSize: '12px'
+                    }}
+                  >
+                    লগইন
+                  </Button>
+                )}
+
+                <Tooltip title={isAuthenticated ? "লগআউট করুন" : "গেস্ট মোড থেকে সুইচ করুন"}>
+                  <Avatar
+                    size={52}
+                    icon={isAuthenticated ? <LogoutOutlined /> : <RobotOutlined />}
+                    className={isAuthenticated ? "glow-blue" : "glow-purple"}
+                    style={{
+                      background: isAuthenticated ? 'rgba(0, 243, 255, 0.1)' : 'rgba(188, 19, 254, 0.1)',
+                      border: `1px solid ${isAuthenticated ? 'var(--neon-blue)' : 'var(--neon-purple)'}`,
+                      color: isAuthenticated ? 'var(--neon-blue)' : 'var(--neon-purple)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s'
+                    }}
+                    onClick={() => {
+                      if (isAuthenticated) {
+                        authUtils.clearAuth();
+                        refreshUser();
+                        message.success('লগআউট সফল!');
+                      } else {
+                        window.location.href = '/login';
+                      }
+                    }}
+                  />
+                </Tooltip>
+              </Space>
+            </div>
+          </Header>
+          
+          <Content style={{ overflow: 'auto', position: 'relative' }}>
+            {renderContent()}
+          </Content>
+        </Layout>
       </Layout>
-    </Layout>
+    </ConfigProvider>
+  );
+}
+
+// --- Moved DashboardHome outside to prevent re-mounting on toggle ---
+function DashboardHome({ isAdmin, setActiveKey }: { isAdmin: boolean, setActiveKey: (key: string) => void }) {
+  return (
+    <div className="dashboard-container" style={{ padding: 'clamp(20px, 5vw, 40px)', position: 'relative', zIndex: 1 }}>
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48 }}>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="title-section"
+        >
+          <Title level={1} className="text-gradient text-high-vis main-title" style={{ margin: 0, fontSize: 'clamp(32px, 8vw, 48px)', fontWeight: 800, letterSpacing: '-1px' }}>
+            SupremeAI অর্কেস্ট্রেটর
+          </Title>
+          <Space align="center" style={{ marginTop: 8 }} className="status-info">
+            <div className="cyber-badge" style={{ background: 'var(--success)', color: '#000', fontWeight: 'bold' }}>সক্রিয়</div>
+            <Text style={{ color: 'var(--text-main)', fontSize: 14, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 500 }}>
+              কার্নেল আইডি: <Text style={{ color: 'var(--neon-blue)', fontWeight: 'bold' }}>SAI-X900</Text> | ভার্সন: <Text style={{ color: 'var(--neon-purple)', fontWeight: 'bold' }}>4.2.0</Text>
+            </Text>
+          </Space>
+        </motion.div>
+
+        <div className="neural-core-container">
+           <NeuralCore />
+        </div>
+      </div>
+
+      <div 
+        className="dashboard-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: 32
+        }}
+      >
+        {/* Main Controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <motion.div whileHover={{ scale: 1.02 }} className="ai-card" style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
+              <RobotOutlined style={{ fontSize: 32, color: 'var(--neon-blue)' }} />
+              <Waveform />
+            </div>
+            <Title level={3} style={{ color: 'var(--text-main)', marginBottom: 12 }}>নিউরাল নেক্সাস</Title>
+            <p style={{ color: 'var(--text-dim)', lineHeight: 1.8, fontSize: 15, marginBottom: 24 }}>
+              সিস্টেম ইন্টেলিজেন্সের সাথে সরাসরি যোগাযোগ করুন। মাল্টি-মোডাল ফ্লো এবং এজেন্টিক যুক্তি কার্যকর করুন।
+            </p>
+            <Button className="cyber-button" icon={<ThunderboltOutlined />} onClick={() => setActiveKey('ai')} style={{ width: '100%' }}>
+              লিঙ্ক শুরু করুন
+            </Button>
+          </motion.div>
+
+          <TerminalLogs />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {/* Dynamic Metrics */}
+          <motion.div className="ai-card glass-panel" style={{ background: 'rgba(188, 19, 254, 0.08)' }}>
+             <Title level={4} style={{ color: 'var(--text-main)', marginBottom: 20 }}>সিস্টেম লোড ম্যাট্রিক্স</Title>
+             <div style={{ marginBottom: 20 }}>
+               <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'var(--text-dim)'}}>নিউরাল প্রসেসিং (NPU)</Text><Text style={{color:'var(--neon-purple)'}}>64%</Text></div>
+               <Progress percent={64} status="active" strokeColor="var(--neon-purple)" trailColor="rgba(255,255,255,0.05)" showInfo={false} />
+             </div>
+             <div style={{ marginBottom: 20 }}>
+               <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'var(--text-dim)'}}>মেমোরি অ্যালোকোশন</Text><Text style={{color:'var(--neon-blue)'}}>42%</Text></div>
+               <Progress percent={42} status="active" strokeColor="var(--neon-blue)" trailColor="rgba(255,255,255,0.05)" showInfo={false} />
+             </div>
+             <div>
+               <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'var(--text-dim)'}}>কোয়ান্টাম ক্যাশে</Text><Text style={{color:'var(--success)'}}>89%</Text></div>
+               <Progress percent={89} status="active" strokeColor="var(--success)" trailColor="rgba(255,255,255,0.05)" showInfo={false} />
+             </div>
+          </motion.div>
+
+          {/* Quick Actions */}
+          <div className="quick-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+             <Button className="glass-panel" icon={<GlobalOutlined />} onClick={() => setActiveKey('vpn')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>নোডস</Button>
+             <Button className="glass-panel" icon={<SafetyOutlined />} onClick={() => setActiveKey('security')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>সিকিউর</Button>
+             <Button className="glass-panel" icon={<BarChartOutlined />} onClick={() => setActiveKey('monitoring')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>মেট্রিক্স</Button>
+             <Button className="glass-panel" icon={<ToolOutlined />} onClick={() => setActiveKey('settings')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>শেল</Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Statistics Bar */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="glass-panel stat-bar" 
+        style={{ marginTop: 40, padding: '24px clamp(24px, 5vw, 40px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      >
+        <div style={{ display: 'flex', gap: 60 }}>
+          <div>
+            <Text style={{ display: 'block', color: 'var(--text-dim)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>আপটাইম</Text>
+            <Title level={4} style={{ color: 'var(--neon-blue)', margin: 0 }}>99.998%</Title>
+          </div>
+          <div>
+            <Text style={{ display: 'block', color: 'var(--text-dim)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>ল্যাটেন্সি</Text>
+            <Title level={4} style={{ color: 'var(--neon-purple)', margin: 0 }}>24ms</Title>
+          </div>
+          <div>
+            <Text style={{ display: 'block', color: 'var(--text-dim)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>এজেন্ট</Text>
+            <Title level={4} style={{ color: 'var(--text-main)', margin: 0 }}>1,204</Title>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <Text style={{ display: 'block', color: 'var(--text-dim)', fontSize: 11, textTransform: 'uppercase' }}>সিকিউরিটি লেভেল</Text>
+          <Text style={{ color: isAdmin ? 'var(--success)' : 'var(--warning)', fontWeight: 800 }}>{isAdmin ? 'কার্নেল_অ্যাক্সেস_অনুমোদিত' : 'সীমাবদ্ধ_অ্যাক্সেস'}</Text>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 

@@ -15,7 +15,8 @@ import {
     SyncOutlined,
     DatabaseOutlined,
     BulbOutlined,
-    FileTextOutlined
+    FileTextOutlined,
+    DownloadOutlined
 } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
 
@@ -331,8 +332,30 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                                         )}
                                     </div>
                                     {msg.sender === 'ai' && (
-                                        <div className="flex gap-3 px-1 mt-1">
-                                            <button onClick={() => { navigator.clipboard.writeText(msg.content); message.success('COPIED'); }} className="text-[8px] font-black uppercase text-white/20 hover:text-white/60 transition-colors flex items-center gap-1"><CopyOutlined /> Copy Payload</button>
+                                        <div className="flex flex-wrap gap-3 px-1 mt-1">
+                                            <button 
+                                                onClick={() => { navigator.clipboard.writeText(msg.content); message.success('COPIED'); }} 
+                                                className="text-[8px] font-black uppercase text-white/20 hover:text-white/60 transition-colors flex items-center gap-1"
+                                            >
+                                                <CopyOutlined /> Copy Payload
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    const blob = new Blob([msg.content], { type: 'text/plain' });
+                                                    const url = URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.href = url;
+                                                    a.download = `supremeai_${msg.intent || 'export'}_${msg.id}.txt`;
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
+                                                    URL.revokeObjectURL(url);
+                                                    message.success('DOWNLOAD_INITIATED');
+                                                }}
+                                                className="text-[8px] font-black uppercase text-white/20 hover:text-emerald-500/80 transition-colors flex items-center gap-1"
+                                            >
+                                                <DownloadOutlined /> Download File
+                                            </button>
                                             <button className="text-[8px] font-black uppercase text-white/20 hover:text-white/60 transition-colors flex items-center gap-1"><CodeOutlined /> Inspect Node</button>
                                         </div>
                                     )}
@@ -399,13 +422,32 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                                 <div className="text-[9px] text-white/10 uppercase italic text-center py-4">No active constraints detected</div>
                             ) : (
                                 knowledge.rules.map((rule, idx) => (
-                                    <div key={idx} className="p-3 bg-white/[0.02] border border-white/5 rounded-lg group hover:border-red-500/20 transition-all">
+                                    <div key={idx} className="p-3 bg-white/[0.02] border border-white/5 rounded-lg group hover:border-red-500/20 transition-all relative">
                                         <div className="text-[10px] text-white/70 line-clamp-2 leading-relaxed font-mono">
                                             {rule.content || rule.message}
                                         </div>
-                                        <div className="mt-2 flex items-center justify-between opacity-30 group-hover:opacity-60 transition-opacity">
+                                        <div className="mt-2 flex items-center justify-between opacity-30 group-hover:opacity-100 transition-all">
                                             <span className="text-[7px] font-black uppercase tracking-tighter">Auto-Captured</span>
-                                            <span className="text-[7px] font-mono">CONF: {Math.round((rule.confidence || 0.9) * 100)}%</span>
+                                            <div className="flex gap-2 items-center">
+                                                <Tooltip title="Download Constraint">
+                                                    <DownloadOutlined 
+                                                        className="text-red-500 cursor-pointer hover:scale-125 transition-transform" 
+                                                        onClick={() => {
+                                                            const blob = new Blob([rule.content || rule.message], { type: 'text/plain' });
+                                                            const url = URL.createObjectURL(blob);
+                                                            const a = document.createElement('a');
+                                                            a.href = url;
+                                                            a.download = `constraint_${idx + 1}.txt`;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+                                                            URL.revokeObjectURL(url);
+                                                            message.success('CONSTRAINT_EXPORTED');
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                <span className="text-[7px] font-mono">CONF: {Math.round((rule.confidence || 0.9) * 100)}%</span>
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -427,16 +469,34 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                                 <div className="text-[9px] text-white/10 uppercase italic text-center py-4">No strategic roadmaps defined</div>
                             ) : (
                                 knowledge.plans.map((plan, idx) => (
-                                    <div key={idx} className="p-3 bg-white/[0.02] border border-white/5 rounded-lg group hover:border-blue-500/20 transition-all">
+                                    <div key={idx} className="p-3 bg-white/[0.02] border border-white/5 rounded-lg group hover:border-blue-500/20 transition-all relative">
                                         <div className="text-[10px] text-white/70 line-clamp-2 leading-relaxed font-mono">
                                             {plan.content || plan.title}
                                         </div>
-                                        <div className="mt-2 flex items-center justify-between opacity-30 group-hover:opacity-60 transition-opacity">
+                                        <div className="mt-2 flex items-center justify-between opacity-30 group-hover:opacity-100 transition-all">
                                             <span className="text-[7px] font-black uppercase tracking-tighter">Roadmap Node</span>
-                                            <div className="flex gap-1">
-                                                <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                                                <div className="w-1 h-1 rounded-full bg-blue-500/30"></div>
-                                                <div className="w-1 h-1 rounded-full bg-blue-500/30"></div>
+                                            <div className="flex gap-2">
+                                                <Tooltip title="Download Blueprint">
+                                                    <DownloadOutlined 
+                                                        className="text-blue-500 cursor-pointer hover:scale-125 transition-transform" 
+                                                        onClick={() => {
+                                                            const blob = new Blob([plan.content || plan.title], { type: 'text/plain' });
+                                                            const url = URL.createObjectURL(blob);
+                                                            const a = document.createElement('a');
+                                                            a.href = url;
+                                                            a.download = `blueprint_${idx + 1}.txt`;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+                                                            URL.revokeObjectURL(url);
+                                                            message.success('BLUEPRINT_EXPORTED');
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                <div className="flex gap-1 items-center">
+                                                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                                                    <div className="w-1 h-1 rounded-full bg-blue-500/30"></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
