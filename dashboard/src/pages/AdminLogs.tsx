@@ -32,8 +32,10 @@ const AdminLogs: React.FC = () => {
     try {
       const response = await authUtils.fetchWithAuth('/api/logs?severity=' + severityFilter);
       if (!response.ok) throw new Error('Failed to fetch logs');
-      const data = await response.json();
-      setLogs(data);
+      const result = await response.json();
+      // Handle ApiResponse wrapper: { success: true, data: { logs: [...] } }
+      const logData = result.data?.logs || [];
+      setLogs(logData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch logs');
     } finally {

@@ -1,6 +1,7 @@
-// ModernAdminDashboard.tsx - Clean Interface with Access Control
-import React, { useState } from 'react';
-import { Layout, Menu, Button, Avatar, theme, Badge, Typography, Alert, Card, Space } from 'antd';
+// ModernAdminDashboard.tsx - Cinematic AI Command Center
+import React, { useState, useEffect, useRef } from 'react';
+import { Layout, Menu, Button, Avatar, theme, Badge, Typography, Space, Tooltip, Progress } from 'antd';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   DashboardOutlined,
   RobotOutlined,
@@ -11,272 +12,554 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MoonOutlined,
-  SunOutlined,
-  ExperimentOutlined,
-  EyeOutlined,
+  ThunderboltOutlined,
+  GlobalOutlined,
+  SafetyOutlined,
+  ClusterOutlined,
+  HddOutlined,
   LockOutlined,
+  ApiOutlined,
+  UserOutlined,
+  FileTextOutlined,
+  DatabaseOutlined,
+  LineChartOutlined,
+  ChromeOutlined,
+  PieChartOutlined,
+  MobileOutlined,
+  BellOutlined,
+  SecurityScanOutlined,
+  AuditOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import { useRole } from '../contexts/RoleContext';
 import { authUtils } from '../lib/authUtils';
 import ChatWithAI from '../components/ChatWithAI';
-import KnowledgeHub from '../components/KnowledgeHub';
-import APIManagement from '../components/APIManagement';
+import UserSettings from '../components/UserSettings';
 import AdminProjects from './AdminProjects';
+import AdminSettings from './AdminSettings';
+import AdminUsers from './AdminUsers';
+import AdminProviders from './AdminProviders';
+import AdminLogs from './AdminLogs';
+import AdminMonitoring from './AdminMonitoring';
+import AdminLearning from './AdminLearning';
+import AdminSecurity from './AdminSecurity';
+import AdminRules from './AdminRules';
+import AdminAnalytics from './AdminAnalytics';
+import AdminVPN from './AdminVPN';
+import AdminBrowser from './AdminBrowser';
+import AdminQuotas from './AdminQuotas';
+import AdminNotifications from './AdminNotifications';
+import AdminReports from './AdminReports';
+import AdminPerformance from './AdminPerformance';
+import AdminBackup from './AdminBackup';
+import AdminOCR from './AdminOCR';
+import AdminSimulator from './AdminSimulator';
 
 const { Header, Content, Sider } = Layout;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
-// Demo placeholder for restricted features
-const RestrictedDemo: React.FC<{title: string; description: string; icon: React.ReactNode}> = ({ title, description, icon }) => (
-  <div style={{
-    padding: '60px 40px',
-    textAlign: 'center',
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px dashed rgba(255,255,255,0.2)',
-    borderRadius: '16px',
-    marginTop: '20px'
-  }}>
-    <LockOutlined style={{ fontSize: 64, color: '#f59e0b', marginBottom: 24, opacity: 0.8 }} />
-    <h3 style={{ color: '#f59e0b', marginBottom: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-      ADMIN-ONLY MODULE
-    </h3>
-    <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: 500, margin: '0 auto 24px', lineHeight: 1.7 }}>
-      <Text strong style={{ color: '#ef4444' }}>{title}</Text> requires administrator privileges.
-      <br />Please sign in with an admin account to access this functionality.
-    </p>
-    <Space size="middle">
-      <Button
-        type="primary"
-        icon={<EyeOutlined />}
-        onClick={() => window.location.href = '/admin?login=true'}
-        style={{ background: '#10b981', borderColor: '#10b981' }}
-      >
-        Login as Admin
-      </Button>
-      <Button
-        onClick={() => window.location.href = '/'}
-      >
-        Back to Home
-      </Button>
-    </Space>
+// --- Sub-components for Cinematic Feel ---
+
+const Waveform = () => (
+  <div className="waveform-container">
+    {[...Array(12)].map((_, i) => (
+      <div 
+        key={i} 
+        className="wave-bar" 
+        style={{ animationDelay: `${i * 0.1}s` }} 
+      />
+    ))}
   </div>
 );
+
+const NeuralGraph = () => (
+  <svg width="100%" height="150" viewBox="0 0 400 150">
+    <circle cx="50" cy="75" r="5" fill="var(--neon-blue)" className="pulsing" />
+    <circle cx="150" cy="40" r="4" fill="var(--neon-purple)" className="pulsing" />
+    <circle cx="150" cy="110" r="4" fill="var(--neon-purple)" className="pulsing" />
+    <circle cx="250" cy="75" r="5" fill="var(--neon-blue)" className="pulsing" />
+    <circle cx="350" cy="75" r="8" fill="var(--neon-blue)" className="pulsing" />
+    
+    <line x1="50" y1="75" x2="150" y2="40" className="neural-line" />
+    <line x1="50" y1="75" x2="150" y2="110" className="neural-line" />
+    <line x1="150" y1="40" x2="250" y2="75" className="neural-line" />
+    <line x1="150" y1="110" x2="250" y2="75" className="neural-line" />
+    <line x1="250" y1="75" x2="350" y2="75" className="neural-line" />
+  </svg>
+);
+
+const DataStream = () => {
+  const [streams, setStreams] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const newStreams = Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 5}s`,
+      duration: `${5 + Math.random() * 10}s`,
+      content: Math.random().toString(2).substring(2, 10)
+    }));
+    setStreams(newStreams);
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
+      {streams.map(s => (
+        <div 
+          key={s.id} 
+          className="data-stream" 
+          style={{ left: s.left, animationDelay: s.delay, animationDuration: s.duration }}
+        >
+          {s.content}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const TerminalLogs = () => {
+  const [logs, setLogs] = useState<string[]>([
+    "[SYSTEM] Initializing SupremeAI Kernel v4.2.0...",
+    "[NETWORK] Establishing secure uplink to Node-07...",
+    "[AUTH] Permission level: ADMINISTRATIVE",
+    "[SECURITY] Firewall active. Zero-day monitoring enabled.",
+  ]);
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const messages = [
+        `[PROCESS] Request handled in ${Math.floor(Math.random() * 50)}ms`,
+        "[DB] Firestore sync complete",
+        "[AI] Model weight recalibration successful",
+        "[USER] New session detected in SG region",
+        "[WARN] Latency spike detected in EU-West-2",
+        "[SYSTEM] Memory optimization routine started",
+      ];
+      setLogs(prev => [...prev.slice(-15), messages[Math.floor(Math.random() * messages.length)]]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  return (
+    <div className="terminal-box" style={{ height: 250 }}>
+      <div className="terminal-header">
+        <span>কোর_লগ_স্ট্রিম (CORE_LOGS)</span>
+        <span>{new Date().toLocaleTimeString()}</span>
+      </div>
+      <div style={{ overflowY: 'auto', height: '180px' }}>
+        {logs.map((log, i) => (
+          <div key={i} style={{ marginBottom: 4, opacity: (i + 1) / logs.length, fontSize: 11 }}>
+            <span style={{ color: log.includes('WARN') ? '#f59e0b' : log.includes('SYSTEM') ? '#bc13fe' : '#00f3ff' }}>{"> "}</span>
+            {log}
+          </div>
+        ))}
+        <div ref={logEndRef} />
+        <span className="terminal-cursor" />
+      </div>
+    </div>
+  );
+};
+
+const NeuralCore = () => (
+  <div className="neural-node pulsing">
+    <svg viewBox="0 0 200 200">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: '#00f3ff', stopOpacity: 1 }} />
+          <stop offset="100%" style={{ stopColor: '#bc13fe', stopOpacity: 1 }} />
+        </linearGradient>
+      </defs>
+      <circle cx="100" cy="100" r="80" fill="none" stroke="url(#grad1)" strokeWidth="0.5" strokeDasharray="10 5" className="rotating" />
+      <circle cx="100" cy="100" r="60" fill="none" stroke="url(#grad1)" strokeWidth="1" strokeDasharray="5 5" className="rotating" style={{ animationDirection: 'reverse' }} />
+      <path d="M100 40 L100 160 M40 100 L160 100" stroke="url(#grad1)" strokeWidth="0.5" opacity="0.3" />
+      <circle cx="100" cy="100" r="10" fill="url(#grad1)" className="pulsing" />
+    </svg>
+  </div>
+);
+
+const RestrictedDemo: React.FC<{title: string; description: string; icon: React.ReactNode}> = ({ title, description, icon }) => (
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="glass-panel"
+    style={{
+      padding: '80px 40px',
+      textAlign: 'center',
+      marginTop: '40px',
+      maxWidth: '800px',
+      margin: '40px auto',
+      border: '1px solid rgba(255, 152, 0, 0.3)',
+      boxShadow: '0 0 40px rgba(255, 152, 0, 0.1)'
+    }}
+  >
+    <div className="pulsing" style={{ marginBottom: 32 }}>
+      <LockOutlined style={{ fontSize: 80, color: '#f59e0b', opacity: 0.8 }} />
+    </div>
+    <Title level={2} style={{ color: '#f59e0b', marginBottom: 16, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+      অ্যাক্সেস প্রত্যাখ্যান করা হয়েছে
+    </Title>
+    <p style={{ color: 'rgba(255,255,255,0.7)', maxWidth: 600, margin: '0 auto 40px', fontSize: 18, lineHeight: 1.8 }}>
+      নিরাপত্তা প্রোটোকল <Text code style={{ color: '#f59e0b' }}>LVL-4</Text> সক্রিয়। 
+      মডিউল <Text strong style={{ color: '#fff' }}>{title}</Text> শুধুমাত্র প্রশাসকদের জন্য এনক্রিপ্ট করা হয়েছে।
+    </p>
+    <Space size="large">
+      <Button
+        className="cyber-button"
+        icon={<SecurityScanOutlined />}
+        onClick={() => window.location.href = '/login'}
+        style={{ height: 'auto', padding: '12px 30px' }}
+      >
+        অ্যাডমিন যাচাই করুন
+      </Button>
+      <Button
+        ghost
+        onClick={() => window.location.href = '/'}
+        style={{ height: 'auto', padding: '12px 30px', borderRadius: 4, borderColor: 'rgba(255,255,255,0.3)' }}
+      >
+        পিছনে যান
+      </Button>
+    </Space>
+  </motion.div>
+);
+
+// --- Main Dashboard Component ---
 
 export default function ModernAdminDashboard() {
   const { isAdmin, isAuthenticated } = useRole();
   const [collapsed, setCollapsed] = useState(false);
   const [activeKey, setActiveKey] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(true);
+  const [chatFont, setChatFont] = useState(localStorage.getItem('chatFont') || 'font-mono');
+  const [mounted, setMounted] = useState(false);
 
-  // All tabs available with role requirements
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const allMenuItems = [
-    { key: 'dashboard', icon: <DashboardOutlined />, label: 'Dashboard', roles: ['guest', 'user', 'admin'] },
-    { key: 'ai', icon: <RobotOutlined />, label: 'AI Chat', roles: ['guest', 'user', 'admin'] },
-    { key: 'projects', icon: <CodeOutlined />, label: 'Projects', roles: ['user', 'admin'] },
-    { key: 'analytics', icon: <BarChartOutlined />, label: 'Analytics', roles: ['admin'] },
-    { key: 'knowledge', icon: <BulbOutlined />, label: 'Knowledge', roles: ['admin'] },
-    { key: 'settings', icon: <SettingOutlined />, label: 'Settings', roles: ['admin'] },
+    // Universal tabs (all roles)
+    { key: 'dashboard', icon: <DashboardOutlined />, label: 'কমান্ড সেন্টার', roles: ['guest', 'user', 'admin'] },
+    { key: 'ai', icon: <RobotOutlined />, label: 'নিউরাল চ্যাট', roles: ['guest', 'user', 'admin'] },
+    { key: 'projects', icon: <CodeOutlined />, label: 'ডিপ্লয়মেন্টস', roles: ['user', 'admin'] },
+    { key: 'settings', icon: <SettingOutlined />, label: 'কনফিগ', roles: ['guest', 'user', 'admin'] },
+    
+    // Admin-only tabs (aligned with backend)
+    { key: 'providers', icon: <ApiOutlined />, label: 'AI প্রোভাইডার', roles: ['admin'] },
+    { key: 'users', icon: <UserOutlined />, label: 'ইউজার ম্যানেজমেন্ট', roles: ['admin'] },
+    { key: 'monitoring', icon: <HddOutlined />, label: 'সিস্টেম মনিটরিং', roles: ['admin'] },
+    { key: 'learning', icon: <BulbOutlined />, label: 'লার্নিং ম্যানেজমেন্ট', roles: ['admin'] },
+    { key: 'security', icon: <SecurityScanOutlined />, label: 'সিকিউরিটি', roles: ['admin'] },
+    { key: 'rules', icon: <AuditOutlined />, label: 'সিস্টেম রুলস', roles: ['admin'] },
+    { key: 'analytics', icon: <LineChartOutlined />, label: 'এনালাইটিক্স', roles: ['admin'] },
+    { key: 'logs', icon: <FileTextOutlined />, label: 'সিস্টেম লগ', roles: ['admin'] },
+    { key: 'vpn', icon: <GlobalOutlined />, label: 'VPN কানেকশন', roles: ['admin'] },
+    { key: 'browser', icon: <ChromeOutlined />, label: 'ব্রাউজার', roles: ['admin'] },
+    { key: 'quotas', icon: <PieChartOutlined />, label: 'কোটা ম্যানেজমেন্ট', roles: ['admin'] },
+    { key: 'simulator', icon: <MobileOutlined />, label: 'সিমুলেটর', roles: ['admin'] },
+    { key: 'notifications', icon: <BellOutlined />, label: 'নোটিফিকেশন', roles: ['admin'] },
+    { key: 'reports', icon: <BarChartOutlined />, label: 'রিপোর্টস', roles: ['admin'] },
+    { key: 'performance', icon: <ClusterOutlined />, label: 'পারফরম্যান্স', roles: ['admin'] },
+    { key: 'backup', icon: <DatabaseOutlined />, label: 'ব্যাকআপ', roles: ['admin'] },
+    { key: 'ocr', icon: <FileTextOutlined />, label: 'OCR টুল', roles: ['admin'] },
   ];
 
-  // Get current user role
-  const getCurrentRole = () => {
-    if (isAdmin) return 'admin';
-    if (isAuthenticated) return 'user';
-    return 'guest';
-  };
-
-  const currentRole = getCurrentRole();
-
-  // Filter menu items based on current role
+  const currentRole = isAdmin ? 'admin' : (isAuthenticated ? 'user' : 'guest');
   const menuItems = allMenuItems.filter(item => item.roles.includes(currentRole));
 
   const renderContent = () => {
-    // Security check: if user somehow selects a key they don't have access to
     const activeItem = allMenuItems.find(item => item.key === activeKey);
     const hasAccess = activeItem?.roles.includes(currentRole);
 
+    console.log(`[Navigation] ActiveKey: ${activeKey}, Role: ${currentRole}, HasAccess: ${hasAccess}`);
+
     if (!hasAccess && activeKey !== 'dashboard') {
-      return <RestrictedDemo title="Access Restricted" description="You do not have permission to access this module." icon={<LockOutlined />} />;
+      return <RestrictedDemo title={activeItem?.label || "Unknown"} description="Security clearance insufficient." icon={<LockOutlined />} />;
     }
 
-    switch (activeKey) {
-      case 'dashboard':
-        return <DashboardHome />;
-      case 'ai':
-        return <ChatWithAI />;
-      case 'projects':
-        return <AdminProjects />;
-      case 'analytics':
-        return <APIManagement />;
-      case 'knowledge':
-        return <KnowledgeHub />;
-      case 'settings':
-        return (
-          <div style={{ padding: 24, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-            <h2>System Settings</h2>
-            <p>System configuration, user management, and security settings.</p>
-          </div>
-        );
-      default:
-        return <DashboardHome />;
-    }
+    return (
+      <div style={{ height: '100%', padding: '0 0 40px 0' }}>
+        {(() => {
+          switch (activeKey) {
+            case 'dashboard': return <DashboardHome />;
+            case 'ai': return <ChatWithAI chatFont={chatFont} />;
+            case 'projects': return <AdminProjects />;
+            
+            // Admin tabs
+            case 'providers': return <AdminProviders />;
+            case 'users': return <AdminUsers />;
+            case 'monitoring': return <AdminMonitoring />;
+            case 'learning': return <AdminLearning />;
+            case 'security': return <AdminSecurity />;
+            case 'rules': return <AdminRules />;
+            case 'analytics': return <AdminAnalytics />;
+            case 'logs': return <AdminLogs />;
+            case 'vpn': return <AdminVPN />;
+            case 'browser': return <AdminBrowser />;
+            case 'quotas': return <AdminQuotas />;
+            case 'simulator': return <AdminSimulator />;
+            case 'notifications': return <AdminNotifications />;
+            case 'reports': return <AdminReports />;
+            case 'performance': return <AdminPerformance />;
+            case 'backup': return <AdminBackup />;
+            case 'ocr': return <AdminOCR />;
+            
+            case 'settings': return isAdmin ? <AdminSettings darkMode={darkMode} setDarkMode={setDarkMode} chatFont={chatFont} setChatFont={setChatFont} /> : <UserSettings darkMode={darkMode} setDarkMode={setDarkMode} chatFont={chatFont} setChatFont={setChatFont} />;
+            default: return <DashboardHome />;
+          }
+        })()}
+      </div>
+    );
   };
 
   function DashboardHome() {
     return (
-      <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 28, marginBottom: 24, fontWeight: 800, letterSpacing: '-0.5px' }}>
-          SupremeAI Command Center
-        </h1>
+      <div style={{ padding: '20px 40px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48 }}>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Title level={1} className="text-gradient" style={{ margin: 0, fontSize: 48, fontWeight: 800, letterSpacing: '-1px' }}>
+              SupremeAI অর্কেস্ট্রেটর
+            </Title>
+            <Space align="center" style={{ marginTop: 8 }}>
+              <div className="cyber-badge">সক্রিয়</div>
+              <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, letterSpacing: 1, textTransform: 'uppercase' }}>
+                কার্নেল আইডি: <Text style={{ color: 'var(--neon-blue)' }}>SAI-X900</Text> | ভার্সন: <Text style={{ color: '#bc13fe' }}>4.2.0</Text>
+              </Text>
+            </Space>
+          </motion.div>
+          
+          <div style={{ width: 200 }}>
+             <NeuralCore />
+          </div>
+        </div>
+
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: 24
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: 32
         }}>
-          {(currentRole === 'guest' || currentRole === 'user' || currentRole === 'admin') && (
-            <div style={{
-              padding: 24,
-              background: 'rgba(255,255,255,0.03)',
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-              <h3 style={{ marginBottom: 12, color: 'var(--neon-blue)', fontWeight: 700 }}>AI Assistant</h3>
-              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-                Chat with SupremeAI agents. Generate code, analyze requirements, and get intelligent assistance.
+          {/* Main Controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <motion.div whileHover={{ scale: 1.02 }} className="ai-card" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
+                <RobotOutlined style={{ fontSize: 32, color: 'var(--neon-blue)' }} />
+                <Waveform />
+              </div>
+              <Title level={3} style={{ color: '#fff', marginBottom: 12 }}>নিউরাল নেক্সাস</Title>
+              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, fontSize: 15, marginBottom: 24 }}>
+                সিস্টেম ইন্টেলিজেন্সের সাথে সরাসরি যোগাযোগ করুন। মাল্টি-মোডাল ফ্লো এবং এজেন্টিক যুক্তি কার্যকর করুন।
               </p>
-              <Button
-                type="primary"
-                icon={<RobotOutlined />}
-                style={{ marginTop: 16 }}
-                onClick={() => setActiveKey('ai')}
-              >
-                Start Chatting
+              <Button className="cyber-button" icon={<ThunderboltOutlined />} onClick={() => setActiveKey('ai')} style={{ width: '100%' }}>
+                লিঙ্ক শুরু করুন
               </Button>
+            </motion.div>
+
+            <TerminalLogs />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {/* Dynamic Metrics */}
+            <motion.div className="ai-card glass-panel" style={{ background: 'rgba(188, 19, 254, 0.05)' }}>
+               <Title level={4} style={{ color: '#fff', marginBottom: 20 }}>সিস্টেম লোড ম্যাট্রিক্স</Title>
+               <div style={{ marginBottom: 20 }}>
+                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'rgba(255,255,255,0.5)'}}>নিউরাল প্রসেসিং (NPU)</Text><Text style={{color:'var(--neon-purple)'}}>64%</Text></div>
+                 <Progress percent={64} status="active" strokeColor="var(--neon-purple)" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
+               </div>
+               <div style={{ marginBottom: 20 }}>
+                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'rgba(255,255,255,0.5)'}}>মেমোরি অ্যালোকোশন</Text><Text style={{color:'var(--neon-blue)'}}>42%</Text></div>
+                 <Progress percent={42} status="active" strokeColor="var(--neon-blue)" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
+               </div>
+               <div>
+                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}><Text style={{color:'rgba(255,255,255,0.5)'}}>কোয়ান্টাম ক্যাশে</Text><Text style={{color:'#10b981'}}>89%</Text></div>
+                 <Progress percent={89} status="active" strokeColor="#10b981" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
+               </div>
+            </motion.div>
+
+            {/* Quick Actions */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+               <Button className="glass-panel" icon={<GlobalOutlined />} onClick={() => setActiveKey('vpn')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>নোডস</Button>
+               <Button className="glass-panel" icon={<SafetyOutlined />} onClick={() => setActiveKey('security')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>সিকিউর</Button>
+               <Button className="glass-panel" icon={<BarChartOutlined />} onClick={() => setActiveKey('monitoring')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>মেট্রিক্স</Button>
+               <Button className="glass-panel" icon={<ToolOutlined />} onClick={() => setActiveKey('settings')} style={{ height: 80, border: '1px solid rgba(255,255,255,0.1)', color:'#fff' }}>শেল</Button>
             </div>
-          )}
-          {(currentRole === 'user' || currentRole === 'admin') && (
-            <div style={{
-              padding: 24,
-              background: 'rgba(255,255,255,0.03)',
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-              <h3 style={{ marginBottom: 12, color: 'var(--neon-purple)', fontWeight: 700 }}>Projects</h3>
-              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-                View and manage your generated applications. Track progress, deploy, and monitor performance.
-              </p>
-              <Button
-                style={{ marginTop: 16 }}
-                icon={<CodeOutlined />}
-                onClick={() => setActiveKey('projects')}
-              >
-                Browse Projects
-              </Button>
-            </div>
-          )}
-          {isAdmin && (
-            <div style={{
-              padding: 24,
-              background: 'rgba(16,185,129,0.1)',
-              borderRadius: 12,
-              border: '1px solid rgba(16,185,129,0.3)',
-              transition: 'all 0.3s ease'
-            }}>
-              <h3 style={{ marginBottom: 12, color: '#10b981', fontWeight: 700 }}>Admin Panel</h3>
-              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-                Full access to provider management, system monitoring, configuration, and advanced analytics.
-              </p>
-              <Button
-                style={{ marginTop: 16 }}
-                icon={<BarChartOutlined />}
-                onClick={() => setActiveKey('analytics')}
-              >
-                View Analytics
-              </Button>
-            </div>
-          )}
+          </div>
         </div>
+        
+        {/* Statistics Bar */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-panel" 
+          style={{ marginTop: 40, padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          <div style={{ display: 'flex', gap: 60 }}>
+            <div>
+              <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>আপটাইম</Text>
+              <Title level={4} style={{ color: 'var(--neon-blue)', margin: 0 }}>99.998%</Title>
+            </div>
+            <div>
+              <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>ল্যাটেন্সি</Text>
+              <Title level={4} style={{ color: 'var(--neon-purple)', margin: 0 }}>24ms</Title>
+            </div>
+            <div>
+              <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>এজেন্ট</Text>
+              <Title level={4} style={{ color: '#fff', margin: 0 }}>1,204</Title>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <Text style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: 11, textTransform: 'uppercase' }}>সিকিউরিটি লেভেল</Text>
+            <Text style={{ color: isAdmin ? '#10b981' : '#f59e0b', fontWeight: 800 }}>{isAdmin ? 'কার্নেল_অ্যাক্সেস_অনুমোদিত' : 'সীমাবদ্ধ_অ্যাক্সেস'}</Text>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
+  if (!mounted) return null;
+
   return (
-    <Layout style={{ minHeight: '100vh', background: darkMode ? '#0a0a0a' : '#f5f5f5' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} theme={darkMode ? 'dark' : 'light'}>
+    <Layout className="animated-bg" style={{ minHeight: '100vh', overflow: 'hidden', position: 'relative' }}>
+      <div className="bg-grid" />
+      <div className="hex-grid" />
+      <DataStream />
+      <div className="scanline" />
+      
+      <Sider 
+        collapsible 
+        collapsed={collapsed} 
+        onCollapse={setCollapsed} 
+        theme="dark"
+        className="glass-panel"
+        width={260}
+        style={{ 
+          margin: 16, 
+          borderRadius: 16, 
+          height: 'calc(100vh - 32px)',
+          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(0,0,0,0.6)',
+          zIndex: 10
+        }}
+      >
         <div style={{
-          height: 32,
-          margin: 16,
-          background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-          borderRadius: 6,
+          height: 80,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: darkMode ? '#10b981' : '#10b981',
-          fontWeight: 700,
-          fontSize: 12,
-          letterSpacing: '0.1em'
+          padding: '0 24px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)'
         }}>
-          {collapsed ? 'SA' : 'SUPREME AI'}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            style={{
+              background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-purple))',
+              padding: '10px 16px',
+              borderRadius: 8,
+              boxShadow: '0 0 20px rgba(0, 243, 255, 0.4)',
+              color: '#000',
+              fontWeight: 900,
+              fontSize: collapsed ? 14 : 20,
+              letterSpacing: 3,
+              fontFamily: 'JetBrains Mono, monospace'
+            }}
+          >
+            {collapsed ? 'S' : 'SUPREME'}
+          </motion.div>
         </div>
+        
         <Menu
           mode="inline"
           selectedKeys={[activeKey]}
           onClick={(e) => setActiveKey(e.key)}
           items={menuItems}
-          theme={darkMode ? 'dark' : 'light'}
+          theme="dark"
+          style={{ background: 'transparent', borderRight: 'none', marginTop: 24 }}
         />
+        
+        {!collapsed && (
+          <div style={{ position: 'absolute', bottom: 80, left: 24, right: 24 }}>
+            <div style={{ padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>অথোরাইজেশন ট্রেস</Text>
+              <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+                {[1,2,3,4,5,6,7,8].map(i => (
+                  <div key={i} style={{ 
+                    height: 6, 
+                    flex: 1, 
+                    background: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? 'var(--neon-blue)' : 'rgba(255,255,255,0.05)',
+                    boxShadow: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? '0 0 10px var(--neon-blue)' : 'none',
+                    borderRadius: 1
+                  }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </Sider>
-      <Layout>
+
+      <Layout style={{ background: 'transparent' }}>
         <Header style={{
-          padding: '0 24px',
-          background: darkMode ? '#111' : '#fff',
+          padding: '0 40px',
+          background: 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(20px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)'
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          height: 80,
+          zIndex: 5
         }}>
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            style={{ color: darkMode ? '#fff' : '#000' }}
+            style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20 }}
           />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Button
-              type="text"
-              icon={darkMode ? <SunOutlined /> : <MoonOutlined />}
-              onClick={() => setDarkMode(!darkMode)}
-              style={{ color: darkMode ? '#fff' : '#000' }}
-            />
-            <Avatar
-              icon={<LogoutOutlined />}
-              style={{
-                backgroundColor: isAdmin ? '#10b981' : '#6b7280',
-                cursor: 'pointer'
-              }}
-              onClick={() => {
-                authUtils.clearAuth();
-                window.location.href = '/';
-              }}
-            />
-            {isAdmin && (
-              <Badge color="#10b981" text={<Text style={{color: '#10b981', fontSize: 11, fontWeight: 700}}>ADMIN</Text>} />
-            )}
-            {!isAdmin && isAuthenticated && (
-              <Badge color="#ff9800" text={<Text style={{color: '#ff9800', fontSize: 11, fontWeight: 700}}>USER</Text>} />
-            )}
-            {!isAuthenticated && (
-              <Badge color="#6b7280" text={<Text style={{color: '#6b7280', fontSize: 11, fontWeight: 700}}>GUEST</Text>} />
-            )}
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+            <div style={{ textAlign: 'right' }}>
+              <Text style={{ display: 'block', color: '#fff', fontWeight: 600, fontSize: 15, letterSpacing: 1 }}>
+                {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
+              </Text>
+              <Text style={{ fontSize: 12, color: isAdmin ? '#10b981' : (isAuthenticated ? 'var(--neon-purple)' : 'rgba(255,255,255,0.4)'), fontFamily: 'JetBrains Mono' }}>
+                ID_AUTH: {Math.random().toString(36).substring(7).toUpperCase()}
+              </Text>
+            </div>
+            
+            <Tooltip title="নিউরাল ডিসকানেক্ট">
+              <Avatar
+                size={52}
+                icon={<LogoutOutlined />}
+                className="glow-blue"
+                style={{
+                  background: 'rgba(0, 243, 255, 0.1)',
+                  border: '1px solid var(--neon-blue)',
+                  color: 'var(--neon-blue)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+                onClick={() => {
+                  authUtils.clearAuth();
+                  window.location.href = '/';
+                }}
+              />
+            </Tooltip>
           </div>
         </Header>
-        <Content style={{ margin: '24px', overflow: 'auto' }}>
+        
+        <Content style={{ overflow: 'auto', position: 'relative' }}>
           {renderContent()}
         </Content>
       </Layout>
     </Layout>
   );
 }
+

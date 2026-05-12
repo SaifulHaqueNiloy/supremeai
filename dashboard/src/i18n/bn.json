@@ -143,10 +143,17 @@
   },
   "settings": {
     "title": "সেটিংস",
+    "userPreferences": "ব্যবহারকারী সেটিংস",
     "language": "ভাষা",
-    "theme": "থিম",
+    "languageDescription": "ইন্টারফেসের জন্য আপনার পছন্দের ভাষা নির্বাচন করুন",
+    "appearance": "দৃশ্যমানতা",
+    "darkMode": "ডার্ক মোড",
     "notifications": "নোটিফিকেশন",
-    "save_changes": "পরিবর্তন সংরক্ষণ করুন"
+    "notificationsDescription": "সিস্টেম আপডেট এবং অ্যালার্টের জন্য নোটিফিকেশন পান",
+    "focusMode": "ফোকাস মোড",
+    "focusModeDescription": "দৃশ্যমান শ ¬রванием কমানো দিয়ে বিচ্ছিন্নতা কমান",
+    "save_changes": "পরিবর্তন সংরক্ষণ করুন",
+    "about": "সম্পর্কে"
   },
   "knowledge": {
     "snapshot": {

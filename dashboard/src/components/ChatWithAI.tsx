@@ -32,7 +32,11 @@ interface ChatMessage {
     status?: 'pending' | 'completed' | 'error';
 }
 
-const ChatWithAI: React.FC = () => {
+interface ChatWithAIProps {
+    chatFont?: string;
+}
+
+const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -63,6 +67,18 @@ const ChatWithAI: React.FC = () => {
 
     const fetchAgents = async () => {
         try {
+            const isAuthenticated = authUtils.isAuthenticated();
+            if (!isAuthenticated) {
+                // For guest mode, use demo agents data directly
+                const demoAgents = [
+                    { id: 'gpt-4o', name: 'GPT-4o', status: 'online', type: 'llm' },
+                    { id: 'claude-3', name: 'Claude 3.5', status: 'online', type: 'llm' },
+                    { id: 'phi-3', name: 'Phi-3 Mini', status: 'offline', type: 'llm' }
+                ];
+                setAgents(demoAgents);
+                return;
+            }
+
             const response = await authUtils.fetchWithAuth('/api/ai/agents');
             if (response.ok) {
                 const data = await response.json();
@@ -75,6 +91,21 @@ const ChatWithAI: React.FC = () => {
 
     const fetchKnowledge = async () => {
         try {
+            const isAuthenticated = authUtils.isAuthenticated();
+            if (!isAuthenticated) {
+                // For guest mode, use demo knowledge data directly
+                const demoRules = [
+                    { id: 1, content: 'কোডের গুণমান বজায় রাখতে হবে', confidence: 0.9 },
+                    { id: 2, content: 'নিরাপত্তা স্ক্যান প্রয়োজন', confidence: 0.95 }
+                ];
+                const demoPlans = [
+                    { id: 1, content: 'Q2 রোডম্যাপ: মডেল অর্কেস্ট্রেশন উন্নত করা', title: 'Q2 রোডম্যাপ' },
+                    { id: 2, content: 'নিরাপত্তা অডিট: তৃতীয় পক্ষের পেনিট্রেশন টেস্টিং', title: 'নিরাপত্তা অডিট' }
+                ];
+                setKnowledge({ rules: demoRules, plans: demoPlans });
+                return;
+            }
+
             const [rulesRes, plansRes] = await Promise.all([
                 authUtils.fetchWithAuth('/api/admin/rules'),
                 authUtils.fetchWithAuth('/api/admin/plans')
@@ -93,6 +124,46 @@ const ChatWithAI: React.FC = () => {
         try {
             const user = authUtils.getCurrentUser();
             const userId = user?.uid || 'anonymous';
+            const isAuthenticated = authUtils.isAuthenticated();
+
+            if (!isAuthenticated) {
+                // For guest mode, use demo chat history directly to avoid 401 errors
+                const demoHistory = [
+                    {
+                        id: 'demo-chat-1',
+                        is_admin: true,
+                        message: 'স্বাগতম SupremeAI ডেমো মোডে! আপনি এখানে AI সহকারীদের সাথে চ্যাট করতে পারেন।',
+                        timestamp: new Date(Date.now() - 3600000).toISOString(),
+                        intent: 'INFO_COLLECTION'
+                    },
+                    {
+                        id: 'demo-chat-2',
+                        is_admin: false,
+                        message: 'হ্যালো! আপনি আমাকে কী সাহায্য করতে পারেন?',
+                        timestamp: new Date(Date.now() - 3500000).toISOString(),
+                        intent: 'NORMAL'
+                    },
+                    {
+                        id: 'demo-chat-3',
+                        is_admin: true,
+                        message: 'আমি কোডিং, প্রজেক্ট তৈরি, বা প্রশ্নের উত্তর দিতে সাহায্য করতে পারি। চেষ্টা করে দেখুন "একটি টোডো অ্যাপ তৈরি করুন" বা "পাইথন কী?"',
+                        timestamp: new Date(Date.now() - 3400000).toISOString(),
+                        intent: 'PROJECT_PLAN'
+                    }
+                ];
+                const historyMessages = demoHistory.map((item: any) => ({
+                    id: item.id,
+                    sender: item.is_admin ? 'ai' : 'user',
+                    agent: item.is_admin ? 'SupremeAI' : 'Operator',
+                    content: item.message,
+                    timestamp: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    status: 'completed' as const,
+                    intent: item.intent || 'NORMAL'
+                }));
+                setMessages(historyMessages);
+                return;
+            }
+
             const response = await authUtils.fetchWithAuth(`/api/chat/history?user_id=${userId}&limit=50`);
             if (response.ok) {
                 const data = await response.json();
@@ -240,7 +311,7 @@ const ChatWithAI: React.FC = () => {
                                         )}
                                         <span className="text-[8px] font-mono text-white/10">{msg.timestamp}</span>
                                     </div>
-                                    <div className={`px-4 py-3 rounded-xl text-[12px] leading-relaxed relative glass-morphism ${
+                                    <div className={`px-4 py-3 rounded-xl text-[12px] leading-relaxed relative glass-morphism ${chatFont} ${
                                         msg.sender === 'user' 
                                         ? 'bg-blue-600/10 border border-blue-500/30 text-blue-100/90 rounded-tr-none' 
                                         : 'bg-white/[0.04] border border-white/10 text-white/80 rounded-tl-none shadow-[0_0_20px_rgba(0,0,0,0.5)]'
@@ -280,7 +351,7 @@ const ChatWithAI: React.FC = () => {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             disabled={loading}
-                            className="bg-black/60 border-white/10 text-white placeholder:text-white/10 text-[12px] h-12 px-5 rounded-lg font-mono focus:border-emerald-500/40 transition-all shadow-[inset_0_1px_10px_rgba(0,0,0,0.8)]"
+                            className={`bg-black/60 border-white/10 text-white placeholder:text-white/10 text-[14px] h-12 px-5 rounded-lg focus:border-emerald-500/40 transition-all shadow-[inset_0_1px_10px_rgba(0,0,0,0.8)] ${chatFont}`}
                         />
                         <button 
                             type="submit"

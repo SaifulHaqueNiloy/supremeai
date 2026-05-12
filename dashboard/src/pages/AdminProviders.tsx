@@ -11,7 +11,7 @@ const { Option } = Select;
 interface Provider {
   id?: string;
   name: string;
-  providerType: string;
+  type: string;
   baseUrl: string;
   apiKey?: string;
   status: 'active' | 'inactive' | 'error';
@@ -32,14 +32,12 @@ const AdminProviders: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = authUtils.getToken();
-      const response = await fetch('/api/admin/providers/configured', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await authUtils.fetchWithAuth('/api/admin/providers/configured');
       if (!response.ok) throw new Error('Failed to fetch providers');
-      const data = await response.json();
-      // Backend returns { providers: [...] }
-      const provList: Provider[] = data.providers || [];
+      const result = await response.json();
+      
+      // Backend returns ApiResponse wrapper: { success: true, data: { providers: [...] } }
+      const provList: Provider[] = result.data?.providers || [];
       setProviders(provList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load providers');
@@ -54,7 +52,6 @@ const AdminProviders: React.FC = () => {
 
   const handleSubmit = async (values: any) => {
     try {
-      const token = authUtils.getToken();
       const payload: Provider = {
         ...values,
         status: values.status || 'active',
@@ -62,21 +59,13 @@ const AdminProviders: React.FC = () => {
       };
       let response;
       if (editingProvider && editingProvider.id) {
-        response = await fetch(`/api/admin/providers/${editingProvider.id}`, {
+        response = await authUtils.fetchWithAuth(`/api/admin/providers/${editingProvider.id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
           body: JSON.stringify(payload),
         });
       } else {
-        response = await fetch('/api/admin/providers/add', {
+        response = await authUtils.fetchWithAuth('/api/admin/providers/add', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
           body: JSON.stringify(payload),
         });
       }
@@ -95,11 +84,8 @@ const AdminProviders: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const token = authUtils.getToken();
-      // Prefer DELETE /api/admin/providers/{id}
-      const response = await fetch(`/api/admin/providers/${id}`, {
+      const response = await authUtils.fetchWithAuth(`/api/admin/providers/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to delete provider');
       message.success('Provider deleted');
@@ -118,8 +104,8 @@ const AdminProviders: React.FC = () => {
     },
     {
       title: 'Type',
-      dataIndex: 'providerType',
-      key: 'providerType',
+      dataIndex: 'type',
+      key: 'type',
       render: (type: string) => <Tag color="blue">{type}</Tag>,
     },
     {
@@ -203,7 +189,7 @@ const AdminProviders: React.FC = () => {
           <Form.Item name="name" label="Provider Name" rules={[{ required: true }]}>
             <Input placeholder="e.g., OpenAI" />
           </Form.Item>
-          <Form.Item name="providerType" label="Type" rules={[{ required: true }]}>
+          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
             <Select placeholder="Select type">
               <Option value="openai">OpenAI</Option>
               <Option value="anthropic">Anthropic</Option>

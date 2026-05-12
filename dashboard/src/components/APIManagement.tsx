@@ -151,15 +151,25 @@ const APIManagement: React.FC = () => {
         }
     };
 
-    const toggleRole = async (id: string, type: string, enabled: boolean) => {
+    const toggleRole = async (id: string, roleType: string, enabled: boolean) => {
         try {
+            // Map frontend role type to backend capability field name
+            const capabilityMap: Record<string, string> = {
+                'communication': 'canCommunicate',
+                'execution': 'canExecuteTasks',
+                'voting': 'canParticipateInVoting'
+            };
+            
+            const fieldName = capabilityMap[roleType];
+            if (!fieldName) return;
+
             const response = await authUtils.fetchWithAuth(`/api/admin/providers/${id}/capability`, {
                 method: 'PATCH',
-                body: JSON.stringify({ type, enabled }),
+                body: JSON.stringify({ [fieldName]: enabled }),
             });
 
             if (response.ok) {
-                message.success(`ROLE_${type.toUpperCase()}_${enabled ? 'ASSIGNED' : 'REVOKED'}`);
+                message.success(`ROLE_${roleType.toUpperCase()}_${enabled ? 'ASSIGNED' : 'REVOKED'}`);
                 fetchProviders();
             } else {
                 throw new Error('FAILED_TO_UPDATE_CAPABILITY');

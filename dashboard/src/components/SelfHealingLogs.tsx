@@ -1,10 +1,52 @@
-import React from 'react';
-import { Typography, Badge, Space, List, Tag, Timeline } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Typography, Badge, Space, List, Tag, Timeline, Spin } from 'antd';
 import { BugOutlined, CheckCircleOutlined, WarningOutlined, SyncOutlined } from '@ant-design/icons';
+import { authUtils } from '../lib/authUtils';
 
 const { Text, Title } = Typography;
 
+interface LogEntry {
+    timestamp: number;
+    severity: string;
+    details: string;
+    category: string;
+}
+
 const SelfHealingLogs: React.FC = () => {
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchLogs = async () => {
+        try {
+            const response = await authUtils.fetchWithAuth('/api/logs?pageSize=20');
+            if (response.success && response.data?.logs) {
+                setLogs(response.data.logs);
+            }
+        } catch (error) {
+            console.error('Failed to fetch self-healing logs:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLogs();
+        const interval = setInterval(fetchLogs, 10000); // Poll every 10s
+        return () => clearInterval(interval);
+    }, []);
+
+    const getSeverityColor = (severity: string) => {
+        switch (severity.toUpperCase()) {
+            case 'CRITICAL':
+            case 'ERROR': return 'red';
+            case 'WARN':
+            case 'WARNING': return 'yellow';
+            case 'INFO': return 'emerald';
+            case 'ACTION': return 'blue';
+            default: return 'white';
+        }
+    };
+
     return (
         <div className="p-4 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -14,19 +56,26 @@ const SelfHealingLogs: React.FC = () => {
                     </Title>
                     
                     <div className="bg-black/40 rounded-xl p-4 font-mono text-[10px] h-[500px] overflow-y-auto custom-scrollbar border border-white/5">
-                        {[
-                            { time: '14:22:01', level: 'INFO', msg: 'System heartbeat normal. All 5 models responding.', color: 'emerald' },
-                            { time: '14:22:15', level: 'WARN', msg: 'GPT-4o latency spike detected: 850ms. Rerouting traffic...', color: 'yellow' },
-                            { time: '14:22:16', level: 'ACTION', msg: 'Auto-healing: Switched primary provider to Claude-3.5.', color: 'blue' },
-                            { time: '14:23:45', level: 'ERROR', msg: 'Ollama local node timeout. Attempting container restart.', color: 'red' },
-                            { time: '14:24:02', level: 'INFO', msg: 'Ollama node recovered. State: HEALTHY.', color: 'emerald' },
-                        ].map((log, i) => (
-                            <div key={i} className="mb-2 flex gap-4 border-l border-white/10 pl-4">
-                                <span className="text-white/20 whitespace-nowrap">[{log.time}]</span>
-                                <span className={`text-${log.color}-500 font-black w-16`}>{log.level}</span>
-                                <span className="text-white/60">{log.msg}</span>
+                        {loading && logs.length === 0 ? (
+                            <div className="h-full flex items-center justify-center">
+                                <Spin size="small" />
                             </div>
-                        ))}
+                        ) : (
+                            logs.map((log, i) => (
+                                <div key={i} className="mb-2 flex gap-4 border-l border-white/10 pl-4">
+                                    <span className="text-white/20 whitespace-nowrap">
+                                        [{new Date(log.timestamp).toLocaleTimeString()}]
+                                    </span>
+                                    <span className={`text-${getSeverityColor(log.severity)}-500 font-black w-16 uppercase`}>
+                                        {log.severity}
+                                    </span>
+                                    <span className="text-white/60">{log.details}</span>
+                                    <Tag className="text-[8px] bg-white/5 border-white/10 text-white/40 ml-auto uppercase">
+                                        {log.category}
+                                    </Tag>
+                                </div>
+                            ))
+                        )}
                         <div className="flex items-center gap-2 mt-4 animate-pulse">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             <span className="text-emerald-500/40 italic">Listening for new telemetry pulses...</span>
@@ -41,27 +90,22 @@ const SelfHealingLogs: React.FC = () => {
                     <Timeline 
                         pending={<span className="text-[9px] text-white/20 uppercase">Monitoring Real-time...</span>}
                         className="dark-timeline"
-                        items={[
-                            {
-                                dot: <CheckCircleOutlined className="text-emerald-500" />,
-                                children: (
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] text-white font-bold uppercase">DB Sync Recovery</span>
-                                        <span className="text-[9px] text-white/30 uppercase">Resolved Firestore connection glitch automatically</span>
-                                    </div>
-                                )
-                            },
-                            {
-                                dot: <WarningOutlined className="text-yellow-500" />,
-                                children: (
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] text-white font-bold uppercase">Rate Limit Mitigation</span>
-                                        <span className="text-[9px] text-white/30 uppercase">Implemented 2s cooling period for Claude API</span>
-                                    </div>
-                                )
-                            }
-                        ]}
+                        items={logs.filter(l => l.severity === 'ACTION' || l.category === 'AUTO_HEALING').slice(0, 5).map(log => ({
+                            dot: <CheckCircleOutlined className="text-emerald-500" />,
+                            children: (
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-white font-bold uppercase">{log.category}</span>
+                                    <span className="text-[9px] text-white/30 uppercase">{log.details}</span>
+                                </div>
+                            )
+                        }))}
                     />
+                    {logs.filter(l => l.severity === 'ACTION' || l.category === 'AUTO_HEALING').length === 0 && (
+                        <div className="text-center py-8 opacity-20">
+                            <SyncOutlined spin className="text-2xl mb-2" />
+                            <div className="text-[10px] uppercase">No active healing events</div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -45,8 +45,8 @@ const AIAgentsDashboard: React.FC = () => {
                 // Mocking load/tasks if not present for density
                 const enriched = (result.data || []).map((a: any) => ({
                     ...a,
-                    load: a.load || Math.floor(Math.random() * 40) + 10,
-                    tasks: a.tasks || Math.floor(Math.random() * 5)
+                    load: a.load !== undefined && a.load !== null ? a.load : 0,
+                    tasks: a.tasks !== undefined && a.tasks !== null ? a.tasks : 0
                 }));
                 setAgents(enriched);
             }

@@ -147,8 +147,8 @@ const DEMO_MOCK_DATA: Record<string, any> = {
   // Send chat (demo response)
   '/api/chat/send': {
     success: true,
-    message: 'This is a demo response. In a real environment, I would process your request using advanced AI models. Try "Create a todo app" or "What is Python?"',
-    agent_name: 'Demo Assistant',
+    message: 'এটি একটি ডেমো রেসপন্স। বাস্তব পরিবেশে, আমি উন্নত AI মডেল ব্যবহার করে আপনার অনুরোধ প্রক্রিয়া করতাম। চেষ্টা করে দেখুন "একটি টোডো অ্যাপ তৈরি করুন" বা "পাইথন কী?"',
+    agent_name: 'ডেমো সহকারী',
     confidence: 0.95,
     intent: 'NORMAL'
   },
@@ -237,15 +237,23 @@ export const authUtils = {
     return {};
   },
 
-  async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  async fetchWithAuth(url: string, options: any = {}) {
     const token = this.getToken();
-    const isGuest = token === 'GUEST_MODE';
+    const isGuest = token === 'GUEST_MODE' || !token;
+    const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || '';
+    const fullUrl = url.startsWith('/') && API_BASE ? `${API_BASE}${url}` : url;
     
-    // Demo mode: return mock data for guest users
-    if (isGuest && DEMO_MOCK_DATA[url]) {
-      console.log(`[Demo Mode] Returning mock data for: ${url}`);
-      const mockData = DEMO_MOCK_DATA[url];
-      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300)); // Simulate network
+    // Normalize URL for mock lookup (strip base and query)
+    let normalizedPath = url.split('?')[0];
+    if (API_BASE && normalizedPath.startsWith(API_BASE)) {
+      normalizedPath = normalizedPath.substring(API_BASE.length);
+    }
+    if (!normalizedPath.startsWith('/')) normalizedPath = '/' + normalizedPath;
+
+    if (isGuest && DEMO_MOCK_DATA[normalizedPath]) {
+      console.log(`[Demo Mode] Returning mock data for: ${normalizedPath}`);
+      const mockData = DEMO_MOCK_DATA[normalizedPath];
+      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
       return {
         ok: true,
         json: async () => mockData,
@@ -261,30 +269,41 @@ export const authUtils = {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || '';
-    const fullUrl = url.startsWith('/') && API_BASE ? `${API_BASE}${url}` : url;
-
     let response = await fetch(fullUrl, { ...options, headers });
 
     if (response.status === 401) {
-      try {
-        const { refreshAccessToken } = await import('./firebase');
-        const newToken = await refreshAccessToken();
-        headers.set('Authorization', `Bearer ${newToken}`);
-        response = await fetch(fullUrl, { ...options, headers });
-      } catch (err) {
-        this.clearAuth();
-        window.location.href = '/admin';
+      if (isGuest) {
+        console.warn("[Demo Mode] 401 encountered in Guest mode. Returning mock if available.");
+        if (DEMO_MOCK_DATA[normalizedPath]) {
+          return {
+            ok: true,
+            json: async () => DEMO_MOCK_DATA[normalizedPath],
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers({ 'Content-Type': 'application/json' }),
+            text: async () => JSON.stringify(DEMO_MOCK_DATA[normalizedPath])
+          } as Response;
+        }
+      } else {
+        try {
+          const { refreshAccessToken } = await import('./firebase');
+          const newToken = await refreshAccessToken();
+          headers.set('Authorization', `Bearer ${newToken}`);
+          response = await fetch(fullUrl, { ...options, headers });
+        } catch (err) {
+          this.clearAuth();
+          window.location.href = '/';
+        }
       }
-    } else if (response.status === 403 && isGuest && DEMO_MOCK_DATA[url]) {
-      console.log(`[Demo Mode] 403 intercepted, showing mock: ${url}`);
+    } else if ((response.status === 403 || response.status === 404) && isGuest && DEMO_MOCK_DATA[normalizedPath]) {
+      console.log(`[Demo Mode] ${response.status} intercepted, showing mock: ${normalizedPath}`);
       return {
         ok: true,
-        json: async () => DEMO_MOCK_DATA[url],
+        json: async () => DEMO_MOCK_DATA[normalizedPath],
         status: 200,
         statusText: 'OK',
         headers: new Headers({ 'Content-Type': 'application/json' }),
-        text: async () => JSON.stringify(DEMO_MOCK_DATA[url])
+        text: async () => JSON.stringify(DEMO_MOCK_DATA[normalizedPath])
       } as Response;
     }
     

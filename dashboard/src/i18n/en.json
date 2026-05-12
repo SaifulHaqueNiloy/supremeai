@@ -162,5 +162,18 @@
       "execution": "Task Execution",
       "voting": "Ensemble Voting"
     }
+  },
+  "settings": {
+    "userPreferences": "User Settings",
+    "language": "Language",
+    "languageDescription": "Choose your preferred language for the interface",
+    "appearance": "Appearance",
+    "darkMode": "Dark Mode",
+    "notifications": "Notifications",
+    "notificationsDescription": "Receive notifications about system updates and alerts",
+    "focusMode": "Focus Mode",
+    "focusModeDescription": "Minimize distractions by reducing visual noise",
+    "save": "Save Settings",
+    "about": "About"
   }
 }

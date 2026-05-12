@@ -172,10 +172,8 @@ const HUDMetric = ({ icon, label, value, color }: { icon: any, label: string, va
 );
 
 function App() {
-  const basename = window.location.pathname.startsWith('/admin') ? '/admin' : '';
-  
   return (
-    <BrowserRouter basename={basename}>
+    <BrowserRouter>
       <Routes>
         {/* Modern clean admin dashboard */}
         <Route path="/" element={<ModernAdminDashboard />} />

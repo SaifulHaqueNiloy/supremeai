@@ -3,9 +3,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Layout, Card, Tabs, Form, Input, Select, Switch, Button, message, Spin, Alert, Table, Space, Tag } from 'antd';
-import { SettingOutlined, ApiOutlined, BellOutlined, FileTextOutlined } from '@ant-design/icons';
+import { SettingOutlined, ApiOutlined, BellOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons';
 import AdminLayout from '../components/AdminLayout';
 import { authUtils } from '../lib/authUtils';
+import UserSettings from '../components/UserSettings';
+
+interface AdminSettingsProps {
+  darkMode: boolean;
+  setDarkMode: (value: boolean) => void;
+  chatFont: string;
+  setChatFont: (value: string) => void;
+}
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -31,7 +39,7 @@ interface SystemConfig {
   collections?: Record<string, string>;
 }
 
-const AdminSettings: React.FC = () => {
+const AdminSettings: React.FC<AdminSettingsProps> = ({ darkMode, setDarkMode, chatFont, setChatFont }) => {
   const [config, setConfig] = useState<SystemConfig>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -272,6 +280,18 @@ const AdminSettings: React.FC = () => {
           {renderMapEditor('settings', 'Generic System Settings')}
           {renderMapEditor('collections', 'Database Collections')}
         </div>
+      ),
+    },
+    {
+      key: 'personal',
+      label: <><UserOutlined /> Personal</>,
+      children: (
+        <UserSettings 
+          darkMode={darkMode} 
+          setDarkMode={setDarkMode} 
+          chatFont={chatFont} 
+          setChatFont={setChatFont} 
+        />
       ),
     },
   ];
