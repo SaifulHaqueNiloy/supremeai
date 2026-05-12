@@ -69,20 +69,37 @@ export default function ModernAdminDashboard() {
   const [activeKey, setActiveKey] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(true);
 
-  // All tabs available
+  // All tabs available with role requirements
   const allMenuItems = [
-    { key: 'dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: 'ai', icon: <RobotOutlined />, label: 'AI Chat' },
-    { key: 'projects', icon: <CodeOutlined />, label: 'Projects' },
-    { key: 'analytics', icon: <BarChartOutlined />, label: 'Analytics', adminOnly: true },
-    { key: 'knowledge', icon: <BulbOutlined />, label: 'Knowledge', adminOnly: true },
-    { key: 'settings', icon: <SettingOutlined />, label: 'Settings', adminOnly: true },
+    { key: 'dashboard', icon: <DashboardOutlined />, label: 'Dashboard', roles: ['guest', 'user', 'admin'] },
+    { key: 'ai', icon: <RobotOutlined />, label: 'AI Chat', roles: ['guest', 'user', 'admin'] },
+    { key: 'projects', icon: <CodeOutlined />, label: 'Projects', roles: ['user', 'admin'] },
+    { key: 'analytics', icon: <BarChartOutlined />, label: 'Analytics', roles: ['admin'] },
+    { key: 'knowledge', icon: <BulbOutlined />, label: 'Knowledge', roles: ['admin'] },
+    { key: 'settings', icon: <SettingOutlined />, label: 'Settings', roles: ['admin'] },
   ];
 
-  // Filter menu items based on admin status
-  const menuItems = allMenuItems.filter(item => !item.adminOnly || isAdmin);
+  // Get current user role
+  const getCurrentRole = () => {
+    if (isAdmin) return 'admin';
+    if (isAuthenticated) return 'user';
+    return 'guest';
+  };
+
+  const currentRole = getCurrentRole();
+
+  // Filter menu items based on current role
+  const menuItems = allMenuItems.filter(item => item.roles.includes(currentRole));
 
   const renderContent = () => {
+    // Security check: if user somehow selects a key they don't have access to
+    const activeItem = allMenuItems.find(item => item.key === activeKey);
+    const hasAccess = activeItem?.roles.includes(currentRole);
+
+    if (!hasAccess && activeKey !== 'dashboard') {
+      return <RestrictedDemo title="Access Restricted" description="You do not have permission to access this module." icon={<LockOutlined />} />;
+    }
+
     switch (activeKey) {
       case 'dashboard':
         return <DashboardHome />;
@@ -91,16 +108,16 @@ export default function ModernAdminDashboard() {
       case 'projects':
         return <AdminProjects />;
       case 'analytics':
-        return isAdmin ? <APIManagement /> : <RestrictedDemo title="Provider Management" description="AI provider registry and capability assignment requires admin access." icon={<ExperimentOutlined />} />;
+        return <APIManagement />;
       case 'knowledge':
-        return isAdmin ? <KnowledgeHub /> : <RestrictedDemo title="Knowledge Hub" description="Access to knowledge base, rule engine, and plan management is restricted to administrators." icon={<ExperimentOutlined />} />;
+        return <KnowledgeHub />;
       case 'settings':
-        return isAdmin ? (
+        return (
           <div style={{ padding: 24, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
             <h2>System Settings</h2>
             <p>System configuration, user management, and security settings.</p>
           </div>
-        ) : <RestrictedDemo title="System Settings" description="System configuration is only available to administrators." icon={<SettingOutlined />} />;
+        );
       default:
         return <DashboardHome />;
     }
@@ -117,45 +134,49 @@ export default function ModernAdminDashboard() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: 24
         }}>
-          <div style={{
-            padding: 24,
-            background: 'rgba(255,255,255,0.03)',
-            borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.1)',
-            transition: 'all 0.3s ease'
-          }}>
-            <h3 style={{ marginBottom: 12, color: 'var(--neon-blue)', fontWeight: 700 }}>AI Assistant</h3>
-            <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-              Chat with SupremeAI agents. Generate code, analyze requirements, and get intelligent assistance.
-            </p>
-            <Button
-              type="primary"
-              icon={<RobotOutlined />}
-              style={{ marginTop: 16 }}
-              onClick={() => setActiveKey('ai')}
-            >
-              Start Chatting
-            </Button>
-          </div>
-          <div style={{
-            padding: 24,
-            background: 'rgba(255,255,255,0.03)',
-            borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.1)',
-            transition: 'all 0.3s ease'
-          }}>
-            <h3 style={{ marginBottom: 12, color: 'var(--neon-purple)', fontWeight: 700 }}>Projects</h3>
-            <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-              View and manage your generated applications. Track progress, deploy, and monitor performance.
-            </p>
-            <Button
-              style={{ marginTop: 16 }}
-              icon={<CodeOutlined />}
-              onClick={() => setActiveKey('projects')}
-            >
-              Browse Projects
-            </Button>
-          </div>
+          {(currentRole === 'guest' || currentRole === 'user' || currentRole === 'admin') && (
+            <div style={{
+              padding: 24,
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.1)',
+              transition: 'all 0.3s ease'
+            }}>
+              <h3 style={{ marginBottom: 12, color: 'var(--neon-blue)', fontWeight: 700 }}>AI Assistant</h3>
+              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                Chat with SupremeAI agents. Generate code, analyze requirements, and get intelligent assistance.
+              </p>
+              <Button
+                type="primary"
+                icon={<RobotOutlined />}
+                style={{ marginTop: 16 }}
+                onClick={() => setActiveKey('ai')}
+              >
+                Start Chatting
+              </Button>
+            </div>
+          )}
+          {(currentRole === 'user' || currentRole === 'admin') && (
+            <div style={{
+              padding: 24,
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.1)',
+              transition: 'all 0.3s ease'
+            }}>
+              <h3 style={{ marginBottom: 12, color: 'var(--neon-purple)', fontWeight: 700 }}>Projects</h3>
+              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                View and manage your generated applications. Track progress, deploy, and monitor performance.
+              </p>
+              <Button
+                style={{ marginTop: 16 }}
+                icon={<CodeOutlined />}
+                onClick={() => setActiveKey('projects')}
+              >
+                Browse Projects
+              </Button>
+            </div>
+          )}
           {isAdmin && (
             <div style={{
               padding: 24,
@@ -174,29 +195,6 @@ export default function ModernAdminDashboard() {
                 onClick={() => setActiveKey('analytics')}
               >
                 View Analytics
-              </Button>
-            </div>
-          )}
-          {!isAdmin && (
-            <div style={{
-              padding: 24,
-              background: 'rgba(245,158,11,0.1)',
-              borderRadius: 12,
-              border: '1px solid rgba(245,158,11,0.3)',
-              transition: 'all 0.3s ease'
-            }}>
-              <h3 style={{ marginBottom: 12, color: '#f59e0b', fontWeight: 700 }}>Upgrade to Admin</h3>
-              <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-                Admin users get access to AI provider management, system metrics, and advanced configuration.
-              </p>
-              <Button
-                type="primary"
-                danger
-                icon={<ExperimentOutlined />}
-                style={{ marginTop: 16 }}
-                onClick={() => window.location.href = '/admin?login=true'}
-              >
-                Request Admin Access
               </Button>
             </div>
           )}
