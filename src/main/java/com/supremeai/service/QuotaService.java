@@ -1,8 +1,11 @@
 package com.supremeai.service;
 
 import com.supremeai.model.UserApiKey;
+import com.supremeai.model.UserTier;
 import com.supremeai.repository.UserApiKeyRepository;
 import com.supremeai.cost.QuotaManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,8 @@ import java.time.LocalDateTime;
  */
 @Service
 public class QuotaService {
+
+    private static final Logger logger = LoggerFactory.getLogger(QuotaService.class);
 
     @Autowired
     private UserApiKeyRepository userApiKeyRepository;
@@ -50,7 +55,7 @@ public class QuotaService {
                     guestApi.setUserId("guest_user");
                     guestApi.setStatus("active");
                     guestApi.setRequestCount(0L);
-                    guestApi.setCreatedAt(LocalDateTime.now());
+                    guestApi.setAddedAt(LocalDateTime.now());
                     return userApiKeyRepository.save(guestApi).map(api -> true);
                 }
                 return Mono.just(false);
@@ -86,7 +91,7 @@ public class QuotaService {
                     guestApi.setStatus("active");
                     guestApi.setRequestCount(1L);
                     guestApi.setLastUsed(LocalDateTime.now());
-                    guestApi.setCreatedAt(LocalDateTime.now());
+                    guestApi.setAddedAt(LocalDateTime.now());
                     return userApiKeyRepository.save(guestApi).map(api -> true);
                 }
                 return Mono.just(false);
