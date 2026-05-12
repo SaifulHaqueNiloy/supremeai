@@ -1,0 +1,59 @@
+# Render Blueprint Specification for SupremeAI Model Fleet
+# Version: 1.0
+
+services:
+  # 1. TinyLlama - Emergency Fallback (Always Free)
+  - type: web
+    name: supreme-ai-tinyllama
+    env: docker
+    dockerContext: .
+    dockerFilePath: deployment/render/Dockerfile
+    plan: free
+    region: oregon # or frankfurt
+    envVars:
+      - key: MODEL_NAME
+        value: tinyllama
+      - key: OLLAMA_HOST
+        value: 0.0.0.0:10000
+
+  # 2. Phi-2 - Fast Response (Free Tier Docker)
+  - type: web
+    name: supreme-ai-phi2
+    env: docker
+    dockerContext: .
+    dockerFilePath: deployment/render/Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: MODEL_NAME
+        value: phi2
+      - key: OLLAMA_HOST
+        value: 0.0.0.0:10000
+
+  # 3. Qwen 0.5B - Ultra-Lightweight (Best for 512MB RAM)
+  - type: web
+    name: supreme-ai-qwen-05b
+    env: docker
+    dockerContext: .
+    dockerFilePath: deployment/render/Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: MODEL_NAME
+        value: qwen:0.5b
+      - key: OLLAMA_HOST
+        value: 0.0.0.0:10000
+
+  # 4. Phi-3 Mini - High Quality (Might need "Starter" plan)
+  - type: web
+    name: supreme-ai-phi3
+    env: docker
+    dockerContext: .
+    dockerFilePath: deployment/render/Dockerfile
+    plan: starter # Starter has 2GB RAM, much better for Phi-3
+    region: oregon
+    envVars:
+      - key: MODEL_NAME
+        value: phi3
+      - key: OLLAMA_HOST
+        value: 0.0.0.0:10000
