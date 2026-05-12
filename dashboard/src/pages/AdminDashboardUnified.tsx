@@ -67,6 +67,7 @@ import {
   Filler
 } from 'chart.js';
 import { ApiResponse, DashboardContract } from '../types';
+import { LogEntry } from '../components/NeuralTerminal';
 
 // Register ChartJS
 ChartJS.register(

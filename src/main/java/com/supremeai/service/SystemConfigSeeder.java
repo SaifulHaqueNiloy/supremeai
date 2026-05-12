@@ -159,13 +159,29 @@ public class SystemConfigSeeder {
                 "rotationThreshold", 0.50,
                 "priority", 8
             )),
+            Map.entry("render_phi3", Map.of(
+                "enabled", true,
+                "model", "phi-3-mini",
+                "description", "Render - Balanced Quality (Docker)",
+                "maxTokens", 4096,
+                "rotationThreshold", 0.70,
+                "priority", 9
+            )),
+            Map.entry("render_qwen", Map.of(
+                "enabled", true,
+                "model", "qwen-0.5b",
+                "description", "Render - Ultra-Lightweight (Best for Free Tier)",
+                "maxTokens", 2048,
+                "rotationThreshold", 0.40,
+                "priority", 10
+            )),
             Map.entry("openai", Map.of(
                 "enabled", true,
                 "model", "gpt-4o-mini",
                 "description", "Backup - Structured Data & Logic Verification",
                 "maxTokens", 128000,
                 "rotationThreshold", 0.80,
-                "priority", 9
+                "priority", 11
             )),
             Map.entry("deepseek", Map.of(
                 "enabled", true,
@@ -173,7 +189,7 @@ public class SystemConfigSeeder {
                 "description", "Professional Coding & Technical Architect",
                 "maxTokens", 64000,
                 "rotationThreshold", 0.80,
-                "priority", 10
+                "priority", 12
             ))
         ));
 

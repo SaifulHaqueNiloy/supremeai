@@ -6,6 +6,7 @@ import { Activity, Cpu, Shield, Zap, Terminal as TerminalIcon, Globe } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboardUnified from './pages/AdminDashboardUnified';
+import ModernAdminDashboard from './pages/ModernAdminDashboard';
 
 interface ModelStatus {
   id: string;
@@ -171,17 +172,18 @@ const HUDMetric = ({ icon, label, value, color }: { icon: any, label: string, va
 );
 
 function App() {
-  // Use basename if hosted in a subdirectory (like /admin/ on Firebase)
   const basename = window.location.pathname.startsWith('/admin') ? '/admin' : '';
   
   return (
     <BrowserRouter basename={basename}>
       <Routes>
-        {/* The AdminDashboardUnified is now the primary entry point for the dashboard app */}
-        <Route path="/" element={<AdminDashboardUnified />} />
-        {/* Legacy/Visualization view kept at a specific path if needed */}
+        {/* Modern clean admin dashboard */}
+        <Route path="/" element={<ModernAdminDashboard />} />
+        {/* Legacy 3D visualizer */}
         <Route path="/visualizer" element={<MainVisualizer />} />
-        {/* Catch-all redirects to the unified dashboard */}
+        {/* Unified dashboard for comparison */}
+        <Route path="/unified" element={<AdminDashboardUnified />} />
+        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
