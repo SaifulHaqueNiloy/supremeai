@@ -3,13 +3,19 @@ package com.supremeai.controller;
 import com.supremeai.dto.AppGenerationRequest;
 import com.supremeai.generation.FullStackCodeGenerator;
 import com.supremeai.generation.MultiPlatformGenerator;
+import com.supremeai.model.GeneratedApp;
+import com.supremeai.repository.GeneratedAppRepository;
 import com.supremeai.service.CodeGenerationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +25,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AppGenerationControllerTest {
 
     @Mock
@@ -29,6 +36,9 @@ class AppGenerationControllerTest {
 
     @Mock
     private MultiPlatformGenerator multiPlatformGenerator;
+
+    @Mock
+    private GeneratedAppRepository generatedAppRepository;
 
     private AppGenerationController controller;
 
@@ -48,9 +58,16 @@ class AppGenerationControllerTest {
             java.lang.reflect.Field multiPlatformField = AppGenerationController.class.getDeclaredField("multiPlatformGenerator");
             multiPlatformField.setAccessible(true);
             multiPlatformField.set(controller, multiPlatformGenerator);
+
+            java.lang.reflect.Field repoField = AppGenerationController.class.getDeclaredField("generatedAppRepository");
+            repoField.setAccessible(true);
+            repoField.set(controller, generatedAppRepository);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        // Default stub for repository
+        when(generatedAppRepository.save(any())).thenReturn(Mono.just(new GeneratedApp("test-app-id", "user", "web", "React")));
     }
 
     @Test
@@ -74,7 +91,7 @@ class AppGenerationControllerTest {
         )).thenReturn(serviceResult);
 
         // When
-        ResponseEntity<Map<String, Object>> response = controller.generateApp(request);
+        ResponseEntity<Map<String, Object>> response = controller.generateApp(request, null);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
@@ -109,7 +126,7 @@ class AppGenerationControllerTest {
         when(codeGenerationService.generateFromContext(anyMap())).thenReturn(expectedResult);
 
         // When
-        ResponseEntity<Map<String, Object>> response = controller.generateApp(request);
+        ResponseEntity<Map<String, Object>> response = controller.generateApp(request, null);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
@@ -134,7 +151,7 @@ class AppGenerationControllerTest {
                 .thenReturn(platformResult);
 
         // When
-        ResponseEntity<Map<String, Object>> response = controller.generateApp(request);
+        ResponseEntity<Map<String, Object>> response = controller.generateApp(request, null);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
@@ -158,7 +175,7 @@ class AppGenerationControllerTest {
                 .thenThrow(new RuntimeException("Generation failed"));
 
         // When
-        ResponseEntity<Map<String, Object>> response = controller.generateApp(request);
+        ResponseEntity<Map<String, Object>> response = controller.generateApp(request, null);
 
         // Then
         assertEquals(500, response.getStatusCode().value());

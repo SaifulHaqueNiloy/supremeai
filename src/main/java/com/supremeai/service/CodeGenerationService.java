@@ -1,14 +1,18 @@
 package com.supremeai.service;
 
 import com.supremeai.ai.client.OpenAIClient;
+import com.supremeai.model.GeneratedApp;
 import com.supremeai.model.EntityDefinition;
 import com.supremeai.model.FieldDefinition;
+import com.supremeai.repository.GeneratedAppRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import reactor.core.publisher.Mono;
 
 @Service
 public class CodeGenerationService {
@@ -18,8 +22,19 @@ public class CodeGenerationService {
 
     private final OpenAIClient openAIClient;
 
+    @Autowired
+    private GeneratedAppRepository generatedAppRepository;
+
     public CodeGenerationService(OpenAIClient openAIClient) {
         this.openAIClient = openAIClient;
+    }
+
+    /**
+     * Retrieve a generated app by its appId.
+     * Used by SimulatorRuntimeController to serve preview.
+     */
+    public Mono<GeneratedApp> getGeneratedApp(String appId) {
+        return generatedAppRepository.findByAppId(appId);
     }
 
     /**

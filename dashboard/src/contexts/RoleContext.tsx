@@ -38,14 +38,11 @@ export const RoleProvider: React.FC<RoleProviderProps> = ({ children }) => {
     setIsGuest(token === 'GUEST_MODE');
     setUser(currentUser);
 
-    // Check admin status: hardcoded admin emails or admin role
+    // Check admin status: rely on backend-assigned roles/tiers
     const isAdminUser =
       currentUser?.role === 'admin' ||
       currentUser?.tier === 'admin' ||
-      currentUser?.email === 'admin@supreme.ai' ||
-      currentUser?.email === 'paykaribazaronline@gmail.com' ||
-      currentUser?.email === 'niloyjoy7@gmail.com' ||
-      currentUser?.email === 'nazifarabbu@gmail.com';
+      currentUser?.tier === 'ADMIN';
 
     setIsAdmin(isAdminUser);
   };

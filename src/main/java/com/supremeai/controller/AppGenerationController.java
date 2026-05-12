@@ -3,21 +3,25 @@ package com.supremeai.controller;
 import com.supremeai.service.CodeGenerationService;
 import com.supremeai.generation.FullStackCodeGenerator;
 import com.supremeai.generation.MultiPlatformGenerator;
+import com.supremeai.model.GeneratedApp;
 import com.supremeai.model.EntityDefinition;
 import com.supremeai.model.FieldDefinition;
+import com.supremeai.repository.GeneratedAppRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.supremeai.dto.AppGenerationRequest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+import reactor.core.publisher.Mono;
+import java.util.UUID;
 
 /**
  * Controller for app generation endpoints.
@@ -37,10 +41,15 @@ public class AppGenerationController {
     
     @Autowired
     private MultiPlatformGenerator multiPlatformGenerator;
-    
+
+    @Autowired
+    private GeneratedAppRepository generatedAppRepository;
+
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
-    public ResponseEntity<Map<String, Object>> generateApp(@Valid @RequestBody AppGenerationRequest request) {
+    public ResponseEntity<Map<String, Object>> generateApp(
+            @Valid @RequestBody AppGenerationRequest request,
+            Authentication auth) {
         try {
             String name = request.getName();
             String description = request.getDescription();
@@ -48,8 +57,10 @@ public class AppGenerationController {
             String database = request.getDatabase();
             String type = request.getType();
             boolean useAI = request.isUseAI();
-            
-            logger.info("Generating app: {} (platform: {}, database: {}, AI: {})", name, platform, database, useAI);
+
+            String userId = auth != null ? auth.getName() : "anonymous";
+
+            logger.info("Generating app: {} (platform: {}, database: {}, AI: {}) by user {}", name, platform, database, useAI, userId);
             
             Map<String, String> decisions = new HashMap<>();
             decisions.put("architecture", "monolith");
@@ -101,8 +112,30 @@ public class AppGenerationController {
             result.put("type", type);
             result.put("status", "GENERATED");
             result.put("message", "App generated successfully");
-            
-            logger.info("App generation completed: {} ({} files)", name, result.getOrDefault("fileCount", 0));
+
+            // Persist generated app to Firestore for simulator preview
+            String appId = UUID.randomUUID().toString();
+            GeneratedApp generatedApp = new GeneratedApp(appId, userId, platform, "React");
+            // For now, store placeholder HTML; will be replaced with actual build output
+            String placeholderHtml = String.format(
+                "<!DOCTYPE html><html><head><title>%s</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>" +
+                "<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f5f5f5\">" +
+                "<div style=\"text-align:center;padding:40px;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1)\">" +
+                "<h1 style=\"color:#333\">%s</h1>" +
+                "<p style=\"color:#666\">Your generated app is being built.</p>" +
+                "<p style=\"color:#999;font-size:12px\">Simulator preview will be available shortly.</p>" +
+                "<p><small>App ID: %s</small></p>" +
+                "</div></body></html>",
+                name, name, appId
+            );
+            generatedApp.setHtmlContent(placeholderHtml);
+            generatedApp.setVersion("1.0.0");
+            generatedApp.setStatus("GENERATED");
+            generatedAppRepository.save(generatedApp).subscribe();
+
+            result.put("appId", appId);
+
+            logger.info("App generation completed: {} ({} files) appId={}", name, result.getOrDefault("fileCount", 0), appId);
             
             return ResponseEntity.ok(result);
             

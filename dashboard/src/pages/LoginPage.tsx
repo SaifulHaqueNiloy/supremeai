@@ -5,6 +5,7 @@ import { UserOutlined, LockOutlined, RobotOutlined, CrownOutlined, LoginOutlined
 import { motion } from 'framer-motion';
 import { authUtils } from '../lib/authUtils';
 import { useRole } from '../contexts/RoleContext';
+import { firebaseSignIn } from '../lib/firebase';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -20,7 +21,6 @@ interface CreateUserForm {
   password: string;
   confirmPassword: string;
   fullName: string;
-  role: 'user' | 'admin';
 }
 
 const LoginPage: React.FC = () => {
@@ -34,47 +34,33 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (values: LoginForm) => {
     setLoading(true);
     try {
-      // Simulate authentication - in real app, this would call your auth API
       if (values.role === 'guest') {
-        // Guest mode - no authentication needed
+        // Guest mode - limited read-only access
+        authUtils.setToken('GUEST_MODE');
+        authUtils.setCurrentUser({
+          id: 'guest',
+          uid: 'guest',
+          email: null,
+          displayName: 'Guest User',
+          username: 'guest',
+          role: 'user',
+          tier: 'guest'
+        });
         message.success('গেস্ট মোডে প্রবেশ করা হয়েছে!');
+        refreshUser();
         setTimeout(() => {
           window.location.href = '/';
         }, 1000);
         return;
       }
 
-      // For demo purposes, accept these credentials
-      const validCredentials = {
-        admin: { email: 'admin@supreme.ai', password: 'admin123' },
-        user: { email: 'user@supreme.ai', password: 'user123' }
-      };
+      // ✅ Real Firebase Authentication
+      const result = await firebaseSignIn(values.email, values.password);
+      
+      authUtils.setToken(result.token);
+      authUtils.setCurrentUser(result.user);
 
-      const roleCreds = validCredentials[values.role as keyof typeof validCredentials];
-      if (!roleCreds) {
-        throw new Error('Invalid role selected');
-      }
-
-      if (values.email !== roleCreds.email || values.password !== roleCreds.password) {
-        throw new Error('Invalid credentials');
-      }
-
-      // Simulate successful authentication
-      const token = `demo-token-${values.role}-${Date.now()}`;
-      const userData = {
-        uid: `demo-${values.role}-user`,
-        email: values.email,
-        role: values.role,
-        tier: values.role,
-        displayName: `${values.role.charAt(0).toUpperCase() + values.role.slice(1)} User`,
-        photoURL: null,
-        emailVerified: true
-      };
-
-      authUtils.setToken(token);
-      authUtils.setCurrentUser(userData);
-
-      message.success(`${values.role.charAt(0).toUpperCase() + values.role.slice(1)} মোডে লগইন সফল!`);
+      message.success(`স্বাগতম, ${result.user.displayName || result.user.email}!`);
       refreshUser();
 
       setTimeout(() => {
@@ -91,41 +77,32 @@ const LoginPage: React.FC = () => {
   const handleCreateUser = async (values: CreateUserForm) => {
     setCreateUserLoading(true);
     try {
-      // Validate password confirmation
       if (values.password !== values.confirmPassword) {
         throw new Error('পাসওয়ার্ড মিলছে না!');
       }
 
-      // Validate password strength
-      if (values.password.length < 6) {
-        throw new Error('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে!');
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      const resp = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          displayName: values.fullName
+        })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || 'রেজিস্ট্রেশন ব্যর্থ হয়েছে!');
       }
 
-      // Simulate user creation - in real app, this would call your registration API
-      const token = `user-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      const userData = {
-        uid: `user-${Date.now()}`,
-        email: values.email,
-        role: values.role,
-        tier: values.role,
-        displayName: values.fullName,
-        photoURL: null,
-        emailVerified: false
-      };
-
-      authUtils.setToken(token);
-      authUtils.setCurrentUser(userData);
-
-      message.success(`নতুন ${values.role === 'admin' ? 'অ্যাডমিন' : 'ইউজার'} অ্যাকাউন্ট তৈরি সফল!`);
+      const result = await resp.json();
+      message.success(result.data?.message || 'অ্যাকাউন্ট তৈরি সফল! এখন লগইন করুন।');
       setCreateUserModalVisible(false);
       createUserForm.resetFields();
-
-      refreshUser();
-
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500);
-
+      
+      // Auto switch to login tab if possible or just stay here
     } catch (error: any) {
       message.error(error.message || 'ইউজার তৈরি করতে ব্যর্থ হয়েছে!');
     } finally {
@@ -133,31 +110,29 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const quickLogin = (role: 'guest' | 'user' | 'admin') => {
-    if (role === 'guest') {
-      message.success('গেস্ট মোডে প্রবেশ করা হয়েছে!');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
+  const handleForgotPassword = async () => {
+    const email = form.getFieldValue('email');
+    if (!email) {
+      message.warning('অনুগ্রহ করে আগে ইমেইল প্রদান করুন!');
       return;
     }
 
-    const demoCreds = {
-      admin: { email: 'admin@supreme.ai', password: 'admin123' },
-      user: { email: 'user@supreme.ai', password: 'user123' }
-    };
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      const resp = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
 
-    form.setFieldsValue({
-      email: demoCreds[role].email,
-      password: demoCreds[role].password,
-      role: role
-    });
-
-    // Auto-submit after a brief delay
-    setTimeout(() => {
-      form.submit();
-    }, 300);
+      if (resp.ok) {
+        message.info('পাসওয়ার্ড রিসেট লিঙ্ক আপনার ইমেইলে পাঠানো হয়েছে (যদি ইমেইলটি রেজিস্টার্ড থাকে)।');
+      }
+    } catch (error) {
+      message.error('পাসওয়ার্ড রিসেট রিকোয়েস্ট পাঠাতে ব্যর্থ হয়েছে।');
+    }
   };
+
 
   return (
     <div className="login-container" style={{
@@ -307,6 +282,16 @@ const LoginPage: React.FC = () => {
                             }}
                           />
                         </Form.Item>
+                        <div style={{ textAlign: 'right', marginBottom: '24px' }}>
+                          <Button 
+                            type="link" 
+                            size="small" 
+                            onClick={handleForgotPassword}
+                            style={{ color: 'var(--neon-blue)', padding: 0 }}
+                          >
+                            পাসওয়ার্ড ভুলে গেছেন?
+                          </Button>
+                        </div>
                       </>
                     )}
                   </Form.Item>
@@ -333,63 +318,6 @@ const LoginPage: React.FC = () => {
                   </Form.Item>
                 </Form>
 
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-                  <Text style={{ color: 'var(--text-dim)' }}>অথবা দ্রুত লগইন</Text>
-                </Divider>
-
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Button
-                    onClick={() => quickLogin('guest')}
-                    block
-                    style={{
-                      background: 'rgba(0, 243, 255, 0.1)',
-                      border: '1px solid var(--neon-blue)',
-                      color: 'var(--neon-blue)',
-                      height: '40px'
-                    }}
-                    icon={<RobotOutlined />}
-                  >
-                    গেস্ট মোডে প্রবেশ করুন
-                  </Button>
-
-                  <Button
-                    onClick={() => quickLogin('user')}
-                    block
-                    style={{
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      border: '1px solid var(--success)',
-                      color: 'var(--success)',
-                      height: '40px'
-                    }}
-                    icon={<UserOutlined />}
-                  >
-                    ইউজার মোড ডেমো
-                  </Button>
-
-                  <Button
-                    onClick={() => quickLogin('admin')}
-                    block
-                    style={{
-                      background: 'rgba(188, 19, 254, 0.1)',
-                      border: '1px solid var(--neon-purple)',
-                      color: 'var(--neon-purple)',
-                      height: '40px'
-                    }}
-                    icon={<CrownOutlined />}
-                  >
-                    অ্যাডমিন মোড ডেমো
-                  </Button>
-                </Space>
-
-                <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                  <Text style={{ color: 'var(--text-dim)', fontSize: '12px' }}>
-                    ডেমো ক্রেডেনশিয়ালস:
-                    <br />
-                    Admin: admin@supreme.ai / admin123
-                    <br />
-                    User: user@supreme.ai / user123
-                  </Text>
-                </div>
               </Tabs.TabPane>
 
               <Tabs.TabPane tab="নতুন ইউজার তৈরি করুন" key="register">
@@ -403,7 +331,6 @@ const LoginPage: React.FC = () => {
                   form={createUserForm}
                   layout="vertical"
                   onFinish={handleCreateUser}
-                  initialValues={{ role: 'user' }}
                   size="large"
                 >
                   <Form.Item
@@ -482,25 +409,6 @@ const LoginPage: React.FC = () => {
                     />
                   </Form.Item>
 
-                  <Form.Item
-                    name="role"
-                    label={<Text style={{ color: 'var(--text-main)', fontWeight: 600 }}>ইউজার টাইপ</Text>}
-                  >
-                    <Select style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                      <Option value="user">
-                        <Space>
-                          <UserOutlined />
-                          <span>সাধারণ ইউজার</span>
-                        </Space>
-                      </Option>
-                      <Option value="admin">
-                        <Space>
-                          <CrownOutlined />
-                          <span>অ্যাডমিন ইউজার</span>
-                        </Space>
-                      </Option>
-                    </Select>
-                  </Form.Item>
 
                   <Form.Item>
                     <Button

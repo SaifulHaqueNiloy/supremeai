@@ -1,6 +1,13 @@
 spring:
   application:
     name: supremeai
+  cloud:
+    gcp:
+      project-id: ${GCP_PROJECT_ID:}
+      pubsub:
+        enabled: true
+      firestore:
+        enabled: true
   data:
     redis:
       host: ${REDIS_HOST:localhost}

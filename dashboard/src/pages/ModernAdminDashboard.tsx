@@ -32,11 +32,17 @@ import {
   SecurityScanOutlined,
   AuditOutlined,
   ToolOutlined,
+  ExclamationCircleOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
+import { Breadcrumb, Modal } from 'antd';
 import { useRole } from '../contexts/RoleContext';
 import { authUtils } from '../lib/authUtils';
 import ChatWithAI from '../components/ChatWithAI';
 import UserSettings from '../components/UserSettings';
+import UserProfile from '../components/UserProfile';
+import ActivityFeed from '../components/ActivityFeed';
+import { ConnectionIndicator } from '../components/FeedbackSystem';
 import AdminProjects from './AdminProjects';
 import AdminSettings from './AdminSettings';
 import AdminUsers from './AdminUsers';
@@ -232,17 +238,56 @@ const RestrictedDemo: React.FC<{title: string; description: string; icon: React.
 // --- Main Dashboard Component ---
 
 export default function ModernAdminDashboard() {
-  const { isAdmin, isAuthenticated } = useRole();
+  const { isAdmin, isAuthenticated, user, refreshUser } = useRole();
   const [collapsed, setCollapsed] = useState(false);
   const [activeKey, setActiveKey] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(true);
   const [chatFont, setChatFont] = useState(localStorage.getItem('chatFont') || 'font-mono');
-  const [mounted, setMounted] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLogout = () => {
+    Modal.confirm({
+      title: <Text style={{ color: 'var(--text-main)', fontSize: 18, fontWeight: 700 }}>লগআউট নিশ্চিত করুন</Text>,
+      icon: <ExclamationCircleOutlined style={{ color: 'var(--warning)', fontSize: 24 }} />,
+      content: (
+        <div style={{ marginTop: 12 }}>
+          <Text style={{ color: 'var(--text-dim)' }}>আপনি কি নিশ্চিতভাবে আপনার বর্তমান সেশনটি শেষ করতে চান? সকল সেভ না করা পরিবর্তন হারিয়ে যেতে পারে।</Text>
+        </div>
+      ),
+      okText: 'লগআউট',
+      cancelText: 'ফিরে যান',
+      centered: true,
+      okButtonProps: { 
+        className: 'cyber-button', 
+        style: { background: 'var(--warning)', border: 'none', color: '#000' } 
+      },
+      cancelButtonProps: { 
+        style: { background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' } 
+      },
+      onOk: async () => {
+        try {
+          await authUtils.logout();
+          refreshUser();
+          message.success('নিরাপদে লগআউট করা হয়েছে।');
+        } catch (error) {
+          message.error('লগআউট করতে সমস্যা হয়েছে।');
+        }
+      },
+    });
+  };
+
+  const getBreadcrumbs = () => {
+    const activeItem = allMenuItems.find(item => item.key === activeKey);
+    return [
+      { title: <><HomeOutlined /> <span>কমান্ড</span></>, key: 'home' },
+      { title: activeItem?.label || 'ড্যাশবোর্ড', key: 'active' }
+    ];
+  };
 
   const allMenuItems = [
     // Universal tabs (all roles)
@@ -509,23 +554,28 @@ export default function ModernAdminDashboard() {
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
               className="mobile-menu-button"
-              style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20, display: 'none' }}
-            />
-            <Button
-              type="text"
-              icon={<MenuOutlined />}
-              onClick={() => setMobileDrawerOpen(true)}
-              className="mobile-menu-button"
               style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20 }}
             />
             
+            <div className="header-breadcrumbs" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <Breadcrumb 
+                items={getBreadcrumbs()} 
+                style={{ color: 'var(--text-dim)', fontSize: '14px' }}
+              />
+              <div className="divider" style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }} />
+              <ConnectionIndicator />
+            </div>
+            
             <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
               <div style={{ textAlign: 'right' }}>
-                <Text style={{ display: 'block', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, letterSpacing: 1 }}>
-                  {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
-                </Text>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+                  {!isAuthenticated && <Tag color="warning" style={{ margin: 0, borderRadius: 4, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b' }}>সীমাবদ্ধ_অ্যাক্সেস</Tag>}
+                  <Text style={{ display: 'block', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, letterSpacing: 1 }}>
+                    {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
+                  </Text>
+                </div>
                 <Text style={{ fontSize: 12, color: isAdmin ? 'var(--success)' : (isAuthenticated ? 'var(--neon-purple)' : 'var(--text-dim)'), fontFamily: 'var(--font-mono)' }}>
-                  {isAuthenticated ? `USER: ${user?.email || 'Unknown'}` : 'MODE: GUEST'}
+                  {isAuthenticated ? `AUTH: ${user?.email || 'Authenticated'}` : 'MODE: GUEST_BYPASS'}
                 </Text>
               </div>
 
@@ -560,9 +610,7 @@ export default function ModernAdminDashboard() {
                     }}
                     onClick={() => {
                       if (isAuthenticated) {
-                        authUtils.clearAuth();
-                        refreshUser();
-                        message.success('লগআউট সফল!');
+                        handleLogout();
                       } else {
                         window.location.href = '/login';
                       }
@@ -633,10 +681,13 @@ function DashboardHome({ isAdmin, setActiveKey }: { isAdmin: boolean, setActiveK
             </Button>
           </motion.div>
 
-          <TerminalLogs />
+          <ActivityFeed />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {/* User Profile Summary */}
+          <UserProfile />
+
           {/* Dynamic Metrics */}
           <motion.div className="ai-card glass-panel" style={{ background: 'rgba(188, 19, 254, 0.08)' }}>
              <Title level={4} style={{ color: 'var(--text-main)', marginBottom: 20 }}>সিস্টেম লোড ম্যাট্রিক্স</Title>

@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboardUnified from './pages/AdminDashboardUnified';
 import ModernAdminDashboard from './pages/ModernAdminDashboard';
 import LoginPage from './pages/LoginPage';
+import FeedbackSystem from './components/FeedbackSystem';
 
 interface ModelStatus {
   id: string;
@@ -175,6 +176,7 @@ const HUDMetric = ({ icon, label, value, color }: { icon: any, label: string, va
 function App() {
   return (
     <BrowserRouter>
+      <FeedbackSystem />
       <Routes>
         {/* Authentication */}
         <Route path="/login" element={<LoginPage />} />

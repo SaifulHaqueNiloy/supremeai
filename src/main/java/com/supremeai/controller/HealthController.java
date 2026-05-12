@@ -20,12 +20,12 @@ import java.util.Map;
 @RequestMapping("/api/health")
 public class HealthController implements HealthIndicator {
 
-    private final RedisConnectionFactory redisConnectionFactory;
+    private final org.springframework.beans.factory.ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider;
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    public HealthController(RedisConnectionFactory redisConnectionFactory,
+    public HealthController(org.springframework.beans.factory.ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
                            CircuitBreakerRegistry circuitBreakerRegistry) {
-        this.redisConnectionFactory = redisConnectionFactory;
+        this.redisConnectionFactoryProvider = redisConnectionFactoryProvider;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
@@ -34,11 +34,16 @@ public class HealthController implements HealthIndicator {
         Map<String, Object> details = new HashMap<>();
         
         // Check Redis
-        try {
-            redisConnectionFactory.getConnection().ping();
-            details.put("redis", "UP");
-        } catch (Exception e) {
-            details.put("redis", "DOWN: " + e.getMessage());
+        RedisConnectionFactory factory = redisConnectionFactoryProvider.getIfAvailable();
+        if (factory != null) {
+            try {
+                factory.getConnection().ping();
+                details.put("redis", "UP");
+            } catch (Exception e) {
+                details.put("redis", "DOWN: " + e.getMessage());
+            }
+        } else {
+            details.put("redis", "DISABLED");
         }
         
         // Check circuit breakers
@@ -58,11 +63,16 @@ public class HealthController implements HealthIndicator {
         health.put("timestamp", System.currentTimeMillis());
         
         // Redis status
-        try {
-            redisConnectionFactory.getConnection().ping();
-            health.put("redis", Map.of("status", "UP"));
-        } catch (Exception e) {
-            health.put("redis", Map.of("status", "DOWN", "error", e.getMessage()));
+        RedisConnectionFactory factory = redisConnectionFactoryProvider.getIfAvailable();
+        if (factory != null) {
+            try {
+                factory.getConnection().ping();
+                health.put("redis", Map.of("status", "UP"));
+            } catch (Exception e) {
+                health.put("redis", Map.of("status", "DOWN", "error", e.getMessage()));
+            }
+        } else {
+            health.put("redis", Map.of("status", "DISABLED"));
         }
         
         // Circuit breaker states

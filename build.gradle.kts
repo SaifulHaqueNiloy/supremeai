@@ -39,6 +39,7 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:9.2.0")
     // Firestore client provided by spring-cloud-gcp-starter-data-firestore (version managed by BOM)
     implementation("com.google.cloud:google-cloud-storage")
+    implementation("com.google.code.gson:gson:2.11.0")
 
     // Authentication & Google Cloud - SECURITY
     implementation("com.google.auth:google-auth-library-oauth2-http:1.14.0")
@@ -88,6 +89,9 @@ dependencies {
 
     // Spring Cloud GCP - Firestore
     implementation("com.google.cloud:spring-cloud-gcp-starter-data-firestore")
+
+    // Google Cloud Pub/Sub client (managed by BOM)
+    implementation("com.google.cloud:google-cloud-pubsub")
 
     // Database
     runtimeOnly("com.h2database:h2")

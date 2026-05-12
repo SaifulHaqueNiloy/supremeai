@@ -47,9 +47,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Default rules for other collections
+    // Default deny: Secure by default
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

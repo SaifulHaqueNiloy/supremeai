@@ -1,7 +1,10 @@
 import React from 'react';
-import { Card, Form, Select, Switch, Slider, Typography, Space, Divider, message, Button } from 'antd';
-import { SaveOutlined } from '@ant-design/icons';
+import { Card, Form, Select, Switch, Typography, Space, Divider, message, Button, Avatar, Badge } from 'antd';
+import { SaveOutlined, UserOutlined, KeyOutlined, ShieldOutlined, SettingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useRole } from '../contexts/RoleContext';
+import { auth } from '../lib/firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -15,7 +18,22 @@ interface UserSettingsProps {
 
 const UserSettings: React.FC<UserSettingsProps> = ({ darkMode, setDarkMode, chatFont, setChatFont }) => {
   const { t, i18n } = useTranslation();
+  const { user, isAdmin, isAuthenticated } = useRole();
   const [form] = Form.useForm();
+  const [resetLoading, setResetLoading] = React.useState(false);
+
+  const handlePasswordReset = async () => {
+    if (!user?.email) return;
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      message.success(t('settings.reset_email_sent', 'Password reset email sent! Check your inbox.'));
+    } catch (error) {
+      message.error(t('settings.reset_error', 'Failed to send reset email.'));
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleSave = (values: any) => {
     // Save language preference
@@ -48,9 +66,8 @@ const UserSettings: React.FC<UserSettingsProps> = ({ darkMode, setDarkMode, chat
   };
 
   React.useEffect(() => {
-    // Load saved preferences
     const savedLanguage = localStorage.getItem('preferredLanguage') || i18n.language || 'en';
-    const savedDarkMode = localStorage.getItem('darkMode') !== 'false'; // default true
+    const savedDarkMode = localStorage.getItem('darkMode') !== 'false';
 
     form.setFieldsValue({
       language: savedLanguage,
@@ -67,114 +84,126 @@ const UserSettings: React.FC<UserSettingsProps> = ({ darkMode, setDarkMode, chat
         {t('settings.userPreferences', 'User Settings')}
       </Title>
 
+      {/* User Profile Card */}
       <Card
         style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(0, 243, 255, 0.03)',
+          border: '1px solid rgba(0, 243, 255, 0.1)',
           borderRadius: 12,
           marginBottom: 24
         }}
         bodyStyle={{ padding: 24 }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSave}
-          initialValues={{
-            language: i18n.language || 'en',
-            darkMode: darkMode,
-            notifications: true,
-            focusMode: false,
+        <Space size="large" align="start">
+          <Avatar 
+            size={64} 
+            src={user?.photoURL} 
+            icon={<UserOutlined />} 
+            style={{ 
+              background: 'rgba(0, 243, 255, 0.1)', 
+              border: '2px solid var(--neon-blue)',
+              boxShadow: '0 0 15px rgba(0, 243, 255, 0.3)'
+            }} 
+          />
+          <div>
+            <Title level={4} style={{ margin: 0, color: '#fff' }}>{user?.displayName || (isAuthenticated ? 'Authorized User' : 'Guest Entity')}</Title>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>{user?.email || 'No email associated'}</Text>
+            <Space>
+              <Badge 
+                status={isAdmin ? "processing" : "default"} 
+                color={isAdmin ? "var(--neon-blue)" : "var(--neon-purple)"}
+                text={<span style={{ color: isAdmin ? "var(--neon-blue)" : "var(--neon-purple)", fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }}>
+                  {user?.role || user?.tier || 'GUEST'}
+                </span>}
+              />
+              <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
+                ID: {user?.uid?.substring(0, 8) || '----'}
+              </Text>
+            </Space>
+          </div>
+        </Space>
+      </Card>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 24 }}>
+        {/* Security Card */}
+        <Card
+          title={<Space><ShieldOutlined /> {t('settings.security', 'Security & Access')}</Space>}
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 12,
           }}
+          bodyStyle={{ padding: 24 }}
         >
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <div>
-              <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
-                {t('settings.language', 'Language')}
-              </Text>
-              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
-                {t('settings.languageDescription', 'Choose your preferred language for the interface')}
-              </Text>
-              <Form.Item name="language" rules={[{ required: true }]}>
-                <Select style={{ width: '100%', maxWidth: 300 }}>
+          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
+            {t('settings.security_desc', 'Manage your account security and authentication methods.')}
+          </Text>
+          <Button 
+            icon={<KeyOutlined />} 
+            onClick={handlePasswordReset} 
+            loading={resetLoading}
+            disabled={!isAuthenticated}
+            style={{ width: '100%', borderRadius: 6 }}
+          >
+            {t('settings.change_password', 'Change Password')}
+          </Button>
+        </Card>
+
+        {/* Preferences Card */}
+        <Card
+          title={<Space><SettingOutlined /> {t('settings.preferences', 'System Preferences')}</Space>}
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 12,
+          }}
+          bodyStyle={{ padding: 24 }}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSave}
+          >
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Form.Item name="language" label={t('settings.language', 'Language')} style={{ marginBottom: 12 }}>
+                <Select style={{ width: '100%' }}>
                   <Option value="en">English</Option>
                   <Option value="bn">বাংলা (Bengali)</Option>
                 </Select>
               </Form.Item>
-            </div>
 
-            <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '16px 0' }} />
-
-            <div>
-              <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
-                {t('settings.appearance', 'Appearance')}
-              </Text>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Space>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t('settings.darkMode', 'Dark Mode')}
-                  </Text>
-                  <Form.Item name="darkMode" valuePropName="checked" noStyle>
-                    <Switch checked={darkMode} onChange={setDarkMode} />
-                  </Form.Item>
-                </Space>
-                
-                <div style={{ marginTop: 16 }}>
-                  <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
-                    {t('settings.chatFont', 'AI Chat Font Style')}
-                  </Text>
-                  <Form.Item name="chatFont" style={{ marginBottom: 0 }}>
-                    <Select style={{ width: '100%', maxWidth: 300 }}>
-                      <Option value="font-mono">Standard Terminal (Mono)</Option>
-                      <Option value="font-doodle">Doodle Art (Handwritten)</Option>
-                      <Option value="font-floral">Floral Elegant (Cursive)</Option>
-                      <Option value="font-cloudy">Cloudy Soft (Bold)</Option>
-                      <Option value="font-bubble">Bubble Letters (Playful)</Option>
-                      <Option value="font-sketch">Pencil Sketch (Artistic)</Option>
-                    </Select>
-                  </Form.Item>
-                </div>
-              </Space>
-            </div>
-
-            <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '16px 0' }} />
-
-            <div>
-              <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 16 }}>
-                {t('settings.notifications', 'Notifications')}
-              </Text>
-              <Form.Item name="notifications" valuePropName="checked" style={{ marginBottom: 8 }}>
-                <Switch />
+              <Form.Item name="chatFont" label={t('settings.chatFont', 'AI Chat Font Style')} style={{ marginBottom: 12 }}>
+                <Select style={{ width: '100%' }}>
+                  <Option value="font-mono">Standard Terminal (Mono)</Option>
+                  <Option value="font-doodle">Doodle Art (Handwritten)</Option>
+                  <Option value="font-floral">Floral Elegant (Cursive)</Option>
+                  <Option value="font-cloudy">Cloudy Soft (Bold)</Option>
+                  <Option value="font-bubble">Bubble Letters (Playful)</Option>
+                  <Option value="font-sketch">Pencil Sketch (Artistic)</Option>
+                </Select>
               </Form.Item>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {t('settings.notificationsDescription', 'Receive notifications about system updates and alerts')}
-              </Text>
-            </div>
 
-            <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '16px 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text>{t('settings.darkMode', 'Dark Mode')}</Text>
+                <Form.Item name="darkMode" valuePropName="checked" noStyle>
+                  <Switch />
+                </Form.Item>
+              </div>
 
-            <div>
-              <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 16 }}>
-                {t('settings.focusMode', 'Focus Mode')}
-              </Text>
-              <Form.Item name="focusMode" valuePropName="checked" style={{ marginBottom: 8 }}>
-                <Switch />
-              </Form.Item>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {t('settings.focusModeDescription', 'Minimize distractions by reducing visual noise')}
-              </Text>
-            </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text>{t('settings.notifications', 'Notifications')}</Text>
+                <Form.Item name="notifications" valuePropName="checked" noStyle>
+                  <Switch />
+                </Form.Item>
+              </div>
 
-            <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
-                  {t('settings.save', 'Save Settings')}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Space>
-        </Form>
-      </Card>
+              <Button type="primary" htmlType="submit" icon={<SaveOutlined />} style={{ width: '100%', marginTop: 8 }}>
+                {t('settings.save', 'Save Settings')}
+              </Button>
+            </Space>
+          </Form>
+        </Card>
+      </div>
 
       <Card
         style={{
@@ -188,7 +217,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ darkMode, setDarkMode, chat
           {t('settings.about', 'About')}
         </Title>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          SupremeAI Dashboard v1.0.0
+          SupremeAI Dashboard v6.0.0
           <br />
           © 2026 SupremeAI. All rights reserved.
         </Text>
