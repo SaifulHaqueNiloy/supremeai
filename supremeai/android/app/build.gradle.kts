@@ -27,9 +27,10 @@ android {
         versionName = flutter.versionName
         
         // Performance optimizations for Flutter
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
-        }
+        // ABI filters are managed by Flutter splits (--split-per-abi) in CI
+        // ndk {
+        //     abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+        // }
     }
 
     buildTypes {
