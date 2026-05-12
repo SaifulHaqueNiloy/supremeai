@@ -6,5 +6,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Set Ollama to listen on all interfaces (default port 11434)
 ENV OLLAMA_HOST=0.0.0.0
 
-# Start Ollama server
-ENTRYPOINT ["ollama", "serve"]
+# Copy startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Start using the script
+ENTRYPOINT ["/bin/bash", "/start.sh"]

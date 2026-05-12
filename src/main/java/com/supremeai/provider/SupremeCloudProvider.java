@@ -2,6 +2,7 @@ package com.supremeai.provider;
 
 import java.util.List;
 import java.util.Map;
+import reactor.core.publisher.Mono;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
@@ -29,7 +30,7 @@ public class SupremeCloudProvider extends AbstractHttpProvider {
         if (isHfInference) {
             return baseUrl; // HF inference uses URL directly
         }
-        return baseUrl.endsWith("/") ? baseUrl + "api/generate" : baseUrl + "/api/generate";
+        return baseUrl.endsWith("/") ? baseUrl + "v1/chat/completions" : baseUrl + "/v1/chat/completions";
     }
 
     @Override

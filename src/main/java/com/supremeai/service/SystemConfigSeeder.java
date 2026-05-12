@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import reactor.core.publisher.Mono;
 
 /**
  * SystemConfigSeeder — seeds default system configuration into Firestore on first startup.
@@ -42,7 +43,7 @@ public class SystemConfigSeeder {
                     return systemConfigRepository.save(buildDefaultConfig());
                 } else {
                     log.info("[CONFIG_SEED] global_settings already exists — skipping seed");
-                    return reactor.core.publisher.Mono.empty();
+                    return Mono.empty();
                 }
             })
             .subscribe(
