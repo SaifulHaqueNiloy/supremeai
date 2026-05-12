@@ -35,7 +35,6 @@ class AuthProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       _token = prefs.getString('auth_token');
-      final isGuestMode = prefs.getBool('is_guest') ?? false;
 
       if (_token != null) {
         // Fetch user profile from backend

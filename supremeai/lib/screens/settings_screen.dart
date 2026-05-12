@@ -92,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
               _buildSection('App Settings', [
                 DropdownButtonFormField<String>(
-                  initialValue: _shareMode,
+                  value: _shareMode,
                   items: const [
                     DropdownMenuItem(value: 'manual', child: Text('Manual share')),
                     DropdownMenuItem(value: 'auto', child: Text('Auto share')),
@@ -116,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: _themeMode,
+                  value: _themeMode,
                   decoration: const InputDecoration(labelText: 'Theme'),
                   items: const [
                     DropdownMenuItem(value: 'system', child: Text('System default')),
