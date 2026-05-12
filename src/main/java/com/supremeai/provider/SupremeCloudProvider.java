@@ -70,12 +70,24 @@ public class SupremeCloudProvider extends AbstractHttpProvider {
         }
         
         if (isHfInference) {
-            Map<String, Object> response = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
-            if (response.containsKey("generated_text")) {
-                return (String) response.get("generated_text");
-            }
-            if (response.containsKey("error")) {
-                return "HF Error: " + response.get("error");
+            // HF Inference API can return a List or a Map
+            Object rawResponse = responseBody.trim().startsWith("[") 
+                ? objectMapper.readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {})
+                : objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+
+            if (rawResponse instanceof List) {
+                List<Map<String, Object>> list = (List<Map<String, Object>>) rawResponse;
+                if (!list.isEmpty() && list.get(0).containsKey("generated_text")) {
+                    return (String) list.get(0).get("generated_text");
+                }
+            } else if (rawResponse instanceof Map) {
+                Map<String, Object> map = (Map<String, Object>) rawResponse;
+                if (map.containsKey("generated_text")) {
+                    return (String) map.get("generated_text");
+                }
+                if (map.containsKey("error")) {
+                    return "HF Error: " + map.get("error");
+                }
             }
             return "Empty HF response";
         }

@@ -42,6 +42,7 @@ public class AIProviderDiscoveryService {
      * Searches for AI models across various registries.
      * Calls actual APIs (HuggingFace, OpenRouter, etc.)
      */
+    @SuppressWarnings("unchecked")
     public Flux<Map<String, Object>> discoverModels(String query) {
         logger.info("Discovering AI models for query: {}", query);
         
@@ -113,6 +114,7 @@ public class AIProviderDiscoveryService {
     /**
      * Scans for local or cloud-deployed models (e.g. Ollama, Cloud Run endpoints).
      */
+    @SuppressWarnings("unchecked")
     public Flux<Map<String, Object>> scanDeployments() {
         Flux<Map<String, Object>> ollamaModels = webClient.get()
                 .uri(ollamaEndpoint + "/api/tags")
@@ -134,7 +136,7 @@ public class AIProviderDiscoveryService {
 
         Flux<Map<String, Object>> cloudRunModels = Flux.defer(() -> {
             try {
-                Process process = Runtime.getRuntime().exec("gcloud run services list --format=json");
+                Process process = new ProcessBuilder("gcloud", "run", "services", "list", "--format=json").start();
                 return Mono.fromCallable(() -> {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                         String json = reader.lines().collect(Collectors.joining("\n"));

@@ -32,4 +32,25 @@ public class SupremeCloudProviderTest {
         assertEquals("model_x", caps.get("model"));
         assertEquals("cloud-native", caps.get("type"));
     }
+
+    @Test
+    public void testExtractResponse_Standard() throws Exception {
+        SupremeCloudProvider provider = new SupremeCloudProvider("key", "test", "model", "http://test.com");
+        String json = "{\"choices\": [{\"message\": {\"content\": \"Hello!\"}}]}";
+        assertEquals("Hello!", provider.extractResponse(json));
+    }
+
+    @Test
+    public void testExtractResponse_HfList() throws Exception {
+        SupremeCloudProvider provider = new SupremeCloudProvider("key", "hf_test", "model", "https://api-inference.huggingface.co/models/test");
+        String json = "[{\"generated_text\": \"Generated content\"}]";
+        assertEquals("Generated content", provider.extractResponse(json));
+    }
+
+    @Test
+    public void testExtractResponse_HfMap() throws Exception {
+        SupremeCloudProvider provider = new SupremeCloudProvider("key", "hf_test", "model", "https://api-inference.huggingface.co/models/test");
+        String json = "{\"generated_text\": \"Map content\"}";
+        assertEquals("Map content", provider.extractResponse(json));
+    }
 }
