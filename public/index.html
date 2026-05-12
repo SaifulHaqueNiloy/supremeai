@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="/images/supreme-ai-icon.svg">
-    <title>SupremeAI - User Login</title>
+    <title>SupremeAI - Unified Intelligence</title>
     <script type="importmap">
     {
         "imports": {
@@ -13,102 +13,281 @@
     }
     </script>
     <script type="module" src="/__/firebase/init.js?useEmulator=true"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #06b6d4;
+            --bg: #0f172a;
+            --glass: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: var(--text);
+            overflow-x: hidden;
         }
-        .login-box {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+
+        .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 480px;
+            z-index: 1;
+        }
+
+        .glass-box {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
             padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
         }
-        .logo { font-size: 28px; font-weight: bold; color: #1e3c72; margin-bottom: 10px; text-align: center; }
-        .logo span { color: #4299e1; }
-        .subtitle { color: #666; font-size: 14px; text-align: center; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: all 0.3s;
+
+        .logo { 
+            font-family: 'Outfit', sans-serif;
+            font-size: 36px; 
+            font-weight: 800; 
+            text-align: center; 
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #818cf8, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
         }
-        input:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.1); }
-        button {
+
+        .subtitle { 
+            color: var(--text-muted); 
+            font-size: 16px; 
+            text-align: center; 
+            margin-bottom: 40px; 
+            font-weight: 300;
+        }
+
+        .guest-section {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn-guest {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-guest:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            font-size: 14px; 
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            font-size: 15px;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        input:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); 
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 10px;
+            transition: all 0.3s;
         }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(30,60,114,0.4); }
-        button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-        .error { color: #d32f2f; background: #ffebee; padding: 12px; border-radius: 5px; margin-bottom: 20px; display: none; border-left: 4px solid #d32f2f; }
+
+        .btn-login:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-muted);
+        }
+
+        .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .error { 
+            color: #ef4444; 
+            background: rgba(220, 38, 38, 0.1); 
+            padding: 12px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            display: none; 
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            font-size: 14px;
+            text-align: center;
+        }
         .error.show { display: block; }
+
         .loading { display: none; text-align: center; margin-bottom: 10px; }
-        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #4299e1; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 0 auto; }
+        .spinner { 
+            border: 2px solid rgba(255,255,255,0.1); 
+            border-top: 2px solid var(--secondary); 
+            border-radius: 50%; 
+            width: 24px; 
+            height: 24px; 
+            animation: spin 0.8s linear infinite; 
+            margin: 0 auto; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading.show { display: block; }
+
+        .toggle-auth {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .toggle-auth a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .toggle-auth a:hover { text-decoration: underline; }
+
+        /* Floating particles effect */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <div class="logo">Supreme<span>AI</span></div>
-        <div class="subtitle" id="subtitle">Customer Login</div>
-        <div class="error" id="error"></div>
-        <div class="loading" id="loading"><div class="spinner"></div></div>
-        <form id="form">
-            <div class="form-group" id="name-group" style="display: none;">
-                <label for="display-name">Full Name</label>
-                <input type="text" id="display-name" placeholder="John Doe">
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="glass-box">
+            <div class="logo">SupremeAI</div>
+            <div class="subtitle" id="subtitle">The Future of Multi-Agent Systems</div>
+            
+            <div class="error" id="error"></div>
+            <div class="loading" id="loading"><div class="spinner"></div></div>
+
+            <div class="guest-section">
+                <button class="btn-guest" id="btn-guest">
+                    <span>Get Started as Guest</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 10px;">Instant access with daily quota limits</p>
             </div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="customer@example.com" required autocomplete="username">
+
+            <div class="divider">
+                <span>OR LOGIN FOR FULL ACCESS</span>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+
+            <form id="form">
+                <div class="form-group" id="name-group" style="display: none;">
+                    <label for="display-name">Full Name</label>
+                    <input type="text" id="display-name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="you@example.com" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-login" id="btn" disabled>Sign In</button>
+            </form>
+
+            <div class="toggle-auth">
+                <span id="toggle-text">New to SupremeAI?</span>
+                <a href="#" id="toggle-link">Create Account</a>
             </div>
-            <button type="submit" id="btn" disabled>Sign In</button>
-        </form>
-        <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
-            <span id="toggle-text">Don't have an account?</span>
-            <a href="#" id="toggle-link" style="color: #4299e1; font-weight: 600; text-decoration: none; margin-left: 5px;">Sign Up</a>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from 'firebase/app';
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, connectAuthEmulator } from 'firebase/auth';
-        import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
-        // Initialize all variables at the top to avoid ReferenceError
         let auth = null;
-        let db = null;
         let firebaseReady = false;
         let isLogin = true;
 
         const errorEl = document.getElementById('error');
         const loadingEl = document.getElementById('loading');
         const btn = document.getElementById('btn');
+        const btnGuest = document.getElementById('btn-guest');
         const form = document.getElementById('form');
         const subtitleEl = document.getElementById('subtitle');
         const nameGroup = document.getElementById('name-group');
@@ -116,7 +295,6 @@
         const toggleLink = document.getElementById('toggle-link');
 
         function showError(msg) { 
-            console.error('Auth error:', msg);
             errorEl.textContent = msg; 
             errorEl.classList.add('show'); 
         }
@@ -128,23 +306,35 @@
         function setLoading(loading) { 
             loadingEl.classList.toggle('show', loading); 
             btn.disabled = loading || !firebaseReady; 
+            btnGuest.disabled = loading;
         }
+
+        // Guest Access Handler
+        btnGuest.addEventListener('click', () => {
+            console.log('Entering Guest Mode...');
+            sessionStorage.setItem('supremeai_token', 'GUEST_MODE');
+            sessionStorage.setItem('supremeai_user', JSON.stringify({
+                email: 'guest@supremeai.internal',
+                uid: 'guest_' + Math.random().toString(36).substr(2, 9),
+                displayName: 'Guest User',
+                isGuest: true
+            }));
+            window.location.href = '/admin';
+        });
 
         toggleLink.addEventListener('click', (e) => {
             e.preventDefault();
             isLogin = !isLogin;
-            subtitleEl.textContent = isLogin ? 'Customer Login' : 'Create Account';
+            subtitleEl.textContent = isLogin ? 'The Future of Multi-Agent Systems' : 'Join the SupremeAI Revolution';
             btn.textContent = isLogin ? 'Sign In' : 'Sign Up';
-            toggleText.textContent = isLogin ? "Don't have an account?" : "Already have an account?";
-            toggleLink.textContent = isLogin ? "Sign Up" : "Sign In";
+            toggleText.textContent = isLogin ? "New to SupremeAI?" : "Already have an account?";
+            toggleLink.textContent = isLogin ? "Create Account" : "Sign In";
             nameGroup.style.display = isLogin ? 'none' : 'block';
             hideError();
         });
 
-        // Initialize Firebase as soon as the page loads
         async function initializeFirebase() {
             try {
-                // Firebase config from .env
                 const firebaseConfig = {
                     apiKey: "AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8",
                     authDomain: "supremeai-a.firebaseapp.com",
@@ -156,35 +346,22 @@
 
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Connect to Firebase Emulator if running in development
+                
                 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
                     try {
                         connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-                        connectFirestoreEmulator(db, 'localhost', 8080);
-                        console.log('Connected to Firebase Emulator');
-                    } catch (emulatorErr) {
-                        console.log('Firebase Emulator not running, using production config');
-                    }
+                    } catch (e) {}
                 }
 
                 firebaseReady = true;
                 btn.disabled = false;
-                console.log('Firebase initialized successfully');
             } catch (err) {
-                console.error('Firebase initialization error:', err);
-                showError('Failed to initialize authentication system. Please refresh the page.');
-                btn.disabled = true;
+                console.error('Firebase init error:', err);
+                showError('Auth system offline. Guest mode still available.');
             }
         }
 
-        // Initialize immediately when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeFirebase);
-        } else {
-            initializeFirebase();
-        }
+        initializeFirebase();
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -194,86 +371,65 @@
             const password = document.getElementById('password').value;
             const displayName = document.getElementById('display-name').value.trim();
 
-            // Basic validation
-            if (!email || !password) { 
-                showError('Enter both email and password'); 
-                return; 
-            }
-            if (!isLogin && !displayName) { 
-                showError('Please enter your full name'); 
-                return; 
-            }
+            if (!email || !password) { showError('Enter credentials'); return; }
+            if (!isLogin && !displayName) { showError('Name required'); return; }
             
-            // Check if Firebase is ready
-            if (!firebaseReady || !auth) {
-                showError('Authentication system not ready. Please refresh the page.');
-                console.error('Firebase not ready:', { firebaseReady, auth: !!auth });
-                return; 
-            }
-
             setLoading(true);
             
             try {
                 let userCredential;
                 if (isLogin) {
-                    // Sign in
-                    console.log('Attempting login for:', email);
                     userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    console.log('Login successful for user:', userCredential.user.uid);
                 } else {
-                    // Sign up
-                    console.log('Attempting signup for:', email);
                     userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    
-                    if (displayName) {
-                        await userCredential.user.updateProfile({ displayName: displayName });
-                        console.log('Profile updated with display name:', displayName);
-                    }
-                    console.log('Signup successful for user:', userCredential.user.uid);
                 }
 
-                const uid = userCredential.user.uid;
                 const token = await userCredential.user.getIdToken();
-                
-                // Store user info in sessionStorage
                 sessionStorage.setItem('supremeai_token', token);
                 sessionStorage.setItem('supremeai_user', JSON.stringify({
                     email: userCredential.user.email,
-                    uid: uid,
+                    uid: userCredential.user.uid,
                     displayName: userCredential.user.displayName || displayName || email.split('@')[0]
                 }));
                 
-                console.log('User data stored, redirecting...');
-                
-// Redirect to admin panel (single URL rule)
-window.location.href = '/admin';
-                
+                window.location.href = '/admin';
             } catch (err) {
-                console.error('Authentication error:', err);
-                
-                // Provide user-friendly error messages
-                let errorMessage = 'Authentication failed';
-                if (err.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email address';
-                } else if (err.code === 'auth/user-not-found') {
-                    errorMessage = 'No account found with this email';
-                } else if (err.code === 'auth/wrong-password') {
-                    errorMessage = 'Incorrect password';
-                } else if (err.code === 'auth/email-already-in-use') {
-                    errorMessage = 'Email already registered';
-                } else if (err.code === 'auth/weak-password') {
-                    errorMessage = 'Password should be at least 6 characters';
-                } else if (err.code === 'auth/network-request-failed') {
-                    errorMessage = 'Network error. Please check your connection';
-                } else if (err.message) {
-                    errorMessage = err.message;
-                }
-                
-                showError(errorMessage);
+                showError(err.message);
             } finally {
                 setLoading(false);
             }
         });
+
+        // Background Particles
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        document.getElementById('particles').appendChild(canvas);
+
+        let w, h, particles = [];
+        function init() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            particles = Array.from({length: 30}, () => ({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                s: Math.random() * 2,
+                v: Math.random() * 0.5 + 0.1
+            }));
+        }
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+                ctx.fill();
+                p.y -= p.v;
+                if (p.y < -10) p.y = h + 10;
+            });
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', init);
+        init(); draw();
     </script>
 </body>
 </html>

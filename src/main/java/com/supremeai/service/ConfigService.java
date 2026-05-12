@@ -4,6 +4,7 @@ import com.supremeai.model.SystemConfig;
 import com.supremeai.model.UserTier;
 import com.supremeai.repository.SystemConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -11,6 +12,7 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.ListenerRegistration;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,12 +29,17 @@ public class ConfigService {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigService.class);
     private static final String DOCUMENT_ID = "global_settings";
+    private static final String REDIS_CONFIG_KEY = "supremeai:config";
+    private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
     @Autowired
     private SystemConfigRepository systemConfigRepository;
 
     @Autowired
     private Firestore firestore;
+
+    @Autowired(required = false)
+    private RedisTemplate<String, Object> redisTemplate;
 
     private SystemConfig cachedConfig;
     private ListenerRegistration listenerRegistration;
@@ -91,7 +98,9 @@ public class ConfigService {
         config.getTierQuotas().put(UserTier.FREE.name(), 1000L);
         config.getTierQuotas().put(UserTier.BASIC.name(), 10000L);
         config.getTierQuotas().put(UserTier.PRO.name(), 100000L);
+        config.getTierQuotas().put("GUEST", 50L); // Default guest quota
         config.getTierQuotas().put(UserTier.ADMIN.name(), -1L);
+
         
         // Set max APIs
         config.getTierMaxApis().put(UserTier.FREE.name(), 5);
@@ -128,32 +137,50 @@ public class ConfigService {
     }
 
     /**
-     * Refreshes the local cache from Firestore.
+     * Refreshes the local cache from Redis/Firestore with fallback.
      */
     public Mono<SystemConfig> refreshCache() {
-        // Diagnostic sync read
-        try {
-            logger.info("Diagnostic: Attempting sync read from Firestore...");
-            var future = firestore.collection("system_configs").document("global_settings").get();
-            var snapshot = future.get(5, java.util.concurrent.TimeUnit.SECONDS);
-            if (snapshot.exists()) {
-                logger.info("Diagnostic: Sync read SUCCEEDED. Document exists.");
-            } else {
-                logger.warn("Diagnostic: Sync read SUCCEEDED but document is missing.");
+        // First try Redis cache
+        if (redisTemplate != null) {
+            try {
+                SystemConfig redisConfig = (SystemConfig) redisTemplate.opsForValue().get(REDIS_CONFIG_KEY);
+                if (redisConfig != null) {
+                    this.cachedConfig = redisConfig;
+                    logger.debug("Config loaded from Redis cache");
+                    return Mono.just(redisConfig);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to load config from Redis, falling back to Firestore", e);
             }
-        } catch (Exception e) {
-            logger.error("Diagnostic: Sync read FAILED", e);
         }
 
+        // Fallback to Firestore
         return systemConfigRepository.findById("global_settings")
                 .map(config -> {
                     this.cachedConfig = config;
+                    // Cache in Redis if available
+                    if (redisTemplate != null) {
+                        try {
+                            redisTemplate.opsForValue().set(REDIS_CONFIG_KEY, config, CACHE_TTL);
+                            logger.debug("Config cached in Redis");
+                        } catch (Exception e) {
+                            logger.warn("Failed to cache config in Redis", e);
+                        }
+                    }
                     return config;
                 })
                 .switchIfEmpty(Mono.defer(() -> {
                     SystemConfig def = createDefaultConfig();
                     return systemConfigRepository.save(def).map(saved -> {
                         this.cachedConfig = saved;
+                        // Cache the default config in Redis
+                        if (redisTemplate != null) {
+                            try {
+                                redisTemplate.opsForValue().set(REDIS_CONFIG_KEY, saved, CACHE_TTL);
+                            } catch (Exception e) {
+                                logger.warn("Failed to cache default config in Redis", e);
+                            }
+                        }
                         return saved;
                     });
                 }));
@@ -196,17 +223,26 @@ public class ConfigService {
     }
 
     /**
-     * Update configuration in Firestore.
+     * Update configuration in Firestore and invalidate Redis cache.
      */
     public Mono<SystemConfig> updateConfig(SystemConfig newConfig, String actorUserId, String ipAddress) {
         SystemConfig previous = getConfig();
         newConfig.setId("global_settings");
         Long currentVersion = previous.getVersion() == null ? 1L : previous.getVersion();
         newConfig.setVersion(currentVersion + 1L);
-        
+
         return systemConfigRepository.save(newConfig)
                 .map(saved -> {
                     this.cachedConfig = saved;
+                    // Invalidate Redis cache
+                    if (redisTemplate != null) {
+                        try {
+                            redisTemplate.delete(REDIS_CONFIG_KEY);
+                            logger.debug("Redis cache invalidated for config update");
+                        } catch (Exception e) {
+                            logger.warn("Failed to invalidate Redis cache", e);
+                        }
+                    }
                     return saved;
                 });
     }

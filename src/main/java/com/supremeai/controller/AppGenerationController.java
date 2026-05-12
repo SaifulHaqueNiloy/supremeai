@@ -39,7 +39,7 @@ public class AppGenerationController {
     private MultiPlatformGenerator multiPlatformGenerator;
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     public ResponseEntity<Map<String, Object>> generateApp(@Valid @RequestBody AppGenerationRequest request) {
         try {
             String name = request.getName();

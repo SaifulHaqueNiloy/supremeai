@@ -150,13 +150,19 @@ dependencies {
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
-// Configure UTF-8 encoding for all compilation tasks
+// Configure UTF-8 encoding for all compilation tasks with performance optimizations
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+    options.isIncremental = true
+    options.isFork = true
+    options.forkOptions.javaHome = javaToolchains.launcherFor(java.toolchain).get().metadata.installationPath.asFile
     options.compilerArgs.addAll(listOf(
         "-Xlint:deprecation",      // Enable deprecation warnings
         "-Xlint:unchecked",        // Enable unchecked warnings
-        "--enable-preview"         // Enable preview features for Java 21
+        "--enable-preview",        // Enable preview features for Java 21
+        "-XDcompilePolicy=simple", // Faster incremental compilation
+        "-Xmaxerrs", "500",        // Allow more errors before stopping
+        "-Xmaxwarns", "500"        // Allow more warnings before stopping
     ))
 }
 
@@ -247,8 +253,35 @@ application {
 
 tasks.bootJar {
     archiveFileName.set("app.jar")
+    // Optimize JAR creation
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    isZip64 = true
 }
 
 tasks.jar {
     enabled = false
+}
+
+// Add build performance optimizations
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+    // Exclude unnecessary files to reduce JAR size
+    excludes.addAll(listOf(
+        "META-INF/*.SF",
+        "META-INF/*.DSA",
+        "META-INF/*.RSA"
+    ))
+
+    // Optimize compression
+    entryCompression = org.gradle.api.tasks.bundling.ZipEntryCompression.DEFLATED
+}
+
+tasks.withType<Test> {
+    // Use JUnit 5 platform
+    useJUnitPlatform()
+
+    // Optimize test execution
+    maxParallelForks = Runtime.getRuntime().availableProcessors().coerceAtMost(4)
+    systemProperties["junit.jupiter.execution.parallel.enabled"] = "true"
+    systemProperties["junit.jupiter.execution.parallel.mode.default"] = "concurrent"
+    systemProperties["junit.jupiter.execution.parallel.config.strategy"] = "dynamic"
 }

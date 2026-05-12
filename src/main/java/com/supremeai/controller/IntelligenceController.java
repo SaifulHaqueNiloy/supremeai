@@ -38,7 +38,7 @@ public class IntelligenceController {
      * GET /api/v2/intelligence/rankings
      */
     @GetMapping("/rankings")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER', 'GUEST')")
     public ResponseEntity<?> getRankings() {
         Map<String, Object> stats = rankingService.getStatistics();
         return ResponseEntity.ok(stats);
@@ -49,7 +49,7 @@ public class IntelligenceController {
      * POST /api/v2/intelligence/validate
      */
     @PostMapping("/validate")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER', 'GUEST')")
     public ResponseEntity<?> validateInput(@RequestBody ValidationRequest request) {
         try {
             logger.info("S3: Validating input of type: {}", request.getRequestType());
@@ -81,7 +81,7 @@ public class IntelligenceController {
      * POST /api/v2/intelligence/vote
      */
     @PostMapping("/vote")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER', 'GUEST')")
     public ResponseEntity<?> executeVoting(@RequestBody VotingRequest request) {
         try {
             logger.info("S4: Executing 10-AI voting for prompt: {}", 

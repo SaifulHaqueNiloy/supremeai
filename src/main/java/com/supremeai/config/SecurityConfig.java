@@ -91,6 +91,8 @@ public class SecurityConfig {
                     "/api/config/public",
                     "/api/system/**",
                     "/api/system/health",
+                    "/api/v2/intelligence/**",
+                    "/api/generate/**",
                     "/public/**",
                     "/telemetry/**",
                     "/__/firebase/**",
@@ -125,8 +127,8 @@ public class SecurityConfig {
                     res.setContentType("application/json");
                     res.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"Access denied\"}");
                 }))
-.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+             .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
          
          return http.build();
      }

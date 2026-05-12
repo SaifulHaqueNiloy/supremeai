@@ -17,7 +17,7 @@ export const authUtils = {
       sessionStorage.removeItem(LEGACY_TOKEN_KEY);
       return legacyToken;
     }
-    return null;
+    return 'GUEST_MODE';
   },
   setToken(token: string): void {
     localStorage.setItem(AUTH_TOKEN_KEY, token);

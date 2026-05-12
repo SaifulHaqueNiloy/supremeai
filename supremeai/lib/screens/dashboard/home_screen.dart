@@ -32,9 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final orchestration = context.read<OrchestrationProvider>();
     final auth = context.read<AuthProvider>();
 
-    if (auth.token == null) return;
-
-    await orchestration.orchestrateRequirement(userMessage, auth.token!);
+    // Allow guest usage (token is null)
+    await orchestration.orchestrateRequirement(userMessage, auth.token ?? 'GUEST_MODE');
 
     if (orchestration.lastResult != null && mounted) {
       setState(() {
@@ -57,9 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _generateProject() {
     final auth = context.read<AuthProvider>();
     final orchestration = context.read<OrchestrationProvider>();
-    if (auth.token != null) {
-      orchestration.generateProject(auth.token!);
-    }
+    orchestration.generateProject(auth.token ?? 'GUEST_MODE');
   }
 
   @override
@@ -74,10 +71,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('SupremeAI'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthProvider>().logout(),
-          ),
+          if (context.watch<AuthProvider>().isGuest)
+            IconButton(
+              icon: const Icon(Icons.login),
+              tooltip: 'Login for more quota',
+              onPressed: () {
+                // Return to login screen
+                context.read<AuthProvider>().logout(); 
+              },
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () => context.read<AuthProvider>().logout(),
+            ),
         ],
       ),
       body: IndexedStack(
@@ -101,8 +108,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildChatTab() {
     final orchestration = context.watch<OrchestrationProvider>();
 
+    final auth = context.watch<AuthProvider>();
     return Column(
       children: [
+        if (auth.isGuest)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            color: Colors.amber.withValues(alpha: 0.1),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 16, color: Colors.amber),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Guest Mode: Limited quota. Login to increase limits.',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => auth.logout(),
+                  child: const Text('Login'),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: _messages.isEmpty
               ? _buildEmptyState()

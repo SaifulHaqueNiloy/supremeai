@@ -4,6 +4,10 @@ import com.supremeai.service.AutonomousQuestioningEngine;
 import com.supremeai.service.MultiAIVotingService;
 import com.supremeai.service.MultiAIConsensusService;
 import com.supremeai.service.EnhancedLearningService;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -41,8 +46,23 @@ public class ChatController {
     @Autowired
     private com.supremeai.service.ChatIntelligenceService intelligenceService;
 
+    @Autowired
+    private CircuitBreakerRegistry circuitBreakerRegistry;
+
+    @Autowired
+    private RetryRegistry retryRegistry;
+
+    private final CircuitBreaker aiCircuitBreaker;
+    private final Retry aiRetry;
+
+    public ChatController() {
+        // Initialize circuit breaker and retry for AI operations
+        this.aiCircuitBreaker = CircuitBreaker.ofDefaults("aiVotingService");
+        this.aiRetry = Retry.ofDefaults("aiVotingService");
+    }
+
     @PostMapping("/send")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER', 'GUEST')")
     public Mono<ResponseEntity<Object>> sendMessage(@Valid @RequestBody ChatRequest request) {
         String message = request.getMessage();
         boolean skipValidation = request.isSkipValidation();
@@ -66,8 +86,8 @@ public class ChatController {
             }
         }
 
-        // S4: 10-AI Voting System - Execute voting across models
-        try {
+        // S4: 10-AI Voting System - Execute voting across models with circuit breaker and retry
+        Supplier<Map<String, Object>> votingSupplier = () -> {
             var votingResult = votingService.executeEnsembleVoting(message, null, 15000L);
 
             String bestResponse = votingResult.getBestResponse();
@@ -89,8 +109,8 @@ public class ChatController {
             // Autonomous intelligence handling (rules/plans)
             intelligenceService.handleIntelligence(
                 request.getAgentId() != null ? request.getAgentId() : "default",
-                message, 
-                intent, 
+                message,
+                intent,
                 "ADMIN", // Defaulting to ADMIN for now as it's the Command Center
                 confidence
             ).subscribe();
@@ -106,28 +126,47 @@ public class ChatController {
                 ).subscribe(); // Fire and forget
             }
 
+            return response;
+        };
+
+        try {
+            // Apply circuit breaker and retry to the voting operation
+            Supplier<Map<String, Object>> decoratedSupplier = Retry.decorateSupplier(aiRetry,
+                CircuitBreaker.decorateSupplier(aiCircuitBreaker, votingSupplier));
+
+            Map<String, Object> response = decoratedSupplier.get();
             return Mono.just(ResponseEntity.ok(response));
+
         } catch (Exception e) {
-            logger.error("Failed to get response via voting system", e);
-            
+            logger.error("Failed to get response via voting system after retries", e);
+
+            // Check circuit breaker state
+            CircuitBreaker.State circuitState = aiCircuitBreaker.getState();
+            logger.warn("AI Circuit breaker state: {}", circuitState);
+
             // Fallback to simpler consensus if voting fails
-            if (consensusService != null) {
+            if (consensusService != null && circuitState != CircuitBreaker.State.OPEN) {
                 // Use multiple providers (not just google) for better fallback resilience
-                return consensusService.askConsensus(message, 
+                return consensusService.askConsensus(message,
                     java.util.Arrays.asList("groq", "deepseek", "claude", "openai", "ollama"), 10000L)
                     .map(res -> ResponseEntity.ok(Map.of(
                         "message", res.getConsensusAnswer(),
                         "confidence", res.getAverageConfidence(),
-                        "fallback", true
+                        "fallback", true,
+                        "circuitBreakerState", circuitState.name()
                     )));
             }
-            
-            return Mono.just(ResponseEntity.status(500).body(Map.of("error", "Voting system error: " + e.getMessage())));
+
+            return Mono.just(ResponseEntity.status(503).body(Map.of(
+                "error", "AI services temporarily unavailable",
+                "circuitBreakerState", circuitState.name(),
+                "retryAfter", 60
+            )));
         }
     }
 
     @GetMapping("/history")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     public Mono<ResponseEntity<Object>> getHistory(
             @RequestParam(required = false) String agent,
             @RequestParam(defaultValue = "50") int limit) {
@@ -139,7 +178,7 @@ public class ChatController {
     }
 
     @PostMapping("/feedback")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'AGENT_MANAGER', 'GUEST')")
     public Mono<ResponseEntity<Object>> submitFeedback(@Valid @RequestBody FeedbackRequest request) {
         String messageId = request.getMessageId();
         boolean helpful = request.isHelpful();
