@@ -20,11 +20,20 @@ public class GlobalKnowledgeBase {
     private static final Logger log = LoggerFactory.getLogger(GlobalKnowledgeBase.class);
     private final Map<String, List<SolutionMemory>> globalMemory = new ConcurrentHashMap<>();
 
-    @Autowired
-    private AdminDashboardService adminDashboard;
+    private final AdminDashboardService adminDashboard;
+    private final SolutionMemoryRepository solutionMemoryRepository;
 
-    @Autowired(required = false)
-    private SolutionMemoryRepository solutionMemoryRepository;
+    public GlobalKnowledgeBase(
+            AdminDashboardService adminDashboard,
+            @Autowired(required = false) SolutionMemoryRepository solutionMemoryRepository) {
+        this.adminDashboard = adminDashboard;
+        this.solutionMemoryRepository = solutionMemoryRepository;
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        loadMemories();
+    }
 
     /**
      * Load memories from Firestore on startup.

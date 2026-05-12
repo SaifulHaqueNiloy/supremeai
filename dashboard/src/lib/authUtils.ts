@@ -2,14 +2,181 @@ import { AuthUser } from '../types';
 
 const AUTH_TOKEN_KEY = 'supremeai_token';
 const FIREBASE_USER_KEY = 'supremeai_user';
-// Legacy key used by older components — kept for backward-compat migration only
 const LEGACY_TOKEN_KEY = 'authToken';
+
+// Demo mode mock data for guest users
+const DEMO_MOCK_DATA: Record<string, any> = {
+  // Admin dashboard contract
+  '/api/admin/dashboard/contract': {
+    success: true,
+    data: {
+      contractVersion: '1.0.0-demo',
+      title: 'SupremeAI Command Center',
+      description: 'Demo Mode - Full system capabilities overview',
+      stats: {
+        totalUsers: 1247,
+        activeUsers: 342,
+        activeAIAgents: 8,
+        systemHealthScore: 98,
+        runningTasks: 42,
+        runningProjects: 15,
+        completedTasks: 12847,
+        successRate: 99.2,
+        systemHealthStatus: 'healthy' as const,
+        systemHealthReason: 'All systems operational',
+        knowledgeBaseSize: 45230,
+        activeConnections: 89,
+        totalProviders: 12,
+        activeProviders: 10,
+        backendConnected: true,
+        databaseConnected: true,
+        lastStartTime: Date.now() - 86400000 * 5,
+        serverUptime: '5d 14h 23m',
+        latency: 45,
+      },
+      navigation: [],
+      components: [],
+      apiEndpoints: {}
+    }
+  },
+  
+  // Provider list (demo)
+  '/api/admin/providers/configured': {
+    success: true,
+    data: {
+      providers: [
+        {
+          id: 'demo-gpt4',
+          name: 'GPT-4o (Demo)',
+          type: 'llm',
+          apiKey: 'sk-demo-redacted',
+          status: 'active',
+          lastTested: new Date().toISOString(),
+          models: ['gpt-4o', 'gpt-4-turbo'],
+          creatorEmail: 'demo@supreme.ai',
+          accountEmail: 'demo@openai.com',
+          apiCount: 2,
+          usageLimit: 100000,
+          currentUsage: 45320,
+          canCommunicate: true,
+          canExecuteTasks: true,
+          canParticipateInVoting: true,
+          deploymentSource: 'api' as const
+        },
+        {
+          id: 'demo-claude',
+          name: 'Claude 3.5 Sonnet (Demo)',
+          type: 'llm',
+          apiKey: 'sk-demo-redacted',
+          status: 'active',
+          lastTested: new Date().toISOString(),
+          models: ['claude-3-5-sonnet'],
+          creatorEmail: 'demo@supreme.ai',
+          accountEmail: 'demo@anthropic.com',
+          apiCount: 1,
+          usageLimit: 100000,
+          currentUsage: 32100,
+          canCommunicate: true,
+          canExecuteTasks: false,
+          canParticipateInVoting: true,
+          deploymentSource: 'api' as const
+        }
+      ]
+    }
+  },
+
+  // Projects list (demo)
+  '/api/projects': [
+    {
+      id: 'demo-1',
+      name: 'E-Commerce Platform',
+      description: 'Full-stack online shopping application with AI recommendations',
+      ownerId: 'demo-user',
+      status: 'ACTIVE',
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
+    },
+    {
+      id: 'demo-2',
+      name: 'Smart Attendance System',
+      description: 'Face recognition based attendance tracking',
+      ownerId: 'demo-user',
+      status: 'COMPLETED',
+      createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000 * 5).toISOString()
+    },
+    {
+      id: 'demo-3',
+      name: 'AI Code Review Bot',
+      description: 'Automated code analysis and PR reviewer',
+      ownerId: 'demo-user',
+      status: 'RUNNING',
+      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+
+  // Chat history (demo)
+  '/api/chat/history': {
+    success: true,
+    chat_history: [
+      {
+        id: 'demo-chat-1',
+        is_admin: true,
+        message: 'Welcome to SupremeAI Demo Mode! You can chat with AI assistants here.',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        intent: 'INFO_COLLECTION'
+      },
+      {
+        id: 'demo-chat-2',
+        is_admin: false,
+        message: 'Hello! What can you help me with?',
+        timestamp: new Date(Date.now() - 3500000).toISOString(),
+        intent: 'NORMAL'
+      },
+      {
+        id: 'demo-chat-3',
+        is_admin: true,
+        message: 'I can help you with coding, project generation, or answer questions. Try asking me to create a new app!',
+        timestamp: new Date(Date.now() - 3400000).toISOString(),
+        intent: 'PROJECT_PLAN'
+      }
+    ]
+  },
+
+  // Send chat (demo response)
+  '/api/chat/send': {
+    success: true,
+    message: 'This is a demo response. In a real environment, I would process your request using advanced AI models. Try "Create a todo app" or "What is Python?"',
+    agent_name: 'Demo Assistant',
+    confidence: 0.95,
+    intent: 'NORMAL'
+  },
+
+  // Agents list (demo - this endpoint actually doesn't exist, so we mock it)
+  '/api/ai/agents': [
+    { id: 'gpt-4o', name: 'GPT-4o', status: 'online', type: 'llm' },
+    { id: 'claude-3', name: 'Claude 3.5', status: 'online', type: 'llm' },
+    { id: 'phi-3', name: 'Phi-3 Mini', status: 'offline', type: 'llm' }
+  ],
+  
+  // Knowledge rules (demo)
+  '/api/admin/rules': [
+    { id: 1, name: 'Code Quality', condition: 'cyclomatic_complexity < 10', action: 'flag_for_review' },
+    { id: 2, name: 'Security Scan', condition: 'vulnerability_detected', action: 'block_deployment' }
+  ],
+
+  // Plans (demo)
+  '/api/admin/plans': [
+    { id: 1, title: 'Q2 Roadmap', description: 'Improve model orchestration', status: 'active' },
+    { id: 2, title: 'Security Audit', description: 'Third-party penetration testing', status: 'pending' }
+  ],
+};
 
 export const authUtils = {
   getToken(): string | null {
     const token = localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
     if (token) return token;
-    // Auto-migrate legacy key to canonical key on first access
     const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY) || sessionStorage.getItem(LEGACY_TOKEN_KEY);
     if (legacyToken) {
       localStorage.setItem(AUTH_TOKEN_KEY, legacyToken);
@@ -19,61 +186,86 @@ export const authUtils = {
     }
     return 'GUEST_MODE';
   },
-  setToken(token: string): void {
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
+
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === 'admin' || user?.tier === 'admin' ||
+           user?.email === 'admin@supreme.ai' ||
+           user?.email === 'paykaribazaronline@gmail.com';
   },
-  getCurrentUser(): AuthUser | null {
-    const userJson = localStorage.getItem(FIREBASE_USER_KEY) || sessionStorage.getItem(FIREBASE_USER_KEY);
-    return userJson ? JSON.parse(userJson) : null;
+
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    return !!token && token !== 'GUEST_MODE';
   },
-  setCurrentUser(user: AuthUser | Record<string, unknown> | null): void {
-    if (user) {
-      localStorage.setItem(FIREBASE_USER_KEY, JSON.stringify({ 
-          id: user.id || (user as Record<string, unknown>).uid || '', 
-          email: user.email, 
-          displayName: user.displayName || user.username || 'User',
-          role: user.role || (user as Record<string, unknown>).role || 'user',
-          tier: user.tier || (user as Record<string, unknown>).tier || 'free'
-      }));
-    } else {
-      localStorage.removeItem(FIREBASE_USER_KEY);
-      sessionStorage.removeItem(FIREBASE_USER_KEY);
+
+  clearAuth() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(FIREBASE_USER_KEY);
+    sessionStorage.removeItem(FIREBASE_USER_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+    sessionStorage.removeItem(LEGACY_TOKEN_KEY);
+  },
+
+  getCurrentUser(): any {
+    const userStr = sessionStorage.getItem(FIREBASE_USER_KEY) || localStorage.getItem(FIREBASE_USER_KEY);
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      return null;
     }
   },
-  clearAuth(): void {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(FIREBASE_USER_KEY);
-    localStorage.removeItem('supremeai_refresh_token');
-    localStorage.removeItem(LEGACY_TOKEN_KEY);
-    sessionStorage.removeItem(AUTH_TOKEN_KEY);
-    sessionStorage.removeItem(FIREBASE_USER_KEY);
-    sessionStorage.removeItem(LEGACY_TOKEN_KEY);
+
+  setToken(token: string) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    sessionStorage.setItem(AUTH_TOKEN_KEY, token);
   },
-  clearToken(): void {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(LEGACY_TOKEN_KEY);
-    sessionStorage.removeItem(AUTH_TOKEN_KEY);
-    sessionStorage.removeItem(LEGACY_TOKEN_KEY);
+
+  setCurrentUser(user: any) {
+    const userStr = JSON.stringify(user);
+    localStorage.setItem(FIREBASE_USER_KEY, userStr);
+    sessionStorage.setItem(FIREBASE_USER_KEY, userStr);
   },
-  getAuthHeaders(): Record<string, string> {
-    const token = authUtils.getToken();
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+
+  getAuthHeaders(): HeadersInit {
+    const token = this.getToken();
+    if (token && token !== 'GUEST_MODE') {
+      return { Authorization: `Bearer ${token}` };
+    }
+    return {};
   },
-  isAuthenticated(): boolean {
-    return !!authUtils.getToken();
-  },
+
   async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+    const token = this.getToken();
+    const isGuest = token === 'GUEST_MODE';
+    
+    // Demo mode: return mock data for guest users
+    if (isGuest && DEMO_MOCK_DATA[url]) {
+      console.log(`[Demo Mode] Returning mock data for: ${url}`);
+      const mockData = DEMO_MOCK_DATA[url];
+      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300)); // Simulate network
+      return {
+        ok: true,
+        json: async () => mockData,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        text: async () => JSON.stringify(mockData)
+      } as Response;
+    }
+
     const headers = new Headers(options.headers || {});
-    const token = authUtils.getToken();
-    if (token) {
+    if (token && token !== 'GUEST_MODE') {
       headers.set('Authorization', `Bearer ${token}`);
     }
-    
+
     const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || '';
     const fullUrl = url.startsWith('/') && API_BASE ? `${API_BASE}${url}` : url;
-    
+
     let response = await fetch(fullUrl, { ...options, headers });
-    
+
     if (response.status === 401) {
       try {
         const { refreshAccessToken } = await import('./firebase');
@@ -81,13 +273,25 @@ export const authUtils = {
         headers.set('Authorization', `Bearer ${newToken}`);
         response = await fetch(fullUrl, { ...options, headers });
       } catch (err) {
-        authUtils.clearAuth();
+        this.clearAuth();
         window.location.href = '/admin';
       }
+    } else if (response.status === 403 && isGuest && DEMO_MOCK_DATA[url]) {
+      console.log(`[Demo Mode] 403 intercepted, showing mock: ${url}`);
+      return {
+        ok: true,
+        json: async () => DEMO_MOCK_DATA[url],
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        text: async () => JSON.stringify(DEMO_MOCK_DATA[url])
+      } as Response;
     }
+    
     return response;
   }
 };
-export const fetchWithAuth = authUtils.fetchWithAuth;
-export const getAuthHeaders = authUtils.getAuthHeaders;
+
+export const fetchWithAuth = authUtils.fetchWithAuth.bind(authUtils);
+export const getAuthHeaders = authUtils.getAuthHeaders.bind(authUtils);
 export default authUtils;

@@ -92,15 +92,15 @@ public class ProviderInitializationService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void syncProvidersOnStartup() {
-        log.info("Syncing AI providers from Realtime Database to Firestore...");
+        log.info("[STARTUP] Initializing AI provider synchronization in background...");
         
         realtimeService.getData("config/api_keys")
+            .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
             .flatMapMany(keysMap -> {
                 if (keysMap == null || keysMap.isEmpty()) {
-                    log.warn("No API keys found in Realtime Database at config/api_keys");
+                    log.warn("[STARTUP] No API keys found in Realtime Database at config/api_keys");
                     return Flux.empty();
                 }
-                
                 return Flux.fromIterable(keysMap.entrySet());
             })
             .flatMap(entry -> {
@@ -113,18 +113,22 @@ public class ProviderInitializationService {
                         provider.setApiKey(key);
                         provider.setLastCheck(new Date());
                         
-                        // If metadata is missing, enrich it
                         if (provider.getBaseUrl() == null || provider.getBaseUrl().isBlank()) {
                             enrichProviderMetadata(provider);
                         }
                         
-                        log.info("Syncing provider: {} (Type: {})", name, provider.getType());
+                        log.debug("[STARTUP] Preparing to sync provider: {}", name);
                         return providerRepository.save(provider);
+                    })
+                    .onErrorResume(e -> {
+                        log.error("[STARTUP] Failed to sync provider {}: {}", name, e.getMessage());
+                        return Mono.empty();
                     });
             })
             .collectList()
-            .doOnSuccess(list -> log.info("Successfully synced {} providers to Firestore.", list.size()))
-            .doOnError(err -> log.error("Error syncing providers: {}", err.getMessage()))
-            .subscribe();
+            .subscribe(
+                list -> log.info("[STARTUP] Provider sync complete. Total providers updated: {}", list.size()),
+                err -> log.error("[STARTUP] Critical error during provider synchronization: {}", err.getMessage())
+            );
     }
 }

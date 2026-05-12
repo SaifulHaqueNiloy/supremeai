@@ -1,11 +1,11 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/supremeai:latest', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/backend:latest', '.']
   
   # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/supremeai:latest']
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/backend:latest']
   
   # Deploy to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,32 +15,14 @@ steps:
       - 'deploy'
       - 'supremeai-backend'
       - '--image'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/supremeai:latest'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/backend:latest'
       - '--region'
       - 'us-central1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'SPRING_PROFILES_ACTIVE=cloud'
-
-  # Deploy to GKE (Optional/Secondary)
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'set'
-      - 'image'
-      - 'deployment/supremeai'
-      - 'supremeai=us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/supremeai:latest'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=supremeai-cluster'
-
-  # Apply other k8s configs
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args: ['apply', '-f', 'k8s-deployment.yaml']
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=supremeai-cluster'
+      - 'SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=$PROJECT_ID,supremeai.cache.enabled=false'
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/supremeai:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/supremeai-repo/backend:latest'

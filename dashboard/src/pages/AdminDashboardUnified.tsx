@@ -1,45 +1,22 @@
-// AdminDashboardUnified.tsx - ULTRA-DENSE DARK COMMAND CENTER
-// UNIFIED ADMIN DASHBOARD - Single Source of Truth Contract
-
-import { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Layout, Menu, Alert, Badge, Space, Tabs, Button, Modal, Input, message, Avatar, Dropdown, Typography, Divider, FloatButton, Progress, Tag, Tooltip, List } from 'antd';
-import { 
-    RobotOutlined, 
-    DashboardOutlined, 
-    CheckCircleOutlined, 
-    SyncOutlined, 
-    DesktopOutlined, 
-    BulbOutlined, 
-    BugOutlined, 
-    NodeIndexOutlined, 
-    ApiOutlined, 
-    MenuUnfoldOutlined, 
-    MenuFoldOutlined, 
-    SearchOutlined, 
-    BellOutlined, 
-    UserOutlined, 
-    SettingOutlined, 
-    LogoutOutlined,
-    GlobalOutlined,
+// AdminDashboardUnified.tsx - Command Center with Access Control
+import { useState, useEffect } from 'react';
+import { Layout, Alert, Badge, Space, Tabs, Button, Modal, Avatar, Tooltip, Typography, Divider } from 'antd';
+import {
+    RobotOutlined,
+    DashboardOutlined,
     DatabaseOutlined,
-    RocketOutlined,
-    ClockCircleOutlined,
-    CloudServerOutlined,
-    InfoCircleOutlined,
-    HistoryOutlined,
-    MessageOutlined,
-    ArrowUpOutlined,
-    CheckCircleFilled,
-    SafetyCertificateOutlined,
-    ThunderboltOutlined,
-    ChromeOutlined,
-    MonitorOutlined,
-    EyeOutlined,
-    UploadOutlined,
+    NodeIndexOutlined,
+    ApiOutlined,
     BarChartOutlined,
-    FileTextOutlined,
-    LoadingOutlined
+    SafetyCertificateOutlined,
+    GlobalOutlined,
+    BulbOutlined,
+    BugOutlined,
+    RocketOutlined,
+    HistoryOutlined,
+    LogoutOutlined,
+    LockOutlined,
+    EyeOutlined,
 } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
 import APIManagement from '../components/APIManagement';
@@ -54,92 +31,61 @@ import LearningHub from '../components/LearningHub';
 import { notification } from 'antd';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { 
-  Chart as ChartJS, 
-  ArcElement, 
-  Tooltip as ChartTooltip, 
-  Legend, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement,
-  PointElement,
-  LineElement,
-  Filler
-} from 'chart.js';
-import { ApiResponse, DashboardContract } from '../types';
-import { LogEntry } from '../components/NeuralTerminal';
-
-// Register ChartJS
-ChartJS.register(
-  ArcElement, 
-  ChartTooltip, 
-  Legend, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement,
-  PointElement,
-  LineElement,
-  Filler
-);
+import { useRole } from '../contexts/RoleContext';
 
 const { Header, Content } = Layout;
+const { Text } = Typography;
 
-// Helper icons for dynamic rendering if needed
-const getIcon = (iconName: string) => {
-    switch (iconName) {
-        case 'DashboardOutlined': return <DashboardOutlined />;
-        case 'RobotOutlined': return <RobotOutlined />;
-        case 'BugOutlined': return <BugOutlined />;
-        case 'ApiOutlined': return <ApiOutlined />;
-        case 'DatabaseOutlined': return <DatabaseOutlined />;
-        case 'GlobalOutlined': return <GlobalOutlined />;
-        case 'CloudServerOutlined': return <CloudServerOutlined />;
-        case 'ThunderboltOutlined': return <ThunderboltOutlined />;
-        case 'RocketOutlined': return <RocketOutlined />;
-        case 'HistoryOutlined': return <HistoryOutlined />;
-        case 'FileTextOutlined': return <FileTextOutlined />;
-        case 'SettingOutlined': return <SettingOutlined />;
-        case 'MonitorOutlined': return <MonitorOutlined />;
-        case 'EyeOutlined': return <EyeOutlined />;
-        case 'UploadOutlined': return <UploadOutlined />;
-        case 'SafetyCertificateOutlined': return <SafetyCertificateOutlined />;
-        case 'NodeIndexOutlined': return <NodeIndexOutlined />;
-        case 'DesktopOutlined': return <DesktopOutlined />;
-        case 'ChromeOutlined': return <ChromeOutlined />;
-        case 'BarChartOutlined': return <BarChartOutlined />;
-        default: return <NodeIndexOutlined />;
-    }
-};
+// Restricted access demo placeholder
+const RestrictedAccess: React.FC = () => (
+  <div style={{
+    padding: '80px 40px',
+    textAlign: 'center',
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px dashed rgba(245,158,11,0.3)',
+    borderRadius: '16px',
+    marginTop: '20px'
+  }}>
+    <LockOutlined style={{ fontSize: 80, color: '#f59e0b', marginBottom: 24, opacity: 0.6 }} />
+    <h2 style={{ color: '#f59e0b', marginBottom: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      ADMIN RESTRICTED
+    </h2>
+    <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.7 }}>
+      This command center module is only accessible to administrators.
+      <br />Please login with an admin account to view system metrics, provider orchestration, and advanced controls.
+    </p>
+    <Space size="large">
+      <Button
+        type="primary"
+        icon={<EyeOutlined />}
+        onClick={() => window.location.href = '/admin?login=true'}
+        style={{ background: '#10b981', borderColor: '#10b981' }}
+      >
+        Login as Administrator
+      </Button>
+      <Button
+        onClick={() => window.location.href = '/'}
+      >
+        Return to Home
+      </Button>
+    </Space>
+  </div>
+);
 
 const AdminDashboardUnified: React.FC = () => {
-    const { t } = useTranslation();
-    const [contract, setContract] = useState<DashboardContract | null>(null);
+    const { isAdmin } = useRole();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [chatVisible, setChatVisible] = useState(false);
     const [liveStream, setLiveStream] = useState<any[]>([]);
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key.toLowerCase() === 'c' && (e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
-                setChatVisible(prev => !prev);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
-    useEffect(() => {
-        fetchContract();
-        const interval = setInterval(fetchContract, 30000);
-        
         const connectWebSocket = () => {
           try {
             const wsPath = import.meta.env.VITE_WS_URL || '/ws';
-            const wsUrl = wsPath.startsWith('http') || wsPath.startsWith('ws') 
-                ? wsPath 
+            const wsUrl = wsPath.startsWith('http') || wsPath.startsWith('ws')
+                ? wsPath
                 : `${window.location.protocol === 'https:' ? 'https:' : 'http'}://${window.location.host}${wsPath.startsWith('/') ? '' : '/'}${wsPath}`;
-            
+
             const socket = new SockJS(wsUrl);
             const stompClient = new Client({
               webSocketFactory: () => socket,
@@ -147,21 +93,14 @@ const AdminDashboardUnified: React.FC = () => {
               onConnect: () => {
                 stompClient.subscribe('/topic/notifications', (message) => {
                   const data = JSON.parse(message.body);
-                  const newLog: LogEntry = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    timestamp: new Date().toLocaleTimeString(),
-                    level: data.level || 'INFO',
-                    source: data.source || 'SYSTEM',
-                    message: data.message || JSON.stringify(data)
-                  };
-                  setLiveStream(prev => [newLog, ...prev].slice(0, 100));
-                  
-                  if (data.type === 'GITHUB_PIPELINE') {
-                    if (data.status === 'success') {
-                      notification.success({ message: '🚀 Deployment Successful', description: data.message });
-                    } else if (data.status === 'failure') {
-                      notification.error({ message: '🚨 Deployment Failed', description: data.message });
-                    }
+                  // Only show notifications for admin events
+                  if (isAdmin) {
+                    notification[data.status === 'success' ? 'success' : 'error']({
+                      message: data.status === 'success' ? '🚀 Deployment Successful' : '🚨 System Alert',
+                      description: data.message,
+                      duration: 5,
+                      placement: 'topRight',
+                    });
                   }
                 });
               }
@@ -169,275 +108,184 @@ const AdminDashboardUnified: React.FC = () => {
             stompClient.activate();
             return () => stompClient.deactivate();
           } catch (err) {
-            console.error("WebSocket connection error", err);
+            console.error("WebSocket error", err);
           }
         };
-        
-        const cleanup = connectWebSocket();
-        return () => {
-          clearInterval(interval);
-          if (cleanup) cleanup();
-        };
-    }, []);
 
-    const fetchContract = async () => {
-        try {
-            const resp = await authUtils.fetchWithAuth('/api/admin/dashboard/contract');
-            if (!resp.ok) {
-                if (resp.status === 401 || resp.status === 403) {
-                    authUtils.clearAuth();
-                    window.location.href = '/admin';
-                    return;
-                }
-                throw new Error('Failed to fetch contract');
-            }
-            const response = await resp.json() as ApiResponse<DashboardContract>;
-            if (response.success && response.data) {
-                setContract(response.data);
-                setError(null);
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleLogout = () => {
-        authUtils.clearAuth();
-        window.location.reload();
-    };
-
-
+        connectWebSocket();
+        // Simulate minimal loading for demo
+        setTimeout(() => setLoading(false), 1000);
+    }, [isAdmin]);
 
     if (loading) return (
-        <div className="h-screen bg-[#050505] flex flex-col items-center justify-center font-mono">
+        <div className="h-screen bg-[#050505] flex flex-col items-center justify-center">
             <div className="w-16 h-16 border-t-2 border-emerald-500 rounded-full animate-spin mb-4"></div>
-            <div className="text-[10px] text-emerald-500 uppercase tracking-[0.3em] animate-pulse">INIT_COMMAND_CENTER</div>
+            <div className="text-[10px] text-emerald-500 uppercase tracking-[0.3em] animate-pulse">INITIALIZING COMMAND CENTER</div>
         </div>
     );
 
-    if (error || !contract) return <Alert message="System Offline" description={error} type="error" showIcon />;
-
-    const stats = contract.stats;
-
-    return (
-        <Layout className="min-h-screen bg-[#050505] text-white">
-            <Layout className="bg-transparent flex flex-col flex-1">
+    // Admin-only dashboard content
+    if (!isAdmin) {
+        return (
+            <Layout className="min-h-screen bg-[#050505] text-white">
                 <Header className="bg-black/90 backdrop-blur-2xl border-b border-white/5 h-16 px-6 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col gap-0.5 min-w-[200px]">
                             <span className="text-[12px] font-black uppercase tracking-[0.2em] text-white">SupremeAI Command Center</span>
-                            <span className="text-[9px] font-black text-yellow-400 uppercase tracking-[0.3em]">AI_MODEL_SCENARIO_PROTOCOL</span>
-                        </div>
-                        <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
-                        <div className="hidden sm:flex flex-col">
-                            <span className="text-[9px] text-cyan-400 uppercase font-black tracking-widest">REGISTRY</span>
-                            <span className="text-[12px] text-white font-mono font-bold">OPTIMIZED_SYNC</span>
-                        </div>
-                        <div className="hidden md:flex flex-col">
-                            <span className="text-[10px] text-white font-black uppercase tracking-tighter">SERVER_UPTIME</span>
-                            <span className="text-[14px] text-yellow-400 font-mono font-bold">{stats.serverUptime || '00:00:00'}</span>
+                            <span className="text-[9px] font-black text-yellow-400 uppercase tracking-[0.3em]">RESTRICTED ACCESS</span>
                         </div>
                     </div>
-                    
                     <div className="flex items-center gap-4">
-                        <div className="hidden lg:flex items-center gap-4 bg-white/10 border border-white/20 rounded-lg px-4 py-2">
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-2">
-                                    <DatabaseOutlined className={`text-[12px] ${stats.databaseConnected ? 'text-emerald-500' : 'text-red-500'}`} />
-                                    <span className="text-[10px] font-black uppercase text-white">DB: {stats.databaseConnected ? 'ONLINE' : 'OFFLINE'}</span>
-                                </div>
-                                <span className="text-[9px] text-cyan-400 font-mono font-bold text-left">{stats.databaseConnected ? 'SYNC_OPTIMAL' : 'RECONNECTING...'}</span>
-                            </div>
-                            <div className="w-[1px] h-8 bg-white/20"></div>
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-2">
-                                    <CloudServerOutlined className={`text-[12px] ${stats.backendConnected ? 'text-emerald-500' : 'text-red-500'}`} />
-                                    <span className="text-[10px] font-black uppercase text-white">SRV: {stats.backendConnected ? 'ACTIVE' : 'INACTIVE'}</span>
-                                </div>
-                                <span className="text-[9px] text-yellow-400 font-mono font-bold text-left">UPTIME_LIVE</span>
-                            </div>
-                        </div>
-                        <div className="h-6 w-[1px] bg-white/5 mx-1"></div>
-                        <div className="flex items-center gap-2 px-2 py-1 bg-white/[0.03] border border-white/10 rounded-full hover:bg-white/10 transition-all cursor-pointer">
-                            <Avatar size={28} className="bg-white text-black border-2 border-white font-bold text-[12px]">AD</Avatar>
-                            <span className="hidden sm:inline-block text-[12px] font-black uppercase tracking-tighter text-white mr-1">ADMIN</span>
-                        </div>
+                        <Avatar size={28} className="bg-amber-500/20 text-amber-500 border border-amber-500/30" icon={<RobotOutlined />} />
+                        <span className="text-[12px] font-black uppercase tracking-tighter text-white/80">GUEST USER</span>
                         <Tooltip title="Logout">
-                            <Button 
-                                type="text" 
-                                icon={<LogoutOutlined />} 
-                                onClick={handleLogout} 
-                                className="text-white/40 hover:text-red-500 border border-white/5" 
+                            <Button
+                                type="text"
+                                icon={<LogoutOutlined />}
+                                onClick={() => { authUtils.clearAuth(); window.location.reload(); }}
+                                className="text-white/40 hover:text-red-500 border border-white/5"
                             />
                         </Tooltip>
                     </div>
                 </Header>
-
                 <Content className="p-6 overflow-y-auto min-h-[calc(100vh-64px)] bg-[#0c0c0c]">
-                    <div className="space-y-6 max-w-[1600px] mx-auto animate-fade-in">
-                        {/* Module Header */}
-                        <div className="glass-card px-6 py-4 flex items-center justify-between border-l-4 border-emerald-500 bg-black/40">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-                                    <RobotOutlined className="text-lg" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <h1 className="text-lg font-black uppercase tracking-[0.2em] text-white m-0">AI Model Scenario Management</h1>
-                                    <p className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest m-0">Orchestrate Communication, Execution & Voting Protocols</p>
-                                </div>
-                            </div>
-                            <div className="hidden md:flex items-center gap-6">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Registry Status</span>
-                                    <Tag color="emerald" className="m-0 text-[10px] font-black border-0 rounded bg-emerald-500/10 text-emerald-500">SYNC_OPTIMAL</Tag>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Main AI Management View with Tabs */}
-                        <div className="glass-card p-6 border border-white/5 bg-black/20">
-                            <Tabs 
-                                defaultActiveKey="registry" 
-                                className="dark-tabs"
-                                items={[
-                                    {
-                                        key: 'registry',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <DatabaseOutlined /> {t('dashboard.pillar_registry')}
-                                            </span>
-                                        ),
-                                        children: <APIManagement />
-                                    },
-                                    {
-                                        key: 'orchestration',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <NodeIndexOutlined /> {t('dashboard.pillar_orchestration')}
-                                            </span>
-                                        ),
-                                        children: <ScenarioOrchestration />
-                                    },
-                                    {
-                                        key: 'telemetry',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <BarChartOutlined /> {t('dashboard.pillar_telemetry')}
-                                            </span>
-                                        ),
-                                        children: (
-                                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-                                                <div className="lg:col-span-2 glass-card border border-white/5 overflow-hidden relative group">
-                                                    <div className="absolute top-4 left-4 z-[110] flex flex-col gap-1">
-                                                        <span className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.2em] drop-shadow-md">System Neural Map</span>
-                                                        <span className="text-[8px] text-white/40 uppercase font-mono drop-shadow-md">Real-time Node Interaction Stream</span>
-                                                    </div>
-                                                    <ThreeDashboard />
-                                                </div>
-                                                <div className="space-y-6 overflow-y-auto custom-scrollbar pr-2">
-                                                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                                                        <h4 className="text-[10px] font-black uppercase text-white/40 mb-4 tracking-widest flex items-center gap-2">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                                            Neural Latency Matrix
-                                                        </h4>
-                                                        <div className="space-y-4">
-                                                            {[
-                                                                { label: 'GPT-4o', value: '142ms', color: 'emerald' },
-                                                                { label: 'Claude 3.5', value: '189ms', color: 'blue' },
-                                                                { label: 'Gemini 1.5', value: '256ms', color: 'purple' }
-                                                            ].map((m, i) => (
-                                                                <div key={i} className="flex flex-col gap-1">
-                                                                    <div className="flex justify-between text-[10px] font-mono uppercase">
-                                                                        <span className="text-white/60">{m.label}</span>
-                                                                        <span className={`text-${m.color}-500`}>{m.value}</span>
-                                                                    </div>
-                                                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                                                        <div className={`h-full bg-${m.color}-500/50`} style={{ width: `${Math.random() * 40 + 60}%` }} />
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                                                        <h4 className="text-[10px] font-black uppercase text-white/40 mb-4 tracking-widest flex items-center gap-2">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                                                            Ensemble Voting
-                                                        </h4>
-                                                        <div className="py-8 text-center border border-dashed border-white/5 rounded-lg">
-                                                            <SafetyCertificateOutlined className="text-2xl text-purple-500/20 mb-2" />
-                                                            <p className="text-[9px] text-white/20 uppercase">Stream Waiting for active consensus session</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: 'consensus',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <SafetyCertificateOutlined /> {t('dashboard.pillar_consensus')}
-                                            </span>
-                                        ),
-                                        children: <ConsensusMap />
-                                    },
-                                    {
-                                        key: 'traffic',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <GlobalOutlined /> {t('dashboard.pillar_traffic')}
-                                            </span>
-                                        ),
-                                        children: <QuotaTraffic />
-                                    },
-                                    {
-                                        key: 'knowledge',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <BulbOutlined /> {t('dashboard.pillar_knowledge')}
-                                            </span>
-                                        ),
-                                        children: <KnowledgeHub />
-                                    },
-                                    {
-                                        key: 'logs',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <BugOutlined /> {t('dashboard.pillar_healing')}
-                                            </span>
-                                        ),
-                                        children: <SelfHealingLogs />
-                                    },
-                                    {
-                                        key: 'learning',
-                                        label: (
-                                            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-                                                <RocketOutlined /> {t('dashboard.pillar_learning')}
-                                            </span>
-                                        ),
-                                        children: <LearningHub />
-                                    }
-                                ]}
-                            />
-                        </div>
+                    <div className="max-w-[1200px] mx-auto">
+                        <Alert
+                            message="Access Restricted"
+                            description="The SupremeAI Command Center is only available to administrators. Please login with admin credentials."
+                            type="warning"
+                            showIcon
+                            icon={<LockOutlined />}
+                            style={{ marginBottom: 24, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}
+                        />
+                        <RestrictedAccess />
                     </div>
                 </Content>
-
-                <Modal
-                    title={<span className="text-white text-[14px] font-black uppercase tracking-widest">Neural Link Chat</span>}
-                    open={chatVisible}
-                    onCancel={() => setChatVisible(false)}
-                    footer={null}
-                    width={800}
-                    className="dark-modal"
-                    styles={{ body: { padding: 0, backgroundColor: '#050505' } }}
-                    centered
-                >
-                    <ChatWithAI />
-                </Modal>
             </Layout>
+        );
+    }
+
+    return (
+        <Layout className="min-h-screen bg-[#050505] text-white">
+            <Header className="bg-black/90 backdrop-blur-2xl border-b border-white/5 h-16 px-6 flex items-center justify-between sticky top-0 z-50">
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col gap-0.5 min-w-[200px]">
+                        <span className="text-[12px] font-black uppercase tracking-[0.2em] text-white">SupremeAI Command Center</span>
+                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em]">ADMINISTRATOR ACCESS</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                        <Avatar size={24} className="bg-emerald-500 text-white border-0" icon={<RobotOutlined />} />
+                        <span className="text-[12px] font-bold uppercase tracking-tighter text-emerald-400">ADMIN</span>
+                    </div>
+                    <Tooltip title="Logout">
+                        <Button
+                            type="text"
+                            icon={<LogoutOutlined />}
+                            onClick={() => { authUtils.clearAuth(); window.location.reload(); }}
+                            className="text-white/40 hover:text-red-500 border border-white/5"
+                        />
+                    </Tooltip>
+                </div>
+            </Header>
+
+            <Content className="p-6 overflow-y-auto min-h-[calc(100vh-64px)] bg-[#0c0c0c]">
+                <div className="max-w-[1600px] mx-auto space-y-6">
+                    <div className="glass-card px-6 py-4 flex items-center justify-between border-l-4 border-emerald-500 bg-black/40">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                                <RobotOutlined className="text-lg" />
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="text-lg font-black uppercase tracking-[0.2em] text-white m-0">AI Model Scenario Management</h1>
+                                <p className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest m-0">Orchestrate Communication, Execution & Voting Protocols</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="glass-card p-6 border border-white/5 bg-black/20">
+                        <Tabs
+                            defaultActiveKey="registry"
+                            className="dark-tabs"
+                            items={[
+                                {
+                                    key: 'registry',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <DatabaseOutlined /> Provider Registry
+                                        </span>
+                                    ),
+                                    children: <APIManagement />
+                                },
+                                {
+                                    key: 'orchestration',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <NodeIndexOutlined /> Scenario Orchestration
+                                        </span>
+                                    ),
+                                    children: <ScenarioOrchestration />
+                                },
+                                {
+                                    key: 'telemetry',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <BarChartOutlined /> Neural Telemetry
+                                        </span>
+                                    ),
+                                    children: <ThreeDashboard />
+                                },
+                                {
+                                    key: 'consensus',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <SafetyCertificateOutlined /> Consensus Map
+                                        </span>
+                                    ),
+                                    children: <ConsensusMap />
+                                },
+                                {
+                                    key: 'traffic',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <GlobalOutlined /> Traffic & Quotas
+                                        </span>
+                                    ),
+                                    children: <QuotaTraffic />
+                                },
+                                {
+                                    key: 'knowledge',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <BulbOutlined /> Knowledge Base
+                                        </span>
+                                    ),
+                                    children: <KnowledgeHub />
+                                },
+                                {
+                                    key: 'logs',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <BugOutlined /> Self-Healing Logs
+                                        </span>
+                                    ),
+                                    children: <SelfHealingLogs />
+                                },
+                                {
+                                    key: 'learning',
+                                    label: (
+                                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                                            <RocketOutlined /> Learning Hub
+                                        </span>
+                                    ),
+                                    children: <LearningHub />
+                                }
+                            ]}
+                        />
+                    </div>
+                </div>
+            </Content>
         </Layout>
     );
 };

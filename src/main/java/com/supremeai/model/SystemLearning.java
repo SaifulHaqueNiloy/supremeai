@@ -33,7 +33,7 @@ public class SystemLearning {
     // Additional fields for error tracking and system learning
     private String type;
     private String resolution;
-    private String context;
+    private Object context;
     private Integer errorCount;
     private Boolean resolved;
     private LocalDateTime timestamp;
@@ -95,8 +95,8 @@ public class SystemLearning {
     public void setType(String type) { this.type = type; }
     public String getResolution() { return resolution; }
     public void setResolution(String resolution) { this.resolution = resolution; }
-    public String getContext() { return context; }
-    public void setContext(String context) { this.context = context; }
+    public Object getContext() { return context; }
+    public void setContext(Object context) { this.context = context; }
     public Integer getErrorCount() { return errorCount; }
     public void setErrorCount(Integer errorCount) { this.errorCount = errorCount; }
     public Boolean getResolved() { return resolved; }

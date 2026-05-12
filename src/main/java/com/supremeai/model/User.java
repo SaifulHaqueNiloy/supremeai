@@ -12,6 +12,8 @@ import java.time.Instant;
 public class User {
 
     @DocumentId
+    private String id;
+
     private String firebaseUid;
 
     private String email;
@@ -56,6 +58,9 @@ public class User {
     }
 
     // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
     public String getFirebaseUid() { return firebaseUid; }
     public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
 

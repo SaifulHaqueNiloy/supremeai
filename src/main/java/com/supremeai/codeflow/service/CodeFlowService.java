@@ -33,29 +33,33 @@ public class CodeFlowService {
     
     private static final Logger logger = LoggerFactory.getLogger(CodeFlowService.class);
     
-    @Autowired
-    private CodeFlowRepository repository;
-    
-    @Autowired
-    private AIProviderFactory providerFactory;
-    
-    @Autowired
-    private AIProviderSwitcher providerSwitcher;
-    
-    @Autowired
-    private CodeAnalyzer codeAnalyzer;
-    
-    @Autowired
-    private SecurityScanner securityScanner;
-    
-    @Autowired
-    private PatternDetector patternDetector;
-    
-    @Autowired
-    private HealthScorer healthScorer;
-    
-    @Autowired
-    private DependencyAnalyzer dependencyAnalyzer;
+    private final CodeFlowRepository repository;
+    private final AIProviderFactory providerFactory;
+    private final AIProviderSwitcher providerSwitcher;
+    private final CodeAnalyzer codeAnalyzer;
+    private final SecurityScanner securityScanner;
+    private final PatternDetector patternDetector;
+    private final HealthScorer healthScorer;
+    private final DependencyAnalyzer dependencyAnalyzer;
+
+    public CodeFlowService(
+            CodeFlowRepository repository,
+            AIProviderFactory providerFactory,
+            AIProviderSwitcher providerSwitcher,
+            CodeAnalyzer codeAnalyzer,
+            SecurityScanner securityScanner,
+            PatternDetector patternDetector,
+            HealthScorer healthScorer,
+            DependencyAnalyzer dependencyAnalyzer) {
+        this.repository = repository;
+        this.providerFactory = providerFactory;
+        this.providerSwitcher = providerSwitcher;
+        this.codeAnalyzer = codeAnalyzer;
+        this.securityScanner = securityScanner;
+        this.patternDetector = patternDetector;
+        this.healthScorer = healthScorer;
+        this.dependencyAnalyzer = dependencyAnalyzer;
+    }
     
     /**
      * Analyze a repository from URL

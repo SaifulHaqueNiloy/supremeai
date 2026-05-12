@@ -33,9 +33,12 @@ public class SystemConfigSeeder {
     @Autowired
     private SystemConfigRepository systemConfigRepository;
 
-    @PostConstruct
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void seedSystemConfig() {
+        log.info("[CONFIG_SEED] Checking for global_settings in background...");
+        
         systemConfigRepository.findById("global_settings")
+            .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
             .hasElement()
             .flatMap(exists -> {
                 if (!exists) {
@@ -47,7 +50,7 @@ public class SystemConfigSeeder {
                 }
             })
             .subscribe(
-                config -> log.info("[CONFIG_SEED] Default system config seeded successfully"),
+                config -> log.info("[CONFIG_SEED] Default system config sync complete"),
                 error -> log.error("[CONFIG_SEED] Failed to seed system config: {}", error.getMessage())
             );
     }

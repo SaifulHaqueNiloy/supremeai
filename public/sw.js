@@ -1,9 +1,8 @@
-const CACHE_NAME = 'supremeai-cache-v1';
+const CACHE_NAME = 'supremeai-cache-v2';
 const ASSETS_TO_CACHE = [
   '/404.html',
   '/admin-console.html',
   '/favicon.svg',
-  '/index.html',
   '/manifest.json',
   '/monitoring-dashboard.html',
   '/performance-dashboard.html',
@@ -15,6 +14,7 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(ASSETS_TO_CACHE))
@@ -30,7 +30,9 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    (async () => {
+      await self.clients.claim();
+      const cacheNames = await caches.keys();
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
@@ -38,6 +40,6 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    })()
   );
 });

@@ -52,12 +52,15 @@ public class RedisRateLimiter implements RateLimiter {
             "    return 0\n" +
             "end";
 
-    public RedisRateLimiter(RedisTemplate<String, Object> redisTemplate) {
+    public RedisRateLimiter(@org.springframework.beans.factory.annotation.Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @Override
     public boolean tryAcquire(String key, int limit, int windowSeconds) {
+        if (redisTemplate == null) {
+            return true; // Fail open if disabled
+        }
         try {
             RedisScript<Long> script = RedisScript.of(RATE_LIMIT_SCRIPT, Long.class);
             List<String> keys = Collections.singletonList("rate_limit:" + key);
@@ -77,6 +80,9 @@ public class RedisRateLimiter implements RateLimiter {
 
     @Override
     public Map<String, Object> getStatus(String key) {
+        if (redisTemplate == null) {
+            return Map.of("status", "disabled");
+        }
         try {
             String redisKey = "rate_limit:" + key;
             Map<Object, Object> bucket = redisTemplate.opsForHash().entries(redisKey);
@@ -94,6 +100,8 @@ public class RedisRateLimiter implements RateLimiter {
 
     @Override
     public void reset(String key) {
-        redisTemplate.delete("rate_limit:" + key);
+        if (redisTemplate != null) {
+            redisTemplate.delete("rate_limit:" + key);
+        }
     }
 }

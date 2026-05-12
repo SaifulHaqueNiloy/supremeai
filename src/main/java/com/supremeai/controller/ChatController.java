@@ -46,12 +46,6 @@ public class ChatController {
     @Autowired
     private com.supremeai.service.ChatIntelligenceService intelligenceService;
 
-    @Autowired
-    private CircuitBreakerRegistry circuitBreakerRegistry;
-
-    @Autowired
-    private RetryRegistry retryRegistry;
-
     private final CircuitBreaker aiCircuitBreaker;
     private final Retry aiRetry;
 

@@ -32,7 +32,7 @@ public class CacheInvalidationService {
 
     public CacheInvalidationService(
             Cache<String, Object> l1Cache,
-            StringRedisTemplate redisTemplate,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) StringRedisTemplate redisTemplate,
             MeterRegistry meterRegistry) {
         this.l1Cache = l1Cache;
         this.redisTemplate = redisTemplate;
@@ -52,7 +52,9 @@ public class CacheInvalidationService {
             l1Cache.invalidate(key);
             
             // Invalidate L2 cache (Redis)
-            redisTemplate.delete(key);
+            if (redisTemplate != null) {
+                redisTemplate.delete(key);
+            }
             
             log.debug("Invalidated cache key: {}", key);
         } finally {
@@ -70,12 +72,16 @@ public class CacheInvalidationService {
             l1Cache.asMap().keySet().removeIf(key -> key.matches(pattern.replace("*", ".*")));
             
             // Invalidate L2 cache entries matching pattern
-            Set<String> keys = redisTemplate.keys(pattern);
-            if (keys != null && !keys.isEmpty()) {
-                redisTemplate.delete(keys);
+            int redisKeysCount = 0;
+            if (redisTemplate != null) {
+                Set<String> keys = redisTemplate.keys(pattern);
+                if (keys != null && !keys.isEmpty()) {
+                    redisKeysCount = keys.size();
+                    redisTemplate.delete(keys);
+                }
             }
             
-            log.info("Invalidated cache pattern: {} ({} keys)", pattern, keys != null ? keys.size() : 0);
+            log.info("Invalidated cache pattern: {} ({} keys)", pattern, redisKeysCount);
         } finally {
             sample.stop(invalidationTimer);
         }
@@ -91,7 +97,13 @@ public class CacheInvalidationService {
             l1Cache.invalidateAll();
             
             // Invalidate L2 cache (Redis)
-            redisTemplate.getConnectionFactory().getConnection().flushDb();
+            if (redisTemplate != null) {
+                try {
+                    redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
+                } catch (Exception e) {
+                    log.warn("Failed to flush Redis: {}", e.getMessage());
+                }
+            }
             
             log.warn("Invalidated all caches");
         } finally {

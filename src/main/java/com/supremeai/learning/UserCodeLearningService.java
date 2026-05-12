@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -24,17 +24,21 @@ public class UserCodeLearningService {
 
     private static final Logger log = LoggerFactory.getLogger(UserCodeLearningService.class);
 
-    @Autowired(required = false)
-    private Firestore firestore;
-
-    @Autowired
-    private GlobalKnowledgeBase globalKnowledgeBase;
-
-    @Value("${firestore.collection.system-learning:system_learning}")
-    private String systemLearningCollection;
+    private final Firestore firestore;
+    private final GlobalKnowledgeBase globalKnowledgeBase;
+    private final String systemLearningCollection;
 
     // In-memory cache for frequently accessed patterns
     private final Map<String, SystemLearning> patternCache = new ConcurrentHashMap<>();
+
+    public UserCodeLearningService(
+            @Autowired(required = false) Firestore firestore,
+            GlobalKnowledgeBase globalKnowledgeBase,
+            @Value("${firestore.collection.system-learning:system_learning}") String systemLearningCollection) {
+        this.firestore = firestore;
+        this.globalKnowledgeBase = globalKnowledgeBase;
+        this.systemLearningCollection = systemLearningCollection;
+    }
 
     @PostConstruct
     public void init() {

@@ -1,6 +1,7 @@
 package com.supremeai.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -14,6 +15,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * Optimized Redis configuration for SupremeAI caching layer
  */
 @Configuration
+@ConditionalOnProperty(name = "supremeai.cache.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisConfig {
 
     @Value("${spring.redis.host:localhost}")

@@ -18,6 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -49,7 +50,7 @@ public class SecurityConfig {
                          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
                          "img-src 'self' data: https:; " +
                          "font-src 'self' https://fonts.gstatic.com; " +
-                         "connect-src 'self' wss: https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://api.supremeai.com https://supremeai-a.web.app https://supremeai-a.firebaseapp.com http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; " +
+                         "connect-src 'self' wss: https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://api.supremeai.com https://supremeai-a.web.app https://supremeai-a.firebaseapp.com https://*.run.app http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; " +
                          "frame-ancestors 'none'; " +
                          "base-uri 'self'; " +
                          "form-action 'self'")
@@ -140,16 +141,28 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Use setAllowedOriginPatterns instead of setAllowedOrigins to allow wildcards with credentials
-        configuration.setAllowedOriginPatterns(List.of(
-            "https://supremeai-a.web.app",
-            "https://supremeai-a.firebaseapp.com",
-            "http://localhost:*",
-            "http://127.0.0.1:*"
+        
+        // Use "*" pattern which is safe with allowCredentials(true) in Spring 3+
+        // This dynamically allows any origin that makes the request
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "X-Requested-With", 
+            "Accept", 
+            "Origin", 
+            "Access-Control-Request-Method", 
+            "Access-Control-Request-Headers",
+            "X-CSRF-TOKEN",
+            "X-Firebase-Id-Token"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-CSRF-TOKEN", "X-Requested-With", "Accept", "Origin"));
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "X-CSRF-TOKEN"));
+        configuration.setExposedHeaders(Arrays.asList(
+            "Access-Control-Allow-Origin", 
+            "Access-Control-Allow-Credentials",
+            "Content-Disposition"
+        ));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         

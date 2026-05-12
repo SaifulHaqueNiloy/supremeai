@@ -48,9 +48,11 @@ public class KnowledgeSeederServiceEnhanced {
     private final AtomicLong cacheMisses = new AtomicLong(0);
     private volatile boolean cacheInitialized = false;
 
-    @PostConstruct
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void seedKnowledge() {
+        log.info("[SEED] Initializing knowledge base synchronization...");
         systemLearningRepository.count()
+            .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
             .flatMapMany(count -> {
                 if (count == 0) {
                     log.info("[SEED] Firestore system_learning is empty — seeding knowledge base...");

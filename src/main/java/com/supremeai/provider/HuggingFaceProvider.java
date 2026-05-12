@@ -42,10 +42,15 @@ public class HuggingFaceProvider extends AbstractHttpProvider {
             
         List<?> choices = (List<?>) response.get("choices");
         if (choices != null && !choices.isEmpty()) {
-            Map<String, Object> first = (Map<String, Object>) choices.get(0);
-            Map<String, Object> message = (Map<String, Object>) first.get("message");
-            if (message != null && message.get("content") != null) {
-                return (String) message.get("content");
+            Object firstObj = choices.get(0);
+            if (firstObj instanceof Map<?, ?> first) {
+                Object messageObj = first.get("message");
+                if (messageObj instanceof Map<?, ?> message) {
+                    Object contentObj = message.get("content");
+                    if (contentObj instanceof String content) {
+                        return content;
+                    }
+                }
             }
         }
         return "No content in HF response.";

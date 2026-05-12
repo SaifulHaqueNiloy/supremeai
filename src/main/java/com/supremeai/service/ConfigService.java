@@ -50,13 +50,17 @@ public class ConfigService {
         this.cachedConfig = createDefaultConfig();
     }
 
-    @PostConstruct
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void init() {
-        // 1. Initial refresh
-        refreshCache().subscribe(
-            config -> logger.info("System configuration initialized: v{}", config.getVersion()),
-            error -> logger.error("Failed to initialize system configuration", error)
-        );
+        logger.info("[CONFIG] Initializing system configuration...");
+        
+        // 1. Initial refresh - use boundedElastic to avoid blocking main thread
+        refreshCache()
+            .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+            .subscribe(
+                config -> logger.info("[CONFIG] System configuration initialized: v{}", config.getVersion()),
+                error -> logger.error("[CONFIG] Failed to initialize system configuration: {}", error.getMessage())
+            );
 
         // 2. Setup real-time listener
         try {
@@ -64,7 +68,7 @@ public class ConfigService {
                     .document(DOCUMENT_ID)
                     .addSnapshotListener(listenerExecutor, (snapshot, error) -> {
                         if (error != null) {
-                            logger.error("Firestore listener error for system_configs", error);
+                            logger.error("[CONFIG] Firestore listener error for system_configs", error);
                             return;
                         }
 
@@ -72,13 +76,13 @@ public class ConfigService {
                             SystemConfig newConfig = snapshot.toObject(SystemConfig.class);
                             if (newConfig != null) {
                                 this.cachedConfig = newConfig;
-                                logger.info("System configuration updated in real-time: v{}", newConfig.getVersion());
+                                logger.info("[CONFIG] System configuration updated in real-time: v{}", newConfig.getVersion());
                             }
                         }
                     });
-            logger.info("Real-time configuration listener attached to document: {}", DOCUMENT_ID);
+            logger.info("[CONFIG] Real-time configuration listener attached to: {}", DOCUMENT_ID);
         } catch (Exception e) {
-            logger.error("Failed to setup real-time configuration listener", e);
+            logger.error("[CONFIG] Failed to setup real-time configuration listener", e);
         }
     }
 
