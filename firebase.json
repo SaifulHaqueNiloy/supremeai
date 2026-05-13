@@ -4,11 +4,18 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "public": "dashboard/dist",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/admin/",
+        "type": 301
+      }
     ],
     "rewrites": [
       {
@@ -20,15 +27,15 @@
       },
       {
         "source": "/admin/**",
-        "destination": "/index.html"
+        "destination": "/admin/index.html"
       },
       {
         "source": "/mobile/**",
-        "destination": "/index.html"
+        "destination": "/mobile/index.html"
       },
       {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/admin/index.html"
       }
     ],
     "headers": [
