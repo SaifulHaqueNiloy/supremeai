@@ -1,58 +1,59 @@
-.PHONY: help build test deploy setup clean
+.PHONY: help deploy infra deploy-all clean test
 
-help:  ## Show this help
-	@echo "SupremeAI Makefile"
+help:
+	@echo "SupremeAI Make Targets"
+	@echo "======================"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "Deployment:"
+	@echo "  make infra        - Setup GCP infrastructure (service accounts, APIs, IAM)"
+	@echo "  make deploy       - Deploy backend + dashboard to Cloud Run & Firebase Hosting"
+	@echo "  make deploy-all   - Run infra setup + full deployment"
+	@echo ""
+	@echo "Development:"
+	@echo "  make build        - Build backend JAR and dashboard"
+	@echo "  make test         - Run all tests"
+	@echo "  make clean        - Clean build artifacts"
+	@echo ""
+	@echo "Utilities:"
+	@echo "  make logs         - Stream Cloud Run logs"
+	@echo "  make rollback     - Rollback Cloud Run service to previous revision"
+	@echo ""
 
-build: ## Build backend JAR
-	./gradlew clean build -x test
+infra:
+	@echo "=== Running Infrastructure Setup ==="
+	@./infrastructure/setup.sh
 
-test: ## Run all tests
-	./gradlew test
+deploy: build
+	@echo "=== Deploying to Cloud Run & Firebase Hosting ==="
+	@./deploy_gcp_firebase.sh
 
-compile: ## Compile only
-	./gradlew compileJava
+deploy-all: infra deploy
 
-lint: ## Run code style checks
-	./gradlew spotlessCheck
+build:
+	@echo "=== Building Backend ==="
+	@./gradlew clean build -x test
+	@echo ""
+	@echo "=== Building Dashboard ==="
+	@cd dashboard && npm ci && npm run build && cd ..
+	@rm -rf public/admin/*
+	@cp -r dashboard/dist/* public/admin/
+	@echo "✅ Build complete"
 
-format: ## Format code
-	./gradlew spotlessApply
+test:
+	@./gradlew test
 
-deploy: ## Deploy all services to Cloud Run (requires gcloud & docker)
-	@echo "Deploying backend, reverse-engineering, and simulator-runtime..."
-	bash deploy.sh
+clean:
+	@./gradlew clean
+	@rm -rf dashboard/dist
+	@rm -rf public/admin/*
+	@echo "✅ Clean complete"
 
-setup: ## Create GCP infrastructure only
-	bash infrastructure/setup.sh
+logs:
+	@BACKEND_URL=$$(gcloud run services describe supremeai-backend --region us-central1 --format='value(status.url)'); \
+	echo "Streaming logs from $$BACKEND_URL"; \
+	gcloud logging tail "resource.type=cloud_run_revision AND resource.labels.service_name=supremeai-backend" --project=$$(gcloud config get-value project)
 
-docker-build: ## Build all Docker images locally
-	docker build -t gcr.io/$(shell echo $$GCP_PROJECT_ID)/supremeai-backend:latest .
-	docker build -t gcr.io/$(shell echo $$GCP_PROJECT_ID)/reverse-engineering:latest -f reverse-engineering/Dockerfile reverse-engineering
-	docker build -t gcr.io/$(shell echo $$GCP_PROJECT_ID)/simulator-runtime:latest -f simulator-runtime/Dockerfile simulator-runtime
-
-docker-push: ## Push all Docker images to GCR
-	docker push gcr.io/$(shell echo $$GCP_PROJECT_ID)/supremeai-backend:latest
-	docker push gcr.io/$(shell echo $$GCP_PROJECT_ID)/reverse-engineering:latest
-	docker push gcr.io/$(shell echo $$GCP_PROJECT_ID)/simulator-runtime:latest
-
-clean: ## Clean build artifacts
-	./gradlew clean
-	rm -rf build/
-	rm -rf dashboard/dist/
-	rm -rf reverse-engineering/__pycache__ simulator-runtime/__pycache__
-
-local-run: ## Run backend locally (requires env vars)
-	@echo "Starting backend on http://localhost:8080"
-	@echo "Ensure Firestore emulator is running: firebase emulators:start"
-	GCP_PROJECT_ID=supremeai-459910 ./gradlew bootRun
-
-simulate-reveng: ## Run reverse engineering locally against a URL
-	cd reverse-engineering && uvicorn main:app --reload --port 8081
-
-simulate-simulator: ## Run simulator runtime locally
-	cd simulator-runtime && uvicorn main:app --reload --port 8082
-
-dashboard: ## Start React dashboard
-	cd dashboard && npm install && npm run dev
+rollback:
+	@echo "Rolling back Cloud Run service..."
+	@gcloud run services revert supremeai-backend --region us-central1
+	@echo "✅ Rollback complete"
