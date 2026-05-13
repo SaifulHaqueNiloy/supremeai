@@ -53,6 +53,7 @@ env:
   # Build Optimization
   GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.configureondemand=true -Dorg.gradle.vfs.watch=true"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: "true"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   # Gradle Daemon Reuse
   GRADLE_DAEMON_IDLE_TIMEOUT: "300000"
   # JVM Options for faster builds
@@ -97,7 +98,7 @@ jobs: # ------------------------------------------------------------------------
               if (artifacts.length === 0) {
                 console.log("No artifacts found to clean up.");
               } else {
-                console.log(`Found ${artifacts.length} artifacts. Cleaning up...`);
+                console.log(`Found ${artifacts.length} artifacts. Cleaning up ALL to free space...`);
                 for (const artifact of artifacts) {
                   try {
                     await github.rest.actions.deleteArtifact({
@@ -217,6 +218,8 @@ jobs: # ------------------------------------------------------------------------
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
       - name: 🛠️ Setup GCloud
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'beta'
       - name: 🔍 Check Required Permissions & APIs
         run: |
           echo "Checking APIs..."
@@ -264,6 +267,8 @@ jobs: # ------------------------------------------------------------------------
       - name: 🛠️ Setup GCloud
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'beta'
       - name: 🐳 Build & Push Container
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
         run: |
@@ -496,11 +501,11 @@ jobs: # ------------------------------------------------------------------------
       - name: Check Backend & Frontend
         run: |
           echo "Checking frontend..."
-          curl -sf https://supremeai-a.web.app/ || echo "Frontend health check failed"
+          curl -sfL https://supremeai-a.web.app/ || { echo "::error::Frontend health check failed"; exit 1; }
           echo "Checking backend..."
           BACKEND_URL=$(gcloud run services describe supremeai-backend --region us-central1 --format='value(status.url)' || echo "")
           if [ -n "$BACKEND_URL" ]; then
-            curl -sf "$BACKEND_URL/api/health" || echo "Backend health check failed"
+            curl -sfL "$BACKEND_URL/api/health" || { echo "::error::Backend health check failed"; exit 1; }
           fi
 
   # --------------------------------------------------------------------------------
