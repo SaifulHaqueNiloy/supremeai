@@ -11,10 +11,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing API key rotation within provider-allowed limits.
@@ -220,47 +225,63 @@ public class ApiKeyRotationService {
 
     /**
      * Test all active keys and mark any that fail validation.
+     * Refactored to use reactive parallel processing (concurrency 10) for performance.
      */
     @Scheduled(cron = "0 0 3 * * *")
     public void validateAllActiveKeys() {
-        log.info("Running scheduled API key validation...");
+        log.info("Running scheduled API key validation (parallel reactive)...");
 
         try {
             List<UserApiKey> allKeys = userApiKeyRepository.findAll().collectList().block();
             if (allKeys == null || allKeys.isEmpty()) return;
 
-            int valid = 0;
-            int invalid = 0;
-            int skipped = 0;
+            // Filter active keys only
+            List<UserApiKey> activeKeys = allKeys.stream()
+                    .filter(k -> "active".equals(k.getStatus()))
+                    .collect(Collectors.toList());
 
-            for (UserApiKey key : allKeys) {
-                if (!"active".equals(key.getStatus())) {
-                    skipped++;
-                    continue;
-                }
-
-                try {
-                    Map<String, Object> result = testApiKey(key);
-                    boolean isValid = Boolean.TRUE.equals(result.get("valid"));
-                    key.setLastTested(LocalDateTime.now());
-                    userApiKeyRepository.save(key).block();
-
-                    if (isValid) {
-                        valid++;
-                    } else {
-                        key.setStatus("error");
-                        userApiKeyRepository.save(key).block();
-                        log.warn("Key {} for provider '{}' failed validation: {}",
-                                key.getMaskedKey(), key.getProvider(), result.get("message"));
-                        invalid++;
-                    }
-                } catch (Exception e) {
-                    log.error("Validation failed for key {}: {}", key.getId(), e.getMessage());
-                    skipped++;
-                }
+            if (activeKeys.isEmpty()) {
+                log.info("No active keys to validate.");
+                return;
             }
 
-            log.info("Key validation complete. Valid: {}, Invalid: {}, Skipped: {}", valid, invalid, skipped);
+            int concurrency = Math.min(10, activeKeys.size());
+            AtomicInteger validCount = new AtomicInteger();
+            AtomicInteger invalidCount = new AtomicInteger();
+
+            Flux.fromIterable(activeKeys)
+                    .flatMap(key ->
+                            Mono.fromCallable(() -> {
+                                        Map<String, Object> result = testApiKey(key);
+                                        boolean isValid = Boolean.TRUE.equals(result.get("valid"));
+                                        key.setLastTested(LocalDateTime.now());
+
+                                        if (isValid) {
+                                            validCount.incrementAndGet();
+                                            return Map.of("key", key, "valid", true);
+                                        } else {
+                                            key.setStatus("error");
+                                            return Map.of("key", key, "valid", false);
+                                        }
+                                    })
+                                    .subscribeOn(Schedulers.boundedElastic())
+                                    .doOnNext(res -> {
+                                        UserApiKey k = (UserApiKey) res.get("key");
+                                        userApiKeyRepository.save(k).block();
+                                        if (!(Boolean) res.get("valid")) {
+                                            invalidCount.incrementAndGet();
+                                            log.warn("Key {} failed validation", k.getMaskedKey());
+                                        }
+                                    })
+                                    .onErrorResume(e -> {
+                                        log.error("Validation error: {}", e.getMessage());
+                                        return Mono.empty();
+                                    }),
+                            concurrency)
+                    .then()
+                    .block();
+
+            log.info("Key validation complete. Valid: {}, Invalid: {}", validCount.get(), invalidCount.get());
         } catch (Exception e) {
             log.error("Failed to validate keys: {}", e.getMessage(), e);
         }

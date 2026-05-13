@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Card, Space, Table, Button, Tag, message, Statistic, Row, Col, InputNumber, Select, Drawer } from 'antd';
 import { MobileOutlined, ReloadOutlined, DatabaseOutlined, RocketOutlined, EyeOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
+import { useRole } from '../contexts/RoleContext';
 import SimulatorPreview from '../components/SimulatorPreview';
 
 const { Title, Text } = Typography;
@@ -22,7 +23,9 @@ interface Project {
 }
 
 const AdminSimulator: React.FC = () => {
-  const [loading, setLoading] = useState(true);
+  const { isAdmin, isGuest, user } = useRole();
+  console.log('[AdminSimulator] User:', user?.email, 'isAdmin:', isAdmin, 'isGuest:', isGuest);
+  const [loading, setLoading] = useState(false);
   const [deployments, setDeployments] = useState<DeploymentRecord[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedAppId, setSelectedAppId] = useState<string | undefined>();
@@ -32,16 +35,39 @@ const AdminSimulator: React.FC = () => {
   });
 
   const fetchData = async () => {
+    if (isGuest) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     try {
-      // Fetch deployments
-      const usageRes = await fetchWithAuth('/api/simulator/admin/usage');
+      // Fetch deployments based on role
+      const endpoint = isAdmin ? '/api/simulator/admin/usage' : '/api/simulator/installed';
+      const usageRes = await fetchWithAuth(endpoint);
+      
       if (usageRes.ok) {
         const data = await usageRes.json();
-        setDeployments(data.deployments || []);
-        setStats({
-          totalDeployments: data.totalDeployments || 0
-        });
+        // Backend returns slightly different shapes for admin vs user
+        if (isAdmin) {
+          setDeployments(data.deployments || []);
+          setStats({
+            totalDeployments: data.totalDeployments || 0
+          });
+        } else {
+          // Normal user response from /installed has 'installedApps'
+          const apps = data.installedApps || [];
+          setDeployments(apps.map((a: any) => ({
+            appId: a.appId,
+            deviceType: a.deviceType || 'UNKNOWN',
+            previewUrl: a.previewUrl,
+            status: a.status,
+            deployedAt: a.installedAt
+          })));
+          setStats({
+            totalDeployments: apps.length
+          });
+        }
       }
 
       // Fetch projects to allow simulation
@@ -60,7 +86,7 @@ const AdminSimulator: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [isAdmin, isGuest]);
 
   const handleSimulate = (appId: string) => {
     setSelectedAppId(appId);
@@ -140,6 +166,20 @@ const AdminSimulator: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
+      {isGuest && (
+        <Alert
+          message="গেস্ট মোড প্রিভিউ"
+          description="সিমুলেটর ম্যানেজমেন্টের অ্যাডভান্সড ফিচারগুলো ব্যবহারের জন্য অনুগ্রহ করে লগইন করুন।"
+          type="warning"
+          showIcon
+          style={{ marginBottom: 24, borderRadius: 8 }}
+          action={
+            <Button size="small" type="primary" onClick={() => window.location.href = '/login'}>
+              লগইন করুন
+            </Button>
+          }
+        />
+      )}
       <Row gutter={[24, 24]}>
         <Col span={16}>
           <Title level={2} style={{ marginBottom: 24, fontWeight: 700 }}>
@@ -219,37 +259,39 @@ const AdminSimulator: React.FC = () => {
         <Col span={8}>
           <SimulatorPreview appId={selectedAppId} />
           
-          <Card
-            className="glass-card"
-            style={{ borderRadius: 12, marginTop: 24 }}
-            title={<><DatabaseOutlined /> কোটা অ্যাডমিনিস্ট্রেশন</>}
-          >
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              সিমুলেটর কোটা ম্যানেজ করতে ইউজার আইডি ব্যবহার করুন:
-            </Text>
-            <div style={{ marginTop: 16 }}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <InputNumber 
-                  placeholder="Quota (1-20)" 
-                  min={1} 
-                  max={20} 
-                  id="quotaInput"
-                  style={{ width: '100%' }}
-                />
-                <Button 
-                  type="primary"
-                  block
-                  onClick={() => {
-                    const userId = window.prompt('User ID দিন:');
-                    const quota = (document.getElementById('quotaInput') as HTMLInputElement)?.value;
-                    if (userId && quota) handleSetQuota(userId, parseInt(quota));
-                  }}
-                >
-                  কোটা সেট করুন
-                </Button>
-              </Space>
-            </div>
-          </Card>
+          {isAdmin && (
+            <Card
+              className="glass-card"
+              style={{ borderRadius: 12, marginTop: 24 }}
+              title={<><DatabaseOutlined /> কোটা অ্যাডমিনিস্ট্রেশন</>}
+            >
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                সিমুলেটর কোটা ম্যানেজ করতে ইউজার আইডি ব্যবহার করুন:
+              </Text>
+              <div style={{ marginTop: 16 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <InputNumber 
+                    placeholder="Quota (1-20)" 
+                    min={1} 
+                    max={20} 
+                    id="quotaInput"
+                    style={{ width: '100%' }}
+                  />
+                  <Button 
+                    type="primary"
+                    block
+                    onClick={() => {
+                      const userId = window.prompt('User ID দিন:');
+                      const quota = (document.getElementById('quotaInput') as HTMLInputElement)?.value;
+                      if (userId && quota) handleSetQuota(userId, parseInt(quota));
+                    }}
+                  >
+                    কোটা সেট করুন
+                  </Button>
+                </Space>
+              </div>
+            </Card>
+          )}
         </Col>
       </Row>
 

@@ -35,9 +35,17 @@ const AdminProviders: React.FC = () => {
       const response = await authUtils.fetchWithAuth('/api/admin/providers/configured');
       if (!response.ok) throw new Error('Failed to fetch providers');
       const result = await response.json();
-      
       // Backend returns ApiResponse wrapper: { success: true, data: { providers: [...] } }
-      const provList: Provider[] = result.data?.providers || [];
+      const rawData = result.data?.providers || (Array.isArray(result.data) ? result.data : []);
+      
+      // Normalize data to prevent crashes
+      const provList: Provider[] = rawData.map((p: any) => ({
+        ...p,
+        models: Array.isArray(p.models) ? p.models : [],
+        status: p.status || 'inactive',
+        type: p.type || 'unknown'
+      }));
+      
       setProviders(provList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load providers');
@@ -126,7 +134,7 @@ const AdminProviders: React.FC = () => {
       key: 'status',
       render: (status: string) => {
         const color = status === 'active' ? 'green' : status === 'error' ? 'red' : 'default';
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
+        return <Tag color={color}>{status ? status.toUpperCase() : 'UNKNOWN'}</Tag>;
       },
     },
     {

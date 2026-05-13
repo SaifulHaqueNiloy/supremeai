@@ -40,47 +40,65 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ title, children }) => {
   const location = useLocation();
 
   useEffect(() => {
-    // Connect to the WebSocket server
-     const socket = new SockJS(import.meta.env.VITE_WS_URL || '/ws');
-    const stompClient = new Client({
-      webSocketFactory: () => socket,
-      reconnectDelay: 5000,
-      onConnect: () => {
-        console.log("Connected to SupremeAI WebSocket!");
-        
-        // Subscribe to the GitHub pipeline channel
-        stompClient.subscribe('/topic/notifications', (message) => {
-          const data = JSON.parse(message.body);
-          
-          if (data.type === 'GITHUB_PIPELINE') {
-            if (data.status === 'success') {
-              notification.success({
-                message: '🚀 Deployment Successful',
-                description: data.message,
-                duration: 5, // Disappears after 5 seconds
-                placement: 'topRight',
-              });
-            } else {
-              notification.error({
-                message: '🚨 Deployment Failed',
-                description: data.message,
-                duration: 0, // Stays on screen until user dismisses
-                placement: 'topRight',
-              });
-            }
-          }
-        });
-      },
-      onStompError: (frame) => {
-        console.error('Broker reported error: ' + frame.headers['message']);
-      }
-    });
+    let stompClient: Client | null = null;
 
-    stompClient.activate();
+    try {
+      // Connect to the WebSocket server
+      const socket = new SockJS(import.meta.env.VITE_WS_URL || '/ws');
+      stompClient = new Client({
+        webSocketFactory: () => socket,
+        reconnectDelay: 5000,
+        onConnect: () => {
+          console.log("Connected to SupremeAI WebSocket!");
+
+          // Subscribe to the GitHub pipeline channel
+          stompClient?.subscribe('/topic/notifications', (message) => {
+            try {
+              const data = JSON.parse(message.body);
+
+              if (data.type === 'GITHUB_PIPELINE') {
+                if (data.status === 'success') {
+                  notification.success({
+                    message: '🚀 Deployment Successful',
+                    description: data.message,
+                    duration: 5, // Disappears after 5 seconds
+                    placement: 'topRight',
+                  });
+                } else {
+                  notification.error({
+                    message: '🚨 Deployment Failed',
+                    description: data.message,
+                    duration: 0, // Stays on screen until user dismisses
+                    placement: 'topRight',
+                  });
+                }
+              }
+            } catch (parseError) {
+              console.error('Failed to parse WebSocket message:', parseError);
+            }
+          });
+        },
+        onStompError: (frame) => {
+          console.error('Broker reported error: ' + frame.headers['message']);
+        },
+        onWebSocketError: (error) => {
+          console.error('WebSocket connection error:', error);
+        },
+        onWebSocketClose: () => {
+          console.log('WebSocket connection closed');
+        }
+      });
+
+      stompClient.activate();
+    } catch (error) {
+      console.error('Failed to initialize WebSocket connection:', error);
+    }
 
     // Disconnect on component unmount
     return () => {
-      stompClient.deactivate();
+      if (stompClient) {
+        stompClient.deactivate();
+      }
     };
   }, []);
 

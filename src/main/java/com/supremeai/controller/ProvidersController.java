@@ -2,11 +2,12 @@ package com.supremeai.controller;
 
 import com.supremeai.response.ApiResponse;
 import com.supremeai.service.AIProviderDiscoveryService;
-
 import com.supremeai.model.APIProvider;
 import com.supremeai.model.ActivityLog;
 import com.supremeai.repository.ProviderRepository;
 import com.supremeai.repository.ActivityLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,11 +16,14 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/providers")
 public class ProvidersController extends BaseAdminController<APIProvider, String> {
+
+    private static final Logger log = LoggerFactory.getLogger(ProvidersController.class);
 
     @Autowired
     private ProviderRepository providerRepository;
@@ -52,25 +56,126 @@ public class ProvidersController extends BaseAdminController<APIProvider, String
 
     @PostMapping("/add")
     public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> addProvider(@RequestBody APIProvider provider) {
-        return updateProvider(provider);
+        return validateBeforeSave(provider)
+                .flatMap(valid -> {
+                    if (!valid) {
+                        return Mono.just(ResponseEntity.badRequest()
+                                .body(ApiResponse.<Map<String, Object>>error("Invalid API key or provider unreachable")));
+                    }
+                    provider.setStatus("inactive"); // Default to inactive until admin activates
+                    provider.setConsecutiveErrorDays(0);
+                    provider.setLastValidated(LocalDateTime.now());
+                    return updateProvider(provider);
+                });
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> updateProviderById(@PathVariable String id, @RequestBody APIProvider provider) {
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>>
+            updateProviderById(@PathVariable String id, @RequestBody APIProvider provider) {
         provider.setId(id);
-        return updateProvider(provider);
+        // If apiKey is being updated, re-validate
+        return providerRepository.findById(id)
+                .flatMap(existing -> {
+                    boolean keyChanged = provider.getApiKey() != null &&
+                            !provider.getApiKey().equals(existing.getApiKey());
+                    if (keyChanged) {
+                        return validateBeforeSave(provider).flatMap(valid -> {
+                            if (!valid) {
+                                return Mono.just(ResponseEntity.badRequest()
+                                        .body(ApiResponse.<Map<String, Object>>error("Invalid API key or provider unreachable")));
+                            }
+                            // Reset error streak on key update
+                            provider.setConsecutiveErrorDays(0);
+                            provider.setLastValidated(LocalDateTime.now());
+                            // If previously dead, revive on valid key update
+                            if ("dead".equals(existing.getStatus()) || "error".equals(existing.getStatus())) {
+                                provider.setStatus("active");
+                                provider.setDeadReason(null);
+                                provider.setDeadAt(null);
+                                provider.setLastErrorDate(null);
+                            }
+                            return updateProvider(provider);
+                        });
+                    } else {
+                        // Key unchanged, but handle status transitions
+                        if ("inactive".equals(existing.getStatus()) && "active".equals(provider.getStatus())) {
+                            // Admin manually activating: reset streak
+                            provider.setConsecutiveErrorDays(0);
+                            provider.setLastValidated(LocalDateTime.now());
+                        }
+                        return updateProvider(provider);
+                    }
+                })
+                .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.<Map<String, Object>>error("Provider not found")));
+    }
+
+    /**
+     * Validate API key using discovery service before persisting.
+     * Returns true if valid, false otherwise.
+     */
+    private Mono<Boolean> validateBeforeSave(APIProvider provider) {
+        if (provider.getApiKey() == null || provider.getType() == null) {
+            return Mono.just(false);
+        }
+        return discoveryService.validateKey(provider.getType(), provider.getApiKey())
+                .map(valid -> {
+                    if (!valid) {
+                        log.warn("API key validation failed for provider type '{}' (name: {})",
+                                provider.getType(), provider.getName());
+                    } else {
+                        log.info("API key validated successfully for provider type '{}' (name: {})",
+                                provider.getType(), provider.getName());
+                    }
+                    return valid;
+                })
+                .onErrorReturn(false);
+    }
+
+    @PostMapping("/{id}/revive")
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> reviveProvider(@PathVariable String id) {
+        String adminUserId = getCurrentAdminUserId();
+        return providerRepository.findById(id)
+                .flatMap(provider -> {
+                    if (!"dead".equals(provider.getStatus()) && !"error".equals(provider.getStatus())) {
+                        return Mono.just(ResponseEntity.badRequest()
+                                .body(ApiResponse.<Map<String, Object>>error("Provider is not dead or in error state")));
+                    }
+                    provider.setStatus("active");
+                    provider.setConsecutiveErrorDays(0);
+                    provider.setDeadReason(null);
+                    provider.setDeadAt(null);
+                    provider.setLastErrorDate(null);
+                    provider.setLastValidated(LocalDateTime.now());
+
+                    return providerRepository.save(provider)
+                            .flatMap(saved -> {
+                                ActivityLog log = new ActivityLog();
+                                log.setUser(adminUserId);
+                                log.setAction("REVIVE_PROVIDER");
+                                log.setCategory("PROVIDER_MANAGEMENT");
+                                log.setSeverity("INFO");
+                                log.setOutcome("SUCCESS");
+                                log.setDetails("Revived provider: " + saved.getId() + " (" + saved.getName() + ")");
+                                return activityLogRepository.save(log)
+                                        .thenReturn(ResponseEntity.ok(ApiResponse.ok(Map.of(
+                                                "message", "Provider revived successfully",
+                                                "provider", saved
+                                        ))));
+                            });
+                })
+                .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.<Map<String, Object>>error("Provider not found")));
     }
 
     @PostMapping("/remove")
     public Mono<ResponseEntity<ApiResponse<String>>> removeProvider(@RequestBody Map<String, String> payload) {
         String providerId = payload.get("providerId");
         if (providerId == null) {
-            return Mono.just(ResponseEntity.badRequest().body(ApiResponse.error("providerId is required")));
+            return Mono.just(ResponseEntity.badRequest().body(ApiResponse.<String>error("providerId is required")));
         }
         return deleteProvider(providerId).map(re -> {
             boolean success = re.getBody() != null && re.getBody().success();
             String error = (re.getBody() != null) ? re.getBody().error() : "Unknown error";
-            return ResponseEntity.status(re.getStatusCode()).body(success ? ApiResponse.ok("Provider removed") : ApiResponse.error(error));
+            return ResponseEntity.status(re.getStatusCode()).body(success ? ApiResponse.ok("Provider removed") : ApiResponse.<String>error(error));
         });
     }
 
@@ -80,7 +185,7 @@ public class ProvidersController extends BaseAdminController<APIProvider, String
         String apiKey = payload.get("apiKey");
 
         if (name == null || apiKey == null) {
-            return Mono.just(ResponseEntity.badRequest().body(ApiResponse.error("name and apiKey are required")));
+            return Mono.just(ResponseEntity.badRequest().body(ApiResponse.<Map<String, Object>>error("name and apiKey are required")));
         }
 
         return discoveryService.validateKey(name, apiKey)

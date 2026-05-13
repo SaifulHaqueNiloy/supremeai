@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, Card, Space, Row, Col, Progress, 
-  Statistic, Badge, Alert, Button, Input, List, message, Spin 
+import {
+  Typography, Card, Space, Row, Col, Progress,
+  Statistic, Badge, Alert, Button, Input, List, message, Spin, Tag
 } from 'antd';
 import { 
   SecurityScanOutlined, 
@@ -101,7 +101,7 @@ const AdminSecurity: React.FC = () => {
         </Title>
         <Space>
           <Badge status="processing" text={<Text style={{ color: '#10b981' }}>Cyber Guard Active</Text>} />
-          <Button icon={<ReloadOutlined />} onClick={fetchData} type="ghost" style={{ color: '#fff' }} />
+          <Button icon={<ReloadOutlined />} onClick={fetchData} ghost style={{ color: '#fff' }} />
         </Space>
       </div>
 

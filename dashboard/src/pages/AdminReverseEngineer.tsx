@@ -228,7 +228,7 @@ const AdminReverseEngineer: React.FC = () => {
           rowKey="jobId"
           loading={loading}
           pagination={{ pageSize: 10 }}
-          locale={<Empty description="No jobs yet" />}
+          locale={{ emptyText: <Empty description="No jobs yet" /> }}
         />
       </Card>
 

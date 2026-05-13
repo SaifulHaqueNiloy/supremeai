@@ -20,16 +20,19 @@ const QuotaTraffic: React.FC = () => {
                     authUtils.fetchWithAuth('/api/admin/providers/rankings')
                 ]);
 
-                if (contractRes.success && contractRes.data?.stats) {
-                    setStats(contractRes.data.stats);
+                if (contractRes.ok) {
+                    const contractData = await contractRes.json();
+                    setStats(contractData.data?.stats || contractData.stats);
                 }
 
-                if (providersRes.success && providersRes.data?.providers) {
-                    setProviders(providersRes.data.providers);
+                if (providersRes.ok) {
+                    const providersData = await providersRes.json();
+                    setProviders(providersData.data?.providers || providersData.providers || []);
                 }
 
-                if (rankingsRes.success && rankingsRes.data?.rankings) {
-                    setRankings(rankingsRes.data.rankings);
+                if (rankingsRes.ok) {
+                    const rankingsData = await rankingsRes.json();
+                    setRankings(rankingsData.data?.rankings || rankingsData.rankings);
                 }
             } catch (error) {
                 console.error('Failed to fetch quota data:', error);

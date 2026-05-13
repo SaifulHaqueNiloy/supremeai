@@ -19,8 +19,9 @@ const SelfHealingLogs: React.FC = () => {
     const fetchLogs = async () => {
         try {
             const response = await authUtils.fetchWithAuth('/api/logs?pageSize=20');
-            if (response.success && response.data?.logs) {
-                setLogs(response.data.logs);
+            if (response.ok) {
+                const data = await response.json();
+                setLogs(data.data?.logs || data.logs || []);
             }
         } catch (error) {
             console.error('Failed to fetch self-healing logs:', error);

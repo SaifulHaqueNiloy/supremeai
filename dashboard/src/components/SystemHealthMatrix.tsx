@@ -32,8 +32,10 @@ const SystemHealthMatrix: React.FC = () => {
             try {
                 const response = await authUtils.fetchWithAuth('/telemetry/health');
                 // The backend returns a list of models in 'models' field
-                if (response && response.models) {
-                    const mappedNodes: NodeStatus[] = response.models.map((m: any) => ({
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.models) {
+                        const mappedNodes: NodeStatus[] = data.models.map((m: any) => ({
                         id: m.id,
                         name: m.name || m.id.toUpperCase(),
                         type: 'PROVIDER', // Mostly providers from telemetry
@@ -50,8 +52,9 @@ const SystemHealthMatrix: React.FC = () => {
                         { id: 'net-1', name: 'EDGE_GATEWAY', type: 'NETWORK', status: 'online', latency: 15, load: 5, lastSeen: 'NOW' }
                     ];
 
-                    setNodes([...mappedNodes, ...infraNodes]);
-                    setLastSync(Date.now());
+                        setNodes([...mappedNodes, ...infraNodes]);
+                        setLastSync(Date.now());
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch system health:', error);

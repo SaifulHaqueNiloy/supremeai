@@ -34,6 +34,11 @@ interface APIProvider {
     canExecuteTasks?: boolean;
     canParticipateInVoting?: boolean;
     deploymentSource?: 'api' | 'gcloud' | 'local' | 'ollama';
+    // Auto-validation fields
+    consecutiveErrorDays?: number;
+    lastValidated?: string;
+    deadAt?: string;
+    deadReason?: string;
 }
 
 const APIManagement: React.FC = () => {
@@ -41,6 +46,7 @@ const APIManagement: React.FC = () => {
     const [providers, setProviders] = useState<APIProvider[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<string>('all');
     const [discoveryQuery, setDiscoveryQuery] = useState('');
     const [discoveryResults, setDiscoveryResults] = useState<any[]>([]);
     const [discoveryLoading, setDiscoveryLoading] = useState(false);
@@ -63,7 +69,6 @@ const APIManagement: React.FC = () => {
             const response = await authUtils.fetchWithAuth('/api/admin/providers/configured');
             if (response.ok) {
                 const data = await response.json();
-                // Ensure data structure matches our interface
                 const formatted = (data.data?.providers || []).map((p: any) => ({
                     ...p,
                     apiCount: p.apiCount || (p.apiKey ? 1 : 0),
@@ -77,6 +82,10 @@ const APIManagement: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const filteredProviders = providers.filter(p =>
+        statusFilter === 'all' || p.status === statusFilter
+    );
 
     const handleDiscovery = async (query: string) => {
         if (!query) {
@@ -190,22 +199,28 @@ const APIManagement: React.FC = () => {
                         {r.status === 'active' && <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse border border-black" />}
                         {r.status === 'dead' && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />}
                     </div>
-                    <div className="flex flex-col leading-tight">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-white/90">{r.name}</span>
-                            <Tag color={r.deploymentSource === 'gcloud' ? 'purple' : 'blue'} className="m-0 text-[7px] px-1 py-0 border-0 bg-opacity-10 leading-normal">
-                                {r.deploymentSource?.toUpperCase() || 'API'}
-                            </Tag>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-mono text-white/30 uppercase tracking-tighter">{r.type}</span>
-                            {r.accountEmail && (
-                                <Tooltip title={`Owner: ${r.accountEmail}`}>
-                                    <span className="text-[8px] text-blue-400/50 italic truncate max-w-[80px]">{r.accountEmail}</span>
-                                </Tooltip>
+                        <div className="flex flex-col leading-tight">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-bold text-white/90">{r.name}</span>
+                                <Tag color={r.deploymentSource === 'gcloud' ? 'purple' : 'blue'} className="m-0 text-[7px] px-1 py-0 border-0 bg-opacity-10 leading-normal">
+                                    {r.deploymentSource?.toUpperCase() || 'API'}
+                                </Tag>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-mono text-white/30 uppercase tracking-tighter">{r.type}</span>
+                                {r.accountEmail && (
+                                    <Tooltip title={`Owner: ${r.accountEmail}`}>
+                                        <span className="text-[8px] text-blue-400/50 italic truncate max-w-[80px]">{r.accountEmail}</span>
+                                    </Tooltip>
+                                )}
+                            </div>
+                            {/* Show validation timestamp if available */}
+                            {r.lastValidated && (
+                                <span className="text-[7px] text-white/20 font-mono">
+                                    Last check: {new Date(r.lastValidated).toLocaleDateString()}
+                                </span>
                             )}
                         </div>
-                    </div>
                 </div>
             )
         },
@@ -219,11 +234,25 @@ const APIManagement: React.FC = () => {
                         <Badge status={r.status === 'dead' ? 'error' : 'processing'} />
                     </div>
                     <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden">
-                        <div 
-                            className={`h-full ${r.status === 'limit_exceeded' ? 'bg-purple-500' : 'bg-blue-500'}`} 
+                        <div
+                            className={`h-full ${r.status === 'limit_exceeded' ? 'bg-purple-500' : 'bg-blue-500'}`}
                             style={{ width: `${Math.min(100, (r.currentUsage || 0) / (r.usageLimit || 100) * 100)}%` }}
                         />
                     </div>
+                    {/* Show error streak for error/dead providers */}
+                    {(r.status === 'error' || r.status === 'dead') && r.consecutiveErrorDays ? (
+                        <div className="flex items-center gap-2 text-[9px]">
+                            <span className={`font-mono ${r.status === 'dead' ? 'text-red-500' : 'text-orange-500'}`}>
+                                Fail streak: {r.consecutiveErrorDays}/3
+                            </span>
+                        </div>
+                    ) : null}
+                    {/* Show deadAt timestamp for dead providers */}
+                    {r.status === 'dead' && r.deadAt ? (
+                        <div className="text-[8px] text-red-400/60 font-mono">
+                            Dead: {new Date(r.deadAt).toLocaleDateString()}
+                        </div>
+                    ) : null}
                 </div>
             )
         },
@@ -291,49 +320,76 @@ const APIManagement: React.FC = () => {
             align: 'right' as const,
             render: (_: any, record: APIProvider) => (
                 <Space size={4}>
-                    <Tooltip title="Test Connection">
-                        <Button 
-                            type="text" 
-                            size="small" 
-                            className="h-6 w-6 flex items-center justify-center text-blue-500 hover:bg-blue-500/10 border border-blue-500/20"
-                            icon={validating === record.id ? <Spin indicator={<LoadingOutlined style={{ fontSize: 11 }} spin />} /> : <ExperimentOutlined style={{ fontSize: '11px' }} />}
-                            onClick={() => testKey(record.name, record.apiKey, record.id)}
-                            disabled={validating === record.id}
-                        />
-                    </Tooltip>
+                    {record.status === 'dead' ? (
+                        <Tooltip title="Revive Provider">
+                            <Button
+                                type="text"
+                                size="small"
+                                className="h-6 w-6 flex items-center justify-center text-emerald-500 hover:bg-emerald-500/10 border border-emerald-500/20"
+                                icon={<SafetyCertificateOutlined style={{ fontSize: '11px' }} />}
+                                onClick={async () => {
+                                    try {
+                                        const res = await authUtils.fetchWithAuth(`/api/admin/providers/${record.id}/revive`, {
+                                            method: 'POST',
+                                        });
+                                        if (res.ok) {
+                                            message.success('PROVIDER_REVIVED');
+                                            fetchProviders();
+                                        } else {
+                                            const data = await res.json();
+                                            message.error(data.error || 'REVIVE_FAILED');
+                                        }
+                                    } catch (e) { message.error('REVIVE_ERROR'); }
+                                }}
+                            />
+                        </Tooltip>
+                    ) : (
+                        <Tooltip title="Test Connection">
+                            <Button
+                                type="text"
+                                size="small"
+                                className="h-6 w-6 flex items-center justify-center text-blue-500 hover:bg-blue-500/10 border border-blue-500/20"
+                                icon={validating === record.id ? <Spin indicator={<LoadingOutlined style={{ fontSize: 11 }} spin />} /> : <ExperimentOutlined style={{ fontSize: '11px' }} />}
+                                onClick={() => testKey(record.name, record.apiKey, record.id)}
+                                disabled={validating === record.id}
+                            />
+                        </Tooltip>
+                    )}
                     <Tooltip title="Edit Link">
-                        <Button 
-                            type="text" 
-                            size="small" 
+                        <Button
+                            type="text"
+                            size="small"
                             className="h-6 w-6 flex items-center justify-center text-emerald-500 hover:bg-emerald-500/10 border border-emerald-500/20"
                             icon={<EditOutlined style={{ fontSize: '11px' }} />}
                             onClick={() => {
                                 setEditingId(record.id);
                                 form.setFieldsValue(record);
                                 setIsModalVisible(true);
-                            }} 
+                            }}
                         />
                     </Tooltip>
-                    <Popconfirm title="Terminate Link?" onConfirm={async () => {
-                        try {
-                            const res = await authUtils.fetchWithAuth(`/api/admin/providers/${record.id}`, { method: 'DELETE' });
-                            if (res.ok) {
-                                message.success('LINK_TERMINATED');
-                                fetchProviders();
-                            }
-                        } catch (e) { message.error('DELETE_FAILED'); }
-                    }} okText="Kill" cancelText="Abort">
-                        <Button 
-                            type="text" 
-                            size="small" 
-                            className="h-6 w-6 flex items-center justify-center text-red-500 hover:bg-red-500/10 border border-red-500/20"
-                            icon={<DeleteOutlined style={{ fontSize: '11px' }} />} 
-                        />
-                    </Popconfirm>
-                </Space>
-            )
-        }
-    ];
+                    {record.status !== 'dead' && (
+                        <Popconfirm title="Terminate Link?" onConfirm={async () => {
+                            try {
+                                const res = await authUtils.fetchWithAuth(`/api/admin/providers/${record.id}`, { method: 'DELETE' });
+                                if (res.ok) {
+                                    message.success('LINK_TERMINATED');
+                                    fetchProviders();
+                                }
+                            } catch (e) { message.error('DELETE_FAILED'); }
+                        }} okText="Kill" cancelText="Abort">
+                            <Button
+                                type="text"
+                                size="small"
+                                className="h-6 w-6 flex items-center justify-center text-red-500 hover:bg-red-500/10 border border-red-500/20"
+                                icon={<DeleteOutlined style={{ fontSize: '11px' }} />}
+                            />
+                        </Popconfirm>
+                    )}
+                 </Space>
+             )
+         }
+     ];
 
     return (
         <div className="space-y-4">
@@ -362,25 +418,41 @@ const APIManagement: React.FC = () => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">{t('dashboard.pillar_registry')}</span>
                         <span className="text-[8px] text-white/20 uppercase font-bold">Trace-Accountable Provider Matrix</span>
                     </div>
-                    <Button 
-                        size="small" 
-                        className="h-8 bg-emerald-500 text-black text-[10px] font-black uppercase border-none hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                        icon={<PlusOutlined className="text-[11px]" />}
-                        onClick={() => {
-                            setEditingId(null);
-                            form.resetFields();
-                            setIsModalVisible(true);
-                            handleDiscovery(''); // Initial search
-                        }}
-                    >
-                        Establish New Link
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <Select
+                            size="small"
+                            className="w-32 text-[8px]"
+                            value={statusFilter}
+                            onChange={setStatusFilter}
+                            options={[
+                                { label: 'All Status', value: 'all' },
+                                { label: 'Active', value: 'active' },
+                                { label: 'Inactive', value: 'inactive' },
+                                { label: 'Error', value: 'error' },
+                                { label: 'Dead', value: 'dead' },
+                                { label: 'Limit Exceeded', value: 'limit_exceeded' },
+                            ]}
+                        />
+                        <Button
+                            size="small"
+                            className="h-8 bg-emerald-500 text-black text-[10px] font-black uppercase border-none hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                            icon={<PlusOutlined className="text-[11px]" />}
+                            onClick={() => {
+                                setEditingId(null);
+                                form.resetFields();
+                                setIsModalVisible(true);
+                                handleDiscovery(''); // Initial search
+                            }}
+                        >
+                            Establish New Link
+                        </Button>
+                    </div>
                 </div>
-                <Table 
-                    columns={columns} 
-                    dataSource={providers} 
-                    loading={loading} 
-                    rowKey="id" 
+                <Table
+                    columns={columns}
+                    dataSource={filteredProviders}
+                    loading={loading}
+                    rowKey="id"
                     size="small"
                     pagination={{ pageSize: 10, className: 'dark-pagination' }}
                     className="dense-table"

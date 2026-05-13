@@ -44,6 +44,10 @@ export const RoleProvider: React.FC<RoleProviderProps> = ({ children }) => {
       currentUser?.tier === 'admin' ||
       currentUser?.tier === 'ADMIN';
 
+    console.log('[RoleContext] Refreshing user:', currentUser?.email);
+    console.log('[RoleContext] Raw role/tier:', currentUser?.role, '/', currentUser?.tier);
+    console.log('[RoleContext] Calculated isAdmin:', isAdminUser);
+
     setIsAdmin(isAdminUser);
   };
 

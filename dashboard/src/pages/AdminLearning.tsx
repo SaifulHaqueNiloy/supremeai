@@ -345,7 +345,7 @@ const AdminLearning: React.FC = () => {
                   <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>{rec.description}</Paragraph>
                 </div>
                 <Space wrap>
-                  {rec.suggestedKeywords.map(k => <Tag key={k} size="small">{k}</Tag>)}
+                  {rec.suggestedKeywords.map(k => <Tag key={k}>{k}</Tag>)}
                 </Space>
               </div>
               <Space direction="vertical" align="end">

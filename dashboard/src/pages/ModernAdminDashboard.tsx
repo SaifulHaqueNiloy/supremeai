@@ -307,9 +307,9 @@ export default function ModernAdminDashboard() {
     { key: 'analytics', icon: <LineChartOutlined />, label: 'এনালাইটিক্স', roles: ['admin'] },
     { key: 'logs', icon: <FileTextOutlined />, label: 'সিস্টেম লগ', roles: ['admin'] },
     { key: 'vpn', icon: <GlobalOutlined />, label: 'VPN কানেকশন', roles: ['admin'] },
-    { key: 'browser', icon: <ChromeOutlined />, label: 'ব্রাউজার', roles: ['admin'] },
+    { key: 'browser', icon: <ChromeOutlined />, label: 'ব্রাউজার', roles: ['guest', 'user', 'admin'] },
     { key: 'quotas', icon: <PieChartOutlined />, label: 'কোটা ম্যানেজমেন্ট', roles: ['admin'] },
-    { key: 'simulator', icon: <MobileOutlined />, label: 'সিমুলেটর', roles: ['admin'] },
+    { key: 'simulator', icon: <MobileOutlined />, label: 'সিমুলেটর', roles: ['guest', 'user', 'admin'] },
     { key: 'reverse', icon: <CodeOutlined />, label: 'রিভার্স ইঞ্জিনিয়ারিং', roles: ['admin'] },
     { key: 'notifications', icon: <BellOutlined />, label: 'নোটিফিকেশন', roles: ['admin'] },
     { key: 'reports', icon: <BarChartOutlined />, label: 'রিপোর্টস', roles: ['admin'] },
@@ -319,7 +319,7 @@ export default function ModernAdminDashboard() {
   ];
 
   const currentRole = isAdmin ? 'admin' : (isAuthenticated ? 'user' : 'guest');
-  const menuItems = allMenuItems.filter(item => item.roles.includes(currentRole));
+  const menuItems = allMenuItems.filter(item => Array.isArray(item.roles) && item.roles.includes(currentRole));
 
   const renderContent = () => {
     const activeItem = allMenuItems.find(item => item.key === activeKey);
@@ -391,7 +391,7 @@ export default function ModernAdminDashboard() {
             colorItemBg: 'transparent',
             colorItemText: '#cbd5e1',
             colorItemTextSelected: '#00f3ff',
-            colorItemSelectedBg: 'rgba(0, 243, 255, 0.1)',
+            colorItemBgSelected: 'rgba(0, 243, 255, 0.1)',
           },
           Progress: {
             remainingColor: 'rgba(255,255,255,0.05)',
@@ -403,7 +403,7 @@ export default function ModernAdminDashboard() {
         }
       }}
     >
-      <Layout className="animated-bg" style={{ minHeight: '100vh', overflow: 'hidden', position: 'relative' }}>
+      <Layout className="animated-bg" style={{ minHeight: '100vh', position: 'relative' }}>
         <div className="bg-grid" />
         <div className="hex-grid" />
         <DataStream />

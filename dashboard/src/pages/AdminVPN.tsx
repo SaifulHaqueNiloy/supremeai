@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Space, Table, Button, Tag, message, Modal, Form, Input, Popconfirm } from 'antd';
+import { Typography, Card, Space, Table, Button, Tag, message, Modal, Form, Input, InputNumber, Popconfirm } from 'antd';
 import { 
   PlusOutlined, 
   DeleteOutlined,

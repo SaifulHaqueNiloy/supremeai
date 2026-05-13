@@ -26,6 +26,13 @@
         }
       },
       {
+        "source": "/telemetry/**",
+        "run": {
+          "serviceId": "supremeai-backend",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/admin/**",
         "destination": "/admin/index.html"
       },

@@ -3,7 +3,9 @@ package com.supremeai.model;
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.spring.data.firestore.Document;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Document(collectionName = "api_providers")
 public class APIProvider {
@@ -33,6 +35,12 @@ public class APIProvider {
     private boolean canParticipateInVoting = true;
     private String deploymentSource = "API"; // API, GCLOUD, LOCAL, OLLAMA
 
+    // Auto-validation tracking fields
+    private Integer consecutiveErrorDays;
+    private LocalDateTime lastValidated;
+    private LocalDateTime lastErrorDate;
+    private String deadReason;
+    private LocalDateTime deadAt;
 
     public APIProvider() {}
 
@@ -93,4 +101,19 @@ public class APIProvider {
 
     public String getDeploymentSource() { return deploymentSource; }
     public void setDeploymentSource(String deploymentSource) { this.deploymentSource = deploymentSource; }
+
+    public Integer getConsecutiveErrorDays() { return consecutiveErrorDays; }
+    public void setConsecutiveErrorDays(Integer consecutiveErrorDays) { this.consecutiveErrorDays = consecutiveErrorDays; }
+
+    public LocalDateTime getLastValidated() { return lastValidated; }
+    public void setLastValidated(LocalDateTime lastValidated) { this.lastValidated = lastValidated; }
+
+    public LocalDateTime getLastErrorDate() { return lastErrorDate; }
+    public void setLastErrorDate(LocalDateTime lastErrorDate) { this.lastErrorDate = lastErrorDate; }
+
+    public String getDeadReason() { return deadReason; }
+    public void setDeadReason(String deadReason) { this.deadReason = deadReason; }
+
+    public LocalDateTime getDeadAt() { return deadAt; }
+    public void setDeadAt(LocalDateTime deadAt) { this.deadAt = deadAt; }
 }

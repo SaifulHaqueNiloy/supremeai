@@ -9,6 +9,7 @@ import AdminDashboardUnified from './pages/AdminDashboardUnified';
 import ModernAdminDashboard from './pages/ModernAdminDashboard';
 import LoginPage from './pages/LoginPage';
 import FeedbackSystem from './components/FeedbackSystem';
+import ErrorBoundary from './components/ErrorBoundary';
 
 interface ModelStatus {
   id: string;
@@ -175,21 +176,23 @@ const HUDMetric = ({ icon, label, value, color }: { icon: any, label: string, va
 
 function App() {
   return (
-    <BrowserRouter>
-      <FeedbackSystem />
-      <Routes>
-        {/* Authentication */}
-        <Route path="/login" element={<LoginPage />} />
-        {/* Modern clean admin dashboard */}
-        <Route path="/" element={<ModernAdminDashboard />} />
-        {/* Legacy 3D visualizer */}
-        <Route path="/visualizer" element={<MainVisualizer />} />
-        {/* Unified dashboard for comparison */}
-        <Route path="/unified" element={<AdminDashboardUnified />} />
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <FeedbackSystem />
+        <Routes>
+          {/* Authentication */}
+          <Route path="/login" element={<LoginPage />} />
+          {/* Modern clean admin dashboard */}
+          <Route path="/" element={<ModernAdminDashboard />} />
+          {/* Legacy 3D visualizer */}
+          <Route path="/visualizer" element={<MainVisualizer />} />
+          {/* Unified dashboard for comparison */}
+          <Route path="/unified" element={<AdminDashboardUnified />} />
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

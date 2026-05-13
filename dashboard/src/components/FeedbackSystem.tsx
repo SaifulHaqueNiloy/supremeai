@@ -28,18 +28,28 @@ export const ConnectionIndicator: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkApi = async () => {
+      if (!mounted) return;
       try {
         const response = await authUtils.fetchWithAuth('/api/health');
-        if (response.ok) setApiStatus('connected');
-        else setApiStatus('error');
+        if (mounted) {
+          if (response.ok) setApiStatus('connected');
+          else setApiStatus('error');
+        }
       } catch (err) {
-        setApiStatus('error');
+        console.warn('Health check failed:', err);
+        if (mounted) setApiStatus('error');
       }
     };
+
     checkApi();
     const interval = setInterval(checkApi, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return (

@@ -24,8 +24,14 @@ const KnowledgeHub: React.FC = () => {
                 authUtils.fetchWithAuth('/api/admin/knowledge/domains')
             ]);
 
-            if (snapshotRes.success) setSnapshot(snapshotRes.data);
-            if (domainsRes.success) setDomains(domainsRes.data);
+            if (snapshotRes.ok) {
+                const data = await snapshotRes.json();
+                setSnapshot(data.data || data);
+            }
+            if (domainsRes.ok) {
+                const data = await domainsRes.json();
+                setDomains(data.data || data);
+            }
         } catch (error) {
             console.error('Failed to fetch knowledge data:', error);
             message.error('KNOWLEDGE_LINK_ERROR');

@@ -52,13 +52,10 @@ const AdminProjects: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = authUtils.getToken();
-      const response = await fetch('/api/projects', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await authUtils.fetchWithAuth('/api/projects');
       if (!response.ok) throw new Error('Failed to fetch projects');
-      const data: Project[] = await response.json();
-      setProjects(data);
+      const result = await response.json();
+      setProjects(result.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load projects');
     } finally {
@@ -383,10 +380,10 @@ const AdminProjects: React.FC = () => {
                   current={generationStep}
                   direction="vertical"
                   items={[
-                    { title: 'Analyzing Requirements', icon: <CodeOutlined /> },
-                    { title: 'Designing Architecture', icon: <CloudServerOutlined /> },
-                    { title: 'Generating Code', icon: <RocketOutlined /> },
-                    { title: 'Build Complete', icon: <CheckCircleOutlined /> },
+                    { title: 'Analyzing Requirements', icon: <CodeOutlined />, status: generationStep > 0 ? 'finish' : 'process' },
+                    { title: 'Designing Architecture', icon: <CloudServerOutlined />, status: generationStep > 1 ? 'finish' : generationStep === 1 ? 'process' : 'wait' },
+                    { title: 'Generating Code', icon: <RocketOutlined />, status: generationStep > 2 ? 'finish' : generationStep === 2 ? 'process' : 'wait' },
+                    { title: 'Build Complete', icon: <CheckCircleOutlined />, status: generationStep > 3 ? 'finish' : generationStep === 3 ? 'process' : 'wait' },
                   ]}
                 />
                 

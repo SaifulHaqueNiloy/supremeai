@@ -75,9 +75,9 @@ const AdminAnalytics: React.FC = () => {
   const columns = [
     { title: 'Provider', dataIndex: 'name', key: 'name', render: (text: string) => <Text strong>{text}</Text> },
     { title: 'Score', dataIndex: 'score', key: 'score', render: (score: number) => (
-      <Progress percent={Math.round(score)} size="small" strokeColor={score > 90 ? "#10b981" : "#f59e0b"} />
+      <Progress percent={isNaN(score) ? 0 : Math.round(score)} size="small" strokeColor={score > 90 ? "#10b981" : "#f59e0b"} />
     )},
-    { title: 'Avg Latency', dataIndex: 'averageLatency', key: 'averageLatency', render: (val: number) => `${Math.round(val)}ms` },
+    { title: 'Avg Latency', dataIndex: 'averageLatency', key: 'averageLatency', render: (val: number) => `${isNaN(val) ? 'N/A' : Math.round(val) + 'ms'}` },
     { title: 'Requests', dataIndex: 'requestCount', key: 'requestCount' },
     { title: 'Status', dataIndex: 'status', key: 'status', render: (status: string) => (
       <Tag color={

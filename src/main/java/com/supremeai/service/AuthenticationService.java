@@ -109,11 +109,6 @@ public class AuthenticationService {
             });
     }
 
-    /**
-     * Check if a given email is an admin — first by Firebase custom claims (already done by caller),
-     * then by ConfigService admin email list, then by hardcoded fallback list.
-     * Never throws even if ConfigService is unavailable.
-     */
     private boolean isAdminByEmail(String email) {
         if (email == null) return false;
         try {
@@ -124,12 +119,8 @@ public class AuthenticationService {
         } catch (Exception e) {
             log.warn("ConfigService unavailable during admin email check: {}", e.getMessage());
         }
-        // Hardcoded fallback: only used if ConfigService has no data
-        return Arrays.asList(
-            "niloyjoy7@gmail.com",
-            "nazifarabbu@gmail.com",
-            "paykaribazaronline@gmail.com"
-        ).contains(email);
+        // No hardcoded fallback
+        return false;
     }
 
     public Mono<User> register(String email, String password, String displayName, String remoteAddr) {

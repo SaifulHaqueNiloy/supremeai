@@ -1,26 +1,16 @@
-// ChatWithAI.tsx - NEURAL LINK COMMAND INTERFACE
+// ChatWithAI.tsx - Clean AI Chat Interface
 import React, { useState, useRef, useEffect } from 'react';
-import { Input, Button, Space, message, Empty, Tag, List, Divider, Row, Col, Tooltip, Typography, Progress, Badge } from 'antd';
-import { 
-    SendOutlined, 
-    RobotOutlined, 
-    CheckCircleOutlined, 
-    CloseCircleOutlined, 
+import { Input, Button, Space, message, Tag, Tooltip } from 'antd';
+import {
+    SendOutlined,
+    RobotOutlined,
     CopyOutlined,
     ThunderboltOutlined,
-    ApiOutlined,
-    SafetyCertificateOutlined,
-    CloudServerOutlined,
-    CodeOutlined,
-    SyncOutlined,
     DatabaseOutlined,
     BulbOutlined,
-    FileTextOutlined,
-    DownloadOutlined
+    FileTextOutlined
 } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
-
-const { Text } = Typography;
 
 interface ChatMessage {
     id: string;
@@ -44,7 +34,6 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
     const [selectedAgent, setSelectedAgent] = useState('all');
     const [agents, setAgents] = useState<any[]>([]);
     const [knowledge, setKnowledge] = useState<{rules: any[], plans: any[]}>({ rules: [], plans: [] });
-    const [systemStatus, setSystemStatus] = useState({ status: 'UP', version: '6.0.0-PRO' });
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -70,7 +59,6 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
         try {
             const isAuthenticated = authUtils.isAuthenticated();
             if (!isAuthenticated) {
-                // For guest mode, use demo agents data directly
                 const demoAgents = [
                     { id: 'gpt-4o', name: 'GPT-4o', status: 'online', type: 'llm' },
                     { id: 'claude-3', name: 'Claude 3.5', status: 'online', type: 'llm' },
@@ -84,6 +72,8 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
             if (response.ok) {
                 const data = await response.json();
                 setAgents(data);
+            } else {
+                console.warn('Failed to fetch agents from API, using fallback data');
             }
         } catch (error) {
             console.error('Failed to fetch agents');
@@ -94,28 +84,25 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
         try {
             const isAuthenticated = authUtils.isAuthenticated();
             if (!isAuthenticated) {
-                // For guest mode, use demo knowledge data directly
                 const demoRules = [
-                    { id: 1, content: 'কোডের গুণমান বজায় রাখতে হবে', confidence: 0.9 },
-                    { id: 2, content: 'নিরাপত্তা স্ক্যান প্রয়োজন', confidence: 0.95 }
+                    { id: 1, content: 'Code quality must be maintained', confidence: 0.9 },
+                    { id: 2, content: 'Security scans are required', confidence: 0.95 }
                 ];
                 const demoPlans = [
-                    { id: 1, content: 'Q2 রোডম্যাপ: মডেল অর্কেস্ট্রেশন উন্নত করা', title: 'Q2 রোডম্যাপ' },
-                    { id: 2, content: 'নিরাপত্তা অডিট: তৃতীয় পক্ষের পেনিট্রেশন টেস্টিং', title: 'নিরাপত্তা অডিট' }
+                    { id: 1, content: 'Q2 Roadmap: Enhance model orchestration', title: 'Q2 Roadmap' },
+                    { id: 2, content: 'Security audit: Third-party penetration testing', title: 'Security Audit' }
                 ];
                 setKnowledge({ rules: demoRules, plans: demoPlans });
                 return;
             }
 
             const [rulesRes, plansRes] = await Promise.all([
-                authUtils.fetchWithAuth('/api/admin/rules'),
-                authUtils.fetchWithAuth('/api/admin/plans')
+                authUtils.fetchWithAuth('/api/admin/rules').catch(() => null),
+                authUtils.fetchWithAuth('/api/admin/plans').catch(() => null)
             ]);
-            if (rulesRes.ok && plansRes.ok) {
-                const rules = await rulesRes.json();
-                const plans = await plansRes.json();
-                setKnowledge({ rules: rules.slice(0, 5), plans: plans.slice(0, 5) });
-            }
+            const rules = rulesRes?.ok ? await rulesRes.json() : [];
+            const plans = plansRes?.ok ? await plansRes.json() : [];
+            setKnowledge({ rules: rules.slice(0, 5), plans: plans.slice(0, 5) });
         } catch (error) {
             console.error('Failed to fetch knowledge context');
         }
@@ -127,51 +114,13 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
             const userId = user?.uid || 'anonymous';
             const isAuthenticated = authUtils.isAuthenticated();
 
-            if (!isAuthenticated) {
-                // For guest mode, use demo chat history directly to avoid 401 errors
-                const demoHistory = [
-                    {
-                        id: 'demo-chat-1',
-                        is_admin: true,
-                        message: 'স্বাগতম SupremeAI ডেমো মোডে! আপনি এখানে AI সহকারীদের সাথে চ্যাট করতে পারেন।',
-                        timestamp: new Date(Date.now() - 3600000).toISOString(),
-                        intent: 'INFO_COLLECTION'
-                    },
-                    {
-                        id: 'demo-chat-2',
-                        is_admin: false,
-                        message: 'হ্যালো! আপনি আমাকে কী সাহায্য করতে পারেন?',
-                        timestamp: new Date(Date.now() - 3500000).toISOString(),
-                        intent: 'NORMAL'
-                    },
-                    {
-                        id: 'demo-chat-3',
-                        is_admin: true,
-                        message: 'আমি কোডিং, প্রজেক্ট তৈরি, বা প্রশ্নের উত্তর দিতে সাহায্য করতে পারি। চেষ্টা করে দেখুন "একটি টোডো অ্যাপ তৈরি করুন" বা "পাইথন কী?"',
-                        timestamp: new Date(Date.now() - 3400000).toISOString(),
-                        intent: 'PROJECT_PLAN'
-                    }
-                ];
-                const historyMessages = demoHistory.map((item: any) => ({
-                    id: item.id,
-                    sender: item.is_admin ? 'ai' : 'user',
-                    agent: item.is_admin ? 'SupremeAI' : 'Operator',
-                    content: item.message,
-                    timestamp: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    status: 'completed' as const,
-                    intent: item.intent || 'NORMAL'
-                }));
-                setMessages(historyMessages);
-                return;
-            }
-
-            const response = await authUtils.fetchWithAuth(`/api/chat/history?user_id=${userId}&limit=50`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.chat_history) {
-                    const historyMessages = data.chat_history.map((item: any) => ({
+            if (isAuthenticated) {
+                const response = await authUtils.fetchWithAuth(`/api/chat/history?user_id=${userId}&limit=50`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const historyMessages: ChatMessage[] = data.map((item: any) => ({
                         id: item.id,
-                        sender: item.is_admin ? 'ai' : 'user',
+                        sender: (item.is_admin ? 'ai' : 'user') as 'ai' | 'user',
                         agent: item.is_admin ? 'SupremeAI' : 'Operator',
                         content: item.message,
                         timestamp: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -188,14 +137,15 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim()) return;
+        if (!input.trim() || loading) return;
 
         const userMessage: ChatMessage = {
             id: Date.now().toString(),
             sender: 'user',
-            agent: 'Operator',
+            agent: 'You',
             content: input,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: 'completed'
         };
 
         setMessages(prev => [...prev, userMessage]);
@@ -204,7 +154,6 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
         setLoading(true);
 
         try {
-            // Intelligent Intent Detection (Local Analysis before Backend)
             let detectedIntent = 'NORMAL';
             if (currentInput.toLowerCase().includes('rule') || currentInput.toLowerCase().includes('must') || currentInput.toLowerCase().includes('always')) {
                 detectedIntent = 'RULE';
@@ -219,7 +168,7 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                 body: JSON.stringify({
                     message: currentInput,
                     agent: selectedAgent === 'all' ? null : selectedAgent,
-                    detected_intent: detectedIntent // Pass hint to backend
+                    detected_intent: detectedIntent
                 }),
             });
 
@@ -236,15 +185,14 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                     status: 'completed',
                 };
                 setMessages((prev) => [...prev, aiMessage]);
-                
-                // If a rule or plan was captured, update the knowledge sidepanel
+
                 if (aiMessage.intent === 'RULE' || aiMessage.intent === 'PROJECT_PLAN') {
-                    message.success(`SYSTEM_INTEL: Captured new ${aiMessage.intent}`);
+                    message.success(`Knowledge updated`);
                     fetchKnowledge();
                 }
             }
         } catch (error: any) {
-            message.error('NEURAL_LINK_ERROR: Request Timeout');
+            message.error('Request failed');
         } finally {
             setLoading(false);
         }
@@ -262,101 +210,67 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
     };
 
     return (
-        <div className="flex h-[700px] bg-[#050505] font-mono text-white overflow-hidden border border-white/5 shadow-2xl rounded-xl">
+        <div className="flex h-[600px] bg-[#0a0a0a] text-white overflow-hidden border border-white/10 rounded-lg shadow-lg">
             {/* Left Column: Chat Interface */}
             <div className="flex-1 flex flex-col border-r border-white/5 relative">
-                {/* Header / Telemetry Bar */}
+                {/* Clean Header */}
                 <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <CodeOutlined className="text-emerald-500 text-[14px]" />
-                            <span className="text-[11px] font-black uppercase tracking-widest">Neural Link Command</span>
-                        </div>
-                        <div className="h-4 w-[1px] bg-white/10"></div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <span className="text-[9px] font-black uppercase text-emerald-500/60">Core Sync: {systemStatus.status}</span>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <RobotOutlined className="text-emerald-500 text-[16px]" />
+                        <span className="text-[14px] font-bold text-white">AI Assistant</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <select 
-                            value={selectedAgent} 
+                        <select
+                            value={selectedAgent}
                             onChange={(e) => setSelectedAgent(e.target.value)}
-                            className="bg-black/40 border border-white/10 text-[9px] px-2 py-1 rounded text-white/60 uppercase font-black outline-none hover:border-emerald-500/30 transition-colors"
+                            className="bg-black/40 border border-white/10 text-[11px] px-3 py-1 rounded text-white/80 outline-none hover:border-emerald-500/30 transition-colors"
                         >
-                            <option value="all">Global Matrix</option>
+                            <option value="all">All Agents</option>
                             {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
-                        <span className="text-[9px] text-white/20 uppercase font-black tracking-tighter">v{systemStatus.version}</span>
                     </div>
                 </div>
 
                 {/* Chat Area */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {messages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center opacity-10">
-                            <RobotOutlined className="text-6xl mb-4" />
-                            <span className="text-[12px] font-black uppercase tracking-[0.5em]">Awaiting Instruction</span>
+                        <div className="h-full flex flex-col items-center justify-center text-white/30">
+                            <RobotOutlined className="text-4xl mb-4 text-emerald-500/50" />
+                            <span className="text-sm font-medium">Start a conversation...</span>
                         </div>
                     ) : (
                         messages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                                <div className={`max-w-[85%] flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} gap-2`}>
-                                    <div className="flex items-center gap-2 px-1">
-                                        {msg.sender === 'ai' && <RobotOutlined className="text-[11px] text-emerald-500" />}
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-white/40">{msg.agent}</span>
+                            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'order-2' : 'order-1'}`}>
+                                    {/* Sender indicator */}
+                                    <div className="flex items-center gap-2 mb-1 px-1">
+                                        {msg.sender === 'ai' && <RobotOutlined className="text-xs text-emerald-500" />}
+                                        <span className="text-xs font-medium text-white/60">{msg.sender === 'ai' ? 'AI' : 'You'}</span>
                                         {msg.intent && msg.intent !== 'NORMAL' && (
-                                            <Tag color={getIntentColor(msg.intent)} className="text-[8px] font-black border-none rounded-sm px-1.5 py-0 leading-tight">
+                                            <Tag size="small" color={getIntentColor(msg.intent)} className="text-xs">
                                                 {msg.intent}
                                             </Tag>
                                         )}
-                                        <span className="text-[8px] font-mono text-white/10">{msg.timestamp}</span>
                                     </div>
-                                    <div className={`px-4 py-3 rounded-xl text-[12px] leading-relaxed relative glass-morphism ${chatFont} ${
-                                        msg.sender === 'user' 
-                                        ? 'bg-blue-600/10 border border-blue-500/30 text-blue-100/90 rounded-tr-none' 
-                                        : 'bg-white/[0.04] border border-white/10 text-white/80 rounded-tl-none shadow-[0_0_20px_rgba(0,0,0,0.5)]'
+
+                                    {/* Message bubble */}
+                                    <div className={`px-4 py-3 rounded-lg text-sm leading-relaxed ${
+                                        msg.sender === 'user'
+                                        ? 'bg-emerald-600/20 border border-emerald-500/30 text-white rounded-br-none'
+                                        : 'bg-white/[0.05] border border-white/10 text-white/90 rounded-bl-none'
                                     }`}>
                                         {msg.content}
-                                        {msg.sender === 'ai' && msg.confidence && (
-                                            <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3 opacity-50">
-                                                <span className="text-[8px] font-black uppercase tracking-tighter">Confidence</span>
-                                                <div className="flex-1 h-[2px] bg-white/5 rounded-full overflow-hidden">
-                                                    <div 
-                                                        className="h-full bg-emerald-500 shadow-[0_0_8px_#10b981]" 
-                                                        style={{ width: `${msg.confidence}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-[8px] font-mono">{msg.confidence}%</span>
-                                            </div>
-                                        )}
                                     </div>
+
+                                    {/* Action buttons for AI messages */}
                                     {msg.sender === 'ai' && (
-                                        <div className="flex flex-wrap gap-3 px-1 mt-1">
-                                            <button 
-                                                onClick={() => { navigator.clipboard.writeText(msg.content); message.success('COPIED'); }} 
-                                                className="text-[8px] font-black uppercase text-white/20 hover:text-white/60 transition-colors flex items-center gap-1"
+                                        <div className="flex gap-2 mt-2 px-1">
+                                            <button
+                                                onClick={() => { navigator.clipboard.writeText(msg.content); message.success('Copied!'); }}
+                                                className="text-xs text-white/40 hover:text-white/80 transition-colors"
                                             >
-                                                <CopyOutlined /> Copy Payload
+                                                <CopyOutlined /> Copy
                                             </button>
-                                            <button 
-                                                onClick={() => {
-                                                    const blob = new Blob([msg.content], { type: 'text/plain' });
-                                                    const url = URL.createObjectURL(blob);
-                                                    const a = document.createElement('a');
-                                                    a.href = url;
-                                                    a.download = `supremeai_${msg.intent || 'export'}_${msg.id}.txt`;
-                                                    document.body.appendChild(a);
-                                                    a.click();
-                                                    document.body.removeChild(a);
-                                                    URL.revokeObjectURL(url);
-                                                    message.success('DOWNLOAD_INITIATED');
-                                                }}
-                                                className="text-[8px] font-black uppercase text-white/20 hover:text-emerald-500/80 transition-colors flex items-center gap-1"
-                                            >
-                                                <DownloadOutlined /> Download File
-                                            </button>
-                                            <button className="text-[8px] font-black uppercase text-white/20 hover:text-white/60 transition-colors flex items-center gap-1"><CodeOutlined /> Inspect Node</button>
                                         </div>
                                     )}
                                 </div>
@@ -367,163 +281,78 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                 </div>
 
                 {/* Input Area */}
-                <div className="p-6 bg-white/[0.02] border-t border-white/5">
-                    <form onSubmit={handleSendMessage} className="relative">
+                <div className="p-4 bg-white/[0.02] border-t border-white/5">
+                    <form onSubmit={handleSendMessage} className="flex gap-3">
                         <Input
-                            placeholder="INPUT COMMAND OR DEFINE RULE..."
+                            placeholder="Type your message..."
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             disabled={loading}
-                            className={`bg-black/60 border-white/10 text-white placeholder:text-white/10 text-[14px] h-12 px-5 rounded-lg focus:border-emerald-500/40 transition-all shadow-[inset_0_1px_10px_rgba(0,0,0,0.8)] ${chatFont}`}
+                            className="flex-1 bg-black/40 border-white/20 text-white placeholder:text-white/40 rounded-lg focus:border-emerald-500/60 transition-all"
                         />
-                        <button 
+                        <button
                             type="submit"
                             disabled={loading || !input.trim()}
-                            className="absolute right-3 top-3 h-6 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 rounded text-[10px] font-black uppercase transition-all disabled:opacity-20 flex items-center gap-2"
+                            className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                            {loading ? <SyncOutlined spin /> : <><ThunderboltOutlined /> Run</>}
+                            {loading ? <ThunderboltOutlined spin /> : <SendOutlined />}
+                            {loading ? 'Sending' : 'Send'}
                         </button>
                     </form>
-                    <div className="mt-4 flex items-center justify-between opacity-40">
-                        <div className="flex gap-6">
-                            <div className="flex items-center gap-2">
-                                <ApiOutlined className="text-[12px] text-emerald-500/70" />
-                                <span className="text-[8px] font-black uppercase tracking-widest">Multi-Agent Voting</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <SafetyCertificateOutlined className="text-[12px] text-blue-500/70" />
-                                <span className="text-[8px] font-black uppercase tracking-widest">Autonomous Sync</span>
-                            </div>
-                        </div>
-                        <span className="text-[8px] font-mono text-white/30 uppercase tracking-widest">Secure Terminal Session</span>
-                    </div>
                 </div>
             </div>
 
-            {/* Right Column: Neural Knowledge Context */}
-            <div className="w-[320px] bg-white/[0.01] flex flex-col p-5 overflow-y-auto custom-scrollbar border-l border-white/5">
-                <div className="flex items-center gap-2 mb-6">
-                    <DatabaseOutlined className="text-emerald-500 text-[16px]" />
-                    <span className="text-[12px] font-black uppercase tracking-widest">Neural Knowledge</span>
-                </div>
+            {/* Right Column: Context Panel */}
+            <div className="w-80 bg-white/[0.02] border-l border-white/10 flex flex-col">
+                {/* Rules Section */}
+                {knowledge.rules.length > 0 && (
+                    <div className="p-4 border-b border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                            <BulbOutlined className="text-orange-500" />
+                            <span className="text-sm font-semibold text-white">Active Rules</span>
+                            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">
+                                {knowledge.rules.length}
+                            </span>
+                        </div>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {knowledge.rules.slice(0, 3).map((rule, idx) => (
+                                <div key={idx} className="text-xs text-white/70 bg-white/5 p-2 rounded border border-white/10">
+                                    {rule.content || rule.message}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
-                <div className="space-y-8">
-                    {/* Active Rules Section */}
-                    <section>
-                        <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                            <div className="flex items-center gap-2">
-                                <BulbOutlined className="text-red-500 text-[12px]" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Persistent Rules</span>
-                            </div>
-                            <Badge count={knowledge.rules.length} overflowCount={9} style={{ backgroundColor: '#f5222d', fontSize: '8px', height: '14px', lineHeight: '14px', minWidth: '14px' }} />
+                {/* Plans Section */}
+                {knowledge.plans.length > 0 && (
+                    <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <FileTextOutlined className="text-blue-500" />
+                            <span className="text-sm font-semibold text-white">Project Plans</span>
+                            <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
+                                {knowledge.plans.length}
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            {knowledge.rules.length === 0 ? (
-                                <div className="text-[9px] text-white/10 uppercase italic text-center py-4">No active constraints detected</div>
-                            ) : (
-                                knowledge.rules.map((rule, idx) => (
-                                    <div key={idx} className="p-3 bg-white/[0.02] border border-white/5 rounded-lg group hover:border-red-500/20 transition-all relative">
-                                        <div className="text-[10px] text-white/70 line-clamp-2 leading-relaxed font-mono">
-                                            {rule.content || rule.message}
-                                        </div>
-                                        <div className="mt-2 flex items-center justify-between opacity-30 group-hover:opacity-100 transition-all">
-                                            <span className="text-[7px] font-black uppercase tracking-tighter">Auto-Captured</span>
-                                            <div className="flex gap-2 items-center">
-                                                <Tooltip title="Download Constraint">
-                                                    <DownloadOutlined 
-                                                        className="text-red-500 cursor-pointer hover:scale-125 transition-transform" 
-                                                        onClick={() => {
-                                                            const blob = new Blob([rule.content || rule.message], { type: 'text/plain' });
-                                                            const url = URL.createObjectURL(blob);
-                                                            const a = document.createElement('a');
-                                                            a.href = url;
-                                                            a.download = `constraint_${idx + 1}.txt`;
-                                                            document.body.appendChild(a);
-                                                            a.click();
-                                                            document.body.removeChild(a);
-                                                            URL.revokeObjectURL(url);
-                                                            message.success('CONSTRAINT_EXPORTED');
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                                <span className="text-[7px] font-mono">CONF: {Math.round((rule.confidence || 0.9) * 100)}%</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {knowledge.plans.slice(0, 3).map((plan, idx) => (
+                                <div key={idx} className="text-xs text-white/70 bg-white/5 p-2 rounded border border-white/10">
+                                    {plan.content || plan.title}
+                                </div>
+                            ))}
                         </div>
-                    </section>
+                    </div>
+                )}
 
-                    {/* Project Plans Section */}
-                    <section>
-                        <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                            <div className="flex items-center gap-2">
-                                <FileTextOutlined className="text-blue-500 text-[12px]" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Project Blueprints</span>
-                            </div>
-                            <Badge count={knowledge.plans.length} overflowCount={9} style={{ backgroundColor: '#1890ff', fontSize: '8px', height: '14px', lineHeight: '14px', minWidth: '14px' }} />
+                {/* Empty state */}
+                {knowledge.rules.length === 0 && knowledge.plans.length === 0 && (
+                    <div className="flex-1 flex items-center justify-center text-white/30">
+                        <div className="text-center">
+                            <DatabaseOutlined className="text-2xl mb-2" />
+                            <div className="text-sm">No context available</div>
                         </div>
-                        <div className="space-y-2">
-                            {knowledge.plans.length === 0 ? (
-                                <div className="text-[9px] text-white/10 uppercase italic text-center py-4">No strategic roadmaps defined</div>
-                            ) : (
-                                knowledge.plans.map((plan, idx) => (
-                                    <div key={idx} className="p-3 bg-white/[0.02] border border-white/5 rounded-lg group hover:border-blue-500/20 transition-all relative">
-                                        <div className="text-[10px] text-white/70 line-clamp-2 leading-relaxed font-mono">
-                                            {plan.content || plan.title}
-                                        </div>
-                                        <div className="mt-2 flex items-center justify-between opacity-30 group-hover:opacity-100 transition-all">
-                                            <span className="text-[7px] font-black uppercase tracking-tighter">Roadmap Node</span>
-                                            <div className="flex gap-2">
-                                                <Tooltip title="Download Blueprint">
-                                                    <DownloadOutlined 
-                                                        className="text-blue-500 cursor-pointer hover:scale-125 transition-transform" 
-                                                        onClick={() => {
-                                                            const blob = new Blob([plan.content || plan.title], { type: 'text/plain' });
-                                                            const url = URL.createObjectURL(blob);
-                                                            const a = document.createElement('a');
-                                                            a.href = url;
-                                                            a.download = `blueprint_${idx + 1}.txt`;
-                                                            document.body.appendChild(a);
-                                                            a.click();
-                                                            document.body.removeChild(a);
-                                                            URL.revokeObjectURL(url);
-                                                            message.success('BLUEPRINT_EXPORTED');
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                                <div className="flex gap-1 items-center">
-                                                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                                                    <div className="w-1 h-1 rounded-full bg-blue-500/30"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Operational Summary */}
-                    <section className="mt-auto pt-10 border-t border-white/5">
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-2">Neural Status</div>
-                            <div className="flex justify-between text-[11px] mb-1">
-                                <span className="text-white/40">Knowledge Nodes</span>
-                                <span className="text-white font-mono">1,242</span>
-                            </div>
-                            <div className="flex justify-between text-[11px] mb-1">
-                                <span className="text-white/40">Active Constraints</span>
-                                <span className="text-white font-mono">{knowledge.rules.length}</span>
-                            </div>
-                            <div className="flex justify-between text-[11px]">
-                                <span className="text-white/40">Memory Usage</span>
-                                <span className="text-white font-mono">0.04%</span>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );
