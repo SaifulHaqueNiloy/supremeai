@@ -225,7 +225,13 @@ jobs: # ------------------------------------------------------------------------
           echo "Checking APIs..."
           gcloud services list --enabled --filter="NAME:cloudscheduler.googleapis.com OR NAME:cloudfunctions.googleapis.com" --quiet
           echo "Checking Service Account Roles..."
-          gcloud scheduler jobs list --location=${{ env.GCP_REGION }} --limit=1 || echo "::warning::Lacks Cloud Scheduler permissions. Run: gcloud projects add-iam-policy-binding ${{ env.GCP_PROJECT_ID }} --member=serviceAccount:supremeai-a@appspot.gserviceaccount.com --role=roles/cloudscheduler.admin"
+          # Wait a moment for authentication to take effect
+          sleep 5
+          if gcloud scheduler jobs list --location=${{ env.GCP_REGION }} --limit=1 >/dev/null 2>&1; then
+            echo "✅ Cloud Scheduler permissions verified"
+          else
+            echo "::warning::Lacks Cloud Scheduler permissions. Run: gcloud projects add-iam-policy-binding ${{ env.GCP_PROJECT_ID }} --member=serviceAccount:supremeai-a@appspot.gserviceaccount.com --role=roles/cloudscheduler.admin"
+          fi
 
   security-scan:
     name: 🛡️ Security & Secret Scan
