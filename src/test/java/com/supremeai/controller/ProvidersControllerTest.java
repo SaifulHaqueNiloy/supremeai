@@ -116,8 +116,10 @@ class ProvidersControllerTest {
         setAuthentication("admin", true);
 
         APIProvider input = new APIProvider(null, "New Provider", "llm", "active");
+        input.setApiKey("test-api-key");
         APIProvider saved = new APIProvider("prov-new", "New Provider", "llm", "active");
 
+        when(discoveryService.validateKey(anyString(), anyString())).thenReturn(Mono.just(true));
         when(providerRepository.save(any(APIProvider.class))).thenReturn(Mono.just(saved));
         when(activityLogRepository.save(any(ActivityLog.class))).thenReturn(Mono.just(new ActivityLog()));
 
@@ -136,7 +138,9 @@ class ProvidersControllerTest {
 
         APIProvider input = new APIProvider(null, "Updated Provider", "llm", "active");
         APIProvider saved = new APIProvider("prov-1", "Updated Provider", "llm", "active");
+        APIProvider existing = new APIProvider("prov-1", "Original Provider", "llm", "active");
 
+        when(providerRepository.findById("prov-1")).thenReturn(Mono.just(existing));
         when(providerRepository.save(any(APIProvider.class))).thenReturn(Mono.just(saved));
         when(activityLogRepository.save(any(ActivityLog.class))).thenReturn(Mono.just(new ActivityLog()));
 
