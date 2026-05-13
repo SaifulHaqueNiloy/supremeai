@@ -1,6 +1,6 @@
 // ModernAdminDashboard.tsx - Cinematic AI Command Center
 import React, { useState, useEffect, useRef } from 'react';
-import { Layout, Menu, Button, Avatar, theme, Badge, Typography, Space, Tooltip, Progress, ConfigProvider, Drawer, message } from 'antd';
+import { Layout, Menu, Button, Avatar, theme, Badge, Typography, Space, Tooltip, Progress, ConfigProvider, Drawer, message, Tag } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DashboardOutlined,
@@ -62,6 +62,7 @@ import AdminBackup from './AdminBackup';
 import AdminOCR from './AdminOCR';
 import AdminSimulator from './AdminSimulator';
 import AdminReverseEngineer from './AdminReverseEngineer';
+import AdminReports from './AdminReports';
 
 const { Header, Content, Sider } = Layout;
 const { Text, Title } = Typography;
