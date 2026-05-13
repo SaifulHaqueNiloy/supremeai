@@ -86,35 +86,65 @@ jobs: # ------------------------------------------------------------------------
             console.log("Starting aggressive artifact cleanup...");
             let deletedCount = 0;
             let totalSize = 0;
-            
+
             try {
+              // Get all artifacts
               const response = await github.rest.actions.listArtifactsForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 per_page: 100
               });
-              
+
               const artifacts = response.data.artifacts || [];
               if (artifacts.length === 0) {
                 console.log("No artifacts found to clean up.");
-              } else {
-                console.log(`Found ${artifacts.length} artifacts. Cleaning up ALL to free space...`);
-                for (const artifact of artifacts) {
-                  try {
-                    await github.rest.actions.deleteArtifact({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      artifact_id: artifact.id,
-                    });
-                    deletedCount++;
-                    totalSize += artifact.size_in_bytes;
-                  } catch (e) {
-                    console.log(`Failed to delete artifact ${artifact.id}: ${e.message}`);
-                  }
+                return;
+              }
+
+              console.log(`Found ${artifacts.length} artifacts. Deleting old ones to free space...`);
+
+              // First, try to delete expired artifacts (older than 1 day for non-release builds)
+              const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+              const expiredArtifacts = artifacts.filter(artifact => new Date(artifact.created_at) < oneDayAgo);
+              console.log(`Found ${expiredArtifacts.length} expired artifacts to delete...`);
+
+              for (const artifact of expiredArtifacts) {
+                try {
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                  });
+                  deletedCount++;
+                  totalSize += artifact.size_in_bytes;
+                  console.log(`Deleted expired: ${artifact.name} (${(artifact.size_in_bytes / 1024 / 1024).toFixed(2)} MB)`);
+                } catch (e) {
+                  console.log(`Failed to delete expired artifact ${artifact.id}: ${e.message}`);
+                }
+              }
+
+              // Then sort by creation date (newest first) and keep only the 5 most recent
+              const sortedArtifacts = artifacts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+              const artifactsToDelete = sortedArtifacts.slice(5); // Keep 5 most recent
+
+              console.log(`Keeping 5 most recent artifacts, deleting ${artifactsToDelete.length} additional old ones...`);
+
+              for (const artifact of artifactsToDelete) {
+                try {
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                  });
+                  deletedCount++;
+                  totalSize += artifact.size_in_bytes;
+                  console.log(`Deleted: ${artifact.name} (${(artifact.size_in_bytes / 1024 / 1024).toFixed(2)} MB)`);
+                } catch (e) {
+                  console.log(`Failed to delete artifact ${artifact.id}: ${e.message}`);
                 }
               }
             } catch (error) {
-              console.log(`Error during artifact listing: ${error.message}`);
+              console.log(`Error during artifact cleanup: ${error.message}`);
             }
             console.log(`✅ Cleanup finished. Deleted ${deletedCount} artifacts (~${(totalSize / 1024 / 1024).toFixed(2)} MB).`);
 
@@ -424,12 +454,12 @@ jobs: # ------------------------------------------------------------------------
           npm ci --prefer-offline || (sleep 10 && npm ci --prefer-offline)
           npm run compile --if-present
       - name: 📦 Archive VS Code Extension
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'release' || github.event.inputs.force_run_all == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: vscode-extension
           path: supremeai-vscode-extension/*.vsix
-          retention-days: 1
+          retention-days: 7
 
   intellij-plugin:
     name: 🔌 IntelliJ Plugin Build
@@ -453,12 +483,12 @@ jobs: # ------------------------------------------------------------------------
           chmod +x gradlew
           ./gradlew buildPlugin --build-cache --no-daemon --parallel --configure-on-demand
       - name: 📦 Archive IntelliJ Plugin
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'release' || github.event.inputs.force_run_all == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: intellij-plugin
           path: supremeai-intellij-plugin/build/distributions/*.zip
-          retention-days: 1
+          retention-days: 7
 
   # --------------------------------------------------------------------------------
   # 🚀 PHASE 3: DEPLOYMENT
