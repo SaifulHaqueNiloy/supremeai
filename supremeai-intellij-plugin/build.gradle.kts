@@ -36,6 +36,11 @@ dependencies {
     implementation("org.springframework:spring-messaging:6.1.10")
     implementation("org.springframework:spring-websocket:6.1.10")
     implementation("org.glassfish.tyrus.bundles:tyrus-standalone-client:1.21")
+
+    // Firebase Data Connect Dependencies
+    implementation("com.google.firebase:firebase-dataconnect-kotlin:0.1.2-beta")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
 
 kotlin {

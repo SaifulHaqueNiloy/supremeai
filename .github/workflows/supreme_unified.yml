@@ -293,6 +293,8 @@ jobs: # ------------------------------------------------------------------------
             --memory 4Gi \
             --cpu 2 \
             --concurrency 80 \
+            --startup-cpu-boost \
+            --timeout 300 \
             --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
             --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
             --quiet
@@ -387,8 +389,8 @@ jobs: # ------------------------------------------------------------------------
           npm ci || (sleep 10 && npm ci)
           npm run lint || echo "Linting skipped or failed"
 
-  ide-extensions:
-    name: 🔌 IDE Extensions Build
+  vscode-extension:
+    name: 🔌 VS Code Extension Build
     needs: [initialize, security-scan]
     if: needs.initialize.outputs.extensions == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -410,6 +412,22 @@ jobs: # ------------------------------------------------------------------------
           npm config set fetch-retry-mintimeout 60000
           npm ci --prefer-offline || (sleep 10 && npm ci --prefer-offline)
           npm run compile --if-present
+      - name: 📦 Archive VS Code Extension
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension
+          path: supremeai-vscode-extension/*.vsix
+          retention-days: 1
+
+  intellij-plugin:
+    name: 🔌 IntelliJ Plugin Build
+    needs: [initialize, security-scan]
+    if: needs.initialize.outputs.extensions == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
       - name: ☕ Setup Java (IntelliJ)
         uses: actions/setup-java@v4
         with:
@@ -423,14 +441,12 @@ jobs: # ------------------------------------------------------------------------
           cp ../gradle/wrapper/gradle-wrapper.jar gradle/wrapper/
           chmod +x gradlew
           ./gradlew buildPlugin --build-cache --no-daemon --parallel --configure-on-demand
-      - name: 📦 Archive Extensions
+      - name: 📦 Archive IntelliJ Plugin
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: ide-extensions
-          path: |
-            supremeai-vscode-extension/*.vsix
-            supremeai-intellij-plugin/build/distributions/*.zip
+          name: intellij-plugin
+          path: supremeai-intellij-plugin/build/distributions/*.zip
           retention-days: 1
 
   # --------------------------------------------------------------------------------
@@ -493,7 +509,7 @@ jobs: # ------------------------------------------------------------------------
   
   workflow-summary:
     name: 📊 Pipeline Summary
-    needs: [backend-pipeline, frontend-pipeline, deploy-functions, ide-extensions, health-check, codeflow-analysis]
+    needs: [backend-pipeline, frontend-pipeline, deploy-functions, vscode-extension, intellij-plugin, health-check, codeflow-analysis]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -506,7 +522,8 @@ jobs: # ------------------------------------------------------------------------
           echo "| Backend | ${{ needs.backend-pipeline.result }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | ${{ needs.frontend-pipeline.result }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| Functions | ${{ needs.deploy-functions.result }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| IDE Plugins | ${{ needs.ide-extensions.result }} | ide-extensions |" >> $GITHUB_STEP_SUMMARY
+          echo "| VS Code Extension | ${{ needs.vscode-extension.result }} | vscode-extension |" >> $GITHUB_STEP_SUMMARY
+          echo "| IntelliJ Plugin | ${{ needs.intellij-plugin.result }} | intellij-plugin |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 📥 Latest Artifacts available for 1 day." >> $GITHUB_STEP_SUMMARY
 
