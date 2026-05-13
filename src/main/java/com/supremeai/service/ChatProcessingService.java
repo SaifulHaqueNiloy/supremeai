@@ -2,6 +2,8 @@ package com.supremeai.service;
 
 import com.supremeai.model.*;
 import com.supremeai.repository.*;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 
 import reactor.core.publisher.Mono;
@@ -43,8 +45,13 @@ public class ChatProcessingService {
     }
 
     public Mono<Map<String, Object>> processMessage(String userId, String message, boolean isAdmin) {
+        // Sanitize user input to prevent XSS
+        String sanitizedMessage = Jsoup.clean(message, Safelist.basic()
+                .addTags("br", "p", "strong", "em", "code")
+                .addProtocols("a", "href", "https"));
+        
         // Save chat message
-        ChatMessage chatMsg = new ChatMessage(userId, message, isAdmin);
+        ChatMessage chatMsg = new ChatMessage(userId, sanitizedMessage, isAdmin);
         chatMsg.setId(generateId("chat"));
         
         return chatHistoryRepository.save(chatMsg)

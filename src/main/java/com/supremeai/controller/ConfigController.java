@@ -14,7 +14,7 @@ import java.util.Map;
 @RequestMapping("/api/config")
 public class ConfigController {
 
-    @Value("${firebase.api.key:AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8}")
+    @Value("${firebase.api.key}")
     private String apiKey;
 
     @Value("${firebase.auth.domain:supremeai-a.firebaseapp.com}")

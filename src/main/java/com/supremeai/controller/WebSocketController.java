@@ -5,12 +5,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import reactor.core.publisher.Mono;
-
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +29,10 @@ public class WebSocketController {
     private UserRepository userRepository;
 
     @MessageMapping("/dashboard/subscribe")
-    @SendTo("/topic/dashboard")
-    public Map<String, Object> subscribeToDashboard() {
-        return getDashboardData().block();
+    @SendToUser("/topic/dashboard")
+    @PreAuthorize("hasRole('USER')")
+    public Mono<Map<String, Object>> subscribeToDashboard(Principal principal) {
+        return getDashboardData();
     }
 
     @Scheduled(fixedRate = 30000) // Update every 30 seconds
@@ -39,7 +42,7 @@ public class WebSocketController {
         );
     }
 
-    @Scheduled(fixedRate = 10000) // Update every 10 seconds
+    @Scheduled(fixedRate = 10000)
     public void broadcastQuotaUpdates() {
         getGlobalQuotaData().flatMap(globalData ->
             userRepository.findAll().collectList().map(users -> {

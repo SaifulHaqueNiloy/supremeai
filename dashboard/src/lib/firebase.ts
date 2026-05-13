@@ -27,14 +27,14 @@ const firebaseConfig = {
 
 // Avoid re-initialising the app during HMR
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const firebaseAuth: Auth = getAuth(app);
+export const auth: Auth = getAuth(app);
 export const firestore = getFirestore(app);
 export const functions = getFunctions(app);
 
 // Connect to Firebase Emulator - Only if explicitly requested via environment variable
 if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
   try {
-    connectAuthEmulator(firebaseAuth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
     connectFirestoreEmulator(firestore, 'localhost', 8081);
     connectFunctionsEmulator(functions, 'localhost', 5001);
     console.log('🚀 Firebase Emulators (Auth, Firestore, Functions) connected');
@@ -100,7 +100,7 @@ export async function firebaseSignIn(
 ): Promise<{ token: string; refreshToken: string; user: import('../types').AuthUser }> {
   try {
     const cred: UserCredential = await signInWithEmailAndPassword(
-      firebaseAuth,
+      auth,
       email,
       password,
     );
@@ -192,7 +192,7 @@ export async function refreshAccessToken(): Promise<string> {
  */
 export async function firebaseSignOutFn(): Promise<void> {
   try {
-    await signOut(firebaseAuth);
+    await signOut(auth);
   } catch (error: unknown) {
     // Sign-out errors are non-critical; log but don't throw
     if (error instanceof FirebaseError) {

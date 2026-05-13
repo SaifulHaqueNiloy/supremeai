@@ -50,12 +50,11 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:reverse-engineering@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/pubsub.subscriber" || true
 
-# 6. Build and push simulator-runtime image
+# 6. Build simulator-runtime image via Cloud Build
 echo ""
-echo "Building simulator-runtime Docker image..."
+echo "Building simulator-runtime image via Google Cloud Build..."
 cd simulator-runtime
-docker build -t "gcr.io/${PROJECT_ID}/simulator-runtime:latest" .
-docker push "gcr.io/${PROJECT_ID}/simulator-runtime:latest"
+gcloud builds submit --tag "gcr.io/${PROJECT_ID}/simulator-runtime:latest" . --project "$PROJECT_ID"
 cd ..
 
 # 7. Deploy reverse-engineering service to Cloud Run

@@ -13,6 +13,7 @@ WORKDIR /app
 RUN apk add --no-cache \
     curl \
     bash \
+    python3 \
     && curl -sSL https://sdk.cloud.google.com | bash \
     && ln -sf /root/google-cloud-sdk/bin/gcloud /usr/bin/gcloud \
     && gcloud --version
@@ -27,4 +28,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]

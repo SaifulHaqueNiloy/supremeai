@@ -11,7 +11,7 @@ import org.springframework.http.HttpHeaders;
 @RequestMapping("/__/firebase")
 public class FirebaseEmulatorController {
 
-    @Value("${firebase.config.apiKey:AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8}")
+    @Value("${firebase.config.apiKey}")
     private String apiKey;
 
     @Value("${firebase.config.authDomain:supremeai-a.firebaseapp.com}")

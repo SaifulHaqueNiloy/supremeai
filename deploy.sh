@@ -32,27 +32,21 @@ log_info "Project: $PROJECT_ID, Region: $REGION"
 log_info "Building Spring Boot backend..."
 ./gradlew clean build -x test
 
-# 2. Build backend Docker image
-log_info "Building backend Docker image..."
-docker build -t "$BACKEND_IMAGE" .
+# 2. Build images via Google Cloud Build (Serverless)
+log_info "Building images via Google Cloud Build..."
 
-# 3. Build reverse-engineering image
-log_info "Building reverse-engineering service image..."
+# Backend
+gcloud builds submit --tag "$BACKEND_IMAGE" . --project "$PROJECT_ID"
+
+# Reverse Engineering service
 cd reverse-engineering
-docker build -t "$REVERSE_ENG_IMAGE" .
+gcloud builds submit --tag "$REVERSE_ENG_IMAGE" . --project "$PROJECT_ID"
 cd ..
 
-# 4. Build simulator-runtime image
-log_info "Building simulator-runtime image..."
+# Simulator runtime
 cd simulator-runtime
-docker build -t "$SIMULATOR_IMAGE" .
+gcloud builds submit --tag "$SIMULATOR_IMAGE" . --project "$PROJECT_ID"
 cd ..
-
-# 5. Push images to GCR
-log_info "Pushing images to Google Container Registry..."
-docker push "$BACKEND_IMAGE"
-docker push "$REVERSE_ENG_IMAGE"
-docker push "$SIMULATOR_IMAGE"
 
 # 6. Create / update infrastructure (if script exists)
 if [ -f "infrastructure/setup.sh" ]; then
@@ -86,8 +80,8 @@ gcloud run deploy simulator-runtime \
   --image "$SIMULATOR_IMAGE" \
   --region "$REGION" \
   --allow-unauthenticated \
-  --set-min-instances=0 \
-  --set-max-instances=10 \
+  --min-instances=0 \
+  --max-instances=10 \
   --project "$PROJECT_ID" || log_warn "Simulator runtime deployment may have failed"
 
 # 8. Create Pub/Sub push subscription (idempotent)

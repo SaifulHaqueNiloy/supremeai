@@ -30,18 +30,10 @@ window.AuthHelper = {
             console.warn('Failed to fetch Firebase config from backend:', e.message);
         }
 
-        // 3. Local development fallback only
+        // 3. Local development fallback only - DO NOT hardcode keys in production
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.warn('Using local Firebase config - set up proper config for production');
-            return {
-                apiKey: "AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8",
-                authDomain: "supremeai-a.firebaseapp.com",
-                databaseURL: "https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/",
-                projectId: "supremeai-a",
-                storageBucket: "supremeai-a.firebasestorage.app",
-                messagingSenderId: "565236080752",
-                appId: "1:565236080752:web:572bb9313db9afb355d4b5"
-            };
+            console.error('Firebase configuration missing. Start the backend server or set window.__FIREBASE_CONFIG__');
+            throw new Error('Firebase config not available. Run backend server or inject config via window.__FIREBASE_CONFIG__');
         }
 
         throw new Error('Firebase configuration not available');

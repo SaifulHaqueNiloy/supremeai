@@ -279,36 +279,38 @@ public class EnhancedLearningService {
      * Get learning statistics
      */
     public Mono<Map<String, Object>> getLearningStats() {
-        List<SystemLearning> allLearnings = repository.findAll().collectList().block();
+        return repository.findAll().collectList()
+                .map(allLearnings -> {
+                    Map<String, Object> stats = new HashMap<>();
+                    if (allLearnings == null) {
+                        stats.put("total", 0);
+                        return stats;
+                    }
 
-        Map<String, Object> stats = new HashMap<>();
-        if (allLearnings == null) {
-            stats.put("total", 0);
-            return Mono.just(stats);
-        }
+                    Map<String, Long> byType = allLearnings.stream()
+                            .collect(Collectors.groupingBy(l -> l.getLearningType() != null ? l.getLearningType() : "UNKNOWN",
+                                    Collectors.counting()));
 
-        Map<String, Long> byType = allLearnings.stream()
-                .collect(Collectors.groupingBy(l -> l.getLearningType() != null ? l.getLearningType() : "UNKNOWN",
-                        Collectors.counting()));
+                    long totalSuccess = allLearnings.stream()
+                            .filter(l -> l.getSuccess() != null && l.getSuccess())
+                            .count();
 
-        long totalSuccess = allLearnings.stream()
-                .filter(l -> l.getSuccess() != null && l.getSuccess())
-                .count();
+                    double avgQuality = allLearnings.stream()
+                            .filter(l -> l.getQualityScore() != null)
+                            .mapToDouble(SystemLearning::getQualityScore)
+                            .average()
+                            .orElse(0.0);
 
-        double avgQuality = allLearnings.stream()
-                .filter(l -> l.getQualityScore() != null)
-                .mapToDouble(SystemLearning::getQualityScore)
-                .average()
-                .orElse(0.0);
+                    stats.put("total", allLearnings.size());
+                    stats.put("byType", byType);
+                    stats.put("successCount", totalSuccess);
+                    stats.put("failureCount", allLearnings.size() - totalSuccess);
+                    stats.put("averageQuality", avgQuality);
+                    stats.put("successRate", allLearnings.size() > 0 ? (double) totalSuccess / allLearnings.size() : 0.0);
 
-        stats.put("total", allLearnings.size());
-        stats.put("byType", byType);
-        stats.put("successCount", totalSuccess);
-        stats.put("failureCount", allLearnings.size() - totalSuccess);
-        stats.put("averageQuality", avgQuality);
-        stats.put("successRate", allLearnings.size() > 0 ? (double) totalSuccess / allLearnings.size() : 0.0);
-
-        return Mono.just(stats);
+                    return stats;
+                })
+                .defaultIfEmpty(Map.of("total", 0));
     }
 
     /**

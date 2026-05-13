@@ -1,5 +1,6 @@
 package com.supremeai.controller;
 
+import com.supremeai.audit.Audited;
 import com.supremeai.model.UserApiKey;
 import com.supremeai.model.ActivityLog;
 import com.supremeai.repository.UserApiKeyRepository;
@@ -97,7 +98,7 @@ public class APIKeyController {
      * API key is encrypted before storing.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @Audited(resource = "api_key", action = "create")
     public Mono<ResponseEntity<Map<String, Object>>> addKey(@Valid @RequestBody ApiKeyCreateRequest body, Authentication auth) {
         String userId = auth.getName();
 
@@ -137,7 +138,7 @@ public class APIKeyController {
      * PUT /api/apikeys/{id} - Update an existing API key.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @Audited(resource = "api_key", action = "update")
     public Mono<ResponseEntity<?>> updateKey(
             @PathVariable String id,
             @RequestBody Map<String, Object> body,
@@ -174,7 +175,7 @@ public class APIKeyController {
      * DELETE /api/apikeys/{id} - Delete an API key.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @Audited(resource = "api_key", action = "delete")
     public Mono<ResponseEntity<?>> deleteKey(@PathVariable String id, Authentication auth) {
         String userId = auth.getName();
 

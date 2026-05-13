@@ -7,6 +7,13 @@ service cloud.firestore {
     }
     
     function isAdmin() {
+      // Primary: Check Firebase custom claim (set by backend when user tier becomes ADMIN)
+      // This avoids Firestore read on every request and is more secure
+      if (request.auth.token.admin == true) {
+        return true;
+      }
+      // Fallback: Check Firestore user document (for legacy tokens without custom claims)
+      // Note: This path causes an extra read and may be stale until token refresh (max 1hr)
       return isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tier == 'ADMIN';
     }

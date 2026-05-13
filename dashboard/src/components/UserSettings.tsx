@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Form, Select, Switch, Typography, Space, Divider, message, Button, Avatar, Badge } from 'antd';
-import { SaveOutlined, UserOutlined, KeyOutlined, ShieldOutlined, SettingOutlined } from '@ant-design/icons';
+import { SaveOutlined, UserOutlined, KeyOutlined, SafetyOutlined, SettingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useRole } from '../contexts/RoleContext';
 import { auth } from '../lib/firebase';
@@ -127,7 +127,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ darkMode, setDarkMode, chat
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 24 }}>
         {/* Security Card */}
         <Card
-          title={<Space><ShieldOutlined /> {t('settings.security', 'Security & Access')}</Space>}
+          title={<Space><SafetyOutlined /> {t('settings.security', 'Security & Access')}</Space>}
           style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.1)',

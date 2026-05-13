@@ -1,5 +1,6 @@
 package com.supremeai.controller;
 
+import com.supremeai.audit.Audited;
 import com.supremeai.model.SystemConfig;
 import com.supremeai.model.UserTier;
 import com.supremeai.service.ConfigService;
@@ -35,6 +36,7 @@ public class AdminConfigController {
      * Update the entire system configuration.
      */
     @PutMapping
+    @Audited(resource = "system_config", action = "update_config")
     public Mono<SystemConfig> updateSystemConfig(
             @RequestBody SystemConfig config,
             Authentication authentication,
@@ -81,6 +83,7 @@ public class AdminConfigController {
      * Update a specific tier's quota limit.
      */
     @PatchMapping("/quotas/{tier}")
+    @Audited(resource = "system_config", action = "update_tier_quota")
     public Mono<SystemConfig> updateTierQuota(
             @PathVariable UserTier tier,
             @RequestParam long limit) {
@@ -91,6 +94,7 @@ public class AdminConfigController {
      * Force refresh the local configuration cache from Firestore.
      */
     @PostMapping("/refresh")
+    @Audited(resource = "system_config", action = "refresh_cache")
     public Mono<SystemConfig> refreshCache() {
         return configService.refreshCache();
     }

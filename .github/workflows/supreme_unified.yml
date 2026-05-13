@@ -314,7 +314,7 @@ jobs: # ------------------------------------------------------------------------
       - name: 🔨 Build Dashboard
         working-directory: dashboard
         env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || 'AIzaSyCib1UPogwLoAshIWm9YQJB_RR0UxC07i8' }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'supremeai-a.firebaseapp.com' }}
           VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/' }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || 'supremeai-a' }}
