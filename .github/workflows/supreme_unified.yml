@@ -298,7 +298,7 @@ jobs: # ------------------------------------------------------------------------
             --memory 4Gi \
             --cpu 2 \
             --concurrency 80 \
-            --startup-cpu-boost \
+            --cpu-boost \
             --timeout 300 \
             --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
             --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
