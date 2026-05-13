@@ -57,11 +57,11 @@ import AdminVPN from './AdminVPN';
 import AdminBrowser from './AdminBrowser';
 import AdminQuotas from './AdminQuotas';
 import AdminNotifications from './AdminNotifications';
-import AdminReports from './AdminReports';
 import AdminPerformance from './AdminPerformance';
 import AdminBackup from './AdminBackup';
 import AdminOCR from './AdminOCR';
 import AdminSimulator from './AdminSimulator';
+import AdminReverseEngineer from './AdminReverseEngineer';
 
 const { Header, Content, Sider } = Layout;
 const { Text, Title } = Typography;
@@ -296,7 +296,7 @@ export default function ModernAdminDashboard() {
     { key: 'projects', icon: <CodeOutlined />, label: 'ডিপ্লয়মেন্টস', roles: ['user', 'admin'] },
     { key: 'settings', icon: <SettingOutlined />, label: 'কনফিগ', roles: ['guest', 'user', 'admin'] },
     
-    // Admin-only tabs (aligned with backend)
+    // Admin-only tabs
     { key: 'providers', icon: <ApiOutlined />, label: 'AI প্রোভাইডার', roles: ['admin'] },
     { key: 'users', icon: <UserOutlined />, label: 'ইউজার ম্যানেজমেন্ট', roles: ['admin'] },
     { key: 'monitoring', icon: <HddOutlined />, label: 'সিস্টেম মনিটরিং', roles: ['admin'] },
@@ -309,6 +309,7 @@ export default function ModernAdminDashboard() {
     { key: 'browser', icon: <ChromeOutlined />, label: 'ব্রাউজার', roles: ['admin'] },
     { key: 'quotas', icon: <PieChartOutlined />, label: 'কোটা ম্যানেজমেন্ট', roles: ['admin'] },
     { key: 'simulator', icon: <MobileOutlined />, label: 'সিমুলেটর', roles: ['admin'] },
+    { key: 'reverse', icon: <CodeOutlined />, label: 'রিভার্স ইঞ্জিনিয়ারিং', roles: ['admin'] },
     { key: 'notifications', icon: <BellOutlined />, label: 'নোটিফিকেশন', roles: ['admin'] },
     { key: 'reports', icon: <BarChartOutlined />, label: 'রিপোর্টস', roles: ['admin'] },
     { key: 'performance', icon: <ClusterOutlined />, label: 'পারফরম্যান্স', roles: ['admin'] },
@@ -348,9 +349,10 @@ export default function ModernAdminDashboard() {
             case 'logs': return <AdminLogs />;
             case 'vpn': return <AdminVPN />;
             case 'browser': return <AdminBrowser />;
-            case 'quotas': return <AdminQuotas />;
-            case 'simulator': return <AdminSimulator />;
-            case 'notifications': return <AdminNotifications />;
+             case 'quotas': return <AdminQuotas />;
+             case 'simulator': return <AdminSimulator />;
+             case 'reverse': return <AdminReverseEngineer />;
+             case 'notifications': return <AdminNotifications />;
             case 'reports': return <AdminReports />;
             case 'performance': return <AdminPerformance />;
             case 'backup': return <AdminBackup />;

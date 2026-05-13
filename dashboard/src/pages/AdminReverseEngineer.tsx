@@ -123,7 +123,7 @@ const AdminReverseEngineer: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        const color = status === 'COMPLETE' ? 'green' : status === 'FAILED' ? 'red' : status === 'CANCELLED' ? 'orange' : 'blue';
+        const color = status === 'COMPLETED' ? 'green' : status === 'FAILED' ? 'red' : status === 'CANCELLED' ? 'orange' : 'blue';
         return <Tag color={color}>{status}</Tag>;
       }
     },
@@ -152,7 +152,7 @@ const AdminReverseEngineer: React.FC = () => {
       key: 'actions',
       render: (_: any, record: Job) => (
         <Space>
-          {record.status === 'COMPLETE' && record.results && (
+          {record.status === 'COMPLETED' && record.results && (
             <>
               <Tooltip title="View Connectors">
                 <Button size="small" icon={<CodeOutlined />} onClick={() => {

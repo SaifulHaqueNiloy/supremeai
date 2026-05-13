@@ -72,10 +72,9 @@ public class DeviceEmulationService {
 
     /**
      * Transform HTML content by applying device emulation rules.
+     * Accepts String directly to avoid byte[] round-trip conversion.
      */
-    public byte[] transformHtml(byte[] originalHtml, EmulationContext context) {
-        String html = new String(originalHtml, StandardCharsets.UTF_8);
-
+    public String transformHtml(String html, EmulationContext context) {
         // 1. Inject/modify viewport meta tag
         html = injectViewportMeta(html, context);
 
@@ -91,7 +90,17 @@ public class DeviceEmulationService {
         // 5. Fix viewport-relative units if needed
         html = convertViewportUnits(html, context);
 
-        return html.getBytes(StandardCharsets.UTF_8);
+        return html;
+    }
+
+    /**
+     * Legacy byte[] version - delegates to String version.
+     * Kept for backwards compatibility.
+     */
+    public byte[] transformHtml(byte[] originalHtml, EmulationContext context) {
+        String html = new String(originalHtml, StandardCharsets.UTF_8);
+        String transformed = transformHtml(html, context);
+        return transformed.getBytes(StandardCharsets.UTF_8);
     }
 
     /**

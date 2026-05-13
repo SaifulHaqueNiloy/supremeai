@@ -25,14 +25,14 @@ public class SimulatorDeploymentService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatorDeploymentService.class);
 
-    @Value("${simulator.cloud.projectId:supremeai-project}")
+    @Value("${spring.cloud.gcp.project-id:supremeai-459910}")
     private String projectId;
 
     @Value("${simulator.cloud.region:us-central1}")
     private String region;
 
-    @Value("${simulator.cloud.run.image:gcr.io/supremeai-project/simulator-runtime:latest}")
-    private String runtimeImage;
+    @Value("${simulator.cloud.run.image:}")
+    private String runtimeImage; // optional override
 
     @Value("${simulator.health.check.timeout.ms:3000}")
     private int healthCheckTimeoutMs;
@@ -172,9 +172,15 @@ public class SimulatorDeploymentService {
     private String deployViaGcloud(String serviceName, String appId, String deviceType) throws Exception {
         logger.info("[GCP] Deploying Cloud Run service: {}", serviceName);
 
+        // Use explicit runtime image if provided, else construct from project ID
+        String image = runtimeImage;
+        if (image == null || image.isEmpty()) {
+            image = "gcr.io/" + projectId + "/simulator-runtime:latest";
+        }
+
         ProcessBuilder pb = new ProcessBuilder(
                 "gcloud", "run", "deploy", serviceName,
-                "--image", runtimeImage,
+                "--image", image,
                 "--region", region,
                 "--allow-unauthenticated",
                 "--set-env-vars", String.format("APP_ID=%s,DEVICE_TYPE=%s,SIMULATOR_MODE=preview", appId, deviceType),

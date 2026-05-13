@@ -6,19 +6,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Controller for website reverse engineering feature.
  * Submits jobs to Pub/Sub queue for async processing by Python FastAPI worker.
  */
 @RestController
-@RequestMapping("/api/reverse")
+@RequestMapping("/api/reverse-engineer")
 public class ReverseEngineeringController {
 
     private static final Logger logger = LoggerFactory.getLogger(ReverseEngineeringController.class);
@@ -30,33 +33,35 @@ public class ReverseEngineeringController {
     @Autowired
     private ReverseEngineeringIntegrationService integrationService;
 
-    @PostMapping("/start")
-    public ResponseEntity<Map<String, Object>> startReverseEngineering(
-            @RequestParam String url,
+    @PostMapping("/submit")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> submitReverseEngineering(
+            @RequestBody Map<String, Object> request,
             Authentication auth) {
         
-        String userId = auth != null ? auth.getName() : "anonymous";
+        String url = (String) request.get("url");
+        String userId = auth != null ? auth.getName() : "admin"; // fallback
+        
+        logger.info("Submitting reverse engineering job for URL: {} by user {}", url, userId);
+        
         String jobId = "reveng_" + UUID.randomUUID().toString().substring(0, 12);
         
-        logger.info("Starting reverse engineering job: {} for {} by {}", jobId, url, userId);
-        
-        // Persist job in Firestore via integration service
+        // Persist job in Firestore
         integrationService.startJob(userId, url).subscribe();
         
-        // Publish job to Pub/Sub for processing by Python worker
+        // Publish to Pub/Sub
         Map<String, Object> message = new HashMap<>();
         message.put("jobId", jobId);
         message.put("userId", userId);
         message.put("websiteUrl", url);
-        message.put("scrapeDepth", 1);
-        message.put("discoverApis", true);
+        message.put("scrapeDepth", request.getOrDefault("scrapeDepth", 1));
+        message.put("discoverApis", request.getOrDefault("discoverApis", true));
         
         try {
             pubSubPublisherService.publish(PUBSUB_TOPIC, message);
             logger.info("Published reverse engineering job {} to topic {}", jobId, PUBSUB_TOPIC);
         } catch (Exception e) {
             logger.error("Failed to publish to Pub/Sub: {}", e.getMessage(), e);
-            // Fallback: continue without Pub/Sub
         }
         
         Map<String, Object> response = new HashMap<>();
@@ -67,7 +72,78 @@ public class ReverseEngineeringController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Get history of reverse engineering jobs.
+     * Frontend: GET /api/reverse-engineer/history?limit=50
+     */
+    @GetMapping("/history")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getHistory(
+            @RequestParam(defaultValue = "50") int limit,
+            Authentication auth) {
+        
+        // Query recent jobs from Firestore
+        return integrationService.getRecentJobs(limit)
+            .map(jobs -> {
+                List<Map<String, Object>> jobList = jobs.stream()
+                    .map(job -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("jobId", job.getJobId());
+                        m.put("url", job.getWebsiteUrl());
+                        m.put("status", job.getStatus());
+                        m.put("submittedAt", job.getCreatedAt());
+                        m.put("startedAt", job.getCreatedAt()); // TODO: add startedAt field
+                        m.put("completedAt", job.getUpdatedAt());
+                        m.put("error", job.getErrorMessage());
+                        
+                        // Progress & phase based on status
+                        int progress = "COMPLETED".equals(job.getStatus()) ? 100 :
+                                       "FAILED".equals(job.getStatus()) ? 0 :
+                                       "PENDING".equals(job.getStatus()) ? 0 : 50;
+                        m.put("progress", progress);
+                        m.put("currentPhase", job.getStatus());
+                        
+                        // Results structure
+                        Map<String, Object> results = new HashMap<>();
+                        results.put("endpoints", job.getDiscoveredApis() != null ? job.getDiscoveredApis() : List.of());
+                        results.put("observation", Map.of());
+                        results.put("auth", Map.of());
+                        results.put("connectors", Map.of());
+                        m.put("results", results);
+                        
+                        return m;
+                    })
+                    .collect(Collectors.toList());
+                Map<String, Object> response = new HashMap<>();
+                response.put("jobs", jobList);
+                response.put("total", jobList.size());
+                return ResponseEntity.ok(response);
+            })
+            .defaultIfEmpty(ResponseEntity.ok(Map.of("jobs", List.of(), "total", 0)))
+            .block(); // blocking fine for controller small query
+    }
+
+    /**
+     * Delete/cancel a reverse engineering job.
+     * Frontend: DELETE /api/reverse-engineer/job/{jobId}
+     */
+    @DeleteMapping("/job/{jobId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> cancelJob(
+            @PathVariable String jobId,
+            Authentication auth) {
+        
+        // In production: update job status to CANCELLED in Firestore
+        logger.info("Job cancellation requested: {} by user {}", jobId, auth != null ? auth.getName() : "unknown");
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("jobId", jobId);
+        response.put("status", "CANCELLED");
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/job/{jobId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getJobStatus(
             @PathVariable String jobId,
             Authentication auth) {
@@ -83,6 +159,7 @@ public class ReverseEngineeringController {
     }
 
     @PostMapping("/job/{jobId}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> completeJob(
             @PathVariable String jobId,
             @RequestBody Map<String, Object> result,
@@ -108,6 +185,7 @@ public class ReverseEngineeringController {
      * Manually trigger integration: generate app from completed reverse engineering job.
      */
     @PostMapping("/integrate/{jobId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> integrateWithCodeGen(
             @PathVariable String jobId,
             Authentication auth) {

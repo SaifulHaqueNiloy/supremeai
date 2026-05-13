@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * This is the ACTUAL runtime that serves preview URLs.
  */
 @RestController
-@RequestMapping("/simulator/preview")
+@RequestMapping("/api/simulator/preview")
 public class SimulatorRuntimeController {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatorRuntimeController.class);
@@ -41,6 +41,9 @@ public class SimulatorRuntimeController {
 
     @Autowired
     private SimulatorDeploymentService deploymentService;
+
+    @Autowired
+    private WebClient webClient;
 
     @Autowired
     private DeviceEmulationService deviceEmulationService;
@@ -61,8 +64,7 @@ public class SimulatorRuntimeController {
         logger.info("[RUNTIME] Serving preview for app={} device={}", appId, device);
 
         // 1. Validate deployment exists
-        SimulatorDeploymentService.DeploymentRecord record =
-                deploymentService.getDeploymentRecord(appId);
+        SimulatorDeploymentService.DeploymentRecord record = deploymentService.getDeploymentRecord(appId);
 
         if (record == null || record.getStatus() != SimulatorDeploymentService.DeploymentStatus.RUNNING) {
             return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -73,14 +75,16 @@ public class SimulatorRuntimeController {
         return simulatorService.getGeneratedApp(appId)
                 .switchIfEmpty(Mono.error(new RuntimeException("Generated app not found: " + appId)))
                 .flatMap(app -> {
-                    // 3. Apply device emulation
-                    DeviceEmulationService.EmulationContext context =
-                            deviceEmulationService.createContext(device);
+                    // 3. Apply device emulation - optimized to avoid byte[] round-trip
+                    DeviceEmulationService.EmulationContext context = deviceEmulationService.createContext(device);
 
-                    byte[] transformedHtmlBytes = deviceEmulationService.transformHtml(
-                            app.getHtmlContent().getBytes(),
-                            context
-                    );
+                    String html = app.getHtmlContent();
+                    if (html == null || html.isEmpty()) {
+                        logger.warn("[RUNTIME] App {} has no HTML content, serving placeholder", appId);
+                        html = "<!DOCTYPE html><html><head><title>Loading...</title></head><body><h2>App content pending...</h2></body></html>";
+                    }
+
+                    String transformedHtml = deviceEmulationService.transformHtml(html, context);
 
                     // 4. Prepare HTTP response with device-specific headers
                     HttpHeaders headers = new HttpHeaders();
@@ -95,83 +99,87 @@ public class SimulatorRuntimeController {
 
                     String injectedJs = String.format(
                             "<script>\n" +
-                            "  (function() {\n" +
-                            "    const config = {\n" +
-                            "      appId: '%s',\n" +
-                            "      device: '%s',\n" +
-                            "      sessionId: '%s',\n" +
-                            "      wsUrl: '%s'\n" +
-                            "    };\n" +
-                            "    window.__SIMULATOR__ = config;\n" +
-                            "\n" +
-                            "    // 1. Establish WebSocket Connection\n" +
-                            "    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';\n" +
-                            "    const wsFullUrl = protocol + '//' + window.location.host + config.wsUrl;\n" +
-                            "    const socket = new WebSocket(wsFullUrl);\n" +
-                            "\n" +
-                            "    socket.onopen = () => {\n" +
-                            "      console.log('[Simulator] Connected to control channel');\n" +
-                            "      socket.send(JSON.stringify({ type: 'status', data: 'ready', timestamp: new Date().toISOString() }));\n" +
-                            "    };\n" +
-                            "\n" +
-                            "    socket.onmessage = (event) => {\n" +
-                            "      try {\n" +
-                            "        const msg = JSON.parse(event.data);\n" +
-                            "        if (msg.type === 'command') {\n" +
-                            "          console.log('[Simulator] Executing command:', msg.data);\n" +
-                            "          switch(msg.data) {\n" +
-                            "            case 'back': window.history.back(); break;\n" +
-                            "            case 'home': window.location.reload(); break;\n" +
-                            "            case 'forward': window.history.forward(); break;\n" +
-                            "          }\n" +
-                            "        }\n" +
-                            "      } catch (e) {\n" +
-                            "        console.error('[Simulator] Failed to parse command', e);\n" +
-                            "      }\n" +
-                            "    };\n" +
-                            "\n" +
-                            "    // 2. Log Forwarding\n" +
-                            "    const originalLog = console.log;\n" +
-                            "    const originalError = console.error;\n" +
-                            "    const originalWarn = console.warn;\n" +
-                            "\n" +
-                            "    const forwardLog = (level, args) => {\n" +
-                            "      const message = Array.from(args).map(arg => \n" +
-                            "        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)\n" +
-                            "      ).join(' ');\n" +
-                            "      \n" +
-                            "      if (socket.readyState === WebSocket.OPEN) {\n" +
-                            "        socket.send(JSON.stringify({\n" +
-                            "          type: 'log',\n" +
-                            "          level: level,\n" +
-                            "          message: message,\n" +
-                            "          timestamp: new Date().toISOString()\n" +
-                            "        }));\n" +
-                            "      }\n" +
-                            "    };\n" +
-                            "\n" +
-                            "    console.log = function() { originalLog.apply(console, arguments); forwardLog('info', arguments); };\n" +
-                            "    console.error = function() { originalError.apply(console, arguments); forwardLog('error', arguments); };\n" +
-                            "    console.warn = function() { originalWarn.apply(console, arguments); forwardLog('warn', arguments); };\n" +
-                            "\n" +
-                            "    window.onerror = function(message, source, lineno, colno, error) {\n" +
-                            "      forwardLog('error', [`Runtime Error: ${message} at ${source}:${lineno}:${colno}`]);\n" +
-                            "    };\n" +
-                            "\n" +
-                            "    // 3. Notify Parent Dashboard\n" +
-                            "    if (window.parent !== window) {\n" +
-                            "      window.parent.postMessage({\n" +
-                            "        source: 'supremeai-simulator',\n" +
-                            "        type: 'ready',\n" +
-                            "        data: config\n" +
-                            "      }, '*');\n" +
-                            "    }\n" +
-                            "  })();\n" +
-                            "</script>\n",
-                            appId, device, sessionId, websocketUrl
-                    );
+                                    "  (function() {\n" +
+                                    "    const config = {\n" +
+                                    "      appId: '%s',\n" +
+                                    "      device: '%s',\n" +
+                                    "      sessionId: '%s',\n" +
+                                    "      wsUrl: '%s'\n" +
+                                    "    };\n" +
+                                    "    window.__SIMULATOR__ = config;\n" +
+                                    "\n" +
+                                    "    // 1. Establish WebSocket Connection\n" +
+                                    "    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';\n" +
+                                    "    const wsFullUrl = protocol + '//' + window.location.host + config.wsUrl;\n" +
+                                    "    const socket = new WebSocket(wsFullUrl);\n" +
+                                    "\n" +
+                                    "    socket.onopen = () => {\n" +
+                                    "      console.log('[Simulator] Connected to control channel');\n" +
+                                    "      socket.send(JSON.stringify({ type: 'status', data: 'ready', timestamp: new Date().toISOString() }));\n"
+                                    +
+                                    "    };\n" +
+                                    "\n" +
+                                    "    socket.onmessage = (event) => {\n" +
+                                    "      try {\n" +
+                                    "        const msg = JSON.parse(event.data);\n" +
+                                    "        if (msg.type === 'command') {\n" +
+                                    "          console.log('[Simulator] Executing command:', msg.data);\n" +
+                                    "          switch(msg.data) {\n" +
+                                    "            case 'back': window.history.back(); break;\n" +
+                                    "            case 'home': window.location.reload(); break;\n" +
+                                    "            case 'forward': window.history.forward(); break;\n" +
+                                    "          }\n" +
+                                    "        }\n" +
+                                    "      } catch (e) {\n" +
+                                    "        console.error('[Simulator] Failed to parse command', e);\n" +
+                                    "      }\n" +
+                                    "    };\n" +
+                                    "\n" +
+                                    "    // 2. Log Forwarding\n" +
+                                    "    const originalLog = console.log;\n" +
+                                    "    const originalError = console.error;\n" +
+                                    "    const originalWarn = console.warn;\n" +
+                                    "\n" +
+                                    "    const forwardLog = (level, args) => {\n" +
+                                    "      const message = Array.from(args).map(arg => \n" +
+                                    "        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)\n" +
+                                    "      ).join(' ');\n" +
+                                    "      \n" +
+                                    "      if (socket.readyState === WebSocket.OPEN) {\n" +
+                                    "        socket.send(JSON.stringify({\n" +
+                                    "          type: 'log',\n" +
+                                    "          level: level,\n" +
+                                    "          message: message,\n" +
+                                    "          timestamp: new Date().toISOString()\n" +
+                                    "        }));\n" +
+                                    "      }\n" +
+                                    "    };\n" +
+                                    "\n" +
+                                    "    console.log = function() { originalLog.apply(console, arguments); forwardLog('info', arguments); };\n"
+                                    +
+                                    "    console.error = function() { originalError.apply(console, arguments); forwardLog('error', arguments); };\n"
+                                    +
+                                    "    console.warn = function() { originalWarn.apply(console, arguments); forwardLog('warn', arguments); };\n"
+                                    +
+                                    "\n" +
+                                    "    window.onerror = function(message, source, lineno, colno, error) {\n" +
+                                    "      forwardLog('error', [`Runtime Error: ${message} at ${source}:${lineno}:${colno}`]);\n"
+                                    +
+                                    "    };\n" +
+                                    "\n" +
+                                    "    // 3. Notify Parent Dashboard\n" +
+                                    "    if (window.parent !== window) {\n" +
+                                    "      window.parent.postMessage({\n" +
+                                    "        source: 'supremeai-simulator',\n" +
+                                    "        type: 'ready',\n" +
+                                    "        data: config\n" +
+                                    "      }, '*');\n" +
+                                    "    }\n" +
+                                    "  })();\n" +
+                                    "</script>\n",
+                            appId, device, sessionId, websocketUrl);
 
-                    String htmlContent = new String(transformedHtmlBytes);
+                    String htmlContent = transformedHtml;
                     if (htmlContent.contains("</head>")) {
                         htmlContent = htmlContent.replace("</head>", injectedJs + "</head>");
                     } else {
@@ -190,8 +198,7 @@ public class SimulatorRuntimeController {
      */
     @GetMapping("/{appId}/health")
     public Mono<ResponseEntity<Map<String, Object>>> healthCheck(@PathVariable String appId) {
-        SimulatorDeploymentService.DeploymentRecord record =
-                deploymentService.getDeploymentRecord(appId);
+        SimulatorDeploymentService.DeploymentRecord record = deploymentService.getDeploymentRecord(appId);
 
         boolean isHealthy = record != null &&
                 record.getStatus() == SimulatorDeploymentService.DeploymentStatus.RUNNING;
@@ -200,8 +207,7 @@ public class SimulatorRuntimeController {
                 "status", isHealthy ? "HEALTHY" : "UNHEALTHY",
                 "appId", appId,
                 "timestamp", LocalDateTime.now().toString(),
-                "activeSessions", sessionService.getActiveSessionCount()
-        );
+                "activeSessions", sessionService.getActiveSessionCount());
 
         HttpStatus status = isHealthy ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
         return Mono.just(ResponseEntity.status(status).body(payload));
@@ -232,8 +238,7 @@ public class SimulatorRuntimeController {
         return Mono.just(ResponseEntity.ok(Map.of(
                 "received", true,
                 "sessionId", sessionId,
-                "timestamp", LocalDateTime.now().toString()
-        )));
+                "timestamp", LocalDateTime.now().toString())));
     }
 
     /**
@@ -248,16 +253,24 @@ public class SimulatorRuntimeController {
                 .map(app -> {
                     byte[] image = app.getScreenshot();
                     if (image == null || image.length == 0) {
-                        image = new byte[]{
-                                (byte)0x89,(byte)0x50,(byte)0x4E,(byte)0x47,(byte)0x0D,(byte)0x0A,(byte)0x1A,(byte)0x0A,
-                                (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x0D,(byte)0x49,(byte)0x48,(byte)0x44,(byte)0x52,
-                                (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x01,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x01,
-                                (byte)0x08,(byte)0x06,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x1F,(byte)0x15,(byte)0xC4,
-                                (byte)0x89,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x0A,(byte)0x49,(byte)0x44,(byte)0x41,
-                                (byte)0x54,(byte)0x78,(byte)0x9C,(byte)0x63,(byte)0x00,(byte)0x01,(byte)0x00,(byte)0x00,
-                                (byte)0x05,(byte)0x00,(byte)0x01,(byte)0x0D,(byte)0x0A,(byte)0x2D,(byte)0xB4,(byte)0x00,
-                                (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x49,(byte)0x45,(byte)0x4E,(byte)0x44,(byte)0xAE,
-                                (byte)0x42,(byte)0x60,(byte)0x82
+                        image = new byte[] {
+                                (byte) 0x89, (byte) 0x50, (byte) 0x4E, (byte) 0x47, (byte) 0x0D, (byte) 0x0A,
+                                (byte) 0x1A, (byte) 0x0A,
+                                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0D, (byte) 0x49, (byte) 0x48,
+                                (byte) 0x44, (byte) 0x52,
+                                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00,
+                                (byte) 0x00, (byte) 0x01,
+                                (byte) 0x08, (byte) 0x06, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1F,
+                                (byte) 0x15, (byte) 0xC4,
+                                (byte) 0x89, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0A, (byte) 0x49,
+                                (byte) 0x44, (byte) 0x41,
+                                (byte) 0x54, (byte) 0x78, (byte) 0x9C, (byte) 0x63, (byte) 0x00, (byte) 0x01,
+                                (byte) 0x00, (byte) 0x00,
+                                (byte) 0x05, (byte) 0x00, (byte) 0x01, (byte) 0x0D, (byte) 0x0A, (byte) 0x2D,
+                                (byte) 0xB4, (byte) 0x00,
+                                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x49, (byte) 0x45, (byte) 0x4E,
+                                (byte) 0x44, (byte) 0xAE,
+                                (byte) 0x42, (byte) 0x60, (byte) 0x82
                         };
                     }
 
@@ -267,7 +280,7 @@ public class SimulatorRuntimeController {
                     headers.setCacheControl(CacheControl.noCache().getHeaderValue());
 
                     // Cast to Resource to match return type
-                    return new ResponseEntity<>((Resource)resource, headers, HttpStatus.OK);
+                    return new ResponseEntity<>((Resource) resource, headers, HttpStatus.OK);
                 })
                 .defaultIfEmpty(ResponseEntity.<Resource>notFound().build());
     }
@@ -275,10 +288,10 @@ public class SimulatorRuntimeController {
     /**
      * Stream console logs from the running simulator app.
      */
-    @GetMapping(value="/{appId}/logs", produces=MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/{appId}/logs", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> streamLogs(
             @PathVariable String appId,
-            @RequestParam(required=false) String level) {
+            @RequestParam(required = false) String level) {
 
         return Flux.interval(java.time.Duration.ofSeconds(1))
                 .map(seq -> ServerSentEvent.<String>builder()
@@ -291,7 +304,7 @@ public class SimulatorRuntimeController {
     /**
      * Proxy API requests from the simulated app to the actual backend.
      */
-    @RequestMapping(path="/{appId}/api/**")
+    @RequestMapping(path = "/{appId}/api/**")
     public Mono<ResponseEntity<byte[]>> proxyApi(
             @PathVariable String appId,
             ServerWebExchange exchange) {
@@ -303,10 +316,10 @@ public class SimulatorRuntimeController {
         String scheme = exchange.getRequest().getURI().getScheme();
         String host = exchange.getRequest().getURI().getHost();
         int port = exchange.getRequest().getURI().getPort();
-        
+
         String targetUrl = scheme + "://" + host + (port != -1 ? ":" + port : "") + "/api/" + path;
 
-        return WebClient.create().method(exchange.getRequest().getMethod())
+        return webClient.method(exchange.getRequest().getMethod())
                 .uri(targetUrl)
                 .headers(headers -> {
                     exchange.getRequest().getHeaders().forEach((k, v) -> {

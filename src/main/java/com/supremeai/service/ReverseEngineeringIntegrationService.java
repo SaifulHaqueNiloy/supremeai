@@ -7,10 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Bridges completed reverse engineering jobs to code generation.
@@ -120,5 +123,24 @@ public class ReverseEngineeringIntegrationService {
                 return jobRepository.save(job);
             })
             .doOnNext(job -> logger.info("[ReverseEngIntegration] Job marked completed: {}", jobId));
+    }
+
+    /**
+     * Fetch recent reverse engineering jobs (for admin history).
+     * Fetches all, sorts by createdAt descending, limits to N.
+     */
+    public Mono<List<ReverseEngineeringJob>> getRecentJobs(int limit) {
+        return jobRepository.findAll()
+            .collectList()
+            .map(list -> list.stream()
+                .sorted((j1, j2) -> {
+                    if (j1.getCreatedAt() == null && j2.getCreatedAt() == null) return 0;
+                    if (j1.getCreatedAt() == null) return 1;
+                    if (j2.getCreatedAt() == null) return -1;
+                    return j2.getCreatedAt().compareTo(j1.getCreatedAt());
+                })
+                .limit(limit)
+                .collect(Collectors.toList())
+            );
     }
 }
