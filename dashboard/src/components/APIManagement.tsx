@@ -13,7 +13,9 @@ import {
     SearchOutlined,
     ThunderboltOutlined,
     LoadingOutlined,
-    CloseCircleOutlined
+    CloseCircleOutlined,
+    SortAscendingOutlined,
+    SortDescendingOutlined
 } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
 

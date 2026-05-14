@@ -429,15 +429,14 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
             {/* Rename Modal */}
             <Modal
                 title={<span className="text-white font-bold uppercase tracking-wider">Rename Chat Session</span>}
-                visible={isRenameModalVisible}
+                open={isRenameModalVisible}
                 onOk={saveNewName}
                 onCancel={() => setIsRenameModalVisible(false)}
                 okText="Save Changes"
                 cancelText="Cancel"
                 centered
-                overlayClassName="dark-modal-overlay"
                 className="dark-modal"
-                bodyStyle={{ backgroundColor: '#0a0a0a', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}
+                styles={{ body: { backgroundColor: '#0a0a0a', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' } }}
             >
                 <div className="py-4">
                     <label className="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-3">New Session Name</label>

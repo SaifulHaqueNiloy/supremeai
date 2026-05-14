@@ -140,6 +140,40 @@ const AdminLearning: React.FC = () => {
     }
   };
 
+  const handleApproveRecommendation = async (id: string) => {
+    setActionLoading(true);
+    try {
+      const resp = await authUtils.fetchWithAuth(`/api/admin/knowledge/recommendations/${id}/approve`, {
+        method: 'POST'
+      });
+      if (resp.ok) {
+        message.success('রিকমেন্ডেশন অ্যাপ্রুভ করা হয়েছে এবং নতুন ডোমেইন তৈরি হয়েছে');
+        fetchData();
+      }
+    } catch (error) {
+      message.error('অপারেশন ব্যর্থ হয়েছে');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeclineRecommendation = async (id: string) => {
+    setActionLoading(true);
+    try {
+      const resp = await authUtils.fetchWithAuth(`/api/admin/knowledge/recommendations/${id}/decline`, {
+        method: 'POST'
+      });
+      if (resp.ok) {
+        message.success('রিকমেন্ডেশন ডিক্লাইন করা হয়েছে');
+        fetchData();
+      }
+    } catch (error) {
+      message.error('অপারেশন ব্যর্থ হয়েছে');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <AdminLayout title="লার্নিং ম্যানেজমেন্ট">
       <div style={{ marginBottom: 24 }}>
@@ -220,8 +254,8 @@ const AdminLearning: React.FC = () => {
           ) : (
             <EvolutionProposalsTab 
               recommendations={recommendations} 
-              onApprove={(id) => message.success(`Approved recommendation ${id}`)} 
-              onDecline={(id) => message.info(`Declined recommendation ${id}`)} 
+              onApprove={handleApproveRecommendation} 
+              onDecline={handleDeclineRecommendation} 
             />
           )}
         </Tabs.TabPane>

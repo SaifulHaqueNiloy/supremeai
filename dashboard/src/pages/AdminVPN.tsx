@@ -232,24 +232,6 @@ const AdminVPN: React.FC = () => {
            </Button>
          </div>
        </div>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => setIsModalVisible(true)}
-            style={{ 
-              height: '42px',
-              padding: '0 24px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
-              border: 'none',
-              fontWeight: 600,
-              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
-            }}
-          >
-            নতুন VPN যোগ করুন
-          </Button>
-        </div>
-      </div>
 
        {/* Modern Toolbar */}
        <div className="glass-panel admin-toolbar">
@@ -279,14 +261,13 @@ const AdminVPN: React.FC = () => {
                icon={<ReloadOutlined />} 
                onClick={fetchConnections} 
                loading={loading}
-               className="admin-btn-icon"
+               className="admin-btn-icon hover-bright"
                style={{ 
                  borderRadius: 'var(--radius-md)',
                  background: 'rgba(255, 255, 255, 0.05)',
                  border: '1px solid rgba(255, 255, 255, 0.1)',
                  color: '#fff'
                }}
-               className="hover-bright"
              />
            </Tooltip>
 
@@ -319,14 +300,13 @@ const AdminVPN: React.FC = () => {
                <Button 
                  onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
                  icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
-                 className="admin-btn-icon"
+                 className="admin-btn-icon hover-bright"
                  style={{ 
                    borderRadius: 'var(--radius-md)',
                    background: 'rgba(255, 255, 255, 0.05)',
                    border: '1px solid rgba(255, 255, 255, 0.1)',
                    color: '#fff'
                  }}
-                 className="hover-bright"
                />
              </Tooltip>
           </Space>
@@ -371,12 +351,11 @@ const AdminVPN: React.FC = () => {
          onOk={() => form.submit()}
          okText="সেভ করুন"
          cancelText="বাতিল"
-         className="admin-modal"
+         className="admin-modal dark-modal"
          styles={{
            body: { maxWidth: 'calc(100vw - var(--space-6))', width: 'clamp(400px, 50vw, 600px)' }
          }}
         centered
-        className="dark-modal"
         okButtonProps={{ style: { background: '#2563eb', border: 'none', height: '40px', padding: '0 24px', borderRadius: '8px', fontWeight: 700 } }}
         cancelButtonProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', height: '40px', padding: '0 24px', borderRadius: '8px' } }}
       >

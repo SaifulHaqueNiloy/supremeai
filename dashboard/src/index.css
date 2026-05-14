@@ -764,6 +764,7 @@ body {
   }
 }
 
+@container (min-width: 700px) {
   .ai-card {
     padding: var(--space-5);
   }

@@ -197,7 +197,7 @@ const AdminQuotas: React.FC = () => {
         </div>
       </div>
 
-      <QuotaWarningsAlert warnings={warnings} />
+      <QuotaWarningsAlert warningsCount={warnings.length} />
 
       <div className="admin-toolbar">
         <div className="toolbar-section">
@@ -259,7 +259,7 @@ const AdminQuotas: React.FC = () => {
         </div>
       </div>
 
-      <QuotaStats stats={stats} loading={loading} />
+      <QuotaStats stats={stats} />
 
       <Card
         className="glass-card"

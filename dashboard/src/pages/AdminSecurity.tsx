@@ -4,8 +4,7 @@ import {
   ReloadOutlined, 
   DashboardOutlined, 
   SafetyCertificateOutlined,
-  SecurityScanOutlined,
-  ShieldOutlined
+  SecurityScanOutlined
 } from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
 import AISuggestionInformer from '../components/AISuggestionInformer';

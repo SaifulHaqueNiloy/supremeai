@@ -283,14 +283,13 @@ const AdminLogs: React.FC = () => {
               <Button 
                 onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
                 icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
-                className="admin-btn-icon"
+                className="admin-btn-icon hover-bright"
                 style={{ 
                   borderRadius: 'var(--radius-md)',
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   color: '#fff'
                 }}
-                className="hover-bright"
               />
             </Tooltip>
           </div>
@@ -414,9 +413,7 @@ const AdminLogs: React.FC = () => {
           justify-content: center !important;
           padding: 0 !important;
         }
-      `}</style>
-    </AdminLayout>
-  );
+
         .glass-card {
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);

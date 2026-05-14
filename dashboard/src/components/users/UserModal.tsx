@@ -5,7 +5,7 @@ import { User } from './types';
 const { Option } = Select;
 
 interface UserModalProps {
-  visible: boolean;
+  open: boolean;
   editingUser: User | null;
   onCancel: () => void;
   onFinish: (values: any) => void;
@@ -14,7 +14,7 @@ interface UserModalProps {
 }
 
 const UserModal: React.FC<UserModalProps> = ({
-  visible,
+  open,
   editingUser,
   onCancel,
   onFinish,
@@ -24,7 +24,7 @@ const UserModal: React.FC<UserModalProps> = ({
   return (
     <Modal
       title={editingUser ? 'Edit User Profile' : 'Register New User'}
-      open={visible}
+      open={open}
       onCancel={onCancel}
       footer={null}
       width={500}

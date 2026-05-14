@@ -192,7 +192,7 @@ const AdminUsers: React.FC = () => {
         )}
 
         <UserModal
-          visible={modalVisible}
+          open={modalVisible}
           editingUser={editingUser}
           onCancel={() => setModalVisible(false)}
           onFinish={handleSubmit}

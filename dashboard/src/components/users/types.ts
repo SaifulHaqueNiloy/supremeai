@@ -10,4 +10,4 @@ export interface User {
   lastLoginAt: string | null;
 }
 
-export type UserSortField = 'email' | 'displayName' | 'tier' | 'isActive' | 'currentUsage' | 'monthlyQuota' | 'lastLoginAt';
+export type UserSortField = 'email' | 'displayName' | 'tier' | 'isActive' | 'currentUsage' | 'monthlyQuota' | 'lastLoginAt' | 'usagePercent';
