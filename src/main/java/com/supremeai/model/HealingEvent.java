@@ -13,6 +13,8 @@ public class HealingEvent {
     private String reasoning;
     private LocalDateTime timestamp;
     private String component;
+    private boolean canRollback;
+    private String rollbackAction;
 
     public HealingEvent() {
         this.id = UUID.randomUUID().toString();
@@ -49,4 +51,10 @@ public class HealingEvent {
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
     public String getComponent() { return component; }
     public void setComponent(String component) { this.component = component; }
+
+    public boolean isCanRollback() { return canRollback; }
+    public void setCanRollback(boolean canRollback) { this.canRollback = canRollback; }
+
+    public String getRollbackAction() { return rollbackAction; }
+    public void setRollbackAction(String rollbackAction) { this.rollbackAction = rollbackAction; }
 }

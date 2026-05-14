@@ -22,7 +22,12 @@ import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import com.supremeai.provider.AIProvider;
+import com.supremeai.provider.AIProviderFactory;
+import com.supremeai.repository.ProviderRepository;
+import com.supremeai.model.APIProvider;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 public class SelfHealingService {
@@ -44,6 +49,12 @@ public class SelfHealingService {
 
     @Autowired
     private AlertingService alertingService;
+
+    @Autowired
+    private AIProviderFactory providerFactory;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     private final MeterRegistry meterRegistry;
     private final Counter healingSuccessCounter;
@@ -204,17 +215,21 @@ public class SelfHealingService {
     }
 
     private String getKnownFix(String error) {
+        if (error == null) return null;
         if (error.contains("quota") || error.contains("CpuAlloc")) {
             return "Reduced max instances to 10, 1 CPU per instance";
         }
         if (error.contains("OutOfMemory")) {
             return "Increased memory limit to 2Gi";
         }
-        if (error.contains("timeout")) {
+        if (error.contains("timeout") || error.contains("deadline")) {
             return "Increased request timeout to 3600s";
         }
-        if (error.contains("Connection refused")) {
-            return "Restarted service instance";
+        if (error.contains("Connection refused") || error.contains("Unavailable")) {
+            return "Restarted service instance and cleared connection pool";
+        }
+        if (error.contains("401") || error.contains("Unauthorized") || error.contains("Invalid Key")) {
+            return "TRIGGER_KEY_ROTATION";
         }
         return null;
     }
@@ -274,7 +289,7 @@ public class SelfHealingService {
         
         // Advanced Perfection Check:
         boolean hasStructure = code.contains("public") && code.contains("class");
-        boolean hasNoPlaceholders = !code.contains("TODO") && !code.contains("// Implement here");
+        boolean hasNoPlaceholders = !code.contains("TODO") && !code.contains("// Implement here") && !code.contains("...");
         boolean hasNoPrintStackTrace = !code.contains("printStackTrace()");
         
         long openBraces = code.chars().filter(ch -> ch == '{').count();
@@ -282,14 +297,44 @@ public class SelfHealingService {
         boolean bracesMatch = openBraces == closeBraces && openBraces > 0;
 
         // Check for common clean code principles
-        boolean hasProperNaming = !code.contains("var1") && !code.contains("arg0");
+        boolean hasProperNaming = !code.contains("var1") && !code.contains("arg0") && !code.contains("data1");
+        boolean hasErrorHandling = code.contains("try") || code.contains("catch") || code.contains("onError");
+        boolean hasDocumentation = code.contains("/**") || code.contains("@param") || code.contains("@return");
         
-        return hasStructure && hasNoPlaceholders && bracesMatch && hasNoPrintStackTrace && hasProperNaming;
+        // Check for basic syntax validity (rudimentary)
+        boolean hasSemicolons = code.contains(";");
+        
+        return hasStructure && hasNoPlaceholders && bracesMatch && 
+               hasNoPrintStackTrace && hasProperNaming && 
+               hasErrorHandling && hasDocumentation && hasSemicolons;
     }
 
     private String improveCode(String currentCode, String prompt, int iteration) {
-        return currentCode.replace("TODO", "Implemented logic for " + prompt + " in iteration " + (iteration + 1))
-                          .replace("// Implement here", "// Logic verified by Council");
+        log.info("Requesting AI improvement for iteration {}", iteration + 1);
+        
+        String improvementPrompt = String.format(
+            "Improve the following code based on this requirement: %s\n\nCurrent Code:\n%s\n\nReturn ONLY the improved Java code block without any explanation or markdown formatting.",
+            prompt, currentCode
+        );
+
+        return votingService.executeEnsembleVoting(improvementPrompt, Arrays.asList("gemini", "openai"), 30000L)
+            .map(result -> {
+                String response = result.getBestResponse();
+                // Strip markdown if present
+                if (response.contains("```java")) {
+                    response = response.substring(response.indexOf("```java") + 7);
+                    if (response.contains("```")) {
+                        response = response.substring(0, response.indexOf("```"));
+                    }
+                } else if (response.contains("```")) {
+                    response = response.substring(response.indexOf("```") + 3);
+                    if (response.contains("```")) {
+                        response = response.substring(0, response.indexOf("```"));
+                    }
+                }
+                return response.trim();
+            })
+            .block();
     }
 
     // ===== PROACTIVE HEALTH MONITORING =====
@@ -319,31 +364,54 @@ public class SelfHealingService {
     public Mono<APIHealthReport> runProactiveHealthCheck() {
         log.info("Starting proactive health check for all registered providers");
 
-        return apiKeyRepository.findAll()
-            .collectList()
-            .flatMap(keys -> {
-                int total = keys.size();
-                int active = 0;
-                int dead = 0;
-                int rotationDue = 0;
-                List<Map<String, Object>> deadDetails = new ArrayList<>();
-
-                for (var key : keys) {
-                    boolean isAlive = key.getStatus().equalsIgnoreCase("ACTIVE");
-                    if (isAlive) {
-                        active++;
-                        if (key.getAddedAt().isBefore(LocalDateTime.now().minusDays(30))) {
-                            rotationDue++;
-                        }
-                    } else {
-                        dead++;
-                        deadDetails.add(Map.of(
-                            "id", key.getId(),
-                            "provider", key.getProvider(),
-                            "error", "Key status is " + key.getStatus()
-                        ));
-                    }
+        return providerRepository.findAll()
+            .flatMap(provider -> {
+                log.info("Testing connectivity for provider: {}", provider.getName());
+                long start = System.currentTimeMillis();
+                try {
+                    AIProvider aiProvider = providerFactory.getProvider(provider.getName());
+                    return aiProvider.generate("ping")
+                        .timeout(Duration.ofSeconds(10))
+                        .map(res -> {
+                            long latency = System.currentTimeMillis() - start;
+                            provider.setStatus("active");
+                            provider.setLastLatency(latency);
+                            provider.setLastTested(LocalDateTime.now());
+                            return provider;
+                        })
+                        .onErrorResume(e -> {
+                            log.error("Provider {} failed health check: {}", provider.getName(), e.getMessage());
+                            provider.setStatus("error");
+                            provider.setLastErrorMessage(e.getMessage());
+                            provider.setLastTested(LocalDateTime.now());
+                            return Mono.just(provider);
+                        });
+                } catch (Exception e) {
+                    log.error("Failed to get provider instance for {}: {}", provider.getName(), e.getMessage());
+                    provider.setStatus("error");
+                    provider.setLastErrorMessage(e.getMessage());
+                    provider.setLastTested(LocalDateTime.now());
+                    return Mono.just(provider);
                 }
+            })
+            .flatMap(providerRepository::save)
+            .collectList()
+            .flatMap(providers -> {
+                int total = providers.size();
+                int active = (int) providers.stream().filter(p -> "active".equals(p.getStatus())).count();
+                int dead = total - active;
+                int rotationDue = (int) providers.stream()
+                    .filter(p -> p.getAddedAt() != null && p.getAddedAt().isBefore(LocalDateTime.now().minusDays(30)))
+                    .count();
+
+                List<Map<String, Object>> deadDetails = new ArrayList<>();
+                providers.stream()
+                    .filter(p -> !"active".equals(p.getStatus()))
+                    .forEach(p -> deadDetails.add(Map.of(
+                        "id", p.getId() != null ? p.getId() : "unknown",
+                        "provider", p.getName(),
+                        "error", p.getLastErrorMessage() != null ? p.getLastErrorMessage() : "Unknown failure"
+                    )));
 
                 APIHealthReport report = new APIHealthReport(
                     UUID.randomUUID().toString(),
@@ -358,16 +426,26 @@ public class SelfHealingService {
     private void autoRotateDeadKeys(APIHealthReport report) {
         log.info("Initiating auto-rotation for {} dead keys", report.getDeadCount());
         for (Map<String, Object> details : report.getDeadKeyDetails()) {
-            String provider = (String) details.get("provider");
-            log.info("Rotating key for provider: {}", provider);
-            // In a real system, this would call a vault or provider API to get a new key
-            // Here we just mark it for manual rotation or simulate rotation
-            reasoningService.logReasoning(
-                "ROTATION_" + UUID.randomUUID(),
-                "Auto Key Rotation",
-                "Dead key detected for " + provider + ". Requesting new key from vault.",
-                "SelfHealingService"
-            );
+            String providerName = (String) details.get("provider");
+            log.info("Attempting recovery for provider: {}", providerName);
+            
+            providerRepository.findAll()
+                .filter(p -> p.getName().equalsIgnoreCase(providerName))
+                .flatMap(p -> {
+                    p.setStatus("rotating");
+                    return providerRepository.save(p);
+                })
+                .flatMap(p -> {
+                    // Simulate rotation logic - in real world would fetch from vault
+                    log.info("Provider {} status set to ROTATING. Alerting admin.", providerName);
+                    return reasoningService.logReasoningAsync(
+                        "ROTATION_" + UUID.randomUUID(),
+                        "Auto Key Rotation",
+                        "Dead key detected for " + providerName + ". Status moved to ROTATING. Please update API key in dashboard.",
+                        "SelfHealingService"
+                    ).thenReturn(p);
+                })
+                .subscribe();
         }
     }
 

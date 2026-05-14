@@ -55,8 +55,14 @@ public class APIProvider {
     private LocalDateTime lastErrorDate;
     private String deadReason;
     private LocalDateTime deadAt;
+    private Long lastLatency;
+    private String lastErrorMessage;
+    private LocalDateTime lastTested;
+    private LocalDateTime addedAt;
 
-    public APIProvider() {}
+    public APIProvider() {
+        this.addedAt = LocalDateTime.now();
+    }
 
     public APIProvider(String id, String name, String type, String status) {
         this.id = id;
@@ -142,4 +148,16 @@ public class APIProvider {
 
     public Integer getBenchmarkCount() { return benchmarkCount; }
     public void setBenchmarkCount(Integer benchmarkCount) { this.benchmarkCount = benchmarkCount; }
+
+    public Long getLastLatency() { return lastLatency; }
+    public void setLastLatency(Long lastLatency) { this.lastLatency = lastLatency; }
+
+    public String getLastErrorMessage() { return lastErrorMessage; }
+    public void setLastErrorMessage(String lastErrorMessage) { this.lastErrorMessage = lastErrorMessage; }
+
+    public LocalDateTime getLastTested() { return lastTested; }
+    public void setLastTested(LocalDateTime lastTested) { this.lastTested = lastTested; }
+
+    public LocalDateTime getAddedAt() { return addedAt; }
+    public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
 }
