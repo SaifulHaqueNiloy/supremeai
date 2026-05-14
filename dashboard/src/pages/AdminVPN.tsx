@@ -301,13 +301,13 @@ const AdminVPN: React.FC = () => {
                  letterSpacing: '1px', 
                  fontWeight: 700 
                }}>সর্টিং</Text>
-               <Select
-                 value={sortBy}
-                 onChange={val => setSortBy(val)}
-                 style={{ width: clamp(140px, 15vw, 180px) }}
-                 className="premium-select"
-                 dropdownClassName="premium-dropdown"
-               >
+                <Select
+                  value={sortBy}
+                  onChange={val => setSortBy(val)}
+                  style={{ width: 'clamp(140px, 15vw, 180px)' }}
+                  className="premium-select"
+                  dropdownClassName="premium-dropdown"
+                >
                 <Option value="name">নাম</Option>
                 <Option value="status">স্ট্যাটাস</Option>
                 <Option value="host">সার্ভার হোস্ট</Option>

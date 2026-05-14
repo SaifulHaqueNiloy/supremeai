@@ -83,16 +83,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
          <div style={{ position: 'absolute', bottom: 'var(--space-5)', left: 'var(--space-3)', right: 'var(--space-3)' }}>
            <div style={{ padding: 'var(--space-3)', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
              <Text style={{ fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>অথোরাইজেশন ট্রেস</Text>
-             <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'var(--space-3)' }}>
-               {[1,2,3,4,5,6,7,8].map(i => (
-                 <div key={i} style={{
-                   height: clamp(4, 1vw, 8),
-                   flex: 1,
-                   background: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? 'var(--neon-blue)' : 'rgba(255,255,255,0.05)',
-                   boxShadow: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? `0 0 ${clamp(4, 1vw, 8)} var(--neon-blue)` : 'none',
-                   borderRadius: clamp(1, 0.25vw, 3)
-                 }} />
-               ))}
+              <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'var(--space-3)' }}>
+                {[1,2,3,4,5,6,7,8].map(i => (
+                  <div key={i} style={{
+                    height: 'clamp(4px, 1vw, 8px)',
+                    flex: 1,
+                    background: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? 'var(--neon-blue)' : 'rgba(255,255,255,0.05)',
+                    boxShadow: i <= (isAdmin ? 8 : (isAuthenticated ? 4 : 1)) ? '0 0 clamp(4px, 1vw, 8px) var(--neon-blue)' : 'none',
+                    borderRadius: 'clamp(1px, 0.25vw, 3px)'
+                  }} />
+                ))}
              </div>
            </div>
          </div>
