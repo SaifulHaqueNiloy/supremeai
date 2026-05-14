@@ -1,5 +1,6 @@
 package com.supremeai.service;
 
+import com.supremeai.admin.ProviderAdminService;
 import com.supremeai.model.APIProvider;
 import com.supremeai.model.ActivityLog;
 import com.supremeai.repository.ProviderRepository;

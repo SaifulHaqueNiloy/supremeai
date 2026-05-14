@@ -4,7 +4,7 @@ import com.supremeai.service.AutonomousQuestioningEngine;
 import com.supremeai.service.ContextualAIRankingService;
 import com.supremeai.service.MultiAIVotingService;
 import com.supremeai.model.ConsensusResult;
-import com.supremeai.model.VotingDecision;
+import com.supremeai.agentorchestration.VotingDecision;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

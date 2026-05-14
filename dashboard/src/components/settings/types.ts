@@ -10,6 +10,8 @@ export interface SystemConfig {
   emailNotifications?: boolean;
   smsAlerts?: boolean;
   systemMessage?: string;
+  autonomousLearningEnabled?: boolean;
+  autonomousAuditEnabled?: boolean;
   tierQuotas?: Record<string, number>;
   tierMaxApis?: Record<string, number>;
   tierMaxSimulatorInstalls?: Record<string, number>;
@@ -17,4 +19,7 @@ export interface SystemConfig {
   thresholds?: Record<string, number>;
   settings?: Record<string, any>;
   collections?: Record<string, string>;
+  permissions?: Record<string, string>;
+  providers?: Record<string, Record<string, any>>;
 }
+

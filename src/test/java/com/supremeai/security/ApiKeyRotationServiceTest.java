@@ -3,6 +3,7 @@ package com.supremeai.service;
 import com.supremeai.model.APIHealthReport;
 import com.supremeai.model.UserApiKey;
 import com.supremeai.repository.UserApiKeyRepository;
+import com.supremeai.security.ApiKeyRotationService;
 import com.supremeai.security.EncryptionService;
 import com.supremeai.repository.APIHealthReportRepository;
 import org.junit.jupiter.api.BeforeEach;
