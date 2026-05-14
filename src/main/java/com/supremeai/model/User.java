@@ -44,6 +44,8 @@ public class User {
 
     private Long monthlyQuota;
 
+    private String githubInstallationId;
+
     // Constructors
     public User() {
         this.createdAt = java.time.LocalDateTime.now().toString();
@@ -136,6 +138,9 @@ public class User {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public String getGithubInstallationId() { return githubInstallationId; }
+    public void setGithubInstallationId(String githubInstallationId) { this.githubInstallationId = githubInstallationId; }
 
     @Exclude
     public boolean isSystemAdmin() {
