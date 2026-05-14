@@ -120,7 +120,7 @@ public class CodeGenerationServiceEnhanced {
                            ". Include proper annotations, relationships, " +
                            "validation, and Lombok annotations.";
             
-            String aiResponse = aiFallbackOrchestrator.executeWithSupremeIntelligence("CODE_GEN", "entity_gen", prompt);
+            String aiResponse = aiFallbackOrchestrator.executeWithSupremeIntelligence("CODE_GEN", "entity_gen", prompt).block();
             if (aiResponse != null && !aiResponse.isEmpty()) {
                 return aiResponse;
             }

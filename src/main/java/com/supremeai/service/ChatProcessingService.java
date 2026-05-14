@@ -114,16 +114,11 @@ public class ChatProcessingService {
                         });
                 }
 
-                // For NORMAL chat, generate an AI response using the fallback orchestrator
-                return Mono.fromCallable(() -> {
-                    try {
-                        return fallbackOrchestrator.executeWithSupremeIntelligence(
+                return fallbackOrchestrator.executeWithSupremeIntelligence(
                             "chat", "casual_chat", message, userId
-                        );
-                    } catch (Exception e) {
-                        return "আমি দুঃখিত, এই মুহূর্তে আমি উত্তর দিতে পারছি না। (AI Error: " + e.getMessage() + ")";
-                    }
-                }).subscribeOn(Schedulers.boundedElastic())
+                        )
+                .onErrorResume(e -> Mono.just("আমি দুঃখিত, এই মুহূর্তে আমি উত্তর দিতে পারছি না। (AI Error: " + e.getMessage() + ")"))
+                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(aiResponse -> {
                     ChatMessage aiMsg = new ChatMessage();
                     aiMsg.setId(generateId("chat_ai"));

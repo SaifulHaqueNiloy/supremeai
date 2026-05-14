@@ -113,7 +113,7 @@ gcloud run deploy "$BACKEND_SERVICE" \
   --image "gcr.io/${GCP_PROJECT}/${BACKEND_SERVICE}:latest" \
   --region "$REGION" \
   --allow-unauthenticated \
-  --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=$GCP_PROJECT" \
+  --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=$GCP_PROJECT,REDIS_MOCK_ONLINE=true" \
   --cpu 2 \
   --memory 2Gi \
   --min-instances 1 \

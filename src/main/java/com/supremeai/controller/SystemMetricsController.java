@@ -24,6 +24,9 @@ public class SystemMetricsController {
 
     @Autowired(required = false)
     private RedisConnectionFactory redisConnectionFactory;
+    
+    @org.springframework.beans.factory.annotation.Value("${supremeai.redis.mock-online:false}")
+    private boolean mockRedisOnline;
 
     @GetMapping("/resources")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getResourceMetrics() {
@@ -58,12 +61,16 @@ public class SystemMetricsController {
         }
 
         // Redis Metrics
-        if (redisConnectionFactory != null) {
+        if (mockRedisOnline) {
+            metrics.put("redisStatus", "PONG");
+        } else if (redisConnectionFactory != null) {
             try {
                 metrics.put("redisStatus", redisConnectionFactory.getConnection().ping());
             } catch (Exception e) {
                 metrics.put("redisStatus", "DOWN");
             }
+        } else {
+            metrics.put("redisStatus", "DISABLED");
         }
         
         // Time

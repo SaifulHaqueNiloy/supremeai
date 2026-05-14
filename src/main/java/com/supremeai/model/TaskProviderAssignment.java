@@ -48,10 +48,10 @@ public class TaskProviderAssignment {
     /** Auto or manual */
     private String assignmentSource; // "auto" or "manual"
 
-    @com.google.cloud.spring.data.firestore.FieldTimestamp
+    @com.google.cloud.firestore.annotation.ServerTimestamp
     private Date createdAt;
 
-    @com.google.cloud.spring.data.firestore.FieldTimestamp
+    @com.google.cloud.firestore.annotation.ServerTimestamp
     private Date updatedAt;
 
     public TaskProviderAssignment() {}

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/self-healing")
@@ -87,8 +88,7 @@ public class SelfHealingController {
     @PostMapping("/health-check")
     public Mono<ResponseEntity<Iterable<com.supremeai.model.APIHealthReport>>> runHealthCheck() {
         return selfHealingService.runProactiveHealthCheck()
-                .collectList()
-                .map(ResponseEntity::ok);
+                .map(report -> ResponseEntity.ok((Iterable<com.supremeai.model.APIHealthReport>) List.of(report)));
     }
 
     // ===== STATUS =====

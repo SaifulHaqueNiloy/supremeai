@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import com.supremeai.repository.TaskProviderAssignmentRepository;
 
 /**
  * Unified Multi-AI Voting Service
@@ -61,6 +62,22 @@ public class MultiAIVotingService {
     // Dynamic model selection (no hardcoded limit)
     private static final int DEFAULT_MAX_VOTING_PROVIDERS = 10;
 
+    public static final String[] ALL_PROVIDERS = {
+        "gemini", "openai", "claude", "groq", "deepseek", "mistral", "kimi", "ollama", "huggingface"
+    };
+
+    public static final String[] DEFAULT_PROVIDERS = {"gemini", "openai", "claude"};
+
+    private final Map<String, ModelPerformanceTracker> performanceTrackers = new ConcurrentHashMap<>();
+    private final List<ConsensusVote> consensusHistory = new CopyOnWriteArrayList<>();
+    private final Random random = new Random();
+
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_BACKOFF_MS = 1000;
+
+    @Value("${ai.active.providers:gemini,openai,claude}")
+    private String activeProviders;
+
     /**
      * Provider cache TTL in milliseconds
      */
@@ -96,6 +113,14 @@ public class MultiAIVotingService {
      * Selects providers based on task type and admin assignments.
      * Supports 0 to ∞ providers - no hardcoded limits.
      */
+    public Mono<VotingResult> executeEnsembleVoting(
+            String prompt,
+            List<String> selectedModels,
+            long timeoutMs
+    ) {
+        return executeEnsembleVoting(prompt, selectedModels, timeoutMs, null);
+    }
+
     @Cacheable(value = "ai_responses", key = "#prompt + '_ensemble_' + #taskType")
     public Mono<VotingResult> executeEnsembleVoting(
             String prompt,
@@ -164,7 +189,7 @@ public class MultiAIVotingService {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Task assignment lookup failed for '{}': {}", taskType, e.getMessage());
+                logger.warn("Task assignment lookup failed for '{}': {}", taskType, e.getMessage());
             }
 
             // 2. Fallback: use contextual ranking to select best providers
@@ -174,7 +199,7 @@ public class MultiAIVotingService {
                 if (selection.providerName != null) {
                     List<String> ranked = contextualRankingService.getRankingsForTask(
                         ContextualAIRankingService.TaskType.valueOf(taskType.toUpperCase())
-                    );
+                    ).stream().map(r -> r.provider).collect(Collectors.toList());
                     if (ranked != null && !ranked.isEmpty()) {
                         List<String> result = ranked.stream()
                             .limit(DEFAULT_MAX_VOTING_PROVIDERS)
@@ -185,7 +210,7 @@ public class MultiAIVotingService {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Contextual ranking failed for '{}': {}", taskType, e.getMessage());
+                logger.warn("Contextual ranking failed for '{}': {}", taskType, e.getMessage());
             }
 
             // 3. Ultimate fallback: all healthy providers (truly unlimited)

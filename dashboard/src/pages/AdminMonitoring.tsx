@@ -148,14 +148,14 @@ const AdminMonitoring: React.FC = () => {
           <Card hoverable>
             <Statistic
               title="Redis Status"
-              value={metrics?.redisStatus || 'Offline'}
+              value={metrics?.redisStatus === 'PONG' ? 'Online' : (metrics?.redisStatus === 'DISABLED' ? 'Disabled' : 'Offline')}
               prefix={<CloudServerOutlined />}
               valueStyle={{
-                color: metrics?.redisStatus === 'PONG' ? '#52c41a' : '#f5222d',
+                color: metrics?.redisStatus === 'PONG' ? '#52c41a' : (metrics?.redisStatus === 'DISABLED' ? '#8c8c8c' : '#f5222d'),
               }}
             />
-            <Tag color={metrics?.redisStatus === 'PONG' ? 'green' : 'red'} style={{ marginTop: 8 }}>
-              {metrics?.redisStatus === 'PONG' ? 'Operational' : 'Disconnected'}
+            <Tag color={metrics?.redisStatus === 'PONG' ? 'green' : (metrics?.redisStatus === 'DISABLED' ? 'default' : 'red')} style={{ marginTop: 8 }}>
+              {metrics?.redisStatus === 'PONG' ? 'Operational' : (metrics?.redisStatus === 'DISABLED' ? 'Not Configured' : 'Disconnected')}
             </Tag>
           </Card>
         </Col>
@@ -206,7 +206,7 @@ const AdminMonitoring: React.FC = () => {
               {metrics.dbIdleConnections ?? 'N/A'}
             </Descriptions.Item>
             <Descriptions.Item label="Redis Connection">
-              {metrics.redisStatus === 'PONG' ? 'Active' : 'Inactive'}
+              {metrics.redisStatus === 'PONG' ? 'Active' : (metrics.redisStatus === 'DISABLED' ? 'Disabled' : 'Inactive')}
             </Descriptions.Item>
             <Descriptions.Item label="Data Freshness">
               {metrics.timestamp ? `${Math.floor((Date.now() - metrics.timestamp) / 1000)}s ago` : 'N/A'}

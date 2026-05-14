@@ -51,6 +51,11 @@ public class APIHealthReport {
     public int getRotationDueKeys() { return rotationDueKeys; }
     public void setRotationDueKeys(int rotationDueKeys) { this.rotationDueKeys = rotationDueKeys; }
 
+    // Convenience aliases for SelfHealingService
+    public int getTotalCount() { return totalKeysTested; }
+    public int getActiveCount() { return activeKeys; }
+    public int getDeadCount() { return deadKeys; }
+
     public List<Map<String, Object>> getDeadKeyDetails() { return deadKeyDetails; }
     public void setDeadKeyDetails(List<Map<String, Object>> deadKeyDetails) { this.deadKeyDetails = deadKeyDetails; }
 

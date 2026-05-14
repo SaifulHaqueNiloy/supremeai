@@ -428,20 +428,3 @@ const AdminLogs: React.FC = () => {
 };
 
 export default AdminLogs;
-className="admin-table-dark"
-          />
-        </Card>
-      </div>
-      <style>{`
-        .glass-card {
-          background: rgba(255, 255, 255, 0.02) !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          backdrop-filter: blur(10px);
-          border-radius: 16px;
-        }
-      `}</style>
-    </AdminLayout>
-  );
-};
-
-export default AdminLogs;

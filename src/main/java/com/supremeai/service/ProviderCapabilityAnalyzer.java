@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,14 +75,14 @@ public class ProviderCapabilityAnalyzer {
 
             for (TaskDefinition task : taskDefinitions) {
                 benchmarkMonos.add(
-                    Mono.fromCallable(() -> {
+                    Mono.<Map.Entry<String, Double>>fromCallable(() -> {
                         double score = runSingleBenchmark(provider, task);
                         log.info("  {} - {}: {:.2f}", providerName, task.getName(), score);
                         return new AbstractMap.SimpleEntry<>(task.getName(), score);
                     })
                     .onErrorResume(e -> {
                         log.warn("Benchmark failed for {} on {}: {}", providerName, task.getName(), e.getMessage());
-                        return Mono.just(new AbstractMap.SimpleEntry<>(task.getName(), 0.0));
+                        return Mono.<Map.Entry<String, Double>>just(new AbstractMap.SimpleEntry<>(task.getName(), 0.0));
                     })
                 );
             }

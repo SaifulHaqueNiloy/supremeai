@@ -7,6 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import com.supremeai.repository.UserApiKeyRepository;
+import com.supremeai.repository.HealingEventRepository;
+import com.supremeai.model.UserApiKey;
+import com.supremeai.model.HealingEvent;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -134,7 +139,7 @@ public class ProviderHealingStrategies {
 
         autoHealingService.registerHealingStrategy(
                 "openai_auth_error",
-                createApiKeyRotationStrategy("openai", "", ""));
+                createApiKeyRotationStrategy("openai", ""));
 
         // Anthropic প্রোভাইডার হিলিং স্ট্র্যাটেজি
         autoHealingService.registerHealingStrategy(
@@ -143,7 +148,7 @@ public class ProviderHealingStrategies {
 
         autoHealingService.registerHealingStrategy(
                 "anthropic_auth_error",
-                createApiKeyRotationStrategy("anthropic", "", ""));
+                createApiKeyRotationStrategy("anthropic", ""));
 
         // Gemini প্রোভাইডার হিলিং স্ট্র্যাটেজি
         autoHealingService.registerHealingStrategy(
@@ -152,7 +157,7 @@ public class ProviderHealingStrategies {
 
         autoHealingService.registerHealingStrategy(
                 "gemini_auth_error",
-                createApiKeyRotationStrategy("gemini", "", ""));
+                createApiKeyRotationStrategy("gemini", ""));
 
         // Groq প্রোভাইডার হিলিং স্ট্র্যাটেজি
         autoHealingService.registerHealingStrategy(
@@ -161,7 +166,7 @@ public class ProviderHealingStrategies {
 
         autoHealingService.registerHealingStrategy(
                 "groq_auth_error",
-                createApiKeyRotationStrategy("groq", "", ""));
+                createApiKeyRotationStrategy("groq", ""));
 
         // DeepSeek প্রোভাইডার হিলিং স্ট্র্যাটেজি
         autoHealingService.registerHealingStrategy(
@@ -170,7 +175,7 @@ public class ProviderHealingStrategies {
 
         autoHealingService.registerHealingStrategy(
                 "deepseek_auth_error",
-                createApiKeyRotationStrategy("deepseek", "", ""));
+                createApiKeyRotationStrategy("deepseek", ""));
 
         logger.info("All provider healing strategies registered successfully");
     }
