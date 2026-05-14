@@ -147,6 +147,12 @@ public class BrowserController {
             .then(Mono.just(ResponseEntity.ok().build()));
     }
 
+    @DeleteMapping("/credentials/{id}")
+    public Mono<ResponseEntity<Void>> deleteCredential(@PathVariable String id) {
+        return browserService.deleteCredential(id)
+            .then(Mono.just(ResponseEntity.ok().build()));
+    }
+
     @GetMapping("/tasks/{id}/findings")
     public Mono<Map<String, Object>> getFindings(@PathVariable String id) {
         return browserService.getFindingsForTask(id)
@@ -159,6 +165,47 @@ public class BrowserController {
         return browserService.createFinding(finding);
     }
     
+    @GetMapping("/surf/screenshot")
+    public Mono<Map<String, String>> getScreenshot() {
+        return browserService.getScreenshot()
+            .map(s -> Map.of("screenshot", s));
+    }
+
+    @PostMapping("/surf/navigate")
+    public Mono<ResponseEntity<Void>> navigate(@RequestBody Map<String, String> body) {
+        return browserService.navigateTo(body.get("url"))
+            .then(Mono.just(ResponseEntity.ok().build()));
+    }
+
+    @PostMapping("/surf/click")
+    public Mono<ResponseEntity<Void>> click(@RequestBody Map<String, String> body) {
+        return browserService.click(body.get("selector"))
+            .then(Mono.just(ResponseEntity.ok().build()));
+    }
+
+    @PostMapping("/surf/fill")
+    public Mono<ResponseEntity<Void>> fill(@RequestBody Map<String, String> body) {
+        return browserService.fill(body.get("selector"), body.get("value"))
+            .then(Mono.just(ResponseEntity.ok().build()));
+    }
+
+    @PostMapping("/surf/click-at")
+    public Mono<ResponseEntity<Void>> clickAt(@RequestBody Map<String, Integer> body) {
+        return browserService.clickAt(body.get("x"), body.get("y"))
+            .then(Mono.just(ResponseEntity.ok().build()));
+    }
+
+    @PostMapping("/surf/type-key")
+    public Mono<ResponseEntity<Void>> typeKey(@RequestBody Map<String, String> body) {
+        return browserService.typeKey(body.get("key"))
+            .then(Mono.just(ResponseEntity.ok().build()));
+    }
+
+    @GetMapping("/surf/accessibility")
+    public Mono<Map<String, Object>> getAccessibilityTree() {
+        return browserService.getAccessibilityTree();
+    }
+
     /**
      * Test endpoint to simulate activity
      */
@@ -170,5 +217,10 @@ public class BrowserController {
             body.getOrDefault("title", "Unknown Page"),
             body.get("reasoning")
         );
+    }
+    @PostMapping("/tasks/{id}/step")
+    public Mono<ResponseEntity<Void>> executeStep(@PathVariable String id) {
+        return browserService.executeAutonomousStep(id)
+            .then(Mono.just(ResponseEntity.ok().build()));
     }
 }

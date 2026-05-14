@@ -1,31 +1,25 @@
-# Multi-stage Docker build for SupremeAI Spring Boot backend
-# Stage 1: Build with Gradle
-FROM gradle:8.10-jdk21 AS builder
-WORKDIR /app
-COPY --chown=gradle:gradle . .
-RUN gradle bootJar --no-daemon --stacktrace
+# Production Dockerfile for SupremeAI Backend
+# This Dockerfile expects a pre-built app.jar in the root directory
+FROM eclipse-temurin:21-jre-jammy
 
-# Stage 2: Runtime image (Alpine JRE)
-FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Install gcloud CLI (required by SimulatorDeploymentService)
-RUN apk add --no-cache \
-    curl \
-    bash \
-    python3 \
-    && curl -sSL https://sdk.cloud.google.com | bash \
-    && ln -sf /root/google-cloud-sdk/bin/gcloud /usr/bin/gcloud \
-    && gcloud --version
+# Create non-root user for security
+RUN groupadd -r supremeai && useradd -r -g supremeai supremeai
 
-# Copy JAR
-COPY --from=builder /app/build/libs/*.jar app.jar
+# Create logs directory with proper ownership
+RUN mkdir -p logs && chown supremeai:supremeai logs && chmod 750 logs
 
-# Expose Spring Boot default
+# Copy the pre-built JAR from the root
+COPY app.jar app.jar
+
+USER supremeai
+
+ENV PORT=8080
+ENV SPRING_PROFILES_ACTIVE=cloud
+ENV JAVA_OPTS="-Xms512m -Xmx1g -XX:+UseG1GC --enable-preview"
+
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
-
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+# Use exec form for proper signal handling
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

@@ -1,37 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Space, Table, Button, Tag, message, Statistic, Row, Col, InputNumber, Select, Drawer, Alert } from 'antd';
-import { MobileOutlined, ReloadOutlined, DatabaseOutlined, RocketOutlined, EyeOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Typography, Card, Button, message, Row, Col, Drawer, Alert } from 'antd';
+import { ReloadOutlined, RocketOutlined, MobileOutlined } from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
 import { useRole } from '../contexts/RoleContext';
 import SimulatorPreview from '../components/SimulatorPreview';
+import SimulatorStats from '../components/simulator/SimulatorStats';
+import SimulationControlCard from '../components/simulator/SimulationControlCard';
+import DeploymentHistoryTable from '../components/simulator/DeploymentHistoryTable';
+import QuotaAdminCard from '../components/simulator/QuotaAdminCard';
+import { DeploymentRecord, Project, SimulatorStatsData } from '../components/simulator/types';
 
-const { Title, Text } = Typography;
-const { Option } = Select;
-
-interface DeploymentRecord {
-  appId: string;
-  deviceType: string;
-  previewUrl: string;
-  status: string;
-  deployedAt: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  type: string;
-}
+const { Title } = Typography;
 
 const AdminSimulator: React.FC = () => {
   const { isAdmin, isGuest, user } = useRole();
-  console.log('[AdminSimulator] User:', user?.email, 'isAdmin:', isAdmin, 'isGuest:', isGuest);
   const [loading, setLoading] = useState(false);
   const [deployments, setDeployments] = useState<DeploymentRecord[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedAppId, setSelectedAppId] = useState<string | undefined>();
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [stats, setStats] = useState({
-    totalDeployments: 0
+  const [stats, setStats] = useState<SimulatorStatsData>({
+    totalDeployments: 0,
+    activeSessions: 0
   });
 
   const fetchData = async () => {
@@ -42,35 +32,35 @@ const AdminSimulator: React.FC = () => {
     
     setLoading(true);
     try {
-      // Fetch deployments based on role
       const endpoint = isAdmin ? '/api/simulator/admin/usage' : '/api/simulator/installed';
       const usageRes = await fetchWithAuth(endpoint);
       
       if (usageRes.ok) {
         const data = await usageRes.json();
-        // Backend returns slightly different shapes for admin vs user
         if (isAdmin) {
-          setDeployments(data.deployments || []);
+          const records = data.deployments || [];
+          setDeployments(records);
           setStats({
-            totalDeployments: data.totalDeployments || 0
+            totalDeployments: data.totalDeployments || 0,
+            activeSessions: records.filter((d: any) => d.status === 'RUNNING').length
           });
         } else {
-          // Normal user response from /installed has 'installedApps'
           const apps = data.installedApps || [];
-          setDeployments(apps.map((a: any) => ({
+          const mapped = apps.map((a: any) => ({
             appId: a.appId,
             deviceType: a.deviceType || 'UNKNOWN',
             previewUrl: a.previewUrl,
             status: a.status,
             deployedAt: a.installedAt
-          })));
+          }));
+          setDeployments(mapped);
           setStats({
-            totalDeployments: apps.length
+            totalDeployments: apps.length,
+            activeSessions: mapped.filter((d: any) => d.status === 'RUNNING').length
           });
         }
       }
 
-      // Fetch projects to allow simulation
       const projectsRes = await fetchWithAuth('/api/projects');
       if (projectsRes.ok) {
         const data = await projectsRes.json();
@@ -109,70 +99,15 @@ const AdminSimulator: React.FC = () => {
     }
   };
 
-  const columns = [
-    { 
-      title: 'অ্যাপ আইডি', 
-      dataIndex: 'appId', 
-      key: 'appId',
-      render: (id: string) => <Text code>{id}</Text>
-    },
-    { 
-      title: 'ডিভাইস টাইপ', 
-      dataIndex: 'deviceType', 
-      key: 'deviceType',
-      render: (type: string) => <Tag color="blue">{type}</Tag>
-    },
-    { 
-      title: 'স্ট্যাটাস', 
-      dataIndex: 'status', 
-      key: 'status', 
-      render: (status: string) => (
-        <Tag color={status === 'RUNNING' ? 'green' : status === 'FAILED' ? 'red' : 'orange'}>
-          {status}
-        </Tag>
-      )
-    },
-    { 
-      title: 'ডিপ্লয়মেন্ট সময়', 
-      dataIndex: 'deployedAt', 
-      key: 'deployedAt',
-      render: (date: string) => new Date(date).toLocaleString()
-    },
-    { 
-      title: 'অ্যাকশন', 
-      key: 'actions', 
-      render: (_: any, record: DeploymentRecord) => (
-        <Space>
-          <Button 
-            size="small" 
-            type="primary" 
-            icon={<EyeOutlined />}
-            onClick={() => handleSimulate(record.appId)}
-          >
-            লাইভ প্রিভিউ
-          </Button>
-          <Button 
-            size="small" 
-            href={record.previewUrl} 
-            target="_blank"
-            disabled={!record.previewUrl}
-          >
-            এক্সটার্নাল
-          </Button>
-        </Space>
-      )
-    },
-  ];
-
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: 24, background: '#0a0a0c', minHeight: '100vh' }}>
       {isGuest && (
         <Alert
           message="গেস্ট মোড প্রিভিউ"
           description="সিমুলেটর ম্যানেজমেন্টের অ্যাডভান্সড ফিচারগুলো ব্যবহারের জন্য অনুগ্রহ করে লগইন করুন।"
           type="warning"
           showIcon
-          style={{ marginBottom: 24, borderRadius: 8 }}
+          style={{ marginBottom: 24, borderRadius: 12, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
           action={
             <Button size="small" type="primary" onClick={() => window.location.href = '/login'}>
               লগইন করুন
@@ -180,78 +115,38 @@ const AdminSimulator: React.FC = () => {
           }
         />
       )}
+
       <Row gutter={[24, 24]}>
         <Col span={16}>
-          <Title level={2} style={{ marginBottom: 24, fontWeight: 700 }}>
+          <Title level={2} style={{ marginBottom: 24, fontWeight: 700, color: '#fff' }}>
             সিমুলেটর ম্যানেজমেন্ট
           </Title>
 
-          <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-            <Col span={12}>
-              <Card bordered={false} className="glass-card">
-                <Statistic
-                  title="মোট ডিপ্লয়মেন্ট"
-                  value={stats.totalDeployments}
-                  prefix={<RocketOutlined />}
-                  valueStyle={{ color: '#60a5fa' }}
-                />
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card bordered={false} className="glass-card">
-                <Statistic
-                  title="অ্যাক্টিভ সেশন"
-                  value={deployments.filter(d => d.status === 'RUNNING').length}
-                  prefix={<MobileOutlined />}
-                  valueStyle={{ color: '#10b981' }}
-                />
-              </Card>
-            </Col>
-          </Row>
+          <SimulatorStats stats={stats} />
+
+          <SimulationControlCard 
+            projects={projects}
+            selectedAppId={selectedAppId}
+            onSelectAppId={setSelectedAppId}
+            onOpenSimulator={() => setPreviewOpen(true)}
+          />
 
           <Card
             className="glass-card"
-            style={{ borderRadius: 12 }}
-            title={<><RocketOutlined /> নতুন সিমুলেশন শুরু করুন</>}
+            style={{ 
+              borderRadius: 16, 
+              marginTop: 24,
+              background: 'rgba(255,255,255,0.02)', 
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}
+            title={<span style={{ color: '#fff' }}><MobileOutlined /> রিসেন্ট সেশনসমূহ</span>}
+            extra={<Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading} type="text" style={{ color: '#fff' }}>রিফ্রেশ</Button>}
           >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Text type="secondary">একটি প্রজেক্ট সিলেক্ট করুন যা আপনি সিমুলেট করতে চান:</Text>
-              <Space>
-                <Select 
-                  placeholder="প্রজেক্ট নির্বাচন করুন" 
-                  style={{ width: 300 }}
-                  onChange={setSelectedAppId}
-                  value={selectedAppId}
-                >
-                  {projects.map(p => (
-                    <Option key={p.id} value={p.id}>{p.name} ({p.type})</Option>
-                  ))}
-                </Select>
-                <Button 
-                  type="primary" 
-                  icon={<PlayCircleOutlined />} 
-                  disabled={!selectedAppId}
-                  onClick={() => setPreviewOpen(true)}
-                >
-                  সিমুলেটর ওপেন করুন
-                </Button>
-              </Space>
-            </Space>
-          </Card>
-
-          <Card
-            className="glass-card"
-            style={{ borderRadius: 12, marginTop: 24 }}
-            title={<><MobileOutlined /> রিসেন্ট সেশনসমূহ</>}
-            extra={<Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>রিফ্রেশ</Button>}
-          >
-            <Table 
-              columns={columns} 
-              dataSource={deployments} 
-              rowKey="appId"
+            <DeploymentHistoryTable 
+              deployments={deployments}
               loading={loading}
-              pagination={{ pageSize: 5 }}
-              size="middle"
+              onRefresh={fetchData}
+              onSimulate={handleSimulate}
             />
           </Card>
         </Col>
@@ -260,55 +155,53 @@ const AdminSimulator: React.FC = () => {
           <SimulatorPreview appId={selectedAppId} />
           
           {isAdmin && (
-            <Card
-              className="glass-card"
-              style={{ borderRadius: 12, marginTop: 24 }}
-              title={<><DatabaseOutlined /> কোটা অ্যাডমিনিস্ট্রেশন</>}
-            >
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                সিমুলেটর কোটা ম্যানেজ করতে ইউজার আইডি ব্যবহার করুন:
-              </Text>
-              <div style={{ marginTop: 16 }}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <InputNumber 
-                    placeholder="Quota (1-20)" 
-                    min={1} 
-                    max={20} 
-                    id="quotaInput"
-                    style={{ width: '100%' }}
-                  />
-                  <Button 
-                    type="primary"
-                    block
-                    onClick={() => {
-                      const userId = window.prompt('User ID দিন:');
-                      const quota = (document.getElementById('quotaInput') as HTMLInputElement)?.value;
-                      if (userId && quota) handleSetQuota(userId, parseInt(quota));
-                    }}
-                  >
-                    কোটা সেট করুন
-                  </Button>
-                </Space>
-              </div>
-            </Card>
+            <QuotaAdminCard onSetQuota={handleSetQuota} />
           )}
         </Col>
       </Row>
 
       <Drawer
-        title={`সিমুলেটর প্রিভিউ: ${selectedAppId}`}
+        title={<span style={{ color: '#fff' }}>সিমুলেটর প্রিভিউ: {selectedAppId}</span>}
         placement="right"
         width="80%"
         onClose={() => setPreviewOpen(false)}
         open={previewOpen}
-        bodyStyle={{ background: '#0a0a0c', padding: 0 }}
+        bodyStyle={{ background: '#000', padding: 0 }}
+        headerStyle={{ background: '#1a1a1a', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
       >
         <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000' }}>
           <SimulatorPreview appId={selectedAppId} />
         </div>
       </Drawer>
+
+      <style>{`
+        .admin-table-dark .ant-table {
+          background: transparent !important;
+          color: #fff !important;
+        }
+        .admin-table-dark .ant-table-thead > tr > th {
+          background: rgba(255,255,255,0.03) !important;
+          color: rgba(255,255,255,0.45) !important;
+          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+        }
+        .admin-table-dark .ant-table-tbody > tr > td {
+          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+        }
+        .admin-table-dark .ant-table-tbody > tr:hover > td {
+          background: rgba(255,255,255,0.05) !important;
+        }
+        .glass-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .glass-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+      `}</style>
     </div>
   );
 };
 
 export default AdminSimulator;
+

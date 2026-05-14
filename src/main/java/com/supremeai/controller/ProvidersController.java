@@ -15,9 +15,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
+import com.supremeai.service.*;
+import com.supremeai.model.*;
+import com.supremeai.repository.*;
+import com.supremeai.admin.AdminDashboardService;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin/providers")
@@ -34,11 +37,21 @@ public class ProvidersController extends BaseAdminController<APIProvider, String
     @Autowired
     private AIProviderDiscoveryService discoveryService;
 
-    @Autowired
-    private com.supremeai.provider.AIProviderFactory aiProviderFactory;
+    private final AdminDashboardService adminDashboardService;
+    private final ProviderRoleSuggestionService roleSuggestionService;
+    private final AdminProviderValidationService adminProviderValidationService;
 
-    public ProvidersController(ProviderRepository providerRepository) {
+    @Autowired
+    public ProvidersController(ProviderRepository providerRepository,
+                             ActivityLogRepository activityLogRepository,
+                             AdminDashboardService adminDashboardService,
+                             ProviderRoleSuggestionService roleSuggestionService,
+                             AdminProviderValidationService adminProviderValidationService) {
         this.providerRepository = providerRepository;
+        this.activityLogRepository = activityLogRepository;
+        this.adminDashboardService = adminDashboardService;
+        this.roleSuggestionService = roleSuggestionService;
+        this.adminProviderValidationService = adminProviderValidationService;
     }
 
     private String getCurrentAdminUserId() {
@@ -257,21 +270,33 @@ public class ProvidersController extends BaseAdminController<APIProvider, String
                 .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.<String>error("Provider not found")));
     }
 
+    @GetMapping("/{id}/suggest-roles")
+    public Mono<ResponseEntity<ApiResponse<List<String>>>> suggestRoles(@PathVariable String id) {
+        return providerRepository.findById(id)
+                .map(provider -> ResponseEntity.ok(ApiResponse.ok(roleSuggestionService.suggestRoles(provider))))
+                .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.error("Provider not found")));
+    }
+
     @PatchMapping("/{id}/capability")
     public Mono<ResponseEntity<ApiResponse<APIProvider>>> patchCapability(
             @PathVariable String id, 
-            @RequestBody Map<String, Boolean> capabilities) {
+            @RequestBody Map<String, Object> updates) {
         String adminUserId = getCurrentAdminUserId();
         return providerRepository.findById(id)
                 .flatMap(provider -> {
-                    if (capabilities.containsKey("canCommunicate")) {
-                        provider.setCanCommunicate(capabilities.get("canCommunicate"));
+                    if (updates.containsKey("canCommunicate")) {
+                        provider.setCanCommunicate((Boolean) updates.get("canCommunicate"));
                     }
-                    if (capabilities.containsKey("canExecuteTasks")) {
-                        provider.setCanExecuteTasks(capabilities.get("canExecuteTasks"));
+                    if (updates.containsKey("canExecuteTasks")) {
+                        provider.setCanExecuteTasks((Boolean) updates.get("canExecuteTasks"));
                     }
-                    if (capabilities.containsKey("canParticipateInVoting")) {
-                        provider.setCanParticipateInVoting(capabilities.get("canParticipateInVoting"));
+                    if (updates.containsKey("canParticipateInVoting")) {
+                        provider.setCanParticipateInVoting((Boolean) updates.get("canParticipateInVoting"));
+                    }
+                    if (updates.containsKey("assignedRoles")) {
+                        @SuppressWarnings("unchecked")
+                        List<String> roles = (List<String>) updates.get("assignedRoles");
+                        provider.setAssignedRoles(roles);
                     }
                     
                     return providerRepository.save(provider)
@@ -282,11 +307,52 @@ public class ProvidersController extends BaseAdminController<APIProvider, String
                                 log.setCategory("PROVIDER_MANAGEMENT");
                                 log.setSeverity("INFO");
                                 log.setOutcome("SUCCESS");
-                                log.setDetails("Updated capabilities for provider: " + id + " (Comm: " + saved.isCanCommunicate() + ", Task: " + saved.isCanExecuteTasks() + ", Vote: " + saved.isCanParticipateInVoting() + ")");
+                                log.setDetails("Updated capabilities/roles for provider: " + id);
                                 return activityLogRepository.save(log).thenReturn(saved);
                             });
                 })
                 .map(saved -> ResponseEntity.ok(ApiResponse.ok(saved)))
                 .defaultIfEmpty(ResponseEntity.status(404).body(ApiResponse.<APIProvider>error("Provider not found")));
+    }
+
+    @PostMapping("/test-all")
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> testAllProviders() {
+        // This triggers the validation service manually in background
+        Mono.fromRunnable(() -> adminProviderValidationService.validateAllActiveProviders())
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .subscribe(); // Run in background
+
+        return Mono.just(ResponseEntity.ok(ApiResponse.ok(Map.of(
+            "status", "validation_started",
+            "message", "সিস্টেম সব কী চেক করা শুরু করেছে। কিছুক্ষণের মধ্যে রিপোর্ট আপডেট হবে।"
+        ))));
+    }
+
+    @GetMapping("/health-stats")
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> getHealthStats() {
+        return providerRepository.findAll().collectList()
+                .map(list -> {
+                    long active = list.stream().filter(p -> "active".equals(p.getStatus())).count();
+                    long error = list.stream().filter(p -> "error".equals(p.getStatus())).count();
+                    long dead = list.stream().filter(p -> "dead".equals(p.getStatus())).count();
+                    
+                    return ResponseEntity.ok(ApiResponse.ok(Map.of(
+                        "total", list.size(),
+                        "active", active,
+                        "error", error,
+                        "dead", dead,
+                        "healthScore", list.size() > 0 ? (active * 100 / list.size()) : 100
+                    )));
+                });
+    }
+
+    @DeleteMapping("/bulk-remove-dead")
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> removeDeadProviders() {
+        return providerRepository.findAll()
+                .filter(p -> "dead".equals(p.getStatus()))
+                .flatMap(p -> providerRepository.deleteById(p.getId()))
+                .then(Mono.just(ResponseEntity.ok(ApiResponse.ok(Map.of(
+                    "message", "সব ডেড কী সফলভাবে রিমুভ করা হয়েছে।"
+                )))));
     }
 }

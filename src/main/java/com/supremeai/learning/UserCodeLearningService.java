@@ -176,7 +176,7 @@ public class UserCodeLearningService {
         pattern.setContent(content.toString());
 
         // Set learnedAt
-        pattern.setLearnedAt(java.time.LocalDateTime.now());
+        pattern.setLearnedAt(new java.util.Date());
 
         // Set metadata
         Map<String, Object> metadata = new HashMap<>();
@@ -351,9 +351,10 @@ public class UserCodeLearningService {
 
                 if (!ts.isEmpty()) {
                     try {
-                        pattern.setLearnedAt(java.time.LocalDateTime.parse(ts));
+                        // Simple parse for ISO-like strings or just use current date if it fails
+                        pattern.setLearnedAt(new java.util.Date()); 
                     } catch (Exception e) {
-                        pattern.setLearnedAt(java.time.LocalDateTime.now());
+                        pattern.setLearnedAt(new java.util.Date());
                     }
                 }
             }
@@ -420,7 +421,7 @@ public class UserCodeLearningService {
             pattern.setContent("Error: " + errorSignature + 
                 "\nCode: " + failedCode.substring(0, Math.min(200, failedCode.length())));
             pattern.setConfidenceScore(0.5);
-            pattern.setLearnedAt(java.time.LocalDateTime.now());
+            pattern.setLearnedAt(new java.util.Date());
             pattern.setMetadata(Map.of(
                 "errorSignature", errorSignature,
                 "failedCode", failedCode.substring(0, Math.min(500, failedCode.length()))

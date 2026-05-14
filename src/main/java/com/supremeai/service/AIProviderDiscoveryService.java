@@ -2,9 +2,12 @@ package com.supremeai.service;
 
 import com.supremeai.model.APIProvider;
 import com.supremeai.provider.AIProviderFactory;
+import com.google.cloud.run.v2.ServicesClient;
+import com.google.cloud.run.v2.LocationName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -13,18 +16,14 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Collectors;
 
 /**
  * Service for discovering AI models from internet registries, cloud deployments, and local systems.
  * Implements the "Zero-Hardcoding" requirement for AI Provider Hub.
- * (ইন্টারনেট রেজিস্ট্রি, ক্লাউড ডিপ্লয়মেন্ট এবং লোকাল সিস্টেম থেকে এআই মডেল খুঁজে বের করার সার্ভিস)
+ * Uses Cloud Run Admin API v2 for cloud deployment scanning (gcloud CLI নির্ভরতা অপসারিত).
  */
-@Service
+@org.springframework.stereotype.Service
 public class AIProviderDiscoveryService {
 
     private static final Logger logger = LoggerFactory.getLogger(AIProviderDiscoveryService.class);
@@ -35,8 +34,14 @@ public class AIProviderDiscoveryService {
     @Autowired
     private WebClient webClient;
 
-    @org.springframework.beans.factory.annotation.Value("${ai.providers.ollama.endpoint:http://localhost:11434}")
+    @Value("${ai.providers.ollama.endpoint:http://localhost:11434}")
     private String ollamaEndpoint;
+
+    @Value("${gcp.project-id:supremeai-a}")
+    private String gcpProjectId;
+
+    @Value("${gcp.region:us-central1}")
+    private String gcpRegion;
 
     /**
      * Searches for AI models across various registries.
@@ -66,7 +71,7 @@ public class AIProviderDiscoveryService {
                 .collectList()
                 .onErrorReturn(new ArrayList<>());
 
-        // 2. OpenRouter (Static-ish but can be fetched)
+        // 2. OpenRouter
         Mono<List<Map<String, Object>>> orModels = webClient.get()
                 .uri("https://openrouter.ai/api/v1/models")
                 .retrieve()
@@ -113,9 +118,11 @@ public class AIProviderDiscoveryService {
 
     /**
      * Scans for local or cloud-deployed models (e.g. Ollama, Cloud Run endpoints).
+     * Cloud Run scanning uses Admin API v2 instead of gcloud CLI.
      */
     @SuppressWarnings("unchecked")
     public Flux<Map<String, Object>> scanDeployments() {
+        // 1. Local Ollama models
         Flux<Map<String, Object>> ollamaModels = webClient.get()
                 .uri(ollamaEndpoint + "/api/tags")
                 .retrieve()
@@ -134,46 +141,35 @@ public class AIProviderDiscoveryService {
                 })
                 .onErrorResume(e -> Flux.empty());
 
-        Flux<Map<String, Object>> cloudRunModels = Flux.defer(() -> {
-            try {
-                Process process = new ProcessBuilder("gcloud", "run", "services", "list", "--format=json").start();
-                return Mono.fromCallable(() -> {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                        String json = reader.lines().collect(Collectors.joining("\n"));
-                        ObjectMapper mapper = new ObjectMapper();
-                        List<Map<String, Object>> services = mapper.readValue(json, List.class);
-                        
-                        return services.stream()
-                            .filter(s -> {
-                                String name = (String) ((Map) s.get("metadata")).get("name");
-                                String n = name.toLowerCase();
-                                return n.contains("ai") || n.contains("model") || n.contains("llama") || 
-                                       n.contains("mistral") || n.contains("gpt") || n.contains("embed") ||
-                                       n.contains("vision");
-                            })
-                            .map(s -> {
-                                Map metadata = (Map) s.get("metadata");
-                                Map status = (Map) s.get("status");
-                                String name = (String) metadata.get("name");
-                                String url = (String) status.get("url");
-                                return Map.<String, Object>of(
-                                    "name", name,
-                                    "provider", "google-cloud",
-                                    "type", "llm",
-                                    "baseUrl", url,
-                                    "description", "Cloud Run Deployment: " + name
-                                );
-                            })
-                            .collect(Collectors.toList());
+        // 2. Cloud Run services via Admin API v2 (gcloud CLI অপসারিত)
+        Flux<Map<String, Object>> cloudRunModels = Mono.fromCallable(() -> {
+            List<Map<String, Object>> result = new ArrayList<>();
+            try (ServicesClient client = ServicesClient.create()) {
+                LocationName parent = LocationName.of(gcpProjectId, gcpRegion);
+                for (com.google.cloud.run.v2.Service service : client.listServices(parent).iterateAll()) {
+                    String name = service.getName();
+                    String simpleName = name.contains("/") ? name.substring(name.lastIndexOf("/") + 1) : name;
+                    String lower = simpleName.toLowerCase();
+
+                    // AI/ML সার্ভিস ফিল্টার
+                    if (lower.contains("ai") || lower.contains("model") || lower.contains("llama") ||
+                        lower.contains("mistral") || lower.contains("gpt") || lower.contains("embed") ||
+                        lower.contains("vision")) {
+                        result.add(Map.<String, Object>of(
+                            "name", simpleName,
+                            "provider", "google-cloud",
+                            "type", "llm",
+                            "baseUrl", service.getUri(),
+                            "description", "Cloud Run Deployment: " + simpleName
+                        ));
                     }
-                }).flatMapMany(Flux::fromIterable);
+                }
             } catch (Exception e) {
-                logger.error("Failed to scan Cloud Run services: {}", e.getMessage());
-                return Flux.empty();
+                logger.warn("Cloud Run scan failed (non-critical): {}", e.getMessage());
             }
-        });
+            return result;
+        }).flatMapMany(Flux::fromIterable);
 
         return Flux.merge(ollamaModels, cloudRunModels);
     }
 }
-

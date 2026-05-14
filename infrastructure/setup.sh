@@ -141,6 +141,7 @@ log_info "=== Step 4: Creating Pub/Sub Resources ==="
 
 TOPICS=(
   "reverse-engineering-jobs"
+  "reverse-engineering-results"
   "simulator-jobs"
   "ai-consensus-requests"
   "code-generation-jobs"

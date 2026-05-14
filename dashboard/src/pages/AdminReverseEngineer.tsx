@@ -1,46 +1,29 @@
+// AdminReverseEngineer.tsx - Universal Automation & Reverse Engineering (Modularized)
+
 import React, { useState, useEffect } from 'react';
-import {
-  Typography, Card, Space, Table, Button, Tag, message, Row, Col,
-  Input, Select, Progress, Modal, Descriptions, Spin, Empty, Timeline, Tooltip
-} from 'antd';
-import {
-  CloudServerOutlined, CheckCircleOutlined, CloseCircleOutlined,
-  PlayCircleOutlined, DownloadOutlined, ReloadOutlined, EyeOutlined,
-  DeleteOutlined, CodeOutlined, ApartmentOutlined
-} from '@ant-design/icons';
+import { Typography, message, Row, Col, Button, Space } from 'antd';
+import { ReloadOutlined, ApartmentOutlined, SettingOutlined } from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
 
-const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
+// Import Modular Components
+import { Job } from '../components/reverse-engineer/types';
+import AutomationLaunchCard from '../components/reverse-engineer/AutomationLaunchCard';
+import TaskMonitorTable from '../components/reverse-engineer/TaskMonitorTable';
+import AlternativeSuggestionsList from '../components/reverse-engineer/AlternativeSuggestionsList';
+import JobDetailsModal from '../components/reverse-engineer/JobDetailsModal';
 
-interface Job {
-  jobId: string;
-  url: string;
-  status: string;
-  progress: number;
-  currentPhase?: string;
-  submittedAt: string;
-  startedAt?: string;
-  completedAt?: string;
-  error?: string;
-  results?: {
-    observation?: any;
-    auth?: any;
-    endpoints?: string[];
-    connectors?: Record<string, { code: string; filename: string; status: string; validation?: any }>;
-  };
-}
+const { Title, Text } = Typography;
 
 const AdminReverseEngineer: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
-  const [ submitting, setSubmitting ] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [url, setUrl] = useState('');
-  const [languages, setLanguages] = useState(['python', 'typescript', 'java', 'swift', 'csharp', 'go']);
+  const [taskType, setTaskType] = useState('reverse_engineer');
+  const [instructions, setInstructions] = useState('');
+  const [languages, setLanguages] = useState(['python', 'typescript', 'java']);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewCode, setPreviewCode] = useState('');
-  const [previewLang, setPreviewLang] = useState('');
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -59,14 +42,13 @@ const AdminReverseEngineer: React.FC = () => {
 
   useEffect(() => {
     fetchJobs();
-    // Poll every 10 sec
-    const interval = setInterval(fetchJobs, 10000);
+    const interval = setInterval(fetchJobs, 15000);
     return () => clearInterval(interval);
   }, []);
 
   const submitJob = async () => {
     if (!url.trim()) {
-      message.error('Please enter a URL');
+      message.error('Please enter a target URL');
       return;
     }
     setSubmitting(true);
@@ -75,16 +57,19 @@ const AdminReverseEngineer: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({
           url,
+          taskType,
+          customInstructions: instructions,
           target_languages: languages,
-          user_id: 'admin' // TODO: get from auth context
+          user_id: 'admin'
         })
       });
       if (res.ok) {
-        message.success('Job submitted successfully');
+        message.success('Automation task submitted successfully');
         setUrl('');
+        setInstructions('');
         fetchJobs();
       } else {
-        message.error('Failed to submit job');
+        message.error('Failed to submit task');
       }
     } catch (e) {
       message.error('Network error');
@@ -97,7 +82,7 @@ const AdminReverseEngineer: React.FC = () => {
     try {
       const res = await fetchWithAuth(`/api/reverse-engineer/job/${jobId}`, { method: 'DELETE' });
       if (res.ok) {
-        message.success('Job cancelled');
+        message.success('Task cancelled');
         fetchJobs();
       }
     } catch (e) {
@@ -105,192 +90,123 @@ const AdminReverseEngineer: React.FC = () => {
     }
   };
 
-  const columns = [
-    {
-      title: 'Job ID',
-      dataIndex: 'jobId',
-      key: 'jobId',
-      render: (id: string) => <Text code copyable>{id.slice(0, 8)}</Text>
-    },
-    {
-      title: 'URL',
-      dataIndex: 'url',
-      key: 'url',
-      render: (url: string) => <Text ellipsis style={{ maxWidth: 200 }}>{url}</Text>
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        const color = status === 'COMPLETED' ? 'green' : status === 'FAILED' ? 'red' : status === 'CANCELLED' ? 'orange' : 'blue';
-        return <Tag color={color}>{status}</Tag>;
-      }
-    },
-    {
-      title: 'Progress',
-      dataIndex: 'progress',
-      key: 'progress',
-      render: (p: number) => (
-        <Progress percent={Math.round(p)} size="small" status={p === 100 ? 'success' : 'active'} />
-      )
-    },
-    {
-      title: 'Phase',
-      dataIndex: 'currentPhase',
-      key: 'currentPhase',
-      render: (phase?: string) => phase ? <Text type="secondary">{phase}</Text> : '-'
-    },
-    {
-      title: 'Submitted',
-      dataIndex: 'submittedAt',
-      key: 'submittedAt',
-      render: (ts: string) => new Date(ts).toLocaleTimeString()
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: Job) => (
-        <Space>
-          {record.status === 'COMPLETED' && record.results && (
-            <>
-              <Tooltip title="View Connectors">
-                <Button size="small" icon={<CodeOutlined />} onClick={() => {
-                  setSelectedJob(record);
-                  setPreviewOpen(true);
-                }} />
-              </Tooltip>
-              <Tooltip title="Download All">
-                <Button size="small" icon={<DownloadOutlined />} onClick={() => {
-                  // TODO: ZIP download endpoint
-                  message.info('Download all not yet implemented');
-                }} />
-              </Tooltip>
-            </>
-          )}
-          {(record.status === 'PENDING' || record.status === 'ANALYZING' || record.status === 'GENERATING') && (
-            <Tooltip title="Cancel">
-              <Button size="small" danger icon={<DeleteOutlined />} onClick={() => cancelJob(record.jobId)} />
-            </Tooltip>
-          )}
-          <Button size="small" icon={<ReloadOutlined />} onClick={fetchJobs} />
-        </Space>
-      )
-    }
-  ];
-
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={2} style={{ marginBottom: 24, fontWeight: 700 }}>
-        <ApartmentOutlined /> Website Reverse Engineering
-      </Title>
+    <div className="admin-container" style={{ padding: '24px', background: 'transparent' }}>
+      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 32 }}>
+        <Col span={16}>
+          <Title level={2} style={{ margin: 0, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>
+            <ApartmentOutlined style={{ marginRight: 12, color: '#1890ff' }} />
+            Universal Automation & Reverse Engineering
+          </Title>
+          <Text type="secondary" style={{ fontSize: 16 }}>
+            Command SupremeAI to analyze, scrape, or automate any website with AI-driven precision.
+          </Text>
+        </Col>
+        <Col span={8} style={{ textAlign: 'right' }}>
+          <Space>
+            <Button icon={<SettingOutlined />} className="glass-button">Config</Button>
+            <Button type="primary" icon={<ReloadOutlined />} onClick={fetchJobs} loading={loading}>Refresh Monitor</Button>
+          </Space>
+        </Col>
+      </Row>
 
-      <Card bordered={false} className="glass-card" style={{ marginBottom: 24 }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Title level={4}>Submit New Analysis</Title>
-          <Input.Search
-            placeholder="https://example.com"
-            value={url}
-            onChange={e => setUrl(e.target.value)}
-            onSearch={submitJob}
-            loading={submitting}
-            enterButton={<><CloudServerOutlined /> Analyze</>}
-            size="large"
+      <Row gutter={[24, 24]}>
+        <Col lg={16} md={24}>
+          <AutomationLaunchCard 
+            url={url}
+            setUrl={setUrl}
+            taskType={taskType}
+            setTaskType={setTaskType}
+            instructions={instructions}
+            setInstructions={setInstructions}
+            languages={languages}
+            setLanguages={setLanguages}
+            submitting={submitting}
+            onSubmit={submitJob}
           />
-          <div>
-            <Text type="secondary">Target Languages: </Text>
-            <Select
-              mode="multiple"
-              value={languages}
-              onChange={setLanguages}
-              style={{ width: 400 }}
-              placeholder="Select languages"
-            >
-              <Option value="python">Python</Option>
-              <Option value="typescript">TypeScript</Option>
-              <Option value="java">Java</Option>
-              <Option value="swift">Swift</Option>
-              <Option value="csharp">C#</Option>
-              <Option value="go">Go</Option>
-            </Select>
-          </div>
-        </Space>
-      </Card>
 
-      <Card
-        className="glass-card"
-        title={<><CloudServerOutlined /> Analysis Jobs</>}
-        extra={<Button icon={<ReloadOutlined />} onClick={fetchJobs} loading={loading}>Refresh</Button>}
-      >
-        <Table
-          columns={columns}
-          dataSource={jobs}
-          rowKey="jobId"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          locale={{ emptyText: <Empty description="No jobs yet" /> }}
-        />
-      </Card>
+          <TaskMonitorTable 
+            jobs={jobs}
+            loading={loading}
+            onView={(job) => {
+              setSelectedJob(job);
+              setPreviewOpen(true);
+            }}
+            onCancel={cancelJob}
+            onRefresh={fetchJobs}
+          />
+        </Col>
 
-      {/* Connectors Preview Modal */}
-      <Modal
-        title="Generated Connectors"
-        open={previewOpen}
+        <Col lg={8} md={24}>
+          <AlternativeSuggestionsList 
+            suggestions={selectedJob?.results?.alternative_suggestions}
+            onSwitch={(newUrl) => setUrl(newUrl)}
+          />
+        </Col>
+      </Row>
+
+      <JobDetailsModal 
+        visible={previewOpen}
+        job={selectedJob}
         onCancel={() => setPreviewOpen(false)}
-        width={800}
-        footer={[
-          <Button key="close" onClick={() => setPreviewOpen(false)}>Close</Button>
-        ]}
-      >
-        {selectedJob && selectedJob.results?.connectors && (
-          <Row gutter={[16, 16]}>
-            {Object.entries(selectedJob.results.connectors).map(([lang, connector]: [string, any]) => (
-              <Col span={12} key={lang}>
-                <Card
-                  size="small"
-                  title={lang.toUpperCase()}
-                  extra={
-                    connector.status === 'VALIDATED' ?
-                      <Tag color="green" icon={<CheckCircleOutlined />}>Valid</Tag> :
-                      <Tag color="red" icon={<CloseCircleOutlined />}>Failed</Tag>
-                  }
-                >
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text code>{connector.filename}</Text>
-                    <Button
-                      size="small"
-                      icon={<EyeOutlined />}
-                      onClick={() => {
-                        setPreviewCode(connector.code);
-                        setPreviewLang(lang);
-                      }}
-                    >
-                      View Code
-                    </Button>
-                  </Space>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
+      />
 
-        {/* Code preview */}
-        {previewCode && (
-          <div style={{ marginTop: 24 }}>
-            <Title level={5}>Code Preview ({previewLang})</Title>
-            <pre style={{
-              background: '#1e1e1e',
-              color: '#d4d4d4',
-              padding: 16,
-              borderRadius: 8,
-              overflow: 'auto',
-              maxHeight: 400
-            }}>
-              <code>{previewCode}</code>
-            </pre>
-          </div>
-        )}
-      </Modal>
+      <style>{`
+        .glass-card {
+          background: rgba(255, 255, 255, 0.05) !important;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          color: #fff !important;
+        }
+        .glass-card .ant-card-head {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+        .instruction-box {
+          background: rgba(0, 0, 0, 0.2);
+          padding: 16px;
+          border-radius: 8px;
+          border-left: 4px solid #1890ff;
+          font-style: italic;
+        }
+        .code-preview {
+          background: #1e1e1e;
+          color: #d4d4d4;
+          padding: 16px;
+          border-radius: 12px;
+          overflow: auto;
+          font-family: 'Fira Code', monospace;
+        }
+        .premium-shadow {
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .ant-table {
+          background: transparent !important;
+          color: #fff !important;
+        }
+        .ant-table-thead > tr > th {
+          background: rgba(255, 255, 255, 0.05) !important;
+          color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .ant-table-tbody > tr > td {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+          color: #fff !important;
+        }
+        .ant-table-tbody > tr:hover > td {
+          background: rgba(255, 255, 255, 0.05) !important;
+        }
+        .ant-typography {
+          color: #fff !important;
+        }
+        .ant-typography-secondary {
+          color: rgba(255, 255, 255, 0.6) !important;
+        }
+        .pulse-button:hover {
+          transform: scale(1.02);
+          box-shadow: 0 0 15px rgba(24, 144, 255, 0.5);
+        }
+      `}</style>
     </div>
   );
 };

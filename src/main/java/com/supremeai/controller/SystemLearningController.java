@@ -23,11 +23,14 @@ public class SystemLearningController {
 
     private final SystemLearningService service;
     private final EnhancedLearningService enhancedService;
+    private final com.supremeai.service.CyberSecuritySkillService cyberSkillService;
 
     public SystemLearningController(SystemLearningService service,
-                                     EnhancedLearningService enhancedService) {
+                                     EnhancedLearningService enhancedService,
+                                     com.supremeai.service.CyberSecuritySkillService cyberSkillService) {
         this.service = service;
         this.enhancedService = enhancedService;
+        this.cyberSkillService = cyberSkillService;
     }
 
     @GetMapping
@@ -102,5 +105,26 @@ public class SystemLearningController {
     @PostMapping("/improve")
     public Mono<Map<String, Object>> improveLearning() {
         return enhancedService.improveSystemLearning();
+    }
+
+    /**
+     * Trigger autonomous research on a specific cybersecurity topic.
+     * System learns hacking techniques to strengthen its own defense.
+     */
+    @PostMapping("/cyber-research")
+    public Mono<Map<String, Object>> triggerCyberResearch(@RequestParam String topic) {
+        return cyberSkillService.initiateLearningCycle(topic);
+    }
+
+    /**
+     * Get the current status of learned hacking skills and active protections.
+     */
+    @GetMapping("/cyber-status")
+    public Map<String, Object> getCyberStatus() {
+        return Map.of(
+            "skills", cyberSkillService.getLearnedSkills(),
+            "protections", cyberSkillService.getActiveProtections(),
+            "lastAudit", cyberSkillService.runSelfAudit()
+        );
     }
 }

@@ -1,8 +1,9 @@
 // LoginPage.tsx - SupremeAI Authentication Portal (Redesigned)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space, Divider } from 'antd';
 import { UserOutlined, LockOutlined, RobotOutlined, LoginOutlined, MailOutlined, UserAddOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { authUtils } from '../lib/authUtils';
 import { useRole } from '../contexts/RoleContext';
 import { firebaseSignIn } from '../lib/firebase';
@@ -28,6 +29,14 @@ const LoginPage: React.FC = () => {
   const [form] = Form.useForm<LoginForm>();
   const [createUserForm] = Form.useForm<CreateUserForm>();
   const { refreshUser } = useRole();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If user is already authenticated, redirect to home
+    if (authUtils.isAuthenticated()) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleLogin = async (values: LoginForm) => {
     setLoading(true);

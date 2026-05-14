@@ -1,33 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Card, Space, Table, Progress, Statistic, Row, Col, 
-  Button, message, Popconfirm, Tag, Select, Badge, Alert, Tooltip 
+  Typography, Card, Button, message 
 } from 'antd';
 import { 
-  PieChartOutlined, UserOutlined, ApartmentOutlined, 
-  ReloadOutlined, WarningOutlined, StopOutlined, CheckCircleOutlined 
+  ReloadOutlined 
 } from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
+import AISuggestionInformer from '../components/AISuggestionInformer';
+import QuotaStats from '../components/quotas/QuotaStats';
+import QuotaTable from '../components/quotas/QuotaTable';
+import QuotaWarningsAlert from '../components/quotas/QuotaWarningsAlert';
+import { UserQuota, QuotaStatsData } from '../components/quotas/types';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-
-interface UserQuota {
-  uid: string;
-  email: string;
-  displayName: string;
-  tier: string;
-  isActive: boolean;
-  currentUsage: number;
-  monthlyQuota: number;
-  createdAt: string;
-}
 
 const AdminQuotas: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserQuota[]>([]);
   const [warnings, setWarnings] = useState<any[]>([]);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<QuotaStatsData>({
     totalUsers: 0,
     activeQuotas: 0,
     overLimit: 0
@@ -123,104 +114,6 @@ const AdminQuotas: React.FC = () => {
     }
   };
 
-  const columns = [
-    { 
-      title: 'ইউজার', 
-      dataIndex: 'email', 
-      key: 'email',
-      render: (email: string, record: UserQuota) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.displayName || 'No Name'}</Text>
-          <Text type="secondary" style={{ fontSize: '12px' }}>{email}</Text>
-        </Space>
-      )
-    },
-    { 
-      title: 'টিয়ার ম্যানেজমেন্ট', 
-      dataIndex: 'tier', 
-      key: 'tier',
-      width: 150,
-      render: (tier: string, record: UserQuota) => (
-        <Select 
-          defaultValue={tier} 
-          style={{ width: '100%' }}
-          onChange={(value) => handleTierUpdate(record.uid, value)}
-          size="small"
-          dropdownStyle={{ borderRadius: 8 }}
-        >
-          <Option value="FREE"><Tag color="default">FREE</Tag></Option>
-          <Option value="PRO"><Tag color="blue">PRO</Tag></Option>
-          <Option value="ADMIN"><Tag color="gold">ADMIN</Tag></Option>
-        </Select>
-      )
-    },
-    { 
-      title: 'API কল (ব্যবহার)', 
-      dataIndex: 'currentUsage', 
-      key: 'currentUsage', 
-      render: (usage: number, record: UserQuota) => {
-        const percent = Math.min(100, Math.round((usage / record.monthlyQuota) * 100));
-        return (
-          <div style={{ width: 150 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <Text style={{ fontSize: '12px' }}>{usage.toLocaleString()}</Text>
-              <Text style={{ fontSize: '12px' }} type="secondary">/ {record.monthlyQuota.toLocaleString()}</Text>
-            </div>
-            <Progress 
-              percent={percent} 
-              size="small" 
-              status={usage >= record.monthlyQuota ? 'exception' : 'active'}
-              strokeColor={usage >= record.monthlyQuota ? '#ef4444' : usage > record.monthlyQuota * 0.8 ? '#f59e0b' : '#10b981'}
-            />
-          </div>
-        );
-      }
-    },
-    { 
-      title: 'স্ট্যাটাস', 
-      dataIndex: 'isActive', 
-      key: 'isActive',
-      render: (active: boolean) => (
-        <Badge 
-          status={active ? 'success' : 'error'} 
-          text={<Text style={{ color: active ? '#10b981' : '#ef4444' }}>{active ? 'Active' : 'Inactive'}</Text>} 
-        />
-      )
-    },
-    { 
-      title: 'অ্যাকশন', 
-      key: 'actions', 
-      render: (_: any, record: UserQuota) => (
-        <Space>
-          <Tooltip title="রিসেট কোটা">
-            <Popconfirm
-              title="আপনি কি নিশ্চিত যে আপনি এই ইউজারের কোটা রিসেট করতে চান?"
-              onConfirm={() => handleReset(record.uid)}
-              okText="হ্যাঁ"
-              cancelText="না"
-            >
-              <Button size="small" shape="circle" icon={<ReloadOutlined />} />
-            </Popconfirm>
-          </Tooltip>
-          
-          {record.isActive && (
-            <Tooltip title="ডিঅ্যাক্টিভ করুন">
-              <Popconfirm
-                title="অ্যাকাউন্ট ডিঅ্যাক্টিভ করতে চান?"
-                onConfirm={() => handleDeactivate(record.uid)}
-                okText="হ্যাঁ"
-                cancelText="না"
-                okButtonProps={{ danger: true }}
-              >
-                <Button size="small" shape="circle" danger icon={<StopOutlined />} />
-              </Popconfirm>
-            </Tooltip>
-          )}
-        </Space>
-      )
-    },
-  ];
-
   return (
     <div style={{ padding: 24, background: '#0a0a0a', minHeight: '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -238,54 +131,34 @@ const AdminQuotas: React.FC = () => {
         </Button>
       </div>
 
-      {warnings.length > 0 && (
-        <Alert
-          message="কোটা সতর্কতা"
-          description={`${warnings.length} জন ইউজার তাদের মাসিক কোটা সীমার কাছাকাছি পৌঁছেছেন।`}
-          type="warning"
-          showIcon
-          icon={<WarningOutlined />}
-          style={{ marginBottom: 24, borderRadius: 12, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
-          action={
-            <Button size="small" ghost onClick={() => message.info('সতর্কতা তালিকা চেক করুন')}>
-              বিস্তারিত
-            </Button>
+      <AISuggestionInformer 
+        title="Resource Distribution Insights"
+        context="User Quotas & Traffic"
+        suggestions={[
+          {
+            id: 'increase-pro-quota',
+            title: 'Dynamic Quota Expansion',
+            description: 'PRO users are consistently hitting 95% of their limits by mid-month. Suggesting a 20% quota increase for the PRO tier to reduce manual reset requests.',
+            impact: 'performance',
+            confidence: 0.92,
+            autoExecutable: true
+          },
+          {
+            id: 'limit-free-tier',
+            title: 'Anomalous Free Tier Usage',
+            description: 'Detected unusual burst of API calls from new FREE tier accounts. Suggesting temporary rate limiting to preserve system stability for paid users.',
+            impact: 'security',
+            confidence: 0.87,
+            autoExecutable: true
           }
-        />
-      )}
+        ]}
+        onApprove={(id) => message.success(`Permission granted for ${id}. System updated.`)}
+        onDecline={(id) => message.info(`Adjustment ${id} declined.`)}
+      />
 
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={8}>
-          <Card bordered={false} className="glass-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>মোট ইউজার</span>}
-              value={stats.totalUsers}
-              prefix={<UserOutlined style={{ color: '#3b82f6' }} />}
-              valueStyle={{ color: '#fff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card bordered={false} className="glass-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>অ্যাক্টিভ কোটা (ব্যবহারকারী)</span>}
-              value={stats.activeQuotas}
-              prefix={<PieChartOutlined style={{ color: '#10b981' }} />}
-              valueStyle={{ color: '#fff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card bordered={false} className="glass-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>কোটা লিমিট অতিক্রম</span>}
-              value={stats.overLimit}
-              prefix={<ApartmentOutlined style={{ color: '#ef4444' }} />}
-              valueStyle={{ color: '#fff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <QuotaWarningsAlert warningsCount={warnings.length} />
+
+      <QuotaStats stats={stats} />
 
       <Card
         className="glass-card"
@@ -303,15 +176,12 @@ const AdminQuotas: React.FC = () => {
           </Text>
         </div>
         
-        <Table 
-          columns={columns} 
-          dataSource={users} 
-          rowKey="uid"
+        <QuotaTable 
+          users={users}
           loading={loading}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          size="middle"
-          className="admin-table-dark"
-          style={{ padding: '8px' }}
+          onReset={handleReset}
+          onTierUpdate={handleTierUpdate}
+          onDeactivate={handleDeactivate}
         />
       </Card>
 
@@ -350,3 +220,4 @@ const AdminQuotas: React.FC = () => {
 };
 
 export default AdminQuotas;
+

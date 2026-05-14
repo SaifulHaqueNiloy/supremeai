@@ -83,6 +83,12 @@ function getFirebaseErrorMessage(code: string | undefined): string {
     'auth/email-already-in-use': 'An account with this email already exists.',
     'auth/weak-password': 'The password is too weak. Please use at least 6 characters.',
     'auth/requires-recent-login': 'Please log out and log in again to perform this action.',
+    // Additional configuration-related errors
+    'auth/operation-not-allowed': 'Email/Password sign-in is disabled. Enable it in Firebase Console > Authentication > Sign-in method.',
+    'auth/unauthorized-domain': 'This domain (supremeai-a.web.app) is not authorized. Add it to Authorized domains in Firebase Console > Authentication > Settings.',
+    'auth/invalid-api-key': 'Firebase API key is invalid. Check your Firebase project configuration.',
+    'auth/missing-api-key': 'Firebase API key is missing. Check your environment configuration.',
+    'auth/invalid-app-id': 'Firebase App ID is invalid. Verify your Firebase configuration.',
   };
 
   return errorMap[code] ?? 'An authentication error occurred. Please try again.';
@@ -145,8 +151,15 @@ const response = await resp.json() as {
     return data;
   } catch (error: unknown) {
     if (error instanceof FirebaseError) {
-      throw new Error(getFirebaseErrorMessage(error.code));
+      const message = getFirebaseErrorMessage(error.code);
+      console.error('[Firebase Auth Error]', {
+        code: error.code,
+        message: error.message,
+        fullError: error
+      });
+      throw new Error(message);
     }
+    console.error('[Unexpected Auth Error]', error);
     throw error;
   }
 }

@@ -4,15 +4,16 @@ import com.google.cloud.spring.data.firestore.Document;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Document(collectionName = "browser_tasks")
-public class BrowserTask {
-    private String id;
-    private String goal;
-    private String status; // active, completed, failed
-    private Integer progress; // 0-100
-    private List<String> findings;
-    private LocalDateTime startedAt;
-    private LocalDateTime completedAt;
+ @Document(collectionName = "browser_tasks")
+ public class BrowserTask {
+     private String id;
+     private String goal;
+     private String status; // active, completed, failed
+     private Integer progress; // 0-100
+     private List<String> findings;
+     private LocalDateTime startedAt;
+     private LocalDateTime completedAt;
+     private String lastUrl; // Current/last visited URL
 
     public BrowserTask() {
         this.status = "active";
@@ -35,4 +36,6 @@ public class BrowserTask {
     public void setStartedAt(LocalDateTime startedAt) { this.startedAt = startedAt; }
     public LocalDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+    public String getLastUrl() { return lastUrl; }
+    public void setLastUrl(String lastUrl) { this.lastUrl = lastUrl; }
 }

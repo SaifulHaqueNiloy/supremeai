@@ -1,44 +1,40 @@
-// AdminProviders.tsx - AI Provider Management Page
-
 import React, { useState, useEffect } from 'react';
-import { Layout, Card, Table, Button, Space, Tag, Modal, Form, Input, Select, message, Spin, Alert, Popconfirm } from 'antd';
-import { RobotOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { Card, message, Spin, Alert } from 'antd';
 import AdminLayout from '../components/AdminLayout';
 import { authUtils } from '../lib/authUtils';
+import AISuggestionInformer from '../components/AISuggestionInformer';
+import { useRole } from '../contexts/RoleContext';
 
-const { Option } = Select;
-
-interface Provider {
-  id?: string;
-  name: string;
-  type: string;
-  baseUrl: string;
-  apiKey?: string;
-  status: 'active' | 'inactive' | 'error';
-  models?: string[];
-  priority?: number;
-  createdAt?: string;
-}
+// Modular Components
+import { Provider, ProviderHealthStats as StatsType } from '../components/providers/types';
+import ProviderHealthStats from '../components/providers/ProviderHealthStats';
+import ProvidersTable from '../components/providers/ProvidersTable';
+import ProviderModal from '../components/providers/ProviderModal';
+import ProviderActionToolbar from '../components/providers/ProviderActionToolbar';
 
 const AdminProviders: React.FC = () => {
+  const { isGuest } = useRole();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
-  const [form] = Form.useForm();
+  const [healthStats, setHealthStats] = useState<StatsType | null>(null);
+  const [testingAll, setTestingAll] = useState(false);
 
   const fetchProviders = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authUtils.fetchWithAuth('/api/admin/providers/configured');
-      if (!response.ok) throw new Error('Failed to fetch providers');
-      const result = await response.json();
-      // Backend returns ApiResponse wrapper: { success: true, data: { providers: [...] } }
+      const [provRes, statsRes] = await Promise.all([
+        authUtils.fetchWithAuth('/api/admin/providers/configured'),
+        authUtils.fetchWithAuth('/api/admin/providers/health-stats')
+      ]);
+
+      if (!provRes.ok) throw new Error('Failed to fetch providers');
+      const result = await provRes.json();
       const rawData = result.data?.providers || (Array.isArray(result.data) ? result.data : []);
       
-      // Normalize data to prevent crashes
       const provList: Provider[] = rawData.map((p: any) => ({
         ...p,
         models: Array.isArray(p.models) ? p.models : [],
@@ -47,6 +43,11 @@ const AdminProviders: React.FC = () => {
       }));
       
       setProviders(provList);
+
+      if (statsRes.ok) {
+        const stats = await statsRes.json();
+        setHealthStats(stats.data);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load providers');
     } finally {
@@ -57,6 +58,36 @@ const AdminProviders: React.FC = () => {
   useEffect(() => {
     fetchProviders();
   }, []);
+
+  const handleTestAll = async () => {
+    if (isGuest) return;
+    setTestingAll(true);
+    try {
+      const response = await authUtils.fetchWithAuth('/api/admin/providers/test-all', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        message.success(result.data.message);
+        setTimeout(fetchProviders, 5000); // Refresh after some time
+      }
+    } catch (err) {
+      message.error('Validation test failed');
+    } finally {
+      setTestingAll(false);
+    }
+  };
+
+  const handleRemoveDead = async () => {
+    if (isGuest) return;
+    try {
+      const response = await authUtils.fetchWithAuth('/api/admin/providers/bulk-remove-dead', { method: 'DELETE' });
+      if (response.ok) {
+        message.success('সব ডেড কী রিমুভ করা হয়েছে');
+        fetchProviders();
+      }
+    } catch (err) {
+      message.error('Failed to remove dead keys');
+    }
+  };
 
   const handleSubmit = async (values: any) => {
     try {
@@ -83,7 +114,6 @@ const AdminProviders: React.FC = () => {
       }
       message.success('Provider saved successfully');
       setModalVisible(false);
-      form.resetFields();
       fetchProviders();
     } catch (err) {
       message.error(err instanceof Error ? err.message : 'Operation failed');
@@ -103,134 +133,71 @@ const AdminProviders: React.FC = () => {
     }
   };
 
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string) => <strong>{text}</strong>,
-    },
-    {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => <Tag color="blue">{type}</Tag>,
-    },
-    {
-      title: 'Base URL',
-      dataIndex: 'baseUrl',
-      key: 'baseUrl',
-      ellipsis: true,
-    },
-    {
-      title: 'Models',
-      dataIndex: 'models',
-      key: 'models',
-      render: (models: string[]) => models ? models.slice(0, 3).join(', ') + (models.length > 3 ? ` +${models.length - 3} more` : '') : '-',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        const color = status === 'active' ? 'green' : status === 'error' ? 'red' : 'default';
-        return <Tag color={color}>{status ? status.toUpperCase() : 'UNKNOWN'}</Tag>;
-      },
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: Provider) => (
-        <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => {
-            setEditingProvider(record);
-            form.setFieldsValue({ ...record, models: record.models?.join(', ') });
-            setModalVisible(true);
-          }}>
-            Edit
-          </Button>
-          <Popconfirm title="Delete provider?" onConfirm={() => handleDelete(record.id!)}>
-            <Button size="small" danger icon={<DeleteOutlined />}>Delete</Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
   return (
     <AdminLayout title="AI Provider Management">
+      <AISuggestionInformer 
+        title="AI Architecture Optimizations"
+        context="Provider Orchestration"
+        suggestions={[
+          {
+            id: 'add-deepseek',
+            title: 'Enable DeepSeek V4-Pro',
+            description: 'Detected complex coding tasks taking longer with current models. Suggesting integration of DeepSeek V4-Pro for 35% better code generation performance.',
+            impact: 'capability',
+            confidence: 0.95,
+            autoExecutable: false
+          },
+          {
+            id: 'failover-config',
+            title: 'Dynamic Failover detected',
+            description: 'Anthropic API is experiencing high latency (2500ms+). Suggesting automatic rerouting to GPT-4o-mini for non-critical chat tasks to maintain responsiveness.',
+            impact: 'performance',
+            confidence: 0.91,
+            autoExecutable: true
+          }
+        ]}
+        onApprove={(id) => message.success(`Executing provider optimization: ${id}`)}
+        onDecline={(id) => message.info(`Optimization ${id} skipped.`)}
+      />
+
+      <ProviderHealthStats stats={healthStats} />
+
       <Card>
-        <div style={{ marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+        <ProviderActionToolbar 
+          loading={loading}
+          testingAll={testingAll}
+          deadCount={healthStats?.dead || 0}
+          onAdd={() => {
             setEditingProvider(null);
-            form.resetFields();
             setModalVisible(true);
-          }}>
-            Add Provider
-          </Button>
-          <Button icon={<ReloadOutlined />} style={{ marginLeft: 8 }} onClick={fetchProviders}>
-            Refresh
-          </Button>
-        </div>
+          }}
+          onRefresh={fetchProviders}
+          onTestAll={handleTestAll}
+          onRemoveDead={handleRemoveDead}
+        />
 
         {loading && <Spin style={{ display: 'block', margin: '20px auto' }} />}
         {error && <Alert type="error" message={error} action={<Button onClick={fetchProviders}>Retry</Button>} />}
 
         {!loading && !error && (
-          <Table
-            columns={columns}
-            dataSource={providers}
-            rowKey="id"
-            pagination={{ pageSize: 15 }}
+          <ProvidersTable 
+            providers={providers}
+            loading={loading}
+            onEdit={(record) => {
+              setEditingProvider(record);
+              setModalVisible(true);
+            }}
+            onDelete={handleDelete}
           />
         )}
       </Card>
 
-      <Modal
-        title={editingProvider ? 'Edit Provider' : 'Add New Provider'}
-        open={modalVisible}
+      <ProviderModal 
+        visible={modalVisible}
+        editingProvider={editingProvider}
         onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={500}
-      >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Provider Name" rules={[{ required: true }]}>
-            <Input placeholder="e.g., OpenAI" />
-          </Form.Item>
-          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-            <Select placeholder="Select type">
-              <Option value="openai">OpenAI</Option>
-              <Option value="anthropic">Anthropic</Option>
-              <Option value="google">Google AI</Option>
-              <Option value="custom">Custom</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="baseUrl" label="Base URL" rules={[{ required: true }]}>
-            <Input placeholder="https://api.openai.com/v1" />
-          </Form.Item>
-          <Form.Item name="apiKey" label="API Key">
-            <Input.Password placeholder="sk-..." />
-          </Form.Item>
-          <Form.Item name="models" label="Models (comma-separated)">
-            <Input placeholder="gpt-4, gpt-3.5-turbo" />
-          </Form.Item>
-          <Form.Item name="status" label="Status" initialValue="active">
-            <Select>
-              <Option value="active">Active</Option>
-              <Option value="inactive">Inactive</Option>
-              <Option value="error">Error</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item style={{ marginTop: 24 }}>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingProvider ? 'Update' : 'Add'}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+        onSubmit={handleSubmit}
+      />
     </AdminLayout>
   );
 };

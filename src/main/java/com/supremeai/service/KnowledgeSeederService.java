@@ -495,7 +495,7 @@ public class KnowledgeSeederService {
         s.setSuccess(true);
         s.setQualityScore(confidence);
         s.setTimesApplied(0);
-        s.setLearnedAt(LocalDateTime.now());
+        s.setLearnedAt(new java.util.Date());
         return s;
     }
 

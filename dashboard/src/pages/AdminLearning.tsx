@@ -1,108 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Layout, 
   Typography, 
-  Card, 
   Space, 
-  Tag, 
-  Progress, 
   Tabs, 
-  Button, 
-  List, 
-  Badge, 
   message, 
-  Spin, 
-  Switch, 
-  Tooltip,
-  Statistic,
-  Row,
-  Col,
-  Empty,
-  Popconfirm
+  Spin 
 } from 'antd';
 import { 
   BulbOutlined, 
-  PlayCircleOutlined, 
-  PauseCircleOutlined,
-  ThunderboltOutlined,
-  TrophyOutlined,
-  BookOutlined,
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  GlobalOutlined,
-  RocketOutlined,
-  SafetyCertificateOutlined
+  BookOutlined, 
+  ExperimentOutlined
 } from '@ant-design/icons';
 import AdminLayout from '../components/AdminLayout';
 import { authUtils } from '../lib/authUtils';
+import AISuggestionInformer from '../components/AISuggestionInformer';
 
-const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
+// Modular Components
+import LearningStatusOverview from '../components/learning/LearningStatusOverview';
+import LearningModeControl from '../components/learning/LearningModeControl';
+import AutonomousDefenseCard from '../components/learning/AutonomousDefenseCard';
+import KnowledgeDomainsTab from '../components/learning/KnowledgeDomainsTab';
+import EvolutionProposalsTab from '../components/learning/EvolutionProposalsTab';
 
-interface LearningStatus {
-  mode: string;
-  modeDescription: string;
-  emergencyPaused: boolean;
-  scrapingAllowed: boolean;
-  autoApprovalAllowed: boolean;
-  learningAllowed: boolean;
-  quota: {
-    totalUsage: number;
-    dailyLimit: number;
-    remaining: number;
-    percentageUsed: number;
-  };
-}
-
-interface KnowledgeDomain {
-  id: string;
-  name: string;
-  status: string;
-  keywords: string[];
-  lastUpdateAt: string;
-  knowledgeCount: number;
-}
-
-interface Recommendation {
-  id: string;
-  title: string;
-  description: string;
-  source: string;
-  confidence: number;
-  suggestedKeywords: string[];
-  createdAt: string;
-}
+const { Title, Text } = Typography;
 
 const AdminLearning: React.FC = () => {
-  const [status, setStatus] = useState<LearningStatus | null>(null);
-  const [domains, setDomains] = useState<KnowledgeDomain[]>([]);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [status, setStatus] = useState<any | null>(null);
+  const [domains, setDomains] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Learning Status
-      const statusResp = await authUtils.fetchWithAuth('/api/admin/learning/status');
-      if (statusResp.ok) {
-        const statusData = await statusResp.json();
-        setStatus(statusData);
-      }
+      const [statusResp, domainsResp, recsResp] = await Promise.all([
+        authUtils.fetchWithAuth('/api/admin/learning/status'),
+        authUtils.fetchWithAuth('/api/admin/knowledge/domains'),
+        authUtils.fetchWithAuth('/api/admin/knowledge/recommendations')
+      ]);
 
-      // 2. Fetch Knowledge Domains
-      const domainsResp = await authUtils.fetchWithAuth('/api/admin/knowledge/domains');
+      if (statusResp.ok) setStatus(await statusResp.json());
       if (domainsResp.ok) {
-        const domainsData = await domainsResp.json();
-        setDomains(domainsData.data || []);
+        const dData = await domainsResp.json();
+        setDomains(dData.data || []);
       }
-
-      // 3. Fetch Recommendations
-      const recsResp = await authUtils.fetchWithAuth('/api/admin/knowledge/recommendations');
       if (recsResp.ok) {
-        const recsData = await recsResp.json();
-        setRecommendations(recsData.data || []);
+        const rData = await recsResp.json();
+        setRecommendations(rData.data || []);
       }
     } catch (error) {
       console.error('Error fetching learning data:', error);
@@ -127,8 +72,6 @@ const AdminLearning: React.FC = () => {
       if (resp.ok) {
         message.success(`লার্নিং মোড পরিবর্তন হয়েছে: ${mode}`);
         fetchData();
-      } else {
-        message.error('মোড পরিবর্তন ব্যর্থ হয়েছে');
       }
     } catch (error) {
       message.error('একটি ত্রুটি ঘটেছে');
@@ -140,15 +83,8 @@ const AdminLearning: React.FC = () => {
   const handleManualTrigger = async () => {
     setActionLoading(true);
     try {
-      const resp = await authUtils.fetchWithAuth('/api/admin/learning/trigger', {
-        method: 'POST'
-      });
-      if (resp.ok) {
-        message.success('লার্নিং সাইকেল শুরু হয়েছে');
-      } else {
-        const err = await resp.json();
-        message.error(err.error || 'ট্রিগার ব্যর্থ হয়েছে');
-      }
+      const resp = await authUtils.fetchWithAuth('/api/admin/learning/trigger', { method: 'POST' });
+      if (resp.ok) message.success('লার্নিং সাইকেল শুরু হয়েছে');
     } catch (error) {
       message.error('সার্ভার এরর');
     } finally {
@@ -172,198 +108,37 @@ const AdminLearning: React.FC = () => {
     }
   };
 
-  const renderStatusTab = () => (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Row gutter={16}>
-        <Col span={8}>
-          <Card bordered={false} className="glass-card">
-            <Statistic 
-              title="Current Mode" 
-              value={status?.mode || 'UNKNOWN'} 
-              valueStyle={{ color: 'var(--neon-blue)', fontWeight: 700 }}
-              prefix={<ThunderboltOutlined />}
-            />
-            <Text type="secondary">{status?.modeDescription}</Text>
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card bordered={false} className="glass-card">
-            <Statistic 
-              title="Daily Quota Usage" 
-              value={status?.quota.totalUsage || 0} 
-              suffix={`/ ${status?.quota.dailyLimit || 0}`}
-              valueStyle={{ color: '#10b981' }}
-            />
-            <Progress 
-              percent={status?.quota.percentageUsed} 
-              size="small" 
-              strokeColor={{ '0%': '#10b981', '100%': '#3b82f6' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card bordered={false} className="glass-card">
-            <Statistic 
-              title="Status" 
-              value={status?.emergencyPaused ? 'Paused' : 'Active'} 
-              valueStyle={{ color: status?.emergencyPaused ? '#ef4444' : '#10b981' }}
-              prefix={status?.emergencyPaused ? <PauseCircleOutlined /> : <CheckCircleOutlined />}
-            />
-            <Button 
-              danger={!status?.emergencyPaused}
-              type={status?.emergencyPaused ? 'primary' : 'default'}
-              size="small"
-              style={{ marginTop: 8 }}
-              onClick={handleEmergencyPause}
-              loading={actionLoading}
-            >
-              {status?.emergencyPaused ? 'Resume Learning' : 'Emergency Pause'}
-            </Button>
-          </Card>
-        </Col>
-      </Row>
+  const handleCyberResearch = async (topic: string) => {
+    setActionLoading(true);
+    try {
+      const resp = await authUtils.fetchWithAuth(`/api/system-learning/cyber-research?topic=${encodeURIComponent(topic)}`, {
+        method: 'POST'
+      });
+      if (resp.ok) {
+        message.success(`সিস্টেম ${topic} নিয়ে গবেষণা শুরু করেছে`);
+        fetchData();
+      }
+    } catch (error) {
+      message.error('সাইবার রিসার্চ ট্রিগার ব্যর্থ হয়েছে');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
-      <Card title="Learning Mode Control" className="glass-card">
-        <Space size="middle" wrap>
-          <Button 
-            type={status?.mode === 'AGGRESSIVE' ? 'primary' : 'default'} 
-            onClick={() => handleModeChange('AGGRESSIVE')}
-            loading={actionLoading}
-          >
-            Aggressive
-          </Button>
-          <Button 
-            type={status?.mode === 'BALANCED' ? 'primary' : 'default'} 
-            onClick={() => handleModeChange('BALANCED')}
-            loading={actionLoading}
-          >
-            Balanced
-          </Button>
-          <Button 
-            type={status?.mode === 'MANUAL' ? 'primary' : 'default'} 
-            onClick={() => handleModeChange('MANUAL')}
-            loading={actionLoading}
-          >
-            Manual
-          </Button>
-          <Button 
-            type={status?.mode === 'PAUSED' ? 'primary' : 'default'} 
-            onClick={() => handleModeChange('PAUSED')}
-            loading={actionLoading}
-            danger
-          >
-            Paused
-          </Button>
-          <div style={{ marginLeft: 24, borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: 24 }}>
-            <Button 
-              icon={<RocketOutlined />} 
-              onClick={handleManualTrigger}
-              disabled={status?.mode !== 'MANUAL' && status?.mode !== 'BALANCED'}
-              loading={actionLoading}
-            >
-              Trigger Learning Cycle
-            </Button>
-          </div>
-        </Space>
-      </Card>
-
-      <Card title="System Capabilities" className="glass-card">
-        <Row gutter={[24, 24]}>
-          <Col span={12}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text><GlobalOutlined style={{ marginRight: 8 }} /> Web Scraping Allowed</Text>
-                <Badge status={status?.scrapingAllowed ? 'processing' : 'default'} text={status?.scrapingAllowed ? 'ON' : 'OFF'} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text><SafetyCertificateOutlined style={{ marginRight: 8 }} /> Auto-Approval (Autonomous Mode)</Text>
-                <Badge status={status?.autoApprovalAllowed ? 'warning' : 'default'} text={status?.autoApprovalAllowed ? 'ACTIVE' : 'DISABLED'} />
-              </div>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-    </Space>
-  );
-
-  const renderKnowledgeTab = () => (
-    <Card bordered={false} className="glass-card">
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <Title level={4} style={{ margin: 0, color: '#fff' }}>Knowledge Domains</Title>
-        <Button icon={<ReloadOutlined />} onClick={fetchData}>Refresh</Button>
-      </div>
-      <List
-        dataSource={domains}
-        renderItem={domain => (
-          <List.Item
-            actions={[
-              <Button type="link" onClick={() => message.info('অপেক্ষমাণ')}>View Knowledge</Button>,
-              <Button type="link" icon={<PlayCircleOutlined />}>Process Job</Button>
-            ]}
-          >
-            <List.Item.Meta
-              avatar={<BookOutlined style={{ fontSize: 24, color: 'var(--neon-blue)' }} />}
-              title={<span style={{ color: '#fff', fontWeight: 600 }}>{domain.name}</span>}
-              description={
-                <Space wrap>
-                  {domain.keywords.map(k => <Tag key={k}>{k}</Tag>)}
-                </Space>
-              }
-            />
-            <div style={{ textAlign: 'right', marginRight: 24 }}>
-              <Tag color={domain.status === 'LEARNING' ? 'processing' : 'success'}>
-                {domain.status}
-              </Tag>
-              <br />
-              <Text type="secondary" style={{ fontSize: 12 }}>Nodes: {domain.knowledgeCount}</Text>
-            </div>
-          </List.Item>
-        )}
-        locale={{ emptyText: <Empty description="কোনো ডোমেইন পাওয়া যায়নি" /> }}
-      />
-    </Card>
-  );
-
-  const renderRecommendationsTab = () => (
-    <Card bordered={false} className="glass-card">
-       <div style={{ marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0, color: '#fff' }}>Improvement Proposals</Title>
-        <Text type="secondary">সিস্টেম লার্নিং থেকে আসা নতুন রিকমেন্ডেশনসমূহ</Text>
-      </div>
-      <List
-        dataSource={recommendations}
-        renderItem={rec => (
-          <Card 
-            size="small" 
-            style={{ marginBottom: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <Text strong style={{ color: '#fff', fontSize: 16 }}>{rec.title}</Text>
-                <Tag color="blue" style={{ marginLeft: 8 }}>{Math.round(rec.confidence * 100)}% Confidence</Tag>
-                <div style={{ marginTop: 8 }}>
-                  <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>{rec.description}</Paragraph>
-                </div>
-                <Space wrap>
-                  {rec.suggestedKeywords.map(k => <Tag key={k}>{k}</Tag>)}
-                </Space>
-              </div>
-              <Space direction="vertical" align="end">
-                <Text type="secondary">{new Date(rec.createdAt).toLocaleDateString()}</Text>
-                <Space>
-                   <Popconfirm title="এই রিকমেন্ডেশনটি অ্যাপ্রুভ করবেন?">
-                    <Button type="primary" size="small" icon={<CheckCircleOutlined />}>Approve</Button>
-                   </Popconfirm>
-                   <Button size="small" icon={<CloseCircleOutlined />} danger>Decline</Button>
-                </Space>
-              </Space>
-            </div>
-          </Card>
-        )}
-        locale={{ emptyText: <Empty description="কোনো নতুন রিকমেন্ডেশন নেই" /> }}
-      />
-    </Card>
-  );
+  const handleRunAudit = async () => {
+    setActionLoading(true);
+    try {
+      const resp = await authUtils.fetchWithAuth('/api/exploitation-techniques/audit', { method: 'POST' });
+      if (resp.ok) {
+        const result = await resp.json();
+        message.success(`অডিট সম্পন্ন: রেজিলিয়েন্স স্কোর ${Math.round(result.resilienceScore * 100)}%`);
+      }
+    } catch (error) {
+      message.error('অডিট ব্যর্থ হয়েছে');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <AdminLayout title="লার্নিং ম্যানেজমেন্ট">
@@ -373,24 +148,83 @@ const AdminLearning: React.FC = () => {
       </div>
 
       <Tabs defaultActiveKey="status" className="modern-tabs">
-        <TabPane 
-          tab={<span><ThunderboltOutlined /> Status & Control</span>} 
+        <Tabs.TabPane 
+          tab={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ExperimentOutlined /> Neural Skill Matrix</span>} 
           key="status"
         >
-          {loading ? <div style={{ padding: 40, textAlign: 'center' }}><Spin size="large" /></div> : renderStatusTab()}
-        </TabPane>
-        <TabPane 
-          tab={<span><BookOutlined /> Knowledge Base</span>} 
-          key="knowledge"
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center' }}><Spin size="large" /></div>
+          ) : (
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <AISuggestionInformer 
+                title="Skill Evolution Proposals"
+                context="Neural Capabilities"
+                suggestions={[
+                  {
+                    id: 'skill-bn-ocr-v2',
+                    title: 'Evolve Bengali OCR to V2',
+                    description: 'Detected complex document layouts. System proposes evolving the OCR skill to handle multi-column tables and handwritten annotations.',
+                    impact: 'capability',
+                    confidence: 0.96,
+                    autoExecutable: true
+                  }
+                ]}
+                onApprove={(id) => message.success(`Skill Evolution Initiated: ${id}`)}
+                onDecline={(id) => message.info(`Proposal ${id} deferred.`)}
+              />
+              
+              <LearningStatusOverview 
+                status={status} 
+                onEmergencyPause={handleEmergencyPause} 
+                actionLoading={actionLoading} 
+              />
+
+              <LearningModeControl 
+                currentMode={status?.mode}
+                onModeChange={handleModeChange}
+                onManualTrigger={handleManualTrigger}
+                actionLoading={actionLoading}
+              />
+
+              <AutonomousDefenseCard 
+                status={status}
+                onCyberResearch={handleCyberResearch}
+                onRunAudit={handleRunAudit}
+                actionLoading={actionLoading}
+              />
+            </Space>
+          )}
+        </Tabs.TabPane>
+
+        <Tabs.TabPane 
+          tab={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BookOutlined /> Knowledge Domains</span>} 
+          key="domains"
         >
-          {loading ? <div style={{ padding: 40, textAlign: 'center' }}><Spin size="large" /></div> : renderKnowledgeTab()}
-        </TabPane>
-        <TabPane 
-          tab={<span><TrophyOutlined /> Recommendations</span>} 
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center' }}><Spin size="large" /></div>
+          ) : (
+            <KnowledgeDomainsTab 
+              domains={domains} 
+              onRefresh={fetchData} 
+              onViewKnowledge={(id) => message.info(`Viewing knowledge for ${id}`)} 
+            />
+          )}
+        </Tabs.TabPane>
+
+        <Tabs.TabPane 
+          tab={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BulbOutlined /> Evolution Proposals</span>} 
           key="recommendations"
         >
-          {loading ? <div style={{ padding: 40, textAlign: 'center' }}><Spin size="large" /></div> : renderRecommendationsTab()}
-        </TabPane>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center' }}><Spin size="large" /></div>
+          ) : (
+            <EvolutionProposalsTab 
+              recommendations={recommendations} 
+              onApprove={(id) => message.success(`Approved recommendation ${id}`)} 
+              onDecline={(id) => message.info(`Declined recommendation ${id}`)} 
+            />
+          )}
+        </Tabs.TabPane>
       </Tabs>
     </AdminLayout>
   );

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,51 +26,34 @@ import java.util.stream.Collectors;
 public class ReverseEngineeringController {
 
     private static final Logger logger = LoggerFactory.getLogger(ReverseEngineeringController.class);
-    private static final String PUBSUB_TOPIC = "reverse-engineering-jobs";
-
-    @Autowired
-    private PubSubPublisherService pubSubPublisherService;
-
+    
     @Autowired
     private ReverseEngineeringIntegrationService integrationService;
 
     @PostMapping("/submit")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> submitReverseEngineering(
+    public Mono<ResponseEntity<Map<String, Object>>> submitReverseEngineering(
             @RequestBody Map<String, Object> request,
             Authentication auth) {
         
         String url = (String) request.get("url");
-        String userId = auth != null ? auth.getName() : "admin"; // fallback
+        String taskType = (String) request.getOrDefault("taskType", "REVERSE_ENGINEER");
+        String customInstructions = (String) request.get("customInstructions");
+        String userId = auth != null ? auth.getName() : "admin";
         
-        logger.info("Submitting reverse engineering job for URL: {} by user {}", url, userId);
-        
-        String jobId = "reveng_" + UUID.randomUUID().toString().substring(0, 12);
-        
-        // Persist job in Firestore
-        integrationService.startJob(userId, url).subscribe();
-        
-        // Publish to Pub/Sub
-        Map<String, Object> message = new HashMap<>();
-        message.put("jobId", jobId);
-        message.put("userId", userId);
-        message.put("websiteUrl", url);
-        message.put("scrapeDepth", request.getOrDefault("scrapeDepth", 1));
-        message.put("discoverApis", request.getOrDefault("discoverApis", true));
-        
-        try {
-            pubSubPublisherService.publish(PUBSUB_TOPIC, message);
-            logger.info("Published reverse engineering job {} to topic {}", jobId, PUBSUB_TOPIC);
-        } catch (Exception e) {
-            logger.error("Failed to publish to Pub/Sub: {}", e.getMessage(), e);
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("jobId", jobId);
-        response.put("status", "PENDING");
-        response.put("message", "Reverse engineering job queued");
-        
-        return ResponseEntity.ok(response);
+        Map<String, Object> extraParams = new HashMap<>(request);
+        extraParams.remove("url");
+        extraParams.remove("taskType");
+        extraParams.remove("customInstructions");
+
+        return integrationService.startJob(userId, url, taskType, customInstructions, extraParams)
+            .map(job -> {
+                Map<String, Object> response = new HashMap<>();
+                response.put("jobId", job.getJobId());
+                response.put("status", job.getStatus());
+                response.put("message", "Reverse engineering job queued via service layer");
+                return ResponseEntity.ok(response);
+            });
     }
 
     /**
@@ -78,7 +62,7 @@ public class ReverseEngineeringController {
      */
     @GetMapping("/history")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getHistory(
+    public Mono<ResponseEntity<Map<String, Object>>> getHistory(
             @RequestParam(defaultValue = "50") int limit,
             Authentication auth) {
         
@@ -119,8 +103,7 @@ public class ReverseEngineeringController {
                 response.put("total", jobList.size());
                 return ResponseEntity.ok(response);
             })
-            .defaultIfEmpty(ResponseEntity.ok(Map.of("jobs", List.of(), "total", 0)))
-            .block(); // blocking fine for controller small query
+            .defaultIfEmpty(ResponseEntity.ok(Map.of("jobs", List.of(), "total", 0)));
     }
 
     /**

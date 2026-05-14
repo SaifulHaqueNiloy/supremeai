@@ -18,7 +18,7 @@
 | 5 | Security | Unauthenticated WebSocket | 🔴 Critical | Backend | 3h | ✅ |
 | 6 | Security | Stored XSS in chat | 🔴 Critical | Backend+Frontend | 2h | ✅ |
 | 7 | Security | Firestore isAdmin() anti-pattern | 🔴 Critical | Backend | 3h | ✅ |
-| 8 | Testing | 49 integration tests disabled | 🔴 Critical | Backend | 2-3d | ❌ |
+| 8 | Testing | 49 integration tests disabled | 🔴 Critical | Backend | 2-3d | 🔄 |
 | 9 | Testing | Dashboard 0% test coverage | 🔴 Critical | Dashboard | 1w | ❌ |
 | 10 | Localization | Mobile 80+ hardcoded strings | 🔴 Critical | Mobile | 3-5d | ❌ |
 | 11 | Security | API keys weak encryption | 🟠 High | Backend | 1d | ✅ |

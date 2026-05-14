@@ -2,6 +2,7 @@ package com.supremeai.controller;
 
 import com.supremeai.model.UserSimulatorProfile;
 import com.supremeai.model.GeneratedApp;
+import com.supremeai.model.SimulatorDeploymentRecord;
 import com.supremeai.service.SimulatorDeploymentService;
 import com.supremeai.service.SimulatorService;
 import com.supremeai.service.DeviceEmulationService;
@@ -64,9 +65,9 @@ public class SimulatorRuntimeController {
         logger.info("[RUNTIME] Serving preview for app={} device={}", appId, device);
 
         // 1. Validate deployment exists
-        SimulatorDeploymentService.DeploymentRecord record = deploymentService.getDeploymentRecord(appId);
+        SimulatorDeploymentRecord record = deploymentService.getDeploymentRecord(appId);
 
-        if (record == null || record.getStatus() != SimulatorDeploymentService.DeploymentStatus.RUNNING) {
+        if (record == null || !"RUNNING".equals(record.getStatus())) {
             return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(("Application not found or not running: " + appId).getBytes()));
         }
@@ -198,10 +199,9 @@ public class SimulatorRuntimeController {
      */
     @GetMapping("/{appId}/health")
     public Mono<ResponseEntity<Map<String, Object>>> healthCheck(@PathVariable String appId) {
-        SimulatorDeploymentService.DeploymentRecord record = deploymentService.getDeploymentRecord(appId);
+        SimulatorDeploymentRecord record = deploymentService.getDeploymentRecord(appId);
 
-        boolean isHealthy = record != null &&
-                record.getStatus() == SimulatorDeploymentService.DeploymentStatus.RUNNING;
+        boolean isHealthy = record != null && "RUNNING".equals(record.getStatus());
 
         Map<String, Object> payload = Map.of(
                 "status", isHealthy ? "HEALTHY" : "UNHEALTHY",

@@ -43,7 +43,7 @@ public class SecurityConfig {
              .cors(cors -> cors.configurationSource(corsConfigurationSource()))
              .csrf(csrf -> csrf
                  .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                 .ignoringRequestMatchers("/api/auth/**", "/api/health/**", "/api/ext/**", "/api/browser/**", "/api/system/**", "/api/admin/**", "/ws/**")
+                 .ignoringRequestMatchers("/api/auth/**", "/api/health/**", "/api/ext/**", "/api/browser/**", "/api/system/**", "/api/admin/**", "/api/workflows/**", "/ws/**")
              )
              .sessionManagement(session -> 
                  session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
@@ -109,6 +109,7 @@ public class SecurityConfig {
                     "/error",
                     "/api/v1/chat/completions",
                     "/api/ext/**",
+                    "/api/workflows/**",
                     "/admin",
                     "/admin/**",
                     "/admin/index.html"

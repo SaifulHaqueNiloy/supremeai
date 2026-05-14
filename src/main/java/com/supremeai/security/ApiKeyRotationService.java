@@ -65,6 +65,9 @@ public class ApiKeyRotationService {
     private UserApiKeyRepository userApiKeyRepository;
 
     @Autowired
+    private com.supremeai.repository.APIHealthReportRepository healthReportRepository;
+
+    @Autowired
     private EncryptionService encryptionService;
 
     /**
@@ -229,62 +232,68 @@ public class ApiKeyRotationService {
      */
     @Scheduled(cron = "0 0 3 * * *")
     public void validateAllActiveKeys() {
-        log.info("Running scheduled API key validation (parallel reactive)...");
+        testAllKeysNow().subscribe();
+    }
 
-        try {
-            List<UserApiKey> allKeys = userApiKeyRepository.findAll().collectList().block();
-            if (allKeys == null || allKeys.isEmpty()) return;
+    /**
+     * Test all active keys and generate a health report.
+     * Returns a Mono that completes when the report is saved.
+     */
+    public Mono<Void> testAllKeysNow() {
+        log.info("Running API key validation and report generation...");
+        
+        return userApiKeyRepository.findAll().collectList()
+            .flatMap(allKeys -> {
+                if (allKeys == null || allKeys.isEmpty()) return Mono.empty();
 
-            // Filter active keys only
-            List<UserApiKey> activeKeys = allKeys.stream()
-                    .filter(k -> "active".equals(k.getStatus()))
-                    .collect(Collectors.toList());
+                List<UserApiKey> activeKeys = allKeys.stream()
+                        .filter(k -> "active".equals(k.getStatus()))
+                        .collect(Collectors.toList());
 
-            if (activeKeys.isEmpty()) {
-                log.info("No active keys to validate.");
-                return;
-            }
+                if (activeKeys.isEmpty()) {
+                    log.info("No active keys to validate.");
+                    return Mono.empty();
+                }
 
-            int concurrency = Math.min(10, activeKeys.size());
-            AtomicInteger validCount = new AtomicInteger();
-            AtomicInteger invalidCount = new AtomicInteger();
+                int concurrency = Math.min(10, activeKeys.size());
+                AtomicInteger validCount = new AtomicInteger();
+                List<Map<String, Object>> deadDetails = Collections.synchronizedList(new ArrayList<>());
+                List<UserApiKey> rotationDue = allKeys.stream().filter(k -> "rotation_due".equals(k.getStatus())).collect(Collectors.toList());
 
-            Flux.fromIterable(activeKeys)
-                    .flatMap(key ->
-                            Mono.fromCallable(() -> {
-                                        Map<String, Object> result = testApiKey(key);
-                                        boolean isValid = Boolean.TRUE.equals(result.get("valid"));
-                                        key.setLastTested(LocalDateTime.now());
+                return Flux.fromIterable(activeKeys)
+                        .flatMap(key ->
+                                Mono.fromCallable(() -> {
+                                            Map<String, Object> result = testApiKey(key);
+                                            boolean isValid = Boolean.TRUE.equals(result.get("valid"));
+                                            key.setLastTested(LocalDateTime.now());
 
-                                        if (isValid) {
-                                            validCount.incrementAndGet();
-                                            return Map.of("key", key, "valid", true);
-                                        } else {
-                                            key.setStatus("error");
-                                            return Map.of("key", key, "valid", false);
-                                        }
-                                    })
-                                    .subscribeOn(Schedulers.boundedElastic())
-                                    .doOnNext(res -> {
-                                        UserApiKey k = (UserApiKey) res.get("key");
-                                        userApiKeyRepository.save(k).block();
-                                        if (!(Boolean) res.get("valid")) {
-                                            invalidCount.incrementAndGet();
-                                            log.warn("Key {} failed validation", k.getMaskedKey());
-                                        }
-                                    })
-                                    .onErrorResume(e -> {
-                                        log.error("Validation error: {}", e.getMessage());
-                                        return Mono.empty();
-                                    }),
-                            concurrency)
-                    .then()
-                    .block();
-
-            log.info("Key validation complete. Valid: {}, Invalid: {}", validCount.get(), invalidCount.get());
-        } catch (Exception e) {
-            log.error("Failed to validate keys: {}", e.getMessage(), e);
-        }
+                                            if (isValid) {
+                                                validCount.incrementAndGet();
+                                            } else {
+                                                key.setStatus("error");
+                                                Map<String, Object> detail = new HashMap<>();
+                                                detail.put("id", key.getId());
+                                                detail.put("label", key.getLabel());
+                                                detail.put("provider", key.getProvider());
+                                                detail.put("error", result.get("message"));
+                                                deadDetails.add(detail);
+                                            }
+                                            return key;
+                                        })
+                                        .subscribeOn(Schedulers.boundedElastic())
+                                        .flatMap(k -> userApiKeyRepository.save(k)),
+                                concurrency)
+                        .then(Mono.defer(() -> {
+                            String reportId = "report_" + LocalDateTime.now().toString().replace(":", "-");
+                            com.supremeai.model.APIHealthReport report = new com.supremeai.model.APIHealthReport(
+                                reportId, allKeys.size(), validCount.get(), deadDetails.size(), rotationDue.size()
+                            );
+                            report.setDeadKeyDetails(deadDetails);
+                            return healthReportRepository.save(report);
+                        }))
+                        .doOnSuccess(r -> log.info("API Health Report generated: {}", r.getId()))
+                        .then();
+            });
     }
 
     /**

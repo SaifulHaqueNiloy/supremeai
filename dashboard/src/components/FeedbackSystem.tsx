@@ -191,8 +191,10 @@ export const FeedbackSystem: React.FC = () => {
   };
 
   useEffect(() => {
-    (window as any).showNotification = addNotification;
-    return () => delete (window as any).showNotification;
+    (window as any)['showNotification'] = addNotification;
+    return () => {
+      delete (window as any)['showNotification'];
+    };
   }, []);
 
   return (

@@ -44,7 +44,7 @@ class EnhancedLearningServiceTest {
         sampleLearning.setSuccess(true);
         sampleLearning.setQualityScore(0.85);
         sampleLearning.setConfidenceScore(0.9);
-        sampleLearning.setLearnedAt(LocalDateTime.now());
+        sampleLearning.setLearnedAt(new Date());
         sampleLearning.setTimesApplied(5);
         sampleLearning.setTags(Arrays.asList("test", "nlp"));
     }
@@ -258,7 +258,7 @@ class EnhancedLearningServiceTest {
         learning.setSuccess(success);
         learning.setQualityScore(qualityScore);
         learning.setConfidenceScore(qualityScore);
-        learning.setLearnedAt(LocalDateTime.now());
+        learning.setLearnedAt(new Date());
         return learning;
     }
 

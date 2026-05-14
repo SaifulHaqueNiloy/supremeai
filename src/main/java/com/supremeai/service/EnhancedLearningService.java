@@ -69,7 +69,7 @@ public class EnhancedLearningService {
         learning.setSuccess(qualityScore > 0.7);
         learning.setQualityScore(qualityScore);
         learning.setRelatedProvider(provider);
-        learning.setLearnedAt(LocalDateTime.now());
+        learning.setLearnedAt(new java.util.Date());
         learning.setTimesApplied(0);
 
         List<String> tags = new ArrayList<>();
@@ -112,7 +112,7 @@ public class EnhancedLearningService {
         learning.setSuccess(accuracyScore > 0.75);
         learning.setQualityScore(accuracyScore);
         learning.setRelatedProvider(provider);
-        learning.setLearnedAt(LocalDateTime.now());
+        learning.setLearnedAt(new java.util.Date());
         learning.setTimesApplied(0);
 
         List<String> tags = Arrays.asList("multimodal", "vision", "image_to_code", provider.toLowerCase());
@@ -148,7 +148,7 @@ public class EnhancedLearningService {
         learning.setSuccess(success);
         learning.setQualityScore(success ? 1.0 : 0.0);
         learning.setRelatedProvider(provider);
-        learning.setLearnedAt(LocalDateTime.now());
+        learning.setLearnedAt(new java.util.Date());
         learning.setTimesApplied(0);
 
         List<String> tags = new ArrayList<>();
@@ -194,7 +194,7 @@ public class EnhancedLearningService {
         learning.setSuccess(buildSuccess);
         learning.setQualityScore(qualityScore);
         learning.setRelatedProvider(agentUsed);
-        learning.setLearnedAt(LocalDateTime.now());
+        learning.setLearnedAt(new java.util.Date());
         learning.setTimesApplied(0);
 
         List<String> tags = new ArrayList<>();
@@ -229,7 +229,7 @@ public class EnhancedLearningService {
         learning.setSuccess(true);
         learning.setConfidenceScore(confidence);
         learning.setQualityScore(confidence);
-        learning.setLearnedAt(LocalDateTime.now());
+        learning.setLearnedAt(new java.util.Date());
         learning.setTimesApplied(0);
 
         List<String> tags = Arrays.asList("predictive", patternType.toLowerCase(), "pattern_matching");
@@ -350,7 +350,7 @@ public class EnhancedLearningService {
                     summary.put("improvementsIdentified", opportunities.size());
                     summary.put("optimizationsApplied", optimization.get("applied"));
                     summary.put("recommendationsGenerated", recommendations.size());
-                    summary.put("improvementCycle", LocalDateTime.now().toString());
+                    summary.put("improvementCycle", new java.util.Date().toString());
                     
                     result.put("summary", summary);
                     result.put("success", true);
@@ -504,9 +504,11 @@ public class EnhancedLearningService {
         });
         
         // Prune obsolete entries (older than 6 months, never applied)
-        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MONTH, -6);
+        Date sixMonthsAgo = cal.getTime();
         long obsolete = learnings.stream()
-                .filter(l -> l.getLearnedAt() != null && l.getLearnedAt().isBefore(sixMonthsAgo))
+                .filter(l -> l.getLearnedAt() != null && l.getLearnedAt().before(sixMonthsAgo))
                 .filter(l -> l.getTimesApplied() == null || l.getTimesApplied() < 1)
                 .count();
         
@@ -517,7 +519,7 @@ public class EnhancedLearningService {
         optimization.put("actions", actions);
         optimization.put("applied", applied);
         optimization.put("obsolete", obsolete);
-        optimization.put("optimizedAt", LocalDateTime.now().toString());
+        optimization.put("optimizedAt", new java.util.Date().toString());
         
         return optimization;
     }

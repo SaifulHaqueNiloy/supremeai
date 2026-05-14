@@ -34,6 +34,7 @@ public class APIProvider {
     private boolean canExecuteTasks = true;
     private boolean canParticipateInVoting = true;
     private String deploymentSource = "API"; // API, GCLOUD, LOCAL, OLLAMA
+    private java.util.List<String> assignedRoles = new java.util.ArrayList<>();
 
     // Auto-validation tracking fields
     private Integer consecutiveErrorDays;
@@ -113,6 +114,9 @@ public class APIProvider {
 
     public String getDeadReason() { return deadReason; }
     public void setDeadReason(String deadReason) { this.deadReason = deadReason; }
+
+    public java.util.List<String> getAssignedRoles() { return assignedRoles; }
+    public void setAssignedRoles(java.util.List<String> assignedRoles) { this.assignedRoles = assignedRoles; }
 
     public LocalDateTime getDeadAt() { return deadAt; }
     public void setDeadAt(LocalDateTime deadAt) { this.deadAt = deadAt; }

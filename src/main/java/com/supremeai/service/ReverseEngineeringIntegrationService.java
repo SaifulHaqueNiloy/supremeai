@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import org.springframework.security.access.prepost.PreAuthorize;
+import java.util.HashMap;
+import java.util.UUID;
 
 import java.util.Comparator;
 import java.util.List;
@@ -32,12 +35,18 @@ public class ReverseEngineeringIntegrationService {
     private CodeGenerationService codeGenerationService;
 
     @Autowired
+    private PubSubPublisherService pubSubPublisherService;
+
+    @Autowired
     private SimulatorService simulatorService;
+
+    private static final String PUBSUB_TOPIC = "reverse-engineering-jobs";
 
     /**
      * Called when a reverse engineering job completes.
      * Generates an app that uses the discovered APIs and optionally deploys to simulator.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<ReverseEngineeringJob> onJobCompletion(String jobId, String userId) {
         logger.info("[ReverseEngIntegration] Processing completed job: {}", jobId);
 
@@ -101,15 +110,38 @@ public class ReverseEngineeringIntegrationService {
     }
 
     /**
-     * Manually trigger reverse engineering job.
      * In production, this would be invoked via Pub/Sub or HTTP webhook.
      */
-    public Mono<ReverseEngineeringJob> startJob(String userId, String websiteUrl) {
-        String jobId = "re_" + java.util.UUID.randomUUID().toString().substring(0, 12);
-        ReverseEngineeringJob job = new ReverseEngineeringJob(jobId, userId, websiteUrl);
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ReverseEngineeringJob> startJob(String userId, String websiteUrl, String taskType, String customInstructions, Map<String, Object> extraParams) {
+        String jobId = "reveng_" + UUID.randomUUID().toString().substring(0, 12);
+        ReverseEngineeringJob job = new ReverseEngineeringJob(jobId, userId, websiteUrl, taskType);
+        job.setCustomInstructions(customInstructions);
         job.setStatus("PENDING");
+        
         return jobRepository.save(job)
-            .doOnNext(saved -> logger.info("[ReverseEngIntegration] Job created: {} for {}", jobId, websiteUrl));
+            .doOnNext(saved -> {
+                logger.info("[ReverseEngIntegration] Job created: {} for {} (Type: {})", jobId, websiteUrl, taskType);
+                
+                // Publish to Pub/Sub
+                Map<String, Object> message = new HashMap<>();
+                message.put("jobId", jobId);
+                message.put("userId", userId);
+                message.put("websiteUrl", websiteUrl);
+                message.put("taskType", taskType);
+                message.put("customInstructions", customInstructions);
+                
+                if (extraParams != null) {
+                    message.putAll(extraParams);
+                }
+                
+                try {
+                    pubSubPublisherService.publish(PUBSUB_TOPIC, message);
+                    logger.info("[ReverseEngIntegration] Published job {} to topic {}", jobId, PUBSUB_TOPIC);
+                } catch (Exception e) {
+                    logger.error("[ReverseEngIntegration] Failed to publish to Pub/Sub: {}", e.getMessage());
+                }
+            });
     }
 
     /**
@@ -129,6 +161,7 @@ public class ReverseEngineeringIntegrationService {
      * Fetch recent reverse engineering jobs (for admin history).
      * Fetches all, sorts by createdAt descending, limits to N.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<List<ReverseEngineeringJob>> getRecentJobs(int limit) {
         return jobRepository.findAll()
             .collectList()

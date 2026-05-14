@@ -2,6 +2,9 @@ package com.supremeai.controller;
 
 import com.supremeai.model.APIProvider;
 import com.supremeai.model.ActivityLog;
+import com.supremeai.admin.AdminDashboardService;
+import com.supremeai.service.ProviderRoleSuggestionService;
+import com.supremeai.admin.AdminProviderValidationService;
 import com.supremeai.provider.AIProviderFactory;
 import com.supremeai.repository.ActivityLogRepository;
 import com.supremeai.repository.ProviderRepository;
@@ -43,13 +46,20 @@ class ProvidersControllerTest {
     @Mock
     private com.supremeai.service.AIProviderDiscoveryService discoveryService;
 
+    @Mock
+    private AdminDashboardService adminDashboardService;
+
+    @Mock
+    private ProviderRoleSuggestionService roleSuggestionService;
+
+    @Mock
+    private AdminProviderValidationService adminProviderValidationService;
+
     private ProvidersController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new ProvidersController(providerRepository);
-        org.springframework.test.util.ReflectionTestUtils.setField(controller, "activityLogRepository", activityLogRepository);
-        org.springframework.test.util.ReflectionTestUtils.setField(controller, "aiProviderFactory", aiProviderFactory);
+        controller = new ProvidersController(providerRepository, activityLogRepository, adminDashboardService, roleSuggestionService, adminProviderValidationService);
         org.springframework.test.util.ReflectionTestUtils.setField(controller, "discoveryService", discoveryService);
         SecurityContextHolder.clearContext();
     }

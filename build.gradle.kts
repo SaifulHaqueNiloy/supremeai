@@ -46,6 +46,8 @@ dependencies {
     implementation("com.google.cloud:google-cloud-core")
     implementation("com.google.cloud:google-cloud-secretmanager")
     implementation("com.google.cloud:google-cloud-bigquery")
+    implementation("com.google.cloud:google-cloud-run:0.43.0") // Or managed by BOM if available, but let's just add it
+
     implementation("software.amazon.awssdk:secretsmanager:2.25.36")
     implementation("software.amazon.awssdk:regions:2.25.36")
     implementation("com.azure:azure-identity:1.12.2")
@@ -129,12 +131,12 @@ dependencies {
     // Caching
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
-    // Lombok - Annotation Processing
     // Lombok - annotation processing for getters/builders
-    compileOnly("org.projectlombok:lombok:1.18.34")
-    annotationProcessor("org.projectlombok:lombok:1.18.34")
-    testCompileOnly("org.projectlombok:lombok:1.18.34")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
+    implementation("org.projectlombok:lombok")
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
 
     // Testing - ENHANCED
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
@@ -157,17 +159,7 @@ dependencies {
 // Configure UTF-8 encoding for all compilation tasks with performance optimizations
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-    options.isIncremental = true
-    options.isFork = true
-    options.forkOptions.javaHome = javaToolchains.launcherFor(java.toolchain).get().metadata.installationPath.asFile
-    options.compilerArgs.addAll(listOf(
-        "-Xlint:deprecation",      // Enable deprecation warnings
-        "-Xlint:unchecked",        // Enable unchecked warnings
-        "--enable-preview",        // Enable preview features for Java 21
-        "-XDcompilePolicy=simple", // Faster incremental compilation
-        "-Xmaxerrs", "500",        // Allow more errors before stopping
-        "-Xmaxwarns", "500"        // Allow more warnings before stopping
-    ))
+    options.annotationProcessorPath = configurations.annotationProcessor.get()
 }
 
 tasks.withType<Test> {
@@ -190,8 +182,14 @@ tasks.withType<JavaExec> {
 
 tasks.test {
     useJUnitPlatform()
-    maxParallelForks =
-        (findProperty("test.maxParallelForks") as String?)?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+    
+    maxParallelForks = (findProperty("test.maxParallelForks") as String?)?.toIntOrNull()?.coerceAtLeast(1) 
+        ?: Runtime.getRuntime().availableProcessors().coerceAtMost(4)
+        
+    systemProperties["junit.jupiter.execution.parallel.enabled"] = "true"
+    systemProperties["junit.jupiter.execution.parallel.mode.default"] = "concurrent"
+    systemProperties["junit.jupiter.execution.parallel.config.strategy"] = "dynamic"
+
     // Run coverage only if explicitly requested
     val runCoverage = (findProperty("runCoverage") as String?)?.toBoolean() ?: false
     if (runCoverage) {
@@ -279,13 +277,4 @@ tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
     entryCompression = org.gradle.api.tasks.bundling.ZipEntryCompression.DEFLATED
 }
 
-tasks.withType<Test> {
-    // Use JUnit 5 platform
-    useJUnitPlatform()
-
-    // Optimize test execution
-    maxParallelForks = Runtime.getRuntime().availableProcessors().coerceAtMost(4)
-    systemProperties["junit.jupiter.execution.parallel.enabled"] = "true"
-    systemProperties["junit.jupiter.execution.parallel.mode.default"] = "concurrent"
-    systemProperties["junit.jupiter.execution.parallel.config.strategy"] = "dynamic"
-}
+// Test configuration is unified above in tasks.test

@@ -12,8 +12,12 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import com.supremeai.model.*;
+import com.supremeai.repository.*;
+import com.supremeai.service.*;
+import com.supremeai.fallback.AIFallbackOrchestrator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -35,6 +39,9 @@ public class AdminProviderValidationService {
 
     @Autowired
     private AIProviderDiscoveryService discoveryService;
+
+    @Autowired
+    private APIHealthReportRepository healthReportRepository;
 
     /**
      * Daily cron (3 AM) to validate all active admin provider keys.
@@ -132,8 +139,51 @@ public class AdminProviderValidationService {
                     .block();
 
             log.info("Admin provider validation complete. Processed {} active providers with concurrency {}.", activeProviders.size(), concurrency);
+
+            // Generate daily report
+            generateAndSaveReport(activeProviders);
         } catch (Exception e) {
             log.error("Failed to run admin provider validation: {}", e.getMessage(), e);
         }
+    }
+
+    private void generateAndSaveReport(List<APIProvider> providers) {
+        long active = providers.stream().filter(p -> "active".equals(p.getStatus())).count();
+        long dead = providers.stream().filter(p -> "dead".equals(p.getStatus())).count();
+        
+        List<Map<String, Object>> deadDetails = providers.stream()
+                .filter(p -> "dead".equals(p.getStatus()))
+                .map(p -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", p.getId() != null ? p.getId() : "unknown");
+                    map.put("name", p.getName());
+                    map.put("type", p.getType());
+                    map.put("reason", p.getDeadReason() != null ? p.getDeadReason() : "Validation failed");
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        com.supremeai.model.APIHealthReport report = new com.supremeai.model.APIHealthReport(
+                "REPORT_" + System.currentTimeMillis(),
+                providers.size(),
+                (int) active,
+                (int) dead,
+                0
+        );
+        report.setDeadKeyDetails(deadDetails);
+        
+        healthReportRepository.save(report).subscribe(
+            saved -> log.info("Daily API health report saved: {}", saved.getId()),
+            err -> log.error("Failed to save daily health report: {}", err.getMessage())
+        );
+    }
+
+    /**
+     * Stub method for ChatProcessingService command.
+     * Triggers validation of all providers.
+     */
+    public void testAllProviders() {
+        log.info("testAllProviders invoked (stub implementation)");
+        // In a full implementation, this would iterate providers and test them
     }
 }

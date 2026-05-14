@@ -59,23 +59,18 @@ public class RedisRateLimiter implements RateLimiter {
     @Override
     public boolean tryAcquire(String key, int limit, int windowSeconds) {
         if (redisTemplate == null) {
-            return true; // Fail open if disabled
+            throw new IllegalStateException("RedisTemplate is not configured");
         }
-        try {
-            RedisScript<Long> script = RedisScript.of(RATE_LIMIT_SCRIPT, Long.class);
-            List<String> keys = Collections.singletonList("rate_limit:" + key);
-            List<String> args = List.of(
-                    String.valueOf(limit),
-                    String.valueOf(windowSeconds),
-                    String.valueOf(Instant.now().getEpochSecond())
-            );
+        RedisScript<Long> script = RedisScript.of(RATE_LIMIT_SCRIPT, Long.class);
+        List<String> keys = Collections.singletonList("rate_limit:" + key);
+        List<String> args = List.of(
+                String.valueOf(limit),
+                String.valueOf(windowSeconds),
+                String.valueOf(Instant.now().getEpochSecond())
+        );
 
-            Long result = redisTemplate.execute(script, keys, (Object[]) args.toArray(new String[0]));
-            return result != null && result == 1L;
-        } catch (Exception e) {
-            log.error("Redis rate limit error for {}: {}", key, e.getMessage());
-            return true; // Fail open
-        }
+        Long result = redisTemplate.execute(script, keys, (Object[]) args.toArray(new String[0]));
+        return result != null && result == 1L;
     }
 
     @Override

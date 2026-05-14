@@ -32,6 +32,8 @@ import { notification } from 'antd';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useRole } from '../contexts/RoleContext';
+import AISuggestionInformer from '../components/AISuggestionInformer';
+import { message } from 'antd';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
@@ -203,6 +205,31 @@ const AdminDashboardUnified: React.FC = () => {
                             </div>
                         </div>
                     </div>
+
+                    <AISuggestionInformer 
+                        title="Critical System Recommendations"
+                        context="Infrastructure & Multi-Agent Harmony"
+                        suggestions={[
+                            {
+                                id: 'rotate-providers',
+                                title: 'Dynamic Provider Rotation',
+                                description: 'Mistral-7B latency has increased by 40%. Suggesting a switch to Gemini 1.5 Flash as the primary execution orchestrator to maintain performance.',
+                                impact: 'performance',
+                                confidence: 0.96,
+                                autoExecutable: true
+                            },
+                            {
+                                id: 'security-anomaly',
+                                title: 'Unusual Traffic Pattern Detected',
+                                description: 'Detected repeated failed API calls from IP 192.168.1.105. Suggesting temporary IP blacklisting and increased logging for the Reverse Engineering module.',
+                                impact: 'security',
+                                confidence: 0.85,
+                                autoExecutable: false
+                            }
+                        ]}
+                        onApprove={(id) => message.success(`Executing: ${id}`)}
+                        onDecline={(id) => message.info(`Dismissed: ${id}`)}
+                    />
 
                     <div className="glass-card p-6 border border-white/5 bg-black/20">
                         <Tabs

@@ -25,7 +25,7 @@ public class PubSubPublisherService {
 
     private static final Logger logger = LoggerFactory.getLogger(PubSubPublisherService.class);
 
-    @Value("${GCP_PROJECT_ID:supremeai-459910}")
+    @Value("${spring.cloud.gcp.project-id:supremeai-a}")
     private String projectId;
 
     private final Map<String, Publisher> publisherCache = new ConcurrentHashMap<>();

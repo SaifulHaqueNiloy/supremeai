@@ -17,6 +17,10 @@ public class ReverseEngineeringJob {
     private String userId;
 
     private String websiteUrl;
+    
+    private String taskType; // REVERSE_ENGINEER, DATA_EXTRACTION, AUTOMATION, SECURITY_AUDIT
+    
+    private String customInstructions;
 
     private String status; // PENDING, PROCESSING, COMPLETED, FAILED
 
@@ -36,10 +40,11 @@ public class ReverseEngineeringJob {
 
     public ReverseEngineeringJob() {}
 
-    public ReverseEngineeringJob(String jobId, String userId, String websiteUrl) {
+    public ReverseEngineeringJob(String jobId, String userId, String websiteUrl, String taskType) {
         this.jobId = jobId;
         this.userId = userId;
         this.websiteUrl = websiteUrl;
+        this.taskType = taskType != null ? taskType : "REVERSE_ENGINEER";
         this.status = "PENDING";
         this.createdAt = LocalDateTime.now();
     }
@@ -55,6 +60,12 @@ public class ReverseEngineeringJob {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getTaskType() { return taskType; }
+    public void setTaskType(String taskType) { this.taskType = taskType; }
+
+    public String getCustomInstructions() { return customInstructions; }
+    public void setCustomInstructions(String customInstructions) { this.customInstructions = customInstructions; }
 
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }

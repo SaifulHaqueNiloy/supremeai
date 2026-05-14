@@ -12,6 +12,7 @@ public class StoredCredential {
     private String selectorUsername;
     private String selectorPassword;
     private String selectorSubmit;
+    private String token;
     private LocalDateTime createdAt;
 
     public StoredCredential() {
@@ -33,6 +34,8 @@ public class StoredCredential {
     public void setSelectorPassword(String selectorPassword) { this.selectorPassword = selectorPassword; }
     public String getSelectorSubmit() { return selectorSubmit; }
     public void setSelectorSubmit(String selectorSubmit) { this.selectorSubmit = selectorSubmit; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

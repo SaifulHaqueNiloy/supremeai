@@ -15,7 +15,7 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # --- Configuration ---
-PROJECT_ID="${GCP_PROJECT_ID:-supremeai-459910}"
+PROJECT_ID="${GCP_PROJECT_ID:-supremeai-a}"
 REGION="${GCP_REGION:-us-central1}"
 BACKEND_IMAGE="gcr.io/${PROJECT_ID}/supremeai-backend:latest"
 REVERSE_ENG_IMAGE="gcr.io/${PROJECT_ID}/reverse-engineering:latest"
@@ -95,6 +95,19 @@ if [ -n "$REVERSE_ENG_URL" ]; then
       --project "$PROJECT_ID" || log_warn "Subscription may already exist"
 else
     log_warn "Could not determine reverse-engineering service URL; skip creating subscription"
+fi
+
+# 9. Configure Backend push subscription for results
+BACKEND_URL=$(gcloud run services describe supremeai-backend --region "$REGION" --format='value(status.url)' --project "$PROJECT_ID")
+if [ -n "$BACKEND_URL" ]; then
+    log_info "Configuring result push subscription for backend: ${BACKEND_URL}/api/pubsub/push"
+    gcloud pubsub subscriptions create reverse-engineering-results-push \
+      --topic=reverse-engineering-results \
+      --push-endpoint="${BACKEND_URL}/api/pubsub/push" \
+      --push-auth-service-account="supremeai-backend@${PROJECT_ID}.iam.gserviceaccount.com" \
+      --project "$PROJECT_ID" || log_warn "Result subscription may already exist"
+else
+    log_warn "Could not determine backend service URL; skip creating result subscription"
 fi
 
 log_info "Deployment complete!"

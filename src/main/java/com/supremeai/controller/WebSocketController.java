@@ -96,6 +96,52 @@ public class WebSocketController {
     }
 
     /**
+     * Broadcast analysis job progress update.
+     * Called from ProjectAnalysisService during file/agent scanning.
+     */
+    public void broadcastAnalysisProgress(String jobId, String projectName, String phase,
+                                           int filesProcessed, int totalFiles,
+                                           String currentAgent, int findingsSoFar,
+                                           String message) {
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("type", "ANALYSIS_PROGRESS");
+        progress.put("jobId", jobId);
+        progress.put("projectName", projectName);
+        progress.put("phase", phase); // EXTRACTING, CHUNKING, SCANNING, FIXING, COMPLETED
+        progress.put("filesProcessed", filesProcessed);
+        progress.put("totalFiles", totalFiles);
+        progress.put("currentAgent", currentAgent);
+        progress.put("findingsSoFar", findingsSoFar);
+        progress.put("message", message);
+        progress.put("timestamp", System.currentTimeMillis());
+
+        // Send to both general analysis topic and job-specific queue for isolation
+        messagingTemplate.convertAndSend("/topic/analysis", progress);
+        messagingTemplate.convertAndSend("/topic/analysis/" + jobId, progress);
+        log.debug("[AnalysisProgress] Job {}: {} - {}/{} files, agent={}, findings={}",
+            jobId, phase, filesProcessed, totalFiles, currentAgent, findingsSoFar);
+    }
+
+    /**
+     * Broadcast analysis job completion event.
+     */
+    public void broadcastAnalysisCompletion(String jobId, String projectName, int totalFindings,
+                                             Map<String, Integer> severitySummary, long durationMs) {
+        Map<String, Object> completion = new HashMap<>();
+        completion.put("type", "ANALYSIS_COMPLETE");
+        completion.put("jobId", jobId);
+        completion.put("projectName", projectName);
+        completion.put("totalFindings", totalFindings);
+        completion.put("severitySummary", severitySummary);
+        completion.put("durationMs", durationMs);
+        completion.put("timestamp", System.currentTimeMillis());
+
+        messagingTemplate.convertAndSend("/topic/analysis", completion);
+        messagingTemplate.convertAndSend("/topic/analysis/" + jobId, completion);
+        log.info("[AnalysisComplete] Job {}: {} findings in {}ms", jobId, totalFindings, durationMs);
+    }
+
+    /**
      * Broadcast learning update (new pattern learned)
      */
     public void broadcastLearningUpdate(String patternType, int count) {

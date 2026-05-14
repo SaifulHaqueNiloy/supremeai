@@ -11,6 +11,7 @@ import {
     FileTextOutlined
 } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
+import AISuggestionInformer from './AISuggestionInformer';
 
 interface ChatMessage {
     id: string;
@@ -33,7 +34,7 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
     const [loading, setLoading] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState('all');
     const [agents, setAgents] = useState<any[]>([]);
-    const [knowledge, setKnowledge] = useState<{rules: any[], plans: any[]}>({ rules: [], plans: [] });
+    const [knowledge, setKnowledge] = useState<{rules: any[], plans: any[], actions: any[]}>({ rules: [], plans: [], actions: [] });
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -92,17 +93,23 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                     { id: 1, content: 'Q2 Roadmap: Enhance model orchestration', title: 'Q2 Roadmap' },
                     { id: 2, content: 'Security audit: Third-party penetration testing', title: 'Security Audit' }
                 ];
-                setKnowledge({ rules: demoRules, plans: demoPlans });
+                setKnowledge({ rules: demoRules, plans: demoPlans, actions: [] });
                 return;
             }
 
-            const [rulesRes, plansRes] = await Promise.all([
+            const [rulesRes, plansRes, actionsRes] = await Promise.all([
                 authUtils.fetchWithAuth('/api/admin/rules').catch(() => null),
-                authUtils.fetchWithAuth('/api/admin/plans').catch(() => null)
+                authUtils.fetchWithAuth('/api/admin/plans').catch(() => null),
+                authUtils.fetchWithAuth('/api/admin/chat/actions/pending').catch(() => null)
             ]);
             const rules = rulesRes?.ok ? await rulesRes.json() : [];
             const plans = plansRes?.ok ? await plansRes.json() : [];
-            setKnowledge({ rules: rules.slice(0, 5), plans: plans.slice(0, 5) });
+            const actions = actionsRes?.ok ? await actionsRes.json() : [];
+            setKnowledge({ 
+                rules: rules.slice(0, 5), 
+                plans: plans.slice(0, 5),
+                actions: actions.slice(0, 5)
+            });
         } catch (error) {
             console.error('Failed to fetch knowledge context');
         }
@@ -205,7 +212,23 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
             case 'PROJECT_PLAN': return '#1890ff';
             case 'DEBUG': return '#faad14';
             case 'INFO_COLLECTION': return '#722ed1';
+            case 'ADMIN_ACTION': return '#eb2f96';
             default: return 'rgba(255,255,255,0.2)';
+        }
+    };
+
+    const handleConfirmAction = async (itemId: string, confirmed: boolean) => {
+        try {
+            const response = await authUtils.fetchWithAuth('/api/chat/confirm', {
+                method: 'POST',
+                body: JSON.stringify({ item_id: itemId, confirmed, item_type: 'admin_action' })
+            });
+            if (response.ok) {
+                message.success(confirmed ? 'Action confirmed' : 'Action declined');
+                fetchKnowledge();
+            }
+        } catch (error) {
+            message.error('Confirmation failed');
         }
     };
 
@@ -247,7 +270,7 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                                         {msg.sender === 'ai' && <RobotOutlined className="text-xs text-emerald-500" />}
                                         <span className="text-xs font-medium text-white/60">{msg.sender === 'ai' ? 'AI' : 'You'}</span>
                                         {msg.intent && msg.intent !== 'NORMAL' && (
-                                            <Tag size="small" color={getIntentColor(msg.intent)} className="text-xs">
+                                            <Tag color={getIntentColor(msg.intent)} className="text-[10px] leading-none py-0 px-1 border-none bg-white/10">
                                                 {msg.intent}
                                             </Tag>
                                         )}
@@ -271,6 +294,29 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                                             >
                                                 <CopyOutlined /> Copy
                                             </button>
+                                            
+                                            {msg.intent === 'ADMIN_ACTION' && msg.status !== 'completed' && (
+                                                <div className="flex gap-2">
+                                                    <Button 
+                                                        size="small" 
+                                                        type="primary" 
+                                                        ghost 
+                                                        className="text-[10px] h-6"
+                                                        onClick={() => handleConfirmAction(msg.id, true)}
+                                                    >
+                                                        Confirm Action
+                                                    </Button>
+                                                    <Button 
+                                                        size="small" 
+                                                        danger 
+                                                        ghost 
+                                                        className="text-[10px] h-6"
+                                                        onClick={() => handleConfirmAction(msg.id, false)}
+                                                    >
+                                                        Decline
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -289,6 +335,11 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
                             onChange={(e) => setInput(e.target.value)}
                             disabled={loading}
                             className="flex-1 bg-black/40 border-white/20 text-white placeholder:text-white/40 rounded-lg focus:border-emerald-500/60 transition-all"
+                            suffix={<AISuggestionInformer 
+                                context="admin_chat" 
+                                onSelect={(val) => setInput(val)} 
+                                style={{ marginRight: -10 }}
+                            />}
                         />
                         <button
                             type="submit"
@@ -304,55 +355,56 @@ const ChatWithAI: React.FC<ChatWithAIProps> = ({ chatFont = 'font-mono' }) => {
 
             {/* Right Column: Context Panel */}
             <div className="w-80 bg-white/[0.02] border-l border-white/10 flex flex-col">
-                {/* Rules Section */}
-                {knowledge.rules.length > 0 && (
-                    <div className="p-4 border-b border-white/10">
-                        <div className="flex items-center gap-2 mb-3">
-                            <BulbOutlined className="text-orange-500" />
-                            <span className="text-sm font-semibold text-white">Active Rules</span>
-                            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">
-                                {knowledge.rules.length}
-                            </span>
-                        </div>
-                        <div className="space-y-2 max-h-32 overflow-y-auto">
-                            {knowledge.rules.slice(0, 3).map((rule, idx) => (
-                                <div key={idx} className="text-xs text-white/70 bg-white/5 p-2 rounded border border-white/10">
-                                    {rule.content || rule.message}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+        {/* Rules Section */}
+        {Array.isArray(knowledge.rules) && knowledge.rules.length > 0 && (
+        <div className="p-4 border-b border-white/10">
+          <div className="flex items-center gap-2 mb-3">
+            <BulbOutlined className="text-orange-500" />
+            <span className="text-sm font-semibold text-white">Active Rules</span>
+            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">
+              {knowledge.rules.length}
+            </span>
+          </div>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {knowledge.rules.slice(0, 3).map((rule, idx) => (
+              <div key={idx} className="text-xs text-white/70 bg-white/5 p-2 rounded border border-white/10">
+                {rule.content || rule.message}
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
 
-                {/* Plans Section */}
-                {knowledge.plans.length > 0 && (
-                    <div className="p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <FileTextOutlined className="text-blue-500" />
-                            <span className="text-sm font-semibold text-white">Project Plans</span>
-                            <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
-                                {knowledge.plans.length}
-                            </span>
-                        </div>
-                        <div className="space-y-2 max-h-32 overflow-y-auto">
-                            {knowledge.plans.slice(0, 3).map((plan, idx) => (
-                                <div key={idx} className="text-xs text-white/70 bg-white/5 p-2 rounded border border-white/10">
-                                    {plan.content || plan.title}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+        {/* Plans Section */}
+        {Array.isArray(knowledge.plans) && knowledge.plans.length > 0 && (
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <FileTextOutlined className="text-blue-500" />
+            <span className="text-sm font-semibold text-white">Project Plans</span>
+            <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
+              {knowledge.plans.length}
+            </span>
+          </div>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {knowledge.plans.slice(0, 3).map((plan, idx) => (
+              <div key={idx} className="text-xs text-white/70 bg-white/5 p-2 rounded border border-white/10">
+                {plan.content || plan.title}
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
 
-                {/* Empty state */}
-                {knowledge.rules.length === 0 && knowledge.plans.length === 0 && (
-                    <div className="flex-1 flex items-center justify-center text-white/30">
-                        <div className="text-center">
-                            <DatabaseOutlined className="text-2xl mb-2" />
-                            <div className="text-sm">No context available</div>
-                        </div>
-                    </div>
-                )}
+        {/* Empty state */}
+        {(Array.isArray(knowledge.rules) ? knowledge.rules.length : 0) === 0 && 
+         (Array.isArray(knowledge.plans) ? knowledge.plans.length : 0) === 0 && (
+        <div className="flex-1 flex items-center justify-center text-white/30">
+          <div className="text-center">
+            <DatabaseOutlined className="text-2xl mb-2" />
+            <div className="text-sm">No context available</div>
+          </div>
+        </div>
+        )}
             </div>
         </div>
     );

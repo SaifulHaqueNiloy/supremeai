@@ -83,7 +83,7 @@ public class AdaptiveAgentOrchestrator {
 
         // Get user's language preference
         UserLanguagePreference languagePreference = languagePreferenceService
-                .getUserLanguagePreference(userId)
+                .getUserPreference(userId)
                 .block(); // Blocking for simplicity in this context
         String userLanguage = languagePreference != null ?
                 languagePreference.getLanguageName() : "English";

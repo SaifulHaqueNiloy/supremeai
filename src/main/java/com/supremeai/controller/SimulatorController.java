@@ -303,16 +303,16 @@ public class SimulatorController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getAllUsage(Authentication auth) {
         // Aggregate usage from deployment service registry
-        java.util.Map<String, com.supremeai.service.SimulatorDeploymentService.DeploymentRecord> deployments =
+        java.util.List<com.supremeai.model.SimulatorDeploymentRecord> deployments =
             simulatorService.getAllDeployments();
 
-        java.util.List<Map<String, Object>> usageList = deployments.values().stream()
+        java.util.List<Map<String, Object>> usageList = deployments.stream()
             .map(record -> {
                 Map<String, Object> entry = new HashMap<>();
                 entry.put("appId", record.getAppId());
                 entry.put("deviceType", record.getDeviceType());
                 entry.put("previewUrl", record.getPreviewUrl());
-                entry.put("status", record.getStatus().name());
+                entry.put("status", record.getStatus());
                 entry.put("deployedAt", record.getDeployedAt());
                 return entry;
             })

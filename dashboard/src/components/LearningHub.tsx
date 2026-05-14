@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Progress, Button, Space, Card, Tag, Empty, message, Select, Badge, Divider } from 'antd';
+import { Typography, Progress, Button, Space, Card, Tag, Empty, message, Select, Badge, Divider, Avatar } from 'antd';
 import { BulbOutlined, RocketOutlined, ExperimentOutlined, HistoryOutlined, SyncOutlined, ThunderboltOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { authUtils } from '../lib/authUtils';
 

@@ -2,14 +2,40 @@
 
 import React from 'react';
 import { Layout, Card, Typography, Alert, Button } from 'antd';
-import { EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { EyeOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import AdminLayout from '../components/AdminLayout';
+import AISuggestionInformer from '../components/AISuggestionInformer';
+import { message } from 'antd';
 
 const { Title, Paragraph } = Typography;
 
 const AdminOCR: React.FC = () => {
   return (
     <AdminLayout title="Bengali OCR">
+      <AISuggestionInformer 
+        title="OCR Model Intelligence"
+        context="Document Processing"
+        suggestions={[
+          {
+            id: 'ocr-medical',
+            title: 'Enable Specialized Medical OCR',
+            description: 'Frequent uploads of prescriptions detected. Suggesting activation of the Med-BERT OCR layer for 25% better handwriting recognition on Bengali medical terms.',
+            impact: 'capability',
+            confidence: 0.93,
+            autoExecutable: false
+          },
+          {
+            id: 'ocr-batch',
+            title: 'Optimize Batch Processing',
+            description: 'Detected high queue volume. Suggesting parallel execution using Cloud Run jobs to reduce processing time by 60%.',
+            impact: 'performance',
+            confidence: 0.86,
+            autoExecutable: true
+          }
+        ]}
+        onApprove={(id) => message.success(`OCR optimization started: ${id}`)}
+        onDecline={(id) => message.info(`OCR suggestion ${id} skipped.`)}
+      />
       <Card>
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <EyeOutlined style={{ fontSize: 64, color: '#eb2f96', marginBottom: 24 }} />

@@ -50,9 +50,10 @@ public class SelfImprovementService {
         logger.info("🔄 Starting hourly self-improvement cycle...");
 
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
+        java.util.Date oneHourAgoDate = java.util.Date.from(oneHourAgo.atZone(java.time.ZoneId.systemDefault()).toInstant());
 
         learningRepository.findAll()
-                .filter(entry -> entry.getLearnedAt() != null && entry.getLearnedAt().isAfter(oneHourAgo))
+                .filter(entry -> entry.getLearnedAt() != null && entry.getLearnedAt().after(oneHourAgoDate))
                 .collectList()
                 .doOnNext(entries -> {
                     logger.info("📊 Analyzing {} new learning entries", entries.size());

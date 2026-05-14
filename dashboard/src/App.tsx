@@ -1,15 +1,18 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { CoreEngine } from './components/CoreEngine';
-import { Activity, Cpu, Shield, Zap, Terminal as TerminalIcon, Globe } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Cpu, Shield, Zap, Terminal as TerminalIcon, Globe } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AdminDashboardUnified from './pages/AdminDashboardUnified';
-import ModernAdminDashboard from './pages/ModernAdminDashboard';
-import LoginPage from './pages/LoginPage';
+import { Spin } from 'antd';
 import FeedbackSystem from './components/FeedbackSystem';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load pages for performance optimization
+const AdminDashboardUnified = lazy(() => import('./pages/AdminDashboardUnified'));
+const ModernAdminDashboard = lazy(() => import('./pages/ModernAdminDashboard'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 interface ModelStatus {
   id: string;
@@ -27,6 +30,24 @@ const models_list: ModelStatus[] = [
   { id: 'nomic', name: 'Nomic Embed', status: 'loading', latency: 0, memory: '2GB', type: 'Embedding' },
   { id: 'deepseek', name: 'DeepSeek Coder', status: 'loading', latency: 0, memory: '8GB', type: 'Logic' },
 ];
+
+const LoadingFallback = () => (
+  <div style={{ 
+    height: '100vh', 
+    width: '100vw', 
+    display: 'flex', 
+    flexDirection: 'column',
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    background: '#020205',
+    color: '#00f3ff'
+  }}>
+    <Spin size="large" />
+    <div style={{ marginTop: 20, fontFamily: 'JetBrains Mono', letterSpacing: 2 }}>
+      সিস্টেম_লোড_হচ্ছে... (INITIALIZING_SYSTEM)
+    </div>
+  </div>
+);
 
 const MainVisualizer = () => {
   const [models, setModels] = useState<ModelStatus[]>(models_list);
@@ -179,21 +200,23 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <FeedbackSystem />
-        <Routes>
-          {/* Authentication */}
-          <Route path="/login" element={<LoginPage />} />
-          {/* Modern clean admin dashboard */}
-          <Route path="/" element={<ModernAdminDashboard />} />
-          {/* Legacy 3D visualizer */}
-          <Route path="/visualizer" element={<MainVisualizer />} />
-          {/* Unified dashboard for comparison */}
-          <Route path="/unified" element={<AdminDashboardUnified />} />
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            {/* Authentication */}
+            <Route path="/login" element={<LoginPage />} />
+            {/* Modern clean admin dashboard */}
+            <Route path="/" element={<ModernAdminDashboard />} />
+            {/* Legacy 3D visualizer */}
+            <Route path="/visualizer" element={<MainVisualizer />} />
+            {/* Unified dashboard for comparison */}
+            <Route path="/unified" element={<AdminDashboardUnified />} />
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </ErrorBoundary>
-  );
+   );
 }
 
 export default App;

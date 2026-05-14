@@ -279,22 +279,42 @@ jobs: # ------------------------------------------------------------------------
   # 🏗️ PHASE 2: BUILD & TEST
   # --------------------------------------------------------------------------------
   
-  backend-pipeline:
-    name: ☕ Backend (Build & Deploy)
-    needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
-    if: needs.initialize.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-      - name: ☕ Setup Java ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: 🔨 Build & Test
-        run: ./gradlew build jacocoTestReport --build-cache --parallel --configure-on-demand --no-daemon
+   backend-pipeline:
+     name: ☕ Backend (Build & Deploy)
+     needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
+     if: needs.initialize.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+     runs-on: ubuntu-latest
+     services:
+       redis:
+         image: redis:7-alpine
+         ports: ["6379:6379"]
+         options: >-
+           --health-cmd "redis-cli ping"
+           --health-interval 10s
+           --health-timeout 5s
+           --health-retries 5
+       firestore:
+         image: firebase/firestore-emulator
+         ports: ["8080:8080"]
+         env:
+           FIRESTORE_EMULATOR_HOST: localhost:8080
+           FIRESTORE_EMULATOR_HOST: 0.0.0.0:8080
+         options: >-
+           --health-cmd="nc -z localhost 8080"
+           --health-interval=10s
+           --health-timeout=5s
+           --health-retries=5
+     steps:
+       - name: 📥 Checkout Code
+         uses: actions/checkout@v4
+       - name: ☕ Setup Java ${{ env.JAVA_VERSION }}
+         uses: actions/setup-java@v4
+         with:
+           java-version: ${{ env.JAVA_VERSION }}
+           distribution: 'temurin'
+           cache: 'gradle'
+       - name: 🔨 Build & Test
+         run: ./gradlew build jacocoTestReport --build-cache --parallel --configure-on-demand --no-daemon
       - name: 🔐 Google Auth
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
         uses: google-github-actions/auth@v2

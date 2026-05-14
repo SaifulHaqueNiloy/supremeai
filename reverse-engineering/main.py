@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 import requests
 from bs4 import BeautifulSoup
+from google.cloud import pubsub_v1
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +37,12 @@ else:
     except Exception as e:
         logger.warning(f"Firebase not initialized: {e}")
         db = None
+
+# Initialize Pub/Sub Publisher
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "supremeai-a")
+RESULTS_TOPIC = "reverse-engineering-results"
+publisher = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path(PROJECT_ID, RESULTS_TOPIC)
 
 app = FastAPI(
     title="SupremeAI Reverse Engineering Service",
@@ -258,6 +265,20 @@ def process_reverse_engineering_job(request: ReverseEngineeringJobRequest):
                 'updatedAt': firestore.SERVER_TIMESTAMP
             })
             logger.info(f"Job {request.jobId} completed and saved to Firestore")
+            
+            # 8. Notify Backend via Pub/Sub
+            try:
+                message_data = {
+                    "jobId": request.jobId,
+                    "userId": request.userId,
+                    "status": "COMPLETED",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                data = json.dumps(message_data).encode("utf-8")
+                future = publisher.publish(topic_path, data)
+                logger.info(f"Published result for job {request.jobId} to {RESULTS_TOPIC}: {future.result()}")
+            except Exception as pe:
+                logger.error(f"Failed to publish result to Pub/Sub: {pe}")
         else:
             logger.warning("Firestore not available, skipping persistence")
             

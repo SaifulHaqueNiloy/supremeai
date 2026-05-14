@@ -160,7 +160,7 @@ public class SimulatorService {
     /**
      * Get all active simulator deployments for admin view.
      */
-    public java.util.Map<String, SimulatorDeploymentService.DeploymentRecord> getAllDeployments() {
+    public java.util.List<com.supremeai.model.SimulatorDeploymentRecord> getAllDeployments() {
         return deploymentService.getAllDeployments();
     }
 
