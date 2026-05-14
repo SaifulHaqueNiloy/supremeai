@@ -275,158 +275,170 @@ jobs: # ------------------------------------------------------------------------
           path: ./
           extra_args: "--only-verified"
 
-  # --------------------------------------------------------------------------------
-  # 🏗️ PHASE 2: BUILD & TEST
-  # --------------------------------------------------------------------------------
-  
-   backend-pipeline:
-      name: ☕ Backend (Build & Deploy)
-      needs: [initialize, security-scan, infrastructure-check, codeflow-analysis, frontend-pipeline]
-     if: needs.initialize.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
-     runs-on: ubuntu-latest
-     services:
-       redis:
-         image: redis:7-alpine
-         ports: ["6379:6379"]
-         options: >-
-           --health-cmd "redis-cli ping"
-           --health-interval 10s
-           --health-timeout 5s
-           --health-retries 5
-       firestore:
-         image: firebase/firestore-emulator
-         ports: ["8080:8080"]
-         env:
-           FIRESTORE_EMULATOR_HOST: localhost:8080
-           FIRESTORE_EMULATOR_HOST: 0.0.0.0:8080
-         options: >-
-           --health-cmd="nc -z localhost 8080"
-           --health-interval=10s
-           --health-timeout=5s
-           --health-retries=5
-     steps:
-       - name: 📥 Checkout Code
-         uses: actions/checkout@v4
-       - name: ☕ Setup Java ${{ env.JAVA_VERSION }}
-         uses: actions/setup-java@v4
-         with:
-           java-version: ${{ env.JAVA_VERSION }}
-           distribution: 'temurin'
-           cache: 'gradle'
-       - name: 🔨 Build & Test
-         run: ./gradlew build jacocoTestReport --build-cache --parallel --configure-on-demand --no-daemon
-      - name: 🔐 Google Auth
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
-      - name: 🛠️ Setup GCloud
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: 'beta'
-       - name: 🐳 Build & Push Container
-         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (needs.frontend-pipeline.result == 'success' || needs.frontend-pipeline.result == 'skipped')
-        run: |
-          BUILD_ID=$(gcloud builds submit --tag us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/supremeai-repo/backend --async --format="value(id)" --quiet .)
-          echo "Build submitted: $BUILD_ID"
-          echo "Waiting for build to complete..."
-          while true; do
-            STATUS=$(gcloud builds describe $BUILD_ID --format="value(status)")
-            echo "Current Status: $STATUS"
-            if [ "$STATUS" == "SUCCESS" ]; then
-              echo "✅ Build Succeeded!"
-              break
-            elif [ "$STATUS" == "FAILURE" ] || [ "$STATUS" == "INTERNAL_ERROR" ] || [ "$STATUS" == "TIMEOUT" ] || [ "$STATUS" == "CANCELLED" ]; then
-              echo "❌ Build Failed with status: $STATUS"
-              exit 1
-            fi
-            sleep 10
-          done
-       - name: 🚀 Deploy to Cloud Run
-         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (needs.frontend-pipeline.result == 'success' || needs.frontend-pipeline.result == 'skipped')
-        run: |
-          gcloud beta run deploy supremeai-backend \
-            --image us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/supremeai-repo/backend \
-            --region ${{ env.GCP_REGION }} \
-            --platform managed \
-            --allow-unauthenticated \
-            --memory 4Gi \
-            --cpu 2 \
-            --concurrency 80 \
-            --cpu-boost \
-            --timeout 300 \
-            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
-            --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
-            --quiet
+# --------------------------------------------------------------------------------
+   # 🏗️ PHASE 2: BUILD & TEST
+   # --------------------------------------------------------------------------------
+   
+    backend-build:
+       name: ☕ Backend Build
+       needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
+       if: needs.initialize.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+       runs-on: ubuntu-latest
+       services:
+         redis:
+           image: redis:7-alpine
+           ports: ["6379:6379"]
+           options: >-
+             --health-cmd "redis-cli ping"
+             --health-interval 10s
+             --health-timeout 5s
+             --health-retries 5
+         firestore:
+           image: firebase/firestore-emulator
+           ports: ["8080:8080"]
+           env:
+             FIRESTORE_EMULATOR_HOST: localhost:8080
+             FIRESTORE_EMULATOR_HOST: 0.0.0.0:8080
+           options: >-
+             --health-cmd="nc -z localhost 8080"
+             --health-interval=10s
+             --health-timeout=5s
+             --health-retries=5
+       steps:
+         - name: 📥 Checkout Code
+           uses: actions/checkout@v4
+         - name: ☕ Setup Java ${{ env.JAVA_VERSION }}
+           uses: actions/setup-java@v4
+           with:
+             java-version: ${{ env.JAVA_VERSION }}
+             distribution: 'temurin'
+             cache: 'gradle'
+         - name: 🔨 Build & Test
+           run: ./gradlew build jacocoTestReport --build-cache --parallel --configure-on-demand --no-daemon
 
-   frontend-pipeline:
-     name: ⚛️ Frontend & Mobile (Build & Deploy)
-     needs: [initialize, security-scan, infrastructure-check, codeflow-analysis, backend-pipeline]
-    if: needs.initialize.outputs.dashboard == 'true' || needs.initialize.outputs.mobile == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: dashboard/package-lock.json
-      - name: 🔨 Build Dashboard
-        working-directory: dashboard
-        env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'supremeai-a.firebaseapp.com' }}
-          VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/' }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || 'supremeai-a' }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET || 'supremeai-a.firebasestorage.app' }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '565236080752' }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || '1:565236080752:web:572bb9313db9afb355d4b5' }}
-        run: |
-          npm config set fetch-retries 10
-          npm config set fetch-retry-mintimeout 60000
-          npm ci --prefer-offline || (sleep 10 && npm ci --prefer-offline)
-          npm run build
-      - name: 💙 Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-          cache: true
-      - name: 📦 Cache Pub Dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            supremeai/.dart_tool
-          key: ${{ runner.os }}-flutter-pub-${{ hashFiles('supremeai/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-pub-
-      - name: 🔨 Build Mobile Web
-        working-directory: supremeai
-        run: |
-          flutter pub get --offline || flutter pub get
-          flutter build web --release --base-href /mobile/ --dart-define=DART_VM_OPTIONS="--enable-asserts=false"
-      - name: 🤖 Build Android APK (Conditional)
-        if: github.event_name != 'pull_request'
-        working-directory: supremeai
-        run: flutter build apk --release --split-per-abi
-      - name: 🔐 Google Auth
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
-       - name: 🚀 Deploy Firebase Hosting
-         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (needs.backend-pipeline.result == 'success' || needs.backend-pipeline.result == 'skipped')
-        run: |
-          mkdir -p public/admin
-          mkdir -p public/mobile
-          cp -r dashboard/dist/* public/admin/
-          cp -r supremeai/build/web/* public/mobile/
-          npm install -g firebase-tools
-          firebase deploy --project ${{ env.GCP_PROJECT_ID }} --only hosting --non-interactive
+backend-deploy:
+      name: ☕ Backend Deploy
+      needs: [backend-build, frontend-build]
+      if: (needs.backend-build.result == 'success') && (needs.frontend-build.result == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+      runs-on: ubuntu-latest
+      steps:
+        - name: 📥 Checkout Code
+          uses: actions/checkout@v4
+        - name: 🔐 Google Auth
+          uses: google-github-actions/auth@v2
+          with:
+            credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
+        - name: 🛠️ Setup GCloud
+          uses: google-github-actions/setup-gcloud@v2
+          with:
+            install_components: 'beta'
+        - name: 🐳 Build & Push Container
+          run: |
+            BUILD_ID=$(gcloud builds submit --tag us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/supremeai-repo/backend --async --format="value(id)" --quiet .)
+            echo "Build submitted: $BUILD_ID"
+            echo "Waiting for build to complete..."
+            while true; do
+              STATUS=$(gcloud builds describe $BUILD_ID --format="value(status)")
+              echo "Current Status: $STATUS"
+              if [ "$STATUS" == "SUCCESS" ]; then
+                echo "✅ Build Succeeded!"
+                break
+              elif [ "$STATUS" == "FAILURE" ] || [ "$STATUS" == "INTERNAL_ERROR" ] || [ "$STATUS" == "TIMEOUT" ] || [ "$STATUS" == "CANCELLED" ]; then
+                echo "❌ Build Failed with status: $STATUS"
+                exit 1
+              fi
+              sleep 10
+            done
+        - name: 🚀 Deploy to Cloud Run
+          run: |
+            gcloud beta run deploy supremeai-backend \
+              --image us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/supremeai-repo/backend \
+              --region ${{ env.GCP_REGION }} \
+              --platform managed \
+              --allow-unauthenticated \
+              --memory 4Gi \
+              --cpu 2 \
+              --concurrency 80 \
+              --cpu-boost \
+              --timeout 300 \
+              --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
+              --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
+              --quiet
+
+    frontend-build:
+      name: ⚛️ Frontend & Mobile Build
+      needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
+      if: needs.initialize.outputs.dashboard == 'true' || needs.initialize.outputs.mobile == 'true' || github.event_name == 'workflow_dispatch'
+      runs-on: ubuntu-latest
+      steps:
+        - name: 📥 Checkout Code
+          uses: actions/checkout@v4
+        - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+          uses: actions/setup-node@v4
+          with:
+            node-version: ${{ env.NODE_VERSION }}
+            cache: 'npm'
+            cache-dependency-path: dashboard/package-lock.json
+        - name: 🔨 Build Dashboard
+          working-directory: dashboard
+          env:
+            VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'supremeai-a.firebaseapp.com' }}
+            VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://supremeai-a-default-rtdb.asia-southeast1.firebasedatabase.app/' }}
+            VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || 'supremeai-a' }}
+            VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET || 'supremeai-a.firebasestorage.app' }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '565236080752' }}
+            VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || '1:565236080752:web:572bb9313db9afb355d4b5' }}
+          run: |
+            npm config set fetch-retries 10
+            npm config set fetch-retry-mintimeout 60000
+            npm ci --prefer-offline || (sleep 10 && npm ci --prefer-offline)
+            npm run build
+        - name: 💙 Setup Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            flutter-version: ${{ env.FLUTTER_VERSION }}
+            channel: 'stable'
+            cache: true
+        - name: 📦 Cache Pub Dependencies
+          uses: actions/cache@v4
+          with:
+            path: |
+              ~/.pub-cache
+              supremeai/.dart_tool
+            key: ${{ runner.os }}-flutter-pub-${{ hashFiles('supremeai/pubspec.lock') }}
+            restore-keys: |
+              ${{ runner.os }}-flutter-pub-
+        - name: 🔨 Build Mobile Web
+          working-directory: supremeai
+          run: |
+            flutter pub get --offline || flutter pub get
+            flutter build web --release --base-href /mobile/ --dart-define=DART_VM_OPTIONS="--enable-asserts=false"
+        - name: 🤖 Build Android APK (Conditional)
+          if: github.event_name != 'pull_request'
+          working-directory: supremeai
+          run: flutter build apk --release --split-per-abi
+
+frontend-deploy:
+      name: ⚛️ Frontend Deploy
+      needs: [frontend-build, backend-build]
+      if: (needs.backend-build.result == 'success') && (needs.frontend-build.result == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+      runs-on: ubuntu-latest
+      steps:
+        - name: 📥 Checkout Code
+          uses: actions/checkout@v4
+        - name: 🔐 Google Auth
+          uses: google-github-actions/auth@v2
+          with:
+            credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
+        - name: 🚀 Deploy Firebase Hosting
+          run: |
+            mkdir -p public/admin
+            mkdir -p public/mobile
+            cp -r dashboard/dist/* public/admin/
+            cp -r supremeai/build/web/* public/mobile/
+            npm install -g firebase-tools
+            firebase deploy --project ${{ env.GCP_PROJECT_ID }} --only hosting --non-interactive
 
   cloud-functions:
     name: ⚡ Cloud Functions Build
@@ -548,10 +560,10 @@ jobs: # ------------------------------------------------------------------------
   # 🏥 PHASE 4: VALIDATION
   # --------------------------------------------------------------------------------
   
-  health-check:
-    name: 🏥 Health Check
-    needs: [backend-pipeline, frontend-pipeline]
-    if: always() && (needs.backend-pipeline.result == 'success' || needs.frontend-pipeline.result == 'success')
+health-check:
+     name: 🏥 Health Check
+     needs: [backend-deploy, frontend-deploy]
+     if: always() && (needs.backend-deploy.result == 'success' || needs.frontend-deploy.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Check Backend & Frontend
@@ -568,25 +580,27 @@ jobs: # ------------------------------------------------------------------------
   # 📊 PHASE 5: SUMMARY & NOTIFICATION
   # --------------------------------------------------------------------------------
   
-  workflow-summary:
-    name: 📊 Pipeline Summary
-    needs: [backend-pipeline, frontend-pipeline, deploy-functions, vscode-extension, intellij-plugin, health-check, codeflow-analysis]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📝 Generate Summary
-        run: |
-          echo "### 🚀 SupremeAI CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Status | Artifacts |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| CodeFlow Analysis | ${{ needs.codeflow-analysis.result }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.backend-pipeline.result }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend | ${{ needs.frontend-pipeline.result }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| Functions | ${{ needs.deploy-functions.result }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| VS Code Extension | ${{ needs.vscode-extension.result }} | vscode-extension |" >> $GITHUB_STEP_SUMMARY
-          echo "| IntelliJ Plugin | ${{ needs.intellij-plugin.result }} | intellij-plugin |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### 📥 Latest Artifacts available for 1 day." >> $GITHUB_STEP_SUMMARY
+workflow-summary:
+     name: 📊 Pipeline Summary
+     needs: [backend-build, backend-deploy, frontend-build, frontend-deploy, deploy-functions, vscode-extension, intellij-plugin, health-check, codeflow-analysis]
+     if: always()
+     runs-on: ubuntu-latest
+     steps:
+       - name: 📝 Generate Summary
+         run: |
+           echo "### 🚀 SupremeAI CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+           echo "| Component | Status | Artifacts |" >> $GITHUB_STEP_SUMMARY
+           echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+           echo "| CodeFlow Analysis | ${{ needs.codeflow-analysis.result }} | - |" >> $GITHUB_STEP_SUMMARY
+           echo "| Backend Build | ${{ needs.backend-build.result }} | - |" >> $GITHUB_STEP_SUMMARY
+           echo "| Backend Deploy | ${{ needs.backend-deploy.result }} | - |" >> $GITHUB_STEP_SUMMARY
+           echo "| Frontend Build | ${{ needs.frontend-build.result }} | - |" >> $GITHUB_STEP_SUMMARY
+           echo "| Frontend Deploy | ${{ needs.frontend-deploy.result }} | - |" >> $GITHUB_STEP_SUMMARY
+           echo "| Functions | ${{ needs.deploy-functions.result }} | - |" >> $GITHUB_STEP_SUMMARY
+           echo "| VS Code Extension | ${{ needs.vscode-extension.result }} | vscode-extension |" >> $GITHUB_STEP_SUMMARY
+           echo "| IntelliJ Plugin | ${{ needs.intellij-plugin.result }} | intellij-plugin |" >> $GITHUB_STEP_SUMMARY
+           echo "" >> $GITHUB_STEP_SUMMARY
+           echo "#### 📥 Latest Artifacts available for 1 day." >> $GITHUB_STEP_SUMMARY
 
   notification:
     name: 🔔 Final Notification

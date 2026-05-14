@@ -12,15 +12,15 @@ SupremeAI uses a comprehensive GitHub Actions CI/CD pipeline (`supreme_unified.y
 - **Security Scan**: Scans for secrets and vulnerabilities
 
 ### Phase 2: Build & Test
-- **Backend Pipeline**: Builds Spring Boot application, runs tests with JaCoCo coverage
-- **Frontend Pipeline**: Builds React dashboard and Flutter mobile app
+- **Backend Build**: Builds Spring Boot application, runs tests with JaCoCo coverage
+- **Frontend Build**: Builds React dashboard and Flutter mobile app
 - **Cloud Functions**: Builds and validates serverless functions
 - **Extensions**: Builds VS Code and IntelliJ plugins
 
 ### Phase 3: Deployment
+- **Backend Deploy**: Containerizes and deploys to Cloud Run (only if both builds succeed)
+- **Frontend Deploy**: Deploys to Firebase Hosting (only if both builds succeed)
 - **Deploy Functions**: Deploys Firebase Cloud Functions
-- **Backend Deploy**: Containerizes and deploys to Cloud Run
-- **Frontend Deploy**: Deploys to Firebase Hosting
 
 ### Phase 4: Validation
 - **Health Check**: Validates deployed services
