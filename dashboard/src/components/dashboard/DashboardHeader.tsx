@@ -33,45 +33,45 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   handleLogout
 }) => {
   return (
-    <Header className="responsive-header" style={{
-      padding: '0 40px',
-      background: 'rgba(0,0,0,0.4)',
-      backdropFilter: 'blur(20px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
-      height: 80,
-      zIndex: 5
-    }}>
-      <Button
-        type="text"
-        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-        onClick={() => setCollapsed(!collapsed)}
-        className="mobile-menu-button"
-        style={{ color: 'rgba(255,255,255,0.6)', fontSize: 20 }}
-      />
-      
-      <div className="header-breadcrumbs" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <Breadcrumb 
-          items={getBreadcrumbs()} 
-          style={{ color: 'var(--text-dim)', fontSize: '14px' }}
-        />
-        <div className="divider" style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }} />
-        <ConnectionIndicator />
-      </div>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+     <Header className="responsive-header" style={{
+       padding: '0 var(--space-3)',
+       background: 'rgba(0,0,0,0.4)',
+       backdropFilter: 'blur(20px)',
+       display: 'flex',
+       alignItems: 'center',
+       justifyContent: 'space-between',
+       borderBottom: '1px solid rgba(255,255,255,0.05)',
+       height: 'var(--header-height, clamp(64px, 8vh, 80px))',
+       zIndex: 5
+     }}>
+       <Button
+         type="text"
+         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+         onClick={() => setCollapsed(!collapsed)}
+         className="mobile-menu-button"
+         style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--text-lg)' }}
+       />
+       
+       <div className="header-breadcrumbs" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+         <Breadcrumb 
+           items={getBreadcrumbs()} 
+           style={{ color: 'var(--text-dim)', fontSize: 'var(--text-sm)' }}
+         />
+         <div className="divider" style={{ width: '1px', height: 'var(--space-4)', background: 'rgba(255,255,255,0.1)' }} />
+         <ConnectionIndicator />
+       </div>
+       
+       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-5)' }}>
         <div style={{ textAlign: 'right' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
             {!isAuthenticated && <Tag color="warning" style={{ margin: 0, borderRadius: 4, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b' }}>সীমাবদ্ধ_অ্যাক্সেস</Tag>}
-            <Text style={{ display: 'block', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, letterSpacing: 1 }}>
-              {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
-            </Text>
+           <Text style={{ display: 'block', color: 'var(--text-main)', fontWeight: 600, fontSize: 'var(--text-sm)', letterSpacing: '1px' }}>
+             {isAdmin ? 'সিস্টেম আর্কিটেক্ট' : (isAuthenticated ? 'নিউরাল অপারেটর' : 'গেস্ট এনটিটি')}
+           </Text>
           </div>
-          <Text style={{ fontSize: 12, color: isAdmin ? 'var(--success)' : (isAuthenticated ? 'var(--neon-purple)' : 'var(--text-dim)'), fontFamily: 'var(--font-mono)' }}>
-            {isAuthenticated ? `AUTH: ${user?.email || 'Authenticated'}` : 'MODE: GUEST_BYPASS'}
-          </Text>
+           <Text style={{ fontSize: 'var(--text-xs)', color: isAdmin ? 'var(--success)' : (isAuthenticated ? 'var(--neon-purple)' : 'var(--text-dim)'), fontFamily: 'var(--font-mono)' }}>
+             {isAuthenticated ? `AUTH: ${user?.email || 'Authenticated'}` : 'MODE: GUEST_BYPASS'}
+           </Text>
         </div>
 
         <Space>

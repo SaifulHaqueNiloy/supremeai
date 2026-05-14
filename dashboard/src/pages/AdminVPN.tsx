@@ -197,25 +197,41 @@ const AdminVPN: React.FC = () => {
     },
   ];
 
-  return (
-    <div style={{ padding: '24px', background: '#050505', minHeight: '100vh', color: '#fff' }}>
-      {/* Header Section */}
-      <div style={{ marginBottom: 32 }}>
-        <Breadcrumb separator=">" style={{ marginBottom: 16, opacity: 0.7 }}>
-          <Breadcrumb.Item href=""><DashboardOutlined /> ড্যাশবোর্ড</Breadcrumb.Item>
-          <Breadcrumb.Item><CloudServerOutlined /> ইনফ্রাস্ট্রাকচার</Breadcrumb.Item>
-          <Breadcrumb.Item>VPN গেটওয়ে</Breadcrumb.Item>
-        </Breadcrumb>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '32px', letterSpacing: '-0.5px' }}>
-              VPN ম্যানেজমেন্ট <span style={{ color: '#3b82f6', fontSize: '14px', fontWeight: 400, verticalAlign: 'middle', marginLeft: '8px', opacity: 0.8 }}>SECURE GATEWAY</span>
-            </Title>
-            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '16px' }}>
-              নিরাপদ নেটওয়ার্ক ইনফ্রাস্ট্রাকচার এবং VPN কানেকশন নিয়ন্ত্রণ করুন
-            </Text>
-          </div>
+   return (
+     <div className="admin-page">
+       {/* Header Section */}
+       <div className="admin-header">
+         <Breadcrumb separator=">" style={{ marginBottom: 'var(--space-3)', opacity: 0.7 }}>
+           <Breadcrumb.Item href=""><DashboardOutlined /> ড্যাশবোর্ড</Breadcrumb.Item>
+           <Breadcrumb.Item><CloudServerOutlined /> ইনফ্রাস্ট্রাকচার</Breadcrumb.Item>
+           <Breadcrumb.Item>VPN গেটওয়ে</Breadcrumb.Item>
+         </Breadcrumb>
+         
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+           <div>
+             <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: 'var(--title-size)', letterSpacing: '-0.5px' }}>
+               VPN ম্যানেজমেন্ট <span className="admin-badge">SECURE GATEWAY</span>
+             </Title>
+             <Text className="admin-subtitle">
+               নিরাপদ নেটওয়ার্ক ইনফ্রাস্ট্রাকচার এবং VPN কানেকশন নিয়ন্ত্রণ করুন
+             </Text>
+           </div>
+           <Button 
+             type="primary" 
+             icon={<PlusOutlined />} 
+             onClick={() => setIsModalVisible(true)}
+             className="admin-btn-primary"
+             style={{ 
+               background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+               border: 'none',
+               fontWeight: 600,
+               boxShadow: '0 4px clamp(12px, 2vw, 20px) rgba(59, 130, 246, 0.3)'
+             }}
+           >
+             নতুন VPN যোগ করুন
+           </Button>
+         </div>
+       </div>
           <Button 
             type="primary" 
             icon={<PlusOutlined />} 
@@ -235,83 +251,63 @@ const AdminVPN: React.FC = () => {
         </div>
       </div>
 
-      {/* Modern Toolbar */}
-      <div className="glass-toolbar" style={{ 
-        padding: '16px 24px', 
-        marginBottom: '24px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.05)', 
-        borderRadius: '20px',
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        flexWrap: 'wrap', 
-        gap: '20px',
-        backdropFilter: 'blur(20px)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ 
-            background: 'rgba(59, 130, 246, 0.1)', 
-            padding: '8px', 
-            borderRadius: '10px',
-            border: '1px solid rgba(59, 130, 246, 0.2)'
-          }}>
-            <SearchOutlined style={{ color: '#3b82f6', fontSize: '18px' }} />
-          </div>
-          <Input
-            placeholder="নাম বা হোস্ট দিয়ে খুঁজুন..."
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
-            variant="borderless"
-            style={{ 
-              width: 320, 
-              height: '42px',
-              fontSize: '15px',
-              color: '#fff' 
-            }}
-            className="dark-input-minimal"
-          />
-        </div>
-        
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <Tooltip title="রিফ্রেশ করুন">
-            <Button 
-              icon={<ReloadOutlined />} 
-              onClick={fetchConnections} 
-              loading={loading}
-              style={{ 
-                height: '42px',
-                width: '42px',
-                borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              className="hover-bright"
-            />
-          </Tooltip>
+       {/* Modern Toolbar */}
+       <div className="glass-panel admin-toolbar">
+         <div className="toolbar-section">
+           <div style={{ 
+             background: 'rgba(59, 130, 246, 0.1)', 
+             padding: 'var(--space-2)', 
+             borderRadius: 'var(--radius-md)',
+             border: '1px solid rgba(59, 130, 246, 0.2)',
+             display: 'flex',
+             alignItems: 'center'
+           }}>
+             <SearchOutlined style={{ color: '#3b82f6', fontSize: 'var(--text-base)' }} />
+           </div>
+           <Input
+             placeholder="নাম বা হোস্ট দিয়ে খুঁজুন..."
+             value={searchText}
+             onChange={e => setSearchText(e.target.value)}
+             variant="borderless"
+             className="admin-search dark-input-minimal"
+           />
+         </div>
+         
+         <div className="toolbar-section">
+           <Tooltip title="রিফ্রেশ করুন">
+             <Button 
+               icon={<ReloadOutlined />} 
+               onClick={fetchConnections} 
+               loading={loading}
+               className="admin-btn-icon"
+               style={{ 
+                 borderRadius: 'var(--radius-md)',
+                 background: 'rgba(255, 255, 255, 0.05)',
+                 border: '1px solid rgba(255, 255, 255, 0.1)',
+                 color: '#fff'
+               }}
+               className="hover-bright"
+             />
+           </Tooltip>
 
-          <div className="toolbar-separator" />
-          
-          <Space size="middle">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Text style={{ 
-                color: 'rgba(255,255,255,0.35)', 
-                fontSize: '11px', 
-                textTransform: 'uppercase', 
-                letterSpacing: '1px', 
-                fontWeight: 700 
-              }}>সর্টিং</Text>
-              <Select
-                value={sortBy}
-                onChange={val => setSortBy(val)}
-                style={{ width: 160 }}
-                className="premium-select"
-                dropdownClassName="premium-dropdown"
-              >
+           <div className="toolbar-divider" />
+           
+           <Space size="middle">
+             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+               <Text style={{ 
+                 color: 'rgba(255,255,255,0.35)', 
+                 fontSize: 'var(--text-xs)', 
+                 textTransform: 'uppercase', 
+                 letterSpacing: '1px', 
+                 fontWeight: 700 
+               }}>সর্টিং</Text>
+               <Select
+                 value={sortBy}
+                 onChange={val => setSortBy(val)}
+                 style={{ width: clamp(140px, 15vw, 180px) }}
+                 className="premium-select"
+                 dropdownClassName="premium-dropdown"
+               >
                 <Option value="name">নাম</Option>
                 <Option value="status">স্ট্যাটাস</Option>
                 <Option value="host">সার্ভার হোস্ট</Option>
@@ -319,39 +315,36 @@ const AdminVPN: React.FC = () => {
               </Select>
             </div>
 
-            <Tooltip title={sortOrder === 'ascend' ? 'ক্রমানুসারে' : 'বিপরীত ক্রমানুসারে'}>
-              <Button 
-                onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
-                icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
-                style={{ 
-                  height: '42px',
-                  width: '42px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                className="hover-bright"
-              />
-            </Tooltip>
+             <Tooltip title={sortOrder === 'ascend' ? 'ক্রমানুসারে' : 'বিপরীত ক্রমানুসারে'}>
+               <Button 
+                 onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
+                 icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
+                 className="admin-btn-icon"
+                 style={{ 
+                   borderRadius: 'var(--radius-md)',
+                   background: 'rgba(255, 255, 255, 0.05)',
+                   border: '1px solid rgba(255, 255, 255, 0.1)',
+                   color: '#fff'
+                 }}
+                 className="hover-bright"
+               />
+             </Tooltip>
           </Space>
         </div>
       </div>
 
-      <Card
-        className="glass-card"
-        style={{ 
-          borderRadius: 24, 
-          background: 'rgba(255,255,255,0.02)', 
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
-          overflow: 'hidden'
-        }}
-        bodyStyle={{ padding: 0 }}
-      >
+       <Card
+         className="glass-card"
+         style={{ 
+           borderRadius: 'var(--radius-xl)', 
+           background: 'rgba(255,255,255,0.02)', 
+           border: '1px solid rgba(255,255,255,0.08)',
+           marginBottom: 'var(--space-4)',
+           boxShadow: '0 clamp(16px, 2.5vw, 32px) clamp(32px, 4vw, 64px) rgba(0, 0, 0, 0.3)',
+           overflow: 'hidden'
+         }}
+         bodyStyle={{ padding: 0 }}
+       >
         <Table 
           columns={columns} 
           dataSource={processedConnections} 
@@ -366,18 +359,22 @@ const AdminVPN: React.FC = () => {
         />
       </Card>
 
-      <Modal
-        title={
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: '#fff', fontWeight: 800, fontSize: '18px' }}>নতুন VPN কানেকশন</span>
-            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase' }}>Secure Node Configuration</span>
-          </div>
-        }
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={() => form.submit()}
-        okText="সেভ করুন"
-        cancelText="বাতিল"
+       <Modal
+         title={
+           <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <span style={{ color: '#fff', fontWeight: 800, fontSize: 'var(--text-lg)' }}>নতুন VPN কানেকশন</span>
+             <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' }}>Secure Node Configuration</span>
+           </div>
+         }
+         open={isModalVisible}
+         onCancel={() => setIsModalVisible(false)}
+         onOk={() => form.submit()}
+         okText="সেভ করুন"
+         cancelText="বাতিল"
+         className="admin-modal"
+         styles={{
+           body: { maxWidth: 'calc(100vw - var(--space-6))', width: 'clamp(400px, 50vw, 600px)' }
+         }}
         centered
         className="dark-modal"
         okButtonProps={{ style: { background: '#2563eb', border: 'none', height: '40px', padding: '0 24px', borderRadius: '8px', fontWeight: 700 } }}
