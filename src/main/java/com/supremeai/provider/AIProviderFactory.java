@@ -1,6 +1,7 @@
 package com.supremeai.provider;
 
 import com.supremeai.service.AIProviderService;
+import com.supremeai.repository.ProviderRepository;
 import com.supremeai.service.ContextualAIRankingService;
 import com.supremeai.learning.SelfLearningRouter;
 import com.supremeai.learning.EnhancedSelfLearningRouter;
@@ -24,6 +25,9 @@ public class AIProviderFactory {
 
     @Autowired
     private AIProviderService aiProviderService;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     @Autowired
     @Lazy
@@ -158,7 +162,7 @@ public class AIProviderFactory {
         // Use enhanced router if available
         if (enhancedRouter != null) {
             try {
-                String chosen = enhancedRouter.getBestProviderForTask(taskType);
+                String chosen = enhancedRouter.getBestProviderForTask(taskType, candidates);
                 if (chosen != null && candidates.contains(chosen)) {
                     logger.info("[ROUTER] Enhanced router selected {} for {}", chosen, taskType);
                     return getProvider(chosen);
@@ -260,36 +264,19 @@ public class AIProviderFactory {
      * @return A working AI provider
      */
     public AIProvider getDefaultProvider() {
-        // Preferred providers in order (free tier first)
-        String[] preferredProviders = {"gcp_qwen", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "hf_phi_vision", "hf_paligemma", "hf_e5_large", "gemini", "groq", "huggingface", "codegeex4", "stepfun", "deepseek", "gpt4", "claude", "mistral", "render_tinyllama", "render_phi3", "render_phi2", "render_qwen"};
+        logger.info("Dynamically searching for healthiest default provider from database");
 
-        // Try preferred providers first
-        for (String providerName : preferredProviders) {
-            try {
-                AIProvider provider = getProvider(providerName);
-                if (isProviderHealthy(provider)) {
-                    logger.info("Using {} as default provider", providerName);
-                    return provider;
-                }
-            } catch (Exception e) {
-                logger.warn("Preferred provider {} unavailable: {}", providerName, e.getMessage());
-            }
-        }
-
-        // Try all supported providers
-        for (String providerName : getSupportedProviders()) {
-            try {
-                AIProvider provider = getProvider(providerName);
-                if (isProviderHealthy(provider)) {
-                    logger.info("Using {} as fallback default provider", providerName);
-                    return provider;
-                }
-            } catch (Exception e) {
-                logger.debug("Provider {} unavailable: {}", providerName, e.getMessage());
-            }
-        }
-
-        throw new RuntimeException("No working AI provider available");
+        return providerRepository.findByStatus("ACTIVE")
+                .collectList()
+                .blockOptional()
+                .orElse(Collections.emptyList())
+                .stream()
+                .sorted(Comparator.comparingInt(com.supremeai.model.APIProvider::getPriority))
+                .map(this::createProviderFromConfig)
+                .filter(Objects::nonNull)
+                .filter(this::isProviderHealthy)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No working AI provider available in database"));
     }
 
     /**
@@ -319,10 +306,15 @@ public class AIProviderFactory {
     }
 
     /**
-     * Get list of all supported provider names
+     * Get list of all supported provider names from database
      */
     public String[] getSupportedProviders() {
-        return new String[]{"gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun", "codegeex4", "gcp_qwen", "gcp_llama", "gcp_phi", "gcp_nomic", "hf_deepseek", "hf_mistral", "hf_llama", "hf_codellama", "hf_phi", "hf_phi_vision", "hf_paligemma", "hf_e5_large", "hf_bge", "render_tinyllama", "render_phi3", "render_phi2", "render_qwen"};
+        return providerRepository.findAll()
+                .map(com.supremeai.model.APIProvider::getName)
+                .collectList()
+                .blockOptional()
+                .orElse(Collections.emptyList())
+                .toArray(new String[0]);
     }
 
     /**

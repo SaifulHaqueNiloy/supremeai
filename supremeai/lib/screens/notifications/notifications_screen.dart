@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../localization_service.dart';
+import '../../services/localization_service.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -52,7 +52,7 @@ class NotificationsScreen extends StatelessWidget {
               'Dynamic Provider Rotation',
               'insights.rotation_desc'.tr(),
               'PERFORMANCE',
-              Colors.emeraldAccent,
+              Colors.greenAccent,
               Icons.rocket_launch,
             ),
             _buildInsightCard(

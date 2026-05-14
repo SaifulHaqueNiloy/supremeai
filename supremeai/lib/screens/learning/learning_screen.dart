@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../localization_service.dart';
+import '../../services/localization_service.dart';
 
 class LearningScreen extends StatelessWidget {
   const LearningScreen({super.key});
@@ -30,7 +30,7 @@ class LearningScreen extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.emeraldAccent.withValues(alpha: 0.1),
+Colors.tealAccent.withValues(alpha: 0.1),
                       Colors.black,
                     ],
                   ),
@@ -95,16 +95,16 @@ class LearningScreen extends StatelessWidget {
                 children: [
                   Text('learning.strategy'.tr().toUpperCase(), style: const TextStyle(color: Colors.white30, fontSize: 9, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text('AGGRESSIVE_EVOLVE', style: TextStyle(color: Colors.emeraldAccent.shade400, fontWeight: FontWeight.w900, fontSize: 16)),
+                  Text('AGGRESSIVE_EVOLVE', style: TextStyle(color: Colors.tealAccent.shade400, fontWeight: FontWeight.w900, fontSize: 16)),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.emeraldAccent.withValues(alpha: 0.1),
+                  color: Colors.tealAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('OPTIMAL', style: TextStyle(color: Colors.emeraldAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                child: const Text('OPTIMAL', style: TextStyle(color: Colors.tealAccent, fontSize: 9, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -177,7 +177,7 @@ class LearningScreen extends StatelessWidget {
         subtitle: Text(subtitle, style: const TextStyle(color: Colors.white24, fontSize: 10)),
         value: value,
         onChanged: (val) {},
-        activeColor: Colors.emeraldAccent,
+        activeColor: Colors.tealAccent,
       ),
     );
   }
