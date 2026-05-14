@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../localization_service.dart';
+import '../../services/localization_service.dart';
 
 class AlertsScreen extends StatelessWidget {
   const AlertsScreen({super.key});

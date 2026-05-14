@@ -32,6 +32,12 @@ public class CyberSecuritySkillService {
     @Autowired
     private IntelligenceController intelligenceController; // For AI-driven discovery
 
+    @Autowired
+    private ConfigService configService;
+
+    private LocalDateTime lastAuditTime;
+    private LocalDateTime lastLearningTime;
+
     public CyberSecuritySkillService() {
         // Initial core patterns (Minimal baseline)
         registerTechnique("SQLI_V1", "SQL Injection Pattern Analysis", "Analyzing query structures for potential injection points", "CRITICAL");
@@ -104,4 +110,47 @@ public class CyberSecuritySkillService {
             return report;
         }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
+
+    /**
+     * S15: Scheduled Autonomous Cycle
+     * Runs every 10 minutes to research new patterns and verify defense.
+     */
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 600000)
+    public void runAutonomousCycle() {
+        SystemConfig config = configService.getConfig();
+        if (config.isAutonomousLearningEnabled()) {
+            String[] commonTopics = {"Zero Day Patterns", "API Injection", "JWT Vulnerabilities", "OIDC Flow Security", "Container Escape Patterns"};
+            String randomTopic = commonTopics[new Random().nextInt(commonTopics.length)];
+            initiateLearningCycle(randomTopic).subscribe(
+                result -> logger.info("[CyberSkill] Autonomous learning completed for: {}", randomTopic),
+                error -> logger.error("[CyberSkill] Autonomous learning failed", error)
+            );
+            lastLearningTime = LocalDateTime.now();
+        }
+
+        if (config.isAutonomousAuditEnabled()) {
+            runSelfAudit().subscribe(
+                report -> {
+                    logger.info("[CyberSkill] Autonomous self-audit completed. Score: {}", report.get("resilienceScore"));
+                    lastAuditTime = LocalDateTime.now();
+                },
+                error -> logger.error("[CyberSkill] Autonomous audit failed", error)
+            );
+        }
+    }
+
+    public boolean isAutonomousLearningEnabled() { return configService.getConfig().isAutonomousLearningEnabled(); }
+    public void setAutonomousLearningEnabled(boolean enabled) { 
+        SystemConfig config = configService.getConfig();
+        config.setAutonomousLearningEnabled(enabled);
+        configService.updateConfig(config).subscribe();
+    }
+    public boolean isAutonomousAuditEnabled() { return configService.getConfig().isAutonomousAuditEnabled(); }
+    public void setAutonomousAuditEnabled(boolean enabled) { 
+        SystemConfig config = configService.getConfig();
+        config.setAutonomousAuditEnabled(enabled);
+        configService.updateConfig(config).subscribe();
+    }
+    public LocalDateTime getLastAuditTime() { return lastAuditTime; }
+    public LocalDateTime getLastLearningTime() { return lastLearningTime; }
 }

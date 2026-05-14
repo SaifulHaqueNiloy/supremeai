@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Button, Typography, Alert, Tag } from 'antd';
-import { AuditOutlined, SecurityScanOutlined, SafetyOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Alert, Tag, Switch, Space } from 'antd';
+import { AuditOutlined, SecurityScanOutlined, SafetyOutlined, RobotOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 
 const { Title, Text } = Typography;
@@ -22,6 +22,8 @@ interface SystemAuditPanelProps {
   auditing: boolean;
   auditReport: AuditReport | null;
   protections: Protection[];
+  autonomousAuditEnabled?: boolean;
+  onToggleAutonomous?: (enabled: boolean) => void;
 }
 
 const SystemAuditPanel: React.FC<SystemAuditPanelProps> = ({
@@ -29,10 +31,26 @@ const SystemAuditPanel: React.FC<SystemAuditPanelProps> = ({
   auditing,
   auditReport,
   protections,
+  autonomousAuditEnabled,
+  onToggleAutonomous,
 }) => {
   return (
     <Card 
-      title={<span style={{ color: '#fff' }}><AuditOutlined /> System Self-Audit (Red Team)</span>}
+      title={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <span style={{ color: '#fff' }}><AuditOutlined /> System Self-Audit (Red Team)</span>
+          <Space>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px' }}>
+              <RobotOutlined /> Autonomous Mode
+            </Text>
+            <Switch 
+              size="small" 
+              checked={autonomousAuditEnabled} 
+              onChange={onToggleAutonomous}
+            />
+          </Space>
+        </div>
+      }
       bordered={false}
       className="glass-card"
       style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)' }}

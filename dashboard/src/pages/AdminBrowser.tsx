@@ -300,12 +300,12 @@ const AdminBrowser: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '100%', margin: '0 auto', minHeight: '100vh', background: '#08090a' }}>
-      <Row gutter={[24, 24]}>
+    <div className="admin-page">
+      <Row gutter={[16, 16]}>
         <BrowserHeader isAutoMode={isAutoMode} setIsAutoMode={setIsAutoMode} />
 
         <Col xs={24} lg={16}>
-          <div className="browser-container" style={{ boxShadow: '0 30px 60px rgba(0,0,0,0.5)', borderRadius: 12, overflow: 'hidden', background: '#000', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <div className="browser-container" style={{ boxShadow: '0 clamp(30px, 4vw, 60px) rgba(0,0,0,0.5)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: '#000', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <BrowserToolbar 
               url={url}
               setUrl={setUrl}

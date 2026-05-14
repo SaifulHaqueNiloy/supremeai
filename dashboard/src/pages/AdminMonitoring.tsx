@@ -31,7 +31,7 @@ const AdminMonitoring: React.FC = () => {
     if (isGuest) return;
     setError(null);
     try {
-      const response = await authUtils.fetchWithAuth('/api/metrics/resources');
+      const response = await authUtils.fetchWithAuth('/api/system/metrics/resources');
       if (!response.ok) throw new Error(`Failed to fetch metrics: ${response.status}`);
       
       const contentType = response.headers.get('content-type');
@@ -69,10 +69,10 @@ const AdminMonitoring: React.FC = () => {
 
   return (
     <AdminLayout title="System Monitoring">
-      <Row gutter={[16, 16]}>
+      <Row gutter={[clamp(12, 2vw, 24), clamp(12, 2vw, 24)])}>
         {/* System Status Card */}
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable>
+          <Card hoverable className="glass-card">
             <Statistic
               title="System Status"
               value={systemStatus.text}

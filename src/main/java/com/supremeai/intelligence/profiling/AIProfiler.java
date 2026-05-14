@@ -31,12 +31,12 @@ public class AIProfiler {
     /**
      * Recommends the best AI for a specific task based on historical REAL-WORLD performance.
      */
-    public AIProviderType getBestAIForTask(String taskCategory) {
+    public String getBestAIForTask(String taskCategory) {
         Map<String, TaskPerformanceProfile> categoryProfiles = providerProfiles.get(taskCategory);
 
         if (categoryProfiles == null || categoryProfiles.isEmpty()) {
-            // No historical data yet, fallback to default primary (e.g., GROQ)
-            return AIProviderType.GROQ_LLAMA3;
+            // No historical data yet, return null so the orchestrator can use database priority
+            return null;
         }
 
         String bestProviderId = null;
@@ -51,11 +51,6 @@ public class AIProfiler {
         }
 
         log.info("[AI Profiler] Selected {} as the expert for task: {}", bestProviderId, taskCategory);
-        
-        try {
-            return AIProviderType.valueOf(bestProviderId.toUpperCase());
-        } catch (Exception e) {
-            return AIProviderType.GROQ_LLAMA3; // Fallback to default if not an enum
-        }
+        return bestProviderId;
     }
 }

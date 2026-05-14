@@ -9,7 +9,10 @@ export type DateString = string;
 
 
 export interface AddReviewData {
-  review_upsert: Review_Key;
+  review_upsert: {
+    userId: string;
+    movieId: UUIDString;
+  };
 }
 
 export interface AddReviewVariables {
@@ -19,7 +22,9 @@ export interface AddReviewVariables {
 }
 
 export interface CreateMovieData {
-  movie_insert: Movie_Key;
+  movie_insert: {
+    id: UUIDString;
+  };
 }
 
 export interface CreateMovieVariables {
@@ -29,7 +34,10 @@ export interface CreateMovieVariables {
 }
 
 export interface DeleteReviewData {
-  review_delete?: Review_Key | null;
+  review_delete?: {
+    userId: string;
+    movieId: UUIDString;
+  };
 }
 
 export interface DeleteReviewVariables {
@@ -126,7 +134,9 @@ export interface SearchMovieVariables {
 }
 
 export interface UpsertUserData {
-  user_upsert: User_Key;
+  user_upsert: {
+    id: string;
+  };
 }
 
 export interface UpsertUserVariables {

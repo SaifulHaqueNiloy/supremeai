@@ -9,7 +9,10 @@ export type DateString = string;
 
 
 export interface AddReviewData {
-  review_upsert: Review_Key;
+  review_upsert: {
+    userId: string;
+    movieId: UUIDString;
+  };
 }
 
 export interface AddReviewVariables {
@@ -19,7 +22,9 @@ export interface AddReviewVariables {
 }
 
 export interface CreateMovieData {
-  movie_insert: Movie_Key;
+  movie_insert: {
+    id: UUIDString;
+  };
 }
 
 export interface CreateMovieVariables {
@@ -29,7 +34,10 @@ export interface CreateMovieVariables {
 }
 
 export interface DeleteReviewData {
-  review_delete?: Review_Key | null;
+  review_delete?: {
+    userId: string;
+    movieId: UUIDString;
+  };
 }
 
 export interface DeleteReviewVariables {
@@ -126,7 +134,9 @@ export interface SearchMovieVariables {
 }
 
 export interface UpsertUserData {
-  user_upsert: User_Key;
+  user_upsert: {
+    id: string;
+  };
 }
 
 export interface UpsertUserVariables {
@@ -137,6 +147,26 @@ export interface User_Key {
   id: string;
   __typename?: 'User_Key';
 }
+
+/** Generated Node Admin SDK operation action function for the 'CreateMovie' Mutation. Allow users to execute without passing in DataConnect. */
+export function createMovie(dc: DataConnect, vars: CreateMovieVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateMovieData>>;
+/** Generated Node Admin SDK operation action function for the 'CreateMovie' Mutation. Allow users to pass in custom DataConnect instances. */
+export function createMovie(vars: CreateMovieVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateMovieData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpsertUser' Mutation. Allow users to execute without passing in DataConnect. */
+export function upsertUser(dc: DataConnect, vars: UpsertUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertUserData>>;
+/** Generated Node Admin SDK operation action function for the 'UpsertUser' Mutation. Allow users to pass in custom DataConnect instances. */
+export function upsertUser(vars: UpsertUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertUserData>>;
+
+/** Generated Node Admin SDK operation action function for the 'AddReview' Mutation. Allow users to execute without passing in DataConnect. */
+export function addReview(dc: DataConnect, vars: AddReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<AddReviewData>>;
+/** Generated Node Admin SDK operation action function for the 'AddReview' Mutation. Allow users to pass in custom DataConnect instances. */
+export function addReview(vars: AddReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<AddReviewData>>;
+
+/** Generated Node Admin SDK operation action function for the 'DeleteReview' Mutation. Allow users to execute without passing in DataConnect. */
+export function deleteReview(dc: DataConnect, vars: DeleteReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteReviewData>>;
+/** Generated Node Admin SDK operation action function for the 'DeleteReview' Mutation. Allow users to pass in custom DataConnect instances. */
+export function deleteReview(vars: DeleteReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteReviewData>>;
 
 /** Generated Node Admin SDK operation action function for the 'ListMovies' Query. Allow users to execute without passing in DataConnect. */
 export function listMovies(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListMoviesData>>;
@@ -162,24 +192,4 @@ export function getMovieById(vars: GetMovieByIdVariables, options?: OperationOpt
 export function searchMovie(dc: DataConnect, vars?: SearchMovieVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SearchMovieData>>;
 /** Generated Node Admin SDK operation action function for the 'SearchMovie' Query. Allow users to pass in custom DataConnect instances. */
 export function searchMovie(vars?: SearchMovieVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SearchMovieData>>;
-
-/** Generated Node Admin SDK operation action function for the 'CreateMovie' Mutation. Allow users to execute without passing in DataConnect. */
-export function createMovie(dc: DataConnect, vars: CreateMovieVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateMovieData>>;
-/** Generated Node Admin SDK operation action function for the 'CreateMovie' Mutation. Allow users to pass in custom DataConnect instances. */
-export function createMovie(vars: CreateMovieVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateMovieData>>;
-
-/** Generated Node Admin SDK operation action function for the 'UpsertUser' Mutation. Allow users to execute without passing in DataConnect. */
-export function upsertUser(dc: DataConnect, vars: UpsertUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertUserData>>;
-/** Generated Node Admin SDK operation action function for the 'UpsertUser' Mutation. Allow users to pass in custom DataConnect instances. */
-export function upsertUser(vars: UpsertUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertUserData>>;
-
-/** Generated Node Admin SDK operation action function for the 'AddReview' Mutation. Allow users to execute without passing in DataConnect. */
-export function addReview(dc: DataConnect, vars: AddReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<AddReviewData>>;
-/** Generated Node Admin SDK operation action function for the 'AddReview' Mutation. Allow users to pass in custom DataConnect instances. */
-export function addReview(vars: AddReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<AddReviewData>>;
-
-/** Generated Node Admin SDK operation action function for the 'DeleteReview' Mutation. Allow users to execute without passing in DataConnect. */
-export function deleteReview(dc: DataConnect, vars: DeleteReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteReviewData>>;
-/** Generated Node Admin SDK operation action function for the 'DeleteReview' Mutation. Allow users to pass in custom DataConnect instances. */
-export function deleteReview(vars: DeleteReviewVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteReviewData>>;
 

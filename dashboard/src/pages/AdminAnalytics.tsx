@@ -87,24 +87,30 @@ const AdminAnalytics: React.FC = () => {
     )},
   ];
 
-  return (
-    <div style={{ padding: 24, minHeight: '100vh', background: 'transparent' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        <div>
-          <Title level={2} style={{ margin: 0, fontWeight: 700, color: '#fff' }}>
-            সিস্টেম এনালাইটিক্স
-          </Title>
-          <Text type="secondary">প্রোভাইডার পারফরম্যান্স এবং ইন্টেলিজেন্স মেট্রিক্স</Text>
-        </div>
-        <Button 
-          icon={<ReloadOutlined />} 
-          onClick={fetchData} 
-          loading={loading}
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-        >
-          রিফ্রেশ
-        </Button>
-      </div>
+   return (
+     <div className="admin-page">
+       <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+         <div>
+           <Title level={2} className="admin-title">
+             সিস্টেম এনালাইটিক্স
+           </Title>
+           <Text className="admin-subtitle">
+             প্রোভাইডার পারফরম্যান্স এবং ইন্টেলিজেন্স মেট্রিক্স
+           </Text>
+         </div>
+         <Button 
+           icon={<ReloadOutlined />} 
+           onClick={fetchData}
+           loading={loading}
+           className="admin-btn-primary"
+           style={{ 
+             background: 'rgba(255,255,255,0.05)',
+             border: '1px solid rgba(255,255,255,0.1)'
+           }}
+         >
+           রিফ্রেশ
+         </Button>
+       </div>
 
       {error && <Alert type="error" message={error} style={{ marginBottom: 24 }} showIcon />}
 

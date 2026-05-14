@@ -16,7 +16,7 @@ spring:
         initial-delay: 60
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       timeout: 2000ms
   datasource:
@@ -72,7 +72,7 @@ supremeai:
 ai:
   providers:
     ollama:
-      endpoint: ${AI_PROVIDERS_OLLAMA_ENDPOINT:http://localhost:11434}
+      endpoint: ${AI_PROVIDERS_OLLAMA_ENDPOINT:http://127.0.0.1:11434}
       api-key: ${AI_PROVIDERS_OLLAMA_API_KEY:ollama}
     huggingface:
       api-key: ${HUGGINGFACE_API_KEY:}
@@ -111,6 +111,6 @@ otel:
     name: supremeai-backend
   exporter:
     otlp:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://127.0.0.1:4317}
   traces:
     exporter: ${OTEL_TRACES_EXPORTER:otlp}

@@ -12,11 +12,11 @@ import reactor.core.publisher.Mono;
 public interface TaskProviderAssignmentRepository
         extends FirestoreReactiveRepository<TaskProviderAssignment> {
 
-    Flux<TaskProviderAssignment> findByTaskTypeAndIsActiveTrue(String taskType);
+    Flux<TaskProviderAssignment> findByTaskTypeAndIsActive(String taskType, boolean isActive);
 
-    Flux<TaskProviderAssignment> findAllByIsActiveTrue();
+    Flux<TaskProviderAssignment> findAllByIsActive(boolean isActive);
 
     Mono<TaskProviderAssignment> findByTaskType(String taskType);
 
-    Mono<Long> countByIsActiveTrue();
+    Mono<Long> countByIsActive(boolean isActive);
 }

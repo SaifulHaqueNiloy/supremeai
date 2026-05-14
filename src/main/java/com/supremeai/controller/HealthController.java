@@ -23,6 +23,9 @@ public class HealthController implements HealthIndicator {
     private final org.springframework.beans.factory.ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider;
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
+    @org.springframework.beans.factory.annotation.Value("${supremeai.redis.mock-online:false}")
+    private boolean mockOnline;
+
     public HealthController(org.springframework.beans.factory.ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
                            CircuitBreakerRegistry circuitBreakerRegistry) {
         this.redisConnectionFactoryProvider = redisConnectionFactoryProvider;
@@ -34,16 +37,20 @@ public class HealthController implements HealthIndicator {
         Map<String, Object> details = new HashMap<>();
         
         // Check Redis
-        RedisConnectionFactory factory = redisConnectionFactoryProvider.getIfAvailable();
-        if (factory != null) {
-            try {
-                factory.getConnection().ping();
-                details.put("redis", "UP");
-            } catch (Exception e) {
-                details.put("redis", "DOWN: " + e.getMessage());
-            }
+        if (mockOnline) {
+            details.put("redis", "UP (MOCKED)");
         } else {
-            details.put("redis", "DISABLED");
+            RedisConnectionFactory factory = redisConnectionFactoryProvider.getIfAvailable();
+            if (factory != null) {
+                try {
+                    factory.getConnection().ping();
+                    details.put("redis", "UP");
+                } catch (Exception e) {
+                    details.put("redis", "DOWN: " + e.getMessage());
+                }
+            } else {
+                details.put("redis", "DISABLED");
+            }
         }
         
         // Check circuit breakers
@@ -63,16 +70,20 @@ public class HealthController implements HealthIndicator {
         health.put("timestamp", System.currentTimeMillis());
         
         // Redis status
-        RedisConnectionFactory factory = redisConnectionFactoryProvider.getIfAvailable();
-        if (factory != null) {
-            try {
-                factory.getConnection().ping();
-                health.put("redis", Map.of("status", "UP"));
-            } catch (Exception e) {
-                health.put("redis", Map.of("status", "DOWN", "error", e.getMessage()));
-            }
+        if (mockOnline) {
+            health.put("redis", Map.of("status", "UP", "mocked", true));
         } else {
-            health.put("redis", Map.of("status", "DISABLED"));
+            RedisConnectionFactory factory = redisConnectionFactoryProvider.getIfAvailable();
+            if (factory != null) {
+                try {
+                    factory.getConnection().ping();
+                    health.put("redis", Map.of("status", "UP"));
+                } catch (Exception e) {
+                    health.put("redis", Map.of("status", "DOWN", "error", e.getMessage()));
+                }
+            } else {
+                health.put("redis", Map.of("status", "DISABLED"));
+            }
         }
         
         // Circuit breaker states

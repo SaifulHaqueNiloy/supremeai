@@ -7,7 +7,7 @@ import '../settings_screen.dart';
 import '../learning/learning_screen.dart';
 import '../projects/projects_list_screen.dart';
 import '../notifications/notifications_screen.dart';
-import '../../localization_service.dart';
+import '../../services/localization_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

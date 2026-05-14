@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../localization_service.dart';
+import '../../services/localization_service.dart';
 
 class ConsensusScreen extends StatelessWidget {
   const ConsensusScreen({super.key});

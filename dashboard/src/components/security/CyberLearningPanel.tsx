@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Space, Typography, Input, Button, Divider, Tag } from 'antd';
-import { LockOutlined, BulbOutlined } from '@ant-design/icons';
+import { Card, Space, Typography, Input, Button, Divider, Tag, Switch } from 'antd';
+import { LockOutlined, BulbOutlined, RobotOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -17,6 +17,8 @@ interface CyberLearningPanelProps {
   onStartLearning: () => void;
   learning: boolean;
   cyberSkills: CyberSkill[];
+  autonomousLearningEnabled?: boolean;
+  onToggleAutonomous?: (enabled: boolean) => void;
 }
 
 const CyberLearningPanel: React.FC<CyberLearningPanelProps> = ({
@@ -25,10 +27,26 @@ const CyberLearningPanel: React.FC<CyberLearningPanelProps> = ({
   onStartLearning,
   learning,
   cyberSkills,
+  autonomousLearningEnabled,
+  onToggleAutonomous,
 }) => {
   return (
     <Card 
-      title={<span style={{ color: '#fff' }}><LockOutlined /> Autonomous Cyber Learning</span>}
+      title={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <span style={{ color: '#fff' }}><LockOutlined /> Autonomous Cyber Learning</span>
+          <Space>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px' }}>
+              <RobotOutlined /> Autonomous Mode
+            </Text>
+            <Switch 
+              size="small" 
+              checked={autonomousLearningEnabled} 
+              onChange={onToggleAutonomous}
+            />
+          </Space>
+        </div>
+      }
       bordered={false}
       className="glass-card"
       style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)' }}

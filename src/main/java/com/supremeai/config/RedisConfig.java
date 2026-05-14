@@ -18,19 +18,19 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @ConditionalOnProperty(name = "supremeai.cache.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisConfig {
 
-    @Value("${spring.redis.host:localhost}")
+    @Value("${spring.data.redis.host:localhost}")
     private String redisHost;
 
-    @Value("${spring.redis.port:6379}")
+    @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
-    @Value("${spring.redis.password:#{null}}")
+    @Value("${spring.data.redis.password:#{null}}")
     private String redisPassword;
 
-    @Value("${spring.redis.database:0}")
+    @Value("${spring.data.redis.database:0}")
     private int redisDatabase;
 
-    @Value("${spring.redis.timeout:2000}")
+    @Value("${spring.data.redis.timeout:5000}")
     private int redisTimeout;
 
     @Bean
@@ -43,7 +43,13 @@ public class RedisConfig {
         }
         config.setDatabase(redisDatabase);
 
-        LettuceConnectionFactory factory = new LettuceConnectionFactory(config);
+        org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration clientConfig = 
+            org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration.builder()
+                .commandTimeout(java.time.Duration.ofMillis(redisTimeout))
+                .shutdownTimeout(java.time.Duration.ofMillis(redisTimeout))
+                .build();
+
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config, clientConfig);
         factory.setShareNativeConnection(false);
         return factory;
     }

@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.List;
+import java.util.HashMap;
 
 /**
  * Controller for the system's autonomous cyber security skills.
@@ -44,5 +45,32 @@ public class CyberSecurityController {
     public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> runAudit() {
         return cyberSecuritySkillService.runSelfAudit()
                 .map(report -> ResponseEntity.ok(ApiResponse.ok(report)));
+    }
+
+    @GetMapping("/config")
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> getConfig() {
+        return Mono.fromCallable(() -> {
+            Map<String, Object> config = new HashMap<>();
+            config.put("autonomousLearningEnabled", cyberSecuritySkillService.isAutonomousLearningEnabled());
+            config.put("autonomousAuditEnabled", cyberSecuritySkillService.isAutonomousAuditEnabled());
+            config.put("lastAuditTime", cyberSecuritySkillService.getLastAuditTime());
+            config.put("lastLearningTime", cyberSecuritySkillService.getLastLearningTime());
+            return ResponseEntity.ok(ApiResponse.ok(config));
+        });
+    }
+
+    @PostMapping("/config")
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> updateConfig(@RequestBody Map<String, Boolean> body) {
+        return Mono.fromCallable(() -> {
+            if (body.containsKey("autonomousLearningEnabled")) {
+                cyberSecuritySkillService.setAutonomousLearningEnabled(body.get("autonomousLearningEnabled"));
+            }
+            if (body.containsKey("autonomousAuditEnabled")) {
+                cyberSecuritySkillService.setAutonomousAuditEnabled(body.get("autonomousAuditEnabled"));
+            }
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            return ResponseEntity.ok(ApiResponse.ok(response));
+        });
     }
 }

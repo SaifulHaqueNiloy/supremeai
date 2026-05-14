@@ -127,19 +127,19 @@ public class EnhancedSelfLearningRouter {
 
     /**
      * Get the best provider for a given task (simple version).
+     * This now expects a list of available providers to remain dynamic.
      */
-    public String getBestProviderForTask(String taskType) {
-        List<String> allProviders = Arrays.asList(
-            "gemini", "deepseek", "gpt4", "claude", "mistral",
-            "gcp_qwen", "hf_llama", "hf_mistral", "ollama"
-        );
+    public String getBestProviderForTask(String taskType, List<String> candidateProviders) {
+        if (candidateProviders == null || candidateProviders.isEmpty()) {
+            return "gemini"; // Default fallback
+        }
 
         RoutingDecision decision = routeRequest(
             taskType,
             UUID.randomUUID().toString(),
             500, // medium complexity
             List.of(),
-            allProviders
+            candidateProviders
         );
 
         return decision.agentId;

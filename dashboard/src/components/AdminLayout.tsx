@@ -16,13 +16,11 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ title, children }) => {
   return (
-    <Content style={{ padding: '24px', background: '#080808' }}>
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Content className="admin-page">
+      <div className="admin-header">
         <div className="flex flex-col">
-          <h1 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            {title}
-          </h1>
-          <div className="h-1 w-12 bg-emerald-500 mt-1" />
+          <h1 className="admin-title">{title}</h1>
+          <div className="h-1 bg-emerald-500 mt-1" style={{ width: 'clamp(60px, 10vw, 100px)', height: 'clamp(2px, 0.3vw, 3px)' }} />
         </div>
       </div>
       {children}

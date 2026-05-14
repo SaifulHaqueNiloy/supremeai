@@ -172,7 +172,7 @@ public class MultiAIVotingService {
             // 1. Check DB for task-specific assignment
             try {
                 List<com.supremeai.model.TaskProviderAssignment> assignments =
-                    taskAssignmentRepo.findByTaskTypeAndIsActiveTrue(taskType).collectList().block();
+                    taskAssignmentRepo.findByTaskTypeAndIsActive(taskType, true).collectList().block();
 
                 if (assignments != null && !assignments.isEmpty()) {
                     // Merge all provider IDs from matching assignments

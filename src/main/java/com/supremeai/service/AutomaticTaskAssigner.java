@@ -153,7 +153,7 @@ public class AutomaticTaskAssigner {
     public void nightlyRebalance() {
         log.info("🌙 Starting nightly rebalance of task assignments...");
 
-        assignmentRepo.findAllByIsActiveTrue()
+        assignmentRepo.findAllByIsActive(true)
             .doOnNext(assignment -> {
                 String taskType = assignment.getTaskType();
                 List<String> currentProviders = assignment.getProviderIds();
@@ -250,7 +250,7 @@ public class AutomaticTaskAssigner {
     public Map<String, Object> getAssignmentStats() {
         Map<String, Object> stats = new HashMap<>();
         long totalAssignments = assignmentRepo.count().block();
-        long activeTasks = assignmentRepo.countByIsActiveTrue().block();
+        long activeTasks = assignmentRepo.countByIsActive(true).block();
 
         stats.put("totalAssignments", totalAssignments);
         stats.put("activeTasks", activeTasks);

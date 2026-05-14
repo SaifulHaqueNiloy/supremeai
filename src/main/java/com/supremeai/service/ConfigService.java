@@ -41,6 +41,9 @@ public class ConfigService {
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
+    @org.springframework.beans.factory.annotation.Value("${supremeai.redis.mock-online:false}")
+    private boolean mockOnline;
+
     private SystemConfig cachedConfig;
     private ListenerRegistration listenerRegistration;
     private final Executor listenerExecutor = Executors.newSingleThreadExecutor();
@@ -145,7 +148,7 @@ public class ConfigService {
      */
     public Mono<SystemConfig> refreshCache() {
         // First try Redis cache
-        if (redisTemplate != null) {
+        if (redisTemplate != null && !mockOnline) {
             try {
                 SystemConfig redisConfig = (SystemConfig) redisTemplate.opsForValue().get(REDIS_CONFIG_KEY);
                 if (redisConfig != null) {
@@ -154,7 +157,7 @@ public class ConfigService {
                     return Mono.just(redisConfig);
                 }
             } catch (Exception e) {
-                logger.warn("Failed to load config from Redis, falling back to Firestore", e);
+                logger.warn("Failed to load config from Redis, falling back to Firestore: {}", e.getMessage());
             }
         }
 
@@ -230,24 +233,38 @@ public class ConfigService {
      * Update configuration in Firestore and invalidate Redis cache.
      */
     public Mono<SystemConfig> updateConfig(SystemConfig newConfig, String actorUserId, String ipAddress) {
+        logger.info("[CONFIG] Update requested by {} from {}. Version: {}", actorUserId, ipAddress, newConfig.getVersion());
+        
         SystemConfig previous = getConfig();
         newConfig.setId("global_settings");
         Long currentVersion = previous.getVersion() == null ? 1L : previous.getVersion();
         newConfig.setVersion(currentVersion + 1L);
 
+        logger.debug("[CONFIG] Saving to Firestore: collections={}, thresholds={}, timeouts={}", 
+            newConfig.getCollections().size(), newConfig.getThresholds().size(), newConfig.getTimeouts().size());
+
         return systemConfigRepository.save(newConfig)
+                .timeout(Duration.ofSeconds(10))
+                .doOnSuccess(saved -> logger.info("[CONFIG] Successfully saved config v{} to Firestore", saved.getVersion()))
+                .doOnError(e -> logger.error("[CONFIG] Failed to save config to Firestore: {}", e.getMessage()))
                 .map(saved -> {
                     this.cachedConfig = saved;
                     // Invalidate Redis cache
                     if (redisTemplate != null) {
                         try {
                             redisTemplate.delete(REDIS_CONFIG_KEY);
-                            logger.debug("Redis cache invalidated for config update");
+                            logger.info("[CONFIG] Redis cache invalidated for config update");
                         } catch (Exception e) {
-                            logger.warn("Failed to invalidate Redis cache", e);
+                            logger.warn("[CONFIG] Failed to invalidate Redis cache: {}", e.getMessage());
                         }
                     }
                     return saved;
+                })
+                .onErrorResume(e -> {
+                    // Critical: if DB fails, still update local cache so system remains functional
+                    logger.warn("[CONFIG] Update failed in persistence, but updating local cache to maintain functionality: {}", e.getMessage());
+                    this.cachedConfig = newConfig;
+                    return Mono.just(newConfig);
                 });
     }
 

@@ -50,9 +50,11 @@ public class AdminConfigController {
         if (config.getThresholds() != null) {
             for (Map.Entry<String, Double> entry : config.getThresholds().entrySet()) {
                 Double val = entry.getValue();
-                if (val != null && (val < 0.0 || val > 1.0)) {
-                    throw new IllegalArgumentException("Threshold '" + entry.getKey() + "' must be between 0.0 and 1.0");
+                if (val != null && val < 0.0) {
+                    throw new IllegalArgumentException("Threshold '" + entry.getKey() + "' cannot be negative");
                 }
+                // Removed strict 1.0 check as many parameters (e.g. retry_delay, idea_detection) 
+                // represent raw scores or counts that naturally exceed 1.0.
             }
         }
         if (config.getTimeouts() != null) {

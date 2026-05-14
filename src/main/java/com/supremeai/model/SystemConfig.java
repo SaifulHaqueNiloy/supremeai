@@ -51,6 +51,8 @@ public class SystemConfig {
     private Map<String, String> permissions = new HashMap<>();
     private Map<String, Map<String, Object>> providers = new HashMap<>();
     private java.util.List<String> adminEmails = new java.util.ArrayList<>();
+    private boolean autonomousLearningEnabled = true;
+    private boolean autonomousAuditEnabled = true;
 
     public SystemConfig() {
         // Default quotas as a fallback
@@ -112,6 +114,8 @@ public class SystemConfig {
         settings.put("backoff_multiplier", 2.0);
         settings.put("max_recent_logs", 1000);
         settings.put("cache_ttl_minutes", 30);
+        this.autonomousLearningEnabled = true;
+        this.autonomousAuditEnabled = true;
     }
 
     // Getters and Setters
@@ -192,6 +196,12 @@ public class SystemConfig {
 
     public java.util.List<String> getAdminEmails() { return adminEmails; }
     public void setAdminEmails(java.util.List<String> adminEmails) { this.adminEmails = adminEmails; }
+
+    public boolean isAutonomousLearningEnabled() { return autonomousLearningEnabled; }
+    public void setAutonomousLearningEnabled(boolean autonomousLearningEnabled) { this.autonomousLearningEnabled = autonomousLearningEnabled; }
+
+    public boolean isAutonomousAuditEnabled() { return autonomousAuditEnabled; }
+    public void setAutonomousAuditEnabled(boolean autonomousAuditEnabled) { this.autonomousAuditEnabled = autonomousAuditEnabled; }
 
     /**
      * Helper to get quota for a specific tier

@@ -29,8 +29,16 @@ const EngineSettingsCard: React.FC<EngineSettingsCardProps> = ({ config, onUpdat
         render: (text: any, record: any) => (
           <Input 
             defaultValue={text}
-            onBlur={(e) => onUpdateValue(field, record.key, e.target.value)}
-            onPressEnter={(e) => onUpdateValue(field, record.key, (e.target as any).value)}
+            onBlur={(e) => {
+              const val = e.target.value;
+              const parsed = isNaN(Number(val)) || val === '' ? val : Number(val);
+              onUpdateValue(field, record.key, parsed);
+            }}
+            onPressEnter={(e) => {
+              const val = (e.target as any).value;
+              const parsed = isNaN(Number(val)) || val === '' ? val : Number(val);
+              onUpdateValue(field, record.key, parsed);
+            }}
             style={{ borderRadius: '6px' }}
           />
         )

@@ -58,6 +58,12 @@ const GeneralSettingsCard: React.FC<GeneralSettingsCardProps> = ({ form, onFinis
           <Form.Item name="enableExternalDirectory" label="External Directory" valuePropName="checked" style={{ marginBottom: 0 }}>
             <Switch />
           </Form.Item>
+          <Form.Item name="autonomousLearningEnabled" label="Autonomous Learning" valuePropName="checked" style={{ marginBottom: 0 }}>
+            <Switch />
+          </Form.Item>
+          <Form.Item name="autonomousAuditEnabled" label="Self-Audit Mode" valuePropName="checked" style={{ marginBottom: 0 }}>
+            <Switch />
+          </Form.Item>
         </div>
 
         <Form.Item name="shareMode" label="Project Sharing Mode">

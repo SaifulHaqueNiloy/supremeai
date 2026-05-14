@@ -160,179 +160,263 @@ const AdminLogs: React.FC = () => {
 
   return (
     <AdminLayout title="System Activity Logs">
-      <div style={{ padding: '24px', background: '#050505', minHeight: 'calc(100vh - 64px)', color: '#fff' }}>
-        {/* Header with Breadcrumbs */}
-        <div style={{ marginBottom: 32 }}>
-          <Breadcrumb separator=">" style={{ marginBottom: 16, opacity: 0.7 }}>
-            <Breadcrumb.Item href=""><DashboardOutlined /> ড্যাশবোর্ড</Breadcrumb.Item>
-            <Breadcrumb.Item><HistoryOutlined /> সিস্টেম অডিট</Breadcrumb.Item>
-            <Breadcrumb.Item>অ্যাক্টিভিটি লগস</Breadcrumb.Item>
-          </Breadcrumb>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div>
-              <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '32px', letterSpacing: '-0.5px' }}>
-                সিস্টেম অ্যাক্টিভিটি লগস <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 400, verticalAlign: 'middle', marginLeft: '8px', opacity: 0.8 }}>LIVE AUDIT</span>
-              </Title>
-              <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '16px' }}>অডিট ট্রেইল এবং সিস্টেম ইভেন্ট রিয়েল-টাইম মনিটরিং</Text>
+      {/* Header Section */}
+      <div className="admin-header">
+        <Breadcrumb separator=">" style={{ marginBottom: 'var(--space-2)', opacity: 0.7 }}>
+          <Breadcrumb.Item href=""><DashboardOutlined /> ড্যাশবোর্ড</Breadcrumb.Item>
+          <Breadcrumb.Item><HistoryOutlined /> সিস্টেম অডিট</Breadcrumb.Item>
+          <Breadcrumb.Item>অ্যাক্টিভিটি লগস</Breadcrumb.Item>
+        </Breadcrumb>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+          <div>
+            <Title level={2} className="admin-title">
+              সিস্টেম অ্যাক্টিভিটি লগস <span className="admin-badge">LIVE AUDIT</span>
+            </Title>
+            <Text className="admin-subtitle">
+              অডিট ট্রেইল এবং সিস্টেম ইভেন্ট রিয়েল-টাইম মনিটরিং
+            </Text>
+          </div>
+          <Button 
+            type="primary" 
+            icon={<ReloadOutlined />} 
+            onClick={fetchLogs}
+            loading={loading}
+            className="admin-btn-primary"
+            style={{ 
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              border: 'none',
+              fontWeight: 600,
+              boxShadow: '0 4px clamp(12px, 2vw, 20px) rgba(59, 130, 246, 0.3)'
+            }}
+          >
+            রিফ্রেশ করুন
+          </Button>
+        </div>
+      </div>
+
+      {error && <Alert type="error" message={error} action={<Button onClick={fetchLogs}>Retry</Button>} className="admin-empty" style={{ marginBottom: 'var(--space-3)' }} />}
+
+      <Card
+        className="glass-card"
+        style={{ 
+          borderRadius: 'var(--radius-xl)', 
+          background: 'rgba(255,255,255,0.02)', 
+          border: '1px solid rgba(255,255,255,0.08)',
+          marginBottom: 'var(--space-4)',
+          boxShadow: '0 clamp(16px, 2.5vw, 32px) clamp(32px, 4vw, 64px) rgba(0, 0, 0, 0.3)',
+          overflow: 'hidden'
+        }}
+        bodyStyle={{ padding: 0 }}
+      >
+        {/* Modern Toolbar */}
+        <div className="admin-toolbar">
+          <div className="toolbar-section">
+            <div style={{ 
+              background: 'rgba(59, 130, 246, 0.1)', 
+              padding: 'var(--space-2)', 
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <SearchOutlined style={{ color: '#3b82f6', fontSize: 'var(--text-base)' }} />
             </div>
-            <Button 
-              type="primary" 
-              icon={<ReloadOutlined />} 
-              onClick={fetchLogs} 
-              loading={loading}
-              style={{ 
-                height: '42px',
-                padding: '0 24px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
-                border: 'none',
-                fontWeight: 600,
-                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
-              }}
-            >
-              রিফ্রেশ করুন
-            </Button>
+            <Input
+              placeholder="ইউজার বা অ্যাকশন দিয়ে খুঁজুন..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              variant="borderless"
+              className="admin-search dark-input-minimal"
+            />
+          </div>
+          
+          <div className="toolbar-section">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Text style={{ 
+                color: 'rgba(255,255,255,0.35)', 
+                fontSize: 'var(--text-xs)', 
+                textTransform: 'uppercase', 
+                letterSpacing: '1px', 
+                fontWeight: 700 
+              }}>সেভেরিটি</Text>
+              <Select
+                placeholder="সবগুলো"
+                value={severityFilter || undefined}
+                onChange={(val) => setSeverityFilter(val || '')}
+                style={{ width: clamp(120px, 12vw, 160px) }}
+                allowClear
+                className="premium-select"
+                dropdownClassName="premium-dropdown"
+              >
+                <Option value="INFO">ইনফো (Info)</Option>
+                <Option value="WARN">ওয়ার্নিং (Warn)</Option>
+                <Option value="ERROR">এরর (Error)</Option>
+                <Option value="DEBUG">ডিবাগ (Debug)</Option>
+              </Select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Text style={{ 
+                color: 'rgba(255,255,255,0.35)', 
+                fontSize: 'var(--text-xs)', 
+                textTransform: 'uppercase', 
+                letterSpacing: '1px', 
+                fontWeight: 700 
+              }}>সর্ট করুন</Text>
+              <Select
+                value={sortBy}
+                onChange={(val) => setSortBy(val)}
+                style={{ width: clamp(140px, 14vw, 180px) }}
+                className="premium-select"
+                dropdownClassName="premium-dropdown"
+              >
+                <Option value="timestamp">সময় (Time)</Option>
+                <Option value="severity">সেভেরিটি</Option>
+                <Option value="user">ইউজার</Option>
+                <Option value="action">অ্যাকশন</Option>
+                <Option value="category">ক্যাটাগরি</Option>
+              </Select>
+            </div>
+
+            <Tooltip title={sortOrder === 'ascend' ? 'ক্রমানুসারে' : 'বিপরীত ক্রমানুসারে'}>
+              <Button 
+                onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
+                icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
+                className="admin-btn-icon"
+                style={{ 
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#fff'
+                }}
+                className="hover-bright"
+              />
+            </Tooltip>
           </div>
         </div>
 
-        {error && <Alert type="error" message={error} action={<Button onClick={fetchLogs}>Retry</Button>} style={{ marginBottom: 24, borderRadius: '12px' }} />}
-
-        <Card
-          className="glass-card main-logs-card"
-          style={{ 
-            borderRadius: 24, 
-            background: 'rgba(255,255,255,0.02)', 
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
-            overflow: 'hidden'
-          }}
-          bodyStyle={{ padding: 0 }}
-        >
-          {/* Modern Toolbar */}
-          <div className="glass-toolbar" style={{ 
-            padding: '20px 24px', 
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            flexWrap: 'wrap', 
-            gap: '20px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ 
-                background: 'rgba(59, 130, 246, 0.1)', 
-                padding: '8px', 
-                borderRadius: '10px',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
-              }}>
-                <SearchOutlined style={{ color: '#3b82f6', fontSize: '18px' }} />
-              </div>
-              <Input
-                placeholder="ইউজার বা অ্যাকশন দিয়ে খুঁজুন..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                variant="borderless"
-                style={{ 
-                  width: 320, 
-                  height: '42px',
-                  fontSize: '15px',
-                  color: '#fff' 
-                }}
-                className="dark-input-minimal"
-              />
-            </div>
-            
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <Space size="middle" wrap>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Text style={{ 
-                    color: 'rgba(255,255,255,0.35)', 
-                    fontSize: '11px', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '1px', 
-                    fontWeight: 700 
-                  }}>সেভেরিটি</Text>
-                  <Select
-                    placeholder="সবগুলো"
-                    value={severityFilter || undefined}
-                    onChange={(val) => setSeverityFilter(val || '')}
-                    style={{ width: 140 }}
-                    allowClear
-                    className="premium-select"
-                    dropdownClassName="premium-dropdown"
-                  >
-                    <Option value="INFO">ইনফো (Info)</Option>
-                    <Option value="WARN">ওয়ার্নিং (Warn)</Option>
-                    <Option value="ERROR">এরর (Error)</Option>
-                    <Option value="DEBUG">ডিবাগ (Debug)</Option>
-                  </Select>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Text style={{ 
-                    color: 'rgba(255,255,255,0.35)', 
-                    fontSize: '11px', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '1px', 
-                    fontWeight: 700 
-                  }}>সর্ট করুন</Text>
-                  <Select
-                    value={sortBy}
-                    onChange={(val) => setSortBy(val)}
-                    style={{ width: 150 }}
-                    className="premium-select"
-                    dropdownClassName="premium-dropdown"
-                  >
-                    <Option value="timestamp">সময় (Time)</Option>
-                    <Option value="severity">সেভেরিটি</Option>
-                    <Option value="user">ইউজার</Option>
-                    <Option value="action">অ্যাকশন</Option>
-                    <Option value="category">ক্যাটাগরি</Option>
-                  </Select>
-                </div>
-
-                <Tooltip title={sortOrder === 'ascend' ? 'ক্রমানুসারে' : 'বিপরীত ক্রমানুসারে'}>
-                  <Button 
-                    onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
-                    icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
-                    style={{ 
-                      height: '42px',
-                      width: '42px',
-                      borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    className="hover-bright"
-                  />
-                </Tooltip>
-              </Space>
-            </div>
-          </div>
-
-          <div style={{ padding: '0 1px' }}>
-            <Table
-              columns={columns}
-              dataSource={processedLogs}
-              rowKey={(record) => record.id || record.timestamp || Math.random().toString()}
-              loading={loading}
-              pagination={{ 
-                pageSize: 15,
-                showSizeChanger: true,
-                pageSizeOptions: ['15', '30', '50', '100']
-              }}
-              className="admin-table-dark"
-            />
-          </div>
-        </Card>
-      </div>
+        <div style={{ overflowX: 'auto' }}>
+          <Table
+            columns={columns}
+            dataSource={processedLogs}
+            rowKey={(record) => record.id || record.timestamp || Math.random().toString()}
+            loading={loading}
+            pagination={{ 
+              pageSize: 15,
+              showSizeChanger: true,
+              pageSizeOptions: ['15', '30', '50', '100']
+            }}
+            className="admin-table-dark"
+          />
+        </div>
+      </Card>
 
       <style>{`
+        .glass-card {
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .dark-input-minimal::placeholder {
+          color: rgba(255,255,255,0.2) !important;
+        }
+
+        .premium-select .ant-select-selector {
+          background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 12px !important;
+          height: 42px !important;
+          display: flex !important;
+          align-items: center !important;
+          color: #fff !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .premium-select:hover .ant-select-selector {
+          border-color: rgba(59, 130, 246, 0.5) !important;
+          background: rgba(255,255,255,0.08) !important;
+        }
+
+        .premium-dropdown {
+          background: #141414 !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 12px !important;
+          padding: 8px !important;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        }
+
+        .premium-dropdown .ant-select-item {
+          border-radius: 8px !important;
+          padding: 8px 12px !important;
+        }
+
+        .premium-dropdown .ant-select-item-option-selected {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+          color: white !important;
+          font-weight: 600;
+        }
+
+        .premium-dropdown .ant-select-item-option-active:not(.ant-select-item-option-selected) {
+          background: rgba(255,255,255,0.05) !important;
+        }
+
+        .admin-table-dark .ant-table {
+          background: transparent !important;
+        }
+
+        .admin-table-dark .ant-table-thead > tr > th {
+          background: rgba(255,255,255,0.02) !important;
+          color: rgba(255,255,255,0.4) !important;
+          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+          font-size: var(--text-xs) !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.5px !important;
+          font-weight: 700 !important;
+          padding: var(--space-3) !important;
+        }
+
+        .admin-table-dark .ant-table-tbody > tr > td {
+          border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+          padding: var(--space-3) !important;
+          color: rgba(255,255,255,0.85) !important;
+        }
+
+        .admin-table-dark .ant-table-tbody > tr:hover > td {
+          background: rgba(255,255,255,0.02) !important;
+        }
+
+        .admin-table-dark .ant-pagination-item {
+          background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: var(--radius-md) !important;
+        }
+
+        .admin-table-dark .ant-pagination-item-active {
+          background: var(--neon-blue) !important;
+          border-color: var(--neon-blue) !important;
+        }
+
+        /* Admin button fixes */
+        .admin-btn-primary {
+          height: clamp(36px, 5vh, 48px) !important;
+          padding: 0 clamp(16px, 2vw, 24px) !important;
+          font-size: var(--text-sm) !important;
+          border-radius: var(--radius-md) !important;
+        }
+
+        .admin-btn-icon {
+          height: clamp(36px, 5vh, 48px) !important;
+          width: clamp(36px, 5vh, 48px) !important;
+          border-radius: var(--radius-md) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+        }
+      `}</style>
+    </AdminLayout>
+  );
         .glass-card {
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);

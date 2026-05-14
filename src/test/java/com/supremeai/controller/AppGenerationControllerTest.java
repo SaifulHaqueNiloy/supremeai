@@ -1,8 +1,8 @@
 package com.supremeai.controller;
 
 import com.supremeai.service.CodeGenerationService;
-import com.supremeai.service.FullStackCodeGenerator;
-import com.supremeai.service.MultiPlatformGenerator;
+import com.supremeai.generation.FullStackCodeGenerator;
+import com.supremeai.generation.MultiPlatformGenerator;
 import com.supremeai.model.EntityDefinition;
 import com.supremeai.model.FieldDefinition;
 import com.supremeai.model.GeneratedApp;
