@@ -232,7 +232,7 @@ const AdminQuotas: React.FC = () => {
             <Select
               value={sortBy}
               onChange={(val) => setSortBy(val)}
-              style={{ width: clamp(140px, 14vw, 180px) }}
+              style={{ width: 160 }}
               className="premium-select"
               dropdownClassName="premium-dropdown"
             >

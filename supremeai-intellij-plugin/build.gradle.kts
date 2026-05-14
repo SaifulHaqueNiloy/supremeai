@@ -40,10 +40,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
-    // Firebase dependencies
-    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
-    implementation("com.google.firebase:firebase-dataconnect-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    // Firebase Data Connect dependencies for generated code
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation("com.google.firebase:firebase-dataconnect")
+    implementation("com.google.firebase:firebase-auth")
 }
 
     // Regular dependencies

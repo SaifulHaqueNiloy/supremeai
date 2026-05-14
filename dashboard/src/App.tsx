@@ -118,7 +118,7 @@ const MainVisualizer = () => {
             className={`glass-panel model-card ${activeModel === model.id ? 'active' : ''}`}
           >
             <div className="model-card-header">
-              <Cpu size={clamp(16, 2.5vw, 24)} color={model.status === 'online' ? 'var(--neon-blue)' : '#555'} />
+              <Cpu size={20} color={model.status === 'online' ? 'var(--neon-blue)' : '#555'} />
               <span style={{ fontSize: 'var(--text-xs)', color: '#888' }}>{model.type}</span>
             </div>
             <h3 className="model-card-title">{model.name}</h3>
@@ -146,7 +146,7 @@ const MainVisualizer = () => {
       <aside className="terminal-panel">
         <div className="glass-panel terminal-panel-content">
           <div className="terminal-panel-header">
-            <TerminalIcon size={clamp(14, 2vw, 20)} color="var(--neon-blue)" />
+            <TerminalIcon size={18} color="var(--neon-blue)" />
             <span className="terminal-panel-title">LIVE TELEMETRY</span>
           </div>
           <div className="terminal-logs">
@@ -166,9 +166,9 @@ const MainVisualizer = () => {
 
       {/* Global Status HUD */}
       <div className="hud-metrics">
-        <HUDMetric icon={<Shield size={clamp(14, 2vw, 20)} />} label="Security" value="MIL-SPEC" color="var(--neon-blue)" />
-        <HUDMetric icon={<Zap size={clamp(14, 2vw, 20)} />} label="Response" value="ULTRALOW" color="var(--neon-purple)" />
-        <HUDMetric icon={<Globe size={clamp(14, 2vw, 20)} />} label="Region" value="GCP-US" color="var(--neon-pink)" />
+        <HUDMetric icon={<Shield size={18} />} label="Security" value="MIL-SPEC" color="var(--neon-blue)" />
+        <HUDMetric icon={<Zap size={18} />} label="Response" value="ULTRALOW" color="var(--neon-purple)" />
+        <HUDMetric icon={<Globe size={18} />} label="Region" value="GCP-US" color="var(--neon-pink)" />
       </div>
     </div>
   );

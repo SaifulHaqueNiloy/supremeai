@@ -69,7 +69,7 @@ const AdminMonitoring: React.FC = () => {
 
   return (
     <AdminLayout title="System Monitoring">
-      <Row gutter={[clamp(12, 2vw, 24), clamp(12, 2vw, 24)])}>
+      <Row gutter={[16, 16]}>
         {/* System Status Card */}
         <Col xs={24} sm={12} md={6}>
           <Card hoverable className="glass-card">

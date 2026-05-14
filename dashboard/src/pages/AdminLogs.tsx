@@ -244,7 +244,7 @@ const AdminLogs: React.FC = () => {
                 placeholder="সবগুলো"
                 value={severityFilter || undefined}
                 onChange={(val) => setSeverityFilter(val || '')}
-                style={{ width: clamp(120px, 12vw, 160px) }}
+                style={{ width: 140 }}
                 allowClear
                 className="premium-select"
                 dropdownClassName="premium-dropdown"
@@ -267,7 +267,7 @@ const AdminLogs: React.FC = () => {
               <Select
                 value={sortBy}
                 onChange={(val) => setSortBy(val)}
-                style={{ width: clamp(140px, 14vw, 180px) }}
+                style={{ width: 160 }}
                 className="premium-select"
                 dropdownClassName="premium-dropdown"
               >
