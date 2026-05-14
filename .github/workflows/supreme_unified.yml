@@ -401,8 +401,8 @@ jobs: # ------------------------------------------------------------------------
 
   frontend-deploy:
     name: ⚛️ Frontend Deploy
-    needs: [frontend-build, backend-build]
-    if: (needs.backend-build.result == 'success') && (needs.frontend-build.result == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+    needs: [backend-deploy]
+    if: needs.backend-deploy.result == 'success' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout Code
