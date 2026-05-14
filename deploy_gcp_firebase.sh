@@ -62,6 +62,14 @@ if [ ! -d "node_modules" ]; then
     npm ci
 fi
 
+# Source environment variables if .env exists
+if [ -f ".env" ]; then
+    log_info "Loading environment variables from .env"
+    set -a
+    source .env
+    set +a
+fi
+
 # Build with environment variables
 export VITE_FIREBASE_API_KEY="${VITE_FIREBASE_API_KEY}"
 export VITE_FIREBASE_AUTH_DOMAIN="${VITE_FIREBASE_AUTH_DOMAIN:-supremeai-a.firebaseapp.com}"
