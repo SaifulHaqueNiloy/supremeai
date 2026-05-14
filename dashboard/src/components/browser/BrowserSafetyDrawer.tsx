@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, Tabs, Input, Space, Row, Col, Button, List, Badge, Typography, Popconfirm, Card, Tag, Descriptions, Alert } from 'antd';
+import { Drawer, Tabs, Input, Space, Row, Col, Button, List, Badge, Typography, Popconfirm, Card, Tag, Descriptions, Alert, Progress } from 'antd';
 import { 
   SafetyOutlined, GlobalOutlined, KeyOutlined, BulbOutlined, 
   ReloadOutlined, CodeOutlined
@@ -57,8 +57,10 @@ const BrowserSafetyDrawer: React.FC<BrowserSafetyDrawerProps> = ({
       width={500}
       onClose={onClose}
       open={open}
-      headerStyle={{ background: '#1a1b1e', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
-      viewBodyStyle={{ background: '#08090a', padding: 24 }}
+      styles={{ 
+        header: { background: '#1a1b1e', borderBottom: '1px solid rgba(255,255,255,0.1)' },
+        body: { background: '#08090a', padding: 24 }
+      }}
       closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>×</span>}
     >
       <Tabs defaultActiveKey="permissions" className="custom-tabs">

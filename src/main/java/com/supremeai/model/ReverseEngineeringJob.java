@@ -2,7 +2,8 @@ package com.supremeai.model;
 
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.ServerTimestamp;
-import java.time.LocalDateTime;
+import org.springframework.data.annotation.Id;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -11,6 +12,7 @@ import java.util.Map;
  */
 public class ReverseEngineeringJob {
 
+    @Id
     @DocumentId
     private String jobId;
 
@@ -33,10 +35,10 @@ public class ReverseEngineeringJob {
     private String generatedAppId; // linked generated app
 
     @ServerTimestamp
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @ServerTimestamp
-    private LocalDateTime updatedAt;
+    private Date updatedAt;
 
     public ReverseEngineeringJob() {}
 
@@ -46,7 +48,7 @@ public class ReverseEngineeringJob {
         this.websiteUrl = websiteUrl;
         this.taskType = taskType != null ? taskType : "REVERSE_ENGINEER";
         this.status = "PENDING";
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = new Date();
     }
 
     public String getJobId() { return jobId; }
@@ -79,9 +81,9 @@ public class ReverseEngineeringJob {
     public String getGeneratedAppId() { return generatedAppId; }
     public void setGeneratedAppId(String generatedAppId) { this.generatedAppId = generatedAppId; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -14,7 +14,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
@@ -44,7 +43,6 @@ public class UserApiKeyService {
     @Autowired
     private ContextualAIRankingService contextualRankingService;
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<List<Map<String, Object>>> listKeys(String userId) {
         return userApiKeyRepository.findByUserId(userId)
             .collectList()
@@ -65,7 +63,6 @@ public class UserApiKeyService {
             }).collect(Collectors.toList()));
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<UserApiKey> addKey(String userId, ApiKeyCreateRequest body) {
         UserApiKey key = new UserApiKey();
         key.setUserId(userId);
@@ -84,7 +81,6 @@ public class UserApiKeyService {
         return userApiKeyRepository.save(key);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<UserApiKey> updateKey(String userId, String keyId, Map<String, Object> updates) {
         return userApiKeyRepository.findById(keyId)
             .flatMap(key -> {
@@ -109,7 +105,6 @@ public class UserApiKeyService {
             });
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<Void> deleteKey(String userId, String keyId) {
         return userApiKeyRepository.findById(keyId)
             .flatMap(key -> {
@@ -122,7 +117,6 @@ public class UserApiKeyService {
             });
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<List<String>> bulkDelete(String userId, List<String> keyIds) {
         return Flux.fromIterable(keyIds)
             .flatMap(id -> userApiKeyRepository.findById(id))
@@ -134,7 +128,6 @@ public class UserApiKeyService {
                 .thenReturn(deletedIds));
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<Map<String, Object>> testKey(String userId, String keyId) {
         return userApiKeyRepository.findById(keyId)
             .flatMap(key -> {
@@ -156,7 +149,6 @@ public class UserApiKeyService {
             });
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<Map<String, Object>> getUsageStats(String userId) {
         return userApiKeyRepository.findByUserId(userId)
             .collectList()
@@ -187,7 +179,6 @@ public class UserApiKeyService {
             });
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<Map<String, Object>> testRequest(String userId, String keyId, String method, String endpoint, Map<String, Object> headers, Object body) {
         return userApiKeyRepository.findById(keyId)
             .flatMap(key -> {
@@ -236,7 +227,6 @@ public class UserApiKeyService {
             });
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public Mono<Void> testAllKeys() {
         return rotationService.testAllKeysNow().then();
     }
@@ -244,7 +234,6 @@ public class UserApiKeyService {
     @Autowired
     private com.supremeai.repository.APIHealthReportRepository healthReportRepository;
 
-    @PreAuthorize("hasRole('ADMIN')")
     public Mono<List<com.supremeai.model.APIHealthReport>> getHealthReports() {
         return healthReportRepository.findAll()
             .collectList()
@@ -254,7 +243,6 @@ public class UserApiKeyService {
             });
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public Mono<com.supremeai.model.APIHealthReport> getHealthReport(String id) {
         return healthReportRepository.findById(id);
     }

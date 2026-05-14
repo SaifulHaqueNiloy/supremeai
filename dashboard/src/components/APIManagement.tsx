@@ -54,6 +54,9 @@ const APIManagement: React.FC = () => {
     const [form] = Form.useForm();
     const [editingId, setEditingId] = useState<string | null>(null);
     
+    const [sortBy, setSortBy] = useState<keyof APIProvider | 'usagePercent'>('name');
+    const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('ascend');
+
     // Watch fields for real-time UI updates in modal
     const canCommunicate = Form.useWatch('canCommunicate', form);
     const canExecuteTasks = Form.useWatch('canExecuteTasks', form);
@@ -83,9 +86,35 @@ const APIManagement: React.FC = () => {
         }
     };
 
-    const filteredProviders = providers.filter(p =>
-        statusFilter === 'all' || p.status === statusFilter
-    );
+    const processedProviders = React.useMemo(() => {
+        let result = providers.filter(p =>
+            statusFilter === 'all' || p.status === statusFilter
+        );
+
+        if (sortBy) {
+            result.sort((a, b) => {
+                let aVal: any = (a as any)[sortBy] ?? '';
+                let bVal: any = (b as any)[sortBy] ?? '';
+
+                if (sortBy === 'usagePercent') {
+                    aVal = (a.currentUsage || 0) / (a.usageLimit || 100);
+                    bVal = (b.currentUsage || 0) / (b.usageLimit || 100);
+                }
+
+                if (typeof aVal === 'string' && typeof bVal === 'string') {
+                    return sortOrder === 'ascend' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                }
+                
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return sortOrder === 'ascend' ? aVal - bVal : bVal - aVal;
+                }
+
+                return 0;
+            });
+        }
+
+        return result;
+    }, [providers, statusFilter, sortBy, sortOrder]);
 
     const handleDiscovery = async (query: string) => {
         if (!query) {
@@ -396,47 +425,82 @@ const APIManagement: React.FC = () => {
             {/* Mission Stats */}
             <div className="grid grid-cols-4 gap-3">
                 {[
-                    { label: 'Active Links', value: providers.filter(p => p.status === 'active').length, icon: <SafetyCertificateOutlined />, color: 'emerald' },
-                    { label: 'Dead Nodes', value: providers.filter(p => p.status === 'dead').length, icon: <CloseCircleOutlined />, color: 'red' },
-                    { label: 'API Density', value: providers.reduce((acc, p) => acc + (p.apiCount || 0), 0), icon: <CloudServerOutlined />, color: 'blue' },
-                    { label: 'Registry Load', value: '14.2%', icon: <ThunderboltOutlined />, color: 'amber' },
+                    { label: 'অ্যাক্টিভ লিঙ্ক', value: providers.filter(p => p.status === 'active').length, icon: <SafetyCertificateOutlined />, color: 'emerald' },
+                    { label: 'ডেড নোড', value: providers.filter(p => p.status === 'dead').length, icon: <CloseCircleOutlined />, color: 'red' },
+                    { label: 'এপিআই ডেনসিটি', value: providers.reduce((acc, p) => acc + (p.apiCount || 0), 0), icon: <CloudServerOutlined />, color: 'blue' },
+                    { label: 'রেজিস্ট্রি লোড', value: '14.2%', icon: <ThunderboltOutlined />, color: 'amber' },
                 ].map((s, i) => (
-                    <div key={i} className="bg-white/[0.02] border border-white/5 p-3 rounded-lg flex flex-col justify-between h-16 relative overflow-hidden group">
+                    <div key={i} className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl flex flex-col justify-between h-20 relative overflow-hidden group backdrop-blur-md">
                         <div className="flex items-center justify-between relative z-10">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-white/40">{s.label}</span>
-                            <span className={`text-[10px] text-${s.color}-500/40 group-hover:text-${s.color}-500 transition-colors`}>{s.icon}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{s.label}</span>
+                            <span className={`text-[12px] text-${s.color}-500/40 group-hover:text-${s.color}-500 transition-colors`}>{s.icon}</span>
                         </div>
-                        <span className="text-xl font-mono font-black text-white leading-none relative z-10">{s.value}</span>
-                        <div className={`absolute bottom-0 left-0 h-0.5 bg-${s.color}-500 w-full opacity-20`} />
+                        <span className="text-2xl font-mono font-black text-white leading-none relative z-10">{s.value}</span>
+                        <div className={`absolute bottom-0 left-0 h-1 bg-${s.color}-500 w-full opacity-20`} />
                     </div>
                 ))}
             </div>
 
             <div className="bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden">
-                <div className="px-4 py-2 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
+                <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">{t('dashboard.pillar_registry')}</span>
-                        <span className="text-[8px] text-white/20 uppercase font-bold">Trace-Accountable Provider Matrix</span>
+                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/80">প্রোভাইডার রেজিস্ট্রি</span>
+                        <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Trace-Accountable Provider Matrix</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Select
-                            size="small"
-                            className="w-32 text-[8px]"
-                            value={statusFilter}
-                            onChange={setStatusFilter}
-                            options={[
-                                { label: 'All Status', value: 'all' },
-                                { label: 'Active', value: 'active' },
-                                { label: 'Inactive', value: 'inactive' },
-                                { label: 'Error', value: 'error' },
-                                { label: 'Dead', value: 'dead' },
-                                { label: 'Limit Exceeded', value: 'limit_exceeded' },
-                            ]}
-                        />
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/10 h-[42px]">
+                            <span className="text-[10px] text-white/30 uppercase font-black px-2">ফিল্টার:</span>
+                            <Select
+                                size="small"
+                                className="w-36 dark-select-compact"
+                                variant="borderless"
+                                popupClassName="dark-dropdown"
+                                value={statusFilter}
+                                onChange={setStatusFilter}
+                                options={[
+                                    { label: 'সব স্ট্যাটাস', value: 'all' },
+                                    { label: 'অ্যাক্টিভ', value: 'active' },
+                                    { label: 'ইনঅ্যাক্টিভ', value: 'inactive' },
+                                    { label: 'এরর', value: 'error' },
+                                    { label: 'ডেড', value: 'dead' },
+                                    { label: 'লিমিট এক্সিড', value: 'limit_exceeded' },
+                                ]}
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/10 h-[42px]">
+                            <span className="text-[10px] text-white/30 uppercase font-black px-2">সর্ট:</span>
+                            <Select
+                                size="small"
+                                className="w-36 dark-select-compact"
+                                variant="borderless"
+                                popupClassName="dark-dropdown"
+                                value={sortBy}
+                                onChange={setSortBy}
+                                options={[
+                                    { label: 'নাম', value: 'name' },
+                                    { label: 'টাইপ', value: 'type' },
+                                    { label: 'স্ট্যাটাস', value: 'status' },
+                                    { label: 'ইউসেজ', value: 'usagePercent' },
+                                    { label: 'এপিআই সংখ্যা', value: 'apiCount' },
+                                ]}
+                            />
+                            <Tooltip title={sortOrder === 'ascend' ? 'আরোহী' : 'অবরোহী'}>
+                                <Button
+                                    type="text"
+                                    size="small"
+                                    icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
+                                    onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
+                                    className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 flex items-center justify-center rounded-lg h-8 w-8"
+                                />
+                            </Tooltip>
+                        </div>
+
                         <Button
-                            size="small"
-                            className="h-8 bg-emerald-500 text-black text-[10px] font-black uppercase border-none hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                            icon={<PlusOutlined className="text-[11px]" />}
+                            size="middle"
+                            className="h-[42px] bg-blue-600 text-white text-[11px] font-black uppercase border-none hover:bg-blue-500 shadow-lg shadow-blue-500/20 rounded-xl px-6 transition-all flex items-center gap-2"
+                            icon={<PlusOutlined className="text-[14px]" />}
                             onClick={() => {
                                 setEditingId(null);
                                 form.resetFields();
@@ -444,13 +508,13 @@ const APIManagement: React.FC = () => {
                                 handleDiscovery(''); // Initial search
                             }}
                         >
-                            Establish New Link
+                            লিঙ্ক তৈরি করুন
                         </Button>
                     </div>
                 </div>
                 <Table
                     columns={columns}
-                    dataSource={filteredProviders}
+                    dataSource={processedProviders}
                     loading={loading}
                     rowKey="id"
                     size="small"

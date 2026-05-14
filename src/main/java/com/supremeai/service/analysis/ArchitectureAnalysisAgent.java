@@ -1,7 +1,8 @@
 package com.supremeai.service.analysis;
 
 import com.supremeai.model.analysis.AnalysisFinding;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -15,8 +16,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
-@Slf4j
 public class ArchitectureAnalysisAgent implements AnalysisAgentInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(ArchitectureAnalysisAgent.class);
+
 
     private final ArchitecturePatterns patterns = new ArchitecturePatterns();
     private final AnalysisStats stats = new AnalysisStats();

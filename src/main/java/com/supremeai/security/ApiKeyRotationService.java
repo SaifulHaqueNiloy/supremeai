@@ -148,82 +148,46 @@ public class ApiKeyRotationService {
     }
 
     /**
-     * Find the best API key to use for a given provider and user.
+     * Find the best API key to use for a given provider and user reactively.
      * Picks the active key with the lowest usage count.
      */
-    public Optional<UserApiKey> selectBestKey(String userId, String provider) {
-        List<UserApiKey> keys = userApiKeyRepository
+    public Mono<UserApiKey> selectBestKey(String userId, String provider) {
+        return userApiKeyRepository
                 .findByUserIdAndStatus(userId, "active")
-                .collectList().block();
-
-        if (keys == null || keys.isEmpty()) return Optional.empty();
-
-        return keys.stream()
                 .filter(k -> provider.equalsIgnoreCase(k.getProvider()))
                 .filter(k -> !"error".equals(k.getStatus()))
-                .min(Comparator.comparingLong(k -> k.getRequestCount() != null ? k.getRequestCount() : 0L));
+                .sort(Comparator.comparingLong(k -> k.getRequestCount() != null ? k.getRequestCount() : 0L))
+                .next();
     }
 
     /**
      * Scheduled check (daily at 2 AM) for keys that need rotation.
-     * Marks keys as needing attention but does NOT auto-rotate them
-     * (users must manually replace keys for security).
+     * Marks keys as needing attention without blocking the thread.
      */
     @Scheduled(cron = "0 0 2 * * *")
     public void checkRotationDueKeys() {
         log.info("Running scheduled API key rotation check...");
 
-        try {
-            List<UserApiKey> allKeys = userApiKeyRepository.findAll().collectList().block();
-            if (allKeys == null || allKeys.isEmpty()) {
-                log.info("No API keys found to check.");
-                return;
-            }
-
-            int rotationDue = 0;
-            int inactive = 0;
-            int errors = 0;
-
-            for (UserApiKey key : allKeys) {
-                try {
-                    // Check if key is already inactive
+        userApiKeyRepository.findAll()
+                .flatMap(key -> {
                     if (!"active".equals(key.getStatus())) {
-                        inactive++;
-                        continue;
+                        return Mono.empty();
                     }
 
-                    // Check if key has exceeded provider max age
                     int maxDays = getRotationDaysForKey(key.getProvider());
                     LocalDateTime maxAgeDate = LocalDateTime.now().minusDays(maxDays);
-                    if (key.getAddedAt() != null && key.getAddedAt().isBefore(maxAgeDate)) {
+                    
+                    if ((key.getAddedAt() != null && key.getAddedAt().isBefore(maxAgeDate)) || key.needsRotation()) {
                         key.setStatus("rotation_due");
                         key.setRotationDueAt(LocalDateTime.now());
-                        userApiKeyRepository.save(key).block();
-                        log.warn("Key {} for provider '{}' (user {}) is past rotation age ({} days). Marked rotation_due.",
-                                key.getMaskedKey(), key.getProvider(), key.getUserId(), maxDays);
-                        rotationDue++;
-                        continue;
-                    }
-
-                    // Check if rotation was explicitly set and is now due
-                    if (key.needsRotation()) {
-                        key.setStatus("rotation_due");
-                        userApiKeyRepository.save(key).block();
-                        log.warn("Key {} for provider '{}' (user {}) has explicit rotation_due date reached.",
+                        log.warn("Key {} for provider '{}' (user {}) is due for rotation. Marked rotation_due.",
                                 key.getMaskedKey(), key.getProvider(), key.getUserId());
-                        rotationDue++;
+                        return userApiKeyRepository.save(key);
                     }
-                } catch (Exception e) {
-                    log.error("Error checking key {}: {}", key.getId(), e.getMessage());
-                    errors++;
-                }
-            }
-
-            log.info("Rotation check complete. Total keys: {}, rotation_due: {}, inactive: {}, errors: {}",
-                    allKeys.size(), rotationDue, inactive, errors);
-        } catch (Exception e) {
-            log.error("Failed to run rotation check: {}", e.getMessage(), e);
-        }
+                    return Mono.empty();
+                })
+                .doOnTerminate(() -> log.info("Rotation check completed."))
+                .subscribe();
     }
 
     /**
@@ -297,23 +261,24 @@ public class ApiKeyRotationService {
     }
 
     /**
-     * Get rotation status summary for a user.
+     * Get rotation status summary for a user reactively.
      */
-    public Map<String, Object> getRotationStatus(String userId) {
-        List<UserApiKey> keys = userApiKeyRepository.findByUserId(userId).collectList().block();
-        if (keys == null) keys = Collections.emptyList();
+    public Mono<Map<String, Object>> getRotationStatus(String userId) {
+        return userApiKeyRepository.findByUserId(userId).collectList()
+                .map(keys -> {
+                    long active = keys.stream().filter(k -> "active".equals(k.getStatus())).count();
+                    long rotationDue = keys.stream().filter(k -> "rotation_due".equals(k.getStatus())).count();
+                    long error = keys.stream().filter(k -> "error".equals(k.getStatus())).count();
 
-        long active = keys.stream().filter(k -> "active".equals(k.getStatus())).count();
-        long rotationDue = keys.stream().filter(k -> "rotation_due".equals(k.getStatus())).count();
-        long error = keys.stream().filter(k -> "error".equals(k.getStatus())).count();
-
-        Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("totalKeys", keys.size());
-        summary.put("active", active);
-        summary.put("rotationDue", rotationDue);
-        summary.put("error", error);
-        summary.put("providerConfigs", PROVIDER_CONFIGS.keySet());
-        return summary;
+                    Map<String, Object> summary = new LinkedHashMap<>();
+                    summary.put("totalKeys", keys.size());
+                    summary.put("active", active);
+                    summary.put("rotationDue", rotationDue);
+                    summary.put("error", error);
+                    summary.put("providerConfigs", PROVIDER_CONFIGS.keySet());
+                    return summary;
+                })
+                .defaultIfEmpty(Map.of("totalKeys", 0));
     }
 
     /**

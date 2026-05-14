@@ -1,11 +1,8 @@
 package com.supremeai.service.analysis;
 
 import com.supremeai.model.analysis.CodeChunk;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +10,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class RAGContextBuilder {
 
+    private static final Logger log = LoggerFactory.getLogger(RAGContextBuilder.class);
     private static final int DEFAULT_TOP_K = 10;
     private static final int MAX_TOKENS_PER_AGENT = 8000;
     private static final int CONTEXT_LINES = 5;
@@ -110,9 +107,6 @@ public class RAGContextBuilder {
          );
      }
 
-     @Data
-     @NoArgsConstructor
-     @AllArgsConstructor
      public static class RAGContext {
          private String agentQuery;
          private List<ContextChunk> relevantChunks;
@@ -120,16 +114,68 @@ public class RAGContextBuilder {
          private int totalTokens;
          private int filesScanned;
          private int totalFiles;
+
+         public RAGContext() {}
+
+         public RAGContext(String agentQuery, List<ContextChunk> relevantChunks, List<String> contextFiles, int totalTokens, int filesScanned, int totalFiles) {
+             this.agentQuery = agentQuery;
+             this.relevantChunks = relevantChunks;
+             this.contextFiles = contextFiles;
+             this.totalTokens = totalTokens;
+             this.filesScanned = filesScanned;
+             this.totalFiles = totalFiles;
+         }
+
+         public String getAgentQuery() { return agentQuery; }
+         public void setAgentQuery(String agentQuery) { this.agentQuery = agentQuery; }
+
+         public List<ContextChunk> getRelevantChunks() { return relevantChunks; }
+         public void setRelevantChunks(List<ContextChunk> relevantChunks) { this.relevantChunks = relevantChunks; }
+
+         public List<String> getContextFiles() { return contextFiles; }
+         public void setContextFiles(List<String> contextFiles) { this.contextFiles = contextFiles; }
+
+         public int getTotalTokens() { return totalTokens; }
+         public void setTotalTokens(int totalTokens) { this.totalTokens = totalTokens; }
+
+         public int getFilesScanned() { return filesScanned; }
+         public void setFilesScanned(int filesScanned) { this.filesScanned = filesScanned; }
+
+         public int getTotalFiles() { return totalFiles; }
+         public void setTotalFiles(int totalFiles) { this.totalFiles = totalFiles; }
      }
 
-     @Data
-     @NoArgsConstructor
-     @AllArgsConstructor
      public static class ContextChunk {
          private String file;
          private int startLine;
          private int endLine;
          private String content;
          private double relevanceScore;
+
+         public ContextChunk() {}
+
+         public ContextChunk(String file, int startLine, int endLine, String content, double relevanceScore) {
+             this.file = file;
+             this.startLine = startLine;
+             this.endLine = endLine;
+             this.content = content;
+             this.relevanceScore = relevanceScore;
+         }
+
+         public String getFile() { return file; }
+         public void setFile(String file) { this.file = file; }
+
+         public int getStartLine() { return startLine; }
+         public void setStartLine(int startLine) { this.startLine = startLine; }
+
+         public int getEndLine() { return endLine; }
+         public void setEndLine(int endLine) { this.endLine = endLine; }
+
+         public String getContent() { return content; }
+         public void setContent(String content) { this.content = content; }
+
+         public double getRelevanceScore() { return relevanceScore; }
+         public void setRelevanceScore(double relevanceScore) { this.relevanceScore = relevanceScore; }
      }
 }
+

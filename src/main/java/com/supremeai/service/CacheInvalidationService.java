@@ -3,7 +3,8 @@ package com.supremeai.service;
 import com.github.benmanes.caffeine.cache.Cache;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Cache invalidation service for multi-tier caching strategy.
  * Handles automatic and manual cache invalidation with event-driven updates.
  */
-@Slf4j
 @Service
 public class CacheInvalidationService {
+
+    private static final Logger log = LoggerFactory.getLogger(CacheInvalidationService.class);
 
     private final Cache<String, Object> l1Cache;
     private final StringRedisTemplate redisTemplate;

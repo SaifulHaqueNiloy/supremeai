@@ -318,6 +318,7 @@ const AdminBrowser: React.FC = () => {
               showConsole={showConsole}
               setShowConsole={setShowConsole}
               setShowSettings={setShowSettings}
+              showSettings={showSettings}
               deniedUrls={deniedUrls}
             />
             

@@ -4,7 +4,8 @@ import com.supremeai.controller.WebSocketController;
 import com.supremeai.model.analysis.*;
 import com.supremeai.repository.analysis.AnalysisFindingRepository;
 import com.supremeai.repository.analysis.AnalysisJobRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,8 @@ import java.util.stream.Collectors;
 import java.util.NoSuchElementException;
 
 @Service
-@Slf4j
 public class ProjectAnalysisService {
+    private static final Logger log = LoggerFactory.getLogger(ProjectAnalysisService.class);
 
     private final List<AnalysisAgentInterface> agents;
     private final FileExtractionService fileExtractionService;

@@ -2,7 +2,8 @@ package com.supremeai.service;
 
 import com.supremeai.model.*;
 import com.supremeai.repository.*;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-@Slf4j
 public class ChatProcessingService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatProcessingService.class);
 
     private final ChatClassifier chatClassifier;
     private final ChatRuleRepository chatRuleRepository;
@@ -354,10 +356,10 @@ public class ChatProcessingService {
 
     public Mono<List<Map<String, Object>>> getChatHistory(String userId, int limit) {
         return (userId != null 
-            ? chatHistoryRepository.findAll()
-                .filter(msg -> msg.getUserId() != null && msg.getUserId().equals(userId))
-                .collectList()
-            : chatHistoryRepository.findAll().collectList())
+            ? chatHistoryRepository.findByUserId(userId)
+            : chatHistoryRepository.findAll())
+            .take(limit)
+            .collectList()
             .map(this::convertChatMessageList);
     }
 

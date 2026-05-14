@@ -3,7 +3,8 @@ package com.supremeai.service.analysis;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supremeai.security.UnifiedSecretsService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -18,8 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class VertexAIEmbeddingService implements EmbeddingService {
+
+    private static final Logger log = LoggerFactory.getLogger(VertexAIEmbeddingService.class);
 
     private static final int MAX_BATCH_SIZE = 250;
     private static final int EMBEDDING_DIMENSION = 768;

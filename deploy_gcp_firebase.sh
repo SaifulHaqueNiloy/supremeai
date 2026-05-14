@@ -89,22 +89,11 @@ log_info "✅ Dashboard built and staged for Firebase Hosting"
 log_info ""
 log_info "=== Step 3: Building & Pushing Docker Image to GCR ==="
 
-# Ensure Docker is running
-if ! docker info >/dev/null 2>&1; then
-    log_error "Docker is not running. Please start Docker."
-    exit 1
-fi
+# Build & Push using Cloud Build (No local Docker required)
+log_info "Building & Pushing Docker image using Cloud Build..."
+gcloud builds submit --tag "gcr.io/${GCP_PROJECT}/${BACKEND_SERVICE}:latest" --project "$GCP_PROJECT" .
 
-# Build image
-log_info "Building Docker image..."
-docker build -t "gcr.io/${GCP_PROJECT}/${BACKEND_SERVICE}:latest" .
-
-# Push to Google Container Registry
-log_info "Pushing to Google Container Registry..."
-gcloud auth configure-docker us-central1-docker.pkg.dev -q
-docker push "gcr.io/${GCP_PROJECT}/${BACKEND_SERVICE}:latest"
-
-log_info "✅ Docker image pushed to gcr.io/${GCP_PROJECT}/${BACKEND_SERVICE}:latest"
+log_info "✅ Docker image built and pushed to gcr.io/${GCP_PROJECT}/${BACKEND_SERVICE}:latest"
 
 # --- Step 4: Deploy Backend to Cloud Run ---
 log_info ""

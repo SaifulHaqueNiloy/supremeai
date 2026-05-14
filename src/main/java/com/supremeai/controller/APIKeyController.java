@@ -6,6 +6,7 @@ import com.supremeai.service.UserApiKeyService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -33,12 +34,14 @@ public class APIKeyController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<List<Map<String, Object>>>> listKeys(Authentication auth) {
         return apiKeyService.listKeys(auth.getName())
             .map(ResponseEntity::ok);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> addKey(@Valid @RequestBody ApiKeyCreateRequest body, Authentication auth) {
         return apiKeyService.addKey(auth.getName(), body)
             .map(saved -> ResponseEntity.ok(Map.of(
@@ -49,6 +52,7 @@ public class APIKeyController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> updateKey(
             @PathVariable String id,
             @RequestBody Map<String, Object> body,
@@ -59,6 +63,7 @@ public class APIKeyController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> deleteKey(@PathVariable String id, Authentication auth) {
         return apiKeyService.deleteKey(auth.getName(), id)
             .then(Mono.just(ResponseEntity.ok(Map.<String, Object>of("status", "success", "message", "API key removed"))))
@@ -66,6 +71,7 @@ public class APIKeyController {
     }
 
     @DeleteMapping("/bulk")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> bulkDeleteKeys(@RequestBody Map<String, Object> body, Authentication auth) {
         @SuppressWarnings("unchecked")
         List<String> keyIds = (List<String>) body.get("keyIds");
@@ -83,6 +89,7 @@ public class APIKeyController {
     }
 
     @PostMapping("/{id}/test")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> testKey(@PathVariable String id, Authentication auth) {
         return apiKeyService.testKey(auth.getName(), id)
             .map(ResponseEntity::ok)
@@ -90,12 +97,14 @@ public class APIKeyController {
     }
 
     @GetMapping("/usage")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> getUsage(Authentication auth) {
         return apiKeyService.getUsageStats(auth.getName())
             .map(ResponseEntity::ok);
     }
 
     @PostMapping("/test-request")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> testRequest(@RequestBody Map<String, Object> body, Authentication auth) {
         String keyId = (String) body.get("keyId");
         String method = (String) body.get("method");
@@ -111,18 +120,21 @@ public class APIKeyController {
     }
 
     @PostMapping("/test-all")
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<ResponseEntity<Map<String, Object>>> testAllKeys(Authentication auth) {
         return apiKeyService.testAllKeys()
             .then(Mono.just(ResponseEntity.ok(Map.<String, Object>of("status", "success", "message", "Full API key validation triggered"))));
     }
 
     @GetMapping("/reports")
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<ResponseEntity<List<APIHealthReport>>> getReports() {
         return apiKeyService.getHealthReports()
             .map(ResponseEntity::ok);
     }
 
     @GetMapping("/reports/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<ResponseEntity<APIHealthReport>> getReport(@PathVariable String id) {
         return apiKeyService.getHealthReport(id)
             .map(ResponseEntity::ok)

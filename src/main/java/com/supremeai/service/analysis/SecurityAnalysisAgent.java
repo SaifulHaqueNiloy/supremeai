@@ -1,7 +1,8 @@
 package com.supremeai.service.analysis;
 
 import com.supremeai.model.analysis.AnalysisFinding;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -20,9 +21,9 @@ import java.util.stream.Collectors;
  * Security Scanner Agent - Detects OWASP Top 10 vulnerabilities using regex patterns.
  */
 @Component
-@Slf4j
 public class SecurityAnalysisAgent implements AnalysisAgentInterface {
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityAnalysisAgent.class);
     private final PatternRepository patternRepository;
     private final AnalysisStats stats = new AnalysisStats();
 

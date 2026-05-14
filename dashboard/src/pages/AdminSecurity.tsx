@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Space, Row, Col, message, Spin, Badge, Button } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Typography, Space, Row, Col, message, Spin, Badge, Button, Breadcrumb, Card } from 'antd';
+import { 
+  ReloadOutlined, 
+  DashboardOutlined, 
+  SafetyCertificateOutlined,
+  SecurityScanOutlined,
+  ShieldOutlined
+} from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
 import AISuggestionInformer from '../components/AISuggestionInformer';
 
@@ -54,6 +60,7 @@ const AdminSecurity: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching security data:', error);
+      message.error('ডাটা লোড করতে ব্যর্থ হয়েছে');
     } finally {
       setLoading(false);
     }
@@ -100,10 +107,10 @@ const AdminSecurity: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         setAuditReport(result.data);
-        message.success('Self-Audit completed successfully');
+        message.success('সেলফ-অডিট সফলভাবে সম্পন্ন হয়েছে');
       }
     } catch (error) {
-      message.error('Audit failed');
+      message.error('অডিট ব্যর্থ হয়েছে');
     } finally {
       setAuditing(false);
     }
@@ -119,12 +126,12 @@ const AdminSecurity: React.FC = () => {
         body: JSON.stringify({ topic: learnTopic })
       });
       if (response.ok) {
-        message.success(`System started learning defense for: ${learnTopic}`);
+        message.success(`সিস্টেম ডিফেন্স লার্নিং শুরু করেছে: ${learnTopic}`);
         setLearnTopic('');
         fetchData();
       }
     } catch (error) {
-      message.error('Learning cycle failed');
+      message.error('লার্নিং সাইকেল ব্যর্থ হয়েছে');
     } finally {
       setLearning(false);
     }
@@ -132,7 +139,7 @@ const AdminSecurity: React.FC = () => {
 
   if (loading && !systemStats) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0a0a0a' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#050505' }}>
         <Spin size="large" tip="সিকিউরিটি ডাটা লোড হচ্ছে..." />
       </div>
     );
@@ -143,15 +150,50 @@ const AdminSecurity: React.FC = () => {
   const healthReason = systemStats?.systemHealthReason || "All systems operational";
 
   return (
-    <div style={{ padding: 24, background: '#0a0a0a', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 700 }}>
-          সিকিউরিটি & রেজিলিয়েন্স
-        </Title>
-        <Space>
-          <Badge status="processing" text={<Text style={{ color: '#10b981' }}>Cyber Guard Active</Text>} />
-          <Button icon={<ReloadOutlined />} onClick={fetchData} ghost style={{ color: '#fff' }} />
-        </Space>
+    <div style={{ padding: '24px', background: '#050505', minHeight: '100vh', color: '#fff' }}>
+      {/* Header Section */}
+      <div style={{ marginBottom: 32 }}>
+        <Breadcrumb separator=">" style={{ marginBottom: 16, opacity: 0.7 }}>
+          <Breadcrumb.Item href=""><DashboardOutlined /> ড্যাশবোর্ড</Breadcrumb.Item>
+          <Breadcrumb.Item><SafetyCertificateOutlined /> সিস্টেম প্রোটেকশন</Breadcrumb.Item>
+          <Breadcrumb.Item>সিকিউরিটি & রেজিলিয়েন্স</Breadcrumb.Item>
+        </Breadcrumb>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '32px', letterSpacing: '-0.5px' }}>
+              নিরাপত্তা ও স্থিতিশীলতা <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 400, verticalAlign: 'middle', marginLeft: '8px', opacity: 0.8 }}>CYBER GUARD</span>
+            </Title>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '16px' }}>
+              সিস্টেমের নিরাপত্তা স্তর মনিটর করুন এবং অটোমেটেড ডিফেন্স পরিচালনা করুন
+            </Text>
+          </div>
+          <Space>
+            <Badge 
+              status="processing" 
+              color="#10b981"
+              text={<Text style={{ color: '#10b981', fontWeight: 600 }}>Cyber Guard Active</Text>} 
+              style={{ marginRight: 16 }}
+            />
+            <Button 
+              type="primary" 
+              icon={<ReloadOutlined />} 
+              onClick={fetchData} 
+              loading={loading}
+              style={{ 
+                height: '42px',
+                padding: '0 24px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+                border: 'none',
+                fontWeight: 600,
+                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
+              }}
+            >
+              রিফ্রেশ ডাটা
+            </Button>
+          </Space>
+        </div>
       </div>
 
       <AISuggestionInformer 
@@ -160,26 +202,26 @@ const AdminSecurity: React.FC = () => {
         suggestions={[
           {
             id: 'block-ip-anomaly',
-            title: 'Block Suspected Botnet IP',
-            description: 'Detected 450+ failed login attempts from IP 103.45.12.89 in the last 10 minutes. Suggesting an immediate firewall block for this range.',
+            title: 'সন্দেহজনক বটনেট আইপি ব্লক',
+            description: 'আইপি ১০৩.৪৫.১২.৮৯ থেকে গত ১০ মিনিটে ৪৫০+ ব্যর্থ লগইন চেষ্টা শনাক্ত হয়েছে। এই রেঞ্জটি ফায়ারওয়ালে ব্লক করার পরামর্শ দেওয়া হচ্ছে।',
             impact: 'security',
             confidence: 0.98,
             autoExecutable: false
           },
           {
             id: 'rotate-keys',
-            title: 'Rotate Stale API Secrets',
-            description: 'Database credentials haven\'t been rotated in 90 days. System suggests a zero-downtime rotation to maintain security posture.',
+            title: 'পুরানো এপিআই সিক্রেট রোটেট করুন',
+            description: 'ডাটাবেস ক্রিডেনশিয়াল ৯০ দিন ধরে রোটেট করা হয়নি। নিরাপত্তা বজায় রাখতে জিরো-ডাউনটাইম রোটেশনের পরামর্শ দেওয়া হচ্ছে।',
             impact: 'security',
             confidence: 0.89,
             autoExecutable: true
           }
         ]}
-        onApprove={(id) => message.success(`Security protocol initiated: ${id}`)}
-        onDecline={(id) => message.info(`Security suggestion ${id} dismissed.`)}
+        onApprove={(id) => message.success(`নিরাপত্তা প্রোটোকল শুরু হয়েছে: ${id}`)}
+        onDecline={(id) => message.info(`নিরাপত্তা পরামর্শ ${id} বাতিল করা হয়েছে।`)}
       />
 
-      <Row gutter={[24, 24]}>
+      <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
         {/* System Health Score */}
         <Col xs={24} lg={8}>
           <HealthScoreCard 
@@ -195,7 +237,7 @@ const AdminSecurity: React.FC = () => {
             healingStatus={healingStatus}
             testError={testError}
             setTestError={setTestError}
-            onTestFix={handleTestFix}
+            handleTestFix={handleTestFix}
             fixing={fixing}
             fixResult={fixResult}
           />
@@ -230,17 +272,90 @@ const AdminSecurity: React.FC = () => {
 
       <style>{`
         .glass-card {
-          border-radius: 16px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-          transition: all 0.3s ease;
+          border-radius: 24px !important;
+          background: rgba(255,255,255,0.02) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          overflow: hidden;
         }
+        
         .glass-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+          transform: translateY(-4px);
           background: rgba(255,255,255,0.04) !important;
+          border-color: rgba(255,255,255,0.15) !important;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important;
         }
+
+        .ant-breadcrumb-link {
+          color: rgba(255,255,255,0.45) !important;
+          font-size: 13px !important;
+        }
+        
+        .ant-breadcrumb-link a {
+          color: rgba(255,255,255,0.45) !important;
+        }
+        
+        .ant-breadcrumb-link a:hover {
+          color: #3b82f6 !important;
+        }
+
+        .ant-breadcrumb-separator {
+          color: rgba(255,255,255,0.2) !important;
+        }
+
+        .ant-typography {
+          color: #fff !important;
+        }
+
+        /* Sub-component style overrides */
+        .ant-card-head {
+          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+          padding: 16px 24px !important;
+        }
+
+        .ant-card-head-title {
+          font-size: 16px !important;
+          font-weight: 700 !important;
+          letter-spacing: 0.5px !important;
+          text-transform: uppercase !important;
+        }
+
         .ant-statistic-title {
-          margin-bottom: 8px !important;
+          color: rgba(255,255,255,0.45) !important;
+          font-size: 12px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 1px !important;
+          font-weight: 700 !important;
+          margin-bottom: 12px !important;
+        }
+
+        .ant-input, .ant-input-affix-wrapper, .ant-input-number {
+          background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 12px !important;
+          color: #fff !important;
+          padding: 8px 16px !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .ant-input:focus, .ant-input-affix-wrapper-focused {
+          border-color: #3b82f6 !important;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+          background: rgba(255,255,255,0.08) !important;
+        }
+
+        .ant-btn-primary {
+          border-radius: 12px !important;
+          font-weight: 600 !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .ant-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4) !important;
         }
       `}</style>
     </div>
@@ -248,3 +363,4 @@ const AdminSecurity: React.FC = () => {
 };
 
 export default AdminSecurity;
+

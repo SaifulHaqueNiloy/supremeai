@@ -34,13 +34,13 @@ public class SystemLearningController {
     }
 
     @GetMapping
-    public List<SystemLearning> getAllLearning() {
-        return service.getAllLearningSync();
+    public Flux<SystemLearning> getAllLearning() {
+        return service.getAllLearning();
     }
 
     @GetMapping("/category/{category}")
-    public List<SystemLearning> getByCategory(@PathVariable String category) {
-        return service.getByCategorySync(category);
+    public Flux<SystemLearning> getByCategory(@PathVariable String category) {
+        return service.getByCategory(category);
     }
 
     @PostMapping
@@ -120,11 +120,15 @@ public class SystemLearningController {
      * Get the current status of learned hacking skills and active protections.
      */
     @GetMapping("/cyber-status")
-    public Map<String, Object> getCyberStatus() {
-        return Map.of(
-            "skills", cyberSkillService.getLearnedSkills(),
-            "protections", cyberSkillService.getActiveProtections(),
-            "lastAudit", cyberSkillService.runSelfAudit()
-        );
+    public Mono<Map<String, Object>> getCyberStatus() {
+        return Mono.zip(
+            cyberSkillService.getLearnedSkills().collectList(),
+            cyberSkillService.getActiveProtections().collectList(),
+            cyberSkillService.runSelfAudit()
+        ).map(tuple -> Map.of(
+            "skills", tuple.getT1(),
+            "protections", tuple.getT2(),
+            "lastAudit", tuple.getT3()
+        ));
     }
 }

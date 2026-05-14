@@ -1,6 +1,7 @@
 package com.supremeai.service.analysis;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,8 +15,9 @@ import java.util.UUID;
  * Service for extracting project files from ZIP uploads or Git repositories.
  */
 @Service
-@Slf4j
 public class FileExtractionService {
+
+    private static final Logger log = LoggerFactory.getLogger(FileExtractionService.class);
 
     private static final long MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
     private static final int MAX_FILES = 500;

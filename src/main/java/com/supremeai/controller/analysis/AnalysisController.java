@@ -6,7 +6,8 @@ import com.supremeai.response.ApiResponse;
 import com.supremeai.service.analysis.FixSuggestionService;
 import com.supremeai.service.analysis.ProjectAnalysisService;
 import com.supremeai.service.analysis.RAGContextBuilder;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,9 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/analysis")
-@Slf4j
 public class AnalysisController {
+
+    private static final Logger log = LoggerFactory.getLogger(AnalysisController.class);
 
     private final ProjectAnalysisService projectAnalysisService;
     private final FixSuggestionService fixSuggestionService;

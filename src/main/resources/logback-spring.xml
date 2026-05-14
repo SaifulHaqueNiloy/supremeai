@@ -60,12 +60,18 @@
         <discardingThreshold>0</discardingThreshold>
     </appender>
 
+    <!-- Sentry Appender -->
+    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+        <minimumEventLevel>ERROR</minimumEventLevel>
+        <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
+    </appender>
+
     <!-- Logger Configuration -->
     <!-- Application loggers -->
-    <logger name="org.example" level="INFO"/>
-    <logger name="org.example.service" level="DEBUG"/>
-    <logger name="org.example.security" level="DEBUG"/>
-    <logger name="org.example.exception" level="DEBUG"/>
+    <logger name="com.supremeai" level="DEBUG"/>
+    <logger name="com.supremeai.service" level="DEBUG"/>
+    <logger name="com.supremeai.security" level="DEBUG"/>
+    <logger name="com.supremeai.exception" level="DEBUG"/>
 
     <!-- Firebase loggers -->
     <logger name="com.google.firebase" level="WARN"/>
@@ -83,6 +89,7 @@
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="SENTRY"/>
     </root>
 
     <!-- Profiles -->
@@ -90,6 +97,7 @@
     <springProfile name="dev">
         <root level="DEBUG">
             <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="SENTRY"/>
         </root>
     </springProfile>
 
@@ -97,6 +105,7 @@
     <springProfile name="prod">
         <root level="WARN">
             <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="SENTRY"/>
         </root>
     </springProfile>
 

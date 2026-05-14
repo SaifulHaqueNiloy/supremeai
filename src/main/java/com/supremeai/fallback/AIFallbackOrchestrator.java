@@ -99,16 +99,24 @@ public class AIFallbackOrchestrator {
     @PostConstruct
     public void init() {
         for (AIProviderType provider : allProviders) {
-            CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker(provider.name().toLowerCase());
-            providerCircuitBreakers.put(provider, cb);
-
-            cb.getEventPublisher()
-                    .onStateTransition(event -> log.info("Circuit breaker {} transitioned from {} to {}",
-                            provider, event.getStateTransition().getFromState(), event.getStateTransition().getToState()));
+            getOrCreateCircuitBreaker(provider.name().toLowerCase());
         }
     }
 
-    public String executeWithSupremeIntelligence(String taskCategory, String errorSignature, String prompt) {
+    private CircuitBreaker getOrCreateCircuitBreaker(String providerId) {
+        String name = providerId.toLowerCase();
+        CircuitBreaker cb = circuitBreakerRegistry.find(name).orElseGet(() -> {
+            log.info("Creating new dynamic circuit breaker for: {}", name);
+            CircuitBreaker newCb = circuitBreakerRegistry.circuitBreaker(name);
+            newCb.getEventPublisher()
+                    .onStateTransition(event -> log.info("Dynamic Circuit breaker {} transitioned from {} to {}",
+                            name, event.getStateTransition().getFromState(), event.getStateTransition().getToState()));
+            return newCb;
+        });
+        return cb;
+    }
+
+    public Mono<String> executeWithSupremeIntelligence(String taskCategory, String errorSignature, String prompt) {
         return executeWithSupremeIntelligence(taskCategory, errorSignature, prompt, "system");
     }
 
@@ -118,166 +126,201 @@ public class AIFallbackOrchestrator {
      *
      * @param userId Optional user ID for API key selection
      */
-    public String executeWithSupremeIntelligence(String taskCategory, String errorSignature, String prompt, String userId) {
-
+    public Mono<String> executeWithSupremeIntelligence(String taskCategory, String errorSignature, String prompt, String userId) {
         // STEP 1: CHECK GLOBAL KNOWLEDGE BASE
-        String knownSolution = knowledgeBase.findKnownSolution(errorSignature);
-        if (knownSolution != null) return knownSolution;
+        return knowledgeBase.findKnownSolution(errorSignature)
+            .switchIfEmpty(Mono.defer(() -> {
+                // STEP 2: DYNAMICALLY RE-ORDER THE FALLBACK CHAIN
+                AIProviderType expertProvider = aiProfiler.getBestAIForTask(taskCategory);
 
-        // STEP 2: DYNAMICALLY RE-ORDER THE FALLBACK CHAIN
-        AIProviderType expertProvider = aiProfiler.getBestAIForTask(taskCategory);
-
-        List<AIProviderType> dynamicChain = new ArrayList<>();
-        if (expertProvider != null) {
-            dynamicChain.add(expertProvider);
-        }
-
-        // Add dynamic providers from DB
-        try {
-            List<com.supremeai.model.APIProvider> dbProviders = providerRepository.findAll()
-                .filter(p -> "active".equals(p.getStatus()))
-                .filter(p -> {
-                    if ("CHAT".equalsIgnoreCase(taskCategory) || "COMMUNICATION".equalsIgnoreCase(taskCategory)) {
-                        return p.isCanCommunicate();
-                    } else {
-                        return p.isCanExecuteTasks();
-                    }
-                })
-                .sort(java.util.Comparator.comparingInt(com.supremeai.model.APIProvider::getPriority))
-                .collectList()
-                .block(java.time.Duration.ofSeconds(3));
-            
-            if (dbProviders != null) {
-                for (com.supremeai.model.APIProvider dbp : dbProviders) {
-                    try {
-                        AIProviderType type = AIProviderType.valueOf(dbp.getType().toUpperCase());
-                        if (!dynamicChain.contains(type)) {
-                            dynamicChain.add(type);
+                return providerRepository.findAll()
+                    .filter(p -> "active".equals(p.getStatus()))
+                    .filter(p -> {
+                        if ("CHAT".equalsIgnoreCase(taskCategory) || "COMMUNICATION".equalsIgnoreCase(taskCategory)) {
+                            return p.isCanCommunicate();
+                        } else {
+                            return p.isCanExecuteTasks();
                         }
-                    } catch (Exception e) {
-                        // Custom provider not in enum, we might need a different way to handle them
-                        // For now, only handle standard providers that are in the database
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("Failed to load dynamic providers: {}", e.getMessage());
+                    })
+                    .sort(java.util.Comparator.comparingInt(com.supremeai.model.APIProvider::getPriority))
+                    .collectList()
+                    .onErrorResume(e -> {
+                        log.error("Failed to load dynamic providers: {}", e.getMessage());
+                        return Mono.just(new ArrayList<com.supremeai.model.APIProvider>());
+                    })
+                    .flatMap(dbProviders -> {
+                        List<Object> dynamicChain = new ArrayList<>();
+                        if (expertProvider != null) {
+                            dynamicChain.add(expertProvider);
+                        }
+
+                        if (dbProviders != null) {
+                            for (com.supremeai.model.APIProvider dbp : dbProviders) {
+                                boolean existsInChain = false;
+                                for (Object o : dynamicChain) {
+                                    if (o instanceof AIProviderType && ((AIProviderType) o).name().equalsIgnoreCase(dbp.getType())) {
+                                        existsInChain = true; break;
+                                    }
+                                    if (o instanceof com.supremeai.model.APIProvider && ((com.supremeai.model.APIProvider) o).getName().equalsIgnoreCase(dbp.getName())) {
+                                        existsInChain = true; break;
+                                    }
+                                }
+                                if (!existsInChain) {
+                                    dynamicChain.add(dbp);
+                                }
+                            }
+                        }
+
+                        for (AIProviderType p : allProviders) {
+                            boolean exists = false;
+                            for (Object o : dynamicChain) {
+                                if (o instanceof AIProviderType && o == p) { exists = true; break; }
+                                if (o instanceof String && ((String) o).equalsIgnoreCase(p.name())) { exists = true; break; }
+                                if (o instanceof com.supremeai.model.APIProvider && ((com.supremeai.model.APIProvider)o).getType().equalsIgnoreCase(p.name())) { exists = true; break; }
+                            }
+                            if (!exists) dynamicChain.add(p);
+                        }
+
+                        return tryNextProvider(dynamicChain, 0, taskCategory, errorSignature, prompt, userId);
+                    });
+            }));
+    }
+
+    private Mono<String> tryNextProvider(List<Object> chain, int index, String taskCategory, String errorSignature, String prompt, String userId) {
+        if (index >= chain.size()) {
+            return Mono.error(new RuntimeException("CRITICAL: All AI failed. Cannot execute task."));
         }
 
-        for (AIProviderType p : allProviders) {
-            if (!dynamicChain.contains(p)) dynamicChain.add(p);
-        }
+        Object pObj = chain.get(index);
+        AIProviderType providerType = null;
+        com.supremeai.model.APIProvider dbProvider = null;
+        String providerId;
 
-        // STEP 3: EXECUTE WITH CIRCUIT BREAKER + RETRY
-        for (AIProviderType provider : dynamicChain) {
-            if (!isServiceQuotaAvailable(provider)) {
-                log.warn("Quota exhausted for {}, skipping.", provider);
-                continue;
-            }
-
-            CircuitBreaker cb = providerCircuitBreakers.get(provider);
-            if (cb != null && cb.getState() == CircuitBreaker.State.OPEN) {
-                log.warn("Circuit breaker OPEN for {}, skipping.", provider);
-                continue;
-            }
-
-            long startTime = System.currentTimeMillis();
-
-            log.info("-> Asking {} (Expert Mode) to handle task: {}", provider, taskCategory);
-
-            String apiKey = resolveApiKey(userId, provider);
-            String generatedCode = null;
-            
+        if (pObj instanceof String) {
+            providerId = ((String) pObj).toLowerCase();
             try {
-                generatedCode = callAIProviderWithRetry(provider, apiKey, prompt, cb);
-                long timeTaken = System.currentTimeMillis() - startTime;
+                providerType = AIProviderType.valueOf(((String) pObj).toUpperCase());
+            } catch (Exception e) { /* Custom provider name */ }
+        } else if (pObj instanceof AIProviderType) {
+            providerType = (AIProviderType) pObj;
+            providerId = providerType.name().toLowerCase();
+        } else if (pObj instanceof com.supremeai.model.APIProvider) {
+            dbProvider = (com.supremeai.model.APIProvider) pObj;
+            providerId = dbProvider.getName().toLowerCase();
+        } else {
+            return tryNextProvider(chain, index + 1, taskCategory, errorSignature, prompt, userId);
+        }
 
-                recordUsage(provider);
+        final AIProviderType finalType = providerType;
+        final com.supremeai.model.APIProvider finalDbProvider = dbProvider;
+        final String finalProviderId = providerId;
+        String serviceName = dbProvider != null ? dbProvider.getType() : getServiceNameForProvider(providerType);
+
+        if (!isServiceQuotaAvailable(serviceName)) {
+            log.warn("Quota exhausted for {}, skipping.", serviceName);
+            return tryNextProvider(chain, index + 1, taskCategory, errorSignature, prompt, userId);
+        }
+
+        CircuitBreaker cb = getOrCreateCircuitBreaker(providerId);
+        if (cb.getState() == CircuitBreaker.State.OPEN) {
+            log.warn("Circuit breaker OPEN for {}, skipping.", providerId);
+            return tryNextProvider(chain, index + 1, taskCategory, errorSignature, prompt, userId);
+        }
+
+        long startTime = System.currentTimeMillis();
+        log.info("-> Asking {} to handle task: {}", providerId, taskCategory);
+
+        return resolveApiKeyReactive(userId, providerType, dbProvider)
+            .flatMap(apiKey -> {
+                return Mono.fromCallable(() -> {
+                    return retryExecutor.executeWithCircuitBreaker(
+                        finalProviderId,
+                        finalDbProvider != null ? finalDbProvider.getType() : getServiceNameForProvider(finalType),
+                        cb,
+                        () -> {
+                            try {
+                                if (finalDbProvider != null) {
+                                    return providerFactory.createProviderFromConfig(finalDbProvider).generate(prompt).block();
+                                } else {
+                                    return callAIProvider(finalType, apiKey, prompt);
+                                }
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    );
+                }).subscribeOn(Schedulers.boundedElastic());
+            })
+            .flatMap(generatedCode -> {
+                long timeTaken = System.currentTimeMillis() - startTime;
+                recordUsage(serviceName);
 
                 if (immunitySystem.isCodeInfected(generatedCode)) {
                     log.error("-> [Orchestrator] AI generated toxic/broken code! Rejecting...");
-                    aiProfiler.recordPerformance(taskCategory, provider, false, timeTaken);
+                    aiProfiler.recordPerformance(taskCategory, finalProviderId, false, timeTaken);
                     
-                    // Capture ecosystem learning for infected code
                     if (enhancedLearningService != null) {
                         Map<String, Object> requestMeta = new HashMap<>();
                         requestMeta.put("taskCategory", taskCategory);
                         requestMeta.put("errorSignature", errorSignature);
                         requestMeta.put("infected", true);
-                        
-                        enhancedLearningService.learnFromAPIUsage(
-                                "generateCode",
-                                provider.name(),
-                                timeTaken,
-                                false,
-                                requestMeta
-                        ).subscribe(); // Fire and forget
+                        enhancedLearningService.learnFromAPIUsage("generateCode", finalProviderId, timeTaken, false, requestMeta).subscribe();
                     }
-                    
-                    continue;
+                    return tryNextProvider(chain, index + 1, taskCategory, errorSignature, prompt, userId);
                 }
 
-                knowledgeBase.recordSuccessWithPermission(errorSignature, generatedCode, provider.name(), timeTaken, 0.95);
-                aiProfiler.recordPerformance(taskCategory, provider, true, timeTaken);
-
-                // Capture ecosystem learning for successful API call
-                if (enhancedLearningService != null) {
-                    Map<String, Object> requestMeta = new HashMap<>();
-                    requestMeta.put("taskCategory", taskCategory);
-                    requestMeta.put("errorSignature", errorSignature);
-                    requestMeta.put("codeLength", generatedCode != null ? generatedCode.length() : 0);
-                    
-                    enhancedLearningService.learnFromAPIUsage(
-                            "generateCode",
-                            provider.name(),
-                            timeTaken,
-                            true,
-                            requestMeta
-                    ).subscribe(); // Fire and forget
-                }
-
-                return generatedCode;
-
-            } catch (Exception e) {
+                return knowledgeBase.recordSuccessWithPermission(errorSignature, generatedCode, finalProviderId, timeTaken, 0.95)
+                    .then(Mono.fromRunnable(() -> aiProfiler.recordPerformance(taskCategory, finalProviderId, true, timeTaken)))
+                    .then(Mono.defer(() -> {
+                        if (enhancedLearningService != null) {
+                            Map<String, Object> requestMeta = new HashMap<>();
+                            requestMeta.put("taskCategory", taskCategory);
+                            requestMeta.put("errorSignature", errorSignature);
+                            requestMeta.put("codeLength", generatedCode != null ? generatedCode.length() : 0);
+                            enhancedLearningService.learnFromAPIUsage("generateCode", finalProviderId, timeTaken, true, requestMeta).subscribe();
+                        }
+                        return Mono.just(generatedCode);
+                    }));
+            })
+            .onErrorResume(e -> {
                 long timeTaken = System.currentTimeMillis() - startTime;
-                log.error("Error from provider: {} on task: {}", provider, taskCategory, e);
-                aiProfiler.recordPerformance(taskCategory, provider, false, timeTaken);
+                log.error("Error from provider: {} on task: {}", finalProviderId, taskCategory, e);
+                aiProfiler.recordPerformance(taskCategory, finalProviderId, false, timeTaken);
                 
-                // Capture ecosystem learning for failed API call
                 if (enhancedLearningService != null) {
                     Map<String, Object> requestMeta = new HashMap<>();
                     requestMeta.put("taskCategory", taskCategory);
                     requestMeta.put("errorSignature", errorSignature);
                     requestMeta.put("errorMessage", e.getMessage());
-                    
-                    enhancedLearningService.learnFromAPIUsage(
-                            "generateCode",
-                            provider.name(),
-                            timeTaken,
-                            false,
-                            requestMeta
-                    ).subscribe(); // Fire and forget
+                    enhancedLearningService.learnFromAPIUsage("generateCode", finalProviderId, timeTaken, false, requestMeta).subscribe();
                 }
-                
-                // Continue to next provider ONCE ONLY - no retries per provider
-            }
-        }
-
-        throw new RuntimeException("CRITICAL: All AI failed. Cannot execute task.");
+                return tryNextProvider(chain, index + 1, taskCategory, errorSignature, prompt, userId);
+            });
     }
 
-    private boolean isServiceQuotaAvailable(AIProviderType provider) {
-        String serviceName = getServiceNameForProvider(provider);
+    private Mono<String> resolveApiKeyReactive(String userId, AIProviderType provider, com.supremeai.model.APIProvider dbProvider) {
+        if (dbProvider != null) {
+            return Mono.just(dbProvider.getApiKey());
+        }
+        if (userId == null || "system".equals(userId)) {
+            return Mono.justOrEmpty(System.getenv(getEnvKeyForProvider(provider)));
+        }
+        return keyRotationService.selectBestKey(userId, getServiceNameForProvider(provider))
+            .map(key -> keyRotationService.getDecryptedApiKey(key))
+            .defaultIfEmpty(System.getenv(getEnvKeyForProvider(provider)));
+    }
+
+    private boolean isServiceQuotaAvailable(String serviceName) {
         if (quotaManager.getQuotaStatus(serviceName, "Requests") == null) return true;
         return quotaManager.getQuotaStatus(serviceName, "Requests").getRemainingQuota() > 0;
     }
 
-    private void recordUsage(AIProviderType provider) {
-        String serviceName = getServiceNameForProvider(provider);
+    private void recordUsage(String serviceName) {
         quotaManager.recordUsage(serviceName, "Requests", 1);
     }
 
     private String getServiceNameForProvider(AIProviderType provider) {
+        if (provider == null) return "Unknown";
         switch (provider) {
             case GROQ_LLAMA3: return "Groq";
             case GEMINI_PRO: return "Google";
@@ -294,20 +337,12 @@ public class AIFallbackOrchestrator {
             case CLOUD_DEEPSEEK: return "HF_DeepSeek";
             case CLOUD_PHI: return "GCP_Phi";
             case CLOUD_NOMIC: return "GCP_Nomic";
-            default: throw new IllegalArgumentException("Unknown AI provider: " + provider);
+            default: return "AI_Provider";
         }
-    }
-
-    private String resolveApiKey(String userId, AIProviderType provider) {
-        if (userId == null || "system".equals(userId)) {
-            return System.getenv(getEnvKeyForProvider(provider));
-        }
-        Optional<UserApiKey> key = keyRotationService.selectBestKey(userId, getServiceNameForProvider(provider));
-        return key.map(k -> keyRotationService.getDecryptedApiKey(k))
-                .orElseGet(() -> System.getenv(getEnvKeyForProvider(provider)));
     }
 
     private String getEnvKeyForProvider(AIProviderType provider) {
+        if (provider == null) return "AI_API_KEY";
         switch (provider) {
             case GROQ_LLAMA3: return "GROQ_API_KEY";
             case GEMINI_PRO: return "GEMINI_API_KEY";
@@ -328,27 +363,15 @@ public class AIFallbackOrchestrator {
         }
     }
 
-    private String callAIProviderWithRetry(AIProviderType provider, String apiKey, String prompt, CircuitBreaker cb) {
-        String serviceName = getServiceNameForProvider(provider);
-        return retryExecutor.executeWithCircuitBreaker(
-                provider.name(), serviceName, cb,
-                () -> {
-                    try {
-                        return callAIProvider(provider, apiKey, prompt);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
-    }
-
     private String callAIProvider(AIProviderType provider, String apiKey, String prompt) throws Exception {
         String providerName = mapFallbackProviderToFactoryName(provider);
         com.supremeai.provider.AIProvider realProvider = providerFactory.getProvider(providerName, apiKey);
+        // Note: Keeping .block() here since it's wrapped in Mono.fromCallable in tryNextProvider
         return realProvider.generate(prompt).block();
     }
 
     private String mapFallbackProviderToFactoryName(AIProviderType provider) {
+        if (provider == null) return "unknown";
         switch (provider) {
             case GROQ_LLAMA3: return "groq";
             case GEMINI_PRO: return "gemini";
@@ -372,7 +395,7 @@ public class AIFallbackOrchestrator {
     public Map<String, Object> getProviderHealthStatus() {
         Map<String, Object> status = new java.util.HashMap<>();
         for (AIProviderType provider : allProviders) {
-            CircuitBreaker cb = providerCircuitBreakers.get(provider);
+            CircuitBreaker cb = getOrCreateCircuitBreaker(provider.name().toLowerCase());
             Map<String, Object> providerStatus = new java.util.HashMap<>();
             if (cb != null) {
                 providerStatus.put("state", cb.getState().name());
@@ -383,9 +406,10 @@ public class AIFallbackOrchestrator {
             } else {
                 providerStatus.put("state", "UNKNOWN");
             }
-            providerStatus.put("quotaAvailable", isServiceQuotaAvailable(provider));
+            providerStatus.put("quotaAvailable", isServiceQuotaAvailable(getServiceNameForProvider(provider)));
             status.put(provider.name(), providerStatus);
         }
         return status;
     }
+}
 }

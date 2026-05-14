@@ -1,6 +1,7 @@
 package com.supremeai.service.analysis;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -13,8 +14,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class CodeChunkerService {
+    private static final Logger log = LoggerFactory.getLogger(CodeChunkerService.class);
 
     private static final int DEFAULT_CHUNK_SIZE = 100;
     private static final int DEFAULT_OVERLAP = 10;

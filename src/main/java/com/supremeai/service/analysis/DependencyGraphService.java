@@ -2,7 +2,8 @@ package com.supremeai.service.analysis;
 
 import com.supremeai.model.analysis.DependencyGraph;
 import com.supremeai.repository.analysis.DependencyGraphRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -19,8 +20,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class DependencyGraphService {
+
+    private static final Logger log = LoggerFactory.getLogger(DependencyGraphService.class);
+
 
     private final DependencyGraphRepository dependencyGraphRepository;
 

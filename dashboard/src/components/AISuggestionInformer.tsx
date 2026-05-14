@@ -20,6 +20,7 @@ interface AISuggestionInformerProps {
   onSelect?: (id: string) => void;
   title?: string;
   context?: string;
+  style?: React.CSSProperties;
 }
 
 const AISuggestionInformer: React.FC<AISuggestionInformerProps> = ({
@@ -28,7 +29,8 @@ const AISuggestionInformer: React.FC<AISuggestionInformerProps> = ({
   onDecline,
   onSelect,
   title = "AI System Optimizations",
-  context = "General"
+  context = "General",
+  style
 }) => {
   // Use onSelect as fallback for onApprove
   const handleApprove = (id: string) => {
@@ -53,8 +55,8 @@ const AISuggestionInformer: React.FC<AISuggestionInformerProps> = ({
     <Card 
       className="glass-card ai-suggestion-card" 
       title={<Space><BulbOutlined style={{ color: '#faad14' }} /> {title}</Space>}
-      extra={<Badge status="processing" text={`${suggestions.length} Active Insights`} />}
-      style={{ marginBottom: 24, borderLeft: '4px solid #faad14' }}
+      extra={<Badge status="processing" text={`${suggestions?.length || 0} Active Insights`} />}
+      style={{ marginBottom: 24, borderLeft: '4px solid #faad14', ...style }}
     >
       <Paragraph type="secondary" style={{ fontSize: 13 }}>
         Based on current {context} metrics, SupremeAI suggests the following enhancements to make the system more profound.

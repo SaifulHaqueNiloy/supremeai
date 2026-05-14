@@ -2,6 +2,8 @@ package com.supremeai.provider;
 
 import com.supremeai.service.AIProviderService;
 import com.supremeai.service.ContextualAIRankingService;
+import com.supremeai.learning.SelfLearningRouter;
+import com.supremeai.learning.EnhancedSelfLearningRouter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,12 @@ public class AIProviderFactory {
 
     @Autowired(required = false)
     private OllamaProvider ollamaProvider;
+
+    @Autowired(required = false)
+    private SelfLearningRouter selfLearningRouter;
+
+    @Autowired(required = false)
+    private EnhancedSelfLearningRouter enhancedRouter;
 
     // Cache for provider health status
     private final Map<String, Boolean> providerHealthCache = new ConcurrentHashMap<>();
@@ -130,14 +138,93 @@ public class AIProviderFactory {
     }
 
     /**
-     * Get the best provider for a specific task type based on rankings and health
+     * Get the best provider for a specific task based on rankings and health
      * @param taskType Type of task (e.g., "code_generation", "code_analysis", "question_answering")
      * @return Best available AI provider for the task
      */
     public AIProvider getBestProviderForTask(String taskType) {
         logger.debug("Finding best provider for task: {}", taskType);
 
-        // Try to get ranked providers for this task
+        // Extract required skills from task type
+        List<String> requiredSkills = extractSkillsFromTaskType(taskType);
+
+        // Get candidate providers (healthy ones)
+        List<String> candidates = getHealthyProviders();
+
+        if (candidates.isEmpty()) {
+            throw new RuntimeException("No healthy AI providers available");
+        }
+
+        // Use enhanced router if available
+        if (enhancedRouter != null) {
+            try {
+                String chosen = enhancedRouter.getBestProviderForTask(taskType);
+                if (chosen != null && candidates.contains(chosen)) {
+                    logger.info("[ROUTER] Enhanced router selected {} for {}", chosen, taskType);
+                    return getProvider(chosen);
+                }
+            } catch (Exception e) {
+                logger.warn("Enhanced router failed: {}", e.getMessage());
+            }
+        }
+
+        // Fallback to original method
+        return selectProviderByRankingOrFallback(taskType, candidates, requiredSkills);
+    }
+
+    /**
+     * Extract skill requirements from task type
+     */
+    private List<String> extractSkillsFromTaskType(String taskType) {
+        String tt = taskType.toLowerCase();
+        List<String> skills = new ArrayList<>();
+
+        if (tt.contains("code") || tt.contains("generation")) {
+            skills.add("coding");
+        }
+        if (tt.contains("analysis") || tt.contains("analyze")) {
+            skills.add("analysis");
+        }
+        if (tt.contains("creative") || tt.contains("writing")) {
+            skills.add("creative");
+        }
+        if (tt.contains("math") || tt.contains("logic")) {
+            skills.add("math");
+        }
+        if (tt.contains("vision") || tt.contains("image")) {
+            skills.add("vision");
+        }
+        if (tt.contains("summar") || tt.contains("qa") || tt.contains("question")) {
+            skills.add("understanding");
+        }
+
+        return skills;
+    }
+
+    /**
+     * Get all currently healthy providers
+     */
+    private List<String> getHealthyProviders() {
+        List<String> healthy = new ArrayList<>();
+        String[] allProviders = getSupportedProviders();
+        for (String providerName : allProviders) {
+            try {
+                AIProvider provider = getProvider(providerName);
+                if (isProviderHealthy(provider)) {
+                    healthy.add(providerName);
+                }
+            } catch (Exception e) {
+                // skip
+            }
+        }
+        return healthy;
+    }
+
+    /**
+     * Original fallback routing: ranking → default
+     */
+    private AIProvider selectProviderByRankingOrFallback(String taskType, List<String> candidates, List<String> requiredSkills) {
+        // Try contextual ranking service
         try {
             ContextualAIRankingService.TaskType rankingTaskType = ContextualAIRankingService.TaskType.QUESTION_ANSWERING;
             try {
@@ -147,25 +234,24 @@ public class AIProviderFactory {
             List<ContextualAIRankingService.ProviderRanking> rankings = contextualRankingService.getRankingsForTask(rankingTaskType);
 
             if (rankings != null && !rankings.isEmpty()) {
-                // Try providers in order of ranking
                 for (ContextualAIRankingService.ProviderRanking ranking : rankings) {
-                    try {
-                        AIProvider provider = getProvider(ranking.provider);
-                        if (isProviderHealthy(provider)) {
+                    if (candidates.contains(ranking.provider.toLowerCase())) {
+                        try {
+                            AIProvider provider = getProvider(ranking.provider);
                             logger.info("Using ranked provider {} for task {}", ranking.provider, taskType);
                             return provider;
+                        } catch (Exception e) {
+                            logger.warn("Ranked provider {} unavailable: {}", ranking.provider, e.getMessage());
                         }
-                    } catch (Exception e) {
-                        logger.warn("Ranked provider {} unavailable: {}", ranking.provider, e.getMessage());
                     }
                 }
             }
         } catch (Exception e) {
-            logger.warn("Failed to get provider rankings for task {}: {}", taskType, e.getMessage());
+            logger.warn("Ranking service error for task {}: {}", taskType, e.getMessage());
         }
 
-        // Fall back to default provider
-        logger.info("No ranked providers available for task {}, using default", taskType);
+        // Fallback to default provider selection
+        logger.info("No ranked provider available for task {}, using default", taskType);
         return getDefaultProvider();
     }
 
@@ -280,5 +366,37 @@ public class AIProviderFactory {
 
     private String resolveKey(String override, String fallback) {
         return (override != null && !override.isEmpty()) ? override : fallback;
+    }
+
+    /**
+     * Creates an AI provider instance directly from database configuration.
+     * This enables dynamic provider support without code changes.
+     */
+    public AIProvider createProviderFromConfig(com.supremeai.model.APIProvider config) {
+        if (config == null) return null;
+        
+        String name = config.getName();
+        String type = config.getType() != null ? config.getType().toLowerCase() : "unknown";
+        String apiKey = config.getApiKey() != null && !config.getApiKey().isEmpty() 
+                        ? config.getApiKey() 
+                        : aiProviderService.getActiveKey(name.toLowerCase());
+        String baseUrl = config.getBaseUrl();
+        String defaultModel = (config.getModels() != null && !config.getModels().isEmpty()) 
+                             ? config.getModels().get(0) 
+                             : "default";
+
+        logger.info("Dynamically creating provider: {} of type: {}", name, type);
+
+        // Try to use hardcoded logic if it's a known standard provider type
+        try {
+            return getProvider(type, apiKey);
+        } catch (IllegalArgumentException e) {
+            // Not a standard provider, use generic SupremeCloudProvider for custom endpoints
+            if (baseUrl != null && !baseUrl.isEmpty()) {
+                logger.info("Using generic SupremeCloudProvider for custom endpoint: {}", baseUrl);
+                return new SupremeCloudProvider(apiKey, name, defaultModel, baseUrl);
+            }
+            throw new IllegalArgumentException("Cannot create provider: " + name + ". Missing baseUrl for custom type: " + type);
+        }
     }
 }

@@ -15,15 +15,9 @@ import java.util.Map;
 public class SelfHealingController {
 
     private final SelfHealingService selfHealingService;
-    private final AutoHealingEngine autoHealingEngine;
-    private final InfiniteAutoHealer infiniteAutoHealer;
 
-    public SelfHealingController(SelfHealingService selfHealingService,
-                                 AutoHealingEngine autoHealingEngine,
-                                 InfiniteAutoHealer infiniteAutoHealer) {
+    public SelfHealingController(SelfHealingService selfHealingService) {
         this.selfHealingService = selfHealingService;
-        this.autoHealingEngine = autoHealingEngine;
-        this.infiniteAutoHealer = infiniteAutoHealer;
     }
 
     // ===== RETRY WITH BACKOFF =====
@@ -63,7 +57,7 @@ public class SelfHealingController {
         if (error == null || error.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Missing 'error' field"));
         }
-        return ResponseEntity.ok(autoHealingEngine.detectAndFix(error));
+        return ResponseEntity.ok(selfHealingService.detectAndFix(error));
     }
 
     // ===== INFINITE AUTO-HEALER =====
@@ -76,11 +70,25 @@ public class SelfHealingController {
             return ResponseEntity.badRequest().body(Map.of("error", "Missing 'prompt' field"));
         }
         try {
-            String result = infiniteAutoHealer.developUntilPerfection(taskCategory, prompt);
+            String result = selfHealingService.developUntilPerfection(taskCategory, prompt);
             return ResponseEntity.ok(Map.of("status", "success", "code", result));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("status", "failed", "error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/history")
+    public Mono<ResponseEntity<Iterable<com.supremeai.model.HealingEvent>>> getHistory() {
+        return selfHealingService.getHealingHistory()
+                .collectList()
+                .map(ResponseEntity::ok);
+    }
+
+    @PostMapping("/health-check")
+    public Mono<ResponseEntity<Iterable<com.supremeai.model.APIHealthReport>>> runHealthCheck() {
+        return selfHealingService.runProactiveHealthCheck()
+                .collectList()
+                .map(ResponseEntity::ok);
     }
 
     // ===== STATUS =====
@@ -91,7 +99,9 @@ public class SelfHealingController {
                 "status", "active",
                 "service", "SelfHealingService",
                 "autoHealing", "enabled",
-                "infiniteLoop", "enabled"
+                "infiniteLoop", "enabled",
+                "auditTrail", "active",
+                "aiAnalysis", "enabled"
         ));
     }
 }

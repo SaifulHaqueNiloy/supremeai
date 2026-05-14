@@ -9,7 +9,7 @@ interface SelfHealingPanelProps {
   healingStatus: any;
   testError: string;
   setTestError: (val: string) => void;
-  handleTestFix: () => void;
+  handleTestFix: () => void | Promise<void>;
   fixing: boolean;
   fixResult: any;
 }

@@ -280,8 +280,8 @@ jobs: # ------------------------------------------------------------------------
   # --------------------------------------------------------------------------------
   
    backend-pipeline:
-     name: ☕ Backend (Build & Deploy)
-     needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
+      name: ☕ Backend (Build & Deploy)
+      needs: [initialize, security-scan, infrastructure-check, codeflow-analysis, frontend-pipeline]
      if: needs.initialize.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
      runs-on: ubuntu-latest
      services:
@@ -325,8 +325,8 @@ jobs: # ------------------------------------------------------------------------
         uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: 'beta'
-      - name: 🐳 Build & Push Container
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+       - name: 🐳 Build & Push Container
+         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (needs.frontend-pipeline.result == 'success' || needs.frontend-pipeline.result == 'skipped')
         run: |
           BUILD_ID=$(gcloud builds submit --tag us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/supremeai-repo/backend --async --format="value(id)" --quiet .)
           echo "Build submitted: $BUILD_ID"
@@ -343,8 +343,8 @@ jobs: # ------------------------------------------------------------------------
             fi
             sleep 10
           done
-      - name: 🚀 Deploy to Cloud Run
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+       - name: 🚀 Deploy to Cloud Run
+         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (needs.frontend-pipeline.result == 'success' || needs.frontend-pipeline.result == 'skipped')
         run: |
           gcloud beta run deploy supremeai-backend \
             --image us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/supremeai-repo/backend \
@@ -360,9 +360,9 @@ jobs: # ------------------------------------------------------------------------
             --update-secrets "JWT_SECRET=jwt-secret:latest,FIREBASE_SERVICE_ACCOUNT_JSON=firebase-service-account-json:latest" \
             --quiet
 
-  frontend-pipeline:
-    name: ⚛️ Frontend & Mobile (Build & Deploy)
-    needs: [initialize, security-scan, infrastructure-check, codeflow-analysis]
+   frontend-pipeline:
+     name: ⚛️ Frontend & Mobile (Build & Deploy)
+     needs: [initialize, security-scan, infrastructure-check, codeflow-analysis, backend-pipeline]
     if: needs.initialize.outputs.dashboard == 'true' || needs.initialize.outputs.mobile == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -418,8 +418,8 @@ jobs: # ------------------------------------------------------------------------
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
-      - name: 🚀 Deploy Firebase Hosting
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+       - name: 🚀 Deploy Firebase Hosting
+         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (needs.backend-pipeline.result == 'success' || needs.backend-pipeline.result == 'skipped')
         run: |
           mkdir -p public/admin
           mkdir -p public/mobile

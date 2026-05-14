@@ -1,10 +1,10 @@
 package com.supremeai.service.analysis;
 
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
  * In Phase 1, patterns are hardcoded. Later will be loaded from Firestore config.
  */
 @Component
-@Slf4j
 public class PatternRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(PatternRepository.class);
     private final Map<String, List<PatternRule>> rulesBySeverity;
 
     public PatternRepository() {

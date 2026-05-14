@@ -1,10 +1,7 @@
 package com.supremeai.service.analysis;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -17,8 +14,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class GitDiffService {
+
+    private static final Logger log = LoggerFactory.getLogger(GitDiffService.class);
 
     public List<FileDiff> computeDiff(String repoPath, String baselineCommit, String currentCommit) throws IOException, InterruptedException {
         List<String> cmd = new ArrayList<>();
@@ -172,16 +170,32 @@ public class GitDiffService {
         return diffs.stream().map(FileDiff::getFileName).distinct().collect(Collectors.toList());
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class FileDiff {
         private String fileName;
         private ChangeType changeType;
         private List<LineRange> changedLineRanges;
         private String rawDiff;
 
+        public FileDiff() {}
+
+        public FileDiff(String fileName, ChangeType changeType, List<LineRange> changedLineRanges, String rawDiff) {
+            this.fileName = fileName;
+            this.changeType = changeType;
+            this.changedLineRanges = changedLineRanges;
+            this.rawDiff = rawDiff;
+        }
+
         public String getFileName() { return fileName; }
+        public void setFileName(String fileName) { this.fileName = fileName; }
+
+        public ChangeType getChangeType() { return changeType; }
+        public void setChangeType(ChangeType changeType) { this.changeType = changeType; }
+
+        public List<LineRange> getChangedLineRanges() { return changedLineRanges; }
+        public void setChangedLineRanges(List<LineRange> changedLineRanges) { this.changedLineRanges = changedLineRanges; }
+
+        public String getRawDiff() { return rawDiff; }
+        public void setRawDiff(String rawDiff) { this.rawDiff = rawDiff; }
 
         public static FileDiffBuilder builder() { return new FileDiffBuilder(); }
         public static class FileDiffBuilder {
@@ -194,22 +208,27 @@ public class GitDiffService {
             public FileDiffBuilder changedLineRanges(List<LineRange> r) { this.changedLineRanges = r; return this; }
             public FileDiffBuilder rawDiff(String d) { this.rawDiff = d; return this; }
             public FileDiff build() {
-                FileDiff fd = new FileDiff();
-                fd.fileName = this.fileName;
-                fd.changeType = this.changeType;
-                fd.changedLineRanges = this.changedLineRanges;
-                fd.rawDiff = this.rawDiff;
-                return fd;
+                return new FileDiff(fileName, changeType, changedLineRanges, rawDiff);
             }
         }
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class LineRange {
         private int startLine;
         private int endLine;
+
+        public LineRange() {}
+
+        public LineRange(int startLine, int endLine) {
+            this.startLine = startLine;
+            this.endLine = endLine;
+        }
+
+        public int getStartLine() { return startLine; }
+        public void setStartLine(int startLine) { this.startLine = startLine; }
+
+        public int getEndLine() { return endLine; }
+        public void setEndLine(int endLine) { this.endLine = endLine; }
 
         public static LineRangeBuilder builder() { return new LineRangeBuilder(); }
         public static class LineRangeBuilder {
@@ -218,10 +237,7 @@ public class GitDiffService {
             public LineRangeBuilder startLine(int s) { this.startLine = s; return this; }
             public LineRangeBuilder endLine(int e) { this.endLine = e; return this; }
             public LineRange build() {
-                LineRange lr = new LineRange();
-                lr.startLine = this.startLine;
-                lr.endLine = this.endLine;
-                return lr;
+                return new LineRange(startLine, endLine);
             }
         }
     }
@@ -230,3 +246,4 @@ public class GitDiffService {
         ADD, MODIFY, DELETE, RENAME
     }
 }
+

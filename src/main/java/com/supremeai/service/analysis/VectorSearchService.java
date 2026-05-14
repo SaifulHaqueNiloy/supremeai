@@ -2,7 +2,8 @@ package com.supremeai.service.analysis;
 
 import com.supremeai.model.analysis.CodeChunk;
 import com.supremeai.repository.analysis.CodeChunkRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,8 +14,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class VectorSearchService {
+
+    private static final Logger log = LoggerFactory.getLogger(VectorSearchService.class);
 
     private final CodeChunkRepository codeChunkRepository;
     private final EmbeddingService embeddingService;

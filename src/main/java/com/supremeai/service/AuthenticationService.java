@@ -10,8 +10,9 @@ import com.supremeai.repository.ActivityLogRepository;
 import com.supremeai.repository.UserRepository;
 import com.supremeai.security.BruteForceProtectionService;
 import com.supremeai.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -21,15 +22,29 @@ import java.util.Map;
 import java.util.Arrays;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class AuthenticationService {
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
     private final UserRepository userRepository;
     private final ActivityLogRepository activityLogRepository;
     private final BruteForceProtectionService bruteForceProtectionService;
     private final JwtUtil jwtUtil;
     private final ConfigService configService;
+
+    @Autowired
+    public AuthenticationService(
+            UserRepository userRepository,
+            ActivityLogRepository activityLogRepository,
+            BruteForceProtectionService bruteForceProtectionService,
+            JwtUtil jwtUtil,
+            ConfigService configService
+    ) {
+        this.userRepository = userRepository;
+        this.activityLogRepository = activityLogRepository;
+        this.bruteForceProtectionService = bruteForceProtectionService;
+        this.jwtUtil = jwtUtil;
+        this.configService = configService;
+    }
 
     public Mono<Map<String, Object>> firebaseLogin(String idToken, String remoteAddr) {
         if (idToken == null || idToken.trim().isEmpty()) {

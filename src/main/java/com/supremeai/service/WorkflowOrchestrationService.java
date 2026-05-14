@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -54,7 +54,7 @@ public class WorkflowOrchestrationService {
     private Mono<WorkflowExecution> executeNextStep(WorkflowExecution execution, WorkflowDefinition definition) {
         if (execution.getCurrentStepIndex() >= definition.getSteps().size()) {
             execution.setStatus("COMPLETED");
-            execution.setCompletedAt(LocalDateTime.now());
+            execution.setCompletedAt(new Date());
             return executionRepository.save(execution);
         }
 
@@ -79,7 +79,7 @@ public class WorkflowOrchestrationService {
                     logger.error("[Workflow] Step failed: {}", e.getMessage());
                     execution.setStatus("FAILED");
                     execution.setErrorMessage(e.getMessage());
-                    execution.setCompletedAt(LocalDateTime.now());
+                    execution.setCompletedAt(new Date());
                     return executionRepository.save(execution);
                 });
     }

@@ -1,0 +1,76 @@
+
+> Task :compileJava
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/service/UserAccountService.java:57: error: cannot find symbol
+        }).subscribeOn(Schedulers.boundedElastic())
+                       ^
+  symbol:   variable Schedulers
+  location: class UserAccountService
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/service/UserAccountService.java:88: error: cannot find symbol
+            }).subscribeOn(Schedulers.boundedElastic())
+                           ^
+  symbol:   variable Schedulers
+  location: class UserAccountService
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/service/UserAccountService.java:103: error: no suitable method found for fromFuture(()->firest[...]get())
+        return Mono.fromFuture(() -> firestore.collection(collectionName).get())
+                   ^
+    method Mono.<T#1>fromFuture(CompletableFuture<? extends T#1>) is not applicable
+      (cannot infer type-variable(s) T#1
+        (argument mismatch; CompletableFuture is not a functional interface))
+    method Mono.<T#2>fromFuture(CompletableFuture<? extends T#2>,boolean) is not applicable
+      (cannot infer type-variable(s) T#2
+        (actual and formal argument lists differ in length))
+    method Mono.<T#3>fromFuture(Supplier<? extends CompletableFuture<? extends T#3>>) is not applicable
+      (cannot infer type-variable(s) T#3
+        (argument mismatch; bad return type in lambda expression
+          ApiFuture<QuerySnapshot> cannot be converted to CompletableFuture<? extends T#3>))
+    method Mono.<T#4>fromFuture(Supplier<? extends CompletableFuture<? extends T#4>>,boolean) is not applicable
+      (cannot infer type-variable(s) T#4
+        (actual and formal argument lists differ in length))
+  where T#1,T#2,T#3,T#4 are type-variables:
+    T#1 extends Object declared in method <T#1>fromFuture(CompletableFuture<? extends T#1>)
+    T#2 extends Object declared in method <T#2>fromFuture(CompletableFuture<? extends T#2>,boolean)
+    T#3 extends Object declared in method <T#3>fromFuture(Supplier<? extends CompletableFuture<? extends T#3>>)
+    T#4 extends Object declared in method <T#4>fromFuture(Supplier<? extends CompletableFuture<? extends T#4>>,boolean)
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/service/UserAccountService.java:193: error: cannot find symbol
+            }).subscribeOn(Schedulers.boundedElastic()));
+                           ^
+  symbol:   variable Schedulers
+  location: class UserAccountService
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/service/UserAccountService.java:231: error: cannot find symbol
+            }).subscribeOn(Schedulers.boundedElastic()));
+                           ^
+  symbol:   variable Schedulers
+  location: class UserAccountService
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/controller/AdminUserManagementController.java:109: error: incompatible types: Mono<ResponseEntity<ApiResponse<Map<String,List<Map<String,Object>>>>>> cannot be converted to Mono<ResponseEntity<ApiResponse<Map<String,Object>>>>
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
+                      ^
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/controller/UserAccountController.java:193: error: incompatible types: Mono<ResponseEntity<Map<String,INT#1>>> cannot be converted to Mono<ResponseEntity<Map<String,Object>>>
+                    .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()))));
+                                  ^
+  where INT#1,INT#2 are intersection types:
+    INT#1 extends Object,Serializable,Comparable<? extends INT#2>,Constable,ConstantDesc
+    INT#2 extends Object,Serializable,Comparable<?>,Constable,ConstantDesc
+/home/nazifarabbu/OneDrive/supremeai/src/main/java/com/supremeai/controller/UserAccountController.java:211: error: incompatible types: Mono<ResponseEntity<Map<String,INT#1>>> cannot be converted to Mono<ResponseEntity<Map<String,Object>>>
+                .onErrorResume(e -> {
+                              ^
+  where INT#1,INT#2 are intersection types:
+    INT#1 extends Object,Serializable,Comparable<? extends INT#2>,Constable
+    INT#2 extends Object,Serializable,Comparable<?>,Constable
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+8 errors
+
+> Task :compileJava FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+BUILD FAILED in 10s
+1 actionable task: 1 executed

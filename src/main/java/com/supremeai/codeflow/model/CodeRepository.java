@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import java.time.Instant;
 import java.util.*;
@@ -14,7 +11,6 @@ import java.util.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("codeRepository")
-@Data
 public class CodeRepository {
     
     @Id
@@ -64,6 +60,52 @@ public class CodeRepository {
 
     public CodeRepository() {}
 
+    public CodeRepository(String id, String name, String fullName, String description, String cloneUrl, String sourceType, String sourceId, String defaultBranch, String ownerId, String ownerType, String namespace, AnalysisStatus analysisStatus, Instant lastAnalyzedAt, Instant createdAt, Instant updatedAt, Long analysisDurationMs, Integer healthScore, String healthGrade, List<HealthIssue> healthIssues, Integer totalFiles, Integer totalLinesOfCode, Integer totalFunctions, Integer totalClasses, Map<String, Integer> languageStats, List<CodeFile> files, DependencyGraph dependencyGraph, List<PatternDetection> detectedPatterns, List<SecurityIssue> securityIssues, List<DeadCode> deadCode, List<CircularDependency> circularDependencies, List<AISuggestion> aiSuggestions, List<ErrorAnalysis> errorAnalyses, String lastAnalysisProvider, Boolean cached, Instant cacheExpiresAt, String cacheVersion, List<String> authorizedUserIds, List<String> authorizedTeamIds, Boolean isPublic, GitHubMetadata gitHubMetadata, List<PullRequestAnalysis> pullRequestAnalyses, Integer version, String previousVersionId) {
+        this.id = id;
+        this.name = name;
+        this.fullName = fullName;
+        this.description = description;
+        this.cloneUrl = cloneUrl;
+        this.sourceType = sourceType;
+        this.sourceId = sourceId;
+        this.defaultBranch = defaultBranch;
+        this.ownerId = ownerId;
+        this.ownerType = ownerType;
+        this.namespace = namespace;
+        this.analysisStatus = analysisStatus;
+        this.lastAnalyzedAt = lastAnalyzedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.analysisDurationMs = analysisDurationMs;
+        this.healthScore = healthScore;
+        this.healthGrade = healthGrade;
+        this.healthIssues = healthIssues;
+        this.totalFiles = totalFiles;
+        this.totalLinesOfCode = totalLinesOfCode;
+        this.totalFunctions = totalFunctions;
+        this.totalClasses = totalClasses;
+        this.languageStats = languageStats;
+        this.files = files;
+        this.dependencyGraph = dependencyGraph;
+        this.detectedPatterns = detectedPatterns;
+        this.securityIssues = securityIssues;
+        this.deadCode = deadCode;
+        this.circularDependencies = circularDependencies;
+        this.aiSuggestions = aiSuggestions;
+        this.errorAnalyses = errorAnalyses;
+        this.lastAnalysisProvider = lastAnalysisProvider;
+        this.cached = cached;
+        this.cacheExpiresAt = cacheExpiresAt;
+        this.cacheVersion = cacheVersion;
+        this.authorizedUserIds = authorizedUserIds;
+        this.authorizedTeamIds = authorizedTeamIds;
+        this.isPublic = isPublic;
+        this.gitHubMetadata = gitHubMetadata;
+        this.pullRequestAnalyses = pullRequestAnalyses;
+        this.version = version;
+        this.previousVersionId = previousVersionId;
+    }
+
     public static CodeRepositoryBuilder builder() { return new CodeRepositoryBuilder(); }
 
     public static class CodeRepositoryBuilder {
@@ -72,6 +114,17 @@ public class CodeRepository {
         private String defaultBranch; private String ownerId; private String ownerType;
         private String namespace; private AnalysisStatus analysisStatus;
         private Instant lastAnalyzedAt; private Instant createdAt; private Instant updatedAt;
+        private Long analysisDurationMs; private Integer healthScore; private String healthGrade;
+        private List<HealthIssue> healthIssues; private Integer totalFiles; private Integer totalLinesOfCode;
+        private Integer totalFunctions; private Integer totalClasses; private Map<String, Integer> languageStats;
+        private List<CodeFile> files; private DependencyGraph dependencyGraph; private List<PatternDetection> detectedPatterns;
+        private List<SecurityIssue> securityIssues; private List<DeadCode> deadCode; private List<CircularDependency> circularDependencies;
+        private List<AISuggestion> aiSuggestions; private List<ErrorAnalysis> errorAnalyses;
+        private String lastAnalysisProvider; private Boolean cached; private Instant cacheExpiresAt;
+        private String cacheVersion; private List<String> authorizedUserIds; private List<String> authorizedTeamIds;
+        private Boolean isPublic; private GitHubMetadata gitHubMetadata; private List<PullRequestAnalysis> pullRequestAnalyses;
+        private Integer version; private String previousVersionId;
+
         public CodeRepositoryBuilder id(String id) { this.id = id; return this; }
         public CodeRepositoryBuilder name(String name) { this.name = name; return this; }
         public CodeRepositoryBuilder fullName(String fullName) { this.fullName = fullName; return this; }
@@ -87,14 +140,37 @@ public class CodeRepository {
         public CodeRepositoryBuilder lastAnalyzedAt(Instant lastAnalyzedAt) { this.lastAnalyzedAt = lastAnalyzedAt; return this; }
         public CodeRepositoryBuilder createdAt(Instant createdAt) { this.createdAt = createdAt; return this; }
         public CodeRepositoryBuilder updatedAt(Instant updatedAt) { this.updatedAt = updatedAt; return this; }
+        public CodeRepositoryBuilder analysisDurationMs(Long analysisDurationMs) { this.analysisDurationMs = analysisDurationMs; return this; }
+        public CodeRepositoryBuilder healthScore(Integer healthScore) { this.healthScore = healthScore; return this; }
+        public CodeRepositoryBuilder healthGrade(String healthGrade) { this.healthGrade = healthGrade; return this; }
+        public CodeRepositoryBuilder healthIssues(List<HealthIssue> healthIssues) { this.healthIssues = healthIssues; return this; }
+        public CodeRepositoryBuilder totalFiles(Integer totalFiles) { this.totalFiles = totalFiles; return this; }
+        public CodeRepositoryBuilder totalLinesOfCode(Integer totalLinesOfCode) { this.totalLinesOfCode = totalLinesOfCode; return this; }
+        public CodeRepositoryBuilder totalFunctions(Integer totalFunctions) { this.totalFunctions = totalFunctions; return this; }
+        public CodeRepositoryBuilder totalClasses(Integer totalClasses) { this.totalClasses = totalClasses; return this; }
+        public CodeRepositoryBuilder languageStats(Map<String, Integer> languageStats) { this.languageStats = languageStats; return this; }
+        public CodeRepositoryBuilder files(List<CodeFile> files) { this.files = files; return this; }
+        public CodeRepositoryBuilder dependencyGraph(DependencyGraph dependencyGraph) { this.dependencyGraph = dependencyGraph; return this; }
+        public CodeRepositoryBuilder detectedPatterns(List<PatternDetection> detectedPatterns) { this.detectedPatterns = detectedPatterns; return this; }
+        public CodeRepositoryBuilder securityIssues(List<SecurityIssue> securityIssues) { this.securityIssues = securityIssues; return this; }
+        public CodeRepositoryBuilder deadCode(List<DeadCode> deadCode) { this.deadCode = deadCode; return this; }
+        public CodeRepositoryBuilder circularDependencies(List<CircularDependency> circularDependencies) { this.circularDependencies = circularDependencies; return this; }
+        public CodeRepositoryBuilder aiSuggestions(List<AISuggestion> aiSuggestions) { this.aiSuggestions = aiSuggestions; return this; }
+        public CodeRepositoryBuilder errorAnalyses(List<ErrorAnalysis> errorAnalyses) { this.errorAnalyses = errorAnalyses; return this; }
+        public CodeRepositoryBuilder lastAnalysisProvider(String lastAnalysisProvider) { this.lastAnalysisProvider = lastAnalysisProvider; return this; }
+        public CodeRepositoryBuilder cached(Boolean cached) { this.cached = cached; return this; }
+        public CodeRepositoryBuilder cacheExpiresAt(Instant cacheExpiresAt) { this.cacheExpiresAt = cacheExpiresAt; return this; }
+        public CodeRepositoryBuilder cacheVersion(String cacheVersion) { this.cacheVersion = cacheVersion; return this; }
+        public CodeRepositoryBuilder authorizedUserIds(List<String> authorizedUserIds) { this.authorizedUserIds = authorizedUserIds; return this; }
+        public CodeRepositoryBuilder authorizedTeamIds(List<String> authorizedTeamIds) { this.authorizedTeamIds = authorizedTeamIds; return this; }
+        public CodeRepositoryBuilder isPublic(Boolean isPublic) { this.isPublic = isPublic; return this; }
+        public CodeRepositoryBuilder gitHubMetadata(GitHubMetadata gitHubMetadata) { this.gitHubMetadata = gitHubMetadata; return this; }
+        public CodeRepositoryBuilder pullRequestAnalyses(List<PullRequestAnalysis> pullRequestAnalyses) { this.pullRequestAnalyses = pullRequestAnalyses; return this; }
+        public CodeRepositoryBuilder version(Integer version) { this.version = version; return this; }
+        public CodeRepositoryBuilder previousVersionId(String previousVersionId) { this.previousVersionId = previousVersionId; return this; }
+
         public CodeRepository build() {
-            CodeRepository r = new CodeRepository();
-            r.id = id; r.name = name; r.fullName = fullName; r.description = description;
-            r.cloneUrl = cloneUrl; r.sourceType = sourceType; r.sourceId = sourceId;
-            r.defaultBranch = defaultBranch; r.ownerId = ownerId; r.ownerType = ownerType;
-            r.namespace = namespace; r.analysisStatus = analysisStatus;
-            r.lastAnalyzedAt = lastAnalyzedAt; r.createdAt = createdAt; r.updatedAt = updatedAt;
-            return r;
+            return new CodeRepository(id, name, fullName, description, cloneUrl, sourceType, sourceId, defaultBranch, ownerId, ownerType, namespace, analysisStatus, lastAnalyzedAt, createdAt, updatedAt, analysisDurationMs, healthScore, healthGrade, healthIssues, totalFiles, totalLinesOfCode, totalFunctions, totalClasses, languageStats, files, dependencyGraph, detectedPatterns, securityIssues, deadCode, circularDependencies, aiSuggestions, errorAnalyses, lastAnalysisProvider, cached, cacheExpiresAt, cacheVersion, authorizedUserIds, authorizedTeamIds, isPublic, gitHubMetadata, pullRequestAnalyses, version, previousVersionId);
         }
     }
 
@@ -102,34 +178,88 @@ public class CodeRepository {
     public void setId(String id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public List<CodeFile> getFiles() { return files; }
-    public void setFiles(List<CodeFile> files) { this.files = files; }
-    public List<PatternDetection> getDetectedPatterns() { return detectedPatterns; }
-    public void setDetectedPatterns(List<PatternDetection> detectedPatterns) { this.detectedPatterns = detectedPatterns; }
-    public List<DeadCode> getDeadCode() { return deadCode; }
-    public void setDeadCode(List<DeadCode> deadCode) { this.deadCode = deadCode; }
-    public List<HealthIssue> getHealthIssues() { return healthIssues; }
-    public void setHealthIssues(List<HealthIssue> healthIssues) { this.healthIssues = healthIssues; }
-    public void setAnalysisStatus(AnalysisStatus status) { this.analysisStatus = status; }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getCloneUrl() { return cloneUrl; }
+    public void setCloneUrl(String cloneUrl) { this.cloneUrl = cloneUrl; }
+    public String getSourceType() { return sourceType; }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
+    public String getSourceId() { return sourceId; }
+    public void setSourceId(String sourceId) { this.sourceId = sourceId; }
+    public String getDefaultBranch() { return defaultBranch; }
+    public void setDefaultBranch(String defaultBranch) { this.defaultBranch = defaultBranch; }
+    public String getOwnerId() { return ownerId; }
+    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
+    public String getOwnerType() { return ownerType; }
+    public void setOwnerType(String ownerType) { this.ownerType = ownerType; }
+    public String getNamespace() { return namespace; }
+    public void setNamespace(String namespace) { this.namespace = namespace; }
     public AnalysisStatus getAnalysisStatus() { return analysisStatus; }
+    public void setAnalysisStatus(AnalysisStatus analysisStatus) { this.analysisStatus = analysisStatus; }
+    public Instant getLastAnalyzedAt() { return lastAnalyzedAt; }
+    public void setLastAnalyzedAt(Instant lastAnalyzedAt) { this.lastAnalyzedAt = lastAnalyzedAt; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-    public void setTotalFiles(Integer tf) { this.totalFiles = tf; }
-    public void setLanguageStats(Map<String, Integer> ls) { this.languageStats = ls; }
-    public void setDependencyGraph(DependencyGraph dg) { this.dependencyGraph = dg; }
-    public DependencyGraph getDependencyGraph() { return dependencyGraph; }
-    public void setSecurityIssues(List<SecurityIssue> si) { this.securityIssues = si; }
-    public List<SecurityIssue> getSecurityIssues() { return securityIssues; }
-    public void setCircularDependencies(List<CircularDependency> cd) { this.circularDependencies = cd; }
-    public List<CircularDependency> getCircularDependencies() { return circularDependencies; }
-    public void setAiSuggestions(List<AISuggestion> as) { this.aiSuggestions = as; }
-    public void setErrorAnalyses(List<ErrorAnalysis> ea) { this.errorAnalyses = ea; }
-    public void setLastAnalysisProvider(String lap) { this.lastAnalysisProvider = lap; }
-    public void setHealthScore(Integer hs) { this.healthScore = hs; }
-    public void setHealthGrade(String hg) { this.healthGrade = hg; }
+    public Long getAnalysisDurationMs() { return analysisDurationMs; }
+    public void setAnalysisDurationMs(Long analysisDurationMs) { this.analysisDurationMs = analysisDurationMs; }
     public Integer getHealthScore() { return healthScore; }
+    public void setHealthScore(Integer healthScore) { this.healthScore = healthScore; }
+    public String getHealthGrade() { return healthGrade; }
+    public void setHealthGrade(String healthGrade) { this.healthGrade = healthGrade; }
+    public List<HealthIssue> getHealthIssues() { return healthIssues; }
+    public void setHealthIssues(List<HealthIssue> healthIssues) { this.healthIssues = healthIssues; }
+    public Integer getTotalFiles() { return totalFiles; }
+    public void setTotalFiles(Integer totalFiles) { this.totalFiles = totalFiles; }
+    public Integer getTotalLinesOfCode() { return totalLinesOfCode; }
+    public void setTotalLinesOfCode(Integer totalLinesOfCode) { this.totalLinesOfCode = totalLinesOfCode; }
+    public Integer getTotalFunctions() { return totalFunctions; }
+    public void setTotalFunctions(Integer totalFunctions) { this.totalFunctions = totalFunctions; }
+    public Integer getTotalClasses() { return totalClasses; }
+    public void setTotalClasses(Integer totalClasses) { this.totalClasses = totalClasses; }
+    public Map<String, Integer> getLanguageStats() { return languageStats; }
+    public void setLanguageStats(Map<String, Integer> languageStats) { this.languageStats = languageStats; }
+    public List<CodeFile> getFiles() { return files; }
+    public void setFiles(List<CodeFile> files) { this.files = files; }
+    public DependencyGraph getDependencyGraph() { return dependencyGraph; }
+    public void setDependencyGraph(DependencyGraph dependencyGraph) { this.dependencyGraph = dependencyGraph; return; }
+    public List<PatternDetection> getDetectedPatterns() { return detectedPatterns; }
+    public void setDetectedPatterns(List<PatternDetection> detectedPatterns) { this.detectedPatterns = detectedPatterns; }
+    public List<SecurityIssue> getSecurityIssues() { return securityIssues; }
+    public void setSecurityIssues(List<SecurityIssue> securityIssues) { this.securityIssues = securityIssues; }
+    public List<DeadCode> getDeadCode() { return deadCode; }
+    public void setDeadCode(List<DeadCode> deadCode) { this.deadCode = deadCode; }
+    public List<CircularDependency> getCircularDependencies() { return circularDependencies; }
+    public void setCircularDependencies(List<CircularDependency> circularDependencies) { this.circularDependencies = circularDependencies; }
+    public List<AISuggestion> getAiSuggestions() { return aiSuggestions; }
+    public void setAiSuggestions(List<AISuggestion> aiSuggestions) { this.aiSuggestions = aiSuggestions; }
+    public List<ErrorAnalysis> getErrorAnalyses() { return errorAnalyses; }
+    public void setErrorAnalyses(List<ErrorAnalysis> errorAnalyses) { this.errorAnalyses = errorAnalyses; }
+    public String getLastAnalysisProvider() { return lastAnalysisProvider; }
+    public void setLastAnalysisProvider(String lastAnalysisProvider) { this.lastAnalysisProvider = lastAnalysisProvider; }
+    public Boolean getCached() { return cached; }
+    public void setCached(Boolean cached) { this.cached = cached; }
+    public Instant getCacheExpiresAt() { return cacheExpiresAt; }
+    public void setCacheExpiresAt(Instant cacheExpiresAt) { this.cacheExpiresAt = cacheExpiresAt; }
+    public String getCacheVersion() { return cacheVersion; }
+    public void setCacheVersion(String cacheVersion) { this.cacheVersion = cacheVersion; }
+    public List<String> getAuthorizedUserIds() { return authorizedUserIds; }
+    public void setAuthorizedUserIds(List<String> authorizedUserIds) { this.authorizedUserIds = authorizedUserIds; }
+    public List<String> getAuthorizedTeamIds() { return authorizedTeamIds; }
+    public void setAuthorizedTeamIds(List<String> authorizedTeamIds) { this.authorizedTeamIds = authorizedTeamIds; }
+    public Boolean getIsPublic() { return isPublic; }
+    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
+    public GitHubMetadata getGitHubMetadata() { return gitHubMetadata; }
+    public void setGitHubMetadata(GitHubMetadata gitHubMetadata) { this.gitHubMetadata = gitHubMetadata; }
+    public List<PullRequestAnalysis> getPullRequestAnalyses() { return pullRequestAnalyses; }
+    public void setPullRequestAnalyses(List<PullRequestAnalysis> pullRequestAnalyses) { this.pullRequestAnalyses = pullRequestAnalyses; }
+    public Integer getVersion() { return version; }
+    public void setVersion(Integer version) { this.version = version; }
+    public String getPreviousVersionId() { return previousVersionId; }
+    public void setPreviousVersionId(String previousVersionId) { this.previousVersionId = previousVersionId; }
     
     public enum AnalysisStatus {
         PENDING, ANALYZING, COMPLETED, FAILED, PARTIAL

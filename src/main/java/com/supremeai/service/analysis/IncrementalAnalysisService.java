@@ -3,7 +3,8 @@ package com.supremeai.service.analysis;
 import com.supremeai.model.analysis.AnalysisBaseline;
 import com.supremeai.model.analysis.AnalysisFinding;
 import com.supremeai.repository.analysis.AnalysisBaselineRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -15,8 +16,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class IncrementalAnalysisService {
+
+    private static final Logger log = LoggerFactory.getLogger(IncrementalAnalysisService.class);
 
     private final GitDiffService gitDiffService;
     private final DependencyGraphService dependencyGraphService;
@@ -173,10 +175,6 @@ public class IncrementalAnalysisService {
         }
     }
 
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
     public static class IncrementalAnalysisPlan {
         private String projectId;
         private String currentCommit;
@@ -185,5 +183,51 @@ public class IncrementalAnalysisService {
         private List<String> changedFiles;
         private List<String> impactedFiles;
         private List<AnalysisFinding> cachedFindings;
+
+        public IncrementalAnalysisPlan() {}
+
+        public IncrementalAnalysisPlan(String projectId, String currentCommit, String baselineCommit, boolean fullAnalysis, List<String> changedFiles, List<String> impactedFiles, List<AnalysisFinding> cachedFindings) {
+            this.projectId = projectId;
+            this.currentCommit = currentCommit;
+            this.baselineCommit = baselineCommit;
+            this.fullAnalysis = fullAnalysis;
+            this.changedFiles = changedFiles;
+            this.impactedFiles = impactedFiles;
+            this.cachedFindings = cachedFindings;
+        }
+
+        public static IncrementalAnalysisPlanBuilder builder() {
+            return new IncrementalAnalysisPlanBuilder();
+        }
+
+        public String getProjectId() { return projectId; }
+        public String getCurrentCommit() { return currentCommit; }
+        public String getBaselineCommit() { return baselineCommit; }
+        public boolean isFullAnalysis() { return fullAnalysis; }
+        public List<String> getChangedFiles() { return changedFiles; }
+        public List<String> getImpactedFiles() { return impactedFiles; }
+        public List<AnalysisFinding> getCachedFindings() { return cachedFindings; }
+
+        public static class IncrementalAnalysisPlanBuilder {
+            private String projectId;
+            private String currentCommit;
+            private String baselineCommit;
+            private boolean fullAnalysis;
+            private List<String> changedFiles;
+            private List<String> impactedFiles;
+            private List<AnalysisFinding> cachedFindings;
+
+            public IncrementalAnalysisPlanBuilder projectId(String projectId) { this.projectId = projectId; return this; }
+            public IncrementalAnalysisPlanBuilder currentCommit(String currentCommit) { this.currentCommit = currentCommit; return this; }
+            public IncrementalAnalysisPlanBuilder baselineCommit(String baselineCommit) { this.baselineCommit = baselineCommit; return this; }
+            public IncrementalAnalysisPlanBuilder fullAnalysis(boolean fullAnalysis) { this.fullAnalysis = fullAnalysis; return this; }
+            public IncrementalAnalysisPlanBuilder changedFiles(List<String> changedFiles) { this.changedFiles = changedFiles; return this; }
+            public IncrementalAnalysisPlanBuilder impactedFiles(List<String> impactedFiles) { this.impactedFiles = impactedFiles; return this; }
+            public IncrementalAnalysisPlanBuilder cachedFindings(List<AnalysisFinding> cachedFindings) { this.cachedFindings = cachedFindings; return this; }
+
+            public IncrementalAnalysisPlan build() {
+                return new IncrementalAnalysisPlan(projectId, currentCommit, baselineCommit, fullAnalysis, changedFiles, impactedFiles, cachedFindings);
+            }
+        }
     }
 }

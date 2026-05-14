@@ -36,6 +36,19 @@ public class APIProvider {
     private String deploymentSource = "API"; // API, GCLOUD, LOCAL, OLLAMA
     private java.util.List<String> assignedRoles = new java.util.ArrayList<>();
 
+    /**
+     * Auto-discovered capability scores (0.0 - 1.0)
+     * Populated by ProviderCapabilityAnalyzer on registration
+     * Key: task type, Value: capability score
+     */
+    private java.util.Map<String, Double> capabilityScores = new java.util.HashMap<>();
+
+    /** When capabilities were last benchmarked */
+    private java.util.Date lastBenchmarkedAt;
+
+    /** Number of times this provider has been benchmarked */
+    private Integer benchmarkCount = 0;
+
     // Auto-validation tracking fields
     private Integer consecutiveErrorDays;
     private LocalDateTime lastValidated;
@@ -120,4 +133,13 @@ public class APIProvider {
 
     public LocalDateTime getDeadAt() { return deadAt; }
     public void setDeadAt(LocalDateTime deadAt) { this.deadAt = deadAt; }
+
+    public java.util.Map<String, Double> getCapabilityScores() { return capabilityScores; }
+    public void setCapabilityScores(java.util.Map<String, Double> capabilityScores) { this.capabilityScores = capabilityScores; }
+
+    public java.util.Date getLastBenchmarkedAt() { return lastBenchmarkedAt; }
+    public void setLastBenchmarkedAt(java.util.Date lastBenchmarkedAt) { this.lastBenchmarkedAt = lastBenchmarkedAt; }
+
+    public Integer getBenchmarkCount() { return benchmarkCount; }
+    public void setBenchmarkCount(Integer benchmarkCount) { this.benchmarkCount = benchmarkCount; }
 }

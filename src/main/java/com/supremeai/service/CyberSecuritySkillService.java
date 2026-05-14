@@ -81,25 +81,27 @@ public class CyberSecuritySkillService {
         logger.info("[CyberSkill] Generated autonomous protection for: {}", techniqueId);
     }
 
-    public List<Map<String, Object>> getLearnedSkills() {
-        return new ArrayList<>(learnedTechniques.values());
+    public reactor.core.publisher.Flux<Map<String, Object>> getLearnedSkills() {
+        return reactor.core.publisher.Flux.fromIterable(learnedTechniques.values());
     }
 
-    public List<Map<String, Object>> getActiveProtections() {
-        return new ArrayList<>(activeProtections.values());
+    public reactor.core.publisher.Flux<Map<String, Object>> getActiveProtections() {
+        return reactor.core.publisher.Flux.fromIterable(activeProtections.values());
     }
 
     /**
      * Performs a self-hacking simulation to verify system resilience.
      */
-    public Map<String, Object> runSelfAudit() {
-        logger.info("[CyberSkill] Starting autonomous red-team self-audit...");
-        Map<String, Object> report = new HashMap<>();
-        report.put("auditId", UUID.randomUUID().toString());
-        report.put("timestamp", LocalDateTime.now().toString());
-        report.put("vulnerabilitiesFound", 0); // System learned to protect itself
-        report.put("resilienceScore", 0.99);
-        report.put("summary", "System successfully resisted all internal exploitation attempts.");
-        return report;
+    public Mono<Map<String, Object>> runSelfAudit() {
+        return Mono.fromCallable(() -> {
+            logger.info("[CyberSkill] Starting autonomous red-team self-audit...");
+            Map<String, Object> report = new HashMap<>();
+            report.put("auditId", UUID.randomUUID().toString());
+            report.put("timestamp", LocalDateTime.now().toString());
+            report.put("vulnerabilitiesFound", 0); // System learned to protect itself
+            report.put("resilienceScore", 0.99);
+            report.put("summary", "System successfully resisted all internal exploitation attempts.");
+            return report;
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 }

@@ -1,8 +1,8 @@
 package com.supremeai.security.ratelimit;
 
 import com.supremeai.config.RateLimitProperties;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -14,13 +14,19 @@ import java.util.Map;
  */
 @Service
 @Primary
-@RequiredArgsConstructor
-@Slf4j
 public class RateLimitingService implements RateLimiter {
+
+    private static final Logger log = LoggerFactory.getLogger(RateLimitingService.class);
 
     private final RateLimitProperties properties;
     private final RedisRateLimiter redisRateLimiter;
     private final InMemoryRateLimiter inMemoryRateLimiter;
+
+    public RateLimitingService(RateLimitProperties properties, RedisRateLimiter redisRateLimiter, InMemoryRateLimiter inMemoryRateLimiter) {
+        this.properties = properties;
+        this.redisRateLimiter = redisRateLimiter;
+        this.inMemoryRateLimiter = inMemoryRateLimiter;
+    }
 
     @Override
     public boolean tryAcquire(String key, int limit, int windowSeconds) {

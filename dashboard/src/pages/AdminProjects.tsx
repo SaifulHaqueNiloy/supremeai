@@ -6,7 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import { authUtils } from '../lib/authUtils';
 
 // Import Modular Components
-import { Project, GenerationForm, GenerationStatus } from '../components/projects/types';
+import { Project, GenerationForm, GenerationStatus, ProjectSortField } from '../components/projects/types';
 import ProjectTable from '../components/projects/ProjectTable';
 import ProjectModal from '../components/projects/ProjectModal';
 import AppGenerationCard from '../components/projects/AppGenerationCard';
@@ -19,6 +19,11 @@ const AdminProjects: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   
+  // Search and Sort State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<ProjectSortField | null>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('descend');
+
   // App Generation State
   const [generationForm, setGenerationForm] = useState<GenerationForm>({
     name: '',
@@ -31,6 +36,38 @@ const AdminProjects: React.FC = () => {
   const [generationStep, setGenerationStep] = useState(0);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationResult, setGenerationResult] = useState<any>(null);
+
+  const processedProjects = React.useMemo(() => {
+    let result = projects.filter(p => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return p.name.toLowerCase().includes(term) || 
+             (p.description && p.description.toLowerCase().includes(term)) ||
+             p.id.toLowerCase().includes(term);
+    });
+
+    if (sortBy) {
+      result.sort((a, b) => {
+        const aVal = (a as any)[sortBy] ?? '';
+        const bVal = (b as any)[sortBy] ?? '';
+
+        if (sortBy === 'createdAt') {
+          return sortOrder === 'ascend' 
+            ? new Date(aVal).getTime() - new Date(bVal).getTime()
+            : new Date(bVal).getTime() - new Date(aVal).getTime();
+        }
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortOrder === 'ascend' 
+            ? aVal.localeCompare(bVal) 
+            : bVal.localeCompare(aVal);
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [projects, sortBy, sortOrder, searchTerm]);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -156,12 +193,18 @@ const AdminProjects: React.FC = () => {
     <AdminLayout title="System Orchestrator: Projects">
       <Card className="glass-card">
         <ProjectActionToolbar 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
           onNewProject={() => {
             setEditingProject(null);
             setModalVisible(true);
           }}
           onRefresh={fetchProjects}
           loading={loading}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
         />
 
         {error && (
@@ -181,7 +224,7 @@ const AdminProjects: React.FC = () => {
           </div>
         ) : (
           <ProjectTable 
-            projects={projects}
+            projects={processedProjects}
             loading={loading}
             onEdit={(project) => {
               setEditingProject(project);

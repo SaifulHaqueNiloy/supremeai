@@ -4,11 +4,8 @@ import com.supremeai.ai.client.OpenAIClient;
 import com.supremeai.model.analysis.AnalysisFix;
 import com.supremeai.model.analysis.AnalysisFinding;
 import com.supremeai.repository.analysis.AnalysisFixRepository;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -21,8 +18,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@Slf4j
 public class FixSuggestionService {
+
+    private static final Logger log = LoggerFactory.getLogger(FixSuggestionService.class);
 
     private final OpenAIClient openAIClient;
     private final FixPromptTemplates fixPromptTemplates;
@@ -34,7 +32,7 @@ public class FixSuggestionService {
 
     @Autowired
     public FixSuggestionService(OpenAIClient openAIClient, FixPromptTemplates fixPromptTemplates,
-                                AnalysisFixRepository fixRepository) {
+                                 AnalysisFixRepository fixRepository) {
         this.openAIClient = openAIClient;
         this.fixPromptTemplates = fixPromptTemplates;
         this.fixRepository = fixRepository;
@@ -209,11 +207,15 @@ public class FixSuggestionService {
         return "unknown";
     }
 
-    @Data
-    @AllArgsConstructor
     private static class ParsedFix {
         private String explanation;
         private String fixedCode;
         private double confidence;
+
+        public ParsedFix(String explanation, String fixedCode, double confidence) {
+            this.explanation = explanation;
+            this.fixedCode = fixedCode;
+            this.confidence = confidence;
+        }
     }
 }

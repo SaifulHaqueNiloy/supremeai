@@ -91,3 +91,26 @@ rate-limit:
 logging:
   level:
     com.supremeai: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  show-actuator: true
+
+sentry:
+  dsn: ${SENTRY_DSN:}
+  traces-sample-rate: 1.0
+  environment: ${SPRING_PROFILES_ACTIVE:development}
+  exception-resolver-order: -2147483647
+
+otel:
+  service:
+    name: supremeai-backend
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+  traces:
+    exporter: ${OTEL_TRACES_EXPORTER:otlp}

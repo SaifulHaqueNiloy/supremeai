@@ -103,6 +103,7 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-core:2.1.0")
     implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
     implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-reactor:2.1.0")
 
     // Rate Limiting
     implementation("com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0")
@@ -113,6 +114,13 @@ dependencies {
     // Metrics & Monitoring
     implementation("io.micrometer:micrometer-core:1.12.3")
     implementation("io.micrometer:micrometer-registry-prometheus:1.12.3")
+
+    // API Documentation - SpringDoc OpenAPI
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
+    // Error Tracking - Sentry
+    implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.14.0")
+    implementation("io.sentry:sentry-logback:7.14.0")
 
     // Distributed Tracing - OpenTelemetry (using stable versions)
     implementation("io.opentelemetry:opentelemetry-api:1.36.0")

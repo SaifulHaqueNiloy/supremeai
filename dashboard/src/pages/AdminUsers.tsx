@@ -30,10 +30,10 @@ const AdminUsers: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authUtils.fetchWithAuth('/api/accounts');
+      const response = await authUtils.fetchWithAuth('/api/admin/users');
       if (!response.ok) throw new Error('Failed to fetch users');
-      const data: User[] = await response.json();
-      setUsers(data);
+      const result = await response.json();
+      setUsers(result.data?.users || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
@@ -126,10 +126,13 @@ const AdminUsers: React.FC = () => {
 
     if (sortBy) {
       result.sort((a, b) => {
-        let aVal = a[sortBy] ?? '';
-        let bVal = b[sortBy] ?? '';
+        let aVal: any = a[sortBy as keyof User] ?? '';
+        let bVal: any = b[sortBy as keyof User] ?? '';
 
-        if (sortBy === 'lastLoginAt') {
+        if (sortBy === 'usagePercent') {
+          aVal = (a.currentUsage || 0) / (a.monthlyQuota || 1);
+          bVal = (b.currentUsage || 0) / (b.monthlyQuota || 1);
+        } else if (sortBy === 'lastLoginAt') {
           const aTime = aVal ? new Date(aVal as string).getTime() : 0;
           const bTime = bVal ? new Date(bVal as string).getTime() : 0;
           return sortOrder === 'ascend' ? aTime - bTime : bTime - aTime;

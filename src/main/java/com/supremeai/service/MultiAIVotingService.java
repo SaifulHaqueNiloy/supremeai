@@ -19,7 +19,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -51,39 +52,21 @@ public class MultiAIVotingService {
     @Autowired
     private KnowledgeFeedbackService feedbackService;
 
-    @Autowired
+@Autowired
     private com.supremeai.repository.ProviderRepository providerRepository;
 
-    // Executors
-    private final ExecutorService ensembleExecutor = Executors.newFixedThreadPool(20);
-    private final java.util.concurrent.ExecutorService decisionExecutor;
+    @Autowired
+    private TaskProviderAssignmentRepository taskAssignmentRepo;
 
-    // Constants from MultiAIConsensusService
-    private static final int MAX_RETRIES = 2;
-    private static final long RETRY_BACKOFF_MS = 250L;
+    // Dynamic model selection (no hardcoded limit)
+    private static final int DEFAULT_MAX_VOTING_PROVIDERS = 10;
 
-    // In-memory history from MultiAIConsensusService
-    private final List<ConsensusVote> consensusHistory = new CopyOnWriteArrayList<>();
-
-    // Performance trackers from TenAIVotingSystem
-private final Map<String, ModelPerformanceTracker> performanceTrackers = new ConcurrentHashMap<>();
-
-    // Default provider names for initialization (dynamic at runtime)
-    public static final String[] DEFAULT_PROVIDERS = {
-        "gpt4", "claude", "gemini", "groq", "deepseek", "ollama", "huggingface", "kimi", "mistral", "stepfun"
-    };
-
-    public static final String[] ALL_PROVIDERS = DEFAULT_PROVIDERS;
-
-    @Value("${supremeai.active.providers:groq,openai,anthropic,ollama}")
-    private String activeProviders;
-
-    private final java.util.Random random = new java.util.Random();
+    /**
+     * Provider cache TTL in milliseconds
+     */
 
     @Autowired
-    public MultiAIVotingService(@org.springframework.beans.factory.annotation.Qualifier("votingTaskExecutor")
-                                 org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor votingTaskExecutor) {
-        this.decisionExecutor = votingTaskExecutor.getThreadPoolExecutor();
+    public MultiAIVotingService() {
         initializePerformanceTrackers();
     }
 
@@ -108,66 +91,114 @@ private final Map<String, ModelPerformanceTracker> performanceTrackers = new Con
 
     // ===== ENSEMBLE VOTING (from TenAIVotingSystem) =====
 
-    /**
-     * Execute ensemble voting with 10 AI models
-     * Replaces TenAIVotingSystem.executeVoting
+/**
+     * Execute ensemble voting with DYNAMIC provider count
+     * Selects providers based on task type and admin assignments.
+     * Supports 0 to ∞ providers - no hardcoded limits.
      */
-    @Cacheable(value = "ai_responses", key = "#prompt + '_10ai_vote'")
-    public VotingResult executeEnsembleVoting(String prompt, List<String> selectedModels, long timeoutMs) {
-        if (selectedModels == null || selectedModels.isEmpty()) {
-            // Fetch dynamic models from repository
-            List<String> dynamicModels = providerRepository.findAll()
+    @Cacheable(value = "ai_responses", key = "#prompt + '_ensemble_' + #taskType")
+    public Mono<VotingResult> executeEnsembleVoting(
+            String prompt,
+            List<String> selectedModels,
+            long timeoutMs,
+            String taskType  // NEW: task type for smart routing
+    ) {
+        long startTime = System.currentTimeMillis();
+        ContextualAIRankingService.TaskType detectedTaskType =
+            contextualRankingService.detectTaskType(prompt);
+
+        Mono<List<String>> modelsToUseMono;
+        if (selectedModels != null && !selectedModels.isEmpty()) {
+            // User explicitly selected specific models (admin override)
+            modelsToUseMono = Mono.just(selectedModels);
+        } else {
+            // 🔥 NEW: Get providers assigned to this task type from DB
+            modelsToUseMono = getAssignedProvidersForTask(
+                taskType != null ? taskType : detectedTaskType.name()
+            );
+        }
+
+        return modelsToUseMono.flatMap(models ->
+            Flux.fromIterable(models)
+                .filter(this::isModelAvailable)
+                .flatMap(modelName -> queryModel(modelName, prompt, timeoutMs))
+                .collectList()
+                .map(allVotes -> {
+                    long duration = System.currentTimeMillis() - startTime;
+                    logger.info("Ensemble voting completed in {}ms with {} responses (task: {})",
+                        duration, allVotes.size(), taskType);
+                    return calculateEnsembleResult(prompt, allVotes, duration, detectedTaskType);
+                })
+        )
+        .timeout(java.time.Duration.ofMillis(timeoutMs))
+        .onErrorResume(java.util.concurrent.TimeoutException.class, e -> {
+            logger.warn("Ensemble voting timed out for prompt: {}", prompt);
+            return Mono.just(new VotingResult(prompt, "Timeout reached",
+                List.of(), 0.0, "TIMEOUT", timeoutMs));
+        });
+    }
+
+    /**
+     * Get providers assigned to a specific task type.
+     * Priority: DB assignment → fallback providers → all active providers.
+     */
+    private Mono<List<String>> getAssignedProvidersForTask(String taskType) {
+        return Mono.fromCallable(() -> {
+            // 1. Check DB for task-specific assignment
+            try {
+                List<com.supremeai.model.TaskProviderAssignment> assignments =
+                    taskAssignmentRepo.findByTaskTypeAndIsActiveTrue(taskType).collectList().block();
+
+                if (assignments != null && !assignments.isEmpty()) {
+                    // Merge all provider IDs from matching assignments
+                    List<String> providers = new ArrayList<>();
+                    for (com.supremeai.model.TaskProviderAssignment assignment : assignments) {
+                        if (assignment.getProviderIds() != null) {
+                            providers.addAll(assignment.getProviderIds());
+                        }
+                    }
+                    if (!providers.isEmpty()) {
+                        logger.info("🎯 Using {} task-assigned providers for '{}': {}",
+                            providers.size(), taskType, providers);
+                        return providers;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Task assignment lookup failed for '{}': {}", taskType, e.getMessage());
+            }
+
+            // 2. Fallback: use contextual ranking to select best providers
+            try {
+                ContextualAIRankingService.ProviderSelection selection =
+                    contextualRankingService.selectBestProvider("test " + taskType, taskType);
+                if (selection.providerName != null) {
+                    List<String> ranked = contextualRankingService.getRankingsForTask(
+                        ContextualAIRankingService.TaskType.valueOf(taskType.toUpperCase())
+                    );
+                    if (ranked != null && !ranked.isEmpty()) {
+                        List<String> result = ranked.stream()
+                            .limit(DEFAULT_MAX_VOTING_PROVIDERS)
+                            .collect(Collectors.toList());
+                        logger.info("📊 Using {} ranked providers for '{}': {}",
+                            result.size(), taskType, result);
+                        return result;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Contextual ranking failed for '{}': {}", taskType, e.getMessage());
+            }
+
+            // 3. Ultimate fallback: all healthy providers (truly unlimited)
+            List<String> allProviders = providerRepository.findAll()
                 .filter(p -> "active".equals(p.getStatus()) && p.isCanParticipateInVoting())
                 .map(p -> p.getName().toLowerCase())
                 .collectList()
-                .block(java.time.Duration.ofSeconds(5));
-            
-            if (dynamicModels != null && !dynamicModels.isEmpty()) {
-                selectedModels = dynamicModels;
-            } else {
-                selectedModels = new ArrayList<>(Arrays.asList(DEFAULT_PROVIDERS));
-            }
-        }
+                .block();
 
-        logger.info("Starting ensemble voting with {} models for prompt: {}",
-                   selectedModels.size(), prompt.substring(0, Math.min(50, prompt.length())));
-
-        List<ProviderVote> allVotes = new CopyOnWriteArrayList<>();
-        List<Future<ProviderVote>> futures = new ArrayList<>();
-
-        // Submit tasks for each AI model
-        for (String modelName : selectedModels) {
-            if (!isModelAvailable(modelName)) {
-                logger.warn("Model {} is not available, skipping", modelName);
-                continue;
-            }
-
-            futures.add(ensembleExecutor.submit(() -> queryModel(modelName, prompt, timeoutMs)));
-        }
-
-        // Collect results with timeout
-        long startTime = System.currentTimeMillis();
-        ContextualAIRankingService.TaskType taskType = contextualRankingService.detectTaskType(prompt);
-
-        for (Future<ProviderVote> future : futures) {
-            try {
-                ProviderVote vote = future.get(timeoutMs, TimeUnit.MILLISECONDS);
-                if (vote != null && vote.getResponse() != null && !vote.getResponse().isEmpty()) {
-                    allVotes.add(vote);
-                    updatePerformanceTracker(vote, taskType);
-                }
-            } catch (TimeoutException e) {
-                logger.warn("Model query timed out");
-                future.cancel(true);
-            } catch (Exception e) {
-                logger.warn("Error getting model response: {}", e.getMessage());
-            }
-        }
-
-        long duration = System.currentTimeMillis() - startTime;
-        logger.info("Ensemble voting completed in {}ms with {} responses", duration, allVotes.size());
-
-        return calculateEnsembleResult(prompt, allVotes, duration, taskType);
+            logger.info("🌍 No task-specific assignment for '{}' - using {} active providers",
+                taskType, allProviders != null ? allProviders.size() : 0);
+            return allProviders != null ? allProviders : List.of();
+        });
     }
 
     // ===== APPROVAL VOTING (from CouncilVotingSystem) =====
@@ -176,36 +207,28 @@ private final Map<String, ModelPerformanceTracker> performanceTrackers = new Con
      * Conduct approval vote for risky actions
      * Replaces CouncilVotingSystem.conductVote
      */
-    public boolean conductApprovalVote(String changeType, String codeSnippet, List<AIProviderType> councilMembers) {
+    public Mono<Boolean> conductApprovalVote(String changeType, String codeSnippet, List<AIProviderType> councilMembers) {
         logger.info("[Approval Voting] Initiating vote for major change: {}", changeType);
 
         VotingTopic topic = topicGenerator.generateTopicForMajorChange(changeType, codeSnippet);
         if (topic == null) {
             logger.error("[Approval Voting] Failed to generate voting topic for: {}", changeType);
-            return false;
+            return Mono.just(false);
         }
         logger.info("[Approval Voting] Formulated Question: {}", topic.getQuestionToAsk());
 
-        int approveCount = 0;
-        int rejectCount = 0;
-
-        for (AIProviderType member : councilMembers) {
-            logger.debug(" -> Asking {}...", member.name());
-            boolean voteApprove = simulateAIVote(member, topic);
-            if (voteApprove) {
-                logger.debug("Voted: APPROVE");
-                approveCount++;
-            } else {
-                logger.debug("Voted: REJECT");
-                rejectCount++;
-            }
-        }
-
-        boolean finalDecision = approveCount > rejectCount;
-        logger.info("[Approval Voting] Final Result: {} Approve, {} Reject -> Decision: {}",
-                   approveCount, rejectCount, finalDecision ? "PROCEED" : "ABORT");
-
-        return finalDecision;
+        return Flux.fromIterable(councilMembers)
+            .flatMap(member -> Mono.fromCallable(() -> simulateAIVote(member, topic))
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()))
+            .collectList()
+            .map(votes -> {
+                long approveCount = votes.stream().filter(v -> v).count();
+                long rejectCount = votes.size() - approveCount;
+                boolean finalDecision = approveCount > rejectCount;
+                logger.info("[Approval Voting] Final Result: {} Approve, {} Reject -> Decision: {}",
+                           approveCount, rejectCount, finalDecision ? "PROCEED" : "ABORT");
+                return finalDecision;
+            });
     }
 
     // ===== DECISION VOTING (from AutonomousVotingService) =====
@@ -214,59 +237,54 @@ private final Map<String, ModelPerformanceTracker> performanceTrackers = new Con
      * Conduct decision vote on questions
      * Replaces AutonomousVotingService.conductVote
      */
-    public VotingDecision conductDecisionVote(String question, String context) {
+    public Mono<VotingDecision> conductDecisionVote(String question, String context) {
         logger.info("Starting decision voting for question: {}", question);
 
-        List<String> providerList = providerRepository.findAll()
+        return providerRepository.findAll()
                 .filter(p -> "active".equals(p.getStatus()) && p.isCanParticipateInVoting())
                 .map(p -> p.getName().toLowerCase())
                 .collectList()
-                .block(java.time.Duration.ofSeconds(5));
-        
-        if (providerList == null || providerList.isEmpty()) {
-            providerList = Arrays.asList(activeProviders.split(","));
-        }
+                .flatMap(providerList -> {
+                    List<String> listToUse = (providerList == null || providerList.isEmpty()) ?
+                            Arrays.asList(activeProviders.split(",")) : providerList;
 
-        List<CompletableFuture<ProviderVote>> futures = new ArrayList<>();
-
-        for (String providerName : providerList) {
-            CompletableFuture<ProviderVote> future = CompletableFuture.supplyAsync(() -> {
-                try {
-                    AIProvider provider = providerFactory.getProvider(providerName);
-                    long start = System.currentTimeMillis();
-                    String response = provider.generate(buildDecisionPrompt(question, context)).block();
-                    long latency = System.currentTimeMillis() - start;
-
-                    ProviderVote vote = new ProviderVote();
-                    vote.setProviderName(providerName);
-                    vote.setResponse(response);
-                    vote.setConfidence(calculateDecisionConfidence(response, latency));
-                    vote.setLatencyMs(latency);
-                    vote.setSuccess(true);
-
-                    logger.debug("Provider {} voted successfully in {}ms", providerName, latency);
-                    return vote;
-
-                } catch (Exception e) {
-                    logger.warn("Provider {} failed to vote: {}", providerName, e.getMessage());
-                    ProviderVote vote = new ProviderVote();
-                    vote.setProviderName(providerName);
-                    vote.setSuccess(false);
-                    vote.setErrorMessage(e.getMessage());
-                    return vote;
-                }
-            }, decisionExecutor);
-
-            futures.add(future);
-        }
-
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-        List<ProviderVote> votes = futures.stream()
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList());
-
-        return calculateDecisionConsensus(question, votes);
+                    return Flux.fromIterable(listToUse)
+                            .flatMap(providerName -> {
+                                long start = System.currentTimeMillis();
+                                try {
+                                    AIProvider provider = providerFactory.getProvider(providerName);
+                                    return provider.generate(buildDecisionPrompt(question, context))
+                                            .map(response -> {
+                                                long latency = System.currentTimeMillis() - start;
+                                                ProviderVote vote = new ProviderVote();
+                                                vote.setProviderName(providerName);
+                                                vote.setResponse(response);
+                                                vote.setConfidence(calculateDecisionConfidence(response, latency));
+                                                vote.setLatencyMs(latency);
+                                                vote.setSuccess(true);
+                                                logger.debug("Provider {} voted successfully in {}ms", providerName, latency);
+                                                return vote;
+                                            })
+                                            .onErrorResume(e -> {
+                                                logger.warn("Provider {} failed to vote: {}", providerName, e.getMessage());
+                                                ProviderVote vote = new ProviderVote();
+                                                vote.setProviderName(providerName);
+                                                vote.setSuccess(false);
+                                                vote.setErrorMessage(e.getMessage());
+                                                return Mono.just(vote);
+                                            });
+                                } catch (Exception e) {
+                                    logger.warn("Provider Factory failed for {}: {}", providerName, e.getMessage());
+                                    ProviderVote vote = new ProviderVote();
+                                    vote.setProviderName(providerName);
+                                    vote.setSuccess(false);
+                                    vote.setErrorMessage(e.getMessage());
+                                    return Mono.just(vote);
+                                }
+                            })
+                            .collectList()
+                            .map(votes -> calculateDecisionConsensus(question, votes));
+                });
     }
 
     // ===== CONSENSUS VOTING (from MultiAIConsensusService) =====
@@ -346,25 +364,27 @@ private final Map<String, ModelPerformanceTracker> performanceTrackers = new Con
             }
         }
 
+        Mono<List<String>> finalProvidersMono;
         if (providerNames.size() < count) {
-            List<String> dynamicDefaults = providerRepository.findAll()
+            finalProvidersMono = providerRepository.findAll()
                 .filter(p -> "active".equals(p.getStatus()) && p.isCanParticipateInVoting())
                 .map(p -> p.getName().toLowerCase())
                 .collectList()
-                .block(java.time.Duration.ofSeconds(5));
-                
-            if (dynamicDefaults != null) {
-                for (String p : dynamicDefaults) {
-                    if (providerNames.size() >= count) break;
-                    if (!providerNames.contains(p)) {
-                        providerNames.add(p);
+                .map(dynamicDefaults -> {
+                    for (String p : dynamicDefaults) {
+                        if (providerNames.size() >= count) break;
+                        if (!providerNames.contains(p)) {
+                            providerNames.add(p);
+                        }
                     }
-                }
-            }
+                    return providerNames;
+                });
+        } else {
+            finalProvidersMono = Mono.just(providerNames);
         }
 
         logger.info("Contextual selection for '{}' (Task: {}): {}", question, selection.taskType, providerNames);
-        return askConsensus(question, providerNames, timeoutMs);
+        return finalProvidersMono.flatMap(names -> askConsensus(question, names, timeoutMs));
     }
 
     /**
@@ -379,28 +399,38 @@ private final Map<String, ModelPerformanceTracker> performanceTrackers = new Con
 
     // ===== PRIVATE HELPER METHODS =====
 
-    private ProviderVote queryModel(String modelName, String prompt, long timeoutMs) {
-        try {
-            AIProvider provider = providerFactory.getProvider(modelName);
+    private Mono<ProviderVote> queryModel(String modelName, String prompt, long timeoutMs) {
+        return Mono.defer(() -> {
+            try {
+                AIProvider provider = providerFactory.getProvider(modelName);
+                long startTime = System.currentTimeMillis();
 
-            long startTime = System.currentTimeMillis();
-            String response = (selfHealingService != null) ?
-                selfHealingService.executeWithRetry(
-                    () -> provider.generate(prompt),
-                    getMaxRetries(),
-                    RETRY_BACKOFF_MS
-                ).block() : provider.generate(prompt).block();
+                Mono<String> generationMono = (selfHealingService != null) ?
+                    selfHealingService.executeWithRetry(
+                        () -> provider.generate(prompt),
+                        getMaxRetries(),
+                        RETRY_BACKOFF_MS
+                    ) : provider.generate(prompt);
 
-            long responseTime = System.currentTimeMillis() - startTime;
-            ContextualAIRankingService.TaskType taskType = contextualRankingService.detectTaskType(prompt);
-            double confidence = calculateConfidence(response, modelName, responseTime, taskType);
-
-            return new ProviderVote(modelName, response, confidence, System.currentTimeMillis());
-
-        } catch (Exception e) {
-            logger.warn("Model {} failed: {}", modelName, e.getMessage());
-            return null;
-        }
+                return generationMono
+                    .map(response -> {
+                        long responseTime = System.currentTimeMillis() - startTime;
+                        ContextualAIRankingService.TaskType taskType = contextualRankingService.detectTaskType(prompt);
+                        double confidence = calculateConfidence(response, modelName, responseTime, taskType);
+                        ProviderVote vote = new ProviderVote(modelName, response, confidence, System.currentTimeMillis());
+                        updatePerformanceTracker(vote, taskType);
+                        return vote;
+                    })
+                    .timeout(java.time.Duration.ofMillis(timeoutMs))
+                    .onErrorResume(e -> {
+                        logger.warn("Model {} failed: {}", modelName, e.getMessage());
+                        return Mono.empty();
+                    });
+            } catch (Exception e) {
+                logger.warn("Model Factory failed for {}: {}", modelName, e.getMessage());
+                return Mono.empty();
+            }
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     private VotingResult calculateEnsembleResult(String prompt, List<ProviderVote> votes, long duration, ContextualAIRankingService.TaskType taskType) {
@@ -579,7 +609,7 @@ private final Map<String, ModelPerformanceTracker> performanceTrackers = new Con
             result.setConsensusAnswer(consensus);
             result.setConsensusPercentage(percentage);
             result.setVotes(votes);
-            result.setTimestamp(java.time.LocalDateTime.now());
+            result.setTimestamp(new Date());
             consensusHistory.add(result);
             logger.info("Saved consensus vote to in-memory history (size: {})", consensusHistory.size());
         } catch (Exception e) {

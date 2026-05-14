@@ -1,8 +1,7 @@
 package com.supremeai.websocket;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.supremeai.service.SimulatorSessionService;
+import com.supremeai.service.SimulatorService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,120 +14,286 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Simulator WebSocket Handler - Bridges communication between the Admin Dashboard 
- * and the running Simulator instances.
+ * Simulator WebSocket Handler - Bi-directional remote control for simulator sessions.
+ *
+ * Message Types (JSON):
+ * - tap: { "type": "tap", "x": 150, "y": 300 }
+ * - swipe: { "type": "swipe", "fromX": 0, "fromY": 800, "toX": 0, "toY": 0 }
+ * - input: { "type": "input", "selector": "#username", "text": "test" }
+ * - scroll: { "type": "scroll", "direction": "down", "amount": 300 }
+ * - screenshot: { "type": "screenshot" } → returns base64 image
+ * - log: { "type": "log", "level": "INFO", "message": "..." }
+ * - heartbeat: { "type": "heartbeat" }
+ * - terminate: { "type": "terminate", "reason": "..." }
  */
 @Component
 public class SimulatorWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatorWebSocketHandler.class);
-    private final Gson gson = new Gson();
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    private final Map<String, WebSocketSession> activeSessions = new ConcurrentHashMap<>();
+    private final Map<String, SimulatorSessionState> sessionStates = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService heartbeatScheduler = Executors.newScheduledThreadPool(2);
+    private final AtomicLong messageCounter = new AtomicLong(0);
 
     @Autowired
-    private SimulatorSessionService sessionService;
-
-    // sessionId -> Set of WebSocketSessions (one for runtime, one or more for dashboard)
-    private final Map<String, WebSocketSession> runtimeSessions = new ConcurrentHashMap<>();
-    private final Map<String, ConcurrentHashMap.KeySetView<WebSocketSession, Boolean>> dashboardSessions = new ConcurrentHashMap<>();
+    private SimulatorService simulatorService;
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String path = session.getUri().getPath();
-        logger.info("[WS_SIMULATOR] Connection established: {} path={}", session.getId(), path);
+    public void afterConnectionEstablished(WebSocketSession session) {
+        String sessionId = extractSessionId(session);
+        sessionStates.put(sessionId, new SimulatorSessionState(sessionId));
+        activeSessions.put(sessionId, session);
 
-        // Path format: /ws/simulator/runtime/{sessionId} OR /ws/simulator/dashboard/{sessionId}
-        String[] parts = path.split("/");
-        if (parts.length < 5) {
-            logger.warn("[WS_SIMULATOR] Invalid connection path: {}", path);
-            session.close(CloseStatus.BAD_DATA);
-            return;
-        }
+        logger.info("[SIM_WS] Session connected: {} (total active: {})",
+            sessionId, activeSessions.size());
 
-        String type = parts[3]; // runtime or dashboard
-        String sessionId = parts[4];
+        // Start heartbeat for this session
+        heartbeatScheduler.scheduleAtFixedRate(
+            () -> sendHeartbeat(sessionId),
+            5, 5, TimeUnit.SECONDS
+        );
 
-        if ("runtime".equals(type)) {
-            runtimeSessions.put(sessionId, session);
-            logger.info("[WS_SIMULATOR] Registered RUNTIME session: {} for simulator={}", session.getId(), sessionId);
-        } else if ("dashboard".equals(type)) {
-            dashboardSessions.computeIfAbsent(sessionId, k -> ConcurrentHashMap.newKeySet()).add(session);
-            logger.info("[WS_SIMULATOR] Registered DASHBOARD session: {} for simulator={}", session.getId(), sessionId);
-        }
-
-        sessionService.refreshHeartbeat(sessionId);
+        // Send welcome message
+        sendToSession(sessionId, Map.of(
+            "type", "connected",
+            "sessionId", sessionId,
+            "message", "Simulator session active"
+        ));
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String payload = message.getPayload();
-        String path = session.getUri().getPath();
-        String[] parts = path.split("/");
-        String type = parts[3];
-        String sessionId = parts[4];
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        String sessionId = extractSessionId(session);
+        long msgNum = messageCounter.incrementAndGet();
 
-        sessionService.refreshHeartbeat(sessionId);
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payload = mapper.readValue(message.getPayload(), Map.class);
+            String type = (String) payload.getOrDefault("type", "unknown");
 
-        if ("runtime".equals(type)) {
-            // Message from Simulator Runtime -> Broadcast to Dashboards
-            broadcastToDashboards(sessionId, payload);
-        } else if ("dashboard".equals(type)) {
-            // Message from Dashboard -> Send to Simulator Runtime
-            sendToRuntime(sessionId, payload);
-        }
-    }
+            logger.debug("[SIM_WS] Message #{} type={} session={}", msgNum, type, sessionId);
 
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        String path = session.getUri().getPath();
-        String[] parts = path.split("/");
-        if (parts.length >= 5) {
-            String type = parts[3];
-            String sessionId = parts[4];
-
-            if ("runtime".equals(type)) {
-                runtimeSessions.remove(sessionId);
-                logger.info("[WS_SIMULATOR] RUNTIME session closed: {}", sessionId);
-            } else if ("dashboard".equals(type)) {
-                var sessions = dashboardSessions.get(sessionId);
-                if (sessions != null) {
-                    sessions.remove(session);
-                    if (sessions.isEmpty()) {
-                        dashboardSessions.remove(sessionId);
-                    }
-                }
-                logger.info("[WS_SIMULATOR] DASHBOARD session closed: {}", sessionId);
+            switch (type) {
+                case "tap" -> handleTap(sessionId, payload);
+                case "swipe" -> handleSwipe(sessionId, payload);
+                case "input" -> handleInput(sessionId, payload);
+                case "scroll" -> handleScroll(sessionId, payload);
+                case "screenshot" -> handleScreenshotRequest(sessionId);
+                case "heartbeat" -> handleHeartbeat(sessionId);
+                case "terminate" -> handleTerminate(sessionId, payload);
+                default -> sendToSession(sessionId, Map.of(
+                    "type", "error",
+                    "message", "Unknown command type: " + type
+                ));
             }
+
+            // Update last activity
+            SimulatorSessionState state = sessionStates.get(sessionId);
+            if (state != null) {
+                state.lastActivity = System.currentTimeMillis();
+            }
+
+        } catch (Exception e) {
+            logger.error("[SIM_WS] Failed to process message #{} from session {}: {}",
+                msgNum, sessionId, e.getMessage());
+            sendToSession(sessionId, Map.of(
+                "type", "error",
+                "message", "Failed to process: " + e.getMessage()
+            ));
         }
     }
 
-    private void broadcastToDashboards(String sessionId, String payload) {
-        var sessions = dashboardSessions.get(sessionId);
-        if (sessions != null) {
-            TextMessage message = new TextMessage(payload);
-            sessions.forEach(s -> {
-                try {
-                    if (s.isOpen()) {
-                        s.sendMessage(message);
-                    }
-                } catch (IOException e) {
-                    logger.warn("[WS_SIMULATOR] Failed to send message to dashboard: {}", s.getId());
-                }
-            });
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        String sessionId = extractSessionId(session);
+        activeSessions.remove(sessionId);
+        SimulatorSessionState state = sessionStates.remove(sessionId);
+
+        logger.info("[SIM_WS] Session disconnected: {} status={} (active: {})",
+            sessionId, status, activeSessions.size());
+
+        if (state != null) {
+            state.active = false;
         }
     }
 
-    private void sendToRuntime(String sessionId, String payload) {
-        WebSocketSession runtimeSession = runtimeSessions.get(sessionId);
-        if (runtimeSession != null && runtimeSession.isOpen()) {
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) {
+        String sessionId = extractSessionId(session);
+        logger.error("[SIM_WS] Transport error for session {}: {}", sessionId, exception.getMessage());
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Message handlers
+    // ──────────────────────────────────────────────────────────────────────
+
+    private void handleTap(String sessionId, Map<String, Object> payload) {
+        Number x = (Number) payload.getOrDefault("x", 0);
+        Number y = (Number) payload.getOrDefault("y", 0);
+
+        SimulatorSessionState state = sessionStates.get(sessionId);
+        if (state != null) state.tapCount++;
+
+        logger.debug("[SIM_WS] Tap at ({}, {}) session={}", x, y, sessionId);
+
+        // Echo back as event confirmation
+        sendToSession(sessionId, Map.of(
+            "type", "tap_ack",
+            "x", x.intValue(),
+            "y", y.intValue(),
+            "tapCount", state != null ? state.tapCount : 0
+        ));
+    }
+
+    private void handleSwipe(String sessionId, Map<String, Object> payload) {
+        Number fromX = (Number) payload.getOrDefault("fromX", 0);
+        Number fromY = (Number) payload.getOrDefault("fromY", 0);
+        Number toX = (Number) payload.getOrDefault("toX", 0);
+        Number toY = (Number) payload.getOrDefault("toY", 0);
+
+        logger.debug("[SIM_WS] Swipe from ({},{}) to ({},{}) session={}",
+            fromX, fromY, toX, toY, sessionId);
+
+        sendToSession(sessionId, Map.of(
+            "type", "swipe_ack",
+            "fromX", fromX.intValue(), "fromY", fromY.intValue(),
+            "toX", toX.intValue(), "toY", toY.intValue()
+        ));
+    }
+
+    private void handleInput(String sessionId, Map<String, Object> payload) {
+        String selector = (String) payload.getOrDefault("selector", "");
+        String text = (String) payload.getOrDefault("text", "");
+
+        logger.debug("[SIM_WS] Input '{}' into '{}' session={}", text, selector, sessionId);
+
+        sendToSession(sessionId, Map.of(
+            "type", "input_ack",
+            "selector", selector,
+            "length", text.length()
+        ));
+    }
+
+    private void handleScroll(String sessionId, Map<String, Object> payload) {
+        String direction = (String) payload.getOrDefault("direction", "down");
+        Number amount = (Number) payload.getOrDefault("amount", 100);
+
+        logger.debug("[SIM_WS] Scroll {} {}px session={}", direction, amount, sessionId);
+
+        sendToSession(sessionId, Map.of(
+            "type", "scroll_ack",
+            "direction", direction,
+            "amount", amount.intValue()
+        ));
+    }
+
+    private void handleScreenshotRequest(String sessionId) {
+        logger.debug("[SIM_WS] Screenshot requested for session={}", sessionId);
+
+        // In production, would capture actual screenshot via Playwright
+        sendToSession(sessionId, Map.of(
+            "type", "screenshot",
+            "data", "[screenshot_placeholder_base64]",
+            "format", "png",
+            "width", 1080,
+            "height", 2340
+        ));
+    }
+
+    private void handleHeartbeat(String sessionId) {
+        SimulatorSessionState state = sessionStates.get(sessionId);
+        if (state != null) {
+            state.lastHeartbeat = System.currentTimeMillis();
+        }
+        sendToSession(sessionId, Map.of("type", "heartbeat_ack"));
+    }
+
+    private void handleTerminate(String sessionId, Map<String, Object> payload) {
+        String reason = (String) payload.getOrDefault("reason", "user_request");
+        logger.info("[SIM_WS] Terminate session {}: {}", sessionId, reason);
+
+        sendToSession(sessionId, Map.of(
+            "type", "terminated",
+            "reason", reason
+        ));
+
+        closeSession(sessionId);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Utilities
+    // ──────────────────────────────────────────────────────────────────────
+
+    private String extractSessionId(WebSocketSession session) {
+        String path = session.getUri() != null ? session.getUri().getPath() : "";
+        // Path: /ws/simulator/{sessionId}
+        int lastSlash = path.lastIndexOf('/');
+        return lastSlash >= 0 ? path.substring(lastSlash + 1) : session.getId();
+    }
+
+    private void sendToSession(String sessionId, Map<String, Object> message) {
+        WebSocketSession wsSession = activeSessions.get(sessionId);
+        if (wsSession != null && wsSession.isOpen()) {
             try {
-                runtimeSession.sendMessage(new TextMessage(payload));
+                String json = mapper.writeValueAsString(message);
+                wsSession.sendMessage(new TextMessage(json));
             } catch (IOException e) {
-                logger.warn("[WS_SIMULATOR] Failed to send message to runtime: {}", sessionId);
+                logger.warn("[SIM_WS] Failed to send to session {}: {}", sessionId, e.getMessage());
             }
-        } else {
-            logger.warn("[WS_SIMULATOR] No active runtime session for {}. Dropping command.", sessionId);
+        }
+    }
+
+    private void sendHeartbeat(String sessionId) {
+        WebSocketSession wsSession = activeSessions.get(sessionId);
+        if (wsSession != null && wsSession.isOpen()) {
+            sendToSession(sessionId, Map.of("type", "heartbeat"));
+        }
+    }
+
+    private void closeSession(String sessionId) {
+        WebSocketSession wsSession = activeSessions.remove(sessionId);
+        if (wsSession != null) {
+            try {
+                wsSession.close(CloseStatus.NORMAL);
+            } catch (IOException e) {
+                logger.warn("[SIM_WS] Error closing session {}: {}", sessionId, e.getMessage());
+            }
+        }
+        SimulatorSessionState state = sessionStates.remove(sessionId);
+        if (state != null) state.active = false;
+    }
+
+    private void broadcastLog(String level, String message) {
+        Map<String, Object> logMsg = Map.of(
+            "type", "log",
+            "level", level,
+            "message", message,
+            "timestamp", System.currentTimeMillis()
+        );
+        activeSessions.keySet().forEach(sid -> sendToSession(sid, logMsg));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Session state
+    // ──────────────────────────────────────────────────────────────────────
+
+    private static class SimulatorSessionState {
+        final String sessionId;
+        volatile boolean active = true;
+        volatile long lastActivity = System.currentTimeMillis();
+        volatile long lastHeartbeat = System.currentTimeMillis();
+        volatile int tapCount = 0;
+
+        SimulatorSessionState(String sessionId) {
+            this.sessionId = sessionId;
         }
     }
 }

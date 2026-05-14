@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, Space, Typography, Tag, Divider } from 'antd';
-import { SafetyOutlined, LinkOutlined, LabelOutlined, RobotOutlined } from '@ant-design/icons';
+import { SafetyOutlined, LinkOutlined, TagOutlined, RobotOutlined } from '@ant-design/icons';
 import { ModelSearchResult, SavedAPIKey } from './types';
-import ModelSearchSelect from './ModelSearchSelect';
+import { ModelSearchSelect } from './ModelSearchSelect';
 import { getProviderEndpoint } from './constants';
 
 const { Text } = Typography;
@@ -82,7 +82,7 @@ const AddKeyModal: React.FC<AddKeyModalProps> = ({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <Form.Item
                         name="label"
-                        label={<span><LabelOutlined /> লেবেল</span>}
+                        label={<span><TagOutlined /> লেবেল</span>}
                         rules={[{ required: true, message: 'একটি লেবেল দিন (যেমন: My OpenAI Key)' }]}
                     >
                         <Input placeholder="উদাঃ My Production Gemini" size="large" />

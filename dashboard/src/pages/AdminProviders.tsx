@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, message, Spin, Alert } from 'antd';
+import { Card, message, Spin, Alert, Button } from 'antd';
 import AdminLayout from '../components/AdminLayout';
 import { authUtils } from '../lib/authUtils';
 import AISuggestionInformer from '../components/AISuggestionInformer';
@@ -22,6 +22,40 @@ const AdminProviders: React.FC = () => {
   const [healthStats, setHealthStats] = useState<StatsType | null>(null);
   const [testingAll, setTestingAll] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<keyof Provider>('name');
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('ascend');
+
+  const processedProviders = React.useMemo(() => {
+    let result = [...providers];
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(lower) || 
+        p.type.toLowerCase().includes(lower) ||
+        p.id?.toLowerCase().includes(lower)
+      );
+    }
+
+    result.sort((a, b) => {
+      let aVal = (a as any)[sortBy] ?? '';
+      let bVal = (b as any)[sortBy] ?? '';
+
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortOrder === 'ascend' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortOrder === 'ascend' ? aVal - bVal : bVal - aVal;
+      }
+
+      return 0;
+    });
+
+    return result;
+  }, [providers, searchTerm, sortBy, sortOrder]);
+
   const fetchProviders = async () => {
     setLoading(true);
     setError(null);
@@ -34,14 +68,14 @@ const AdminProviders: React.FC = () => {
       if (!provRes.ok) throw new Error('Failed to fetch providers');
       const result = await provRes.json();
       const rawData = result.data?.providers || (Array.isArray(result.data) ? result.data : []);
-      
+
       const provList: Provider[] = rawData.map((p: any) => ({
         ...p,
         models: Array.isArray(p.models) ? p.models : [],
         status: p.status || 'inactive',
         type: p.type || 'unknown'
       }));
-      
+
       setProviders(provList);
 
       if (statsRes.ok) {
@@ -94,7 +128,7 @@ const AdminProviders: React.FC = () => {
       const payload: Provider = {
         ...values,
         status: values.status || 'active',
-        models: values.models ? values.models.split(',').map((m: string) => m.trim()) : [],
+        models: values.models ? (Array.isArray(values.models) ? values.models : values.models.split(',').map((m: string) => m.trim())) : [],
       };
       let response;
       if (editingProvider && editingProvider.id) {
@@ -135,7 +169,7 @@ const AdminProviders: React.FC = () => {
 
   return (
     <AdminLayout title="AI Provider Management">
-      <AISuggestionInformer 
+      <AISuggestionInformer
         title="AI Architecture Optimizations"
         context="Provider Orchestration"
         suggestions={[
@@ -162,8 +196,8 @@ const AdminProviders: React.FC = () => {
 
       <ProviderHealthStats stats={healthStats} />
 
-      <Card>
-        <ProviderActionToolbar 
+      <div className="glass-card p-6 rounded-2xl">
+        <ProviderActionToolbar
           loading={loading}
           testingAll={testingAll}
           deadCount={healthStats?.dead || 0}
@@ -174,14 +208,20 @@ const AdminProviders: React.FC = () => {
           onRefresh={fetchProviders}
           onTestAll={handleTestAll}
           onRemoveDead={handleRemoveDead}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
         />
 
         {loading && <Spin style={{ display: 'block', margin: '20px auto' }} />}
         {error && <Alert type="error" message={error} action={<Button onClick={fetchProviders}>Retry</Button>} />}
 
         {!loading && !error && (
-          <ProvidersTable 
-            providers={providers}
+          <ProvidersTable
+            providers={processedProviders}
             loading={loading}
             onEdit={(record) => {
               setEditingProvider(record);
@@ -190,9 +230,9 @@ const AdminProviders: React.FC = () => {
             onDelete={handleDelete}
           />
         )}
-      </Card>
+      </div>
 
-      <ProviderModal 
+      <ProviderModal
         visible={modalVisible}
         editingProvider={editingProvider}
         onCancel={() => setModalVisible(false)}

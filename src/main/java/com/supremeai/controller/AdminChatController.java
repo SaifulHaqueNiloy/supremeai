@@ -45,7 +45,7 @@ public class AdminChatController {
             )));
     }
 
-    @GetMapping("/pending")
+    @GetMapping({"/pending", "/actions/pending"})
     public Mono<ResponseEntity<Map<String, Object>>> getPending(
             @RequestParam(required = false) String user_id) {
         List<Map<String, Object>> pending = chatProcessingService.getPendingConfirmations(user_id);

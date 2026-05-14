@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Card, Button, message 
+  Typography, Card, Button, message, Input, Select, Space, Tooltip, Breadcrumb
 } from 'antd';
 import { 
-  ReloadOutlined 
+  ReloadOutlined,
+  SearchOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined,
+  DashboardOutlined,
+  SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { fetchWithAuth } from '../lib/authUtils';
 import AISuggestionInformer from '../components/AISuggestionInformer';
@@ -13,6 +18,7 @@ import QuotaWarningsAlert from '../components/quotas/QuotaWarningsAlert';
 import { UserQuota, QuotaStatsData } from '../components/quotas/types';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const AdminQuotas: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -23,6 +29,11 @@ const AdminQuotas: React.FC = () => {
     activeQuotas: 0,
     overLimit: 0
   });
+
+  // Search and Sort State
+  const [searchText, setSearchText] = useState('');
+  const [sortBy, setSortBy] = useState<keyof UserQuota | 'usagePercent'>('currentUsage');
+  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('descend');
 
   const fetchData = async () => {
     setLoading(true);
@@ -59,6 +70,41 @@ const AdminQuotas: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const processedUsers = React.useMemo(() => {
+    let result = users.filter(user => {
+      const searchLower = searchText.toLowerCase();
+      return (
+        user.displayName?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.uid?.toLowerCase().includes(searchLower)
+      );
+    });
+
+    if (sortBy) {
+      result.sort((a, b) => {
+        let aVal: any = (a as any)[sortBy];
+        let bVal: any = (b as any)[sortBy];
+
+        if (sortBy === 'usagePercent') {
+          aVal = (a.currentUsage / a.monthlyQuota);
+          bVal = (b.currentUsage / b.monthlyQuota);
+        }
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortOrder === 'ascend' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortOrder === 'ascend' ? aVal - bVal : bVal - aVal;
+        }
+
+        return 0;
+      });
+    }
+
+    return result;
+  }, [users, searchText, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchData();
@@ -115,20 +161,42 @@ const AdminQuotas: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24, background: '#0a0a0a', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 700 }}>
-          কোটা ম্যানেজমেন্ট
-        </Title>
-        <Button 
-          type="primary" 
-          icon={<ReloadOutlined />} 
-          onClick={fetchData} 
-          loading={loading}
-          style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', border: 'none' }}
-        >
-          রিফ্রেশ ডাটা
-        </Button>
+    <div style={{ padding: '24px', background: '#050505', minHeight: '100vh', color: '#fff' }}>
+      {/* Header Section */}
+      <div style={{ marginBottom: 32 }}>
+        <Breadcrumb separator=">" style={{ marginBottom: 16, opacity: 0.7 }}>
+          <Breadcrumb.Item href=""><DashboardOutlined /> ড্যাশবোর্ড</Breadcrumb.Item>
+          <Breadcrumb.Item><SafetyCertificateOutlined /> রিসোর্স ম্যানেজমেন্ট</Breadcrumb.Item>
+          <Breadcrumb.Item>কোটা কন্ট্রোল</Breadcrumb.Item>
+        </Breadcrumb>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '32px', letterSpacing: '-0.5px' }}>
+              কোটা ম্যানেজমেন্ট <span style={{ color: '#3b82f6', fontSize: '14px', fontWeight: 400, verticalAlign: 'middle', marginLeft: '8px', opacity: 0.8 }}>SYSTEM LIMITS</span>
+            </Title>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '16px' }}>
+              ইউজারদের রিসোর্স ব্যবহার এবং লিমিটেশন নিয়ন্ত্রণ করুন
+            </Text>
+          </div>
+          <Button 
+            type="primary" 
+            icon={<ReloadOutlined />} 
+            onClick={fetchData} 
+            loading={loading}
+            style={{ 
+              height: '42px',
+              padding: '0 24px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+              border: 'none',
+              fontWeight: 600,
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
+            }}
+          >
+            রিফ্রেশ ডাটা
+          </Button>
+        </div>
       </div>
 
       <AISuggestionInformer 
@@ -156,63 +224,238 @@ const AdminQuotas: React.FC = () => {
         onDecline={(id) => message.info(`Adjustment ${id} declined.`)}
       />
 
-      <QuotaWarningsAlert warningsCount={warnings.length} />
+      <div style={{ margin: '24px 0' }}>
+        <QuotaWarningsAlert warningsCount={warnings.length} />
+      </div>
 
-      <QuotaStats stats={stats} />
+      <div style={{ marginBottom: 32 }}>
+        <QuotaStats stats={stats} />
+      </div>
 
+      {/* Main Content Card */}
       <Card
-        className="glass-card"
+        className="glass-card main-quota-card"
         style={{ 
-          borderRadius: 16, 
+          borderRadius: 24, 
           background: 'rgba(255,255,255,0.02)', 
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+          overflow: 'hidden'
         }}
         bodyStyle={{ padding: 0 }}
       >
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <Text style={{ color: 'rgba(255,255,255,0.45)' }}>
-            ইউজার তালিকা এবং কোটা ব্যবহারের রিয়েল-টাইম স্ট্যাটাস
-          </Text>
+        {/* Modern Toolbar */}
+        <div className="glass-toolbar" style={{ 
+          padding: '20px 24px', 
+          background: 'rgba(255, 255, 255, 0.03)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '20px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+              background: 'rgba(59, 130, 246, 0.1)', 
+              padding: '8px', 
+              borderRadius: '10px',
+              border: '1px solid rgba(59, 130, 246, 0.2)'
+            }}>
+              <SearchOutlined style={{ color: '#3b82f6', fontSize: '18px' }} />
+            </div>
+            <Input
+              placeholder="নাম, ইমেইল বা আইডি দিয়ে খুঁজুন..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              variant="borderless"
+              style={{ 
+                width: 320, 
+                height: '42px',
+                fontSize: '15px',
+                color: '#fff' 
+              }}
+              className="dark-input-minimal"
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div className="toolbar-separator" />
+            
+            <Space size="middle">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Text style={{ 
+                  color: 'rgba(255,255,255,0.35)', 
+                  fontSize: '11px', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  fontWeight: 700 
+                }}>ফিল্টার</Text>
+                <Select
+                  value={sortBy}
+                  onChange={val => setSortBy(val)}
+                  style={{ width: 180 }}
+                  className="premium-select"
+                  dropdownClassName="premium-dropdown"
+                >
+                  <Option value="currentUsage">ব্যবহার (প্রকৃত)</Option>
+                  <Option value="usagePercent">ব্যবহার (%)</Option>
+                  <Option value="monthlyQuota">কোটা লিমিট</Option>
+                  <Option value="displayName">ইউজার নাম</Option>
+                  <Option value="tier">অ্যাকাউন্ট টিয়ার</Option>
+                  <Option value="createdAt">রেজিস্ট্রেশন তারিখ</Option>
+                </Select>
+              </div>
+
+              <Tooltip title={sortOrder === 'ascend' ? 'ক্রমানুসারে' : 'বিপরীত ক্রমানুসারে'}>
+                <Button 
+                  onClick={() => setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend')}
+                  icon={sortOrder === 'ascend' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
+                  style={{ 
+                    height: '42px',
+                    width: '42px',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  className="hover-bright"
+                />
+              </Tooltip>
+            </Space>
+          </div>
         </div>
         
-        <QuotaTable 
-          users={users}
-          loading={loading}
-          onReset={handleReset}
-          onTierUpdate={handleTierUpdate}
-          onDeactivate={handleDeactivate}
-        />
+        <div style={{ padding: '0 1px' }}>
+          <QuotaTable 
+            users={processedUsers}
+            loading={loading}
+            onReset={handleReset}
+            onTierUpdate={handleTierUpdate}
+            onDeactivate={handleDeactivate}
+          />
+        </div>
       </Card>
 
       <style>{`
+        .glass-card {
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .main-quota-card .ant-card-body {
+          background: linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        .dark-input-minimal::placeholder {
+          color: rgba(255,255,255,0.2) !important;
+        }
+        
+        .toolbar-separator {
+          height: 24px;
+          width: 1px;
+          background: rgba(255,255,255,0.08);
+          margin: 0 8px;
+        }
+
+        .premium-select .ant-select-selector {
+          background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 12px !important;
+          height: 42px !important;
+          display: flex !important;
+          align-items: center !important;
+          color: #fff !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .premium-select:hover .ant-select-selector {
+          border-color: rgba(59, 130, 246, 0.5) !important;
+          background: rgba(255,255,255,0.08) !important;
+        }
+
+        .premium-select .ant-select-selection-item {
+          color: #fff !important;
+          font-weight: 500 !important;
+        }
+
+        .premium-dropdown {
+          background: #141414 !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 12px !important;
+          padding: 8px !important;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        }
+
+        .premium-dropdown .ant-select-item {
+          color: rgba(255,255,255,0.65) !important;
+          border-radius: 8px !important;
+          margin-bottom: 4px !important;
+          transition: all 0.2s ease !important;
+        }
+
+        .premium-dropdown .ant-select-item-option-selected {
+          background: rgba(59, 130, 246, 0.15) !important;
+          color: #3b82f6 !important;
+        }
+
+        .premium-dropdown .ant-select-item-option-active {
+          background: rgba(255,255,255,0.05) !important;
+          color: #fff !important;
+        }
+
+        .hover-bright:hover {
+          background: rgba(255,255,255,0.1) !important;
+          border-color: rgba(255,255,255,0.2) !important;
+          transform: translateY(-1px);
+        }
+
+        /* Table Customizations */
         .admin-table-dark .ant-table {
           background: transparent !important;
-          color: #fff !important;
         }
+
         .admin-table-dark .ant-table-thead > tr > th {
-          background: rgba(255,255,255,0.03) !important;
-          color: rgba(255,255,255,0.65) !important;
+          background: rgba(255,255,255,0.02) !important;
+          color: rgba(255,255,255,0.4) !important;
           border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+          font-size: 12px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 1px !important;
+          font-weight: 700 !important;
+          padding: 16px 24px !important;
         }
+
         .admin-table-dark .ant-table-tbody > tr > td {
-          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+          border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+          padding: 16px 24px !important;
+          color: rgba(255,255,255,0.85) !important;
         }
+
         .admin-table-dark .ant-table-tbody > tr:hover > td {
+          background: rgba(255,255,255,0.02) !important;
+        }
+
+        .admin-table-dark .ant-pagination-item {
           background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 8px !important;
         }
-        .admin-table-dark .ant-pagination-item, .admin-table-dark .ant-pagination-prev, .admin-table-dark .ant-pagination-next {
-          background: transparent !important;
-          border-color: rgba(255,255,255,0.2) !important;
+
+        .admin-table-dark .ant-pagination-item-active {
+          background: #3b82f6 !important;
+          border-color: #3b82f6 !important;
         }
+
         .admin-table-dark .ant-pagination-item a {
+          color: rgba(255,255,255,0.65) !important;
+        }
+
+        .admin-table-dark .ant-pagination-item-active a {
           color: #fff !important;
-        }
-        .glass-card {
-          transition: transform 0.2s ease;
-        }
-        .glass-card:hover {
-          transform: translateY(-2px);
         }
       `}</style>
     </div>

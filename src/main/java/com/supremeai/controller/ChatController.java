@@ -68,95 +68,92 @@ public class ChatController {
         logger.info("Received chat message: {}", message);
 
         // S3: Autonomous Questioning - Validate input clarity
-        if (!skipValidation) {
-            var validation = questioningEngine.validateAndQuestion(message, AutonomousQuestioningEngine.RequestType.GENERAL_AI);
-            if (!validation.isComplete() && validation.hasQuestions()) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("type", "CLARIFICATION_REQUIRED");
-                response.put("questions", validation.getClarifyingQuestions());
-                response.put("clarityScore", validation.getClarityScore());
-                response.put("message", "I need more information before I can give you a quality answer.");
-                return Mono.just(ResponseEntity.ok(response));
-            }
-        }
+        Mono<Object> validationMono = skipValidation ? Mono.empty() : 
+            questioningEngine.validateAndQuestion(message, AutonomousQuestioningEngine.RequestType.GENERAL_AI)
+                .flatMap(validation -> {
+                    if (!validation.isComplete() && validation.hasQuestions()) {
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("type", "CLARIFICATION_REQUIRED");
+                        response.put("questions", validation.getClarifyingQuestions());
+                        response.put("clarityScore", validation.getClarityScore());
+                        response.put("message", "I need more information before I can give you a quality answer.");
+                        return Mono.just(response);
+                    }
+                    return Mono.empty();
+                });
 
-        // S4: 10-AI Voting System - Execute voting across models with circuit breaker and retry
-        Supplier<Map<String, Object>> votingSupplier = () -> {
-            var votingResult = votingService.executeEnsembleVoting(message, null, 15000L);
+        return validationMono
+            .map(ResponseEntity::ok)
+            .switchIfEmpty(
+                // S4: 10-AI Voting System - Execute voting across models
+                votingService.executeEnsembleVoting(message, null, 15000L)
+                    .flatMap(votingResult -> {
+                        String bestResponse = votingResult.getBestResponse();
+                        Double confidence = votingResult.getAverageConfidence();
 
-            String bestResponse = votingResult.getBestResponse();
-            Double confidence = votingResult.getAverageConfidence();
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("message", bestResponse);
+                        response.put("verdict", votingResult.getVerdict());
+                        response.put("confidence", confidence);
+                        response.put("modelsUsed", votingResult.getTotalModelsUsed());
+                        response.put("processingTimeMs", votingResult.getProcessingTimeMs());
+                        response.put("timestamp", java.time.Instant.now().toString());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", bestResponse);
-            response.put("verdict", votingResult.getVerdict());
-            response.put("confidence", confidence);
-            response.put("modelsUsed", votingResult.getTotalModelsUsed());
-            response.put("processingTimeMs", votingResult.getProcessingTimeMs());
-            response.put("timestamp", java.time.Instant.now().toString());
+                        // Intent classification (logic-only, so synchronous is okay but we wrap for safety)
+                        var intent = intelligenceService.classifyIntent(message);
+                        response.put("mode", intent.name().toLowerCase());
+                        response.put("intent", intent.name());
 
-            // ডায়নামিকভাবে মোড সনাক্ত করা
-            var intent = intelligenceService.classifyIntent(message);
-            response.put("mode", intent.name().toLowerCase());
-            response.put("intent", intent.name());
+                        // Chain side-effects (handleIntelligence and learning)
+                        Mono<Void> sideEffects = intelligenceService.handleIntelligence(
+                            request.getAgentId() != null ? request.getAgentId() : "default",
+                            message,
+                            intent,
+                            "ADMIN",
+                            confidence
+                        );
 
-            // Autonomous intelligence handling (rules/plans)
-            intelligenceService.handleIntelligence(
-                request.getAgentId() != null ? request.getAgentId() : "default",
-                message,
-                intent,
-                "ADMIN", // Defaulting to ADMIN for now as it's the Command Center
-                confidence
-            ).subscribe();
+                        if (enhancedLearningService != null) {
+                            sideEffects = sideEffects.then(
+                                enhancedLearningService.learnFromNLPInteraction(
+                                    message,
+                                    bestResponse,
+                                    "voting_system",
+                                    confidence != null ? confidence : 0.5,
+                                    Map.of("modelsUsed", votingResult.getTotalModelsUsed())
+                                ).then()
+                            );
+                        }
 
-            // Capture NLP learning from this interaction
-            if (enhancedLearningService != null) {
-                enhancedLearningService.learnFromNLPInteraction(
-                        message,
-                        bestResponse,
-                        "voting_system",
-                        confidence != null ? confidence : 0.5,
-                        Map.of("modelsUsed", votingResult.getTotalModelsUsed())
-                ).subscribe(); // Fire and forget
-            }
+                        return sideEffects.thenReturn(ResponseEntity.ok((Object)response));
+                    })
+                    // Apply Circuit Breaker and Retry to the voting process
+                    .transformDeferred(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(aiCircuitBreaker))
+                    .transformDeferred(io.github.resilience4j.reactor.retry.RetryOperator.of(aiRetry))
+                    .onErrorResume(e -> {
+                        logger.error("Failed to get response via voting system after retries", e);
+                        
+                        CircuitBreaker.State circuitState = aiCircuitBreaker.getState();
+                        logger.warn("AI Circuit breaker state: {}", circuitState);
 
-            return response;
-        };
+                        if (consensusService != null && circuitState != CircuitBreaker.State.OPEN) {
+                            return consensusService.askConsensus(message,
+                                java.util.Arrays.asList("groq", "deepseek", "claude", "openai", "ollama"), 10000L)
+                                .map(res -> ResponseEntity.ok(Map.of(
+                                    "message", res.getConsensusAnswer(),
+                                    "confidence", res.getAverageConfidence(),
+                                    "fallback", true,
+                                    "circuitBreakerState", circuitState.name()
+                                )));
+                        }
 
-        try {
-            // Apply circuit breaker and retry to the voting operation
-            Supplier<Map<String, Object>> decoratedSupplier = Retry.decorateSupplier(aiRetry,
-                CircuitBreaker.decorateSupplier(aiCircuitBreaker, votingSupplier));
-
-            Map<String, Object> response = decoratedSupplier.get();
-            return Mono.just(ResponseEntity.ok(response));
-
-        } catch (Exception e) {
-            logger.error("Failed to get response via voting system after retries", e);
-
-            // Check circuit breaker state
-            CircuitBreaker.State circuitState = aiCircuitBreaker.getState();
-            logger.warn("AI Circuit breaker state: {}", circuitState);
-
-            // Fallback to simpler consensus if voting fails
-            if (consensusService != null && circuitState != CircuitBreaker.State.OPEN) {
-                // Use multiple providers (not just google) for better fallback resilience
-                return consensusService.askConsensus(message,
-                    java.util.Arrays.asList("groq", "deepseek", "claude", "openai", "ollama"), 10000L)
-                    .map(res -> ResponseEntity.ok(Map.of(
-                        "message", res.getConsensusAnswer(),
-                        "confidence", res.getAverageConfidence(),
-                        "fallback", true,
-                        "circuitBreakerState", circuitState.name()
-                    )));
-            }
-
-            return Mono.just(ResponseEntity.status(503).body(Map.of(
-                "error", "AI services temporarily unavailable",
-                "circuitBreakerState", circuitState.name(),
-                "retryAfter", 60
-            )));
-        }
+                        return Mono.just(ResponseEntity.status(503).body(Map.of(
+                            "error", "AI services temporarily unavailable",
+                            "circuitBreakerState", circuitState.name(),
+                            "retryAfter", 60
+                        )));
+                    })
+            );
     }
 
     @GetMapping("/history")

@@ -17,3 +17,5 @@ export interface GenerationForm {
 }
 
 export type GenerationStatus = 'idle' | 'generating' | 'success' | 'error';
+
+export type ProjectSortField = 'name' | 'status' | 'createdAt';

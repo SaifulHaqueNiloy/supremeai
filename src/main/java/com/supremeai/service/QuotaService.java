@@ -161,21 +161,15 @@ public class QuotaService {
      */
     @Scheduled(cron = "0 0 0 1 * ?")
     public void resetMonthlyUsage() {
+        logger.info("Starting monthly usage reset for all API keys...");
         userApiKeyRepository.findAll()
-            .collectList()
-            .flatMap(apiKeys -> {
-                // Batch update all API keys at once for better performance
-                return userApiKeyRepository.saveAll(
-                    apiKeys.stream()
-                        .map(api -> {
-                            api.setRequestCount(0L);
-                            return api;
-                        })
-                        .toList()
-                ).then();
+            .map(api -> {
+                api.setRequestCount(0L);
+                return api;
             })
+            .as(userApiKeyRepository::saveAll)
             .doOnError(error -> logger.error("Failed to reset monthly usage", error))
-            .doOnSuccess(unused -> logger.info("Successfully reset monthly usage for all API keys"))
+            .doOnComplete(() -> logger.info("Successfully reset monthly usage for all API keys"))
             .subscribe();
     }
 

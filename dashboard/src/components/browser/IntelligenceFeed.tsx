@@ -1,10 +1,10 @@
 import React from 'react';
-import { Tabs, Timeline, Typography, Paragraph, Empty, List, Tag, Alert, Card, Button } from 'antd';
+import { Tabs, Timeline, Typography, Empty, List, Tag, Alert, Card, Button } from 'antd';
 import { HistoryOutlined, BulbOutlined, CodeOutlined, RocketOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 
 const { TabPane } = Tabs;
-const { Text, Title } = Typography;
+const { Text, Title, Paragraph } = Typography;
 
 interface IntelligenceFeedProps {
   activities: any[];

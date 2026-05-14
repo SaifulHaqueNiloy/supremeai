@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import com.supremeai.response.ApiResponse;
 import java.util.UUID;
 
 /**
@@ -47,10 +49,10 @@ public class AppGenerationController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
-    public ResponseEntity<Map<String, Object>> generateApp(
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> generateApp(
             @Valid @RequestBody AppGenerationRequest request,
             Authentication auth) {
-        try {
+        return Mono.fromCallable(() -> {
             String name = request.getName();
             String description = request.getDescription();
             String platform = request.getPlatform();
@@ -137,15 +139,12 @@ public class AppGenerationController {
 
             logger.info("App generation completed: {} ({} files) appId={}", name, result.getOrDefault("fileCount", 0), appId);
             
-            return ResponseEntity.ok(result);
-            
-        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.ok(result));
+        }).subscribeOn(Schedulers.boundedElastic())
+        .onErrorResume(e -> {
             logger.error("App generation failed", e);
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", "App generation failed: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
-        }
+            return Mono.just(ResponseEntity.internalServerError().body(ApiResponse.error("App generation failed: " + e.getMessage())));
+        });
     }
     
     /**
@@ -239,19 +238,19 @@ public class AppGenerationController {
      * Health check endpoint.
      */
     @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
+    public Mono<ResponseEntity<ApiResponse<Map<String, String>>>> health() {
         Map<String, String> health = new HashMap<>();
         health.put("status", "UP");
         health.put("service", "AppGenerationService");
-        return ResponseEntity.ok(health);
+        return Mono.just(ResponseEntity.ok(ApiResponse.ok(health)));
     }
     
     /**
      * Preview generation - returns sample output without creating files.
      */
     @PostMapping("/preview")
-    public ResponseEntity<Map<String, Object>> previewGeneration(@RequestBody Map<String, Object> request) {
-        try {
+    public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> previewGeneration(@RequestBody Map<String, Object> request) {
+        return Mono.fromCallable(() -> {
             String platform = (String) request.getOrDefault("platform", "fullstack");
             
             Map<String, String> decisions = new HashMap<>();
@@ -279,14 +278,12 @@ public class AppGenerationController {
                 result.put("totalFiles", files.size());
             }
             
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(ApiResponse.ok(result));
             
-        } catch (Exception e) {
+        }).subscribeOn(Schedulers.boundedElastic())
+        .onErrorResume(e -> {
             logger.error("Preview generation failed", e);
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", "Preview generation failed: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
-        }
+            return Mono.just(ResponseEntity.internalServerError().body(ApiResponse.error("Preview generation failed: " + e.getMessage())));
+        });
     }
 }

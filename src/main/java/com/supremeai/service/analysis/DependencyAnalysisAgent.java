@@ -3,7 +3,8 @@ package com.supremeai.service.analysis;
 import com.supremeai.model.analysis.AnalysisFinding;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -21,8 +22,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
-@Slf4j
 public class DependencyAnalysisAgent implements AnalysisAgentInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(DependencyAnalysisAgent.class);
+
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final DocumentBuilder documentBuilder;

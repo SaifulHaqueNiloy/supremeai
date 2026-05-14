@@ -16,7 +16,7 @@ interface BrowserViewportProps {
   votingDetails: any[];
   stepping: boolean;
   navigating: boolean;
-  browserRef: React.RefObject<HTMLImageElement | null>;
+  browserRef: React.RefObject<HTMLImageElement>;
 }
 
 const BrowserViewport: React.FC<BrowserViewportProps> = ({

@@ -10,10 +10,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import reactor.core.scheduler.Schedulers;
-
-import java.util.List;
-
 /**
  * Service for managing system learning with Redis caching.
  */
@@ -26,22 +22,12 @@ public class SystemLearningService {
         this.repository = repository;
     }
 
-    @Cacheable(value = "system_learning", key = "'all'")
-    public List<SystemLearning> getAllLearningSync() {
-        return Mono.fromCallable(() -> repository.findAll().collectList().block())
-                .subscribeOn(Schedulers.boundedElastic())
-                .block();
-    }
-
     public Flux<SystemLearning> getAllLearning() {
         return repository.findAll();
     }
 
-    @Cacheable(value = "system_learning", key = "#category")
-    public List<SystemLearning> getByCategorySync(String category) {
-        return Mono.fromCallable(() -> repository.findByCategory(category).collectList().block())
-                .subscribeOn(Schedulers.boundedElastic())
-                .block();
+    public Flux<SystemLearning> getByCategory(String category) {
+        return repository.findByCategory(category);
     }
 
     @CacheEvict(value = "system_learning", allEntries = true)

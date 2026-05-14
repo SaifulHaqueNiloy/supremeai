@@ -24,13 +24,13 @@ public class CyberSecurityController {
     private CyberSecuritySkillService cyberSecuritySkillService;
 
     @GetMapping("/skills")
-    public Mono<ApiResponse<List<Map<String, Object>>>> getSkills() {
-        return Mono.just(ApiResponse.ok(cyberSecuritySkillService.getLearnedSkills()));
+    public reactor.core.publisher.Flux<Map<String, Object>> getSkills() {
+        return cyberSecuritySkillService.getLearnedSkills();
     }
 
     @GetMapping("/protections")
-    public Mono<ApiResponse<List<Map<String, Object>>>> getProtections() {
-        return Mono.just(ApiResponse.ok(cyberSecuritySkillService.getActiveProtections()));
+    public reactor.core.publisher.Flux<Map<String, Object>> getProtections() {
+        return cyberSecuritySkillService.getActiveProtections();
     }
 
     @PostMapping("/learn")
@@ -42,7 +42,7 @@ public class CyberSecurityController {
 
     @PostMapping("/audit")
     public Mono<ResponseEntity<ApiResponse<Map<String, Object>>>> runAudit() {
-        return Mono.fromCallable(() -> cyberSecuritySkillService.runSelfAudit())
+        return cyberSecuritySkillService.runSelfAudit()
                 .map(report -> ResponseEntity.ok(ApiResponse.ok(report)));
     }
 }

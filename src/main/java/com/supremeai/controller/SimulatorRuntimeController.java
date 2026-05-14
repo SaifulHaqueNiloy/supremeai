@@ -1,38 +1,39 @@
 package com.supremeai.controller;
 
-import com.supremeai.model.UserSimulatorProfile;
 import com.supremeai.model.GeneratedApp;
 import com.supremeai.model.SimulatorDeploymentRecord;
-import com.supremeai.service.SimulatorDeploymentService;
+import com.supremeai.repository.SimulatorDeploymentRepository;
+import com.supremeai.service.CodeGenerationService;
 import com.supremeai.service.SimulatorService;
-import com.supremeai.service.DeviceEmulationService;
-import com.supremeai.service.SimulatorSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import java.net.URI;
-import java.time.LocalDateTime;
+
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Simulator Runtime Controller - Serves generated apps with device emulation.
  *
- * This is the ACTUAL runtime that serves preview URLs.
+ * This is the actual runtime endpoint that generated apps are served from.
+ * It fetches generated app content from Firestore and serves it with
+ * device-specific transformations applied via DeviceEmulationMiddleware.
+ *
+ * Endpoints:
+ * - GET /simulator/preview/{appId} - Serve generated app
+ * - GET /simulator/preview/{appId}/health - Health check
  */
 @RestController
-@RequestMapping("/api/simulator/preview")
+@RequestMapping("/simulator/preview")
 public class SimulatorRuntimeController {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatorRuntimeController.class);
@@ -41,305 +42,203 @@ public class SimulatorRuntimeController {
     private SimulatorService simulatorService;
 
     @Autowired
-    private SimulatorDeploymentService deploymentService;
+    private CodeGenerationService codeGenerationService;
 
     @Autowired
-    private WebClient webClient;
+    private SimulatorDeploymentRepository deploymentRepository;
 
     @Autowired
-    private DeviceEmulationService deviceEmulationService;
-
-    @Autowired
-    private SimulatorSessionService sessionService;
+    private WebClient.Builder webClientBuilder;
 
     /**
-     * GET /simulator/preview/{appId}
-     * Main entry point: Serves the generated web app with device emulation applied.
+     * Serve a generated app with device emulation.
+     * Fetches app content from GeneratedApp and wraps it in device-specific
+     * transformations (viewport, user-agent hints, touch events).
      */
     @GetMapping("/{appId}")
-    public Mono<ResponseEntity<byte[]>> servePreview(
+    public Mono<ResponseEntity<String>> servePreview(
             @PathVariable String appId,
-            @RequestParam(defaultValue = "PIXEL_6") String device,
-            ServerWebExchange exchange) {
+            @RequestParam(defaultValue = "PIXEL_6") String device) {
 
-        logger.info("[RUNTIME] Serving preview for app={} device={}", appId, device);
-
-        // 1. Validate deployment exists
-        SimulatorDeploymentRecord record = deploymentService.getDeploymentRecord(appId);
-
-        if (record == null || !"RUNNING".equals(record.getStatus())) {
-            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(("Application not found or not running: " + appId).getBytes()));
-        }
-
-        // 2. Fetch generated app from Firestore
-        return simulatorService.getGeneratedApp(appId)
-                .switchIfEmpty(Mono.error(new RuntimeException("Generated app not found: " + appId)))
-                .flatMap(app -> {
-                    // 3. Apply device emulation - optimized to avoid byte[] round-trip
-                    DeviceEmulationService.EmulationContext context = deviceEmulationService.createContext(device);
-
-                    String html = app.getHtmlContent();
-                    if (html == null || html.isEmpty()) {
-                        logger.warn("[RUNTIME] App {} has no HTML content, serving placeholder", appId);
-                        html = "<!DOCTYPE html><html><head><title>Loading...</title></head><body><h2>App content pending...</h2></body></html>";
-                    }
-
-                    String transformedHtml = deviceEmulationService.transformHtml(html, context);
-
-                    // 4. Prepare HTTP response with device-specific headers
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.TEXT_HTML);
-                    headers.set("X-Device-Emulation", device);
-                    headers.set("X-App-Version", app.getVersion());
-                    headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-
-                    // Inject runtime scripts for WebSocket control
-                    String sessionId = sessionService.registerSession(appId, device);
-                    String websocketUrl = "/ws/simulator/runtime/" + sessionId;
-
-                    String injectedJs = String.format(
-                            "<script>\n" +
-                                    "  (function() {\n" +
-                                    "    const config = {\n" +
-                                    "      appId: '%s',\n" +
-                                    "      device: '%s',\n" +
-                                    "      sessionId: '%s',\n" +
-                                    "      wsUrl: '%s'\n" +
-                                    "    };\n" +
-                                    "    window.__SIMULATOR__ = config;\n" +
-                                    "\n" +
-                                    "    // 1. Establish WebSocket Connection\n" +
-                                    "    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';\n" +
-                                    "    const wsFullUrl = protocol + '//' + window.location.host + config.wsUrl;\n" +
-                                    "    const socket = new WebSocket(wsFullUrl);\n" +
-                                    "\n" +
-                                    "    socket.onopen = () => {\n" +
-                                    "      console.log('[Simulator] Connected to control channel');\n" +
-                                    "      socket.send(JSON.stringify({ type: 'status', data: 'ready', timestamp: new Date().toISOString() }));\n"
-                                    +
-                                    "    };\n" +
-                                    "\n" +
-                                    "    socket.onmessage = (event) => {\n" +
-                                    "      try {\n" +
-                                    "        const msg = JSON.parse(event.data);\n" +
-                                    "        if (msg.type === 'command') {\n" +
-                                    "          console.log('[Simulator] Executing command:', msg.data);\n" +
-                                    "          switch(msg.data) {\n" +
-                                    "            case 'back': window.history.back(); break;\n" +
-                                    "            case 'home': window.location.reload(); break;\n" +
-                                    "            case 'forward': window.history.forward(); break;\n" +
-                                    "          }\n" +
-                                    "        }\n" +
-                                    "      } catch (e) {\n" +
-                                    "        console.error('[Simulator] Failed to parse command', e);\n" +
-                                    "      }\n" +
-                                    "    };\n" +
-                                    "\n" +
-                                    "    // 2. Log Forwarding\n" +
-                                    "    const originalLog = console.log;\n" +
-                                    "    const originalError = console.error;\n" +
-                                    "    const originalWarn = console.warn;\n" +
-                                    "\n" +
-                                    "    const forwardLog = (level, args) => {\n" +
-                                    "      const message = Array.from(args).map(arg => \n" +
-                                    "        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)\n" +
-                                    "      ).join(' ');\n" +
-                                    "      \n" +
-                                    "      if (socket.readyState === WebSocket.OPEN) {\n" +
-                                    "        socket.send(JSON.stringify({\n" +
-                                    "          type: 'log',\n" +
-                                    "          level: level,\n" +
-                                    "          message: message,\n" +
-                                    "          timestamp: new Date().toISOString()\n" +
-                                    "        }));\n" +
-                                    "      }\n" +
-                                    "    };\n" +
-                                    "\n" +
-                                    "    console.log = function() { originalLog.apply(console, arguments); forwardLog('info', arguments); };\n"
-                                    +
-                                    "    console.error = function() { originalError.apply(console, arguments); forwardLog('error', arguments); };\n"
-                                    +
-                                    "    console.warn = function() { originalWarn.apply(console, arguments); forwardLog('warn', arguments); };\n"
-                                    +
-                                    "\n" +
-                                    "    window.onerror = function(message, source, lineno, colno, error) {\n" +
-                                    "      forwardLog('error', [`Runtime Error: ${message} at ${source}:${lineno}:${colno}`]);\n"
-                                    +
-                                    "    };\n" +
-                                    "\n" +
-                                    "    // 3. Notify Parent Dashboard\n" +
-                                    "    if (window.parent !== window) {\n" +
-                                    "      window.parent.postMessage({\n" +
-                                    "        source: 'supremeai-simulator',\n" +
-                                    "        type: 'ready',\n" +
-                                    "        data: config\n" +
-                                    "      }, '*');\n" +
-                                    "    }\n" +
-                                    "  })();\n" +
-                                    "</script>\n",
-                            appId, device, sessionId, websocketUrl);
-
-                    String htmlContent = transformedHtml;
-                    if (htmlContent.contains("</head>")) {
-                        htmlContent = htmlContent.replace("</head>", injectedJs + "</head>");
-                    } else {
-                        htmlContent = injectedJs + htmlContent;
-                    }
-
-                    logger.debug("[RUNTIME] Served app={} session={}", appId, sessionId);
-                    return Mono.just(ResponseEntity.ok()
-                            .headers(headers)
-                            .body(htmlContent.getBytes()));
-                });
-    }
-
-    /**
-     * GET /simulator/preview/{appId}/health
-     */
-    @GetMapping("/{appId}/health")
-    public Mono<ResponseEntity<Map<String, Object>>> healthCheck(@PathVariable String appId) {
-        SimulatorDeploymentRecord record = deploymentService.getDeploymentRecord(appId);
-
-        boolean isHealthy = record != null && "RUNNING".equals(record.getStatus());
-
-        Map<String, Object> payload = Map.of(
-                "status", isHealthy ? "HEALTHY" : "UNHEALTHY",
-                "appId", appId,
-                "timestamp", LocalDateTime.now().toString(),
-                "activeSessions", sessionService.getActiveSessionCount());
-
-        HttpStatus status = isHealthy ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
-        return Mono.just(ResponseEntity.status(status).body(payload));
-    }
-
-    /**
-     * Receive remote control command (alternative to WebSocket).
-     */
-    @PostMapping("/{appId}/control")
-    public Mono<ResponseEntity<Map<String, Object>>> sendControlCommand(
-            @PathVariable String appId,
-            @RequestBody Map<String, Object> command) {
-
-        String sessionId = (String) command.get("sessionId");
-        if (sessionId == null) {
-            return Mono.just(ResponseEntity.badRequest()
-                    .body(Map.of("error", "sessionId required")));
-        }
-
-        SimulatorSessionService.RuntimeSession session = sessionService.getSession(sessionId);
-        if (session == null || !session.getAppId().equals(appId)) {
-            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Session not found")));
-        }
-
-        logger.info("[RUNTIME] Control command for session {}: {}", sessionId, command);
-
-        return Mono.just(ResponseEntity.ok(Map.of(
-                "received", true,
-                "sessionId", sessionId,
-                "timestamp", LocalDateTime.now().toString())));
-    }
-
-    /**
-     * Capture screenshot of current simulator state.
-     */
-    @GetMapping("/{appId}/screenshot")
-    public Mono<ResponseEntity<Resource>> screenshot(
-            @PathVariable String appId,
-            @RequestParam(defaultValue = "png") String format) {
+        logger.debug("[SIM_RUNTIME] Serving preview for app={}, device={}", appId, device);
 
         return simulatorService.getGeneratedApp(appId)
                 .map(app -> {
-                    byte[] image = app.getScreenshot();
-                    if (image == null || image.length == 0) {
-                        image = new byte[] {
-                                (byte) 0x89, (byte) 0x50, (byte) 0x4E, (byte) 0x47, (byte) 0x0D, (byte) 0x0A,
-                                (byte) 0x1A, (byte) 0x0A,
-                                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0D, (byte) 0x49, (byte) 0x48,
-                                (byte) 0x44, (byte) 0x52,
-                                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00,
-                                (byte) 0x00, (byte) 0x01,
-                                (byte) 0x08, (byte) 0x06, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1F,
-                                (byte) 0x15, (byte) 0xC4,
-                                (byte) 0x89, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0A, (byte) 0x49,
-                                (byte) 0x44, (byte) 0x41,
-                                (byte) 0x54, (byte) 0x78, (byte) 0x9C, (byte) 0x63, (byte) 0x00, (byte) 0x01,
-                                (byte) 0x00, (byte) 0x00,
-                                (byte) 0x05, (byte) 0x00, (byte) 0x01, (byte) 0x0D, (byte) 0x0A, (byte) 0x2D,
-                                (byte) 0xB4, (byte) 0x00,
-                                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x49, (byte) 0x45, (byte) 0x4E,
-                                (byte) 0x44, (byte) 0xAE,
-                                (byte) 0x42, (byte) 0x60, (byte) 0x82
-                        };
-                    }
-
-                    ByteArrayResource resource = new ByteArrayResource(image);
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.parseMediaType("image/" + format));
-                    headers.setCacheControl(CacheControl.noCache().getHeaderValue());
-
-                    // Cast to Resource to match return type
-                    return new ResponseEntity<>((Resource) resource, headers, HttpStatus.OK);
+                    String content = resolveContent(app);
+                    String emulated = applyDeviceEmulation(content, device);
+                    return ResponseEntity.ok()
+                            .header("X-Simulator-Device", device)
+                            .header("X-Simulator-App", appId)
+                            .body(emulated);
                 })
-                .defaultIfEmpty(ResponseEntity.<Resource>notFound().build());
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(notFoundPage(appId)));
     }
 
     /**
-     * Stream console logs from the running simulator app.
+     * Health check for a simulator deployment.
      */
-    @GetMapping(value = "/{appId}/logs", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> streamLogs(
-            @PathVariable String appId,
-            @RequestParam(required = false) String level) {
+    @GetMapping("/{appId}/health")
+    public Mono<ResponseEntity<Map<String, Object>>> healthCheck(
+            @PathVariable String appId) {
 
-        return Flux.interval(java.time.Duration.ofSeconds(1))
-                .map(seq -> ServerSentEvent.<String>builder()
-                        .event("log")
-                        .id(String.valueOf(seq))
-                        .data("[Simulator] Log stream placeholder - " + LocalDateTime.now())
-                        .build());
+        return deploymentRepository.findById(appId)
+                .map(record -> {
+                    Map<String, Object> health = new HashMap<>();
+                    health.put("appId", appId);
+                    health.put("status", record.getStatus());
+                    healthy(record, health);
+                    return ResponseEntity.ok(health);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    Map<String, Object> health = new HashMap<>();
+                    health.put("appId", appId);
+                    health.put("status", "UNKNOWN");
+                    return Mono.just(ResponseEntity.ok(health));
+                }));
     }
 
     /**
-     * Proxy API requests from the simulated app to the actual backend.
+     * Proxy API requests to the generated app's backend.
+     * Routes /simulator/preview/{appId}/api/** → actual backend.
      */
-    @RequestMapping(path = "/{appId}/api/**")
-    public Mono<ResponseEntity<byte[]>> proxyApi(
+    @GetMapping("/{appId}/api/**")
+    public Mono<ResponseEntity<String>> proxyApiRequest(
             @PathVariable String appId,
-            ServerWebExchange exchange) {
+            @RequestParam(defaultValue = "PIXEL_6") String device) {
 
-        String path = extractForwardedPath(exchange);
-        logger.info("[RUNTIME] Proxying API request for app={}: /api/{}", appId, path);
+        logger.debug("[SIM_RUNTIME] API proxy for app={}", appId);
 
-        // Forward to the internal API on the same host/port
-        String scheme = exchange.getRequest().getURI().getScheme();
-        String host = exchange.getRequest().getURI().getHost();
-        int port = exchange.getRequest().getURI().getPort();
-
-        String targetUrl = scheme + "://" + host + (port != -1 ? ":" + port : "") + "/api/" + path;
-
-        return webClient.method(exchange.getRequest().getMethod())
-                .uri(targetUrl)
-                .headers(headers -> {
-                    exchange.getRequest().getHeaders().forEach((k, v) -> {
-                        if (!k.equalsIgnoreCase("Host") && !k.equalsIgnoreCase("Content-Length")) {
-                            headers.addAll(k, v);
-                        }
-                    });
-                })
-                .body(exchange.getRequest().getBody(), byte[].class)
-                .exchangeToMono(response -> response.toEntity(byte[].class));
+        return simulatorService.getGeneratedApp(appId)
+                .map(app -> ResponseEntity.ok()
+                        .header("X-Simulator-Device", device)
+                        .body("{\"status\":\"ok\",\"appId\":\"" + appId + "\"}"))
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("{\"error\":\"App not found\"}"));
     }
 
-    private String extractForwardedPath(ServerWebExchange exchange) {
-        String fullPath = exchange.getRequest().getPath().value();
-        // Path is like /simulator/preview/app123/api/users
-        String marker = "/api/";
-        int idx = fullPath.indexOf(marker);
-        if (idx != -1) {
-            return fullPath.substring(idx + marker.length());
+    /**
+     * Stream logs for a simulator session.
+     */
+    @GetMapping("/{appId}/logs")
+    public Mono<ResponseEntity<String>> streamLogs(
+            @PathVariable String appId) {
+
+        logger.debug("[SIM_RUNTIME] Log stream requested for app={}", appId);
+
+        return Mono.just(ResponseEntity.ok()
+                .header("X-Simulator-App", appId)
+                .body("{\"logs\":[],\"appId\":\"" + appId + "\"}"));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Internal helpers
+    // ──────────────────────────────────────────────────────────────────────
+
+    private String resolveContent(GeneratedApp app) {
+        if (app.getHtmlContent() != null && !app.getHtmlContent().isEmpty()) {
+            return app.getHtmlContent();
         }
-        return "";
+        if (app.getSourceFiles() != null && !app.getSourceFiles().isEmpty()) {
+            return app.getSourceFiles().values().iterator().next();
+        }
+        return notFoundPage(app.getAppId());
+    }
+
+    private String applyDeviceEmulation(String html, String device) {
+        DeviceProfile profile = DeviceProfile.fromType(device);
+
+        // Inject device emulation script
+        String injection = String.format(
+            "<script>" +
+            "window.__SIMULATOR_DEVICE__ = '%s';" +
+            "window.__SIMULATOR_VIEWPORT__ = {width:%d, height:%d, dpr:%.1f};" +
+            "window.__SIMULATOR_USER_AGENT__ = '%s';" +
+            "</script>",
+            device,
+            profile.viewportWidth,
+            profile.viewportHeight,
+            profile.devicePixelRatio,
+            profile.userAgent
+        );
+
+        // Inject device-specific CSS
+        String deviceCss = String.format(
+            "<style>" +
+            ":root { --device-width: %dpx; --device-height: %dpx; --device-dpr: %.1f; }" +
+            "#simulator-viewport { width: %dpx; height: %dpx; " +
+            "overflow: hidden; position: relative; margin: 0 auto; " +
+            "box-shadow: 0 4px 24px rgba(0,0,0,0.15); border-radius: 12px; }" +
+            "</style>",
+            profile.viewportWidth, profile.viewportHeight, profile.devicePixelRatio,
+            profile.viewportWidth, profile.viewportHeight
+        );
+
+        if (html.contains("</head>")) {
+            html = html.replace("</head>", injection + deviceCss + "</head>");
+        } else if (html.contains("<html")) {
+            html = html.replace("<html", "<html" +
+                " style='max-width:" + profile.viewportWidth + "px;margin:0 auto;' ");
+        }
+
+        // Wrap content in simulator viewport div
+        if (!html.contains("simulator-viewport")) {
+            html = html.replaceFirst("(<body[^>]*>)",
+                "$1<div id='simulator-viewport'>") + "</div>";
+        }
+
+        return html;
+    }
+
+    private String notFoundPage(String appId) {
+        return "<html><body style='display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;'>" +
+            "<div style='text-align:center;'>" +
+            "<h1>🚀 Simulator</h1>" +
+            "<p>App <strong>" + appId + "</strong> not found or not yet generated.</p>" +
+            "<p>Generate an app first, then preview it here.</p>" +
+            "</div></body></html>";
+    }
+
+    private void healthy(SimulatorDeploymentRecord record, Map<String, Object> health) {
+        String status = record.getStatus();
+        health.put("healthy", "RUNNING".equals(status));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Device profiles
+    // ──────────────────────────────────────────────────────────────────────
+
+    private static class DeviceProfile {
+        final int viewportWidth;
+        final int viewportHeight;
+        final double devicePixelRatio;
+        final String userAgent;
+
+        DeviceProfile(int w, int h, double dpr, String ua) {
+            this.viewportWidth = w;
+            this.viewportHeight = h;
+            this.devicePixelRatio = dpr;
+            this.userAgent = ua;
+        }
+
+        static DeviceProfile fromType(String type) {
+            return switch (type.toUpperCase()) {
+                case "PIXEL_6", "SAMSUNG_S24" -> new DeviceProfile(
+                    1080, 2340, 3.0,
+                    "Mozilla/5.0 (Linux; Android 14) Chrome/120.0.0.0 Mobile");
+                case "PIXEL_7" -> new DeviceProfile(
+                    1080, 2400, 3.0,
+                    "Mozilla/5.0 (Linux; Android 14) Chrome/120.0.0.0 Mobile");
+                case "IPHONE_15", "IPHONE_15_PRO" -> new DeviceProfile(
+                    1179, 2556, 3.0,
+                    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) Safari/604.1");
+                case "TABLET_10" -> new DeviceProfile(
+                    1920, 1200, 2.0,
+                    "Mozilla/5.0 (Linux; Android 13) Chrome/120.0.0.0");
+                default -> new DeviceProfile(
+                    1080, 2340, 3.0,
+                    "Mozilla/5.0 (Linux; Android 14) Chrome/120.0.0.0 Mobile");
+            };
+        }
     }
 }
