@@ -15,7 +15,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.5.0",
     "@dataconnect/generated": "file:src/dataconnect-generated",
-    "@react-three/drei": "^9.88.16",
+    "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^8.15.11",
     "@stomp/stompjs": "^7.3.0",
     "@types/js-cookie": "^3.0.6",
