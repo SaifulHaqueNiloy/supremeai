@@ -1,5 +1,4 @@
 import urllib.request
-import sys
 
 api_key = "***REDACTED_RENDER_KEY***"
 services = ["srv-d991umnaqgkc73fk89o0", "srv-d817sc7aqgkc73aocjlg"]
