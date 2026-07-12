@@ -2,7 +2,7 @@ import urllib.request
 import json
 import os
 
-api_key = "***REDACTED_RENDER_KEY***"
+api_key = os.environ.get("RENDER_API_KEY", "")
 url = "https://api.render.com/v1/services"
 
 headers = {
