@@ -1,9 +1,25 @@
+export const RENDER_BACKENDS = [
+  'https://supremeai-backend-08zd.onrender.com', // Primary
+  'https://supremeai-backend-secondary.onrender.com' // Fallback
+];
+
+export const switchActiveBackend = (): string => {
+  const current = sessionStorage.getItem('supremeai_active_backend') || RENDER_BACKENDS[0];
+  const next = current === RENDER_BACKENDS[0] ? RENDER_BACKENDS[1] : RENDER_BACKENDS[0];
+  sessionStorage.setItem('supremeai_active_backend', next);
+  console.log(`[Failover] Switched backend to: ${next}`);
+  return next;
+};
+
 export const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') {
     const url = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL;
     if (!url && import.meta.env.PROD) throw new Error("API URL missing in production");
     return url || 'http://localhost:8000';
   }
+
+  const cached = sessionStorage.getItem('supremeai_active_backend');
+  if (cached) return cached;
 
   if (import.meta.env.VITE_API_BASE) {
     return import.meta.env.VITE_API_BASE;
@@ -13,9 +29,8 @@ export const getApiBaseUrl = (): string => {
     return import.meta.env.VITE_API_URL;
   }
 
-  // বাংলা মন্তব্য: প্রোডাকশনে VITE_API_URL সেট না থাকলে সরাসরি Render ব্যাকএন্ড URL ব্যবহার করা হবে
   if (import.meta.env.PROD) {
-    return 'https://supremeai-backend-08zd.onrender.com';
+    return RENDER_BACKENDS[0];
   }
   return window.location.origin;
 };
@@ -32,5 +47,14 @@ export const getWebSocketBaseUrl = (): string => {
   }
 
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  // If in production, use the active backend domain for WebSockets
+  if (import.meta.env.PROD) {
+    const apiBase = getApiBaseUrl();
+    if (apiBase.startsWith('http')) {
+      return apiBase.replace(/^http/, 'ws');
+    }
+  }
+
   return `${protocol}//${window.location.host}`;
 };
