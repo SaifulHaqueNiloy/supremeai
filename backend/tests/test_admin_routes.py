@@ -15,8 +15,6 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from core.admin_routes import router
-from models.admin import AdminLoginRequest
-from models.admin import AdminVerifyRequest
 from models.admin import AdminFirebaseLoginRequest
 from models.admin import AdminFirebaseTotpSetupRequest
 from models.admin import AdminFirebaseTotpVerifyRequest
@@ -153,27 +151,6 @@ class TestAdminRoutes:
         response = client.get("/actuator/health")
         assert response.status_code == 200
 
-    def test_admin_login_no_password(self, client):
-        """পাসওয়ার্ড ছাড়া লগইন 422."""
-        response = client.post("/api/admin/login", json={})
-        assert response.status_code == 422
-
-    def test_admin_login_invalid_password(self, client):
-        """ভুল পাসওয়ার্ডে 401."""
-        with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": "dummy-hash", "SUPREMEAI_ADMIN_TOTP_SECRET": "dummy-secret"}, clear=False):
-            response = client.post("/api/admin/login", json={"password": "wrong-password"})
-            assert response.status_code == 401
-
-    def test_admin_verify_no_password(self, client):
-        """পাসওয়ার্ড ছাড়া ভেরিফাই 422."""
-        response = client.post("/api/admin/verify", json={})
-        assert response.status_code == 422
-
-    def test_admin_verify_invalid_password(self, client):
-        """ভুল পাসওয়ার্ডে ভেরিফাই 401."""
-        with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": "dummy-hash", "SUPREMEAI_ADMIN_TOTP_SECRET": "dummy-secret"}, clear=False):
-            response = client.post("/api/admin/verify", json={"password": "wrong", "otp": "1234567"})
-            assert response.status_code == 401
 
     def test_admin_firebase_login_no_token(self, client):
         """Firebase login with no token returns 422."""

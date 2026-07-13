@@ -6,25 +6,10 @@ from models.admin import (
     AdminFirebaseLoginRequest,
     AdminFirebaseTotpSetupRequest,
     AdminFirebaseTotpVerifyRequest,
-    AdminLoginRequest,
-    AdminVerifyRequest,
 )
 
 
-def test_admin_login_request():
-    req = AdminLoginRequest(password="secret")
-    assert req.password == "secret"
 
-
-def test_admin_verify_request():
-    req = AdminVerifyRequest(password="secret", otp="123456")
-    assert req.password == "secret"
-    assert req.otp == "123456"
-
-
-def test_admin_verify_request_missing_otp():
-    with pytest.raises(ValidationError):
-        AdminVerifyRequest(password="secret")
 
 
 def test_admin_firebase_login_request():

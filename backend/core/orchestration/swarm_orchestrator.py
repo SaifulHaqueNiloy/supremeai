@@ -16,7 +16,15 @@ from core.orchestration.crew_departments import ToolExecutorAgent
 from core.orchestration.crew_departments import ToolSynthesizerAgent
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.skill_manager import skill_manager
-from core.skills.core_skills import SystemDesignSkill
+from core.skills.core_skills import (
+    SystemDesignSkill,
+    CodeGenerationSkill,
+    StaticAnalysisSkill,
+    ResearchSkill,
+    ToolSynthesisSkill,
+    ToolExecutionSkill,
+    ExperiencePersistenceSkill,
+)
 from models.shared_workspace import SharedWorkspace
 
 
@@ -37,6 +45,7 @@ class MorphicOrchestrator:
             "qa": QAAgent(),
             "guardian": GuardianAgent(),
             "reflection": ReflectionAgent(),
+            "integration": IntegrationAgent(),
         }
         # বাংলা মন্তব্য: ফেজ ১ - MCP-Hub ইন্টিগ্রেশন। এটি বাইরের জগতের সাথে সংযোগ স্থাপন করবে।
         self.mcp_client = MCPRegistryClient()
@@ -47,6 +56,14 @@ class MorphicOrchestrator:
 
         # বাংলা মন্তব্য: কোর স্কিলগুলো রেজিস্টার করা হচ্ছে।
         skill_manager.register_skill(SystemDesignSkill())
+        skill_manager.register_skill(CodeGenerationSkill())
+        skill_manager.register_skill(StaticAnalysisSkill())
+        skill_manager.register_skill(ResearchSkill())
+        skill_manager.register_skill(ToolSynthesisSkill())
+        skill_manager.register_skill(ToolExecutionSkill())
+        skill_manager.register_skill(ExperiencePersistenceSkill())
+        skill_manager.register_skill(SlackIntegrationSkill())
+        skill_manager.register_skill(NotionSyncSkill())
 
     async def _get_dag_for_intent(self, intent: str) -> dict[str, list[str]]:
         """
@@ -63,6 +80,10 @@ class MorphicOrchestrator:
             return {
                 "researcher": [],
                 "reflection": ["researcher"],
+            }
+        elif intent in ["sync_to_slack", "sync_to_notion"]:
+            return {
+                "integration": [],
             }
         # Default DAG for general tasks
         return {"executor": [], "researcher": ["executor"], "reflection": ["researcher"]}

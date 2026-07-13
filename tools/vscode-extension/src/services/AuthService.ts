@@ -56,17 +56,50 @@ export class AuthService {
 
   public async login(): Promise<boolean> {
     try {
-      if (!this.config.backendUrl) {
-        throw new Error('Backend URL is not configured in settings.');
+      const apiKey = await vscode.window.showInputBox({
+        prompt: 'Please enter your SupremeAI API Key (generated from your Web Dashboard)',
+        password: true,
+        ignoreFocusOut: true,
+        placeHolder: 'sk-sup-...'
+      });
+
+      if (!apiKey) {
+        vscode.window.showWarningMessage('Login cancelled: No API Key provided.');
+        return false;
       }
 
-      const baseUrl = this.resolveBaseUrl();
-      this.authState = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const loginUrl = `${baseUrl}/auth/login?state=${this.authState}`;
-      console.log('[SupremeAI] Opening browser for login:', loginUrl);
-      await vscode.env.openExternal(vscode.Uri.parse(loginUrl));
-      vscode.window.showInformationMessage('Login page opened in your browser. After signing in, the extension will detect the callback and complete authentication.');
-      return false;
+      return await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Verifying SupremeAI API Key...",
+        cancellable: false
+      }, async () => {
+        try {
+          const baseUrl = this.resolveBaseUrl();
+          const response = await fetch(`${baseUrl}/auth/verify`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.valid) {
+              if (this.secrets) {
+                await this.secrets.store('supremeai.aiApiKey', apiKey);
+              }
+              this.token = apiKey;
+              this.user = { id: data.user_id, role: data.role };
+              await vscode.commands.executeCommand('setContext', 'supremeai.authenticated', true);
+              this._onAuthStateChanged.fire(true);
+              vscode.window.showInformationMessage('🎉 Successfully logged in to SupremeAI!');
+              return true;
+            }
+          }
+          throw new Error('Invalid API Key response');
+        } catch (error) {
+          vscode.window.showErrorMessage('❌ Invalid API Key. Please check your dashboard and try again.');
+          return false;
+        }
+      });
     } catch (error: any) {
       console.error('[SupremeAI] Login error:', error);
       vscode.window.showErrorMessage(`Login failed: ${error.message}`);
