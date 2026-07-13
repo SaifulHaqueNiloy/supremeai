@@ -249,6 +249,11 @@ jobs:
           VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
           $VENV_PYTHON scripts/generate_smart_docs.py
 
+      - name: 🤖 Generate AI Codebase Prompts
+        run: |
+          VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
+          $VENV_PYTHON scripts/generate_ai_codebase_docs.py
+
       - name: 🚨 Generate System Incident Report from Logs
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
