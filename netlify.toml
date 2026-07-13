@@ -1,0 +1,9 @@
+[build]
+  base = "apps/studio-client"
+  command = "pnpm install && turbo run build"
+  publish = "dist-user"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
