@@ -172,27 +172,64 @@ class AuthMiddleware:
                 return
             # Token mismatch in test mode — fall through to normal auth
 
-        enabled = bool(os.getenv("SUPREMEAI_API_TOKEN"))
-        if not enabled:
-            if settings.env == "production":
-                raise RuntimeError("SUPREMEAI_API_TOKEN must be set in production — fail-closed enforced.")
-            await self.app(scope, receive, send)
-            return
-
-        expected = os.getenv("SUPREMEAI_API_TOKEN") or ""
-        if not token or not secrets.compare_digest(token, expected):
-            logger.warning(f"Unauthorized access attempt to {path}")
+        if not token:
+            logger.warning(f"Unauthorized access attempt to {path}: Missing token")
             response = JSONResponse(
                 status_code=401,
-                content={"detail": "Invalid or missing API token."},
+                content={"detail": "Missing Authorization Token"},
+                headers={"WWW-Authenticate": "Bearer"},
             )
             await response(scope, receive, send)
             return
-        await self.app(scope, receive, send)
+
+        expected = os.getenv("SUPREMEAI_API_TOKEN") or ""
+        if expected and secrets.compare_digest(token, expected):
+            # 1. Fallback / Admin Static Token
+            scope.setdefault("state", {})["user"] = {"sub": "admin_system", "role": "admin"}
+            await self.app(scope, receive, send)
+            return
+
+        # 2. JWT Decoding (Regular web user)
+        try:
+            payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+            scope.setdefault("state", {})["user"] = payload
+            await self.app(scope, receive, send)
+            return
+        except Exception:
+            pass  # If not a JWT, we fall through to API Key check
+
+        # 3. Dynamic API Key Check
+        try:
+            from core.security import hash_api_key
+            from models.api_key import get_api_key_by_hash
+            import time
+            token_hash = hash_api_key(token)
+            api_key_data = await get_api_key_by_hash(token_hash)
+
+            if api_key_data:
+                expires_at = api_key_data.get("expires_at")
+                if expires_at and expires_at < int(time.time()):
+                    pass # expired
+                else:
+                    scope.setdefault("state", {})["user"] = {"sub": api_key_data["user_id"], "role": "api_client"}
+                    scope["state"]["api_key"] = api_key_data
+                    await self.app(scope, receive, send)
+                    return
+        except Exception as e:
+            logger.error(f"API Key validation error: {e}")
+            pass
+
+        # All checks failed
+        logger.warning(f"Unauthorized access attempt to {path}: Invalid Token or API Key")
+        response = JSONResponse(
+            status_code=401,
+            content={"detail": "Unauthorized: Invalid Token or API Key"},
+        )
+        await response(scope, receive, send)
 
 
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ফেল-ক্লোজড অথেনটিকেশন এনফোর্সমেন্ট ইঞ্জিন।
-# যেকোনো ভেরিফিকেশন ফেইলিওর বা এক্সেপশনে এটি সরাসরি রিকোয়েস্ট হার্ড-ব্লক করে (Fail-Closed)।
+# যেকোনো ভেরিফিকেশন ফেইলিওর বা এক্সেপশনে এটি সরাসরি রিকোয়েস্ট হার্ড-ব্লক করে (Fail-Closed).
 
 
 async def verify_admin_session_fail_closed(request: Request) -> dict:

@@ -64,79 +64,11 @@ from core.messaging.events import get_firebase_auth
 from models.admin import AdminFirebaseLoginRequest
 from models.admin import AdminFirebaseTotpSetupRequest
 from models.admin import AdminFirebaseTotpVerifyRequest
-from models.admin import AdminLoginRequest
-from models.admin import AdminVerifyRequest
-
-
-try:
-    import bcrypt
-except Exception:  # pragma: no cover - optional fallback  # noqa: BLE001
-    bcrypt = None
 
 
 router = APIRouter()
 
-
-def _hash_password(password: str) -> str:
-    if not bcrypt:
-        raise RuntimeError("bcrypt is required but not installed")
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-
-def _verify_password(password: str, hashed: str) -> bool:
-    if not bcrypt or not hashed:
-        return False
-    try:
-        return bcrypt.checkpw(password.encode(), hashed.encode())
-    except Exception:  # noqa: BLE001
-        return False
-
-
-def _get_admin_credentials():
-    expected_hash = os.getenv("SUPREMEAI_ADMIN_PASSWORD_HASH")
-    if not expected_hash:
-        raise HTTPException(status_code=500, detail="Admin password hash is not configured on server")
-    return expected_hash
-
-
 auth = get_firebase_auth()
-
-
-@router.post("/api/admin/login")
-def admin_login(payload: AdminLoginRequest):
-    password = payload.password
-    expected_hash = _get_admin_credentials()
-    if not _verify_password(password, expected_hash):
-        raise HTTPException(status_code=401, detail="Invalid password")
-
-    totp_secret = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
-    if not totp_secret:
-        raise HTTPException(status_code=500, detail="TOTP secret not configured on server")
-    return {"status": "otp_required", "message": "Google Authenticator code required."}
-
-
-@router.post("/api/admin/verify")
-def admin_verify(payload: AdminVerifyRequest):
-    password = payload.password
-    otp = payload.otp
-
-    expected_hash = _get_admin_credentials()
-    if not _verify_password(password, expected_hash):
-        raise HTTPException(status_code=401, detail="Invalid password")
-
-    totp_secret = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
-    if not totp_secret:
-        raise HTTPException(status_code=500, detail="TOTP secret not configured on server")
-
-    if not otp or not verify_totp_code(otp.strip(), totp_secret):
-        raise HTTPException(status_code=401, detail="Invalid Google Authenticator code")
-
-    from jose import jwt
-
-    jwt_payload = {"sub": "admin", "role": "admin", "exp": int(time.time()) + 3600 * 24}
-    jwt_secret = settings.jwt_secret
-    token = jwt.encode(jwt_payload, jwt_secret, algorithm="HS256")
-    return {"status": "success", "token": token}
 
 
 # বাংলা মন্তব্য: শুধুমাত্র স্ট্যান্ডার্ড ২-স্টেপ পাসওয়ার্ড + TOTP ফ্লো এবং ৭-ডিজিট ফায়ারবেস অথেনটিকেশন ফ্লোটি সক্রিয় রাখা হয়েছে।
