@@ -18,6 +18,18 @@ class FakeRedis:
     def set(self, key, value, ex=None):
         self.store[key] = value
 
+    def incr(self, key):
+        val = int(self.store.get(key, 0)) + 1
+        self.store[key] = str(val)
+        return val
+
+    def expire(self, key, time):
+        pass
+
+    def delete(self, key):
+        if key in self.store:
+            del self.store[key]
+
 
 def test_initial_state():
     cb = CircuitBreaker("svc")
