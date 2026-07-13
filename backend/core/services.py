@@ -84,23 +84,25 @@ global_http_client: httpx.AsyncClient | None = None
 
 def __getattr__(name: str):
     """what is code: ডায়নামিক সার্ভিস গেটার — লিগ্যাসি টেস্ট এবং রাউটারগুলোর ব্যাকওয়ার্ড কম্প্যাটিবিলিটি নিশ্চিত করে।"""
+    if name.startswith("__") and name.endswith("__"):
+        raise AttributeError(f"Module 'core.services' has no attribute '{name}'")
+
     if name == "registry":
         raise AttributeError("Registry not initialized")
 
-    # Attempt to resolve from registry
-    from core.services import registry
-
-    if registry:
-        if hasattr(registry, "get_service"):
-            svc = registry.get_service(name)
+    # Attempt to resolve from registry safely without triggering imports
+    reg = globals().get("registry")
+    if reg:
+        if hasattr(reg, "get_service"):
+            svc = reg.get_service(name)
             if svc is not None:
                 return svc
-        if hasattr(registry, "services") and name in registry.services:
-            return registry.services[name]
+        if hasattr(reg, "services") and name in reg.services:
+            return reg.services[name]
 
     import os
 
-    if os.getenv("ENV", "local").lower() in ("test", "testing"):
+    if os.getenv("ENV", "local").lower() in ("test", "testing", "ci"):
         import logging
 
         logging.getLogger(__name__).warning(f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!")
