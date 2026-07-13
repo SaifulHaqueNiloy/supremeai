@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Loader2, ListChecks, AlertOctagon, Terminal, Clock } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { setSujonState } from '../sujon-utils';
+import { getApiBaseUrl } from '../../utils/api';
+
 
 interface AutomationTask {
   id: string;
@@ -68,9 +70,9 @@ export function AutomationQueuePage() {
 
   useEffect(() => {
     refresh();
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const backendUrl = getApiBaseUrl();
     const sse = new EventSource(`${backendUrl}/api/dashboard/stream`);
-    
+
     sse.addEventListener('browser_tasks', () => {
       refresh();
     });
@@ -181,7 +183,7 @@ export function AutomationQueuePage() {
               {/* Circuit Breaker Diagnostic Panel */}
               {t.status.toUpperCase() === 'CIRCUIT_OPEN' && t.failure_payload && (
                 <div className="bg-red-950/20 border-t border-red-900/30 p-5 flex flex-col md:flex-row gap-6">
-                  
+
                   {/* Left: Summary */}
                   <div className="w-full md:w-1/3 flex flex-col gap-4">
                     <div className="flex items-start gap-2">
@@ -191,7 +193,7 @@ export function AutomationQueuePage() {
                          <p className="text-xs text-gray-400 mt-1">Protection mechanisms activated due to repeated failures.</p>
                        </div>
                     </div>
-                    
+
                     <div className="bg-black/40 rounded-lg p-3 border border-red-900/50">
                        <p className="text-[10px] uppercase text-gray-500 mb-1">Root Cause</p>
                        <p className="text-sm text-gray-300 font-semibold">{t.failure_payload.root_cause}</p>
