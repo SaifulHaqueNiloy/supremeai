@@ -49,14 +49,6 @@ on:
         description: '🧪 Run Performance E2E (Playwright)'
         type: boolean
         default: false
-      run_worker_test:
-        description: '⚡ Run Cloudflare Worker Tests'
-        type: boolean
-        default: false
-      run_db_schema_generator:
-        description: '📊 Generate DB Schema Diagram'
-        type: boolean
-        default: false
 
 # বাংলা মন্তব্য: প্রতিটি টাস্ককে আলাদা জব-এ ভাগ করা হয়েছে স্বচ্ছতা এবং নির্ভরযোগ্যতার জন্য।
 
@@ -308,7 +300,7 @@ jobs:
 
 
   worker-test:
-    if: ${{ github.event.inputs.run_worker_test == 'true' }}
+    if: false
     name: ⚡ Cloudflare Worker (Test)
     runs-on: ubuntu-latest
     steps:
@@ -336,7 +328,7 @@ jobs:
   generate-db-schema:
     name: 📊 Generate DB Schema Diagram
     runs-on: ubuntu-latest
-    if: github.event.inputs.run_db_schema_generator == 'true'
+    if: false
     needs: setup
     steps:
       - uses: actions/checkout@v4
