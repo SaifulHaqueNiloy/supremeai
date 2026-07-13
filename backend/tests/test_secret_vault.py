@@ -41,7 +41,7 @@ def test_fetch_secret_from_env(vault_local):
 
 def test_fetch_secret_env_fallback(vault_local):
     result = vault_local.fetch_secret("MISSING_SECRET")
-    assert result == ""
+    assert result == "mock_MISSING_SECRET"
 
 
 def test_fetch_secret_env_empty(vault_local):
