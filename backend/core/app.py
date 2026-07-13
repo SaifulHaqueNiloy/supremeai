@@ -342,6 +342,7 @@ core_routers = [
     ("api.routes.public_config", "/api"),
     ("api.routes.traffic_monitor", ""),
     ("api.routes.swarm", "/api/v1"),
+    ("api.routes.agent_action", "/api/v1"),
     ("core.orchestrator", ""),
 ]
 
@@ -350,6 +351,7 @@ for router_path, prefix in core_routers:
 
 # Optional / External Tools Routers
 optional_routers = [
+    ("api.routes.dock_actions", "/api"),
     ("api.routes.websocket_voice", ""),
     ("tools.collaborative_editor", "/api/v1"),
     ("tools.image_to_code", ""),
