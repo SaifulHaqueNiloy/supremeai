@@ -32,3 +32,5 @@ services:
         sync: false
       - key: CI_WEBHOOK_SECRET
         sync: false
+      - key: CORS_ORIGINS
+        value: '["https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
