@@ -1,5 +1,11 @@
-﻿# SupremeAI 2.0 🚀
+# SupremeAI 2.0 🚀
 **Autonomic CI/CD Command Center & Neural Agentic Workspace**
+
+## 🌐 Live Application URLs
+- **Primary Frontend (Netlify):** [https://tiny-stroopwafel-2d981c.netlify.app](https://tiny-stroopwafel-2d981c.netlify.app)
+- **Primary Backend (Render):** [https://supremeai-backend-08zd.onrender.com](https://supremeai-backend-08zd.onrender.com)
+- **Secondary Backend (Render):** [https://supremeai-backend-secondary.onrender.com](https://supremeai-backend-secondary.onrender.com)
+- *Note: Frontend automatically switches backends if one goes to sleep (Zero-Cost HA Strategy).*
 
 SupremeAI is a production-grade, highly scalable ecosystem featuring a Hub-and-Spoke CI/CD pipeline, an AI-powered CodeQL audited backend, and dual real-time client interfaces.
 
@@ -116,7 +122,7 @@ As part of the SupremeAI 2.0 production readiness audit, the following security 
   - Added service healthchecks (backend on port 8000)
   - Explicit `depends_on` with `condition: service_healthy` for frontend services
 - **GitHub Actions (deploy.yml)**:
-  - note): 
+  - note):
   0 apply step uses the plan artifact from the plan job.
     - Deployment job uses `environment: production` for protection rules and secrets
     - Added validation for required `CI_WEBHOOK_SECRET` in production
