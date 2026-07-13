@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=None if "pytest" in sys.modules else ["../.env", ".env"],
+        env_file=None if "pytest" in sys.modules else ["../.env", ".env", "/etc/secrets/.env", "/etc/secrets/render.env"],
         extra="ignore",
     )
 
