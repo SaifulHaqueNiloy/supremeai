@@ -66,7 +66,7 @@ export function AdminConsole(props: AdminConsoleProps) {
       {!props.adminAuthenticated ? (
         <LoginView
           adminEmail={props.adminEmail}
-          setAdminEmail={props.adminEmail ? props.setAdminEmail : () => {}} // fallback if needed
+          setAdminEmail={props.setAdminEmail}
           adminPassword={props.adminPassword}
           setAdminPassword={props.setAdminPassword}
           adminError={props.adminError}
