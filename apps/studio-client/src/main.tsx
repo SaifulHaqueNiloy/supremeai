@@ -9,6 +9,11 @@ import { ToastProvider } from './contexts/ToastProvider';
 
 setupGlobalFetchInterceptor();
 
+import { startAntiSleepHeartbeat } from './services/heartbeat';
+if (import.meta.env.PROD) {
+  startAntiSleepHeartbeat();
+}
+
 // Inject globally for any UI components or legacy scripts that expect it
 (window as any).getApiBaseUrl = getApiBaseUrl;
 
@@ -30,4 +35,3 @@ createRoot(document.getElementById('root')!).render(
     </ToastProvider>
   </StrictMode>,
 )
-

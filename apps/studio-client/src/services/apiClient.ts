@@ -1,7 +1,7 @@
 // Centralized API Client for SupremeAI 2.0
 // বাংলা মন্তব্য: এটি অ্যাপ্লিকেশনের সেন্ট্রাল এপিআই ক্লায়েন্ট যা হেডার, টোকেন এবং সিকিউর রেট লিমিট (429) / ভ্যালিডেশন এরর ইন্টারসেপ্ট করে।
 
-import { getApiBaseUrl } from '../utils/api';
+import { getApiBaseUrl, switchActiveBackend } from '../utils/api';
 import PQueue from 'p-queue';
 
 // বাংলা মন্তব্য: কাস্টম এরর ক্লাস — status প্রপার্টি দিয়ে React Query retry ফাংশন সঠিকভাবে 401/403/429 চিহ্নিত করতে পারে
@@ -25,14 +25,14 @@ export const getAuthHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  
+
   // 🟢 Sprint 5: Backend API Integration
   // Use localStorage or zustand state to get token. Assuming token is saved in localStorage 'supremeai_auth_token'
   const token = localStorage.getItem('supremeai_auth_token');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -71,14 +71,37 @@ const handleResponse = async (res: Response) => {
 // বাংলা মন্তব্য: throttledFetch — p-queue দিয়ে একসাথে অতিরিক্ত রিকোয়েস্ট না যাওয়ার নিশ্চয়তা
 const throttledFetch = async (url: string, options: RequestInit): Promise<Response> => {
   return requestQueue.add(async () => {
-    try {
-      // credentials already set in interceptor, but we can enforce it here too
-      options.credentials = 'include';
-      return await fetch(url, options);
-    } catch (e) {
-      console.error(`[Queue Interceptor] Network failure for ${url}:`, e);
-      throw e; // throw so the caller knows it failed, queue will proceed to next item
+    let currentUrl = url;
+    let attempts = 0;
+    options.credentials = 'include';
+
+    while (attempts < 2) {
+      try {
+        const res = await fetch(currentUrl, options);
+        // 502/503/504 পেলে রেন্ডার সার্ভার স্লিপিং বা ডাউন, ফেইলওভার ট্রিগার করব
+        if (res.status >= 502 && res.status <= 504) {
+          throw new Error("Server sleeping or down (50x)");
+        }
+        return res;
+      } catch (e: any) {
+        attempts++;
+        if (attempts >= 2) {
+          console.error(`[Queue Interceptor] Network failure for ${currentUrl} after 2 attempts:`, e);
+          throw e;
+        }
+
+        console.warn(`[Failover] Network error detected: ${e.message}. Switching active backend...`);
+        const newBase = switchActiveBackend();
+
+        // currentUrl থেকে পুরনো বেস URL সরিয়ে নতুনটি বসানো
+        const urlObj = new URL(currentUrl);
+        currentUrl = `${newBase}${urlObj.pathname}${urlObj.search}`;
+
+        // স্লিপিং থেকে ওঠার জন্য একটু অপেক্ষা করে রিট্রাই
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
+    throw new Error("All backends failed");
   }) as Promise<Response>;
 };
 
@@ -121,4 +144,3 @@ export const apiClient = {
     return handleResponse(res);
   },
 };
-
