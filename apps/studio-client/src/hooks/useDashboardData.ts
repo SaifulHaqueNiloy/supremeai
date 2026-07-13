@@ -162,13 +162,15 @@ export function useDashboardReports(reportName?: string) {
 
 // SSE Listener Hook
 import { useEffect } from 'react';
+import { getApiBaseUrl } from '../utils/api';
+
 
 export function useDashboardSSE() {
   const qc = useQueryClient();
 
   useEffect(() => {
     if (!hasToken()) return;
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const backendUrl = getApiBaseUrl();
     const sse = new EventSource(`${backendUrl}/api/dashboard/stream`);
 
     sse.addEventListener('dashboard_events', (e) => {
@@ -194,4 +196,3 @@ export function useDashboardSSE() {
     };
   }, [qc]);
 }
-

@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeSyncContext } from './ThemeSyncContext';
+import { getApiBaseUrl } from '../utils/api';
+
 
 // বাংলা মন্তব্য: ThemeSyncContext একে অপর ফাইল থেকে ইম্পোর্ট করা হয়েছে, যাতে react-refresh সতর্কতা দূর হয়
 // useThemeSync hook একে অপর ফাইলে সরানো হয়েছে (useThemeSync.ts)
-export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({ 
-  children, 
-  userId = 'default' 
+export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({
+  children,
+  userId = 'default'
 }) => {
   const [theme, setThemeState] = useState<string>('dark');
 
   useEffect(() => {
     // Listen for Server-Sent Events from FastAPI
-    const eventSource = new EventSource(`http://127.0.0.1:8000/api/preferences/${userId}/stream`);
+    const eventSource = new EventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream`);
 
     eventSource.onmessage = (event) => {
       try {
@@ -44,7 +46,7 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('dark', 'light', 'sunset');
-    
+
     // Add the new theme class if it's not the default root theme
     if (theme === 'dark' || theme === 'sunset') {
       root.classList.add(theme);
@@ -55,7 +57,7 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
     setThemeState(newTheme);
     // Push the change to backend
     try {
-      await fetch(`http://127.0.0.1:8000/api/preferences/?user_id=${userId}`, {
+      await fetch(`${getApiBaseUrl()}/api/preferences/?user_id=${userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme: newTheme }),
