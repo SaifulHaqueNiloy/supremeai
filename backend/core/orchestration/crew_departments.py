@@ -291,3 +291,18 @@ class ToolExecutorAgent(SwarmAgentBase):
         # await self.execute(workspace, user_id, model_name)
         logger.info("ToolExecutorAgent: Using 'ToolExecutionSkill' to run a tool.")
         await self._safe_skill_run("ToolExecutionSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+
+
+class IntegrationAgent(SwarmAgentBase):
+    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = 'gemini/gemini-2.5-flash'):
+        from loguru import logger
+        logger.info(f'IntegrationAgent: Executing integration for intent {workspace.intent}')
+        kwargs = getattr(workspace, 'kwargs', {})
+        if workspace.intent == 'sync_to_slack':
+            result = await self._safe_skill_run('SlackIntegrationSkill', workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
+        elif workspace.intent == 'sync_to_notion':
+            result = await self._safe_skill_run('NotionSyncSkill', workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
+        else:
+            workspace.log(f'IntegrationAgent: Unknown intent {workspace.intent}')
+            result = {'status': 'error', 'message': f'Unknown integration intent {workspace.intent}'}
+        workspace.work_product['integration_result'] = result

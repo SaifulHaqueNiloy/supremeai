@@ -3,8 +3,10 @@
 This document is the **single source of truth** for all unfinished tasks, architectural debt, and planned features across the SupremeAI project. It has been strictly audited to remove zombie/completed tasks from old lists.
 
 ## 🚨 P0 - Critical Security & Auth (Fatal Mistakes Mitigation)
-- [ ] **Implement Actual Frontend RBAC:** Replace mocked `TODO: Phase 3 - Implement RBAC check here` in `AdminShell.tsx` with real role-based checks.
-- [ ] **VS Code Extension Auth:** Connect the VS Code extension to the backend for real user authentication and API key management (currently mocked).
+- [ ] **MANUAL: Key Rotation:** Access the Render Dashboard and immediately rotate (change/delete) any exposed API Keys.
+- [x] **MANUAL: Git History Scrubbing:** Run `git filter-repo` to permanently remove leaked secrets from git history, followed by `git push --force`.
+- [x] **Implement Actual Frontend RBAC:** Replace mocked `TODO: Phase 3 - Implement RBAC check here` in `AdminShell.tsx` with real role-based checks.
+- [x] **VS Code Extension Auth:** Connect the VS Code extension to the backend for real user authentication and API key management (currently mocked).
 - [ ] **Admin Login Token:** Fix the vulnerability where the plain password is used as the JWT token. *(Note: pending investigation on frontend side)*
 
 ## 🛠️ P1 - High Priority (Infrastructure & Logic Fixes)
@@ -20,7 +22,7 @@ This document is the **single source of truth** for all unfinished tasks, archit
 - [ ] **Fake/Hardcoded Users in Auth:** Remove mock user data in UI.
 - [ ] **Bilingual Codebase:** Resolve the bilingual codebase comments to ensure international scalability, or fully commit to one language standard.
 - [ ] **CICDVisualizer Static Data:** Replace mock data with live CI metrics in frontend.
-- [ ] **ActionCard Fake Execution:** Remove mock execution logic in frontend components.
+- [x] **ActionCard Fake Execution:** Remove mock execution logic in frontend components.
 
 ## 🔮 P3 - Low Priority / Future Enhancements
 - [ ] **Frontier Quality Replication:** Integrate o1/R1 reasoning and Perplexity search.

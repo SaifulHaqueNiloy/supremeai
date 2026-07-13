@@ -1,13 +1,26 @@
 import { create } from 'zustand';
 import { getApiBaseUrl } from '../utils/api';
 
+const decodeJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
+
 interface AdminState {
   adminAuthenticated: boolean;
-  adminPassword: string;
-  setAdminPassword: (val: string) => void;
+  adminRole: string | null;
+  setAdminRole: (val: string | null) => void;
   adminError: string;
   setAdminError: (val: string) => void;
-  handleAdminLogin: () => Promise<void>;
+  handleAdminLogin: (password?: string) => Promise<void>;
   handleAdminLogout: () => void;
   actionStatus: string;
   setActionStatus: (val: string) => void;
@@ -29,8 +42,8 @@ interface AdminState {
 
 export const useAdminStore = create<AdminState>((set, get) => ({
   adminAuthenticated: false,
-  adminPassword: '',
-  setAdminPassword: (val) => set({ adminPassword: val }),
+  adminRole: null,
+  setAdminRole: (val) => set({ adminRole: val }),
   adminError: '',
   setAdminError: (val) => set({ adminError: val }),
   actionStatus: '',
@@ -49,10 +62,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setTotpSecret: (val) => set({ totpSecret: val }),
   provisioningUri: '',
   setProvisioningUri: (val) => set({ provisioningUri: val }),
-  handleAdminLogin: async () => {
-    const { adminEmail, adminPassword, otpRequired, adminOtp, totpSetupRequired } = get();
+  handleAdminLogin: async (password?: string) => {
+    const { adminEmail, otpRequired, adminOtp, totpSetupRequired } = get();
     const cleanEmail = adminEmail.trim();
-    const cleanPassword = adminPassword.trim();
+    const cleanPassword = password?.trim() || '';
 
     if (!otpRequired && (!cleanEmail || !cleanPassword)) return;
     set({ adminError: '' });
@@ -134,8 +147,15 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
         if (res.ok) {
           const data = await res.json();
-          // Token is now set via httpOnly cookie from the backend.
-          set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false, adminOtp: '', adminPassword: '' });
+          // Token is returned from the backend in data.token
+          if (data.token) {
+            localStorage.setItem('adminToken', data.token);
+            const decoded = decodeJwt(data.token);
+            if (decoded && decoded.role) {
+              set({ adminRole: decoded.role });
+            }
+          }
+          set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false, adminOtp: '' });
         } else {
           const data = await res.json();
           set({ adminError: data.detail || 'Invalid verification code.' });
@@ -151,9 +171,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       await signOut(getAuth());
       const API_BASE = getApiBaseUrl();
       await fetch(`${API_BASE}/api/admin/logout`, { method: 'POST', credentials: 'include' });
+      localStorage.removeItem('adminToken');
     } catch(e) {
       console.error('Logout failed:', e);
     }
-    set({ adminAuthenticated: false, adminPassword: '', otpRequired: false, adminOtp: '', adminError: '' });
+    set({ adminAuthenticated: false, adminRole: null, otpRequired: false, adminOtp: '', adminError: '' });
   },
 }));

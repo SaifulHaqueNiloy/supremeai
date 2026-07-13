@@ -5,15 +5,13 @@ import { AuthenticatedView } from './AdminAuthenticated';
 
 interface AdminConsoleProps {
   adminAuthenticated: boolean;
-  adminPassword: string;
-  setAdminPassword: (val: string) => void;
   adminEmail: string;
   setAdminEmail: (val: string) => void;
   totpSetupRequired: boolean;
   totpSecret: string;
   provisioningUri: string;
   adminError: string;
-  handleAdminLogin: () => void;
+  handleAdminLogin: (password?: string) => void;
   handleAdminOtpVerify: () => void;
   handleAdminLogout: () => void;
   actionStatus: string;
@@ -67,8 +65,6 @@ export function AdminConsole(props: AdminConsoleProps) {
         <LoginView
           adminEmail={props.adminEmail}
           setAdminEmail={props.setAdminEmail}
-          adminPassword={props.adminPassword}
-          setAdminPassword={props.setAdminPassword}
           adminError={props.adminError}
           handleAdminLogin={props.handleAdminLogin}
           otpRequired={props.otpRequired}
