@@ -4,6 +4,8 @@ import { fetchJavaWorkerHealth } from '../../services/api/microserviceMonitor';
 import type { JavaWorkerHealth } from '../../services/api/microserviceMonitor';
 import { useAdminStore } from '../../store/adminStore';
 import type { AdminSubTab } from '../../types';
+import { getApiBaseUrl } from '../../utils/api';
+
 
 // বাংলা মন্তব্য: জাভা ওয়ার্কার মেট্রিক্স ও কুইক নেভিগেশন প্যানেল — সব থিমের সাথে সামঞ্জস্যপূর্ণ
 export const ServiceHealthMetrics: React.FC = () => {
@@ -16,10 +18,10 @@ export const ServiceHealthMetrics: React.FC = () => {
       setMetrics(data);
     };
     loadMetrics();
-    
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+    const backendUrl = getApiBaseUrl();
     const sse = new EventSource(`${backendUrl}/api/dashboard/stream`);
-    
+
     sse.addEventListener('metrics_events', () => {
       loadMetrics();
     });
@@ -53,7 +55,7 @@ export const ServiceHealthMetrics: React.FC = () => {
 
   return (
     <div className="bg-[var(--bg-panel)] border border-[var(--border-accent)] rounded-xl p-3 shadow-lg relative overflow-hidden group backdrop-blur-xl w-80 transition-all duration-500">
-      
+
       {/* Java Metrics Section (Compact) */}
       <div className="flex items-center justify-between mb-2 relative z-10 border-b border-[var(--border-accent)] pb-2 transition-colors duration-500">
         <h3 className="text-xs font-bold text-[var(--accent-primary)] flex items-center gap-1.5 uppercase tracking-wider font-mono">
