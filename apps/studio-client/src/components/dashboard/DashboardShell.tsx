@@ -32,6 +32,7 @@ import { LiveSujonBackground } from '../LiveSujonBackground';
 import { setSujonState, type SujonState } from '../sujon-utils';
 import { MockSwarmProvider } from '../../providers/MockSwarmProvider';
 import { SwarmHealthDashboard } from '../swarm/SwarmHealthDashboard';
+import { ActionDock } from './ActionDock';
 
 interface NavItem {
   id: DashboardRoute;
@@ -202,6 +203,9 @@ export function DashboardShell(props: DashboardShellProps) {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
           <main className="flex-1 overflow-y-auto bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)]">
             {renderPage()}
+
+            {/* Action Dock Integration */}
+            <ActionDock sessionId="test-session" />
           </main>
         </div>
       </div>
