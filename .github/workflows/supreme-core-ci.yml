@@ -155,37 +155,6 @@ jobs:
           fi
           echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
 
-      - name: 🩹 Inline Auto-Fix (On Failure)
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT_FOR_AUTO_FIX }}
-        run: |
-          echo "=== ইনলাইন অটো-ফিক্স শুরু হয়েছে ===" >> $GITHUB_STEP_SUMMARY
-          echo "Ruff ফরম্যাটিং এবং ফিক্স রান করা হচ্ছে..."
-          ruff format backend/ || true
-          ruff check backend/ --fix || true
-
-          git add -u
-          if ! git diff --staged --quiet; then
-            echo "🔧 পরিবর্তন পাওয়া গেছে, ফিক্সগুলো কমিট করা হচ্ছে..."
-            git config --global user.name 'SupremeAI Auto-Fix Bot'
-            git config --global user.email 'bot@supremeai.dev'
-            git commit -m "fix(ci): Automatically apply lint fixes inline [skip ci]"
-
-            BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
-            git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
-
-            echo "🔄 পুশ করার আগে রিমোট ব্রাঞ্চের সাথে সিঙ্ক করা হচ্ছে..."
-            git pull --rebase origin $BRANCH_NAME
-            git push origin HEAD:$BRANCH_NAME
-
-            echo "✅ অটো-ফিক্স সফলভাবে প্রয়োগ করা হয়েছে! পাইপলাইন এখন সেলফ-হিল্ড।" >> $GITHUB_STEP_SUMMARY
-            exit 0
-          else
-            echo "❌ কোনো অটো-ফিক্সযোগ্য পরিবর্তন পাওয়া যায়নি। ব্যর্থতাটি ম্যানুয়ালি চেক করতে হবে।" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
   observability-audit:
     name: "🔬 Observability Audit (No Silent Errors)"
     needs: [pre-merge-gate]
@@ -235,21 +204,17 @@ jobs:
         with:
           plugins: poetry-plugin-export
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          enable-cache: true
+          cache-dependency-glob: 'backend/poetry.lock'
 
       - name: Setup Python & Install Dependencies
         working-directory: backend
         run: |
-          python -m pip install --upgrade pip
-          poetry config virtualenvs.create false
           poetry export --with dev --without ml,tools --format requirements.txt --output requirements.txt
-          pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+          uv pip install --system -r requirements.txt
 
       - name: 🛡️ Safety Guard - File Protection Validation
         id: safety_guard
@@ -312,8 +277,8 @@ jobs:
           echo "- Codegraph: ${{ steps.codegraph.outcome }}" >> $GITHUB_STEP_SUMMARY
 
   backend-core:
-    name: 🐍 Backend (Test & Auto-Fix)
-    needs: [changes, pre-merge-gate, production-readiness]
+    name: 🐍 Backend (Test)
+    needs: [changes, pre-merge-gate]
     if: >
       !failure() && !cancelled() &&
       (
@@ -344,96 +309,17 @@ jobs:
         with:
           plugins: poetry-plugin-export
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          enable-cache: true
+          cache-dependency-glob: 'backend/poetry.lock'
 
       - name: Setup Python & Install Dependencies
         working-directory: backend
         run: |
-          python -m pip install --upgrade pip
-          poetry config virtualenvs.create false
           poetry export --with dev --without ml,tools --format requirements.txt --output requirements.txt
-          pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
-
-      - name: 🩹 Auto-Fix and Format Code
-        working-directory: backend
-        run: |
-          # ১. Ruff দিয়ে এরর ফিক্স এবং ফরম্যাট করা
-          python -m ruff check backend/ --fix || true
-          poetry run ruff format || true
-
-          # ২. গিট চেঞ্জ চেক করে পুশ করা (Self-Healing)
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "🔧 Formatting changes detected! Committing and pushing back..."
-            git config user.name "SupremeAI Auto-Fix Bot 🤖"
-            git config user.email "actions@github.com"
-            git add .
-            git commit -m "style(ci): auto-fix formatting issues 🔧 [skip ci]"
-
-            BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
-            git remote set-url origin https://x-access-token:${{ secrets.GH_PAT_FOR_AUTO_FIX }}@github.com/${{ github.repository }}.git
-
-            git pull --rebase origin $BRANCH_NAME
-            git push origin HEAD:$BRANCH_NAME
-
-            echo "✅ Auto-Format applied successfully!"
-            # নতুন রান ট্রিগার করার জন্য আমরা exit 0 দিয়ে জব পাস করাব
-            exit 0
-          else
-            echo "✅ No formatting changes needed."
-          fi
-
-      - name: 🚫 Zero-Gap Stub Data Gate
-        id: stub_data_gate
-        working-directory: backend
-        run: |
-          echo "## 🚫 Zero-Gap Stub Data Gate" >> $GITHUB_STEP_SUMMARY
-          python ../scripts/find_stub_data.py --path .. --fail-on HIGH >> $GITHUB_STEP_SUMMARY 2>&1 || {
-            echo "❌ Stub/placeholder data detected in codebase" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          }
-          echo "✅ No stub/placeholder patterns found above HIGH severity" >> $GITHUB_STEP_SUMMARY
-
-      # বাংলা মন্তব্য: Code Smell Detector - CI/CD mandatory integration
-      - name: 🚨 Code Smell Check (Mandatory, Blocking)
-        id: code_smell_check
-        working-directory: backend
-        run: |
-          # বাংলা মন্তব্য: সঠিক ডিরেক্টরি পাথ (tools.code.code_smell_detector) থেকে CodeSmellDetector ইম্পোর্ট করা হচ্ছে।
-          poetry run python -c "from tools.code.code_smell_detector import CodeSmellDetector; detector = CodeSmellDetector(); result = detector.analyze_directory('tools'); total = sum(len(v) for v in result.values()); print('Found', total, 'code smell issues')" || {
-            echo "❌ Code smell check failed" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          }
-          echo "✅ Code smell check passed" >> $GITHUB_STEP_SUMMARY
-
-      # বাংলা মন্তব্য: Style Lint - Ruff format check
-      - name: 🔍 Style Lint (Ruff Format Check)
-        id: style_lint
-        working-directory: backend
-        run: |
-          echo "## 🔍 Style Lint Check" >> $GITHUB_STEP_SUMMARY
-          poetry run ruff format --check tools/ || {
-            echo "❌ Style lint failed - code not properly formatted" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          }
-          echo "✅ Style lint passed" >> $GITHUB_STEP_SUMMARY
-
-      # বাংলা মন্তব্য: PR Review Bot - Dry run for webhook validation
-      - name: 🤖 PR Review Bot (Dry Run)
-        id: pr_review_bot
-        working-directory: backend
-        run: |
-          # বাংলা মন্তব্য: সঠিক ডিরেক্টরি পাথ (tools.code.pr_reviewer) থেকে PRReviewer ইম্পোর্ট করা হচ্ছে।
-          poetry run python -c "from tools.code.pr_reviewer import PRReviewer; reviewer = PRReviewer(); print('PR Reviewer initialized successfully for webhook integration')" || {
-            echo "❌ PR Review Bot initialization failed" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          }
-          echo "✅ PR Review Bot ready" >> $GITHUB_STEP_SUMMARY
+          uv pip install --system -r requirements.txt
 
       - name: 🧪 Run Tests
         id: backend_tests
@@ -449,27 +335,6 @@ jobs:
             --pytest-json pytest-report.md \
             --coverage-json coverage.json \
             --label Backend
-
-      - name: 🔧 SupremeAI Auto-Fix Engine
-        if: failure() && steps.backend_tests.outcome == 'failure'
-        working-directory: backend
-        env:
-          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
-        run: poetry run python ../.github/scripts/ci-auto-fix-v3.py --job backend-test --mode fix
-
-      - name: 🧠 Multi-Model Consensus Check
-        if: failure() && steps.backend_tests.outcome == 'failure'
-        id: consensus
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DIFF_CONTENT: "$(git diff HEAD)"
-        run: |
-          # multi-model-evaluator.py একটি নতুন স্ক্রিপ্ট যা পরিবর্তনগুলো একাধিক মডেল দিয়ে যাচাই করবে
-          # যদি যাচাই ব্যর্থ হয়, এটি একটি নন-জিরো এক্সিট কোড দেবে
-          python .github/scripts/multi-model-evaluator.py
-          echo "✅ Consensus validation passed."
-
       - name: GCP Auth for Artifact Registry
         # বাংলা মন্তব্য: রেন্ডার-এ স্থানান্তরের কারণে জিসিপি বিল্ড ও পুশ নিষ্ক্রিয় করা হলো।
         if: false
@@ -611,45 +476,6 @@ jobs:
         # বাংলা মন্তব্য: ওয়ার্কস্পেস থেকে web-chat রিমুভ করা হয়েছে, তাই টার্বোরেপো ফিল্টার থেকে এটি বাদ দেওয়া হল।
         run: pnpm turbo run build lint --filter=supremeai-studio-client --filter=supremeai-vscode --cache-dir=.turbo
 
-      - name: 🩹 Inline Frontend Auto-Fix (On Failure)
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT_FOR_AUTO_FIX }}
-        run: |
-          echo "=== Inline Frontend Auto-Fix Triggered ===" >> $GITHUB_STEP_SUMMARY
-          echo "Running ESLint and Prettier auto-fixes..."
-
-          # Fix studio-client
-          if [ -d "apps/studio-client" ]; then
-            pnpm --dir apps/studio-client exec eslint . --fix || true
-          fi
-
-          # Fix web-chat
-          if [ -d "apps/web-chat" ]; then
-            pnpm --dir apps/web-chat exec eslint . --fix || true
-          fi
-
-          git add -u
-          if ! git diff --staged --quiet; then
-            echo "🔧 ফ্রন্টএন্ডে পরিবর্তন পাওয়া গেছে, ফিক্সগুলো কমিট করা হচ্ছে..."
-            git config --global user.name 'SupremeAI Auto-Fix Bot'
-            git config --global user.email 'bot@supremeai.dev'
-            git commit -m "fix(ci): Automatically apply frontend lint fixes inline [skip ci]"
-
-            BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
-            git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
-
-            echo "🔄 পুশ করার আগে রিমোট ব্রাঞ্চের সাথে সিঙ্ক করা হচ্ছে..."
-            git pull --rebase origin $BRANCH_NAME
-            git push origin HEAD:$BRANCH_NAME
-
-            echo "✅ ফ্রন্টএন্ড অটো-ফিক্স সফলভাবে প্রয়োগ করা হয়েছে! পাইপলাইন এখন সেলফ-হিল্ড।" >> $GITHUB_STEP_SUMMARY
-            exit 0
-          else
-            echo "❌ ফ্রন্টএন্ডের জন্য কোনো অটো-ফিক্সযোগ্য পরিবর্তন প্রয়োগ করা যায়নি।" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
 
       - name: Run Studio Client Vitest with JSON Report
         run: pnpm --dir apps/studio-client exec vitest run --reporter=json > apps/studio-client/vitest-report.json
@@ -680,31 +506,6 @@ jobs:
       - name: Run VS Code Extension Tests
         run: pnpm turbo run test --filter=supremeai-vscode --cache-dir=.turbo
 
-
-
-      - name: Install Python Dependencies for Frontend Auto-Fix
-        if: failure()
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install litellm
-
-      - name: 🔧 SupremeAI Auto-Fix Engine (Frontend)
-        if: failure()
-        env:
-          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python .github/scripts/ci-auto-fix-v3.py --job frontend --mode fix
-
-      - name: 🧠 Multi-Model Consensus Check (Frontend)
-        if: failure()
-        id: consensus_frontend
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DIFF_CONTENT: "$(git diff HEAD)"
-        run: |
-          python .github/scripts/multi-model-evaluator.py
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
