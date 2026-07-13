@@ -3,10 +3,8 @@ import { useState } from 'react';
 interface LoginViewProps {
   adminEmail: string;
   setAdminEmail: (val: string) => void;
-  adminPassword: string;
-  setAdminPassword: (val: string) => void;
   adminError: string;
-  handleAdminLogin: () => void;
+  handleAdminLogin: (password?: string) => void;
   otpRequired: boolean;
   adminOtp: string;
   setAdminOtp: (val: string) => void;
@@ -17,8 +15,6 @@ interface LoginViewProps {
 export function LoginView({
   adminEmail,
   setAdminEmail,
-  adminPassword,
-  setAdminPassword,
   adminError,
   handleAdminLogin,
   otpRequired,
@@ -27,6 +23,8 @@ export function LoginView({
   totpSetupRequired,
   provisioningUri,
 }: LoginViewProps) {
+  const [localPassword, setLocalPassword] = useState('');
+
   return (
     <div className="flex-1 flex items-center justify-center p-6">
       <div className="w-full max-w-md glass-card text-center flex flex-col gap-6 relative overflow-hidden">
@@ -43,7 +41,10 @@ export function LoginView({
           className="flex flex-col gap-3.5"
           onSubmit={(e) => {
             e.preventDefault();
-            handleAdminLogin();
+            handleAdminLogin(localPassword);
+            if (!otpRequired) {
+              setLocalPassword(''); // Clear immediately after submission
+            }
           }}
         >
           {!otpRequired && (
@@ -59,8 +60,8 @@ export function LoginView({
               <input
                 type="password"
                 placeholder="Password"
-                value={adminPassword}
-                onChange={e => setAdminPassword(e.target.value)}
+                value={localPassword}
+                onChange={e => setLocalPassword(e.target.value)}
                 className="w-full text-center bg-[#07090f] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#00f3ff] transition-all font-mono tracking-widest"
                 required
               />
