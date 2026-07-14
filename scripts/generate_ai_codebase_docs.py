@@ -1,5 +1,4 @@
 import os
-import sys
 
 EXCLUDE_DIRS = {
     'node_modules', '.venv', '.git', '__pycache__', '.pytest_cache',
@@ -89,7 +88,7 @@ def write_file_to_markdown(filepath, relpath, ext, out):
         out.write("```\n\n")
     except UnicodeDecodeError:
         pass
-    except Exception as e:
+    except Exception:
         pass
 
 def generate_docs(root_dir, output_dir):
