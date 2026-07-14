@@ -14,8 +14,20 @@ from loguru import logger
 from core.observability.log_batcher import batcher
 
 
-# বাংলা মন্তব্য: BLE001 ফিক্স — নির্দিষ্ট এরর টাইপ ব্যবহার করা হয়েছে ব্লাইন্ড এক্সেপশন এভয়ড করার জন্য
-SPECIFIC_EXCEPTIONS = (ConnectionError, TimeoutError)
+# রিয়েল Redis client থাকলে তার exception hierarchy-ও ধরা — না থাকলে gracefully skip
+try:
+    from redis.exceptions import RedisError
+    _REDIS_EXC: tuple = (RedisError,)
+except ImportError:
+    _REDIS_EXC = ()
+
+SPECIFIC_EXCEPTIONS = (
+    ConnectionError,
+    TimeoutError,
+    json.JSONDecodeError,   # করাপ্টেড state payload
+    ValueError,             # int(failures_raw) পার্স ফেইল
+    *_REDIS_EXC,            # redis-py-র নিজস্ব এরর টাইপ (AuthenticationError, ResponseError ইত্যাদি)
+)
 
 
 T = TypeVar("T")

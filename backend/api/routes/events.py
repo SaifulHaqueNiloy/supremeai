@@ -21,9 +21,9 @@ async def dashboard_stream(request: Request):
 
     async def event_generator():
         # Subscribe to the required channels
-        dashboard_queue = global_pubsub.subscribe("dashboard_events")
-        metrics_queue = global_pubsub.subscribe("metrics_events")
-        tasks_queue = global_pubsub.subscribe("browser_tasks")
+        dashboard_queue = await global_pubsub.subscribe("dashboard_events")
+        metrics_queue = await global_pubsub.subscribe("metrics_events")
+        tasks_queue = await global_pubsub.subscribe("browser_tasks")
 
         try:
             while True:
@@ -51,8 +51,8 @@ async def dashboard_stream(request: Request):
                 if await request.is_disconnected():
                     break
         finally:
-            global_pubsub.unsubscribe("dashboard_events", dashboard_queue)
-            global_pubsub.unsubscribe("metrics_events", metrics_queue)
-            global_pubsub.unsubscribe("browser_tasks", tasks_queue)
+            await global_pubsub.unsubscribe("dashboard_events", dashboard_queue)
+            await global_pubsub.unsubscribe("metrics_events", metrics_queue)
+            await global_pubsub.unsubscribe("browser_tasks", tasks_queue)
 
     return EventSourceResponse(event_generator())

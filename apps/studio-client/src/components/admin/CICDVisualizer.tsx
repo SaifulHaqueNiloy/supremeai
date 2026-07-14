@@ -5,6 +5,7 @@ import { useStore } from '../../store/useStore';
 import { useCIReports } from '../../hooks/useAdminApi';
 import { getApiBaseUrl } from '../../utils/api';
 import { getAdminToken } from '../../services/adminTokenStore';
+import { apiClient } from '../../services/apiClient';
 import type { CIReport } from '../../types';
 
 interface FeatureFlag {
@@ -16,29 +17,45 @@ interface FeatureFlag {
   environment: 'staging' | 'production';
 }
 
-const MOCK_FLAGS: FeatureFlag[] = [
-  { id: '1', name: 'new_chat_ui', description: 'New chat interface with streaming', enabled: true, rollout: 25, environment: 'production' },
-  { id: '2', name: 'rag_v2', description: 'Improved RAG retrieval algorithm', enabled: false, rollout: 0, environment: 'staging' },
-  { id: '3', name: 'dark_mode', description: 'Dark mode toggle for all users', enabled: true, rollout: 100, environment: 'production' },
-];
-
 export function CICDVisualizer() {
-  const [flags, setFlags] = useState<FeatureFlag[]>(MOCK_FLAGS);
+  const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [selectedRun, setSelectedRun] = useState<CIReport | null>(null);
   const { deployGate, fetchGateStatus } = useStore();
   const { data: ciReports, isLoading: isCILoading, refetch: refetchCI } = useCIReports(15);
 
+  const fetchFlags = async () => {
+    try {
+      const res = await apiClient.get<{ flags: FeatureFlag[] }>('/admin-api/feature-flags');
+      setFlags(res.flags || []);
+    } catch (e) {
+      console.error("Failed to fetch feature flags", e);
+    }
+  };
+
   useEffect(() => {
     fetchGateStatus();
+    fetchFlags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleFlag = (id: string) => {
-    setFlags(flags.map(f => (f.id === id ? { ...f, enabled: !f.enabled } : f)));
+  const toggleFlag = async (id: string) => {
+    const flag = flags.find(f => f.id === id);
+    if (!flag) return;
+    try {
+      await apiClient.put(`/admin-api/feature-flags/${id}`, { enabled: !flag.enabled });
+      await fetchFlags();
+    } catch (e) {
+      console.error("Failed to toggle flag", e);
+    }
   };
 
-  const updateRollout = (id: string, rollout: number) => {
-    setFlags(flags.map(f => (f.id === id ? { ...f, rollout } : f)));
+  const updateRollout = async (id: string, rollout: number) => {
+    try {
+      await apiClient.put(`/admin-api/feature-flags/${id}`, { rollout });
+      await fetchFlags();
+    } catch (e) {
+      console.error("Failed to update rollout", e);
+    }
   };
 
   const getStatusBadgeVariant = (status: string): 'success' | 'warning' | 'info' | 'danger' => {
@@ -85,7 +102,7 @@ export function CICDVisualizer() {
           🚀 CI/CD & Deployment Control
         </h2>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={() => refetchCI()}
             className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold font-mono uppercase transition-colors"
           >
@@ -111,12 +128,12 @@ export function CICDVisualizer() {
             ) : (
               <div className="flex flex-col gap-3">
                 {ciReports.map((report) => (
-                  <div 
-                    key={report.id} 
+                  <div
+                    key={report.id}
                     onClick={() => setSelectedRun(selectedRun?.id === report.id ? null : report)}
                     className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                      selectedRun?.id === report.id 
-                        ? 'border-[#00f3ff] bg-[#00f3ff]/5' 
+                      selectedRun?.id === report.id
+                        ? 'border-[#00f3ff] bg-[#00f3ff]/5'
                         : 'border-slate-800 bg-slate-900/20 hover:border-slate-700'
                     }`}
                   >
