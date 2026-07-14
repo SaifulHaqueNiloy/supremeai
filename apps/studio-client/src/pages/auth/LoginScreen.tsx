@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../store/authStore';
+import { Link } from 'react-router-dom';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -13,10 +14,10 @@ export const LoginScreen = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-    
+
     setIsLoading(true);
     try {
-      await login(email, email.split('@')[0]);
+      await login(email, password);
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +68,9 @@ export const LoginScreen = () => {
         </CardContent>
         <CardFooter className="flex justify-center text-sm text-[var(--supremeai-color-neutral-500)]">
           Don't have an account?{' '}
-          <button className="text-[var(--supremeai-color-brand-500)] font-medium hover:underline ml-1">
-            Contact Admin
-          </button>
+          <Link to="/register" className="text-[var(--supremeai-color-brand-500)] font-medium hover:underline ml-1">
+            Sign Up
+          </Link>
         </CardFooter>
       </Card>
     </div>

@@ -9,15 +9,15 @@ export const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const login = useAuthStore((state) => state.login);
+  const register = useAuthStore((state) => state.register);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !name) return;
-    
+
     setIsLoading(true);
     try {
-      await login(email, name);
+      await register(email, name, password);
     } finally {
       setIsLoading(false);
     }
