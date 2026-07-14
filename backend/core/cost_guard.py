@@ -64,21 +64,78 @@ class CostGuard:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"CostGuard DB Error: {e}")
+            try:
+                from core.messaging.event_bus import ErrorEvent
+                from core.messaging.event_bus import error_event_bus
+
+                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="DB_ERROR", message=str(e), severity="ERROR"))
+            except ImportError:
+                pass
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
 
-    def validate_budget(self, tier: str) -> bool:
+    async def validate_budget(self, tenant_id: str, tier: str) -> bool:
         """
         নতুন মেthod: টাস্ক রাউটারের ৮০/১৫/৫ মাল্টি-টিয়ার ফলব্যাক চেইনের বাজেট ভ্যালিডেশনের জন্য।
         এটি চেক করবে ওই নির্দিষ্ট টিয়ারের কোটা এপিআই কলের জন্য খালি আছে কিনা।
         """
-        logger.info(f"[CostGuard] Validating execution safety gate for AI tier: '{tier}'")
+        logger.info(f"[CostGuard] Validating execution safety gate for AI tier: '{tier}' for tenant: '{tenant_id}'")
 
-        # প্রোডাকশনে এখানে রেডিস (Redis) বা ডাটাবেজ থেকে কারেন্ট ইউজ কোটা চেক হবে।
-        # আপাতত এটিকে True করে দেওয়া হলো যাতে আপনার টেস্ট সুইট এবং রাউটার নির্বিঘ্নে পাস করে।
-        if tier in self.tier_limits:
-            return True
+        max_task_cost = self.tier_limits.get(tier)
+        if max_task_cost is None:
+            return True  # unrestricted tier
+
+        from core.cache.redis_manager import redis_manager
+
+        key = f"cost_guard:{tenant_id}:{tier}:spent"
+
+        try:
+            spent_raw = await redis_manager.get_cache(key)
+            spent = float(spent_raw) if spent_raw else 0.0
+        except Exception as e:
+            logger.error(f"[CostGuard] Redis unavailable, fail-safe reject: {e}")
+            try:
+                from core.messaging.event_bus import ErrorEvent
+                from core.messaging.event_bus import error_event_bus
+
+                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_UNAVAILABLE", message=str(e), severity="WARNING"))
+            except ImportError:
+                pass
+            return tier == "free"  # fail-safe: শুধু ফ্রি টিয়ারে যেতে দাও
+
+        cap = self._daily_cap(tier)
+
+        # Check 1: Already exhausted
+        if spent >= cap:
+            logger.warning(f"[CostGuard] Tier '{tier}' quota exhausted for {tenant_id}")
+            return False
+
+        # Check 2: Will this task push it over?
+        if spent + max_task_cost > cap:
+            logger.warning(f"[CostGuard] Tier '{tier}' task budget would exceed quota for {tenant_id}")
+            return False
 
         return True
+
+    def _daily_cap(self, tier: str) -> float:
+        # Default daily cap strategy based on tier limit (e.g. 10x the per task limit)
+        return self.tier_limits.get(tier, 0.0) * 10.0
+
+    async def record_spend(self, tenant_id: str, tier: str, actual_cost: float):
+        from core.cache.redis_manager import redis_manager
+
+        key = f"cost_guard:{tenant_id}:{tier}:spent"
+
+        try:
+            await redis_manager.incrbyfloat(key, actual_cost, ex_seconds=86400)
+        except Exception as e:
+            logger.error(f"[CostGuard] Failed to record spend in Redis: {e}")
+            try:
+                from core.messaging.event_bus import ErrorEvent
+                from core.messaging.event_bus import error_event_bus
+
+                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_ERROR", message=str(e), severity="WARNING"))
+            except ImportError:
+                pass
 
 
 # CRITICAL FIX (Import Error & Backward Compatibility):

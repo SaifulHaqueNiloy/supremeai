@@ -88,14 +88,11 @@ def _validate_vm_id(vm_id: str) -> str:
 def _safe_vm_path(sandbox_root: Path, vm_id: str) -> Path:
     """
     বাংলা মন্তব্য: vm_id থেকে safe path তৈরি।
-    Path traversal check: final path অবশ্যই sandbox_root-এর under থাকবে।
-    vm_id validated হওয়া সত্ত্বেও double-check করা হয় — defense in depth।
+    ResourceGuard.verify_path ব্যবহার করে path traversal check করা হয়।
     """
+    from core.security.resource_guard import ResourceGuard
     vm_path = (sandbox_root / vm_id).resolve()
-    sandbox_root_str = str(sandbox_root)
-    if not str(vm_path).startswith(sandbox_root_str):
-        raise ValueError(f"Path traversal detected! vm_id '{vm_id}' resolves to '{vm_path}' which is outside sandbox root '{sandbox_root_str}'.")
-    return vm_path
+    return ResourceGuard.verify_path(vm_path)
 
 
 class MicroVMSandbox:
@@ -162,7 +159,8 @@ class MicroVMSandbox:
             "network-interfaces": [] if self.network_disabled else [],
         }
         config_path = vm_dir / "config.json"
-        config_path.write_text(json.dumps(config), encoding="utf-8")
+        from core.security.resource_guard import ResourceGuard
+        ResourceGuard.write_text(config_path, json.dumps(config), encoding="utf-8")
         return config_path
 
     async def execute_async(self, cmd: str, timeout: int = 30, language: str = "python") -> dict[str, Any]:

@@ -1,5 +1,4 @@
 import { getApiBaseUrl } from './api';
-import { useAdminStore } from '../store/adminStore';
 
 export function setupGlobalFetchInterceptor() {
   if (typeof window === 'undefined') return;
@@ -20,21 +19,21 @@ export function setupGlobalFetchInterceptor() {
 
     try {
       const response = await originalFetch.apply(this, args);
-      
+
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
            // Handle unauthorized access globally
-           const store = useAdminStore.getState();
-           if (store.adminAuthenticated) {
-             store.handleAdminLogout();
-           }
-           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-             // Redirect to login if on admin portal
+           import('../store/adminStore').then(({ useAdminStore }) => {
+             const store = useAdminStore.getState();
+             if (store.adminAuthenticated) {
+               store.handleAdminLogout();
+             }
+           });
              // Wait, handleAdminLogout already resets state. Let's redirect as user requested
              // Actually, if we just clear authenticated state, the App will render the login page.
            }
         }
-        
+
         let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
         try {
           const clone = response.clone();
@@ -54,7 +53,7 @@ export function setupGlobalFetchInterceptor() {
           (window as any).showGlobalToast('error', errorMsg);
         }
       }
-      
+
       return response;
     } catch (error) {
       if ((window as any).showGlobalToast) {

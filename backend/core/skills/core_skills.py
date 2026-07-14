@@ -24,6 +24,7 @@ class SystemDesignSkill(BaseSkill):
         resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
+
 class CodeGenerationSkill(BaseSkill):
     """
     বাংলা মন্তব্য: আর্কিটেকচার ব্লুপ্রিন্ট থেকে রিয়েল কোড জেনারেট করার স্কিল।

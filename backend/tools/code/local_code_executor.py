@@ -44,6 +44,11 @@ class LocalCodeExecutor:
     async def _run_host_subprocess(self, code: str, timeout: int) -> dict:
         logger.warning("⚠️ CRITICAL SECURITY NOTE: Running code directly on Host Subprocess!")
         try:
+            from tools.code.fuzz_sandbox import run_sandbox_ast_check
+
+            if not run_sandbox_ast_check(code):
+                return {"success": False, "error": "Host execution blocked: Code failed AST security layout check."}
+
             # অসিঙ্ক্রোনাসভাবে লোকাল হোস্ট প্রসেস এক্সিকিউট করা হচ্ছে
             proc = await asyncio.create_subprocess_exec("python", "-c", code, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)

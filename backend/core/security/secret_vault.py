@@ -21,7 +21,9 @@ class ProductionSecretVault:
     """
 
     def __init__(self):
-        self.env = os.getenv("ENV", "local").lower()
+        from core.config import settings
+
+        self.env = getattr(settings, "env", os.getenv("ENV", "local")).lower()
         self.project_id = os.getenv("INFISICAL_PROJECT_ID")
         self.client_id = os.getenv("INFISICAL_CLIENT_ID")
         self.client_secret = os.getenv("INFISICAL_CLIENT_SECRET")

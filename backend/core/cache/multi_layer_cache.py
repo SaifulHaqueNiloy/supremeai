@@ -10,14 +10,17 @@ The system prioritizes cache hits across layers before falling back to AI model
 """
 
 import hashlib
-from functools import lru_cache
+import threading
 from typing import Any
 
+from cachetools import TTLCache
 from loguru import logger
 
 from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
-
+from core.swarm_pubsub import swarm_streamer
+import json
+import asyncio
 
 # বাংলা মন্তব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
 # Redis client এখন lazy function-level এ initialize হবে।
@@ -179,18 +182,97 @@ class MultiLayerCache:
             logger.error(f"L3 prefix cache write error: {e}")
             error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_WRITE_FAILED", message=str(e)[:200], severity="WARNING"))
 
+        if session_id:
+            _set_session_cache(session_id, prompt, response)
+
         logger.info(f"💾 Response cached in all applicable layers for model {model_name}")
 
 
-# Level 4: Session Cache (In-memory LRU cache per worker)
-@lru_cache(maxsize=1000)
+# Level 4: Session Cache (In-memory TTLCache per worker)
+_session_cache: TTLCache = TTLCache(maxsize=2000, ttl=600)  # 10 minutes, per-worker
+_session_lock = threading.Lock()
+
+
+def _session_key(session_id: str, prompt: str) -> str:
+    return f"{session_id}:{hashlib.sha256(prompt.encode()).hexdigest()[:16]}"
+
+
 def _get_session_cache(session_id: str, prompt: str) -> str | None:
     """বাংলা মন্তব্য: per-worker in-memory session cache — None মানে miss।"""
-    return None
+    with _session_lock:
+        return _session_cache.get(_session_key(session_id, prompt))
+
+
+def _set_session_cache(session_id: str, prompt: str, response: str) -> None:
+    with _session_lock:
+        _session_cache[_session_key(session_id, prompt)] = response
 
 
 import asyncio  # noqa: E402 — asyncio must be available for CancelledError
 
+
+def _cache_invalidation_listener(event: ErrorEvent) -> None:
+    """বাংলা মন্তব্য: Event-Sourced Cache Invalidation
+    ErrorEventBus থেকে ইভেন্ট রিসিভ করে ক্যাশ ক্লিয়ার করে।
+    """
+    if event.error_type in ["CIRCUIT_OPEN", "LLM_DOWN", "RATE_LIMIT_EXCEEDED"]:
+        tenant_id = event.context.get("tenant_id") or (event.structured_context.env if event.structured_context else None)
+        # Attempt to get tenant from context
+
+        with _session_lock:
+            if tenant_id:
+                # Filter and clear only keys associated with this tenant
+                keys_to_delete = [k for k in _session_cache.keys() if tenant_id in str(k)]
+                for k in keys_to_delete:
+                    del _session_cache[k]
+                logger.info(
+                    f"🧹 Event-Sourced Cache: Invalidated {len(keys_to_delete)} session cache keys for tenant {tenant_id} due to {event.error_type}."
+                )
+            else:
+                # Fallback to clear all if tenant_id is not explicitly provided in the error context
+                _session_cache.clear()
+                logger.info(f"🧹 Event-Sourced Cache: Invalidated entire session cache due to {event.error_type}.")
+
+
+error_event_bus.register_listener(_cache_invalidation_listener)
+
+async def start_swarm_cache_invalidator():
+    """বাংলা মন্তব্য: SwarmPubSub থেকে domain ইভেন্ট শুনে ক্যাশ ক্লিয়ার করা।"""
+    try:
+        async for message_str in swarm_streamer.subscribe():
+            try:
+                message = json.loads(message_str)
+                event_type = message.get("type")
+                payload = message.get("data", {})
+
+                target_events = [
+                    "KNOWLEDGE_BASE_UPDATED",
+                    "TENANT_CONFIG_CHANGED",
+                    "TENANT_DELETED",
+                    "SYSTEM_CIRCUIT_OPEN",
+                    "CACHE_INVALIDATE_REQUESTED"
+                ]
+
+                if event_type in target_events:
+                    tenant_id = payload.get("tenant_id")
+
+                    with _session_lock:
+                        if tenant_id:
+                            keys_to_delete = [k for k in _session_cache.keys() if tenant_id in str(k)]
+                            for k in keys_to_delete:
+                                del _session_cache[k]
+                            logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event_type}.")
+                        else:
+                            _session_cache.clear()
+                            logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared entire session cache due to {event_type}.")
+            except json.JSONDecodeError:
+                pass
+            except Exception as e:
+                logger.error(f"Error in swarm cache invalidator processing: {e}")
+    except asyncio.CancelledError:
+        logger.info("Swarm cache invalidator task cancelled.")
+    except Exception as e:
+        logger.error(f"Swarm cache invalidator crashed: {e}")
 
 # Global instance — lazy init, no network on import
 multi_layer_cache = MultiLayerCache()

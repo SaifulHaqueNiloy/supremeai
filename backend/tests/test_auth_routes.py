@@ -177,4 +177,3 @@ class TestRequestModels:
     def test_me_response_with_scopes(self):
         resp = MeResponse(user_id="u1", role="admin", scopes=("read", "write"))
         assert resp.scopes == ("read", "write")
-

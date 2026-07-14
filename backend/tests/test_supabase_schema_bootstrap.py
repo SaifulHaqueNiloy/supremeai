@@ -139,6 +139,7 @@ LIVE_SUPABASE = bool(
 )
 IS_CI = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
 
+
 @pytest.mark.skipif(
     not LIVE_SUPABASE or IS_CI,
     reason="Live Supabase environment is not configured for integration testing, or running in CI with mock credentials",
