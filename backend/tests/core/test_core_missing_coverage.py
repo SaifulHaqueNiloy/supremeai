@@ -269,18 +269,20 @@ class TestCostGuardMissingBranches:
         result = await guard.check_budget("t1", 1.0)
         assert result is True
 
-    def test_validate_budget_accepts_known_tiers(self):
+    @pytest.mark.asyncio
+    async def test_validate_budget_accepts_known_tiers(self):
         from core.cost_guard import CostGuard
 
         guard = CostGuard()
         for tier in ("free", "economy", "premium"):
-            assert guard.validate_budget(tier) is True
+            assert await guard.validate_budget("t1", tier) is True
 
-    def test_validate_budget_returns_true_for_unknown_tier(self):
+    @pytest.mark.asyncio
+    async def test_validate_budget_returns_true_for_unknown_tier(self):
         from core.cost_guard import CostGuard
 
         guard = CostGuard()
-        assert guard.validate_budget("unknown") is True
+        assert await guard.validate_budget("t1", "unknown") is True
 
     @pytest.mark.asyncio
     async def test_check_budget_bypasses_when_no_db(self):

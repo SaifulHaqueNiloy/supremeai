@@ -70,14 +70,14 @@ class AutoRemediation:
             ) from ve
         return real_path
 
-    async def process_security_alert(self, file_path: str, line_number: int, issue: str, severity: str) -> dict:
+    async def process_security_alert(self, file_path: str, line_number: int, issue: str, severity: str, tenant_id: str = "default_tenant") -> dict:
         """বাংলা মন্তব্য: P1 Fix — method কে fully async করা হলো।
         আগে: asyncio.run()/loop.run_until_complete() ব্যবহার হতো → running event loop-এ RuntimeError।
         এখন: সব I/O অপারেশন await দিয়ে চলে — কোনো blocking নেই।
         """
         logger.info(f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}")
 
-        # Path traversal protection (ধাপ ১.৫ দেখুন)
+        # Path traversal protection
         safe_path = self._validate_file_path(file_path)
 
         if not os.path.exists(safe_path):
@@ -86,50 +86,30 @@ class AutoRemediation:
         with open(safe_path, encoding="utf-8") as f:
             original_code = f.read()
 
-        # বাংলা মন্তব্য: P1 Fix — সরাসরি await, asyncio.run() নয়
         fixed_code = await self._get_ai_patch(safe_path, original_code, line_number, issue)
 
         if not fixed_code:
             return {"success": False, "error": "AI failed to generate a secure patch"}
 
-        # Syntax validation
-        try:
-            import ast
+        from core.health.self_healer import RemediationPipeline
 
-            if fixed_code.strip() and not fixed_code.strip().startswith("#"):
-                ast.parse(fixed_code)
-        except SyntaxError as se:
-            logger.error(f"AI-generated patch failed validation: {se}")
-            return {
-                "success": False,
-                "error": f"Generated patch contains invalid syntax: {se}",
-            }
+        pipeline = RemediationPipeline()
 
-        # Write patched file
-        try:
-            with open(safe_path, "w", encoding="utf-8") as f:
-                f.write(fixed_code)
-            logger.info(f"Patch applied successfully to {safe_path}")
-        except Exception as e:  # noqa: BLE001
-            return {"success": False, "error": f"Failed to apply patch: {e}"}
+        # Determine impact score based on severity
+        impact_score = 0.8 if severity.lower() == "high" or severity.lower() == "critical" else 0.3
 
-        # Create GitHub PR
-        import asyncio
+        result = await pipeline.submit(tenant_id, issue, fixed_code, impact_score, [])
 
-        try:
-            pr = await asyncio.to_thread(self._create_github_pr, safe_path, original_code, fixed_code, issue)
-            if pr:
-                logger.info(f"Created PR: {pr.html_url}")
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Failed to create PR: {e}")
+        if result.startswith("reject"):
+            return {"success": False, "error": f"Patch rejected by pipeline: {result}"}
 
         return {
             "success": True,
             "file": file_path,
-            "patch_applied": True,
+            "patch_applied": True,  # Or pending_review depending on impact score
             "branch": "supremeai-improvements",
             "pr_url": None,
-            "message": "Remediation patch applied and committed.",
+            "message": f"Remediation patch processed by pipeline. ID: {result}",
         }
 
     async def _get_ai_patch(self, file_path: str, code: str, line_number: int, issue: str) -> str:

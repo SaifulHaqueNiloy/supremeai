@@ -3,6 +3,8 @@ import { useStore } from '../store/useStore';
 import { useCustomerStore } from '../store/customerStore';
 import type { ChatMessage } from '../types/customer';
 import { getApiBaseUrl } from '../utils/api';
+// বাংলা মন্তব্য: getAuthHeaders import — streaming fetch এ Authorization header মিসিং ছিল, এখন যোগ হলো
+import { getAuthHeaders } from '../services/apiClient';
 
 
 interface UseChatOptions {
@@ -62,7 +64,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       try {
         const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // বাংলা মন্তব্য: ...getAuthHeaders() যোগ — আগে streaming fetch তে Authorization header ছিল না, backend 401 দিতো
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: userMsg.content,
             project_id: projectId,
@@ -129,7 +132,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       try {
         const res = await fetch(`${getApiBaseUrl()}/api/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // বাংলা মন্তব্য: non-streaming path এও auth header যোগ হলো
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: userMsg.content,
             project_id: projectId,

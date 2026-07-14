@@ -15,7 +15,7 @@ from core.observability.log_batcher import batcher
 
 
 # বাংলা মন্তব্য: BLE001 ফিক্স — নির্দিষ্ট এরর টাইপ ব্যবহার করা হয়েছে ব্লাইন্ড এক্সেপশন এভয়ড করার জন্য
-SPECIFIC_EXCEPTIONS = (ConnectionError, TimeoutError, ValueError)
+SPECIFIC_EXCEPTIONS = (ConnectionError, TimeoutError)
 
 
 T = TypeVar("T")
@@ -127,7 +127,24 @@ class CircuitBreaker:
         with self._lock:
             self._half_open_in_flight = max(0, self._half_open_in_flight - 1)
         if self.state != "CLOSED":
-            self._emit_alert("CIRCUIT_CLOSED")
+            mttr = 0.0
+            if self.opened_at is not None:
+                mttr = time.time() - self.opened_at
+
+            from core.messaging.event_bus import ErrorEvent
+            from core.messaging.event_bus import error_event_bus
+
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="circuit_breaker",
+                    error_type="CIRCUIT_RECOVERY",
+                    message=f"Circuit Breaker {self.name} recovered. MTTR: {mttr:.2f}s",
+                    severity="INFO",
+                    context={"cb_name": self.name, "mttr": mttr},
+                )
+            )
+            self._emit_alert("CIRCUIT_CLOSED", mttr=mttr)
+
         self.failures = 0
         self.state = "CLOSED"
         self.opened_at = None
@@ -165,7 +182,7 @@ class CircuitBreaker:
             self._emit_alert("CIRCUIT_OPEN")
         self._persist_to_redis()
 
-    def _emit_alert(self, status: str) -> None:
+    def _emit_alert(self, status: str, mttr: float | None = None) -> None:
         try:
             from datetime import UTC
 
@@ -178,6 +195,9 @@ class CircuitBreaker:
                 "model": self.name,
                 "status": status,
             }
+            if mttr is not None:
+                log_entry["mttr"] = mttr
+
             batcher.emit(log_entry)
         except SPECIFIC_EXCEPTIONS as e:
             # বাংলা মন্তব্য: অ্যালার্ট ইমিট করার সময় নির্দিষ্ট এররগুলো ক্যাচ করা হয়েছে

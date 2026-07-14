@@ -136,15 +136,10 @@ async def me(current_user: UserContext | None = Depends(optional_current_user)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     return MeResponse(user_id=current_user.user_id, role=current_user.role, scopes=current_user.scopes)
 
+
 @router.get("/verify")
 async def verify_token(request: Request):
     user = getattr(request.state, "user", None)
     if not user:
         raise HTTPException(status_code=401, detail="Missing or invalid token")
-    return {
-        "valid": True,
-        "user_id": user.get("sub"),
-        "role": user.get("role"),
-        "message": "Authentication successful"
-    }
-
+    return {"valid": True, "user_id": user.get("sub"), "role": user.get("role"), "message": "Authentication successful"}

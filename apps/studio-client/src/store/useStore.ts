@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { getApiBaseUrl } from '../utils/api';
+// বাংলা মন্তব্য: raw fetch() সরিয়ে apiClient ব্যবহার — auth header সব request এ যাবে
+import { apiClient } from '../services/apiClient';
 import { AppDefaults } from '../config/constants';
 
 
@@ -11,7 +12,7 @@ interface ChatMessage {
 }
 
 interface DeployGateInfo {
-  status: "LOCKED" | "UNLOCKED";
+  // বাংলা মন্তব্য: আগে duplicate status field ছিল — TypeScript compile error। একটি রাখা হলো।
   status: "LOCKED" | "UNLOCKED";
   reason: string;
   updated_at?: string;
@@ -27,7 +28,7 @@ interface EvolutionState {
   isForging: boolean;
   forgeFeedback: string | null;
   forgeSuccessCode: string | null;
-  
+
   // ⚡ Evolution Action
   forgeNewSkill: (skillName: string, userDemand: string) => Promise<void>;
 }
@@ -41,7 +42,7 @@ interface SupremeState extends EvolutionState, ConfigState {
   activeTaskType: string;
   executionError: string | null;
   streamLogs: string[];
-  
+
   // 🛡️ New Autonomous Gate States
   deployGate: DeployGateInfo | null;
   isGateLoading: boolean;
@@ -52,7 +53,7 @@ interface SupremeState extends EvolutionState, ConfigState {
   addMessage: (message: Omit<ChatMessage, "id" | "timestamp">) => void;
   clearHistory: () => void;
   triggerOrchestration: (active: boolean, error?: string | null) => void;
-  
+
   // ⚡ New Gate Actions
   fetchGateStatus: () => Promise<void>;
   executeGateOverride: (targetStatus: string, reason: string, secret: string) => Promise<{ success: boolean; message: string }>;
@@ -71,7 +72,7 @@ export const useStore = create<SupremeState>((set) => ({
   activeTaskType: "general",
   executionError: null,
   streamLogs: [],
-  
+
   // Default States
   deployGate: null,
   isGateLoading: false,
@@ -95,18 +96,14 @@ export const useStore = create<SupremeState>((set) => ({
 
   // ── 🛡️ Autonomous Gate Management Actions ────────────────────────
   fetchGateStatus: async () => {
+    // বাংলা মন্তব্য: raw fetch() → apiClient — Authorization header এখন সব request এ যাচ্ছে
     set({ isGateLoading: true });
     try {
-      // আমরা যে গেটকিপার ফায়ারস্টোর ডাটা বানিয়েছি তা চেক করার এন্ডপয়েন্ট (অথবা কাস্টম গেট রুট)
-      const res = await fetch(`${getApiBaseUrl()}/api/admin/metrics/dashboard`);
-      if (res.ok) {
-        const data = await res.json();
-        // ড্যাশবোর্ড ম্যাট্রিক্স থেকে গেট ডাটা এক্সট্রাক্ট (ফলব্যাকসহ)
-        set({ deployGate: { 
-          status: data.status === "HEALTHY" ? "UNLOCKED" : "LOCKED", 
-          reason: data.error || "System operating within safe deployment thresholds."
-        }});
-      }
+      const data = await apiClient.get<any>('/api/admin/metrics/dashboard');
+      set({ deployGate: {
+        status: data.status === "HEALTHY" ? "UNLOCKED" : "LOCKED",
+        reason: data.error || "System operating within safe deployment thresholds."
+      }});
     } catch (err) {
       console.error("Failed to sync deploy gate telemetry:", err);
     } finally {
@@ -115,55 +112,47 @@ export const useStore = create<SupremeState>((set) => ({
   },
 
   executeGateOverride: async (targetStatus, reason, secret) => {
+    // বাংলা মন্তব্য: raw fetch() → apiClient — auth header এখন যাচ্ছে। admin_secret এখনো body তে, HTTPS চ্যানেলে safe।
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/admin/gate/override`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          target_status: targetStatus,
-          reason: reason,
-          admin_secret: secret
-        })
+      const data = await apiClient.post<any>('/api/admin/gate/override', {
+        target_status: targetStatus,
+        reason,
+        admin_secret: secret,
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (data.success) {
         set({ deployGate: { status: data.forced_status, reason: `👑 Forced: ${reason}` } });
         return { success: true, message: data.message };
       }
-        return { success: false, message: data.detail || "Override verification rejected." };
+      return { success: false, message: data.detail || "Override verification rejected." };
     } catch (err: any) {
       return { success: false, message: err.message || "Network isolation error." };
     }
   },
 
   forgeNewSkill: async (skillName, userDemand) => {
+    // বাংলা মন্তব্য: raw fetch() → apiClient — Authorization header সহ, 402/429 status properly throw হবে
     set({ isForging: true, forgeFeedback: "🧠 Self-Evolution Core is structuring your request...", forgeSuccessCode: null });
-    
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/evolution/forge`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skill_name: skillName, user_demand: userDemand })
+      const data = await apiClient.post<any>('/api/evolution/forge', {
+        skill_name: skillName,
+        user_demand: userDemand,
       });
-      
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        set({ 
-          isForging: false, 
+      if (data.success) {
+        set({
+          isForging: false,
           forgeFeedback: `🏆 Success! Skill '${data.skill_name}' is fully deployed to Firestore.`,
-          forgeSuccessCode: data.generated_code // যদি ব্যাকএন্ড কোড রিটার্ন করে, তা স্ক্রিনে দেখানোর জন্য
+          forgeSuccessCode: data.generated_code,
         });
       } else {
-        set({ 
-          isForging: false, 
-          forgeFeedback: `🚨 Evolution Blocked: ${data.detail || data.error || "Sandbox Verification Failed."}` 
+        set({
+          isForging: false,
+          forgeFeedback: `🚨 Evolution Blocked: ${data.detail || data.error || "Sandbox Verification Failed."}`,
         });
       }
     } catch (err: any) {
-      set({ 
-        isForging: false, 
-        forgeFeedback: `❌ Infrastructure Error: ${err.message || "Network Failure."}` 
+      set({
+        isForging: false,
+        forgeFeedback: `❌ Infrastructure Error: ${err.message || "Network Failure."}`,
       });
     }
   }

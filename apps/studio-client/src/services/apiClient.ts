@@ -21,16 +21,24 @@ export const setApiConcurrency = (concurrency: number) => {
   requestQueue.concurrency = concurrency;
 };
 
+let cachedToken: string | null = null;
+
+export const updateTokenCache = (token: string | null) => {
+  cachedToken = token;
+};
+
 export const getAuthHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
 
   // 🟢 Sprint 5: Backend API Integration
-  // Use localStorage or zustand state to get token. Assuming token is saved in localStorage 'supremeai_auth_token'
-  const token = localStorage.getItem('supremeai_auth_token');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (cachedToken === null) {
+    cachedToken = localStorage.getItem('supremeai_auth_token') || '';
+  }
+
+  if (cachedToken) {
+    headers['Authorization'] = `Bearer ${cachedToken}`;
   }
 
   return headers;

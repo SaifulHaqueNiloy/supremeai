@@ -15,9 +15,6 @@ if (import.meta.env.PROD) {
   startAntiSleepHeartbeat();
 }
 
-// Inject globally for any UI components or legacy scripts that expect it
-(window as any).getApiBaseUrl = getApiBaseUrl;
-
 import { ThemeProvider } from './contexts/ThemeProvider'
 // Shared providers (react-query, monaco defaults)
 import { SharedProviders } from '@supremeai/ui-components'

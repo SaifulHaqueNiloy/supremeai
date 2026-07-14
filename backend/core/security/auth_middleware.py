@@ -198,6 +198,7 @@ class AuthMiddleware:
 
                 from core.security import hash_api_key
                 from models.api_key import get_api_key_by_hash
+
                 token_hash = hash_api_key(token)
                 api_key_data = await get_api_key_by_hash(token_hash)
 
@@ -306,11 +307,18 @@ async def verify_admin_session_fail_closed(request: Request) -> dict:
         ) from None
 
     except Exception as fatal_exception:  # noqa: BLE001
-        # ❌ পুরানো ভুল পদ্ধতি (Fail-Open): return None বা পাস করা
         # ✅ নতুন সঠিক পদ্ধতি: P1/P2 Fail-Closed এনফোর্সমেন্ট। যেকোনো আননোন ক্র্যাশে রিকোয়েস্ট হার্ড-ব্লক।
         logger.critical(f"🔥 FATAL AUTH EXCEPTION: Dynamic crash detected during auth flow -> {str(fatal_exception)}")
+        try:
+            from core.messaging.event_bus import ErrorEvent
+            from core.messaging.event_bus import error_event_bus
+
+            error_event_bus.emit(
+                ErrorEvent(module="auth_middleware", error_type="FATAL_AUTH_EXCEPTION", message=str(fatal_exception), severity="CRITICAL")
+            )
+        except ImportError:
+            pass
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Security handshake verification failure. Access safely denied.",
         ) from None
-

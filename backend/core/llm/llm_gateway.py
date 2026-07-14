@@ -247,7 +247,14 @@ class LLMGateway:
             db = get_firestore_db()
             if db:
                 cost_guard = CostGuard(db)
-                await cost_guard.check_budget(tenant_id, 0.01)
+                try:
+                    from core.prompt_handler import estimate_tokens
+
+                    tokens = estimate_tokens(prompt_text)
+                    estimated_cost = tokens * 0.00001
+                except Exception:
+                    estimated_cost = 0.01
+                await cost_guard.check_budget(tenant_id, estimated_cost)
 
         call_chain = self._build_call_chain(model, provider, task_type)
 
@@ -365,11 +372,11 @@ class LLMGateway:
                     stream=True,
                     api_key=api_key,
                 )
-                cb.mark_success()
                 async for chunk in response_stream:
                     content = chunk.choices[0].delta.content
                     if content:
                         yield content
+                cb.mark_success()
                 return
             except asyncio.CancelledError:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না

@@ -55,9 +55,15 @@ class AutoSkillCreator:
                 if client is not None:
                     self.skills_ref = client.collection("supreme_dynamic_skills")
             except Exception as e:  # noqa: BLE001
-                import logging
+                try:
+                    from core.messaging.event_bus import ErrorEvent
+                    from core.messaging.event_bus import error_event_bus
 
-                logging.warning(f"Exception suppressed: {e}")
+                    error_event_bus.emit(
+                        ErrorEvent(module="auto_skill_creator", error_type="FIRESTORE_INIT_FAILED", message=str(e), severity="WARNING")
+                    )
+                except ImportError:
+                    pass
             if self.skills_ref is None:
 
                 class MockDoc:
@@ -206,10 +212,9 @@ class AutoSkillCreator:
             entry_file = quarantine_dir / "main.py"
             schema_file = quarantine_dir / "schema.json"
 
-            with open(entry_file, "w", encoding="utf-8") as f:
-                f.write(code_block)
-            with open(schema_file, "w", encoding="utf-8") as f:
-                json.dump(schema_dict, f, indent=4)
+            from core.security.resource_guard import ResourceGuard
+            ResourceGuard.write_text(entry_file, code_block)
+            ResourceGuard.write_text(schema_file, json.dumps(schema_dict, indent=4))
 
             # Load module from quarantine and execute validation tests inside the restricted Docker Sandbox
             # বাংলা মন্তব্য: এআই জেনারেটেড কোডটি সরাসরি লোকাল ইন্টারপ্রেটারে রান না করিয়ে
@@ -236,6 +241,9 @@ async def run():
 
 asyncio.run(run())
 """
+                is_safe_test = run_sandbox_ast_check(sandbox_script)
+                if not is_safe_test:
+                    raise SecurityError("Generated test harness failed AST layout normalization.")
                 run_res = await sandbox.execute_local_code(sandbox_script)
                 if not run_res.get("success"):
                     err_msg = run_res.get("error", run_res.get("stderr"))
