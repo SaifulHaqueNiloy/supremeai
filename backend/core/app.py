@@ -222,6 +222,19 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException) ->
     )
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error(f"Unhandled Exception on {request.url.path}: {exc}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "title": "Internal Server Error",
+            "detail": "An unexpected error occurred. This has been logged and our team will investigate.",
+            "instance": request.url.path,
+        },
+    )
+
+
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
