@@ -1,4 +1,3 @@
-import os
 
 maintenance_path = r'c:\Users\n\supremeai\supremeai_2.0\.github\workflows\maintenance_pipeline.yml'
 core_ci_path = r'c:\Users\n\supremeai\supremeai_2.0\.github\workflows\supreme-core-ci.yml'

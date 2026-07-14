@@ -1,4 +1,3 @@
-import os
 
 path = 'backend/tests/tools/test_style_learner_ast.py'
 with open(path, 'r', encoding='utf-8') as f:

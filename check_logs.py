@@ -1,5 +1,4 @@
 import requests
-import json
 
 import os
 api_key = os.getenv("RENDER_API_KEY")

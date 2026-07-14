@@ -1,4 +1,5 @@
-import os, re
+import os
+import re
 tests_dir = 'backend/tests'
 
 def replace_in_file(path, old, new):
