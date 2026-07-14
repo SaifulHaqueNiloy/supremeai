@@ -1,7 +1,10 @@
-import time
-
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from database.session import get_db_session
+from models.selector_healing_event import SelectorHealingEvent
 
 
 router = APIRouter(prefix="/api/admin/selector-healing", tags=["Self-Healing Logs"])
@@ -23,31 +26,51 @@ class DecisionIn(BaseModel):
     approve: bool
 
 
-# In-memory mock for now since the DB schema (selector_healing_event) is handled by SQLAlchemy in phase 1
-MOCK_EVENTS = [
-    {
-        "id": "evt_001",
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "action_id": 4,
-        "original_selector": "#login-form > div.submit-wrapper > button",
-        "healed_selector": "button[data-testid='login-submit']",
-        "confidence_score": 98,
-        "auto_applied": False,
-        "screenshot_before_base64": "",
-        "screenshot_after_base64": "",
-    }
-]
-
-
 @router.get("/")
-def get_healing_logs():
-    return {"items": MOCK_EVENTS}
+async def get_healing_logs(session: AsyncSession = Depends(get_db_session)):
+    result = await session.execute(select(SelectorHealingEvent))
+    events = result.scalars().all()
+
+    formatted = []
+    for evt in events:
+        formatted.append({
+            "id": str(evt.id),
+            "ts": "", # Add a timestamp field to model later
+            "action_id": str(evt.action_id),
+            "original_selector": evt.old_selector,
+            "healed_selector": evt.new_selector,
+            "confidence_score": float(evt.confidence_score),
+            "auto_applied": evt.auto_applied,
+            "screenshot_before_base64": evt.screenshot_before_url or "",
+            "screenshot_after_base64": evt.screenshot_after_url or "",
+        })
+    return {"items": formatted}
 
 
 @router.post("/{event_id}/decision")
-def make_healing_decision(event_id: str, payload: DecisionIn):
-    for evt in MOCK_EVENTS:
-        if evt["id"] == event_id:
-            evt["auto_applied"] = payload.approve
-            return {"status": "success", "event": evt}
-    return {"status": "error", "message": "not found"}
+async def make_healing_decision(event_id: str, payload: DecisionIn, session: AsyncSession = Depends(get_db_session)):
+    import uuid
+    try:
+        eid = uuid.UUID(event_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid event UUID")
+
+    result = await session.execute(select(SelectorHealingEvent).where(SelectorHealingEvent.id == eid))
+    evt = result.scalars().first()
+    if not evt:
+        raise HTTPException(status_code=404, detail="not found")
+
+    evt.auto_applied = payload.approve
+    await session.commit()
+
+    return {"status": "success", "event": {
+        "id": str(evt.id),
+        "ts": "",
+        "action_id": str(evt.action_id),
+        "original_selector": evt.old_selector,
+        "healed_selector": evt.new_selector,
+        "confidence_score": float(evt.confidence_score),
+        "auto_applied": evt.auto_applied,
+        "screenshot_before_base64": evt.screenshot_before_url or "",
+        "screenshot_after_base64": evt.screenshot_after_url or "",
+    }}

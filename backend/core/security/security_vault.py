@@ -1,6 +1,6 @@
 import os
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, MultiFernet
 from loguru import logger
 
 from core.messaging.event_bus import ErrorEvent
@@ -27,7 +27,8 @@ if not ENCRYPTION_KEY:
         )
         raise ValueError("CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!")
 
-fernet = Fernet(ENCRYPTION_KEY.encode("utf-8"))
+_raw_keys = [k for k in os.environ.get("ENCRYPTION_KEYS", ENCRYPTION_KEY or "").split(",") if k.strip()]
+fernet = MultiFernet([Fernet(k.strip().encode("utf-8")) for k in _raw_keys])
 
 
 def encrypt_token(plain_text: str) -> str:

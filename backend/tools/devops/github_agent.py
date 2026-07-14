@@ -52,7 +52,6 @@ async def create_autonomous_pr(
 
     db_session বাধ্যতামূলক — না দিলে fail-fast করে, যাতে কেউ ভুলে placeholder দিয়ে ডিপ্লয় করতে না পারে।
     """  # noqa: W293
-    # ১. ডাটাবেস থেকে এনক্রিপ্টেড টোকেন নিয়ে ডিক্রিপ্ট করা
     if db is None:
         raise RuntimeError("create_autonomous_pr: db_session is required. Call with an active AsyncSession to fetch the GitHub token from DB.")
 
@@ -62,149 +61,113 @@ async def create_autonomous_pr(
             f"GitHub token not found or could not be decrypted for user '{user_id}'. Please connect GitHub via /integrations/github/link first."
         )
 
-    headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/vnd.github.v3+json"}
+    agent = GitHubAgent(token=access_token)
 
     branch_name = f"supremeai-auto-fix-{dt.now().strftime('%Y%m%d%H%M%S')}"
-    base_url = f"https://api.github.com/repos/{repo_name}"
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        # Step A: Get Default Branch SHA (সাধারণত 'main' বা 'master')
-        repo_info = await client.get(base_url, headers=headers)
-        if repo_info.status_code != 200:
-            raise Exception(f"Failed to fetch repo info: {repo_info.text}")
+    # Step 1: Commit the code
+    files_to_commit = {file_path: code_content}
+    await agent.commit_changes(repo_name, files_to_commit, commit_msg, branch_name)
 
-        default_branch = repo_info.json().get("default_branch", "main")
+    # Step 2: Create the Pull Request
+    title = f"🚀 SupremeAI Auto-Fix: {commit_msg}"
+    body = (
+        "This PR was autonomously generated and verified in the SupremeAI Zero-Cost Sandbox.\n\n"
+        "- ✅ Execution Verified\n"
+        "- 🧠 Saved to Memory Vault"
+    )
+    pr_res = await agent.create_pr(repo_name, title, body, branch_name)
 
-        ref_info = await client.get(f"{base_url}/git/refs/heads/{default_branch}", headers=headers)
-        if ref_info.status_code != 200:
-            raise Exception(f"Failed to fetch ref info: {ref_info.text}")
-
-        base_sha = ref_info.json()["object"]["sha"]
-
-        # Step B: Create New Branch
-        branch_res = await client.post(f"{base_url}/git/refs", headers=headers, json={"ref": f"refs/heads/{branch_name}", "sha": base_sha})
-        if branch_res.status_code != 201:
-            raise Exception(f"Failed to create branch: {branch_res.text}")
-
-        # Step C: Commit the Code to New Branch
-        encoded_code = base64.b64encode(code_content.encode("utf-8")).decode("utf-8")
-        commit_res = await client.put(
-            f"{base_url}/contents/{file_path}", headers=headers, json={"message": commit_msg, "content": encoded_code, "branch": branch_name}
-        )
-        if commit_res.status_code not in (200, 201):
-            raise Exception(f"Failed to commit file: {commit_res.text}")
-
-        # Step D: Create the Pull Request
-        pr_response = await client.post(
-            f"{base_url}/pulls",
-            headers=headers,
-            json={
-                "title": f"🚀 SupremeAI Auto-Fix: {commit_msg}",
-                "body": (
-                    "This PR was autonomously generated and verified in the SupremeAI Zero-Cost Sandbox.\n\n"
-                    "- ✅ Execution Verified\n"
-                    "- 🧠 Saved to Memory Vault"
-                ),
-                "head": branch_name,
-                "base": default_branch,
-            },
-        )
-
-        if pr_response.status_code != 201:
-            raise Exception(f"Failed to create PR: {pr_response.text}")
-
-        return pr_response.json().get("html_url")
+    return pr_res.get("pr_url")
 
 
 class GitHubAgent:
-    def __init__(self, token: str = None):
+    """Thin wrapper around the GitHub REST API. No mock/simulated responses —
+    every method either performs the real call or raises."""
+
+    def __init__(self, token: str | None = None):
         self.token = token or ""
         if not self.token:
             logger.warning("GitHubAgent initialized without a token; real API calls disabled.")
-        else:
-            logger.info("GitHubAgent initialized with token.")
 
-    def _require_token(self) -> str:
+    def _headers(self) -> dict:
         if not self.token:
             raise RuntimeError("GitHub token is required for real API operations.")
-        return self.token
+        return {"Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github.v3+json"}
 
-    def connect_repo(self, repo_owner: str, repo_name: str, installation_id: str = None) -> dict:
-        token = self.token or ""
-        logger.info(f"Connecting to repo {repo_owner}/{repo_name} using installation_id {installation_id}")
-        return {
-            "status": "success",
-            "message": f"Connected to {repo_owner}/{repo_name}",
-            "repo": f"{repo_owner}/{repo_name}",
-            "token_prefix": token[:4] + "****",
-        }
+    async def connect_repo(self, repo_owner: str, repo_name: str, installation_id: str = None) -> dict:
+        """Verifies the repo is actually reachable with this token before 'connecting'."""
+        url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, headers=self._headers())
+        if resp.status_code == 404:
+            raise ValueError(f"Repository {repo_owner}/{repo_name} not found or not accessible with this token.")
+        resp.raise_for_status()
+        return {"status": "success", "repo": f"{repo_owner}/{repo_name}", "default_branch": resp.json().get("default_branch")}
 
-    def analyze_repo(self, repo_url: str) -> dict:
-        """Analyze repository code quality/vulnerabilities."""
-        token = self.token or ""
-        logger.info(f"Analyzing repository at {repo_url}")
+    async def analyze_repo(self, repo_url: str) -> dict:
+        """Real, lightweight repo metadata pull (open issues, language, size).
+        Deep static-analysis scoring is NOT implemented yet — we report that
+        honestly instead of returning a fabricated score."""
+        url = f"https://api.github.com/repos/{repo_url}"
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, headers=self._headers())
+        resp.raise_for_status()
+        data = resp.json()
         return {
             "status": "success",
             "repo": repo_url,
-            "score": 85,
-            "issues": [
-                {
-                    "file": "src/db.py",
-                    "issue": "Missing connection pooling",
-                    "severity": "medium",
-                },
-                {"file": "src/cache.py", "issue": "TTL not set", "severity": "low"},
-            ],
-            "token_prefix": token[:4] + "****",
+            "open_issues": data.get("open_issues_count"),
+            "primary_language": data.get("language"),
+            "default_branch": data.get("default_branch"),
+            "code_quality_score": None,
+            "note": "Deep static-analysis scoring pending — see backend/core/code_validator.py integration TODO.",
         }
 
-    def create_improvement_pr(self, repo_url: str, improvements: dict, base_branch: str = "main") -> dict:
-        token = self.token or ""
-        logger.info(f"Applying improvements to {repo_url} from {base_branch}")
-        new_branch = f"supremeai-improvements-{int(datetime.datetime.now().timestamp())}"
-        pr_title = "SupremeAI: Automated Code Improvements"
-        pr_body = "AI has analyzed the repository and suggested the following changes:\n\n"
-        for file_path, desc in improvements.items():
-            pr_body += f"- {file_path}: {desc}\n"
-        pr_body += "\nNote: Customer approval is required before merging."
-        pr_url = f"https://github.com/{repo_url}/pull/42"
-        return {
-            "status": "success",
-            "branch": new_branch,
-            "pr_title": pr_title,
-            "pr_url": pr_url,
-            "message": "PR created successfully. Waiting for manual approval.",
-            "token_prefix": token[:4] + "****",
-        }
+    async def create_pr(self, repo_name: str, title: str, body: str, head_branch: str, base_branch: str = "main") -> dict:
+        headers = self._headers()
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                f"https://api.github.com/repos/{repo_name}/pulls",
+                headers=headers,
+                json={"title": title, "body": body, "head": head_branch, "base": base_branch},
+            )
+        if resp.status_code != 201:
+            raise RuntimeError(f"GitHub PR creation failed ({resp.status_code}): {resp.text}")
+        pr = resp.json()
+        logger.info(f"Real PR created: {pr['html_url']}")
+        return {"status": "success", "pr_url": pr["html_url"], "pr_number": pr["number"]}
 
-    def create_pr(
-        self,
-        repo_name: str,
-        title: str,
-        body: str,
-        head_branch: str,
-        base_branch: str = "main",
-    ) -> dict:
-        """Creates a pull request on GitHub."""
-        self._require_token()
-        logger.info(f"Creating PR on {repo_name}: '{title}'")
+    async def commit_changes(self, repo_url: str, files_to_commit: dict[str, str], commit_message: str, branch: str) -> dict:
+        """files_to_commit: {file_path: new_content}. Creates the branch if it
+        doesn't exist, then commits each file for real via the Contents API."""
+        headers = self._headers()
+        base_url = f"https://api.github.com/repos/{repo_url}"
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            repo_info = await client.get(base_url, headers=headers)
+            repo_info.raise_for_status()
+            default_branch = repo_info.json()["default_branch"]
 
-        mock_pr_url = f"https://github.com/{repo_name}/pull/99"
-        logger.info(f"Mock PR created: {mock_pr_url}")
-        return {"status": "success", "pr_url": mock_pr_url}
+            ref = await client.get(f"{base_url}/git/refs/heads/{default_branch}", headers=headers)
+            ref.raise_for_status()
+            base_sha = ref.json()["object"]["sha"]
 
-    def commit_changes(self, repo_url: str, files_to_commit: list, commit_message: str, branch: str) -> dict:
-        """Directly commits specified files to a branch."""
-        self._require_token()
-        logger.info(f"Attempting to commit {len(files_to_commit)} files to {repo_url} on branch {branch}")
+            branch_res = await client.post(
+                f"{base_url}/git/refs", headers=headers, json={"ref": f"refs/heads/{branch}", "sha": base_sha}
+            )
+            if branch_res.status_code not in (201, 422):  # 422 = branch already exists, acceptable
+                raise RuntimeError(f"Failed to create branch: {branch_res.text}")
 
-        logger.info(f"Simulating git commit with message: '{commit_message}'")
-        for file_path in files_to_commit:
-            logger.info(f"  - Staging {file_path}")
+            last_sha = None
+            for file_path, content in files_to_commit.items():
+                encoded = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+                commit_res = await client.put(
+                    f"{base_url}/contents/{file_path}",
+                    headers=headers,
+                    json={"message": commit_message, "content": encoded, "branch": branch},
+                )
+                if commit_res.status_code not in (200, 201):
+                    raise RuntimeError(f"Failed to commit {file_path}: {commit_res.text}")
+                last_sha = commit_res.json()["commit"]["sha"]
 
-        logger.info(f"  - Pushing to origin {branch}")
-        return {
-            "status": "success",
-            "commit_hash": "mock_commit_hash_123abc",
-            "branch": branch,
-        }
+        return {"status": "success", "branch": branch, "commit_hash": last_sha, "files_committed": list(files_to_commit)}

@@ -220,17 +220,34 @@ class AsyncTaskManager:
     """
 
     def __init__(self):
-        self._local_tasks: dict[str, dict[str, Any]] = {}  # local state (test/dev)
-        self._queue = None  # lazy init
+        self._local_tasks: dict[str, dict[str, Any]] = {}
+        self._queue = None
+        self._queue_init_failed = False
+        self._allow_memory_fallback = os.getenv("ENV", "production") in ("dev", "test", "local")
 
     def _get_queue(self):
-        if self._queue is None:
+        if self._queue is None and not self._queue_init_failed:
             try:
                 from core.queue.task_queue_enhanced import EnhancedTaskQueue
-
                 self._queue = EnhancedTaskQueue()
-            except Exception:  # noqa: BLE001
-                self._queue = None  # graceful fallback
+            except Exception as exc:
+                self._queue_init_failed = True
+                if self._allow_memory_fallback:
+                    logger.warning(
+                        f"[AsyncTaskManager] Redis-backed queue unavailable ({exc}); "
+                        f"using in-memory fallback because ENV={os.getenv('ENV')} permits it."
+                    )
+                else:
+                    # প্রোডাকশনে silently fallback করা যাবে না — জোরে ব্যর্থ হও, চুপচাপ ডেটা হারানোর চেয়ে
+                    logger.critical(f"[AsyncTaskManager] Task queue backend failed to initialize in production: {exc}")
+                    from core.messaging.event_bus import ErrorEvent, error_event_bus
+                    error_event_bus.emit(ErrorEvent(
+                        module="agent_orchestrator",
+                        error_type="TASK_QUEUE_INIT_FAILED",
+                        message=str(exc),
+                        severity="CRITICAL",
+                    ))
+                    raise RuntimeError(f"Task queue unavailable in production (ENV={os.getenv('ENV')}): {exc}") from exc
         return self._queue
 
     def create_task(self, task_type: str, payload: dict) -> str:

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, Badge } from '../ui';
 import { Plus, Trash2, Play } from 'lucide-react';
+import { useAdminRules, useSaveRules } from '../../hooks/useAdminApi';
 
 interface Rule {
   id: string;
@@ -13,14 +14,20 @@ interface Rule {
   enabled: boolean;
 }
 
-const MOCK_RULES: Rule[] = [
-  { id: '1', name: 'Block prompt injection', condition: 'user_input', operator: 'contains', value: 'ignore previous instructions', action: 'block', severity: 'critical', enabled: true },
-  { id: '2', name: 'Warn on PII', condition: 'user_input', operator: 'regex', value: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', action: 'warn', severity: 'high', enabled: true },
-  { id: '3', name: 'Log medical queries', condition: 'user_input', operator: 'contains', value: 'medical advice', action: 'log', severity: 'medium', enabled: false },
-];
-
 export function VisualRulesBuilder() {
-  const [rules, setRules] = useState<Rule[]>(MOCK_RULES);
+  const { data: fetchedRules, isLoading } = useAdminRules();
+  const saveRules = useSaveRules();
+
+  const [localRules, setLocalRules] = useState<Rule[] | null>(null);
+  const rules = localRules ?? fetchedRules ?? [];
+
+  const updateRules = (next: Rule[]) => {
+    setLocalRules(next);          // optimistic UI update
+    saveRules.mutate(next, {      // real persist to services.rules_engine
+      onError: () => setLocalRules(fetchedRules ?? []),  // rollback on failure
+    });
+  };
+
   const [selectedRule, setSelectedRule] = useState<Rule | null>(null);
   const [testingInput, setTestingInput] = useState('');
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -36,19 +43,19 @@ export function VisualRulesBuilder() {
       severity: 'medium',
       enabled: true,
     };
-    setRules([...rules, newRule]);
+    updateRules([...rules, newRule]);
     setSelectedRule(newRule);
   };
 
   const updateRule = (id: string, updates: Partial<Rule>) => {
-    setRules(rules.map(r => (r.id === id ? { ...r, ...updates } : r)));
+    updateRules(rules.map(r => (r.id === id ? { ...r, ...updates } : r)));
     if (selectedRule?.id === id) {
       setSelectedRule({ ...selectedRule, ...updates });
     }
   };
 
   const deleteRule = (id: string) => {
-    setRules(rules.filter(r => r.id !== id));
+    updateRules(rules.filter(r => r.id !== id));
     if (selectedRule?.id === id) setSelectedRule(null);
   };
 
@@ -80,6 +87,7 @@ export function VisualRulesBuilder() {
 
   return (
     <div className="flex-grow p-6 overflow-y-auto bg-[#030611]">
+      {isLoading && <p className="text-slate-400 text-xs font-mono p-6">Loading rules…</p>}
       <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#00f3ff]/15">
         <h2 className="text-lg font-bold font-['Space_Grotesk'] tracking-widest text-[#00f3ff] uppercase">
           ⚖️ Visual Rules Builder

@@ -585,6 +585,58 @@ def trigger_backup():
     logger.info(f"Backup created at {backup_dir}")
     return {"status": "success", "backup_path": backup_dir}
 
+@router.get("/backups")
+def get_backups():
+    backups_list = []
+    if os.path.exists("backups"):
+        for b_name in os.listdir("backups"):
+            b_path = os.path.join("backups", b_name)
+            if os.path.isdir(b_path):
+                # Calculate size
+                total_size = sum(os.path.getsize(os.path.join(b_path, f)) for f in os.listdir(b_path) if os.path.isfile(os.path.join(b_path, f)))
+                # Size string
+                size_mb = total_size / (1024 * 1024)
+                size_str = f"{size_mb:.1f} MB" if size_mb > 0 else "< 1 MB"
+
+                # Parse timestamp from name
+                ts = b_name.replace("backup_", "")
+                if len(ts) == 15: # YYYYMMDD_HHMMSS
+                    ts_formatted = f"{ts[0:4]}-{ts[4:6]}-{ts[6:8]} {ts[9:11]}:{ts[11:13]}:{ts[13:15]}"
+                else:
+                    ts_formatted = "Unknown"
+
+                backups_list.append({
+                    "id": b_name,
+                    "timestamp": ts_formatted,
+                    "size": size_str,
+                    "type": "manual",
+                    "status": "completed",
+                    "retention": "permanent"
+                })
+    backups_list.sort(key=lambda x: x["timestamp"], reverse=True)
+    return {"backups": backups_list}
+
+_FEATURE_FLAGS = [
+  { "id": '1', "name": 'new_chat_ui', "description": 'New chat interface with streaming', "enabled": True, "rollout": 25, "environment": 'production' },
+  { "id": '2', "name": 'rag_v2', "description": 'Improved RAG retrieval algorithm', "enabled": False, "rollout": 0, "environment": 'staging' },
+  { "id": '3', "name": 'dark_mode', "description": 'Dark mode toggle for all users', "enabled": True, "rollout": 100, "environment": 'production' },
+]
+
+@router.get("/feature-flags")
+def get_feature_flags():
+    return {"flags": _FEATURE_FLAGS}
+
+@router.put("/feature-flags/{flag_id}")
+def update_feature_flag(flag_id: str, payload: dict):
+    for f in _FEATURE_FLAGS:
+        if f["id"] == flag_id:
+            if "enabled" in payload:
+                f["enabled"] = payload["enabled"]
+            if "rollout" in payload:
+                f["rollout"] = payload["rollout"]
+            return {"status": "success", "flag": f}
+    raise HTTPException(status_code=404, detail="Flag not found")
+
 
 @router.get("/data-export")
 def get_full_data_export():
