@@ -232,7 +232,7 @@ class ReflectionAgent(SwarmAgentBase):
             db.record_experience(exp)
             workspace.log("ReflectionAgent: Experience successfully saved to Vector DB.")
         except Exception as e:  # noqa: BLE001
-            workspace.log(f"ReflectionAgent: Failed to save experience: {e}")
+            workspace.log(f"ReflectionAgent: Failed to persist experience: {e}")
 
         return analysis
 
@@ -302,6 +302,8 @@ class IntegrationAgent(SwarmAgentBase):
             result = await self._safe_skill_run('SlackIntegrationSkill', workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
         elif workspace.intent == 'sync_to_notion':
             result = await self._safe_skill_run('NotionSyncSkill', workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
+        elif workspace.intent == 'sync_to_github':
+            result = await self._safe_skill_run('GithubSyncSkill', workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
         else:
             workspace.log(f'IntegrationAgent: Unknown intent {workspace.intent}')
             result = {'status': 'error', 'message': f'Unknown integration intent {workspace.intent}'}
