@@ -1,76 +1,36 @@
-# ══════════════════════════════════════════════════════════
-# SupremeAI 2.0 — Root Dockerfile (Distroless variant)
-# Target: Maximum security with gcr.io/distroless
-# ══════════════════════════════════════════════════════════
-
-# Stage 1: Build dependencies
+# Stage 1: Builder
 FROM python:3.11-slim AS builder
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    build-essential libpq-dev curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+RUN pip install --no-cache-dir poetry
+RUN poetry config virtualenvs.in-project true
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# ক্যাশ লেয়ার: শুধু ডিপেন্ডেন্সি ইন্সটল
+COPY backend/pyproject.toml backend/poetry.lock* ./
+RUN poetry install --no-interaction --no-ansi --no-root --only main,tools
 
-RUN pip install --no-cache-dir poetry && poetry config virtualenvs.in-project true
-
-# ── Install CPU-only PyTorch FIRST ──
-WORKDIR /app/backend
-RUN python -m venv /app/backend/.venv && \
-    /app/backend/.venv/bin/pip install --no-cache-dir --upgrade pip && \
-    /app/backend/.venv/bin/pip install --no-cache-dir \
-        torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
-    /app/backend/.venv/bin/pip install --no-cache-dir "setuptools<82.0.0"
-
-COPY backend/pyproject.toml ./
-COPY backend/poetry.lock* ./
-
-RUN poetry install --no-interaction --no-ansi --no-root --only main --with ml || \
-    poetry install --no-interaction --no-ansi --no-root --only main
-
-# ── Force CPU torch, remove CUDA bloat ──
-RUN /app/backend/.venv/bin/pip uninstall -y \
-    nvidia-cuda-nvrtc-cu12 nvidia-cuda-runtime-cu12 nvidia-cuda-cupti-cu12 \
-    nvidia-cudnn-cu12 nvidia-cublas-cu12 nvidia-cufft-cu12 nvidia-curand-cu12 \
-    nvidia-cusolver-cu12 nvidia-cusparse-cu12 nvidia-nccl-cu12 nvidia-nvtx-cu12 \
-    nvidia-nvjitlink-cu12 triton 2>/dev/null || true && \
-    /app/backend/.venv/bin/pip install --no-cache-dir torch torchvision \
-        --index-url https://download.pytorch.org/whl/cpu
-
-# ── Pre-download EasyOCR models ──
-RUN /app/backend/.venv/bin/pip install --no-cache-dir --no-build-isolation "openai-whisper==20240930" 2>/dev/null || true
-RUN mkdir -p /root/.EasyOCR/model && \
-    /app/backend/.venv/bin/python -c "import easyocr; easyocr.Reader(['bn', 'en'])" 2>/dev/null || true && \
-    rm -f /root/.EasyOCR/model/*.zip 2>/dev/null || true
-
-# ── Aggressive cleanup ──
-RUN find /app/backend/.venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
-    find /app/backend/.venv -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true && \
-    find /app/backend/.venv -type d -name "test" -exec rm -rf {} + 2>/dev/null || true && \
-    find /app/backend/.venv -type f -name "*.pyc" -delete 2>/dev/null || true && \
-    rm -rf /app/backend/.venv/lib/python3.11/site-packages/torch/test 2>/dev/null || true && \
-    rm -rf /app/backend/.venv/lib/python3.11/site-packages/caffe2 2>/dev/null || true
-
-
-# Stage 2: Final minimal runner
+# Stage 2: Runner
 FROM python:3.11-slim AS runner
-
-RUN apt-get update && apt-get install -y --no-install-recommends libpq5 && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libpq5 && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/backend/.venv /app/backend/.venv
-COPY backend /app/backend
-# বাংলা মন্তব্য: প্রোডাকশন রানটাইমে সিক্রেট ক্লাউড থেকে লোড করা হয়, তাই বিল্ডে .env ফাইল কপি করা লাগবে না
-COPY --from=builder /root/.EasyOCR /home/nonroot/.EasyOCR
+# শুধুমাত্র ভার্চুয়াল এনভায়রনমেন্ট কপি করো (পুরো সোর্স কোড নয়)
+COPY --from=builder /app/.venv /app/.venv
+COPY backend/ .
+# বাংলা মন্তব্য: রুট-লেভেল 'skills' ডিরেক্টরি কপি করা হচ্ছে যাতে
+# core/evolution/auto_skill_creator.py সঠিকভাবে 'skills.installer' ইম্পোর্ট করতে পারে।
+COPY skills/ ./skills/
 
-ENV PATH="/app/backend/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/backend"
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/app/.venv/bin:$PATH"
+EXPOSE 8000
 
-WORKDIR /app/backend
-
-ENTRYPOINT ["/app/backend/.venv/bin/python", "main.py"]
+# CRITICAL FIX (Cloud Run Port Binding):
+# Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).
+# The shell form allows Cloud Run to dynamically inject the $PORT environment variable.
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
