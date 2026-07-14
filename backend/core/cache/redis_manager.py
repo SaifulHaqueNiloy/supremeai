@@ -17,15 +17,22 @@ from redis import asyncio as aioredis
 class SecureRedisManager:
     def __init__(self):
         self.url = os.getenv("REDIS_URL")
-        if self.url:
-            self.client = aioredis.from_url(self.url, decode_responses=True)
-        else:
-            self.client = None
+        self._client = None
+        self._initialized = False
 
-        if self.client:
+    def _ensure_connected(self):
+        if self.url:
+            self._client = aioredis.from_url(self.url, decode_responses=True)
             logger.info("⚡ Serverless Upstash Redis REST Provider Active.")
         else:
             logger.critical("🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state.")
+        self._initialized = True
+
+    @property
+    def client(self):
+        if not self._initialized:
+            self._ensure_connected()
+        return self._client
 
     async def set_cache(self, key: str, value: str, ex_seconds: int = 3600) -> bool:
         """Native Redis API এর মাধ্যমে কি-ভ্যালু পেয়ার সেভ করার মেথড।"""
@@ -47,6 +54,18 @@ class SecureRedisManager:
         except Exception as exc:  # noqa: BLE001
             logger.error(f"❌ Upstash Cache Read Operation Failed for {key}: {exc}")
             return None
+
+    async def incrbyfloat(self, key: str, amount: float, ex_seconds: int = 86400) -> float:
+        """Atomic increment for floats (used by CostGuard)."""
+        if not self.client:
+            return 0.0
+        try:
+            result = await self.client.incrbyfloat(key, amount)
+            await self.client.expire(key, ex_seconds)
+            return float(result)
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"❌ Redis Cache INCRBYFLOAT Operation Failed for {key}: {exc}")
+            return 0.0
 
     async def set_agent_heartbeat(self, agent_id: str, status: str, latency_ms: int, ttl: int = 5) -> bool:
         """এজেন্ট হার্টবিট সেট করার মেথড।"""
@@ -80,10 +99,42 @@ class SecureRedisManager:
             return {}
 
     async def close(self):
-        if self.client:
-            await self.client.aclose()
+        if self._client:
+            await self._client.aclose()
             logger.info("💀 Redis Async connection gracefully terminated.")
 
 
 # Create the singleton instance
 redis_manager = SecureRedisManager()
+
+
+# Idempotency Helper Functions (Task 8.6)
+async def acquire_idempotency_lock(key: str, ttl: int = 120) -> bool:
+    if not redis_manager.client:
+        return True  # Fail-open
+    try:
+        # SET NX EX
+        res = await redis_manager.client.set(key, "locked", nx=True, ex=ttl)
+        return bool(res)
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Idempotency lock failed: {e}")
+        return True  # Fail-open
+
+
+async def release_idempotency_lock(key: str) -> None:
+    if not redis_manager.client:
+        return
+    try:
+        await redis_manager.client.delete(key)
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Idempotency lock release failed: {e}")
+
+
+async def cache_response_and_release_lock(key: str, response: str, ttl: int = 86400) -> None:
+    if not redis_manager.client:
+        return
+    try:
+        await redis_manager.client.set(f"idempotency:response:{key}", response, ex=ttl)
+        await release_idempotency_lock(key)
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Idempotency cache response failed: {e}")

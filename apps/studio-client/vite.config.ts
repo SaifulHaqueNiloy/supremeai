@@ -65,7 +65,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600,
-    sourcemap: false,
+    sourcemap: 'hidden',
   },
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
 })

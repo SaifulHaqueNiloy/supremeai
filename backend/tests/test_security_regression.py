@@ -23,6 +23,7 @@ async def test_production_jwt_secret_required():
             )
     assert "SUPREMEAI_JWT_SECRET must be explicitly set in all environments" in str(excinfo.value)
 
+
 @pytest.mark.skip(reason="Needs update")
 def test_auth_middleware_rejects_invalid_api_token():
     """Verify that AuthMiddleware rejects invalid API tokens and 'test-token' if the expected token is different."""
@@ -44,4 +45,3 @@ def test_auth_middleware_rejects_invalid_api_token():
         resp = client.get("/api/task/execute", headers={"Authorization": "Bearer test-token"})
         assert resp.status_code == 401
         assert resp.json()["detail"] == "Invalid or missing API token."
-

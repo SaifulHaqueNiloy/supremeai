@@ -47,51 +47,53 @@ from core.pgbouncer_pool import init_db_pool
 
 async def _ensure_api_key_tables() -> None:
     pool = await get_db_pool()
-    await pool.execute(
-        """
-        CREATE TABLE IF NOT EXISTS api_keys (
-            id SERIAL PRIMARY KEY,
-            user_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            key_hash TEXT NOT NULL UNIQUE,
-            key_masked TEXT NOT NULL,
-            key_prefix TEXT NOT NULL,
-            rate_limit_rps INTEGER DEFAULT 6,
-            revoked BOOLEAN DEFAULT FALSE,
-            expires_at INTEGER,
-            last_used_at INTEGER,
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL
-        )
-        """
-    )
-    await pool.execute(
-        """
-        CREATE TABLE IF NOT EXISTS api_key_usage (
-            id SERIAL PRIMARY KEY,
-            api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
-            endpoint TEXT NOT NULL,
-            status_code INTEGER NOT NULL,
-            latency_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
-            ip_address TEXT,
-            created_at INTEGER NOT NULL
-        )
-        """
-    )
-    await pool.execute(
-        """
-        CREATE TABLE IF NOT EXISTS api_key_events (
-            id SERIAL PRIMARY KEY,
-            api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
-            event_type TEXT NOT NULL,
-            details TEXT,
-            ip_address TEXT,
-            created_at INTEGER NOT NULL
-        )
-        """
-    )
-    await pool.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
-    await pool.execute("CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)")
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS api_keys (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    key_hash TEXT NOT NULL UNIQUE,
+                    key_masked TEXT NOT NULL,
+                    key_prefix TEXT NOT NULL,
+                    rate_limit_rps INTEGER DEFAULT 6,
+                    revoked BOOLEAN DEFAULT FALSE,
+                    expires_at INTEGER,
+                    last_used_at INTEGER,
+                    created_at INTEGER NOT NULL,
+                    updated_at INTEGER NOT NULL
+                )
+                """
+            )
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS api_key_usage (
+                    id SERIAL PRIMARY KEY,
+                    api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
+                    endpoint TEXT NOT NULL,
+                    status_code INTEGER NOT NULL,
+                    latency_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
+                    ip_address TEXT,
+                    created_at INTEGER NOT NULL
+                )
+                """
+            )
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS api_key_events (
+                    id SERIAL PRIMARY KEY,
+                    api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
+                    event_type TEXT NOT NULL,
+                    details TEXT,
+                    ip_address TEXT,
+                    created_at INTEGER NOT NULL
+                )
+                """
+            )
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)")
     logger.info("✅ API key tables ensured")
 
 
@@ -150,11 +152,11 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="DB_POOL_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="CRITICAL" if os.getenv("ENV") == "production" else "WARNING",
-                context={"db_url": db_url[:50] if db_url else "", "env": os.getenv("ENV", "unknown")},
+                severity="CRITICAL" if getattr(settings, "env", "local") == "production" else "WARNING",
+                context={"db_url": db_url[:50] if db_url else "", "env": getattr(settings, "env", "unknown")},
             )
         )
-        if os.getenv("ENV") == "production":
+        if getattr(settings, "env", "local") == "production":
             # Production-এ Sentry-তে alert পাঠান, কিন্তু crash করবেন না
             logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
 
@@ -191,11 +193,11 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="REDIS_INIT_FAILED",
                 message=str(e)[:200],
-                severity="CRITICAL" if os.getenv("ENV") == "production" else "WARNING",
-                context={"env": os.getenv("ENV", "unknown")},
+                severity="CRITICAL" if getattr(settings, "env", "local") == "production" else "WARNING",
+                context={"env": getattr(settings, "env", "unknown")},
             )
         )
-        if os.getenv("ENV") == "production":
+        if getattr(settings, "env", "local") == "production":
             logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
             # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
 
@@ -238,8 +240,10 @@ async def app_lifespan(app):
 
     # Start the Sentinel Agent
     from core.sentinel_agent import sentinel
+    from core.cache.multi_layer_cache import start_swarm_cache_invalidator
 
     app.state.sentinel_task = asyncio.create_task(sentinel.run_periodic_loop())
+    app.state.swarm_cache_task = asyncio.create_task(start_swarm_cache_invalidator())
 
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 
@@ -268,8 +272,13 @@ async def app_lifespan(app):
             sentinel.running = False
             sentinel_task.cancel()
             logger.info("✅ Sentinel Agent shut down successfully.")
+
+        swarm_cache_task = getattr(app.state, "swarm_cache_task", None)
+        if swarm_cache_task and not swarm_cache_task.done():
+            swarm_cache_task.cancel()
+            logger.info("✅ Swarm Cache Invalidator shut down successfully.")
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Error closing Sentinel Agent: {e}")
+        logger.error(f"Error closing background tasks: {e}")
 
     try:
         pool = await get_db_pool()

@@ -366,9 +366,14 @@ class TaskQueue:
         priority: TaskPriority,
     ) -> None:
         """বাংলা মন্তব্য: Redis sorted set-এ task push। Lazy import।"""
-        import redis.asyncio as aioredis  # lazy import — module level নয়
+        from core.cache.redis_manager import redis_manager
 
-        client = aioredis.from_url(self.redis_url, decode_responses=True)
+        client = redis_manager.client
+        if not client:
+            import redis.asyncio as aioredis
+
+            client = aioredis.from_url(self.redis_url, decode_responses=True)
+
         task_data = {
             "task_id": task_id,
             "function": f"{func.__module__}.{func.__name__}",
@@ -378,9 +383,10 @@ class TaskQueue:
             "timestamp": time.time(),
         }
         score = -priority.value  # higher priority = lower score = earlier dequeue
-        async with client:
-            await client.zadd("supremeai:task_queue", {json.dumps(task_data): score})
-            await client.hset("supremeai:task_metadata", task_id, json.dumps(task_data))
+        pipeline = client.pipeline()
+        pipeline.zadd("supremeai:task_queue", {json.dumps(task_data): score})
+        pipeline.hset("supremeai:task_metadata", task_id, json.dumps(task_data))
+        await pipeline.execute()
 
     async def _submit_to_pubsub(
         self,
@@ -507,3 +513,7 @@ def cancel_task(task_id: str) -> bool:
 
 def get_queue_stats() -> dict[str, int]:
     return get_task_queue().get_stats()
+
+
+# Alias for backwards compatibility
+EnhancedTaskQueue = TaskQueue

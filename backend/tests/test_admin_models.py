@@ -9,9 +9,6 @@ from models.admin import (
 )
 
 
-
-
-
 def test_admin_firebase_login_request():
     req = AdminFirebaseLoginRequest(id_token="token")
     assert req.id_token == "token"
