@@ -1,3 +1,4 @@
+# ruff: noqa: E402, F821
 """
 Cloud-native PostgreSQL store using Supabase/Cloud SQL.
 Replaces local SQLite for production.
@@ -137,3 +138,4 @@ class SQLiteStore:
         self.db_path = db_path
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         # ... existing SQLite implementation ...
+

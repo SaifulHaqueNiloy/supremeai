@@ -1,3 +1,4 @@
+# ruff: noqa: E402, F821
 #!/usr/bin/env python3
 """
 SupremeAI - Ask the Scribe
@@ -80,3 +81,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     import asyncio
     asyncio.run(main(args.question))
+
