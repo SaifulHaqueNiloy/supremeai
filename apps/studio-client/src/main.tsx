@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { App } from './App.tsx'
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 import { getApiBaseUrl } from './utils/api';
 import { setupGlobalFetchInterceptor } from './utils/apiInterceptor';
 import { ToastProvider } from './contexts/ToastProvider';
@@ -28,7 +29,9 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <SharedProviders>
           <BrowserRouter>
-            <App />
+            <GlobalErrorBoundary>
+              <App />
+            </GlobalErrorBoundary>
           </BrowserRouter>
         </SharedProviders>
       </ThemeProvider>
