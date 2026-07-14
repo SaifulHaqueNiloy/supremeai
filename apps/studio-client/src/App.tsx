@@ -189,19 +189,15 @@ const AppContent: React.FC = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/workspace/*" element={
-                  <ProtectedRoute>
-                    <DashboardShell
-                      theme={theme}
-                      toggleTheme={toggleTheme}
-                      isServerOnline={isServerOnline}
-                      workspace={legacyWorkspace}
-                    />
-                  </ProtectedRoute>
+                  <DashboardShell
+                    theme={theme}
+                    toggleTheme={toggleTheme}
+                    isServerOnline={isServerOnline}
+                    workspace={legacyWorkspace}
+                  />
                 } />
                 <Route path="/workspace/live" element={
-                  <ProtectedRoute>
-                    <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
-                  </ProtectedRoute>
+                  <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
                 } />
 
                 {/* Users trying to access admin are redirected */}
