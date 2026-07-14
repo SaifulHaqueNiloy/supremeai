@@ -38,7 +38,7 @@ async def run_agent_action(
         raise HTTPException(status_code=401, detail="Invalid user token")
 
     platform = payload.target_platform.lower()
-    
+
     # 1. Fetch encrypted token from database
     try:
         stmt = select(Integration).where(
@@ -47,13 +47,13 @@ async def run_agent_action(
         )
         result = await db.execute(stmt)
         integration = result.scalar_one_or_none()
-        
+
         if not integration or not integration.encrypted_access_token:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Integration for {platform} not found. Please connect {platform} in your settings."
             )
-            
+
         # 2. Decrypt token securely in the API layer (Stateless injection)
         plain_token = decrypt_token(integration.encrypted_access_token)
     except HTTPException:
@@ -74,30 +74,30 @@ async def run_agent_action(
     try:
         logger.info(f"Triggering MorphicOrchestrator for intent '{intent}'")
         orchestrator = MorphicOrchestrator()
-        
+
         # Pass the kwargs to be available in the workspace execution
         workspace = await orchestrator.execute_task(
             prompt=f"Execute {intent} action.",
             user_id=user_id,
         )
-        
+
         # Inject the custom intent and kwargs, overriding the generic one from `execute_task`
         workspace.intent = intent
         workspace.kwargs = kwargs
-        
+
         # Rerun execute_task logic but with our custom DAG
         # Since execute_task already runs, maybe we should not call execute_task directly
         # but just use the underlying method or we can create the workspace directly.
-        
+
         import uuid
 
         from models.shared_workspace import SharedWorkspace
-        
+
         custom_workspace = SharedWorkspace(task_id=str(uuid.uuid4()), original_prompt=payload.content, intent=intent)
         custom_workspace.kwargs = kwargs
-        
+
         dag = await orchestrator._get_dag_for_intent(intent)
-        
+
         completed_tasks = set()
         import asyncio
         while len(completed_tasks) < len(dag):
@@ -109,13 +109,13 @@ async def run_agent_action(
             if tasks_to_run:
                 await asyncio.gather(*tasks_to_run)
             completed_tasks.update(ready_tasks)
-            
+
         result = custom_workspace.work_product.get("integration_result", {})
         if result.get("status") == "error":
             raise HTTPException(status_code=500, detail=result.get("message", "Integration Execution Failed"))
-            
+
         return {"status": "success", "workspace_logs": custom_workspace.logs, "result": result}
-        
+
     except Exception as e:
         logger.error(f"Failed to execute agent action: {e}")
         raise HTTPException(status_code=500, detail=f"Agent Execution Error: {e}") from e
