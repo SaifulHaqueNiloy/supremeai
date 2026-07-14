@@ -70,7 +70,7 @@ export class AuthService {
 
       return await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
-        title: "Verifying SupremeAI API Key...",
+        title: 'Verifying SupremeAI API Key...',
         cancellable: false
       }, async () => {
         try {
