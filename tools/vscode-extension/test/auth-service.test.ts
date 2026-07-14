@@ -27,10 +27,13 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    test('opens browser URL and returns false', async () => {
+    test('prompts for API key and returns false if cancelled', async () => {
+      // Mock showInputBox to return undefined (user cancelled)
+      vi.mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
+
       const result = await authService.login();
       expect(result).toBe(false);
-      expect(vscode.env.openExternal).toHaveBeenCalled();
+      expect(vscode.window.showInputBox).toHaveBeenCalled();
     });
   });
 
