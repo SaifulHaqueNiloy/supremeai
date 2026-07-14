@@ -9,6 +9,7 @@ from core.mcp_client import MCPRegistryClient
 from core.orchestration.crew_departments import ArchitectureAgent
 from core.orchestration.crew_departments import CodeGeneratorAgent
 from core.orchestration.crew_departments import GuardianAgent
+from core.orchestration.crew_departments import IntegrationAgent
 from core.orchestration.crew_departments import QAAgent
 from core.orchestration.crew_departments import ReflectionAgent
 from core.orchestration.crew_departments import ResearchAgent
@@ -16,17 +17,16 @@ from core.orchestration.crew_departments import ToolExecutorAgent
 from core.orchestration.crew_departments import ToolSynthesizerAgent
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.skill_manager import skill_manager
-from core.skills.core_skills import (
-    SystemDesignSkill,
-    CodeGenerationSkill,
-    StaticAnalysisSkill,
-    ResearchSkill,
-    ToolSynthesisSkill,
-    ToolExecutionSkill,
-    ExperiencePersistenceSkill,
-)
-from core.skills.integrations import SlackIntegrationSkill, NotionSyncSkill, GithubSyncSkill
-from core.orchestration.crew_departments import IntegrationAgent
+from core.skills.core_skills import CodeGenerationSkill
+from core.skills.core_skills import ExperiencePersistenceSkill
+from core.skills.core_skills import ResearchSkill
+from core.skills.core_skills import StaticAnalysisSkill
+from core.skills.core_skills import SystemDesignSkill
+from core.skills.core_skills import ToolExecutionSkill
+from core.skills.core_skills import ToolSynthesisSkill
+from core.skills.integrations import GithubSyncSkill
+from core.skills.integrations import NotionSyncSkill
+from core.skills.integrations import SlackIntegrationSkill
 from models.shared_workspace import SharedWorkspace
 
 

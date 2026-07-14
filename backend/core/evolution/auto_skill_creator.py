@@ -24,10 +24,10 @@ for _ in range(5):
     current_dir = os.path.dirname(current_dir)
 
 from loguru import logger
-from skills.installer import SkillInstaller
 
 from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
+from skills.installer import SkillInstaller
 from tools.code.fuzz_sandbox import SecurityError
 
 # আমাদের হার্ডেনড স্যান্ডবক্স গেটকিপার ইম্পোর্ট
@@ -90,9 +90,8 @@ class AutoSkillCreator:
         start_time = time.time()
         from pathlib import Path
 
-        from skills.schema import UniversalSkillSchema
-
         from core.llm.llm_gateway import llm_gateway
+        from skills.schema import UniversalSkillSchema
 
         logger.info(f"🧠 Self-Evolution Triggered: Designing skill '{skill_name}' for demand: '{user_demand}'")
 
