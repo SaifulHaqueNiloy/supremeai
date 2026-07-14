@@ -49,10 +49,7 @@ async def run_agent_action(
         integration = result.scalar_one_or_none()
 
         if not integration or not integration.encrypted_access_token:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Integration for {platform} not found. Please connect {platform} in your settings."
-            )
+            raise HTTPException(status_code=400, detail=f"Integration for {platform} not found. Please connect {platform} in your settings.")
 
         # 2. Decrypt token securely in the API layer (Stateless injection)
         plain_token = decrypt_token(integration.encrypted_access_token)
@@ -100,6 +97,7 @@ async def run_agent_action(
 
         completed_tasks = set()
         import asyncio
+
         while len(completed_tasks) < len(dag):
             ready_tasks = [task for task, deps in dag.items() if task not in completed_tasks and all(d in completed_tasks for d in deps)]
             if not ready_tasks:

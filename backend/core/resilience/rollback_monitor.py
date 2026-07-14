@@ -21,6 +21,12 @@ class RollbackMonitor:
         """
         logger.info(f"RollbackMonitor: Checking metrics for {service_name} - Latency: {latency_ms}ms, Error: {is_error}")
 
+        import re
+
+        if not re.match(r"^[a-zA-Z0-9-]+$", service_name):
+            logger.error("Invalid service_name format")
+            return {"status": "error", "message": "Invalid service_name format"}
+
         from core import services
 
         if not hasattr(services, "redis_queue") or not services.redis_queue or not services.redis_queue.configured:
@@ -77,6 +83,11 @@ class RollbackMonitor:
             "error_rate": current_error_rate,
             "avg_latency": current_avg_latency,
         }
+
+    async def record_metrics_and_check_async(self, service_name: str, latency_ms: float, is_error: bool) -> dict:
+        import asyncio
+
+        return await asyncio.to_thread(self.record_metrics_and_check, service_name, latency_ms, is_error)
 
     def trigger_rollback(self, service_name: str) -> dict:
         """

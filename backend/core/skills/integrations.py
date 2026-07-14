@@ -93,31 +93,8 @@ class NotionSyncSkill(BaseSkill):
         # A simple payload to create a page with a text block
         payload = {
             "parent": {"page_id": parent_page_id},
-            "properties": {
-                "title": [
-                    {
-                        "text": {
-                            "content": "AI Synced Document"
-                        }
-                    }
-                ]
-            },
-            "children": [
-                {
-                    "object": "block",
-                    "type": "paragraph",
-                    "paragraph": {
-                        "rich_text": [
-                            {
-                                "type": "text",
-                                "text": {
-                                    "content": content
-                                }
-                            }
-                        ]
-                    }
-                }
-            ]
+            "properties": {"title": [{"text": {"content": "AI Synced Document"}}]},
+            "children": [{"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": content}}]}}],
         }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -135,6 +112,7 @@ class NotionSyncSkill(BaseSkill):
                 logger.error(f"Notion integration unexpected error: {e}")
                 workspace.log(f"{self.name}: Unexpected Error: {e}")
                 raise RuntimeError(f"Unexpected error in Notion integration: {e}") from e
+
 
 class GithubSyncSkill(BaseSkill):
     """
@@ -162,10 +140,7 @@ class GithubSyncSkill(BaseSkill):
             "Accept": "application/vnd.github.v3+json",
         }
 
-        payload = {
-            "title": "AI Synced Content",
-            "body": content
-        }
+        payload = {"title": "AI Synced Content", "body": content}
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             try:

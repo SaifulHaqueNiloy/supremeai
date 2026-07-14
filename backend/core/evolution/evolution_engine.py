@@ -10,17 +10,16 @@ data using a dual-storage strategy (Supabase and local SQLite).
 from __future__ import annotations
 
 import hashlib
-import logging
 import os
 import sqlite3
 from datetime import UTC
 from datetime import datetime
 from typing import Any
 
+from loguru import logger
+
 from brain.model_router import ModelRouter
 
-
-logger = logging.getLogger(__name__)
 
 try:
     from prometheus_client import Counter
@@ -41,13 +40,18 @@ class EvolutionEngine:
         # বাংলা মন্তব্য: P2 Fix — Production Cloud Run-এ local SQLite নিষিদ্ধ।
         # /data/ directory ephemeral — container restart-এ সব data হারায়।
         # শুধু Supabase (persistent) ব্যবহার করুন বা Cloud Storage FUSE mount (/mnt/) দিন।
-        env = os.getenv("ENV", "local").lower()
+        from core.config import settings
+
+        env = settings.env
         if env == "production" and "/data/" in str(self.db_path):
-            logger.warning(
-                "⚠️ SQLite on ephemeral filesystem detected in production. "
-                "Evolution data will NOT survive container restarts. "
-                "Recommend: Set EVOLUTION_DB_PATH=/mnt/gcs/evolution.db for Cloud Storage FUSE."
-            )
+            gcs_path = os.getenv("EVOLUTION_DB_PATH_GCS")
+            if not gcs_path:
+                raise RuntimeError(
+                    "🛑 FATAL: ephemeral SQLite disallowed in production. "
+                    "Set EVOLUTION_DB_PATH=/mnt/gcs/evolution.db (Cloud Storage FUSE) "
+                    "or route through Supabase-only mode (EVOLUTION_STORAGE=supabase)."
+                )
+            self.db_path = gcs_path
 
         os.makedirs(os.path.dirname(str(self.db_path)), exist_ok=True)
         self._ensure_schema()
@@ -148,6 +152,7 @@ class EvolutionEngine:
     def learn_from_failure(self, task: str, approach: str, result: str) -> dict[str, Any]:
         created_at = datetime.now(UTC).isoformat()
         supabase_success = False
+        db = None
         try:
             from database.supabase_client import db
 
@@ -163,7 +168,7 @@ class EvolutionEngine:
 
         # বাংলা মন্তব্য: যদি Supabase ক্লায়েন্ট ইনিশিয়ালাইজড থাকে কিন্তু রাইট ফেইল করে, তবেই কেবল সাগা রোলব্যাক (SQLite এভয়েড) করা হবে।
         # কিন্তু যদি ক্লায়েন্ট না থাকে (যেমন টেস্ট বা লোকাল রান), তবে লোকাল SQLite ডেটা স্টোর চলতে দেওয়া হবে।
-        if not supabase_success and db.client:
+        if not supabase_success and (db is not None and db.client):
             return {"stored": False, "error": "Supabase write failed. Saga rollback: skipping SQLite."}
 
         conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
@@ -262,7 +267,7 @@ class EvolutionEngine:
         finally:
             conn.close()
 
-    def propose_prompt_optimization(self, original_prompt: str, failure_data: dict[str, Any]) -> dict[str, Any]:
+    async def propose_prompt_optimization(self, original_prompt: str, failure_data: dict[str, Any]) -> dict[str, Any]:
         task_hash = hashlib.sha256(original_prompt.encode()).hexdigest()
 
         # বাংলা মন্তব্য: LLM ব্যবহার করে উন্নত প্রম্পট তৈরির জন্য একটি প্রম্পট তৈরি করা হচ্ছে।
@@ -278,7 +283,9 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
 """
 
         try:
-            response = self.model_router.route_and_generate(optimization_prompt, task_type="analysis")
+            import asyncio
+
+            response = await asyncio.to_thread(self.model_router.route_and_generate, optimization_prompt, task_type="analysis")
             optimized_prompt = response.get("text", "").strip()
 
             if not optimized_prompt or optimized_prompt == original_prompt:
@@ -379,7 +386,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         finally:
             conn.close()
 
-    def run_daily_evolution(self, task_history: list[dict[str, Any]]) -> dict[str, Any]:
+    async def run_daily_evolution(self, task_history: list[dict[str, Any]]) -> dict[str, Any]:
         total = len(task_history)
         successful = sum(1 for t in task_history if t.get("success"))
         success_rate = (successful / total * 100.0) if total > 0 else 100.0
@@ -396,7 +403,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         underperforming_prompts = self.detect_underperforming_prompts()
         prompt_optimizations_proposed = []
         for prompt_data in underperforming_prompts:
-            proposal = self.propose_prompt_optimization(prompt_data["task"], prompt_data)
+            proposal = await self.propose_prompt_optimization(prompt_data["task"], prompt_data)
             if proposal.get("status") == "proposed":
                 prompt_optimizations_proposed.append(proposal)
 

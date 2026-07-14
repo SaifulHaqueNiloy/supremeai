@@ -20,6 +20,12 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       include: ['src/components/customer/**/*.{ts,tsx}', 'src/hooks/**/*.{ts,tsx}'],
       exclude: ['**/*.d.ts', '**/test/**', '**/*.test.*'],
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 60,
+        statements: 60
+      }
     },
   },
 });

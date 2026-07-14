@@ -229,30 +229,35 @@ class TestCheckBudget:
 class TestValidateBudget:
     """বাংলা মন্তব্য: validate_budget() method টেস্ট।"""
 
-    def test_validate_free_tier(self, cost_guard):
+    @pytest.mark.asyncio
+    async def test_validate_free_tier(self, cost_guard):
         """বাংলা মন্তব্য: Free tier validate হয়।"""
-        result = cost_guard.validate_budget("free")
+        result = await cost_guard.validate_budget("tenant_1", "free")
         assert result is True
 
-    def test_validate_economy_tier(self, cost_guard):
+    @pytest.mark.asyncio
+    async def test_validate_economy_tier(self, cost_guard):
         """বাংলা মন্তব্য: Economy tier validate হয়।"""
-        result = cost_guard.validate_budget("economy")
+        result = await cost_guard.validate_budget("tenant_1", "economy")
         assert result is True
 
-    def test_validate_premium_tier(self, cost_guard):
+    @pytest.mark.asyncio
+    async def test_validate_premium_tier(self, cost_guard):
         """বাংলা মন্তব্য: Premium tier validate হয়।"""
-        result = cost_guard.validate_budget("premium")
+        result = await cost_guard.validate_budget("tenant_1", "premium")
         assert result is True
 
-    def test_validate_unknown_tier(self, cost_guard):
+    @pytest.mark.asyncio
+    async def test_validate_unknown_tier(self, cost_guard):
         """বাংলা মন্তব্য: Unknown tier-ও True return করে (bypass mode)।"""
-        result = cost_guard.validate_budget("enterprise")
+        result = await cost_guard.validate_budget("tenant_1", "enterprise")
         assert result is True
 
-    def test_validate_logs_tier(self, cost_guard):
+    @pytest.mark.asyncio
+    async def test_validate_logs_tier(self, cost_guard):
         """বাংলা মন্তব্য: Tier validation log হয়।"""
         with patch("core.cost_guard.logger") as mock_logger:
-            cost_guard.validate_budget("premium")
+            await cost_guard.validate_budget("tenant_1", "premium")
             mock_logger.info.assert_called_once()
             log_msg = mock_logger.info.call_args[0][0]
             assert "Validating execution safety gate for AI tier: 'premium'" in log_msg

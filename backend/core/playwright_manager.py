@@ -46,14 +46,22 @@ async def shutdown_global_browser():
     try:
         if _global_browser:
             logger.info("Closing active global Chromium engine...")
-            await _global_browser.close()
+            import asyncio
+
+            res = _global_browser.close()
+            if asyncio.iscoroutine(res):
+                await res
     except Exception as e:  # noqa: BLE001
         logger.critical(f"Error closing global browser: {e}")
 
     try:
         if _playwright_runner:
             logger.info("Stopping playwright runner core context...")
-            await _playwright_runner.stop()
+            import asyncio
+
+            res = _playwright_runner.stop()
+            if asyncio.iscoroutine(res):
+                await res
     except Exception as e:  # noqa: BLE001
         logger.critical(f"Error stopping global playwright runner: {e}")
     finally:
