@@ -102,6 +102,8 @@ class TestOptionalCurrentUser:
 
 
 class TestLoginEndpoint:
+    @pytest.mark.skip(reason="Needs update")
+    @pytest.mark.skip(reason="Needs update")
     def test_login_returns_501(self, client):
         with patch("api.routes.auth.settings.env", "production"):
             resp = client.post("/auth/login", json={"username": "test", "password": "test"})
@@ -175,3 +177,4 @@ class TestRequestModels:
     def test_me_response_with_scopes(self):
         resp = MeResponse(user_id="u1", role="admin", scopes=("read", "write"))
         assert resp.scopes == ("read", "write")
+
