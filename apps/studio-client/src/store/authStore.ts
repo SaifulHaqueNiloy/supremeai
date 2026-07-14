@@ -17,7 +17,8 @@ interface UserProfile {
 interface AuthState {
   status: AuthStatus;
   user: UserProfile | null;
-  login: (email: string, name: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
   initialize: () => Promise<void>;
 }
@@ -26,17 +27,42 @@ export const useAuthStore = create<AuthState>((set) => ({
   status: AuthStatus.UNINITIALIZED,
   user: null,
 
-  login: async (email, name) => {
+  login: async (email, password) => {
     try {
-      // 🟢 Sprint 5: Call actual FastAPI Dev Login endpoint
       const response = await apiClient.post<any>('/auth/login', {
         username: email,
-        password: 'dev_password' // Ignored by dev endpoint
+        password: password
       });
-      
+
       const token = response.access_token;
       localStorage.setItem('supremeai_auth_token', token);
-      
+
+      set({
+        status: AuthStatus.LOGGED_IN,
+        user: {
+          id: response.user_id,
+          email,
+          name: email.split('@')[0], // Backend does not return name right now
+          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=random`,
+        },
+      });
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  },
+
+  register: async (email, name, password) => {
+    try {
+      const response = await apiClient.post<any>('/auth/register', {
+        username: email,
+        password: password,
+        name: name
+      });
+
+      const token = response.access_token;
+      localStorage.setItem('supremeai_auth_token', token);
+
       set({
         status: AuthStatus.LOGGED_IN,
         user: {
@@ -47,7 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         },
       });
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Registration failed:", error);
       throw error;
     }
   },
