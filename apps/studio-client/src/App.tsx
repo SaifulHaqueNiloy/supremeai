@@ -19,6 +19,7 @@ import { ArchitectTower } from './pages/ArchitectTower';
 import SwarmMap from './components/SwarmMap';
 import EvolutionForge from './pages/EvolutionForge/EvolutionForge';
 import { DashboardShell } from "./components/dashboard/DashboardShell";
+import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
 
 // Services & Hooks
@@ -61,7 +62,7 @@ export const App: React.FC = () => {
 const AppContent: React.FC = () => {
   const { isServerOnline, deployGate } = useStore();
   const { streamStatus } = useServerStream();
-  
+
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [code, setCode] = useState('// Click Preview or Save to interact with the workspace code');
@@ -155,7 +156,7 @@ const AppContent: React.FC = () => {
                   </GuestRoute>
                 } />
                 <Route path="/" element={<Navigate to="/workspace" replace />} />
-                
+
                 {/* AUTHENTICATED STATE */}
                 <Route path="/workspace/agent" element={
                   <ProtectedRoute>
@@ -195,6 +196,11 @@ const AppContent: React.FC = () => {
                       isServerOnline={isServerOnline}
                       workspace={legacyWorkspace}
                     />
+                  </ProtectedRoute>
+                } />
+                <Route path="/workspace/live" element={
+                  <ProtectedRoute>
+                    <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
                   </ProtectedRoute>
                 } />
 
