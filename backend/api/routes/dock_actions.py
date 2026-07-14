@@ -32,14 +32,14 @@ async def push_to_sse(session_id: str, data: dict):
 # NOTE: require_admin_token is currently mocked/commented for testing the UI
 @router.post("/session/{session_id}/integrations/{tool_id}")
 async def run_dock_integration(
-    session_id: str, 
-    tool_id: str, 
+    session_id: str,
+    tool_id: str,
     payload: DockActionPayload,
     # token: str = Depends(require_admin_token)
 ):
     # ১. UI তে "Neon-Pulse" অ্যানিমেশন অন করার জন্য SSE পুশ
     await push_to_sse(session_id, {"state": "processing", "message": f"Connecting to {tool_id.capitalize()}..."})
-    
+
     # ২. টুল ডিসপ্যাচার (Tool Dispatcher)
     if tool_id == "github":
         return await handle_github_push(session_id, payload)
@@ -66,14 +66,14 @@ async def handle_github_push(session_id: str, payload: DockActionPayload):
 
         # ধাপ ৩: গিটহাবে পুশ করা (PyGithub ম্যাজিক)
         await push_to_sse(session_id, {"state": "processing", "message": "Pushing code to repository..."})
-        
+
         # PyGithub ব্লকিং কল করে, তাই এটিকে async এ চালানোর জন্য একটু ট্রিকস:
         def push_code():
             g = Github(user_token)
             user = g.get_user()
             # ইউজারের একটি ডিফল্ট রিপোজিটরি টার্গেট করুন, অথবা নতুন তৈরি করুন
-            repo = user.get_repo("supremeai_generated_workspace") 
-            
+            repo = user.get_repo("supremeai_generated_workspace")
+
             try:
                 # ফাইল আগে থাকলে আপডেট করবে, না থাকলে নতুন বানাবে
                 contents = repo.get_contents(file_name)
@@ -86,7 +86,7 @@ async def handle_github_push(session_id: str, payload: DockActionPayload):
 
         # ধাপ ৪: UI তে সাকসেস মেসেজ ও গ্রিন টিক অ্যানিমেশন পাঠানো
         await push_to_sse(session_id, {"state": "success", "message": "Code successfully merged to GitHub!"})
-        
+
         return {"ok": True, "message": "Pushed to GitHub"}
 
     except Exception as e:
@@ -94,4 +94,3 @@ async def handle_github_push(session_id: str, payload: DockActionPayload):
         error_msg = str(e)
         await push_to_sse(session_id, {"state": "error", "message": f"GitHub Error: {error_msg}"})
         raise HTTPException(status_code=500, detail=error_msg)
-
