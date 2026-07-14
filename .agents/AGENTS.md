@@ -94,3 +94,5 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 - **Code Comments (Bangla):** Whenever making changes to the codebase, always try to add explanatory comments in **Bangla** so that the rationale behind the changes is easily understood later by the team.
 
 - **Elite Developer Mindset:** As an elite developer, do not just fix a single error. Always investigate and fix the root cause, and proactively find and fix similar errors across the codebase.
+
+- **Production-Ready Implementation:** DO NOT use mocks, stubs, or dummy implementations. All code must be production-ready and fully functional. If integrating a feature, integrate it with the real backing services (e.g., Supabase, database).

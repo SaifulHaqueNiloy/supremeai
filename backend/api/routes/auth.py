@@ -7,6 +7,7 @@ from datetime import timedelta
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
@@ -21,6 +22,7 @@ except ImportError:
 
 from core.config import settings
 from core.security.rbac import UserContext
+from database.supabase_client import db
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -60,6 +62,12 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    name: str | None = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -75,26 +83,50 @@ class MeResponse(BaseModel):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest):
-    if settings.env not in ("local", "test"):
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Direct login is not supported in production. Use the admin TOTP flow or an OAuth provider.",
-        )
+    if not db.client:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Supabase client is not initialized")
 
-    # Fallback logic: If SSO is not configured or fails, use local credentials
+    try:
+        res = db.client.auth.sign_in_with_password({"email": body.username, "password": body.password})
+        if not res.user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    # 🟢 Dev/Fallback Mode: Generate a token for local testing or emergency fallback
-    user_id = f"dev_{body.username.split('@')[0]}"
-    primary_role = "admin" if "admin" in body.username else "user"
-    token_data = {
-        "sub": user_id,
-        "role": primary_role,
-        "email": body.username,
-        "method": "dev_login",
-    }
-    access_token = create_access_token(token_data)
+        user_id = res.user.id
+        primary_role = "admin" if "admin" in body.username else "user"
+        token_data = {
+            "sub": user_id,
+            "role": primary_role,
+            "email": body.username,
+            "method": "supabase_auth",
+        }
+        access_token = create_access_token(token_data)
+        return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
-    return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
+
+@router.post("/register", response_model=TokenResponse)
+async def register(body: RegisterRequest):
+    if not db.client:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Supabase client is not initialized")
+
+    try:
+        res = db.client.auth.sign_up({"email": body.username, "password": body.password})
+        if not res.user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
+
+        user_id = res.user.id
+        primary_role = "admin" if "admin" in body.username else "user"
+        token_data = {
+            "sub": user_id,
+            "role": primary_role,
+            "email": body.username,
+            "method": "supabase_auth",
+        }
+        access_token = create_access_token(token_data)
+        return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/me", response_model=MeResponse)
