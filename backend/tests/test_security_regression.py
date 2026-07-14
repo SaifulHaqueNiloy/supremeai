@@ -22,9 +22,9 @@ async def test_production_jwt_secret_required():
                 gemini_api_key="valid",
             )
     assert "SUPREMEAI_JWT_SECRET must be explicitly set in all environments" in str(excinfo.value)
-    @pytest.mark.skip(reason="Needs update")
-    @pytest.mark.skip(reason="Needs update")
-    def test_auth_middleware_rejects_invalid_api_token():
+
+@pytest.mark.skip(reason="Needs update")
+def test_auth_middleware_rejects_invalid_api_token():
     """Verify that AuthMiddleware rejects invalid API tokens and 'test-token' if the expected token is different."""
     from fastapi import FastAPI
     from fastapi.testclient import TestClient

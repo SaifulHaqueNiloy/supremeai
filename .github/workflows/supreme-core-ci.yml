@@ -521,8 +521,8 @@ jobs:
           retention-days: 1
 
   deploy-to-render:
-    name: 🚀 Deploy Backend (Render)
-    needs: [backend-core]
+    name: 🌐 Deploy Backend (Render)
+    needs: [backend-core, pre-merge-gate]
     runs-on: ubuntu-latest
     if: |
       always() &&
