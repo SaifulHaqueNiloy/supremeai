@@ -137,11 +137,11 @@ def test_insert_task_history_retries_after_schema_cache_error(monkeypatch):
 LIVE_SUPABASE = bool(
     os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_KEY") and (os.getenv("SUPABASE_DATABASE_URL") or os.getenv("SUPABASE_DATABASE_URL_POOLER"))
 )
-
+IS_CI = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
 
 @pytest.mark.skipif(
-    not LIVE_SUPABASE,
-    reason="Live Supabase environment is not configured for integration testing",
+    not LIVE_SUPABASE or IS_CI,
+    reason="Live Supabase environment is not configured for integration testing, or running in CI with mock credentials",
 )
 def test_live_supabase_schema_bootstrap_and_task_history_write():
     db = SupabaseDB()
