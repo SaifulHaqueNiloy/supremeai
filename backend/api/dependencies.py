@@ -20,15 +20,17 @@ def get_fitness_engine() -> FitnessEngine:
 
 
 def get_current_user_token(request: Request) -> dict:
-    # রিফ্যাক্টর: লোকাল is_test চেকের বদলে শেয়ার্ড ইউটিলিটি ব্যবহার
+    # 1. Check context injected by AuthMiddleware
+    user = getattr(request.state, "user", None)
+    if user:
+        return user
+
+    # 2. Test Environment fallback
     if is_test_environment():
         return {"sub": "admin@supremeai.com", "role": "admin"}
 
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    token = auth_header.split(" ")[1]
-    return verify_token(token)
+    # 3. Fallback check
+    raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def get_tenant_db(
