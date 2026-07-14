@@ -1,3 +1,4 @@
+# ruff: noqa: BLE001, B904, E722
 from __future__ import annotations
 
 import os
@@ -312,3 +313,4 @@ async def verify_admin_session_fail_closed(request: Request) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Security handshake verification failure. Access safely denied.",
         ) from None
+
