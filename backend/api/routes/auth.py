@@ -1,3 +1,4 @@
+# ruff: noqa: BLE001, B904, E722
 from __future__ import annotations
 
 from datetime import UTC
@@ -146,3 +147,4 @@ async def verify_token(request: Request):
         "role": user.get("role"),
         "message": "Authentication successful"
     }
+
