@@ -28,8 +28,8 @@ export default tseslint.config({ ignores: ['dist'] }, {
       'warn',
       { allowConstantExport: true, allowExportNames: ['useTheme', 'useToast', 'useI18n', 'useThemeSync', 'useSwarmStream', 'setSujonState', 'useSujonState', 'SUJON_STATE_EVENT', 'SujonState', 'Theme', 'THEME_ORDER', 'ToastType', 'Toast', 'globalShowToastRef'] },
     ],
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
     'react-hooks/set-state-in-effect': 'off',
   },
 }, storybook.configs["flat/recommended"]);

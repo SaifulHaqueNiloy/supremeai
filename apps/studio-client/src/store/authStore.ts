@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiClient } from '../services/apiClient';
+import { apiClient, updateTokenCache } from '../services/apiClient';
 
 export enum AuthStatus {
   UNINITIALIZED = 'uninitialized',
@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const token = response.access_token;
       localStorage.setItem('supremeai_auth_token', token);
+      updateTokenCache(token);
 
       set({
         status: AuthStatus.LOGGED_IN,
@@ -62,6 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const token = response.access_token;
       localStorage.setItem('supremeai_auth_token', token);
+      updateTokenCache(token);
 
       set({
         status: AuthStatus.LOGGED_IN,
@@ -80,6 +82,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     localStorage.removeItem('supremeai_auth_token');
+    updateTokenCache(null);
     set({ status: AuthStatus.LOGGED_OUT, user: null });
   },
 
@@ -92,16 +95,18 @@ export const useAuthStore = create<AuthState>((set) => ({
           status: AuthStatus.LOGGED_IN,
           user: {
             id: response.user_id,
-            email: 'dev_user@example.com', // /auth/me doesn't return email right now, this is a placeholder
+            email: response.email || response.username || 'unknown@example.com',
             name: response.role,
             avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(response.role)}&background=random`,
           }
         });
       } catch (e) {
         localStorage.removeItem('supremeai_auth_token');
+        updateTokenCache(null);
         set({ status: AuthStatus.LOGGED_OUT });
       }
     } else {
+      updateTokenCache(null);
       set({ status: AuthStatus.LOGGED_OUT });
     }
   },

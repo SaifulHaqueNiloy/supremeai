@@ -269,6 +269,13 @@ class FreeTierTracker:
                             )
             except Exception as e:  # noqa: BLE001
                 logger.debug(f"Failed to fetch provider configs from Supabase: {e}")
+                try:
+                    from core.messaging.event_bus import ErrorEvent
+                    from core.messaging.event_bus import error_event_bus
+
+                    error_event_bus.emit(ErrorEvent(module="free_tier_tracker", error_type="DB_FETCH_ERROR", message=str(e), severity="WARNING"))
+                except ImportError:
+                    pass
             return None, None
 
         db_limits, db_priority = await asyncio.to_thread(_fetch)

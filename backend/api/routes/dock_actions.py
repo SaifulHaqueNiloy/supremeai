@@ -14,20 +14,17 @@ from core.messaging.pubsub import global_pubsub
 
 router = APIRouter(tags=["Dock Actions"])
 
+
 class DockActionPayload(BaseModel):
     triggered_from: str
     active_file: str | None = None
-    content: str | None = None # যে কোডটি গিটহাবে যাবে
+    content: str | None = None  # যে কোডটি গিটহাবে যাবে
+
 
 # push_to_sse implemented using the global pubsub in your event system
 async def push_to_sse(session_id: str, data: dict):
-    await global_pubsub.publish("dashboard_events", {
-        "type": "integration_status",
-        "payload": {
-            "session_id": session_id,
-            **data
-        }
-    })
+    await global_pubsub.publish("dashboard_events", {"type": "integration_status", "payload": {"session_id": session_id, **data}})
+
 
 # NOTE: require_admin_token is currently mocked/commented for testing the UI
 @router.post("/session/{session_id}/integrations/{tool_id}")
@@ -54,7 +51,7 @@ async def run_dock_integration(
 async def handle_github_push(session_id: str, payload: DockActionPayload):
     try:
         # ধাপ ১: ইউজারের Vault থেকে গিটহাব টোকেন বের করা
-        user_token = "ghp_your_personal_access_token" # (টেস্ট করার জন্য আপাতত হার্ডকোড করে দেখতে পারেন)
+        user_token = "ghp_your_personal_access_token"  # (টেস্ট করার জন্য আপাতত হার্ডকোড করে দেখতে পারেন)
 
         if not user_token:
             raise ValueError("GitHub token missing! Please add it in your Vault.")

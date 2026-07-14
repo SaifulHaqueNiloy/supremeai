@@ -167,8 +167,8 @@ class IdempotencyMiddleware:
                 ),
                 ex=86400,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception:
             # বাংলা মন্তব্য: কোনো কারণে রিকোয়েস্ট ফেইল হলে কী-টি মুছে ফেলা হবে, যাতে ক্লায়েন্ট আবার চেষ্টা করতে পারে
             with contextlib.suppress(Exception):
                 await redis.delete(redis_key)
-            raise e
+            raise
