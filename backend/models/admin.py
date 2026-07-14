@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-
 class AdminFirebaseLoginRequest(BaseModel):
     id_token: str = Field(..., description="Firebase ID token")
 

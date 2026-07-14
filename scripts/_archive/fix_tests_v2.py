@@ -1,4 +1,5 @@
-import os, re
+import os
+import re
 tests_dir = 'backend/tests'
 
 def replace_all(path, replacements):
@@ -50,4 +51,3 @@ replace_all(f'{tests_dir}/tools/test_style_learner_ast.py', [
     ("mock_settings: MagicMock, ", ""),
     ("mock_settings: MagicMock", "")
 ])
-
