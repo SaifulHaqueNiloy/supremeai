@@ -16,8 +16,11 @@ import {
   Wifi,
   WifiOff,
   Activity,
+  AlertCircle,
 } from 'lucide-react';
 import { useHashRoute, type DashboardRoute, parseHash } from './useHashRoute';
+import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 import { SessionsPage } from './SessionsPage';
 import { SessionDetailPage } from './SessionDetailPage';
 import { KnowledgePage } from './KnowledgePage';
@@ -69,6 +72,7 @@ interface DashboardShellProps {
 
 export function DashboardShell(props: DashboardShellProps) {
   const [route, navigate] = useHashRoute();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // বাংলা মন্তব্য: রাউটের ভিত্তিতে Sujon স্টেট সেট করা — টাস্ক এক্সিকিউশন আরম্ভ হলে processing, সেশন শেষে idle
   useMemo(() => {
@@ -201,6 +205,19 @@ export function DashboardShell(props: DashboardShellProps) {
 
         {/* মূল কন্টেন্ট এলাকা */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
+          {!isAuthenticated && (
+            <div className="shrink-0 bg-rose-500/10 border-b border-rose-500/20 px-4 py-2 flex items-center justify-center gap-3 shadow-sm z-10">
+              <AlertCircle className="w-4 h-4 text-rose-400" />
+              <span className="text-xs font-medium text-slate-300">
+                You are exploring in <span className="text-rose-400">Guest Mode</span>.
+              </span>
+              <div className="h-3 w-px bg-slate-700"></div>
+              <Link to="/login" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors">
+                Login / Sign Up
+              </Link>
+              <span className="text-xs text-slate-500 hidden sm:inline">to save your progress.</span>
+            </div>
+          )}
           <main className="flex-1 overflow-y-auto bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)]">
             {renderPage()}
 
