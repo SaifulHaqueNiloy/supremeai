@@ -25,6 +25,8 @@ from core.skills.core_skills import (
     ToolExecutionSkill,
     ExperiencePersistenceSkill,
 )
+from core.skills.integrations import SlackIntegrationSkill, NotionSyncSkill, GithubSyncSkill
+from core.orchestration.crew_departments import IntegrationAgent
 from models.shared_workspace import SharedWorkspace
 
 
@@ -64,6 +66,7 @@ class MorphicOrchestrator:
         skill_manager.register_skill(ExperiencePersistenceSkill())
         skill_manager.register_skill(SlackIntegrationSkill())
         skill_manager.register_skill(NotionSyncSkill())
+        skill_manager.register_skill(GithubSyncSkill())
 
     async def _get_dag_for_intent(self, intent: str) -> dict[str, list[str]]:
         """
@@ -81,7 +84,7 @@ class MorphicOrchestrator:
                 "researcher": [],
                 "reflection": ["researcher"],
             }
-        elif intent in ["sync_to_slack", "sync_to_notion"]:
+        elif intent in ["sync_to_slack", "sync_to_notion", "sync_to_github"]:
             return {
                 "integration": [],
             }

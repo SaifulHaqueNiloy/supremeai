@@ -146,6 +146,7 @@ class AuthMiddleware:
             "/api/config/public",
             "/api/task/stream",
             "/api/health",
+            "/auth/login",
         }
         # বাংলা মন্তব্য: public paths dynamically matching using substring or clean compare.
         is_public = (
@@ -189,35 +190,56 @@ class AuthMiddleware:
             await self.app(scope, receive, send)
             return
 
-        # 2. JWT Decoding (Regular web user)
-        try:
-            payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
-            scope.setdefault("state", {})["user"] = payload
-            await self.app(scope, receive, send)
-            return
-        except Exception:
-            pass  # If not a JWT, we fall through to API Key check
+        if token.startswith("sk-"):
+            # 2. Dynamic API Key Check
+            try:
+                from core.security import hash_api_key
+                from models.api_key import get_api_key_by_hash
+                import time
+                token_hash = hash_api_key(token)
+                api_key_data = await get_api_key_by_hash(token_hash)
 
-        # 3. Dynamic API Key Check
-        try:
-            from core.security import hash_api_key
-            from models.api_key import get_api_key_by_hash
-            import time
-            token_hash = hash_api_key(token)
-            api_key_data = await get_api_key_by_hash(token_hash)
-
-            if api_key_data:
-                expires_at = api_key_data.get("expires_at")
-                if expires_at and expires_at < int(time.time()):
-                    pass # expired
-                else:
-                    scope.setdefault("state", {})["user"] = {"sub": api_key_data["user_id"], "role": "api_client"}
-                    scope["state"]["api_key"] = api_key_data
-                    await self.app(scope, receive, send)
-                    return
-        except Exception as e:
-            logger.error(f"API Key validation error: {e}")
-            pass
+                if api_key_data:
+                    expires_at = api_key_data.get("expires_at")
+                    if expires_at and expires_at < int(time.time()):
+                        logger.warning(f"Unauthorized: API Key has expired")
+                        response = JSONResponse(
+                            status_code=401,
+                            content={"detail": "API Key has expired"},
+                        )
+                        await response(scope, receive, send)
+                        return
+                    else:
+                        scope.setdefault("state", {})["user"] = {"sub": api_key_data["user_id"], "role": "api_client"}
+                        scope["state"]["api_key"] = api_key_data
+                        await self.app(scope, receive, send)
+                        return
+            except Exception as e:
+                logger.error(f"API Key validation error: {e}")
+                pass
+        else:
+            # 3. JWT Decoding (Regular web user)
+            try:
+                payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+                scope.setdefault("state", {})["user"] = payload
+                await self.app(scope, receive, send)
+                return
+            except ExpiredSignatureError:
+                logger.warning("Unauthorized: JWT has expired")
+                response = JSONResponse(
+                    status_code=401,
+                    content={"detail": "Token has expired"},
+                )
+                await response(scope, receive, send)
+                return
+            except JWTError as e:
+                logger.warning(f"Unauthorized: Invalid JWT -> {str(e)}")
+                response = JSONResponse(
+                    status_code=401,
+                    content={"detail": "Invalid credentials"},
+                )
+                await response(scope, receive, send)
+                return
 
         # All checks failed
         logger.warning(f"Unauthorized access attempt to {path}: Invalid Token or API Key")
