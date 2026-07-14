@@ -15,7 +15,7 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> {
   final BillingService _billingService = BillingService();
-  
+
   Map<String, dynamic>? _wallet;
   List<Map<String, dynamic>> _history = [];
   bool _isLoading = true;
@@ -47,21 +47,19 @@ class _WalletScreenState extends State<WalletScreen> {
     final checkoutRes = await _billingService.initiateCheckout(amount);
     if (checkoutRes['success'] == true) {
       final String checkoutUrl = checkoutRes['checkout_url'];
-      
+
       if (mounted) {
         // Trigger multi-gateway transaction flow securely via bridge
-        final success = await PaymentGatewayBridge.startPaymentFlow(
+        await PaymentGatewayBridge.startPaymentFlow(
           context: context,
           gateway: gateway,
           checkoutUrl: checkoutUrl,
           amount: amount,
         );
-
-        if (success) {
-          // Trigger mock webhook confirmation locally for developer simulations
-          await _simulateWebhookConfirmation(amount, gateway);
-          _refreshWallet();
-        }
+        // Note: The UI should ideally listen to a realtime backend stream (like WebSocket/SSE)
+        // or poll for the webhook completion to update the wallet balance.
+        // For now, simply refreshing the wallet manually.
+        _refreshWallet();
       }
     } else {
       if (mounted) {
@@ -73,41 +71,6 @@ class _WalletScreenState extends State<WalletScreen> {
         );
       }
     }
-  }
-
-  // Developer simulation helper for webhook updates on local test networks
-  Future<void> _simulateWebhookConfirmation(double amount, String gateway) async {
-    final client = http.Client();
-    try {
-      final String url = gateway == 'stripe' 
-          ? 'https://supremeai-a.web.app/api/billing/webhook/stripe'
-          : 'https://supremeai-a.web.app/api/billing/webhook/sslcommerz';
-      
-      final Map<String, dynamic> payload = gateway == 'stripe'
-          ? {
-              "type": "checkout.session.completed",
-              "data": {
-                "object": {
-                  "id": "cs_live_simulated",
-                  "amount_total": (amount * 100).toInt(),
-                  "metadata": {"user_id": "default_user_session"}
-                }
-              }
-            }
-          : {
-              "status": "VALID",
-              "amount": amount / 0.0085, // Convert back to BDT
-              "value_a": "default_user_session"
-            };
-
-      // Call webhook asynchronously to update backend state
-      // বাংলা মন্তব্য: লোকাল ডেভেলপমেন্ট সিমুলেশন - সরাসরি ওয়েবহুক এপিআই কল ট্রিগার।
-      await client.post(
-        Uri.parse(url.replaceFirst('https://supremeai-a.web.app', 'http://127.0.0.1:8000')),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
-    } catch (_) {}
   }
 
   @override

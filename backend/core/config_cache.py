@@ -79,107 +79,40 @@ class ConfigCache:
         """TTL expire হয়েছে কিনা চেক করে।"""
         return (time.time() - self._last_refresh) > self._ttl
 
-    def _load_from_db(self) -> dict[str, Any]:
-        """
-        DB থেকে active SystemConfig রেকর্ড লোড করে।
-        যদি DB না থাকে বা কোন error হয়, DEFAULT_CONFIGS ব্যবহার করে।
-        """
-        configs = dict(DEFAULT_CONFIGS)  # Start with defaults
+    async def _load_from_db_async(self) -> dict[str, Any]:
+        """একমাত্র DB-load পথ — সবসময় বর্তমান event loop-এই চলে, নতুন থ্রেড/লুপ তৈরি করে না।"""
+        configs = dict(DEFAULT_CONFIGS)
         try:
-            # Try to load from SystemConfig table
-            # Synchronous load for cache initialization
-            import asyncio
-
             from sqlalchemy import select
-
             from database.session import AsyncSessionLocal
             from models.system_config import SystemConfig
 
-            async def _async_load():
-                async with AsyncSessionLocal() as session:
-                    stmt = select(SystemConfig).where(SystemConfig.is_active)
-                    result = await session.execute(stmt)
-                    rows = result.scalars().all()
-                    for row in rows:
-                        configs[row.key] = row.value
-                    return configs
-
-            try:
-                try:
-                    # বাংলা মন্তব্য: রানিং লুপ থাকলে থ্রেড পুলে রান করিয়ে ব্লক করা এড়ানো হচ্ছে।
-                    loop = asyncio.get_running_loop()
-                    import concurrent.futures
-
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future = executor.submit(lambda: asyncio.run(_async_load()))
-                        configs = future.result()
-                except RuntimeError:
-                    # No running loop, safe to create and run on current thread
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    configs = loop.run_until_complete(_async_load())
-                    loop.close()
-                logger.info(f"ConfigCache: Loaded {len(configs)} configs from DB")
-            except RuntimeError as e:
-                logger.exception(f"❌ Critical task failure in config_cache.py: {e}")
-                from core.messaging.event_bus import ErrorEvent
-                from core.messaging.event_bus import error_event_bus
-
-                error_event_bus.emit(
-                    ErrorEvent(
-                        module="backend.core.config_cache",
-                        error_type=type(e).__name__,
-                        message=str(e),
-                        severity="WARNING",
-                        context={"action": "async_load_fallback"},
-                    )
-                )
-
-        except Exception as exc:  # noqa: BLE001
-            logger.debug(f"ConfigCache: DB load failed, using defaults: {exc}")
-
-        return configs
-
-    def refresh(self):
-        """ফোর্স রিফ্রেশ — ক্যাশ DB থেকে রিলোড করে (সিঙ্ক্রোনাস)।"""
-        with self._lock:
-            try:
-                self._cache = self._load_from_db()
-            except Exception as exc:  # noqa: BLE001
-                # বাংলা মন্তব্য: Sync load failing এ fallback defaults লোড করা হচ্ছে
-                logger.debug(f"ConfigCache: Sync load failed, using defaults: {exc}")
-                self._cache = dict(DEFAULT_CONFIGS)
-            self._last_refresh = time.time()
-            self._loaded = True
-            logger.debug(f"ConfigCache: Refreshed {len(self._cache)} configs")
-
-    async def refresh_async(self):
-        """Asynchronous refresh, mainly for startup."""
-        from sqlalchemy import select
-
-        from database.session import AsyncSessionLocal
-        from models.system_config import SystemConfig
-
-        configs = dict(DEFAULT_CONFIGS)
-        try:
             async with AsyncSessionLocal() as session:
                 stmt = select(SystemConfig).where(SystemConfig.is_active)
                 result = await session.execute(stmt)
-                rows = result.scalars().all()
-                for row in rows:
+                for row in result.scalars().all():
                     configs[row.key] = row.value
+            logger.info(f"ConfigCache: Loaded {len(configs)} configs from DB")
+        except Exception as exc:  # noqa: BLE001 — DB down হলেও app চলতে থাকুক, defaults দিয়ে
+            logger.warning(f"ConfigCache: DB load failed, using defaults: {exc}")
+        return configs
 
-            with self._lock:
-                self._cache = configs
-                self._last_refresh = time.time()
-                self._loaded = True
-            logger.info(f"ConfigCache: Async loaded {len(configs)} configs from DB")
-        except Exception as exc:  # noqa: BLE001
-            logger.debug(f"ConfigCache: DB load failed during startup, using defaults: {exc}")
-            with self._lock:
-                self._cache = configs
-                self._last_refresh = time.time()
-                self._loaded = True
+    async def refresh_async(self):
+        new_cache = await self._load_from_db_async()
+        with self._lock:
+            self._cache = new_cache
+            self._last_refresh = time.time()
+            self._loaded = True
+
+    def refresh_sync_bootstrap(self):
+        """শুধু app startup-এ, event loop চালু হওয়ার আগে, একবারই ব্যবহারের জন্য।
+        Request-handling চলাকালীন এটা কখনো কল করা যাবে না।"""
+        import asyncio
+        new_cache = asyncio.run(self._load_from_db_async())
+        with self._lock:
+            self._cache = new_cache
+            self._last_refresh = time.time()
+            self._loaded = True
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -188,7 +121,12 @@ class ConfigCache:
         - DB না থাকলে DEFAULT_CONFIGS থেকে নেয়
         """
         if not self._loaded or self._should_refresh():
-            self.refresh()
+            import asyncio
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.refresh_async())
+            except RuntimeError:
+                pass
 
         with self._lock:
             return self._cache.get(key, default)
@@ -196,7 +134,12 @@ class ConfigCache:
     def get_all(self, category: str | None = None) -> dict[str, Any]:
         """সব কনফিগ (অথবা নির্দিষ্ট category) রিটার্ন করে।"""
         if not self._loaded or self._should_refresh():
-            self.refresh()
+            import asyncio
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.refresh_async())
+            except RuntimeError:
+                pass
 
         with self._lock:
             if category:
