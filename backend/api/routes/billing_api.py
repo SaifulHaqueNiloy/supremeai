@@ -11,6 +11,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
+import httpx
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -33,6 +34,26 @@ token_deductor = TokenDeductor()
 _raw_stripe_key = settings.stripe_api_key.get_secret_value() if settings.stripe_api_key else None
 stripe.api_key = _raw_stripe_key
 STRIPE_WEBHOOK_SECRET = getattr(settings, "stripe_webhook_secret", None)
+
+SSLCOMMERZ_VALIDATION_URL = "https://securepay.sslcommerz.com/validator/api/validationserverAPI.php"
+SSLCOMMERZ_STORE_ID = getattr(settings, "sslcommerz_store_id", None)
+SSLCOMMERZ_STORE_PASSWORD = getattr(settings, "sslcommerz_store_password", None)
+
+async def _verify_sslcommerz_transaction(val_id: str) -> dict | None:
+    """SSLCommerz Validation API server-to-server validation"""
+    if not SSLCOMMERZ_STORE_ID or not SSLCOMMERZ_STORE_PASSWORD:
+        logger.critical("SSLCommerz credentials not configured — cannot verify transactions.")
+        return None
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(SSLCOMMERZ_VALIDATION_URL, params={
+            "val_id": val_id,
+            "store_id": SSLCOMMERZ_STORE_ID,
+            "store_passwd": SSLCOMMERZ_STORE_PASSWORD,
+            "format": "json",
+        })
+    resp.raise_for_status()
+    data = resp.json()
+    return data if data.get("status") in ("VALID", "VALIDATED") else None
 
 
 # Pre-seed default user wallet with SignUp Bonus
@@ -272,43 +293,55 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
 @router.post("/webhook/sslcommerz")
 async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = Depends(get_db_session)):
     """
-    Asynchronously processes local currency MFS payments success logs from SSLCommerz.
+    Asynchronously processes local currency MFS payments success logs from SSLCommerz securely.
     """
     try:
         payload = await request.json()
-        status_val = payload.get("status")
+        val_id = payload.get("val_id")
 
-        if status_val == "VALID":
-            user_id = payload.get("value_a", "default_user_session")
-            amount_bdt = float(payload.get("amount", 0))
-            exchange_rate = float(getattr(settings, "bdt_exchange_rate", "0.0085"))
-            amount_usd = Decimal(str(round(amount_bdt * exchange_rate, 6)))
+        if not val_id:
+            raise HTTPException(status_code=400, detail="Missing val_id")
 
-            async with session.begin():
-                result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
-                wallet = result.scalars().first()
+        verified = await _verify_sslcommerz_transaction(val_id)
+        if not verified:
+            logger.warning(f"SSLCommerz webhook rejected — val_id {val_id} could not be verified.")
+            raise HTTPException(status_code=400, detail="Transaction could not be verified.")
 
-                if not wallet:
-                    logger.error(f"Wallet not found for user: {user_id} during SSLCommerz top-up.")
-                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User wallet not found")
+        user_id = verified.get("value_a")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Missing user reference in verified transaction.")
 
-                wallet.balance_usd += amount_usd
+        amount_bdt = float(verified.get("amount", 0))
+        exchange_rate = float(getattr(settings, "bdt_exchange_rate", "0.0085"))
+        amount_usd = Decimal(str(round(amount_bdt * exchange_rate, 6)))
 
-                tx_id = str(uuid.uuid4())
-                entry = TransactionLedgerEntry(
-                    transaction_id=tx_id,
-                    user_id=user_id,
-                    amount_usd=amount_usd,
-                    transaction_type="topup",
-                    description=f"Fund deposit via SSLCommerz (Tk.{amount_bdt} MFS)",
-                )
-                session.add(entry)
-            return {"status": "processed", "message": f"Successfully credited ${amount_usd} (BDT {amount_bdt}) via SSLCommerz."}
+        async with session.begin():
+            result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
+            wallet = result.scalars().first()
 
-        return {"status": "ignored", "message": "SSLCommerz payment not VALID."}
+            if not wallet:
+                logger.error(f"Wallet not found for user: {user_id} during SSLCommerz top-up.")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User wallet not found")
+
+            wallet.balance_usd += amount_usd
+
+            tx_id = str(uuid.uuid4())
+            entry = TransactionLedgerEntry(
+                transaction_id=tx_id,
+                user_id=user_id,
+                amount_usd=amount_usd,
+                transaction_type="topup",
+                description=f"Fund deposit via SSLCommerz (Tk.{amount_bdt} MFS)",
+            )
+            session.add(entry)
+
+        return {"status": "processed", "message": f"Successfully credited ${amount_usd} (BDT {amount_bdt}) via SSLCommerz."}
+
     except StaleDataError as e:
-        logger.critical(f"Concurrency Failure on SSLCommerz Webhook for user {user_id}.")
+        logger.critical(f"Concurrency Failure on SSLCommerz Webhook for val_id {val_id}.")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Transaction conflict.") from e
+    except HTTPException:
+        raise
     except Exception as e:  # noqa: BLE001
         logger.error(f"SSLCommerz Webhook processing failed: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error") from e

@@ -1,6 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from typing import List
 
+from database.session import get_db_session
+from models.execution_policy import ExecutionPolicy, PolicyScope
 
 router = APIRouter(prefix="/api/admin/execution-policies", tags=["Guardrails"])
 
@@ -16,40 +21,53 @@ class ExecutionPolicyModel(BaseModel):
     cooldown_window_sec: int
 
 
-# In-memory mock for DB layer built in phase 1 (execution_policy table)
-MOCK_POLICIES = [
-    {
-        "id": "pol_global",
-        "scope": "global",
-        "target_name": "*",
-        "max_timeout_ms": 30000,
-        "max_compute_usd": 1.0,
-        "max_retries": 3,
-        "cb_failure_threshold": 5,
-        "cooldown_window_sec": 300,
-    },
-    {
-        "id": "pol_stripe",
-        "scope": "platform",
-        "target_name": "stripe.com",
-        "max_timeout_ms": 15000,
-        "max_compute_usd": 0.5,
-        "max_retries": 1,
-        "cb_failure_threshold": 3,
-        "cooldown_window_sec": 600,
-    },
-]
-
-
 @router.get("/")
-def get_policies():
-    return {"items": MOCK_POLICIES}
+async def get_policies(session: AsyncSession = Depends(get_db_session)):
+    result = await session.execute(select(ExecutionPolicy))
+    policies = result.scalars().all()
+
+    formatted = []
+    for pol in policies:
+        formatted.append({
+            "id": str(pol.id),
+            "scope": pol.scope.value,
+            "target_name": "*",  # Add a DB field for this if needed, mocking for now as per previous struct
+            "max_timeout_ms": pol.max_timeout_seconds * 1000,
+            "max_compute_usd": float(pol.max_serverless_compute_budget_usd),
+            "max_retries": pol.max_retries,
+            "cb_failure_threshold": pol.circuit_breaker_failure_threshold,
+            "cooldown_window_sec": pol.circuit_breaker_cooldown_seconds,
+        })
+    return {"items": formatted}
 
 
 @router.put("/{policy_id}")
-def update_policy(policy_id: str, updates: dict):
-    for pol in MOCK_POLICIES:
-        if pol["id"] == policy_id:
-            pol.update(updates)
-            return pol
-    return {"error": "not found"}
+async def update_policy(policy_id: str, updates: dict, session: AsyncSession = Depends(get_db_session)):
+    import uuid
+    try:
+        pid = uuid.UUID(policy_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid policy UUID")
+
+    result = await session.execute(select(ExecutionPolicy).where(ExecutionPolicy.id == pid))
+    pol = result.scalars().first()
+    if not pol:
+        raise HTTPException(status_code=404, detail="not found")
+
+    if "max_timeout_ms" in updates:
+        pol.max_timeout_seconds = updates["max_timeout_ms"] // 1000
+    if "max_retries" in updates:
+        pol.max_retries = updates["max_retries"]
+
+    await session.commit()
+
+    return {
+        "id": str(pol.id),
+        "scope": pol.scope.value,
+        "target_name": "*",
+        "max_timeout_ms": pol.max_timeout_seconds * 1000,
+        "max_compute_usd": float(pol.max_serverless_compute_budget_usd),
+        "max_retries": pol.max_retries,
+        "cb_failure_threshold": pol.circuit_breaker_failure_threshold,
+        "cooldown_window_sec": pol.circuit_breaker_cooldown_seconds,
+    }
