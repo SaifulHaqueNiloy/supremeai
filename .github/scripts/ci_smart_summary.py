@@ -5,7 +5,6 @@ SupremeAI - Smart CI Failure Summary Script
 এবং অ্যাডমিনের জন্য একটি সুন্দর Markdown রিপোর্ট তৈরি করে।
 """
 
-import json
 import os
 import sys
 from datetime import datetime, timezone
@@ -210,10 +209,10 @@ def generate_smart_summary() -> str:
     commit_msg = failed_run.get("head_commit", {}).get("message", "")[:80]
     branch = failed_run.get("head_branch", "main")
 
-    lines.append(f"## ❌ ব্যর্থ রান ধরা পড়েছে")
+    lines.append("## ❌ ব্যর্থ রান ধরা পড়েছে")
     lines.append("")
-    lines.append(f"| ফিল্ড | বিস্তারিত |")
-    lines.append(f"|-------|-----------|")
+    lines.append("| ফিল্ড | বিস্তারিত |")
+    lines.append("|-------|-----------|")
     lines.append(f"| **রান** | [#{run_number}]({run_url}) |")
     lines.append(f"| **ব্রাঞ্চ** | `{branch}` |")
     lines.append(f"| **ব্যর্থ হয়েছে** | {run_time} |")
@@ -273,7 +272,7 @@ def generate_smart_summary() -> str:
             lines.append(f"- **কীভাবে:** {fix['fix_description']}")
             maintenance_url = build_maintenance_dispatch_url(fix.get("fix_action", ""))
             lines.append(f"- 🔗 **[Maintenance Fix রান করতে এখানে ক্লিক করুন]({maintenance_url})**")
-            lines.append(f"  - ওয়ার্কফ্লো: `maintenance_pipeline.yml`")
+            lines.append("  - ওয়ার্কফ্লো: `maintenance_pipeline.yml`")
             lines.append(f"  - এনাবল করুন: `{fix['fix_action']}`")
             lines.append("")
 
@@ -339,4 +338,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

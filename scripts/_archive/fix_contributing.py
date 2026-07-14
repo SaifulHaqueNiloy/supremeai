@@ -1,4 +1,3 @@
-import os
 
 def fix_contributing():
     path = "CONTRIBUTING.md"

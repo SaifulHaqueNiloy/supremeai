@@ -1,7 +1,5 @@
 # scripts/ai_query_optimizer.py
 import os
-import requests
-import json
 
 # বাংলা মন্তব্য: এখানে আমরা একটি ডামি স্লো কোয়েরি লগ ব্যবহার করছি।
 # বাস্তব পরিবেশে, এটি আপনার ডেটাবেসের slow query log থেকে আসবে (যেমন: PostgreSQL-এর pg_stat_statements)।

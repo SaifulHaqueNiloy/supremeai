@@ -193,16 +193,17 @@ class AuthMiddleware:
         if token.startswith("sk-"):
             # 2. Dynamic API Key Check
             try:
+                import time
+
                 from core.security import hash_api_key
                 from models.api_key import get_api_key_by_hash
-                import time
                 token_hash = hash_api_key(token)
                 api_key_data = await get_api_key_by_hash(token_hash)
 
                 if api_key_data:
                     expires_at = api_key_data.get("expires_at")
                     if expires_at and expires_at < int(time.time()):
-                        logger.warning(f"Unauthorized: API Key has expired")
+                        logger.warning("Unauthorized: API Key has expired")
                         response = JSONResponse(
                             status_code=401,
                             content={"detail": "API Key has expired"},
