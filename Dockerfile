@@ -33,4 +33,4 @@ EXPOSE 8000
 # CRITICAL FIX (Cloud Run Port Binding):
 # Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).
 # The shell form allows Cloud Run to dynamically inject the $PORT environment variable.
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${GUNICORN_WORKERS:-4}"]
