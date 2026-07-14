@@ -150,14 +150,29 @@ class MorphicOrchestrator:
         async def _execute_dag():
             # Standard DAG execution for non-loop parts
             while len(completed_tasks) < len(task_graph):
-                ready_tasks = [task for task, deps in task_graph.items() if task not in completed_tasks and all(d in completed_tasks for d in deps)]
+                ready_tasks = [task for task, deps in task_graph.items()
+                               if task not in completed_tasks and all(d in completed_tasks for d in deps)]
                 if not ready_tasks:
                     raise RuntimeError(f"DAG execution error: No ready tasks found, but not all tasks are complete. Completed: {completed_tasks}")
 
-                tasks_to_run = [self.agents[task].run(workspace, user_id) for task in ready_tasks if task in self.agents]
-                if tasks_to_run:
-                    await asyncio.gather(*tasks_to_run)
-                completed_tasks.update(ready_tasks)
+                runnable = [task for task in ready_tasks if task in self.agents]
+                missing = set(ready_tasks) - set(runnable)
+                if missing:
+                    # ❗ আগে silently completed মার্ক হতো — এখন স্পষ্ট error, সিস্টেম জানবে সে কিছু মিস করছে
+                    raise RuntimeError(
+                        f"MorphicOrchestrator: DAG references unregistered agent(s): {missing}. "
+                        f"Registered agents: {list(self.agents.keys())}"
+                    )
+
+                coros = [self.agents[task].run(workspace, user_id) for task in runnable]
+                results = await asyncio.gather(*coros, return_exceptions=True)
+
+                failures = [(task, r) for task, r in zip(runnable, results) if isinstance(r, Exception)]
+                if failures:
+                    failed_names = ", ".join(f"{t}: {e}" for t, e in failures)
+                    raise RuntimeError(f"MorphicOrchestrator: task(s) failed in this batch — {failed_names}")
+
+                completed_tasks.update(runnable)   # শুধু যেগুলো সত্যিই সফলভাবে রান হয়েছে
 
             # Special Handling for 'code_generation' intent's refinement loop
             if workspace.intent == "code_generation":

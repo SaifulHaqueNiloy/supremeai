@@ -1,31 +1,44 @@
 import { Card } from '../ui';
 import { Database, RefreshCw, Download, Upload, Shield, Clock, HardDrive } from 'lucide-react';
-import { useState } from 'react';
-
-const MOCK_BACKUPS = [
-  { id: '1', timestamp: '2026-06-21 03:00:00', size: '2.4 GB', type: 'automatic', status: 'completed', retention: '30 days' },
-  { id: '2', timestamp: '2026-06-20 03:00:00', size: '2.3 GB', type: 'automatic', status: 'completed', retention: '30 days' },
-  { id: '3', timestamp: '2026-06-19 15:42:00', size: '2.3 GB', type: 'manual', status: 'completed', retention: 'permanent' },
-  { id: '4', timestamp: '2026-06-18 03:00:00', size: '2.2 GB', type: 'automatic', status: 'completed', retention: '30 days' },
-];
+import { useState, useEffect } from 'react';
+import { apiClient } from '../../services/apiClient';
 
 export function BackupRestore() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [backups, setBackups] = useState(MOCK_BACKUPS);
+  const [backups, setBackups] = useState<any[]>([]);
 
-  const triggerBackup = () => {
+  const fetchBackups = async () => {
+    try {
+      const res = await apiClient.get<{ backups: any[] }>('/admin-api/backups');
+      setBackups(res.backups || []);
+    } catch (e: any) {
+      console.error("Failed to fetch backups", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchBackups();
+  }, []);
+
+  const triggerBackup = async () => {
+    const tempId = `pending-${Date.now()}`;
     const newBackup = {
-      id: Date.now().toString(),
+      id: tempId,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      size: '2.4 GB',
+      size: '—',
       type: 'manual' as const,
       status: 'in_progress' as const,
       retention: 'permanent',
     };
     setBackups([newBackup, ...backups]);
-    setTimeout(() => {
-      setBackups(backups.map(b => b.id === newBackup.id ? { ...b, status: 'completed' as const } : b));
-    }, 3000);
+
+    try {
+      const res = await apiClient.post<{ status: string; backup_path: string }>('/admin-api/backup');
+      await fetchBackups(); // Refresh the list
+    } catch (e: any) {
+      setBackups(prev => prev.filter(b => b.id !== tempId));
+      alert(`❌ Backup failed: ${e.message}`);
+    }
   };
 
   return (

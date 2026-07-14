@@ -40,6 +40,12 @@ STUB_PATTERNS: list[tuple[str, str, str]] = [
     ("stub_response", r'return f"Response from.*:.*\.\.\."', "MEDIUM"),
     ("hardcoded_localhost_redirect", r'redirect_uri\s*=\s*["\']http://localhost:8000', "MEDIUM"),
     ("hardcoded_localhost_frontend", r'RedirectResponse\(url=["\']http://localhost:5173', "MEDIUM"),
+    ("mock_data_constant", r'\bconst\s+MOCK_[A-Z_]+\s*[:=]', "HIGH"),
+    ("mock_data_constant_py", r'^\s*MOCK_[A-Z_]+\s*[:=]\s*\[', "HIGH"),
+    ("hardcoded_mock_pr_url", r'["\']https://github\.com/[^"\']*/pull/\d+["\']', "CRITICAL"),
+    ("mock_commit_hash", r'mock_commit_hash', "CRITICAL"),
+    ("simulating_action_log", r'[Ss]imulat(e|ing)\s+(git\s+)?commit', "HIGH"),
+    ("todo_replace_mock", r'TODO.*(replace|remove).*mock', "MEDIUM"),
 ]
 
 
@@ -51,6 +57,11 @@ ALLOWED_EXCEPTIONS: list[tuple[str, str]] = [
     ("**/tests/**", "dummy_email"),
     ("**/tests/**", "dummy_domain"),
     ("**/tests/**", "placeholder_implementation"),
+    ("**/tests/**", "hardcoded_mock_pr_url"),
+    ("**/tests/**", "mock_commit_hash"),
+    ("**/tests/**", "mock_data_constant"),
+    ("**/tests/**", "mock_data_constant_py"),
+    ("**/tests/**", "simulating_action_log"),
     ("**/conftest.py", "simulated_api_key"),
     ("**/conftest.py", "dummy_domain"),
     ("**/test_*.py", "simulated_api_key"),
@@ -58,6 +69,9 @@ ALLOWED_EXCEPTIONS: list[tuple[str, str]] = [
     ("**/test_*.py", "dummy_email"),
     ("**/test_*.py", "dummy_domain"),
     ("**/test_*.py", "placeholder_implementation"),
+    ("**/test_*.py", "hardcoded_mock_pr_url"),
+    ("**/test_*.py", "mock_commit_hash"),
+    ("**/test_*.py", "mock_data_constant_py"),
     ("**/migrations/**", "dummy_email"),  # Alembic migration templates
     ("**/alembic/**", "dummy_email"),
     ("**/multi_account_rotator.py", "dummy_domain"),
@@ -99,7 +113,7 @@ def scan_file(filepath: str) -> list[dict]:
             stripped = line.strip()
             if stripped.startswith("#") or stripped.startswith("//"):
                 continue
-                
+
             if re.search(regex, line):
                 if not is_excepted(filepath, pattern_name):
                     findings.append({
@@ -118,12 +132,12 @@ def scan_directory(root_dir: str, exclude_dirs: list[str] | None = None) -> list
         exclude_dirs = [".venv", "node_modules", "__pycache__", ".git", ".agent", "docs", "infrastructure"]
 
     all_findings: list[dict] = []
-    
+
     # বাংলা মন্তব্য: os.walk ব্যবহার করে excluded ডিরেক্টরিগুলো স্কিপ (prune) করা হলো যাতে রিকার্সন অনেক ফাস্ট হয়।
     for root, dirs, files in os.walk(root_dir):
         # Prune excluded directories in-place
         dirs[:] = [d for d in dirs if d not in exclude_dirs and not d.startswith(".")]
-        
+
         for file in files:
             filepath = Path(root) / file
             if filepath.suffix in {".py", ".ts", ".tsx", ".js", ".jsx", ".java", ".kt", ".yaml", ".yml", ".json", ".md"}:

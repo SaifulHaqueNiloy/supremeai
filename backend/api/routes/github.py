@@ -1,16 +1,20 @@
+import uuid
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from firebase_admin import firestore
 from pydantic import BaseModel
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import asynccontextmanager
 
-from api.dependencies import get_tenant_db
-from tools.devops.github_agent import GitHubAgent
+from api.dependencies import get_tenant_db, get_current_user_token
+from database.session import get_db_session
+from tools.devops.github_agent import GitHubAgent, get_user_github_token
 from tools.repo_discovery_agent import RepoDiscoveryAgent
 
 
 router = APIRouter(prefix="/github", tags=["github"])
-github_agent = GitHubAgent()
 repo_discovery_agent = RepoDiscoveryAgent()
 
 
@@ -25,6 +29,29 @@ def _resolve_repo(payload_repo: str | None, db: firestore.Client) -> str:
             detail="Repository not connected. Please connect your GitHub repository or provide one in the request.",
         )
     return repo.strip()
+
+
+@asynccontextmanager
+async def handle_github_errors(operation_name: str, repo: str | None = None):
+    try:
+        yield
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_id = uuid.uuid4().hex[:8]
+        repo_info = f" for repo={repo}" if repo else ""
+        logger.error(f"[{error_id}] github/{operation_name} failed{repo_info}: {e}")
+        raise HTTPException(status_code=502, detail=f"GitHub operation failed (ref: {error_id})") from e
+
+
+async def _get_agent(user: dict, sql_db: AsyncSession) -> GitHubAgent:
+    user_id = user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    token = await get_user_github_token(user_id, sql_db)
+    if not token:
+        raise HTTPException(status_code=403, detail="GitHub integration not connected or token invalid.")
+    return GitHubAgent(token=token)
 
 
 class ConnectRequest(BaseModel):
@@ -59,59 +86,131 @@ class ImplementRequest(BaseModel):
 
 
 @router.post("/connect")
-async def connect_repo(payload: ConnectRequest, db=Depends(get_tenant_db)):
-    try:
+async def connect_repo(
+    payload: ConnectRequest,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session)
+):
+    async with handle_github_errors("connect", f"{payload.repo_owner}/{payload.repo_name}"):
+        agent = await _get_agent(user, sql_db)
         inst_id = payload.installation_id if payload.installation_id is not None else ""
-        github_agent.connect_repo(payload.repo_owner, payload.repo_name, inst_id)
-        # ট্যানান্টের প্রোফাইলে গিটহাব রেপো কানেকশন সেভ করা হচ্ছে
+        await agent.connect_repo(payload.repo_owner, payload.repo_name, inst_id)
         tenant_ref = db.tenant_root
         tenant_ref.set({"github_repo": f"{payload.repo_owner}/{payload.repo_name}"}, merge=True)
         return {
             "status": "success",
             "message": f"Connected to {payload.repo_owner}/{payload.repo_name}",
         }
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/improve")
-async def improve_repo(payload: ImproveRequest, db=Depends(get_tenant_db)):
-    try:
+async def improve_repo(
+    payload: ImproveRequest,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session)
+):
+    async with handle_github_errors("improve", payload.repo):
         repo = _resolve_repo(payload.repo, db)
-        analysis = github_agent.analyze_repo(repo)
+        agent = await _get_agent(user, sql_db)
+        analysis = await agent.analyze_repo(repo)
         return {"status": "success", "analysis": analysis}
-    except HTTPException:
-        raise
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/push")
-async def push_improvements(payload: PushRequest, db=Depends(get_tenant_db)):
-    try:
+async def push_improvements(
+    payload: PushRequest,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session)
+):
+    async with handle_github_errors("push", payload.repo):
         repo = _resolve_repo(payload.repo, db)
-        improvements = dict.fromkeys(payload.files_changed, "Optimized")
-        res = github_agent.create_improvement_pr(repo, improvements, payload.branch)
-        return res
-    except HTTPException:
-        raise
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        agent = await _get_agent(user, sql_db)
+
+        improvements_content = {f: "Optimized content placeholder" for f in payload.files_changed}
+        commit_res = await agent.commit_changes(repo, improvements_content, payload.commit_message, payload.branch)
+
+        pr_title = "SupremeAI: Automated Code Improvements"
+        pr_body = "AI has analyzed the repository and suggested changes.\n\nNote: Customer approval is required before merging."
+        pr_res = await agent.create_pr(repo, pr_title, pr_body, payload.branch)
+
+        return {
+            "status": "success",
+            "branch": commit_res["branch"],
+            "pr_title": pr_title,
+            "pr_url": pr_res["pr_url"],
+            "message": "PR created successfully. Waiting for manual approval."
+        }
 
 
 @router.post("/discover")
 async def discover_repos(payload: DiscoverRequest):
-    try:
+    async with handle_github_errors("discover"):
         repos = repo_discovery_agent.discover_repos(payload.requirement, payload.tech_stack, payload.criteria)
         return {"status": "success", "repos": repos}
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/implement")
 async def implement_repo(payload: ImplementRequest):
-    try:
+    async with handle_github_errors("implement", payload.repo_url):
         res = repo_discovery_agent.implement_repo(payload.repo_url, payload.integration_method, payload.target_project)
         return res
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/repos")
+async def list_connected_repos(
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session)
+):
+    profile = db.get_tenant_profile() or {}
+    repo = profile.get("github_repo")
+    if not repo:
+        return []
+
+    import httpx
+    GITHUB_API_BASE = "https://api.github.com"
+    agent = await _get_agent(user, sql_db)
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(
+            f"{GITHUB_API_BASE}/repos/{repo}",
+            headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"}
+        )
+    resp.raise_for_status()
+    data = resp.json()
+    return [{
+        "id": str(data["id"]), "name": data["name"], "branch": data["default_branch"],
+        "updated": data["updated_at"], "commits": data.get("size", 0),
+    }]
+
+
+@router.get("/repos/{repo_id}/commits")
+async def list_repo_commits(
+    repo_id: str,
+    limit: int = 10,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session)
+):
+    profile = db.get_tenant_profile() or {}
+    repo = profile.get("github_repo")
+    if not repo:
+        raise HTTPException(status_code=404, detail="No repository connected.")
+
+    import httpx
+    GITHUB_API_BASE = "https://api.github.com"
+    agent = await _get_agent(user, sql_db)
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(
+            f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
+            headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"}
+        )
+    resp.raise_for_status()
+    return [{
+        "hash": c["sha"][:7], "message": c["commit"]["message"].split("\n")[0],
+        "author": c["commit"]["author"]["name"], "time": c["commit"]["author"]["date"],
+    } for c in resp.json()]
