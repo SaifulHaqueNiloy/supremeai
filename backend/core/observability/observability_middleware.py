@@ -8,14 +8,12 @@ from loguru import logger
 from api.routes.metrics import record_error
 from api.routes.metrics import record_request
 from api.routes.metrics import record_request_duration
-from core.observability.telemetry import setup_tracing
 from core.observability.telemetry import trace_span
 
 
 class ObservabilityMiddleware:
     def __init__(self, app) -> None:
         self.app = app
-        setup_tracing()
 
     async def __call__(self, scope, receive, send) -> None:
         if scope["type"] != "http":

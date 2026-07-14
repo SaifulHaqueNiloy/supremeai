@@ -356,6 +356,7 @@ core_routers = [
     ("api.routes.traffic_monitor", ""),
     ("api.routes.swarm", "/api/v1"),
     ("api.routes.agent_action", "/api/v1"),
+    ("api.routes.websocket_hitl", ""),
     ("core.orchestrator", ""),
 ]
 
