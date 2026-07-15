@@ -36,9 +36,10 @@ class ResourceGuard:
         # 2. Resolve the path to its absolute, canonical form (resolves symlinks)
         try:
             resolved_path = path.resolve(strict=False)
-        except Exception as e:
+        except OSError as e:
+            # বাংলা: Path resolve করতে OS-লেভেল error হলে (symlink loop ইত্যাদি) ValueError রেইজ করা হয়
             logger.error(f"[ResourceGuard] Error resolving path {requested_path}: {e}")
-            raise ValueError(f"Invalid path: {requested_path}")
+            raise ValueError(f"Invalid path: {requested_path}") from e
 
         # 3. Check if the resolved path starts with any of the allowed roots
         allowed = False

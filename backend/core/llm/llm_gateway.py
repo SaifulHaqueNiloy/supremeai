@@ -252,7 +252,7 @@ class LLMGateway:
 
                     tokens = estimate_tokens(prompt_text)
                     estimated_cost = tokens * 0.00001
-                except Exception:
+                except Exception:  # noqa: BLE001 — টোকেন estimate ব্যর্থ হলে safe fallback cost ব্যবহার করা হয়
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
