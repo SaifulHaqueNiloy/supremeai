@@ -340,6 +340,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
+      POETRY_VIRTUALENVS_CREATE: "false"
       SETUPTOOLS_USE_DISTUTILS: stdlib
       SUPREMEAI_ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
       PYTHONPATH: ${{ github.workspace }}/backend
