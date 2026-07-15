@@ -83,6 +83,12 @@ class ASTSecurityScanner(ast.NodeVisitor):
                 raise SecuritySandboxError(f"Banned import detected: {node.module}")
         self.generic_visit(node)
 
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        """Block sandbox escape via subscript access: __builtins__['exec'](), builtins['eval']()"""
+        if isinstance(node.value, ast.Name) and node.value.id in {"builtins", "__builtins__"}:
+            raise SecuritySandboxError(f"Sandbox escape via subscript blocked: {node.value.id}[...]")
+        self.generic_visit(node)
+
     def visit_Call(self, node: ast.Call):
         # Block direct function calls like eval(), __import__()
         if isinstance(node.func, ast.Name) and node.func.id in self.banned_functions:
@@ -91,6 +97,10 @@ class ASTSecurityScanner(ast.NodeVisitor):
         # Block malicious module methods like importlib.import_module() or os.system()
         elif isinstance(node.func, ast.Attribute) and node.func.attr in {"import_module", "system", "popen", "spawn", "fork"}:
             raise SecuritySandboxError(f"Banned method invocation detected: {node.func.attr}")
+
+        # Block subscript calls: builtins["exec"]("...")
+        elif isinstance(node.func, ast.Subscript):
+            self.visit_Subscript(node.func)
 
         self.generic_visit(node)
 

@@ -48,7 +48,15 @@ class AsyncRateLimiter:
         if self._redis is None:
             import redis.asyncio as aioredis
 
-            redis_url = os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL") or "redis://localhost:6379"
+            # বাংলা মন্তব্য: settings.redis_url থেকে প্রাথমিক ভ্যালু নেওয়া হচ্ছে — fallback চেইন রক্ষিত
+            from core.config import settings as app_settings
+
+            redis_url = (
+                getattr(app_settings, "redis_url", None)
+                or os.getenv("REDIS_URL")
+                or os.getenv("UPSTASH_REDIS_URL")
+                or "redis://localhost:6379"
+            )
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
 
