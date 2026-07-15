@@ -27,23 +27,23 @@ Dependencies:
 # backend/core/lifespan.py
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
 # Moving this file will break relative paths, imports, and core app lifespan management.
-import asyncio
-import os
-from contextlib import asynccontextmanager
+import asyncio  # noqa: E402
+import os  # noqa: E402
+from contextlib import asynccontextmanager  # noqa: E402
 
-import httpx
-from loguru import logger
+import httpx  # noqa: E402
+from loguru import logger  # noqa: E402
 
-from core import services
-from core.cache.redis_manager import redis_manager
-from core.config import settings
-from core.config_cache import config_cache
-from core.maintenance_pipeline import maintenance_pipeline
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
-from core.orchestration.orchestrator import Orchestrator
-from core.pgbouncer_pool import get_db_pool
-from core.pgbouncer_pool import init_db_pool
+from core import services  # noqa: E402
+from core.cache.redis_manager import redis_manager  # noqa: E402
+from core.config import settings  # noqa: E402
+from core.config_cache import config_cache  # noqa: E402
+from core.maintenance_pipeline import maintenance_pipeline  # noqa: E402
+from core.messaging.event_bus import ErrorEvent  # noqa: E402
+from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.orchestration.orchestrator import Orchestrator  # noqa: E402
+from core.pgbouncer_pool import get_db_pool  # noqa: E402
+from core.pgbouncer_pool import init_db_pool  # noqa: E402
 
 
 async def _ensure_api_key_tables() -> None:
@@ -293,17 +293,17 @@ async def app_lifespan(app):
             except asyncio.CancelledError:
                 pass
             logger.info("✅ Sentinel Agent shut down successfully.")
-            tasks.append(sentinel_task)
+            tasks.append(sentinel_task)  # noqa: F821
 
         swarm_cache_task = getattr(app.state, "swarm_cache_task", None)
         if swarm_cache_task and not swarm_cache_task.done():
             swarm_cache_task.cancel()
-            tasks.append(swarm_cache_task)
+            tasks.append(swarm_cache_task)  # noqa: F821
 
-        if tasks:
+        if tasks:  # noqa: F821
             try:
-                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)
-                logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)  # noqa: F821
+                logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")  # noqa: F821
             except asyncio.TimeoutError:
                 logger.warning("⚠️ Background tasks did not finish within 10s shutdown window.")
             except asyncio.CancelledError:

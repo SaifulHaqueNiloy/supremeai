@@ -141,7 +141,7 @@ def load_users() -> list[dict[str, Any]]:
     try:
         with open(USERS_FILE) as f:
             return json.load(f)
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.exception("Unhandled exception")
         return []
 
@@ -326,7 +326,7 @@ def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
         return True
     except FileExistsError:
         return False
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.exception("Unhandled exception")
         return False
 
