@@ -33,7 +33,7 @@ class HITLConnectionManager:
         for connection in self.active_connections:
             try:
                 await connection.send_text(message)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Error sending message to HITL WebSocket: {e}")
                 self.disconnect(connection)
 
