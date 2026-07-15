@@ -14,7 +14,10 @@ export const commands = {
 
 export const workspace = {
   isTrusted: true,
-  getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }),
+  getConfiguration: vi.fn().mockReturnValue({ 
+    get: vi.fn(),
+    update: vi.fn().mockResolvedValue(undefined) 
+  }),
   workspaceFolders: [],
   onDidSaveTextDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
 };
