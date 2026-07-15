@@ -208,6 +208,25 @@ async def app_lifespan(app):
             logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
             # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
 
+    # CostGuard initialization (for distributed budget tracking)
+    try:
+        from evolution.cost_guard import cost_guard
+
+        await cost_guard.connect()
+        logger.info("✅ CostGuard Redis connection initialized for budget tracking.")
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"CostGuard initialization failed (non-critical): {e}")
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="COST_GUARD_INIT_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"component": "cost_guard"},
+            )
+        )
+
     # Orchestrator initialization
     try:
         orch_inst = Orchestrator()
@@ -279,6 +298,7 @@ async def app_lifespan(app):
         )
 
     # Background tasks cleanup
+    tasks: list[asyncio.Task] = []  # noqa: F821
     try:
         sentinel_task = getattr(app.state, "sentinel_task", None)
         if sentinel_task and not sentinel_task.done():
@@ -293,17 +313,17 @@ async def app_lifespan(app):
             except asyncio.CancelledError:
                 pass
             logger.info("✅ Sentinel Agent shut down successfully.")
-            tasks.append(sentinel_task)  # noqa: F821
+            tasks.append(sentinel_task)
 
         swarm_cache_task = getattr(app.state, "swarm_cache_task", None)
         if swarm_cache_task and not swarm_cache_task.done():
             swarm_cache_task.cancel()
-            tasks.append(swarm_cache_task)  # noqa: F821
+            tasks.append(swarm_cache_task)
 
-        if tasks:  # noqa: F821
+        if tasks:
             try:
-                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)  # noqa: F821
-                logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")  # noqa: F821
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)
+                logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")
             except asyncio.TimeoutError:
                 logger.warning("⚠️ Background tasks did not finish within 10s shutdown window.")
             except asyncio.CancelledError:
