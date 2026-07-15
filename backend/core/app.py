@@ -1,3 +1,5 @@
+from __future__ import annotations
+from core.messaging.event_bus import ErrorContext
 """SupremeAI 2.0 — Core FastAPI app bootstrapping, middleware chain, and router loading.
 
 বাংলা: কোর FastAPI অ্যাপ বুটস্ট্র্যাপিং, মিডলওয়্যার চেইন এবং রাউটার লোডিং।
@@ -7,7 +9,6 @@ Key Components:
 - _safe_include_router: Dynamic lazy router loader with fail-fast.
 - router_health_check: Ensures minimum route count on startup.
 """
-from __future__ import annotations
 
 import base64
 import importlib
@@ -211,7 +212,7 @@ def _safe_include_router(fastapi_app: FastAPI, router_module: str, prefix: str =
                 module="app",
                 error_type="ROUTER_NOT_FOUND",
                 message=str(exc)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"router_module": router_module},
             )
         )
@@ -222,7 +223,7 @@ def _safe_include_router(fastapi_app: FastAPI, router_module: str, prefix: str =
                 module="app",
                 error_type="ROUTER_LOAD_FAILED",
                 message=str(exc)[:500],
-                severity="CRITICAL",
+                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
                 context={"router_module": router_module},
             )
         )
@@ -240,7 +241,7 @@ async def health() -> dict[str, Any]:
         except Exception:  # noqa: BLE001
             logger.exception("Health check failed on redis connection")
             error_event_bus.emit(
-                ErrorEvent(module="app.health", error_type="REDIS_HEALTH_FAIL", message="Redis health error", severity="ERROR")
+                ErrorEvent(module="app.health", error_type="REDIS_HEALTH_FAIL", message="Redis health error", severity="ERROR", structured_context=ErrorContext(module="auto_fixed"))
             )
             redis_ok = False
     else:

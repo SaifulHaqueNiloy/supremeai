@@ -83,8 +83,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     app_name: str = "SupremeAI 2.0"
     docs_auth_enabled: bool = True
-    docs_username: str = "admin"
-    docs_password: str = ""
+    docs_username: str = Field(default="admin", validation_alias="SUPREMEAI_DOCS_USERNAME")
+    docs_password: SecretStr = Field(default=SecretStr(""), validation_alias="SUPREMEAI_DOCS_PASSWORD")
 
     # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
     port: int = Field(default=8000, validation_alias="PORT")
@@ -147,13 +147,35 @@ class Settings(BaseSettings):
     max_cost_per_task: float = Field(default=0.01, validation_alias="MAX_COST_PER_TASK")
     enable_token_compression: bool = True
 
+    # ── Security & Auth Config ──────────────────────────────────────────────
+    admin_emails: list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
+    supremeai_admin_password_hash: str | None = Field(default=None, validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH")
+    supremeai_public_paths: list[str] = Field(
+        default=["/health", "/metrics", "/docs", "/openapi.json", "/api/v1/auth/token"],
+        validation_alias="SUPREMEAI_PUBLIC_PATHS"
+    )
+    prompt_blocked_patterns: list[str] = Field(
+        default=["system prompt", "ignore all previous", "you are an administrative"],
+        validation_alias="PROMPT_BLOCKED_PATTERNS"
+    )
+    rbac_role_definitions: dict[str, list[str]] = Field(
+        default_factory=lambda: {
+            "admin": ["*"],
+            "user": ["read", "write"],
+            "guest": ["read"]
+        },
+        validation_alias="RBAC_ROLE_DEFINITIONS"
+    )
+
     # ── Circuit Breaker Config ───────────────────────────────────────────────
     circuit_breaker_failure_threshold: int = Field(default=3, validation_alias="CIRCUIT_BREAKER_FAILURE_THRESHOLD")
     circuit_breaker_cooldown_period: int = Field(default=60, validation_alias="CIRCUIT_BREAKER_COOLDOWN_PERIOD")
 
-    # ── Idempotency Config ───────────────────────────────────────────────────
+    # ── Idempotency Config ───────────────────────────────────────────────
+    # বাংলা মন্তব্য: idempotency_critical_paths সম্পূর্ণ env-driven।
+    # IDEMPOTENCY_CRITICAL_PATHS="/api/orchestrate/generate,/api/billing/charge" (comma-separated)
     idempotency_critical_paths: list[str] = Field(
-        default=["/api/orchestrate/generate", "/api/billing/charge", "/tools/auto-pr"],
+        default_factory=list,
         validation_alias="IDEMPOTENCY_CRITICAL_PATHS",
     )
 
@@ -190,6 +212,34 @@ class Settings(BaseSettings):
     # বাংলা মন্তব্য: local_code_executor ও docker_sandbox-এর লোকাল ফলব্যাকের জন্য settings ভেরিয়েবল যোগ করা হলো।
     allow_local_sandbox_fallback: str = Field(default="false", validation_alias="ALLOW_LOCAL_SANDBOX_FALLBACK")
 
+    # ── Agent Execution Config — env-driven ─────────────────────────────────
+    # বাংলা মন্তব্য: আগে agent_orchestrator.py সরাসরি os.getenv() করত।
+    # এখন এই দুটো settings-এর Single Source of Truth থেকে আসে।
+    max_agent_tokens: int = Field(default=5000, validation_alias="MAX_AGENT_TOKENS")
+    max_agent_iterations: int = Field(default=5, validation_alias="MAX_AGENT_ITERATIONS")
+    agent_admin_permissions_required: bool = Field(default=True, validation_alias="AGENT_ADMIN_PERMISSIONS_REQUIRED")
+
+    # ── LLM Cost Config — env-driven ────────────────────────────────────────
+    # বাংলা মন্তব্য: আগে llm_gateway.py-এ `estimated_cost = tokens * 0.00001` hardcoded ছিল।
+    # এখন এই factor settings থেকে নিয়ন্ত্রিত হয় যা runtime-এ override করা যাবে।
+    llm_cost_per_token: float = Field(default=0.00001, validation_alias="LLM_COST_PER_TOKEN")
+
+    # ── Task Queue Config — env-driven ──────────────────────────────────────
+    # বাংলা মন্তব্য: task_queue_enhanced.py-এ TTL এবং backend priority এখন config-driven।
+    task_result_ttl_seconds: int = Field(default=3600, validation_alias="TASK_RESULT_TTL_SECONDS")
+    queue_backend_priority: str = Field(default="asyncio,redis,celery,pubsub", validation_alias="QUEUE_BACKEND_PRIORITY")
+
+    # ── Health Check Config — env-driven ────────────────────────────────────
+    # বাংলা মন্তব্য: health_monitor.py-এ hardcoded interval এখন config-driven।
+    health_check_interval_seconds: int = Field(default=60, validation_alias="HEALTH_CHECK_INTERVAL_SECONDS")
+    skill_timeout_seconds: int = Field(default=30, validation_alias="SKILL_TIMEOUT_SECONDS")
+
+    # ── Self-Healing Config — env-driven ────────────────────────────────────
+    # বাংলা মন্তব্য: self_healer.py-এ human approval loop-এর জন্য config যোগ করা হলো।
+    self_heal_approval_webhook: str = Field(default="", validation_alias="SELF_HEAL_APPROVAL_WEBHOOK")
+    self_heal_approval_timeout_hours: int = Field(default=24, validation_alias="SELF_HEAL_APPROVAL_TIMEOUT_HOURS")
+    auto_remediation_dry_run: bool = Field(default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN")
+
     _cached_secrets: dict[str, str] = PrivateAttr(default_factory=dict)
 
     def _get_cached_secret(self, key: str) -> str:
@@ -200,10 +250,12 @@ class Settings(BaseSettings):
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
     @computed_field
+    @property
     def supabase_database_url(self) -> str:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
 
     @computed_field
+    @property
     def redis_url(self) -> str:
         url = self._get_cached_secret("REDIS_URL")
         if url and not url.startswith(("redis://", "rediss://", "unix://")):
@@ -211,52 +263,86 @@ class Settings(BaseSettings):
         return url
 
     @computed_field
+    @property
     def openrouter_api_key(self) -> str:
         return self._get_cached_secret("OPENROUTER_API_KEY")
 
     @computed_field
+    @property
     def hf_api_key(self) -> str:
         return self._get_cached_secret("HF_API_KEY")
 
     @computed_field
+    @property
     def gemini_api_key(self) -> str:
         return self._get_cached_secret("GEMINI_API_KEY")
 
     @computed_field
+    @property
     def openai_api_key(self) -> str:
         return self._get_cached_secret("OPENAI_API_KEY")
 
     @computed_field
+    @property
     def deepseek_api_key(self) -> str:
         return self._get_cached_secret("DEEPSEEK_API_KEY")
 
     @computed_field
+    @property
     def groq_api_key(self) -> str:
         return self._get_cached_secret("GROQ_API_KEY")
 
     @computed_field
+    @property
     def nvidia_api_key(self) -> str:
         return self._get_cached_secret("NVIDIA_API_KEY")
 
     @computed_field
+    @property
     def firecrawl_api_key(self) -> str:
         return self._get_cached_secret("FIRECRAWL_API_KEY")
 
     @computed_field
+    @property
     def discord_bot_token(self) -> str:
         return self._get_cached_secret("DISCORD_BOT_TOKEN")
 
     @computed_field
+    @property
     def github_client_id(self) -> str:
         return self._get_cached_secret("GITHUB_CLIENT_ID")
 
     @computed_field
+    @property
     def github_client_secret(self) -> str:
         return self._get_cached_secret("GITHUB_CLIENT_SECRET")
 
     @computed_field
+    @property
     def ci_webhook_secret(self) -> str:
         return self._get_cached_secret("CI_WEBHOOK_SECRET")
+
+    # ── Supabase credentials — settings-এ মাইগ্রেট করা হলো ──────────────────
+    # বাংলা মন্তব্য: আগে database/supabase_client.py সরাসরি os.environ.get() করত।
+    # এখন এই দুটো computed field settings-এর Single Source of Truth।
+    # supabase_client.py শুধু settings.supabase_url এবং settings.supabase_key ব্যবহার করবে।
+    @computed_field
+    @property
+    def supabase_url(self) -> str:
+        return self._get_cached_secret("SUPABASE_URL")
+
+    @computed_field
+    @property
+    def supabase_key(self) -> str:
+        return self._get_cached_secret("SUPABASE_KEY")
+
+    # ── System API Token — settings-এ মাইগ্রেট করা হলো ──────────────────────
+    # বাংলা মন্তব্য: আগে auth_middleware.py সরাসরি os.getenv("SUPREMEAI_API_TOKEN") করত।
+    # এখন এই computed field settings-এর Single Source of Truth।
+    @computed_field
+    @property
+    def supremeai_api_token(self) -> str:
+        return self._get_cached_secret("SUPREMEAI_API_TOKEN")
 
     # ── Validators ───────────────────────────────────────────────────────────
 
@@ -280,15 +366,46 @@ class Settings(BaseSettings):
 
     @field_validator("docs_password", mode="before")
     @classmethod
-    def validate_docs_password(cls, v: str, info: ValidationInfo) -> str:
+    def validate_docs_password(cls, v: str | SecretStr | None, info: ValidationInfo) -> str | SecretStr:
         if "pytest" in sys.modules:
-            return v
-        # বাংলা মন্তব্য: env ভেরিয়েবলটি ব্যবহার করা হয়নি, তাই সরিয়ে দেওয়া হয়েছে (F841 ফিক্স)
-        docs_auth_enabled = info.data.get("docs_auth_enabled", True)
-        if docs_auth_enabled and not v:
-            # All environments must have password if docs are enabled
-            raise ValueError("docs_password must be set when docs_auth_enabled=true.")
-        return v
+            return v or ""
+        return v or ""
+
+    @model_validator(mode="after")
+    def validate_docs_auth(self):
+        # বাংলা মন্তব্য: Production-এ docs auth enabled থাকলে password mandatory
+        if self.env in {"production", "staging"} and self.docs_auth_enabled:
+            pwd = self.docs_password.get_secret_value() if self.docs_password else ""
+            if not pwd:
+                raise ValueError(f"{self.env.capitalize()} requires SUPREMEAI_DOCS_PASSWORD to be set if docs_auth_enabled=true.")
+        return self
+
+    @field_validator("idempotency_critical_paths", "supremeai_public_paths", "prompt_blocked_patterns", mode="before")
+    @classmethod
+    def parse_list_fields(cls, v) -> list[str]:
+        if not v:
+            return []
+        if isinstance(v, str):
+            v = v.strip()
+            try:
+                import json as _json
+                return _json.loads(v)
+            except Exception:  # noqa: BLE001
+                return [p.strip() for p in v.split(",") if p.strip()]
+        return v or []
+
+    @field_validator("rbac_role_definitions", mode="before")
+    @classmethod
+    def parse_dict_fields(cls, v) -> dict:
+        if not v:
+            return {}
+        if isinstance(v, str):
+            try:
+                import json as _json
+                return _json.loads(v)
+            except Exception:  # noqa: BLE001
+                return {}
+        return v or {}
 
     @field_validator("admin_emails", mode="before")
     @classmethod

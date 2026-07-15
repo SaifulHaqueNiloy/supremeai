@@ -1,3 +1,5 @@
+from __future__ import annotations
+from core.messaging.event_bus import ErrorContext
 """
 free_tier_tracker.py
 ====================
@@ -10,7 +12,6 @@ the best available free provider for each request.
 Supports optional Redis persistence for multi-worker environments.
 """
 
-from __future__ import annotations
 
 import time
 from collections import deque
@@ -19,6 +20,9 @@ from dataclasses import field
 from typing import Any
 
 from loguru import logger
+
+from core.config import settings
+from core.messaging.event_bus import ErrorEvent, error_event_bus
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +186,15 @@ class ProviderBudget:
         """Temporarily pause this provider (e.g. after a 429 response)."""
         self._paused_until = time.time() + seconds
         logger.warning(f"[FreeTier] {self.provider} paused for {seconds:.0f}s")
+        error_event_bus.emit(
+            ErrorEvent(
+                module="free_tier_tracker",
+                error_type="PROVIDER_PAUSED",
+                message=f"Provider {self.provider} paused for {seconds:.0f}s",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                context={"provider": self.provider, "pause_duration": seconds},
+            )
+        )
 
     def remaining(self) -> dict[str, Any]:
         """Return remaining capacity across all windows."""
@@ -227,7 +240,8 @@ class FreeTierTracker:
         self,
         custom_limits: dict[str, dict[str, int]] | None = None,
     ) -> None:
-        limits = {**DEFAULT_LIMITS, **(custom_limits or {})}
+        env_overrides = getattr(settings, "provider_limits_override", {})
+        limits = {**DEFAULT_LIMITS, **env_overrides, **(custom_limits or {})}
         self.priority_list = list(FREE_PROVIDER_PRIORITY)
 
         self._budgets: dict[str, ProviderBudget] = {
@@ -273,7 +287,7 @@ class FreeTierTracker:
                     from core.messaging.event_bus import ErrorEvent
                     from core.messaging.event_bus import error_event_bus
 
-                    error_event_bus.emit(ErrorEvent(module="free_tier_tracker", error_type="DB_FETCH_ERROR", message=str(e), severity="WARNING"))
+                    error_event_bus.emit(ErrorEvent(module="free_tier_tracker", error_type="DB_FETCH_ERROR", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
                 except ImportError:
                     pass
             return None, None

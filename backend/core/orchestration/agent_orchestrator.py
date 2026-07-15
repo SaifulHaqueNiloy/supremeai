@@ -1,14 +1,15 @@
+from core.messaging.event_bus import ErrorContext
 import os
 import re
 from typing import Any
 
 from loguru import logger
 from pydantic import BaseModel
+from core.config import settings
 
-
-MAX_AGENT_TOKENS = int(os.getenv("MAX_AGENT_TOKENS", "5000"))
-MAX_AGENT_ITERATIONS = int(os.getenv("MAX_AGENT_ITERATIONS", "5"))
-ADMIN_PERMISSIONS_REQUIRED = os.getenv("AGENT_ADMIN_PERMISSIONS_REQUIRED", "true").lower() == "true"
+MAX_AGENT_TOKENS = settings.max_agent_tokens
+MAX_AGENT_ITERATIONS = settings.max_agent_iterations
+ADMIN_PERMISSIONS_REQUIRED = settings.agent_admin_permissions_required
 
 # [Antigravity 2026-06-22] Import free-tier tracker for budget-aware routing
 try:
@@ -255,7 +256,7 @@ class AsyncTaskManager:
                         module="agent_orchestrator",
                         error_type="TASK_QUEUE_INIT_FAILED",
                         message=str(exc),
-                        severity="CRITICAL",
+                        severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
                     ))
                     raise RuntimeError(f"Task queue unavailable in production (ENV={os.getenv('ENV')}): {exc}") from exc
         return self._queue

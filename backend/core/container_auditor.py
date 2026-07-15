@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 """This module provides real-time memory auditing for Docker containers within the SupremeAI ecosystem. It proactively monitors container resource usage, issuing warnings when memory utilization approaches 80% and automatically triggering a termination "kill chain" for containers exceeding 95% memory usage to prevent Out-Of-Memory (OOM) abuse and ensure system stability in a highly scalable environment.
 
 Key Components:
@@ -41,7 +42,7 @@ class ContainerAuditor:
             if result.returncode != 0:
                 logger.error(f"Failed to fetch docker stats: {result.stderr}")
                 error_event_bus.emit(
-                    ErrorEvent(module="container_auditor", error_type="DOCKER_STATS_FAILED", message=result.stderr[:200], severity="WARNING")
+                    ErrorEvent(module="container_auditor", error_type="DOCKER_STATS_FAILED", message=result.stderr[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed"))
                 )
                 return []
 
@@ -52,7 +53,7 @@ class ContainerAuditor:
             return stats
         except Exception as e:  # noqa: BLE001
             logger.error(f"Error executing docker stats: {e}")
-            error_event_bus.emit(ErrorEvent(module="container_auditor", error_type="DOCKER_STATS_EXEC_ERROR", message=str(e)[:200], severity="ERROR"))
+            error_event_bus.emit(ErrorEvent(module="container_auditor", error_type="DOCKER_STATS_EXEC_ERROR", message=str(e)[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
             return []
 
     def parse_memory_percent(self, mem_perc_str: str) -> float:
@@ -82,7 +83,7 @@ class ContainerAuditor:
                                 module="container_auditor",
                                 error_type="DOCKER_KILL_FAILED",
                                 message=str(e)[:200],
-                                severity="CRITICAL",
+                                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
                                 context={"container_name": name},
                             )
                         )
@@ -92,7 +93,7 @@ class ContainerAuditor:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"Error in container audit cycle: {e}")
-            error_event_bus.emit(ErrorEvent(module="container_auditor", error_type="AUDIT_CYCLE_FAILED", message=str(e)[:200], severity="ERROR"))
+            error_event_bus.emit(ErrorEvent(module="container_auditor", error_type="AUDIT_CYCLE_FAILED", message=str(e)[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
 
     async def run(self):
         """বাংলা মন্তব্য: Continuous audit loop — Cron-এর পরিবর্তে asyncio loop ব্যবহার করে।"""
@@ -111,7 +112,7 @@ class ContainerAuditor:
                         module="container_auditor",
                         error_type="AUDIT_LOOP_FAILED",
                         message=str(e)[:200],
-                        severity="ERROR",
+                        severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
                 self.running = False
