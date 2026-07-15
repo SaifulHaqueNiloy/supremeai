@@ -599,7 +599,7 @@ jobs:
     name: 🚀 Deploy Backend (Cloud Run)
     needs: [backend-core, security-audit]
     # TEMPORARILY DISABLED: Remove `false` and restore conditions to reactivate Cloud Run deployment
-    if: always() && github.ref == 'refs/heads/main'
+    if: false
     runs-on: ubuntu-latest
     environment: production
     steps:
