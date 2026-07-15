@@ -35,7 +35,8 @@ async def stream_swarm_health(request: Request):
                 if await request.is_disconnected():
                     break
                 yield {"data": message}
-        except Exception:  # noqa: BLE001
+        except Exception:
+            logger.exception("Unhandled exception")
             pass
 
     return EventSourceResponse(event_generator())

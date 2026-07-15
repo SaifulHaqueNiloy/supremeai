@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
+from loguru import logger
 from pydantic import BaseModel
 
 
@@ -54,7 +55,8 @@ async def optional_current_user(
         user_id = payload.get("sub", "unknown")
         role = payload.get("role", "viewer")
         return UserContext(user_id=user_id, role=role)
-    except Exception:  # noqa: BLE001
+    except Exception:
+        logger.exception("Unhandled exception")
         return None
 
 

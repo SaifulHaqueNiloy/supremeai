@@ -1,16 +1,19 @@
 import uuid
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from firebase_admin import firestore
-from pydantic import BaseModel
 from loguru import logger
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from contextlib import asynccontextmanager
 
-from api.dependencies import get_tenant_db, get_current_user_token
+from api.dependencies import get_current_user_token
+from api.dependencies import get_tenant_db
 from database.session import get_db_session
-from tools.devops.github_agent import GitHubAgent, get_user_github_token
+from tools.devops.github_agent import GitHubAgent
+from tools.devops.github_agent import get_user_github_token
 from tools.repo_discovery_agent import RepoDiscoveryAgent
 
 
