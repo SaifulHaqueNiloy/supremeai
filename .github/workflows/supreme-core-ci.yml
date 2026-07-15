@@ -313,11 +313,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: ⚙️ Install Backend Dependencies
+        working-directory: backend
+        run: poetry install --with dev
+
       - name: 🧪 Run Tests
         id: backend_tests
         working-directory: backend
         run: |
-          pytest --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
+          poetry run pytest --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
 
       - name: Add Backend Test Results to GitHub Summary
         if: always()
@@ -470,7 +474,7 @@ jobs:
 
 
       - name: Run Studio Client Vitest with JSON Report
-        run: pnpm --dir apps/studio-client exec vitest run --reporter=json > apps/studio-client/vitest-report.json
+        run: pnpm --dir apps/studio-client exec vitest run --reporter=default --reporter=json --outputFile=vitest-report.json
 
       - name: Add Studio Client Test Results to GitHub Summary
         if: always()
