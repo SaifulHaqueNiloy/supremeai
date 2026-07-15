@@ -1032,19 +1032,19 @@ class TestPlaywrightManagerMissingBranches:
     @pytest.mark.asyncio
     async def test_get_global_browser_raises_when_not_installed(self, monkeypatch):
         import core.playwright_manager as pm
-        
+
         monkeypatch.setattr(pm, "_global_browser", None)
-        
+
         import builtins
         original_callable = builtins.callable
-        
+
         def mock_callable(obj):
             if getattr(obj, "__name__", "") == "async_playwright":
                 return False
             return original_callable(obj)
-            
+
         monkeypatch.setattr(builtins, "callable", mock_callable)
-        
+
         with pytest.raises(RuntimeError, match="Playwright is not installed"):
             await pm.get_global_browser()
 

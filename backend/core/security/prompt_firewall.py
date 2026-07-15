@@ -64,7 +64,7 @@ def _get_compiled_patterns() -> list[re.Pattern]:
             all_patterns.extend(patterns)
         # Add custom patterns from settings
         all_patterns.extend(settings.prompt_blocked_patterns)
-        
+
         for p in all_patterns:
             try:
                 # Escape pattern to prevent regex injection, then compile case-insensitive

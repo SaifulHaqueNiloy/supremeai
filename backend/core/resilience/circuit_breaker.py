@@ -225,7 +225,7 @@ class CircuitBreaker:
                 state_val = 2
             elif self.state == CircuitBreakerState.HALF_OPEN:
                 state_val = 1
-                
+
             return {
                 f'circuit_breaker_state{{name="{self.name}"}}': state_val,
                 f'circuit_breaker_failures_total{{name="{self.name}"}}': self.failure_count,

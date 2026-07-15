@@ -286,7 +286,7 @@ class TestSwarmOrchestratorExecuteTask:
                             result_exec = await orchestrator.execute_task("Build a python REST API", "user123")
                             result = result_exec.workspace
                         assert result is mock_workspace
-                        mock_workspace.log.assert_any_call("MorphicOrchestrator: Multi-Agent DAG execution completed successfully.")
+                        assert "MorphicOrchestrator: Multi-Agent DAG execution completed successfully." in mock_workspace.execution_logs
 
     @pytest.mark.asyncio
     async def test_task_creates_unique_task_id(self, mock_workspace):
@@ -322,10 +322,9 @@ class TestSwarmOrchestratorExecuteTask:
                         res = res.workspace
 
                         # Verify initialization log was called
-                        mock_workspace.log.assert_called()
+                        assert len(mock_workspace.execution_logs) > 0
                         # Check that the log contains the expected message
-                        log_calls = [str(call) for call in mock_workspace.log.call_args_list]
-                        assert any("Initialized swarm DAG" in call for call in log_calls)
+                        assert any("Initialized swarm DAG" in call for call in mock_workspace.execution_logs)
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_open_returns_workspace(self, mock_workspace):
@@ -342,10 +341,9 @@ class TestSwarmOrchestratorExecuteTask:
 
             assert result is mock_workspace
             # Check that log was called with circuit breaker message
-            mock_workspace.log.assert_called()
-            log_calls = [str(call) for call in mock_workspace.log.call_args_list]
-            assert any("Circuit breaker OPEN" in call for call in log_calls)
-            mock_workspace.add_error.assert_called_once()
+            assert len(mock_workspace.execution_logs) > 0
+            assert any("Circuit breaker OPEN" in call for call in mock_workspace.execution_logs)
+            assert any("Circuit breaker" in str(err) for err in mock_workspace.errors)
 
     @pytest.mark.asyncio
     async def test_architecture_phase_failure(self, mock_workspace):
@@ -464,5 +462,5 @@ class TestSwarmOrchestratorIntegration:
         with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
             result = await orchestrator.execute_task("Task python after open", "user1")
             # Should return workspace with error, not raise
-            assert result is mock_workspace
-            mock_workspace.add_error.assert_called()
+            assert result.workspace is mock_workspace
+            assert len(mock_workspace.errors) > 0

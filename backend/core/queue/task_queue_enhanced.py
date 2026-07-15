@@ -173,7 +173,7 @@ class TaskQueue:
         """
         async with self._lock:
             await self._evict_oldest_if_needed()
-            
+
             # বাংলা মন্তব্য: FIFO — সবচেয়ে পুরানো টাস্ক বাদ যাবে (evict logic was simplified in lock scope)
             while len(self._results) >= self._MAX_TRACKED_TASKS:
                 oldest_id, oldest_result = next(iter(self._results.items()))
@@ -186,7 +186,7 @@ class TaskQueue:
                 else:
                     logger.warning(f"[TaskQueue] Max tracked tasks ({self._MAX_TRACKED_TASKS}) reached with all pending tasks. Cannot evict.")
                     break
-            
+
             task_id = str(uuid.uuid4())
             metadata = TaskMetadata(
                 task_id=task_id,
@@ -203,7 +203,7 @@ class TaskQueue:
             self._stats["submitted"] += 1
 
         selected_backend = backend or self.default_backend
-        
+
         # Parse fallback sequence
         try:
             priorities = [p.strip() for p in settings.queue_backend_priority.split(",")]
@@ -233,7 +233,7 @@ class TaskQueue:
                     submitted = True
                     selected_backend = QueueBackend.ASYNCIO
                     break
-            
+
             if not submitted:
                 # fallback
                 await self._submit_to_asyncio(func, task_id, args, kwargs)
@@ -493,9 +493,9 @@ class TaskQueue:
         """বাংলা মন্তব্য: Periodic cleanup — old completed/failed tasks remove।"""
         if max_age_seconds is None:
             max_age_seconds = settings.task_result_ttl_seconds
-            
+
         cutoff_time = time.time() - max_age_seconds
-        
+
         async with self._lock:
             to_remove = [
                 tid

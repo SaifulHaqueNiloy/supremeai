@@ -299,7 +299,7 @@ async def app_lifespan(app):
         if swarm_cache_task and not swarm_cache_task.done():
             swarm_cache_task.cancel()
             tasks.append(swarm_cache_task)
-        
+
         if tasks:
             try:
                 await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)
