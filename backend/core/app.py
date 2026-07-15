@@ -34,8 +34,9 @@ from core.security.api_key_middleware import APIKeyAuthMiddleware
 from core.security.auth_middleware import AuthMiddleware
 from core.security.honeypot_middleware import HoneypotMiddleware
 from core.security.origin_validator import TrustedOriginMiddleware
-from middleware.chaos_injector import ChaosInjectorMiddleware
-from middleware.idempotency import IdempotencyMiddleware
+from api import register_router
+from api.middleware import ResponseStandardizationMiddleware, SupremeContextMiddleware, TenantExtractionMiddleware, ChaosInjectorMiddleware, IdempotencyMiddleware
+from api.routers import register_all_routers
 
 
 class InterceptHandler(logging.Handler):
@@ -146,16 +147,24 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "X-API-Key"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "X-API-Key", "X-Correlation-ID"],
 )
 
+# SupremeContextMiddleware - must be first to capture all requests
+app.add_middleware(SupremeContextMiddleware)
 app.add_middleware(TrustedOriginMiddleware)
 app.add_middleware(ChaosInjectorMiddleware)
 app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(HoneypotMiddleware)
 app.add_middleware(AuthMiddleware)
+# TenantExtractionMiddleware enriches request.state.tenant_id after auth so downstream
+# handlers and dependencies can rely on it without re-deriving context from JWT.
+app.add_middleware(TenantExtractionMiddleware)
 app.add_middleware(IdempotencyMiddleware)
 app.add_middleware(APIKeyAuthMiddleware)
+# ResponseStandardizationMiddleware normalizes non-JSON error responses into the
+# standard envelope as the last middleware in the chain.
+app.add_middleware(ResponseStandardizationMiddleware)
 
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -195,41 +204,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-def _safe_include_router(fastapi_app: FastAPI, router_module: str, prefix: str = "") -> None:
-    """Lazy-load a router module with strict error handling and fail-fast.
-
-    বাংলা: লেজি রাউটার লোডার — ক্রিটিকাল এরর = sys.exit(1)।
-    """
-    try:
-        module = importlib.import_module(router_module)
-        router = getattr(module, "router", None)
-        if router:
-            fastapi_app.include_router(router, prefix=prefix)
-    except ImportError as exc:
-        logger.warning(f"Optional router {router_module} not installed/found: {exc}")
-        error_event_bus.emit(
-            ErrorEvent(
-                module="app",
-                error_type="ROUTER_NOT_FOUND",
-                message=str(exc)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
-                context={"router_module": router_module},
-            )
-        )
-    except (AttributeError, TypeError) as exc:
-        logger.critical(f"Critical error loading router {router_module}: {exc}")
-        error_event_bus.emit(
-            ErrorEvent(
-                module="app",
-                error_type="ROUTER_LOAD_FAILED",
-                message=str(exc)[:500],
-                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
-                context={"router_module": router_module},
-            )
-        )
-        sys.exit(1)
-
-
 @app.get("/health")
 async def health() -> dict[str, Any]:
     """Comprehensive health check — Redis + API key status."""
@@ -266,90 +240,7 @@ def actuator_health() -> dict[str, str]:
 
 app.include_router(admin_router)
 
-# Core Routers
-core_routers: list[tuple[str, str]] = [
-    ("api.routes.memory", ""),
-    ("api.routes.task", ""),
-    ("api.routes.markdown", "/api/v1"),
-    ("api.routes.simulator", ""),
-    ("api.routes.site_actions", ""),
-    ("api.routes.llm_gateway", ""),
-    ("api.routes.browser", ""),
-    ("api.routes.stream", ""),
-    ("api.routes.media", ""),
-    ("api.routes.graph", ""),
-    ("api.routes.knowledge", ""),
-    ("api.routes.marketplace_endpoints", ""),
-    ("api.routes.auth", "/api/v1"),
-    ("api.routes.onboarding", "/api/v1/onboarding"),
-    ("api.routes.evolution", "/api/v1/evolution"),
-    ("api.routes.admin_dashboard", ""),
-    ("api.routes.email", ""),
-    ("api.routes.github", ""),
-    ("api.routes.internal", ""),
-    ("api.routes.config", ""),
-    ("api.routes.repos", ""),
-    ("api.routes.tools_ops", ""),
-    ("api.routes.agents", ""),
-    ("api.routes.admin", ""),
-    ("api.routes.tools_registry", ""),
-    ("api.routes.preferences", ""),
-    ("api.routes.usage_metrics", ""),
-    ("api.routes.sso", ""),
-    ("api.routes.health", ""),
-    ("api.routes.api_keys", ""),
-    ("api.routes.ci_webhooks", ""),
-    ("api.routes.task_workspace", "/api/v1"),
-    ("api.routes.websocket_agent", ""),
-    ("api.routes.agent_workspace", "/api/v1"),
-    ("api.routes.integrations", "/api/v1"),
-    ("api.routes.public_config", "/api"),
-    ("api.routes.traffic_monitor", ""),
-    ("api.routes.swarm", "/api/v1"),
-    ("api.routes.agent_action", "/api/v1"),
-    ("api.routes.websocket_hitl", ""),
-    ("core.orchestrator", ""),
-]
-
-for router_path, prefix in core_routers:
-    _safe_include_router(app, router_path, prefix)
-
-# Optional / External Tools Routers
-optional_routers: list[tuple[str, str]] = [
-    ("api.routes.dock_actions", "/api"),
-    ("api.routes.websocket_voice", ""),
-    ("tools.collaborative_editor", "/api/v1"),
-    ("tools.image_to_code", ""),
-    ("tools.browser_agent", "/api"),
-    ("tools.voice_coder", "/api"),
-    ("tools.style_learner", "/api"),
-    ("tools.diagram_to_architecture", "/api"),
-    ("tools.ai_pair_programmer", "/api"),
-    ("api.routes.codeflow", ""),
-    ("api.routes.feedback", ""),
-    ("tools.media.multilingual_tts", "/api"),
-    ("api.routes.voice", "/api/voice"),
-    ("tools.comment_thread_ai", "/api"),
-    ("tools.auto_test_generator", "/api"),
-    ("api.routes.tenant_admin", "/api"),
-    ("api.routes.mobile_bff", ""),
-    ("api.routes.billing_api", ""),
-    ("api.routes.metrics", ""),
-    ("api.routes.cloud_mesh", ""),
-    ("api.routes.events", "/api"),
-    ("api.routes.payments", ""),
-    ("api.routes.maintenance", "/api/v1"),
-    ("api.routes.sandbox_api", ""),
-    ("api.routes.pr_review_api", ""),
-]
-
-for router_path, prefix in optional_routers:
-    _safe_include_router(app, router_path, prefix)
-
-if settings.encryption_key and settings.encryption_key.get_secret_value():
-    _safe_include_router(app, "api.routes.byoc_api", "")
-else:
-    logger.warning("Universal BYOC router not loaded: ENCRYPTION_KEY missing")
+register_all_routers(app)
 
 app.router.lifespan_context = lifespan.app_lifespan
 

@@ -8,7 +8,7 @@ from fastapi import Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from core.theme_pubsub import theme_pubsub
+from core.messaging.pubsub import global_pubsub as theme_pubsub
 from database.supabase_client import db
 
 
@@ -58,7 +58,7 @@ async def upsert_preferences(user_id: str = Query(default="default"), payload: P
     if not db.client:
         # For offline/local mode, still broadcast the theme
         if payload.theme:
-            theme_pubsub.publish(user_id, payload.theme)
+            await theme_pubsub.publish(user_id, {"theme": payload.theme})
         return {"status": "success", "preferences": payload.dict(exclude_none=True)}
     data = payload.dict(exclude_none=True)
     if not data:
@@ -67,7 +67,7 @@ async def upsert_preferences(user_id: str = Query(default="default"), payload: P
     try:
         res = db.client.table("user_preferences").upsert(data).execute()
         if payload.theme:
-            theme_pubsub.publish(user_id, payload.theme)
+            await theme_pubsub.publish(user_id, {"theme": payload.theme})
         return {"status": "success", "preferences": res.data[0] if res.data else data}
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -80,7 +80,7 @@ async def stream_preferences(request: Request, user_id: str):
     """
 
     async def event_generator():
-        queue = theme_pubsub.subscribe(user_id)
+        queue = await theme_pubsub.subscribe(user_id)
         try:
             # Yield connection success
             yield {"event": "connected", "data": json.dumps({"status": "connected to theme stream"})}
@@ -96,6 +96,6 @@ async def stream_preferences(request: Request, user_id: str):
                     # Heartbeat ping
                     yield {"event": "ping", "data": json.dumps({"channel": "heartbeat"})}
         finally:
-            theme_pubsub.unsubscribe(user_id, queue)
+            await theme_pubsub.unsubscribe(user_id, queue)
 
     return EventSourceResponse(event_generator())

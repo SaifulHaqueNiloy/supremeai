@@ -193,28 +193,9 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-backend
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Setup Poetry
-        uses: snok/install-poetry@v1
-        with:
-          plugins: poetry-plugin-export
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: 'backend/poetry.lock'
-
-      - name: Setup Python & Install Dependencies
-        working-directory: backend
-        run: |
-          poetry export --with dev --without ml,tools --format requirements.txt --output requirements.txt
-          uv pip install --system -r requirements.txt
 
       - name: 🛡️ Safety Guard - File Protection Validation
         id: safety_guard
@@ -305,33 +286,15 @@ jobs:
       ANTHROPIC_API_KEY: "mock_anthropic_api_key"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-backend
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Setup Poetry
-        uses: snok/install-poetry@v1
-        with:
-          plugins: poetry-plugin-export
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: 'backend/poetry.lock'
-
-      - name: Setup Python & Install Dependencies
-        working-directory: backend
-        run: |
-          poetry export --with dev --without ml,tools --format requirements.txt --output requirements.txt
-          uv pip install --system -r requirements.txt
 
       - name: 🧪 Run Tests
         id: backend_tests
         working-directory: backend
         run: |
-          poetry run pytest --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
+          pytest --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
 
       - name: Add Backend Test Results to GitHub Summary
         if: always()
