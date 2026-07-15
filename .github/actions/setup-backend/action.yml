@@ -16,6 +16,12 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: 📦 Install System Dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg libpq-dev build-essential
+
     - uses: actions/setup-python@v6
       with:
         python-version: ${{ inputs.python-version }}
