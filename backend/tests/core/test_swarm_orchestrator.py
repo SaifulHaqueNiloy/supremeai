@@ -53,7 +53,7 @@ async def test_swarm_orchestrator_execute_task(mock_agents):
     orchestrator = mock_agents["orchestrator_class"]()
     with patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}):
         result = await orchestrator.execute_task("write a python script", user_id="user1")
-    
+
     from core.orchestration.swarm_orchestrator import ExecutionResult
     assert isinstance(result, ExecutionResult)
     workspace = result.workspace
