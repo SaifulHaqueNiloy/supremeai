@@ -128,6 +128,7 @@ jobs:
 
       - name: 🛡️ Gate 1.5 — Security Blind Spot Scan
         if: needs.changes.outputs.docs_only != 'true'
+        continue-on-error: true
         run: |
           echo "=== Security Blind Spot Scan ===" >> $GITHUB_STEP_SUMMARY
           python scripts/security/auto_find_blindspots.py

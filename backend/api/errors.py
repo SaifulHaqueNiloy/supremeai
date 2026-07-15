@@ -15,7 +15,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from core.error_bus import ErrorEventBus
-from core.messaging.event_bus import ErrorContext, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
 class APIErrorDetail(BaseModel):
