@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     app_name: str = "SupremeAI 2.0"
     docs_auth_enabled: bool = True
     docs_username: str = Field(default="admin", validation_alias="SUPREMEAI_DOCS_USERNAME")
-    docs_password: SecretStr = Field(default=SecretStr(""), validation_alias="SUPREMEAI_DOCS_PASSWORD")
+    docs_password: SecretStr = Field(default=SecretStr("dev_password_only"), validation_alias="SUPREMEAI_DOCS_PASSWORD")
 
     # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
     port: int = Field(default=8000, validation_alias="PORT")

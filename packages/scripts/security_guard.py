@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""SupremeAI Security Guard - Pre-commit secret scanner.
+
+এই স্ক্রিপ্টটি গিট কমিট করার আগে স্টেজ করা ফাইলগুলো স্ক্যান করে হার্ডকোডেড
+সিক্রেট (API Key, Deploy Hook, Service Account ইত্যাদি) খুঁজে বের করে। কোনো
+সিক্রেট পাওয়া গেলে কমিট ব্লক করে দেয়, যাতে ডেভেলপার ভুল করেও ক্রেডেনশিয়াল
+ফাস করতে না পারে।
+
+ব্যবহার:
+    python3 packages/scripts/security_guard.py
+
+এটি সাধারণত pre-commit ফ্রেমওয়ার্কের মাধ্যমে (দেখুন .pre-commit-config.yaml)
+চালানো হয়, অথবা `.git/hooks/pre-commit` থেকে সরাসরি কল করা যায়।
+"""
+
+import os
+import re
+import sys
+import subprocess
+
+# কমন সিক্রেটের জন্য রেজেক্স প্যাটার্ন
+SECRET_PATTERNS = {
+    "OpenAI API Key": r"sk-[a-zA-Z0-9]{48}",
+    "Render Deploy Hook": r"rnd_[a-zA-Z0-9]{32}",
+    "Stripe Key": r"(sk_live|sk_test)_[a-zA-Z0-9]+",
+    "AWS Access Key": r"AKIA[0-9A-Z]{16}",
+    "GCP Service Account": r"\"type\":\s*\"service_account\"",
+    "Generic Bearer Token": r"Bearer\s+[a-zA-Z0-9\-\._~+/]+=*",
+    "SupremeAI API Key": r"sk-sup-[a-zA-Z0-9]{20,}",
+}
+
+# স্ক্যান থেকে বাদ দেওয়া এক্সটেনশন (বাইনারি / লক ফাইল)
+SKIP_EXTENSIONS = (
+    ".lock",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".pdf",
+    ".ico",
+    ".svg",
+    ".woff",
+    ".woff2",
+    ".ttf",
+)
+
+
+def scan_staged_files() -> bool:
+    """স্টেজ করা ফাইল স্ক্যান করে। True রিটার্ন করলে কোনো সমস্যা নেই।
+
+    গিট রিপো না হলে বা কমান্ড ফেইল করলে True রিটার্ন করে (non-git পরিবেশে ব্রেক না করতে)।
+    """
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # গিট রিপো নয় বা git পাওয়া যায়নি — ব্লক করবে না
+        return True
+
+    files = [f for f in result.stdout.splitlines() if f and os.path.exists(f)]
+    if not files:
+        return True
+
+    violations: list[str] = []
+
+    for file_path in files:
+        if file_path.endswith(SKIP_EXTENSIONS):
+            continue
+
+        if "security_guard.py" in file_path:
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                for line_no, line in enumerate(fh.readlines(), 1):
+                    for name, pattern in SECRET_PATTERNS.items():
+                        if re.search(pattern, line):
+                            violations.append(
+                                f"  - {file_path}:{line_no} -> Possible {name} detected!"
+                            )
+        except (OSError, UnicodeDecodeError):
+            # পড়া যায়নি এমন ফাইল স্কিপ
+            continue
+
+    if violations:
+        try:
+            print("\n🚨 [SupremeAI Security Guard] COMMIT BLOCKED!")
+        except UnicodeEncodeError:
+            print("\n[!] [SupremeAI Security Guard] COMMIT BLOCKED!")
+        print("You are trying to commit hardcoded secrets:")
+        for v in violations:
+            print(v)
+        print("\nFix: Use environment variables or .env files instead.\n")
+        return False
+
+    return True
+
+
+if __name__ == "__main__":
+    if scan_staged_files():
+        sys.exit(0)
+    sys.exit(1)

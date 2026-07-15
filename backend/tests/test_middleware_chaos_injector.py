@@ -43,14 +43,14 @@ async def test_dispatch_injects_delay_and_drop_when_enabled(monkeypatch):
     async def fake_sleep(duration):
         sleeps.append(duration)
 
-    monkeypatch.setattr("middleware.chaos_injector.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("api.middleware.asyncio.sleep", fake_sleep)
 
     values = [0.1, 0.1]
 
     def fake_random():
         return values.pop(0)
 
-    monkeypatch.setattr("middleware.chaos_injector.random.random", fake_random)
+    monkeypatch.setattr("api.middleware.random.random", fake_random)
 
     request = Request({"type": "http", "path": "/api/test", "headers": {}})
 
@@ -70,7 +70,7 @@ async def test_dispatch_packet_drop_returns_504(monkeypatch):
     app = type("FakeApp", (), {})()
     mw = ChaosInjectorMiddleware(app)
 
-    monkeypatch.setattr("middleware.chaos_injector.random.random", lambda: 0.0)
+    monkeypatch.setattr("api.middleware.random.random", lambda: 0.0)
 
     request = Request({"type": "http", "path": "/api/test", "headers": {}})
 
