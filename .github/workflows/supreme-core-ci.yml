@@ -315,6 +315,12 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: 🛠️ Force Pre-install Whisper Dependencies
+        working-directory: backend
+        run: |
+          pip install --upgrade setuptools wheel
+          pip install openai-whisper==20240930
+
       - name: ⚙️ Install Backend Dependencies
         working-directory: backend
         run: poetry install --with dev
