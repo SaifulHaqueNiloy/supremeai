@@ -1,5 +1,13 @@
+import { vi, describe, it, test, expect, beforeEach, afterEach } from 'vitest';
 import * as vscode from 'vscode';
 import { AuthService } from '../src/services/AuthService';
+
+vi.mock('vscode', () => ({
+  window: {
+    showInputBox: vi.fn(),
+    showInformationMessage: vi.fn(),
+  },
+}));
 
 describe('AuthService', () => {
   let authService: any;
