@@ -72,20 +72,7 @@ async def run_agent_action(
         logger.info(f"Triggering MorphicOrchestrator for intent '{intent}'")
         orchestrator = MorphicOrchestrator()
 
-        # Pass the kwargs to be available in the workspace execution
-        workspace = await orchestrator.execute_task(
-            prompt=f"Execute {intent} action.",
-            user_id=user_id,
-        )
-
-        # Inject the custom intent and kwargs, overriding the generic one from `execute_task`
-        workspace.intent = intent
-        workspace.kwargs = kwargs
-
-        # Rerun execute_task logic but with our custom DAG
-        # Since execute_task already runs, maybe we should not call execute_task directly
-        # but just use the underlying method or we can create the workspace directly.
-
+        # বাংলা মন্তব্য: রিকোয়েস্টে ডাবল সোয়ার্ম এক্সিকিউশন ও ওপারেশনাল কস্ট এড়াতে সরাসরি কাস্টম ওয়ার্কস্পেস দিয়ে রান করানো হচ্ছে।
         import uuid
 
         from models.shared_workspace import SharedWorkspace
@@ -93,27 +80,18 @@ async def run_agent_action(
         custom_workspace = SharedWorkspace(task_id=str(uuid.uuid4()), original_prompt=payload.content, intent=intent)
         custom_workspace.kwargs = kwargs
 
-        dag = await orchestrator._get_dag_for_intent(intent)
-
-        completed_tasks = set()
-        import asyncio
-
-        while len(completed_tasks) < len(dag):
-            ready_tasks = [task for task, deps in dag.items() if task not in completed_tasks and all(d in completed_tasks for d in deps)]
-            if not ready_tasks:
-                raise RuntimeError("DAG execution error: No ready tasks found.")
-
-            tasks_to_run = [orchestrator.agents[task].run(custom_workspace, user_id) for task in ready_tasks if task in orchestrator.agents]
-            if tasks_to_run:
-                await asyncio.gather(*tasks_to_run)
-            completed_tasks.update(ready_tasks)
+        # বাংলা মন্তব্য: ডুপ্লিকেট এবং বাগি লোকাল DAG লুপ পরিহার করে সেন্ট্রাল run_dag_for_workspace রান করা হলো।
+        custom_workspace = await orchestrator.run_dag_for_workspace(custom_workspace, user_id=user_id)
 
         result = custom_workspace.work_product.get("integration_result", {})
         if result.get("status") == "error":
-            raise HTTPException(status_code=500, detail=result.get("message", "Integration Execution Failed"))
+            raise HTTPException(status_code=400, detail=result.get("message", "Integration Execution Failed"))
 
         return {"status": "success", "workspace_logs": custom_workspace.logs, "result": result}
 
+    except HTTPException:
+        # বাংলা মন্তব্য: ফোর-হান্ড্রেড রেঞ্জের ভ্যালিডেশন এররগুলো যাতে ৫০০-তে কনভার্ট না হয় সেজন্য সরাসরি রি-রেইজ করা হলো।
+        raise
     except Exception as e:
         logger.error(f"Failed to execute agent action: {e}")
         raise HTTPException(status_code=500, detail=f"Agent Execution Error: {e}") from e

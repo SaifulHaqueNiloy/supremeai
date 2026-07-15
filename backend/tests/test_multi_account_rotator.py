@@ -324,8 +324,12 @@ class TestMultiAccountRotator:
             rate_limit_tpm=5000000,
         )
         acc = Account(id="a1", provider="deepseek", email="a@b.com")
-        result = await rotator._call_api(provider, acc, "test prompt")
-        assert "DeepSeek analysis" in result
+        # বাংলা মন্তব্য: রিয়েল নেটওয়ার্ক কল এড়াতে LLMGateway.acompletion মক করা হলো।
+        with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+            mock_acompletion.return_value = {"success": True, "text": "DeepSeek analysis: test response"}
+            result = await rotator._call_api(provider, acc, "test prompt")
+            assert "DeepSeek analysis" in result
+            mock_acompletion.assert_called_once()
 
     @pytest.mark.anyio
     async def test_get_best_provider_for_task_with_preferences(self, rotator):

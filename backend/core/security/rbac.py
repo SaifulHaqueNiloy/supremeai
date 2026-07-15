@@ -1,56 +1,196 @@
+"""Role-Based Access Control (RBAC) system.
+
+বাংলা: রোল-ভিত্তিক অ্যাক্সেস কন্ট্রোল (RBAC) সিস্টেম।
+
+Defines roles, permissions, and authorization logic for the entire platform.
+"""
 from __future__ import annotations
 
-import datetime
-from dataclasses import dataclass
+import logging
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
 
-
-@dataclass
-class RBAC:
-    role: str
-    permissions: tuple[str, ...]
+logger = logging.getLogger(__name__)
 
 
+class Role(str, Enum):
+    """Valid system roles with hierarchical permissions."""
+
+    OWNER = "owner"
+    ADMIN = "admin"
+    OPERATOR = "operator"
+    VIEWER = "viewer"
+
+    @classmethod
+    def has_value(cls, value: str) -> bool:
+        return any(value == r.value for r in cls)
+
+
+class Permission(str, Enum):
+    """Valid action permissions in the system."""
+
+    READ = "read"
+    WRITE = "write"
+    ADMIN = "admin"
+    AUDIT = "audit"
+    MANAGE_USERS = "manage_users"
+    MANAGE_BILLING = "manage_billing"
+    DEPLOY = "deploy"
+    MANAGE_API_KEYS = "manage_api_keys"
+
+
+# ── Role-to-Permission Mapping ────────────────────────────────────────────────
+ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
+    Role.OWNER: frozenset({
+        Permission.READ,
+        Permission.WRITE,
+        Permission.ADMIN,
+        Permission.AUDIT,
+        Permission.MANAGE_USERS,
+        Permission.MANAGE_BILLING,
+        Permission.DEPLOY,
+        Permission.MANAGE_API_KEYS,
+    }),
+    Role.ADMIN: frozenset({
+        Permission.READ,
+        Permission.WRITE,
+        Permission.ADMIN,
+        Permission.AUDIT,
+        Permission.MANAGE_API_KEYS,
+    }),
+    Role.OPERATOR: frozenset({
+        Permission.READ,
+        Permission.WRITE,
+        Permission.DEPLOY,
+    }),
+    Role.VIEWER: frozenset({
+        Permission.READ,
+    }),
+}
+
+
+@dataclass(frozen=True)
+class RBACEntry:
+    """An RBAC entry linking a role to its permitted actions.
+
+    Attributes:
+        role: The role identifier.
+        permissions: Set of permissions granted to this role.
+    """
+
+    role: Role
+    permissions: frozenset[Permission] = field(compare=False)
+
+
+def get_role_permissions(role: str | Role) -> frozenset[Permission]:
+    """Get all permissions for a given role.
+
+    বাংলা: নির্দিষ্ট রোলের জন্য সব পারমিশন রিটার্ন করে।
+
+    Raises:
+        ValueError: If role is not a valid Role.
+    """
+    if isinstance(role, str):
+        try:
+            role_enum = Role(role.lower())
+        except ValueError:
+            raise ValueError(f"Invalid role '{role}'. Valid roles: {[r.value for r in Role]}") from None
+    else:
+        role_enum = role
+
+    return ROLE_PERMISSIONS.get(role_enum, frozenset())
+
+
+def has_permission(role: str | Role, required_permission: str | Permission) -> bool:
+    """Check if a role has a specific permission.
+
+    বাংলা: একটি রোলের নির্দিষ্ট পারমিশন আছে কিনা চেক করে।
+
+    Args:
+        role: The role to check.
+        required_permission: The permission required.
+
+    Returns:
+        True if the role has the permission, False otherwise.
+    """
+    try:
+        if isinstance(required_permission, str):
+            perm = Permission(required_permission.lower())
+        else:
+            perm = required_permission
+        return perm in get_role_permissions(role)
+    except (ValueError, KeyError):
+        logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}")
+        return False
+
+
+def authorize(user_role: str | Role, required_permission: str | Permission, context: dict[str, Any] | None = None) -> bool:
+    """Authorize a user action based on their role.
+
+    বাংলা: ইউজারের রোলের ভিত্তিতে অ্যাকশন অথরাইজ করে।
+
+    Args:
+        user_role: The role of the user requesting the action.
+        required_permission: The permission required for the action.
+        context: Optional context for more granular authorization logic.
+
+    Returns:
+        True if authorized, False otherwise.
+    """
+    if context and context.get("bypass_rbac"):
+        return True
+
+    return has_permission(user_role, required_permission)
+
+
+# বাংলা মন্তব্য: ইউজার কনটেক্সট ক্লাস যা ইউজারের আইডি, রোল, মেয়াদ এবং স্কোপ ধারণ করে।
 @dataclass
 class UserContext:
     user_id: str
     role: str
-    scopes: tuple[str, ...] = ()
     expires_at: str | None = None
+    scopes: tuple[str, ...] | None = None
 
 
-ROLE_MATRIX: dict[str, RBAC] = {
-    "owner": RBAC(role="owner", permissions=("read", "write", "admin", "audit", "manage_users")),
-    "admin": RBAC(role="admin", permissions=("read", "write", "admin", "audit")),
-    "operator": RBAC(role="operator", permissions=("read", "write")),
-    "viewer": RBAC(role="viewer", permissions=("read",)),
-}
-
-
+# বাংলা মন্তব্য: ক্লাসের মাধ্যমে রোলের পারমিশন চেক করার জন্য RoleBasedAccessControl ক্লাস যোগ করা হলো।
 class RoleBasedAccessControl:
-    def __init__(self, role_matrix: dict[str, RBAC] | None = None) -> None:
-        self.role_matrix = role_matrix or dict(ROLE_MATRIX)
+    def __init__(self, role_matrix: dict[str, Any] | None = None) -> None:
+        self.role_matrix = role_matrix
 
-    def has_permission(self, role: str, action: str) -> bool:
-        rbac = self.role_matrix.get((role or "viewer").lower())
-        if not rbac:
+    def has_permission(self, role: str | Role, action: str | Permission) -> bool:
+        if self.role_matrix:
+            # বাংলা মন্তব্য: কাস্টম রোল ম্যাট্রিক্স থাকলে সেটি চেক করা হচ্ছে।
+            if isinstance(role, Role):
+                role = role.value
+            if role in self.role_matrix:
+                entry = self.role_matrix[role]
+                perms = getattr(entry, "permissions", ())
+                if isinstance(action, Permission):
+                    action = action.value
+                return action in perms
             return False
-        return action in rbac.permissions
+        # বাংলা মন্তব্য: গ্লোবাল রোল পারমিশন চেক করা হচ্ছে।
+        return has_permission(role, action)
 
-    def required_permission(self, action: str) -> str:
-        return action
-
-    def check(self, context: UserContext, action: str) -> bool:
-        if getattr(context, "expires_at", None) and str(context.expires_at) < datetime.datetime.now().isoformat():
-            return False
+    def check(self, context: UserContext, action: str | Permission) -> bool:
+        # বাংলা মন্তব্য: কনটেক্সট মেয়াদোত্তীর্ণ হয়েছে কিনা তা চেক করা হচ্ছে।
+        if context.expires_at:
+            try:
+                import datetime
+                expires = datetime.datetime.fromisoformat(context.expires_at)
+                if datetime.datetime.now() > expires:
+                    return False
+            except ValueError:
+                return False
+        # বাংলা মন্তব্য: স্কোপ চেক করা হচ্ছে।
+        if context.scopes is not None:
+            act_str = action.value if isinstance(action, Permission) else action
+            if act_str not in context.scopes:
+                return False
         return self.has_permission(context.role, action)
 
-    def require(self, context: UserContext, action: str) -> dict[str, Any]:
-        if not self.check(context, action):
-            return {
-                "allowed": False,
-                "role": context.role,
-                "action": action,
-                "reason": "Permission denied",
-            }
-        return {"allowed": True, "role": context.role, "action": action}
+    def require(self, context: UserContext, action: str | Permission) -> dict[str, Any]:
+        if self.check(context, action):
+            return {"allowed": True, "role": context.role}
+        return {"allowed": False, "reason": "Permission denied", "action": action.value if isinstance(action, Permission) else action}

@@ -108,17 +108,31 @@ class SecureRedisManager:
 redis_manager = SecureRedisManager()
 
 
+# বাংলা মন্তব্য: Redis অনুপলব্ধ থাকলে বা কানেকশন ফেইল করলে এই এরর রেইজ হবে যাতে সাইলেন্ট ফেইলর না ঘটে।
+class IdempotencyUnavailableError(Exception):
+    """Redis অনুপলব্ধ হওয়ায় idempotency guarantee দেওয়া সম্ভব হচ্ছে না।"""
+
+
 # Idempotency Helper Functions (Task 8.6)
-async def acquire_idempotency_lock(key: str, ttl: int = 120) -> bool:
+async def acquire_idempotency_lock(key: str, ttl: int = 120, fail_closed: bool = True) -> bool:
+    """
+    বাংলা মন্তব্য: fail_closed=True হলে Redis না থাকলে বা ফেইল করলে IdempotencyUnavailableError রেইজ হবে।
+    fail_closed=False হলে এটি সাইলেন্টলি fail-open হয়ে True রিটার্ন করবে।
+    """
     if not redis_manager.client:
-        return True  # Fail-open
+        if fail_closed:
+            raise IdempotencyUnavailableError("Redis অনুপলব্ধ — idempotency guarantee দেওয়া যাচ্ছে না।")
+        logger.warning(f"Idempotency lock for '{key}' skipped — Redis unavailable, fail-open mode.")
+        return True
     try:
         # SET NX EX
         res = await redis_manager.client.set(key, "locked", nx=True, ex=ttl)
         return bool(res)
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Idempotency lock failed: {e}")
-        return True  # Fail-open
+        logger.error(f"Idempotency lock failed for '{key}': {e}")
+        if fail_closed:
+            raise IdempotencyUnavailableError(f"Redis error during lock acquisition: {e}") from e
+        return True
 
 
 async def release_idempotency_lock(key: str) -> None:

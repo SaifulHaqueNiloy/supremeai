@@ -1,5 +1,5 @@
 import type { AdminSubTab, ChatMessage } from '../../types';
-import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, RedesignedDashboardMockup } from '.';
+import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
 import { RateLimitManager } from './RateLimitManager';
 import { AdminDashboardHome } from './AdminDashboardHome';
 // বাংলা মন্তব্য: ইন্টারেক্টিভ চ্যাট ট্যাব ইম্পোর্ট করা হলো
@@ -38,7 +38,7 @@ interface SubTabContentProps {
 }
 
 const MODULE_MAP: Record<string, React.FC<any>> = {
-  'dashboard': RedesignedDashboardMockup,
+  'dashboard': Dashboard,
   'command-center': CommandCenter,
   'sandbox': SandboxView,
   'logs': LiveLogs,
@@ -63,8 +63,8 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
 
 export function SubTabContent(props: SubTabContentProps) {
   const { adminSubTab, setAdminSubTab } = props;
-  
-  const SelectedModule = MODULE_MAP[adminSubTab] || RedesignedDashboardMockup;
+
+  const SelectedModule = MODULE_MAP[adminSubTab] || Dashboard;
   const isDashboardOrCanvas = adminSubTab === 'dashboard' || adminSubTab === 'command-center';
 
   return (
@@ -75,7 +75,7 @@ export function SubTabContent(props: SubTabContentProps) {
             <span className="w-2 h-2 rounded-full bg-[var(--accent-secondary)] animate-pulse"></span>
             MODULE: {adminSubTab.replace('-', ' ')}
           </span>
-          <button 
+          <button
             onClick={() => setAdminSubTab('command-center')}
             className="p-1.5 hover:opacity-80 rounded-lg transition-colors group"
             title="Close Module & Return to Canvas"
