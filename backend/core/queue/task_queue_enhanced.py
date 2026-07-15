@@ -207,7 +207,7 @@ class TaskQueue:
         # Parse fallback sequence
         try:
             priorities = [p.strip() for p in settings.queue_backend_priority.split(",")]
-        except Exception:
+        except Exception:  # noqa: BLE001
             priorities = ["asyncio"]
 
         try:

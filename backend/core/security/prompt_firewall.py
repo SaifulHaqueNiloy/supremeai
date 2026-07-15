@@ -69,7 +69,7 @@ def _get_compiled_patterns() -> list[re.Pattern]:
             try:
                 # Escape pattern to prevent regex injection, then compile case-insensitive
                 _compiled_patterns.append(re.compile(re.escape(p), re.IGNORECASE))
-            except Exception:
+            except Exception:  # noqa: BLE001
                 pass
     return _compiled_patterns
 

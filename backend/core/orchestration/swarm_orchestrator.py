@@ -3,7 +3,6 @@
 
 import asyncio
 import uuid
-from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -235,7 +234,7 @@ class MorphicOrchestrator:
             with trace_span("morphic_orchestrator.run_dag_for_workspace", attributes=attributes):
                 await self.circuit_breaker.acall(_execute_dag)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে এবং ট্রেসব্যাক লগ করা হচ্ছে।
             from loguru import logger
             logger.opt(exception=True).error(f"DAG execution failed: {e}")
@@ -254,7 +253,7 @@ class MorphicOrchestrator:
             if "reflection" not in completed_tasks and "reflection" in self.agents:
                 try:
                     await self.agents["reflection"].reflect_and_persist(workspace, user_id)
-                except Exception as reflection_error:
+                except Exception as reflection_error:  # noqa: BLE001
                     workspace.log(f"MorphicOrchestrator: Failed to run reflection after error: {reflection_error}")
             return workspace
 
