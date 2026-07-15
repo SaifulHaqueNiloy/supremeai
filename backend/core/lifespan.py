@@ -46,6 +46,7 @@ from core.pgbouncer_pool import init_db_pool
 
 
 async def _ensure_api_key_tables() -> None:
+    """Ensure API key database tables exist."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
@@ -105,6 +106,7 @@ async def app_lifespan(app):
     """
     logger.info("🌐 Core Infrastructure Bootstrapping Active...")
 
+    # OpenTelemetry tracing initialization
     try:
         from core.observability.telemetry import setup_tracing
 
@@ -123,6 +125,7 @@ async def app_lifespan(app):
             )
         )
 
+    # Global HTTP client initialization
     services.global_http_client = httpx.AsyncClient(
         limits=httpx.Limits(max_keepalive_connections=50, max_connections=200),
         timeout=httpx.Timeout(30.0),
@@ -132,6 +135,7 @@ async def app_lifespan(app):
     services.model_router._http_client = services.global_http_client
     logger.info("✅ Global HTTP Connection Pool initialized [Max Cons: 200].")
 
+    # Database pool initialization
     try:
         db_url = settings.supabase_database_url
         if "sqlite" in db_url:
@@ -160,6 +164,7 @@ async def app_lifespan(app):
             # Production-এ Sentry-তে alert পাঠান, কিন্তু crash করবেন না
             logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
 
+    # Config cache initialization
     try:
         await config_cache.refresh_async()
         logger.info("✅ System configuration cache successfully initialized.")
@@ -180,6 +185,7 @@ async def app_lifespan(app):
         config_cache._cache = dict(DEFAULT_CONFIGS)
         # sys.exit(1) রিমুভ করা হলো যাতে ক্লাউড রান হেলথ চেক পাস করতে পারে
 
+    # Redis initialization
     try:
         # SecureRedisManager is initialized synchronously in __init__.
         # Just check if the client is connected.
@@ -201,6 +207,7 @@ async def app_lifespan(app):
             logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
             # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
 
+    # Orchestrator initialization
     try:
         orch_inst = Orchestrator()
         app.state.orchestrator = orch_inst
@@ -216,12 +223,16 @@ async def app_lifespan(app):
                 context={"component": "orchestrator"},
             )
         )
+        # Ensure orchestrator is set to None on failure to prevent NoneType errors
+        app.state.orchestrator = None
 
+    # Supabase schema bootstrap
     try:
         from database import db as supabase_db
 
         if os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL_POOLER"):
-            supabase_db.bootstrap_schema()
+            # বাংলা: sync call in async context - run in thread to avoid blocking
+            await asyncio.to_thread(supabase_db.bootstrap_schema)
             logger.info("Supabase schema bootstrap complete")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
@@ -249,11 +260,13 @@ async def app_lifespan(app):
 
     logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
 
+    # Orchestrator cleanup
     try:
-        _ = getattr(app.state, "orchestrator", None)
-        # Orchestrator does not have a background loop to stop
+        orch = getattr(app.state, "orchestrator", None)
+        if orch and hasattr(orch, "stop"):
+            await orch.stop()
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Error during graceful shutdown: {e}")
+        logger.error(f"Error during orchestrator shutdown: {e}")
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -264,6 +277,7 @@ async def app_lifespan(app):
             )
         )
 
+    # Background tasks cleanup
     try:
         sentinel_task = getattr(app.state, "sentinel_task", None)
         if sentinel_task and not sentinel_task.done():
@@ -271,15 +285,28 @@ async def app_lifespan(app):
 
             sentinel.running = False
             sentinel_task.cancel()
+            try:
+                await asyncio.wait_for(sentinel_task, timeout=5.0)
+            except asyncio.TimeoutError:
+                logger.warning("Sentinel task did not stop gracefully within timeout")
+            except asyncio.CancelledError:
+                pass
             logger.info("✅ Sentinel Agent shut down successfully.")
 
         swarm_cache_task = getattr(app.state, "swarm_cache_task", None)
         if swarm_cache_task and not swarm_cache_task.done():
             swarm_cache_task.cancel()
+            try:
+                await asyncio.wait_for(swarm_cache_task, timeout=5.0)
+            except asyncio.TimeoutError:
+                logger.warning("Swarm cache task did not stop gracefully within timeout")
+            except asyncio.CancelledError:
+                pass
             logger.info("✅ Swarm Cache Invalidator shut down successfully.")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error closing background tasks: {e}")
 
+    # Database pool cleanup
     try:
         pool = await get_db_pool()
         if pool:
@@ -297,6 +324,7 @@ async def app_lifespan(app):
             )
         )
 
+    # Redis cleanup
     try:
         await redis_manager.close()
         logger.info("✅ Redis Manager connection closed.")
@@ -312,6 +340,7 @@ async def app_lifespan(app):
             )
         )
 
+    # HTTP client cleanup
     try:
         if services.global_http_client:
             await services.global_http_client.aclose()
@@ -328,6 +357,7 @@ async def app_lifespan(app):
             )
         )
 
+    # Browser cleanup
     try:
         from tools.ai_agents.browser_agent import shutdown_global_browser
 
