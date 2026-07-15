@@ -59,8 +59,25 @@ env:
   NODE_VERSION: '24'
 
 jobs:
+  # বাংলা মন্তব্য: gatekeeper জব সবার আগে রান হয়।
+  # ২৪ ঘণ্টার মধ্যে আগে রান হলে should_run=false সেট করে বাকি সব জব গ্রেসফুলি স্কিপ করায়।
+  gatekeeper:
+    name: "\U0001F6A6 Check 24h Gap"
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check_gap.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Gap Check
+        id: check_gap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/enforce_24h_gap.py
+
   # এই জবটি শুধুমাত্র একবার রান হবে এবং সব downstream জব এটি ব্যবহার করবে।
   setup:
+    needs: gatekeeper
+    if: needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
     outputs:
       requirements-cache-key: ${{ steps.cache-key.outputs.key }}
@@ -219,51 +236,21 @@ jobs:
           pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
           poetry install --no-root
 
-      - name: 🤖 Generate AI Architecture Docs (ADR, DFD, OpenAPI)
-        env:
-          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          # বাংলা মন্তব্য: প্রোডাকশন-রেডি সিকিউরিটি মোডে Settings ইনিশিয়ালাইজ করার সময় ভ্যালিডেশন এরর এড়াতে এটি ইনজেক্ট করা হয়েছে
-          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY || 'sk_test_dummy' }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || 'whsec_dummy' }}
-          DOCS_PASSWORD: ${{ secrets.DOCS_PASSWORD || 'dummy_docs_password' }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'sk-or-v1-dummy' }}
-          CI_WEBHOOK_SECRET: ${{ secrets.CI_WEBHOOK_SECRET || 'dummy_ci_secret' }}
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY || '9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_RqaVwno=' }}
+      - name: 📄 Generate API Documentation (OpenAPI)
+        # বাংলা মন্তব্য: AI/LLM কল বাদ দেওয়া হয়েছে। শুধুমাত্র Swagger/OpenAPI জেনারেট হবে।
+        # এতে GEMINI_API_KEY, OPENROUTER_API_KEY সহ অনেক সিক্রেট এক্সপোজ হওয়ার ঝুঁকি কমে গেছে
+        # এবং রান টাইম কয়েক মিনিট থেকে কমে কয়েক সেকেন্ডে নেমে আসবে।
         run: |
           VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
           $VENV_PYTHON scripts/generate_openapi.py
-          $VENV_PYTHON scripts/auto_generate_architecture_docs.py
-          $VENV_PYTHON scripts/generate_push_summary.py
 
-      - name: Generate Smart Docs & Dashboard
-        run: |
-          VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
-          $VENV_PYTHON scripts/generate_smart_docs.py
-
-      - name: 🤖 Generate AI Codebase Prompts
-        run: |
-          VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
-          $VENV_PYTHON scripts/generate_ai_codebase_docs.py
-
-      - name: 🚨 Generate System Incident Report from Logs
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: |
-          VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
-          $VENV_PYTHON scripts/generate_incident_report.py
-
-      - name: 📦 Commit and Push Generated Docs
+      - name: 📦 Commit and Push OpenAPI Spec
         id: push_docs
         run: |
           git config --global user.name "SupremeAI-DocBot"
           git config --global user.email "docbot@supremeai.dev"
-          git add -f docs/autogen/ || true
-          git add -f ADR-*.md || true
-          git add -f DIAGRAM-*.md || true
-          git add -f THREAT-MODEL-*.md || true
           git add -f backend/API-swagger.yaml || true
-          git diff-index --quiet HEAD || (git commit -m "docs: [auto-docs] Automated ADR, Codebase Docs & Dashboard [skip ci]" && git push) || echo "No changes to commit"
+          git diff-index --quiet HEAD || (git commit -m "docs: auto-update API-swagger.yaml [skip ci]" && git push) || echo "No changes to commit"
 
       - name: 📦 Setup Node.js and pnpm for Docusaurus
         uses: pnpm/action-setup@v3
@@ -356,10 +343,13 @@ jobs:
           path: docs/autogen/db_schema.png
 
 
+
   performance-e2e-test:
     name: 🧪 Human Simulation & Load Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.run_performance_e2e == 'true' }}
+    needs: gatekeeper
+    # বাংলা মন্তব্য: gatekeeper should_run চেক করে — শুধু manual রানেই চলবে
+    if: (needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule') && github.event.inputs.run_performance_e2e == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
@@ -457,10 +447,11 @@ jobs:
   ci-failure-smart-summary:
     name: 🧠 Smart CI Failure Summary
     runs-on: ubuntu-latest
-    # বাংলা মন্তব্য: scheduled রানে সবসময় চলবে; manual রানে শুধু যখন input true
+    needs: gatekeeper
+    # বাংলা মন্তব্য: gatekeeper should_run চেক করে scheduled রানে গ্রেসফুল স্কিপ নিশ্চিত করে
     if: >
-      github.event_name == 'schedule' ||
-      github.event.inputs.run_ci_failure_summary == 'true'
+      (needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule') &&
+      (github.event_name == 'schedule' || github.event.inputs.run_ci_failure_summary == 'true')
     permissions:
       actions: read
       contents: read
@@ -489,7 +480,9 @@ jobs:
   outdated-dependency-report:
     name: 📦 Outdated Dependency Report
     runs-on: ubuntu-latest
-    if: github.event.inputs.run_outdated_report == 'true'
+    needs: gatekeeper
+    # বাংলা মন্তব্য: gatekeeper should_run চেক করে scheduled রানে গ্রেসফুল স্কিপ নিশ্চিত করে
+    if: (needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule') && github.event.inputs.run_outdated_report == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -541,8 +534,8 @@ jobs:
   auto-dependency-upgrade:
     name: "📦 Auto Dependency Upgrade (PR)"
     runs-on: ubuntu-latest
-    needs: outdated-dependency-report
-    if: github.event.inputs.run_auto_dependency_upgrade == 'true'
+    needs: [gatekeeper, outdated-dependency-report]
+    if: (needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule') && github.event.inputs.run_auto_dependency_upgrade == 'true'
     permissions:
       contents: write
       pull-requests: write
@@ -586,7 +579,9 @@ jobs:
   changelog-generator:
     name: 📝 Changelog Generator (Auto PR)
     runs-on: ubuntu-latest
-    if: github.event.inputs.run_changelog_generator == 'true'
+    needs: gatekeeper
+    # বাংলা মন্তব্য: gatekeeper should_run চেক করে scheduled রানে গ্রেসফুল স্কিপ নিশ্চিত করে
+    if: (needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule') && github.event.inputs.run_changelog_generator == 'true'
     permissions:
       contents: write
       pull-requests: write
@@ -682,7 +677,9 @@ jobs:
   cache-purge:
     name: 🗑️ Purge Redis Cache (Upstash)
     runs-on: ubuntu-latest
-    if: github.event.inputs.run_cache_purge == 'true'
+    needs: gatekeeper
+    # বাংলা মন্তব্য: gatekeeper should_run চেক করে scheduled রানে গ্রেসফুল স্কিপ নিশ্চিত করে
+    if: (needs.gatekeeper.outputs.should_run == 'true' || github.event_name != 'schedule') && github.event.inputs.run_cache_purge == 'true'
     steps:
       - name: 🗑️ Flush Upstash Redis Cache
         # বাংলা মন্তব্য: Upstash Redis REST API দিয়ে সব stale cache key পরিষ্কার করা হচ্ছে
