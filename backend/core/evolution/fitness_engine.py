@@ -63,7 +63,7 @@ class FitnessEngine:
             if self.db is not None:
                 try:
                     self.db.collection("system_metrics").document("fitness_metrics").set({"metrics": self.metrics})
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.warning(f"Failed to sync fitness metrics to DB: {e}")
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to save fitness metrics: {e}")
