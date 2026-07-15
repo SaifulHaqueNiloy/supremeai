@@ -1,34 +1,43 @@
-import contextlib
-import time
+"""API Key Authentication Middleware.
 
-from fastapi import HTTPException
-from fastapi import Request
+বাংলা: API কী অথেনটিকেশন মিডলওয়্যার — রেট লিমিটিং, রিভোকেশন চেক, এক্সপায়ারি ভ্যালিডেশন।
+"""
+from __future__ import annotations
+
+import time
+from typing import Any
+
+from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.pgbouncer_pool import get_db_pool
 from core.rate_limiter import AsyncRateLimiter
-from core.security import API_KEY_PREFIX
-from core.security import hash_api_key
-from core.security import mask_api_key
+from core.security import API_KEY_PREFIX, hash_api_key, mask_api_key
 from models.api_key import record_api_key_usage
-
-# শেয়ার্ড ইউটিলিটি — টেস্ট এনভায়রনমেন্ট চেক কেন্দ্রীভূত
 from utils.environment import is_test_environment
 
 
 class APIKeyAuthMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app) -> None:
+    """Validates API keys from the x-api-key header.
+
+    Skips validation if:
+    - No x-api-key header present
+    - Key doesn't start with expected prefix
+    - Running in test environment
+    """
+
+    def __init__(self, app: Any) -> None:  # noqa: ANN401
         super().__init__(app)
         self.limiter = AsyncRateLimiter()
         self.prefix = API_KEY_PREFIX
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Any) -> JSONResponse:  # noqa: ANN401
         api_key_header = request.headers.get("x-api-key")
         if not api_key_header or not api_key_header.startswith(self.prefix):
             return await call_next(request)
 
-        # রিফ্যাক্টর: লোকাল is_test চেকের বদলে শেয়ার্ড ইউটিলিটি ব্যবহার
         if is_test_environment():
             request.state.api_key = {
                 "id": "test",
@@ -39,27 +48,38 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         pool = await get_db_pool()
         key_hash = hash_api_key(api_key_header)
 
-        row = await pool.fetchrow(
-            "SELECT id, key_hash, revoked, rate_limit_rps, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
-            key_hash,
-        )
+        try:
+            row = await pool.fetchrow(
+                "SELECT id, key_hash, revoked, rate_limit_rps, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
+                key_hash,
+            )
+        except ConnectionError as exc:
+            logger.error(f"DB connection failed during API key lookup: {exc}")
+            raise HTTPException(status_code=503, detail="Authentication service unavailable") from exc
+
         if not row:
+            logger.warning(f"Invalid API key attempt: {mask_api_key(api_key_header)}")
             raise HTTPException(status_code=401, detail="Invalid API key")
         if row["revoked"]:
+            logger.warning(f"Revoked API key used: {row['id']}")
             raise HTTPException(status_code=403, detail="API key has been revoked")
         if row["expires_at"] and row["expires_at"] < int(time.time()):
+            logger.warning(f"Expired API key used: {row['id']}")
             raise HTTPException(status_code=403, detail="API key has expired")
 
-        rps = row.get("rate_limit_rps") or 6
+        rps = int(row.get("rate_limit_rps") or 6)
         key_prefix = api_key_header[:12]
         if not self.limiter.is_allowed(key_prefix, rps=rps):
+            logger.warning(f"Rate limit hit for API key: {row['id']}")
             raise HTTPException(status_code=429, detail="API key rate limit exceeded")
 
         request.state.api_key = {
             "id": row["id"],
             "masked": mask_api_key(api_key_header),
         }
-        with contextlib.suppress(Exception):
+
+        # Non-critical: usage tracking failure should not block the request
+        try:
             await record_api_key_usage(
                 key_id=row["id"],
                 endpoint=request.url.path,
@@ -67,5 +87,8 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                 latency_ms=0.0,
                 ip_address=str(request.client.host) if request.client else None,
             )
+        except Exception:  # noqa: BLE001
+            logger.opt(exception=True).warning(f"Failed to record API key usage for {row['id']}")
+
         logger.info(f"API key authenticated: {request.state.api_key['masked']}")
         return await call_next(request)

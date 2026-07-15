@@ -702,4 +702,22 @@ class SupabaseDB:
             return []
 
 
+    # বাংলা মন্তব্য: 'a' দিয়ে শুরু হওয়া মেথডগুলোকে থ্রেডপুলে রান করানোর জন্য ডায়নামিক এসিঙ্ক প্রক্সি মেথড।
+    # এটি ইভেন্ট লুপকে ব্লক হওয়া থেকে বাঁচাবে।
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("a") and hasattr(self, name[1:]):
+            sync_attr = getattr(self, name[1:])
+            if callable(sync_attr):
+                import asyncio
+                from functools import partial
+
+                async def async_wrapper(*args, **kwargs):
+                    loop = asyncio.get_running_loop()
+                    func = partial(sync_attr, *args, **kwargs)
+                    return await loop.run_in_executor(None, func)
+
+                return async_wrapper
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+
 db = SupabaseDB()

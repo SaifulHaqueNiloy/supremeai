@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from unittest.mock import MagicMock
+import pytest
 
 from core.evolution.evolution_engine import EvolutionEngine
 
@@ -16,33 +17,39 @@ def _make_engine(monkeypatch=None):
     return engine, db_path, tmpdir
 
 
-def test_run_daily_evolution_empty_history(monkeypatch):
+@pytest.mark.anyio
+async def test_run_daily_evolution_empty_history(monkeypatch):
     engine, _, _ = _make_engine(monkeypatch)
-    report = engine.run_daily_evolution([])
+    # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await করা হলো।
+    report = await engine.run_daily_evolution([])
     assert report["total_tasks_processed"] == 0
     assert report["success_rate"] == 100.0
     assert report["repeated_failures"] == 0
     assert report["new_skills_proposed"] == []
 
 
-def test_run_daily_evolution_all_success(monkeypatch):
+@pytest.mark.anyio
+async def test_run_daily_evolution_all_success(monkeypatch):
     engine, _, _ = _make_engine(monkeypatch)
     history = [
         {"success": True, "task": "t1"},
         {"success": True, "task": "t2"},
         {"success": True, "task": "t3"},
     ]
-    report = engine.run_daily_evolution(history)
+    # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await করা হলো।
+    report = await engine.run_daily_evolution(history)
     assert report["total_tasks_processed"] == 3
     assert report["success_rate"] == 100.0
     assert report["repeated_failures"] == 0
 
 
-def test_run_daily_evolution_all_failure_triggers_repeated_failures(monkeypatch):
+@pytest.mark.anyio
+async def test_run_daily_evolution_all_failure_triggers_repeated_failures(monkeypatch):
     engine, _, _ = _make_engine(monkeypatch)
     for _ in range(5):
         engine.learn_from_failure("flaky_task", "approach_a", "timeout")
-    report = engine.run_daily_evolution([])
+    # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await করা হলো।
+    report = await engine.run_daily_evolution([])
     assert report["repeated_failures"] >= 1
 
 

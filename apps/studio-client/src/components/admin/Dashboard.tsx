@@ -1,6 +1,6 @@
 import React from 'react';
-import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, X, DollarSign, Database, GitBranch, ShieldAlert, Sparkles, RefreshCw, Layout } from 'lucide-react';
-import ReactFlow, { Background, Controls, useNodesState, useEdgesState, Panel } from 'reactflow';
+import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, X, DollarSign, Database, GitBranch, Sparkles, RefreshCw, Layout } from 'lucide-react';
+import ReactFlow, { Background, Controls, useNodesState, useEdgesState } from 'reactflow';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'reactflow/dist/style.css';
 import './AethelCoreStyles.css';
@@ -11,16 +11,18 @@ import DeploymentModal from './DeploymentModal';
 import { DynamicPanel } from './DynamicPanel';
 
 /**
- * 🎨 SupremeAI 2.0 - Dashboard Redesign Mockup (Deep Tactical Grid Theme & Executive Command Bridge Mode Toggle)
+ * 🎨 SupremeAI 2.0 - Admin Dashboard Component
  * Real-time API Integration + Premium Sci-Fi Aesthetics & Simple Friendly Mode
+ *
+ * বাংলা মন্তব্য: পুরোনো RedesignedDashboardMockup পরিবর্তন করে Dashboard হিসেবে নামকরণ করা হলো।
  */
 
-const RedesignedDashboardMockup: React.FC = () => {
+const Dashboard: React.FC = () => {
   const activePanel = useDashboardStore((s) => s.activePanel);
   const setActivePanel = useDashboardStore((s) => s.setActivePanel);
   const setDeploymentModal = useDashboardStore((s) => s.setDeploymentModal);
   const updateSystemStatus = useDashboardStore((s) => s.updateSystemStatus);
-  
+
   // বাংলা মন্তব্য: স্টোর থেকে ড্যাশবোর্ড মোড ও টগল ফাংশন নিয়ে আসা হলো
   const dashboardMode = useDashboardStore((s) => s.dashboardMode);
   const toggleDashboardMode = useDashboardStore((s) => s.toggleDashboardMode);
@@ -159,13 +161,13 @@ const RedesignedDashboardMockup: React.FC = () => {
       <HealthBanner />
       <DeploymentModal />
       <DynamicPanel />
-      
+
       {isSimple ? (
         // ==========================================
         // 🌟 SIMPLE MODE (User-Friendly Cockpit View)
         // ==========================================
         <div className="w-full h-screen bg-slate-50 text-slate-800 relative overflow-y-auto font-sans p-6 transition-colors duration-500">
-          
+
           {/* Header */}
           <div className="flex justify-between items-center border-b border-slate-200 pb-5 mb-6">
             <div>
@@ -177,7 +179,7 @@ const RedesignedDashboardMockup: React.FC = () => {
                 সিস্টেমের গতিবিধি পর্যবেক্ষণ ও সাধারণ ইউজারদের জন্য সহজ ড্যাশবোর্ড ইন্টারফেস।
               </p>
             </div>
-            
+
             {/* Mode Switcher */}
             <button
               onClick={toggleDashboardMode}
@@ -233,7 +235,7 @@ const RedesignedDashboardMockup: React.FC = () => {
 
           {/* Split Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
+
             {/* Activity Feed */}
             <div className="lg:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
               <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -272,7 +274,7 @@ const RedesignedDashboardMockup: React.FC = () => {
               <div>
                 <h2 className="text-sm font-bold text-slate-900 mb-2">Smart Actions Center</h2>
                 <p className="text-[11px] text-slate-400 mb-6">জটিল ব্যাকএন্ড কমান্ড সরাসরি ওয়ান-ক্লিকে রান করুন।</p>
-                
+
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={runSmartOptimization}
@@ -286,7 +288,7 @@ const RedesignedDashboardMockup: React.FC = () => {
                     {isOptimizing ? (
                       <RefreshCw size={14} className="text-indigo-600 animate-spin" />
                     ) : (
-                      <span className="text-xs text-indigo-600 font-bold">রান করুন →</span>
+                      <span className="text-xs text-indigo-600 font-bold">রানিং করুন →</span>
                     )}
                   </button>
 
@@ -336,7 +338,7 @@ const RedesignedDashboardMockup: React.FC = () => {
                   <p className="text-xs text-slate-400 font-mono">কোনো রিপোর্ট পাওয়া যায়নি।</p>
                 )}
               </div>
-              
+
               {/* Report Viewer */}
               <div className="md:col-span-3 pl-2">
                 {selectedReportName ? (
@@ -344,7 +346,7 @@ const RedesignedDashboardMockup: React.FC = () => {
                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 max-h-[300px] overflow-y-auto">
                       <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
                         <span className="text-xs font-bold text-slate-800">{activeReport.name}</span>
-                        <button 
+                        <button
                           onClick={() => setSelectedReportName(undefined)}
                           className="text-[10px] text-slate-400 hover:text-slate-600 font-bold"
                         >
@@ -402,7 +404,7 @@ const RedesignedDashboardMockup: React.FC = () => {
             <Controls className="sci-fi-glass fill-[#00f3ff] text-[#00f3ff] border-[#00f3ff]" />
           </ReactFlow>
 
-          {/* --- Floating Compact Java Worker Widget (Upgraded) --- */}
+          {/* --- Floating Compact Java Worker Widget --- */}
           <div className="absolute top-6 left-6 w-80 sci-fi-glass p-5 shadow-2xl flex flex-col gap-4 border border-[#00f3ff]/30 z-[100]">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[rgba(0,243,255,0.2)] pb-3">
@@ -472,5 +474,4 @@ const RedesignedDashboardMockup: React.FC = () => {
   );
 };
 
-export default RedesignedDashboardMockup;
-
+export default Dashboard;

@@ -175,6 +175,8 @@ class MultiAccountRotator:
                     return data
 
                 await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Firestore check failed, falling back to SQLite: {e}")
 
@@ -209,6 +211,8 @@ class MultiAccountRotator:
                             return data
                     conn.close()
                 await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"SQLite fallback check failed: {e}")
 
@@ -349,6 +353,8 @@ class MultiAccountRotator:
                 else:
                     logger.error(f"[SUPREME-AI] No verification data received for {new_email} within timeout.")
                     return False
+            except asyncio.CancelledError:
+                raise
             except Exception as e:  # noqa: BLE001
                 logger.error(f"[SUPREME-AI] Playwright automation failed for {provider_name}: {e}")
                 return False
@@ -363,6 +369,8 @@ class MultiAccountRotator:
                 with open(self.config_file) as f:
                     config = json.load(f)
                     self._load_providers_from_config(config)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to load config: {e}")
                 self._create_default_config()
@@ -545,11 +553,15 @@ class MultiAccountRotator:
                             api_key = raw.strip()
                             logger.info(f"[ROTATOR] Extracted API key for {provider_name} (length: {len(api_key)}) from selector '{selector}'")
                             return api_key
+                except asyncio.CancelledError:
+                    raise
                 except Exception:  # noqa: BLE001
                     continue
 
             logger.warning(f"[ROTATOR] Could not extract API key for {provider_name} from dashboard. Admin must add it manually.")
             return None
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:  # noqa: BLE001
             logger.warning(f"[ROTATOR] API key extraction failed for {provider_name}: {exc}")
             return None
@@ -698,6 +710,8 @@ class MultiAccountRotator:
                 "tokens_used": len(prompt.split()) * 1.5,  # Rough estimate
             }
 
+        except asyncio.CancelledError:
+            raise
         except Exception as e:  # noqa: BLE001
             # Record failed request
             account.record_request(success=False)
@@ -707,21 +721,37 @@ class MultiAccountRotator:
             return await self._failover_execute(task_type, prompt, **kwargs)
 
     async def _call_api(self, provider: Provider, account: Account, prompt: str, **kwargs) -> str:
-        """Make actual provider API execution using their SDKs or HTTP client"""
-        # This would contain the actual API integration code
-        # For now, return a validated mock response string
+        """
+        বাংলা মন্তব্য: আসল প্রোভাইডার API কল এখন কেন্দ্রীয় LLMGateway দিয়ে সম্পন্ন করা হচ্ছে।
+        অ্যাকাউন্টের API কী ডাইনামিকালি ইনজেক্ট করা হয়।
+        """
+        # বাংলা মন্তব্য: CancelledError রেইজ করার স্ট্যান্ডার্ড বজায় রাখা হচ্ছে।
+        try:
+            from core.llm.llm_gateway import get_llm_gateway
+            gateway = get_llm_gateway()
 
-        await asyncio.sleep(0.01)  # Simulate API latency
+            # বাংলা মন্তব্য: প্রোভাইডারের প্রথম এভেইলেবল মডেলটি নেওয়া হচ্ছে যদি না kwargs-এ সুনির্দিষ্ট মডেল দেওয়া থাকে।
+            model = kwargs.get("model") or (provider.models[0] if provider.models else None)
+            if not model:
+                raise ValueError(f"Provider '{provider.name}'-এর জন্য কোনো মডেল নির্ধারিত নেই।")
 
-        # Generate response template based on provider metadata
-        if provider.name == "deepseek":
-            return f"DeepSeek analysis: {prompt[:50]}..."
-        elif provider.name == "groq":
-            return f"Groq response: {prompt[:50]}..."
-        elif provider.name == "google_ai_studio":
-            return f"Gemini response: {prompt[:50]}..."
-        else:
-            return f"Execution result from provider {provider.name} for prompt: {prompt[:50]} [verified]"
+            # বাংলা মন্তব্য: litellm গেটওয়ের acompletion কল করা হচ্ছে এবং rotator থেকে এপিআই কী পাস হচ্ছে।
+            response = await gateway.acompletion(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                api_key=account.api_key,
+                **kwargs
+            )
+
+            if isinstance(response, dict) and response.get("success"):
+                return response.get("text") or ""
+            return str(response)
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"[ROTATOR] LLM Gateway API call failed: {e}")
+            raise
 
     async def _failover_execute(self, task_type: TaskType, prompt: str, **kwargs) -> dict | None:
         """Execute task with failover logic"""
@@ -749,6 +779,8 @@ class MultiAccountRotator:
                     "model": kwargs.get("model", provider.models[0]),
                 }
 
+            except asyncio.CancelledError:
+                raise
             except Exception as e:  # noqa: BLE001
                 account.record_request(success=False)
                 logger.warning(f"Failover attempt failed for {provider.name}: {e}")
@@ -805,10 +837,12 @@ def get_rotator():
 
 async def main():
     """Example usage"""
+    # বাংলা মন্তব্য: গ্লোবাল রেফারেন্স সরাসরি ব্যবহারের বদলে get_rotator() দিয়ে শুরু করা হলো।
+    rotator = get_rotator()
     # Add some test accounts
-    rotator.add_account("groq", "test1@supremeai.com", "gsk_test_key_1")
-    rotator.add_account("groq", "test2@supremeai.com", "gsk_test_key_2")
-    rotator.add_account("deepseek", "test3@supremeai.com", "ds_test_key_1")
+    rotator.add_account("groq", "test1@supremeai.com", os.getenv("TEST_GROQ_KEY_1", "gsk_test_key_1"))
+    rotator.add_account("groq", "test2@supremeai.com", os.getenv("TEST_GROQ_KEY_2", "gsk_test_key_2"))
+    rotator.add_account("deepseek", "test3@supremeai.com", os.getenv("TEST_DEEPSEEK_KEY_1", "ds_test_key_1"))
 
     # Execute some test tasks
     tasks = [

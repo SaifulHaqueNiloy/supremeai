@@ -142,6 +142,10 @@ class MorphicOrchestrator:
                 workspace.work_product["available_tools"].append(new_tool)
 
         # 3. Get Dynamic DAG based on intent
+        return await self.run_dag_for_workspace(workspace, user_id)
+
+    # বাংলা মন্তব্য: ওয়ার্কস্পেসের ইনটেন্ট অনুযায়ী DAG চালনার জন্য এই পাবলিক মেথড তৈরি করা হলো।
+    async def run_dag_for_workspace(self, workspace: SharedWorkspace, user_id: str = "default_user_session") -> SharedWorkspace:
         task_graph = await self._get_dag_for_intent(workspace.intent)
         workspace.log(f"MorphicOrchestrator: Constructed DAG with nodes: {list(task_graph.keys())}")
 
@@ -167,7 +171,7 @@ class MorphicOrchestrator:
                 coros = [self.agents[task].run(workspace, user_id) for task in runnable]
                 results = await asyncio.gather(*coros, return_exceptions=True)
 
-                failures = [(task, r) for task, r in zip(runnable, results) if isinstance(r, Exception)]
+                failures = [(task, r) for task, r in zip(runnable, results, strict=False) if isinstance(r, Exception)]
                 if failures:
                     failed_names = ", ".join(f"{t}: {e}" for t, e in failures)
                     raise RuntimeError(f"MorphicOrchestrator: task(s) failed in this batch — {failed_names}")
@@ -207,12 +211,12 @@ class MorphicOrchestrator:
                 "user_id": user_id,
                 "intent": workspace.intent,
             }
+            best_provider = workspace.work_product.get("best_provider")
             if best_provider:
                 attributes["provider"] = best_provider
 
-            with trace_span("morphic_orchestrator.execute_task", attributes=attributes):
+            with trace_span("morphic_orchestrator.run_dag_for_workspace", attributes=attributes):
                 await self.circuit_breaker.call(_execute_dag)
-            # Duplicate log removed here
 
         except Exception as e:  # noqa: BLE001
             # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে।
@@ -226,7 +230,7 @@ class MorphicOrchestrator:
             workspace.log(f"MorphicOrchestrator: An unexpected error occurred during DAG execution: {e}")
             workspace.add_error(str(e))
             # বাংলা মন্তব্য: এরর হলেও রিফ্লেকশন চালানোর চেষ্টা করা হবে, যাতে সিস্টেম শিখতে পারে।
-            if "reflection" not in completed_tasks:
+            if "reflection" not in completed_tasks and "reflection" in self.agents:
                 await self.agents["reflection"].reflect_and_persist(workspace, user_id)
             return workspace
 

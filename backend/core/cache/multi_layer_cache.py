@@ -9,7 +9,9 @@ The system prioritizes cache hits across layers before falling back to AI model
 
 """
 
+import asyncio
 import hashlib
+import json
 import threading
 from typing import Any
 
@@ -19,8 +21,7 @@ from loguru import logger
 from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
 from core.swarm_pubsub import swarm_streamer
-import json
-import asyncio
+
 
 # বাংলা মন্তব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
 # Redis client এখন lazy function-level এ initialize হবে।
@@ -52,6 +53,14 @@ class _InMemoryRedisStub:
 
     async def setex(self, key: str, ttl: int, value: str):
         self._store[key] = value
+
+    async def mget(self, keys: list[str]) -> list[str | None]:
+        # বাংলা মন্তব্য: ব্যাচ রিড সাপোর্ট করার জন্য স্টাব ক্লাসে mget মেথড যোগ করা হলো।
+        return [self._store.get(k) for k in keys]
+
+
+# বাংলা মন্তব্য: প্রিফিক্স ল্যাটেরাল রাউন্ড-ট্রিপ ক্যাপ করার কনস্ট্যান্ট।
+_MAX_PREFIX_CANDIDATES = 8
 
 
 class MultiLayerCache:
@@ -119,16 +128,26 @@ class MultiLayerCache:
             error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_READ_FAILED", message=str(e)[:200], severity="WARNING"))
 
         try:
-            # Layer 3: Prefix Cache (Redis)
+            # Layer 3: Prefix Cache (Redis) — এখন একটাই batched round-trip
             prefix_cache = self._get_prefix_cache()
             words = prompt.split()
-            for i in range(len(words) - 1, 0, -1):
+            # বাংলা মন্তব্য: O(n) রাউন্ড-ট্রিপ এড়াতে এবং দীর্ঘতম প্রিফিক্সে অগ্রাধিকার দিতে ক্যান্ডিডেট সংখ্যা ক্যাপ করা হলো।
+            candidate_lengths = sorted(
+                {max(1, len(words) - step) for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))},
+                reverse=True,
+            )
+            prefix_keys = []
+            for i in candidate_lengths:
                 prefix = " ".join(words[:i])
-                prefix_cache_key = f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
-                cached_response = await prefix_cache.get(prefix_cache_key)
-                if cached_response:
-                    logger.info("✅ L3 CACHE HIT: Prefix Match")
-                    return {"response": cached_response, "source": "L3_PREFIX_CACHE", "latency_ms": 10}
+                prefix_keys.append(f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}")
+
+            if prefix_keys:
+                # বাংলা মন্তব্য: mget দিয়ে সম্পূর্ণ প্রিফিক্স ক্যান্ডিডেটগুলোর ডাটা একটাই নেটওয়ার্ক রাউন্ড-ট্রিপে আনা হচ্ছে।
+                results = await prefix_cache.mget(prefix_keys)
+                for cached_response in results:
+                    if cached_response:
+                        logger.info("✅ L3 CACHE HIT: Prefix Match")
+                        return {"response": cached_response, "source": "L3_PREFIX_CACHE", "latency_ms": 10}
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001
@@ -172,10 +191,24 @@ class MultiLayerCache:
         try:
             prefix_cache = self._get_prefix_cache()
             words = prompt.split()
-            for i in range(1, len(words) + 1):
-                prefix = " ".join(words[:i])
-                prefix_cache_key = f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
-                await prefix_cache.setex(prefix_cache_key, 1800, response)
+            # বাংলা মন্তব্য: O(n) রাইট এড়াতে এবং স্টোরেজ অপটিমাইজেশনের জন্য প্রিফিক্স ক্যান্ডিডেট ক্যাপ করা হচ্ছে।
+            candidate_lengths = sorted(
+                {max(1, len(words) - step) for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))},
+                reverse=True,
+            )
+            # pipelined write if pipeline method exists
+            if hasattr(prefix_cache, "pipeline"):
+                async with prefix_cache.pipeline(transaction=False) as pipe:
+                    for i in candidate_lengths:
+                        prefix = " ".join(words[:i])
+                        prefix_cache_key = f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
+                        pipe.setex(prefix_cache_key, 1800, response)
+                    await pipe.execute()
+            else:
+                for i in candidate_lengths:
+                    prefix = " ".join(words[:i])
+                    prefix_cache_key = f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
+                    await prefix_cache.setex(prefix_cache_key, 1800, response)
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001
@@ -208,9 +241,6 @@ def _set_session_cache(session_id: str, prompt: str, response: str) -> None:
         _session_cache[_session_key(session_id, prompt)] = response
 
 
-import asyncio  # noqa: E402 — asyncio must be available for CancelledError
-
-
 def _cache_invalidation_listener(event: ErrorEvent) -> None:
     """বাংলা মন্তব্য: Event-Sourced Cache Invalidation
     ErrorEventBus থেকে ইভেন্ট রিসিভ করে ক্যাশ ক্লিয়ার করে।
@@ -222,7 +252,7 @@ def _cache_invalidation_listener(event: ErrorEvent) -> None:
         with _session_lock:
             if tenant_id:
                 # Filter and clear only keys associated with this tenant
-                keys_to_delete = [k for k in _session_cache.keys() if tenant_id in str(k)]
+                keys_to_delete = [k for k in _session_cache if tenant_id in str(k)]
                 for k in keys_to_delete:
                     del _session_cache[k]
                 logger.info(
@@ -258,7 +288,7 @@ async def start_swarm_cache_invalidator():
 
                     with _session_lock:
                         if tenant_id:
-                            keys_to_delete = [k for k in _session_cache.keys() if tenant_id in str(k)]
+                            keys_to_delete = [k for k in _session_cache if tenant_id in str(k)]
                             for k in keys_to_delete:
                                 del _session_cache[k]
                             logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event_type}.")
@@ -267,11 +297,11 @@ async def start_swarm_cache_invalidator():
                             logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared entire session cache due to {event_type}.")
             except json.JSONDecodeError:
                 pass
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Error in swarm cache invalidator processing: {e}")
     except asyncio.CancelledError:
         logger.info("Swarm cache invalidator task cancelled.")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Swarm cache invalidator crashed: {e}")
 
 # Global instance — lazy init, no network on import

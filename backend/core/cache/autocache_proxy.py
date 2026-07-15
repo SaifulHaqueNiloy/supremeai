@@ -32,7 +32,9 @@ class AutocacheProxy:
 
     def __init__(self, cache: SemanticCache):
         self.cache = cache
-        self.request_history = {}
+        # বাংলা মন্তব্য: মেমরি লিক এড়াতে plain dict-এর বদলে maxsize=5000 এবং ttl=3600 সেকেন্ডের TTLCache ব্যবহার করা হলো।
+        from cachetools import TTLCache
+        self.request_history = TTLCache(maxsize=5000, ttl=3600)
         self.cost_metrics = {"total_requests": 0, "cached_hits": 0, "total_cost_saved": 0.0, "dedup_requests": 0}
         self.vendor_costs = {
             "openai/gpt-4o": {"input": 0.005, "output": 0.015},
@@ -49,6 +51,17 @@ class AutocacheProxy:
 
     def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
         """API কল খরচ ক্যালকুলেট করুন"""
+        # বাংলা মন্তব্য: ডাটাবেস-ড্রিভেন লজিক ডিজাইন প্রিন্সিপাল অনুযায়ী config_cache থেকে কস্ট নেওয়ার চেষ্টা করা হচ্ছে।
+        from core.config_cache import config_cache
+
+        # মডেলের নাম ফিল্টার করে কী নেম স্পেস জেনারেট করা হচ্ছে (e.g. vendor_cost_openai_gpt_4o_input)
+        model_key = model.replace("/", "_").replace("-", "_").replace(".", "_")
+        input_cost = config_cache.get(f"vendor_cost_{model_key}_input")
+        output_cost = config_cache.get(f"vendor_cost_{model_key}_output")
+
+        if input_cost is not None and output_cost is not None:
+            return (input_tokens * float(input_cost)) + (output_tokens * float(output_cost))
+
         if model not in self.vendor_costs:
             logger.warning(f"Unknown model: {model}, assuming free tier")
             return 0.0

@@ -1,23 +1,33 @@
-# বাংলা মন্তব্য: Anthropic Constitutional AI প্যাটার্ন ইমপ্লিমেন্টেশন।
-# মডেলের রেসপন্স ইউজারের কাছে পাঠানোর আগে এটি নির্দিষ্ট কিছু প্রিন্সিপল অনুযায়ী যাচাই করবে।
-# tests-এর জন্য pre_flight_scan এবং classify_intent helper functions যোগ করা হলো।
+"""Prompt Firewall — Constitutional AI + Local Pattern Blocking.
+
+বাংলা: প্রম্পট ফায়ারওয়াল — কনস্টিটিউশনাল AI + লোকাল প্যাটার্ন ব্লকিং।
+Anthropic Constitutional AI pattern implementation.
+Validates model responses against constitutional principles before sending to user.
+
+Key Features:
+- Local heuristic pattern matching (LLM-free fast path)
+- Constitutional AI critique-revision cycle
+- Bengali native enforcement rules
+- Intent classification (keyword-based)
+"""
+from __future__ import annotations
 
 import re
 from typing import Any
 
 from loguru import logger
 
+from core.config import settings
 from core.llm.llm_gateway import GatewayManager
 
 
-CONSTITUTIONAL_PRINCIPLES = [
+CONSTITUTIONAL_PRINCIPLES: list[str] = [
     "Avoid generating harmful or dangerous content",
     "Do not assist with illegal activities",
     "Protect user privacy and do not leak PII",
     "Be honest about AI limitations and do not hallucinate facts",
 ]
 
-# বাংলা মন্তব্য: Local pattern matching — LLM call ছাড়াই দ্রুত obvious threats block করা
 _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
     "prompt_injection": [
         "disregard previous instructions",
@@ -43,35 +53,48 @@ _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
     ],
 }
 
-# বাংলা মন্তব্য: BENGALI NATIVE ENFORCEMENT RULES — PromptFirewall enforce করে যে
-# Agent সবসময় Bangla-aware এবং helpful response দেবে।
-_BENGALI_ENFORCEMENT_HEADER = """BENGALI NATIVE ENFORCEMENT RULES:
-- Always respond in Bangla (বাংলা) when the user writes in Bangla.
-- Be culturally sensitive and respectful to Bangladeshi users.
-- Prioritize clarity and helpfulness over formality.
-"""
+_BENGALI_ENFORCEMENT_HEADER: str = (
+    "BENGALI NATIVE ENFORCEMENT RULES:\n"
+    "- Always respond in Bangla (বাংলা) when the user writes in Bangla.\n"
+    "- Be culturally sensitive and respectful to Bangladeshi users.\n"
+    "- Prioritize clarity and helpfulness over formality.\n"
+)
 
 
 class PromptFirewall:
-    def __init__(self, gateway: GatewayManager = None):  # type: ignore[assignment]
+    """Validates prompts and responses against constitutional principles and local patterns.
+
+    বাংলা: সাংবিধানিক নীতি এবং স্থানীয় প্যাটার্নের বিরুদ্ধে প্রম্পট এবং প্রতিক্রিয়া বৈধতা দেয়।
+    """
+
+    def __init__(self, gateway: GatewayManager | None = None) -> None:
         self.gateway = gateway or GatewayManager()
-        self.cheap_model = "gemini/gemini-2.5-flash"  # Free tier for quick critique
+        # Model for quick critique — env-driven via settings
+        self.cheap_model: str = settings.claude_openrouter_model or "gemini/gemini-2.5-flash"
 
     def enforce_bengali_rules(self, system_prompt: str) -> str:
-        """বাংলা মন্তব্য: Bangla enforcement header inject করে যদি না থাকে।"""
+        """Inject Bengali enforcement header if not already present.
+
+        বাংলা: বাংলা এনফোর্সমেন্ট হেডার যোগ করে যদি না থাকে।
+        """
         if "BENGALI NATIVE ENFORCEMENT RULES" in system_prompt:
             return system_prompt
         return system_prompt + "\n" + _BENGALI_ENFORCEMENT_HEADER
 
     def validate_agent_response(self, response: str) -> bool:
-        """বাংলা মন্তব্য: Validate that a response is non-empty and contains Bangla text."""
+        """Validate that a response is non-empty and contains Bangla text.
+
+        বাংলা: রেসপন্স খালি নয় কিনা এবং বাংলা টেক্সট আছে কিনা চেক করে।
+        """
         if not response or not response.strip():
             return False
-        # Check for at least one Bengali character (Unicode range U+0980 - U+09FF)
         return bool(re.search(r"[\u0980-\u09FF]", response))
 
     def _check_local_patterns(self, text: str) -> str | None:
-        """বাংলা মন্তব্য: Local heuristic check — LLM-free fast path."""
+        """Local heuristic check — LLM-free fast path.
+
+        বাংলা: স্থানীয় হিউরিস্টিক চেক — LLM ছাড়া দ্রুত পাথ।
+        """
         lower = text.lower()
         for threat_type, patterns in _LOCAL_BLOCK_PATTERNS.items():
             for pattern in patterns:
@@ -80,11 +103,14 @@ class PromptFirewall:
         return None
 
     async def constitutional_filter(self, response_text: str) -> tuple[str, bool]:
+        """Anthropic Constitutional AI pattern with critique-revision cycle.
+
+        Returns:
+            Tuple of (filtered_response, was_revised).
+
+        বাংলা: কনস্টিটিউশনাল AI প্যাটার্ন — সমালোচনা-সংশোধন চক্র।
         """
-        Anthropic Constitutional AI pattern.
-        Returns: (filtered_response, was_revised)
-        """
-        # বাংলা মন্তব্য: Local check আগে — LLM call কম হবে
+        # Local check first — avoids LLM call for obvious violations
         local_threat = self._check_local_patterns(response_text)
         if local_threat:
             logger.warning(f"Local pattern blocked: {local_threat}")
@@ -93,7 +119,10 @@ class PromptFirewall:
         for principle in CONSTITUTIONAL_PRINCIPLES:
             try:
                 # 1. Critique phase
-                critique_prompt = f"Does the following response violate this principle: '{principle}'?\n\nResponse:\n{response_text}\n\nAnswer ONLY with 'YES' or 'NO'."
+                critique_prompt = (
+                    f"Does the following response violate this principle: '{principle}'?\n\n"
+                    f"Response:\n{response_text}\n\nAnswer ONLY with 'YES' or 'NO'."
+                )
                 critique_response = await self.gateway.acompletion(prompt=critique_prompt, model=self.cheap_model)
                 critique_text = critique_response.get("text", "").strip().upper()
 
@@ -101,24 +130,35 @@ class PromptFirewall:
                     logger.warning(f"Constitutional AI triggered on principle: '{principle}'")
 
                     # 2. Revision phase
-                    revision_prompt = f"The following response violates the principle: '{principle}'. Please revise it to be compliant while preserving the original intent.\n\nResponse:\n{response_text}"
+                    revision_prompt = (
+                        f"The following response violates the principle: '{principle}'. "
+                        f"Please revise it to be compliant while preserving the original intent.\n\n"
+                        f"Response:\n{response_text}"
+                    )
                     revised_response = await self.gateway.acompletion(prompt=revision_prompt, model=self.cheap_model)
                     return revised_response.get("text", response_text), True
 
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Error during constitutional filtering: {e}")
+            except (ConnectionError, TimeoutError) as exc:
+                logger.error(f"Network error during constitutional filtering for principle '{principle}': {exc}")
+                continue
+            except ValueError as exc:
+                logger.error(f"Invalid response from LLM during constitutional filtering for principle '{principle}': {exc}")
                 continue
 
         return response_text, False
 
 
-# বাংলা মন্তব্য: Singleton instance
+# Singleton instance
 firewall = PromptFirewall()
 
 
 async def pre_flight_scan(prompt: str) -> dict[str, Any]:
-    """বাংলা মন্তব্য: pre_flight_scan — prompt submit করার আগে quick local check।
-    Returns dict with 'allowed' and optional 'threat_type' keys.
+    """Quick local check before submitting prompt to LLM.
+
+    বাংলা: LLM-এ প্রম্পট সাবমিট করার আগে দ্রুত স্থানীয় চেক।
+
+    Returns:
+        dict with 'allowed' and optional 'threat_type' keys.
     """
     threat = firewall._check_local_patterns(prompt)
     if threat:
@@ -127,8 +167,9 @@ async def pre_flight_scan(prompt: str) -> dict[str, Any]:
 
 
 async def classify_intent(prompt: str) -> dict[str, Any]:
-    """বাংলা মন্তব্য: classify_intent — prompt-এর intent classify করে।
-    Lightweight keyword-based classification without LLM call.
+    """Keyword-based intent classification without LLM call.
+
+    বাংলা: LLM কল ছাড়া কীওয়ার্ড-ভিত্তিক ইন্টেন্ট ক্লাসিফিকেশন।
     """
     lower = prompt.lower()
 
