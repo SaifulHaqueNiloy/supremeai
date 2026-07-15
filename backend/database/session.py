@@ -49,7 +49,7 @@ AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_
 @asynccontextmanager
 async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
     """Context manager for backend tasks or non-FastAPI usages.
-    
+
     বাংলা: FastAPI-এর বাইরে বা ব্যাকগ্রাউন্ড টাস্কে ডাটাবেস সেশন ব্যবহারের জন্য।
     """
     async with AsyncSessionLocal() as session:
@@ -66,7 +66,7 @@ async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
 # FastAPI Dependency Injection (with safe rollback)
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI Dependency for database sessions.
-    
+
     বাংলা: FastAPI রুটগুলোর জন্য ডাটাবেস ডিপেন্ডেন্সি।
     """
     async with get_db_session_context() as session:
