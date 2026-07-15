@@ -799,8 +799,8 @@ jobs:
       # asset_name: supremeai-desktop_${{ github.ref_name }}_${{ matrix.target }}.AppImage
       # asset_content_type: application/octet-stream
 
-  deploy-frontend-prod:
-    name: 🌐 Deploy Frontend (Firebase)
+  deploy-admin-firebase:
+    name: 🚀 Deploy Admin Portal (Firebase)
     needs: [frontend-core, security-audit, changes]
     if: |
       always() &&
@@ -808,7 +808,6 @@ jobs:
       github.ref == 'refs/heads/main' &&
       needs.frontend-core.result != 'failure' && needs.frontend-core.result != 'cancelled' && needs.frontend-core.result != 'skipped'
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
 
@@ -818,12 +817,13 @@ jobs:
           name: frontend-dist
           path: apps/studio-client/dist-admin
 
-      - name: 🌐 Deploy to Firebase
-        run: |
-          npm install -g firebase-tools
-          firebase deploy --only hosting --project ${{ secrets.GCP_PROJECT_ID }} --token "${{ secrets.FIREBASE_TOKEN }}"
-          echo "### 🌐 Firebase Deployment Complete" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** [https://${{ secrets.GCP_PROJECT_ID }}.web.app](https://${{ secrets.GCP_PROJECT_ID }}.web.app)" >> $GITHUB_STEP_SUMMARY
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: supremeai-admin # আপনার ফায়ারবেস প্রজেক্ট আইডি
+          channelId: live
 
   deploy-to-vercel:
     name: 🚀 Deploy User Portal (Vercel)
@@ -863,12 +863,12 @@ jobs:
 
   sync-mirror:
     name: 📤 Sync to Secondary Repo
-    needs: [deploy-backend, deploy-frontend-prod, security-audit]
+    needs: [deploy-backend, deploy-admin-firebase, security-audit]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
       needs.deploy-backend.result != 'failure' && needs.deploy-backend.result != 'cancelled' &&
-      needs.deploy-frontend-prod.result != 'failure' && needs.deploy-frontend-prod.result != 'cancelled' &&
+      needs.deploy-admin-firebase.result != 'failure' && needs.deploy-admin-firebase.result != 'cancelled' &&
       needs.security-audit.result != 'failure' && needs.security-audit.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
