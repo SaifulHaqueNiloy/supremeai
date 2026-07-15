@@ -48,9 +48,8 @@ def circuit_breaker():
 @pytest.fixture
 def mock_workspace():
     """Mock SharedWorkspace।"""
-    workspace = MagicMock()
-    workspace.log = MagicMock()
-    workspace.add_error = MagicMock()
+    from core.orchestration.swarm_orchestrator import SharedWorkspace
+    workspace = SharedWorkspace(task_id="test-task", original_prompt="test", intent="general", tools=[], metadata={})
     return workspace
 
 
@@ -284,7 +283,8 @@ class TestSwarmOrchestratorExecuteTask:
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")):
                     with patch.object(orchestrator.agents["reflection"], "run", new_callable=AsyncMock):
                         with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                            result = await orchestrator.execute_task("Build a python REST API", "user123")
+                            result_exec = await orchestrator.execute_task("Build a python REST API", "user123")
+                            result = result_exec.workspace
                         assert result is mock_workspace
                         mock_workspace.log.assert_any_call("MorphicOrchestrator: Multi-Agent DAG execution completed successfully.")
 
@@ -299,10 +299,12 @@ class TestSwarmOrchestratorExecuteTask:
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace") as mock_ws_class:
                         mock_ws_class.return_value = mock_workspace
 
-                        await orchestrator.execute_task("python Task 1", "user1")
+                        res1 = await orchestrator.execute_task("python Task 1", "user1")
+                        res1 = res1.workspace
                         call1_task_id = mock_ws_class.call_args_list[0][1].get("task_id") or mock_ws_class.call_args_list[0][0][0]
 
-                        await orchestrator.execute_task("python Task 2", "user2")
+                        res2 = await orchestrator.execute_task("python Task 2", "user2")
+                        res2 = res2.workspace
                         call2_task_id = mock_ws_class.call_args_list[1][1].get("task_id") or mock_ws_class.call_args_list[1][0][0]
 
                         assert call1_task_id != call2_task_id
@@ -316,7 +318,8 @@ class TestSwarmOrchestratorExecuteTask:
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")):
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                        await orchestrator.execute_task("Test python task", "user123")
+                        res = await orchestrator.execute_task("Test python task", "user123")
+                        res = res.workspace
 
                         # Verify initialization log was called
                         mock_workspace.log.assert_called()
@@ -334,7 +337,8 @@ class TestSwarmOrchestratorExecuteTask:
         orchestrator.circuit_breaker.last_failure_time = time.monotonic()
 
         with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-            result = await orchestrator.execute_task("Test python task", "user123")
+            result_exec = await orchestrator.execute_task("Test python task", "user123")
+            result = result_exec.workspace
 
             assert result is mock_workspace
             # Check that log was called with circuit breaker message
@@ -354,7 +358,8 @@ class TestSwarmOrchestratorExecuteTask:
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
                         # The MorphicOrchestrator will catch RuntimeError, run reflection, and return workspace
                         # To test circuit breaker, we just check if failure was recorded.
-                        await orchestrator.execute_task("Test python task", "user123")
+                        res = await orchestrator.execute_task("Test python task", "user123")
+                        res = res.workspace
 
                         # Circuit breaker should have recorded the failure
                         assert orchestrator.circuit_breaker.failure_count == 1
@@ -368,7 +373,8 @@ class TestSwarmOrchestratorExecuteTask:
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock, side_effect=RuntimeError("Code gen failed")):
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")):
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                        await orchestrator.execute_task("Test python task", "user123")
+                        res = await orchestrator.execute_task("Test python task", "user123")
+                        res = res.workspace
 
                         assert orchestrator.circuit_breaker.failure_count == 1
 
@@ -381,7 +387,8 @@ class TestSwarmOrchestratorExecuteTask:
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, side_effect=RuntimeError("QA failed")):
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                        await orchestrator.execute_task("Test python task", "user123")
+                        res = await orchestrator.execute_task("Test python task", "user123")
+                        res = res.workspace
 
                         assert orchestrator.circuit_breaker.failure_count == 1
 
@@ -394,7 +401,8 @@ class TestSwarmOrchestratorExecuteTask:
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")):
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                        await orchestrator.execute_task("Test python task")
+                        res = await orchestrator.execute_task("Test python task")
+                        res = res.workspace
 
                         # Verify architect.run was called with default user_id
                         mock_design.assert_called_once()
@@ -420,7 +428,8 @@ class TestSwarmOrchestratorIntegration:
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock) as mock_code:
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")) as mock_guardian:
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                        result = await orchestrator.execute_task("Build a python microservice", "user456")
+                        result_exec = await orchestrator.execute_task("Build a python microservice", "user456")
+                        result = result_exec.workspace
 
                         # All three phases should be called
                         mock_design.assert_called_once()

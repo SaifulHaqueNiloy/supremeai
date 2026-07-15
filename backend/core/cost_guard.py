@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 """This module, `cost_guard.py`, provides a robust mechanism for managing and enforcing budget constraints within the SupremeAI ecosystem. It features the `CostGuard` class, which offers methods for pre-flight budget checks against a database for individual tenants and a tier-based validation system designed to support multi-tier fallback strategies for AI task routing. A global singleton instance ensures easy access and backward compatibility for other modules like `task_router.py`.
 
 Key Components:
@@ -68,7 +69,7 @@ class CostGuard:
                 from core.messaging.event_bus import ErrorEvent
                 from core.messaging.event_bus import error_event_bus
 
-                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="DB_ERROR", message=str(e), severity="ERROR"))
+                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="DB_ERROR", message=str(e), severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
             except ImportError:
                 pass
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
@@ -81,8 +82,8 @@ class CostGuard:
         logger.info(f"[CostGuard] Validating execution safety gate for AI tier: '{tier}' for tenant: '{tenant_id}'")
 
         max_task_cost = self.tier_limits.get(tier)
-        if max_task_cost is None:
-            return True  # unrestricted tier
+        if max_task_cost is None or max_task_cost <= 0.0:
+            return True  # unrestricted/free tier
 
         from core.cache.redis_manager import redis_manager
 
@@ -97,7 +98,7 @@ class CostGuard:
                 from core.messaging.event_bus import ErrorEvent
                 from core.messaging.event_bus import error_event_bus
 
-                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_UNAVAILABLE", message=str(e), severity="WARNING"))
+                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_UNAVAILABLE", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
             except ImportError:
                 pass
             return tier == "free"  # fail-safe: শুধু ফ্রি টিয়ারে যেতে দাও
@@ -133,7 +134,7 @@ class CostGuard:
                 from core.messaging.event_bus import ErrorEvent
                 from core.messaging.event_bus import error_event_bus
 
-                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_ERROR", message=str(e), severity="WARNING"))
+                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_ERROR", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
             except ImportError:
                 pass
 

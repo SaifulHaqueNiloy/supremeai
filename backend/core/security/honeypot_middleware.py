@@ -1,4 +1,5 @@
 from __future__ import annotations
+from core.messaging.event_bus import ErrorContext
 
 import json
 import re
@@ -126,7 +127,7 @@ class HoneypotMiddleware:
                         module="honeypot",
                         error_type="HONEYPOT_TRIGGERED",
                         message=f"Malicious payload detected from {hacker_ip}",
-                        severity="HIGH",
+                        severity="HIGH", structured_context=ErrorContext(module="auto_fixed"),
                         context={
                             "ip": hacker_ip,
                             "action": "ip_blocked",

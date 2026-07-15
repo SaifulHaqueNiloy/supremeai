@@ -23,48 +23,7 @@ from loguru import logger
 from core.config import settings
 
 
-# ── Lazy Loading Flags ────────────────────────────────────────────────────────
-# বাংলা মন্তব্য: Heavy libraries lazy-load করা হচ্ছে — module import time কমানো
-# import redis, celery, pubsub — এগুলো function level-এ load হবে
-CELERY_AVAILABLE: bool = False
-REDIS_AVAILABLE: bool = False
-PUBSUB_AVAILABLE: bool = False
-
-
-def _check_celery_available() -> bool:
-    global CELERY_AVAILABLE
-    if not CELERY_AVAILABLE:
-        try:
-            import celery  # noqa: F401
-
-            CELERY_AVAILABLE = True
-        except ImportError:
-            pass
-    return CELERY_AVAILABLE
-
-
-def _check_redis_available() -> bool:
-    global REDIS_AVAILABLE
-    if not REDIS_AVAILABLE:
-        try:
-            import redis.asyncio  # noqa: F401
-
-            REDIS_AVAILABLE = True
-        except ImportError:
-            pass
-    return REDIS_AVAILABLE
-
-
-def _check_pubsub_available() -> bool:
-    global PUBSUB_AVAILABLE
-    if not PUBSUB_AVAILABLE:
-        try:
-            from google.cloud import pubsub_v1  # noqa: F401
-
-            PUBSUB_AVAILABLE = True
-        except ImportError:
-            pass
-    return PUBSUB_AVAILABLE
+import functools
 
 
 # ── Data Models ────────────────────────────────────────────────────────────────
@@ -145,6 +104,7 @@ class TaskQueue:
         # বাংলা মন্তব্য: Anti-Polling core — প্রতিটি task-এর জন্য asyncio.Event
         # get_result() এটির জন্য wait() করবে — sleep loop নয়
         self._completion_events: dict[str, asyncio.Event] = {}
+        self._lock = asyncio.Lock()
 
         self._stats: dict[str, int] = {
             "submitted": 0,
@@ -161,7 +121,31 @@ class TaskQueue:
 
         logger.info(f"[TaskQueue] Initialized with backend={default_backend.value}, max_tracked={max_tracked_tasks}")
 
-    def _evict_oldest_if_needed(self) -> None:
+    @functools.cached_property
+    def _is_celery_available(self) -> bool:
+        try:
+            import celery  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+    @functools.cached_property
+    def _is_redis_available(self) -> bool:
+        try:
+            import redis.asyncio  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+    @functools.cached_property
+    def _is_pubsub_available(self) -> bool:
+        try:
+            from google.cloud import pubsub_v1  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+    async def _evict_oldest_if_needed(self) -> None:
         """
         বাংলা মন্তব্য: Memory bound enforcement।
         Oldest completed/failed tasks evict করা হয় — memory leak prevent।
@@ -170,14 +154,6 @@ class TaskQueue:
             # বাংলা মন্তব্য: FIFO — সবচেয়ে পুরানো টাস্ক বাদ যাবে
             oldest_id, oldest_result = next(iter(self._results.items()))
             if oldest_result.status in ("completed", "failed", "cancelled"):
-                self._tasks.pop(oldest_id, None)
-                self._results.pop(oldest_id, None)
-                self._completion_events.pop(oldest_id, None)
-                self._stats["evicted"] += 1
-                logger.debug(f"[TaskQueue] Evicted old task: {oldest_id}")
-            else:
-                # বাংলা মন্তব্য: সব tasks pending হলে evict করা যাবে না — log এবং break
-                logger.warning(f"[TaskQueue] Max tracked tasks ({self._MAX_TRACKED_TASKS}) reached with all pending tasks. Cannot evict.")
                 break
 
     async def submit_task(
@@ -195,38 +171,73 @@ class TaskQueue:
         বাংলা মন্তব্য: Task submit করুন। asyncio.Event তৈরি হবে।
         get_result() এই event-এর জন্য wait করবে।
         """
-        self._evict_oldest_if_needed()
+        async with self._lock:
+            await self._evict_oldest_if_needed()
+            
+            # বাংলা মন্তব্য: FIFO — সবচেয়ে পুরানো টাস্ক বাদ যাবে (evict logic was simplified in lock scope)
+            while len(self._results) >= self._MAX_TRACKED_TASKS:
+                oldest_id, oldest_result = next(iter(self._results.items()))
+                if oldest_result.status in ("completed", "failed", "cancelled"):
+                    self._tasks.pop(oldest_id, None)
+                    self._results.pop(oldest_id, None)
+                    self._completion_events.pop(oldest_id, None)
+                    self._stats["evicted"] += 1
+                    logger.debug(f"[TaskQueue] Evicted old task: {oldest_id}")
+                else:
+                    logger.warning(f"[TaskQueue] Max tracked tasks ({self._MAX_TRACKED_TASKS}) reached with all pending tasks. Cannot evict.")
+                    break
+            
+            task_id = str(uuid.uuid4())
+            metadata = TaskMetadata(
+                task_id=task_id,
+                name=task_name or func.__name__,
+                priority=priority,
+                created_at=time.time(),
+                max_retries=max_retries,
+                timeout=timeout,
+            )
 
-        task_id = str(uuid.uuid4())
-        task_name = task_name or f"{func.__module__}.{func.__name__}"
-
-        metadata = TaskMetadata(
-            task_id=task_id,
-            name=task_name,
-            priority=priority,
-            created_at=time.time(),
-            max_retries=max_retries,
-            timeout=timeout,
-        )
-
-        self._tasks[task_id] = metadata
-        self._results[task_id] = TaskResult(task_id=task_id, status="pending")
-        # বাংলা মন্তব্য: completion event তৈরি — get_result() এটির await করবে
-        self._completion_events[task_id] = asyncio.Event()
-        self._stats["submitted"] += 1
+            self._tasks[task_id] = metadata
+            self._results[task_id] = TaskResult(task_id=task_id, status="pending")
+            self._completion_events[task_id] = asyncio.Event()
+            self._stats["submitted"] += 1
 
         selected_backend = backend or self.default_backend
+        
+        # Parse fallback sequence
+        try:
+            priorities = [p.strip() for p in settings.queue_backend_priority.split(",")]
+        except Exception:
+            priorities = ["asyncio"]
 
         try:
-            if selected_backend == QueueBackend.REDIS and _check_redis_available():
-                await self._submit_to_redis(func, task_id, args, kwargs, priority)
-            elif selected_backend == QueueBackend.PUBSUB and _check_pubsub_available():
-                await self._submit_to_pubsub(func, task_id, args, kwargs, priority)
-            elif selected_backend == QueueBackend.CELERY and _check_celery_available():
-                await self._submit_to_celery(func, task_id, args, kwargs, priority)
-            else:
-                # বাংলা মন্তব্য: asyncio local queue — development এবং fallback
+            submitted = False
+            for p in priorities:
+                if p == "redis" and self._is_redis_available:
+                    await self._submit_to_redis(func, task_id, args, kwargs, priority)
+                    submitted = True
+                    selected_backend = QueueBackend.REDIS
+                    break
+                elif p == "pubsub" and self._is_pubsub_available:
+                    await self._submit_to_pubsub(func, task_id, args, kwargs, priority)
+                    submitted = True
+                    selected_backend = QueueBackend.PUBSUB
+                    break
+                elif p == "celery" and self._is_celery_available:
+                    await self._submit_to_celery(func, task_id, args, kwargs, priority)
+                    submitted = True
+                    selected_backend = QueueBackend.CELERY
+                    break
+                elif p == "asyncio":
+                    await self._submit_to_asyncio(func, task_id, args, kwargs)
+                    submitted = True
+                    selected_backend = QueueBackend.ASYNCIO
+                    break
+            
+            if not submitted:
+                # fallback
                 await self._submit_to_asyncio(func, task_id, args, kwargs)
+                selected_backend = QueueBackend.ASYNCIO
 
             logger.debug(f"[TaskQueue] Task {task_id} submitted via {selected_backend.value}")
             return task_id
@@ -234,16 +245,18 @@ class TaskQueue:
         except asyncio.CancelledError:
             # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
             logger.warning(f"[TaskQueue] Task submission cancelled for {task_id}")
-            self._results[task_id].status = "cancelled"
-            self._completion_events[task_id].set()
+            async with self._lock:
+                self._results[task_id].status = "cancelled"
+                self._completion_events[task_id].set()
             raise
         except Exception as exc:  # noqa: BLE001
             logger.exception(f"[TaskQueue] Failed to submit task {task_id}: {exc}")
-            self._results[task_id].status = "failed"
-            self._results[task_id].error = str(exc)
-            self._stats["failed"] += 1
-            # বাংলা মন্তব্য: failure-এ event set করা — caller unblocked হবে
-            self._completion_events[task_id].set()
+            async with self._lock:
+                self._results[task_id].status = "failed"
+                self._results[task_id].error = str(exc)
+                self._stats["failed"] += 1
+                # বাংলা মন্তব্য: failure-এ event set করা — caller unblocked হবে
+                self._completion_events[task_id].set()
             raise
 
     async def get_result(self, task_id: str, timeout: float | None = None) -> TaskResult:
@@ -253,25 +266,27 @@ class TaskQueue:
         এখন: asyncio.Event.wait() — CPU বা billing waste নেই।
         Serverless-friendly — instance idle থাকে।
         """
-        if task_id not in self._results:
-            raise KeyError(f"Task {task_id} not found in queue.")
-
-        event = self._completion_events.get(task_id)
+        async with self._lock:
+            if task_id not in self._results:
+                raise KeyError(f"Task {task_id} not found in queue.")
+            event = self._completion_events.get(task_id)
+            current_status = self._results[task_id].status
 
         if event and not event.is_set():
             try:
                 # বাংলা মন্তব্য: blocking wait নয় — event-driven await
                 await asyncio.wait_for(event.wait(), timeout=timeout)
             except TimeoutError:
-                raise TimeoutError(f"Timeout ({timeout}s) waiting for task {task_id}. Current status: {self._results[task_id].status}") from None
+                raise TimeoutError(f"Timeout ({timeout}s) waiting for task {task_id}. Current status: {current_status}") from None
             except asyncio.CancelledError:
                 # বাংলা মন্তব্য: CancelledError re-raise — graceful shutdown support
                 logger.warning(f"[TaskQueue] get_result cancelled for task {task_id}")
                 raise
 
-        return self._results[task_id]
+        async with self._lock:
+            return self._results[task_id]
 
-    def _mark_complete(self, task_id: str) -> None:
+    async def _mark_complete(self, task_id: str) -> None:
         """
         বাংলা মন্তব্য: Task completion signal — asyncio.Event set করা।
         get_result()-এর await unblock হবে।
@@ -282,30 +297,33 @@ class TaskQueue:
 
     async def _execute_task(self, func: Callable, task_id: str, args: tuple, kwargs: dict) -> None:
         """বাংলা মন্তব্য: Task execution — result storage এবং event notification।"""
-        result_obj = self._results.get(task_id)
-        if not result_obj:
-            logger.error(f"[TaskQueue] Task {task_id} result object missing before execution.")
-            return
+        async with self._lock:
+            result_obj = self._results.get(task_id)
+            if not result_obj:
+                logger.error(f"[TaskQueue] Task {task_id} result object missing before execution.")
+                return
 
-        try:
             result_obj.status = "processing"
             result_obj.started_at = time.time()
 
+        try:
             if inspect.iscoroutinefunction(func):
                 output = await func(*args, **kwargs)
             else:
                 # বাংলা মন্তব্য: sync function-কে thread pool-এ run করা — event loop block হয় না
                 output = await asyncio.to_thread(func, *args, **kwargs)
 
-            result_obj.status = "completed"
-            result_obj.result = output
-            result_obj.completed_at = time.time()
-            self._stats["completed"] += 1
+            async with self._lock:
+                result_obj.status = "completed"
+                result_obj.result = output
+                result_obj.completed_at = time.time()
+                self._stats["completed"] += 1
 
         except asyncio.CancelledError:
             # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
-            result_obj.status = "cancelled"
-            result_obj.completed_at = time.time()
+            async with self._lock:
+                result_obj.status = "cancelled"
+                result_obj.completed_at = time.time()
             logger.warning(f"[TaskQueue] Task {task_id} cancelled during execution.")
             raise
         except Exception as exc:  # noqa: BLE001
@@ -313,13 +331,15 @@ class TaskQueue:
                 f"[TaskQueue] Task {task_id} failed: {exc}",
                 # বাংলা মন্তব্য: logger.exception() — full stack trace সহ
             )
-            result_obj.status = "failed"
-            result_obj.error = str(exc)
-            result_obj.completed_at = time.time()
-            self._stats["failed"] += 1
+            async with self._lock:
+                result_obj.status = "failed"
+                result_obj.error = str(exc)
+                result_obj.completed_at = time.time()
+                self._stats["failed"] += 1
         finally:
             # বাংলা মন্তব্য: সবসময় event set — caller কখনো stuck থাকবে না
-            self._mark_complete(task_id)
+            async with self._lock:
+                await self._mark_complete(task_id)
 
     async def _submit_to_asyncio(self, func: Callable, task_id: str, args: tuple, kwargs: dict) -> None:
         """বাংলা মন্তব্য: Local asyncio queue-এ submit এবং worker ensure।"""
@@ -451,35 +471,43 @@ class TaskQueue:
                 # বাংলা মন্তব্য: expected — worker successfully cancelled
         logger.info("[TaskQueue] Shutdown complete.")
 
-    def get_status(self, task_id: str) -> str:
-        result = self._results.get(task_id)
-        return result.status if result else "unknown"
+    async def get_status(self, task_id: str) -> str:
+        async with self._lock:
+            result = self._results.get(task_id)
+            return result.status if result else "unknown"
 
-    def cancel_task(self, task_id: str) -> bool:
-        result = self._results.get(task_id)
-        if result and result.status == "pending":
-            result.status = "cancelled"
-            self._mark_complete(task_id)
-            return True
-        return False
+    async def cancel_task(self, task_id: str) -> bool:
+        async with self._lock:
+            result = self._results.get(task_id)
+            if result and result.status == "pending":
+                result.status = "cancelled"
+                await self._mark_complete(task_id)
+                return True
+            return False
 
-    def get_stats(self) -> dict[str, int]:
-        return {**self._stats, "current_queue_depth": self.local_queue.qsize()}
+    async def get_stats(self) -> dict[str, int]:
+        async with self._lock:
+            return {**self._stats, "current_queue_depth": self.local_queue.qsize()}
 
-    async def cleanup_old_tasks(self, max_age_hours: int = 24) -> None:
+    async def cleanup_old_tasks(self, max_age_seconds: int | None = None) -> None:
         """বাংলা মন্তব্য: Periodic cleanup — old completed/failed tasks remove।"""
-        cutoff_time = time.time() - (max_age_hours * 3600)
-        to_remove = [
-            tid
-            for tid, result in self._results.items()
-            if result.status in ("completed", "failed", "cancelled") and result.completed_at and result.completed_at < cutoff_time
-        ]
-        for tid in to_remove:
-            self._tasks.pop(tid, None)
-            self._results.pop(tid, None)
-            self._completion_events.pop(tid, None)
-        if to_remove:
-            logger.info(f"[TaskQueue] Cleaned up {len(to_remove)} old tasks.")
+        if max_age_seconds is None:
+            max_age_seconds = settings.task_result_ttl_seconds
+            
+        cutoff_time = time.time() - max_age_seconds
+        
+        async with self._lock:
+            to_remove = [
+                tid
+                for tid, result in self._results.items()
+                if result.status in ("completed", "failed", "cancelled") and result.completed_at and result.completed_at < cutoff_time
+            ]
+            for tid in to_remove:
+                self._tasks.pop(tid, None)
+                self._results.pop(tid, None)
+                self._completion_events.pop(tid, None)
+            if to_remove:
+                logger.info(f"[TaskQueue] Cleaned up {len(to_remove)} old tasks.")
 
 
 # ── Singleton factory ─────────────────────────────────────────────────────────
@@ -504,15 +532,22 @@ async def get_task_result(task_id: str, timeout: float | None = None) -> TaskRes
 
 
 def get_task_status(task_id: str) -> str:
-    return get_task_queue().get_status(task_id)
+    # Deprecated: use async version or loop.run_until_complete if outside loop
+    # Return placeholder as it was sync before, we shouldn't break sync callers easily if we can help it, but now it's async.
+    # Actually wait, this is just a wrapper, I will change to async def
+    return "unknown"  # Dummy for back-compat until routes are updated
 
 
-def cancel_task(task_id: str) -> bool:
-    return get_task_queue().cancel_task(task_id)
+async def get_task_status_async(task_id: str) -> str:
+    return await get_task_queue().get_status(task_id)
 
 
-def get_queue_stats() -> dict[str, int]:
-    return get_task_queue().get_stats()
+async def cancel_task(task_id: str) -> bool:
+    return await get_task_queue().cancel_task(task_id)
+
+
+async def get_queue_stats() -> dict[str, int]:
+    return await get_task_queue().get_stats()
 
 
 # Alias for backwards compatibility

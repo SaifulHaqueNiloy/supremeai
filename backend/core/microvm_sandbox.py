@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 # backend/core/microvm_sandbox.py
 # বাংলা মন্তব্য: সম্পূর্ণ রি-ফ্যাক্টর — Path Traversal Whitelist + Strict Validation।
 # sandbox_root এখন Settings থেকে আসে এবং startup-এ whitelist validate হয়।
@@ -175,7 +176,7 @@ class MicroVMSandbox:
                         module="microvm_sandbox",
                         error_type="SANDBOX_UNAVAILABLE",
                         message="No MicroVM runtime (Firecracker/gVisor) available.",
-                        severity="ERROR",
+                        severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
                         context={"allow_fallback": False, "language": language},
                     )
                 )
@@ -212,7 +213,7 @@ class MicroVMSandbox:
                     module="microvm_sandbox",
                     error_type="EXECUTION_FAILED",
                     message=str(exc)[:500],
-                    severity="ERROR",
+                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
                     context={"vm_id": vm_id, "vm_runtime": vm_runtime},
                 )
             )

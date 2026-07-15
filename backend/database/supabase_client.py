@@ -1,12 +1,50 @@
+import asyncio
+import functools
 import os
-from typing import Any
+import time
+from typing import Any, Callable
 
 import psycopg2
 from loguru import logger
 from supabase import Client
 from supabase import create_client
 
+from core.config import settings
 
+def _supabase_retry_decorator(func: Callable) -> Callable:
+    """Decorator to retry Supabase operations with exponential backoff and consolidated logging."""
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self.client and func.__name__ not in ("__init__", "_derive_supabase_url", "bootstrap_schema", "get_bootstrap_statements", "_is_schema_cache_error", "_execute_response_with_retry"):
+            return None if func.__name__.startswith("get_") or func.__name__.startswith("is_") else None
+            
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                return func(self, *args, **kwargs)
+            except Exception as e:
+                # Handle schema cache error via existing logic if possible, or just retry
+                if attempt < max_retries - 1:
+                    sleep_time = 2 ** attempt
+                    logger.warning(f"Supabase operation '{func.__name__}' failed: {e}. Retrying in {sleep_time}s...")
+                    time.sleep(sleep_time)
+                else:
+                    logger.warning(f"Supabase operation '{func.__name__}' failed after {max_retries} retries: {e}")
+                    # Return safe fallbacks based on method name prefix
+                    if func.__name__.startswith("get_"):
+                        return None
+                    if func.__name__.startswith("is_"):
+                        return False
+                    return None
+    return wrapper
+
+def _apply_retries_to_public_methods(cls):
+    for attr_name, attr_value in vars(cls).items():
+        if callable(attr_value) and not attr_name.startswith("_") and attr_name not in ("get_bootstrap_statements", "bootstrap_schema"):
+            setattr(cls, attr_name, _supabase_retry_decorator(attr_value))
+    return cls
+
+@_apply_retries_to_public_methods
 class SupabaseDB:
     """
     Supabase client wrapper for SupremeAI 2.0.
@@ -14,10 +52,10 @@ class SupabaseDB:
     """
 
     def __init__(self):
-        self.url = os.environ.get("SUPABASE_URL") or self._derive_supabase_url(
+        self.url = settings.supabase_url or self._derive_supabase_url(
             os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL_POOLER")
         )
-        self.key = os.environ.get("SUPABASE_KEY")
+        self.key = settings.supabase_key
         self.client: Client | None = None
 
         if self.url and self.key:
@@ -43,10 +81,8 @@ class SupabaseDB:
                     return f"https://{hostname[3:]}"
                 return f"https://{hostname}"
         except Exception as exc:
-            logger.exception(f"Supabase operation error: {exc}")
-            # বল মনতবয: DATABASE_URL পরস বযরথ হল আগ নরব None রটরন করত;
-            # কনফগ ভল থকল ত যন দশযমন হয় সজনয ডবগ লগ যকত কর হল
-            logger.debug(f"Failed to derive Supabase URL from DATABASE_URL: {exc}")
+            # বাংলা মন্তব্য: exception এবং debug দুটো আলাদা কল না করে একটি warning-এ consolidate করা হলো
+            logger.warning(f"Failed to derive Supabase URL from DATABASE_URL: {exc}")
         return None
 
     @classmethod
@@ -385,59 +421,36 @@ class SupabaseDB:
 
     # --- System Config ---
     def get_config(self, key: str) -> Any | None:
-        if not self.client:
-            return None
-        try:
-            res = self.client.table("system_config").select("value").eq("key", key).execute()
-            if res.data:
-                return res.data[0].get("value")
-            return None
-        except Exception as e:
-            logger.exception(f"Supabase operation error: {e}")
-            return None
+        res = self.client.table("system_config").select("value").eq("key", key).execute()
+        if res.data:
+            return res.data[0].get("value")
+        return None
 
     def set_config(self, key: str, value: Any, category: str = "general"):
-        if not self.client:
-            return
-        try:
-            self.client.table("system_config").upsert({"key": key, "value": value, "category": category}).execute()
-        except Exception as e:
-            logger.exception(f"Supabase operation error: {e}")
+        self.client.table("system_config").upsert({"key": key, "value": value, "category": category}).execute()
 
     # --- Feature Flags ---
     def is_feature_enabled(self, feature_name: str, user_id: str | None = None) -> bool:
-        if not self.client:
-            return False
-        try:
-            res = self.client.table("feature_flags").select("*").eq("feature_name", feature_name).execute()
-            if res.data:
-                flag = res.data[0]
-                if not flag.get("enabled", False):
-                    return False
-                if user_id and flag.get("allowed_users") and user_id in flag["allowed_users"]:
-                    return True
-                # Real implementation would hash user_id against rollout_percentage here
+        res = self.client.table("feature_flags").select("*").eq("feature_name", feature_name).execute()
+        if res.data:
+            flag = res.data[0]
+            if not flag.get("enabled", False):
+                return False
+            if user_id and flag.get("allowed_users") and user_id in flag["allowed_users"]:
                 return True
-            return False
-        except Exception as e:
-            logger.exception(f"Supabase operation error: {e}")
-            return False
+            return True
+        return False
 
     # --- GitHub Repos ---
     def add_github_repo(self, repo_name: str, owner: str, description: str = "", language: str = ""):
-        if not self.client:
-            return
-        try:
-            self.client.table("github_repos").upsert(
-                {
-                    "repo_name": repo_name,
-                    "owner": owner,
-                    "description": description,
-                    "language": language,
-                }
-            ).execute()
-        except Exception as e:
-            logger.exception(f"Supabase operation error: {e}")
+        self.client.table("github_repos").upsert(
+            {
+                "repo_name": repo_name,
+                "owner": owner,
+                "description": description,
+                "language": language,
+            }
+        ).execute()
 
     # --- AI Model Behavior ---
     def get_model_behavior(self, model_name: str) -> Any | None:

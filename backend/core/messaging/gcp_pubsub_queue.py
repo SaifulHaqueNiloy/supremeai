@@ -8,6 +8,9 @@ from typing import Any
 
 from loguru import logger
 
+from core.messaging.event_bus import ErrorContext
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 try:
     from google.cloud import pubsub_v1  # type: ignore[import-untyped]
@@ -143,16 +146,28 @@ class GCPPubSubQueue:
             )
             messages = []
             for received in response.received_messages:
-                data = json.loads(received.message.data.decode("utf-8"))
-                messages.append(
-                    {
-                        "message_id": received.ack_id,
-                        "task_id": data.get("task_id"),
-                        "payload": data.get("payload"),
-                        "attributes": dict(received.message.attributes),
-                        "published_at": data.get("published_at"),
-                    }
-                )
+                try:
+                    data = json.loads(received.message.data.decode("utf-8"))
+                    messages.append(
+                        {
+                            "message_id": received.ack_id,
+                            "task_id": data.get("task_id"),
+                            "payload": data.get("payload"),
+                            "attributes": dict(received.message.attributes),
+                            "published_at": data.get("published_at"),
+                        }
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.error(f"Failed to decode message {received.ack_id}: {exc}")
+                    error_event_bus.emit(
+                        ErrorEvent(
+                            module="gcp_pubsub_queue",
+                            error_type="MessageDecodeError",
+                            message=f"Failed to decode message {received.ack_id}: {exc}",
+                            severity="ERROR",
+                            structured_context=ErrorContext(module="gcp_pubsub_queue"),
+                        )
+                    )
             return messages
 
         with self._get_connection() as conn:
@@ -171,13 +186,28 @@ class GCPPubSubQueue:
 
     def ack(self, message_id: str) -> dict[str, Any]:
         if self.subscriber is not None:
-            self.subscriber.acknowledge(self.subscription_path, [message_id])
-            return {
-                "success": True,
-                "provider": "gcp_pubsub",
-                "message_id": message_id,
-                "acked": True,
-            }
+            try:
+                self.subscriber.acknowledge(
+                    request={"subscription": self.subscription_path, "ack_ids": [message_id]}
+                )
+                return {
+                    "success": True,
+                    "provider": "gcp_pubsub",
+                    "message_id": message_id,
+                    "acked": True,
+                }
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Failed to ack message {message_id}: {exc}")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="gcp_pubsub_queue",
+                        error_type="AckError",
+                        message=f"Failed to ack message {message_id}: {exc}",
+                        severity="ERROR",
+                        structured_context=ErrorContext(module="gcp_pubsub_queue"),
+                    )
+                )
+                raise
 
         with self._get_connection() as conn:
             cursor = conn.execute("UPDATE pubsub_queue SET acked = 1 WHERE message_id = ?", (message_id,))
