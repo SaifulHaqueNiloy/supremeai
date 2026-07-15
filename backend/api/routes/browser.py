@@ -104,7 +104,7 @@ def get_credentials(userId: str = "default"):
             decrypted = credential_store.decrypt(c.get("ciphertext", ""), c.get("key_ref"))
             try:
                 decrypted_dict = json.loads(decrypted)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 logger.exception("Unhandled exception")
                 decrypted_dict = {}
 
