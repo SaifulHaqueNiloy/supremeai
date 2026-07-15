@@ -306,7 +306,9 @@ jobs:
     name: 🐍 Backend (Test)
     needs: [changes, pre-merge-gate, docker-build]
     if: >
+      always() &&
       (needs.pre-merge-gate.result == 'success') &&
+      (needs.docker-build.result == 'success' || needs.docker-build.result == 'skipped') &&
       (needs.changes.outputs.backend == 'true' || needs.changes.outputs.docker_build == 'true' || github.event_name == 'workflow_dispatch' || github.run_attempt > 1)
     runs-on: ubuntu-latest
     container:
