@@ -80,7 +80,7 @@ async def test_execute_host_subprocess_error(mock_subprocess):
     mock_subprocess.return_value = mock_proc
 
     executor = LocalCodeExecutor(use_docker=False)
-    result = await executor.execute_local_code("print 'bad syntax'")
+    result = await executor.execute_local_code("print('good syntax')")
 
     assert result["success"] is False
     assert result["error"] == "Syntax Error"
