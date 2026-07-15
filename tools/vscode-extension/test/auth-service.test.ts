@@ -4,6 +4,7 @@ import { AuthService } from '../src/services/AuthService';
 
 vi.mock('vscode', () => ({
   window: {
+    showInputBox: vi.fn(),
     showInformationMessage: vi.fn(),
     showErrorMessage: vi.fn(),
     showWarningMessage: vi.fn(),
@@ -60,7 +61,8 @@ describe('AuthService', () => {
   describe('login', () => {
     test('prompts for API key and returns false if cancelled', async () => {
       // Mock showInputBox to return undefined (user cancelled)
-      vi.mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
+      const mockShowInputBox = vscode.window.showInputBox as unknown as ReturnType<typeof vi.fn>;
+      mockShowInputBox.mockResolvedValueOnce(undefined);
 
       const result = await authService.login();
       expect(result).toBe(false);

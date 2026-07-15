@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
 export const window = {
+  showInputBox: vi.fn(),
   showInformationMessage: vi.fn(),
   showErrorMessage: vi.fn(),
   showWarningMessage: vi.fn(),
