@@ -162,6 +162,12 @@ class Settings(BaseSettings):
         validation_alias="CLAUDE_OPENROUTER_MODEL",
     )
 
+    # বাংলা মন্তব্য: জেমিনি মডেল নাম সেন্ট্রালাইজড করা হলো যাতে কোনো ইউটিলিটি স্ক্রিপ্টে হার্ডকোড না থাকে।
+    gemini_model_name: str = Field(
+        default="gemini/gemini-2.5-flash",
+        validation_alias="GEMINI_MODEL_NAME",
+    )
+
     sentry_dsn: str = Field(default="", validation_alias="SENTRY_DSN")
 
     # বাংলা মন্তব্য: OLLAMA_URL — fail-fast, কোনো localhost fallback নেই

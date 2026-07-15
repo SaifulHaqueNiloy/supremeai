@@ -34,7 +34,8 @@ async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
     engine = EvolutionEngine()
     task_history = payload.task_history or []
     try:
-        report = engine.run_daily_evolution(task_history)
+        # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await ব্যবহার করা হলো।
+        report = await engine.run_daily_evolution(task_history)
     except Exception as exc:  # noqa: BLE001
         logger.error(f"EvolutionEngine failed: {exc}")
         raise HTTPException(status_code=500, detail=f"Evolution failed: {exc}") from exc

@@ -30,10 +30,12 @@ def test_task_router():
     assert r["task_type"] == "image_generation"
 
 
-def test_evolution_engine():
+@pytest.mark.anyio
+async def test_evolution_engine():
     engine = EvolutionEngine()
     history = [{"success": True}, {"success": False}]
-    report = engine.run_daily_evolution(history)
+    # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await করা হলো।
+    report = await engine.run_daily_evolution(history)
     assert report["total_tasks_processed"] == 2
     assert report["success_rate"] == 50.0
 

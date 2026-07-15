@@ -35,14 +35,18 @@ vi.mock('../../services/chatService', () => ({
 
 import { DashboardShell } from './DashboardShell';
 
+import { MemoryRouter } from 'react-router-dom';
+
 const renderShell = () =>
   render(
-    <DashboardShell
-      theme="dark"
-      toggleTheme={vi.fn()}
-      isServerOnline={true}
-      workspace={<div data-testid="legacy-workspace">Workspace content</div>}
-    />
+    <MemoryRouter>
+      <DashboardShell
+        theme="dark"
+        toggleTheme={vi.fn()}
+        isServerOnline={true}
+        workspace={<div data-testid="legacy-workspace">Workspace content</div>}
+      />
+    </MemoryRouter>
   );
 
 describe('DashboardShell', () => {

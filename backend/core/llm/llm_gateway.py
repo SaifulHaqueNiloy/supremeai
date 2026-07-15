@@ -284,8 +284,9 @@ class LLMGateway:
 
             try:
                 logger.info(f"[LLMGateway] Attempting: {current_model}")
-                # বাংলা মন্তব্য: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ
-                api_key = self._get_api_key_for_model(current_model)
+                # বাংলা মন্তব্য: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ।
+                # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
+                api_key = kwargs.pop("api_key", None) or self._get_api_key_for_model(current_model)
                 response = await litellm.acompletion(
                     model=current_model,
                     messages=messages_payload,

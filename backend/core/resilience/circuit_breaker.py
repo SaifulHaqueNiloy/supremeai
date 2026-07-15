@@ -1,227 +1,229 @@
+"""Circuit Breaker — Resilience pattern for preventing cascading failures.
+
+বাংলা: সার্কিট ব্রেকার — ক্যাসকেডিং ফেইলিওর প্রতিরোধের জন্য রেজিলিয়েন্স প্যাটার্ন।
+
+Tracks failure/success counts and opens the circuit when threshold exceeded.
+After cooldown, transitions to half-open state for recovery testing.
+"""
 from __future__ import annotations
 
-import json
-import threading
 import time
-import uuid
-from collections.abc import Callable
-from datetime import datetime
-from typing import Any
-from typing import TypeVar
+from collections.abc import Awaitable, Callable
+from enum import Enum
+from typing import Any, TypeVar
 
 from loguru import logger
 
-from core.observability.log_batcher import batcher
-
-
-# রিয়েল Redis client থাকলে তার exception hierarchy-ও ধরা — না থাকলে gracefully skip
-try:
-    from redis.exceptions import RedisError
-    _REDIS_EXC: tuple = (RedisError,)
-except ImportError:
-    _REDIS_EXC = ()
-
-SPECIFIC_EXCEPTIONS = (
-    ConnectionError,
-    TimeoutError,
-    json.JSONDecodeError,   # করাপ্টেড state payload
-    ValueError,             # int(failures_raw) পার্স ফেইল
-    *_REDIS_EXC,            # redis-py-র নিজস্ব এরর টাইপ (AuthenticationError, ResponseError ইত্যাদি)
-)
-
+from core.config import settings
 
 T = TypeVar("T")
 
 
-# বাংলা মন্তব্য: CircuitBreakerOpenError — circuit open হলে raise করা হয়।
-# Tests এবং upstream code এই exception import করতে পারে।
-class CircuitBreakerOpenError(RuntimeError):
-    """Raised when a call is attempted on an OPEN circuit breaker."""
+class CircuitBreakerState(str, Enum):
+    """Circuit breaker states."""
+
+    CLOSED = "CLOSED"  # Normal operation — requests pass through
+    OPEN = "OPEN"  # Failing — requests are rejected immediately
+    HALF_OPEN = "HALF_OPEN"  # Testing — limited requests allowed
 
 
-# বাংলা মন্তব্য: CircuitBreakerState — circuit breaker state enum।
-# Test code এই enum import করে state check করে।
-class CircuitBreakerState:
-    """State constants for CircuitBreaker."""
+class CircuitBreakerOpenError(Exception):
+    """Raised when the circuit breaker is OPEN and a request is rejected.
 
-    CLOSED = "CLOSED"
-    OPEN = "OPEN"
-    HALF_OPEN = "HALF_OPEN"
+    বাংলা: সার্কিট ব্রেকার OPEN থাকলে রিকোয়েস্ট রিজেক্ট হলে এই এক্সেপশন রেইজ হয়।
+    """
+
+    def __init__(self, name: str, state: CircuitBreakerState) -> None:
+        self.name = name
+        self.state = state
+        super().__init__(f"Circuit breaker '{name}' is {state.value}. Request rejected.")
 
 
 class CircuitBreaker:
+    """Circuit breaker for a specific operation or service.
+
+    বাংলা: নির্দিষ্ট অপারেশন বা সার্ভিসের জন্য সার্কিট ব্রেকার।
+
+    Attributes:
+        name: Identifier for this breaker (e.g., service name).
+        failure_threshold: Number of consecutive failures to open the circuit.
+        recovery_timeout: Seconds to wait before transitioning to HALF_OPEN.
+        state: Current circuit state.
+        failure_count: Current consecutive failure count.
+        success_count: Current consecutive success count (for half-open recovery).
+        last_failure_time: Timestamp of the last failure.
+        last_success_time: Timestamp of the last success.
+    """
+
     def __init__(
         self,
-        name: str = "default",
-        failure_threshold: int = 5,
-        recovery_timeout: float = 30.0,
-        half_open_after: float = 10.0,
-        redis_queue: Any = None,
+        name: str,
+        failure_threshold: int | None = None,
+        recovery_timeout: float | None = None,
     ) -> None:
         self.name = name
-        self.failure_threshold = failure_threshold
-        self.recovery_timeout = recovery_timeout
-        self.half_open_after = half_open_after
-        self.failures = 0
-        self.state = "CLOSED"
-        self.opened_at: float | None = None
-        self.last_failure_at: float | None = None
-        self.redis_queue = redis_queue
-        self._key_prefix = f"cb:{name}"
-        self._restore_from_redis()
-        self._lock = threading.Lock()
-        self._half_open_in_flight = 0
+        self.failure_threshold = failure_threshold or settings.circuit_breaker_failure_threshold
+        self.recovery_timeout = float(recovery_timeout or settings.circuit_breaker_cooldown_period)
+
+        self.state: CircuitBreakerState = CircuitBreakerState.CLOSED
+        self.failure_count: int = 0
+        self.success_count: int = 0
+        self.last_failure_time: float | None = None
+        self.last_success_time: float | None = None
+
+    def __repr__(self) -> str:
+        return (
+            f"CircuitBreaker(name='{self.name}', state={self.state.value}, "
+            f"failures={self.failure_count}, successes={self.success_count})"
+        )
 
     @property
-    def _cb(self) -> CircuitBreaker:
-        """বাংলা মন্তব্য: Backward-compat alias — tests cb._cb.failures এভাবে access করে।
-        এটি self-reference — same object এর একটি view।
+    def is_open(self) -> bool:
+        """Check if the circuit is currently open.
+
+        বাংলা: সার্কিট বর্তমানে OPEN কিনা চেক করে।
         """
-        return self
+        return self.state == CircuitBreakerState.OPEN
 
-    def _restore_from_redis(self) -> None:
-        if not self.redis_queue or not getattr(self.redis_queue, "configured", False):
-            return
-        try:
-            raw = self.redis_queue.get(f"{self._key_prefix}:state")
-            if raw:
-                data = json.loads(raw)
-                self.state = data.get("state", "CLOSED")
-                self.opened_at = data.get("opened_at")
-                self.last_failure_at = data.get("last_failure_at")
+    def _should_attempt_recovery(self) -> bool:
+        """Check if enough time has passed to attempt recovery.
 
-            # Read atomic failures count
-            failures_raw = self.redis_queue.get(f"{self._key_prefix}:failures")
-            if failures_raw:
-                self.failures = int(failures_raw)
+        বাংলা: রিকভারি চেষ্টা করার জন্য যথেষ্ট সময় পেরিয়েছে কিনা চেক করে।
+        """
+        if self.last_failure_time is None:
+            return True
+        return (time.monotonic() - self.last_failure_time) >= self.recovery_timeout
+
+    def call(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+        """Execute a function with circuit breaker protection (sync).
+
+        বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ সিঙ্ক্রোনাস ফাংশন এক্সিকিউট করে।
+
+        Raises:
+            CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
+        """
+        if self.state == CircuitBreakerState.OPEN:
+            if self._should_attempt_recovery():
+                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                self.state = CircuitBreakerState.HALF_OPEN
             else:
-                self.failures = data.get("failures", 0) if raw else 0
-        except SPECIFIC_EXCEPTIONS as exc:
-            # বাংলা মন্তব্য: রেডিস থেকে স্টেট রিস্টোর করার সময় নির্দিষ্ট এররগুলো ক্যাচ করা হয়েছে
-            # সমস্যা ট্র্যাক করার জন্য নরমালি ডিবাগ লগ করা হল যত রেডিস সমস্যা দশযমন থাকে
-            logger.debug(f"CircuitBreaker redis restore failed: {exc}")
+                raise CircuitBreakerOpenError(self.name, self.state)
 
-    def _persist_to_redis(self) -> None:
-        if not self.redis_queue or not getattr(self.redis_queue, "configured", False):
-            return
         try:
-            data = {
-                "state": self.state,
-                "opened_at": self.opened_at,
-                "last_failure_at": self.last_failure_at,
-            }
-            self.redis_queue.set(f"{self._key_prefix}:state", json.dumps(data), ex=600)
-        except SPECIFIC_EXCEPTIONS as exc:
-            # বাংলা মন্তব্য: রেডিসে পার্সিস্ট করার সময় নির্দিষ্ট এররগুলো ক্যাচ করা হয়েছে
-            # সমস্যা ট্র্যাক করার জন্য নরমালি ডিবাগ লগ করা হল
-            logger.debug(f"CircuitBreaker redis persist failed: {exc}")
+            result = func(*args, **kwargs)
+            self._mark_success()
+            return result
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
+            self._mark_failure()
+            raise
+        except Exception:  # noqa: BLE001
+            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error")
+            self._mark_failure()
+            raise
 
+    async def acall(self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any) -> T:
+        """Execute an async function with circuit breaker protection.
+
+        বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ অ্যাসিঙ্ক্রোনাস ফাংশন এক্সিকিউট করে।
+
+        Raises:
+            CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
+        """
+        if self.state == CircuitBreakerState.OPEN:
+            if self._should_attempt_recovery():
+                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                self.state = CircuitBreakerState.HALF_OPEN
+            else:
+                raise CircuitBreakerOpenError(self.name, self.state)
+
+        try:
+            result = await func(*args, **kwargs)
+            self._mark_success()
+            return result
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
+            self._mark_failure()
+            raise
+        except Exception:  # noqa: BLE001
+            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error")
+            self._mark_failure()
+            raise
+
+    def _mark_success(self) -> None:
+        """Record a successful call and potentially close the circuit.
+
+        বাংলা: সফল কল রেকর্ড করে এবং সম্ভবত সার্কিট বন্ধ করে।
+        """
+        self.success_count += 1
+        self.failure_count = 0
+        self.last_success_time = time.monotonic()
+
+        if self.state == CircuitBreakerState.HALF_OPEN:
+            logger.info(f"Circuit breaker '{self.name}' recovered — transitioning to CLOSED")
+            self.state = CircuitBreakerState.CLOSED
+
+    def _mark_failure(self) -> None:
+        """Record a failed call and potentially open the circuit.
+
+        বাংলা: ব্যর্থ কল রেকর্ড করে এবং সম্ভবত সার্কিট খোলে।
+        """
+        self.failure_count += 1
+        self.success_count = 0
+        self.last_failure_time = time.monotonic()
+
+        if self.failure_count >= self.failure_threshold:
+            logger.warning(
+                f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
+            )
+            self.state = CircuitBreakerState.OPEN
+
+    def reset(self) -> None:
+        """Manually reset the circuit breaker to CLOSED state.
+
+        বাংলা: ম্যানুয়ালি সার্কিট ব্রেকারকে CLOSED স্টেটে রিসেট করে।
+        """
+        logger.info(f"Circuit breaker '{self.name}' manually reset")
+        self.state = CircuitBreakerState.CLOSED
+        self.failure_count = 0
+        self.success_count = 0
+        self.last_failure_time = None
+        self.last_success_time = None
+
+    def get_metrics(self) -> dict[str, Any]:
+        """Get current metrics for monitoring.
+
+        বাংলা: মনিটরিংয়ের জন্য বর্তমান মেট্রিক্স রিটার্ন করে।
+        """
+        return {
+            "name": self.name,
+            "state": self.state.value,
+            "failure_count": self.failure_count,
+            "success_count": self.success_count,
+            "failure_threshold": self.failure_threshold,
+            "recovery_timeout": self.recovery_timeout,
+            "last_failure_time": self.last_failure_time,
+            "last_success_time": self.last_success_time,
+        }
+
+    # বাংলা মন্তব্য: LLMGateway-তে ম্যানুয়াল রিকোয়েস্ট চেকিং প্যাটার্ন সচল করার জন্য এই মেথডগুলো যোগ করা হলো।
     def allow_request(self) -> bool:
-        if self.state == "OPEN":
-            if self.opened_at is not None and (time.time() - self.opened_at) >= self.recovery_timeout:
-                with self._lock:
-                    # Double-check inside lock
-                    if self.state == "OPEN":
-                        self.state = "HALF_OPEN"
-                        self._persist_to_redis()
-                        self._half_open_in_flight += 1
-                        return True
-            return False
-        if self.state == "HALF_OPEN":
-            with self._lock:
-                if self._half_open_in_flight >= 1:
-                    return False
-                self._half_open_in_flight += 1
+        """Check if request is allowed through the breaker.
+
+        বাংলা: রিকোয়েস্ট সার্কিট দিয়ে পাস হতে পারবে কিনা চেক করে।
+        """
+        if self.state == CircuitBreakerState.OPEN:
+            if self._should_attempt_recovery():
+                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                self.state = CircuitBreakerState.HALF_OPEN
                 return True
+            return False
         return True
 
     def mark_success(self) -> None:
-        with self._lock:
-            self._half_open_in_flight = max(0, self._half_open_in_flight - 1)
-        if self.state != "CLOSED":
-            mttr = 0.0
-            if self.opened_at is not None:
-                mttr = time.time() - self.opened_at
-
-            from core.messaging.event_bus import ErrorEvent
-            from core.messaging.event_bus import error_event_bus
-
-            error_event_bus.emit(
-                ErrorEvent(
-                    module="circuit_breaker",
-                    error_type="CIRCUIT_RECOVERY",
-                    message=f"Circuit Breaker {self.name} recovered. MTTR: {mttr:.2f}s",
-                    severity="INFO",
-                    context={"cb_name": self.name, "mttr": mttr},
-                )
-            )
-            self._emit_alert("CIRCUIT_CLOSED", mttr=mttr)
-
-        self.failures = 0
-        self.state = "CLOSED"
-        self.opened_at = None
-        self.last_failure_at = None
-
-        # Reset failures in redis
-        if self.redis_queue and getattr(self.redis_queue, "configured", False):
-            try:
-                self.redis_queue.delete(f"{self._key_prefix}:failures")
-            except SPECIFIC_EXCEPTIONS as exc:
-                logger.debug(f"CircuitBreaker redis delete failed: {exc}")
-
-        self._persist_to_redis()
+        """Record successful request."""
+        self._mark_success()
 
     def mark_failure(self) -> None:
-        with self._lock:
-            self._half_open_in_flight = max(0, self._half_open_in_flight - 1)
-        now = time.time()
-        self.last_failure_at = now
-
-        # Increment failures atomically via Redis to prevent race conditions
-        if self.redis_queue and getattr(self.redis_queue, "configured", False):
-            try:
-                self.failures = self.redis_queue.incr(f"{self._key_prefix}:failures")
-                self.redis_queue.expire(f"{self._key_prefix}:failures", 600)
-            except SPECIFIC_EXCEPTIONS as exc:
-                logger.debug(f"CircuitBreaker redis INCR failed: {exc}")
-                self.failures += 1
-        else:
-            self.failures += 1
-
-        if self.failures >= self.failure_threshold and self.state != "OPEN":
-            self.state = "OPEN"
-            self.opened_at = now
-            self._emit_alert("CIRCUIT_OPEN")
-        self._persist_to_redis()
-
-    def _emit_alert(self, status: str, mttr: float | None = None) -> None:
-        try:
-            from datetime import UTC
-
-            log_entry = {
-                "id": str(uuid.uuid4()),
-                "session_id": "swarm_health",
-                "log_type": "alert",
-                "message": f"{self.name}: {status}",
-                "created_at": datetime.now(UTC).isoformat(),
-                "model": self.name,
-                "status": status,
-            }
-            if mttr is not None:
-                log_entry["mttr"] = mttr
-
-            batcher.emit(log_entry)
-        except SPECIFIC_EXCEPTIONS as e:
-            # বাংলা মন্তব্য: অ্যালার্ট ইমিট করার সময় নির্দিষ্ট এররগুলো ক্যাচ করা হয়েছে
-            logger.debug(f"Failed to emit alert: {e}")
-
-    async def call(self, func: Callable[..., T], *args: object, **kwargs: object) -> T:
-        if not self.allow_request():
-            raise CircuitBreakerOpenError(f"Service temporarily unavailable — circuit breaker {self.name!r} is OPEN")
-        try:
-            result = await func(*args, **kwargs)
-            self.mark_success()
-            return result
-        except Exception:  # noqa: BLE001
-            self.mark_failure()
-            raise
+        """Record failed request."""
+        self._mark_failure()
