@@ -25,7 +25,9 @@ def get_rbac():
         ("viewer", "admin", False),
     ],
 )
-def test_has_permission(rbac, role, action, expected):
+def test_has_permission(rbac, role, action, expected, monkeypatch):
+    from core.security.rbac import settings
+    monkeypatch.setattr(settings, "rbac_role_definitions", {})
     assert rbac.has_permission(role, action) == expected
 
 
