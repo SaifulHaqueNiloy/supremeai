@@ -11,6 +11,7 @@ Dependencies:
 - `sys`: For system-specific parameters and functions, used for `sys.exit` and checking `sys.modules` for `pytest`.
 - `pathlib.Path`: For object-oriented filesystem paths, used for locating `.env` files.
 - `typing`: For type hints.
+- `json`: For parsing JSON strings, specifically for `cors_origins`.
 - `dotenv.load_dotenv`: For loading environment variables from `.env` files.
 - `loguru.logger`: For structured logging, especially for critical configuration errors.
 - `pydantic`: The core library for data validation and settings management.
@@ -23,7 +24,6 @@ Dependencies:
 - `pydantic.computed_field`: For fields whose values are computed dynamically.
 - `pydantic.field_validator`: Decorator for field-specific validation logic.
 - `pydantic.model_validator`: Decorator for model-level validation logic.
-- `json`: For parsing JSON strings, specifically for `cors_origins`.
 - `core.security.secret_vault`: An internal module responsible for fetching secrets from a secure vault (e.g., GCP Secret Manager)."""
 
 # backend/core/config.py
@@ -34,6 +34,7 @@ Dependencies:
 # সব ভ্যালু env var বা GCP Secret Manager থেকে আসে।
 # যেকোনো Environment-এ (Local/Staging/Prod) কোনো missing required var = startup crash (sys.exit(1)) — "resilient boot" সম্পূর্ণ নিষিদ্ধ।
 
+import json
 import os
 import secrets
 import sys
@@ -345,8 +346,7 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
-        import json
-
+        # বাংলা: import json এখন ফাইলের শীর্ষে সরাসরি করা হয়েছে, প্রতিটি কলে re-import নেই
         if isinstance(v, str):
             v = v.strip()
             if not v:

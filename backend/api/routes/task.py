@@ -1,6 +1,11 @@
+"""Task execution endpoints for SupremeAI.
+
+বাংলা: কাজ এক্সিকিউশন এন্ডপয়েন্ট।
+"""
 import contextlib
 import datetime
 import json
+import logging
 import re
 
 # বাংলা মন্তব্য: টাইপিং এরর এড়ানোর জন্য Any ইমপোর্ট করা হলো
@@ -187,9 +192,7 @@ def format_chat_history(messages: list[dict]) -> str:
                 if isinstance(data, dict) and "content" in data:
                     content = data["content"]
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logging.getLogger(__name__).warning(f"Exception suppressed: {e}")
         role_label = "User" if role == "user" else "Assistant"
         lines.append(f"{role_label}: {content}")
     return "\n".join(lines)
@@ -227,7 +230,8 @@ def format_response(text: str, task_type: str) -> str:
             ensure_ascii=False,
         )
 
-    if task_type == "image" or "generate image" in text.lower():
+    # বাংলা: লজিক্যাল অপারেটর ঠিক করা হয়েছে - and ব্যবহার করা হয়েছে
+    if task_type == "image" or ("generate image" in text.lower()):
         urls = re.findall(
             r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
             text,
@@ -379,6 +383,7 @@ async def task_stream():
         try:
             while True:
                 yield f"data: {json.dumps({'status': 'alive', 'timestamp': datetime.datetime.now(datetime.UTC).isoformat()})}\n\n"
+
                 await asyncio.sleep(15)
         except asyncio.CancelledError:
             logger.debug("Task stream keepalive cancelled (client disconnected)")

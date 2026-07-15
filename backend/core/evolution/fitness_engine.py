@@ -11,6 +11,7 @@ ensuring quality control and evolutionary adaptation within the SupremeAI ecosys
 import json
 import os
 import shutil
+import threading
 from typing import Any
 
 from loguru import logger
@@ -36,6 +37,9 @@ class FitnessEngine:
         self.deprecated_dir = deprecated_dir or os.path.join(base_dir, "skills", "deprecated")
         self.db = db
 
+        # রেস কন্ডিশন এবং ফাইল করাপশন এড়াতে থ্রেড লক ব্যবহার করা হচ্ছে
+        self._lock = threading.Lock()
+
         # Initialize SkillManager
         from core.skill_manager import SkillManager
 
@@ -48,48 +52,53 @@ class FitnessEngine:
             try:
                 with open(self.metrics_path, encoding="utf-8") as f:
                     return json.load(f)
-            except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to decode fitness metrics JSON: {e}")
+            except OSError as e:
+                logger.error(f"OS Error while reading fitness metrics: {e}")
+            except Exception as e:
+                logger.exception(f"Unexpected error loading metrics: {e}")
         return {}
 
     def _save_metrics(self):
-        os.makedirs(os.path.dirname(self.metrics_path), exist_ok=True)
         try:
+            os.makedirs(os.path.dirname(self.metrics_path), exist_ok=True)
             with open(self.metrics_path, "w", encoding="utf-8") as f:
                 json.dump(self.metrics, f, indent=4)
+        except OSError as e:
+            logger.error(f"OS Error while saving fitness metrics: {e}")
+        except Exception as e:
+            logger.exception(f"Unexpected error saving fitness metrics: {e}")
 
-            if self.db is not None:
-                try:
-                    self.db.collection("system_metrics").document("fitness_metrics").set({"metrics": self.metrics})
-                except Exception as e:  # noqa: BLE001
-                    logger.warning(f"Failed to sync fitness metrics to DB: {e}")
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to save fitness metrics: {e}")
+        if self.db is not None:
+            try:
+                self.db.collection("system_metrics").document("fitness_metrics").set({"metrics": self.metrics})
+            except Exception as e:
+                logger.error(f"Failed to sync fitness metrics to DB: {e}")
 
     def track_execution(self, skill_name: str, success: bool, latency: float, token_cost: float = 0.0):
         """Record telemetry metrics for a skill execution."""
-        if skill_name not in self.metrics:
-            self.metrics[skill_name] = {
-                "success_count": 0,
-                "failure_count": 0,
-                "total_latency": 0.0,
-                "token_cost": 0.0,
-                "reuse_count": 0,
-            }
+        with self._lock:
+            if skill_name not in self.metrics:
+                self.metrics[skill_name] = {
+                    "success_count": 0,
+                    "failure_count": 0,
+                    "total_latency": 0.0,
+                    "token_cost": 0.0,
+                    "reuse_count": 0,
+                }
 
-        entry = self.metrics[skill_name]
-        if success:
-            entry["success_count"] += 1
-        else:
-            entry["failure_count"] += 1
+            entry = self.metrics[skill_name]
+            if success:
+                entry["success_count"] += 1
+            else:
+                entry["failure_count"] += 1
 
-        entry["total_latency"] += latency
-        entry["token_cost"] += token_cost
-        entry["reuse_count"] += 1
+            entry["total_latency"] += latency
+            entry["token_cost"] += token_cost
+            entry["reuse_count"] += 1
 
-        self._save_metrics()
+            self._save_metrics()
 
     def calculate_fitness(self, skill_name: str) -> float:
         """
@@ -101,18 +110,19 @@ class FitnessEngine:
         - Latency Penalty = min(1.0, average_latency / 10.0)
         - Fitness = (Success Rate * 0.7) + ((1.0 - Latency Penalty) * 0.3)
         """
-        if skill_name not in self.metrics:
-            return 1.0
+        with self._lock:
+            if skill_name not in self.metrics:
+                return 1.0
 
-        entry = self.metrics[skill_name]
-        total_runs = entry["success_count"] + entry["failure_count"]
-        if total_runs == 0:
-            return 1.0
+            entry = self.metrics[skill_name]
+            total_runs = entry["success_count"] + entry["failure_count"]
+            if total_runs == 0:
+                return 1.0
 
-        success_rate = entry["success_count"] / total_runs
-        avg_latency = entry["total_latency"] / total_runs
+            success_rate = entry["success_count"] / total_runs
+            avg_latency = entry["total_latency"] / total_runs
+
         latency_penalty = min(1.0, avg_latency / 10.0)
-
         score = (success_rate * 0.7) + ((1.0 - latency_penalty) * 0.3)
         return float(score)
 
@@ -121,11 +131,13 @@ class FitnessEngine:
         Evaluate the skill and soft prune it if its score is below threshold after min_runs.
         Returns True if pruned/deprecated, False otherwise.
         """
-        if skill_name not in self.metrics:
-            return False
+        with self._lock:
+            if skill_name not in self.metrics:
+                return False
 
-        entry = self.metrics[skill_name]
-        total_runs = entry["success_count"] + entry["failure_count"]
+            entry = self.metrics[skill_name]
+            total_runs = entry["success_count"] + entry["failure_count"]
+
         if total_runs < min_runs:
             return False
 
@@ -140,33 +152,39 @@ class FitnessEngine:
             skill_data = self.registry._skills.get(skill_name)
             if skill_data and hasattr(skill_data, "status"):
                 skill_data.status = "DEPRECATED"
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to update registry status: {e}")
+        except Exception as e:
+            logger.exception(f"Failed to update registry status: {e}")
 
         # 2. Update Firestore Status
         if self.db is not None:
             try:
                 self.db.collection("supreme_dynamic_skills").document(skill_name).update({"status": "DEPRECATED"})
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Failed to update Firestore status for skill '{skill_name}': {e}")
+            except Exception as e:
+                logger.exception(f"Failed to update Firestore status for skill '{skill_name}': {e}")
 
         # 3. Soft Prune: Move files from skills/dynamic/<skill_name> to skills/deprecated/<skill_name>
         src_dir = os.path.join(self.skills_dir, skill_name)
         dest_dir = os.path.join(self.deprecated_dir, skill_name)
 
         if os.path.exists(src_dir):
-            os.makedirs(os.path.dirname(dest_dir), exist_ok=True)
             try:
+                os.makedirs(os.path.dirname(dest_dir), exist_ok=True)
                 if os.path.exists(dest_dir):
                     shutil.rmtree(dest_dir)
                 shutil.move(src_dir, dest_dir)
                 logger.info(f"📁 Soft pruned skill files moved to deprecated zone: {dest_dir}")
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Failed to move files to deprecated zone: {e}")
+            except OSError as e:
+                logger.error(f"OS Error while moving files to deprecated zone: {e}")
+            except Exception as e:
+                logger.exception(f"Failed to move files to deprecated zone: {e}")
 
         return True
 
     def evaluate_pending(self) -> None:
         """Evaluate all skills currently tracked in metrics and prune those below threshold."""
-        for skill_name in list(self.metrics.keys()):
+        # lock এর বাইরে কি লিস্ট কপি করে নেওয়া হচ্ছে
+        with self._lock:
+            skills_to_evaluate = list(self.metrics.keys())
+
+        for skill_name in skills_to_evaluate:
             self.evaluate_and_prune(skill_name)
