@@ -29,3 +29,12 @@ repos:
         language: system
         types: [python]
         stages: [commit]
+
+      # SupremeAI Security Guard - হার্ডকোডেড সিক্রেট ব্লকার
+      - id: security-guard
+        name: "🛡️ SupremeAI Security Guard"
+        description: "স্টেজ করা ফাইলে হার্ডকোডেড API Key / সিক্রেট থাকলে কমিট ব্লক করে।"
+        entry: python3 packages/scripts/security_guard.py
+        language: system
+        pass_filenames: false
+        stages: [commit]
