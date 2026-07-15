@@ -323,7 +323,7 @@ jobs:
 
       - name: ⚙️ Install Backend Dependencies
         working-directory: backend
-        run: poetry install --with dev
+        run: poetry install --sync --with dev
 
       - name: 🧪 Run Tests
         id: backend_tests
