@@ -21,6 +21,7 @@ async def test_generate_contract(mock_legal):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 # NON-DISCLOSURE AGREEMENT
 
@@ -59,6 +60,7 @@ This includes trade secrets, business plans, and technical data.
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 Clause Analysis:
 - Type: Confidentiality Clause
@@ -90,6 +92,7 @@ Privacy Policy:
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 Compliance Report:
 - GDPR: Compliant (data collection disclosed)
@@ -113,6 +116,7 @@ async def test_generate_tos(mock_legal):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 # TERMS OF SERVICE
 
@@ -146,6 +150,7 @@ async def test_generate_privacy_policy(mock_legal):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 # PRIVACY POLICY
 
@@ -173,6 +178,7 @@ async def test_legal_document_with_bangladesh_law(mock_legal):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 # EMPLOYMENT AGREEMENT
 
