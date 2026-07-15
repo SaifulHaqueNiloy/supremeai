@@ -19,43 +19,51 @@ export const MockSwarmProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [logs, setLogs] = useState<SwarmLog[]>([]);
 
-  // fetchHealth: রিয়েল ব্যাকএন্ড হেলথ এপিআই থেকে ডেটা রিকোয়েস্ট করা হচ্ছে
-  const fetchHealth = useCallback(async () => {
-    try {
-      const agentIds = ['Architect', 'Coder', 'QA', 'Deployer'];
-      // বাংলা মন্তব্য: সরাসরি ব্যাকএন্ড এপিআই থেকে এজেন্টের হেলথ স্ট্যাটাস ফেচ করা হচ্ছে।
-      const data = await apiClient.post<Record<string, { status: string; latency: number }>>('/api/health/agents', {
-        agent_ids: agentIds,
-      });
-
-      // Active agents গণনা করা
-      const activeCount = Object.values(data).filter(a => a.status === 'active' || a.status === 'healthy').length;
-
-      // জেনুইন স্ট্যাটাস অনুযায়ী CPU/Memory এবং এরর রেট রিফ্লেক্ট করা
-      setMetrics({
-        cpuUsage: activeCount > 0 ? 15 + activeCount * 8.5 + (Math.random() * 4) : 2.5,
-        memoryUsage: activeCount > 0 ? 256 + activeCount * 64 + (Math.random() * 20) : 128,
-        activeAgents: activeCount,
-        errorRate: activeCount > 0 ? Math.max(0, 0.5 + (Math.random() * 2)) : 0,
-      });
-      setConnectionStatus('connected');
-    } catch (err) {
-      // বাংলা মন্তব্য: ব্যাকএন্ড রিচ করতে না পারলে ডিসকানেক্টেড দেখানো হচ্ছে এবং মেট্রিক্স শুন্য করা হচ্ছে
-      setConnectionStatus('disconnected');
-      setMetrics({
-        cpuUsage: 0,
-        memoryUsage: 0,
-        activeAgents: 0,
-        errorRate: 0,
-      });
-    }
-  }, []);
-
   useEffect(() => {
-    fetchHealth();
-    const interval = setInterval(fetchHealth, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [fetchHealth]);
+    let isMounted = true;
+
+    const checkStatus = async () => {
+      try {
+        const agentIds = ['Architect', 'Coder', 'QA', 'Deployer'];
+        // বাংলা মন্তব্য: সরাসরি ব্যাকএন্ড এপিআই থেকে এজেন্টের হেলথ স্ট্যাটাস ফেচ করা হচ্ছে।
+        const data = await apiClient.post<Record<string, { status: string; latency: number }>>('/api/health/agents', {
+          agent_ids: agentIds,
+        });
+
+        if (isMounted) {
+          // Active agents গণনা করা
+          const activeCount = Object.values(data).filter(a => a.status === 'active' || a.status === 'healthy').length;
+
+          // জেনুইন স্ট্যাটাস অনুযায়ী CPU/Memory এবং এরর রেট রিফ্লেক্ট করা
+          setMetrics({
+            cpuUsage: activeCount > 0 ? 15 + activeCount * 8.5 + (Math.random() * 4) : 2.5,
+            memoryUsage: activeCount > 0 ? 256 + activeCount * 64 + (Math.random() * 20) : 128,
+            activeAgents: activeCount,
+            errorRate: activeCount > 0 ? Math.max(0, 0.5 + (Math.random() * 2)) : 0,
+          });
+          setConnectionStatus('connected');
+        }
+      } catch (err) {
+        if (isMounted) {
+          // বাংলা মন্তব্য: ব্যাকএন্ড রিচ করতে না পারলে ডিসকানেক্টেড দেখানো হচ্ছে এবং মেট্রিক্স শুন্য করা হচ্ছে
+          setConnectionStatus('disconnected');
+          setMetrics({
+            cpuUsage: 0,
+            memoryUsage: 0,
+            activeAgents: 0,
+            errorRate: 0,
+          });
+        }
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, POLL_INTERVAL_MS);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Simulate logs when connection is active
   useEffect(() => {
