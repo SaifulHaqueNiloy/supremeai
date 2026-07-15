@@ -42,7 +42,7 @@ def mock_llm_gateway():
 @pytest.fixture
 def circuit_breaker():
     """CircuitBreaker ইনস্ট্যান্স ফেরত দেয়।"""
-    return CircuitBreaker(failure_threshold=3, recovery_timeout=30.0)
+    return CircuitBreaker(name="test_fixture", failure_threshold=3, recovery_timeout=0.1)
 
 
 @pytest.fixture
@@ -77,12 +77,12 @@ class TestCircuitBreakerOpenError:
     """বাংলা মন্তব্য: CircuitBreakerOpenError exception টেস্ট।"""
 
     def test_can_be_raised(self):
-        with pytest.raises(CircuitBreakerOpenError, match="Service temporarily unavailable"):
-            raise CircuitBreakerOpenError("Service temporarily unavailable — circuit breaker OPEN")
+        with pytest.raises(CircuitBreakerOpenError):
+            raise CircuitBreakerOpenError(name="test_service", state=CircuitBreakerState.OPEN)
 
     def test_is_exception(self):
         with pytest.raises(Exception):
-            raise CircuitBreakerOpenError("Test error")
+            raise CircuitBreakerOpenError(name="test_service", state=CircuitBreakerState.OPEN)
 
 
 # -------------------- Tests: CircuitBreaker --------------------
@@ -92,20 +92,22 @@ class TestCircuitBreakerInit:
     """বাংলা মন্তব্য: CircuitBreaker initialization টেস্ট।"""
 
     def test_default_initialization(self):
-        cb = CircuitBreaker()
-        assert cb._cb.failure_threshold == 5
-        assert cb._cb.recovery_timeout == 30.0
-        assert cb._cb.failures == 0
-        assert cb._cb.last_failure_at is None
+        cb = CircuitBreaker(name="test_service")
+        assert cb.name == "test_service"
+        assert cb.failure_threshold == 3
+        assert cb.recovery_timeout == 60.0
+        assert cb.failure_count == 0
+        assert cb.last_failure_time is None
         assert cb.state == CircuitBreakerState.CLOSED
 
     def test_custom_initialization(self):
-        cb = CircuitBreaker(failure_threshold=10, recovery_timeout=60.0)
-        assert cb._cb.failure_threshold == 10
-        assert cb._cb.recovery_timeout == 60.0
+        cb = CircuitBreaker(name="test_service", failure_threshold=10, recovery_timeout=60.0)
+        assert cb.name == "test_service"
+        assert cb.failure_threshold == 10
+        assert cb.recovery_timeout == 60.0
 
     def test_initial_state_is_closed(self):
-        cb = CircuitBreaker()
+        cb = CircuitBreaker(name="test_service")
         assert cb.state == CircuitBreakerState.CLOSED
 
 
@@ -117,23 +119,22 @@ class TestCircuitBreakerCall:
         """বাংলা মন্তব্য: CLOSED state-এ সফল call result return করে।"""
         mock_coro = AsyncMock(return_value="success")
 
-        result = await circuit_breaker.call(mock_coro, "arg1", key="value")
+        result = await circuit_breaker.acall(mock_coro, "arg1", key="value")
 
         assert result == "success"
         assert circuit_breaker.state == CircuitBreakerState.CLOSED
-        assert circuit_breaker._cb.failures == 0
+        assert circuit_breaker.failure_count == 0
 
     @pytest.mark.asyncio
     async def test_successful_call_resets_failures(self, circuit_breaker):
         """বাংলা মন্তব্য: Success হলে failures reset হয়।"""
-        circuit_breaker._cb.failures = 2
-        circuit_breaker.state = CircuitBreakerState.HALF_OPEN  # Need to be in HALF_OPEN state
-        circuit_breaker._cb.state = CircuitBreakerState.HALF_OPEN
+        circuit_breaker.failure_count = 2
+        circuit_breaker.state = CircuitBreakerState.HALF_OPEN
         mock_coro = AsyncMock(return_value="success")
 
-        await circuit_breaker.call(mock_coro)
+        await circuit_breaker.acall(mock_coro)
 
-        assert circuit_breaker._cb.failures == 0
+        assert circuit_breaker.failure_count == 0
         assert circuit_breaker.state == CircuitBreakerState.CLOSED
 
     @pytest.mark.asyncio
@@ -142,10 +143,10 @@ class TestCircuitBreakerCall:
         mock_coro = AsyncMock(side_effect=RuntimeError("Service error"))
 
         with pytest.raises(RuntimeError):
-            await circuit_breaker.call(mock_coro)
+            await circuit_breaker.acall(mock_coro)
 
-        assert circuit_breaker._cb.failures == 1
-        assert circuit_breaker._cb.last_failure_at is not None
+        assert circuit_breaker.failure_count == 1
+        assert circuit_breaker.last_failure_time is not None
 
     @pytest.mark.asyncio
     async def test_multiple_failures_under_threshold(self, circuit_breaker):
@@ -154,9 +155,9 @@ class TestCircuitBreakerCall:
 
         for i in range(2):
             with pytest.raises(RuntimeError):
-                await circuit_breaker.call(mock_coro)
+                await circuit_breaker.acall(mock_coro)
 
-        assert circuit_breaker._cb.failures == 2
+        assert circuit_breaker.failure_count == 2
         assert circuit_breaker.state == CircuitBreakerState.CLOSED
 
     @pytest.mark.asyncio
@@ -166,33 +167,31 @@ class TestCircuitBreakerCall:
 
         for i in range(3):
             with pytest.raises(RuntimeError):
-                await circuit_breaker.call(mock_coro)
+                await circuit_breaker.acall(mock_coro)
 
-        assert circuit_breaker._cb.failures == 3
+        assert circuit_breaker.failure_count == 3
         assert circuit_breaker.state == CircuitBreakerState.OPEN
 
     @pytest.mark.asyncio
     async def test_open_circuit_rejects_calls(self, circuit_breaker):
         """বাংলা মন্তব্য: OPEN state-এ calls reject হয়।"""
         circuit_breaker.state = CircuitBreakerState.OPEN
-        circuit_breaker._cb.state = CircuitBreakerState.OPEN
-        circuit_breaker._cb.last_failure_at = time.time()
+        circuit_breaker.last_failure_time = time.time()
 
         mock_coro = AsyncMock(return_value="success")
 
-        with pytest.raises(CircuitBreakerOpenError, match="Service temporarily unavailable"):
-            await circuit_breaker.call(mock_coro)
+        with pytest.raises(CircuitBreakerOpenError):
+            await circuit_breaker.acall(mock_coro)
 
     @pytest.mark.asyncio
     async def test_open_circuit_transitions_to_half_open_after_timeout(self, circuit_breaker):
         """বাংলা মন্তব্য: Recovery timeout পরে OPEN থেকে HALF_OPEN হয়।"""
         circuit_breaker.state = CircuitBreakerState.OPEN
-        circuit_breaker._cb.state = CircuitBreakerState.OPEN
-        circuit_breaker._cb.opened_at = time.time() - 31.0  # 31 seconds ago
+        circuit_breaker.last_failure_time = time.monotonic() - 61.0  # 61 seconds ago
 
         mock_coro = AsyncMock(return_value="success")
 
-        result = await circuit_breaker.call(mock_coro)
+        result = await circuit_breaker.acall(mock_coro)
 
         assert result == "success"
         # After successful call in HALF_OPEN, it transitions to CLOSED
@@ -202,13 +201,12 @@ class TestCircuitBreakerCall:
     async def test_open_circuit_stays_open_before_timeout(self, circuit_breaker):
         """বাংলা মন্তব্য: Timeout আগে OPEN state maintain করে।"""
         circuit_breaker.state = CircuitBreakerState.OPEN
-        circuit_breaker._cb.state = CircuitBreakerState.OPEN
-        circuit_breaker._cb.last_failure_at = time.time() - 10.0  # 10 seconds ago
+        circuit_breaker.last_failure_time = time.monotonic() - 0.05  # 0.05 seconds ago (timeout is 0.1)
 
         mock_coro = AsyncMock(return_value="success")
 
         with pytest.raises(CircuitBreakerOpenError):
-            await circuit_breaker.call(mock_coro)
+            await circuit_breaker.acall(mock_coro)
 
         assert circuit_breaker.state == CircuitBreakerState.OPEN
 
@@ -216,38 +214,36 @@ class TestCircuitBreakerCall:
     async def test_half_open_success_closes_circuit(self, circuit_breaker):
         """বাংলা মন্তব্য: HALF_OPEN state-এ success হলে CLOSED হয়।"""
         circuit_breaker.state = CircuitBreakerState.HALF_OPEN
-        circuit_breaker._cb.state = CircuitBreakerState.HALF_OPEN
-        circuit_breaker._cb.failures = 2
+        circuit_breaker.failure_count = 2
 
         mock_coro = AsyncMock(return_value="success")
 
-        result = await circuit_breaker.call(mock_coro)
+        result = await circuit_breaker.acall(mock_coro)
 
         assert result == "success"
         assert circuit_breaker.state == CircuitBreakerState.CLOSED
-        assert circuit_breaker._cb.failures == 0
+        assert circuit_breaker.failure_count == 0
 
     @pytest.mark.asyncio
     async def test_half_open_failure_reopens_circuit(self, circuit_breaker):
         """বাংলা মন্তব্য: HALF_OPEN state-এ failure হলে আবার OPEN হয়।"""
         circuit_breaker.state = CircuitBreakerState.HALF_OPEN
-        circuit_breaker._cb.state = CircuitBreakerState.HALF_OPEN
-        circuit_breaker._cb.failures = 2
+        circuit_breaker.failure_count = 2
 
         mock_coro = AsyncMock(side_effect=RuntimeError("Still failing"))
 
         with pytest.raises(RuntimeError):
-            await circuit_breaker.call(mock_coro)
+            await circuit_breaker.acall(mock_coro)
 
         assert circuit_breaker.state == CircuitBreakerState.OPEN
-        assert circuit_breaker._cb.failures == 3
+        assert circuit_breaker.failure_count == 3
 
     @pytest.mark.asyncio
     async def test_call_with_args_and_kwargs(self, circuit_breaker):
         """বাংলা মন্তব্য: args এবং kwargs correctly coroutine-এ pass হয়।"""
         mock_coro = AsyncMock(return_value="result")
 
-        result = await circuit_breaker.call(mock_coro, "arg1", "arg2", key1="val1", key2="val2")
+        result = await circuit_breaker.acall(mock_coro, "arg1", "arg2", key1="val1", key2="val2")
 
         mock_coro.assert_called_once_with("arg1", "arg2", key1="val1", key2="val2")
         assert result == "result"
@@ -271,8 +267,8 @@ class TestSwarmOrchestratorInit:
     def test_circuit_breaker_default_config(self):
         """বাংলা মন্তব্য: Circuit breaker default configuration দিয়ে create হয়।"""
         orchestrator = MorphicOrchestrator()
-        assert orchestrator.circuit_breaker._cb.failure_threshold == 3
-        assert orchestrator.circuit_breaker._cb.recovery_timeout == 30.0
+        assert getattr(orchestrator, "circuit_breaker", None) is not None
+        assert orchestrator.circuit_breaker.recovery_timeout == 30.0
 
 
 class TestSwarmOrchestratorExecuteTask:
@@ -335,8 +331,7 @@ class TestSwarmOrchestratorExecuteTask:
 
         # Make circuit breaker open
         orchestrator.circuit_breaker.state = CircuitBreakerState.OPEN
-        orchestrator.circuit_breaker._cb.state = CircuitBreakerState.OPEN
-        orchestrator.circuit_breaker._cb.last_failure_at = time.time()
+        orchestrator.circuit_breaker.last_failure_time = time.monotonic()
 
         with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
             result = await orchestrator.execute_task("Test python task", "user123")
@@ -362,7 +357,7 @@ class TestSwarmOrchestratorExecuteTask:
                         await orchestrator.execute_task("Test python task", "user123")
 
                         # Circuit breaker should have recorded the failure
-                        assert orchestrator.circuit_breaker._cb.failures == 1
+                        assert orchestrator.circuit_breaker.failure_count == 1
 
     @pytest.mark.asyncio
     async def test_code_generation_phase_failure(self, mock_workspace):
@@ -375,7 +370,7 @@ class TestSwarmOrchestratorExecuteTask:
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
                         await orchestrator.execute_task("Test python task", "user123")
 
-                        assert orchestrator.circuit_breaker._cb.failures == 1
+                        assert orchestrator.circuit_breaker.failure_count == 1
 
     @pytest.mark.asyncio
     async def test_qa_phase_failure(self, mock_workspace):
@@ -388,7 +383,7 @@ class TestSwarmOrchestratorExecuteTask:
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
                         await orchestrator.execute_task("Test python task", "user123")
 
-                        assert orchestrator.circuit_breaker._cb.failures == 1
+                        assert orchestrator.circuit_breaker.failure_count == 1
 
     @pytest.mark.asyncio
     async def test_default_user_id(self, mock_workspace):

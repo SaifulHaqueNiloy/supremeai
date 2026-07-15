@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+import hmac
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -45,6 +46,10 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
     Returns:
         Decoded payload dict, or None if invalid/expired.
     """
+    if not settings.jwt_secret:
+        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        return None
+
     try:
         payload = jwt.decode(
             token,
@@ -153,7 +158,7 @@ class AuthMiddleware:
         # API Key validation for system components / testing
         # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
         supremeai_api_token = os.getenv("SUPREMEAI_API_TOKEN")
-        if supremeai_api_token and token == supremeai_api_token:
+        if supremeai_api_token and hmac.compare_digest(token.encode("utf-8"), supremeai_api_token.encode("utf-8")):
             scope["user"] = {
                 "sub": "system_api_key",
                 "role": "admin",

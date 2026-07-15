@@ -565,7 +565,7 @@ class TestSwarmOrchestratorMissingBranches:
         # বাংলা মন্তব্য: CircuitBreaker ও সম্পর্কিত স্টেট/এরর সরাসরি core.resilience.circuit_breaker থেকে ইম্পোর্ট করা হলো।
         from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitBreakerState
 
-        cb = CircuitBreaker(failure_threshold=2, recovery_timeout=0.1)
+        cb = CircuitBreaker(name="morphic", failure_threshold=2, recovery_timeout=0.1)
 
         async def failing():
             raise RuntimeError("fail")
