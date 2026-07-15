@@ -66,7 +66,7 @@ async def commit_to_memory(request: LearnRequest):
     return {"status": "success", "message": "Memorized successfully"}
 
 
-from services.github_agent import create_autonomous_pr
+from tools.devops.github_agent import create_autonomous_pr
 
 
 @router.post("/agent/github/pr")
