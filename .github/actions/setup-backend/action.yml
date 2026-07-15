@@ -40,4 +40,5 @@ runs:
     - name: ⚙️ Install Build Dependencies
       shell: bash
       run: |
-        pip install --upgrade pip setuptools wheel
+        pip install --upgrade pip
+        pip install setuptools==74.0.0 wheel
