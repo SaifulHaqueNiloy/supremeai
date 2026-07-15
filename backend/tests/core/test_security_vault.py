@@ -48,7 +48,7 @@ def test_encrypt_token_uses_fernet(monkeypatch):
             return b"encrypted-bytes"
 
     # বাংলা মন্তব্য: monkeypatch ব্যবহার করে security_vault.fernet mock করা হলো
-    monkeypatch.setattr(security_vault, "fernet", MockFernet())
+    monkeypatch.setattr(security_vault, "_vault", MockFernet())
     result = encrypt_token("hello")
     assert result == "encrypted-bytes"
 
@@ -59,6 +59,6 @@ def test_decrypt_token_handles_exception(monkeypatch):
             raise Exception("Decryption failed")
 
     # বাংলা মন্তব্য: monkeypatch ব্যবহার করে security_vault.fernet mock করা হলো
-    monkeypatch.setattr(security_vault, "fernet", MockFernet())
+    monkeypatch.setattr(security_vault, "_vault", MockFernet())
     with pytest.raises(ValueError, match="Decryption failed"):
         decrypt_token("invalid")

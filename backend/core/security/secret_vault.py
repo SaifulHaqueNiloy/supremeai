@@ -108,7 +108,7 @@ class ProductionSecretVault:
                 project_id=self.project_id,
                 secret_name=secret_id,
             )
-            
+
             # Exponential backoff retry logic
             max_retries = 3
             for attempt in range(max_retries):

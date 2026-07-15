@@ -91,12 +91,12 @@ def get_role_permissions(role: str | Role) -> frozenset[Permission] | frozenset[
     বাংলা: নির্দিষ্ট রোলের জন্য সব পারমিশন রিটার্ন করে। প্রথমে config চেক করে, তারপর default।
     """
     role_str = role.value if isinstance(role, Role) else role.lower()
-    
+
     # Check config-driven roles first
     custom_roles = settings.rbac_role_definitions
     if role_str in custom_roles:
         return frozenset(custom_roles[role_str])
-        
+
     # Fallback to hardcoded roles
     try:
         role_enum = Role(role_str)
@@ -113,15 +113,15 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
     try:
         req_perm_str = required_permission.value if isinstance(required_permission, Permission) else required_permission.lower()
         role_perms = get_role_permissions(role)
-        
+
         # wildcard support
         if "*" in role_perms:
             return True
-            
+
         # check both enum-based and string-based perms
         if req_perm_str in role_perms:
             return True
-            
+
         if isinstance(required_permission, str):
             try:
                 perm_enum = Permission(required_permission.lower())
@@ -129,7 +129,7 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
                     return True
             except ValueError:
                 pass
-                
+
         return False
     except Exception as exc:
         logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}")
