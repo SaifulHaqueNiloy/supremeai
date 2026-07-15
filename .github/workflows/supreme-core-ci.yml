@@ -373,7 +373,7 @@ jobs:
       - name: 📦 Install Dependencies (Smart Sync)
         working-directory: backend
         run: |
-          poetry install --sync --with dev
+          poetry install --with dev
 
       - name: 🧪 Run Tests
         id: backend_tests
