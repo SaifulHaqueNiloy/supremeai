@@ -37,7 +37,7 @@ async def run_experiment(target: str, fault: str, duration: int, loops: int):
             try:
                 await cb.call(simulated_network_call, False)
                 logger.info(f"Call succeeded. State: {cb.state}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 — circuit breaker যেকোনো error তুলতে পারে, সবগুলো log করা দরকার
                 logger.error(f"Unexpected error: {e}")
 
         # 2. Inject Faults to Trip Circuit Breaker
@@ -48,7 +48,7 @@ async def run_experiment(target: str, fault: str, duration: int, loops: int):
             except CircuitBreakerOpenError as e:
                 logger.critical(f"Circuit Breaker is OPEN: {e}")
                 break
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 — fault injection phase-এ injected error সব ধরনের হতে পারে
                 logger.warning(f"Call failed (Fault injected): {e}. State: {cb.state}")
 
         # Wait for the recovery timeout
@@ -61,7 +61,7 @@ async def run_experiment(target: str, fault: str, duration: int, loops: int):
             try:
                 await cb.call(simulated_network_call, False)
                 logger.info(f"Recovery call succeeded. State: {cb.state}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 — recovery phase-এ half-open বা failed call যেকোনো error তুলতে পারে
                 logger.error(f"Recovery call failed: {e}")
 
         logger.info("-" * 20)
