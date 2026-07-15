@@ -125,9 +125,12 @@ class TestConfigCacheMissingBranches:
     def test_refresh_sync_loads_defaults_on_db_failure(self, monkeypatch):
         from core.config_cache import ConfigCache, DEFAULT_CONFIGS
 
-        monkeypatch.setattr(ConfigCache, "_load_from_db", lambda self: (_ for _ in ()).throw(RuntimeError("db down")))
+        async def fake_load_from_db_async(self):
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(ConfigCache, "_load_from_db_async", fake_load_from_db_async)
         cache = ConfigCache()
-        cache.refresh()
+        cache.refresh_sync_bootstrap()
         assert cache._loaded is True
         assert cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
 
@@ -274,8 +277,9 @@ class TestCostGuardMissingBranches:
         from core.cost_guard import CostGuard
 
         guard = CostGuard()
-        for tier in ("free", "economy", "premium"):
-            assert await guard.validate_budget("t1", tier) is True
+        with patch("core.cache.redis_manager.redis_manager.get_cache", new_callable=AsyncMock, return_value="0.0"):
+            for tier in ("free", "economy", "premium"):
+                assert await guard.validate_budget("t1", tier) is True
 
     @pytest.mark.asyncio
     async def test_validate_budget_returns_true_for_unknown_tier(self):
@@ -446,28 +450,31 @@ class TestEventBusMissingBranches:
 
 
 class TestPubSubMissingBranches:
-    def test_subscribe_creates_channel(self):
+    @pytest.mark.asyncio
+    async def test_subscribe_creates_channel(self):
         from core.messaging.pubsub import PubSub
 
         pubsub = PubSub()
-        q = pubsub.subscribe("ch1")
+        q = await pubsub.subscribe("ch1")
         assert "ch1" in pubsub.subscribers
         assert q in pubsub.subscribers["ch1"]
 
-    def test_unsubscribe_removes_channel_when_empty(self):
+    @pytest.mark.asyncio
+    async def test_unsubscribe_removes_channel_when_empty(self):
         from core.messaging.pubsub import PubSub
 
         pubsub = PubSub()
-        q = pubsub.subscribe("ch1")
-        pubsub.unsubscribe("ch1", q)
+        q = await pubsub.subscribe("ch1")
+        await pubsub.unsubscribe("ch1", q)
         assert "ch1" not in pubsub.subscribers
 
-    def test_unsubscribe_nonexistent_channel(self):
+    @pytest.mark.asyncio
+    async def test_unsubscribe_nonexistent_channel(self):
         from core.messaging.pubsub import PubSub
 
         pubsub = PubSub()
         q = MagicMock()
-        pubsub.unsubscribe("missing", q)
+        await pubsub.unsubscribe("missing", q)
 
     @pytest.mark.asyncio
     async def test_publish_no_subscribers(self):
@@ -481,7 +488,7 @@ class TestPubSubMissingBranches:
         from core.messaging.pubsub import PubSub
 
         pubsub = PubSub()
-        q = pubsub.subscribe("ch1")
+        q = await pubsub.subscribe("ch1")
         msg = {"msg": 1}
         await pubsub.publish("ch1", msg)
         received = await q.get()
