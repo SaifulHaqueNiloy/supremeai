@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 """Implements a robust, multi-layered caching system for the SupremeAI project.
 
 This module provides the `MultiLayerCache` class, which orchestrates a five-tier caching strategy
@@ -113,7 +114,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L1 cache read error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L1_READ_FAILED", message=str(e)[:200], severity="WARNING"))
+            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L1_READ_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
 
         try:
             # Layer 2: Semantic Cache
@@ -125,7 +126,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L2 semantic cache error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_READ_FAILED", message=str(e)[:200], severity="WARNING"))
+            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_READ_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
 
         try:
             # Layer 3: Prefix Cache (Redis) — এখন একটাই batched round-trip
@@ -152,7 +153,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L3 prefix cache error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_READ_FAILED", message=str(e)[:200], severity="WARNING"))
+            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_READ_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
 
         # Layer 4: Session Cache (In-memory LRU)
         if session_id:
@@ -178,7 +179,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L1 cache write error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L1_WRITE_FAILED", message=str(e)[:200], severity="WARNING"))
+            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L1_WRITE_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
 
         try:
             await self._get_semantic_cache().set(prompt, response, task_type="general")
@@ -186,7 +187,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L2 semantic cache write error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_WRITE_FAILED", message=str(e)[:200], severity="WARNING"))
+            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_WRITE_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
 
         try:
             prefix_cache = self._get_prefix_cache()
@@ -213,7 +214,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L3 prefix cache write error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_WRITE_FAILED", message=str(e)[:200], severity="WARNING"))
+            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_WRITE_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
 
         if session_id:
             _set_session_cache(session_id, prompt, response)

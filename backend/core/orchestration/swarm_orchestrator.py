@@ -3,6 +3,9 @@
 
 import asyncio
 import uuid
+from typing import Any
+
+from pydantic import BaseModel, Field, ConfigDict
 
 from core.agent_factory import DynamicAgentFactory
 from core.mcp_client import MCPRegistryClient
@@ -28,6 +31,14 @@ from core.skills.integrations import GithubSyncSkill
 from core.skills.integrations import NotionSyncSkill
 from core.skills.integrations import SlackIntegrationSkill
 from models.shared_workspace import SharedWorkspace
+
+
+class ExecutionResult(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    task_id: str = Field(..., description="Unique Master Task ID")
+    status: str = Field(..., description="Execution status")
+    workspace: SharedWorkspace
+    errors: list[str] = Field(default_factory=list)
 
 
 class MorphicOrchestrator:
@@ -105,7 +116,7 @@ class MorphicOrchestrator:
             return synthesized_capability
         return None
 
-    async def execute_task(self, prompt: str, user_id: str = "default_user_session") -> SharedWorkspace:
+    async def execute_task(self, prompt: str, user_id: str = "default_user_session") -> ExecutionResult:
         task_id = str(uuid.uuid4())
         workspace = SharedWorkspace(task_id=task_id, original_prompt=prompt)
         workspace.log(f"MorphicOrchestrator: Initialized swarm DAG for task {task_id}")
@@ -142,7 +153,9 @@ class MorphicOrchestrator:
                 workspace.work_product["available_tools"].append(new_tool)
 
         # 3. Get Dynamic DAG based on intent
-        return await self.run_dag_for_workspace(workspace, user_id)
+        workspace = await self.run_dag_for_workspace(workspace, user_id)
+        status = "error" if workspace.errors else "success"
+        return ExecutionResult(task_id=workspace.task_id, status=status, workspace=workspace, errors=workspace.errors)
 
     async def run_dag_for_workspace(self, workspace: SharedWorkspace, user_id: str = "default_user_session") -> SharedWorkspace:
         task_graph = await self._get_dag_for_intent(workspace.intent)
@@ -224,9 +237,8 @@ class MorphicOrchestrator:
 
         except Exception as e:
             # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে এবং ট্রেসব্যাক লগ করা হচ্ছে।
-            import traceback
-            import logging
-            logging.error(f"DAG execution failed: {traceback.format_exc()}")
+            from loguru import logger
+            logger.opt(exception=True).error(f"DAG execution failed: {e}")
 
             from core.resilience.circuit_breaker import CircuitBreakerOpenError
 

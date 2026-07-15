@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 """This module serves as the central FastAPI application lifespan manager for the SupremeAI project, orchestrating the robust startup and graceful shutdown of all critical backend infrastructure. It handles the initialization of essential services such as database connection pools, Redis caches, global HTTP clients, OpenTelemetry tracing, the core AI Orchestrator, and various background agents, ensuring the application is fully prepared to serve requests. The module is designed with defensive programming principles, allowing the application to start in a degraded mode if certain non-critical services fail to initialize, thereby enhancing operational stability and resilience in a highly scalable AI ecosystem.
 
 Key Components:
@@ -120,7 +121,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="TRACING_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"component": "opentelemetry"},
             )
         )
@@ -156,11 +157,11 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="DB_POOL_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="CRITICAL" if getattr(settings, "env", "local") == "production" else "WARNING",
-                context={"db_url": db_url[:50] if db_url else "", "env": getattr(settings, "env", "unknown")},
+                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
+                context={"db_url": db_url[:50] if db_url else "", "env": settings.env},
             )
         )
-        if getattr(settings, "env", "local") == "production":
+        if settings.env == "production":
             # Production-এ Sentry-তে alert পাঠান, কিন্তু crash করবেন না
             logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
 
@@ -176,7 +177,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="CONFIG_CACHE_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"fallback": "DEFAULT_CONFIGS"},
             )
         )
@@ -199,11 +200,11 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="REDIS_INIT_FAILED",
                 message=str(e)[:200],
-                severity="CRITICAL" if getattr(settings, "env", "local") == "production" else "WARNING",
-                context={"env": getattr(settings, "env", "unknown")},
+                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
+                context={"env": settings.env},
             )
         )
-        if getattr(settings, "env", "local") == "production":
+        if settings.env == "production":
             logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
             # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
 
@@ -219,7 +220,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="ORCHESTRATOR_INIT_FAILED",
                 message=str(e)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"component": "orchestrator"},
             )
         )
@@ -241,7 +242,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SUPABASE_BOOTSTRAP_FAILED",
                 message=str(exc)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"component": "supabase"},
             )
         )
@@ -272,7 +273,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_ORCHESTRATOR_FAILED",
                 message=str(e)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -292,17 +293,21 @@ async def app_lifespan(app):
             except asyncio.CancelledError:
                 pass
             logger.info("✅ Sentinel Agent shut down successfully.")
+            tasks.append(sentinel_task)
 
         swarm_cache_task = getattr(app.state, "swarm_cache_task", None)
         if swarm_cache_task and not swarm_cache_task.done():
             swarm_cache_task.cancel()
+            tasks.append(swarm_cache_task)
+        
+        if tasks:
             try:
-                await asyncio.wait_for(swarm_cache_task, timeout=5.0)
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)
+                logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")
             except asyncio.TimeoutError:
-                logger.warning("Swarm cache task did not stop gracefully within timeout")
+                logger.warning("⚠️ Background tasks did not finish within 10s shutdown window.")
             except asyncio.CancelledError:
                 pass
-            logger.info("✅ Swarm Cache Invalidator shut down successfully.")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error closing background tasks: {e}")
 
@@ -319,7 +324,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_DB_POOL_FAILED",
                 message=str(e)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -335,7 +340,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_REDIS_FAILED",
                 message=str(e)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -352,7 +357,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_HTTP_CLIENT_FAILED",
                 message=str(e)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -369,7 +374,7 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_BROWSER_FAILED",
                 message=str(e)[:200],
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )

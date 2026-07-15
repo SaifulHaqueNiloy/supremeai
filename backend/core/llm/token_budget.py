@@ -1,3 +1,5 @@
+from __future__ import annotations
+from core.messaging.event_bus import ErrorContext
 """
 token_budget.py
 ===============
@@ -14,7 +16,6 @@ Key features:
 - Usage statistics
 """
 
-from __future__ import annotations
 
 import re
 import time
@@ -23,6 +24,8 @@ from dataclasses import field
 from typing import Any
 
 from loguru import logger
+
+from core.messaging.event_bus import ErrorEvent, error_event_bus
 
 
 # ---------------------------------------------------------------------------
@@ -223,6 +226,20 @@ class TokenBudgetManager:
         original_tokens = estimate_tokens(prompt)
         system_tokens = estimate_tokens(system_prompt) if system_prompt else 0
         available_for_user = max_input - system_tokens
+
+        if available_for_user <= 0:
+            msg = f"Token budget exhausted for {provider}. System prompt uses {system_tokens} tokens, max allowed is {max_input}."
+            logger.error(f"[TokenBudget] {msg}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="token_budget",
+                    error_type="BUDGET_EXHAUSTION",
+                    message=msg,
+                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    context={"provider": provider, "system_tokens": system_tokens, "max_input": max_input},
+                )
+            )
+            raise ValueError(msg)
 
         truncated = False
         tokens_saved = 0
