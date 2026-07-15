@@ -290,6 +290,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
+      SETUPTOOLS_USE_DISTUTILS: stdlib
       SUPREMEAI_ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
       PYTHONPATH: ${{ github.workspace }}/backend
       GITHUB_TOKEN: "mock_dummy_token"
