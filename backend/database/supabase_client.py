@@ -24,8 +24,8 @@ class SupabaseDB:
             try:
                 self.client = create_client(self.url, self.key)
                 logger.info("Initialized Supabase Client")
-            except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-                logger.error(f"Failed to initialize Supabase client: {e}")
+            except Exception as e:
+                logger.exception(f"Supabase operation error: {e}")
         else:
             logger.warning("SUPABASE_URL or SUPABASE_KEY not found. Running in offline/mock mode.")
 
@@ -42,7 +42,8 @@ class SupabaseDB:
                 if hostname.startswith("db."):
                     return f"https://{hostname[3:]}"
                 return f"https://{hostname}"
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as exc:
+        except Exception as exc:
+            logger.exception(f"Supabase operation error: {exc}")
             # বল মনতবয: DATABASE_URL পরস বযরথ হল আগ নরব None রটরন করত;
             # কনফগ ভল থকল ত যন দশযমন হয় সজনয ডবগ লগ যকত কর হল
             logger.debug(f"Failed to derive Supabase URL from DATABASE_URL: {exc}")
@@ -341,7 +342,8 @@ class SupabaseDB:
                     ("SUPABASE_DATABASE_URL_POOLER" if candidate_url == pooler_url else "SUPABASE_DATABASE_URL"),
                 )
                 return
-            except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
+            except Exception as e:
+                logger.exception(f"Supabase operation error: {e}")
                 logger.warning(
                     "Supabase schema bootstrap failed for %s: %s",
                     ("SUPABASE_DATABASE_URL_POOLER" if candidate_url == pooler_url else "SUPABASE_DATABASE_URL"),
@@ -361,7 +363,7 @@ class SupabaseDB:
         try:
             response = operation()
             return getattr(response, "data", response)
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
+        except Exception as e:
             if self._is_schema_cache_error(e):
                 logger.warning(
                     "Supabase operation failed due missing table schema cache; bootstrapping schema and retrying: %s",
@@ -371,7 +373,8 @@ class SupabaseDB:
                 try:
                     response = operation()
                     return getattr(response, "data", response)
-                except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as retry_error:
+                except Exception as retry_error:
+                    logger.exception(f"Supabase operation error: {retry_error}")
                     logger.error(
                         "Supabase retry after schema bootstrap failed: %s",
                         retry_error,
@@ -389,8 +392,8 @@ class SupabaseDB:
             if res.data:
                 return res.data[0].get("value")
             return None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch config '{key}': {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def set_config(self, key: str, value: Any, category: str = "general"):
@@ -398,8 +401,8 @@ class SupabaseDB:
             return
         try:
             self.client.table("system_config").upsert({"key": key, "value": value, "category": category}).execute()
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to set config '{key}': {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
 
     # --- Feature Flags ---
     def is_feature_enabled(self, feature_name: str, user_id: str | None = None) -> bool:
@@ -416,8 +419,8 @@ class SupabaseDB:
                 # Real implementation would hash user_id against rollout_percentage here
                 return True
             return False
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to check feature flag '{feature_name}': {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return False
 
     # --- GitHub Repos ---
@@ -433,8 +436,8 @@ class SupabaseDB:
                     "language": language,
                 }
             ).execute()
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to add GitHub repo '{repo_name}': {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
 
     # --- AI Model Behavior ---
     def get_model_behavior(self, model_name: str) -> Any | None:
@@ -445,7 +448,8 @@ class SupabaseDB:
             if res.data:
                 return res.data
             return None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             # It's okay if a model is not found, so we can log this at a debug level.
             logger.debug(f"Could not fetch AI model behavior for '{model_name}': {e}")
             return None
@@ -457,8 +461,8 @@ class SupabaseDB:
             # Use upsert with on_conflict on 'model_name' if the table is set up for it.
             res = self.client.table("ai_model_behavior").upsert(data).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to upsert AI model behavior: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     # --- User Preferences ---
@@ -470,8 +474,8 @@ class SupabaseDB:
             if res.data:
                 return res.data[0]
             return None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch preferences for '{user_id}': {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def upsert_user_preferences(self, data: dict) -> Any | None:
@@ -480,8 +484,8 @@ class SupabaseDB:
         try:
             res = self.client.table("user_preferences").upsert(data).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to upsert preferences: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_configs_by_category(self, category: str) -> list[dict]:
@@ -490,8 +494,8 @@ class SupabaseDB:
         try:
             res = self.client.table("system_config").select("*").eq("category", category).execute()
             return res.data or []
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch configs by category '{category}': {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return []
 
     # --- Evolution / Self-Evolution Persistence ---
@@ -560,8 +564,8 @@ class SupabaseDB:
             }
             res = self.client.table("skill_proposals").insert(entry).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.debug(f"Supabase skill_proposals insert failed: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def insert_feedback(
@@ -584,8 +588,8 @@ class SupabaseDB:
             }
             res = self.client.table("feedback_loop").insert(entry).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.debug(f"Supabase feedback_loop insert failed: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def append_evolution_log(self, entry: dict[str, Any]) -> Any | None:
@@ -603,8 +607,8 @@ class SupabaseDB:
         try:
             res = self.client.table("evolution_logs").insert(entry).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.debug(f"Supabase evolution_logs insert failed: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_evolution_logs(self, limit: int = 200) -> list[dict[str, Any]]:
@@ -613,8 +617,8 @@ class SupabaseDB:
         try:
             res = self.client.table("evolution_logs").select("*").order("created_at", desc=True).limit(limit).execute()
             return res.data or []
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.debug(f"Supabase get_evolution_logs failed: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return []
 
     # --- Usage Metrics ---
@@ -624,8 +628,8 @@ class SupabaseDB:
         try:
             res = self.client.table("usage_metrics").upsert(data).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to upsert usage metrics: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     # --- Skills Registry DB integration ---
@@ -635,8 +639,8 @@ class SupabaseDB:
         try:
             res = self.client.table("skills").upsert(data).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to upsert skill into DB: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_db_skill(self, name: str) -> Any | None:
@@ -645,8 +649,8 @@ class SupabaseDB:
         try:
             res = self.client.table("skills").select("*").eq("name", name).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch skill '{name}' from DB: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_all_db_skills(self) -> list[dict]:
@@ -655,8 +659,8 @@ class SupabaseDB:
         try:
             res = self.client.table("skills").select("*").execute()
             return res.data or []
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch all skills from DB: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return []
 
     # --- Guardrails DB integration ---
@@ -666,8 +670,8 @@ class SupabaseDB:
         try:
             res = self.client.table("guardrails").upsert(data).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to upsert guardrail: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_db_guardrails(self) -> list[dict]:
@@ -676,8 +680,8 @@ class SupabaseDB:
         try:
             res = self.client.table("guardrails").select("*").eq("is_active", True).order("priority", desc=False).execute()
             return res.data or []
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch active guardrails: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return []
 
     # --- Provider Configs DB integration ---
@@ -687,8 +691,8 @@ class SupabaseDB:
         try:
             res = self.client.table("provider_configs").upsert(data).execute()
             return res.data[0] if res.data else None
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to upsert provider config: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_db_provider_configs(self) -> list[dict]:
@@ -697,8 +701,8 @@ class SupabaseDB:
         try:
             res = self.client.table("provider_configs").select("*").eq("is_active", True).order("priority", desc=False).execute()
             return res.data or []
-        except (ValueError, TypeError, ConnectionError, RuntimeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to fetch active provider configs: {e}")
+        except Exception as e:
+            logger.exception(f"Supabase operation error: {e}")
             return []
 
 

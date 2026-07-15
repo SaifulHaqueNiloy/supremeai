@@ -1,16 +1,20 @@
 # Model Router for SupremeAI 2.0 (Refactored Thin Wrapper)
-# বাংলা মন্তব্য: এটি পুরানো রাউটিং লজিকগুলোর বদলে সরাসরি নতুন llm_gateway.py এর মাধ্যমে রিকোয়েস্ট ফরোয়ার্ড করে।
+# বাংলা মন্তব্য: এটি পুরানো রাউটিং লজিকগুলোর বদলে সরাসরি নতুন llm_gateway.py এর মাধ্যমে রিকোয়েস্ট ফরোয়ার্ড করে।
 
 import asyncio
 import inspect
+import json
+import sys
 from typing import Any
 
 from loguru import logger
 
+from core.config import settings
 from core.llm.llm_gateway import llm_gateway
 
 
 def run_async_as_sync(coro):
+    """Run async coroutine in sync context."""
     from concurrent.futures import ThreadPoolExecutor
 
     try:
@@ -33,7 +37,7 @@ class ModelRouter:
 
     def __init__(self):
         logger.info("Initializing refactored ModelRouter (LiteLLM Wrapper)")
-        # বাংলা মন্তব্য: ব্যাকওয়ার্ড কমপ্যাটিবিলিটি ও মকিংয়ের জন্য cot_reasoner মক অবজেক্ট যুক্ত করা হলো
+        # বাংলা মন্তব্য: ব্যাকওয়ার্ড কম্প্যাটিবিলিটি ও মকিংয়ের জন্য cot_reasoner মক অবজেক্ট যুক্ত করা হয়েছে
         self.cot_reasoner = None
         self._local_rag = None
         self._pick_provider = None
@@ -52,10 +56,10 @@ class ModelRouter:
         return self._breakers[task_type]
 
     def route_and_generate_with_cot(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
-        # বাংলা মন্তব্য: CoT সাপোর্টের জন্য cot_reasoner এর মকিং প্রপার্টিসমূহ রিটার্ন করা হলো
+        # বাংলা মন্তব্য: CoT সাপোর্টের জন্য cot_reasoner এর মকিং প্রপার্টিসমূহ রিটার্ন করা হয়েছে
         res = self.route_and_generate(prompt, task_type, max_cost)
 
-        # বাংলা মন্তব্য: Null-safe guard — cot_reasoner None থাকলে crash না হয়ে empty dict return
+        # বাংলা মন্তব্য: Null-safe guard — cot_reasoner None থাকলে crash না হয়ে empty dict return
         reasoning_res = {}
         if self.cot_reasoner is not None and hasattr(self.cot_reasoner, "reason"):
             try:
@@ -90,7 +94,7 @@ class ModelRouter:
         }
 
     def route_and_generate(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
-        # বাংলা মন্তব্য: টেস্টে যদি async_route_and_generate কে mock করা হয়, তবে সেটিকেও সাপোর্ট করার জন্য ডাইনামিক কলিং
+        # বাংলা মন্তব্য: টেস্টে যদি async_route_and_generate কে mock করা হয়, তবে সেটিকেও সাপোর্ট করার জন্য ডাইনামিক কলিং
         res = None
         async_func = getattr(self, "async_route_and_generate", None)
         if (
@@ -104,8 +108,6 @@ class ModelRouter:
             res = run_async_as_sync(self.async_route_and_generate(prompt, task_type, max_cost))
 
         if res is None:
-            import json
-
             res = {
                 "success": True,
                 "model": "local_mock_fallback",
@@ -142,16 +144,10 @@ class ModelRouter:
         except Exception as e:  # noqa: BLE001
             return {"success": False, "text": f"Error: {e} (Services unavailable)", "error": str(e)}
 
-        # বাংলা মন্তব্য: এপিআই কী না থাকলে লাইভ গেটওয়ে এড়াতে ফলব্যাক রিটার্ন
-        import sys
-
-        from core.config import settings
-
+        # বাংলা মন্তব্য: এপিআই কী না থাকলে লাইভ গেটওয়ে এড়াতে ফলব্যাক রিটার্ন
         if not settings.gemini_api_key and not settings.openrouter_api_key and "pytest" not in sys.modules:
             # We don't force fallback just because pytest is running,
             # so that mocked LLMGateway can be hit during testing.
-            import json
-
             return {
                 "success": True,
                 "model": "local_mock_fallback",
@@ -201,8 +197,6 @@ class ModelRouter:
 
             if not best_provider:
                 logger.warning("[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock).")
-                import json
-
                 return {
                     "success": True,
                     "model": "eco_mode_offline",
@@ -232,13 +226,13 @@ class ModelRouter:
             return {"success": False, "text": "{}", "error": str(e)}
 
     def query_local_rag(self, query: str) -> dict[str, Any]:
-        # বাংলা মন্তব্য: RAG কোয়েরি মেথড ব্যাকওয়ার্ড কমপ্যাটিবিলিটির জন্য যুক্ত করা হলো
+        # বাংলা মন্তব্য: RAG কোয়েরি মেথড ব্যাকওয়ার্ড কম্প্যাটিবিলিটির জন্য যুক্ত করা হয়েছে
         if hasattr(self, "_local_rag") and hasattr(self._local_rag, "semantic_search"):
             return self._local_rag.semantic_search(query)
         return {"status": "error", "message": "RAG engine not initialized"}
 
     def route_and_stream(self, prompt: str, task_type: str = "general", *args, **kwargs):
-        # বাংলা মন্তব্য: স্ট্রিমিং ফলব্যাক মেথড যুক্ত করা হলো
+        # বাংলা মন্তব্য: স্ট্রিমিং ফলব্যাক মেথড যুক্ত করা হয়েছে
         if hasattr(self, "_stream_ollama") and callable(self._stream_ollama):
             yield from self._stream_ollama(prompt, "qwen")
         else:
@@ -247,7 +241,7 @@ class ModelRouter:
             yield " World"
 
     def _call_openrouter(self, prompt, model):
-        # বাংলা মন্তব্য: টেস্ট কেসে monkeypatch করার সুবিধার্থে ডামি মেথড ডিফাইন করা হলো
+        # বাংলা মন্তব্য: টেস্ট কেসে monkeypatch করার সুবিধার্থে ডামি মেথড ডিফাইন করা হয়েছে
         pass
 
     def _call_huggingface(self, prompt, model):

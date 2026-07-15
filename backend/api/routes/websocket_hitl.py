@@ -1,4 +1,5 @@
 import json
+import asyncio
 
 from fastapi import APIRouter
 from fastapi import WebSocket
@@ -17,25 +18,41 @@ router = APIRouter(prefix="/ws/hitl", tags=["hitl"])
 
 class HITLConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        # Set ব্যবহার করা হয়েছে যাতে O(1) কমপ্লেক্সিটিতে কানেকশন রিমুভ করা যায় এবং ডুপ্লিকেট এড়ানো যায়।
+        self.active_connections: set[WebSocket] = set()
+        self._lock = asyncio.Lock()  # রেস কন্ডিশন এড়ানোর জন্য অ্যাসিনক্রোনাস লক
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        async with self._lock:
+            self.active_connections.add(websocket)
         logger.info(f"New HITL WebSocket connection. Total connections: {len(self.active_connections)}")
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-            logger.info(f"HITL WebSocket disconnected. Total connections: {len(self.active_connections)}")
+    async def disconnect(self, websocket: WebSocket):
+        async with self._lock:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+        logger.info(f"HITL WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
     async def broadcast(self, message: str):
-        for connection in self.active_connections:
+        # কানেকশন ড্রপ বা এরর হ্যান্ডল করার জন্য ব্রডকাস্ট লজিক ইমপ্রুভ করা হয়েছে।
+        disconnected = set()
+        async with self._lock:
+            # Iterating over a copy to safely remove items if necessary
+            connections = list(self.active_connections)
+
+        for connection in connections:
             try:
                 await connection.send_text(message)
-            except Exception as e:  # noqa: BLE001
+            except WebSocketDisconnect:
+                disconnected.add(connection)
+            except Exception as e:
                 logger.error(f"Error sending message to HITL WebSocket: {e}")
-                self.disconnect(connection)
+                disconnected.add(connection)
+
+        # ফেইলড কানেকশনগুলো পরিষ্কার করা হচ্ছে
+        for conn in disconnected:
+            await self.disconnect(conn)
 
 
 manager = HITLConnectionManager()
@@ -44,14 +61,21 @@ manager = HITLConnectionManager()
 async def hitl_event_listener(event: ErrorEvent):
     """Listens to the event bus and broadcasts HITL review requests to active WebSockets."""
     if event.error_type == "HITL_REVIEW_REQUIRED":
-        payload = {
-            "type": "HITL_REVIEW_REQUIRED",
-            "message": event.message,
-            "context": event.context,
-            "severity": event.severity,
-            "module": event.module,
-        }
-        await manager.broadcast(json.dumps(payload))
+        try:
+            payload = {
+                "type": "HITL_REVIEW_REQUIRED",
+                "message": event.message,
+                "context": event.context,
+                "severity": event.severity,
+                "module": event.module,
+            }
+            # json.dumps এরর হ্যান্ডলিং যোগ করা হয়েছে, যদি non-serializable object থাকে
+            message = json.dumps(payload)
+            await manager.broadcast(message)
+        except TypeError as e:
+            logger.error(f"Failed to serialize HITL event payload: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error in HITL event listener: {e}")
 
 
 # Register listener so we can push fixes to UI in real-time
@@ -88,7 +112,10 @@ async def verify_hitl_token(websocket: WebSocket) -> bool:
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         role = payload.get("role", "").lower()
-        if role not in ["admin", "supervisor"]:
+
+        # হার্ডকোডেড রোলের বদলে কনফিগারেশন থেকে রোল নেয়া যেতে পারে (আপাতত settings.allowed_hitl_roles ব্যবহার করা হচ্ছে, না থাকলে ডিফল্ট)
+        allowed_roles = getattr(settings, "allowed_hitl_roles", ["admin", "supervisor"])
+        if role not in allowed_roles:
             logger.warning(f"HITL WebSocket connection rejected: Insufficient role '{role}'")
             return False
         return True
@@ -97,6 +124,9 @@ async def verify_hitl_token(websocket: WebSocket) -> bool:
         return False
     except jwt.PyJWTError as e:
         logger.warning(f"HITL WebSocket connection rejected: Invalid token - {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error during token verification: {e}")
         return False
 
 
@@ -116,7 +146,9 @@ async def websocket_hitl_endpoint(websocket: WebSocket):
             if data == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
-    except Exception as e:  # noqa: BLE001
+        logger.info("HITL WebSocket client gracefully disconnected.")
+    except Exception as e:
         logger.error(f"HITL WebSocket error: {e}")
-        manager.disconnect(websocket)
+    finally:
+        # finally block নিশ্চিত করে যে যেকোনো এরর বা ডিসকানেক্টে কানেকশন রিমুভ হবে
+        await manager.disconnect(websocket)

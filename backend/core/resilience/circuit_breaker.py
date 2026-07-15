@@ -8,6 +8,7 @@ After cooldown, transitions to half-open state for recovery testing.
 from __future__ import annotations
 
 import time
+import threading
 from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Any, TypeVar
@@ -70,12 +71,14 @@ class CircuitBreaker:
         self.success_count: int = 0
         self.last_failure_time: float | None = None
         self.last_success_time: float | None = None
+        self._lock = threading.Lock()
 
     def __repr__(self) -> str:
-        return (
-            f"CircuitBreaker(name='{self.name}', state={self.state.value}, "
-            f"failures={self.failure_count}, successes={self.success_count})"
-        )
+        with self._lock:
+            return (
+                f"CircuitBreaker(name='{self.name}', state={self.state.value}, "
+                f"failures={self.failure_count}, successes={self.success_count})"
+            )
 
     @property
     def is_open(self) -> bool:
@@ -83,7 +86,8 @@ class CircuitBreaker:
 
         বাংলা: সার্কিট বর্তমানে OPEN কিনা চেক করে।
         """
-        return self.state == CircuitBreakerState.OPEN
+        with self._lock:
+            return self.state == CircuitBreakerState.OPEN
 
     def _should_attempt_recovery(self) -> bool:
         """Check if enough time has passed to attempt recovery.
@@ -102,12 +106,13 @@ class CircuitBreaker:
         Raises:
             CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
         """
-        if self.state == CircuitBreakerState.OPEN:
-            if self._should_attempt_recovery():
-                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
-                self.state = CircuitBreakerState.HALF_OPEN
-            else:
-                raise CircuitBreakerOpenError(self.name, self.state)
+        with self._lock:
+            if self.state == CircuitBreakerState.OPEN:
+                if self._should_attempt_recovery():
+                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                    self.state = CircuitBreakerState.HALF_OPEN
+                else:
+                    raise CircuitBreakerOpenError(self.name, self.state)
 
         try:
             result = func(*args, **kwargs)
@@ -117,7 +122,7 @@ class CircuitBreaker:
             logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
             self._mark_failure()
             raise
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error")
             self._mark_failure()
             raise
@@ -130,12 +135,13 @@ class CircuitBreaker:
         Raises:
             CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
         """
-        if self.state == CircuitBreakerState.OPEN:
-            if self._should_attempt_recovery():
-                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
-                self.state = CircuitBreakerState.HALF_OPEN
-            else:
-                raise CircuitBreakerOpenError(self.name, self.state)
+        with self._lock:
+            if self.state == CircuitBreakerState.OPEN:
+                if self._should_attempt_recovery():
+                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                    self.state = CircuitBreakerState.HALF_OPEN
+                else:
+                    raise CircuitBreakerOpenError(self.name, self.state)
 
         try:
             result = await func(*args, **kwargs)
@@ -145,7 +151,7 @@ class CircuitBreaker:
             logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
             self._mark_failure()
             raise
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error")
             self._mark_failure()
             raise
@@ -155,70 +161,75 @@ class CircuitBreaker:
 
         বাংলা: সফল কল রেকর্ড করে এবং সম্ভবত সার্কিট বন্ধ করে।
         """
-        self.success_count += 1
-        self.failure_count = 0
-        self.last_success_time = time.monotonic()
+        with self._lock:
+            self.success_count += 1
+            self.failure_count = 0
+            self.last_success_time = time.monotonic()
 
-        if self.state == CircuitBreakerState.HALF_OPEN:
-            logger.info(f"Circuit breaker '{self.name}' recovered — transitioning to CLOSED")
-            self.state = CircuitBreakerState.CLOSED
+            if self.state == CircuitBreakerState.HALF_OPEN:
+                logger.info(f"Circuit breaker '{self.name}' recovered — transitioning to CLOSED")
+                self.state = CircuitBreakerState.CLOSED
 
     def _mark_failure(self) -> None:
         """Record a failed call and potentially open the circuit.
 
         বাংলা: ব্যর্থ কল রেকর্ড করে এবং সম্ভবত সার্কিট খোলে।
         """
-        self.failure_count += 1
-        self.success_count = 0
-        self.last_failure_time = time.monotonic()
+        with self._lock:
+            self.failure_count += 1
+            self.success_count = 0
+            self.last_failure_time = time.monotonic()
 
-        if self.failure_count >= self.failure_threshold:
-            logger.warning(
-                f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
-            )
-            self.state = CircuitBreakerState.OPEN
+            if self.failure_count >= self.failure_threshold:
+                if self.state != CircuitBreakerState.OPEN:
+                    logger.warning(
+                        f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
+                    )
+                    self.state = CircuitBreakerState.OPEN
 
     def reset(self) -> None:
         """Manually reset the circuit breaker to CLOSED state.
 
         বাংলা: ম্যানুয়ালি সার্কিট ব্রেকারকে CLOSED স্টেটে রিসেট করে।
         """
-        logger.info(f"Circuit breaker '{self.name}' manually reset")
-        self.state = CircuitBreakerState.CLOSED
-        self.failure_count = 0
-        self.success_count = 0
-        self.last_failure_time = None
-        self.last_success_time = None
+        with self._lock:
+            logger.info(f"Circuit breaker '{self.name}' manually reset")
+            self.state = CircuitBreakerState.CLOSED
+            self.failure_count = 0
+            self.success_count = 0
+            self.last_failure_time = None
+            self.last_success_time = None
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current metrics for monitoring.
 
         বাংলা: মনিটরিংয়ের জন্য বর্তমান মেট্রিক্স রিটার্ন করে।
         """
-        return {
-            "name": self.name,
-            "state": self.state.value,
-            "failure_count": self.failure_count,
-            "success_count": self.success_count,
-            "failure_threshold": self.failure_threshold,
-            "recovery_timeout": self.recovery_timeout,
-            "last_failure_time": self.last_failure_time,
-            "last_success_time": self.last_success_time,
-        }
+        with self._lock:
+            return {
+                "name": self.name,
+                "state": self.state.value,
+                "failure_count": self.failure_count,
+                "success_count": self.success_count,
+                "failure_threshold": self.failure_threshold,
+                "recovery_timeout": self.recovery_timeout,
+                "last_failure_time": self.last_failure_time,
+                "last_success_time": self.last_success_time,
+            }
 
-    # বাংলা মন্তব্য: LLMGateway-তে ম্যানুয়াল রিকোয়েস্ট চেকিং প্যাটার্ন সচল করার জন্য এই মেথডগুলো যোগ করা হলো।
     def allow_request(self) -> bool:
         """Check if request is allowed through the breaker.
 
         বাংলা: রিকোয়েস্ট সার্কিট দিয়ে পাস হতে পারবে কিনা চেক করে।
         """
-        if self.state == CircuitBreakerState.OPEN:
-            if self._should_attempt_recovery():
-                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
-                self.state = CircuitBreakerState.HALF_OPEN
-                return True
-            return False
-        return True
+        with self._lock:
+            if self.state == CircuitBreakerState.OPEN:
+                if self._should_attempt_recovery():
+                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                    self.state = CircuitBreakerState.HALF_OPEN
+                    return True
+                return False
+            return True
 
     def mark_success(self) -> None:
         """Record successful request."""

@@ -144,7 +144,6 @@ class MorphicOrchestrator:
         # 3. Get Dynamic DAG based on intent
         return await self.run_dag_for_workspace(workspace, user_id)
 
-    # বাংলা মন্তব্য: ওয়ার্কস্পেসের ইনটেন্ট অনুযায়ী DAG চালনার জন্য এই পাবলিক মেথড তৈরি করা হলো।
     async def run_dag_for_workspace(self, workspace: SharedWorkspace, user_id: str = "default_user_session") -> SharedWorkspace:
         task_graph = await self._get_dag_for_intent(workspace.intent)
         workspace.log(f"MorphicOrchestrator: Constructed DAG with nodes: {list(task_graph.keys())}")
@@ -181,28 +180,33 @@ class MorphicOrchestrator:
             # Special Handling for 'code_generation' intent's refinement loop
             if workspace.intent == "code_generation":
                 max_refinements = 3
-                for i in range(max_refinements):
-                    workspace.log(f"MorphicOrchestrator: Starting Guardian/QA refinement loop, iteration {i + 1}/{max_refinements}")
+                guardian_agent = self.agents.get("guardian")
+                coder_agent = self.agents.get("coder")
 
-                    # Guardian validation
-                    guardian_agent = self.agents["guardian"]
-                    is_approved, feedback = await guardian_agent.validate(workspace, user_id)
+                if not guardian_agent or not coder_agent:
+                    workspace.log("MorphicOrchestrator: Guardian or Coder agent missing for code generation loop.")
+                else:
+                    for i in range(max_refinements):
+                        workspace.log(f"MorphicOrchestrator: Starting Guardian/QA refinement loop, iteration {i + 1}/{max_refinements}")
 
-                    if is_approved:
-                        workspace.log("MorphicOrchestrator: Code APPROVED by Guardian. Exiting refinement loop.")
-                        break
+                        # Guardian validation
+                        is_approved, feedback = await guardian_agent.validate(workspace, user_id)
 
-                    workspace.log("MorphicOrchestrator: Code FAILED Guardian validation. Triggering refinement.")
+                        if is_approved:
+                            workspace.log("MorphicOrchestrator: Code APPROVED by Guardian. Exiting refinement loop.")
+                            break
 
-                    # Refinement by CodeGeneratorAgent
-                    coder_agent = self.agents["coder"]
-                    await coder_agent.refine(workspace, feedback, user_id)
-                else:  # This else belongs to the for loop, executes if loop finishes without break
-                    workspace.log("MorphicOrchestrator: Max refinement attempts reached. Proceeding with current code.")
+                        workspace.log("MorphicOrchestrator: Code FAILED Guardian validation. Triggering refinement.")
+
+                        # Refinement by CodeGeneratorAgent
+                        await coder_agent.refine(workspace, feedback, user_id)
+                    else:  # This else belongs to the for loop, executes if loop finishes without break
+                        workspace.log("MorphicOrchestrator: Max refinement attempts reached. Proceeding with current code.")
 
             # Final reflection step for all intents
-            if "reflection" in self.agents:
-                await self.agents["reflection"].run(workspace, user_id)
+            reflection_agent = self.agents.get("reflection")
+            if reflection_agent:
+                await reflection_agent.run(workspace, user_id)
 
         try:
             from core.observability.telemetry import trace_span
@@ -216,10 +220,14 @@ class MorphicOrchestrator:
                 attributes["provider"] = best_provider
 
             with trace_span("morphic_orchestrator.run_dag_for_workspace", attributes=attributes):
-                await self.circuit_breaker.call(_execute_dag)
+                await self.circuit_breaker.acall(_execute_dag)
 
-        except Exception as e:  # noqa: BLE001
-            # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে।
+        except Exception as e:
+            # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে এবং ট্রেসব্যাক লগ করা হচ্ছে।
+            import traceback
+            import logging
+            logging.error(f"DAG execution failed: {traceback.format_exc()}")
+
             from core.resilience.circuit_breaker import CircuitBreakerOpenError
 
             if isinstance(e, CircuitBreakerOpenError) or "is OPEN" in str(e):
@@ -229,9 +237,13 @@ class MorphicOrchestrator:
 
             workspace.log(f"MorphicOrchestrator: An unexpected error occurred during DAG execution: {e}")
             workspace.add_error(str(e))
-            # বাংলা মন্তব্য: এরর হলেও রিফ্লেকশন চালানোর চেষ্টা করা হবে, যাতে সিস্টেম শিখতে পারে।
+
+            # বাংলা মন্তব্য: এরর হলেও রিফ্লেকশন চালানোর চেষ্টা করা হবে, যাতে সিস্টেম শিখতে পারে, তবে রিফ্লেকশনে এরর হলে তা মেইন ফ্লো কে ব্লক করবে না।
             if "reflection" not in completed_tasks and "reflection" in self.agents:
-                await self.agents["reflection"].reflect_and_persist(workspace, user_id)
+                try:
+                    await self.agents["reflection"].reflect_and_persist(workspace, user_id)
+                except Exception as reflection_error:
+                    workspace.log(f"MorphicOrchestrator: Failed to run reflection after error: {reflection_error}")
             return workspace
 
         workspace.log("MorphicOrchestrator: Multi-Agent DAG execution completed successfully.")
