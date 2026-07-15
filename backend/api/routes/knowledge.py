@@ -8,7 +8,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from pydantic import BaseModel
 
-from core.security import get_current_user_or_guest
+from api.dependencies import get_current_user_token
 
 
 router = APIRouter()
@@ -23,7 +23,7 @@ class ScribeQuestion(BaseModel):
 @router.post("/knowledge/ask-scribe", tags=["Knowledge Base"])
 async def ask_the_scribe(
     request: ScribeQuestion,
-    user: dict = Depends(get_current_user_or_guest),  # Basic security
+    user: dict = Depends(get_current_user_token),  # Basic security
 ):
     """
     Asks a question to the AI Scribe about the codebase.
