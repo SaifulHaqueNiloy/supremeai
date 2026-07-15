@@ -7,13 +7,13 @@ Fetches production API keys directly into memory from Infisical.
 Removes the need for monolithic GCP Secret Manager.
 """
 
-import asyncio
-import os
-import time
+import asyncio  # noqa: E402
+import os  # noqa: E402
+import time  # noqa: E402
 
-from loguru import logger
+from loguru import logger  # noqa: E402
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorEvent, error_event_bus  # noqa: E402
 
 try:
     from infisical_client import AuthenticationOptions, ClientSettings, GetSecretOptions, InfisicalClient, UniversalAuthMethod

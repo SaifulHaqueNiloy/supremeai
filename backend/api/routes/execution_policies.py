@@ -56,7 +56,7 @@ async def get_policies(
                 "cooldown_window_sec": pol.circuit_breaker_cooldown_seconds,
             })
         return {"items": formatted}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.exception(f"Failed to fetch execution policies: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
@@ -105,7 +105,7 @@ async def update_policy(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         await session.rollback()
         logger.exception(f"Failed to update execution policy {policy_id}: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

@@ -14,14 +14,14 @@ Dependencies:
 - `core.config`: To retrieve application settings, specifically the Redis connection URL.
 - `core.messaging.event_bus`: For emitting structured error events to the central application event bus."""
 
-import asyncio
-import json
-from collections.abc import AsyncGenerator
+import asyncio  # noqa: E402
+import json  # noqa: E402
+from collections.abc import AsyncGenerator  # noqa: E402
 
-from loguru import logger
+from loguru import logger  # noqa: E402
 
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
+from core.messaging.event_bus import ErrorEvent  # noqa: E402
+from core.messaging.event_bus import error_event_bus  # noqa: E402
 
 
 # বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।

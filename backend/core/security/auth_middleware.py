@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import json
-import os
 import hmac
 from collections.abc import Awaitable, Callable
 from typing import Any

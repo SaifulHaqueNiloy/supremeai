@@ -4,6 +4,7 @@ SupremeAI Multi-API & Multi-Account Rotation System
 Complete implementation for intelligent provider switching and account management
 """
 
+from core.config import settings
 import asyncio
 import contextlib
 import hashlib
@@ -864,9 +865,9 @@ async def main():
     rotator = get_rotator()
 
     # Security: No hardcoded fallback keys - require environment variables
-    test_groq_key_1 = os.getenv("TEST_GROQ_KEY_1")
-    test_groq_key_2 = os.getenv("TEST_GROQ_KEY_2")
-    test_deepseek_key_1 = os.getenv("TEST_DEEPSEEK_KEY_1")
+    test_groq_key_1 = getattr(settings, "test_groq_key_1", None)
+    test_groq_key_2 = getattr(settings, "test_groq_key_2", None)
+    test_deepseek_key_1 = getattr(settings, "test_deepseek_key_1", None)
 
     if test_groq_key_1:
         rotator.add_account("groq", "test1@supremeai.com", test_groq_key_1)

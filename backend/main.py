@@ -61,7 +61,7 @@ def run_server() -> None:
             try:
                 import sentry_sdk
                 sentry_sdk.capture_exception(exc)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 pass
         sys.exit(1)
     except OSError as exc:
@@ -70,7 +70,7 @@ def run_server() -> None:
             try:
                 import sentry_sdk
                 sentry_sdk.capture_exception(exc)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 pass
         sys.exit(1)
 

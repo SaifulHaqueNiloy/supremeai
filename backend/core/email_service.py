@@ -19,13 +19,13 @@ Dependencies:
 - `core.messaging.event_bus`: For emitting `ErrorEvent`s when email sending encounters API or network failures.
 - `core.config`: For accessing application-wide settings such as the Resend API URL and the SupremeAI frontend URL."""
 
-import os
+import os  # noqa: E402
 
-import httpx
-from loguru import logger
+import httpx  # noqa: E402
+from loguru import logger  # noqa: E402
 
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
+from core.messaging.event_bus import ErrorEvent  # noqa: E402
+from core.messaging.event_bus import error_event_bus  # noqa: E402
 
 
 class EmailService:

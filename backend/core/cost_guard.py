@@ -13,10 +13,10 @@ Dependencies:
 - `loguru`: Employed for structured logging of budget checks, warnings, and errors.
 - `asyncio`: Used internally within `check_budget` to adapt to both synchronous and asynchronous database client methods."""
 
-from typing import Any
+from typing import Any  # noqa: E402
 
-from fastapi import HTTPException
-from loguru import logger
+from fastapi import HTTPException  # noqa: E402
+from loguru import logger  # noqa: E402
 
 
 class CostGuard:
