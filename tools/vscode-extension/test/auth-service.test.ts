@@ -3,10 +3,18 @@ import * as vscode from 'vscode';
 import { AuthService } from '../src/services/AuthService';
 
 vi.mock('vscode', () => ({
+  EventEmitter: vi.fn().mockImplementation(() => ({
+    event: vi.fn(),
+    fire: vi.fn(),
+    dispose: vi.fn(),
+  })),
   window: {
     showInputBox: vi.fn(),
     showInformationMessage: vi.fn(),
   },
+  commands: {
+    registerCommand: vi.fn(),
+  }
 }));
 
 describe('AuthService', () => {
