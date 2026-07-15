@@ -22,6 +22,7 @@ async def test_figma_to_react(mock_image_to_code):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 import React from 'react';
 
@@ -50,6 +51,7 @@ async def test_figma_to_flutter(mock_image_to_code):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 import 'package:flutter/material.dart';
 
@@ -80,6 +82,7 @@ async def test_extract_color_palette(mock_image_to_code):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 {
     "palette": ["#FF5733", "#33FF57", "#3357FF"],
@@ -106,6 +109,7 @@ async def test_detect_component_tree(mock_image_to_code):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 [
     {

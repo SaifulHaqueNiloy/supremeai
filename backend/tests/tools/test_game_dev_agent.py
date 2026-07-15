@@ -21,6 +21,7 @@ async def test_generate_unity_script(mock_game_dev):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 using UnityEngine;
 
@@ -68,6 +69,7 @@ async def test_gdd_to_code(mock_game_dev):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 public class GameManager : MonoBehaviour
 {
@@ -95,6 +97,7 @@ async def test_generate_asset_script(mock_game_dev):
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 import bpy
 
@@ -135,6 +138,7 @@ void Update()
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 Performance Issues Found:
 1. GameObject.Find() called in loop - use caching instead
@@ -158,6 +162,7 @@ async def test_generate_unity_coroutine():
 
     with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
+            "success": True,
             "text": """
 using UnityEngine;
 using System.Collections;
