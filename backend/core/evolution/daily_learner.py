@@ -37,5 +37,6 @@ class DailyLearner:
         ]
         return discovered
 
-    def run_daily_evolution(self, task_history: list[dict[str, Any]]) -> dict[str, Any]:
-        return self.engine.run_daily_evolution(task_history)
+    # বাংলা মন্তব্য: ইভোলিউশন ইঞ্জিন মেথডটি অ্যাসিঙ্ক হওয়ায় একে অ্যাসিঙ্ক করা হলো এবং অ্যাওয়েট করা হলো।
+    async def run_daily_evolution(self, task_history: list[dict[str, Any]]) -> dict[str, Any]:
+        return await self.engine.run_daily_evolution(task_history)

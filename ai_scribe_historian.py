@@ -125,57 +125,55 @@ graph TD;
 <Full summary from file_summaries...>
 """
 
-def get_ai_response(prompt: str) -> str:
-    """
-    Sends a prompt to the configured LLM and returns the response.
-    """
+# বাংলা মন্তব্য: সব রিট্রাই শেষে LLM কল পুরোপুরি ব্যর্থ হলে সাইলেন্ট ফেইলর এড়াতে এই এরর ব্যবহার করা হবে।
+class LLMCallError(Exception):
+    """সব রিট্রাই শেষে LLM কল ব্যর্থ হলে এই এরর রেইজ হবে।"""
+
 key_index = 0
 api_key_lock = threading.Lock()
 
-def get_ai_response(prompt: str) -> str:
+def get_ai_response(prompt: str, max_retries_per_key: int = 3, retry_backoff_seconds: float = 2.0) -> str:
+    """
+    বাংলা মন্তব্য: প্রম্পট পাঠায় এবং LLM-এর উত্তর রিটার্ন করে। ব্যর্থ হলে LLMCallError রেইজ করে।
+    """
     global key_index
-    try:
-        api_keys_str = settings.gemini_api_key
-        if not api_keys_str:
-            logging.error("No Gemini API key found in settings.")
-            return ""
+    api_keys_str = settings.gemini_api_key
+    if not api_keys_str:
+        raise LLMCallError("settings.gemini_api_key কনফিগার করা নেই।")
 
-        keys = [k.strip() for k in api_keys_str.split(',') if k.strip()]
-        if not keys:
-            logging.error("No valid Gemini API keys found.")
-            return ""
+    keys = [k.strip() for k in api_keys_str.split(',') if k.strip()]
+    if not keys:
+        raise LLMCallError("কোনো বৈধ Gemini API key পাওয়া যায়নি।")
 
-        import time
-        max_retries = 3 * len(keys) # Allow enough retries to cycle through keys
-        for attempt in range(max_retries):
-            current_key = keys[key_index % len(keys)]
-            try:
-                response = litellm.completion(
-                    model="gemini/gemini-2.5-flash",
-                    messages=[{"content": prompt, "role": "user"}],
-                    temperature=0.1,
-                    api_key=current_key
-                )
-                return response.choices[0].message.content or ""
-            except Exception as e:
-                error_msg = str(e)
-                if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "RateLimit" in error_msg:
-                    logging.warning(f"Rate limit hit with key ending in ...{current_key[-4:]}. Rotating key... (Attempt {attempt+1}/{max_retries})")
-                    with api_key_lock:
-                        key_index += 1 # Thread-safe rotation to next key
-                    time.sleep(2) # Short sleep before trying next key
-                    continue
-                elif "403" in error_msg or "PERMISSION_DENIED" in error_msg or "API_KEY_SERVICE_BLOCKED" in error_msg:
-                    logging.error(f"API Key ending in ...{current_key[-4:]} is BLOCKED (403). Rotating to next key...")
-                    with api_key_lock:
-                        key_index += 1
-                    continue
-                else:
-                    raise e
-        return ""
-    except Exception as e:
-        logging.error(f"LLM API call failed: {e}")
-        return ""
+    max_retries = max_retries_per_key * len(keys)
+    last_error: Exception | None = None
+
+    for attempt in range(max_retries):
+        current_key = keys[key_index % len(keys)]
+        try:
+            response = litellm.completion(
+                model=settings.gemini_model_name,  # বাংলা মন্তব্য: হার্ডকোড না করে সেটিংস থেকে আনা হচ্ছে।
+                messages=[{"content": prompt, "role": "user"}],
+                temperature=0.1,
+                api_key=current_key
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            last_error = e
+            error_msg = str(e)
+            recoverable = any(code in error_msg for code in ("429", "RESOURCE_EXHAUSTED", "RateLimit", "403", "PERMISSION_DENIED", "API_KEY_SERVICE_BLOCKED"))
+            if not recoverable:
+                # বাংলা মন্তব্য: অপ্রত্যাশিত এরর সাথে সাথে থ্রো করা হচ্ছে।
+                raise
+
+            logging.warning(f"Key ending in ...{current_key[-4:]} failed (attempt {attempt+1}/{max_retries}), rotating key...")
+            with api_key_lock:
+                key_index += 1
+            # বাংলা মন্তব্য: rate limit এবং temporary ব্লকের ক্ষেত্রে exponential backoff দিয়ে sleep করা হচ্ছে।
+            import time
+            time.sleep(retry_backoff_seconds * (2 ** (attempt // len(keys))))
+
+    raise LLMCallError(f"সব API key দিয়ে চেষ্টার পরও ব্যর্থ: {last_error}")
 
 def get_existing_docstring(content: str) -> str | None:
     """Safely extracts the module-level docstring using AST."""

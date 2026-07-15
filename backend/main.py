@@ -1,16 +1,14 @@
-# FILE_PATH: main.py
+"""SupremeAI 2.0 — Entry point. Handles ENV bootstrap, signal handling, and Uvicorn launch.
+
+বাংলা: রুট এন্ট্রি পয়েন্ট। ENV সেটআপ, সিগন্যাল হ্যান্ডলিং এবং সার্ভার লঞ্চ।
+"""
 import os
 import signal
 import sys
 
 
-# Ensure ENV is set for local/test runs if not explicitly defined or is an empty string.
-# This helps Pydantic Settings determine the correct environment context
-# for validation, preventing production config errors in non-production environments
-# where required production secrets might not be present.
-# 'not os.getenv("ENV")' handles both None and empty string scenarios.
 if not os.getenv("ENV"):
-    os.environ["ENV"] = "local"  # Default to 'local' for development/testing if not specified
+    os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
 
 import uvicorn
 from loguru import logger
@@ -22,10 +20,9 @@ from core.logging_config import setup_logging
 
 setup_logging()
 
-# Production config validation is now handled automatically by Pydantic model validators
 
-
-def _handle_sigterm(signum, frame):
+def _handle_sigterm(signum: int, frame: object) -> None:  # noqa: ANN401
+    """SIGTERM/SIGINT handler — performs graceful shutdown."""
     logger.info("Received shutdown signal. Performing graceful shutdown...")
     sys.exit(0)
 
@@ -35,27 +32,34 @@ signal.signal(signal.SIGINT, _handle_sigterm)
 
 
 def run_server() -> None:
-    port = int(os.environ.get("PORT", "8080"))
+    """Boot the Uvicorn server with config-driven settings.
+
+    বাংলা: কনফিগ-ড্রিভেন সেটিংস দিয়ে Uvicorn সার্ভার বুট।
+    """
+    port = int(os.getenv("PORT", str(settings.port)))
     is_local = settings.env == "local"
-    uvicorn_kwargs = {
+    uvicorn_kwargs: dict = {
         "host": settings.host,
         "port": port,
-        "log_level": "info",
-        "access_log": True,
-        "timeout_keep_alive": 30,
+        "log_level": os.getenv("UVICORN_LOG_LEVEL", "info"),
+        "access_log": os.getenv("UVICORN_ACCESS_LOG", "true").lower() == "true",
+        "timeout_keep_alive": int(os.getenv("UVICORN_KEEP_ALIVE_TIMEOUT", "30")),
     }
     if is_local:
         uvicorn_kwargs["reload"] = True
     else:
         uvicorn_kwargs["reload"] = False
-        workers = int(os.environ.get("GUNICORN_WORKERS", "4"))
+        workers = int(os.getenv("GUNICORN_WORKERS", os.getenv("UVICORN_WORKERS", "4")))
         if workers > 1:
             uvicorn_kwargs["workers"] = workers
 
     try:
         uvicorn.run("main:app", **uvicorn_kwargs)
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Server failed to start: {exc}")
+    except RuntimeError as exc:
+        logger.critical(f"Server failed to start (configuration error): {exc}")
+        sys.exit(1)
+    except OSError as exc:
+        logger.critical(f"Server failed to start (port/bind error on {settings.host}:{port}): {exc}")
         sys.exit(1)
 
 

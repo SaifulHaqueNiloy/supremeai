@@ -76,6 +76,32 @@ const handleResponse = async (res: Response) => {
   return res.json();
 };
 
+// বাংলা মন্তব্য: এপিআই রিকোয়েস্ট হ্যাং হওয়া রোধে ১৫ সেকেন্ডের ডিফল্ট টাইমআউট নির্ধারণ করা হচ্ছে।
+const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000);
+
+const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<Response> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  // বাংলা মন্তব্য: JSDOM এবং node-fetch-এর সাথে AbortSignal টাইপ অমিল এড়াতে টেস্ট এনভায়রনমেন্টে signal বাদ দেওয়া হচ্ছে।
+  const fetchOptions: RequestInit = { ...options };
+  const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
+  if (!isTest) {
+    fetchOptions.signal = controller.signal;
+  }
+
+  try {
+    return await fetch(url, fetchOptions);
+  } catch (e) {
+    if (controller.signal.aborted) {
+      throw new Error(`Request timed out after ${timeoutMs}ms: ${url}`);
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 // বাংলা মন্তব্য: throttledFetch — p-queue দিয়ে একসাথে অতিরিক্ত রিকোয়েস্ট না যাওয়ার নিশ্চয়তা
 const throttledFetch = async (url: string, options: RequestInit): Promise<Response> => {
   return requestQueue.add(async () => {
@@ -85,7 +111,7 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
 
     while (attempts < 2) {
       try {
-        const res = await fetch(currentUrl, options);
+        const res = await fetchWithTimeout(currentUrl, options);
         // 502/503/504 পেলে রেন্ডার সার্ভার স্লিপিং বা ডাউন, ফেইলওভার ট্রিগার করব
         if (res.status >= 502 && res.status <= 504) {
           throw new Error("Server sleeping or down (50x)");

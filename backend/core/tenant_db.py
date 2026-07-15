@@ -1,12 +1,26 @@
 # backend/core/tenant_db.py
-import contextlib
+"""বাংলা মন্তব্য: Tenant-aware Firestore client with hard-isolated subcollections.
 
+Fixes Applied (Autonomous Architecture Audit):
+- 🔴 [CRITICAL] ImportError-এ firestore undefined থেকে NameError হওয়ার রিস্ক fixed
+- 🔴 [CRITICAL] try/except ব্লকে fallback `firestore.Client()` কল করার আগে existence check যোগ করা
+"""
 
-with contextlib.suppress(ImportError):
-    from google.cloud import firestore
+from __future__ import annotations
+
 from fastapi import HTTPException
 from fastapi import status
 from loguru import logger
+
+# বাংলা মন্তব্য: Safe import with proper fallback — আর undefined NameError হবে না
+try:
+    from google.cloud import firestore
+
+    _HAS_FIRESTORE = True
+except ImportError:
+    _HAS_FIRESTORE = False
+    firestore = None  # type: ignore[assignment]
+    logger.warning("google.cloud.firestore not available — tenant DB will use mock/test mode only")
 
 
 class TenantAwareFirestore:
@@ -28,44 +42,59 @@ class TenantAwareFirestore:
         from utils.environment import is_test_environment
 
         if is_test_environment():
-
-            class MockFirestore:
-                def collection(self, *args, **kwargs):
-                    class MockCol:
-                        def document(self, *args, **kwargs):
-                            class MockDoc:
-                                def get(self, *args, **kwargs):
-                                    class MockSnap:
-                                        exists = False
-
-                                        def to_dict(self):
-                                            return {}
-
-                                    return MockSnap()
-
-                                def set(self, *args, **kwargs):
-                                    pass
-
-                                def collection(self, *args, **kwargs):
-                                    return MockCol()
-
-                            return MockDoc()
-
-                    return MockCol()
-
-            self._db = MockFirestore()
+            self._db = self._create_mock_db()
         else:
-            try:
-                from core.gcp_firestore import get_firestore_client
-
-                self._db = get_firestore_client()
-                if self._db is None:
-                    self._db = firestore.Client()
-            except Exception:  # noqa: BLE001
-                self._db = firestore.Client()
+            self._db = self._resolve_db_client()
 
         # 🛡️ হার্ড-আইসোলেটেড রুট রেফারেন্স
         self.tenant_root = self._db.collection("tenants").document(self.tenant_id)
+
+    @staticmethod
+    def _create_mock_db():
+        class MockFirestore:
+            def collection(self, *args, **kwargs):
+                class MockCol:
+                    def document(self, *args, **kwargs):
+                        class MockDoc:
+                            def get(self, *args, **kwargs):
+                                class MockSnap:
+                                    exists = False
+
+                                    def to_dict(self):
+                                        return {}
+
+                                return MockSnap()
+
+                            def set(self, *args, **kwargs):
+                                pass
+
+                            def collection(self, *args, **kwargs):
+                                return MockCol()
+
+                        return MockDoc()
+
+                return MockCol()
+
+        return MockFirestore()
+
+    def _resolve_db_client(self):
+        """Try to resolve a Firestore client — handling the case where google.cloud isn't installed."""
+        try:
+            from core.gcp_firestore import get_firestore_client
+
+            client = get_firestore_client()
+            if client is not None:
+                return client
+        except Exception:  # noqa: BLE001
+            logger.debug("get_firestore_client() failed, falling back to direct firestore.Client()")
+
+        # বাংলা মন্তব্য: firestore module exists কিনা check করে তবেই কল
+        if _HAS_FIRESTORE:
+            return firestore.Client()  # type: ignore[union-attr]
+        # No Firestore available — raise a clear error instead of NameError
+        raise RuntimeError(
+            "Firestore client not available. Install google-cloud-firestore or run in test environment."
+        )
 
     def collection(self, collection_name: str):
         """ট্যানান্টের নিজস্ব সাব-কালেকশন রিটার্ন করবে"""

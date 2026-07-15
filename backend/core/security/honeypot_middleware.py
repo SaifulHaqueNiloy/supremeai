@@ -136,8 +136,8 @@ class HoneypotMiddleware:
                         },
                     )
                 )
-            except Exception:  # noqa: BLE001
-                pass  # Event bus failure should not block the honeypot response
+            except Exception as exc:  # noqa: BLE001
+                logger.debug(f"Event bus emit failed during honeypot block (suppressed by design): {exc}")
 
             # 5. Return RFC 2324 (418 I'm a teapot) — اطلاعات-লীন রেসপন্স
             response = JSONResponse(
