@@ -342,7 +342,7 @@ class TestCostGuardIntegration:
         # All tiers should validate successfully
         tiers = ["free", "economy", "premium"]
         for tier in tiers:
-            result = cost_guard.validate_budget(tier)
+            result = await cost_guard.validate_budget("tenant-123", tier)
             assert result is True
 
     @pytest.mark.asyncio

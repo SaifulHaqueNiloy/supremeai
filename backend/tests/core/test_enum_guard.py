@@ -24,7 +24,7 @@ class TestGuardEnumSuccess:
                 ACTIVE = "active"
                 PENDING = "pending"
 
-            await guard_enum("test_enum", TestEnum)
+            await guard_enum(mock_conn, "test_enum", TestEnum)
 
     @pytest.mark.anyio
     async def test_guard_enum_db_not_found(self):
@@ -45,20 +45,20 @@ class TestGuardEnumSuccess:
             class TestEnum(Enum):
                 ACTIVE = "active"
 
-            await guard_enum("test_enum", TestEnum)
+            await guard_enum(mock_conn, "test_enum", TestEnum)
 
     @pytest.mark.anyio
     async def test_guard_enum_db_connection_error(self):
-        mock_engine = MagicMock()
-        mock_engine.connect.side_effect = Exception("DB connection failed")
-
-        with patch("core.enum_guard.engine", mock_engine):
-            from enum import Enum
-
-            class TestEnum(Enum):
-                ACTIVE = "active"
-
-            await guard_enum("test_enum", TestEnum)
+        from sqlalchemy.exc import SQLAlchemyError
+        mock_conn = AsyncMock()
+        mock_conn.execute.side_effect = SQLAlchemyError("DB connection failed")
+    
+        from enum import Enum
+    
+        class TestEnum(Enum):
+            ACTIVE = "active"
+    
+        await guard_enum(mock_conn, "test_enum", TestEnum)
 
     @pytest.mark.anyio
     async def test_guard_enum_mismatch_raises(self):
@@ -81,7 +81,7 @@ class TestGuardEnumSuccess:
                 PENDING = "pending"
 
             with pytest.raises(EnumMismatchError):
-                await guard_enum("test_enum", TestEnum)
+                await guard_enum(mock_conn, "test_enum", TestEnum)
 
 
 class TestRunEnumGuards:
