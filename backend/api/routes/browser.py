@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import HTTPException
+from loguru import logger
 from pydantic import BaseModel
 
 from core.observability.audit_logger import AuditLogger
@@ -103,7 +104,8 @@ def get_credentials(userId: str = "default"):
             decrypted = credential_store.decrypt(c.get("ciphertext", ""), c.get("key_ref"))
             try:
                 decrypted_dict = json.loads(decrypted)
-            except Exception:  # noqa: BLE001
+            except Exception:
+                logger.exception("Unhandled exception")
                 decrypted_dict = {}
 
             masked_dict = {}
