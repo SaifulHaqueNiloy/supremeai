@@ -76,13 +76,13 @@ from core.security.rbac import RoleBasedAccessControl
 
 _TEST_ENV_DEFAULTS = {
     "ENV": "test",
-    "OPENROUTER_API_KEY": "",
-    "HF_API_KEY": "",
-    "GEMINI_API_KEY": "",
-    "DEEPSEEK_API_KEY": "",
-    "GROQ_API_KEY": "",
-    "NVIDIA_API_KEY": "",
-    "FIRECRAWL_API_KEY": "",
+    "OPENROUTER_API_KEY": "mock_openrouter",
+    "HF_API_KEY": "mock_hf",
+    "GEMINI_API_KEY": "mock_gemini",
+    "DEEPSEEK_API_KEY": "mock_deepseek",
+    "GROQ_API_KEY": "mock_groq",
+    "NVIDIA_API_KEY": "mock_nvidia",
+    "FIRECRAWL_API_KEY": "mock_firecrawl",
     "OLLAMA_URL": "http://127.0.0.1:11434",
     "SUPREMEAI_API_TOKEN": "",
     "SENTRY_DSN": "",
@@ -112,6 +112,12 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
 
     for key, value in _TEST_ENV_DEFAULTS.items():
         monkeypatch.setenv(key, value)
+        try:
+            import brain.model_router
+            if hasattr(brain.model_router.ModelRouter, "_breakers"):
+                brain.model_router.ModelRouter._breakers.clear()
+        except ImportError:
+            pass
         try:
             if hasattr(core.config.settings, key.lower()):
                 setattr(core.config.settings, key.lower(), value)
