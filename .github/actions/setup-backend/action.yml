@@ -30,3 +30,8 @@ runs:
         key: venv-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles(format('{0}/poetry.lock', inputs.working-directory)) }}
         restore-keys: |
           venv-${{ runner.os }}-py${{ inputs.python-version }}-
+
+    - name: ⚙️ Install Build Dependencies
+      shell: bash
+      run: |
+        pip install --upgrade pip setuptools wheel
