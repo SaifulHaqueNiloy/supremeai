@@ -11,7 +11,7 @@ def fix():
                 filepath = os.path.join(root, file)
                 with open(filepath, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 if 'from __future__' in content and not content.lstrip().startswith('from __future__') and not content.lstrip().startswith('#') and not content.lstrip().startswith('\"\"\"'):
                     future_imports = re.findall(r'                    content = re.sub(r'                    content = '\n'.join(future_imports) + '\n' + content
                     with open(filepath, 'w', encoding='utf-8') as f:

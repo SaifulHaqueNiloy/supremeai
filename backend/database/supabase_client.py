@@ -17,7 +17,7 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
     def wrapper(self, *args, **kwargs):
         if not self.client and func.__name__ not in ("__init__", "_derive_supabase_url", "bootstrap_schema", "get_bootstrap_statements", "_is_schema_cache_error", "_execute_response_with_retry"):
             return None if func.__name__.startswith("get_") or func.__name__.startswith("is_") else None
-            
+
         max_retries = 3
         for attempt in range(max_retries):
             try:
