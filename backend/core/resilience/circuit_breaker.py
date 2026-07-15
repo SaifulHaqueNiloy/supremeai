@@ -71,6 +71,7 @@ class CircuitBreaker:
         self.success_count: int = 0
         self.last_failure_time: float | None = None
         self.last_success_time: float | None = None
+        self._recovery_in_progress: bool = False
         self._lock = threading.Lock()
 
     def __repr__(self) -> str:
@@ -111,8 +112,13 @@ class CircuitBreaker:
                 if self._should_attempt_recovery():
                     logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
                     self.state = CircuitBreakerState.HALF_OPEN
+                    self._recovery_in_progress = True
                 else:
                     raise CircuitBreakerOpenError(self.name, self.state)
+            elif self.state == CircuitBreakerState.HALF_OPEN:
+                if self._recovery_in_progress:
+                    raise CircuitBreakerOpenError(self.name, self.state)
+                self._recovery_in_progress = True
 
         try:
             result = func(*args, **kwargs)
@@ -140,8 +146,13 @@ class CircuitBreaker:
                 if self._should_attempt_recovery():
                     logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
                     self.state = CircuitBreakerState.HALF_OPEN
+                    self._recovery_in_progress = True
                 else:
                     raise CircuitBreakerOpenError(self.name, self.state)
+            elif self.state == CircuitBreakerState.HALF_OPEN:
+                if self._recovery_in_progress:
+                    raise CircuitBreakerOpenError(self.name, self.state)
+                self._recovery_in_progress = True
 
         try:
             result = await func(*args, **kwargs)
@@ -169,6 +180,7 @@ class CircuitBreaker:
             if self.state == CircuitBreakerState.HALF_OPEN:
                 logger.info(f"Circuit breaker '{self.name}' recovered — transitioning to CLOSED")
                 self.state = CircuitBreakerState.CLOSED
+                self._recovery_in_progress = False
 
     def _mark_failure(self) -> None:
         """Record a failed call and potentially open the circuit.
@@ -186,6 +198,7 @@ class CircuitBreaker:
                         f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
                     )
                     self.state = CircuitBreakerState.OPEN
+                    self._recovery_in_progress = False
 
     def reset(self) -> None:
         """Manually reset the circuit breaker to CLOSED state.
@@ -199,6 +212,7 @@ class CircuitBreaker:
             self.success_count = 0
             self.last_failure_time = None
             self.last_success_time = None
+            self._recovery_in_progress = False
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current metrics for monitoring.
@@ -206,15 +220,16 @@ class CircuitBreaker:
         বাংলা: মনিটরিংয়ের জন্য বর্তমান মেট্রিক্স রিটার্ন করে।
         """
         with self._lock:
+            state_val = 0
+            if self.state == CircuitBreakerState.OPEN:
+                state_val = 2
+            elif self.state == CircuitBreakerState.HALF_OPEN:
+                state_val = 1
+                
             return {
-                "name": self.name,
-                "state": self.state.value,
-                "failure_count": self.failure_count,
-                "success_count": self.success_count,
-                "failure_threshold": self.failure_threshold,
-                "recovery_timeout": self.recovery_timeout,
-                "last_failure_time": self.last_failure_time,
-                "last_success_time": self.last_success_time,
+                f'circuit_breaker_state{{name="{self.name}"}}': state_val,
+                f'circuit_breaker_failures_total{{name="{self.name}"}}': self.failure_count,
+                f'circuit_breaker_successes_total{{name="{self.name}"}}': self.success_count,
             }
 
     def allow_request(self) -> bool:
@@ -227,8 +242,14 @@ class CircuitBreaker:
                 if self._should_attempt_recovery():
                     logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
                     self.state = CircuitBreakerState.HALF_OPEN
+                    self._recovery_in_progress = True
                     return True
                 return False
+            elif self.state == CircuitBreakerState.HALF_OPEN:
+                if self._recovery_in_progress:
+                    return False
+                self._recovery_in_progress = True
+                return True
             return True
 
     def mark_success(self) -> None:

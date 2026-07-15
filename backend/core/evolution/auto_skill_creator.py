@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 # ruff: noqa: E402
 """
 Provides the `AutoSkillCreator` class, the core of the SupremeAI self-evolution engine.
@@ -60,7 +61,7 @@ class AutoSkillCreator:
                     from core.messaging.event_bus import error_event_bus
 
                     error_event_bus.emit(
-                        ErrorEvent(module="auto_skill_creator", error_type="FIRESTORE_INIT_FAILED", message=str(e), severity="WARNING")
+                        ErrorEvent(module="auto_skill_creator", error_type="FIRESTORE_INIT_FAILED", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed"))
                     )
                 except ImportError:
                     pass

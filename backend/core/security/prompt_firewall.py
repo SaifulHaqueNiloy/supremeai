@@ -53,6 +53,26 @@ _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
     ],
 }
 
+# Pre-compiled regex cache for fast heuristic matching
+_compiled_patterns: list[re.Pattern] = []
+
+def _get_compiled_patterns() -> list[re.Pattern]:
+    global _compiled_patterns
+    if not _compiled_patterns:
+        all_patterns = []
+        for patterns in _LOCAL_BLOCK_PATTERNS.values():
+            all_patterns.extend(patterns)
+        # Add custom patterns from settings
+        all_patterns.extend(settings.prompt_blocked_patterns)
+        
+        for p in all_patterns:
+            try:
+                # Escape pattern to prevent regex injection, then compile case-insensitive
+                _compiled_patterns.append(re.compile(re.escape(p), re.IGNORECASE))
+            except Exception:
+                pass
+    return _compiled_patterns
+
 _BENGALI_ENFORCEMENT_HEADER: str = (
     "BENGALI NATIVE ENFORCEMENT RULES:\n"
     "- Always respond in Bangla (বাংলা) when the user writes in Bangla.\n"
@@ -91,15 +111,13 @@ class PromptFirewall:
         return bool(re.search(r"[\u0980-\u09FF]", response))
 
     def _check_local_patterns(self, text: str) -> str | None:
-        """Local heuristic check — LLM-free fast path.
+        """Local heuristic check — LLM-free fast path with pre-compiled regex.
 
         বাংলা: স্থানীয় হিউরিস্টিক চেক — LLM ছাড়া দ্রুত পাথ।
         """
-        lower = text.lower()
-        for threat_type, patterns in _LOCAL_BLOCK_PATTERNS.items():
-            for pattern in patterns:
-                if pattern.lower() in lower:
-                    return threat_type
+        for pattern in _get_compiled_patterns():
+            if pattern.search(text):
+                return "policy_violation"
         return None
 
     async def constitutional_filter(self, response_text: str) -> tuple[str, bool]:
