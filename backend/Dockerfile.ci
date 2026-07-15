@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg libpq-dev build-essential git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install heavy dependencies first
+RUN pip install --no-cache-dir --upgrade pip setuptools==68.0.0 wheel
+RUN pip install --no-cache-dir torch openai-whisper==20240930 --no-build-isolation
+
+# Install Poetry and configure it
+RUN pip install --no-cache-dir poetry
+RUN poetry config virtualenvs.create false
+
+WORKDIR /app
