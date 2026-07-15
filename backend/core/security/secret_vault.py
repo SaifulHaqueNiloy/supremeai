@@ -1,16 +1,19 @@
+from __future__ import annotations
+from core.messaging.event_bus import ErrorContext
 """Enterprise Cloud Secret Vault (Infisical / Doppler).
 
 বাংলা: এন্টারপ্রাইজ ক্লাউড সিক্রেট ভল্ট — ইন-মেমরি ক্যাশে TTL-সহ, Fail-Closed।
 Fetches production API keys directly into memory from Infisical.
 Removes the need for monolithic GCP Secret Manager.
 """
-from __future__ import annotations
 
 import asyncio
 import os
 import time
 
 from loguru import logger
+
+from core.messaging.event_bus import ErrorEvent, error_event_bus
 
 try:
     from infisical_client import AuthenticationOptions, ClientSettings, GetSecretOptions, InfisicalClient, UniversalAuthMethod
@@ -105,14 +108,44 @@ class ProductionSecretVault:
                 project_id=self.project_id,
                 secret_name=secret_id,
             )
-            secret_value = self.client.getSecret(options=options).secret_value
-            self._cache[secret_id] = _CacheEntry(secret_value)
-            return secret_value
+            
+            # Exponential backoff retry logic
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    secret_value = self.client.getSecret(options=options).secret_value
+                    self._cache[secret_id] = _CacheEntry(secret_value)
+                    return secret_value
+                except (ConnectionError, TimeoutError) as exc:
+                    if attempt < max_retries - 1:
+                        sleep_time = 2 ** attempt
+                        logger.warning(f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}")
+                        time.sleep(sleep_time)
+                    else:
+                        raise exc
         except (ConnectionError, TimeoutError) as exc:
             logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment.")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="secret_vault",
+                    error_type="VAULT_FETCH_TIMEOUT",
+                    message=f"Failed to fetch {secret_id} from Infisical after retries: {exc}",
+                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    context={"secret_id": secret_id}
+                )
+            )
             return self._fallback_to_env(secret_id, default)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Using fallback.")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="secret_vault",
+                    error_type="VAULT_FETCH_ERROR",
+                    message=f"Unexpected error fetching {secret_id}: {exc}",
+                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    context={"secret_id": secret_id}
+                )
+            )
             return self._fallback_to_env(secret_id, default)
 
     def _fallback_to_env(self, secret_id: str, default: str | None) -> str:

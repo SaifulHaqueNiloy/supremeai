@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from core.config import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -83,45 +85,54 @@ class RBACEntry:
     permissions: frozenset[Permission] = field(compare=False)
 
 
-def get_role_permissions(role: str | Role) -> frozenset[Permission]:
+def get_role_permissions(role: str | Role) -> frozenset[Permission] | frozenset[str]:
     """Get all permissions for a given role.
 
-    বাংলা: নির্দিষ্ট রোলের জন্য সব পারমিশন রিটার্ন করে।
-
-    Raises:
-        ValueError: If role is not a valid Role.
+    বাংলা: নির্দিষ্ট রোলের জন্য সব পারমিশন রিটার্ন করে। প্রথমে config চেক করে, তারপর default।
     """
-    if isinstance(role, str):
-        try:
-            role_enum = Role(role.lower())
-        except ValueError:
-            raise ValueError(f"Invalid role '{role}'. Valid roles: {[r.value for r in Role]}") from None
-    else:
-        role_enum = role
-
-    return ROLE_PERMISSIONS.get(role_enum, frozenset())
+    role_str = role.value if isinstance(role, Role) else role.lower()
+    
+    # Check config-driven roles first
+    custom_roles = settings.rbac_role_definitions
+    if role_str in custom_roles:
+        return frozenset(custom_roles[role_str])
+        
+    # Fallback to hardcoded roles
+    try:
+        role_enum = Role(role_str)
+        return ROLE_PERMISSIONS.get(role_enum, frozenset())
+    except ValueError:
+        return frozenset()
 
 
 def has_permission(role: str | Role, required_permission: str | Permission) -> bool:
     """Check if a role has a specific permission.
 
     বাংলা: একটি রোলের নির্দিষ্ট পারমিশন আছে কিনা চেক করে।
-
-    Args:
-        role: The role to check.
-        required_permission: The permission required.
-
-    Returns:
-        True if the role has the permission, False otherwise.
     """
     try:
+        req_perm_str = required_permission.value if isinstance(required_permission, Permission) else required_permission.lower()
+        role_perms = get_role_permissions(role)
+        
+        # wildcard support
+        if "*" in role_perms:
+            return True
+            
+        # check both enum-based and string-based perms
+        if req_perm_str in role_perms:
+            return True
+            
         if isinstance(required_permission, str):
-            perm = Permission(required_permission.lower())
-        else:
-            perm = required_permission
-        return perm in get_role_permissions(role)
-    except (ValueError, KeyError):
-        logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}")
+            try:
+                perm_enum = Permission(required_permission.lower())
+                if perm_enum in role_perms:
+                    return True
+            except ValueError:
+                pass
+                
+        return False
+    except Exception as exc:
+        logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}")
         return False
 
 

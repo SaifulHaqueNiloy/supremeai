@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 """This module implements the `MaintenancePipeline`, acting as the "Immune System" for the SupremeAI ecosystem. It is responsible for continuously monitoring the health and performance of critical backend components such as databases, Redis, and external AI APIs. The pipeline proactively listens for system-wide error events, performs routine health checks, detects potential performance regressions, and attempts automated self-healing remediation actions like switching LLM providers or re-initializing services to ensure the overall stability and resilience of the AI platform.
 
 Key Components:
@@ -85,7 +86,7 @@ class MaintenancePipeline:
                     module="maintenance_pipeline",
                     error_type="system.health.degraded",
                     message="System health score dropped below safe threshold.",
-                    severity="CRITICAL",
+                    severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
                     context={"results": results, "score": self.health_score},
                 )
             )
@@ -145,7 +146,7 @@ class MaintenancePipeline:
                                 module="auto_remediation",
                                 error_type="system.routing.updated",
                                 message="Switched to OpenRouter successfully.",
-                                severity="INFO",
+                                severity="INFO", structured_context=ErrorContext(module="auto_fixed"),
                             )
                         )
                         self.last_recovery_time = current_time

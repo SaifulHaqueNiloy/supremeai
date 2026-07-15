@@ -48,8 +48,8 @@ class ErrorEvent(BaseModel):
     message: str
     severity: str  # CRITICAL, ERROR, WARNING, INFO
     context: dict[str, Any] = Field(default_factory=dict)
-    # বাংলা মন্তব্য: structured context — flat dict-এর পাশাপাশি type-safe correlation
-    structured_context: ErrorContext | None = None
+    # বাংলা মন্তব্য: structured context — flat dict-এর পাশাপাশি type-safe correlation (mandatory)
+    structured_context: ErrorContext
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -107,11 +107,14 @@ class ErrorEventBus:
             # নতুন loop তৈরি করা হয় না — thread safety issue এড়াতে।
             logger.debug(f"[ErrorEventBus] No running loop for async dispatch of '{event.error_type}'. Sync log completed.")
 
-    async def emit_async(self, event: ErrorEvent) -> None:
+    async def async_emit(self, event: ErrorEvent) -> None:
         """বাংলা মন্তব্য: Async context-এ সরাসরি call করার জন্য।"""
         self._log_event(event)
         self._total_emitted += 1
         await self._dispatch_async(event)
+
+    # Alias for backwards compatibility if any
+    emit_async = async_emit
 
     async def _dispatch_async(self, event: ErrorEvent) -> None:
         """বাংলা মন্তব্য: সব listeners-এ concurrent dispatch। Individual failure isolation।"""
@@ -175,15 +178,14 @@ class ErrorEventBus:
         context সহ — user_id, task_id, request_id correlation।
         """
         ctx = event.context.copy()
-        if event.structured_context:
-            ctx.update(
-                {
-                    "user_id": event.structured_context.user_id,
-                    "task_id": event.structured_context.task_id,
-                    "request_id": event.structured_context.request_id,
-                    "env": event.structured_context.env,
-                }
-            )
+        ctx.update(
+            {
+                "user_id": event.structured_context.user_id,
+                "task_id": event.structured_context.task_id,
+                "request_id": event.structured_context.request_id,
+                "env": event.structured_context.env,
+            }
+        )
 
         log_msg = f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
 
