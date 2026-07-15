@@ -60,10 +60,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      dependencies: ${{ steps.filter.outputs.dependencies }}
-      docs_only: ${{ steps.filter.outputs.docs_only }}
+      backend: ${{ steps.filter.outputs.backend == 'true' || github.run_attempt > 1 }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.run_attempt > 1 }}
+      dependencies: ${{ steps.filter.outputs.dependencies == 'true' || github.run_attempt > 1 }}
+      docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -263,11 +263,8 @@ jobs:
     name: 🐍 Backend (Test)
     needs: [changes, pre-merge-gate]
     if: >
-      !failure() && !cancelled() &&
-      (
-        (needs.pre-merge-gate.outputs.trivial_change != 'true' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
-        (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
-      )
+      (needs.pre-merge-gate.result == 'success') &&
+      (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' || github.run_attempt > 1)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -318,7 +315,8 @@ jobs:
       - name: 🛠️ Force Pre-install Whisper Dependencies
         working-directory: backend
         run: |
-          pip install --upgrade setuptools wheel
+          pip install --upgrade pip
+          pip install setuptools==74.0.0 wheel
           pip install openai-whisper==20240930
 
       - name: ⚙️ Install Backend Dependencies
