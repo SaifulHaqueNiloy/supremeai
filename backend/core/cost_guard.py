@@ -91,7 +91,7 @@ class CostGuard:
         try:
             spent_raw = await redis_manager.get_cache(key)
             spent = float(spent_raw) if spent_raw else 0.0
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"[CostGuard] Redis unavailable, fail-safe reject: {e}")
             try:
                 from core.messaging.event_bus import ErrorEvent
@@ -127,7 +127,7 @@ class CostGuard:
 
         try:
             await redis_manager.incrbyfloat(key, actual_cost, ex_seconds=86400)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"[CostGuard] Failed to record spend in Redis: {e}")
             try:
                 from core.messaging.event_bus import ErrorEvent

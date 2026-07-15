@@ -117,6 +117,6 @@ async def websocket_hitl_endpoint(websocket: WebSocket):
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"HITL WebSocket error: {e}")
         manager.disconnect(websocket)
