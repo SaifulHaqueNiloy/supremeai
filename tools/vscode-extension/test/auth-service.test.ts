@@ -15,7 +15,10 @@ vi.mock('vscode', () => ({
   },
   workspace: {
     isTrusted: true,
-    getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }),
+    getConfiguration: vi.fn().mockReturnValue({ 
+      get: vi.fn(),
+      update: vi.fn().mockResolvedValue(undefined) 
+    }),
   },
   authentication: {
     getSession: vi.fn(),
