@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 
 export const window = {
-  showInputBox: vi.fn(),
   showInformationMessage: vi.fn(),
   showErrorMessage: vi.fn(),
   showWarningMessage: vi.fn(),
+  showInputBox: vi.fn().mockResolvedValue('mock-api-key'),
   createOutputChannel: vi.fn().mockReturnValue({ appendLine: vi.fn(), show: vi.fn() }),
 };
 
@@ -13,12 +13,12 @@ export const commands = {
   registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }),
 };
 
-// এখানে workspace মকটি প্রপারলি চেইন করুন
 export const workspace = {
   isTrusted: true,
+  // এখানে আপডেট মেথডটি চেইনের ভেতরে সরাসরি ডিফাইন করা হয়েছে
   getConfiguration: vi.fn().mockReturnValue({
-    get: vi.fn(),
-    update: vi.fn().mockResolvedValue(undefined), // এই লাইনটি Missing ছিল
+    get: vi.fn().mockReturnValue(undefined),
+    update: vi.fn().mockResolvedValue(undefined),
   }),
   workspaceFolders: [],
   onDidSaveTextDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
