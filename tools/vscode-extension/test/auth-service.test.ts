@@ -4,10 +4,10 @@ import { AuthService } from '../src/services/AuthService';
 
 vi.mock('vscode', () => ({
   window: {
-    showInputBox: vi.fn(),
-    showErrorMessage: vi.fn(),
     showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
     showWarningMessage: vi.fn(),
+    createOutputChannel: vi.fn().mockReturnValue({ appendLine: vi.fn(), show: vi.fn() }),
   },
   commands: {
     executeCommand: vi.fn().mockResolvedValue(undefined),
@@ -15,13 +15,15 @@ vi.mock('vscode', () => ({
   },
   workspace: {
     isTrusted: true,
-    getConfiguration: vi.fn().mockReturnValue({ 
+    getConfiguration: vi.fn().mockReturnValue({
       get: vi.fn(),
-      update: vi.fn().mockResolvedValue(undefined) 
+      update: vi.fn().mockResolvedValue(undefined),
     }),
+    workspaceFolders: [],
+    onDidSaveTextDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   },
   authentication: {
-    getSession: vi.fn(),
+    getSession: vi.fn().mockResolvedValue(undefined),
   },
   EventEmitter: vi.fn().mockImplementation(() => ({
     event: vi.fn(),
