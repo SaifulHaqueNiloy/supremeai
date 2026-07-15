@@ -29,13 +29,15 @@ from loguru import logger
 from core.llm.llm_gateway import llm_gateway
 from core.mcp_client import MCPRegistryClient
 from core.skills.base import BaseSkill
+from tools.code.fuzz_sandbox import SecurityError
+from tools.code.fuzz_sandbox import run_sandbox_ast_check
 
 
 class SkillManager:
     """
     বাংলা মন্তব্য: Skill-as-a-Service আর্কিটেকচারের কেন্দ্রবিন্দু।
     এই ম্যানেজার রানটাইমে স্কিল রেজিস্টার, ডিসকভার এবং ডিসপ্যাচ করে।
-    এটি এখন এক্সিকিউটেবল BaseSkill অবজেক্ট নিয়ে কাজ করে।
+    এটি এখন এক্সিকিউটেবল BaseSkill অবজেক্ট নিয়ে কাজ করে।
     """
 
     def __init__(self):
@@ -56,7 +58,7 @@ class SkillManager:
     async def get_skill(self, skill_name: str) -> BaseSkill:
         """
         বাংলা মন্তব্য: রেজিস্ট্রি থেকে একটি স্কিল খুঁজে বের করে।
-        যদি লোকালি না পাওয়া যায়, তবে MCP থেকে খোঁজার চেষ্টা করে।
+        যদি লোকালি না পাওয়া যায়, তবে MCP থেকে খোঁজার চেষ্টা করে।
         """
         if skill_name in self._skills:
             logger.debug(f"Found skill '{skill_name}' in local registry.")
@@ -73,16 +75,61 @@ class SkillManager:
             data = json.loads(res)
             if "rows" in data and len(data["rows"]) > 0:
                 code_content = data["rows"][0]["code"]
-                local_env = {}
-                # Ensure BaseSkill is available
-                exec_globals = globals().copy()
-                exec(code_content, exec_globals, local_env)
+
+                # --- নিরাপত্তা গেট ১: AST-স্তরের স্ট্যাটিক ভেটিং ---
+                # আগে DB থেকে আসা কোড কোনো যাচাই ছাড়াই সরাসরি `exec(code, globals().copy(), ...)`
+                # দিয়ে চালানো হতো — অর্থাৎ `skills` টেবিলে যে কেউ (compromised service-role key,
+                # future marketplace-submit ফিচার, বা downstream SQL injection দিয়ে) একটি row
+                # লিখতে পারলেই backend প্রসেসে remote code execution (RCE) সম্ভব ছিল। রিপোতে
+                # ইতিমধ্যে এই ঠিক কাজের জন্য বানানো `run_sandbox_ast_check` (fuzz_sandbox.py) আছে
+                # — os/subprocess/socket import, eval/exec/getattr/globals/locals-এর মতো বিপজ্জনক
+                # প্যাটার্ন ব্লক করে — কিন্ত এই ফাইলে সেটা কখনো call করা হয়নি। এখন সেটা প্রয়োগ করা হলো।
+                try:
+                    ast_ok = run_sandbox_ast_check(code_content)
+                except SecurityError as sec_exc:
+                    logger.error(f"🚨 Blocked unsafe skill code for '{skill_name}': {sec_exc}")
+                    raise ValueError(f"Skill '{skill_name}' failed security validation and was not loaded.") from sec_exc
+                if not ast_ok:
+                    raise ValueError(f"Skill '{skill_name}' has invalid/unparseable code and was not loaded.")
+
+                # --- নিরাপত্তা গেট ২: ন্যূনতম, লক-ডাউন করা exec namespace ---
+                # `globals().copy()` এই মডিউলের সব ইম্পোর্ট (llm_gateway, MCPRegistryClient, logger
+                # ইত্যাদি) exec করা কোডের কাছে উন্মুক্ত করে দিত। এখন শুধু ক্লাস ডিফাইন করতে যা
+                # লাগে (BaseSkill) এবং একটি সীমিত builtins সেট-ই দেওয়া হচ্ছে — defense-in-depth,
+                # যাতে AST-চেক এড়িয়ে গেলেও exec'd কোড অ্যাপ্লিকেশনের ইন্টারনাল ক্লায়েন্ট/সিক্রেটে
+                # হাত দিতে না পারে।
+                import builtins as _builtins
+
+                _SAFE_SKILL_BUILTINS = {
+                    "__build_class__": _builtins.__build_class__,  # class স্টেটমেন্টের জন্য আবশ্যক
+                    "__name__": "supreme_skill_sandbox",
+                    "object": object,
+                    "range": range,
+                    "len": len,
+                    "str": str,
+                    "int": int,
+                    "float": float,
+                    "bool": bool,
+                    "list": list,
+                    "dict": dict,
+                    "set": set,
+                    "tuple": tuple,
+                    "isinstance": isinstance,
+                    "super": super,
+                    "Exception": Exception,
+                    "ValueError": ValueError,
+                }
+                local_env: dict[str, Any] = {}
+                exec_globals = {"__builtins__": _SAFE_SKILL_BUILTINS, "BaseSkill": BaseSkill}
+                exec(code_content, exec_globals, local_env)  # noqa: S102 — AST-vetted, locked-down namespace above
 
                 for item in local_env.values():
                     if isinstance(item, type) and issubclass(item, BaseSkill) and item != BaseSkill:
                         skill_instance = item()
                         self.register_skill(skill_instance, skill_name)
                         return skill_instance
+        except ValueError:
+            raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"Error fetching skill '{skill_name}' from DB: {e}")
 

@@ -4,13 +4,13 @@ SupremeAI Multi-API & Multi-Account Rotation System
 Complete implementation for intelligent provider switching and account management
 """
 
-from loguru import logger
 import asyncio
 import contextlib
 import hashlib
 import json
 import logging
 import os
+import secrets
 import time
 from dataclasses import dataclass
 from dataclasses import field
@@ -20,6 +20,9 @@ from enum import Enum
 from typing import Any
 
 from core.config_cache import config_cache
+
+# Security: Allowed providers whitelist
+ALLOWED_PROVIDERS = frozenset(["groq", "deepseek", "google_ai_studio", "openai", "anthropic", "cohere"])
 
 
 # Configure logging
@@ -226,14 +229,18 @@ class MultiAccountRotator:
         3. Wait for the Firebase Function to catch the email
         4. Retrieve the code and finalize the account
         """
-        logger.info(f"[SUPREME-AI] Initiating autonomous identity creation for {provider_name}")
+        # Security: Validate provider_name against whitelist
+        if provider_name not in ALLOWED_PROVIDERS:
+            logger.error(f"[SUPREME-AI] Invalid provider: {provider_name}. Must be in {ALLOWED_PROVIDERS}")
+            return False
 
-        import random
+        logger.info(f"[SUPREME-AI] Initiating autonomous identity creation for {provider_name}")
 
         from playwright.async_api import async_playwright
 
-        new_email = f"supremeai+{random.getrandbits(16)}@yourdomain.com"
-        password = f"Pass-{random.getrandbits(32)}"
+        # Security: Use secrets module for cryptographically secure random generation
+        new_email = f"supremeai+{secrets.token_hex(8)}@yourdomain.com"
+        password = f"Pass-{secrets.token_urlsafe(16)}"
 
         # Simulate incoming verification email (SQLite local queue for testing/local env)
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -316,8 +323,8 @@ class MultiAccountRotator:
                         await page.wait_for_selector("text=Account Created Successfully", timeout=2000)
                     logger.info(f"[SUPREME-AI] Account creation confirmed for {new_email}.")
 
-                    # Add to rotator registry
-                    account_id = f"{provider_name}-{random.getrandbits(16)}"
+                    # Add to rotator registry - use SHA-256 for secure ID generation
+                    account_id = f"{provider_name}-{hashlib.sha256(f'{new_email}{time.time()}'.encode()).hexdigest()[:12]}"
 
                     # বাংলা মন্তব্য: ড্যাশবোর্ড থেকে প্লেরাইট দিয়ে রিয়েল এপিআই কী স্ক্র্যাপ করার চেষ্টা করা হচ্ছে
                     extracted_api_key = await self._extract_api_key_from_dashboard(page, provider_name)
@@ -475,6 +482,18 @@ class MultiAccountRotator:
 
     def add_account(self, provider_name: str, email: str, api_key: str):
         """Add a new account to a provider"""
+        # Security: Validate provider_name against whitelist
+        if provider_name not in ALLOWED_PROVIDERS:
+            raise ValueError(f"Invalid provider: {provider_name}. Must be in {ALLOWED_PROVIDERS}")
+
+        # Security: Validate email format
+        if not email or "@" not in email:
+            raise ValueError(f"Invalid email format: {email}")
+
+        # Security: Validate api_key is not empty
+        if not api_key:
+            raise ValueError("API key cannot be empty")
+
         logger.info(f"Adding account to provider: {provider_name}")
 
         if provider_name not in self.providers:
@@ -487,8 +506,8 @@ class MultiAccountRotator:
 
         provider = self.providers[provider_name]
 
-        # Generate unique account ID
-        account_id = hashlib.md5(f"{provider_name}_{email}".encode(), usedforsecurity=False).hexdigest()[:8]
+        # Security: Use SHA-256 for account ID generation
+        account_id = f"{provider_name}-{hashlib.sha256(f'{email}{time.time()}'.encode()).hexdigest()[:12]}"
 
         account = Account(
             id=account_id,
@@ -503,6 +522,10 @@ class MultiAccountRotator:
 
     def _create_provider_if_missing(self, provider_name: str):
         """Create a basic provider configuration using ConfigCache DB fallback"""
+        # Security: Validate provider_name against whitelist
+        if provider_name not in ALLOWED_PROVIDERS:
+            raise ValueError(f"Invalid provider: {provider_name}. Must be in {ALLOWED_PROVIDERS}")
+
         # Fetch dynamically from ConfigCache (which falls back to defaults or DB)
         base_url = config_cache.get(f"provider_base_url_{provider_name}", f"https://api.{provider_name}.com")
         models = config_cache.get(f"provider_models_{provider_name}", ["default-model"])
@@ -836,13 +859,25 @@ def get_rotator():
 
 
 async def main():
-    """Example usage"""
+    """Example usage - requires environment variables to be set"""
     # বাংলা মন্তব্য: গ্লোবাল রেফারেন্স সরাসরি ব্যবহারের বদলে get_rotator() দিয়ে শুরু করা হলো।
     rotator = get_rotator()
-    # Add some test accounts
-    rotator.add_account("groq", "test1@supremeai.com", os.getenv("TEST_GROQ_KEY_1", "gsk_test_key_1"))
-    rotator.add_account("groq", "test2@supremeai.com", os.getenv("TEST_GROQ_KEY_2", "gsk_test_key_2"))
-    rotator.add_account("deepseek", "test3@supremeai.com", os.getenv("TEST_DEEPSEEK_KEY_1", "ds_test_key_1"))
+
+    # Security: No hardcoded fallback keys - require environment variables
+    test_groq_key_1 = os.getenv("TEST_GROQ_KEY_1")
+    test_groq_key_2 = os.getenv("TEST_GROQ_KEY_2")
+    test_deepseek_key_1 = os.getenv("TEST_DEEPSEEK_KEY_1")
+
+    if test_groq_key_1:
+        rotator.add_account("groq", "test1@supremeai.com", test_groq_key_1)
+    if test_groq_key_2:
+        rotator.add_account("groq", "test2@supremeai.com", test_groq_key_2)
+    if test_deepseek_key_1:
+        rotator.add_account("deepseek", "test3@supremeai.com", test_deepseek_key_1)
+
+    if not any([test_groq_key_1, test_groq_key_2, test_deepseek_key_1]):
+        logger.warning("[ROTATOR] No test API keys found in environment. Set TEST_GROQ_KEY_1, TEST_GROQ_KEY_2, or TEST_DEEPSEEK_KEY_1 to test.")
+        return
 
     # Execute some test tasks
     tasks = [

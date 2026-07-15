@@ -132,12 +132,12 @@ class ProductionSecretVault:
         self._cache[secret_id] = _CacheEntry(env_fallback)
         return env_fallback
 
-    async def fetch_secret_async(self, secret_id: str) -> str:
+    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
         """Async wrapper — runs fetch_secret in a thread to avoid blocking the event loop.
 
         বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।
         """
-        return await asyncio.to_thread(self.fetch_secret, secret_id)
+        return await asyncio.to_thread(self.fetch_secret, secret_id, default)
 
     def invalidate_cache(self, secret_id: str | None = None) -> None:
         """Invalidate cache for a specific secret or clear all.
