@@ -314,6 +314,8 @@ jobs:
 
       - name: 🛠️ Force Pre-install Whisper Dependencies
         working-directory: backend
+        env:
+          SETUPTOOLS_USE_DISTUTILS: stdlib
         run: |
           pip install --upgrade pip
           pip install setuptools==74.0.0 wheel
