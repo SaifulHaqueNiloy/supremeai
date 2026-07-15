@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from core.services import registry
 
+
 router = APIRouter()
 
 

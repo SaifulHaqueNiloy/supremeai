@@ -1,6 +1,5 @@
 # Secure Endpoints for Universal BYOC Management
 # বাংলা মন্তব্য: সিকিউর প্রক্সি, রোটেশন, ক্রেডেনশিয়াল ম্যানেজমেন্ট ও টেরাফর্ম রানার ট্রিগার এপিআই।
-
 import json
 import os
 import uuid
@@ -11,6 +10,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from loguru import logger
 
 from api.dependencies import get_current_user_token
 from byoc.cloud_connector import GCPCredentialManager
@@ -76,7 +76,8 @@ async def deploy_container(payload: BYOCDeployRequest, background_tasks: Backgro
         with open(config_path, encoding="utf-8") as f:
             limits = json.load(f)["limits"]
             user_limits = limits.get(user_tier, limits["free"])
-    except Exception:  # noqa: BLE001
+    except Exception:
+        logger.exception("Unhandled exception")
         user_limits = {"max_containers": 1, "max_memory": "256Mi", "max_cpu": "500m"}
 
     # Count active containers (simulation check)

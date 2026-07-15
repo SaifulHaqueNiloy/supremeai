@@ -1,16 +1,16 @@
-import json
 import asyncio
+import json
 
+import jwt
 from fastapi import APIRouter
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
 from fastapi import status
 from loguru import logger
 
+from core.config import settings
 from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
-import jwt
-from core.config import settings
 
 
 router = APIRouter(prefix="/ws/hitl", tags=["hitl"])
