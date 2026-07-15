@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -130,8 +131,9 @@ class AuthMiddleware:
 
         path = scope.get("path", "")
 
-        # Skip auth for public paths or test environment
-        if _is_public_path(path) or is_test_environment():
+        # Skip auth for public paths or test environment (only if no api token env is configured)
+        # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে অথেন্টিকেশন বাইপাস করা হয়, যদি না সরাসরি API টোকেন চেক করা হচ্ছে।
+        if _is_public_path(path) or (is_test_environment() and not os.getenv("SUPREMEAI_API_TOKEN")):
             await self.app(scope, receive, send)
             return
 
@@ -146,6 +148,18 @@ class AuthMiddleware:
                 body={"detail": "Missing authentication token"},
                 headers={"WWW-Authenticate": "Bearer"},
             )
+            return
+
+        # API Key validation for system components / testing
+        # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
+        supremeai_api_token = os.getenv("SUPREMEAI_API_TOKEN")
+        if supremeai_api_token and token == supremeai_api_token:
+            scope["user"] = {
+                "sub": "system_api_key",
+                "role": "admin",
+                "tenant_id": None,
+            }
+            await self.app(scope, receive, send)
             return
 
         payload = _decode_jwt(token)
@@ -166,3 +180,48 @@ class AuthMiddleware:
         }
 
         await self.app(scope, receive, send)
+
+
+async def verify_admin_session_fail_closed(request: Any) -> dict[str, Any]:
+    """Verify admin session JWT token in a fail-closed manner.
+
+    বাংলা: অ্যাডমিন সেশন JWT টোকেন fail-closed উপায়ে ভ্যালিডেট করে।
+    """
+    from fastapi import HTTPException
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        logger.warning("Missing Authorization header")
+        raise HTTPException(status_code=401, detail="Missing authorization header")
+
+    if not auth_header.startswith("Bearer "):
+        logger.warning("Malformed Authorization header scheme")
+        raise HTTPException(status_code=401, detail="Malformed authorization header")
+
+    token = auth_header[7:]
+
+    # Fail-closed check for JWT secret config
+    if not settings.jwt_secret:
+        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        raise HTTPException(status_code=500, detail="Authentication server configuration error")
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            options={"verify_exp": True},
+        )
+    except ExpiredSignatureError as exc:
+        logger.warning(f"Expired JWT token: {exc}")
+        raise HTTPException(status_code=401, detail="Token has expired") from exc
+    except JWTError as exc:
+        logger.warning(f"Invalid JWT token: {exc}")
+        raise HTTPException(status_code=401, detail="Invalid token") from exc
+
+    role = payload.get("role")
+    if role not in ("admin", "master_admin"):
+        logger.warning(f"Access denied: role '{role}' is not authorized for admin session")
+        raise HTTPException(status_code=401, detail="Not authorized")
+
+    return payload
