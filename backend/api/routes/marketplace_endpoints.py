@@ -94,13 +94,15 @@ def get_enabled_catalog_sources() -> list[str]:
 
     try:
         enabled = db.get_config("marketplace.resource_sources")
-    except Exception:  # noqa: BLE001
+    except Exception:
+        logger.exception("Unhandled exception")
         enabled = None
 
     if isinstance(enabled, str):
         try:
             enabled = json.loads(enabled)
-        except Exception:  # noqa: BLE001
+        except Exception:
+            logger.exception("Unhandled exception")
             enabled = [item.strip() for item in enabled.split(",") if item.strip()]
 
     if not isinstance(enabled, list):

@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 # backend/core/llm_gateway.py
 # বাংলা মন্তব্য: সম্পূর্ণ রি-ফ্যাক্টর — os.environ secrets injection সম্পূর্ণ বন্ধ।
 # litellm per-call api_key passing → secrets process env-এ leak হয় না।
@@ -49,6 +50,14 @@ _DEFAULT_FALLBACK_MODELS: list[str] = [
     "gemini/gemini-2.5-flash",
     "openrouter/auto",
 ]
+# OpenAI-style Task-to-Model mapping
+TASK_MODEL_MAP: dict[str, str] = {
+    "coding": "deepseek/deepseek-coder",
+    "reasoning": "anthropic/claude-3-5-sonnet",
+    "vision": "google/gemini-2.5-pro",
+    "chat": "gemini/gemini-2.5-flash",
+    "general": "gemini/gemini-2.5-flash",
+}
 
 
 class LLMGateway:
@@ -92,14 +101,14 @@ class LLMGateway:
                 with open(_POLICY_PATH, encoding="utf-8") as f:
                     return json.load(f)
             logger.warning(f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config.")
-        except Exception as exc:  # noqa: BLE001
-            logger.exception(f"[LLMGateway] Error loading routing policy: {exc}")
+        except Exception as exc:
+            logger.opt(exception=True).error(f"[LLMGateway] Error loading routing policy: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
                     module="llm_gateway",
                     error_type="ROUTING_POLICY_LOAD_FAILED",
                     message=str(exc)[:500],
-                    severity="WARNING",
+                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                     context={"policy_path": _POLICY_PATH},
                 )
             )
@@ -132,7 +141,7 @@ class LLMGateway:
                 cost = response_obj._response_metadata.get("api_cost", 0.0) if hasattr(response_obj, "_response_metadata") else 0.0
                 duration = (end_time - start_time).total_seconds()
                 logger.info(f"[LLMGateway] ✅ Model={model} | Cost=${cost:.6f} | P={prompt_tokens} C={completion_tokens} | {duration:.2f}s")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"[LLMGateway] Success callback error: {exc}")
 
         def failure_callback(kwargs, exception_obj, start_time, end_time):
@@ -140,7 +149,7 @@ class LLMGateway:
             try:
                 delta = end_time - start_time
                 duration = delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 duration = 0.0
             logger.error(f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s")
             error_event_bus.emit(
@@ -148,7 +157,7 @@ class LLMGateway:
                     module="llm_gateway",
                     error_type="LLM_CALL_FAILED",
                     message=str(exception_obj)[:500],
-                    severity="ERROR",
+                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
                     context={"model": model, "duration_s": round(duration, 2)},
                 )
             )
@@ -163,15 +172,6 @@ class LLMGateway:
         task_type: str,
     ) -> list[str]:
         """বাংলা মন্তব্য: Task type অনুযায়ী fallback chain তৈরি।"""
-
-        # OpenAI-style Task-to-Model mapping
-        TASK_MODEL_MAP = {
-            "coding": "deepseek/deepseek-coder",
-            "reasoning": "anthropic/claude-3-5-sonnet",
-            "vision": "google/gemini-2.5-pro",
-            "chat": "gemini/gemini-2.5-flash",
-            "general": "gemini/gemini-2.5-flash",
-        }
 
         difficulty = "easy"
         if any(kw in task_type.lower() for kw in ("reasoning", "math", "code", "coding")):
@@ -207,6 +207,15 @@ class LLMGateway:
             logger.warning("[LLMGateway] Empty call chain — using default fallback models.")
 
         return call_chain
+
+    def _get_or_create_circuit_breaker(self, current_model: str) -> CircuitBreaker:
+        if current_model not in self._circuit_breakers:
+            self._circuit_breakers[current_model] = CircuitBreaker(
+                name=current_model,
+                failure_threshold=getattr(settings, "circuit_breaker_failure_threshold", 3),
+                recovery_timeout=getattr(settings, "circuit_breaker_cooldown_period", 60),
+            )
+        return self._circuit_breakers[current_model]
 
     async def acompletion(
         self,
@@ -251,8 +260,8 @@ class LLMGateway:
                     from core.prompt_handler import estimate_tokens
 
                     tokens = estimate_tokens(prompt_text)
-                    estimated_cost = tokens * 0.00001
-                except Exception:  # noqa: BLE001 — টোকেন estimate ব্যর্থ হলে safe fallback cost ব্যবহার করা হয়
+                    estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
+                except Exception:  # Safe fallback cost on token estimate failure
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
@@ -269,15 +278,7 @@ class LLMGateway:
         last_exception: Exception | None = None
         for current_model in call_chain:
             # Circuit Breaker check
-            if current_model not in self._circuit_breakers:
-                # Initialize using settings from config (which defaults to threshold=3, cooldown=60)
-                self._circuit_breakers[current_model] = CircuitBreaker(
-                    name=current_model,
-                    failure_threshold=getattr(settings, "circuit_breaker_failure_threshold", 3),
-                    recovery_timeout=getattr(settings, "circuit_breaker_cooldown_period", 60),
-                )
-
-            cb = self._circuit_breakers[current_model]
+            cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
                 logger.warning(f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping...")
                 continue
@@ -306,10 +307,10 @@ class LLMGateway:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] acompletion cancelled during model {current_model}")
                 raise
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_exception = exc
                 cb.mark_failure()
-                logger.warning(f"[LLMGateway] Model {current_model} failed: {str(exc)[:200]}. Trying next in chain...")
+                logger.opt(exception=True).warning(f"[LLMGateway] Model {current_model} failed. Trying next in chain...")
                 continue
 
         # বাংলা মন্তব্য: সব fallbacks exhausted — self healer trigger এবং error emit
@@ -330,7 +331,7 @@ class LLMGateway:
                 module="llm_gateway",
                 error_type="ALL_MODELS_FAILED",
                 message=str(final_exception)[:500],
-                severity="CRITICAL",
+                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
                 context={"tenant_id": tenant_id, "call_chain": call_chain},
             )
         )
@@ -350,14 +351,7 @@ class LLMGateway:
         last_exception: Exception | None = None
         for current_model in call_chain:
             # Circuit Breaker check
-            if current_model not in self._circuit_breakers:
-                self._circuit_breakers[current_model] = CircuitBreaker(
-                    name=current_model,
-                    failure_threshold=getattr(settings, "circuit_breaker_failure_threshold", 3),
-                    recovery_timeout=getattr(settings, "circuit_breaker_cooldown_period", 60),
-                )
-
-            cb = self._circuit_breakers[current_model]
+            cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
                 logger.warning(f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping...")
                 continue
@@ -383,10 +377,10 @@ class LLMGateway:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] Stream cancelled at model {current_model}")
                 raise
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_exception = exc
                 cb.mark_failure()
-                logger.warning(f"[LLMGateway] Stream model {current_model} failed: {str(exc)[:200]}")
+                logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
                 continue
 
         raise last_exception or RuntimeError("All streaming fallback options failed.")

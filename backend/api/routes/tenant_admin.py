@@ -79,7 +79,8 @@ def _get_db():
         from database.supabase_client import db
 
         return db.client if db and db.client else None
-    except Exception:  # noqa: BLE001
+    except Exception:
+        logger.exception("Unhandled exception")
         return None
 
 
