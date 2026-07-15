@@ -198,3 +198,4 @@ dist-admin/
 
 dist-admin/
 *.env
+.git_backup/
