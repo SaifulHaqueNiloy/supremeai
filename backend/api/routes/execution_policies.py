@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import List
 
 from database.session import get_db_session
-from models.execution_policy import ExecutionPolicy, PolicyScope
+from models.execution_policy import ExecutionPolicy
 
 router = APIRouter(prefix="/api/admin/execution-policies", tags=["Guardrails"])
 
