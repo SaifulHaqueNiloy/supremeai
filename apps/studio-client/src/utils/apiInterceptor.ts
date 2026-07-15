@@ -20,42 +20,39 @@ export function setupGlobalFetchInterceptor() {
     try {
       const response = await originalFetch.apply(this, args);
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-           // Handle unauthorized access globally
-           import('../store/adminStore').then(({ useAdminStore }) => {
-             const store = useAdminStore.getState();
-             if (store.adminAuthenticated) {
-               store.handleAdminLogout();
-             }
-           });
-             // Wait, handleAdminLogout already resets state. Let's redirect as user requested
-             // Actually, if we just clear authenticated state, the App will render the login page.
+       if (!response.ok) {
+         if (response.status === 401 || response.status === 403) {
+            // Handle unauthorized access globally
+            import('../store/adminStore').then(({ useAdminStore }) => {
+              const store = useAdminStore.getState();
+              if (store.adminAuthenticated) {
+                store.handleAdminLogout();
+              }
+            });
+         }
+
+         let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
+         try {
+           const clone = response.clone();
+           const text = await clone.text();
+           if (text) {
+              const parsed = JSON.parse(text);
+              if (parsed.error) errorMsg = parsed.error;
+              else if (parsed.message) errorMsg = parsed.message;
+              else if (parsed.detail) errorMsg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
+              else errorMsg = text.slice(0, 50);
            }
-        }
+         } catch (e) {
+           // ignore parsing error
+         }
 
-        let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
-        try {
-          const clone = response.clone();
-          const text = await clone.text();
-          if (text) {
-             const parsed = JSON.parse(text);
-             if (parsed.error) errorMsg = parsed.error;
-             else if (parsed.message) errorMsg = parsed.message;
-             else if (parsed.detail) errorMsg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
-             else errorMsg = text.slice(0, 50);
-          }
-        } catch (e) {
-          // ignore parsing error
-        }
+         if ((window as any).showGlobalToast) {
+           (window as any).showGlobalToast('error', errorMsg);
+         }
+       }
 
-        if ((window as any).showGlobalToast) {
-          (window as any).showGlobalToast('error', errorMsg);
-        }
-      }
-
-      return response;
-    } catch (error) {
+       return response;
+     } catch (error) {
       if ((window as any).showGlobalToast) {
         (window as any).showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
       }

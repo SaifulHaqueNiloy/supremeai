@@ -54,7 +54,6 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.traffic_monitor", ""),
     ("api.routes.agent_action", "/api/v1"),
     ("api.routes.websocket_hitl", ""),
-    ("core.orchestrator", ""),
 ]
 
 optional_routers: list[tuple[str, str]] = [
