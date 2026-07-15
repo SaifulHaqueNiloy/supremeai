@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
 
 export const window = {
-  showInformationMessage: vi.fn().mockResolvedValue(undefined),
-  showErrorMessage: vi.fn().mockResolvedValue(undefined),
-  showWarningMessage: vi.fn().mockResolvedValue(undefined),
+  showInformationMessage: vi.fn(),
+  showErrorMessage: vi.fn(),
+  showWarningMessage: vi.fn(),
   createOutputChannel: vi.fn().mockReturnValue({ appendLine: vi.fn(), show: vi.fn() }),
 };
 
@@ -12,11 +12,12 @@ export const commands = {
   registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }),
 };
 
+// এখানে workspace মকটি প্রপারলি চেইন করুন
 export const workspace = {
   isTrusted: true,
-  getConfiguration: vi.fn().mockReturnValue({ 
+  getConfiguration: vi.fn().mockReturnValue({
     get: vi.fn(),
-    update: vi.fn().mockResolvedValue(undefined) 
+    update: vi.fn().mockResolvedValue(undefined), // এই লাইনটি Missing ছিল
   }),
   workspaceFolders: [],
   onDidSaveTextDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
@@ -24,11 +25,6 @@ export const workspace = {
 
 export const authentication = {
   getSession: vi.fn().mockResolvedValue(undefined),
-};
-
-export const Uri = {
-  parse: vi.fn(),
-  file: vi.fn(),
 };
 
 export const EventEmitter = vi.fn().mockImplementation(() => ({
