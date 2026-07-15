@@ -8,12 +8,16 @@ vi.mock('vscode', () => ({
     fire: vi.fn(),
     dispose: vi.fn(),
   })),
+  commands: {
+    executeCommand: vi.fn().mockResolvedValue(undefined),
+    registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  },
   window: {
-    showInputBox: vi.fn(),
+    showInputBox: vi.fn().mockResolvedValue('mock-api-key'),
     showInformationMessage: vi.fn(),
   },
-  commands: {
-    registerCommand: vi.fn(),
+  authentication: {
+    getSession: vi.fn(),
   }
 }));
 
