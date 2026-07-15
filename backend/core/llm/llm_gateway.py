@@ -101,7 +101,7 @@ class LLMGateway:
                 with open(_POLICY_PATH, encoding="utf-8") as f:
                     return json.load(f)
             logger.warning(f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config.")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             logger.opt(exception=True).error(f"[LLMGateway] Error loading routing policy: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -141,7 +141,7 @@ class LLMGateway:
                 cost = response_obj._response_metadata.get("api_cost", 0.0) if hasattr(response_obj, "_response_metadata") else 0.0
                 duration = (end_time - start_time).total_seconds()
                 logger.info(f"[LLMGateway] ✅ Model={model} | Cost=${cost:.6f} | P={prompt_tokens} C={completion_tokens} | {duration:.2f}s")
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 logger.warning(f"[LLMGateway] Success callback error: {exc}")
 
         def failure_callback(kwargs, exception_obj, start_time, end_time):
@@ -149,7 +149,7 @@ class LLMGateway:
             try:
                 delta = end_time - start_time
                 duration = delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 duration = 0.0
             logger.error(f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s")
             error_event_bus.emit(
@@ -261,7 +261,7 @@ class LLMGateway:
 
                     tokens = estimate_tokens(prompt_text)
                     estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
-                except Exception:  # Safe fallback cost on token estimate failure
+                except Exception:  # Safe fallback cost on token estimate failure  # noqa: BLE001
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
@@ -307,7 +307,7 @@ class LLMGateway:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] acompletion cancelled during model {current_model}")
                 raise
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 last_exception = exc
                 cb.mark_failure()
                 logger.opt(exception=True).warning(f"[LLMGateway] Model {current_model} failed. Trying next in chain...")
@@ -377,7 +377,7 @@ class LLMGateway:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] Stream cancelled at model {current_model}")
                 raise
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 last_exception = exc
                 cb.mark_failure()
                 logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")

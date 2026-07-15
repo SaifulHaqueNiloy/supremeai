@@ -1,4 +1,3 @@
-import asyncio
 import functools
 import os
 import time
@@ -22,7 +21,7 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
         for attempt in range(max_retries):
             try:
                 return func(self, *args, **kwargs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 # Handle schema cache error via existing logic if possible, or just retry
                 if attempt < max_retries - 1:
                     sleep_time = 2 ** attempt
@@ -62,7 +61,7 @@ class SupabaseDB:
             try:
                 self.client = create_client(self.url, self.key)
                 logger.info("Initialized Supabase Client")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.exception(f"Supabase operation error: {e}")
         else:
             logger.warning("SUPABASE_URL or SUPABASE_KEY not found. Running in offline/mock mode.")
@@ -80,7 +79,7 @@ class SupabaseDB:
                 if hostname.startswith("db."):
                     return f"https://{hostname[3:]}"
                 return f"https://{hostname}"
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             # বাংলা মন্তব্য: exception এবং debug দুটো আলাদা কল না করে একটি warning-এ consolidate করা হলো
             logger.warning(f"Failed to derive Supabase URL from DATABASE_URL: {exc}")
         return None
@@ -378,7 +377,7 @@ class SupabaseDB:
                     ("SUPABASE_DATABASE_URL_POOLER" if candidate_url == pooler_url else "SUPABASE_DATABASE_URL"),
                 )
                 return
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.exception(f"Supabase operation error: {e}")
                 logger.warning(
                     "Supabase schema bootstrap failed for %s: %s",
@@ -399,7 +398,7 @@ class SupabaseDB:
         try:
             response = operation()
             return getattr(response, "data", response)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             if self._is_schema_cache_error(e):
                 logger.warning(
                     "Supabase operation failed due missing table schema cache; bootstrapping schema and retrying: %s",
@@ -409,7 +408,7 @@ class SupabaseDB:
                 try:
                     response = operation()
                     return getattr(response, "data", response)
-                except Exception as retry_error:
+                except Exception as retry_error:  # noqa: BLE001
                     logger.exception(f"Supabase operation error: {retry_error}")
                     logger.error(
                         "Supabase retry after schema bootstrap failed: %s",
@@ -461,7 +460,7 @@ class SupabaseDB:
             if res.data:
                 return res.data
             return None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             # It's okay if a model is not found, so we can log this at a debug level.
             logger.debug(f"Could not fetch AI model behavior for '{model_name}': {e}")
@@ -474,7 +473,7 @@ class SupabaseDB:
             # Use upsert with on_conflict on 'model_name' if the table is set up for it.
             res = self.client.table("ai_model_behavior").upsert(data).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -487,7 +486,7 @@ class SupabaseDB:
             if res.data:
                 return res.data[0]
             return None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -497,7 +496,7 @@ class SupabaseDB:
         try:
             res = self.client.table("user_preferences").upsert(data).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -507,7 +506,7 @@ class SupabaseDB:
         try:
             res = self.client.table("system_config").select("*").eq("category", category).execute()
             return res.data or []
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return []
 
@@ -577,7 +576,7 @@ class SupabaseDB:
             }
             res = self.client.table("skill_proposals").insert(entry).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -601,7 +600,7 @@ class SupabaseDB:
             }
             res = self.client.table("feedback_loop").insert(entry).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -620,7 +619,7 @@ class SupabaseDB:
         try:
             res = self.client.table("evolution_logs").insert(entry).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -630,7 +629,7 @@ class SupabaseDB:
         try:
             res = self.client.table("evolution_logs").select("*").order("created_at", desc=True).limit(limit).execute()
             return res.data or []
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return []
 
@@ -641,7 +640,7 @@ class SupabaseDB:
         try:
             res = self.client.table("usage_metrics").upsert(data).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -652,7 +651,7 @@ class SupabaseDB:
         try:
             res = self.client.table("skills").upsert(data).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -662,7 +661,7 @@ class SupabaseDB:
         try:
             res = self.client.table("skills").select("*").eq("name", name).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -672,7 +671,7 @@ class SupabaseDB:
         try:
             res = self.client.table("skills").select("*").execute()
             return res.data or []
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return []
 
@@ -683,7 +682,7 @@ class SupabaseDB:
         try:
             res = self.client.table("guardrails").upsert(data).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -693,7 +692,7 @@ class SupabaseDB:
         try:
             res = self.client.table("guardrails").select("*").eq("is_active", True).order("priority", desc=False).execute()
             return res.data or []
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return []
 
@@ -704,7 +703,7 @@ class SupabaseDB:
         try:
             res = self.client.table("provider_configs").upsert(data).execute()
             return res.data[0] if res.data else None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return None
 
@@ -714,7 +713,7 @@ class SupabaseDB:
         try:
             res = self.client.table("provider_configs").select("*").eq("is_active", True).order("priority", desc=False).execute()
             return res.data or []
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return []
 
