@@ -122,7 +122,7 @@ class SelfHealerService:
                     context={"fix_id": fix_id, "tenant_id": tenant_id, "impact_score": impact_score},
                 )
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to emit HITL_REVIEW_REQUIRED event: {e}")
 
         return fix_id
