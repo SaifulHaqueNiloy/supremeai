@@ -33,7 +33,7 @@ class TokenDeductor:
         try:
             with open(config_path, encoding="utf-8") as f:
                 self.config = json.load(f)
-        except Exception:  # noqa: BLE001
+        except Exception:
             self.config = {"token_rates_usd_per_1k": {"input": 0.0015, "output": 0.0020}, "byoc_deployment_fee_usd": 0.05}
 
     def _acquire_distributed_lock(self, lock_key: str, lock_value: str, ttl: int = 10) -> bool:
@@ -48,7 +48,7 @@ class TokenDeductor:
         try:
             # SET lock_key lock_value NX EX ttl
             return redis_queue.set_nx(lock_key, lock_value, ex=ttl)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to acquire distributed lock: {e}")
             return False
 
@@ -68,7 +68,7 @@ class TokenDeductor:
             end
             """
             redis_queue.eval(lua_script, 1, lock_key, lock_value)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to release distributed lock: {e}")
 
     async def deduct_tokens(self, session: AsyncSession, user_id: str, input_tokens: int, output_tokens: int, model_name: str) -> bool:
@@ -140,8 +140,8 @@ class TokenDeductor:
         except StaleDataError:
             logger.critical(f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}")
             return False
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Transaction failed for {user_id}: {str(e)}")
+        except Exception as e:
+            logger.exception(f"Transaction failed for {user_id}")
             return False
         finally:
             await asyncio.to_thread(self._release_distributed_lock, lock_key, lock_value)
@@ -203,8 +203,8 @@ class TokenDeductor:
         except StaleDataError:
             logger.critical(f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}")
             return False
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Transaction failed for {user_id}: {str(e)}")
+        except Exception as e:
+            logger.exception(f"Transaction failed for {user_id}")
             return False
         finally:
             await asyncio.to_thread(self._release_distributed_lock, lock_key, lock_value)
