@@ -287,7 +287,6 @@ jobs:
 
 
   worker-test:
-    if: false
     name: ⚡ Cloudflare Worker (Test)
     runs-on: ubuntu-latest
     steps:
@@ -315,7 +314,6 @@ jobs:
   generate-db-schema:
     name: 📊 Generate DB Schema Diagram
     runs-on: ubuntu-latest
-    if: false
     needs: setup
     steps:
       - uses: actions/checkout@v4
