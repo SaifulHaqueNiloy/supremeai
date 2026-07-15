@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 import ast
 import os
 import sys
@@ -49,7 +50,7 @@ def process_file(filepath: Path, dry_run: bool = False):
         indent = prefix.split("\n")[-1]
         replacement += f"{indent}logger.error(f'Caught exception: {{{var_name}}}')\n"
         replacement += f"{indent}from core.messaging.event_bus import error_event_bus, ErrorEvent\n"
-        replacement += f"{indent}error_event_bus.emit(ErrorEvent(module='auto_refactor', error_type='GENERIC_EXCEPTION', message=str({var_name})[:200], severity='ERROR'))"  # noqa: E501
+        replacement += f"{indent}error_event_bus.emit(ErrorEvent(module='auto_refactor', error_type='GENERIC_EXCEPTION', message=str({var_name})[:200], severity='ERROR', structured_context=ErrorContext(module="auto_fixed")))"  # noqa: E501
         return replacement
 
     new_content, count = pass_pattern.subn(replacer, original_content)

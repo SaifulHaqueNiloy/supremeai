@@ -108,7 +108,11 @@ class ConfigCache:
         """শুধু app startup-এ, event loop চালু হওয়ার আগে, একবারই ব্যবহারের জন্য।
         Request-handling চলাকালীন এটা কখনো কল করা যাবে না।"""
         import asyncio
-        new_cache = asyncio.run(self._load_from_db_async())
+        try:
+            new_cache = asyncio.run(self._load_from_db_async())
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"ConfigCache: DB load failed during sync bootstrap, using defaults: {exc}")
+            new_cache = dict(DEFAULT_CONFIGS)
         with self._lock:
             self._cache = new_cache
             self._last_refresh = time.time()

@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 import asyncio
 
 from fastapi import APIRouter
@@ -69,7 +70,7 @@ async def mock_screencast_emitter(websocket: WebSocket, session_id: str):
                 module="backend.api.routes.session_takeover",
                 error_type=type(e).__name__,
                 message=str(e),
-                severity="WARNING",
+                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                 context={"session_id": session_id},
             )
         )

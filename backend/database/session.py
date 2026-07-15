@@ -1,13 +1,14 @@
 import os
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from core.config import settings
 
 
-DATABASE_URL = os.getenv("SUPABASE_DATABASE_URL_POOLER", "")
+DATABASE_URL = settings.supabase_database_url
 
 if not DATABASE_URL:
     logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
@@ -24,19 +25,49 @@ def get_async_url(url: str) -> str:
     return url
 
 
-engine = create_async_engine(get_async_url(DATABASE_URL), poolclass=NullPool, echo=False)
+_async_url = get_async_url(DATABASE_URL)
+engine_kwargs = {
+    "echo": False,
+}
+if _async_url.startswith("postgresql"):
+    engine_kwargs.update({
+        "pool_size": 20,
+        "max_overflow": 0,
+        "pool_timeout": 30,
+        "pool_recycle": 1800,
+        "connect_args": {"command_timeout": 30, "server_settings": {"application_name": "supremeai_2.0"}},
+    })
+
+engine = create_async_engine(
+    _async_url,
+    **engine_kwargs
+)
 
 AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
-# FastAPI Dependency Injection (with safe rollback)
-async def get_db_session():
+@asynccontextmanager
+async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
+    """Context manager for backend tasks or non-FastAPI usages.
+    
+    বাংলা: FastAPI-এর বাইরে বা ব্যাকগ্রাউন্ড টাস্কে ডাটাবেস সেশন ব্যবহারের জন্য।
+    """
     async with AsyncSessionLocal() as session:
         try:
             yield session
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             await session.rollback()
             logger.error(f"Database transaction rolled back due to error: {e}")
             raise
         finally:
             await session.close()
+
+
+# FastAPI Dependency Injection (with safe rollback)
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI Dependency for database sessions.
+    
+    বাংলা: FastAPI রুটগুলোর জন্য ডাটাবেস ডিপেন্ডেন্সি।
+    """
+    async with get_db_session_context() as session:
+        yield session

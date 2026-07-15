@@ -1,3 +1,5 @@
+from __future__ import annotations
+from core.messaging.event_bus import ErrorContext
 """
 SupremeAI 2.0 — Telegram Bot Handler (Production-Ready)
 
@@ -15,7 +17,6 @@ Setup:
      curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=<WEBHOOK_URL>"
 """
 
-from __future__ import annotations
 
 # বাংলা মন্তব্য: ওএস মডিউল ইম্পোর্ট করা হলো যাতে os.environ ঠিকমত কাজ করে
 import os
@@ -241,12 +242,12 @@ class TelegramBotHandler:
                     logger.info(f"Successfully registered Telegram Webhook to {webhook_url}")
                 else:
                     logger.error(f"Failed to register webhook: {resp.text}")
-                    error_event_bus.emit(ErrorEvent(module="telegram_bot", error_type="WEBHOOK_FAILED", message=resp.text[:200], severity="ERROR"))
+                    error_event_bus.emit(ErrorEvent(module="telegram_bot", error_type="WEBHOOK_FAILED", message=resp.text[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
         except Exception as e:  # noqa: BLE001
             logger.error(f"Webhook setup exception: {e}")
             from core.messaging.event_bus import error_event_bus, ErrorEvent
 
-            error_event_bus.emit(ErrorEvent(module="telegram_bot", error_type="WEBHOOK_EXCEPTION", message=str(e)[:200], severity="ERROR"))
+            error_event_bus.emit(ErrorEvent(module="telegram_bot", error_type="WEBHOOK_EXCEPTION", message=str(e)[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
             raise RuntimeError("Failed to setup Telegram webhook.") from e
 
 

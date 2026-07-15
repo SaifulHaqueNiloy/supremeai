@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 # বাংলা মন্তব্য: core module-এর কম-কভার লাইন কভার করার জন্য অতিরিক্ত টেস্টসমূহ
 import asyncio
 import contextlib
@@ -320,7 +321,7 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="WARNING",
+            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
 
@@ -341,7 +342,7 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="WARNING",
+            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         await bus.emit_async(event)
@@ -361,7 +362,7 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="WARNING",
+            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         await bus.emit_async(event)
@@ -384,7 +385,7 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="ERROR",
+            severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         await bus.emit_async(event)
@@ -418,7 +419,7 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="ERROR",
+            severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         with patch("core.event_bus.logger.critical") as mock_critical:
@@ -543,6 +544,7 @@ class TestSwarmOrchestratorMissingBranches:
         orchestrator = MorphicOrchestrator()
 
         with (
+            patch("core.orchestration.agent_orchestrator.budget_aware_route", return_value={"intent": "coding", "tier": "free", "best_provider": "gemini"}),
             patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}),
             patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock) as mock_design,
             patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock) as mock_code,
@@ -551,14 +553,11 @@ class TestSwarmOrchestratorMissingBranches:
             patch.object(orchestrator.agents["reflection"], "run", new_callable=AsyncMock) as mock_reflection,
             patch.object(orchestrator.agents["reflection"], "reflect_and_persist", new_callable=AsyncMock) as mock_reflect_persist,
         ):
-            # Using an intent that maps to a simpler task graph if we want, but default works if we mock all
-            with patch("core.swarm_orchestrator.SharedWorkspace") as mock_workspace:
-                mock_workspace.return_value.intent = "code_generation"
-                workspace = await orchestrator.execute_task("write a python script", "uid")
-                mock_design.assert_called_once()
-                mock_code.assert_called_once()
-                # mock_verify is guardian.run, which is not called for code_generation. validate is called instead.
-                assert workspace is not None
+            workspace = await orchestrator.execute_task("write a python script", "uid")
+            mock_design.assert_called_once()
+            mock_code.assert_called_once()
+            # mock_verify is guardian.run, which is not called for code_generation. validate is called instead.
+            assert workspace is not None
 
     @pytest.mark.anyio
     async def test_circuit_breaker_opens_after_threshold(self):
@@ -571,27 +570,27 @@ class TestSwarmOrchestratorMissingBranches:
             raise RuntimeError("fail")
 
         with pytest.raises(RuntimeError):
-            await cb.call(failing)
+            await cb.acall(failing)
         with pytest.raises(RuntimeError):
-            await cb.call(failing)
+            await cb.acall(failing)
 
         assert cb.state == CircuitBreakerState.OPEN
 
         with pytest.raises(CircuitBreakerOpenError):
-            await cb.call(failing)
+            await cb.acall(failing)
 
     @pytest.mark.anyio
     async def test_circuit_breaker_half_open_after_timeout(self):
         # বাংলা মন্তব্য: CircuitBreaker ও সম্পর্কিত স্টেট/এরর সরাসরি core.resilience.circuit_breaker থেকে ইম্পোর্ট করা হলো।
         from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerState
 
-        cb = CircuitBreaker(failure_threshold=1, recovery_timeout=0.05)
+        cb = CircuitBreaker(name="test", failure_threshold=1, recovery_timeout=0.05)
 
         async def failing():
             raise RuntimeError("fail")
 
         with pytest.raises(RuntimeError):
-            await cb.call(failing)
+            await cb.acall(failing)
         assert cb.state == CircuitBreakerState.OPEN
 
         await asyncio.sleep(0.1)
@@ -599,8 +598,8 @@ class TestSwarmOrchestratorMissingBranches:
         async def succeeding():
             return "ok"
 
-        result = await cb.call(succeeding)
-        assert result == "ok"
+        res = await cb.acall(succeeding)
+        assert res == "ok"
         assert cb.state == CircuitBreakerState.CLOSED
 
 
@@ -1032,11 +1031,22 @@ class TestPlaywrightManagerMissingBranches:
 
     @pytest.mark.asyncio
     async def test_get_global_browser_raises_when_not_installed(self, monkeypatch):
-        from core.playwright_manager import async_playwright, get_global_browser
-
-        monkeypatch.setattr("core.playwright_manager.async_playwright", None)
+        import core.playwright_manager as pm
+        
+        monkeypatch.setattr(pm, "_global_browser", None)
+        
+        import builtins
+        original_callable = builtins.callable
+        
+        def mock_callable(obj):
+            if getattr(obj, "__name__", "") == "async_playwright":
+                return False
+            return original_callable(obj)
+            
+        monkeypatch.setattr(builtins, "callable", mock_callable)
+        
         with pytest.raises(RuntimeError, match="Playwright is not installed"):
-            await get_global_browser()
+            await pm.get_global_browser()
 
     @pytest.mark.asyncio
     async def test_shutdown_global_browser_handles_errors(self, monkeypatch):
@@ -1163,7 +1173,7 @@ class TestSecurityUtilsMissingBranches:
 class TestSwarmOrchestratorCircuitBreakerIntegration:
     @pytest.mark.anyio
     async def test_execute_task_handles_circuit_breaker_open(self):
-        from core.resilience.circuit_breaker import CircuitBreakerOpenError
+        from core.resilience.circuit_breaker import CircuitBreakerOpenError, CircuitBreakerState
         from core.orchestration.swarm_orchestrator import MorphicOrchestrator
 
         orchestrator = MorphicOrchestrator()
@@ -1173,7 +1183,7 @@ class TestSwarmOrchestratorCircuitBreakerIntegration:
         # Mock _synthesize_tool to avoid LLM call
         with (
             patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}),
-            patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock, side_effect=CircuitBreakerOpenError("circuit open")),
+            patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock, side_effect=CircuitBreakerOpenError("circuit open", state=CircuitBreakerState.OPEN)),
             patch.object(orchestrator.agents["reflection"], "reflect_and_persist", new_callable=AsyncMock),
         ):
             # We verify that the circuit breaker error path is reached

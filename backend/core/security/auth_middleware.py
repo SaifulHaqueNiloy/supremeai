@@ -65,25 +65,12 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
         logger.warning(f"JWT token validation failed: {exc}")
         return None
 
-
-PUBLIC_PATH_PREFIXES: frozenset[str] = frozenset({
-    "/health",
-    "/actuator",
-    "/docs",
-    "/redoc",
-    "/openapi.json",
-    "/api/v1/auth",
-    "/api/v1/onboarding",
-    "/api/public",
-})
-
-
 def _is_public_path(path: str) -> bool:
     """Check if a path is public (no auth required).
 
     বাংলা: পাথটি পাবলিক কিনা চেক করে (কোনো অথের প্রয়োজন নেই)।
     """
-    return any(path.startswith(prefix) for prefix in PUBLIC_PATH_PREFIXES)
+    return any(path.startswith(prefix) for prefix in settings.supremeai_public_paths)
 
 
 async def _send_json_response(
@@ -138,7 +125,7 @@ class AuthMiddleware:
 
         # Skip auth for public paths or test environment (only if no api token env is configured)
         # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে অথেন্টিকেশন বাইপাস করা হয়, যদি না সরাসরি API টোকেন চেক করা হচ্ছে।
-        if _is_public_path(path) or (is_test_environment() and not os.getenv("SUPREMEAI_API_TOKEN")):
+        if _is_public_path(path) or (is_test_environment() and not settings.supremeai_api_token):
             await self.app(scope, receive, send)
             return
 
@@ -157,7 +144,7 @@ class AuthMiddleware:
 
         # API Key validation for system components / testing
         # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
-        supremeai_api_token = os.getenv("SUPREMEAI_API_TOKEN")
+        supremeai_api_token = settings.supremeai_api_token
         if supremeai_api_token and hmac.compare_digest(token.encode("utf-8"), supremeai_api_token.encode("utf-8")):
             scope["user"] = {
                 "sub": "system_api_key",

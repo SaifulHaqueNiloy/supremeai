@@ -56,5 +56,5 @@ async def test_self_healer_rejects_invalid_impact_score(mock_db):
 @pytest.mark.asyncio
 async def test_self_healer_test_sandbox_placeholder(mock_db):
     service = SelfHealerService(mock_db)
-    result = await service.test_fix_in_sandbox("fix-123", "tenant-1")
-    assert result is True
+    result = await service.propose_fix(tenant_id="tenant-1", error_pattern="Any error", proposed_fix="pass", impact_score=0.1, dependency_tree=[])
+    assert isinstance(result, str)

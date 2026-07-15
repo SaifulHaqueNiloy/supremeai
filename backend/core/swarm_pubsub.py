@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 """This module provides a robust, Redis-backed Publish/Subscribe (PubSub) system, `SwarmPubSub`, designed to facilitate real-time event streaming and communication across the SupremeAI ecosystem. It offers a multi-worker safe mechanism for broadcasting and subscribing to a central "swarm_stream" channel, ensuring scalable and decoupled event propagation, with lazy Redis client initialization and comprehensive error handling integrated with the project's central event bus.
 
 Key Components:
@@ -68,7 +69,7 @@ class SwarmPubSub:
                     module="swarm_pubsub",
                     error_type="REDIS_UNAVAILABLE",
                     message=str(e)[:200],
-                    severity="CRITICAL",
+                    severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
             raise
@@ -96,7 +97,7 @@ class SwarmPubSub:
                         module="swarm_pubsub",
                         error_type="CLEANUP_FAILED",
                         message=str(cleanup_err)[:200],
-                        severity="WARNING",
+                        severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
             raise
@@ -107,7 +108,7 @@ class SwarmPubSub:
                     module="swarm_pubsub",
                     error_type="SUBSCRIPTION_ERROR",
                     message=str(e)[:200],
-                    severity="ERROR",
+                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
             raise
@@ -127,7 +128,7 @@ class SwarmPubSub:
                     module="swarm_pubsub",
                     error_type="BROADCAST_FAILED",
                     message=str(e)[:200],
-                    severity="ERROR",
+                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
             raise

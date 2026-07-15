@@ -1,3 +1,4 @@
+from core.messaging.event_bus import ErrorContext
 import os
 
 from cryptography.fernet import Fernet
@@ -23,7 +24,7 @@ if not ENCRYPTION_KEY:
                 module="security_vault",
                 error_type="MISSING_ENCRYPTION_KEY",
                 message="ENCRYPTION_KEY environment variable is missing",
-                severity="CRITICAL",
+                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
             )
         )
         raise ValueError("CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!")
@@ -51,7 +52,7 @@ def encrypt_token(plain_text: str) -> str:
         return _vault.encrypt(plain_text.encode("utf-8")).decode("utf-8")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error encrypting token: {e}")
-        error_event_bus.emit(ErrorEvent(module="security_vault", error_type="ENCRYPTION_FAILED", message=str(e)[:200], severity="ERROR"))
+        error_event_bus.emit(ErrorEvent(module="security_vault", error_type="ENCRYPTION_FAILED", message=str(e)[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
         raise RuntimeError("Token encryption failed.") from e
 
 
@@ -66,5 +67,5 @@ def decrypt_token(cipher_text: str, ttl: int | None = None) -> str:
         return _vault.decrypt(cipher_text.encode("utf-8"), ttl=ttl).decode("utf-8")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error decrypting token: {e}")
-        error_event_bus.emit(ErrorEvent(module="security_vault", error_type="DECRYPTION_FAILED", message=str(e)[:200], severity="CRITICAL"))
+        error_event_bus.emit(ErrorEvent(module="security_vault", error_type="DECRYPTION_FAILED", message=str(e)[:200], severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed")))
         raise ValueError("Decryption failed: Invalid or corrupted token.") from e
