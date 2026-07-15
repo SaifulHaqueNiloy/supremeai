@@ -318,7 +318,7 @@ jobs:
           SETUPTOOLS_USE_DISTUTILS: stdlib
         run: |
           pip install --upgrade pip
-          pip install setuptools==74.0.0 wheel
+          pip install setuptools==68.0.0 wheel
           pip install openai-whisper==20240930 --no-build-isolation
           poetry install --sync --with dev
 
