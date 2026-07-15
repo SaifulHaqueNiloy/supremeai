@@ -266,6 +266,11 @@ jobs:
       (needs.pre-merge-gate.result == 'success') &&
       (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' || github.run_attempt > 1)
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/backend-ci-base:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     services:
       postgres:
         image: postgres:15
@@ -309,9 +314,6 @@ jobs:
       ANTHROPIC_API_KEY: "mock_anthropic_api_key"
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-backend
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: ⚙️ Setup Poetry Cache
         uses: actions/cache@v4
@@ -325,13 +327,7 @@ jobs:
 
       - name: 📦 Install Dependencies (Smart Sync)
         working-directory: backend
-        env:
-          SETUPTOOLS_USE_DISTUTILS: stdlib
         run: |
-          pip install --upgrade pip
-          pip install setuptools==68.0.0 wheel
-          pip install openai-whisper==20240930 --no-build-isolation
-          poetry config virtualenvs.in-project true
           poetry install --sync --with dev
 
       - name: 🧪 Run Tests
