@@ -124,7 +124,8 @@ class AuthMiddleware:
 
         # Skip auth for public paths or test environment (only if no api token env is configured)
         # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে অথেন্টিকেশন বাইপাস করা হয়, যদি না সরাসরি API টোকেন চেক করা হচ্ছে।
-        if _is_public_path(path) or (is_test_environment() and not settings.supremeai_api_token):
+        import os
+        if _is_public_path(path) or (is_test_environment() and not (settings.supremeai_api_token or os.environ.get("SUPREMEAI_API_TOKEN"))):
             await self.app(scope, receive, send)
             return
 
@@ -143,7 +144,7 @@ class AuthMiddleware:
 
         # API Key validation for system components / testing
         # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
-        supremeai_api_token = settings.supremeai_api_token
+        supremeai_api_token = settings.supremeai_api_token or os.environ.get("SUPREMEAI_API_TOKEN")
         if supremeai_api_token and hmac.compare_digest(token.encode("utf-8"), supremeai_api_token.encode("utf-8")):
             scope["user"] = {
                 "sub": "system_api_key",
