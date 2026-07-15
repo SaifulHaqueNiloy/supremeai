@@ -3,22 +3,28 @@ import * as vscode from 'vscode';
 import { AuthService } from '../src/services/AuthService';
 
 vi.mock('vscode', () => ({
+  window: {
+    showInputBox: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showInformationMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
+  },
+  commands: {
+    executeCommand: vi.fn().mockResolvedValue(undefined),
+    registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  },
+  workspace: {
+    isTrusted: true,
+    getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }),
+  },
+  authentication: {
+    getSession: vi.fn(),
+  },
   EventEmitter: vi.fn().mockImplementation(() => ({
     event: vi.fn(),
     fire: vi.fn(),
     dispose: vi.fn(),
   })),
-  commands: {
-    executeCommand: vi.fn().mockResolvedValue(undefined),
-    registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }),
-  },
-  window: {
-    showInputBox: vi.fn().mockResolvedValue('mock-api-key'),
-    showInformationMessage: vi.fn(),
-  },
-  authentication: {
-    getSession: vi.fn(),
-  }
 }));
 
 describe('AuthService', () => {
