@@ -31,7 +31,9 @@ def mock_firestore():
 
 
 @patch("api.routes.admin.get_current_user_token")
-def test_get_fixes_unauthorized(mock_token):
+@patch("core.security.auth_middleware._decode_jwt")
+def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
+    mock_decode_jwt.return_value = {"sub": "user_test", "role": "user"}
     app.dependency_overrides[mock_token] = lambda: {"sub": "user_test", "role": "user"}
     from api.routes.admin import get_current_admin
 
@@ -40,13 +42,15 @@ def test_get_fixes_unauthorized(mock_token):
         __import__("fastapi").HTTPException(status_code=403, detail="Not enough permissions")
     )
 
-    response = client.get("/api/admin/fixes")
+    response = client.get("/api/admin/fixes", headers={"Authorization": "Bearer dummy"})
     assert response.status_code in (401, 403), f"Unexpected status: {response.status_code}, details: {response.text}"
     app.dependency_overrides = {}
 
 
 @patch("api.routes.admin.get_current_user_token")
-def test_get_fixes_authorized(mock_token, mock_healer, mock_firestore):
+@patch("core.security.auth_middleware._decode_jwt")
+def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_firestore):
+    mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
     app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
 
     # Mocking Firestore response
@@ -67,7 +71,7 @@ def test_get_fixes_authorized(mock_token, mock_healer, mock_firestore):
 
     app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
 
-    response = client.get("/api/admin/fixes?tenant_id=test")
+    response = client.get("/api/admin/fixes?tenant_id=test", headers={"Authorization": "Bearer dummy"})
     assert response.status_code == 200, f"Unexpected status: {response.status_code}, details: {response.text}"
     assert "fixes" in response.json()
     assert len(response.json()["fixes"]) == 1
