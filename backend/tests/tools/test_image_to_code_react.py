@@ -20,7 +20,7 @@ async def test_figma_to_react(mock_image_to_code):
     # বাংলা মন্তব্য: Figma/UI screenshot থেকে React component জেনারেশন টেস্ট
     converter = ImageToCode()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -49,7 +49,7 @@ async def test_figma_to_flutter(mock_image_to_code):
     # বাংলা মন্তব্য: Figma/UI screenshot থেকে Flutter widget জেনারেশন টেস্ট
     converter = ImageToCode()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -80,7 +80,7 @@ async def test_extract_color_palette(mock_image_to_code):
     # বাংলা মন্তব্য: Color palette extraction এবং CSS variable generation টেস্ট
     converter = ImageToCode()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -107,7 +107,7 @@ async def test_detect_component_tree(mock_image_to_code):
     # বাংলা মন্তব্য: Component tree extraction (nested components) টেস্ট
     converter = ImageToCode()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """

@@ -19,7 +19,7 @@ async def test_generate_contract(mock_legal):
     # বাংলা মন্তব্য: চুক্তি (Contract) তৈরি টেস্ট
     agent = LegalAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -58,7 +58,7 @@ The party shall not disclose any confidential information for a period of 5 year
 This includes trade secrets, business plans, and technical data.
 """
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -90,7 +90,7 @@ Privacy Policy:
 - No third-party sharing without consent
 """
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -114,7 +114,7 @@ async def test_generate_tos(mock_legal):
     # বাংলা মন্তব্য: Terms of Service জেনারেশন টেস্ট
     agent = LegalAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -148,7 +148,7 @@ async def test_generate_privacy_policy(mock_legal):
     # বাংলা মন্তব্য: Privacy Policy জেনারেশন টেস্ট
     agent = LegalAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -176,7 +176,7 @@ async def test_legal_document_with_bangladesh_law(mock_legal):
     # বাংলা মন্তব্য: বাংলাদেশের আইন অনুযায়ী ডকুমেন্ট জেনারেশন টেস্ট
     agent = LegalAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """

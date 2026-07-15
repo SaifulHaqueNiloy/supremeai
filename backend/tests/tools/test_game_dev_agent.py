@@ -19,7 +19,7 @@ async def test_generate_unity_script(mock_game_dev):
     # বাংলা মন্তব্য: Unity C# script জেনারেশন টেস্ট
     agent = GameDevAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -67,7 +67,7 @@ async def test_gdd_to_code(mock_game_dev):
 - C# scripting
 """
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -95,7 +95,7 @@ async def test_generate_asset_script(mock_game_dev):
     # বাংলা মন্তব্য: Asset description থেকে Blender Python script জেনারেশন টেস্ট
     agent = GameDevAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -136,7 +136,7 @@ void Update()
 }
 """
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -160,7 +160,7 @@ async def test_generate_unity_coroutine():
     # বাংলা মন্তব্য: Unity coroutine script জেনারেশন টেস্ট
     agent = GameDevAgent()
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
