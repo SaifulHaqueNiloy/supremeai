@@ -25,6 +25,7 @@ class UniversalRulesEngine:
     def _load_rules(self) -> dict[str, Any]:
         """Loads rules from secure Database. If not available, uses default rules."""
         db_rules = {}
+        conn = None
         try:
             from tools.mcp.mcp_supabase import _get_connection
 
@@ -33,6 +34,7 @@ class UniversalRulesEngine:
                 cur = conn.cursor()
                 cur.execute("SELECT rule_key, category, value FROM rules WHERE is_enabled = TRUE")
                 rows = cur.fetchall()
+                cur.close()
                 for rule_key, category, value in rows:
                     if category not in db_rules:
                         db_rules[category] = {}
@@ -45,6 +47,12 @@ class UniversalRulesEngine:
                     db_rules[category][rule_key] = parsed_val
         except Exception as e:  # noqa: BLE001
             logger.error(f"⚠️ Failed to load rules from DB, falling back to defaults: {e}")
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception:  # noqa: BLE001
+                    pass
 
         # Default fallback rules (Admin definitions)
         default_rules = {

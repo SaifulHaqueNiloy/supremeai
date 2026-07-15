@@ -1,43 +1,72 @@
+# check_render.py
+# বাংলা মন্তব্য: এই স্ক্রিপ্টটি Render-এর মাল্টিপল অ্যাকাউন্টের সার্ভিস ও ডিপ্লয়মেন্ট স্ট্যাটাস চেক করে।
+# পারফরম্যান্সের উন্নয়নের জন্য ThreadPoolExecutor ব্যবহার করে N+1 সিকোয়েন্সিয়াল কুয়েরির সমস্যা সমাধান করা হয়েছে এবং কনকারেন্টলি স্ট্যাটাস আনা হচ্ছে।
+
 import os
+import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
-KEYS = {
-    "Primary Account (RENDER_API_KEY)": os.getenv("RENDER_API_KEY"),
-    "Backup Account (RENDER_API_KEY_BACKUP)": os.getenv("RENDER_API_KEY_BACKUP")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("check_render")
+
+REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS", "15"))
+MAX_WORKERS = int(os.getenv("RENDER_CHECK_CONCURRENCY", "5"))
+
+ACCOUNTS = {
+    "Primary": os.getenv("RENDER_API_KEY"),
+    "Backup": os.getenv("RENDER_API_KEY_BACKUP"),
 }
 
-print("Checking Render Services...")
-for name, key in KEYS.items():
-    print(f"\n--- {name} ---")
-    headers = {"Authorization": f"Bearer {key}", "Accept": "application/json"}
-    try:
-        response = requests.get("https://api.render.com/v1/services?limit=10", headers=headers)
-        if response.status_code == 200:
-            services = response.json()
-            if not services:
-                print("No services found in this account.")
-            for srv in services:
-                service = srv.get("service", {})
-                srv_name = service.get("name", "Unknown")
-                srv_type = service.get("type", "Unknown")
-                srv_state = service.get("suspended", "Unknown")
-                srv_url = service.get("serviceDetails", {}).get("url", "No URL")
-                state_str = "Suspended" if srv_state == "suspended" else "Active"
-                print(f"- Name: {srv_name} | Type: {srv_type} | State: {state_str} | URL: {srv_url}")
+def get_latest_deploy_status(service_id: str, headers: dict) -> str:
+    # বাংলা মন্তব্য: প্রতিটি নির্দিষ্ট সার্ভিসের ডিপ্লয়মেন্ট স্ট্যাটাস আনতে timeout ব্যবহার করা হচ্ছে।
+    resp = requests.get(
+        f"https://api.render.com/v1/services/{service_id}/deploys?limit=1",
+        headers=headers, timeout=REQUEST_TIMEOUT,
+    )
+    resp.raise_for_status()
+    deploys = resp.json()
+    return deploys[0].get("deploy", {}).get("status", "Unknown") if deploys else "No deploys"
 
-                # Check latest deploy
-                srv_id = service.get("id")
-                if srv_id:
-                    dep_resp = requests.get(f"https://api.render.com/v1/services/{srv_id}/deploys?limit=1", headers=headers)
-                    if dep_resp.status_code == 200:
-                        deploys = dep_resp.json()
-                        if deploys:
-                            dep = deploys[0].get("deploy", {})
-                            status = dep.get("status", "Unknown")
-                            print(f"  Last Deploy Status: {status}")
-                    else:
-                        print("  Could not fetch deploys.")
-        else:
-            print(f"Failed to fetch services. Status Code: {response.status_code}, Response: {response.text}")
-    except Exception as e:
-        print(f"Error checking account: {e}")
+def check_account(name: str, api_key: str) -> None:
+    if not api_key:
+        logger.warning("%s: API key সেট করা নেই, স্কিপ করা হচ্ছে।", name)
+        return
+
+    headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
+    try:
+        resp = requests.get("https://api.render.com/v1/services?limit=10",
+                             headers=headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        logger.error("%s: সার্ভিস তালিকা আনতে ব্যর্থ — %s", name, e)
+        return
+
+    services = resp.json()
+    if not services:
+        logger.info("%s: কোনো সার্ভিস পাওয়া যায়নি।", name)
+        return
+
+    # বাংলা মন্তব্য: N+1 সিকোয়েন্সিয়াল রিকোয়েস্ট দূর করতে ThreadPoolExecutor দিয়ে সমান্তরালভাবে (concurrently) ডিপ্লয়মেন্ট স্ট্যাটাস আনা হচ্ছে।
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        futures = {}
+        for srv in services:
+            service = srv.get("service", {})
+            srv_id = service.get("id")
+            if srv_id:
+                futures[pool.submit(get_latest_deploy_status, srv_id, headers)] = service
+
+        for future in as_completed(futures):
+            service = futures[future]
+            status_str = "Suspended" if service.get("suspended") == "suspended" else "Active"
+            url = service.get("serviceDetails", {}).get("url", "No URL")
+            try:
+                deploy_status = future.result()
+            except requests.RequestException as e:
+                deploy_status = f"Error: {e}"
+            logger.info("[%s] %s | State: %s | URL: %s | Last Deploy: %s",
+                        name, service.get("name", "Unknown"), status_str, url, deploy_status)
+
+if __name__ == "__main__":
+    for account_name, key in ACCOUNTS.items():
+        check_account(account_name, key)

@@ -25,7 +25,7 @@ def vault_production():
                 v.project_id = "proj-1"
                 v.env = "production"
                 v.client = mock_client
-                v._cached_secrets = {}
+                v._cache = {}
                 yield v
 
 
@@ -35,7 +35,7 @@ def test_local_mode_initialization(vault_local):
 
 
 def test_fetch_secret_from_env(vault_local):
-    with patch.dict(os.environ, {"MY_SECRET": "env_value"}, clear=False):
+    with patch.dict(os.environ, {"MY_SECRET": "env_value"}, clear=False):  # pragma: allowlist secret
         assert vault_local.fetch_secret("MY_SECRET") == "env_value"
 
 
@@ -52,7 +52,7 @@ def test_fetch_secret_env_empty(vault_local):
 
 def test_production_mode_fetch_secret(vault_production):
     response = MagicMock()
-    response.secret_value = "secret_value"
+    response.secret_value = "secret_value"  # pragma: allowlist secret
     vault_production.client.getSecret.return_value = response
     with patch.dict(os.environ, {"SECRET_ID": ""}, clear=False):
         result = vault_production.fetch_secret("SECRET_ID")
@@ -76,7 +76,7 @@ def test_production_mode_missing_client_and_project(vault_production):
     v.env = "production"
     v.client = None
     v.project_id = None
-    v._cached_secrets = {}
+    v._cache = {}
     import pytest
 
     with pytest.raises(RuntimeError):
