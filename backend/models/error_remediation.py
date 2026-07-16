@@ -2,8 +2,8 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from pybreaker import CircuitBreaker
-from pybreaker import CircuitBreakerError
+from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
+
 from tenacity import RetryError
 from tenacity import retry
 from tenacity import stop_after_attempt
@@ -14,8 +14,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 # --- সার্কিট ব্রেকার কনফিগারেশন ---
 # কোনো ফাংশন ৩ বার ব্যর্থ হলে সার্কিট "open" হবে এবং পরবর্তী ৩০ সেকেন্ডের জন্য সেই ফাংশনে কোনো কল যেতে দেবে না।
-# এটি ক্লাউড ফাংশনের মতো রিসোর্সের ಅನවශ්‍ය রানিং কস্ট কমায়।
-db_breaker = CircuitBreaker(fail_max=3, reset_timeout=30)
+# এটি ক্লাউড ফাংশনের মতো রিসোর্সের ಅನವශ්‍ය রানিং কস্ট কমায়।
+db_breaker = CircuitBreaker("db_breaker", failure_threshold=3, recovery_timeout=30)
 
 
 class ExternalService:
