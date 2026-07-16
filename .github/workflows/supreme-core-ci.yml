@@ -379,7 +379,12 @@ jobs:
         id: backend_tests
         working-directory: backend
         run: |
-          poetry run pytest --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
+          if [ "${{ needs.changes.outputs.backend }}" == 'true' ] || [ "${{ needs.changes.outputs.shared }}" == 'true' ]; then
+            poetry run pytest -n auto --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
+          else
+            echo "Skipping full backend tests, only running smoke tests."
+            poetry run pytest -n auto tests/test_health.py -q
+          fi
 
       - name: Add Backend Test Results to GitHub Summary
         if: always()
@@ -824,7 +829,7 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           projectId: supremeai-admin-portal
           target: admin-hosting
 
