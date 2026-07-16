@@ -2,6 +2,9 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any
 from .tools import check_infrastructure_drift, check_env_secrets_sync, check_redis_connection
+import os
+import json
+import redis.asyncio as redis
 
 class SyncGuardAgent:
     def __init__(self, llm_client=None):
@@ -47,6 +50,16 @@ class SyncGuardAgent:
         if audit_report["status"] == "SYNC_FAILED":
             print(f"❌ [{self.name}] AUDIT FAILED. System is out of sync!")
             print(f"Details: {audit_report['issues']}")
+            # Broadcast the alert to other agents via Redis Pub/Sub
+            try:
+                redis_url = os.getenv("REDIS_URL")
+                if redis_url:
+                    redis_client = redis.from_url(redis_url)
+                    await redis_client.publish("supremeai:alerts:syncguard", json.dumps(audit_report))
+                    await redis_client.aclose()
+                    print(f"📡 [{self.name}] Broadcasted SYNC_FAILED alert to Swarm.")
+            except Exception as e:
+                print(f"⚠️ [{self.name}] Failed to broadcast alert: {e}")
         else:
             print(f"✅ [{self.name}] AUDIT PASSED. System is 100% synchronized and ready for scaling.")
 
@@ -55,5 +68,9 @@ class SyncGuardAgent:
 # Test Execution (If run directly)
 if __name__ == "__main__":
     import asyncio
+    import sys
     agent = SyncGuardAgent()
-    asyncio.run(agent.run_full_audit())
+    report = asyncio.run(agent.run_full_audit())
+    if report["status"] == "SYNC_FAILED":
+        sys.exit(1)
+    sys.exit(0)
