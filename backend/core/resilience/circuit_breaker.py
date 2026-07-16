@@ -75,6 +75,7 @@ class CircuitBreaker:
         self.success_count: int = 0
         self.last_failure_time: float | None = None
         self.last_success_time: float | None = None
+        self.opened_at: float | None = None
         self._recovery_in_progress: bool = False
         self._lock = threading.Lock()
 

@@ -12,7 +12,7 @@ import pytest
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.resilience.circuit_breaker import CircuitBreakerOpenError
 from core.resilience.circuit_breaker import CircuitBreakerState
-from core.orchestration.swarm_orchestrator import MorphicOrchestrator
+from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
 
 # -------------------- Fixtures --------------------
@@ -256,7 +256,7 @@ class TestSwarmOrchestratorInit:
 
     def test_initialization(self):
         """বাংলা মন্তব্য: Orchestrator initialize হয় with all agents।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         assert orchestrator.agents.get("architect") is not None
         assert orchestrator.agents.get("coder") is not None
@@ -265,7 +265,7 @@ class TestSwarmOrchestratorInit:
 
     def test_circuit_breaker_default_config(self):
         """বাংলা মন্তব্য: Circuit breaker default configuration দিয়ে create হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
         assert getattr(orchestrator, "circuit_breaker", None) is not None
         assert orchestrator.circuit_breaker.recovery_timeout == 30.0
 
@@ -276,7 +276,7 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_successful_task_execution(self, mock_workspace):
         """বাংলা মন্তব্য: সব agents successfully execute হলে completed workspace return হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock):
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
@@ -286,12 +286,12 @@ class TestSwarmOrchestratorExecuteTask:
                             result_exec = await orchestrator.execute_task("Build a python REST API", "user123")
                             result = result_exec.workspace
                         assert result is mock_workspace
-                        assert "MorphicOrchestrator: Multi-Agent DAG execution completed successfully." in mock_workspace.execution_logs
+                        assert "SwarmOrchestrator: Multi-Agent DAG execution completed successfully." in mock_workspace.execution_logs
 
     @pytest.mark.asyncio
     async def test_task_creates_unique_task_id(self, mock_workspace):
         """বাংলা মন্তব্য: প্রতিটি task-এর unique task_id হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock):
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
@@ -312,7 +312,7 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_task_logs_initialization(self, mock_workspace):
         """বাংলা মন্তব্য: Task initialization log হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock):
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
@@ -329,7 +329,7 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_circuit_breaker_open_returns_workspace(self, mock_workspace):
         """বাংলা মন্তব্য: Circuit breaker OPEN হলে workspace return হয় with error।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         # Make circuit breaker open
         orchestrator.circuit_breaker.state = CircuitBreakerState.OPEN
@@ -348,13 +348,13 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_architecture_phase_failure(self, mock_workspace):
         """বাংলা মন্তব্য: Architecture phase fail করলে circuit breaker trigger হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock, side_effect=RuntimeError("Design failed")):
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
                 with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")):
                     with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                        # The MorphicOrchestrator will catch RuntimeError, run reflection, and return workspace
+                        # The SwarmOrchestrator will catch RuntimeError, run reflection, and return workspace
                         # To test circuit breaker, we just check if failure was recorded.
                         res = await orchestrator.execute_task("Test python task", "user123")
                         res = res.workspace
@@ -365,7 +365,7 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_code_generation_phase_failure(self, mock_workspace):
         """বাংলা মন্তব্য: Code generation phase fail করলে circuit breaker trigger হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock):
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock, side_effect=RuntimeError("Code gen failed")):
@@ -379,7 +379,7 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_qa_phase_failure(self, mock_workspace):
         """বাংলা মন্তব্য: QA phase fail করলে circuit breaker trigger হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock):
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
@@ -393,7 +393,7 @@ class TestSwarmOrchestratorExecuteTask:
     @pytest.mark.asyncio
     async def test_default_user_id(self, mock_workspace):
         """বাংলা মন্তব্য: Default user_id 'default_user_session' ব্যবহার হয়।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock) as mock_design:
             with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
@@ -417,7 +417,7 @@ class TestSwarmOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_full_successful_execution_flow(self, mock_workspace):
         """বাংলা মন্তব্য: সম্পূর্ণ successful execution flow।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         # Override Intent logic so it uses standard DAG
         mock_workspace.intent = "standard_code_generation"
@@ -443,7 +443,7 @@ class TestSwarmOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_circuit_breaker_prevents_cascading_failures(self, mock_workspace):
         """বাংলা মন্তব্য: Circuit breaker cascading failures prevent করে।"""
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
         mock_workspace.intent = "standard"
 
         # Simulate multiple failures to open circuit
@@ -452,7 +452,7 @@ class TestSwarmOrchestratorIntegration:
                 with patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock):
                     with patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "")):
                         with patch("core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace):
-                            # MorphicOrchestrator intercepts it and adds error to workspace
+                            # SwarmOrchestrator intercepts it and adds error to workspace
                             await orchestrator.execute_task(f"Task python {i}", "user1")
 
         # Circuit should now be open
