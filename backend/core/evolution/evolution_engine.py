@@ -314,27 +314,38 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         finally:
             conn.close()
 
-    def propose_new_skill(self, pattern: str) -> dict[str, Any]:
+    async def propose_new_skill(self, pattern: str) -> dict[str, Any]:
+        """
+        বাংলা মন্তব্য: আগে এই মেথড একটা hardcoded boilerplate ক্লাস টেমপ্লেট জেনারেট করত
+        (`return {'skill': ..., 'status': 'ok'}`) — যেটা আসলে কোনো প্যাটার্ন থেকে কিছুই শেখেনি,
+        শুধু একটা fake placeholder ছিল, ইনপুট pattern যাই হোক না কেন একই কোড বেরোতো।
+        এখন এটি প্রজেক্টে ইতিমধ্যে বিদ্যমান real self-evolution ইঞ্জিন AutoSkillCreator
+        (core/evolution/auto_skill_creator.py) ব্যবহার করে — যেটা LLM দিয়ে আসল কোড জেনারেট করে,
+        AST security sandbox-এ validate করে, তারপর সফল হলে লাইভ ডিপ্লয় করে।
+        """
         skill_name = f"auto_{pattern.strip().replace(' ', '_').lower()}"
         created_at = datetime.now(UTC).isoformat()
-        class_name = "".join(part.capitalize() for part in skill_name.split("_"))
-        code = (
-            f"class {class_name}:\n"
-            f"    def __init__(self): ...\n"
-            f"    def run(self, payload: dict) -> dict:\n"
-            f"        return {{'skill': '{skill_name}', 'status': 'ok'}}\n"
-        )
+
+        try:
+            from core.evolution.auto_skill_creator import AutoSkillCreator
+
+            creator = AutoSkillCreator()
+            result = await creator.generate_and_deploy_skill(user_demand=pattern, skill_name=skill_name)
+        except Exception as e:  # noqa: BLE001
+            # বাংলা মন্তব্য: AutoSkillCreator instantiation/call ব্যর্থ হলেও পুরো daily evolution
+            # run crash করবে না — failed status সহ রেকর্ড হয়ে পরের সাইকেলে retry হবে।
+            logger.error(f"AutoSkillCreator failed for pattern '{pattern}': {e}")
+            result = {"success": False, "error": str(e)}
+
+        status = "deployed" if result.get("success") else "failed"
+        generated_code = result.get("generated_code", "")
+        error_note = result.get("error", "")
+
         try:
             from database.supabase_client import db
 
             if db.client:
-                db.insert_skill_proposal(
-                    skill_name,
-                    pattern,
-                    code,
-                    "proposed",
-                    created_at,
-                )
+                db.insert_skill_proposal(skill_name, pattern, generated_code, status, created_at)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Failed to insert skill proposal to Supabase: {e}")
             if evolution_write_failures:
@@ -344,15 +355,16 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         try:
             conn.execute(
                 "INSERT INTO skill_proposals (skill_name, source_pattern, generated_code, status, created_at) VALUES (?, ?, ?, ?, ?)",
-                (skill_name, pattern, code, "proposed", created_at),
+                (skill_name, pattern, generated_code, status, created_at),
             )
             conn.commit()
             return {
                 "skill_name": skill_name,
                 "source_pattern": pattern,
-                "status": "proposed",
-                "generated_code": code,
+                "status": status,
+                "generated_code": generated_code,
                 "generated_at": created_at,
+                "error": error_note,
             }
         finally:
             conn.close()
@@ -396,7 +408,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         failed_tasks = [f["task"] for f in failures]
         new_skills_proposed = []
         for task in failed_tasks:
-            proposal = self.propose_new_skill(task)
+            proposal = await self.propose_new_skill(task)
             new_skills_proposed.append(proposal["skill_name"])
 
         # Prompt optimization proposals
