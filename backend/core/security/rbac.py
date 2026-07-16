@@ -7,11 +7,13 @@ Defines roles, permissions, and authorization logic for the entire platform.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
 from typing import Any
 
 from core.config import settings
+
 
 logger = logging.getLogger(__name__)
 

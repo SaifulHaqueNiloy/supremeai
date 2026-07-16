@@ -12,6 +12,7 @@ from fastapi import HTTPException
 from fastapi import status
 from loguru import logger
 
+
 # বাংলা মন্তব্য: Safe import with proper fallback — আর undefined NameError হবে না
 try:
     from google.cloud import firestore

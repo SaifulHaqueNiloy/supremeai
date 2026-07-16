@@ -12,8 +12,11 @@ import logging
 
 from fastapi import FastAPI
 
-from core.config import settings
-from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.config import settings  # noqa  # noqa
+from core.messaging.event_bus import ErrorContext
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
+
 
 logger = logging.getLogger("SupremeAI.API")
 

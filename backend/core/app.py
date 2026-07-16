@@ -1,5 +1,8 @@
 from __future__ import annotations
+
 from core.messaging.event_bus import ErrorContext
+
+
 """SupremeAI 2.0 — Core FastAPI app bootstrapping, middleware chain, and router loading.
 
 বাংলা: কোর FastAPI অ্যাপ বুটস্ট্র্যাপিং, মিডলওয়্যার চেইন এবং রাউটার লোডিং।
@@ -11,7 +14,6 @@ Key Components:
 """
 
 import base64
-import importlib
 import logging
 import os
 import secrets
@@ -19,24 +21,34 @@ import sys
 from typing import Any
 
 import sentry_sdk
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import HTTPBasic
+from fastapi.security import HTTPBasicCredentials
 from loguru import logger
 
-from core import lifespan, services
+from api.middleware import ChaosInjectorMiddleware
+from api.middleware import IdempotencyMiddleware
+from api.middleware import ResponseStandardizationMiddleware
+from api.middleware import SupremeContextMiddleware
+from api.middleware import TenantExtractionMiddleware
+from api.routers import register_all_routers
+from core import lifespan
+from core import services
 from core.admin_routes import router as admin_router
 from core.config import settings
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 from core.observability.observability_middleware import ObservabilityMiddleware
 from core.security.api_key_middleware import APIKeyAuthMiddleware
 from core.security.auth_middleware import AuthMiddleware
 from core.security.honeypot_middleware import HoneypotMiddleware
 from core.security.origin_validator import TrustedOriginMiddleware
-from api import register_router
-from api.middleware import ResponseStandardizationMiddleware, SupremeContextMiddleware, TenantExtractionMiddleware, ChaosInjectorMiddleware, IdempotencyMiddleware
-from api.routers import register_all_routers
 
 
 class InterceptHandler(logging.Handler):
@@ -167,9 +179,11 @@ app.add_middleware(APIKeyAuthMiddleware)
 app.add_middleware(ResponseStandardizationMiddleware)
 
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
