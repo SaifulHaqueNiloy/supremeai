@@ -77,7 +77,7 @@ jobs:
           python .github/scripts/detect-previous-failures.py
 
           # Parse the base64 output
-          B64_JSON=$(cat $GITHUB_OUTPUT | grep force_flags_b64 | cut -d'=' -f2)
+          B64_JSON=$(grep "force_flags_b64=" $GITHUB_OUTPUT | sed 's/^force_flags_b64=//')
           if [ ! -z "$B64_JSON" ]; then
             JSON_STR=$(echo "$B64_JSON" | base64 --decode)
             echo "force_backend=$(echo $JSON_STR | jq -r '.backend')" >> $GITHUB_OUTPUT
