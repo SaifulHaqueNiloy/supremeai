@@ -73,6 +73,21 @@ services:
     networks:
       - supreme_network
 
+  neo4j:
+    image: neo4j:5.12.0-community
+    restart: always
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/password}
+    volumes:
+      - neo4j_data:/data
+      - neo4j_import:/import
+      - neo4j_plugins:/plugins
+    networks:
+      - supreme_network
+
 networks:
   supreme_network:
     driver: bridge
@@ -80,3 +95,6 @@ networks:
 volumes:
   postgres_data:
   n8n_data:
+  neo4j_data:
+  neo4j_import:
+  neo4j_plugins:
