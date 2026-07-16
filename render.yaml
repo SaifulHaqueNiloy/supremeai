@@ -1,25 +1,25 @@
+# render.yaml - SupremeAI 2.0 Master Blueprint
 services:
+  # ১. ব্যাকএন্ড সার্ভিস (API) - Docker Based
   - type: web
     name: supremeai-backend
-    env: image
-    image:
-      url: ghcr.io/paykaribazaronline/supremeai/supremeai-backend:latest
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
     region: singapore
-    plan: free
-    autoDeploy: false
-    healthCheckPath: /health
+    plan: free # স্কেল করার সময় এটিকে 'starter' এ আপগ্রেড করবেন
+    healthCheckPath: /api/v1/health
     envVars:
+      - key: PORT
+        value: 8080
       - key: ENV
         value: production
-      - key: PORT
-        value: 10000
+      # বাকি সিক্রেটগুলো ড্যাশবোর্ড থেকে সিঙ্ক হবে
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
-      - key: OPENROUTER_API_KEY
-        sync: false
-      - key: GEMINI_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
       - key: SUPREMEAI_JWT_SECRET
         sync: false
@@ -35,3 +35,16 @@ services:
         sync: false
       - key: CORS_ORIGINS
         value: '["https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
+
+  # ২. Redis (Upstash-এর বদলে যদি নিজস্ব Redis লাগে ভবিষ্যতে)
+  # - type: redis
+  #   name: supremeai-redis
+  #   ipAllowList: [] # Only internal access
+  #   plan: free
+
+  # ৩. Database (Supabase-এর বদলে যদি নিজস্ব Postgres লাগে)
+  # - type: postgres
+  #   name: supremeai-db
+  #   databaseName: supremeai
+  #   user: supremeai_user
+  #   plan: starter
