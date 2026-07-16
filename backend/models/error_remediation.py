@@ -65,7 +65,7 @@ if __name__ == "__main__":
     try:
         result = resilient_call(service.unstable_operation, should_fail=False)
         logging.info(f"ফলাফল: {result}")
-    except (RetryError, CircuitBreakerError) as e:
+    except (RetryError, CircuitBreakerOpenError) as e:
         logging.error(f"ত্রুটি: {e}")
 
     logging.info("\n--- পরিস্থিতি ২: সার্ভিস অস্থায়ীভাবে ফেইল করছে (কিন্তু রিট্রাই করে সফল হবে) ---")
@@ -76,12 +76,12 @@ if __name__ == "__main__":
     try:
         # এই কলটি ৩ বার রিট্রাই করার পর চূড়ান্তভাবে ফেইল করবে
         resilient_call(service.unstable_operation, should_fail=True)
-    except (RetryError, CircuitBreakerError) as e:
-        logging.error(f"চূড়ান্ত ত্রুটি: {e}. সার্কিট ব্রেকার এখন '{db_breaker.current_state}' অবস্থায় আছে।")
+    except (RetryError, CircuitBreakerOpenError) as e:
+        logging.error(f"চূড়ান্ত ত্রুটি: {e}. সার্কিট ব্রেকার এখন '{db_breaker.state.name}' অবস্থায় আছে।")
 
     logging.info("\n--- পরিস্থিতি ৪: সার্কিট ব্রেকার 'open' থাকা অবস্থায় পুনরায় কল করার চেষ্টা ---")
     try:
         resilient_call(service.unstable_operation, should_fail=True)
-    except CircuitBreakerError as e:
+    except CircuitBreakerOpenError as e:
         logging.warning(f"সার্কিট ওপেন থাকায় কলটি ব্লক করা হয়েছে: {e}")
-        logging.info(f"ব্রেকার রিসেট হতে আর {db_breaker.seconds_remaining:.1f} সেকেন্ড বাকি।")
+        logging.info(f"ব্রেকার রিসেট হতে আর {db_breaker.recovery_timeout} সেকেন্ড অপেক্ষা করতে হবে।")
