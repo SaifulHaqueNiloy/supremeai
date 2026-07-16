@@ -13,7 +13,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from core.swarm_pubsub import swarm_streamer
 from engine.forge_compiler import ForgeCompiler
-from engine.swarm_orchestrator import SwarmOrchestrator
+from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
 
 logger = logging.getLogger(__name__)

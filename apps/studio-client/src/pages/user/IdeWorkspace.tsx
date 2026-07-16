@@ -6,18 +6,18 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebContainer } from '@webcontainer/api';
 import 'xterm/css/xterm.css';
 
-import { useIdeStore } from '../store/useIdeStore';
-import { FileExplorer } from '../components/editor/FileExplorer';
-import { EditorTabs } from '../components/editor/EditorTabs';
+import { useIdeStore } from '../../store/useIdeStore';
+import { FileExplorer } from '../../components/editor/FileExplorer';
+import { EditorTabs } from '../../components/editor/EditorTabs';
 import { Play } from 'lucide-react';
 
 export const IdeWorkspace: React.FC = () => {
   const { webContainer, setWebContainer, files, activeFile, updateFileContent, markFileSaved } = useIdeStore();
-  
+
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  
+
   const [isBooting, setIsBooting] = useState(true);
 
   // Initialize Terminal and WebContainer
@@ -54,7 +54,7 @@ export const IdeWorkspace: React.FC = () => {
 
           // Start jsh shell
           const shellProcess = await wc.spawn('jsh');
-          
+
           shellProcess.output.pipeTo(
             new WritableStream({
               write(data) {
@@ -62,12 +62,12 @@ export const IdeWorkspace: React.FC = () => {
               }
             })
           );
-          
+
           const input = shellProcess.input.getWriter();
           term.onData((data) => {
             input.write(data);
           });
-          
+
         } catch (error) {
           term.writeln(`\r\n❌ \x1b[1;31mError booting WebContainer:\x1b[0m ${error}`);
           setIsBooting(false);
@@ -136,7 +136,7 @@ export const IdeWorkspace: React.FC = () => {
           </div>
         </div>
         <div className="flex space-x-2">
-           <button 
+           <button
              onClick={handleSave}
              disabled={!currentFileData?.isModified}
              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded text-white text-xs font-semibold transition-colors"
@@ -149,18 +149,18 @@ export const IdeWorkspace: React.FC = () => {
       {/* Main Layout using react-resizable-panels */}
       <div className="flex-1 flex min-h-0">
         <PanelGroup direction="horizontal">
-          
+
           {/* LEFT: File Explorer */}
           <Panel defaultSize={20} minSize={10} maxSize={40}>
             <FileExplorer />
           </Panel>
-          
+
           <PanelResizeHandle className="w-1 bg-[#252526] hover:bg-blue-500 cursor-col-resize transition-colors" />
-          
+
           {/* RIGHT: Editor + Terminal */}
           <Panel defaultSize={80}>
             <PanelGroup direction="vertical">
-              
+
               {/* TOP: Editor */}
               <Panel defaultSize={70} minSize={30}>
                 <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -183,9 +183,9 @@ export const IdeWorkspace: React.FC = () => {
                   </div>
                 </div>
               </Panel>
-              
+
               <PanelResizeHandle className="h-1 bg-[#252526] hover:bg-blue-500 cursor-row-resize transition-colors" />
-              
+
               {/* BOTTOM: Terminal */}
               <Panel defaultSize={30} minSize={10}>
                 <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -195,10 +195,10 @@ export const IdeWorkspace: React.FC = () => {
                   <div ref={terminalRef} className="flex-1 p-2 min-h-0 bg-[#1e1e1e]" />
                 </div>
               </Panel>
-              
+
             </PanelGroup>
           </Panel>
-          
+
         </PanelGroup>
       </div>
     </div>

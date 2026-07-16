@@ -22,7 +22,7 @@ export const DebateOverlay: React.FC<DebateOverlayProps> = ({ isOpen, logs }) =>
           Consensus Engine (Debate)
         </span>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {logs.length === 0 && (
           <div className="text-center text-text-secondary text-sm italic">
@@ -34,7 +34,7 @@ export const DebateOverlay: React.FC<DebateOverlayProps> = ({ isOpen, logs }) =>
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-brand-primary">{log.agentName}</span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                log.status === 'CONSENSUS' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 
+                log.status === 'CONSENSUS' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                 log.status === 'RETHINKING' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
                 log.status === 'JUDGING' ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30' :
                 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'

@@ -27,15 +27,15 @@ export const ForgeSidebar = () => {
 
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-bold text-text-secondary uppercase tracking-widest border-b border-border-subtle pb-2">Swarm Agents</h3>
-        
+
         {AVAILABLE_NODES.map((node, index) => (
           <div
             key={index}
             draggable
             onDragStart={(event) => onDragStart(event, node)}
             className={`
-              p-3 rounded-lg border-2 ${node.borderColor} bg-background/50 cursor-grab 
-              hover:bg-background hover:shadow-[0_0_15px_var(--color-brand-primary)] 
+              p-3 rounded-lg border-2 ${node.borderColor} bg-background/50 cursor-grab
+              hover:bg-background hover:shadow-[0_0_15px_var(--color-brand-primary)]
               transition-all duration-fast ease-out
             `}
           >
