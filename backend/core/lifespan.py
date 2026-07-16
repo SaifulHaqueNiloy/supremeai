@@ -210,7 +210,7 @@ async def app_lifespan(app):
 
     # CostGuard initialization (for distributed budget tracking)
     try:
-        from evolution.cost_guard import cost_guard
+        from core.cost_guard import cost_guard
 
         await cost_guard.connect()
         logger.info("✅ CostGuard Redis connection initialized for budget tracking.")
@@ -384,7 +384,7 @@ async def app_lifespan(app):
 
     # Browser cleanup
     try:
-        from tools.ai_agents.browser_agent import shutdown_global_browser
+        from core.playwright_manager import shutdown_global_browser
 
         await shutdown_global_browser()
     except Exception as e:  # noqa: BLE001

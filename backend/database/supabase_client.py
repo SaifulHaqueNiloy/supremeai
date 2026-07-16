@@ -365,7 +365,7 @@ class SupabaseDB:
             try:
                 if candidate_url.startswith("sqlite"):
                     logger.info("Skipping psycopg2 bootstrap for SQLite: %s", candidate_url)
-                    return
+                    continue
                 conn = psycopg2.connect(candidate_url)
                 try:
                     cur = conn.cursor()
