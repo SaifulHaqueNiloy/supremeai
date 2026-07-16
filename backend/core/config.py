@@ -344,6 +344,21 @@ class Settings(BaseSettings):
     def supremeai_api_token(self) -> str:
         return self._get_cached_secret("SUPREMEAI_API_TOKEN")
 
+    @computed_field
+    @property
+    def neo4j_uri(self) -> str:
+        return self._get_cached_secret("NEO4J_URI") or "bolt://localhost:7687"
+
+    @computed_field
+    @property
+    def neo4j_user(self) -> str:
+        return self._get_cached_secret("NEO4J_USER") or "neo4j"
+
+    @computed_field
+    @property
+    def neo4j_password(self) -> str:
+        return self._get_cached_secret("NEO4J_PASSWORD") or ""
+
     # ── Validators ───────────────────────────────────────────────────────────
 
     @field_validator("env")
