@@ -61,6 +61,7 @@ class CircuitBreaker:
         name: str,
         failure_threshold: int | None = None,
         recovery_timeout: float | None = None,
+        **kwargs: Any,
     ) -> None:
         self.name = name
         self.failure_threshold = failure_threshold or settings.circuit_breaker_failure_threshold

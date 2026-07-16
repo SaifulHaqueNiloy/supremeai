@@ -40,6 +40,11 @@ class ExecutionResult(BaseModel):
     errors: list[str] = Field(default_factory=list)
 
 
+# Alias for backward compatibility
+class SwarmOrchestrator:
+    def __new__(cls, *args, **kwargs):
+        return MorphicOrchestrator(*args, **kwargs)
+
 class MorphicOrchestrator:
     """
     Universal Cognitive Engine (Architecture 2.0)
