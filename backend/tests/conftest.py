@@ -20,7 +20,13 @@ def create_mock_module(name, is_package=False):
 
 sys.modules["slowapi"] = create_mock_module("slowapi", is_package=True)
 sys.modules["slowapi.util"] = create_mock_module("slowapi.util")
-sys.modules["slowapi.errors"] = create_mock_module("slowapi.errors")
+
+class RateLimitExceeded(Exception):
+    pass
+
+slowapi_errors_mock = create_mock_module("slowapi.errors")
+slowapi_errors_mock.RateLimitExceeded = RateLimitExceeded
+sys.modules["slowapi.errors"] = slowapi_errors_mock
 sys.modules["pinecone"] = create_mock_module("pinecone", is_package=True)
 sys.modules["chromadb"] = create_mock_module("chromadb", is_package=True)
 sys.modules["chromadb.config"] = create_mock_module("chromadb.config")
@@ -248,3 +254,18 @@ async def async_session():
     from unittest.mock import AsyncMock
 
     yield AsyncMock()
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache():
+    """Clear cached secrets before each test to prevent test bleed."""
+    import os
+    from core.config import settings
+    from core.config import secret_vault
+
+    settings._cached_secrets.clear()
+    secret_vault.invalidate_cache()
+
+    # Many tests mutate os.environ without cleaning up
+    # MUST set to "" instead of del, otherwise secret_vault will mock it with "mock_SUPREMEAI_API_TOKEN"
+    os.environ["SUPREMEAI_API_TOKEN"] = ""
+    yield
