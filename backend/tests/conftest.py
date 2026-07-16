@@ -239,12 +239,12 @@ import pytest_asyncio
 pytest_plugins = ["pytest_asyncio"]
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")
+@pytest_asyncio.fixture(autouse=True, scope="function")  # বাংলা: session scope নয়, function scope ব্যবহার নির্ভরযোগ্য DB isolation নিশ্চিত করে
 async def setup_test_database():
     from sqlalchemy.ext.compiler import compiles
     from sqlalchemy.dialects.postgresql import JSONB
-    from sqlalchemy.types import JSON
-    import sqlalchemy.dialects.sqlite as sqlite_dialect
+    from sqlalchemy.types import JSON  # noqa: F401
+    import sqlalchemy.dialects.sqlite as sqlite_dialect  # noqa: F401
 
     @compiles(JSONB, "sqlite")
     def compile_jsonb_sqlite(type_, compiler, **kw):
@@ -253,7 +253,7 @@ async def setup_test_database():
     from database.session import engine
     from models.base import Base
 
-    # Import all models explicitly to ensure they are registered with Base
+    # বাংলা মন্তব্য: সব মডেল স্পষ্টভাবে ইম্পোর্ট করা হলো যাতে Base.metadata তে রেজিস্ট্রি হয়
     import models.admin
     import models.agent_session
     import models.api_key
@@ -275,12 +275,13 @@ async def setup_test_database():
     import models.shared_workspace
     import models.system_config
     import models.target_platform_credential
-    import models.transaction_ledger
     import models.voice_interaction
-    import models.wallet
+    # বাংলা: wallet.py তে UserWallet ও TransactionLedgerEntry (SQLAlchemy) আছে — সরাসরি ইম্পোর্ট করো
+    import models.wallet  # UserWallet + TransactionLedgerEntry (SQLAlchemy) আছে এখানে
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.drop_all)  # পরিষ্কার শুরু নিশ্চিত করতে
+        await conn.run_sync(Base.metadata.create_all)  # সব টেবিল তৈরি
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -310,7 +311,27 @@ def clear_settings_cache():
 
 @pytest.fixture(autouse=True)
 def mock_supabase():
+    # বাংলা মন্তব্য: Supabase নেটওয়ার্ক লিক সম্পূর্ণ বন্ধ করা হলো।
+    # create_client মক করার পাশাপাশি settings-এ supabase_url/key খালি রেখে
+    # যেকোনো রিয়েল নেটওয়ার্ক রিকোয়েস্ট আটকানো হচ্ছে।
     from unittest.mock import patch, MagicMock
-    with patch("database.supabase_client.create_client") as mock_client:
-        mock_client.return_value = MagicMock()
-        yield mock_client
+    import os
+
+    # নিশ্চিত করো env-এ URL/KEY নেই যাতে create_client কল না হয়
+    old_url = os.environ.get("SUPABASE_URL", "")
+    old_key = os.environ.get("SUPABASE_KEY", "")
+    os.environ["SUPABASE_URL"] = ""
+    os.environ["SUPABASE_KEY"] = ""
+
+    with patch("database.supabase_client.create_client") as mock_create, \
+         patch("database.supabase_client.SupabaseDB.__init__", return_value=None) as mock_init:
+        mock_db = MagicMock()
+        mock_db.client = MagicMock()
+        mock_create.return_value = mock_db.client
+        yield mock_create
+
+    # টেস্টের পর env পুনরুদ্ধার
+    if old_url:
+        os.environ["SUPABASE_URL"] = old_url
+    if old_key:
+        os.environ["SUPABASE_KEY"] = old_key
