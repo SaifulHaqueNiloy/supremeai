@@ -252,7 +252,7 @@ async def setup_test_database():
 
     from database.session import engine
     from models.base import Base
-    
+
     # Import all models explicitly to ensure they are registered with Base
     import models.admin
     import models.agent_session
@@ -298,10 +298,10 @@ def clear_settings_cache():
     import os
     from core.config import settings
     from core.config import secret_vault
-    
+
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
-    
+
     # Many tests mutate os.environ without cleaning up
     # MUST set to "" instead of del, otherwise secret_vault will mock it with "mock_SUPREMEAI_API_TOKEN"
     os.environ["SUPREMEAI_API_TOKEN"] = ""
