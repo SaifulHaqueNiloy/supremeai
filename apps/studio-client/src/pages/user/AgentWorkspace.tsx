@@ -4,7 +4,7 @@ import { Terminal } from 'xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebContainer } from '@webcontainer/api'; // 🟢 নতুন ইমপোর্ট
 import 'xterm/css/xterm.css'; // টার্মিনালের স্টাইল
-import { apiClient } from '../services/apiClient';
+import { apiClient } from '../../services/apiClient';
 
 // টাইপ ডেফিনিশন
 interface Message {
@@ -83,7 +83,7 @@ export const AgentWorkspace: React.FC = () => {
           if (fitAddonRef.current) fitAddonRef.current.fit();
         };
         window.addEventListener('resize', handleResize);
-        
+
         // Save handleResize to window for cleanup if needed, but better to put it in effect scope
         (window as any)._terminalResizeHandler = handleResize;
       }
@@ -125,11 +125,11 @@ export const AgentWorkspace: React.FC = () => {
       if (data.status === 'success') {
         // এআই এর রেসপন্স এবং সোর্স (API নাকি Memory) অ্যাড করা
         setMessages([
-          ...newMessages, 
-          { 
-            role: 'agent', 
+          ...newMessages,
+          {
+            role: 'agent',
             content: data.message,
-            source: data.source 
+            source: data.source
           }
         ]);
         // Monaco Editor এ কোড আপডেট করা
@@ -146,19 +146,19 @@ export const AgentWorkspace: React.FC = () => {
   const handleRunAndEvaluate = async (codeToRun = generatedCode, retryCount = 0) => {
     if (!webcontainerRef.current || !xtermRef.current) return;
     const term = xtermRef.current;
-    
+
     setIsHealing(true);
     try {
       term.writeln(`\r\n⚙️ \x1b[1;36m[Execution] Running code... (Attempt ${retryCount + 1}/3)\x1b[0m`);
-      
+
       // ১. ফাইল সেভ করা
       await webcontainerRef.current.fs.writeFile('/index.js', codeToRun);
-      
+
       // ২. সরাসরি Node.js প্রসেস স্পন (Spawn) করা যাতে Exit Code ধরতে পারি
       const process = await webcontainerRef.current.spawn('node', ['index.js']);
-      
+
       let processOutput = '';
-      
+
       // ৩. আউটপুট ক্যাপচার করা এবং টার্মিনালে দেখানো
       process.output.pipeTo(
         new WritableStream({
@@ -168,15 +168,15 @@ export const AgentWorkspace: React.FC = () => {
           }
         })
       );
-      
+
       // ৪. প্রসেস শেষ হওয়ার জন্য অপেক্ষা করা (The Evaluation)
       const exitCode = await process.exit;
-      
+
       if (exitCode !== 0) {
         // ❌ এরর পেয়েছে! (Self-Healing Loop)
         if (retryCount < 2) {
           term.writeln(`\r\n⚠️ \x1b[1;33m[Auto-Heal] Code failed with exit code ${exitCode}. Requesting AI fix...\x1b[0m`);
-          
+
           // ব্যাকএন্ডে এরর মেসেজসহ ফিক্সের জন্য রিকোয়েস্ট পাঠানো
           const fixData = await apiClient.post<any>('/agent/execute', {
             prompt: `I tried to run this code but got an error. \n\nCODE:\n${codeToRun}\n\nERROR:\n${processOutput}\n\nPlease fix the bug and return ONLY the full working code.`,
@@ -186,7 +186,7 @@ export const AgentWorkspace: React.FC = () => {
             const fixedCode = fixData.code;
             setGeneratedCode(fixedCode); // এডিটরে নতুন কোড বসবে
             setMessages(prev => [...prev, { role: 'agent', content: `🔧 I analyzed the error and fixed the code. Retrying...` }]);
-            
+
             // রিকার্সিভ কল (নতুন কোড দিয়ে আবার টেস্ট করবে)
             await handleRunAndEvaluate(fixedCode, retryCount + 1);
           }
@@ -196,21 +196,21 @@ export const AgentWorkspace: React.FC = () => {
       } else {
         // ✅ কোড পারফেক্টলি রান করেছে! (The Learning Phase)
         term.writeln(`\r\n✅ \x1b[1;32m[Success] Execution flawless! Committing to Memory Vault...\x1b[0m`);
-        
+
         // ব্যাকএন্ডকে কনফার্ম করা যে কোডটি কাজ করেছে, মেমোরিতে সেভ করো
         await apiClient.post('/agent/learn', {
           prompt: prompt, // অরিজিনাল প্রম্পট
           working_code: codeToRun
         });
-        
+
         setMessages(prev => [...prev, { role: 'agent', content: `🎯 Execution verified! I have memorized this solution in the Zero-Cost Vault.`, source: 'memory' }]);
 
         // 🟢 ২. GitHub-এ Auto-PR তৈরি করা (The New Magic)
         term.writeln(`\r\n🐙 \x1b[1;34m[GitHub] Pushing verified code to repository as a PR...\x1b[0m`);
-        
+
         const prData = await apiClient.post<any>('/agent/github/pr', {
           user_id: 'admin_123', // TODO: Fetch from session
-          repo_name: import.meta.env.VITE_GITHUB_REPO || 'supremeai/test_repo', 
+          repo_name: import.meta.env.VITE_GITHUB_REPO || 'supremeai/test_repo',
           file_path: 'src/auto_generated.js',
           code: codeToRun,
           prompt: prompt
@@ -236,7 +236,7 @@ export const AgentWorkspace: React.FC = () => {
         <div className="p-4 border-b border-gray-700 bg-gray-900 font-bold text-lg text-blue-400">
           🧠 SupremeAI Agent
         </div>
-        
+
         {/* Chat History */}
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {messages.map((msg, idx) => (
@@ -271,7 +271,7 @@ export const AgentWorkspace: React.FC = () => {
               }
             }}
           />
-          <button 
+          <button
             onClick={handleExecute}
             disabled={isLoading || !prompt.trim()}
             className="mt-2 w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors"
@@ -280,10 +280,10 @@ export const AgentWorkspace: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       {/* 🔴 RIGHT PANEL: Live Code Editor & Terminal */}
       <div className="w-2/3 h-full flex flex-col bg-[#1e1e1e]">
-        
+
         {/* Top 70%: Code Editor */}
         <div className="flex-1 flex flex-col min-h-0 border-b border-gray-700">
           <div className="p-2 text-sm text-gray-400 bg-[#252526] flex items-center justify-between">
@@ -291,9 +291,9 @@ export const AgentWorkspace: React.FC = () => {
               <span>📄 index.js</span>
               <span className="text-xs bg-gray-700 px-2 py-1 rounded">JavaScript</span>
             </div>
-            
+
             {/* 🟢 নতুন Run Button */}
-            <button 
+            <button
               onClick={() => handleRunAndEvaluate(generatedCode, 0)}
               disabled={isHealing}
               className="bg-green-600 hover:bg-green-500 disabled:bg-gray-600 text-white text-xs font-bold py-1 px-3 rounded flex items-center transition-colors"

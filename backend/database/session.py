@@ -25,9 +25,14 @@ def get_async_url(url: str) -> str:
 
 
 _async_url = get_async_url(DATABASE_URL)
+from sqlalchemy.pool import StaticPool
+
 engine_kwargs = {
     "echo": False,
 }
+if _async_url.startswith("sqlite"):
+    engine_kwargs["poolclass"] = StaticPool
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
 if _async_url.startswith("postgresql"):
     engine_kwargs.update({
         "pool_size": 20,
