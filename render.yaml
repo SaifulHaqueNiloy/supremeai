@@ -6,6 +6,7 @@ services:
       url: ghcr.io/paykaribazaronline/supremeai/supremeai-backend:latest
     region: singapore
     plan: free
+    autoDeploy: false
     healthCheckPath: /health
     envVars:
       - key: ENV
