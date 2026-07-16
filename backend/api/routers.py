@@ -50,6 +50,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.traffic_monitor", ""),
     ("api.routes.agent_action", "/api/v1"),
     ("api.routes.websocket_hitl", ""),
+    ("api.routes.syncguard", "/api/v1"),
 ]
 
 optional_routers: list[tuple[str, str]] = [
