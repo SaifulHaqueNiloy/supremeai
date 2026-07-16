@@ -539,9 +539,9 @@ class TestSecurityVaultModuleInit:
 class TestSwarmOrchestratorMissingBranches:
     @pytest.mark.anyio
     async def test_execute_task_runs_all_agents(self):
-        from core.orchestration.swarm_orchestrator import MorphicOrchestrator
+        from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         with (
             patch("core.orchestration.agent_orchestrator.budget_aware_route", return_value={"intent": "coding", "tier": "free", "best_provider": "gemini"}),
@@ -1174,9 +1174,9 @@ class TestSwarmOrchestratorCircuitBreakerIntegration:
     @pytest.mark.anyio
     async def test_execute_task_handles_circuit_breaker_open(self):
         from core.resilience.circuit_breaker import CircuitBreakerOpenError, CircuitBreakerState
-        from core.orchestration.swarm_orchestrator import MorphicOrchestrator
+        from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
-        orchestrator = MorphicOrchestrator()
+        orchestrator = SwarmOrchestrator()
 
         orchestrator.circuit_breaker.state = "OPEN"
 
