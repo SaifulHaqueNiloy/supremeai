@@ -1,6 +1,6 @@
 # render.yaml - SupremeAI 2.0 Master Blueprint
 services:
-  # ১. ব্যাকএন্ড সার্ভিস (API) - Image Based (Saves Render Build Minutes)
+  # ১. ব্যাকএন্ড সার্ভিস (API) - Image Based
   - type: web
     name: supremeai-backend
     env: image
@@ -15,7 +15,17 @@ services:
         value: 8080
       - key: ENV
         value: production
-      # বাকি সিক্রেটগুলো ড্যাশবোর্ড থেকে সিঙ্ক হবে বা একবার বসাতে হবে
+      # Render Internal Redis Auto-link
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: supremeai-redis
+          property: connectionString
+      # বাকি সিক্রেটগুলো ড্যাশবোর্ড থেকে সিঙ্ক হবে
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
@@ -35,4 +45,25 @@ services:
       - key: CI_WEBHOOK_SECRET
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
+        value: '["https://supremeai-studio.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
+
+  # ২. Redis Message Broker
+  - type: redis
+    name: supremeai-redis
+    region: singapore
+    plan: free
+    ipAllowList: [] # Only internal access
+
+  # ৩. Frontend / Studio Client (UI)
+  - type: web
+    name: supremeai-studio
+    env: static
+    region: singapore
+    plan: free
+    autoDeploy: true
+    buildCommand: "cd apps/studio-client && pnpm install && pnpm run build"
+    staticPublishPath: "./apps/studio-client/dist"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
