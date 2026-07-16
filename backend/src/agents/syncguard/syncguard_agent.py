@@ -5,6 +5,7 @@ from .tools import check_infrastructure_drift, check_env_secrets_sync, check_red
 import os
 import json
 import redis.asyncio as redis
+from loguru import logger
 
 class SyncGuardAgent:
     def __init__(self, llm_client=None):
@@ -24,7 +25,7 @@ class SyncGuardAgent:
         """
         Executes the full synchronization audit across the 10-Crore-Floor architecture.
         """
-        print(f"\n🚀 [{self.name}] Initiating System Audit...")
+        logger.info(f"🚀 [{self.name}] Initiating System Audit...")
         audit_report = {"status": "SYNC_OK", "issues": []}
 
         # 1. Check Infrastructure Blueprint Sync
@@ -48,8 +49,8 @@ class SyncGuardAgent:
 
         # Final Decision
         if audit_report["status"] == "SYNC_FAILED":
-            print(f"❌ [{self.name}] AUDIT FAILED. System is out of sync!")
-            print(f"Details: {audit_report['issues']}")
+            logger.error(f"❌ [{self.name}] AUDIT FAILED. System is out of sync!")
+            logger.error(f"Details: {audit_report['issues']}")
             # Broadcast the alert to other agents via Redis Pub/Sub
             try:
                 redis_url = os.getenv("REDIS_URL")
@@ -57,11 +58,11 @@ class SyncGuardAgent:
                     redis_client = redis.from_url(redis_url)
                     await redis_client.publish("supremeai:alerts:syncguard", json.dumps(audit_report))
                     await redis_client.aclose()
-                    print(f"📡 [{self.name}] Broadcasted SYNC_FAILED alert to Swarm.")
+                    logger.info(f"📡 [{self.name}] Broadcasted SYNC_FAILED alert to Swarm.")
             except Exception as e:
-                print(f"⚠️ [{self.name}] Failed to broadcast alert: {e}")
+                logger.warning(f"⚠️ [{self.name}] Failed to broadcast alert: {e}")
         else:
-            print(f"✅ [{self.name}] AUDIT PASSED. System is 100% synchronized and ready for scaling.")
+            logger.info(f"✅ [{self.name}] AUDIT PASSED. System is 100% synchronized and ready for scaling.")
 
         return audit_report
 
