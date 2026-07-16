@@ -84,6 +84,7 @@ class ConfigCache:
         configs = dict(DEFAULT_CONFIGS)
         try:
             from sqlalchemy import select
+
             from database.session import AsyncSessionLocal
             from models.system_config import SystemConfig
 

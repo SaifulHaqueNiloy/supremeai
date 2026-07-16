@@ -17,7 +17,7 @@ async def simulated_network_call(should_fail: bool):
 
 
 def event_listener(event):
-    if event.error_type == "CIRCUIT_RECOVERY" or event.error_type == "CIRCUIT_OPEN":
+    if event.error_type in ("CIRCUIT_RECOVERY", "CIRCUIT_OPEN"):
         logger.info(f"Event Bus Triggered: {event.error_type} - {event.message}")
 
 
