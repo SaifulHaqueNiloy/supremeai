@@ -1,27 +1,23 @@
-# render.yaml - SupremeAI 2.0 Master Blueprint
+# render.yaml - SupremeAI 2.0 Master Blueprint (Zero Cost Edition)
 services:
-  # ১. ব্যাকএন্ড সার্ভিস (API) - Image Based
+  # ১. ব্যাকএন্ড (GHCR Image - Zero Render Build Minutes)
   - type: web
     name: supremeai-backend
     env: image
     image:
       url: ghcr.io/paykaribazaronline/supremeai/supremeai-backend:latest
     region: singapore
-    plan: free # স্কেল করার সময় এটিকে 'starter' এ আপগ্রেড করবেন
+    plan: free
     healthCheckPath: /api/v1/health
-    autoDeploy: false # GitHub Actions এটা কন্ট্রোল করবে
+    autoDeploy: false
     envVars:
       - key: PORT
         value: 8080
       - key: ENV
         value: production
-      # Render Internal Redis Auto-link
+      # বাকি সিক্রেটগুলো ড্যাশবোর্ড থেকে সিঙ্ক হবে (Upstash & Supabase)
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: supremeai-redis
-          property: connectionString
-      # বাকি সিক্রেটগুলো ড্যাশবোর্ড থেকে সিঙ্ক হবে
+        sync: false
       - key: UPSTASH_REDIS_REST_URL
         sync: false
       - key: UPSTASH_REDIS_REST_TOKEN
@@ -45,24 +41,16 @@ services:
       - key: CI_WEBHOOK_SECRET
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://supremeai-studio.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
+        value: '["https://supremeai-studio-client.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
 
-  # ২. Redis Message Broker
-  - type: redis
-    name: supremeai-redis
-    region: singapore
-    plan: free
-    ipAllowList: [] # Only internal access
-
-  # ৩. Frontend / Studio Client (UI)
+  # ২. ফ্রন্টএন্ড (Render 100% Free Static Hosting)
   - type: web
-    name: supremeai-studio
+    name: supremeai-studio-client
     env: static
     region: singapore
-    plan: free
-    autoDeploy: true
     buildCommand: "cd apps/studio-client && pnpm install && pnpm run build"
     staticPublishPath: "./apps/studio-client/dist"
+    autoDeploy: true
     routes:
       - type: rewrite
         source: /*
