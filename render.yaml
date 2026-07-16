@@ -47,7 +47,6 @@ services:
   - type: web
     name: supremeai-studio-client
     env: static
-    region: singapore
     buildCommand: "cd apps/studio-client && pnpm install && pnpm run build"
     staticPublishPath: "./apps/studio-client/dist"
     autoDeploy: true
