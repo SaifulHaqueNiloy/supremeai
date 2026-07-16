@@ -31,10 +31,12 @@ class CircuitBreakerState(str, Enum):
     HALF_OPEN = "HALF_OPEN"  # Testing — limited requests allowed
 
 
-class CircuitBreakerOpenError(Exception):
+class CircuitBreakerOpenError(RuntimeError):
     """Raised when the circuit breaker is OPEN and a request is rejected.
 
-    বাংলা: সার্কিট ব্রেকার OPEN থাকলে রিকোয়েস্ট রিজেক্ট হলে এই এক্সেপশন রেইজ হয়।
+    বাংলা: সার্কিট ব্রেকার OPEN থাকলে রিকোয়েস্ট রিজেক্ট হলে এই এক্সেপশন রেইজ হয়।
+    RuntimeError থেকে inherit করা হয়েছে যাতে contextlib.suppress(RuntimeError) দিয়ে
+    suppress করা যায় এবং pytest.raises(RuntimeError) দিয়ে catch করা যায়।
     """
 
     def __init__(self, name: str, state: CircuitBreakerState) -> None:
@@ -99,19 +101,31 @@ class CircuitBreaker:
         """Check if enough time has passed to attempt recovery.
 
         বাংলা: রিকভারি চেষ্টা করার জন্য যথেষ্ট সময় পেরিয়েছে কিনা চেক করে।
+        opened_at ব্যবহার করা হয় যাতে টেস্টে সহজে ম্যানিপুলেট করা যায়।
         """
-        if self.last_failure_time is None:
+        if self.opened_at is None:
             return True
-        return (time.monotonic() - self.last_failure_time) >= self.recovery_timeout
+        return (time.monotonic() - self.opened_at) >= self.recovery_timeout
 
     def call(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
-        """Execute a function with circuit breaker protection (sync).
+        """Execute a function with circuit breaker protection (sync or async).
 
-        বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ সিঙ্ক্রোনাস ফাংশন এক্সিকিউট করে।
+        বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ ফাংশন এক্সিকিউট করে।
+        যদি func একটি async function হয়, তাহলে acall() coroutine return করা হয়
+        যাতে caller নিজে await বা asyncio.run() করতে পারে।
+        এটি নিশ্চিত করে যে async function এর failure সঠিকভাবে ট্র্যাক হবে।
 
         Raises:
             CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
         """
+        import inspect
+
+        # বাংলা মন্তব্য: async function detect করে acall() coroutine return করা হচ্ছে।
+        # এটা করলে caller asyncio.run() বা await দিয়ে সঠিকভাবে execute করতে পারবে।
+        # nested asyncio.run() এড়াতে এখানে আমরা asyncio.run() করি না।
+        if inspect.iscoroutinefunction(func):
+            return self.acall(func, *args, **kwargs)  # type: ignore[return-value]
+
         with self._lock:
             if self.state == CircuitBreakerState.OPEN:
                 if self._should_attempt_recovery():
@@ -185,6 +199,8 @@ class CircuitBreaker:
             if self.state == CircuitBreakerState.HALF_OPEN:
                 logger.info(f"Circuit breaker '{self.name}' recovered — transitioning to CLOSED")
                 self.state = CircuitBreakerState.CLOSED
+                # বাংলা মন্তব্য: সফলভাবে CLOSED হলে opened_at রিসেট করা হচ্ছে
+                self.opened_at = None
                 self._recovery_in_progress = False
 
     def _mark_failure(self) -> None:
@@ -202,6 +218,9 @@ class CircuitBreaker:
                     f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
                 )
                 self.state = CircuitBreakerState.OPEN
+                # বাংলা মন্তব্য: সার্কিট খোলার সময় opened_at সেট করা হচ্ছে
+                # যাতে _should_attempt_recovery() সঠিকভাবে কাজ করে এবং টেস্টে ম্যানিপুলেট করা যায়
+                self.opened_at = time.monotonic()
                 self._recovery_in_progress = False
 
     def reset(self) -> None:
@@ -216,6 +235,8 @@ class CircuitBreaker:
             self.success_count = 0
             self.last_failure_time = None
             self.last_success_time = None
+            # বাংলা মন্তব্য: রিসেটে opened_at ক্লিয়ার করা হচ্ছে
+            self.opened_at = None
             self._recovery_in_progress = False
 
     def get_metrics(self) -> dict[str, Any]:
@@ -238,9 +259,9 @@ class CircuitBreaker:
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         """Allow CircuitBreaker to be used as a decorator."""
-        import asyncio
+        import inspect
         import functools
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             @functools.wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
                 return await self.acall(func, *args, **kwargs)
