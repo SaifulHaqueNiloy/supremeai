@@ -43,7 +43,8 @@ class ResourceGuard:
 
         # 3. Check if the resolved path starts with any of the allowed roots
         allowed = False
-        allowed_roots = [cls.PROJECT_ROOT, cls.PERSISTENT_DATA_DIR, cls.SANDBOX_ROOT]
+        github_workspace = Path(os.getenv("GITHUB_WORKSPACE", "/__w/supremeai/supremeai")).resolve()
+        allowed_roots = [cls.PROJECT_ROOT, cls.PERSISTENT_DATA_DIR, cls.SANDBOX_ROOT, github_workspace]
 
         for root in allowed_roots:
             try:
