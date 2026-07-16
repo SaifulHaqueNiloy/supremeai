@@ -1,11 +1,7 @@
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch, AsyncMock
 
 from fastapi.testclient import TestClient
-
-
-os.environ["OPENROUTER_API_KEY"] = "mock-key-value"
-os.environ["SUPREMEAI_API_TOKEN"] = "test-token"
 from backend.api.routes import config as config_route
 from core.app import app
 
@@ -43,7 +39,7 @@ def test_api_email_endpoints():
             "host": "imap.gmail.com",
             "port": 993,
             "username": "supremeai@paykaribazar.com",
-            "app_password": "secret_password",
+            "app_password": "secret_password",  # pragma: allowlist secret
         },
         headers=auth_headers,
     )
@@ -51,7 +47,17 @@ def test_api_email_endpoints():
     assert resp2.json()["status"] == "success"
 
 
-def test_api_github_endpoints():
+@patch("api.routes.github._get_agent", new_callable=AsyncMock)
+def test_api_github_endpoints(mock_get_agent):
+    mock_agent = MagicMock()
+    mock_agent.verify_connection = AsyncMock(return_value=True)
+    mock_agent.connect_repo = AsyncMock()
+    mock_agent.analyze_repo = AsyncMock(return_value={"status": "analyzed", "score": 85})
+    mock_agent.improve_code = AsyncMock(return_value={"status": "improved"})
+    mock_agent.commit_changes = AsyncMock(return_value={"status": "committed", "branch": "supremeai-improvements-1718952000"})
+    mock_agent.create_pr = AsyncMock(return_value={"status": "pr_created", "pr_url": "https://github.com/pulls/1"})
+    mock_get_agent.return_value = mock_agent
+
     # test /github/connect
     resp = client.post(
         "/github/connect",

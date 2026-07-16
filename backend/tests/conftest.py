@@ -139,6 +139,7 @@ def bypass_jwt_auth():
         "middleware.auth_middleware.verify_token",
         "backend.core.security.verify_token",
         "core.security.verify_token",
+        "core.security.auth_middleware._decode_jwt",
     ]
     for target in targets:
         try:
@@ -206,6 +207,34 @@ def mock_production_env(monkeypatch):
 import pytest_asyncio
 
 pytest_plugins = ["pytest_asyncio"]
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session")
+async def setup_test_database():
+    from sqlalchemy.ext.compiler import compiles
+    from sqlalchemy.dialects.postgresql import JSONB
+    from sqlalchemy.types import JSON
+    import sqlalchemy.dialects.sqlite as sqlite_dialect
+
+    @compiles(JSONB, "sqlite")
+    def compile_jsonb_sqlite(type_, compiler, **kw):
+        return "JSON"
+
+    from database.session import engine
+    from models.base import Base
+    import importlib
+    import pkgutil
+    import models
+
+    # Import all modules in the models package so they are registered with Base
+    for _, module_name, _ in pkgutil.iter_modules(models.__path__):
+        importlib.import_module(f"models.{module_name}")
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture

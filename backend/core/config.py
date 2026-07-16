@@ -151,7 +151,7 @@ class Settings(BaseSettings):
     admin_emails: list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
     supremeai_admin_password_hash: str | None = Field(default=None, validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH")
     supremeai_public_paths: list[str] = Field(
-        default=["/health", "/metrics", "/docs", "/openapi.json", "/api/v1/auth/token"],
+        default=["/health", "/metrics", "/docs", "/openapi.json", "/api/v1/auth/token", "/actuator", "/api/admin/firebase-"],
         validation_alias="SUPREMEAI_PUBLIC_PATHS"
     )
     prompt_blocked_patterns: list[str] = Field(

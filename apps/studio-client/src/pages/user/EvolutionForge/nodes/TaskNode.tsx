@@ -17,8 +17,8 @@ const TaskNode = ({ id, data, selected }: NodeProps<TaskNodeData>) => {
   return (
     <div className={`
       relative min-w-[280px] p-5 rounded-xl border-2 border-dashed backdrop-blur-md transition-all duration-fast
-      ${selected 
-        ? 'border-brand-primary shadow-[0_0_20px_var(--color-brand-primary)] bg-card-bg/90' 
+      ${selected
+        ? 'border-brand-primary shadow-[0_0_20px_var(--color-brand-primary)] bg-card-bg/90'
         : 'border-text-muted bg-card-bg/40 hover:border-text-secondary'}
     `}>
       {/* Task Node Header */}
@@ -42,10 +42,10 @@ const TaskNode = ({ id, data, selected }: NodeProps<TaskNodeData>) => {
       </div>
 
       {/* Outgoing Handle ONLY (No incoming handle for the starting node) */}
-      <Handle 
-        type="source" 
-        position={Position.Bottom} 
-        className="w-4 h-4 bg-brand-primary border-2 border-background" 
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-4 h-4 bg-brand-primary border-2 border-background"
       />
     </div>
   );
