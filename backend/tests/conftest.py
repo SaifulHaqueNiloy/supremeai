@@ -6,9 +6,31 @@ from loguru import logger
 # বাংলা মন্তব্য: pytest কালেকশনের সময় loguru-এর ডিফল্ট stderr হ্যান্ডলার যেন I/O error না দেয়, তাই প্রথমেই সেটি রিমুভ করা হলো।
 logger.remove()
 
+# Mock external dependencies that are not installed
+import sys
+import importlib.machinery
+from unittest.mock import MagicMock
+
+def create_mock_module(name, is_package=False):
+    m = MagicMock()
+    m.__spec__ = importlib.machinery.ModuleSpec(name=name, loader=MagicMock(), is_package=is_package)
+    if is_package:
+        m.__path__ = []
+    return m
+
+sys.modules["slowapi"] = create_mock_module("slowapi", is_package=True)
+sys.modules["slowapi.util"] = create_mock_module("slowapi.util")
+sys.modules["slowapi.errors"] = create_mock_module("slowapi.errors")
+sys.modules["pinecone"] = create_mock_module("pinecone", is_package=True)
+sys.modules["chromadb"] = create_mock_module("chromadb", is_package=True)
+sys.modules["chromadb.config"] = create_mock_module("chromadb.config")
+sys.modules["chromadb.utils"] = create_mock_module("chromadb.utils", is_package=True)
+sys.modules["chromadb.utils.embedding_functions"] = create_mock_module("chromadb.utils.embedding_functions")
+sys.modules["cachetools"] = create_mock_module("cachetools", is_package=True)
+
 os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_RqaVwno="
 os.environ["ENCRYPTION_KEY"] = "9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_RqaVwno="
-os.environ["STRIPE_API_KEY"] = "sk_test_dummy"
+os.environ["STRIPE_API_KEY"] = "dummy_stripe_key"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_dummy"
 os.environ["OPENROUTER_API_KEY"] = "sk-or-v1-dummy"
 os.environ["GEMINI_API_KEY"] = "AIzaSy_dummy"
@@ -129,32 +151,16 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
             pass
 
 
-@pytest.fixture(autouse=True, scope="session")
-def bypass_jwt_auth():
-    from unittest.mock import patch
+@pytest.fixture(autouse=True)
+def override_auth():
+    from core.app import app
+    from api.dependencies import get_current_user_token
+    from api.dependencies import verify_autonomous_agent_token
 
-    patches = []
-    targets = [
-        "backend.middleware.auth_middleware.verify_token",
-        "middleware.auth_middleware.verify_token",
-        "backend.core.security.verify_token",
-        "core.security.verify_token",
-        "core.security.auth_middleware._decode_jwt",
-    ]
-    for target in targets:
-        try:
-            p = patch(target)
-            mock = p.start()
-            mock.return_value = {"sub": "test_admin@supremeai.com", "role": "admin"}
-            patches.append(p)
-        except Exception as e:  # noqa: BLE001
-            import logging
-
-            logging.warning(f"Exception suppressed: {e}")
+    app.dependency_overrides[get_current_user_token] = lambda: {"sub": "test_admin@supremeai.com", "role": "admin"}
+    app.dependency_overrides[verify_autonomous_agent_token] = lambda: {"sub": "test_admin@supremeai.com", "role": "admin"}
     yield
-    for p in patches:
-        with contextlib.suppress(Exception):
-            p.stop()
+    app.dependency_overrides = {}
 
 
 @pytest.fixture(autouse=True)

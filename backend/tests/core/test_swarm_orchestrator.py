@@ -29,10 +29,10 @@ def mock_agents():
         patch("core.swarm_orchestrator.GuardianAgent", return_value=mock_guardian),
         patch("core.swarm_orchestrator.ReflectionAgent", return_value=mock_reflection),
     ):
-        from core.orchestration.swarm_orchestrator import MorphicOrchestrator
+        from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
         yield {
-            "orchestrator_class": MorphicOrchestrator,
+            "orchestrator_class": SwarmOrchestrator,
             "architect": mock_architect,
             "coder": mock_coder,
             "qa": mock_qa,
