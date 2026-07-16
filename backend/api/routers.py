@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-import os
-import sys
-from typing import Any
-
 from fastapi import FastAPI
-
-from core.config import settings
-from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from loguru import logger
+
 from api import register_router
+from core.config import settings
+
 
 core_routers: list[tuple[str, str]] = [
     ("api.routes.memory", ""),

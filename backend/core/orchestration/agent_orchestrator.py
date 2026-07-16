@@ -1,11 +1,13 @@
-from core.messaging.event_bus import ErrorContext
 import os
 import re
 from typing import Any
 
 from loguru import logger
 from pydantic import BaseModel
+
 from core.config import settings
+from core.messaging.event_bus import ErrorContext
+
 
 MAX_AGENT_TOKENS = settings.max_agent_tokens
 MAX_AGENT_ITERATIONS = settings.max_agent_iterations
