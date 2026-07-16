@@ -102,7 +102,11 @@ class ResponseStandardizationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         if response.status_code >= 400 and response.headers.get("content-type") != "application/json":
-            body = {"error": {"title": response.description, "detail": response.body.decode()}}
+            description = getattr(response, "description", "Unknown error")
+            body_content = ""
+            if hasattr(response, "body") and getattr(response, "body", b""):
+                body_content = response.body.decode()
+            body = {"error": {"title": description, "detail": body_content}}
             return JSONResponse(status_code=response.status_code, content=body)
         return response
 

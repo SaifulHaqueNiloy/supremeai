@@ -12,15 +12,15 @@ const AgentNode = ({ data, selected }: NodeProps<AgentNodeData>) => {
   return (
     <div className={`
       relative min-w-[200px] p-4 rounded-xl border-2 backdrop-blur-md transition-all duration-fast
-      ${selected 
-        ? 'border-neon-blue shadow-[0_0_20px_var(--color-neon-blue)] bg-card-bg/90' 
+      ${selected
+        ? 'border-neon-blue shadow-[0_0_20px_var(--color-neon-blue)] bg-card-bg/90'
         : 'border-border-subtle bg-card-bg/50 hover:border-text-secondary'}
     `}>
       {/* Incoming Data/Task Handle */}
-      <Handle 
-        type="target" 
-        position={Position.Top} 
-        className="w-3 h-3 bg-neon-purple border-2 border-background" 
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-3 h-3 bg-neon-purple border-2 border-background"
       />
 
       {/* Node Content */}
@@ -37,10 +37,10 @@ const AgentNode = ({ data, selected }: NodeProps<AgentNodeData>) => {
       </div>
 
       {/* Outgoing Result Handle */}
-      <Handle 
-        type="source" 
-        position={Position.Bottom} 
-        className="w-3 h-3 bg-neon-blue border-2 border-background" 
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-3 h-3 bg-neon-blue border-2 border-background"
       />
     </div>
   );

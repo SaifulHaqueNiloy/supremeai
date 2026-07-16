@@ -144,10 +144,10 @@ class TestAdminRoutes:
 
     @pytest.fixture
     def client(self):
-        """TestClient with mocked dependencies."""
+        """TestClient with mocked dependencies and auth header."""
         from core.app import app as fastapi_app
 
-        return TestClient(fastapi_app)
+        return TestClient(fastapi_app, headers={"Authorization": "Bearer test-admin-token"})
 
     def test_health(self, client):
         """Health endpoint."""

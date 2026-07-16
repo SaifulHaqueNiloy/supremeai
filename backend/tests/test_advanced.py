@@ -113,15 +113,14 @@ def test_telegram_bot_handler():
 
 @pytest.mark.asyncio
 async def test_task_queue():
-    with patch("core.queue.task_queue_enhanced.CELERY_AVAILABLE", False):
-        from core.queue.task_queue_enhanced import submit_task, get_task_result
+    from core.queue.task_queue_enhanced import submit_task, get_task_result
 
-        async def mock_task():
-            return "done"
+    async def mock_task():
+        return "done"
 
-        task_id = await submit_task(mock_task)
-        res = await get_task_result(task_id, timeout=2.0)
-        assert res.status == "completed"
+    task_id = await submit_task(mock_task)
+    res = await get_task_result(task_id, timeout=2.0)
+    assert res.status == "completed"
 
 
 @pytest.mark.anyio
@@ -160,10 +159,10 @@ async def test_perform_autonomous_signup():
     ):
         config_path = os.path.join(tmpdir, "rotation_config.json")
         rotator = MultiAccountRotator(config_file=config_path)
-        success = await rotator.perform_autonomous_signup("google")
+        success = await rotator.perform_autonomous_signup("google_ai_studio")
         assert success is True
-        assert "google" in rotator.providers
-        accounts = rotator.providers["google"].accounts
+        assert "google_ai_studio" in rotator.providers
+        accounts = rotator.providers["google_ai_studio"].accounts
         assert len(accounts) == 1
         assert accounts[0].email.startswith("supremeai+")
         assert accounts[0].password is not None

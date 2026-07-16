@@ -5,7 +5,7 @@
   "targets": {
     "supremeai-a": {
       "hosting": {
-        "studio": [
+        "admin-hosting": [
           "supremeai-a"
         ],
         "admin": [

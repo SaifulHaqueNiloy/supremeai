@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { getApiBaseUrl } from '../utils/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
+import { getApiBaseUrl } from '../../utils/api';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 
 export const IntegrationsManager: React.FC = () => {
   const [githubStatus, setGithubStatus] = useState<'Disconnected' | 'Connected'>('Disconnected');
@@ -21,7 +21,7 @@ export const IntegrationsManager: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* 🟢 GitHub Card (Active) */}
         <Card className="hover:border-[var(--supremeai-color-brand-primary-light)] dark:hover:border-[var(--supremeai-color-brand-primary-dark)] transition-colors">
           <CardHeader className="text-center">
