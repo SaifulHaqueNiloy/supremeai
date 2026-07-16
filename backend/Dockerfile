@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir poetry
 RUN poetry config virtualenvs.in-project true
 
 # ক্যাশ লেয়ার: শুধু ডিপেন্ডেন্সি ইন্সটল
-COPY pyproject.toml poetry.lock* ./
+COPY backend/pyproject.toml backend/poetry.lock* ./
 # বাংলা মন্তব্য: Render free tier-এ 'tools' group (~500MB) বাদ দেওয়া হয়েছে — শুধু main dependencies।
 RUN poetry install --no-interaction --no-ansi --no-root --only main
 
