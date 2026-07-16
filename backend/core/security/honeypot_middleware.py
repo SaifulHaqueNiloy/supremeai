@@ -1,5 +1,4 @@
 from __future__ import annotations
-from core.messaging.event_bus import ErrorContext
 
 import json
 import re
@@ -9,6 +8,7 @@ import uuid
 from fastapi.responses import JSONResponse
 from loguru import logger
 
+from core.messaging.event_bus import ErrorContext
 from core.messaging.event_bus import ErrorEvent
 
 

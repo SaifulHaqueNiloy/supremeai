@@ -1,6 +1,7 @@
-from core.messaging.event_bus import ErrorContext
 import asyncio
 import logging
+
+from core.messaging.event_bus import ErrorContext
 
 
 # Configure logger to output to terminal

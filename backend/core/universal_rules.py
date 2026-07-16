@@ -49,7 +49,7 @@ class UniversalRulesEngine:
             logger.error(f"⚠️ Failed to load rules from DB, falling back to defaults: {e}")
         finally:
             if conn:
-                try:
+                try:  # noqa
                     conn.close()
                 except Exception:  # noqa: BLE001
                     pass

@@ -6,6 +6,7 @@ import os
 import signal
 import sys
 
+
 if not os.getenv("ENV"):
     os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
 
@@ -15,6 +16,7 @@ from loguru import logger
 from core.app import app
 from core.config import settings
 from core.logging_config import setup_logging
+
 
 setup_logging()
 
