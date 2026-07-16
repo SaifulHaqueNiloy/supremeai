@@ -24,12 +24,10 @@ HEADERS = {
 }
 
 PACKAGE_MAP = {
-    "backend": ["Backend Tests", "backend-test", "backend_test", "🐍 Backend Tests"],
-    "studio": ["Studio Build", "studio-build", "studio_build", "🎨 Studio Build", "🎨 Studio Client Build"],
-    "mobile": ["Mobile Analysis", "mobile-analyze", "mobile_analyze", "📱 Mobile Analysis"],
-    "webchat": ["WebChat Build", "webchat-build", "webchat_build", "💬 WebChat Build", "💬 Web Chat Build"],
-    "vscode": ["VS Code Build", "vscode-build", "vscode_build", "🧩 VS Code Build", "🧩 VS Code Extension Build"],
-    "prompt": ["Prompt Eval", "prompt-eval", "prompt_eval", "🤖 LLM Prompt Evaluation"],
+    "backend": ["Backend (Test)", "Backend Tests", "Deploy Backend (Render)", "Deploy Backend (Cloud Run)", "Canary Deploy Backend (Cloud Run)"],
+    "frontend": ["Frontend Monorepo (Turbo)", "Deploy Admin Portal (Firebase)", "Deploy User Portal (Vercel)"],
+    "docker_build": ["Build Base Image"],
+    "dependencies": []
 }
 
 FAILED_CONCLUSIONS = {"failure", "cancelled", "timed_out"}

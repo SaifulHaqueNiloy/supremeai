@@ -60,15 +60,31 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      backend: ${{ steps.filter.outputs.backend == 'true' || github.run_attempt > 1 }}
-      docker_build: ${{ steps.filter.outputs.docker_build == 'true' || github.run_attempt > 1 }}
-      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.run_attempt > 1 }}
-      admin_needed: ${{ steps.filter.outputs.admin == 'true' || steps.filter.outputs.shared == 'true' || github.run_attempt > 1 }}
-      user_needed: ${{ steps.filter.outputs.user == 'true' || steps.filter.outputs.shared == 'true' || github.run_attempt > 1 }}
-      dependencies: ${{ steps.filter.outputs.dependencies == 'true' || github.run_attempt > 1 }}
+      backend: ${{ steps.filter.outputs.backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
+      docker_build: ${{ steps.filter.outputs.docker_build == 'true' || steps.detect.outputs.force_docker_build == 'true' || github.run_attempt > 1 }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
+      admin_needed: ${{ steps.filter.outputs.admin == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
+      user_needed: ${{ steps.filter.outputs.user == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
+      dependencies: ${{ steps.filter.outputs.dependencies == 'true' || steps.detect.outputs.force_dependencies == 'true' || github.run_attempt > 1 }}
       docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Detect previous failures
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python .github/scripts/detect-previous-failures.py
+
+          # Parse the base64 output
+          B64_JSON=$(cat $GITHUB_OUTPUT | grep force_flags_b64 | cut -d'=' -f2)
+          if [ ! -z "$B64_JSON" ]; then
+            JSON_STR=$(echo "$B64_JSON" | base64 --decode)
+            echo "force_backend=$(echo $JSON_STR | jq -r '.backend')" >> $GITHUB_OUTPUT
+            echo "force_frontend=$(echo $JSON_STR | jq -r '.frontend')" >> $GITHUB_OUTPUT
+            echo "force_docker_build=$(echo $JSON_STR | jq -r '.docker_build')" >> $GITHUB_OUTPUT
+            echo "force_dependencies=$(echo $JSON_STR | jq -r '.dependencies')" >> $GITHUB_OUTPUT
+          fi
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -295,8 +311,8 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: backend/Dockerfile.ci
+          context: ./backend
+          file: ./backend/Dockerfile.ci
           push: true
           tags: ghcr.io/${{ github.repository }}/backend-ci-base:latest
           cache-from: type=gha
