@@ -9,7 +9,7 @@ logger.remove()
 # Mock external dependencies that are not installed
 import sys
 import importlib.machinery
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 def create_mock_module(name, is_package=False):
     m = MagicMock()
@@ -17,6 +17,12 @@ def create_mock_module(name, is_package=False):
     if is_package:
         m.__path__ = []
     return m
+
+# বাংলা মন্তব্য: টেস্টে Supabase নেটওয়ার্ক রিকোয়েস্ট আটকাতে module import এর আগেই
+# SUPABASE_URL ও SUPABASE_KEY খালি করা হচ্ছে। SupabaseDB.__init__() এ শর্ত আছে:
+# "if self.url and self.key: create_client()" — ফলে url বা key না থাকলে create_client কল হবে না।
+os.environ["SUPABASE_URL"] = ""
+os.environ["SUPABASE_KEY"] = ""
 
 sys.modules["slowapi"] = create_mock_module("slowapi", is_package=True)
 sys.modules["slowapi.util"] = create_mock_module("slowapi.util")
@@ -66,6 +72,18 @@ os.environ.setdefault("OPENROUTER_API_KEY", "mock-key-value")
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["SUPABASE_DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["SUPABASE_DATABASE_URL_POOLER"] = "sqlite+aiosqlite:///:memory:"
+
+# বাংলা মন্তব্য: env var সেট হওয়ার পরে settings._cached_secrets ক্লিয়ার করা হচ্ছে।
+# এটা না করলে settings.supabase_url পুরানো ক্যাশড মান return করতে পারে,
+# যার ফলে create_client() রিয়াল Supabase URL-এ নেটওয়ার্ক রিকোয়েস্ট পাঠাবে।
+try:
+    from core.config import settings, secret_vault
+    settings._cached_secrets.clear()
+    secret_vault.invalidate_cache()
+except Exception:
+    pass
+
+
 
 
 # Mock Google Auth credentials and services globally during tests
@@ -234,13 +252,32 @@ async def setup_test_database():
 
     from database.session import engine
     from models.base import Base
-    import importlib
-    import pkgutil
-    import models
-
-    # Import all modules in the models package so they are registered with Base
-    for _, module_name, _ in pkgutil.iter_modules(models.__path__):
-        importlib.import_module(f"models.{module_name}")
+    
+    # Import all models explicitly to ensure they are registered with Base
+    import models.admin
+    import models.agent_session
+    import models.api_key
+    import models.byoc_payloads
+    import models.ci_report
+    import models.deployment_logs
+    import models.dynamic_agent
+    import models.error_remediation
+    import models.evolution
+    import models.execution_log
+    import models.execution_policy
+    import models.handoff_event
+    import models.integration
+    import models.local_model_handler
+    import models.morphic
+    import models.pending_tasks
+    import models.selector_healing_event
+    import models.sentinel
+    import models.shared_workspace
+    import models.system_config
+    import models.target_platform_credential
+    import models.transaction_ledger
+    import models.voice_interaction
+    import models.wallet
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -261,11 +298,19 @@ def clear_settings_cache():
     import os
     from core.config import settings
     from core.config import secret_vault
-
+    
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
-
+    
     # Many tests mutate os.environ without cleaning up
     # MUST set to "" instead of del, otherwise secret_vault will mock it with "mock_SUPREMEAI_API_TOKEN"
     os.environ["SUPREMEAI_API_TOKEN"] = ""
     yield
+
+
+@pytest.fixture(autouse=True)
+def mock_supabase():
+    from unittest.mock import patch, MagicMock
+    with patch("database.supabase_client.create_client") as mock_client:
+        mock_client.return_value = MagicMock()
+        yield mock_client
