@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
 from core.config import settings
 
@@ -25,7 +26,6 @@ def get_async_url(url: str) -> str:
 
 
 _async_url = get_async_url(DATABASE_URL)
-from sqlalchemy.pool import StaticPool
 
 engine_kwargs = {
     "echo": False,
