@@ -7,15 +7,18 @@ After cooldown, transitions to half-open state for recovery testing.
 """
 from __future__ import annotations
 
-import time
 import threading
-from collections.abc import Awaitable, Callable
+import time
+from collections.abc import Awaitable
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any
+from typing import TypeVar
 
 from loguru import logger
 
 from core.config import settings
+
 
 T = TypeVar("T")
 
@@ -193,13 +196,12 @@ class CircuitBreaker:
             self.success_count = 0
             self.last_failure_time = time.monotonic()
 
-            if self.failure_count >= self.failure_threshold:
-                if self.state != CircuitBreakerState.OPEN:
-                    logger.warning(
-                        f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
-                    )
-                    self.state = CircuitBreakerState.OPEN
-                    self._recovery_in_progress = False
+            if self.failure_count >= self.failure_threshold and self.state != CircuitBreakerState.OPEN:
+                logger.warning(
+                    f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
+                )
+                self.state = CircuitBreakerState.OPEN
+                self._recovery_in_progress = False
 
     def reset(self) -> None:
         """Manually reset the circuit breaker to CLOSED state.
@@ -235,8 +237,8 @@ class CircuitBreaker:
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         """Allow CircuitBreaker to be used as a decorator."""
-        import functools
         import asyncio
+        import functools
         if asyncio.iscoroutinefunction(func):
             @functools.wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:

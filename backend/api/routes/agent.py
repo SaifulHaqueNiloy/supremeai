@@ -9,11 +9,19 @@ Provides:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
+from pydantic import BaseModel
+from pydantic import Field
 
 from api.dependencies import verify_autonomous_agent_token
-from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
+
 
 router = APIRouter(prefix="/v1/agents", tags=["Autonomous Agents"])
 

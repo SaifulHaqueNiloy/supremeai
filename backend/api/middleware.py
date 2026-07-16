@@ -19,13 +19,16 @@ import random
 import time
 import uuid
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
-from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 
 class SupremeContextMiddleware(BaseHTTPMiddleware):
@@ -196,7 +199,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                         content=cached_data.get("body", {}),
                         headers={"X-Cache-Lookup": "HIT - Idempotency Lock"},
                     )
-            except Exception as e:
+            except Exception as e:  # noqa  # noqa
                 logger.warning(f"[Idempotency] Cache read failed — continuing: {e}")
 
         acquired = await acquire_idempotency_lock(idempotency_key, IDEMPOTENCY_TTL_SECONDS)
@@ -226,7 +229,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     body_str = body_bytes.decode("utf-8")
                     cache_data = json.dumps({"status_code": 200, "body": json.loads(body_str)})
                     await cache_response_and_release_lock(idempotency_key, cache_data, IDEMPOTENCY_TTL_SECONDS * 5)
-                except Exception as cache_err:
+                except Exception as cache_err:  # noqa  # noqa
                     logger.warning(f"[Idempotency] Response caching failed (non-blocking): {cache_err}")
                     await release_idempotency_lock(idempotency_key)
             else:

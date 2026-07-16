@@ -1,6 +1,7 @@
 import os
 import re
 
+
 def main():
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
@@ -13,7 +14,7 @@ def main():
         for file in files:
             if file.endswith('.py'):
                 filepath = os.path.join(root, file)
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, encoding='utf-8') as f:
                     content = f.read()
 
                 # Check if ErrorEvent is in the file

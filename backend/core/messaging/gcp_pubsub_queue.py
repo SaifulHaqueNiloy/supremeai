@@ -12,6 +12,7 @@ from core.messaging.event_bus import ErrorContext
 from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
 
+
 try:
     from google.cloud import pubsub_v1  # type: ignore[import-untyped]
 

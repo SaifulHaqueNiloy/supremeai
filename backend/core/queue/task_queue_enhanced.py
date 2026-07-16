@@ -6,6 +6,7 @@
 # CancelledError সবসময় re-raise।
 import asyncio
 import contextlib
+import functools
 import inspect
 import json
 import time
@@ -21,9 +22,6 @@ from typing import Any
 from loguru import logger
 
 from core.config import settings
-
-
-import functools
 
 
 # ── Data Models ────────────────────────────────────────────────────────────────

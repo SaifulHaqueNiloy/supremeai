@@ -11,9 +11,9 @@ from pydantic import BaseModel
 from pydantic import Field
 from sse_starlette.sse import EventSourceResponse
 
+from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.swarm_pubsub import swarm_streamer
 from engine.forge_compiler import ForgeCompiler
-from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
 
 logger = logging.getLogger(__name__)

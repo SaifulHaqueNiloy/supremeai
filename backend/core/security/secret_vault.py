@@ -1,5 +1,8 @@
 from __future__ import annotations
+
 from core.messaging.event_bus import ErrorContext
+
+
 """Enterprise Cloud Secret Vault (Infisical / Doppler).
 
 বাংলা: এন্টারপ্রাইজ ক্লাউড সিক্রেট ভল্ট — ইন-মেমরি ক্যাশে TTL-সহ, Fail-Closed।
@@ -13,10 +16,16 @@ import time  # noqa: E402
 
 from loguru import logger  # noqa: E402
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus  # noqa: E402
+from core.messaging.event_bus import ErrorEvent  # noqa: E402
+from core.messaging.event_bus import error_event_bus  # noqa: E402
+
 
 try:
-    from infisical_client import AuthenticationOptions, ClientSettings, GetSecretOptions, InfisicalClient, UniversalAuthMethod
+    from infisical_client import AuthenticationOptions
+    from infisical_client import ClientSettings
+    from infisical_client import GetSecretOptions
+    from infisical_client import InfisicalClient
+    from infisical_client import UniversalAuthMethod
 except ImportError:
     InfisicalClient = None  # type: ignore[assignment]
 
