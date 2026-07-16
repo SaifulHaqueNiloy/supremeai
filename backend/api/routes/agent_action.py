@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_current_user_token
-from core.orchestration.swarm_orchestrator import MorphicOrchestrator
+from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.security.security_vault import decrypt_token
 from database.session import get_db_session
 from models.integration import Integration
@@ -69,8 +69,8 @@ async def run_agent_action(
 
     # 4. Trigger Morphic Orchestrator
     try:
-        logger.info(f"Triggering MorphicOrchestrator for intent '{intent}'")
-        orchestrator = MorphicOrchestrator()
+        logger.info(f"Triggering SwarmOrchestrator for intent '{intent}'")
+        orchestrator = SwarmOrchestrator()
 
         # বাংলা মন্তব্য: রিকোয়েস্টে ডাবল সোয়ার্ম এক্সিকিউশন ও ওপারেশনাল কস্ট এড়াতে সরাসরি কাস্টম ওয়ার্কস্পেস দিয়ে রান করানো হচ্ছে।
         import uuid

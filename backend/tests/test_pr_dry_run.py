@@ -30,7 +30,7 @@ async def test_dry_run_pr(async_session):
 
         mock_pr_response = MagicMock()
         mock_pr_response.status_code = 201
-        mock_pr_response.json.return_value = {"html_url": "https://github.com/mock/pr/1"}
+        mock_pr_response.json.return_value = {"html_url": "https://github.com/mock/pr/1", "number": 1}
 
         mock_client.get.side_effect = [mock_repo_info, mock_ref_info]
         mock_client.post.side_effect = [mock_branch_res, mock_pr_response]
