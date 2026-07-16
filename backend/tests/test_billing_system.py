@@ -4,7 +4,7 @@ import os
 # Set mock environment variables for encryption key and stripe configuration before importing core modules
 # বাংলা মন্তব্য: রানিং টেস্টে ক্লাউড কানেকশন ড্রাইভার ফাস্ট-ফেইল আটকাতে মক এনক্রিপশন কী সেট করা হলো
 os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "4vW8yO_tWn8_bM6W_vW7LDw8qddv6QRw2wKKyJue7sE="
-os.environ["STRIPE_SECRET_KEY"] = "sk_test_key"
+os.environ["STRIPE_SECRET_KEY"] = "dummy_stripe_key"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
 
 from decimal import Decimal
@@ -119,7 +119,7 @@ def test_stripe_webhook_adds_credit(mock_db_session):
                 }
             },
         }
-        with patch("stripe.api_key", "sk_test_key"):
+        with patch("stripe.api_key", "dummy_stripe_key"):
             with patch("api.routes.billing_api.STRIPE_WEBHOOK_SECRET", "whsec_test"):
                 resp = client.post(
                     "/api/billing/webhook/stripe", json={"type": "payment_intent.succeeded"}, headers={"Stripe-Signature": "t=123,v1=abc"}
@@ -130,13 +130,27 @@ def test_stripe_webhook_adds_credit(mock_db_session):
 
 
 def test_sslcommerz_webhook_adds_credit(mock_db_session):
+    # বাংলা মন্তব্য: _verify_sslcommerz_transaction অ্যাসিঙ্ক ফাংশন তাই AsyncMock ব্যবহার করা হলো
+    # val_id পেলোডে অন্তর্ভুক্ত — API এর জন্য আবশ্যক
+    from unittest.mock import AsyncMock
+
     ssl_payload = {
         "status": "VALID",
         "amount": 1000.0,  # 1000 BDT * 0.0085 = $8.50
+        "val_id": "mock_val_id_12345",
         "value_a": "default_user_session",
     }
 
-    resp = client.post("/api/billing/webhook/sslcommerz", json=ssl_payload)
+    # _verify_sslcommerz_transaction মক করা: নেটওয়ার্ক ছাড়াই ভেরিফাই সিমুলেট
+    verified_response = {
+        "status": "VALID",
+        "val_id": "mock_val_id_12345",
+        "amount": "1000.00",
+        "value_a": "default_user_session",
+    }
+
+    with patch("api.routes.billing_api._verify_sslcommerz_transaction", new=AsyncMock(return_value=verified_response)):
+        resp = client.post("/api/billing/webhook/sslcommerz", json=ssl_payload)
     assert resp.status_code == 200
     assert resp.json()["status"] == "processed"
     assert mock_db_session._wallet.balance_usd == Decimal("13.500000")
