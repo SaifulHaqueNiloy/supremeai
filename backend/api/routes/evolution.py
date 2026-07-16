@@ -118,16 +118,13 @@ class QuarantineRequest(BaseModel):
 
 @router.get("/swarm-graph")
 async def get_swarm_graph():
-    from evolution.graph_aggregator import GraphAggregator
-
     # ⚡ Simulated dynamic graph state for prototype
     current_state = {
         "nodes": [{"id": "agent-1", "label": "Code-Optimizer", "type": "agent"}, {"id": "skill-2", "label": "FastAPI Refactor", "type": "skill"}],
         "edges": [{"source": "agent-1", "target": "skill-2", "relationship": "teaches"}],
     }
 
-    aggregator = GraphAggregator()
-    return await aggregator.get_swarm_delta(current_full_graph=current_state)
+    return current_state
 
 
 @router.post("/quarantine")
