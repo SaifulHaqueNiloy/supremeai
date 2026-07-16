@@ -48,7 +48,7 @@ services:
     name: supremeai-studio-client
     env: static
     buildCommand: "cd apps/studio-client && pnpm install && pnpm run build"
-    staticPublishPath: "./apps/studio-client/dist"
+    staticPublishPath: "./apps/studio-client/dist-user"
     autoDeploy: true
     routes:
       - type: rewrite
