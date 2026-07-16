@@ -35,7 +35,7 @@ const initialNodes = [
   },
 ];
 
-import { useToast } from '../../components/ui/Toast';
+import { useToast } from '../../../components/ui/Toast';
 
 const loadAutosavedFlow = () => {
   try {
@@ -52,10 +52,10 @@ const loadAutosavedFlow = () => {
 
 const EvolutionForgeCanvas = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  
+
   const [nodes, setNodes, onNodesChange] = useNodesState(() => loadAutosavedFlow()?.nodes || initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(() => loadAutosavedFlow()?.edges || []);
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isDebateOpen, setIsDebateOpen] = useState(false);
@@ -65,20 +65,20 @@ const EvolutionForgeCanvas = () => {
 
   useEffect(() => {
     const sse = new EventSource('/api/v1/swarm/stream');
-    
+
     sse.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
         if (payload.type === 'DEBATE_UPDATE') {
           setIsDebateOpen(true);
           const logData = payload.data;
-          
+
           let message = '';
           if (logData.state === 'PROPOSING') message = `Starting Debate Cycle ${logData.iteration || ''}`;
           if (logData.proposals_count) message = `Generated ${logData.proposals_count} proposals. Judge evaluating...`;
           if (logData.feedback) message = `Rethinking based on feedback: ${logData.feedback}`;
           if (logData.winning_agent) message = `Consensus reached by ${logData.winning_agent}`;
-          
+
           setDebateLogs(prev => [...prev, {
             agentName: 'ConsensusEngine',
             status: logData.state,
@@ -126,11 +126,11 @@ const EvolutionForgeCanvas = () => {
         id: `agent_${Date.now()}`,
         type,
         position,
-        data: { 
-          label: nodeData.label || 'New Node', 
-          role: nodeData.role || 'Unknown', 
+        data: {
+          label: nodeData.label || 'New Node',
+          role: nodeData.role || 'Unknown',
           model: nodeData.model || 'Unknown',
-          prompt: '' 
+          prompt: ''
         },
       };
 
@@ -169,7 +169,7 @@ const EvolutionForgeCanvas = () => {
 
       const response = await fetch('/api/v1/swarm/forge', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -199,10 +199,10 @@ const EvolutionForgeCanvas = () => {
 
       // We use a dummy flow_id for now, in a real app this would be the saved swarm ID
       const flowId = `flow_${Date.now()}`;
-      
+
       const response = await fetch(`/api/v1/swarm/forge/${flowId}/execute`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -227,10 +227,10 @@ const EvolutionForgeCanvas = () => {
     <div className="flex h-[calc(100vh-64px)] w-full bg-background relative" ref={reactFlowWrapper}>
       <ForgeSidebar />
       <DebateOverlay isOpen={isDebateOpen} logs={debateLogs} />
-      
+
       <div className="flex-grow h-full relative">
         <div className="absolute top-4 right-4 z-10 flex gap-3">
-          <button 
+          <button
             onClick={handleExecuteSwarm}
             disabled={isExecuting || isSaving}
             className={`
@@ -241,8 +241,8 @@ const EvolutionForgeCanvas = () => {
           >
             {isExecuting ? 'Executing...' : '⚡ Execute Flow'}
           </button>
-          
-          <button 
+
+          <button
             onClick={handleSaveSwarm}
             disabled={isSaving || isExecuting}
             className={`
@@ -268,9 +268,9 @@ const EvolutionForgeCanvas = () => {
         >
           <Background color="var(--color-border-subtle)" gap={16} />
           <Controls className="bg-card-bg border border-border-subtle fill-text-primary" />
-          <MiniMap 
-            nodeColor="var(--color-brand-primary)" 
-            maskColor="var(--color-bg-surface)" 
+          <MiniMap
+            nodeColor="var(--color-brand-primary)"
+            maskColor="var(--color-bg-surface)"
             className="bg-background border border-border-subtle"
           />
         </ReactFlow>
