@@ -239,7 +239,7 @@ import pytest_asyncio
 pytest_plugins = ["pytest_asyncio"]
 
 
-@pytest_asyncio.fixture(autouse=True, scope="function")  # বাংলা: session scope নয়, function scope ব্যবহার নির্ভরযোগ্য DB isolation নিশ্চিত করে
+@pytest_asyncio.fixture(autouse=True, scope="session")  # বাংলা: টেস্ট রান টাইম কমাতে session scope ব্যবহার করা হচ্ছে
 async def setup_test_database():
     from sqlalchemy.ext.compiler import compiles
     from sqlalchemy.dialects.postgresql import JSONB
@@ -335,3 +335,10 @@ def mock_supabase():
         os.environ["SUPABASE_URL"] = old_url
     if old_key:
         os.environ["SUPABASE_KEY"] = old_key
+
+@pytest.fixture(autouse=True)
+def mock_network():
+    # সব ধরণের আউটগোয়িং নেটওয়ার্ক কল ব্লক করুন
+    import respx
+    with respx.mock(base_url="https://mock.supabase.co", assert_all_mocked=False) as respx_mock:
+        yield respx_mock
