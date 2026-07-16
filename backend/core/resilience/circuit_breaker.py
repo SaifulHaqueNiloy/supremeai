@@ -233,6 +233,21 @@ class CircuitBreaker:
                 f'circuit_breaker_successes_total{{name="{self.name}"}}': self.success_count,
             }
 
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        """Allow CircuitBreaker to be used as a decorator."""
+        import functools
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                return await self.acall(func, *args, **kwargs)
+            return async_wrapper
+        else:
+            @functools.wraps(func)
+            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+                return self.call(func, *args, **kwargs)
+            return sync_wrapper
+
     def allow_request(self) -> bool:
         """Check if request is allowed through the breaker.
 
