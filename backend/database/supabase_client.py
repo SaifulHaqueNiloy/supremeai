@@ -1,7 +1,8 @@
 import functools
 import os
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import psycopg2
 from loguru import logger
@@ -9,6 +10,7 @@ from supabase import Client
 from supabase import create_client
 
 from core.config import settings
+
 
 def _supabase_retry_decorator(func: Callable) -> Callable:
     """Decorator to retry Supabase operations with exponential backoff and consolidated logging."""
@@ -35,6 +37,7 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
                     if func.__name__.startswith("is_"):
                         return False
                     return None
+        return None
     return wrapper
 
 def _apply_retries_to_public_methods(cls):

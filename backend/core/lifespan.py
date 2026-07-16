@@ -1,4 +1,6 @@
 from core.messaging.event_bus import ErrorContext
+
+
 """This module serves as the central FastAPI application lifespan manager for the SupremeAI project, orchestrating the robust startup and graceful shutdown of all critical backend infrastructure. It handles the initialization of essential services such as database connection pools, Redis caches, global HTTP clients, OpenTelemetry tracing, the core AI Orchestrator, and various background agents, ensuring the application is fully prepared to serve requests. The module is designed with defensive programming principles, allowing the application to start in a degraded mode if certain non-critical services fail to initialize, thereby enhancing operational stability and resilience in a highly scalable AI ecosystem.
 
 Key Components:
@@ -270,8 +272,8 @@ async def app_lifespan(app):
     maintenance_pipeline.start_monitoring()
 
     # Start the Sentinel Agent
-    from core.sentinel_agent import sentinel
     from core.cache.multi_layer_cache import start_swarm_cache_invalidator
+    from core.sentinel_agent import sentinel
 
     app.state.sentinel_task = asyncio.create_task(sentinel.run_periodic_loop())
     app.state.swarm_cache_task = asyncio.create_task(start_swarm_cache_invalidator())
@@ -308,7 +310,7 @@ async def app_lifespan(app):
             sentinel_task.cancel()
             try:
                 await asyncio.wait_for(sentinel_task, timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("Sentinel task did not stop gracefully within timeout")
             except asyncio.CancelledError:
                 pass
@@ -324,7 +326,7 @@ async def app_lifespan(app):
             try:
                 await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)
                 logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("⚠️ Background tasks did not finish within 10s shutdown window.")
             except asyncio.CancelledError:
                 pass

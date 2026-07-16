@@ -1,15 +1,17 @@
-"""Authentication Middleware — JWT Bearer token validation with fail-closed behavior.
+"""Authentication Middleware — JWT Auth token validation with fail-closed behavior.
 
 বাংলা: অথেনটিকেশন মিডলওয়্যার — JWT বিয়ারার টোকেন ভ্যালিডেশন, Fail-Closed।
 """
 from __future__ import annotations
 
-import json
 import hmac
-from collections.abc import Awaitable, Callable
+import json
+from collections.abc import Awaitable
+from collections.abc import Callable
 from typing import Any
 
-from jose import JWTError, jwt
+from jose import JWTError
+from jose import jwt
 from jose.exceptions import ExpiredSignatureError
 from loguru import logger
 
@@ -25,7 +27,7 @@ Headers = list[tuple[bytes, bytes]]
 
 
 def _get_bearer_token(headers: Headers) -> str | None:
-    """Extract a Bearer token from the ASGI headers list.
+    """Extract an Auth token from the ASGI headers list.
 
     বাংলা: ASGI হেডার থেকে Bearer টোকেন এক্সট্র্যাক্ট করে।
     """
@@ -133,7 +135,7 @@ class AuthMiddleware:
         token = _get_bearer_token(headers)
 
         if not token:
-            logger.warning(f"Missing Bearer token for path: {path}")
+            logger.warning(f"Missing Auth token for path: {path}")
             await _send_json_response(
                 send,
                 status_code=401,

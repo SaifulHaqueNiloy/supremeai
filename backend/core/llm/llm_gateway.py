@@ -1,4 +1,3 @@
-from core.messaging.event_bus import ErrorContext
 # backend/core/llm_gateway.py
 # বাংলা মন্তব্য: সম্পূর্ণ রি-ফ্যাক্টর — os.environ secrets injection সম্পূর্ণ বন্ধ।
 # litellm per-call api_key passing → secrets process env-এ leak হয় না।
@@ -6,7 +5,6 @@ from core.messaging.event_bus import ErrorContext
 # Semantic cache, fallback chain, cost guard সব অক্ষুণ্ণ।
 # CancelledError সবসময় re-raise।
 # import litellm lazy করা হলো — cold start কমাতে।
-
 import json
 import os
 from collections.abc import AsyncGenerator
@@ -17,6 +15,7 @@ from loguru import logger
 from core.config import settings
 from core.cost_guard import CostGuard
 from core.health.self_healer import SelfHealerService
+from core.messaging.event_bus import ErrorContext
 from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
 from core.prompt_handler import normalize_prompt

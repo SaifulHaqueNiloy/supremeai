@@ -57,7 +57,7 @@ _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
 _compiled_patterns: list[re.Pattern] = []
 
 def _get_compiled_patterns() -> list[re.Pattern]:
-    global _compiled_patterns
+    global _compiled_patterns  # noqa
     if not _compiled_patterns:
         all_patterns = []
         for patterns in _LOCAL_BLOCK_PATTERNS.values():
@@ -66,7 +66,7 @@ def _get_compiled_patterns() -> list[re.Pattern]:
         all_patterns.extend(settings.prompt_blocked_patterns)
 
         for p in all_patterns:
-            try:
+            try:  # noqa
                 # Escape pattern to prevent regex injection, then compile case-insensitive
                 _compiled_patterns.append(re.compile(re.escape(p), re.IGNORECASE))
             except Exception:  # noqa: BLE001

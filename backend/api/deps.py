@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
 from loguru import logger
 
 from api.errors import raise_unauthorized
@@ -36,6 +38,7 @@ async def get_current_user_token(request: Request) -> dict[str, Any]:
         return {"sub": "admin@supremeai.com", "role": "admin"}
 
     raise_unauthorized("Missing or invalid authentication token.")
+    return None
 
 
 def get_tenant_db(

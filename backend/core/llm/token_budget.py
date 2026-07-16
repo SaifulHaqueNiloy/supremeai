@@ -1,5 +1,8 @@
 from __future__ import annotations
+
 from core.messaging.event_bus import ErrorContext
+
+
 """
 token_budget.py
 ===============
@@ -25,7 +28,8 @@ from typing import Any  # noqa: E402
 
 from loguru import logger  # noqa: E402
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus  # noqa: E402
+from core.messaging.event_bus import ErrorEvent  # noqa: E402
+from core.messaging.event_bus import error_event_bus  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,3 @@
-from core.messaging.event_bus import ErrorContext
 import asyncio
 
 from fastapi import APIRouter
@@ -6,6 +5,8 @@ from fastapi import Query
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
 from loguru import logger
+
+from core.messaging.event_bus import ErrorContext
 
 
 router = APIRouter()
