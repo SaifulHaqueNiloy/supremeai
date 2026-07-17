@@ -12,8 +12,13 @@ except ImportError:  # pragma: no cover
 def scan_keys(client, pattern: str) -> list[str]:
     try:
         return list(client.scan_iter(match=pattern, count=1000))
-    except Exception:
-        return client.keys(pattern)
+    except Exception as scan_err:
+        print(f"WARNING: scan_iter failed: {scan_err}. Falling back to KEYS pattern scan.")
+        try:
+            return client.keys(pattern)
+        except Exception as keys_err:
+            print(f"ERROR: Fallback keys scan failed: {keys_err}")
+            return []
 
 
 def clear_stale_cache() -> int:
