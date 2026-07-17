@@ -1,24 +1,32 @@
 # backend/skills/core_knowledge_qa.py
-import os
 import logging
-from typing import Dict, Any, List
+import os
+from typing import Any
+
 from google import genai
 from google.genai import types
 
+
 logger = logging.getLogger("supremeai.skills.knowledge_qa")
 
-def _mock_vector_search(query: str, namespace: str) -> List[Dict[str, Any]]:
+
+def _mock_vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
     """Supabase Vector RPC এর মক রিট্রিভাল লেয়ার।"""
     database_mock = {
         "public_sops": [
-            {"id": "doc_01", "content": "SupremeAI office timing is from 9:00 AM to 6:00 PM, Sunday to Thursday.", "source": "Employee Handbook 2026 v1"},
-            {"id": "doc_02", "content": "Remote work is permitted on Wednesdays with manager approval.", "source": "Remote Work Policy v2"}
+            {
+                "id": "doc_01",
+                "content": "SupremeAI office timing is from 9:00 AM to 6:00 PM, Sunday to Thursday.",
+                "source": "Employee Handbook 2026 v1",
+            },
+            {"id": "doc_02", "content": "Remote work is permitted on Wednesdays with manager approval.", "source": "Remote Work Policy v2"},
         ],
         "company_financials": [
             {"id": "fin_99", "content": "SupremeAI Q1 2026 net profit margin increased by 14.2%.", "source": "Q1 Board Memo Private"}
-        ]
+        ],
     }
     return database_mock.get(namespace, [])
+
 
 def execute_tool(payload: dict) -> dict:
     """Strict Supreme Tool Contract for Permission-aware RAG with Citations"""
@@ -29,11 +37,7 @@ def execute_tool(payload: dict) -> dict:
         if not query:
             return {"success": False, "error": "Query content cannot be empty."}
 
-        role_permissions = {
-            "Admin": ["company_financials", "public_sops"],
-            "Manager": ["public_sops"],
-            "Standard_User": ["public_sops"]
-        }
+        role_permissions = {"Admin": ["company_financials", "public_sops"], "Manager": ["public_sops"], "Standard_User": ["public_sops"]}
 
         allowed_namespaces = role_permissions.get(user_role, ["public_sops"])
 
@@ -43,10 +47,7 @@ def execute_tool(payload: dict) -> dict:
             retrieved_chunks.extend(chunks)
 
         if not retrieved_chunks:
-            return {
-                "success": True,
-                "result": {"answer": "I could not find any relevant documents you have permission to access.", "citations": []}
-            }
+            return {"success": True, "result": {"answer": "I could not find any relevant documents you have permission to access.", "citations": []}}
 
         context_str = ""
         citations = []
@@ -80,16 +81,10 @@ def execute_tool(payload: dict) -> dict:
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 temperature=0.2,
-            )
+            ),
         )
 
-        return {
-            "success": True,
-            "result": {
-                "answer": response.text.strip(),
-                "citations": citations
-            }
-        }
+        return {"success": True, "result": {"answer": response.text.strip(), "citations": citations}}
 
     except Exception as e:
         logger.error(f"Failed inside core_knowledge_qa skill loop: {str(e)}")

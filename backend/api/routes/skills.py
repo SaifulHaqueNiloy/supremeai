@@ -2,8 +2,11 @@
 import json
 import logging
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any
+from typing import Any
+
+from fastapi import APIRouter
+from fastapi import HTTPException
+
 
 logger = logging.getLogger("supremeai.api.skills")
 router = APIRouter(prefix="/skills", tags=["Skill Catalog Infrastructure"])
@@ -11,7 +14,8 @@ router = APIRouter(prefix="/skills", tags=["Skill Catalog Infrastructure"])
 # ম্যানিফেস্ট ডিরেক্টরির পাথ ডিফাইন (পাথ ট্রাভার্সাল প্রোটেকশন সহ)
 MANIFEST_DIR = Path("backend/skills/manifests").resolve()
 
-@router.get("/catalog", response_model=List[Dict[str, Any]])
+
+@router.get("/catalog", response_model=list[dict[str, Any]])
 async def get_active_skill_catalog():
     """
     ফাইল সিস্টেমের manifests/ ফোল্ডার স্ক্যান করে ড্যাশবোর্ডের জন্য
@@ -22,7 +26,7 @@ async def get_active_skill_catalog():
         raise HTTPException(status_code=500, detail="Skill catalog repository is unavailable.")
 
     catalog = []
-    
+
     # ডিরেক্টরির সমস্ত .json ম্যানিফেস্ট ফাইল রিড করা হচ্ছে
     for json_file in MANIFEST_DIR.glob("*.json"):
         try:
@@ -30,10 +34,10 @@ async def get_active_skill_catalog():
             if not json_file.resolve().is_relative_to(MANIFEST_DIR):
                 logger.warning(f"Path traversal attempt blocked during catalog scan: {json_file}")
                 continue
-                
+
             manifest_data = json.loads(json_file.read_text(encoding="utf-8"))
             catalog.append(manifest_data)
-            
+
         except json.JSONDecodeError as jde:
             logger.error(f"Malformed JSON schema detected in manifest {json_file.name}: {str(jde)}")
             continue

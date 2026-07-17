@@ -58,7 +58,6 @@ optional_routers: list[tuple[str, str]] = [
     # বাংলা মন্তব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
     ("api.routes.knowledge", ""),
     ("api.routes.dock_actions", "/api"),
-
     ("api.routes.websocket_voice", ""),
     ("tools.collaborative_editor", "/api/v1"),
     ("tools.image_to_code", ""),
