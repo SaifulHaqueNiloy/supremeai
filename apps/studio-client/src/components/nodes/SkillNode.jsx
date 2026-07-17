@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 
 export const SkillNode = ({ data }) => {
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.5 }} 
-      animate={{ opacity: 1, scale: 1 }} 
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
       className="p-3 rounded-full bg-slate-800 border border-orange-500 flex items-center gap-2 shadow-[0_0_10px_rgba(249,115,22,0.3)]"
     >

@@ -15,15 +15,15 @@ graph TD
     API -->|Load Dynamic Skills| SkillLoader[Skill Loader]
     API -->|Process Model Route| Router[Model Router]
     API -->|Observability| Telemetry[OpenTelemetry + Prometheus]
-    
+
     Router -->|Tier 1: Claude/GPT/Gemini| OpenRouter[OpenRouter API]
     Router -->|Tier 5: Local fallback| Ollama[(Local Ollama)]
     Router -->|CoT Reasoning| CoT[CoT Reasoner]
-    
+
     API -->|Store Settings & Audit| AdminDB[(SQLite / Supabase)]
     API -->|Context Optimization| Context[Context Orchestrator]
     API -->|Hallucination Guard| Guard[6-Layer Defense]
-    
+
     SkillLoader -->|Load Skills| DynamicSkills[skills/dynamic/]
 ```
 

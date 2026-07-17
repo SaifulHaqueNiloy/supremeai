@@ -75,8 +75,8 @@ export function UserManager({
       <h4 className="text-xs font-bold text-slate-400 mb-4 tracking-wider uppercase font-mono">Administrative User Registry</h4>
       <div className="flex flex-col gap-3">
         {Array.isArray(adminUsers) && adminUsers.map(user => {
-          const perms = Array.isArray(user.permissions) 
-            ? user.permissions 
+          const perms = Array.isArray(user.permissions)
+            ? user.permissions
             : typeof user.permissions === 'string'
               ? user.permissions.split(',').map((p: string) => p.trim())
               : [];
@@ -96,7 +96,7 @@ export function UserManager({
                     {user.role}
                   </span>
                 </div>
-                
+
                 {/* Permission Badges */}
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {perms.map((perm: string, idx: number) => (
@@ -107,7 +107,7 @@ export function UserManager({
                   {perms.length === 0 && <span className="text-[10px] text-slate-400 italic font-mono">No special permissions assigned</span>}
                 </div>
               </div>
-              
+
               <button
                 onClick={() => handleDeleteUser(user.username)}
                 className="self-end md:self-auto bg-red-950/30 hover:bg-red-900/40 text-red-400 border border-red-900/30 hover:border-red-900/60 px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase font-mono tracking-wider"

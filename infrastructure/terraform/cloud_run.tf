@@ -72,5 +72,3 @@ resource "google_cloud_run_service" "api" {
     latest_revision = true
   }
 }
-
-

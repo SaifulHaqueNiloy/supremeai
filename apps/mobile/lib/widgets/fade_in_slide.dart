@@ -29,11 +29,11 @@ class _FadeInSlideState extends State<FadeInSlide> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration ?? DesignTokens.motionDurationNormal);
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: DesignTokens.motionEasingStandard),
     );
-    
+
     _slideAnimation = Tween<Offset>(begin: widget.slideOffset, end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: DesignTokens.motionEasingBounce),
     );

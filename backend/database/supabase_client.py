@@ -14,9 +14,17 @@ from core.config import settings
 
 def _supabase_retry_decorator(func: Callable) -> Callable:
     """Decorator to retry Supabase operations with exponential backoff and consolidated logging."""
+
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        if not self.client and func.__name__ not in ("__init__", "_derive_supabase_url", "bootstrap_schema", "get_bootstrap_statements", "_is_schema_cache_error", "_execute_response_with_retry"):
+        if not self.client and func.__name__ not in (
+            "__init__",
+            "_derive_supabase_url",
+            "bootstrap_schema",
+            "get_bootstrap_statements",
+            "_is_schema_cache_error",
+            "_execute_response_with_retry",
+        ):
             return None if func.__name__.startswith("get_") or func.__name__.startswith("is_") else None
 
         max_retries = 3
@@ -26,7 +34,7 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
             except Exception as e:  # noqa: BLE001
                 # Handle schema cache error via existing logic if possible, or just retry
                 if attempt < max_retries - 1:
-                    sleep_time = 2 ** attempt
+                    sleep_time = 2**attempt
                     logger.warning(f"Supabase operation '{func.__name__}' failed: {e}. Retrying in {sleep_time}s...")
                     time.sleep(sleep_time)
                 else:
@@ -38,13 +46,16 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
                         return False
                     return None
         return None
+
     return wrapper
+
 
 def _apply_retries_to_public_methods(cls):
     for attr_name, attr_value in vars(cls).items():
         if callable(attr_value) and not attr_name.startswith("_") and attr_name not in ("get_bootstrap_statements", "bootstrap_schema"):
             setattr(cls, attr_name, _supabase_retry_decorator(attr_value))
     return cls
+
 
 @_apply_retries_to_public_methods
 class SupabaseDB:
@@ -755,7 +766,6 @@ class SupabaseDB:
         except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
             return []
-
 
     # বাংলা মন্তব্য: 'a' দিয়ে শুরু হওয়া মেথডগুলোকে থ্রেডপুলে রান করানোর জন্য ডায়নামিক এসিঙ্ক প্রক্সি মেথড।
     # এটি ইভেন্ট লুপকে ব্লক হওয়া থেকে বাঁচাবে।

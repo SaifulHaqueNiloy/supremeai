@@ -57,14 +57,14 @@ class _HoldToKillButtonState extends State<HoldToKillButton>
         _isHolding = false;
       });
       // বাটন ছেড়ে দিলে দ্রুত আগের অবস্থায় ফিরে যাবে
-      _controller.reverse(); 
+      _controller.reverse();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     // Note: Use the exact generated property names from your DesignTokens
-    final dangerColor = DesignTokens.brandDangerDark; 
+    final dangerColor = DesignTokens.brandDangerDark;
 
     return Listener(
       onPointerDown: _handlePointerDown,

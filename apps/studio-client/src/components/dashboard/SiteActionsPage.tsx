@@ -42,7 +42,7 @@ export function SiteActionsPage() {
   const [draft, setDraft] = useState<DraftAction>(EMPTY_DRAFT);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  
+
   // Test Selector Preview Modal
   const [testModal, setTestModal] = useState<{
     show: boolean;
@@ -81,10 +81,10 @@ export function SiteActionsPage() {
     if (!draft.site_name.trim() || !draft.url_pattern.trim() || !draft.selector.trim() || saving) return;
     setSaving(true);
     setError('');
-    
+
     // Clean up draft payload
     const { fallback_input, ...payload } = draft;
-    
+
     try {
       if (editingId != null) {
         await apiClient.put(`/api/admin/site-actions/${editingId}`, payload);
@@ -124,21 +124,21 @@ export function SiteActionsPage() {
         action_id: a.id
       });
       if (res.found && res.screenshot_base64) {
-         setTestModal({ 
-            show: true, 
-            loading: false, 
-            selectorTested: a.selector, 
-            screenshotUrl: `data:image/jpeg;base64,${res.screenshot_base64}` 
+         setTestModal({
+            show: true,
+            loading: false,
+            selectorTested: a.selector,
+            screenshotUrl: `data:image/jpeg;base64,${res.screenshot_base64}`
          });
       } else {
          setTestModal({ show: true, loading: false, selectorTested: a.selector, error: "Selector not found on live page." });
       }
     } catch (err) {
-      setTestModal({ 
-        show: true, 
-        loading: false, 
-        selectorTested: a.selector, 
-        error: err instanceof Error ? err.message : "Test execution failed." 
+      setTestModal({
+        show: true,
+        loading: false,
+        selectorTested: a.selector,
+        error: err instanceof Error ? err.message : "Test execution failed."
       });
     }
   };
@@ -153,7 +153,7 @@ export function SiteActionsPage() {
        setField('fallback_input', '');
     }
   };
-  
+
   const removeFallback = (idx: number) => {
     const newArr = [...draft.fallback_selectors];
     newArr.splice(idx, 1);
@@ -183,7 +183,7 @@ export function SiteActionsPage() {
       {/* Editor Form */}
       <div className="rounded-xl border border-gray-800 bg-[#1e1e1e] p-5 mb-8 shadow-xl">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">{editingId ? 'Edit Mapping Rule' : 'New Mapping Rule'}</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <input
             value={draft.site_name}
@@ -224,7 +224,7 @@ export function SiteActionsPage() {
             </select>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
            <div>
              <input
@@ -234,7 +234,7 @@ export function SiteActionsPage() {
                 className="w-full rounded-lg bg-black/40 border border-gray-700 px-3 py-2 text-sm font-mono text-white placeholder-slate-500 outline-none focus:border-blue-500/50"
               />
            </div>
-           
+
            {/* Tags Input */}
            <div className="flex items-center flex-wrap gap-2 p-2 rounded-lg bg-black/40 border border-gray-700 min-h-[42px]">
               {draft.fallback_selectors.map((sel, i) => (
@@ -243,7 +243,7 @@ export function SiteActionsPage() {
                    <button onClick={() => removeFallback(i)} className="text-gray-500 hover:text-red-400"><X size={10}/></button>
                  </span>
               ))}
-              <input 
+              <input
                  value={draft.fallback_input}
                  onChange={(e) => setField('fallback_input', e.target.value)}
                  onKeyDown={handleAddFallback}
@@ -403,9 +403,9 @@ export function SiteActionsPage() {
                          <Check size={16} /> Selector Hit Registered
                        </p>
                        <div className="border border-gray-700 rounded-lg overflow-hidden bg-black shadow-inner flex-1 relative">
-                          <img 
-                            src={testModal.screenshotUrl} 
-                            alt="DOM Preview" 
+                          <img
+                            src={testModal.screenshotUrl}
+                            alt="DOM Preview"
                             className="w-full h-full object-contain"
                           />
                           {/* The backend actually draws the red box in the screenshot base64, so we just display it */}

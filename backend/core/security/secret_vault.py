@@ -76,9 +76,7 @@ class ProductionSecretVault:
             if self.client_id and self.client_secret:
                 self.client = InfisicalClient(
                     ClientSettings(
-                        auth=AuthenticationOptions(
-                            universal_auth=UniversalAuthMethod(client_id=self.client_id, client_secret=self.client_secret)
-                        )
+                        auth=AuthenticationOptions(universal_auth=UniversalAuthMethod(client_id=self.client_id, client_secret=self.client_secret))
                     )
                 )
                 logger.info("Production Secret Vault hooked into Infisical via Machine Identity")
@@ -127,7 +125,7 @@ class ProductionSecretVault:
                     return secret_value
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
-                        sleep_time = 2 ** attempt
+                        sleep_time = 2**attempt
                         logger.warning(f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}")
                         time.sleep(sleep_time)
                     else:
@@ -139,8 +137,9 @@ class ProductionSecretVault:
                     module="secret_vault",
                     error_type="VAULT_FETCH_TIMEOUT",
                     message=f"Failed to fetch {secret_id} from Infisical after retries: {exc}",
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
-                    context={"secret_id": secret_id}
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"secret_id": secret_id},
                 )
             )
             return self._fallback_to_env(secret_id, default)
@@ -151,8 +150,9 @@ class ProductionSecretVault:
                     module="secret_vault",
                     error_type="VAULT_FETCH_ERROR",
                     message=f"Unexpected error fetching {secret_id}: {exc}",
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
-                    context={"secret_id": secret_id}
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"secret_id": secret_id},
                 )
             )
             return self._fallback_to_env(secret_id, default)
@@ -168,9 +168,7 @@ class ProductionSecretVault:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
                 env_fallback = f"mock_{secret_id}"
             else:
-                raise RuntimeError(
-                    f"Secret '{secret_id}' not found in Infisical and no env fallback provided! Fail-closed triggered."
-                )
+                raise RuntimeError(f"Secret '{secret_id}' not found in Infisical and no env fallback provided! Fail-closed triggered.")
         self._cache[secret_id] = _CacheEntry(env_fallback)
         return env_fallback
 

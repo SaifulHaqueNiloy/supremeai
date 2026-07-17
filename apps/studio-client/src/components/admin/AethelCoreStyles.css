@@ -1,5 +1,5 @@
-/* 
-  Aethel Core - Custom Futuristic CSS Styles 
+/*
+  Aethel Core - Custom Futuristic CSS Styles
   বাংলা মন্তব্য: একদম অরিজিনাল সাই-ফাই মুভির মতো প্রিমিয়াম গ্লাসমরফিজম ও অ্যানিমেশন।
 */
 
@@ -11,7 +11,7 @@
   backdrop-filter: blur(24px) saturate(150%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
   border: 1px solid rgba(0, 243, 255, 0.15) !important;
-  box-shadow: 
+  box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.5),
     inset 0 0 20px rgba(0, 243, 255, 0.05),
     0 0 15px rgba(0, 243, 255, 0.2) !important;
@@ -116,7 +116,7 @@
    ═══════════════════════════════════════════════════════ */
 .hex-grid-bg {
   background-color: #030712;
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
   background-size: 40px 40px;

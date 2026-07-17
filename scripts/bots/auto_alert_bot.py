@@ -77,20 +77,20 @@ def check_budget_alerts() -> bool:
         import sys
         sys.path.append('/app/scripts/orchestrator')
         from auto_budget_guardian import get_tracker
-        
+
         tracker = get_tracker()
         status = tracker.get_status()
-        
+
         alerts_sent = False
-        
+
         for provider_name, provider_status in status["providers"].items():
             # Check each metric against threshold
             rpm_usage = provider_status["rpm_used"] / provider_status["rpm_limit"] if provider_status["rpm_limit"] > 0 else 0
             tpm_usage = provider_status["tpm_used"] / provider_status["tpm_limit"] if provider_status["tpm_limit"] > 0 else 0
             rpd_usage = provider_status["rpd_used"] / provider_status["rpd_limit"] if provider_status["rpd_limit"] > 0 else 0
-            
+
             max_usage = max(rpm_usage, tpm_usage, rpd_usage)
-            
+
             if max_usage >= BUDGET_ALERT_THRESHOLD:
                 alert_msg = (
                     f"🚨 **Budget Alert** for {provider_name.upper()}\n"
@@ -102,10 +102,10 @@ def check_budget_alerts() -> bool:
                     f"• RPD: {provider_status['rpd_used']}/{provider_status['rpd_limit']} "
                     f"({rpd_usage*100:.1f}%)"
                 )
-                
+
                 if send_alert(alert_msg, f"Budget Alert: {provider_name}", "error"):
                     alerts_sent = True
-        
+
         return alerts_sent
     except Exception as e:
         logger.error(f"Error checking budget alerts: {e}")
@@ -115,7 +115,7 @@ def check_system_health() -> bool:
     """Check system health via HTTP endpoint."""
     if not SYSTEM_HEALTH_CHECK_URL:
         return False
-    
+
     try:
         response = requests.get(SYSTEM_HEALTH_CHECK_URL, timeout=10)
         if response.status_code == 200:
@@ -147,7 +147,7 @@ def check_log_errors() -> bool:
     # In a real implementation, you would:
     # 1. Query your logging backend for recent ERROR-level logs
     # 2. If any found, send a summary alert
-    
+
     # Placeholder implementation
     return False
 
@@ -161,7 +161,7 @@ def send_startup_notification() -> bool:
         f"Discord alerts: {'✅ Enabled' if DISCORD_WEBHOOK_URL else '❌ Disabled'}\n"
         f"Slack alerts: {'✅ Enabled' if SLACK_WEBHOOK_URL else '❌ Disabled'}"
     )
-    
+
     return send_alert(message, "Alert Bot Started", "info")
 
 def send_shutdown_notification() -> bool:
@@ -178,39 +178,39 @@ def main() -> int:
     print(f"   • Discord alerts: {'✅ Enabled' if DISCORD_WEBHOOK_URL else '❌ Disabled'}")
     print(f"   • Slack alerts: {'✅ Enabled' if SLACK_WEBHOOK_URL else '❌ Disabled'}")
     print(f"   • System health check: {'✅ Enabled' if SYSTEM_HEALTH_CHECK_URL else '❌ Disabled'}")
-    
+
     # Send startup notification
     if ALERTS_ENABLED:
         send_startup_notification()
-    
+
     try:
         while True:
             print(f"🔍 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Checking for alerts...")
-            
+
             alerts_triggered = False
-            
+
             # Check budget alerts
             if check_budget_alerts():
                 alerts_triggered = True
                 print("   💰 Budget alerts processed")
-            
+
             # Check system health
             if check_system_health():
                 alerts_triggered = True
                 print("   🏥 System health alerts processed")
-            
+
             # Check for log errors (if implemented)
             # if check_log_errors():
             #     alerts_triggered = True
             #     print("   📝 Log error alerts processed")
-            
+
             if not alerts_triggered:
                 print("   ✅ No alerts triggered")
-            
+
             # Wait for next check
             print(f"😴 Sleeping for {CHECK_INTERVAL} seconds...")
             time.sleep(CHECK_INTERVAL)
-            
+
     except KeyboardInterrupt:
         print("\n⚠️  Received interrupt signal")
     except Exception as e:
@@ -222,7 +222,7 @@ def main() -> int:
         # Send shutdown notification
         if ALERTS_ENABLED:
             send_shutdown_notification()
-    
+
     print("👋 Alert bot stopped")
     return 0
 

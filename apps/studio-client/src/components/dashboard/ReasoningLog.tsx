@@ -9,7 +9,7 @@ export const ReasoningLog: React.FC = () => {
   if (collapsed) {
     return (
       <div className="flex flex-col h-full bg-[#1e1e1e] border-l border-gray-800 w-12 items-center pt-2">
-        <button 
+        <button
           onClick={() => setCollapsed(false)}
           className="p-2 hover:bg-gray-700 rounded text-gray-400 transition-colors"
           title="Expand Reasoning Log"
@@ -30,14 +30,14 @@ export const ReasoningLog: React.FC = () => {
           <BrainCircuit className="w-4 h-4 mr-2" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">Agent Reasoning</h3>
         </div>
-        <button 
+        <button
           onClick={() => setCollapsed(true)}
           className="text-gray-400 hover:text-white"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {reasoningChain.length === 0 ? (
           <div className="text-gray-500 text-sm text-center mt-10 italic">

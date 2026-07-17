@@ -26,7 +26,7 @@ def extract_source_directories(coverage_report_path):
     try:
         tree = ET.parse(coverage_report_path)
         root = tree.getroot()
-        
+
         sources = []
         sources_element = root.find(".//sources")
         if sources_element is not None:
@@ -34,7 +34,7 @@ def extract_source_directories(coverage_report_path):
                 source_path = source_element.text.strip()
                 if source_path and os.path.isdir(source_path):
                     sources.append(source_path)
-        
+
         return sources
     except Exception as e:
         print(f"Warning: Could not extract source directories from coverage report: {e}")
@@ -46,13 +46,13 @@ def resolve_file_path(filename, source_directories):
     # If it's already an absolute path and exists, return it
     if os.path.isabs(filename) and os.path.exists(filename):
         return filename
-    
+
     # Try to find the file in each source directory
     for source_dir in source_directories:
         potential_path = os.path.join(source_dir, filename)
         if os.path.exists(potential_path):
             return potential_path
-    
+
     # If not found, return the original (will be handled by caller)
     return filename
 
@@ -60,7 +60,7 @@ def resolve_file_path(filename, source_directories):
 def run_tests_with_coverage(coverage_report_filename="coverage.xml"):
     """Run tests with coverage and generate coverage report."""
     print("Running tests with coverage...")
-    
+
     # Change to backend directory where pyproject.toml is
     backend_dir = Path(__file__).parent.parent.parent / "backend"
     coverage_report_path = backend_dir / coverage_report_filename
@@ -88,7 +88,7 @@ def run_tests_with_coverage(coverage_report_filename="coverage.xml"):
             "--cov-report=term-missing",
             "-q"
         ]
-    
+
     try:
         result = subprocess.run(
             cmd,
@@ -97,7 +97,7 @@ def run_tests_with_coverage(coverage_report_filename="coverage.xml"):
             text=True,
             timeout=300  # 5 minute timeout
         )
-        
+
         print("Test output:")
         print(result.stdout)
         if result.stderr:
@@ -106,7 +106,7 @@ def run_tests_with_coverage(coverage_report_filename="coverage.xml"):
 
         return result.returncode == 0, str(coverage_report_path)
     except subprocess.TimeoutExpired:
-        print("Tests timed out after 5 minutes") 
+        print("Tests timed out after 5 minutes")
         return False
     except Exception as e:
         print(f"Error running tests: {e}")
@@ -134,29 +134,29 @@ async def main():
         help="Identify gaps and generate tests without saving files or running tests"
     )
     parser.add_argument(
-        "--skip-test-run", 
-        action="store_true", 
+        "--skip-test-run",
+        action="store_true",
         help="Skip running tests, only generate based on existing coverage report"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Change to project root directory
     project_root = Path(__file__).parent.parent.parent
     os.chdir(project_root)
-    
+
     print(f"Working in: {project_root}")
     print(f"Coverage target: {args.coverage_target}%")
     print(f"Dry run: {args.dry_run}")
     print(f"Skip test run: {args.skip_test_run}")
     print("-" * 50)
-    
+
     # Step 1: Run tests with coverage (unless skipping)
-    coverage_report_path = project_root / "backend" / args.coverage_report 
+    coverage_report_path = project_root / "backend" / args.coverage_report
     if not args.skip_test_run:
         success, report_path = run_tests_with_coverage(args.coverage_report)
         coverage_report_path = Path(report_path) if success else coverage_report_path
-        if not success: 
+        if not success:
             print("Warning: Tests had failures or errors, but continuing with coverage analysis...")
     else:
         if not coverage_report_path.exists():
@@ -164,7 +164,7 @@ async def main():
             print("Run without --skip-test-run to generate a coverage report first.")
             return 1
         print(f"Using existing coverage report: {coverage_report_path}")
-    
+
     # Extract source directories from coverage report
     source_directories = extract_source_directories(str(coverage_report_path))
     if source_directories:
@@ -181,26 +181,26 @@ async def main():
         ]
         # Filter to only existing directories
         source_directories = [d for d in source_directories if os.path.isdir(d)]
-    
+
     # Step 2: Use auto coverage improver to find gaps and generate tests
     print("\nAnalyzing coverage gaps and generating tests...")
-    
+
     improver = AutoCoverageImprover()
-    
+
     # Get gaps from auditor
     gaps = improver.auditor.find_gaps(str(coverage_report_path), min_coverage=args.coverage_target)
-    
+
     if not gaps:
         print("No coverage gaps found. Excellent work!")
         result = {"status": "success", "message": "No coverage gaps found.", "gaps_found": 0, "tests_generated": 0}
     else:
         print(f"Found {len(gaps)} file(s) with coverage below {args.coverage_target}%.")
-        
+
         generation_results = []
         for gap in gaps:
             # Resolve the file path using source directories
             resolved_path = resolve_file_path(gap.file_path, source_directories)
-            
+
             print(f"Attempting to generate tests for '{gap.file_path}' (Coverage: {gap.coverage}%)")
             if not os.path.exists(resolved_path):
                 print(f"Warning: Source file not found, skipping: {gap.file_path}")
@@ -211,14 +211,14 @@ async def main():
 
             result = await improver.generator.generate_and_save(resolved_path, run_tests=not args.dry_run)
             generation_results.append(result)
-        
+
         result = {
             "status": "completed",
             "gaps_found": len(gaps),
             "tests_generated": sum(1 for r in generation_results if r.get("status") == "success"),
             "results": generation_results,
         }
-    
+
     # Step 3: Report results
     print("\n" + "="*50)
     print("COVERAGE IMPROVEMENT RESULTS")
@@ -227,16 +227,16 @@ async def main():
     print(f"Message: {result.get('message', 'N/A')}")
     print(f"Gaps found: {result.get('gaps_found', 0)}")
     print(f"Tests generated: {result.get('tests_generated', 0)}")
-    
+
     if result.get('results'):
         print("\nDetailed results:")
         for i, res in enumerate(result['results'], 1):
             status = res.get('status', 'unknown')
             file_path = res.get('file_path', 'unknown')
             print(f"  {i}. {file_path}: {status}")
-    
+
     print("="*50)
-    
+
     if result.get('status') == 'completed' and result.get('tests_generated', 0) > 0:
         print("\nNext steps:")
         print("1. Review the generated test files")
@@ -246,7 +246,7 @@ async def main():
         if not args.dry_run:
             print("\nTo run tests with coverage again:")
             print("  cd backend && poetry run pytest --cov=backend --cov-report=term-missing")
-    
+
     return 0 if result.get('status') in ['success', 'completed'] else 1
 
 

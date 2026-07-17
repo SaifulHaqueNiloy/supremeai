@@ -20,27 +20,27 @@ class AlertsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _buildAlertCard(
-            context, 
-            'alerts.rate_limit'.tr(), 
-            'alerts.quota_exceeded'.tr(), 
-            '5m ago', 
-            Colors.redAccent, 
+            context,
+            'alerts.rate_limit'.tr(),
+            'alerts.quota_exceeded'.tr(),
+            '5m ago',
+            Colors.redAccent,
             Icons.error_outline
           ),
           _buildAlertCard(
-            context, 
-            'alerts.slow_response'.tr(), 
-            'alerts.high_latency'.tr(), 
-            '12m ago', 
-            Colors.orangeAccent, 
+            context,
+            'alerts.slow_response'.tr(),
+            'alerts.high_latency'.tr(),
+            '12m ago',
+            Colors.orangeAccent,
             Icons.warning_amber_rounded
           ),
           _buildAlertCard(
-            context, 
-            'projects.status'.tr(), 
-            'Synchronized 1.2k records with Firestore replica.', 
-            '1h ago', 
-            Colors.greenAccent, 
+            context,
+            'projects.status'.tr(),
+            'Synchronized 1.2k records with Firestore replica.',
+            '1h ago',
+            Colors.greenAccent,
             Icons.check_circle_outline
           ),
         ],

@@ -20,7 +20,7 @@ with open(output_file, "w", encoding="utf-8") as out:
             filepath = os.path.join(dirpath, file)
             rel_path = os.path.relpath(filepath, root_dir)
             out.write(f"## {rel_path}\n\n")
-            
+
             # map extension to markdown language
             lang = ext.replace(".", "")
             if lang == "py": lang = "python"
@@ -33,7 +33,7 @@ with open(output_file, "w", encoding="utf-8") as out:
             elif lang == "json": lang = "json"
             elif lang == "md": lang = "markdown"
             elif lang == "sh": lang = "bash"
-            
+
             out.write(f"```{lang}\n")
             try:
                 with open(filepath, "r", encoding="utf-8") as f:

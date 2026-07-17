@@ -10,7 +10,7 @@ TEST_DIR="$BASE_DIR/.testenv"
 create_test_env() {
     echo "Creating isolated test environment at $TEST_DIR"
     mkdir -p "$TEST_DIR"
-    
+
     cat > "$TEST_DIR/.env.test" << 'EOF'
 ENV=test
 DEBUG=true

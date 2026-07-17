@@ -100,7 +100,8 @@ class EmailService:
                             module="email_service",
                             error_type="RESEND_API_ERROR",
                             message=response.text[:200],
-                            severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                            severity="ERROR",
+                            structured_context=ErrorContext(module="auto_fixed"),
                             context={"status_code": response.status_code, "to_email": to_email},
                         )
                     )
@@ -110,7 +111,12 @@ class EmailService:
             logger.error(f"Exception while sending email: {e}")
             error_event_bus.emit(
                 ErrorEvent(
-                    module="email_service", error_type="HTTP_REQUEST_FAILED", message=str(e)[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed"), context={"to_email": to_email}
+                    module="email_service",
+                    error_type="HTTP_REQUEST_FAILED",
+                    message=str(e)[:200],
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"to_email": to_email},
                 )
             )
             return False

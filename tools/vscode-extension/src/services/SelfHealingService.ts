@@ -61,9 +61,9 @@ export class SelfHealingService extends BaseDisposable {
         // Process only the first error for now
         const primaryError = errors[0];
         const stateManager = HealingStateManager.getInstance();
-        
+
         stateManager.setState(HealingState.ANALYZING_ERROR);
-        
+
         // Gather Context
         const line = primaryError.range.start.line;
         const semanticContext = await getSemanticContext(editor.document, line);
@@ -75,16 +75,16 @@ export class SelfHealingService extends BaseDisposable {
             codeContext: semanticContext,
             languageId: editor.document.languageId
         };
-        
+
         this.isHealing = true;
         stateManager.setState(HealingState.GENERATING_PATCH);
-        
+
         try {
             const fixResponse = await this.supremeService.requestSelfHealing(payload);
-            
+
             if (fixResponse && fixResponse.fixedCode) {
                 stateManager.setState(HealingState.APPLYING_DIFF);
-                
+
                 // Track for Telemetry
                 const { TelemetryTracker } = require('./TelemetryTracker');
                 TelemetryTracker.trackProposedPatch(uri.fsPath, `error-${Date.now()}`, fixResponse.fixedCode);
@@ -106,33 +106,33 @@ export class SelfHealingService extends BaseDisposable {
         // Create an in-memory document for the fixed code
         // VS Code allows providing virtual documents via TextDocumentContentProvider,
         // but for a quick diff we can use an untitled URI with a query parameter or just a custom scheme.
-        
-        // Alternatively, we can use the original uri for left, and an untitled file for right, 
+
+        // Alternatively, we can use the original uri for left, and an untitled file for right,
         // or a custom virtual document provider.
         // For simplicity, we can create a temporary file or workspace edit, but let's use a custom scheme.
-        
+
         // VS Code Diff command takes (left, right, title)
         // We will register a TextDocumentContentProvider for 'supremeai-fix' scheme if not already registered.
-        
+
         const rightUri = vscode.Uri.parse(`supremeai-fix:${originalUri.path}?fixed=true`);
-        
+
         // Registering a temporary provider (ideally this should be registered once in initialize)
         const provider = new class implements vscode.TextDocumentContentProvider {
             provideTextDocumentContent(uri: vscode.Uri): string {
                 return fixedCode;
             }
         };
-        
+
         // We register it and then unregister after diff is closed or just keep it.
         const registration = vscode.workspace.registerTextDocumentContentProvider('supremeai-fix', provider);
-        
+
         await vscode.commands.executeCommand(
             'vscode.diff',
             originalUri,
             rightUri,
             `SupremeAI Fix: ${originalUri.path.split('/').pop()}`
         );
-        
+
         // We'll leave registration active for simplicity, though normally we'd clean it up.
     }
 }
@@ -143,7 +143,7 @@ export class SelfHealingService extends BaseDisposable {
  */
 export async function getSemanticContext(document: vscode.TextDocument, errorLine: number): Promise<string> {
     let symbols: vscode.DocumentSymbol[] | undefined;
-    
+
     try {
         symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
             'vscode.executeDocumentSymbolProvider',
@@ -178,11 +178,11 @@ export async function getSemanticContext(document: vscode.TextDocument, errorLin
  */
 function findInnermostSymbol(symbols: vscode.DocumentSymbol[], line: number): vscode.DocumentSymbol | undefined {
     let innermost: vscode.DocumentSymbol | undefined;
-    
+
     for (const symbol of symbols) {
         if (symbol.range.start.line <= line && symbol.range.end.line >= line) {
             innermost = symbol;
-            
+
             // Dive deeper into children (e.g., a method inside a class)
             if (symbol.children && symbol.children.length > 0) {
                 const childMatch = findInnermostSymbol(symbol.children, line);

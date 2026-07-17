@@ -1,11 +1,11 @@
 /**
  * error-bus.ts — কেন্দ্রীয় Observable Error Event Bus (Anti-Silent Error)
  *
- * এই মডিউলটি অ্যাপ্লিকেশনের যেকোনো জায়গায় ঘটা এররগুলোকে 
+ * এই মডিউলটি অ্যাপ্লিকেশনের যেকোনো জায়গায় ঘটা এররগুলোকে
  * সাইলেন্টলি সাপ্রেস না করে সেন্ট্রাল লগিং এবং মনিটরিং-এর আওতায় নিয়ে আসে।
- * 
+ *
  * আর্কিটেকচারাল নিয়ম:
- * - কোডের কোথাও generic `catch (e) { console.error(e) }` বা `try {} catch(e) {}` 
+ * - কোডের কোথাও generic `catch (e) { console.error(e) }` বা `try {} catch(e) {}`
  *   দিয়ে এরর সাপ্রেস করা কঠোরভাবে নিষিদ্ধ।
  * - যেকোনো exception এই বাস-এর মাধ্যমে এমিট করতে হবে।
  */
@@ -36,10 +36,10 @@ type ErrorListener = (payload: ErrorEventPayload) => void;
 
 class ErrorEventBus {
   private listeners: Set<ErrorListener> = new Set();
-  
+
   /**
    * এরর রিপোর্ট করার মেইন এন্ট্রি পয়েন্ট।
-   * 
+   *
    * @param error অরিজিনাল Error অবজেক্ট
    * @param context কোন কনটেক্সট থেকে এররটি এল তার বিস্তারিত
    * @param severity এররটির গুরুত্ব (ডিফল্ট: error)
@@ -50,8 +50,8 @@ class ErrorEventBus {
     severity: ErrorSeverity = "error"
   ): void {
     // Ensure we have a valid Error object
-    const normalizedError = error instanceof Error 
-      ? error 
+    const normalizedError = error instanceof Error
+      ? error
       : new Error(typeof error === "string" ? error : JSON.stringify(error));
 
     const payload: ErrorEventPayload = {
@@ -97,7 +97,7 @@ class ErrorEventBus {
   private logToConsole(payload: ErrorEventPayload): void {
     const { error, severity, context, timestamp } = payload;
     const logPrefix = `[${timestamp}] [${severity.toUpperCase()}] [${context.sourceModule}]`;
-    
+
     const logData = {
       message: error.message,
       context,

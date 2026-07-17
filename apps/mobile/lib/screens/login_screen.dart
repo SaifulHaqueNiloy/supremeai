@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               }
             ),
           ),
-          
+
           // Glassmorphism Content
           Center(
             child: SingleChildScrollView(
@@ -317,4 +317,3 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 }
-

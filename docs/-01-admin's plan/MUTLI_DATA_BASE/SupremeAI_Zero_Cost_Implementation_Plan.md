@@ -156,7 +156,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ALTER TABLE skills ADD COLUMN embedding vector(1536);
 
 -- Create index
-CREATE INDEX idx_skills_embedding ON skills 
+CREATE INDEX idx_skills_embedding ON skills
     USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
 
@@ -865,14 +865,14 @@ export function Sidebar() {
 
     return (
         <div className="w-72 h-full bg-gray-900 border-r border-gray-800 flex flex-col">
-            <SearchBar 
+            <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder="Search skills (semantic)..."
                 isLoading={isSearching}
             />
 
-            <CategoryFilter 
+            <CategoryFilter
                 selected={selectedCategory}
                 onSelect={setSelectedCategory}
                 categories={['marketing', 'seo', 'coding', 'design', 'analytics']}
@@ -920,7 +920,7 @@ export function PromptEditor({ skillId, initialValue, onChange }: PromptEditorPr
     return (
         <div className="relative h-full">
             {cursors.map(cursor => (
-                <PresenceCursor 
+                <PresenceCursor
                     key={cursor.userId}
                     name={cursor.name}
                     color={cursor.color}
@@ -1142,7 +1142,7 @@ class GraphService:
             for skill in skills:
                 await session.run(
                     "MERGE (s:Skill {id: $id}) SET s.name = $name, s.category = $category, s.success_rate = $success_rate",
-                    id=skill['id'], name=skill['name'], 
+                    id=skill['id'], name=skill['name'],
                     category=skill['category'], success_rate=skill.get('success_rate', 0)
                 )
 
@@ -1402,7 +1402,7 @@ export function PresenceCursors({ cursors }: { cursors: Cursor[] }) {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                         <path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill={cursor.color} stroke="white" strokeWidth="2"/>
                     </svg>
-                    <span 
+                    <span
                         className="absolute left-4 top-4 px-2 py-0.5 rounded text-xs text-white whitespace-nowrap"
                         style={{ backgroundColor: cursor.color }}
                     >

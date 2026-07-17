@@ -71,9 +71,7 @@ async def create_autonomous_pr(
     # Step 2: Create the Pull Request
     title = f"🚀 SupremeAI Auto-Fix: {commit_msg}"
     body = (
-        "This PR was autonomously generated and verified in the SupremeAI Zero-Cost Sandbox.\n\n"
-        "- ✅ Execution Verified\n"
-        "- 🧠 Saved to Memory Vault"
+        "This PR was autonomously generated and verified in the SupremeAI Zero-Cost Sandbox.\n\n- ✅ Execution Verified\n- 🧠 Saved to Memory Vault"
     )
     pr_res = await agent.create_pr(repo_name, title, body, branch_name)
 
@@ -151,9 +149,7 @@ class GitHubAgent:
             ref.raise_for_status()
             base_sha = ref.json()["object"]["sha"]
 
-            branch_res = await client.post(
-                f"{base_url}/git/refs", headers=headers, json={"ref": f"refs/heads/{branch}", "sha": base_sha}
-            )
+            branch_res = await client.post(f"{base_url}/git/refs", headers=headers, json={"ref": f"refs/heads/{branch}", "sha": base_sha})
             if branch_res.status_code not in (201, 422):  # 422 = branch already exists, acceptable
                 raise RuntimeError(f"Failed to create branch: {branch_res.text}")
 

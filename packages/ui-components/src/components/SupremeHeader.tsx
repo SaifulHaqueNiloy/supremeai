@@ -6,15 +6,15 @@ export interface SupremeHeaderProps extends React.HTMLAttributes<HTMLHeadingElem
   gradient?: boolean;
 }
 
-export const SupremeHeader: React.FC<SupremeHeaderProps> = ({ 
-  children, 
+export const SupremeHeader: React.FC<SupremeHeaderProps> = ({
+  children,
   subtitle,
   gradient = false,
   className = '',
-  ...props 
+  ...props
 }) => {
-  const titleColor = gradient 
-    ? "bg-gradient-to-r from-accent-primary to-neon-purple bg-clip-text text-transparent" 
+  const titleColor = gradient
+    ? "bg-gradient-to-r from-accent-primary to-neon-purple bg-clip-text text-transparent"
     : "text-foreground";
 
   return (

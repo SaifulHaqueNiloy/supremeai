@@ -15,6 +15,7 @@ def test_breaker_blocks_after_failures_and_recovers():
     assert breaker.allow_request() is False
 
     import time
+
     time.sleep(0.15)
     assert breaker.allow_request() is True
     assert breaker.state == "HALF_OPEN"

@@ -4,6 +4,7 @@
 
 Defines roles, permissions, and authorization logic for the entire platform.
 """
+
 from __future__ import annotations
 
 import logging
@@ -46,31 +47,39 @@ class Permission(str, Enum):
 
 # ── Role-to-Permission Mapping ────────────────────────────────────────────────
 ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
-    Role.OWNER: frozenset({
-        Permission.READ,
-        Permission.WRITE,
-        Permission.ADMIN,
-        Permission.AUDIT,
-        Permission.MANAGE_USERS,
-        Permission.MANAGE_BILLING,
-        Permission.DEPLOY,
-        Permission.MANAGE_API_KEYS,
-    }),
-    Role.ADMIN: frozenset({
-        Permission.READ,
-        Permission.WRITE,
-        Permission.ADMIN,
-        Permission.AUDIT,
-        Permission.MANAGE_API_KEYS,
-    }),
-    Role.OPERATOR: frozenset({
-        Permission.READ,
-        Permission.WRITE,
-        Permission.DEPLOY,
-    }),
-    Role.VIEWER: frozenset({
-        Permission.READ,
-    }),
+    Role.OWNER: frozenset(
+        {
+            Permission.READ,
+            Permission.WRITE,
+            Permission.ADMIN,
+            Permission.AUDIT,
+            Permission.MANAGE_USERS,
+            Permission.MANAGE_BILLING,
+            Permission.DEPLOY,
+            Permission.MANAGE_API_KEYS,
+        }
+    ),
+    Role.ADMIN: frozenset(
+        {
+            Permission.READ,
+            Permission.WRITE,
+            Permission.ADMIN,
+            Permission.AUDIT,
+            Permission.MANAGE_API_KEYS,
+        }
+    ),
+    Role.OPERATOR: frozenset(
+        {
+            Permission.READ,
+            Permission.WRITE,
+            Permission.DEPLOY,
+        }
+    ),
+    Role.VIEWER: frozenset(
+        {
+            Permission.READ,
+        }
+    ),
 }
 
 
@@ -191,6 +200,7 @@ class RoleBasedAccessControl:
         if context.expires_at:
             try:
                 import datetime
+
                 expires = datetime.datetime.fromisoformat(context.expires_at)
                 if datetime.datetime.now() > expires:
                     return False

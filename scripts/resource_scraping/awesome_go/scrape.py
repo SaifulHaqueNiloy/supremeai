@@ -24,7 +24,7 @@ def parse_readme(content):
     lines = content.split('\n')
     categories = {}
     current_category = None
-    
+
     for line in lines:
         # Check for category heading (## Category Name)
         if line.startswith('## '):
@@ -51,7 +51,7 @@ def parse_readme(content):
                         "url": url.strip(),
                         "description": ""
                     })
-    
+
     # Remove empty categories
     categories = {k: v for k, v in categories.items() if v}
     return categories
@@ -61,15 +61,15 @@ def main():
     content = fetch_readme()
     if content is None:
         return
-    
+
     print("Parsing README...")
     data = parse_readme(content)
-    
+
     # Save to JSON file
     output_file = "awesome_go.json"
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    
+
     print(f"Successfully scraped {len(data)} categories.")
     print(f"Data saved to {output_file}")
 

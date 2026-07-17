@@ -11,14 +11,14 @@ export const SwarmHealthDashboard: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <SupremeHeader 
-          title="Swarm Health Dashboard" 
+        <SupremeHeader
+          title="Swarm Health Dashboard"
           subtitle={`Connection: ${connectionStatus.toUpperCase()} | Circuit: ${circuitState}`}
           gradient={true}
         />
         <div className="flex items-center gap-4">
           {circuitState === 'OPEN' && (
-            <button 
+            <button
               onClick={resetCircuitBreaker}
               className="px-4 py-2 bg-success/20 text-success border border-success rounded-md text-sm font-bold"
             >
@@ -94,8 +94,8 @@ export const SwarmHealthDashboard: React.FC = () => {
                   {new Date(log.timestamp).toLocaleTimeString()}
                 </span>
                 <span className={`shrink-0 font-bold ${
-                  log.level === 'error' ? 'text-danger' : 
-                  log.level === 'warn' ? 'text-warning' : 
+                  log.level === 'error' ? 'text-danger' :
+                  log.level === 'warn' ? 'text-warning' :
                   log.level === 'success' ? 'text-success' : 'text-neon-blue'
                 }`}>
                   [{log.agentName}]

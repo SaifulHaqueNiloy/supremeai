@@ -2,6 +2,7 @@
 
 বাংলা: কোর সার্ভিস রেজিস্ট্রি এবং লেজি ইনিশিয়ালাইজেশন।
 """
+
 from collections.abc import Callable
 from typing import Any
 
@@ -101,6 +102,7 @@ def __getattr__(name: str) -> Any:
         if hasattr(reg, "get") and name in reg._services:
             # Return the service factory, not the instance
             import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():

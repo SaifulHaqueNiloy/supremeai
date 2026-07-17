@@ -37,7 +37,7 @@ def bprint(msg: str, color: str = "") -> None:
 def clean_project(root_dir: str):
     """প্রজেক্ট থেকে অপ্রয়োজনীয় ফাইল ও ডিরেক্টরি মুছে দেয়।"""
     bprint("\n🧹 [ধাপ ১] ক্যাশ এবং অপ্রয়োজনীয় ফাইল মোছা শুরু হচ্ছে...", CYAN)
-    
+
     patterns_to_remove = [
         "__pycache__",
         ".pytest_cache",
@@ -53,7 +53,7 @@ def clean_project(root_dir: str):
         "coverage",
         ".coverage",
     ]
-    
+
     files_removed_count = 0
     dirs_removed_count = 0
 
@@ -79,14 +79,14 @@ def clean_project(root_dir: str):
 def format_code(root_dir: str):
     """Ruff ব্যবহার করে কোড ফরম্যাট ও লিন্ট করে।"""
     bprint("\n💅 [ধাপ ২] Ruff দিয়ে কোড ফরম্যাটিং এবং লিন্টিং শুরু হচ্ছে...", CYAN)
-    
+
     try:
         bprint("  - Ruff Formatter চালানো হচ্ছে...", YELLOW)
         subprocess.run(["ruff", "format", root_dir], check=True, capture_output=True, text=True)
-        
+
         bprint("  - Ruff Linter (auto-fix) চালানো হচ্ছে...", YELLOW)
         subprocess.run(["ruff", "check", root_dir, "--fix"], check=True, capture_output=True, text=True)
-        
+
         bprint("\n✅ কোড সফলভাবে ফরম্যাট এবং লিন্ট করা হয়েছে।", GREEN)
     except FileNotFoundError:
         bprint("❌ 'ruff' কমান্ড পাওয়া যায়নি। Ruff ইনস্টল করা আছে কিনা তা নিশ্চিত করুন (`pip install ruff`)", RED)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     if args.action in ["clean", "all"]:
         clean_project(project_root)
-    
+
     if args.action in ["format", "all"]:
         format_code(project_root)
 

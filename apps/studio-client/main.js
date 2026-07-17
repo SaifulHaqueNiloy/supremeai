@@ -38,12 +38,12 @@ function updateTitleBar(win) {
   if (!win) return;
   const isDark = nativeTheme.shouldUseDarkColors;
   // Fallback colors if tokens are missing
-  const bgColor = isDark 
+  const bgColor = isDark
     ? (tokens['color-neutral-900'] || '#0F172A')
     : (tokens['color-neutral-50'] || '#F8FAFC');
-  
+
   const symbolColor = tokens['color-brand-500'] || '#6366F1';
-  
+
   win.setTitleBarOverlay({
     color: bgColor,
     symbolColor: symbolColor
@@ -52,7 +52,7 @@ function updateTitleBar(win) {
 
 function createWindow() {
   const isDark = nativeTheme.shouldUseDarkColors;
-  const bgColor = isDark 
+  const bgColor = isDark
     ? (tokens['color-neutral-900'] || '#0F172A')
     : (tokens['color-neutral-50'] || '#F8FAFC');
   const symbolColor = tokens['color-brand-500'] || '#6366F1';

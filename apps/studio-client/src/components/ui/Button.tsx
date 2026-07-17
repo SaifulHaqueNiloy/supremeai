@@ -9,12 +9,12 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', state = 'default', children, disabled, ...props }, ref) => {
-    
+
     // Style Dictionary semantic tokens map directly to CSS variables or Tailwind utility classes
     // Assuming variables like --supremeai-semantic-color-action-primary-bg are generated
-    
+
     const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50";
-    
+
     const variants = {
       primary: "bg-[var(--supremeai-semantic-color-action-primary-bg)] text-[var(--supremeai-semantic-color-action-primary-text)] hover:opacity-90 shadow-md",
       secondary: "bg-transparent border border-[var(--supremeai-color-neutral-200)] text-foreground hover:bg-[var(--supremeai-color-neutral-50)]",

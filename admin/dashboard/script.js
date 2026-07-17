@@ -16,7 +16,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
         e.preventDefault();
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
-        
+
         e.currentTarget.classList.add('active');
         document.getElementById(e.currentTarget.getAttribute('data-target')).classList.remove('hidden');
     });
@@ -29,7 +29,7 @@ async function fetchLiveJobs() {
     try {
         const res = await fetch(`${RAW_URL}/logs/ci/latest.json?t=${Date.now()}`);
         if (!res.ok) throw new Error('Failed to fetch jobs');
-        
+
         const data = await res.json();
         renderRealJobs(data.jobs || {});
     } catch (error) {
@@ -41,7 +41,7 @@ async function fetchLiveJobs() {
 function renderRealJobs(jobsObject) {
     const grid = document.getElementById('jobsGrid');
     grid.innerHTML = '';
-    
+
     // Convert object to array for mapping
     const jobs = Object.entries(jobsObject).map(([id, status]) => ({ id, name: formatJobName(id), status }));
 
@@ -54,7 +54,7 @@ function renderRealJobs(jobsObject) {
         const isSuccess = job.status === 'success';
         const icon = isSuccess ? '✅' : (job.status === 'failure' ? '❌' : '⏭');
         const color = isSuccess ? 'var(--success)' : (job.status === 'failure' ? 'var(--danger)' : 'var(--text-muted)');
-        
+
         grid.innerHTML += `
             <div class="job-card" onclick="openTerminal('${job.id}', '${job.status}')">
                 <div>
@@ -88,7 +88,7 @@ async function openTerminal(jobId, status) {
         const res = await fetch(`${RAW_URL}/logs/ci/latest.md?t=${Date.now()}`);
         if (!res.ok) throw new Error('Log missing');
         const text = await res.text();
-        
+
         // Simulating writing lines to terminal
         terminalBody.innerHTML = '';
         const lines = text.split('\n').slice(0, 30); // Show first 30 lines for speed
