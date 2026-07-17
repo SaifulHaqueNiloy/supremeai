@@ -280,7 +280,8 @@ class AgentDAGScheduler:
                 if isinstance(message, dict) and message.get("type") == "message":
                     try:
                         yield json.loads(message["data"])
-                    except (json.JSONDecodeError, TypeError):
+                    except (json.JSONDecodeError, TypeError) as parse_err:
+                        logger.error(f"[PubSub] Failed to parse message on {channel}. Payload: {message.get('data')}. Error: {parse_err}")
                         continue
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Subscription to {channel} ended: {e}")

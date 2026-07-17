@@ -39,8 +39,14 @@ function loadLocalSessions(): DashboardSession[] {
 function saveLocalSessions(sessions: DashboardSession[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  } catch {
-    // বাংলা মন্তব্য: স্টোরেজ কোটা শেষ হলে নীরবে উপেক্ষা করা হয়
+  } catch (err) {
+    // বাংলা মন্তব্য: স্টোরেজ কোটা শেষ হলে বা ব্যর্থ হলে সতর্কবার্তা দেওয়া হলো
+    console.error("[Storage] Failed to save sessions locally:", err);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('supremeai-toast', {
+        detail: { message: 'Local storage quota exceeded. Changes might not persist!', type: 'error' }
+      }));
+    }
   }
 }
 
@@ -58,21 +64,41 @@ export async function loadSessions(): Promise<DashboardSession[]> {
   }
 }
 
-// বাংলা মন্তব্য: ব্যাকএন্ডে সেশন সেভ/আপডেট করে, ব্যর্থ হলে localStorage-এ ফলব্যাক
+// বাংলা মন্তব্য: ব্যাকএন্ডে সেশন সেভ/আপডেট করে, ব্যর্থ হলে pending-sync কিউতে জমা করে
 export async function saveSessions(sessions: DashboardSession[]): Promise<void> {
-  try {
-    // বাংলা মন্তব্য: ব্যাকএন্ডে প্রতিটি সেশন আপডেট/তৈরি করি
-    for (const session of sessions) {
+  let hasFailed = false;
+
+  for (const session of sessions) {
+    try {
+      await apiClient.put(`/api/browser/sessions/${session.id}`, session);
+    } catch {
       try {
-        await apiClient.put(`/api/browser/sessions/${session.id}`, session);
-      } catch {
-        // বাংলা মন্তব্য: সেশন না থাকলে নতুন করে তৈরি করি
         await apiClient.post('/api/browser/sessions', session);
+      } catch (err) {
+        hasFailed = true;
+        console.error(`[API] Failed to save session ${session.id} on backend:`, err);
       }
     }
-  } catch {
-    // বাংলা মন্তব্য: API কল ব্যর্থ — localStorage ফলব্যাক
   }
+
+  if (hasFailed) {
+    // বাংলা মন্তব্য: ব্যর্থ সেশনগুলোকে লোকাল পেন্ডিং কিউতে জমা করি এবং ব্যবহারকারীকে জানাই
+    try {
+      localStorage.setItem('supremeai_pending_sessions', JSON.stringify(sessions));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('supremeai-toast', {
+          detail: { message: 'Saved locally. Changes will sync once back online.', type: 'warning' }
+        }));
+      }
+    } catch (e) {
+      console.error("[Storage] Failed to save pending sessions to queue:", e);
+    }
+  } else {
+    try {
+      localStorage.removeItem('supremeai_pending_sessions');
+    } catch {}
+  }
+
   // বাংলা মন্তব্য: সর্বদা localStorage-এ ক্যাশে আপডেট করি
   saveLocalSessions(sessions);
 }
