@@ -38,7 +38,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.preferences", ""),
     ("api.routes.usage_metrics", ""),
     ("api.routes.sso", ""),
-    ("api.routes.health", ""),
+    ("api.routes.health", "/api/v1"),
     ("api.routes.api_keys", ""),
     ("api.routes.ci_webhooks", ""),
     ("api.routes.task_workspace", "/api/v1"),
