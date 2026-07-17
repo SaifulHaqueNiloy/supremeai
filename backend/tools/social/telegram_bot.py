@@ -62,7 +62,7 @@ class TelegramBotHandler:
 
     @property
     def configured(self) -> bool:
-        return bool(self.bot_token and self.bot_token != "mock_token")
+        return bool(self.bot_token and self.bot_token != "mock_token")  # noqa: S105
 
     # ── Telegram API helpers ──────────────────────────────────────
 

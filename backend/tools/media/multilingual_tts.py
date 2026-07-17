@@ -291,7 +291,7 @@ class MultilingualTTS:
             logger.debug(f"gTTS failed: {exc}")
             return {"status": "error", "language": lang, "error": str(exc)}
 
-    def synthesize_stream(self, text: str, chunk_size: int = 200):
+    def sync_synthesize_stream(self, text: str, chunk_size: int = 200):
         """Yield text chunks for streaming TTS."""
         for i in range(0, len(text), chunk_size):
             yield text[i : i + chunk_size]
