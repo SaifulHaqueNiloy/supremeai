@@ -23,6 +23,18 @@
     {
       "source": "/telemetry/(.*)",
       "destination": "https://supremeai-backend-65hl.onrender.com/telemetry/$1"
+    },
+    {
+      "source": "/logs/stream",
+      "destination": "https://supremeai-backend-65hl.onrender.com/logs/stream"
+    },
+    {
+      "source": "/default/stream",
+      "destination": "https://supremeai-backend-65hl.onrender.com/default/stream"
+    },
+    {
+      "source": "/:user_id/stream",
+      "destination": "https://supremeai-backend-65hl.onrender.com/:user_id/stream"
     }
   ]
 }
