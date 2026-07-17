@@ -1,19 +1,25 @@
 # backend/api/routes/admin_librarian.py
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
+
 from backend.agents.skill_librarian import SkillLibrarian
+
 
 # 🔄 প্রিফিক্স ডুপ্লিকেশন ফিক্স (/api/api/admin... থেকে /api/admin...)
 router = APIRouter(prefix="/admin/librarian", tags=["Librarian Gateway"])
 librarian = SkillLibrarian()
 
+
 class ApprovalRequest(BaseModel):
     skill_id: str
     action: str  # APPROVE, APPROVE_AS_EPHEMERAL, REJECT
-    ai_patch_code: Optional[str] = None
+    ai_patch_code: str | None = None
 
-@router.get("/queue", response_model=List[dict])
+
+@router.get("/queue", response_model=list[dict])
 async def get_quarantine_queue():
     """কোয়ারেন্টাইনে থাকা পেন্ডিং স্কিলগুলোর লিস্ট ড্যাশবোর্ডে পাঠায়"""
     try:
@@ -21,14 +27,18 @@ async def get_quarantine_queue():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch queue: {str(e)}")
 
+
 @router.post("/process")
-async def process_skill_action(payload: ApprovalRequest):
-    """Admin এর ক্লিক করা অ্যাকশন (Approve/Reject) প্রসেস করে"""
-    result = librarian.process_approval(
-        skill_id=payload.skill_id,
-        action=payload.action,
-        ai_patch_code=payload.ai_patch_code
-    )
-    if not result["success"]:
-        raise HTTPException(status_code=400, detail=result["detail"])
-    return result
+async def process_skill_action(payload: ApprovalRequest, background_tasks: BackgroundTasks):
+    """
+    Admin এর অ্যাকশন রিকোয়েস্ট গ্রহণ করে সাথে সাথে ২০০ OK রেসপন্স দেয়।
+    ভারী ফাইল অপারেশন এবং ডিস্ক রাইট ব্যাকগ্রাউন্ডে প্রসেস হয়।
+    """
+    if payload.action not in ["APPROVE", "APPROVE_AS_EPHEMERAL", "REJECT"]:
+        raise HTTPException(status_code=400, detail="Invalid action provided.")
+
+    # 🚀 ভারী কাজগুলো ব্যাকগ্রাউন্ড টাস্কে পুশ করা হলো
+    background_tasks.add_task(librarian.process_approval, skill_id=payload.skill_id, action=payload.action, ai_patch_code=payload.ai_patch_code)
+
+    # ইউজার ইন্টারফেস সাথে সাথে ফ্রি (Instant UI Response)
+    return {"success": True, "detail": "Action queued successfully for asynchronous processing."}
