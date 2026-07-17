@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import HttpUrl
 
@@ -60,5 +61,5 @@ class SkillManifest(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    # বাংলা মন্তব্য: Pydantic V2 ফিক্স — class Config deprecated, model_config = ConfigDict() ব্যবহার করা হয়েছে
+    model_config = ConfigDict(from_attributes=True)
