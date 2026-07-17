@@ -420,7 +420,8 @@ class Settings(BaseSettings):
             try:
                 import json as _json
                 return _json.loads(v)
-            except Exception:  # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Failed to parse rbac_role_definitions JSON: {e}. Defaulting to empty dictionary.")
                 return {}
         return v or {}
 
