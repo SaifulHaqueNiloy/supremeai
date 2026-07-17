@@ -168,7 +168,7 @@ class CodeGraphGenerator:
                     with open(py_file, "r", encoding="utf-8", errors="ignore") as f:
                         if module_name in f.read():
                             dependents.append(str(py_file.relative_to(self.repo_root)))
-                except:
+                except Exception:
                     pass
         
         except Exception:
