@@ -651,11 +651,15 @@ jobs:
           BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
           BACKUP_SVC_ID="srv-d9cl8eu1a83c739adv70"
 
+          PRIMARY_SUCCESS=false
+          BACKUP_SUCCESS=false
+
           # বাংলা: Primary hook দিয়ে প্রথমে চেষ্টা করি
           if [ -n "$PRIMARY_HOOK" ]; then
             echo "Trying primary Render account..."
             if curl -f -s "$PRIMARY_HOOK" > /dev/null; then
               echo "✅ Primary Render deploy triggered successfully!"
+              PRIMARY_SUCCESS=true
             else
               echo "⚠️ Primary hook failed. Trying backup..."
             fi
@@ -664,7 +668,12 @@ jobs:
           # বাংলা: Backup hook বা Render API দিয়ে backup service deploy করি
           if [ -n "$BACKUP_HOOK" ]; then
             echo "🔄 Triggering backup via webhook..."
-            curl -f -s "$BACKUP_HOOK" > /dev/null && echo "✅ Backup hook triggered!" || echo "⚠️ Backup hook failed."
+            if curl -f -s "$BACKUP_HOOK" > /dev/null; then
+              echo "✅ Backup hook triggered!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Backup hook failed."
+            fi
           elif [ -n "$BACKUP_API_KEY" ]; then
             echo "🔄 No backup hook found. Using Render API to trigger backup deploy..."
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
@@ -674,11 +683,18 @@ jobs:
               -d '{"clearCache":"do_not_clear"}')
             if [ "$STATUS" = "201" ]; then
               echo "✅ Backup Render deploy triggered via API (status: $STATUS)!"
+              BACKUP_SUCCESS=true
             else
-              echo "⚠️ Backup API deploy returned status: $STATUS (continuing pipeline)"
+              echo "⚠️ Backup API deploy returned status: $STATUS"
             fi
           else
-            echo "No backup deploy configured. Skipping backup deploy."
+            echo "No backup deploy configured."
+          fi
+
+          # বাংলা: কোনোটিই সফল না হলে বা কনফিগার না থাকলে CI ফেইল করাও
+          if [ "$PRIMARY_SUCCESS" = "false" ] && [ "$BACKUP_SUCCESS" = "false" ]; then
+            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded! Failing build."
+            exit 1
           fi
 
 
