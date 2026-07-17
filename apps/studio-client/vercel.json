@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/preferences/:user_id/stream",
+      "destination": "https://supremeai-backend-65hl.onrender.com/api/preferences/:user_id/stream"
+    },
+    {
       "source": "/logs/stream",
       "destination": "https://supremeai-backend-65hl.onrender.com/logs/stream"
     },
