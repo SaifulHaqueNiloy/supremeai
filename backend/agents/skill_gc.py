@@ -1,11 +1,17 @@
 # backend/agents/skill_gc.py
+import logging
 import shutil
 import tarfile
+from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List
-from backend.schemas.skill_manifest import SkillManifest, SkillStatus
+
 from backend.schemas.skill_index import SkillIndexManager
+from backend.schemas.skill_manifest import SkillManifest
+from backend.schemas.skill_manifest import SkillStatus
+
+
+logger = logging.getLogger("supremeai.skill_gc")
 
 class SkillGarbageCollector:
     def __init__(self, base_skills_dir: str = "backend/skills"):
@@ -18,7 +24,7 @@ class SkillGarbageCollector:
         # কোর সিস্টেম স্কিল যা কোনো অবস্থাতেই ছাঁটাই করা যাবে না
         self.SYSTEM_CRITICAL_SKILLS = ["browser_agent", "code_smell_detector", "mcp_router"]
 
-    def run_daily_cleanup(self, usage_threshold: int = 5, days_threshold: int = 30) -> List[str]:
+    def run_daily_cleanup(self, usage_threshold: int = 5, days_threshold: int = 30) -> list[str]:
         """কম ব্যবহৃত স্কিলগুলো আইডেন্টিফাই করে এবং গ্রেস পিরিয়ড ও আর্কাইভ এনফোর্স করে।"""
         index = self.index_manager.load_index()
         now = datetime.utcnow()
@@ -37,12 +43,11 @@ class SkillGarbageCollector:
 
             # ক্যান্ডিডেট সিলেকশন: ৩০ দিনে ব্যবহার ৫ এর কম হলে
             if manifest.usage_count < usage_threshold and last_used < cutoff_date:
-
                 if manifest.status == SkillStatus.APPROVED:
                     # ⚠️ ধাপ ১: সরাসরি ডিলেট না করে Deprecated Pending করা ও নোটিফিকেশন
                     manifest.status = SkillStatus.DEPRECATED_PENDING
                     self.index_manager.update_skill(manifest)
-                    print(f"⚠️ [GC WARNING] Skill '{skill_id}' marked as DEPRECATED_PENDING. Grace period started.")
+                    logger.info(f"⚠️ [GC WARNING] Skill '{skill_id}' marked as DEPRECATED_PENDING. Grace period started.")
 
                 elif manifest.status == SkillStatus.DEPRECATED_PENDING:
                     # 📦 ধাপ ২: গ্রেস পিরিয়ড পার হলে নিরাপদ রিকভারেবল আর্কাইভ তৈরি
@@ -59,10 +64,11 @@ class SkillGarbageCollector:
                         del global_index[skill_id]
                         with open(self.index_manager.path, "w") as f:
                             import json
+
                             json.dump(global_index, f, indent=4)
 
                     purged_skills.append(skill_id)
-                    print(f"✨ [GC PURGE] Stale asset '{skill_id}' successfully archived and cleared.")
+                    logger.info(f"✨ [GC PURGE] Stale asset '{skill_id}' successfully archived and cleared.")
 
         return purged_skills
 

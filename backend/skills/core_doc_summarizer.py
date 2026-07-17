@@ -1,11 +1,13 @@
 # backend/skills/core_doc_summarizer.py
-import os
 import logging
-from typing import Dict, Any
+import os
+
 from google import genai
 from google.genai import types
 
+
 logger = logging.getLogger("supremeai.skills.doc_summarizer")
+
 
 def execute_tool(payload: dict) -> dict:
     """Strict Supreme Tool Contract for Sandbox-isolated File Summarization"""
@@ -39,7 +41,7 @@ def execute_tool(payload: dict) -> dict:
 
         user_prompt = f"""
         [Target Length: {summary_length.upper()}]
-        
+
         [Document Source Content]
         {file_content}
         """
@@ -51,7 +53,7 @@ def execute_tool(payload: dict) -> dict:
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 temperature=0.3,  # অ্যানালিটিক্যাল কনসিস্টেন্সির জন্য অপ্টিমাইজড
-            )
+            ),
         )
 
         return {
@@ -59,8 +61,8 @@ def execute_tool(payload: dict) -> dict:
             "result": {
                 "summary": response.text.strip(),
                 "extracted_bytes_processed": len(file_content.encode("utf-8")),
-                "model_enforced": "gemini-2.5-flash"
-            }
+                "model_enforced": "gemini-2.5-flash",
+            },
         }
 
     except Exception as e:
