@@ -171,7 +171,9 @@ jobs:
         # F401 (আনইউজড ইম্পোর্ট) ইগনোর করা হয়েছে, কারণ maintenance pipeline এটি অটো-ফিক্স করবে।
         run: |
           echo "=== Ruff স্ট্যাটিক অ্যানালাইসিস গেট ===" >> $GITHUB_STEP_SUMMARY
-          ruff check backend/ --select=E,W,F,T201 --ignore=E501,F401 --no-fix
+          # Keep the backend pyproject.toml as the single source of lint rules,
+          # including scoped test and fixture exceptions.
+          ruff check backend/ --no-fix
           echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
 
       - name: 📋 Gate 3 — Observability Check (No httpx without timeout)
