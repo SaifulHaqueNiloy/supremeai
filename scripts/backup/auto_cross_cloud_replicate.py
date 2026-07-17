@@ -6,7 +6,7 @@ Automatically replicates critical Firestore data to secondary cloud providers
 for disaster recovery and multi-cloud resilience.
 
 This solution implements a change-data-capture approach using Cloud Functions
-to replicate writes to secondary databases, but this script provides the 
+to replicate writes to secondary databases, but this script provides the
 initial synchronization and ongoing reconciliation capabilities.
 
 Environment Variables:
@@ -52,7 +52,7 @@ def load_secondary_credentials() -> Optional[service_account.Credentials]:
     if not SECONDARY_PROJECT_ID:
         print("⚠️  No secondary project configured - running in monitoring mode only")
         return None
-    
+
     try:
         if SECRET_BACKEND == "secret_manager":
             from google.cloud import secretmanager
@@ -75,7 +75,7 @@ def load_secondary_credentials() -> Optional[service_account.Credentials]:
     except Exception as e:
         logger.error(f"Failed to load secondary credentials: {e}")
         return None
-    
+
     return None
 
 def get_firestore_client(project_id: str, credentials: Optional[service_account.Credentials] = None) -> Optional[firestore.Client]:
@@ -93,9 +93,9 @@ def get_firestore_client(project_id: str, credentials: Optional[service_account.
 def calculate_document_hash(doc_data: Dict[str, Any]) -> str:
     """Calculate a hash of document data for change detection."""
     # Remove fields that might vary (like timestamps) for consistent hashing
-    cleaned_data = {k: v for k, v in doc_data.items() 
+    cleaned_data = {k: v for k, v in doc_data.items()
                    if not k.startswith('_') and not k.endswith('_at')}
-    
+
     # Sort keys for consistent JSON serialization
     sorted_data = json.dumps(cleaned_data, sort_keys=True, default=str)
     return hashlib.md5(sorted_data.encode()).hexdigest()
@@ -107,12 +107,12 @@ def sync_collection_primary_to_secondary(
 ) -> Dict[str, int]:
     """
     Synchronize a collection from primary to secondary database.
-    
+
     Returns:
         Dict with counts: {'processed': int, 'inserted': int, 'updated': int, 'skipped': int, 'errors': int}
     """
     stats = {'processed': 0, 'inserted': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
-    
+
     if not secondary_client:
         print("⚠️  Secondary client not available - skipping actual replication")
         # Still count for reporting
@@ -121,36 +121,36 @@ def sync_collection_primary_to_secondary(
         for doc in docs:
             stats['processed'] += 1
         return stats
-    
+
     try:
         collection_ref = primary_client.collection(collection_path)
-        
+
         # Process in batches
         docs = collection_ref.limit(BATCH_SIZE).stream()
-        
+
         batch = secondary_client.batch()
         batch_count = 0
-        
+
         for doc in docs:
             stats['processed'] += 1
-            
+
             try:
                 doc_data = doc.to_dict()
                 doc_id = doc.id
-                
+
                 # Calculate hash for change detection
                 doc_hash = calculate_document_hash(doc_data)
-                
+
                 # Add hash to metadata for tracking
                 doc_data['_sync_metadata'] = {
                     'source_project': 'primary',
                     'synced_at': datetime.now(timezone.utc).isoformat(),
                     'hash': doc_hash
                 }
-                
+
                 # Reference to document in secondary
                 doc_ref = secondary_client.collection(collection_path).document(doc_id)
-                
+
                 # Check if document exists and has changed
                 existing_doc = doc_ref.get()
                 if existing_doc.exists:
@@ -158,7 +158,7 @@ def sync_collection_primary_to_secondary(
                     existing_hash = None
                     if '_sync_metadata' in existing_data and 'hash' in existing_data['_sync_metadata']:
                         existing_hash = existing_data['_sync_metadata']['hash']
-                    
+
                     if existing_hash == doc_hash:
                         stats['skipped'] += 1
                         continue  # No change
@@ -166,11 +166,11 @@ def sync_collection_primary_to_secondary(
                         stats['updated'] += 1
                 else:
                     stats['inserted'] += 1
-                
+
                 # Add to batch
                 batch.set(doc_ref, doc_data)
                 batch_count += 1
-                
+
                 # Commit batch when full
                 if batch_count >= 100:  # Firestore batch limit is 500, but we'll be conservative
                     if not DRY_RUN:
@@ -179,22 +179,22 @@ def sync_collection_primary_to_secondary(
                         print(f"🔍 [DRY RUN] Would commit batch of {batch_count} writes to {collection_path}")
                     batch = secondary_client.batch()
                     batch_count = 0
-                    
+
             except Exception as e:
                 logger.error(f"Error processing document {doc.id} in {collection_path}: {e}")
                 stats['errors'] += 1
-        
+
         # Commit remaining items in batch
         if batch_count > 0:
             if not DRY_RUN:
                 batch.commit()
             else:
                 print(f"🔍 [DRY RUN] Would commit final batch of {batch_count} writes to {collection_path}")
-        
+
     except Exception as e:
         logger.error(f"Error synchronizing collection {collection_path}: {e}")
         stats['errors'] += 1
-    
+
     return stats
 
 
@@ -207,8 +207,8 @@ def send_discord_alert(severity: str, message: str):
                                headers={"Content-Type": "application/json"})
         try:
             _url_req.urlopen(req)
-        except Exception:
-            pass
+        except Exception as alert_err:
+            logger.exception(f"Failed to send Discord alert webhook: {alert_err}")
     logger.log(logging.CRITICAL if severity == "critical" else logging.INFO, message)
 
 
@@ -247,15 +247,15 @@ def replicate_with_retry(
 def main() -> int:
     """Main function to execute cross-cloud replication."""
     print("🔄 Starting Cross-Cloud Replication...")
-    
+
     # Validate configuration
     if not PRIMARY_PROJECT_ID:
         print("❌ Error: PRIMARY_PROJECT_ID environment variable is not set")
         return 1
-    
+
     if not SECONDARY_PROJECT_ID:
         print("⚠️  Warning: SECONDARY_PROJECT_ID not set - running in analysis mode only")
-    
+
     # Parse collections to replicate
     replicate_collections = []
     if REPLICATE_COLLECTIONS_STR:
@@ -266,13 +266,13 @@ def main() -> int:
         # For now, we'll need to specify collections
         print("💡 Set REPLICATE_COLLECTIONS environment variable to specify which collections to replicate")
         return 1
-    
+
     # Initialize clients
     print("🔌 Connecting to primary Firestore...")
     primary_client = get_firestore_client(PRIMARY_PROJECT_ID)
     if not primary_client:
         return 1
-    
+
     print("🔌 Connecting to secondary Firestore...")
     secondary_credentials = load_secondary_credentials()
     secondary_client = None
@@ -280,28 +280,28 @@ def main() -> int:
         secondary_client = get_firestore_client(SECONDARY_PROJECT_ID, secondary_credentials)
         if not secondary_client:
             print("⚠️  Warning: Could not connect to secondary - continuing in analysis mode")
-    
+
     if DRY_RUN:
         print("🔍 RUNNING IN DRY-RUN MODE - No actual changes will be made")
-    
+
     # Synchronize each collection
     total_stats = {'processed': 0, 'inserted': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
-    
+
     for collection_name in replicate_collections:
         print(f"\n\U0001f4ca Synchronizing collection: {collection_name}")
         stats = replicate_with_retry(
-            primary_client, 
-            secondary_client, 
+            primary_client,
+            secondary_client,
             collection_name
         )
-        
+
         # Accumulate stats
         for key in total_stats:
             total_stats[key] += stats.get(key, 0)
-        
+
         print(f"   📈 Processed: {stats['processed']}, Inserted: {stats['inserted']}, "
               f"Updated: {stats['updated']}, Skipped: {stats['skipped']}, Errors: {stats['errors']}")
-    
+
     # Print summary
     print("\n📊 Synchronization Summary:")
     print(f"   📄 Total processed: {total_stats['processed']}")
@@ -309,7 +309,7 @@ def main() -> int:
     print(f"   🔄 Total updated: {total_stats['updated']}")
     print(f"   ⏭️  Total skipped: {total_stats['skipped']}")
     print(f"   ❌ Total errors: {total_stats['errors']}")
-    
+
     if total_stats['errors'] > 0:
         print("\n⚠️  Some errors occurred during synchronization - check logs for details")
         return 1

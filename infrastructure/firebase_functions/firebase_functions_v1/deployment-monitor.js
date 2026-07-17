@@ -19,7 +19,7 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 /**
  * HTTP trigger: Analyze deployment changes with AI
  * Endpoint: https://region-supremeai.cloudfunctions.net/analyzeDeployment
- * 
+ *
  * LOCAL-FIRST MODE: If no AI API key is configured, uses heuristic analysis.
  */
 exports.analyzeDeployment = onRequest(async (req, res) => {
@@ -338,7 +338,10 @@ exports.monitorSystemHealth = onSchedule('*/5 * * * *', async (event) => {
         const backendUrl = process.env.JAVA_BACKEND_URL || "https://ide-api.supremeai.google.com";
         const healthResponse = await axios.get(`${backendUrl}/api/health`, {
             timeout: 10000
-        }).catch(() => null);
+        }).catch((error) => {
+            console.error(`[Health Check Failed] url=${backendUrl}/api/health message=${error.message} code=${error.code || 'N/A'}`);
+            return null;
+        });
 
         if (!healthResponse) {
             console.log("System appears to be down. Attempting to diagnose...");
