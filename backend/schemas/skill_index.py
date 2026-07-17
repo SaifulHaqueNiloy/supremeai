@@ -1,17 +1,28 @@
 # backend/schemas/skill_index.py
+# বাংলা মন্তব্য: SkillIndexManager — .index.json ফাইলের atomic read/write manager।
+# স্থায়ী ফিক্স: __file__ থেকে absolute path নির্ণয় করা হয়েছে
+# যাতে CI/CD-তে working directory যেখানেই থাকুক, path সবসময় সঠিক থাকে।
 import json
 import os
 from pathlib import Path
 
-from backend.schemas.skill_manifest import SkillManifest
+from schemas.skill_manifest import SkillManifest
 
 
-VERIFIED_MCP_SOURCES = ["https://github.com/modelcontextprotocol/servers", "https://github.com/paykaribazaronline/supreme-verified-skills"]
+VERIFIED_MCP_SOURCES = [
+    "https://github.com/modelcontextprotocol/servers",
+    "https://github.com/paykaribazaronline/supreme-verified-skills",
+]
+
+# বাংলা মন্তব্য: __file__ থেকে absolute path — relative path CI-তে ভাঙে
+_DEFAULT_INDEX_PATH = Path(__file__).resolve().parent.parent / "skills" / "manifests" / ".index.json"
 
 
 class SkillIndexManager:
-    def __init__(self, index_path: str = "backend/skills/manifests/.index.json"):
-        self.path = Path(index_path)
+    def __init__(self, index_path: Path | str | None = None):
+        # বাংলা মন্তব্য: index_path না দিলে এই ফাইলের পজিশন থেকে absolute path ব্যবহার করা হয়
+        # "backend/skills/manifests/.index.json" relative path CI-তে FileNotFoundError দেয়
+        self.path = Path(index_path) if index_path is not None else _DEFAULT_INDEX_PATH
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if not self.path.exists():
             self._atomic_write({})

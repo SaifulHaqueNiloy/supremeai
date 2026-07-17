@@ -11,8 +11,10 @@ from fastapi import HTTPException
 logger = logging.getLogger("supremeai.api.skills")
 router = APIRouter(prefix="/skills", tags=["Skill Catalog Infrastructure"])
 
-# ম্যানিফেস্ট ডিরেক্টরির পাথ ডিফাইন (পাথ ট্রাভার্সাল প্রোটেকশন সহ)
-MANIFEST_DIR = Path("backend/skills/manifests").resolve()
+# বাংলা মন্তব্য: __file__ থেকে absolute path নির্ণয় — relative path CI-তে FileNotFoundError দেয়
+# পুরনো: Path("backend/skills/manifests").resolve() — CWD-dependent, CI-তে ভাঙে
+# নতুন: Path(__file__).resolve().parent থেকে নিরাপদ relative calculation
+MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
 
 
 @router.get("/catalog", response_model=list[dict[str, Any]])
