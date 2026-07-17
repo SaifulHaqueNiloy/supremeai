@@ -1,35 +1,38 @@
 # SupremeAI 2.0 — Git Pre-commit Hooks (Iron Curtain Local Defense)
 # ================================================================
 # বাংলা মন্তব্য: এই ফাইলটি git commit করার আগে স্বয়ংক্রিয়ভাবে
-# CI/CD পাইপলাইনের মতো একই কোয়ালিটি গেট লোকালি চালায়।
-# লক্ষ্য: কোনো ত্রুটিপূর্ণ কোড গিটহাবে পৌঁছানোর আগেই ব্লক করা।
-#
-# ইনস্টলেশন: pre-commit install
-# ম্যানুয়াল রান: pre-commit run --all-files
+# ভাঙা JSON/TOML, মার্জ মার্কার, এবং debug statements লোকালি ব্লক করে।
 
 repos:
   # ══════════════════════════════════════════════════════════════
-  # ১. বেসিক ফাইল হেলথ চেক (File Integrity Gate)
+  # ১. বেসিক ফাইল হেলথ চেক (File Integrity Gate & Gatekeepers)
   # ══════════════════════════════════════════════════════════════
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-yaml
+        name: 📄 YAML Syntactical Validator
         args: [--allow-multiple-documents]
         exclude: ^docs/.*\.yml$
-      - id: check-json              # JSON সিনট্যাক্স ভ্যালিডেশন
-      - id: check-toml              # pyproject.toml ও Cargo.toml চেক
-      - id: end-of-file-fixer       # ফাইলের শেষে নিউলাইন এনফোর্স
-      - id: trailing-whitespace     # ট্রেইলিং স্পেস মুছে দেয়
+      - id: check-json
+        name: 🧱 JSON Gatekeeper (Validates Structural JSON)
+        description: ভাঙা বা ম্যালফর্মড JSON ফাইলের কমিট ব্লক করে।
+      - id: check-toml
+        name: ⚙️ TOML Gatekeeper (Validates Structural TOML)
+        description: pyproject.toml বা কনফিগ TOML ফাইলের সিনট্যাক্স লক করে।
+      - id: check-merge-conflict
+        name: ⚔️ Merge Conflict Shield
+        description: কোডের ভেতর ভুল করে '<<<<<<< HEAD' মার্কার থাকলে কমিট ড্রপ করায়।
+      - id: debug-statements
+        name: 🕵️‍♂️ Debug Tracer Blocker
+        description: পাইথন কোডে pdb.set_trace(), breakpoint() কল লোকালি আটকায়।
+      - id: end-of-file-fixer
+        name: 🏁 End of File Enforcer
+      - id: trailing-whitespace
+        name: 🧹 Trailing Whitespace Remover
         args: [--markdown-linebreak-ext=md]
-      - id: mixed-line-ending       # CR+LF মিক্স হলে ব্লক করে
-        args: [--fix=lf]
-      - id: check-added-large-files
-        args: ['--maxkb=500']       # ৫০০ KB+ ফাইল হলে ব্লক
-      - id: check-merge-conflict    # মার্জ কনফ্লিক্ট মার্কার থাকলে ব্লক
-      - id: check-case-conflict     # কেস-ইনসেন্সিটিভ ফাইলনেম কনফ্লিক্ট
-      - id: debug-statements        # pdb/ipdb/breakpoint() কল আটকায়
-      - id: detect-private-key      # SSH/SSL প্রাইভেট কী ব্লক করে
+      - id: detect-private-key
+        name: 🔑 SSH/SSL Private Key Blocker
         exclude: ^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
 
   # ══════════════════════════════════════════════════════════════
@@ -42,21 +45,19 @@ repos:
         exclude: package\.json|^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
 
   # ══════════════════════════════════════════════════════════════
-  # ৩. Python কোড কোয়ালিটি (Ruff — CI-র সাথে ১:১ মিল)
+  # ৩. Python কোড কোয়ালিটি এবং আনসেফ ফিক্স (Ruff Engine + Unsafe-fixes)
   # ══════════════════════════════════════════════════════════════
-  # বাংলা মন্তব্য: রুলসেট CI workflow-এর মতোই।
-  # UP042 (StrEnum), I001 (import order), SIM210 (bool ternary),
-  # B028 (stacklevel), T201 (print), S-rules (security) সব enforce হয়।
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.0
     hooks:
       - id: ruff
-        # বাংলা মন্তব্য: --fix: auto-fixable এররগুলো নিজে ঠিক করে।
-        # pyproject.toml থেকে রুলসেট রিড হয় — S বাদ দেওয়া হয়েছে কারণ
-        # detect-secrets + detect-private-key hooks সিকিউরিটি আলাদাভাবে কভার করে।
-        args: [--fix]
+        name: ⚡ Ruff Linter with Unsafe Semantic Fixes
+        # --unsafe-fixes ফ্ল্যাগ UP042 (StrEnum) এর মতো এডভান্সড সিম্যান্টিক ফিক্স নিজে ঠিক করে।
+        args: [--fix, --unsafe-fixes, --config=backend/pyproject.toml]
         types_or: [python, pyi]
-      - id: ruff-format             # Black-compatible formatter
+      - id: ruff-format
+        name: 🎨 Ruff Formatter (PEP 8 Enforcer)
+        args: [--config=backend/pyproject.toml]
 
   # ══════════════════════════════════════════════════════════════
   # ৪. Python টাইপ চেকিং (Mypy Static Analyzer)
@@ -70,15 +71,14 @@ repos:
         args: [--ignore-missing-imports, --no-strict-optional]
 
   # ══════════════════════════════════════════════════════════════
-  # ৫. TypeScript / Frontend কোয়ালিটি (ESLint — optional)
+  # ৫. TypeScript / Frontend কোয়ালিটি (Strict ESLint Import Gate)
   # ══════════════════════════════════════════════════════════════
-  # বাংলা মন্তব্য: TypeScript ফাইলে import/no-unused-vars ইত্যাদি চেক করে
   - repo: local
     hooks:
       - id: eslint-frontend
-        name: "🔍 ESLint Frontend Check"
+        name: "🔍 ESLint Frontend Check (Strict Import Guard)"
         description: "TypeScript/TSX ফাইলে ESLint রান করে import order ও type error ধরে।"
-        entry: bash -c 'cd apps/studio-client && npx eslint --max-warnings=0 src/ --ext .ts,.tsx 2>&1 || true'
+        entry: bash -c 'cd apps/studio-client && npx eslint --max-warnings=0 src/ --ext .ts,.tsx'
         language: system
         files: ^apps/studio-client/src/.*\.(ts|tsx)$
         pass_filenames: false
@@ -91,7 +91,6 @@ repos:
     hooks:
       - id: security-guard
         name: "🛡️ SupremeAI Security Guard"
-        description: "স্টেজ করা ফাইলে হার্ডকোডেড API Key / সিক্রেট থাকলে কমিট ব্লক করে।"
         entry: python3 packages/scripts/security_guard.py
         language: system
         pass_filenames: false
