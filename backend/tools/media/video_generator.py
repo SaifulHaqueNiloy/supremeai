@@ -94,8 +94,8 @@ class VideoGenerator:
 
         if provider == "runway":
             if not self.runway_api_key:
-                logger.warning("Runway selected but RUNWAY_API_KEY is missing. Returning stub payload.")
-                return self._stub(prompt, duration, "runway", output_path=output_path)
+                # বাংলা মন্তব্য: রানওয়ে সিলেক্টেড কিন্তু কী না থাকলে মক করার বদলে সরাসরি ValueError রেজ করা হবে।
+                raise ValueError("Runway selected but RUNWAY_API_KEY is missing.")
             try:
                 return self._call_runway(prompt, duration)
             except Exception as exc:  # noqa: BLE001
@@ -109,12 +109,12 @@ class VideoGenerator:
                         output_path=output_path,
                         tried={*tried, "runway"},
                     )
-                return self._stub(prompt, duration, "runway", output_path=output_path, error=str(exc))
+                raise RuntimeError(f"Runway generation failed and no fallback succeeded: {exc}")
 
         if provider == "kling":
             if not self.kling_api_key:
-                logger.warning("Kling selected but KLING_API_KEY is missing. Returning stub payload.")
-                return self._stub(prompt, duration, "kling", output_path=output_path)
+                # বাংলা মন্তব্য: ক্লিং সিলেক্টেড কিন্তু কী না থাকলে মক করার বদলে সরাসরি ValueError রেজ করা হবে।
+                raise ValueError("Kling selected but KLING_API_KEY is missing.")
             try:
                 return self._call_kling(prompt, duration)
             except Exception as exc:  # noqa: BLE001
@@ -128,32 +128,6 @@ class VideoGenerator:
                         output_path=output_path,
                         tried={*tried, "kling"},
                     )
-                return self._stub(prompt, duration, "kling", output_path=output_path, error=str(exc))
+                raise RuntimeError(f"Kling generation failed and no fallback succeeded: {exc}")
 
         raise ValueError(f"Unknown provider: {provider!r}. Use 'runway', 'kling', or 'auto'.")
-
-    @staticmethod
-    def _stub(
-        prompt: str,
-        duration: int,
-        provider: str,
-        output_path: str | None = None,
-        error: str | None = None,
-    ) -> dict[str, Any]:
-        logger.info(f"Returning stub video payload for provider={provider}.")
-        manifest = {
-            "success": True,
-            "provider": f"{provider}-stub",
-            "prompt": prompt,
-            "duration": duration,
-            "job_id": "stub-job",
-            "video_url": None,
-            "mock": True,
-            "error": error,
-        }
-        if output_path:
-            path = Path(output_path)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-            manifest["output_path"] = str(path)
-        return manifest
