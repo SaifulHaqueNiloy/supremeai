@@ -528,8 +528,11 @@ export const scrapeHealthFn = https.onRequest(
       try {
         const r = await axios.get(`${PLAYWRIGHT_URL}/health`, { timeout: 5000 });
         return { ok: r.status === 200, status: r.status };
-      } catch { return { ok: false }; }
-    })()) as { ok: boolean; status: number };
+      } catch (err: any) {
+        console.error("[scrapeEngine] Playwright health check failed:", err.message, "code:", err.code);
+        return { ok: false, error: err.message, code: err.code || 'UNKNOWN' };
+      }
+    })()) as { ok: boolean; status?: number; error?: string; code?: string };
     res.status(200).json({
       service: "scrapeEngine",
       playwright: playStatus,
