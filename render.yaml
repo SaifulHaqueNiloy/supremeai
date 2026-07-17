@@ -36,7 +36,7 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: ENCRYPTION_KEY
+      - key: SUPREMEAI_ENCRYPTION_KEY
         sync: false
       - key: CI_WEBHOOK_SECRET
         sync: false

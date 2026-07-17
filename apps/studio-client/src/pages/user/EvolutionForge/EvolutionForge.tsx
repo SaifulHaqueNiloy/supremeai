@@ -19,6 +19,7 @@ import TaskNode from './nodes/TaskNode';
 import { ForgeSidebar } from './ForgeSidebar';
 import { useForgeAutosave } from './hooks/useForgeAutosave';
 import { DebateOverlay } from './DebateOverlay';
+import { getApiBaseUrl } from '../../../utils/api';
 
 // Register custom node types
 const nodeTypes = {
@@ -167,7 +168,7 @@ const EvolutionForgeCanvas = () => {
       setIsSaving(true);
       const payload = buildForgePayload(`Swarm_${Date.now()}`, toObject());
 
-      const response = await fetch('/api/v1/swarm/forge', {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/swarm/forge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,7 +201,7 @@ const EvolutionForgeCanvas = () => {
       // We use a dummy flow_id for now, in a real app this would be the saved swarm ID
       const flowId = `flow_${Date.now()}`;
 
-      const response = await fetch(`/api/v1/swarm/forge/${flowId}/execute`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/swarm/forge/${flowId}/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
