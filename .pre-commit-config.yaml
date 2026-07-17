@@ -10,6 +10,9 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: check-added-large-files
+        args: ['--maxkb=500'] # ৫০০ KB এর বড় ফাইল হলে কমিট আটকে দেবে
+      - id: detect-private-key # ভুলে SSH বা SSL প্রাইভেট কী স্টেজ করলে ব্লক করবে
 
   # Secret Scanning
   - repo: https://github.com/Yelp/detect-secrets
@@ -18,18 +21,24 @@ repos:
       - id: detect-secrets
         exclude: package.json
 
-  # AI Scribe Historian (আমাদের কাস্টম হুক)
+  # 🚀 Ruff Linter & Formatter (Iron Curtain লোকাল ডিফেন্স লেয়ার)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [ --fix ] # কোডের বাগ এবং অব্যবহৃত ইম্পোর্ট নিজে থেকেই ফিক্স করে দেবে
+      - id: ruff-format # সম্পূর্ণ কোডবেসকে স্ট্যান্ডার্ড ফরম্যাটে রাখবে
+
+  # 🚀 টাইপ এরর লোকালি ব্লক করার জন্য (Mypy Static Type Checker)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [pydantic, types-requests] # আপনার প্রোজেক্ট ডিপেনডেন্সি অনুযায়ী
+
+  # Local Hooks Registry
   - repo: local
     hooks:
-      - id: ai-scribe-historian
-        name: "🤖 AI Scribe - Auto-Doc Generator"
-        description: "AI Scribe ব্যবহার করে পাইথন ফাইলগুলোর জন্য স্বয়ংক্রিয়ভাবে ডকস্ট্রিং তৈরি ও আপডেট করে।"
-        # poetry env ব্যবহার করার জন্য system language এবং backend ডিরেক্টরি দিয়ে poetry run ব্যবহার করছি
-        entry: poetry -C backend run python ../ai_scribe_historian.py --files
-        language: system
-        types: [python]
-        stages: [commit]
-
       # SupremeAI Security Guard - হার্ডকোডেড সিক্রেট ব্লকার
       - id: security-guard
         name: "🛡️ SupremeAI Security Guard"
