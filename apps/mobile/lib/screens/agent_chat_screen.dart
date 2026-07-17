@@ -11,7 +11,7 @@ class AgentChatScreen extends StatefulWidget {
 class _AgentChatScreenState extends State<AgentChatScreen> {
   final NeuralStreamService _wsService = NeuralStreamService();
   final TextEditingController _controller = TextEditingController();
-  
+
   final List<Map<String, String>> _messages = [];
   String _currentStream = "";
   bool _isGenerating = false;
@@ -20,7 +20,7 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
   void initState() {
     super.initState();
     _wsService.connect();
-    
+
     // WebSocket স্ট্রিম শোনা
     _wsService.stream.listen((data) {
       if (data == '[DONE]') {
@@ -39,12 +39,12 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
 
   void _sendMessage() {
     if (_controller.text.isEmpty || _isGenerating) return;
-    
+
     setState(() {
       _messages.add({"role": "user", "content": _controller.text});
       _isGenerating = true;
     });
-    
+
     _wsService.sendMessage(_controller.text);
     _controller.clear();
   }

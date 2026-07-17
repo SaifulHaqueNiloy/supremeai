@@ -77,7 +77,7 @@ export function useDynamicDock({ resolveContent, unsupportedPlatforms = [] }: Us
       const platform = String(over.id);
       const draggedId = String(active.id);
       const { content, context } = resolveContent(draggedId);
-      
+
       // HITL: Hold the action and set node to pending
       setPendingAction({ platform, content, context: context ?? {} });
       setStatus(platform, 'pending', 'Awaiting your confirmation...');

@@ -29,8 +29,8 @@ export default function CollabEditor({ sessionId, clientId }: CollabEditorProps)
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
-        // বাংলা মন্তব্য: ব্যাকএন্ড 'sync_state' এর ক্ষেত্রে 'state' অবজেক্টের ভেতর 'document_state' পাঠায়। 
+
+        // বাংলা মন্তব্য: ব্যাকএন্ড 'sync_state' এর ক্ষেত্রে 'state' অবজেক্টের ভেতর 'document_state' পাঠায়।
         // আর 'delta' এর ক্ষেত্রে সরাসরি অবজেক্টের লেভেলে 'document_state' থাকে।
         if (data.type === 'sync_state') {
           if (data.state && data.state.document_state !== undefined) {
@@ -63,12 +63,12 @@ export default function CollabEditor({ sessionId, clientId }: CollabEditorProps)
   const handleEditorChange = useCallback((value: string | undefined) => {
     const newValue = value || '';
     setCode(newValue);
-    
+
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       // MVP এর জন্য আমরা সিম্পল ডেল্টা পাঠাচ্ছি। (প্রোডাকশনে এখানে Yjs/CRDT ডেল্টা যাবে)
       wsRef.current.send(JSON.stringify({
         type: 'delta',
-        delta: { insert: newValue, position: 0 } 
+        delta: { insert: newValue, position: 0 }
       }));
     }
   }, []);
@@ -97,7 +97,7 @@ export default function CollabEditor({ sessionId, clientId }: CollabEditorProps)
           </div>
           <span className="ml-2 text-sm font-semibold text-gray-600 font-mono">supreme_agent.py</span>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           {isAiProcessing && (
             <span className="text-xs font-bold text-indigo-600 animate-pulse flex items-center">
@@ -108,7 +108,7 @@ export default function CollabEditor({ sessionId, clientId }: CollabEditorProps)
               AI is typing...
             </span>
           )}
-          <button 
+          <button
             onClick={handleAskAI}
             className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors flex items-center"
           >

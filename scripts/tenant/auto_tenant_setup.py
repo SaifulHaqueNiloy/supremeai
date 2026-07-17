@@ -66,14 +66,14 @@ def create_tenant_document(db: firestore.Client, tenant_id: str, tenant_data: Di
     """Create the tenant document in Firestore."""
     try:
         tenant_ref = db.collection('tenants').document(tenant_id)
-        
+
         # Set creation timestamp if not provided
         if 'created_at' not in tenant_data:
             tenant_data['created_at'] = firestore.SERVER_TIMESTAMP
-        
+
         # Set updated timestamp
         tenant_data['updated_at'] = firestore.SERVER_TIMESTAMP
-        
+
         tenant_ref.set(tenant_data)
         logger.info(f"Created tenant document for {tenant_id}")
         return True
@@ -85,7 +85,7 @@ def create_tenant_subcollections(db: firestore.Client, tenant_id: str, template:
     """Create default subcollections and documents for a tenant."""
     try:
         tenant_ref = db.collection('tenants').document(tenant_id)
-        
+
         # Define default collections and their initial documents based on template
         template_configs = {
             "starter": {
@@ -182,9 +182,9 @@ def create_tenant_subcollections(db: firestore.Client, tenant_id: str, template:
                 }
             }
         }
-        
+
         config = template_configs.get(template, template_configs["starter"])
-        
+
         # Create each subcollection
         for collection_name, initial_data in config.items():
             if isinstance(initial_data, list):
@@ -199,7 +199,7 @@ def create_tenant_subcollections(db: firestore.Client, tenant_id: str, template:
                 if isinstance(initial_data, dict):
                     initial_data["created_at"] = firestore.SERVER_TIMESTAMP
                 doc_ref.set(initial_data)
-        
+
         logger.info(f"Created subcollections for tenant {tenant_id} using template '{template}'")
         return True
     except Exception as e:
@@ -211,7 +211,7 @@ def setup_default_skills(db: firestore.Client, tenant_id: str) -> bool:
     try:
         # Reference to the tenant's skills subcollection
         skills_ref = db.collection('tenants').document(tenant_id).collection('skills')
-        
+
         # Get list of available starter skills from the system
         # In a real implementation, this would query a global skills catalog
         starter_skills = [
@@ -244,13 +244,13 @@ def setup_default_skills(db: firestore.Client, tenant_id: str) -> bool:
                 "usage_limit": 2000
             }
         ]
-        
+
         # Assign each skill to the tenant
         for skill_data in starter_skills:
             skill_id = skill_data["skill_id"]
             skill_ref = skills_ref.document(skill_id)
             skill_ref.set(skill_data)
-        
+
         logger.info(f"Assigned {len(starter_skills)} default skills to tenant {tenant_id}")
         return True
     except Exception as e:
@@ -262,43 +262,43 @@ def send_welcome_email(tenant_email: str, tenant_name: str, tenant_id: str, temp
     try:
         # This is a simplified implementation
         # In production, you would use a proper email service like SendGrid, SES, etc.
-        
+
         smtp_server = os.getenv("SMTP_SERVER", "localhost")
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
         smtp_user = os.getenv("SMTP_USER")
         smtp_password = os.getenv("SMTP_PASSWORD")
-        
+
         if not all([smtp_server, smtp_port]):
             logger.warning("SMTP not configured - skipping email")
             return True  # Not fatal
-        
+
         msg = MIMEMultipart()
         msg['From'] = smtp_user or "noreply@supremeai.com"
         msg['To'] = tenant_email
         msg['Subject'] = f"Welcome to SupremeAI 2.0, {tenant_name}!"
-        
+
         # In a real implementation, you would load the template and fill in variables
         body = f"""
         Hello {tenant_name},
-        
+
         Welcome to SupremeAI 2.0! Your account has been successfully created.
-        
+
         You now have access to:
         - AI-powered chat and content generation
         - Workflow automation tools
         - Analytics and monitoring
         - Custom skill development
-        
+
         To get started, visit your dashboard at: https://app.supremeai.com/{tenant_id}
-        
+
         If you have any questions, our support team is here to help.
-        
+
         Best regards,
         The SupremeAI Team
         """
-        
+
         msg.attach(MIMEText(body, 'plain'))
-        
+
         # Only actually send if not in dry-run mode
         if os.getenv("DRY_RUN", "false").lower() != "true":
             server = smtplib.SMTP(smtp_server, smtp_port)
@@ -311,7 +311,7 @@ def send_welcome_email(tenant_email: str, tenant_name: str, tenant_id: str, temp
             logger.info(f"Welcome email sent to {tenant_email}")
         else:
             print(f"🔍 [DRY RUN] Would send welcome email to {tenant_email}")
-        
+
         return True
     except Exception as e:
         logger.error(f"Failed to send welcome email to {tenant_email}: {e}")
@@ -322,7 +322,7 @@ def notify_admin_of_new_tenant(tenant_id: str, tenant_email: str, template: str)
     try:
         if not ADMIN_EMAIL:
             return True  # Not required
-        
+
         # Similar to send_welcome_email but for admin notification
         # For brevity, we'll just log this
         logger.info(f"New tenant registered: {tenant_id} ({tenant_email}) using template '{template}'")
@@ -335,39 +335,39 @@ def notify_admin_of_new_tenant(tenant_id: str, tenant_email: str, template: str)
 def main() -> int:
     """Main function to set up a new tenant."""
     print("🏢 Starting Tenant Setup...")
-    
+
     # In a real implementation, this would be triggered by a Pub/Sub message
     # or HTTP endpoint when a new user signs up
     # For this script, we'll expect environment variables or command line args
-    
+
     # Get tenant information from environment (would normally come from trigger)
     tenant_id = os.getenv("TENANT_ID")
     tenant_email = os.getenv("TENANT_EMAIL")
     tenant_name = os.getenv("TENANT_NAME", tenant_email.split('@')[0] if tenant_email else "Unknown User")
     template = os.getenv("TEMPLATE", DEFAULT_TEMPLATE)
-    
+
     if not tenant_id:
         print("❌ Error: TENANT_ID environment variable is not set")
         print("   This script is typically triggered automatically by user signup")
         print("   For manual testing, set TENANT_ID, TENANT_EMAIL, and optionally TEMPLATE")
         return 1
-    
+
     if not tenant_email:
         print("⚠️  Warning: TENANT_EMAIL not set - notifications will be skipped")
-    
+
     print(f"📝 Setting up tenant: {tenant_id}")
     print(f"📧 Email: {tenant_email or '(not provided)'}")
     print(f"👤 Name: {tenant_name}")
     print(f"📋 Template: {template}")
-    
+
     # Initialize clients
     db = get_firestore_client()
     if not db:
         return 1
-    
+
     # Track overall success
     success = True
-    
+
     # Step 1: Create tenant document
     print("\n1️⃣ Creating tenant record...")
     tenant_data = {
@@ -379,12 +379,12 @@ def main() -> int:
         "created_at": firestore.SERVER_TIMESTAMP,
         "updated_at": firestore.SERVER_TIMESTAMP
     }
-    
+
     if not create_tenant_document(db, tenant_id, tenant_data):
         success = False
     else:
         print("   ✅ Tenant record created")
-    
+
     # Step 2: Create subcollections
     if success:
         print("\n2️⃣ Setting up tenant data structure...")
@@ -392,7 +392,7 @@ def main() -> int:
             success = False
         else:
             print("   ✅ Tenant data structure created")
-    
+
     # Step 3: Set up default skills
     if success:
         print("\n3️⃣ Assigning default skills...")
@@ -400,7 +400,7 @@ def main() -> int:
             success = False
         else:
             print("   ✅ Default skills assigned")
-    
+
     # Step 4: Send welcome email
     if success and tenant_email:
         print("\n4️⃣ Sending welcome email...")
@@ -409,7 +409,7 @@ def main() -> int:
             print("   ⚠️  Warning: Failed to send welcome email")
         else:
             print("   ✅ Welcome email sent")
-    
+
     # Step 5: Notify administrators
     if success:
         print("\n5️⃣ Notifying administrators...")
@@ -418,7 +418,7 @@ def main() -> int:
             print("   ⚠️  Warning: Failed to notify administrators")
         else:
             print("   ✅ Administrators notified")
-    
+
     if success:
         print(f"\n🎉 Tenant {tenant_id} setup completed successfully!")
         return 0

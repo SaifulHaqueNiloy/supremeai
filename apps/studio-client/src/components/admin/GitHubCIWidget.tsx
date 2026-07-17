@@ -38,12 +38,12 @@ export const GitHubCIWidget: React.FC<GitHubCIWidgetProps> = ({ reports, isLoadi
                     {isSuccess ? <CheckCircle2 size={14} className="text-emerald-500" /> :
                      isFailed ? <XCircle size={14} className="text-rose-500" /> :
                      <CircleDashed size={14} className="text-cyan-500 animate-spin-slow" />}
-                    
+
                     <span className="text-xs font-semibold text-slate-200">
                       {report.workflow_name || 'supreme-core-ci.yml'}
                     </span>
                   </div>
-                  
+
                   <span className="text-[9px] text-slate-500">
                     {report.created_at ? new Date(report.created_at).toLocaleTimeString() : 'Just now'}
                   </span>

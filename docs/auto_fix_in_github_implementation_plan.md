@@ -61,7 +61,7 @@
 MAX_FILES_CHANGED = 10
 MAX_LINES_CHANGED = 300
 CRITICAL_FILE_PATTERNS = [
-    "migrations/", "alembic/", 
+    "migrations/", "alembic/",
     "core/auth", "core/security",
     ".env", "secrets"
 ]

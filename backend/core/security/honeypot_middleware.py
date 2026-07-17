@@ -127,7 +127,8 @@ class HoneypotMiddleware:
                         module="honeypot",
                         error_type="HONEYPOT_TRIGGERED",
                         message=f"Malicious payload detected from {hacker_ip}",
-                        severity="HIGH", structured_context=ErrorContext(module="auto_fixed"),
+                        severity="HIGH",
+                        structured_context=ErrorContext(module="auto_fixed"),
                         context={
                             "ip": hacker_ip,
                             "action": "ip_blocked",

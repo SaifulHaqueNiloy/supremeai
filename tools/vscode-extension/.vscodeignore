@@ -24,4 +24,3 @@ test/**
 tsconfig.tsbuildinfo
 jest.config.js
 package-lock.json
-

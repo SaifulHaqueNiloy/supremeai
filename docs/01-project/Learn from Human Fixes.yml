@@ -54,16 +54,16 @@ jobs:
           FIXED_COMMIT_SHA: ${{ github.sha }}
         run: |
           echo "Generating training data from fix..."
-          
+
           # Create a directory for the broken code
           mkdir -p ./.ci-temp/broken-code
-          
+
           # Get the list of changed files between the broken and fixed commits
           CHANGED_FILES=$(git diff --name-only $BROKEN_COMMIT_SHA $FIXED_COMMIT_SHA)
-          
+
           echo "Changed files:"
           echo "$CHANGED_FILES"
-          
+
           # For each changed file, check out its content from the BROKEN commit
           for file in $CHANGED_FILES; do
             # Ensure the directory exists
@@ -71,10 +71,10 @@ jobs:
             # Get the file content from the old commit and save it
             git show "$BROKEN_COMMIT_SHA:$file" > "./.ci-temp/broken-code/$file"
           done
-          
+
           # Get the diff which will become the "completion" part of the training data
           git diff $BROKEN_COMMIT_SHA $FIXED_COMMIT_SHA > ./.ci-temp/fix.diff
-          
+
           # Create a JSONL file for fine-tuning
           # The script now has access to:
           # - ./.ci-temp/logs/ (error logs)

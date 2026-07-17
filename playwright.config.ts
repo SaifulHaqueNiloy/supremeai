@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * আপনার Playwright E2E টেস্ট কনফিগারেশন
  * এটি স্বয়ংক্রিয়ভাবে ডেভ সার্ভার চালু করবে এবং তারপর E2E টেস্ট রান করবে।
- * 
+ *
  * CI-তে রান করার জন্য: pnpm exec playwright test
  * লোকালে চালানোর জন্য: pnpm exec playwright test --headed
  */
@@ -24,7 +24,7 @@ export default defineConfig({
     // Visual Regression Test-এর জন্য ডিফল্ট সেটিংস
     toHaveScreenshot: { maxDiffPixels: 100, threshold: 0.2 },
   },
-  
+
   use: {
     // বাংলা মন্তব্য: ডেভেলপমেন্ট সার্ভারের জন্য ডিফল্ট URL
     baseURL: process.env.BASE_URL || 'http://localhost:5173',

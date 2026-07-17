@@ -144,27 +144,27 @@ class SkillService:
     def __init__(self):
         self.client = create_client(url, key)
         self.cache = {}  # Redis later
-    
+
     async def get_skill(self, skill_id: str):
         # Cache first
         if skill_id in self.cache:
             return self.cache[skill_id]
-        
+
         # DB query
         result = await self.client.table('skills').select('*').eq('id', skill_id).execute()
         skill = result.data[0]
-        
+
         # Cache for 5 minutes
         self.cache[skill_id] = skill
         return skill
-    
+
     async def find_or_create_skill(self, task_description: str):
         # Semantic search using pgvector or full-text
         result = await self.client.rpc('search_skills', {'query': task_description}).execute()
-        
+
         if result.data:
             return result.data[0]  # Best match
-        
+
         # Auto-generate new skill
         new_skill = await self.evolution_engine.generate(task_description)
         await self.client.table('skills').insert(new_skill).execute()
@@ -302,5 +302,3 @@ Environment Separation: dev, staging, prod আলাদা Supabase প্রজ
 🎯 সারসংক্ষেপ
 এটা একদম সঠিক সিদ্ধান্ত। আপনার SupremeAI 2.0 যদি হাজার হাজার ডাইনামিক স্কিল জেনারেট করে, তাহলে সেগুলো ডাটাবেজে সরানো অপরিহার্য। GitHub repo শুধু কোর লজিক এবং ইনফ্রাস্ট্রাকচার কোড রাখবে। স্কিল ডাটা, লগস, এবং কনফিগারেশন Supabase-এ থাকবে। এতে আপনার multi-cloud, multi-task প্ল্যাটফর্ম স্কেলেবল, ফাস্ট, এবং মেইনটেইনেবল হবে।
 আপনি কি চান আমি স্পেসিফিক কোড স্নিপেট (যেমন SkillService ক্লাস, evolution_engine.py রি-ফ্যাক্টর) লিখে দিই?
-
-

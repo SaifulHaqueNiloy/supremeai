@@ -124,9 +124,7 @@ class TestLoginEndpoint:
 
     def test_admin_role_assigned_only_if_in_settings_emails(self, client):
         # বাংলা মন্তব্য: "hacker-admin@gmail.com" ইমেইলে "admin" সাবস্ট্রিং থাকলেও সে যেন এডমিন রোল না পায়, তা নিশ্চিত করার জন্য টেস্ট।
-        with patch("api.routes.auth.db.client") as mock_supabase_client, \
-             patch("api.routes.auth.settings.admin_emails", ["admin@supremeai.dev"]):
-
+        with patch("api.routes.auth.db.client") as mock_supabase_client, patch("api.routes.auth.settings.admin_emails", ["admin@supremeai.dev"]):
             mock_res = MagicMock()
             mock_res.user = MagicMock()
             mock_res.user.id = "user-id-123"

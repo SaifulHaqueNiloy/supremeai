@@ -24,6 +24,7 @@ def test_auth_middleware_allows_health_without_token():
 
 from unittest.mock import patch
 
+
 def test_auth_middleware_blocks_protected_route_without_token():
     app = FastAPI()
 

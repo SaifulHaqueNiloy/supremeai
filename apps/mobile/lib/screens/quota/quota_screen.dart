@@ -22,7 +22,7 @@ class QuotaScreen extends StatelessWidget {
           children: [
             _buildPlanCard(context),
             const SizedBox(height: 32),
-            Text('quota.current_usage'.tr().toUpperCase(), 
+            Text('quota.current_usage'.tr().toUpperCase(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
             ),
             const SizedBox(height: 16),
@@ -57,11 +57,11 @@ class QuotaScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('quota.plan'.tr().toUpperCase(), 
+          Text('quota.plan'.tr().toUpperCase(),
             style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 2)
           ),
           const SizedBox(height: 8),
-          const Text('Enterprise AI', 
+          const Text('Enterprise AI',
             style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)
           ),
           const SizedBox(height: 16),

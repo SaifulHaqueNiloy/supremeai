@@ -64,7 +64,4 @@ class HFImageGenerator:
         except Exception as e:  # noqa: BLE001
             # বাংলা মন্তব্য: কানেকশন বা সার্ভার এরর হলে এটি আর সাইলেন্টলি ফেইল না করে সরাসরি এরর ডিকশনারি রিটার্ন করবে।
             logger.error(f"HuggingFace image generation failed: {e}")
-            return {
-                "success": False,
-                "error": f"HuggingFace API call failed: {str(e)}"
-            }
+            return {"success": False, "error": f"HuggingFace API call failed: {str(e)}"}

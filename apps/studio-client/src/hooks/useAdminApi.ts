@@ -152,4 +152,3 @@ export function useCIReports(limit = 20) {
     staleTime: 15_000,
   });
 }
-

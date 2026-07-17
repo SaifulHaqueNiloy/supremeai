@@ -75,10 +75,10 @@ def get_yesterday_stats() -> Dict[str, Any]:
     """Get statistics for yesterday."""
     # In a real implementation, this would query your databases, logging systems, etc.
     # For this example, we'll return mock data
-    
+
     yesterday = datetime.now(timezone.utc) - timedelta(days=1)
     yesterday_str = yesterday.strftime("%Y-%m-%d")
-    
+
     # Mock data - replace with actual queries to your systems
     stats = {
         "date": yesterday_str,
@@ -111,14 +111,14 @@ def get_yesterday_stats() -> Dict[str, Any]:
             {"time": "22:45", "event": "Completed daily backup successfully"}
         ]
     }
-    
+
     return stats
 
 def format_feedback_card(title: str, items: List[Dict[str, Any]], item_format_func) -> str:
     """Format a section of the report with a title and list of items."""
     if not items:
         return ""
-    
+
     section = f"\n## {title}\n"
     for item in items:
         section += f"- {item_format_func(item)}\n"
@@ -139,7 +139,7 @@ def format_event_item(item: Dict[str, Any]) -> str:
 def generate_standup_message() -> str:
     """Generate the daily standup message."""
     stats = get_yesterday_stats()
-    
+
     # Header
     message = f"""# 📊 Daily Standup Report - {stats['date']}
 
@@ -164,7 +164,7 @@ Good morning! Here's what happened in the SupremeAI system yesterday:
             stats["top_endpoints"],
             format_endpoint_stat
         )
-    
+
     # Add errors section if enabled
     if INCLUDE_ERRORS and stats.get("error_summary"):
         message += format_feedback_card(
@@ -172,7 +172,7 @@ Good morning! Here's what happened in the SupremeAI system yesterday:
             stats["error_summary"],
             format_error_item
         )
-    
+
     # Add system events
     if stats.get("system_events"):
         message += format_feedback_card(
@@ -180,14 +180,14 @@ Good morning! Here's what happened in the SupremeAI system yesterday:
             stats["system_events"],
             format_event_item
         )
-    
+
     # Footer
     message += f"""
 ---
 *Report generated at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}*
 *Next report scheduled for {(datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=STANDUP_HOUR, minute=STANDUP_MINUTE, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S UTC')}*
 """
-    
+
     return message
 
 def run_scheduler() -> None:
@@ -196,9 +196,9 @@ def run_scheduler() -> None:
     schedule.every().day.at(f"{STANDUP_HOUR:02d}:{STANDUP_MINUTE:02d}").do(
         lambda: send_standup(generate_standup_message())
     ).timezone = timezone(timedelta(hours=int(TIMEZONE))) if TIMEZONE != "UTC" else timezone.utc
-    
+
     print(f"⏰ Scheduled daily standup for {STANDUP_HOUR:02d}:{STANDUP_MINUTE:02d} {TIMEZONE}")
-    
+
     # Send an immediate test run if requested
     if os.getenv("RUN_NOW", "false").lower() == "true":
         print("🚀 Running immediate test...")
@@ -208,13 +208,13 @@ def run_scheduler() -> None:
         print("="*50)
         print(message)
         print("="*50)
-        
+
         # Actually send it if not just testing
         if os.getenv("SEND_NOW", "false").lower() == "true":
             send_standup(message)
             print("✅ Test message sent!")
         return
-    
+
     # Main loop
     print("🔄 Starting scheduler...")
     try:
@@ -235,11 +235,11 @@ def main() -> int:
     print(f"   • Slack webhook: {'✅ Configured' if SLACK_WEBHOOK_URL else '❌ Not configured'}")
     print(f"   • Include metrics: {'✅ Yes' if INCLUDE_METRICS else '❌ No'}")
     print(f"   • Include errors: {'✅ Yes' if INCLUDE_ERRORS else '❌ No'}")
-    
+
     # Validate configuration
     if not DISCORD_WEBHOOK_URL and not SLACK_WEBHOOK_URL:
         print("⚠️  Warning: No webhook URLs configured - will only output to console")
-    
+
     try:
         run_scheduler()
     except KeyboardInterrupt:
@@ -247,7 +247,7 @@ def main() -> int:
     except Exception as e:
         logger.error(f"Unexpected error in standup bot: {e}")
         return 1
-    
+
     print("👋 Standup bot stopped")
     return 0
 

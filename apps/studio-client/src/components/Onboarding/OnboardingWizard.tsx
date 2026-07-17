@@ -22,7 +22,7 @@ const OnboardingWizard = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-xl w-full bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-700">
         <h2 className="text-3xl font-bold mb-6 text-center text-blue-400">Welcome to SupremeAI 2.0</h2>
-        
+
         {/* Progress Bar */}
         <div className="flex justify-between mb-8">
           {[1, 2, 3].map((num) => (

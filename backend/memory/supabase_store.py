@@ -84,17 +84,15 @@ class SupabaseStore(SQLiteMemoryStore):
     def _generate_embedding(self, text: str) -> list[float] | None:
         # বাংলা মন্তব্য: LiteLLM ব্যবহার করে টেক্সটের জন্য ১৫৩৬ ডাইমেনশনের ভেক্টর এমবেডিং তৈরি করা হচ্ছে।
         try:
-            import asyncio
             import litellm
+
             # litellm.embedding() সিঙ্ক পদ্ধতিতে এমবেডিং জেনারেট করে যা আমাদের সিঙ্ক থ্রেডের জন্য উপযুক্ত
-            response = litellm.embedding(
-                model="text-embedding-3-small",
-                input=text
-            )
+            response = litellm.embedding(model="text-embedding-3-small", input=text)
             return response.data[0]["embedding"]
         except Exception as e:
             try:
                 from loguru import logger
+
                 logger.error(f"Embedding generation failed: {e}")
             except ImportError:
                 pass
@@ -125,6 +123,7 @@ class SupabaseStore(SQLiteMemoryStore):
             except Exception as e:
                 try:
                     from loguru import logger
+
                     logger.error(f"Failed to save fact with embedding: {e}")
                 except ImportError:
                     pass
@@ -146,18 +145,14 @@ class SupabaseStore(SQLiteMemoryStore):
                 if query_embedding:
                     client = self._get_supabase_client()
                     response = client.rpc(
-                        "match_learned_facts",
-                        {
-                            "query_embedding": query_embedding,
-                            "match_threshold": 0.3,
-                            "match_count": 5
-                        }
+                        "match_learned_facts", {"query_embedding": query_embedding, "match_threshold": 0.3, "match_count": 5}
                     ).execute()
                     if response.data:
                         return [json.loads(row["content"]) if isinstance(row["content"], str) else row["content"] for row in response.data]
             except Exception as e:
                 try:
                     from loguru import logger
+
                     logger.warning(f"pgvector RPC failed, falling back to ilike: {e}")
                 except ImportError:
                     pass
@@ -170,6 +165,7 @@ class SupabaseStore(SQLiteMemoryStore):
             except Exception as e:
                 try:
                     from loguru import logger
+
                     logger.error(f"Fallback search failed: {e}")
                 except ImportError:
                     pass

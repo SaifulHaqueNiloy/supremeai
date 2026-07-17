@@ -1,7 +1,7 @@
 # 🔱 The GCP-Killer Stack: Elite Decoupled Architecture
 
-**Status:** Active  
-**Version:** 1.0  
+**Status:** Active
+**Version:** 1.0
 **Objective:** Replace the monolithic GCP infrastructure with a 100% Zero-Cost, Serverless, and highly decoupled modern stack.
 
 ---
@@ -22,7 +22,7 @@
 ## ⚙️ How It Works (Component Details)
 
 ### 1. 🚀 Render (The Compute Layer)
-Render আমাদের মূল ফাস্টএপিআই (FastAPI) ব্যাকএন্ড রান করবে। 
+Render আমাদের মূল ফাস্টএপিআই (FastAPI) ব্যাকএন্ড রান করবে।
 - **ডেপ্লয়মেন্ট ফ্লো:** গিটহাবের `main` ব্রাঞ্চে কোনো কোড পুশ বা মার্জ হওয়ার সাথে সাথেই Render-এর ওয়েব হুক ট্রিগার হবে। রেন্ডার অটোমেটিক্যালি আমাদের ডকারফাইল বিল্ড করে কন্টেইনার রান করবে।
 - **জিরো-কস্ট ম্যাকানিজম:** রেন্ডারের ফ্রি-টিয়ার স্পিন-ডাউন (Spin-down) মেকানিজম ব্যবহার করে; অর্থাৎ, ইউজার ১৫ মিনিট কোনো রিকোয়েস্ট না করলে কন্টেইনার স্লিপ মোডে চলে যাবে।
 

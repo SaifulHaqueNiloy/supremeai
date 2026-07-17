@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional
 # from some_git_provider import GitClient
 # from core.database import get_db_pool  # As per db_context.xml
 
+
 class RootCauseAnalysisAgent:
     """
     AI-Powered Root Cause Analysis Agent.
@@ -17,7 +18,13 @@ class RootCauseAnalysisAgent:
     It is designed to evolve from simple error pattern matching to complex, AI-driven diagnostics.
     """
 
-    def __init__(self, llm_client: Any, db_pool: Any, git_client: Any, github_client: Optional[Any] = None):
+    def __init__(
+        self,
+        llm_client: Any,
+        db_pool: Any,
+        git_client: Any,
+        github_client: Optional[Any] = None,
+    ):
         """
         Initializes the agent with necessary clients.
 
@@ -53,15 +60,17 @@ class RootCauseAnalysisAgent:
         structured_logs = []
         for log_file in log_files:
             try:
-                with open(log_file, 'r', encoding='utf-8') as f:
+                with open(log_file, "r", encoding="utf-8") as f:
                     for line in f:
                         for pattern in self.common_error_patterns:
                             if match := pattern.search(line):
-                                structured_logs.append({
-                                    "file": log_file,
-                                    "raw_log": line.strip(),
-                                    "error_type": match.group(0), # উদাহরণস্বরূপ
-                                })
+                                structured_logs.append(
+                                    {
+                                        "file": log_file,
+                                        "raw_log": line.strip(),
+                                        "error_type": match.group(0),  # উদাহরণস্বরূপ
+                                    }
+                                )
             except FileNotFoundError:
                 print(f"Warning: Log file not found at {log_file}")
         print(f"Found {len(structured_logs)} relevant log entries.")
@@ -83,7 +92,7 @@ class RootCauseAnalysisAgent:
         problematic_spans = []
         for trace_file in trace_files:
             try:
-                with open(trace_file, 'r', encoding='utf-8') as f:
+                with open(trace_file, "r", encoding="utf-8") as f:
                     trace_data = json.load(f)
                     for trace in trace_data.get("data", []):
                         for span in trace.get("spans", []):
@@ -92,11 +101,12 @@ class RootCauseAnalysisAgent:
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 print(f"Warning: Could not process trace file {trace_file}. Error: {e}")
 
-        
         print(f"Found {len(problematic_spans)} problematic trace spans.")
         return problematic_spans
 
-    async def _get_context_from_git(self, file_path: str, line_number: int) -> Optional[Dict[str, str]]:
+    async def _get_context_from_git(
+        self, file_path: str, line_number: int
+    ) -> Optional[Dict[str, str]]:
         """
         Uses 'git blame' to find the last commit and author related to a specific line of code.
 
@@ -114,7 +124,9 @@ class RootCauseAnalysisAgent:
             print(f"Error running git blame: {e}")
             return None
 
-    async def analyze(self, incident_id: str, log_files: List[str], trace_files: List[str]) -> Dict[str, Any]:
+    async def analyze(
+        self, incident_id: str, log_files: List[str], trace_files: List[str]
+    ) -> Dict[str, Any]:
         """
         Main analysis pipeline. It orchestrates parsing, context gathering, and AI-driven diagnosis.
 
@@ -129,10 +141,14 @@ class RootCauseAnalysisAgent:
         print(f"Starting root cause analysis for incident: {incident_id}")
         logs = await self._parse_logs(log_files)
         traces = await self._parse_traces(trace_files)
-        
+
         # উদাহরণস্বরূপ, প্রথম লগ থেকে ফাইল পাথ এবং লাইন নম্বর বের করা
         # বাস্তব ক্ষেত্রে এটি আরও জটিল হবে
-        git_context = await self._get_context_from_git("src/payment_processor.py", 42) if logs else None
+        git_context = (
+            await self._get_context_from_git("src/payment_processor.py", 42)
+            if logs
+            else None
+        )
 
         # Prepare prompt for the LLM
         prompt = f"""
@@ -155,12 +171,14 @@ class RootCauseAnalysisAgent:
             analysis_result = {
                 "root_cause": "Failed to get a diagnosis from the LLM.",
                 "code_patch_suggestion": "N/A",
-                "architecture_suggestion": "N/A"
+                "architecture_suggestion": "N/A",
             }
         print("Analysis complete.")
         return analysis_result
 
-    def create_github_issue(self, incident_id: str, analysis_result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def create_github_issue(
+        self, incident_id: str, analysis_result: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """
         Creates a GitHub issue based on the analysis result.
 
@@ -185,21 +203,23 @@ class RootCauseAnalysisAgent:
 ---
 
 ### 🕵️ Root Cause
-_{analysis_result.get('root_cause', 'Not determined.')}_
+_{analysis_result.get("root_cause", "Not determined.")}_
 
 ---
 
 ### 💡 Code Patch Suggestion
 ```python
-{analysis_result.get('code_patch_suggestion', 'No suggestion available.')}
+{analysis_result.get("code_patch_suggestion", "No suggestion available.")}
 ```
 
 ### 🏛️ Architectural Suggestion
-{analysis_result.get('architecture_suggestion', 'No suggestion available.')}
+{analysis_result.get("architecture_suggestion", "No suggestion available.")}
 """
         labels = ["bug", "autogenerated", "needs-review"]
         try:
-            created_issue = self.github_client.create_issue(title=title, body=body.strip(), labels=labels)
+            created_issue = self.github_client.create_issue(
+                title=title, body=body.strip(), labels=labels
+            )
             print(f"Successfully created GitHub issue: {created_issue.get('html_url')}")
             return created_issue
         except Exception as e:

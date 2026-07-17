@@ -14,8 +14,6 @@ class AutoRemediation:
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY", "")
         self._ALLOWED_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-
-
     def _validate_file_path(self, file_path: str) -> str:
         """বাংলা মন্তব্য: P0 Fix — Path traversal attack প্রতিরোধ।
         শুধুমাত্র project directory-র ভেতরের ফাইলগুলোতে write অনুমোদিত।

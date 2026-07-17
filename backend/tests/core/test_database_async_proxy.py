@@ -4,6 +4,7 @@ from database.supabase_client import SupabaseDB
 
 # বাংলা মন্তব্য: SupabaseDB-এর ডায়নামিক এসিঙ্ক প্রক্সি মেথডগুলোর সঠিক কার্যকারিতা পরীক্ষা করার জন্য ইউনিট টেস্ট।
 
+
 @pytest.mark.anyio
 async def test_supabase_db_dynamic_async_proxy():
     db_instance = SupabaseDB()

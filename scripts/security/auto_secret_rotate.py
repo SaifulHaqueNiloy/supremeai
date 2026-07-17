@@ -37,24 +37,24 @@ def generate_secure_token(length: int = 32) -> str:
 def rotate_secret(secret_id: str, project_id: str, value: Optional[str] = None) -> bool:
     """
     Rotate a secret by adding a new version.
-    
+
     Args:
         secret_id: The ID of the secret to rotate
         project_id: The GCP project ID
         value: The new value for the secret. If None, a random value is generated.
-        
+
     Returns:
         True if successful, False otherwise
     """
     try:
         from google.cloud import secretmanager
-        
+
         # Create the Secret Manager client
         client = secretmanager.SecretManagerServiceClient()
-        
+
         # Build the resource name of the parent secret
         parent = f"projects/{project_id}/secrets/{secret_id}"
-        
+
         # Check if the secret exists
         try:
             client.get_secret(request={"name": parent})
@@ -73,14 +73,14 @@ def rotate_secret(secret_id: str, project_id: str, value: Optional[str] = None) 
                 }
             )
             print(f"✅ Created secret {secret_id}")
-        
+
         # Determine the value to set
         if value is None:
             value = generate_secure_token()
             print(f"🔑 Generated new random value for {secret_id}")
         else:
             print(f"🔑 Using provided value for {secret_id}")
-        
+
         # Add a new version of the secret
         response = client.add_secret_version(
             request={
@@ -88,9 +88,9 @@ def rotate_secret(secret_id: str, project_id: str, value: Optional[str] = None) 
                 "payload": {"data": value.encode("UTF-8")}
             }
         )
-        
+
         print(f"✅ Successfully rotated secret {secret_id} (version: {response.name.split('/')[-1]})")
-        
+
         # Optional: Destroy old versions (keep only the last N versions)
         # For simplicity, we'll keep all versions, but in production you might want to limit
         # Uncomment the following lines to destroy versions older than 30 days
@@ -100,9 +100,9 @@ def rotate_secret(secret_id: str, project_id: str, value: Optional[str] = None) 
         #     if version.create_time < cutoff_time and version.state != secretmanager.SecretVersion.State.DESTROYED:
         #         client.destroy_secret_version(request={"name": version.name})
         #         print(f"🗑️  Destroyed old version {version.name.split('/')[-1]} of {secret_id}")
-        
+
         return True
-        
+
     except ImportError:
         print("❌ Error: google-cloud-secret-manager is not installed")
         print("Install it with: pip install google-cloud-secret-manager")
@@ -118,36 +118,36 @@ def main() -> None:
     if not project_id:
         print("❌ Error: GOOGLE_CLOUD_PROJECT environment variable is not set")
         sys.exit(1)
-    
+
     secret_ids_str = os.getenv("SECRET_IDS", "")
     if not secret_ids_str:
         print("❌ Error: SECRET_IDS environment variable is not set")
         print("Set it to a comma-separated list of secret IDs to rotate")
         sys.exit(1)
-    
+
     secret_ids = [sid.strip() for sid in secret_ids_str.split(",") if sid.strip()]
     if not secret_ids:
         print("❌ Error: No valid secret IDs provided in SECRET_IDS")
         sys.exit(1)
-    
+
     # Optional: rotation frequency check (if you want to skip if recently rotated)
     # We'll skip this for simplicity and rotate every time the script runs
     # In a production cron job, you might want to check the last rotation time
-    
+
     print(f"🔐 Starting secret rotation for {len(secret_ids)} secret(s) in project {project_id}")
     print(f"📋 Secrets to rotate: {', '.join(secret_ids)}")
-    
+
     success_count = 0
     for secret_id in secret_ids:
         # Allow per-secret value override via env var: e.g., FIREBASE_API_KEY_VALUE
         value_env = f"{secret_id.upper().replace('-', '_')}_VALUE"
         value = os.getenv(value_env)
-        
+
         if rotate_secret(secret_id, project_id, value):
             success_count += 1
-    
+
     print(f"\n📊 Rotation complete: {success_count}/{len(secret_ids)} secrets rotated successfully")
-    
+
     if success_count < len(secret_ids):
         sys.exit(1)
     else:

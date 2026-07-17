@@ -3,6 +3,7 @@ import pytest
 from pathlib import Path
 from backend.agents.ephemeral_executor import EphemeralExecutor
 
+
 def test_ephemeral_executor_purges_files_strictly_on_finally():
     executor = EphemeralExecutor()
     skill_id = "test_transient_tool"

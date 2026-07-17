@@ -20,7 +20,7 @@ class AnalyticsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('analytics.system_health'.tr().toUpperCase(), 
+            Text('analytics.system_health'.tr().toUpperCase(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
             ),
             const SizedBox(height: 16),
@@ -28,7 +28,7 @@ class AnalyticsScreen extends StatelessWidget {
             _buildMetricCard(context, 'analytics.memory_usage'.tr(), '1.2 GB / 4 GB', Colors.greenAccent, Icons.storage),
             _buildMetricCard(context, 'analytics.api_latency'.tr(), '120ms', Colors.orangeAccent, Icons.speed),
             const SizedBox(height: 32),
-            Text('analytics.recent_alerts'.tr().toUpperCase(), 
+            Text('analytics.recent_alerts'.tr().toUpperCase(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
             ),
             const SizedBox(height: 16),

@@ -71,7 +71,15 @@ class CostGuard:
                 from core.messaging.event_bus import ErrorEvent
                 from core.messaging.event_bus import error_event_bus
 
-                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="DB_ERROR", message=str(e), severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="cost_guard",
+                        error_type="DB_ERROR",
+                        message=str(e),
+                        severity="ERROR",
+                        structured_context=ErrorContext(module="auto_fixed"),
+                    )
+                )
             except ImportError:
                 pass
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
@@ -100,7 +108,15 @@ class CostGuard:
                 from core.messaging.event_bus import ErrorEvent
                 from core.messaging.event_bus import error_event_bus
 
-                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_UNAVAILABLE", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="cost_guard",
+                        error_type="REDIS_UNAVAILABLE",
+                        message=str(e),
+                        severity="WARNING",
+                        structured_context=ErrorContext(module="auto_fixed"),
+                    )
+                )
             except ImportError:
                 pass
             return tier == "free"  # fail-safe: শুধু ফ্রি টিয়ারে যেতে দাও
@@ -136,7 +152,15 @@ class CostGuard:
                 from core.messaging.event_bus import ErrorEvent
                 from core.messaging.event_bus import error_event_bus
 
-                error_event_bus.emit(ErrorEvent(module="cost_guard", error_type="REDIS_ERROR", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="cost_guard",
+                        error_type="REDIS_ERROR",
+                        message=str(e),
+                        severity="WARNING",
+                        structured_context=ErrorContext(module="auto_fixed"),
+                    )
+                )
             except ImportError:
                 pass
 

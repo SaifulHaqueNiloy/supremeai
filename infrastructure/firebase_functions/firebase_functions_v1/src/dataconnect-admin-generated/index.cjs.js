@@ -69,4 +69,3 @@ function searchMovie(dcOrVarsOrOptions, varsOrOptions, options) {
   return dcInstance.executeQuery('SearchMovie', inputVars, inputOpts);
 }
 exports.searchMovie = searchMovie;
-

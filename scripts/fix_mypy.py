@@ -67,4 +67,3 @@ fix_re('backend/core/auto_remediation.py', r'^import json\n', 'import json\nimpo
 # model_router async iterators
 fix('backend/brain/model_router.py', '-> Iterator[str]', '-> typing.Any')
 fix_re('backend/brain/model_router.py', r'^import json\n', 'import json\nimport typing\n')
-

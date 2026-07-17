@@ -80,7 +80,9 @@ def main():
     completion = read_file_content(FIX_DIFF_FILE)
 
     if not prompt or not completion:
-        print("::error::Could not generate training data because prompt or completion is empty. Aborting.")
+        print(
+            "::error::Could not generate training data because prompt or completion is empty. Aborting."
+        )
         sys.exit(1)
 
     # 3. Create the JSONL object

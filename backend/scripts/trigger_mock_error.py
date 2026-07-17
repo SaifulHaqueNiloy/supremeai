@@ -17,7 +17,8 @@ async def main():
         module="mock.module",
         error_type="MockError",
         message="This is a mock error to verify EventBus routing",
-        severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+        severity="WARNING",
+        structured_context=ErrorContext(module="auto_fixed"),
         context={"task_id": "mock_task_123"},
     )
 

@@ -93,7 +93,7 @@ export function HealthMap({ healthMap }: HealthMapProps) {
                 {prov.status}
               </span>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3 text-[11px] font-mono text-slate-400">
               <div>Region: <span className="text-slate-200">{prov.region}</span></div>
               <div>Latency: <span className="text-slate-200">{prov.latency}</span></div>

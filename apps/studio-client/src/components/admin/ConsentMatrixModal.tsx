@@ -107,13 +107,13 @@ export const ConsentMatrixModal: React.FC<ConsentMatrixModalProps> = ({
                     onChange={(e) => setFeedback(e.target.value)}
                   />
                   <div className="flex justify-end gap-2 mt-2">
-                    <button 
+                    <button
                       onClick={() => setShowFeedbackInput(false)}
                       className="px-3 py-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors"
                     >
                       Cancel
                     </button>
-                    <button 
+                    <button
                       onClick={() => onRejectWithFeedback(request.id, feedback)}
                       className="px-3 py-1.5 text-xs font-mono bg-[#00f3ff]/20 text-[#00f3ff] border border-[#00f3ff]/50 rounded hover:bg-[#00f3ff]/40 transition-colors"
                     >

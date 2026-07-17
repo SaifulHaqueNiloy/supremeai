@@ -6,8 +6,8 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './AethelCoreStyles.css';
-import { 
-  Cpu, 
+import {
+  Cpu,
   Send,
   Mic,
   Maximize2,
@@ -73,7 +73,7 @@ export function CommandCenter() {
     // Initialize Audio Services
     const service = new AudioPlaybackService();
     setPlaybackService(service);
-    
+
     const wsUrl = `${getWebSocketBaseUrl()}/api/voice/ws/voice`;
     recorderRef.current = new AudioRecorderService(wsUrl);
 
@@ -92,7 +92,7 @@ export function CommandCenter() {
         { id: Date.now(), sender: 'SupremeAI', text: text }
       ]);
       service.play(text);
-      
+
       // Rough estimation to stop visualizer (in a real app, bind to onend)
       setTimeout(() => setIsSpeaking(false), text.length * 50 + 1000);
     };
@@ -101,12 +101,12 @@ export function CommandCenter() {
     return () => {
       window.removeEventListener('supremeai_speak', handleAethelSpeak);
     };
-     
+
   }, []);
 
   const toggleVoiceRecording = async () => {
     if (!recorderRef.current) return;
-    
+
     if (isRecording) {
       recorderRef.current.stopRecording();
       setIsRecording(false);
@@ -271,8 +271,8 @@ export function CommandCenter() {
         </div>
         <div className="text-sm font-bold tracking-widest text-[var(--accent-primary)] uppercase flex items-center gap-4">
           SUPREMEAI CORE
-          <button 
-            onClick={toggleTheme} 
+          <button
+            onClick={toggleTheme}
             className="p-1.5 rounded-full bg-[var(--bg-panel)] border border-[var(--border-accent)] hover:scale-110 transition-transform cursor-pointer"
             title="Cycle Theme"
           >
@@ -283,7 +283,7 @@ export function CommandCenter() {
           </button>
         </div>
         <div className="flex items-center gap-4 text-[10px] text-[var(--accent-primary)] font-bold">
-          <span 
+          <span
             onClick={useAdminStore(state => state.handleAdminLogout)}
             className="cursor-pointer hover:opacity-80 transition-opacity"
             title="Return to Login"
@@ -296,7 +296,7 @@ export function CommandCenter() {
 
       {/* ── MAIN WORKSPACE CONTENT ────────────────────────────────── */}
       <div className="flex-1 flex flex-row gap-4 overflow-hidden mb-4">
-        
+
         {/* Core React Flow Telemetry Canvas */}
         <div className="flex-1 bg-[var(--bg-panel)] border border-[var(--border-accent)] rounded-xl relative overflow-hidden flex flex-col transition-colors duration-500">
           <div className="flex-1 w-full h-full relative">
@@ -327,7 +327,7 @@ export function CommandCenter() {
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[380px] bg-[var(--waveform-bg)] border border-[var(--border-accent)] rounded-lg p-3 shadow-lg backdrop-blur-md z-20 flex flex-col items-center transition-colors duration-500">
             <div className="flex justify-between w-full text-[9px] text-[var(--text-secondary)] font-bold mb-1">
               <span>CMD | v3.0</span>
-              <button 
+              <button
                 onClick={toggleVoiceRecording}
                 className="flex items-center gap-1.5 hover:opacity-80 p-1 rounded transition-colors"
               >
@@ -340,9 +340,9 @@ export function CommandCenter() {
 
             {/* Glowing Waveform representation */}
             <div className="flex items-center justify-center h-8 my-1 w-full">
-              <WaveformVisualizer 
-                analyser={playbackService ? playbackService.getAnalyser() : null} 
-                isActive={isRecording || isSpeaking} 
+              <WaveformVisualizer
+                analyser={playbackService ? playbackService.getAnalyser() : null}
+                isActive={isRecording || isSpeaking}
                 color={isRecording ? '#ef4444' : '#00f3ff'}
               />
             </div>
@@ -365,7 +365,7 @@ export function CommandCenter() {
                 <Cpu size={14} className="text-[var(--accent-primary)] animate-pulse" />
                 <span className="text-xs font-black tracking-widest text-[var(--accent-primary)] uppercase">SUPREMEAI CENTRAL ORC</span>
               </div>
-              
+
               {/* Panel Toggle Buttons */}
               <div className="flex items-center gap-2">
                 <button onClick={() => setShowChat(p => !p)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showChat ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Chat">
@@ -392,7 +392,7 @@ export function CommandCenter() {
 
             {/* Panels Container */}
             <div className="flex-1 flex gap-2 p-2 overflow-hidden">
-              
+
               {/* CHAT PANEL */}
               {showChat && (
                 <div className="flex-1 flex flex-col bg-[var(--bg-panel)] border border-[var(--border-accent)] rounded-xl overflow-hidden transition-all duration-300">

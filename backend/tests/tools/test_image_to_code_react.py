@@ -33,7 +33,7 @@ export function GeneratedComponent() {
         </div>
     );
 }
-"""
+""",
         }
 
         result = await converter.figma_to_react("test_image.png", framework="react")
@@ -64,7 +64,7 @@ class GeneratedWidget extends StatelessWidget {
         );
     }
 }
-"""
+""",
         }
 
         result = await converter.figma_to_react("test_image.png", framework="flutter")
@@ -91,7 +91,7 @@ async def test_extract_color_palette(mock_image_to_code):
         "secondary": "#33FF57"
     }
 }
-"""
+""",
         }
 
         result = await converter.extract_color_palette("test_image.png")
@@ -121,7 +121,7 @@ async def test_detect_component_tree(mock_image_to_code):
         ]
     }
 ]
-"""
+""",
         }
 
         result = await converter.detect_component_tree("test_image.png")
