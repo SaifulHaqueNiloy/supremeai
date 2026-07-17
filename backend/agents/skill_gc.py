@@ -4,8 +4,8 @@ import tarfile
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List
-from schemas.skill_manifest import SkillManifest, SkillStatus
-from schemas.skill_index import SkillIndexManager
+from backend.schemas.skill_manifest import SkillManifest, SkillStatus
+from backend.schemas.skill_index import SkillIndexManager
 
 class SkillGarbageCollector:
     def __init__(self, base_skills_dir: str = "backend/skills"):

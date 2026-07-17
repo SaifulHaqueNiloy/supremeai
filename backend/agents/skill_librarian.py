@@ -2,8 +2,8 @@
 import shutil
 from pathlib import Path
 from typing import List, Dict, Any
-from schemas.skill_manifest import SkillManifest, SkillStatus
-from schemas.skill_index import SkillIndexManager
+from backend.schemas.skill_manifest import SkillManifest, SkillStatus
+from backend.schemas.skill_index import SkillIndexManager
 
 class SkillLibrarian:
     def __init__(self, base_skills_dir: str = "backend/skills"):
