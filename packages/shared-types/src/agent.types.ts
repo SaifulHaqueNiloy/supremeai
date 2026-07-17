@@ -1,7 +1,7 @@
 /**
  * Agent Actions represent the specific tool or internal action the agent is executing.
  */
-export type AgentAction = 
+export type AgentAction =
   | 'READ_FILE'
   | 'WRITE_FILE'
   | 'RUN_COMMAND'

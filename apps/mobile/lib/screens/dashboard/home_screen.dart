@@ -138,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildChatTab() {
     final orchestration = context.watch<OrchestrationProvider>();
     final auth = context.watch<AuthProvider>();
-    
+
     return Column(
       children: [
         if (auth.isGuest) _buildGuestWarning(),

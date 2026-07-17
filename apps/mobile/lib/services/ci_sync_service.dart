@@ -12,11 +12,11 @@ class CiSyncService {
   Future<List<CiJobModel>> fetchLiveJobs() async {
     try {
       final response = await http.get(Uri.parse('$rawUrl/logs/ci/latest.json?t=${DateTime.now().millisecondsSinceEpoch}'));
-      
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final Map<String, dynamic> jobsMap = data['jobs'] ?? {};
-        
+
         return jobsMap.entries.map((e) => CiJobModel.fromMap(e.key, e.value.toString())).toList();
       } else {
         throw Exception('Failed to load jobs');

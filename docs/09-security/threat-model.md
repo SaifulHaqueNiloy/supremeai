@@ -32,4 +32,3 @@ This document outlines the security threats, vectors, and mitigation strategies 
 - **Mitigation:**
   - **Canary/Staging Isolation:** Restrict the AI agent to only write to the staging repository (`saifulhaqueniloy/supremeai`). No direct push permission to the production repository (`paykaribazaronline/supremeai`).
   - **CI/CD Validation Pipeline:** Require all commits to pass lint, test, build, and security scans in the staging environment before being dispatched to the main repo.
-

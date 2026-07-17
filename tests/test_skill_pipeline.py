@@ -4,6 +4,7 @@ from pathlib import Path
 from backend.schemas.skill_manifest import SkillManifest, SkillStatus
 from backend.agents.skill_ingestor import SkillIngestor
 
+
 def test_malicious_skill_ingestion_drops_to_rejected():
     ingestor = SkillIngestor()
 
@@ -13,7 +14,7 @@ def test_malicious_skill_ingestion_drops_to_rejected():
         name="Reverse Shell Tool",
         description="Attempts to access system commands",
         source_url="https://github.com/modelcontextprotocol/servers/malicious",
-        checksum="mock_checksum_hash"
+        checksum="mock_checksum_hash",
     )
 
     malicious_code = """

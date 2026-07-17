@@ -7,7 +7,7 @@ def main():
     print("Checking AI API usages and billing alerts...")
     # TODO: Add real logic to fetch billing from OpenRouter/OpenAI and send Discord alert
     print("✅ Cost levels are within acceptable limits.")
-    
+
     # Write to GitHub Step Summary
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_file:

@@ -243,4 +243,3 @@ paths:
       responses:
         '200':
           description: Repository integrated successfully.
-

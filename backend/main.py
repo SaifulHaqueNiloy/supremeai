@@ -2,6 +2,7 @@
 
 বাংলা: রুট এন্ট্রি পয়েন্ট। ENV সেটআপ, সিগন্যাল হ্যান্ডলিং এবং সার্ভার লঞ্চ।
 """
+
 import os
 import signal
 import sys
@@ -62,6 +63,7 @@ def run_server() -> None:
         if settings.sentry_dsn:
             try:
                 import sentry_sdk
+
                 sentry_sdk.capture_exception(exc)
             except Exception:  # noqa: BLE001
                 pass
@@ -71,6 +73,7 @@ def run_server() -> None:
         if settings.sentry_dsn:
             try:
                 import sentry_sdk
+
                 sentry_sdk.capture_exception(exc)
             except Exception:  # noqa: BLE001
                 pass

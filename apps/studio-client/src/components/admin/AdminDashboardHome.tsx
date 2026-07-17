@@ -56,7 +56,7 @@ export const AdminDashboardHome: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#030611] p-6 font-mono text-slate-300">
-      
+
       {/* 1. TOP SECTION: AI Fleet Status */}
       <section className="mb-6 bg-slate-950/60 border border-[#00f3ff]/15 rounded-xl p-5 shadow-[0_0_15px_rgba(0,243,255,0.02)]">
         <div className="flex justify-between items-center mb-4">
@@ -65,7 +65,7 @@ export const AdminDashboardHome: React.FC = () => {
             VIEW DETAILS
           </button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Active Agents Gauge */}
           <div className="bg-[#040814]/80 border border-slate-900 rounded-lg p-4 flex items-center justify-between">
@@ -107,9 +107,9 @@ export const AdminDashboardHome: React.FC = () => {
             {/* Mini bar animated chart */}
             <div className="flex items-end gap-1.5 h-10">
               {[20, 45, 15, 60, 30, 80, 50, 95, 40].map((h, i) => (
-                <div 
-                  key={i} 
-                  style={{ height: `${h}%` }} 
+                <div
+                  key={i}
+                  style={{ height: `${h}%` }}
                   className="w-1.5 bg-gradient-to-t from-purple-800 to-[#b5179e] rounded-sm"
                 />
               ))}
@@ -143,13 +143,13 @@ export const AdminDashboardHome: React.FC = () => {
 
       {/* 2. MIDDLE ROW: 3 Columns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        
+
         {/* Card A: Model Performance Analytics */}
         <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-5 flex flex-col justify-between min-h-[380px] shadow-[0_0_15px_rgba(0,0,0,0.3)]">
           <div className="flex justify-between items-center mb-4">
             <span className="text-[10px] text-[#00f3ff] uppercase font-bold tracking-wider">Model Perf. Analytics</span>
-            <select 
-              value={modelId} 
+            <select
+              value={modelId}
               onChange={e => setModelId(e.target.value)}
               className="bg-[#040814] border border-slate-800 rounded px-2 py-0.5 text-[10px] text-slate-300 outline-none"
             >
@@ -176,26 +176,26 @@ export const AdminDashboardHome: React.FC = () => {
               {/* Back grid lines */}
               <line x1="20" y1="90" x2="180" y2="90" stroke="#1e293b" strokeWidth="1" strokeDasharray="2,2"/>
               <line x1="40" y1="20" x2="40" y2="100" stroke="#1e293b" strokeWidth="1" strokeDasharray="2,2"/>
-              
+
               {/* Fake 3D Wireframe surface peaks */}
-              <path 
-                d="M 30 90 L 50 70 L 80 85 L 100 40 L 120 75 L 150 50 L 180 90" 
-                fill="none" 
-                stroke="#00f3ff" 
+              <path
+                d="M 30 90 L 50 70 L 80 85 L 100 40 L 120 75 L 150 50 L 180 90"
+                fill="none"
+                stroke="#00f3ff"
                 strokeWidth="1.5"
                 opacity="0.8"
               />
-              <path 
-                d="M 25 95 L 45 75 L 75 90 L 95 45 L 115 80 L 145 55 L 175 95" 
-                fill="none" 
-                stroke="#b5179e" 
+              <path
+                d="M 25 95 L 45 75 L 75 90 L 95 45 L 115 80 L 145 55 L 175 95"
+                fill="none"
+                stroke="#b5179e"
                 strokeWidth="1.5"
                 opacity="0.6"
               />
-              <path 
-                d="M 20 100 L 40 80 L 70 95 L 90 50 L 110 85 L 140 60 L 170 100" 
-                fill="none" 
-                stroke="#10b981" 
+              <path
+                d="M 20 100 L 40 80 L 70 95 L 90 50 L 110 85 L 140 60 L 170 100"
+                fill="none"
+                stroke="#10b981"
                 strokeWidth="1"
                 opacity="0.4"
               />
@@ -270,8 +270,8 @@ export const AdminDashboardHome: React.FC = () => {
           <div className="flex-grow flex items-center justify-center py-4">
             <div className="grid grid-cols-3 gap-2">
               {hexValues.map((val, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`w-14 h-16 bg-[#040814] border flex flex-col items-center justify-center relative shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] ${
                     val === null
                       ? 'border-slate-800 text-slate-800'
@@ -332,7 +332,7 @@ export const AdminDashboardHome: React.FC = () => {
 
       {/* 3. BOTTOM ROW: 3 Columns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Card D: Live Event Log */}
         <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-5 flex flex-col justify-between min-h-[300px] shadow-[0_0_15px_rgba(0,0,0,0.3)]">
           <div className="flex justify-between items-center mb-3">

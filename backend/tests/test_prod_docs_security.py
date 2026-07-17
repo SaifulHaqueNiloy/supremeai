@@ -22,14 +22,14 @@ def _run(code: str) -> subprocess.CompletedProcess:
         from unittest.mock import MagicMock
         import google.auth
         google.auth.default = lambda *args, **kwargs: (MagicMock(), "dummy-project")
-        
+
         # Patch clients to prevent network calls
         try:
             import google.cloud.firestore
             google.cloud.firestore.Client = MagicMock
         except ImportError:
             sys.modules['google.cloud.firestore'] = MagicMock()
-        
+
         try:
             import google.cloud.secretmanager
             google.cloud.secretmanager.SecretManagerServiceClient = MagicMock
@@ -97,11 +97,11 @@ def test_docs_disabled_in_production():
         os.environ["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "mock_hash_for_production_test"
         os.environ["docs_auth_enabled"] = "false"
         os.environ["REDIS_URL"] = "redis://mock:6379"
-        
+
         # Mock secret fetching to prevent errors for missing production secrets
         import core.security.secret_vault as sv
         sv.ProductionSecretVault.fetch_secret = lambda self, name: "mock"
-        
+
         import core.app as app_mod
         import core.services as services
 

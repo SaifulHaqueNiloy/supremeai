@@ -64,12 +64,12 @@ def get_all_tenants(db: firestore.Client) -> List[Dict[str, Any]]:
     try:
         tenants = []
         tenants_ref = db.collection('tenants')
-        
+
         for doc in tenants_ref.stream():
             tenant_data = doc.to_dict()
             tenant_data['tenant_id'] = doc.id
             tenants.append(tenant_data)
-        
+
         return tenants
     except Exception as e:
         logger.error(f"Failed to retrieve tenants: {e}")
@@ -85,9 +85,9 @@ def get_tenant_usage_stats(db: firestore.Client, tenant_id: str) -> Dict[str, An
             'active_users': 0,
             'last_activity': None
         }
-        
+
         tenant_ref = db.collection('tenants').document(tenant_id)
-        
+
         # Get usage from current period
         usage_doc = tenant_ref.collection('usage').document('current').get()
         if usage_doc.exists:
@@ -98,12 +98,12 @@ def get_tenant_usage_stats(db: firestore.Client, tenant_id: str) -> Dict[str, An
                 'compute_minutes_today': usage_data.get('compute_minutes', 0),
                 'last_activity': usage_data.get('last_updated')
             })
-        
+
         # Get active users count
         users_col = tenant_ref.collection('users')
         active_users = users_col.where('status', '==', 'active').get()
         stats['active_users'] = len(active_users)
-        
+
         return stats
     except Exception as e:
         logger.error(f"Failed to get usage stats for tenant {tenant_id}: {e}")
@@ -154,7 +154,7 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
         'warnings': [],
         'metrics': {}
     }
-    
+
     # Check API usage
     api_used = usage.get('api_calls_today', 0)
     api_limit = limits.get('api_calls_per_month', 10000)
@@ -162,7 +162,7 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
     api_daily_limit = api_limit / 30
     api_percent = calculate_usage_percentage(api_used, api_daily_limit)
     health['metrics']['api_usage_percent'] = round(api_percent, 1)
-    
+
     if api_percent >= 90:
         health['status'] = 'critical'
         health['issues'].append(f"API usage at {api_percent:.1f}% of daily limit")
@@ -170,13 +170,13 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
         if health['status'] == 'healthy':
             health['status'] = 'warning'
         health['warnings'].append(f"API usage at {api_percent:.1f}% of daily limit")
-    
+
     # Check storage usage
     storage_used = usage.get('storage_mb', 0)
     storage_limit = limits.get('storage_mb', 1000)
     storage_percent = calculate_usage_percentage(storage_used, storage_limit)
     health['metrics']['storage_usage_percent'] = round(storage_percent, 1)
-    
+
     if storage_percent >= 90:
         if health['status'] == 'healthy':
             health['status'] = 'critical'
@@ -189,7 +189,7 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
         if health['status'] == 'healthy':
             health['status'] = 'warning'
         health['warnings'].append(f"Storage usage at {storage_percent:.1f}% of limit")
-    
+
     # Check compute usage
     compute_used = usage.get('compute_minutes_today', 0)
     compute_limit = limits.get('compute_minutes_per_month', 500)
@@ -197,7 +197,7 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
     compute_daily_limit = compute_limit / 30
     compute_percent = calculate_usage_percentage(compute_used, compute_daily_limit)
     health['metrics']['compute_usage_percent'] = round(compute_percent, 1)
-    
+
     if compute_percent >= 90:
         if health['status'] == 'healthy':
             health['status'] = 'critical'
@@ -210,7 +210,7 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
         if health['status'] == 'healthy':
             health['status'] = 'warning'
         health['warnings'].append(f"Compute usage at {compute_percent:.1f}% of daily limit")
-    
+
     # Check for inactivity (no activity in last 7 days)
     last_activity = usage.get('last_activity')
     if last_activity:
@@ -220,7 +220,7 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
             else:
                 # Assume it's a Firestore timestamp
                 last_active = last_activity
-            
+
             days_inactive = (datetime.now(timezone.utc) - last_active).days
             if days_inactive > 7:
                 health['issues'].append(f"No activity for {days_inactive} days")
@@ -230,10 +230,10 @@ def assess_tenant_health(usage: Dict[str, Any], limits: Dict[str, Any]) -> Dict[
                     pass  # Keep warning if already set
         except Exception as e:
             logger.warning(f"Could not parse last_activity for tenant: {e}")
-    
+
     return health
 
-def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any], 
+def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
                           limits: Dict[str, Any], health: Dict[str, Any]) -> str:
     """Generate a health report for a single tenant."""
     tenant_id = tenant.get('tenant_id', 'unknown')
@@ -241,13 +241,13 @@ def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
     template = tenant.get('template', 'unknown')
     status = tenant.get('status', 'unknown')
     created_at = tenant.get('created_at')
-    
+
     # Format timestamps
     if hasattr(created_at, 'strftime'):
         created_str = created_at.strftime('%Y-%m-%d')
     else:
         created_str = str(created_at) if created_at else 'Unknown'
-    
+
     if REPORT_FORMAT == 'json':
         report_data = {
             'tenant_id': tenant_id,
@@ -261,7 +261,7 @@ def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
             'generated_at': datetime.now(timezone.utc).isoformat()
         }
         return json.dumps(report_data, indent=2, default=str)
-    
+
     elif REPORT_FORMAT == 'html':
         # HTML report generation
         html = f"""
@@ -291,7 +291,7 @@ def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
                 <p><strong>Status:</strong> <span class="status-{health['status']}">{health['status'].upper()}</span></p>
                 <p><strong>Created:</strong> {created_str}</p>
             </div>
-            
+
             <div class="section">
                 <h2>Usage Metrics</h2>
                 <div class="metric">API Calls Today: {usage.get('api_calls_today', 0):,}</div>
@@ -299,38 +299,38 @@ def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
                 <div class="metric">Compute Minutes Today: {usage.get('compute_minutes_today', 0):,}</div>
                 <div class="metric">Active Users: {usage.get('active_users', 0)}</div>
             </div>
-            
+
             <div class="section">
                 <h2>Usage vs Limits</h2>
                 <div class="metric">API Usage: {health['metrics'].get('api_usage_percent', 0):.1f}%</div>
                 <div class="metric">Storage Usage: {health['metrics'].get('storage_usage_percent', 0):.1f}%</div>
                 <div class="metric">Compute Usage: {health['metrics'].get('compute_usage_percent', 0):.1f}%</div>
             </div>
-            
+
             <div class="section">
                 <h2>Health Status</h2>
                 <p><strong>Overall Status:</strong> <span class="status-{health['status']}">{health['status'].upper()}</span></p>
         """
-        
+
         if health['issues']:
             html += "<h3>Issues:</h3><ul class='issue'>"
             for issue in health['issues']:
                 html += f"<li>{issue}</li>"
             html += "</ul>"
-        
+
         if health['warnings']:
             html += "<h3>Warnings:</h3><ul class='warning'>"
             for warning in health['warnings']:
                 html += f"<li>{warning}</li>"
             html += "</ul>"
-        
+
         html += """
             </div>
         </body>
         </html>
         """
         return html
-    
+
     else:  # Default to markdown
         report = f"""# Tenant Health Report: {tenant_name}
 
@@ -363,16 +363,16 @@ def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
             for issue in health['issues']:
                 report += f"- {issue}\n"
             report += "\n"
-        
+
         if health['warnings']:
             report += "### ⚠️ Warnings\n"
             for warning in health['warnings']:
                 report += f"- {warning}\n"
             report += "\n"
-        
+
         if not health['issues'] and not health['warnings']:
             report += "✅ No issues detected - tenant is operating normally\n\n"
-        
+
         # Add recommendations based on health status
         if health['status'] in ['warning', 'critical']:
             report += "### 💡 Recommendations\n"
@@ -384,7 +384,7 @@ def generate_tenant_report(tenant: Dict[str, Any], usage: Dict[str, Any],
                 report += "- Optimize workflows to reduce compute consumption\n"
             if 'inactive' in health['status'] or any('activity' in issue.lower() for issue in health['issues']):
                 report += "- Re-engage with the platform to maintain service quality\n"
-    
+
     return report
 
 def send_report_via_email(recipient: str, subject: str, body: str, is_html: bool = False) -> bool:
@@ -395,7 +395,7 @@ def send_report_via_email(recipient: str, subject: str, body: str, is_html: bool
             try:
                 from sendgrid import SendGridAPIClient
                 from sendgrid.helpers.mail import Mail
-                
+
                 message = Mail(
                     from_env='SENDER_EMAIL',
                     to_emails=recipient,
@@ -403,7 +403,7 @@ def send_report_via_email(recipient: str, subject: str, body: str, is_html: bool
                     html_content=body if is_html else None,
                     plain_text_content=body if not is_html else None
                 )
-                
+
                 sg = SendGridAPIClient(SENDGRID_API_KEY)
                 response = sg.send(message)
                 print(f"📧 Sent report via SendGrid to {recipient} (Status: {response.status_code})")
@@ -412,25 +412,25 @@ def send_report_via_email(recipient: str, subject: str, body: str, is_html: bool
                 print("⚠️  SendGrid not installed - falling back to SMTP")
             except Exception as e:
                 print(f"⚠️  SendGrid failed: {e} - falling back to SMTP")
-        
+
         # Fallback to SMTP
         smtp_server = os.getenv("SMTP_SERVER", "localhost")
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
         smtp_user = os.getenv("SMTP_USER")
         smtp_password = os.getenv("SMTP_PASSWORD")
         sender_email = os.getenv("SENDER_EMAIL", "noreply@supremeai.com")
-        
+
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = recipient
         msg['Subject'] = subject
-        
+
         # Attach body as appropriate type
         if is_html:
             msg.attach(MIMEText(body, 'html'))
         else:
             msg.attach(MIMEText(body, 'plain'))
-        
+
         # Only actually send if not in dry-run mode
         if os.getenv("DRY_RUN", "false").lower() != "true":
             server = smtplib.SMTP(smtp_server, smtp_port)
@@ -443,7 +443,7 @@ def send_report_via_email(recipient: str, subject: str, body: str, is_html: bool
             logger.info(f"Report sent to {recipient}")
         else:
             print(f"🔍 [DRY RUN] Would send report to {recipient}")
-        
+
         return True
     except Exception as e:
         logger.error(f"Failed to send report to {recipient}: {e}")
@@ -456,16 +456,16 @@ def generate_summary_report(all_tenants_data: List[Dict[str, Any]]) -> str:
     warning_count = len([t for t in all_tenants_data if t['health']['status'] == 'warning'])
     critical_count = len([t for t in all_tenants_data if t['health']['status'] == 'critical'])
     inactive_count = len([t for t in all_tenants_data if t['health']['status'] == 'inactive'])
-    
+
     # Calculate averages
     avg_api_usage = sum(t['health']['metrics'].get('api_usage_percent', 0) for t in all_tenants_data) / max(total_tenants, 1)
     avg_storage_usage = sum(t['health']['metrics'].get('storage_usage_percent', 0) for t in all_tenants_data) / max(total_tenants, 1)
     avg_compute_usage = sum(t['health']['metrics'].get('compute_usage_percent', 0) for t in all_tenants_data) / max(total_tenants, 1)
-    
+
     # Find top users by various metrics
     top_api_users = sorted(all_tenants_data, key=lambda x: x['usage'].get('api_calls_today', 0), reverse=True)[:5]
     top_storage_users = sorted(all_tenants_data, key=lambda x: x['usage'].get('storage_mb', 0), reverse=True)[:5]
-    
+
     if REPORT_FORMAT == 'json':
         summary = {
             'report_generated': datetime.now(timezone.utc).isoformat(),
@@ -488,11 +488,11 @@ def generate_summary_report(all_tenants_data: List[Dict[str, Any]]) -> str:
             'tenants': [{'tenant_id': t['tenant_id'], 'name': t['tenant_name'], 'health': t['health']['status']} for t in all_tenants_data]
         }
         return json.dumps(summary, indent=2, default=str)
-    
+
     elif REPORT_FORMAT == 'html':
         # HTML version would go here - for brevity, we'll skip in this example
         return "<!-- HTML report generation would go here -->"
-    
+
     else:  # Markdown
         report = f"""# Tenant Health Summary Report
 
@@ -515,64 +515,64 @@ def generate_summary_report(all_tenants_data: List[Dict[str, Any]]) -> str:
 
         for i, tenant in enumerate(top_api_users, 1):
             report += f"{i}. **{tenant['tenant_name']}** ({tenant['tenant_id']}): {tenant['usage'].get('api_calls_today', 0):,} calls\n"
-        
+
         report += "\n## 🏆 Top 5 Users by Storage Usage\n"
         for i, tenant in enumerate(top_storage_users, 1):
             report += f"{i}. **{tenant['tenant_name']}** ({tenant['tenant_id']}): {tenant['usage'].get('storage_mb', 0):.1f} MB\n"
-        
+
         # Add sections for problematic tenants
         if critical_count > 0 or warning_count > 0:
             report += "\n## ⚠️ Tenants Requiring Attention\n"
-            
+
             problem_tenants = [t for t in all_tenants_data if t['health']['status'] in ['warning', 'critical', 'inactive']]
             problem_tenants.sort(key=lambda x: {'critical': 0, 'warning': 1, 'inactive': 2}.get(x['health']['status'], 3))
-            
+
             for tenant in problem_tenants[:10]:  # Limit to top 10
                 status_emoji = {'critical': '🔴', 'warning': '🟡', 'inactive': '⚪'}.get(tenant['health']['status'], '⚪')
                 report += f"- {status_emoji} **{tenant['tenant_name']}** ({tenant['tenant_id']}): {tenant['health']['status'].upper()}"
                 if tenant['health']['issues']:
                     report += f" - Issues: {', '.join(tenant['health']['issues'][:2])}"
                 report += "\n"
-        
+
         report += "\n---\n*Report generated automatically by SupremeAI 2.0 Tenant Health Monitor*\n"
-        
+
         return report
 
 def main() -> int:
     """Main function to generate tenant health reports."""
     print("🏥 Starting Tenant Health Report Generation...")
-    
+
     # Initialize Firestore client
     db = get_firestore_client()
     if not db:
         print("❌ Failed to initialize Firestore client")
         return 1
-    
+
     # Get all tenants
     print("🔍 Fetching tenant list...")
     tenants = get_all_tenants(db)
-    
+
     if not tenants:
         print("⚠️  No tenants found")
         return 1
-    
+
     print(f"📊 Found {len(tenants)} tenants to analyze")
-    
+
     # Analyze each tenant
     all_tenants_data = []
     for i, tenant in enumerate(tenants, 1):
         tenant_id = tenant.get('tenant_id', f'unknown_{i}')
         print(f"📋 Analyzing tenant {i}/{len(tenants)}: {tenant_id}")
-        
+
         # Get usage stats
         usage = get_tenant_usage_stats(db, tenant_id)
-        
+
         # Get limits
         limits = get_tenant_limits(db, tenant_id)
-        
+
         # Assess health
         health = assess_tenant_health(usage, limits)
-        
+
         # Store for reporting
         tenant_data = {
             'tenant': tenant,
@@ -581,11 +581,11 @@ def main() -> int:
             'health': health
         }
         all_tenants_data.append(tenant_data)
-    
+
     # Generate summary report
     print("\n📝 Generating summary report...")
     summary_report = generate_summary_report(all_tenants_data)
-    
+
     # Determine recipients
     recipients = []
     if ADMIN_ONLY:
@@ -607,51 +607,51 @@ def main() -> int:
                 tenant_email = tenant_data['tenant'].get('email')
                 if tenant_email:
                     recipients.append(tenant_email)
-    
+
     # Remove duplicates
     recipients = list(set(filter(None, recipients)))
-    
+
     if recipients:
         print(f"\n📧 Sending reports to {len(recipients)} recipient(s)")
-        
+
         # Send summary report to administrators/recipients
         subject = f"SupremeAI 2.0 Tenant Health Report - {datetime.now().strftime('%Y-%m-%d')}"
-        
+
         success_count = 0
         for recipient in recipients:
             is_html = (REPORT_FORMAT == 'html')
             if send_report_via_email(recipient, subject, summary_report, is_html):
                 success_count += 1
-        
+
         print(f"✅ Successfully sent reports to {success_count}/{len(recipients)} recipients")
-        
+
         # If sending individual tenant reports, do those too
         if SEND_TENANT_REPORTS and not ADMIN_ONLY:
             print("\n📧 Sending individual tenant reports...")
             tenant_success = 0
             total_tenant_emails = 0
-            
+
             for tenant_data in all_tenants_data:
                 tenant_email = tenant_data['tenant'].get('email')
                 if not tenant_email:
                     continue
-                
+
                 total_tenant_emails += 1
                 tenant_id = tenant_data['tenant'].get('tenant_id', 'unknown')
                 tenant_name = tenant_data['tenant'].get('display_name', 'Unknown')
-                
+
                 tenant_report = generate_tenant_report(
                     tenant_data['tenant'],
                     tenant_data['usage'],
                     tenant_data['limits'],
                     tenant_data['health']
                 )
-                
+
                 subject = f"Your Monthly Usage Report - {tenant_name}"
-                
+
                 if send_report_via_email(tenant_email, subject, tenant_report, (REPORT_FORMAT == 'html')):
                     tenant_success += 1
-            
+
             print(f"✅ Sent {tenant_success}/{total_tenant_emails} individual tenant reports")
     else:
         # Just output to console/log if no recipients
@@ -659,7 +659,7 @@ def main() -> int:
         print("SUMMARY REPORT (no email recipients configured)")
         print("="*60)
         print(summary_report)
-    
+
     print("\n✅ Tenant health report generation completed!")
     return 0
 

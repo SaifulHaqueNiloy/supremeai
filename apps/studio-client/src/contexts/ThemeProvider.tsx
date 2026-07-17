@@ -24,7 +24,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (localTheme && THEME_ORDER.includes(localTheme)) {
         setTheme(localTheme);
       }
-      
+
       // 2. ব্যাকএন্ড থেকে ফেচ করা (Cross-device sync)
       const API_BASE = getApiBaseUrl();
       try {
@@ -66,7 +66,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const currentIndex = THEME_ORDER.indexOf(theme);
     const nextIndex = (currentIndex + 1) % THEME_ORDER.length;
     const newTheme = THEME_ORDER[nextIndex];
-    
+
     // Optimistic UI Update
     setTheme(newTheme);
     localStorage.setItem('supremeai_theme', newTheme);
@@ -76,7 +76,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const token = getAdminToken();
     fetch(`${API_BASE}/api/v1/preferences`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },

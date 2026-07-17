@@ -587,6 +587,7 @@ def trigger_backup():
     logger.info(f"Backup created at {backup_dir}")
     return {"status": "success", "backup_path": backup_dir}
 
+
 @router.get("/backups")
 def get_backups():
     backups_list = []
@@ -602,31 +603,36 @@ def get_backups():
 
                 # Parse timestamp from name
                 ts = b_name.replace("backup_", "")
-                if len(ts) == 15: # YYYYMMDD_HHMMSS
+                if len(ts) == 15:  # YYYYMMDD_HHMMSS
                     ts_formatted = f"{ts[0:4]}-{ts[4:6]}-{ts[6:8]} {ts[9:11]}:{ts[11:13]}:{ts[13:15]}"
                 else:
                     ts_formatted = "Unknown"
 
-                backups_list.append({
-                    "id": b_name,
-                    "timestamp": ts_formatted,
-                    "size": size_str,
-                    "type": "manual",
-                    "status": "completed",
-                    "retention": "permanent"
-                })
+                backups_list.append(
+                    {"id": b_name, "timestamp": ts_formatted, "size": size_str, "type": "manual", "status": "completed", "retention": "permanent"}
+                )
     backups_list.sort(key=lambda x: x["timestamp"], reverse=True)
     return {"backups": backups_list}
 
+
 _FEATURE_FLAGS = [
-  { "id": '1', "name": 'new_chat_ui', "description": 'New chat interface with streaming', "enabled": True, "rollout": 25, "environment": 'production' },
-  { "id": '2', "name": 'rag_v2', "description": 'Improved RAG retrieval algorithm', "enabled": False, "rollout": 0, "environment": 'staging' },
-  { "id": '3', "name": 'dark_mode', "description": 'Dark mode toggle for all users', "enabled": True, "rollout": 100, "environment": 'production' },
+    {
+        "id": "1",
+        "name": "new_chat_ui",
+        "description": "New chat interface with streaming",
+        "enabled": True,
+        "rollout": 25,
+        "environment": "production",
+    },
+    {"id": "2", "name": "rag_v2", "description": "Improved RAG retrieval algorithm", "enabled": False, "rollout": 0, "environment": "staging"},
+    {"id": "3", "name": "dark_mode", "description": "Dark mode toggle for all users", "enabled": True, "rollout": 100, "environment": "production"},
 ]
+
 
 @router.get("/feature-flags")
 def get_feature_flags():
     return {"flags": _FEATURE_FLAGS}
+
 
 @router.put("/feature-flags/{flag_id}")
 def update_feature_flag(flag_id: str, payload: dict):

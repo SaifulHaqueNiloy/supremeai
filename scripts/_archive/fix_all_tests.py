@@ -41,9 +41,9 @@ ast_path = f"{tests_dir}/tools/test_style_learner_ast.py"
 if os.path.exists(ast_path):
     with open(ast_path, "r", encoding="utf-8") as f:
         ast_content = f.read()
-    ast_content = re.sub(r'with patch\.object\(learner, "_get_model_router"\) as mock_router:', 
+    ast_content = re.sub(r'with patch\.object\(learner, "_get_model_router"\) as mock_router:',
                          'with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_generate:', ast_content)
-    ast_content = re.sub(r'mock_router\.return_value\.async_route_and_generate = AsyncMock\(.*?\n\s*return_value=', 
+    ast_content = re.sub(r'mock_router\.return_value\.async_route_and_generate = AsyncMock\(.*?\n\s*return_value=',
                          'mock_generate.return_value = ', ast_content, flags=re.DOTALL)
     # Removing missing methods
     ast_content = re.sub(r'@pytest\.mark\.anyio\s+async def test_naming_convention_detection.*?(?=\n@pytest|\Z)', '', ast_content, flags=re.DOTALL)

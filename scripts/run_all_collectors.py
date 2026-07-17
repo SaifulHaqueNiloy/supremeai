@@ -18,21 +18,21 @@ def run_all_collectors():
     print("=" * 60)
     print("SUPREMEAI RESOURCE COLLECTION SYSTEM")
     print("=" * 60)
-    
+
     collectors = [
         ("Awesome Self-Hosted Scraper", awesome_selfhosted.main),
         ("Awesome Go Scraper", awesome_go.main),
         ("Awesome Python Scraper", awesome_python.main),
         ("OSS Insight API Client", main_ossinsight),
     ]
-    
+
     results = []
-    
+
     for name, main_func in collectors:
         print(f"\n{'-' * 50}")
         print(f"Running: {name}")
         print(f"{'-' * 50}")
-        
+
         try:
             result = main_func()
             if result == 0:
@@ -44,23 +44,23 @@ def run_all_collectors():
         except Exception as e:
             print(f"[ERROR] {name} failed with exception: {e}")
             results.append((name, False, str(e)))
-    
+
     # Summary
     print(f"\n{'=' * 60}")
     print("COLLECTION SUMMARY")
     print(f"{'=' * 60}")
-    
+
     passed = sum(1 for _, success, _ in results if success)
     total = len(results)
-    
+
     for name, success, error in results:
         status = "[PASS]" if success else "[FAIL]"
         print(f"{status} {name}")
         if not success:
             print(f"      Error: {error}")
-    
+
     print(f"\nTotal: {passed}/{total} collectors successful")
-    
+
     if passed == total:
         print("\n🎉 ALL COLLECTORS COMPLETED SUCCESSFULLY!")
         return 0

@@ -135,7 +135,7 @@ export class FeedbackHandler {
     let minDistance = Infinity;
 
     // Find the suggestion whose context is closest to the current cursor position
-    for (const [id, feedback] of this.pendingSuggestions.entries()) {      
+    for (const [id, feedback] of this.pendingSuggestions.entries()) {
       // A more robust context would include the URI and position/range
       if (feedback.context.includes(uri.fsPath) && feedback.originalPosition) {
         const distance = Math.abs(position.line - feedback.originalPosition.line);
@@ -147,7 +147,7 @@ export class FeedbackHandler {
         // Fallback for older suggestions without position
         return id;
       }
-    }    
+    }
     return null;
   }
 

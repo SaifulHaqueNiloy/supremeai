@@ -1,15 +1,18 @@
+import ast
+import importlib.util
+import json
+import math
 import os
 import sqlite3
-import json
-import ast
-import math
-import importlib.util
-from typing import Any, Dict, List
+from typing import Any
+
 from loguru import logger
+
 
 HAS_SENTENCE_TRANSFORMERS = importlib.util.find_spec("sentence_transformers") is not None
 
-def hash_vectorize(text: str, size: int = 384) -> List[float]:
+
+def hash_vectorize(text: str, size: int = 384) -> list[float]:
     """
     Pure Python Feature Hashing (Hashing Trick) to convert text into a 384-dimensional vector.
     Serves as a robust, zero-cost fallback when SentenceTransformer is unavailable.
@@ -33,6 +36,7 @@ def hash_vectorize(text: str, size: int = 384) -> List[float]:
         vector = [x / norm for x in vector]
     return vector
 
+
 class CascadeMemoryService:
     """
     Handles context memory operations for SupremeAI using a local SQLite vector-store fallback.
@@ -50,6 +54,7 @@ class CascadeMemoryService:
         if HAS_SENTENCE_TRANSFORMERS:
             try:
                 from sentence_transformers import SentenceTransformer
+
                 self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
                 logger.info("Initialized SentenceTransformer encoder for memory service")
             except Exception as e:
@@ -72,7 +77,7 @@ class CascadeMemoryService:
             )
             conn.commit()
 
-    def _embed(self, text: str) -> List[float]:
+    def _embed(self, text: str) -> list[float]:
         if self.encoder:
             try:
                 return self.encoder.encode(text).tolist()
@@ -80,7 +85,7 @@ class CascadeMemoryService:
                 logger.warning(f"Embedding failed: {e}. Falling back to hash vectorizer.")
         return hash_vectorize(text)
 
-    def _parse_code_structure(self, file_path: str, content: str) -> Dict[str, Any]:
+    def _parse_code_structure(self, file_path: str, content: str) -> dict[str, Any]:
         """
         Parses Python file AST structure and extracts function/class names and docstrings.
         """
@@ -88,10 +93,7 @@ class CascadeMemoryService:
             # Simple line-based fallback for non-python files
             lines = content.splitlines()
             summary = f"File: {file_path}\nLines: {len(lines)}"
-            return {
-                "summary": summary,
-                "structure": json.dumps({"lines": len(lines)})
-            }
+            return {"summary": summary, "structure": json.dumps({"lines": len(lines)})}
 
         try:
             tree = ast.parse(content)
@@ -100,21 +102,14 @@ class CascadeMemoryService:
 
             for node in ast.iter_child_nodes(tree):
                 if isinstance(node, ast.ClassDef):
-                    class_info = {
-                        "name": node.name,
-                        "methods": [],
-                        "docstring": ast.get_docstring(node) or ""
-                    }
+                    class_info = {"name": node.name, "methods": [], "docstring": ast.get_docstring(node) or ""}
                     summary_parts.append(f"Class: {node.name}")
                     if class_info["docstring"]:
                         summary_parts.append(f"  Docstring: {class_info['docstring']}")
 
                     for subnode in node.body:
                         if isinstance(subnode, ast.FunctionDef):
-                            method_info = {
-                                "name": subnode.name,
-                                "docstring": ast.get_docstring(subnode) or ""
-                            }
+                            method_info = {"name": subnode.name, "docstring": ast.get_docstring(subnode) or ""}
                             class_info["methods"].append(method_info)
                             summary_parts.append(f"  Method: {subnode.name}")
                             if method_info["docstring"]:
@@ -122,27 +117,18 @@ class CascadeMemoryService:
                     structure["classes"].append(class_info)
 
                 elif isinstance(node, ast.FunctionDef):
-                    func_info = {
-                        "name": node.name,
-                        "docstring": ast.get_docstring(node) or ""
-                    }
+                    func_info = {"name": node.name, "docstring": ast.get_docstring(node) or ""}
                     summary_parts.append(f"Function: {node.name}")
                     if func_info["docstring"]:
                         summary_parts.append(f"  Docstring: {func_info['docstring']}")
                     structure["functions"].append(func_info)
 
-            return {
-                "summary": "\n".join(summary_parts),
-                "structure": json.dumps(structure)
-            }
+            return {"summary": "\n".join(summary_parts), "structure": json.dumps(structure)}
         except Exception as e:
             logger.warning(f"AST parsing failed for {file_path}: {e}")
-            return {
-                "summary": f"File: {file_path} (AST parsing error)",
-                "structure": json.dumps({"error": str(e)})
-            }
+            return {"summary": f"File: {file_path} (AST parsing error)", "structure": json.dumps({"error": str(e)})}
 
-    def chunk_and_embed(self, file_path: str, content: str) -> List[Dict[str, Any]]:
+    def chunk_and_embed(self, file_path: str, content: str) -> list[dict[str, Any]]:
         """
         Parses raw code, extracts function summaries and structure,
         generates vector embeddings, and saves them to the local SQLite database.
@@ -168,13 +154,13 @@ class CascadeMemoryService:
                     structure=excluded.structure,
                     embedding=excluded.embedding
                 """,
-                (file_path, content, summary, structure, embedding_str)
+                (file_path, content, summary, structure, embedding_str),
             )
             conn.commit()
 
         return [{"file": file_path, "summary": summary, "vector": embedding}]
 
-    def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
+    def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
         dot = sum(x * y for x, y in zip(a, b, strict=False))
         norm_a = math.sqrt(sum(x * x for x in a))
         norm_b = math.sqrt(sum(y * y for y in b))
@@ -182,7 +168,7 @@ class CascadeMemoryService:
             return 0.0
         return dot / (norm_a * norm_b)
 
-    def query_context(self, prompt: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    def query_context(self, prompt: str, top_k: int = 5) -> list[dict[str, Any]]:
         """
         Takes the user's prompt, embeds it, and queries local SQLite for the top_k
         most relevant structural contexts using cosine similarity.
@@ -201,18 +187,14 @@ class CascadeMemoryService:
                 try:
                     stored_vector = json.loads(row["embedding"])
                     score = self._cosine_similarity(query_vector, stored_vector)
-                    results.append({
-                        "file": row["file_path"],
-                        "summary": row["summary"],
-                        "structure": json.loads(row["structure"]),
-                        "score": score
-                    })
+                    results.append({"file": row["file_path"], "summary": row["summary"], "structure": json.loads(row["structure"]), "score": score})
                 except Exception as e:
                     logger.warning(f"Error calculating similarity for {row['file_path']}: {e}")
 
         # Sort by similarity score descending
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:top_k]
+
 
 # Global instance
 memory_service = CascadeMemoryService()

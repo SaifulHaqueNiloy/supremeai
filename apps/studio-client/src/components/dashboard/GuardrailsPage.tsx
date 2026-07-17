@@ -50,14 +50,14 @@ export function GuardrailsPage() {
       <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-5">
         <div>
           <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
-            {policy.scope === 'global' ? <Globe size={18} className="text-blue-500" /> : 
-             policy.scope === 'platform' ? <Server size={18} className="text-emerald-500" /> : 
+            {policy.scope === 'global' ? <Globe size={18} className="text-blue-500" /> :
+             policy.scope === 'platform' ? <Server size={18} className="text-emerald-500" /> :
              <Code2 size={18} className="text-purple-500" />}
             {policy.target_name === '*' ? 'Global Default Baseline' : `Target: ${policy.target_name}`}
           </h3>
           <p className="text-xs text-gray-500 mt-1">ID: {policy.id}</p>
         </div>
-        <button 
+        <button
           disabled={savingId === policy.id}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm text-white transition-colors"
         >
@@ -67,7 +67,7 @@ export function GuardrailsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+
         {/* Sliders */}
         <div className="space-y-6">
           <div>
@@ -75,8 +75,8 @@ export function GuardrailsPage() {
               <span className="text-gray-300">Max Compute Budget (USD)</span>
               <span className="text-emerald-400 font-mono">${policy.max_compute_usd.toFixed(2)}</span>
             </div>
-            <input 
-              type="range" min="0" max="10" step="0.01" 
+            <input
+              type="range" min="0" max="10" step="0.01"
               value={policy.max_compute_usd}
               onChange={(e) => handleUpdate(policy.id, { max_compute_usd: parseFloat(e.target.value) })}
               className="w-full accent-emerald-500"
@@ -88,8 +88,8 @@ export function GuardrailsPage() {
               <span className="text-gray-300">Max Execution Timeout (ms)</span>
               <span className="text-amber-400 font-mono">{policy.max_timeout_ms.toLocaleString()} ms</span>
             </div>
-            <input 
-              type="range" min="1000" max="60000" step="1000" 
+            <input
+              type="range" min="1000" max="60000" step="1000"
               value={policy.max_timeout_ms}
               onChange={(e) => handleUpdate(policy.id, { max_timeout_ms: parseInt(e.target.value) })}
               className="w-full accent-amber-500"
@@ -101,8 +101,8 @@ export function GuardrailsPage() {
               <span className="text-gray-300">Max Retries</span>
               <span className="text-blue-400 font-mono">{policy.max_retries} attempts</span>
             </div>
-            <input 
-              type="range" min="0" max="10" step="1" 
+            <input
+              type="range" min="0" max="10" step="1"
               value={policy.max_retries}
               onChange={(e) => handleUpdate(policy.id, { max_retries: parseInt(e.target.value) })}
               className="w-full accent-blue-500"
@@ -116,8 +116,8 @@ export function GuardrailsPage() {
               <span className="text-gray-300">Circuit Breaker Threshold</span>
               <span className="text-red-400 font-mono">{policy.cb_failure_threshold} consecutive failures</span>
             </div>
-            <input 
-              type="range" min="1" max="20" step="1" 
+            <input
+              type="range" min="1" max="20" step="1"
               value={policy.cb_failure_threshold}
               onChange={(e) => handleUpdate(policy.id, { cb_failure_threshold: parseInt(e.target.value) })}
               className="w-full accent-red-500"
@@ -129,8 +129,8 @@ export function GuardrailsPage() {
               <span className="text-gray-300">Cooldown Window (Seconds)</span>
               <span className="text-purple-400 font-mono">{policy.cooldown_window_sec}s lock</span>
             </div>
-            <input 
-              type="range" min="10" max="3600" step="10" 
+            <input
+              type="range" min="10" max="3600" step="10"
               value={policy.cooldown_window_sec}
               onChange={(e) => handleUpdate(policy.id, { cooldown_window_sec: parseInt(e.target.value) })}
               className="w-full accent-purple-500"
@@ -154,19 +154,19 @@ export function GuardrailsPage() {
 
       {/* Scope Swapper */}
       <div className="flex gap-2 mb-8 p-1 bg-black/40 border border-gray-800 rounded-lg inline-flex">
-        <button 
+        <button
           onClick={() => setActiveScope('global')}
           className={`px-6 py-2 text-sm font-medium rounded-md transition-all ${activeScope === 'global' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
         >
           <Globe size={14} className="inline mr-2" /> Global
         </button>
-        <button 
+        <button
           onClick={() => setActiveScope('platform')}
           className={`px-6 py-2 text-sm font-medium rounded-md transition-all ${activeScope === 'platform' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
         >
           <Server size={14} className="inline mr-2" /> Per-Platform
         </button>
-        <button 
+        <button
           onClick={() => setActiveScope('action')}
           className={`px-6 py-2 text-sm font-medium rounded-md transition-all ${activeScope === 'action' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
         >

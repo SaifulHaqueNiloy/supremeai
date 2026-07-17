@@ -60,7 +60,7 @@ export const api = {
     taskType: string = 'general'
   ): Promise<TaskExecutionResponse> {
     const payload: TaskExecutionPayload = { task, task_type: taskType, messages };
-    
+
     try {
       const response = await apiClient.post<TaskExecutionResponse>('/task/execute', payload);
       return response.data;
@@ -68,7 +68,7 @@ export const api = {
       // Anti-Silent Error: সেন্ট্রাল ErrorEventBus-এ এরর রিপোর্ট করা হচ্ছে
       const isAxiosError = error instanceof AxiosError;
       const errorMessage = isAxiosError ? error.message : "Unknown task execution error";
-      
+
       errorBus.report(error, {
         sourceModule: "api.ts:executeTask",
         action: `Executing task of type: ${taskType}`,

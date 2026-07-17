@@ -10,10 +10,10 @@ option java_outer_classname = "SupremeEngineProto";
 service WorkerService {
   // Submits a heavy background task for execution
   rpc SubmitTask (TaskRequest) returns (TaskResponse);
-  
+
   // Retrieves the status of a previously submitted task
   rpc GetTaskStatus (TaskStatusRequest) returns (TaskStatusResponse);
-  
+
   // Logs a security audit event
   rpc LogAuditEvent (AuditLogRequest) returns (AuditLogResponse);
 }

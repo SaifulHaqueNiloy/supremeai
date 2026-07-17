@@ -13,7 +13,7 @@ This report is generated from the execution of the monorepo test suite (`pnpm te
 ## ❌ Current Technical Errors & Failures (Real Checked Report)
 
 ### 1. [Desktop App UI] Rollup Resolution Failure
-* **Error Log:** 
+* **Error Log:**
   ```
   [vite]: Rollup failed to resolve import "react-router-dom" from "apps/desktop/src-ui/src/App.tsx".
   ```

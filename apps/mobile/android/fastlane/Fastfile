@@ -5,7 +5,7 @@ platform :android do
   lane :deploy do
     # 1. Update version codes if needed (optional)
     # flutter build takes care of this usually or fastlane can bump versions
-    
+
     # 2. Build the app using flutter
     sh "cd ../../ && flutter build appbundle --release"
 

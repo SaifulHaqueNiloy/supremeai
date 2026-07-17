@@ -58,7 +58,7 @@ export class AudioRecorderService {
   public sendText(text: string) {
     this.connectWebSocket();
     const payload = JSON.stringify({ action: 'text_chat', text });
-    
+
     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
       this.websocket.send(payload);
     } else if (this.websocket) {
@@ -77,7 +77,7 @@ export class AudioRecorderService {
     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) return;
 
     this.websocket = new WebSocket(this.wsUrl);
-    
+
     this.websocket.onopen = () => {
       console.log('🟢 [AudioRecorderService] WebSocket connected.');
     };
@@ -88,7 +88,7 @@ export class AudioRecorderService {
         if (data.type === 'transcript' && this.onTranscriptCallback) {
           this.onTranscriptCallback(data.text);
         } else if (data.type === 'response_chunk') {
-          // This goes to the playback service via global event or store, 
+          // This goes to the playback service via global event or store,
           // but for simplicity, we dispatch a custom event
           window.dispatchEvent(new CustomEvent('supremeai_speak', { detail: data.text }));
         }

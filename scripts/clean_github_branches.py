@@ -23,27 +23,27 @@ KEEP_BRANCHES = ["main", "master", "develop"]
 def get_all_branches():
     branches = []
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/refs/heads"
-    
+
     while url:
         response = requests.get(url, headers=HEADERS)
         if response.status_code != 200:
             print(f"Failed to fetch branches: {response.status_code} {response.text}")
             break
-            
+
         data = response.json()
         if not isinstance(data, list):
             break
-            
+
         for ref in data:
             branch_name = ref["ref"].replace("refs/heads/", "")
             branches.append(branch_name)
-            
+
         # Pagination check
         if "next" in response.links:
             url = response.links["next"]["url"]
         else:
             url = None
-            
+
     return branches
 
 def delete_branch(branch_name):
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     print(f"Fetching branches for {REPO_OWNER}/{REPO_NAME}...")
     branches = get_all_branches()
     print(f"Found {len(branches)} total branches.")
-    
+
     deleted_count = 0
     for branch in branches:
         if branch not in KEEP_BRANCHES:
@@ -78,5 +78,5 @@ if __name__ == "__main__":
             deleted_count += 1
         else:
             print(f"🛡️  Kept: {branch}")
-            
+
     print(f"Cleanup complete! Deleted {deleted_count} stale branches.")

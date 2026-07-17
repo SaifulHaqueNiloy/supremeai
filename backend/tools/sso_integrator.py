@@ -190,8 +190,7 @@ class SSOIntegrator:
 
             root = ET.fromstring(logout_response_xml)
             status_code = root.findtext(
-                ".//{urn:oasis:names:tc:SAML:2.0:protocol}Status/{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode",
-                default=""
+                ".//{urn:oasis:names:tc:SAML:2.0:protocol}Status/{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode", default=""
             )
             if "status:Success" in status_code or not status_code:
                 return {"status": "success", "method": "xml_fallback_slo"}

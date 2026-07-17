@@ -290,7 +290,7 @@ def main():
     print("=" * 70)
     print("SupremeAI 2.0 - Bangla Comment Injection")
     print("=" * 70)
-    
+
     files = []
     for root, dirs, fnames in os.walk(ROOT):
         dirs[:] = [d for d in dirs if d not in SKIP and not d.startswith('.')]
@@ -302,31 +302,31 @@ def main():
             ext = fp.suffix.lower()
             if ext in EXTS and is_lang_module(fp):
                 files.append(fp)
-    
+
     print(f"Total: {len(files)}\n")
-    
+
     ok = 0
     for i, fp in enumerate(files, 1):
         try:
             txt = fp.read_text(encoding='utf-8', errors='ignore')
         except Exception:
             continue
-        
+
         ext = fp.suffix.lower()
         hfn = HEADERS.get(ext)
         if not hfn:
             continue
-        
+
         hdr = hfn(fp.name, get_module(fp), get_purpose(fp.stem))
         try:
             fp.write_text(hdr + strip(txt), encoding='utf-8')
             ok += 1
         except Exception:
             pass
-        
+
         if i % 100 == 0 or i == len(files):
             print(f"{i}/{len(files)} ok={ok}")
-    
+
     print("\nDONE: %d files" % ok)
 
 

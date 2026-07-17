@@ -1,7 +1,7 @@
 # Contributing to SupremeAI 2.0 — Phase 2 Guide
 
-**Status**: Phase 1 Complete (Production Readiness Systems), Phase 2 Active (Team Integration)  
-**Updated**: July 3, 2026  
+**Status**: Phase 1 Complete (Production Readiness Systems), Phase 2 Active (Team Integration)
+**Updated**: July 3, 2026
 
 এই ডকুমেন্টটি SupremeAI 2.0-তে কাজ করার সম্পূর্ণ গাইড। আমরা ৫টি শক্তিশালী উৎপাদন-তৈরি সিস্টেম স্থাপন করেছি যা আপনার কাজকে নিরাপদ এবং দক্ষ করে তোলে।
 
@@ -31,7 +31,7 @@ cd backend && pytest tests/test_swarm_orchestrator.py -v
 
 **সুরক্ষিত ফাইল প্যাটার্ন**:
 - `**/auth*.py` — অথেন্টিকেশন
-- `**/security*.py` — নিরাপত্তা কনফিগ  
+- `**/security*.py` — নিরাপত্তা কনফিগ
 - `**/payment*.py` — পেমেন্ট প্রসেসিং
 - `**/admin*.py` — অ্যাডমিন ইন্টারফেস
 - `.github/workflows/*.yml` — CI/CD ওয়ার্কফ্লো
@@ -127,7 +127,7 @@ python scripts/codegraph_integration.py --analyze-impact core/llm_gateway.py
 ```
 ১. 🛡️ Safety Guard → সংবেদনশীল ফাইল চেক করুন
    ↓
-২. 🔍 Multi-Model Validator → নিরাপত্তা/লজিক পরীক্ষা করুন  
+২. 🔍 Multi-Model Validator → নিরাপত্তা/লজিক পরীক্ষা করুন
    ↓
 ३. 📊 Codegraph → জ্ঞান ভিত্তি আপডেট করুন
    ↓
@@ -222,10 +222,10 @@ async def test_my_feature_does_x():
     """আমার বৈশিষ্ট্য X করে"""
     # Arrange - সেটআপ
     input_data = {"key": "value"}
-    
+
     # Act - পরীক্ষা
     result = await my_function(input_data)
-    
+
     # Assert - যাচাই
     assert result["success"] is True
     assert result["output"] == "expected"
@@ -318,6 +318,5 @@ except Exception as e:
 
 ---
 
-**হ্যাপি কোডিং! 🚀**  
+**হ্যাপি কোডিং! 🚀**
 SupremeAI দল
-

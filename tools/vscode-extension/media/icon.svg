@@ -10,33 +10,33 @@
   <!-- Crown Icon -->
   <g id="crown-icon">
     <!-- Base band -->
-    <path d="M 30 100 Q 30 125 50 135 L 150 135 Q 170 125 170 100 L 170 80 Q 170 70 160 70 L 40 70 Q 30 70 30 80 Z" 
+    <path d="M 30 100 Q 30 125 50 135 L 150 135 Q 170 125 170 100 L 170 80 Q 170 70 160 70 L 40 70 Q 30 70 30 80 Z"
           fill="url(#purpleGradIcon)" stroke="url(#purpleGradIcon)" stroke-width="1.5"/>
-    
+
     <!-- Left point -->
     <g>
       <circle cx="55" cy="30" r="7" fill="url(#purpleGradIcon)"/>
       <path d="M 65 85 L 55 40 L 45 85" fill="url(#purpleGradIcon)" stroke="url(#purpleGradIcon)" stroke-width="1.5" stroke-linejoin="round"/>
     </g>
-    
+
     <!-- Left-center point -->
     <g>
       <circle cx="92" cy="10" r="7" fill="url(#purpleGradIcon)"/>
       <path d="M 102 88 L 92 20 L 82 88" fill="url(#purpleGradIcon)" stroke="url(#purpleGradIcon)" stroke-width="1.5" stroke-linejoin="round"/>
     </g>
-    
+
     <!-- Center point (tallest) -->
     <g>
       <circle cx="100" cy="5" r="8" fill="url(#purpleGradIcon)"/>
       <path d="M 110 75 L 100 15 L 90 75" fill="url(#purpleGradIcon)" stroke="url(#purpleGradIcon)" stroke-width="1.5" stroke-linejoin="round"/>
     </g>
-    
+
     <!-- Right-center point -->
     <g>
       <circle cx="108" cy="10" r="7" fill="url(#purpleGradIcon)"/>
       <path d="M 98 88 L 108 20 L 118 88" fill="url(#purpleGradIcon)" stroke="url(#purpleGradIcon)" stroke-width="1.5" stroke-linejoin="round"/>
     </g>
-    
+
     <!-- Right point -->
     <g>
       <circle cx="145" cy="30" r="7" fill="url(#purpleGradIcon)"/>

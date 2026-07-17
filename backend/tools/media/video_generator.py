@@ -1,8 +1,6 @@
 from __future__ import annotations
 from core.config import settings
 
-import json
-from pathlib import Path
 from typing import Any
 
 import httpx

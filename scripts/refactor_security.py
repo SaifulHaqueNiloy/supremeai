@@ -25,7 +25,7 @@ for filename in files_to_move:
     if os.path.exists(src) and not os.path.islink(src):
         # Move the file
         shutil.move(src, dst)
-        
+
         # Create thin wrapper
         module_name = filename[:-3]
         wrapper_content = f"""import warnings

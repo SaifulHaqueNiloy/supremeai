@@ -3,12 +3,14 @@
 Load seed data from cloud storage (GCS/S3) at runtime.
 Replaces static seed_data/ in git.
 """
+
 import os
 import json
 import boto3
 from google.cloud import storage
 from loguru import logger
 from typing import Dict, Any
+
 
 class SeedDataLoader:
     """
@@ -55,10 +57,19 @@ class SeedDataLoader:
     def load_all(self) -> Dict[str, Any]:
         """Load all seed data categories."""
         categories = [
-            "ai_ml", "api_and_performance", "databases",
-            "design_patterns", "devops", "errors",
-            "frameworks", "helpers", "languages",
-            "practices", "security", "system_design", "testing"
+            "ai_ml",
+            "api_and_performance",
+            "databases",
+            "design_patterns",
+            "devops",
+            "errors",
+            "frameworks",
+            "helpers",
+            "languages",
+            "practices",
+            "security",
+            "system_design",
+            "testing",
         ]
 
         result = {}
@@ -72,6 +83,7 @@ class SeedDataLoader:
 
         logger.info(f"Loaded {len(result)} seed data categories")
         return result
+
 
 if __name__ == "__main__":
     loader = SeedDataLoader()

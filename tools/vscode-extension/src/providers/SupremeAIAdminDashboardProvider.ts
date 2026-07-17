@@ -24,7 +24,7 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
 
     this.setupWebviewMessageListener(webviewView);
     webviewView.webview.html = this.getLoadingHTML();
-    
+
     this.updateContent(webviewView);
     this.startPeriodicUpdates();
   }

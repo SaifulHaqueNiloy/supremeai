@@ -35,7 +35,7 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
             child: Container(color: Colors.black.withValues(alpha: 0.5)),
           ),
         ),
-        title: Text('projects.title'.tr().toUpperCase(), 
+        title: Text('projects.title'.tr().toUpperCase(),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white)
         ),
       ),
@@ -86,7 +86,7 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                           Text(task['icon']!, style: const TextStyle(fontSize: 18)),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(task['key']!.tr(), 
+                            child: Text(task['key']!.tr(),
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: isSelected ? Colors.white : Colors.white60,
@@ -142,13 +142,13 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected 
-              ? Colors.blueAccent.withValues(alpha: 0.15) 
+            color: isSelected
+              ? Colors.blueAccent.withValues(alpha: 0.15)
               : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected 
-                ? Colors.blueAccent.withValues(alpha: 0.5) 
+              color: isSelected
+                ? Colors.blueAccent.withValues(alpha: 0.5)
                 : Colors.white.withValues(alpha: 0.1),
               width: 1.5,
             ),
@@ -212,7 +212,7 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: Text('projects.initiate'.tr().toUpperCase(), 
+        child: Text('projects.initiate'.tr().toUpperCase(),
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5)
         ),
       ),
@@ -236,11 +236,11 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('projects.alternative'.tr().toUpperCase(), 
+                  Text('projects.alternative'.tr().toUpperCase(),
                     style: const TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)
                   ),
                   const SizedBox(height: 4),
-                  Text('projects.suggestion_desc'.tr(), 
+                  Text('projects.suggestion_desc'.tr(),
                     style: const TextStyle(color: Colors.white70, fontSize: 11)
                   ),
                 ],
@@ -256,4 +256,3 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
     );
   }
 }
-

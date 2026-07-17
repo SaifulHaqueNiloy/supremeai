@@ -36,14 +36,14 @@ def get_latest_commit_hash():
 def generate_summary(diff_content):
     if not diff_content.strip():
         return "No significant changes found in this push."
-        
+
     # Cap the diff size to avoid hitting LLM token limits (e.g. max 50KB string)
     max_diff_size = 50 * 1024
     if len(diff_content) > max_diff_size:
         diff_content = diff_content[:max_diff_size] + "\n...[DIFF TRUNCATED]..."
 
     prompt = f"""
-You are an expert Enterprise Software Architect. 
+You are an expert Enterprise Software Architect.
 Review the following git diff and provide a concise, high-level technical summary of the changes.
 List the files changed and summarize the key updates in bullet points.
 Highlight any major architectural shifts, security implications, or critical logic updates.
@@ -59,7 +59,7 @@ Keep it strictly under 300 words. Format the output in Markdown.
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if "," in api_key:
             os.environ["GEMINI_API_KEY"] = api_key.split(",")[0]
-            
+
         print("Calling LLM via litellm...")
         response = completion(
             model="gemini/gemini-2.5-pro",
@@ -72,7 +72,7 @@ Keep it strictly under 300 words. Format the output in Markdown.
 
 def manage_history():
     files = sorted(glob.glob(os.path.join(SUMMARY_DIR, "PUSH-SUMMARY-*.md")), key=os.path.getmtime)
-    
+
     if len(files) > MAX_FILES:
         files_to_remove = files[:len(files) - MAX_FILES]
         for f in files_to_remove:
@@ -86,17 +86,17 @@ def main():
     print("Generating summary for the latest push...")
     diff = get_git_diff()
     summary = generate_summary(diff)
-    
+
     commit_hash = get_latest_commit_hash()
     summary_filename = os.path.join(SUMMARY_DIR, f"PUSH-SUMMARY-{commit_hash}.md")
-    
+
     # Prefix the output
     final_output = f"# SupremeAI Push Summary ({commit_hash})\n\n{summary}"
 
     with open(summary_filename, "w", encoding="utf-8") as f:
         f.write(final_output)
     print(f"Saved summary to {summary_filename}")
-    
+
     # Update the LATEST symlink / copy
     with open(LATEST_SUMMARY, "w", encoding="utf-8") as f:
         f.write(final_output)

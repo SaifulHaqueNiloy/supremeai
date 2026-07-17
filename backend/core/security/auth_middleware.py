@@ -2,6 +2,7 @@
 
 বাংলা: অথেনটিকেশন মিডলওয়্যার — JWT বিয়ারার টোকেন ভ্যালিডেশন, Fail-Closed।
 """
+
 from __future__ import annotations
 
 import hmac
@@ -66,6 +67,7 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
         logger.warning(f"JWT token validation failed: {exc}")
         return None
 
+
 def _is_public_path(path: str) -> bool:
     """Check if a path is public (no auth required).
 
@@ -94,15 +96,19 @@ async def _send_json_response(
     body_bytes = json.dumps(body, separators=(",", ":")).encode("utf-8")
     response_headers.append((b"content-length", str(len(body_bytes)).encode()))
 
-    await send({
-        "type": "http.response.start",
-        "status": status_code,
-        "headers": response_headers,
-    })
-    await send({
-        "type": "http.response.body",
-        "body": body_bytes,
-    })
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status_code,
+            "headers": response_headers,
+        }
+    )
+    await send(
+        {
+            "type": "http.response.body",
+            "body": body_bytes,
+        }
+    )
 
 
 class AuthMiddleware:
@@ -127,6 +133,7 @@ class AuthMiddleware:
         # Skip auth for public paths or test environment (only if no api token env is configured)
         # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে অথেন্টিকেশন বাইপাস করা হয়, যদি না সরাসরি API টোকেন চেক করা হচ্ছে।
         import os
+
         if _is_public_path(path) or (is_test_environment() and not (settings.supremeai_api_token or os.environ.get("SUPREMEAI_API_TOKEN"))):
             await self.app(scope, receive, send)
             return

@@ -4,18 +4,22 @@
 render.yaml-এ healthCheckPath: /api/v1/health সেট করা আছে।
 তাই GET /api/v1/health অবশ্যই 200 রিটার্ন করতে হবে।
 """
+
 import time
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from core.services import registry, redis_manager
+from core.services import redis_manager
+from core.services import registry
 
 
 router = APIRouter()
 
 
-from fastapi import Request, Response
+from fastapi import Request
+from fastapi import Response
+
 
 # বাংলা মন্তব্য: Render health check-এর জন্য এই endpoint অপরিহার্য।
 # render.yaml-এ healthCheckPath: /api/v1/health নির্ধারিত।
@@ -44,9 +48,7 @@ async def health_check(request: Request, response: Response):
         except Exception:  # noqa: BLE001
             subsystems["redis"] = "down"
 
-    has_critical_failure = any(
-        subsystems.get(k) == "down" for k in ["db", "redis"]
-    )
+    has_critical_failure = any(subsystems.get(k) == "down" for k in ["db", "redis"])
 
     if has_critical_failure:
         response.status_code = 503
@@ -69,6 +71,7 @@ async def health_check(request: Request, response: Response):
 
 class HealthRequest(BaseModel):
     """Request model for agent health check."""
+
     agent_ids: list[str]
 
 

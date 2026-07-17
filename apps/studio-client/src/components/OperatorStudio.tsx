@@ -61,7 +61,7 @@ export function OperatorStudio({
             Home Feed
           </button>
         </div>
-        
+
         {/* Content area */}
         <div className="flex-1 flex flex-col gap-4">
           {currentView === 'presets' ? (

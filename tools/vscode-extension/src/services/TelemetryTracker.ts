@@ -48,7 +48,7 @@ export class TelemetryTracker extends BaseDisposable {
         }
 
         await TelemetryTracker.sendTelemetry(patchData.originalErrorId, filePath, status, similarityScore);
-        
+
         // Remove from active tracking after evaluation
         this.activePatches.delete(filePath);
     }
@@ -57,7 +57,7 @@ export class TelemetryTracker extends BaseDisposable {
         try {
             // Replace with your actual backend URL from config
             const backendUrl = vscode.workspace.getConfiguration('supremeai').get('backendUrl', 'https://supremeai-api-lhlwyikwlq-uc.a.run.app');
-            
+
             await fetch(`${backendUrl}/api/v1/swarm/telemetry/patch-result`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

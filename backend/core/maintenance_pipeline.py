@@ -88,7 +88,8 @@ class MaintenancePipeline:
                     module="maintenance_pipeline",
                     error_type="system.health.degraded",
                     message="System health score dropped below safe threshold.",
-                    severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"results": results, "score": self.health_score},
                 )
             )
@@ -148,7 +149,8 @@ class MaintenancePipeline:
                                 module="auto_remediation",
                                 error_type="system.routing.updated",
                                 message="Switched to OpenRouter successfully.",
-                                severity="INFO", structured_context=ErrorContext(module="auto_fixed"),
+                                severity="INFO",
+                                structured_context=ErrorContext(module="auto_fixed"),
                             )
                         )
                         self.last_recovery_time = current_time

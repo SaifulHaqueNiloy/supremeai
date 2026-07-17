@@ -54,7 +54,7 @@ app.get(['/health', '/api/health'], (req, res) => {
 // REAL LLM Connection (Routed via Python Backend to use FreeTierTracker)
 async function callChatBackend(message, token) {
   const backendUrl = process.env.SUPREME_BACKEND_URL || 'http://127.0.0.1:8000';
-  
+
   try {
     const response = await axios.post(
       `${backendUrl}/api/chat/completion`,
@@ -123,7 +123,7 @@ async function unifiedChatHandler(req, res) {
     if (!answer) {
       try {
         const chatResult = await callChatBackend(message, token);
-        
+
         if (chatResult.ecoMode) {
           res.setHeader('X-SupremeAI-Status', 'Eco-Mode');
         }

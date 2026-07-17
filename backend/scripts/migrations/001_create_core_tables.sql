@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS skills (
     skill_name VARCHAR(255) UNIQUE NOT NULL,
     description TEXT,
     code TEXT NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'active', 
+    status VARCHAR(50) NOT NULL DEFAULT 'active',
     version INT NOT NULL DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

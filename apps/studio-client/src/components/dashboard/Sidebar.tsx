@@ -20,7 +20,7 @@ export const Sidebar: React.FC = () => {
         </div>
         <span className="font-bold text-xl tracking-tight text-foreground">SupremeAI</span>
       </div>
-      
+
       <nav className="flex-1 px-4 space-y-1">
         {navItems.map((item) => (
           <NavLink

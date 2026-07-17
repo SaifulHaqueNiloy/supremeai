@@ -92,15 +92,15 @@ export const supremeApi = {
 
   // Skills
   listSkills: () => fetch(`${API_BASE}/api/skills`),
-  executeSkill: (name: string, params: any) => 
+  executeSkill: (name: string, params: any) =>
     fetch(`${API_BASE}/api/skills/${name}/execute`, { method: 'POST', body: JSON.stringify(params) }),
 
   // Evolution
-  forgeSkill: (demand: string) => 
+  forgeSkill: (demand: string) =>
     fetch(`${API_BASE}/api/evolution/forge`, { method: 'POST', body: JSON.stringify({ skill_name: demand, user_demand: demand }) }),
 
   // GitHub
-  connectRepo: (url: string) => 
+  connectRepo: (url: string) =>
     fetch(`${API_BASE}/api/github/connect`, { method: 'POST', body: JSON.stringify({ repo_url: url }) }),
 
   // Admin
@@ -235,7 +235,7 @@ app.updater()
 ## 🚀 CI/CD Pipeline (GitHub Actions)
 
 > [!NOTE]
-> The GitHub action below will build the Tauri application and package it as an `.msi` file automatically on every version tag. 
+> The GitHub action below will build the Tauri application and package it as an `.msi` file automatically on every version tag.
 
 ```yaml
 # .github/workflows/desktop-release.yml

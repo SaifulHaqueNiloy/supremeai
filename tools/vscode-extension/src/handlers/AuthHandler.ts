@@ -6,13 +6,13 @@ export class AuthHandler {
     const authSuccessDisposable = vscode.window.registerUriHandler({
       handleUri: async (uri: vscode.Uri) => {
         console.log('[SupremeAI] URI callback received:', uri.toString());
-        
+
         if (uri.query.includes('action=login') || uri.path.includes('callback')) {
           const params = new URLSearchParams(uri.query);
           const token = params.get('token');
           const userParam = params.get('user');
           const stateParam = params.get('state');
-          
+
           if (token) {
             const auth = AuthService.getInstance();
             if (auth) {
@@ -23,7 +23,7 @@ export class AuthHandler {
                 return;
               }
               auth.clearAuthState();
-  
+
               vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: 'Verifying authentication...',
@@ -34,7 +34,7 @@ export class AuthHandler {
                   vscode.window.showErrorMessage('Login failed: Invalid or expired token.');
                   return;
                 }
-  
+
                 auth.setToken(token);
                 if (userParam) {
                   try {

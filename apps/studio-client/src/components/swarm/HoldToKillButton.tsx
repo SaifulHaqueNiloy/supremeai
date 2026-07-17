@@ -30,9 +30,9 @@ export const HoldToKillButton: React.FC<Props> = ({ onTrigger }) => {
          onPointerDown={handlePointerDown}
          onPointerUp={handlePointerUp}
          onPointerLeave={handlePointerUp}>
-      
+
       {/* Background/Progress Layer (Fills up in 2 seconds) */}
-      <div 
+      <div
         className="absolute left-0 top-0 h-full bg-danger opacity-80"
         style={{
           width: isHolding ? '100%' : '0%',

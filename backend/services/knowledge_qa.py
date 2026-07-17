@@ -16,7 +16,7 @@ from core.observability.audit_logger import AuditLogger
 from memory.chromadb_store import ChromaDBStore
 
 
-MANIFEST_PATH = Path("backend/skills/manifests/core_knowledge_qa.json")
+MANIFEST_PATH = Path(__file__).resolve().parent.parent / "skills" / "manifests" / "core_knowledge_qa.json"
 MIN_RETRIEVAL_SCORE = 0.05
 MAX_CONTEXT_CHARS = 12_000
 

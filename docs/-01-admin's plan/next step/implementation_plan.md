@@ -142,7 +142,7 @@ import litellm
 
 class UserProfiler:
     MODES = ["FAST_TRACK", "LEARNING", "PRODUCTION"]
-    
+
     async def classify_user(user_id: str) -> UserProfile
     async def update_from_history(user_id: str, task: Task) -> None
 ```
@@ -323,7 +323,7 @@ heal_graph.add_node("apply_fix", apply_patch)
 heal_graph.add_node("escalate_hitl", send_to_approval_queue)
 
 # লুপ: run → fail → analyze → fix → run (max 3 retries)
-heal_graph.add_conditional_edges("run_tests", 
+heal_graph.add_conditional_edges("run_tests",
     lambda s: "escalate_hitl" if s.retries >= 3 else "analyze_error")
 ```
 
@@ -354,7 +354,7 @@ heal_graph.add_conditional_edges("run_tests",
 User connects GCP Service Account
         ↓
 backend/byoc/cloud_connector.py
-        ↓  
+        ↓
 infrastructure/terraform/gcp/
   ├── main.tf          (Cloud Run service definition)
   ├── storage.tf       (GCS bucket for skill artifacts)
@@ -544,7 +544,7 @@ async def crawl(url: str) -> CrawlResult  # HITL required for new domains
 # প্রতিদিন রাত ২টায় নতুন জ্ঞান শিখবে (LangSmith-এ ট্রেস হবে)
 class LearningLoop:
     SCHEDULE = "0 2 * * *"  # UTC
-    
+
     async def run_cycle() -> LearningReport:
         # Scout → Extract → Embed → Store in Qdrant → Register as Skill
 ```
@@ -623,7 +623,7 @@ auditor_agent = Agent(
     llm="ollama/llama3.2"  # LiteLLM-এর মাধ্যমে
 )
 coder_agent = Agent(
-    role="Patch Generator", 
+    role="Patch Generator",
     goal="Write code improvements based on audit findings",
     llm="gemini/gemini-flash"
 )
@@ -660,7 +660,7 @@ class MasterPlanner:
 class AutoUpdateManager:
     BRANCH_PREFIX = "feature/auto-"
     TARGET_BRANCH = "develop"  # শুধু develop-এ PR, কখনো main-এ নয়
-    
+
     async def on_approval(proposal_id: str) -> UpdateResult:
         branch = f"{self.BRANCH_PREFIX}{timestamp()}"
         # sandbox test → create branch → commit → open PR → log

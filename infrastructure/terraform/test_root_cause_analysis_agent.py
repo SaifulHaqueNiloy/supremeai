@@ -7,14 +7,16 @@ from unittest.mock import AsyncMock, MagicMock
 # or the path is correctly configured.
 from analysis.root_cause_analysis_agent import RootCauseAnalysisAgent
 
+
 @pytest.fixture
 def mock_clients():
     """Provides mock clients for the agent."""
     return {
         "llm_client": MagicMock(),
         "db_pool": AsyncMock(),
-        "git_client": MagicMock()
+        "git_client": MagicMock(),
     }
+
 
 @pytest.mark.asyncio
 async def test_analyze_pipeline(mocker, mock_clients):
@@ -30,40 +32,38 @@ async def test_analyze_pipeline(mocker, mock_clients):
     # Mock the internal async methods of the agent
     mock_parsed_logs = [{"file": "service.log", "error_type": "NullPointerException"}]
     mocker.patch.object(
-        RootCauseAnalysisAgent, 
-        '_parse_logs', 
-        new_callable=AsyncMock, 
-        return_value=mock_parsed_logs
+        RootCauseAnalysisAgent,
+        "_parse_logs",
+        new_callable=AsyncMock,
+        return_value=mock_parsed_logs,
     )
 
     mock_parsed_traces = [{"service": "payment_processor", "duration_ms": 1500}]
     mocker.patch.object(
-        RootCauseAnalysisAgent, 
-        '_parse_traces', 
-        new_callable=AsyncMock, 
-        return_value=mock_parsed_traces
+        RootCauseAnalysisAgent,
+        "_parse_traces",
+        new_callable=AsyncMock,
+        return_value=mock_parsed_traces,
     )
 
     mock_git_context = {"commit": "a1b2c3d4", "author": "dev@supreme.ai"}
     mocker.patch.object(
-        RootCauseAnalysisAgent, 
-        '_get_context_from_git', 
-        new_callable=AsyncMock, 
-        return_value=mock_git_context
+        RootCauseAnalysisAgent,
+        "_get_context_from_git",
+        new_callable=AsyncMock,
+        return_value=mock_git_context,
     )
 
     # --- 2. Initialize Agent and Run Analysis ---
 
     agent = RootCauseAnalysisAgent(**mock_clients)
-    
+
     incident_id = "INC-TEST-001"
     log_files = ["/path/to/service.log"]
     trace_files = ["/path/to/trace.json"]
 
     result = await agent.analyze(
-        incident_id=incident_id,
-        log_files=log_files,
-        trace_files=trace_files
+        incident_id=incident_id, log_files=log_files, trace_files=trace_files
     )
 
     # --- 3. Assertions ---
@@ -72,7 +72,9 @@ async def test_analyze_pipeline(mocker, mock_clients):
     RootCauseAnalysisAgent._parse_logs.assert_awaited_once_with(log_files)
     RootCauseAnalysisAgent._parse_traces.assert_awaited_once_with(trace_files)
     # The arguments for git context are hardcoded in the example, so we match them.
-    RootCauseAnalysisAgent._get_context_from_git.assert_awaited_once_with("src/payment_processor.py", 42)
+    RootCauseAnalysisAgent._get_context_from_git.assert_awaited_once_with(
+        "src/payment_processor.py", 42
+    )
 
     # Verify the final result (currently hardcoded in the agent)
     expected_root_cause = "The 'payment_processor' service is failing due to a NullPointerException when handling a specific payment type, likely introduced in commit a1b2c3d4."

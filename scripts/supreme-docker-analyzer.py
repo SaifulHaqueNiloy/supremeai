@@ -11,7 +11,7 @@ class SupremeDockerAnalyzer:
         self.image_name = image_name
         self.service_name = service_name
         self.limits = self.load_limits()
-        
+
     def load_limits(self):
         limits_path = Path("config/docker-limits.yml")
         if limits_path.exists():
@@ -68,10 +68,10 @@ if __name__ == '__main__':
     analyzer = SupremeDockerAnalyzer(image, service)
     result = analyzer.analyze()
     print(json.dumps(result, indent=2))
-    
+
     with open("docker_analysis.json", "w") as f:
         json.dump(result, f, indent=2)
-        
+
     if result["status"] == "FAIL":
         sys.exit(1)
     sys.exit(0)

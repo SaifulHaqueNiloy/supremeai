@@ -71,7 +71,8 @@ class SwarmPubSub:
                     module="swarm_pubsub",
                     error_type="REDIS_UNAVAILABLE",
                     message=str(e)[:200],
-                    severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
             raise
@@ -99,7 +100,8 @@ class SwarmPubSub:
                         module="swarm_pubsub",
                         error_type="CLEANUP_FAILED",
                         message=str(cleanup_err)[:200],
-                        severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                        severity="WARNING",
+                        structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
             raise
@@ -110,7 +112,8 @@ class SwarmPubSub:
                     module="swarm_pubsub",
                     error_type="SUBSCRIPTION_ERROR",
                     message=str(e)[:200],
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
             raise
@@ -130,7 +133,8 @@ class SwarmPubSub:
                     module="swarm_pubsub",
                     error_type="BROADCAST_FAILED",
                     message=str(e)[:200],
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
             raise

@@ -13,11 +13,7 @@ class GraphService:
         self.password = getattr(settings, "neo4j_password", None)
 
         # বাংলা মন্তব্য: যদি পাসওয়ার্ড না থাকে, অথবা টেস্ট এনভায়রনমেন্টে মক সিক্রেট থাকে (যেমন: 'mock_NEO4J_URI'), তবে ড্রাই-রান মোড চালু হবে।
-        self.dry_run = (
-            not self.password
-            or self.uri.startswith("mock_")
-            or (isinstance(self.password, str) and self.password.startswith("mock_"))
-        )
+        self.dry_run = not self.password or self.uri.startswith("mock_") or (isinstance(self.password, str) and self.password.startswith("mock_"))
 
         if self.dry_run:
             logger.warning("NEO4J_PASSWORD missing or mock credentials detected. GraphService will run in dry-run/mock mode.")

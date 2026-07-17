@@ -128,6 +128,6 @@ cd apps/studio-client && pnpm dev
 pip install pre-commit
 pre-commit install
 
-#ony  
+#ony
 pre-commit run --all-files
 ```

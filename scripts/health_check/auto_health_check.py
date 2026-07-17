@@ -35,7 +35,7 @@ if __name__ == "__main__":
     logger.info("Starting Auto Health Check...")
     api_ok = check_api()
     # redis_ok = check_redis() # Optional if redis is not running locally in CI
-    
+
     if not api_ok:
         sys.exit(1)
     logger.info("All Health Checks Passed.")

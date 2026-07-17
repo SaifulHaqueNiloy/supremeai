@@ -26,13 +26,13 @@ export const FixPreviewModal: React.FC<FixPreviewModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-        
+
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-slate-700 bg-slate-800">
           <div>
             <h2 className="text-xl font-bold text-white">Review Fix: {fix.id}</h2>
             <p className="text-slate-400 text-sm mt-1">
-              Error Type: <span className="font-mono text-rose-400">{fix.error_type}</span> | 
+              Error Type: <span className="font-mono text-rose-400">{fix.error_type}</span> |
               Impact Score: <span className="font-mono text-emerald-400">{fix.impact_score || 0}</span>
             </p>
           </div>
@@ -55,17 +55,17 @@ export const FixPreviewModal: React.FC<FixPreviewModalProps> = ({
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-slate-700 bg-slate-800 flex justify-end gap-3">
-          <button 
-            onClick={onReject} 
+          <button
+            onClick={onReject}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-rose-900/50 text-rose-400 rounded-lg transition-colors border border-transparent hover:border-rose-500/50"
           >
             <XCircle size={18} />
             Reject
           </button>
-          
-          <button 
-            onClick={onApprove} 
+
+          <button
+            onClick={onApprove}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-lg shadow-emerald-500/20 transition-all font-medium disabled:opacity-50"
           >

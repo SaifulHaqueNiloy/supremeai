@@ -49,4 +49,3 @@ Basic deploy flow:
 4. If you need Supabase database schema setup, use the Supabase dashboard SQL editor or migration scripts; do not upload local SQLite/DB files as part of the build.
 
 <!-- Trigger CI/CD backend test run -->
- 

@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from loguru import logger
+
+
 HAS_SENTENCE_TRANSFORMERS = importlib.util.find_spec("sentence_transformers") is not None
 HAS_CHROMADB = importlib.util.find_spec("chromadb") is not None
 HAS_QDRANT = importlib.util.find_spec("qdrant_client") is not None

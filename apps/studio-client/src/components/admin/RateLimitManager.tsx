@@ -71,7 +71,7 @@ export const RateLimitManager: React.FC = () => {
     setLoading(false);
   }, []);
 
-  useEffect(() => { 
+  useEffect(() => {
     // বাংলা মন্তব্য: set-state-in-effect ফিক্স — fetchData কে async ফাংশনের ভেতরে র‍্যাপ করা হয়েছে
     const loadData = async () => {
       await fetchData();

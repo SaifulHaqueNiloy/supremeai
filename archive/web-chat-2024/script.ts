@@ -45,7 +45,7 @@ validateDOM();
 // --- Event Listeners with Strict Cleanup ---
 if (btnAttach && imageUpload) {
     btnAttach.addEventListener('click', () => imageUpload.click(), { signal: abortController.signal });
-    
+
     // Strict typing for file input event
     imageUpload.addEventListener('change', (e: Event) => {
         const target = e.target as HTMLInputElement;
@@ -126,9 +126,9 @@ function connectWebSocket(): void {
         if (token) {
             urlObj.searchParams.append("token", token);
         }
-        
+
         ws = new WebSocket(urlObj.toString());
-        
+
         ws.onopen = () => {
             console.info('🟢 [WS] Connected to Neural Engine');
             reconnectAttempts = 0; // Reset counter on successful connection
@@ -158,7 +158,7 @@ function connectWebSocket(): void {
                 console.info('⚪ [WS] Closed gracefully due to app unmount.');
                 return;
             }
-            
+
             if (reconnectAttempts >= AppConfig.ws.maxReconnectAttempts) {
                 errorBus.report(
                     new Error(`WebSocket failed to reconnect after ${AppConfig.ws.maxReconnectAttempts} attempts.`),
@@ -171,7 +171,7 @@ function connectWebSocket(): void {
 
             const delay = calculateBackoff();
             console.warn(`🔴 [WS] Disconnected (Code: ${event.code}). Reconnecting in ${delay}ms... (Attempt ${reconnectAttempts + 1})`);
-            
+
             clearTimeout(reconnectTimeoutId);
             reconnectTimeoutId = window.setTimeout(() => {
                 reconnectAttempts++;
@@ -200,7 +200,7 @@ function addMessage(role: "user" | "assistant", text: string): void {
     // We use predefined CSS classes for styling (removed inline styles)
     div.className = `msg msg-${role}`;
     div.innerHTML = DOMPurify.sanitize(text);
-    
+
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
@@ -209,7 +209,7 @@ function addMessage(role: "user" | "assistant", text: string): void {
 function handleSend(): void {
     if (!chatInput) return;
     const text = chatInput.value.trim();
-    
+
     if ((!text && !currentImageBase64) || isGenerating || !ws || ws.readyState !== WebSocket.OPEN) {
         return;
     }
@@ -233,7 +233,7 @@ function handleSend(): void {
         errorBus.report(error, { sourceModule: "script.ts", action: "Sending WS Message" }, "error");
         addMessage('assistant', '⚠️ মেসেজ পাঠাতে সমস্যা হয়েছে।');
     }
-    
+
     clearImageAttachment();
 }
 

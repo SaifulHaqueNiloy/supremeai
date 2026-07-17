@@ -12,10 +12,10 @@ from core.maintenance_pipeline import maintenance_pipeline
 
 async def test_chaos_and_recovery():
     print("Starting Chaos & Recovery Test...")
-    
+
     # 1. Manually force the health check which includes Chaos Probes
     print("Simulating Chaos via Health Probes...")
-    
+
     # Run the health check a few times to increase the 5% chance of chaos
     for i in range(20):
         results = await maintenance_pipeline.run_health_check()

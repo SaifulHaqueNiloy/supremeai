@@ -18,7 +18,7 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
     const [eventState, setEventState] = useState<SujonState>('idle');
     const sessionState = useSessionCockpitStore((state) => state.agentState);
     const sessionId = useSessionCockpitStore((state) => state.sessionId);
-    
+
     // If we are in a session, prefer session state over ambient event state
     const effectiveState = forcedState ?? (sessionId ? sessionState : eventState);
 
@@ -60,7 +60,7 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
 
         const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
         const texCoordAttributeLocation = gl.getAttribLocation(program, 'a_texCoord');
-        
+
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         const positions = new Float32Array([
@@ -77,7 +77,7 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
         const vao = gl.createVertexArray();
         gl.bindVertexArray(vao);
         vaoRef.current = vao;
-        
+
         gl.enableVertexAttribArray(positionAttributeLocation);
         gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
@@ -92,7 +92,7 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
             1, 1,
         ]), gl.STATIC_DRAW);
         texCoordBufferRef.current = texCoordBuffer;
-        
+
         gl.enableVertexAttribArray(texCoordAttributeLocation);
         gl.vertexAttribPointer(texCoordAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
@@ -126,7 +126,7 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
 
         const render = (now: number) => {
             if (!isVisible || !glRef.current) return;
-            
+
             const time = (now - startTime) * 0.001;
 
             gl.useProgram(program);
@@ -134,12 +134,12 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
 
             gl.uniform1f(timeLocation, time);
             gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
-            
+
             // Note: In React, accessing effectiveState directly in this closure might hold stale value unless we ref it.
-            // But since this effect re-runs on nothing (dependencies array []), we need to use a ref to get latest state, 
+            // But since this effect re-runs on nothing (dependencies array []), we need to use a ref to get latest state,
             // OR include effectiveState in dependencies. But rebuilding WebGL context on state change is bad.
             // Instead, we will use a ref for the effectiveState. Let's fix that.
-            
+
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -173,7 +173,7 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
         const colorLocation = gl.getUniformLocation(programRef.current, 'u_baseColor');
         const intensityLocation = gl.getUniformLocation(programRef.current, 'u_intensity');
         const stateIdLocation = gl.getUniformLocation(programRef.current, 'u_stateId');
-        
+
         const color = getBaseColor(effectiveState);
         gl.uniform3f(colorLocation, color[0], color[1], color[2]);
         gl.uniform1f(intensityLocation, 1.0);

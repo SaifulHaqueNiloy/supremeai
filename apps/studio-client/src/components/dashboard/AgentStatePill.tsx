@@ -20,7 +20,7 @@ export const AgentStatePill: React.FC<AgentStatePillProps> = ({ state }) => {
   const config = stateConfig[state];
 
   return (
-    <div 
+    <div
       className="flex items-center space-x-2 px-3 py-1 bg-gray-800 rounded-full border border-gray-700 shadow-sm"
       aria-label={`Agent is currently ${config.label}`}
     >

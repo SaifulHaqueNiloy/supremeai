@@ -124,57 +124,57 @@ body {
 .chat-history { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-right: 8px; }
 
 /* Replaced Inline Styles for Messages */
-.msg { 
-    padding: 10px 14px; 
-    border-radius: 12px; 
-    margin-bottom: 8px; 
-    max-width: 80%; 
-    color: white; 
-    font-size: 14px; 
-    line-height: 1.5; 
-    animation: popIn 0.3s ease; 
+.msg {
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    max-width: 80%;
+    color: white;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: popIn 0.3s ease;
 }
-.msg-user { 
-    align-self: flex-end; 
-    background: #3B82F6; 
-    font-weight: 500; 
+.msg-user {
+    align-self: flex-end;
+    background: #3B82F6;
+    font-weight: 500;
 }
-.msg-assistant { 
-    align-self: flex-start; 
-    background: #1F2937; 
+.msg-assistant {
+    align-self: flex-start;
+    background: #1F2937;
 }
 
 /* Replaced Inline Styles for Input Area */
 .input-area {
-    display: flex; gap: 10px; align-items: center; background: #1F2937; 
+    display: flex; gap: 10px; align-items: center; background: #1F2937;
     padding: 10px; border-radius: 12px; border: 1px solid #374151;
 }
 .hidden-input { display: none; }
 .btn-icon {
-    background: none; border: none; color: #9CA3AF; cursor: pointer; 
+    background: none; border: none; color: #9CA3AF; cursor: pointer;
     font-size: 22px; padding: 0 5px; transition: color 0.2s;
 }
 .btn-icon:hover { color: white; }
 .chat-input {
-    flex: 1; background: transparent; border: none; color: white; 
+    flex: 1; background: transparent; border: none; color: white;
     outline: none; font-size: 15px; font-family: var(--font-sans);
 }
 .btn-primary {
-    background: #3B82F6; color: white; border: none; padding: 8px 16px; 
+    background: #3B82F6; color: white; border: none; padding: 8px 16px;
     border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s;
 }
 .btn-primary:hover { background: #2563EB; }
 
 /* Replaced Inline Styles for Image Preview */
 .image-preview-container {
-    display: none; position: relative; margin-bottom: 12px; max-width: 120px; 
+    display: none; position: relative; margin-bottom: 12px; max-width: 120px;
     border-radius: 8px; border: 1px solid #374151; padding: 4px; background: #1F2937;
 }
 .image-preview { width: 100%; border-radius: 6px; object-fit: cover; }
 .btn-remove-image {
-    position: absolute; top: -8px; right: -8px; background: #EF4444; color: white; 
-    border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; 
-    font-size: 12px; font-weight: bold; display: flex; align-items: center; 
+    position: absolute; top: -8px; right: -8px; background: #EF4444; color: white;
+    border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;
+    font-size: 12px; font-weight: bold; display: flex; align-items: center;
     justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 

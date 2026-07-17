@@ -24,7 +24,7 @@ SERVICES = {
     "API_Gateway": os.getenv("BACKEND_URL", "http://localhost:8000") + "/api/v1/health",
     # 필요하면 Redis, NATS आदि এখানে যোগ করা যাবে
     # "Redis": "http://localhost:6379",
-    # "NATS_JetStream": "http://localhost:8222/healthz", 
+    # "NATS_JetStream": "http://localhost:8222/healthz",
 }
 TIMEOUT = 5
 
@@ -35,7 +35,7 @@ async def send_telegram_alert(message: str):
     """টেলিগ্রামে অ্যালার্ট মেসেজ পাঠানোর ফাংশন।"""
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
-    
+
     if not bot_token or not chat_id:
         logging.warning("Telegram Bot Token বা Chat ID সেট করা নেই। নোটিফিকেশন পাঠানো যাচ্ছে না।")
         return
@@ -46,7 +46,7 @@ async def send_telegram_alert(message: str):
         "text": f"🚨 *SupremeAI Health Alert* 🚨\n\n{message}",
         "parse_mode": "Markdown"
     }
-    
+
     try:
         # httpx ব্যবহার করা হয়েছে যাতে async সাপোর্ট থাকে
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
@@ -90,10 +90,10 @@ async def check_database_connection() -> tuple[bool, str]:
 
 async def run_health_check():
     logging.info("🚀 Starting SupremeAI 2.0 Backend Health Check...")
-    
+
     all_healthy = True
     alert_messages = []
-    
+
     # 1. API Services চেক করা
     for name, url in SERVICES.items():
         success, message = await check_service(name, url)
@@ -104,7 +104,7 @@ async def run_health_check():
             error_msg = f"{name} is down! Error: {message}"
             logging.error(f"❌ {error_msg}")
             alert_messages.append(error_msg)
-            
+
     # 2. Database চেক করা (CI এনভায়রনমেন্টে ডাটাবেস চেক স্কিপ করা যায়)
     if os.getenv("CI") != "true":
         db_success, db_message = await check_database_connection()

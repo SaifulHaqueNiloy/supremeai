@@ -9,8 +9,8 @@ interface ShellProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Shell = React.forwardRef<HTMLDivElement, ShellProps>(
   ({ className, sidebar, header, children, ...props }, ref) => {
     return (
-      <div 
-        ref={ref} 
+      <div
+        ref={ref}
         className={cn("flex h-screen w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] overflow-hidden text-foreground", className)}
         {...props}
       >
@@ -20,7 +20,7 @@ export const Shell = React.forwardRef<HTMLDivElement, ShellProps>(
             {sidebar}
           </aside>
         )}
-        
+
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header */}
@@ -29,7 +29,7 @@ export const Shell = React.forwardRef<HTMLDivElement, ShellProps>(
               {header}
             </header>
           )}
-          
+
           {/* Scrollable Content */}
           <main className="flex-1 overflow-auto p-6 relative">
             {children}

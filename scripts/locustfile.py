@@ -24,7 +24,7 @@ class SupremeAILoadTester(HttpUser):
                 # বাংলা মন্তব্য: প্রোডাকশনে কোনোভাবেই ফলব্যাক টোকেন চলতে পারে না!
                 logger.critical("CRITICAL: SUPREMEAI_API_TOKEN env var is missing in production environment!")
                 raise ValueError("SUPREMEAI_API_TOKEN environment variable is mandatory for production load tests.")
-            
+
             # লোকাল এনভায়রনমেন্টে নন-সেন্সিটিভ টেস্টিংয়ের জন্য ফলব্যাক
             api_token = "test-token-" + "secure-bypass"
             logger.warning(f"Using development fallback token. Current environment context: {app_env}")
@@ -59,13 +59,13 @@ class SupremeAILoadTester(HttpUser):
             "আমাকে একটি পাইথন স্ক্রিপ্ট লিখে দাও। ", # শেষে অতিরিক্ত স্পেস ও দাড়ি
             "পাইথনে একটি কোড লিখে দাও প্লিজ"        # সম্পূর্ণ ভিন্ন স্ট্রাকচার কিন্তু সেম মিনিং
         ]
-        
+
         # প্রথমবার রিকোয়েস্ট পাঠালে ক্যাশ মিস হবে (LLM হিট করবে)
         # ২য় এবং ৩য় বার ক্যাশ হিট হয়ে < ৫০ms এ রেসপন্স আসার কথা
         for prompt in semantic_prompts:
             idempotency_key = str(uuid.uuid4())
             headers = {**self.auth_headers, "Idempotency-Key": idempotency_key}
-            
+
             start_time = time.time()
             with self.client.post(
                 "/api/task/execute",
@@ -74,7 +74,7 @@ class SupremeAILoadTester(HttpUser):
                 catch_response=True
             ) as response:
                 duration = (time.time() - start_time) * 1000
-                
+
                 if response.status_code == 200:
                     try:
                         res_json = response.json()
@@ -97,7 +97,7 @@ class SupremeAILoadTester(HttpUser):
         """৩. আইডেমপোটেন্সি রেস-কন্ডিশন অ্যাটাক (একই কি দিয়ে স্প্যামিং)"""
         shared_idempotency_key = str(uuid.uuid4())
         headers = {**self.auth_headers, "Idempotency-Key": shared_idempotency_key}
-        
+
         # একই টাইমে পরপর ৩টি রিকোয়েস্ট ফায়ার করা হবে (Simulating rapid double clicks)
         responses = []
         for _ in range(3):
@@ -108,12 +108,12 @@ class SupremeAILoadTester(HttpUser):
                 name="/api/task/execute [Idempotency Spam]"
             )
             responses.append(res)
-        
+
         # ভ্যালিডেশন লজিক:
         # ১ম রিকোয়েস্টটি সাকসেসফুল (200 OK) অথবা প্রসেসিং (409 Conflict) হবে।
         # কিন্তু ২য় ও ৩য় রিকোয়েস্টকে আমাদের আইডেমপোটেন্সি ইঞ্জিন অবশ্যই ৪MD বা ২০০ ক্যাশড রেসপন্স দিয়ে ব্লক করবে।
         status_codes = [r.status_code for r in responses]
-        
+
         # যদি কোনোভাবে একাধিক রিকোয়েস্ট ২০০ পেয়ে যায় এবং ক্যাশ সোর্স না দেখায়, তবে লকিং ফেইল করেছে!
         if status_codes.count(200) > 1:
             # চেক করা হচ্ছে ২য় ২০০-টি ক্যাশ হিট কি না

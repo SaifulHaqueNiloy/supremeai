@@ -59,7 +59,7 @@ export function HomeFeed() {
         Personalized Home Feed
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {isLoading 
+        {isLoading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-3 p-4 border border-slate-800 rounded-xl bg-slate-900/30">
                 <div className="flex gap-2 items-center">

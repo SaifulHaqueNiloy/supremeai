@@ -59,7 +59,7 @@ def generate_docs():
     changes_dir.mkdir(parents=True, exist_ok=True)
 
     print("Generating modular codebase and codebase_full dump...")
-    
+
     file_count = 0
     total_size = 0
     full_dump_content = "# 🧠 SupremeAI 2.0 Codebase Dump\n"
@@ -69,31 +69,31 @@ def generate_docs():
     # ১. মডুলার কোডবেস এবং ফুল ডাম্প জেনারেশন
     for root, dirs, files in os.walk("."):
         dirs[:] = [d for d in dirs if not should_skip_path(os.path.join(root, d))]
-        
+
         for file in files:
             file_path = Path(root) / file
-            
+
             if file_path.suffix not in DOCUMENT_EXTENSIONS:
                 continue
-                
+
             try:
                 content = file_path.read_text(encoding='utf-8', errors='replace')
                 rel_path = file_path.relative_to(".")
-                
+
                 # মডুলার ফাইল তৈরি
                 modular_name = sanitize_filename(str(rel_path))
                 output_file = codebase_dir / f"{modular_name}.md"
-                
+
                 file_size = len(content.encode('utf-8'))
                 total_size += file_size
-                
+
                 header = f"# 📄 ফাইল: {rel_path}\n\n**প্রকার:** {file_path.suffix}  \n**সাইজ:** {file_size:,} বাইট  \n**আপডেট:** {datetime.now().isoformat()}\n\n---\n\n## কোড\n\n"
                 output_file.write_text(header + f"```{file_path.suffix[1:]}\n{content}\n```", encoding='utf-8')
                 file_count += 1
-                
+
                 # ফুল ডাম্প ফাইলে যুক্ত করা
                 full_dump_content += f"\n## File: `{rel_path}`\n\n```{file_path.suffix[1:]}\n{content}\n```\n"
-                
+
             except Exception as e:
                 print(f"Skipped {file_path}: {e}")
 
@@ -111,11 +111,11 @@ def generate_docs():
             try:
                 commit_info = subprocess.check_output(["git", "show", "--stat", commit]).decode('utf-8', errors='replace')
                 diff = subprocess.check_output(["git", "show", commit]).decode('utf-8', errors='replace')
-                
+
                 # বাংলা মন্তব্য: ডিফ খুব বড় হলে ছেঁটে ফেলা হচ্ছে যাতে GitHub Pages লিমিট অতিক্রম না করে
                 if len(diff) > MAX_DIFF_SIZE:
                     diff = diff[:MAX_DIFF_SIZE] + f"\n\n... [TRUNCATED — diff was {len(diff):,} bytes, capped at {MAX_DIFF_SIZE:,}] ...\n"
-                
+
                 changelog_content = f"# 📋 Commit {commit}\n\n## Commit Stats\n```\n{commit_info}\n```\n\n## Diff Detail\n```diff\n{diff}\n```\n"
                 (changes_dir / f"change_{commit}.md").write_text(changelog_content, encoding='utf-8')
             except Exception as ce:

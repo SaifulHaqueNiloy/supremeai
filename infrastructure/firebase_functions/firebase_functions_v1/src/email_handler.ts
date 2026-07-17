@@ -53,7 +53,7 @@ export const handleIncomingEmail = functions.https.onRequest(async (req, res) =>
         const authorizedAdmins = process.env.AUTHORIZED_ADMINS
             ? process.env.AUTHORIZED_ADMINS.split(',').map(email => email.trim().toLowerCase())
             : ['admin@yourdomain.com'];
-            
+
         if (!sender || !authorizedAdmins.includes(sender.toLowerCase())) {
             console.warn(`Unauthorized access attempt by ${sender}`);
             res.status(403).send('Forbidden');

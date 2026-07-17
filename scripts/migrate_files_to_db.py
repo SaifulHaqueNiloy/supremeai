@@ -12,28 +12,28 @@ from tools.headless_agent_registry import get_headless_agent_configs
 async def migrate_skills():
     print("Migrating Skills...")
     skills_dir = os.path.join(os.path.dirname(__file__), '..', 'backend', 'core', 'skills')
-    
+
     if not os.path.exists(skills_dir):
         print(f"Skills directory not found: {skills_dir}")
         return
-        
+
     for filename in os.listdir(skills_dir):
         if filename.endswith('.py') and filename != '__init__.py':
             filepath = os.path.join(skills_dir, filename)
             with open(filepath, 'r', encoding='utf-8') as f:
                 code_content = f.read()
-                
+
             skill_name = filename.replace('.py', '')
             description = f"Core skill from {filename}"
-            
+
             # Using parameterization to avoid SQL injection / quote issues
             query = """
-            INSERT INTO skills (skill_name, description, code, status) 
+            INSERT INTO skills (skill_name, description, code, status)
             VALUES (%s, %s, %s, 'active')
-            ON CONFLICT (skill_name) DO UPDATE 
+            ON CONFLICT (skill_name) DO UPDATE
             SET code = EXCLUDED.code, description = EXCLUDED.description, updated_at = NOW();
             """
-            
+
             try:
                 await supabase_execute_sql(ExecuteQueryInput(
                     query=query,
@@ -55,7 +55,7 @@ async def migrate_rules():
             "description": "Default security policy for agents."
         }
     ]
-    
+
     for rule in rules:
         query = """
         INSERT INTO rules (rule_key, category, value, description)

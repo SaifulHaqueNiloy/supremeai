@@ -23,7 +23,7 @@ class DashboardProvider with ChangeNotifier {
     notifyListeners();
 
     _jobs = await _syncService.fetchLiveJobs();
-    
+
     _isLoading = false;
     notifyListeners();
   }
