@@ -1,6 +1,8 @@
 import { RENDER_BACKENDS } from '../utils/api';
 
-// বাংলা মন্তব্য: এটি একটি গ্লোবাল হার্টবিট সার্ভিস, যা প্রতি ১০ মিনিট অন্তর সার্ভারগুলোকে পিং করে স্লিপিং মোডে যাওয়া থেকে বিরত রাখে।
+// বাংলা মন্তব্য: এটি একটি গ্লোবাল হার্টবিট সার্ভিস, যা প্রতি ১০ মিনিট অন্তর /api/v1/live ইনফ্রাস্ট্রাকচার প্রোব দিয়ে
+// সার্ভারগুলোকে স্লিপিং মোডে যাওয়া থেকে বিরত রাখে। /health থেকে /api/v1/live তে মাইগ্রেটেড
+// কারণ /api/v1/live শুধু প্রসেস লাইভনেস চেক করে, Redis/DB ডিপেন্ডেন্সি টাচ করে না তাই আরো লাইটওয়েট
 export const startAntiSleepHeartbeat = () => {
   // Initial ping 10 seconds after load
   setTimeout(() => {
@@ -16,16 +18,18 @@ export const startAntiSleepHeartbeat = () => {
 const pingServers = () => {
   RENDER_BACKENDS.forEach(async (url) => {
     try {
-      const response = await fetch(`${url}/health`, {
+      // বাংলা: /api/v1/live প্রোব ব্যাকেন্ডের নতুন Liveness Probe দিয়ে পিং করার জন্য মাইগ্রেটেড
+      const response = await fetch(`${url}/api/v1/live`, {
         method: 'GET',
-        // Optional: keep it super light
         headers: { 'Cache-Control': 'no-cache' }
       });
       if (response.ok) {
-        console.log(`[Heartbeat] Pinged: ${url}`);
+        console.log(`[Heartbeat] ✅ Live: ${url}/api/v1/live`);
+      } else {
+        console.warn(`[Heartbeat] ⚠️ Non-ok response from: ${url}/api/v1/live (${response.status})`);
       }
     } catch (err) {
-      console.warn(`[Heartbeat] Could not reach: ${url}`);
+      console.warn(`[Heartbeat] ❌ Could not reach: ${url}/api/v1/live`);
     }
   });
 };
