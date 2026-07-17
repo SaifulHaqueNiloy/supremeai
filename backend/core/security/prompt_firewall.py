@@ -69,8 +69,10 @@ def _get_compiled_patterns() -> list[re.Pattern]:
             try:  # noqa
                 # Escape pattern to prevent regex injection, then compile case-insensitive
                 _compiled_patterns.append(re.compile(re.escape(p), re.IGNORECASE))
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                # বাংলা মন্তব্য: pattern compile ব্যর্থ হলে তা লগ করা হচ্ছে যাতে সিকিউরিটি রুল কার্যকর না হওয়ার কারণ বোঝা যায়।
+                from core.logger import logger
+                logger.error(f"[PromptFirewall] Failed to compile blocked pattern '{p}': {e}")
     return _compiled_patterns
 
 _BENGALI_ENFORCEMENT_HEADER: str = (
