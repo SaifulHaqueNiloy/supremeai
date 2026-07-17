@@ -848,7 +848,7 @@ jobs:
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}'
-          projectId: supremeai-admin-portal
+          projectId: supremeai-a
           target: admin-hosting
 
   deploy-user-vercel:
