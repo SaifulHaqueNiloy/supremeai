@@ -1,17 +1,25 @@
 # backend/agents/skill_ingestor.py
 import ast
 import hashlib
+import io
+import logging
+import os
 import re
 import shutil
 import urllib.request
 import zipfile
-import io
 from pathlib import Path
-from typing import Tuple, Dict, Any
-from backend.schemas.skill_manifest import SkillManifest, SkillStatus
-from backend.schemas.skill_index import SkillIndexManager
-from backend.sandbox.docker_sandbox import DockerSandbox
+from typing import Any
+
 from backend.agents.morphic_adapter import MorphicAdapter
+from backend.sandbox.docker_sandbox import DockerSandbox
+from backend.schemas.skill_index import SkillIndexManager
+from backend.schemas.skill_manifest import SkillManifest
+from backend.schemas.skill_manifest import SkillStatus
+
+
+logger = logging.getLogger("supremeai.skill_ingestor")
+
 
 class SkillIngestor:
     def __init__(self, base_skills_dir: str = "backend/skills"):
@@ -25,7 +33,7 @@ class SkillIngestor:
         self.sandbox = DockerSandbox()
         self.morphic_adapter = MorphicAdapter()
 
-    def static_ast_safety_check(self, code: str) -> Tuple[bool, str]:
+    def static_ast_safety_check(self, code: str) -> tuple[bool, str]:
         try:
             tree = ast.parse(code)
             for node in ast.walk(tree):
@@ -43,9 +51,9 @@ class SkillIngestor:
         except SyntaxError:
             return False, "Invalid Python syntax."
 
-    def ingest_mcp_skill(self, manifest: SkillManifest, zip_url: str, entry_file: str, test_payload: str) -> Dict[str, Any]:
+    def ingest_mcp_skill(self, manifest: SkillManifest, zip_url: str, entry_file: str, test_payload: str) -> dict[str, Any]:
         # 🛡️ ১. কঠোর Path Traversal এবং Injection ব্লকিং
-        if not re.match(r'^[a-zA-Z0-9_]+$', manifest.skill_id):
+        if not re.match(r"^[a-zA-Z0-9_]+$", manifest.skill_id):
             return {"success": False, "detail": "Malicious Skill ID pattern blocked."}
 
         if not self.index_manager.is_source_allowed(str(manifest.source_url)):
@@ -74,7 +82,7 @@ class SkillIngestor:
                     target_path = Path(os.path.abspath(skill_staging_dir / member))
                     base_path = Path(os.path.abspath(skill_staging_dir))
 
-                    if not target_path.resolve().startswith(base_path.resolve()):
+                    if not target_path.resolve().is_relative_to(base_path.resolve()):
                         raise PermissionError("🛑 Zip-Slip Malicious Payload Detected and Defused!")
 
                 archive.extractall(path=skill_staging_dir)
@@ -83,18 +91,16 @@ class SkillIngestor:
             if not entry_path.exists():
                 return {"success": False, "detail": "Entry point missing."}
 
-            is_safe, static_msg = self.static_ast_safety_check(entry_path.read_text(encoding="utf-8"))
+            code_content = entry_path.read_text(encoding="utf-8")
+            is_safe, static_msg = self.static_ast_safety_check(code_content)
             if not is_safe:
                 manifest.status = SkillStatus.REJECTED
                 self.index_manager.update_skill(manifest)
                 return {"success": False, "detail": f"Static Failure: {static_msg}"}
 
             # ---- MORPHIC ADAPTATION LAYER START ----
-            print(f"🧬 [MORPHIC ENGINE] Triggering AI Refactoring for skill: {manifest.skill_id}")
-            morphic_res = self.morphic_adapter.adapt_code_to_contract(
-                raw_code=code_content,
-                skill_description=manifest.description
-            )
+            logger.info(f"🧬 [MORPHIC ENGINE] Triggering AI Refactoring for skill: {manifest.skill_id}")
+            morphic_res = self.morphic_adapter.adapt_code_to_contract(raw_code=code_content, skill_description=manifest.description)
 
             if not morphic_res["success"]:
                 manifest.status = SkillStatus.REJECTED
@@ -118,11 +124,7 @@ class SkillIngestor:
 
                 shutil.move(str(skill_staging_dir), str(skill_quarantine_dir))
 
-                return {
-                    "success": True,
-                    "status": "QUARANTINE_PASSED",
-                    "detail": "Skill verified and safely moved to quarantine queue."
-                }
+                return {"success": True, "status": "QUARANTINE_PASSED", "detail": "Skill verified and safely moved to quarantine queue."}
             else:
                 manifest.status = SkillStatus.REJECTED
                 self.index_manager.update_skill(manifest)
