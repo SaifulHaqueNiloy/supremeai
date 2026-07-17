@@ -95,7 +95,9 @@ async def login(body: LoginRequest):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         user_id = res.user.id
-        primary_role = "admin" if "admin" in body.username else "user"
+        # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
+        is_admin = body.username and any(body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails)
+        primary_role = "admin" if is_admin else "user"
         token_data = {
             "sub": user_id,
             "role": primary_role,
@@ -119,7 +121,9 @@ async def register(body: RegisterRequest):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
 
         user_id = res.user.id
-        primary_role = "admin" if "admin" in body.username else "user"
+        # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
+        is_admin = body.username and any(body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails)
+        primary_role = "admin" if is_admin else "user"
         token_data = {
             "sub": user_id,
             "role": primary_role,
@@ -136,7 +140,9 @@ async def register(body: RegisterRequest):
 async def me(current_user: UserContext | None = Depends(optional_current_user)):
     if current_user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    return MeResponse(user_id=current_user.user_id, role=current_user.role, scopes=current_user.scopes)
+    # বাংলা মন্তব্য: scopes যদি None হয় তবে MeResponse ভ্যালিডেশন পাস করানোর জন্য খালি টুপল পাস করা হচ্ছে।
+    scopes_val = current_user.scopes if current_user.scopes is not None else ()
+    return MeResponse(user_id=current_user.user_id, role=current_user.role, scopes=scopes_val)
 
 
 @router.get("/verify")
