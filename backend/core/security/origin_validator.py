@@ -25,6 +25,13 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         if env == "test" or host in ["testserver", "localhost", "127.0.0.1"]:
             return await call_next(request)
 
+        # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
+        # এটি নিশ্চিত করে যে Render-এর হেলথ চেক পোলার ALLOWED_HOSTS মিসকনফিগারেশনের
+        # কারণে ব্লক না হয়ে সবসময় 200 OK পায় এবং ডিপ্লয় সফল হয়।
+        public_paths = settings.supremeai_public_paths
+        if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
+            return await call_next(request)
+
         # বাংলা মন্তব্য: এপিআই রিকোয়েস্টের Origin এবং Host হেডার রিড করা হচ্ছে।
         origin = request.headers.get("Origin")
 
