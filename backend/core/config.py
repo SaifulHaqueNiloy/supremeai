@@ -161,6 +161,8 @@ class Settings(BaseSettings):
             "/api/admin/firebase-",
             "/api/v1/health",
             "/api/v1/health/",
+            "/api/v1/live",
+            "/api/v1/ready",
             "/",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
