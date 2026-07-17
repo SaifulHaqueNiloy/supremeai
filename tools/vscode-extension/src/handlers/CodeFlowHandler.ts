@@ -5,13 +5,13 @@
 
 import * as vscode from 'vscode';
 import { SupremeAIService, getSupremeAIService } from '../services/SupremeAIService';
-import { 
-  CodeFlowAnalysisRequest, 
+import {
+  CodeFlowAnalysisRequest,
   CodeFlowAnalysisResponse,
   ErrorResolutionRequest,
   SecurityIssue,
   HealthScore,
-  DependencyGraph 
+  DependencyGraph
 } from '../types';
 
 export class CodeFlowHandler {
@@ -24,7 +24,7 @@ export class CodeFlowHandler {
     this.context = context;
     this.supremeAIService = getSupremeAIService();
     this.outputChannel = vscode.window.createOutputChannel('SupremeAI CodeFlow');
-    
+
     // Create status bar item for health score
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     this.statusBarItem.text = '$(graph) CodeFlow';
@@ -70,7 +70,7 @@ export class CodeFlowHandler {
         }
 
         const files = await this.collectFiles(workspaceFolders[0].uri);
-        
+
         progress.report({ increment: 30, message: `Analyzing ${files.length} files...` });
 
         const request: CodeFlowAnalysisRequest = {
@@ -91,14 +91,14 @@ export class CodeFlowHandler {
 
         if (response.success && response.data) {
           progress.report({ increment: 40, message: 'Processing results...' });
-          
+
           await this.storeAnalysisResults(response.data);
           await this.updateHealthScore(response.data.healthScore);
-          
+
           progress.report({ increment: 30, message: 'Displaying results...' });
-          
+
           this.displayAnalysisResults(response.data);
-          
+
           vscode.window.showInformationMessage(
             `CodeFlow Analysis Complete! Health Score: ${response.data.healthScore.grade} (${response.data.healthScore.score}/100)`,
             'View Dashboard',
@@ -284,7 +284,7 @@ export class CodeFlowHandler {
     try {
       const files = await this.collectFiles(workspaceFolders[0].uri);
       this.outputChannel.appendLine(`[SupremeAI] প্রারম্ভিক ইনডেক্সিং শুরু (ব্যাকগ্রাউন্ড ও লো-প্রায়োরিটি): ${files.length} ফাইল পাওয়া গেছে`);
-      
+
       for (const file of files) {
         const ext = file.path.split('.').pop() || 'txt';
         try {
@@ -339,9 +339,11 @@ export class CodeFlowHandler {
     const files: Array<{ path: string; content: string }> = [];
     const patterns = ['**/*.js', '**/*.ts', '**/*.py', '**/*.go', '**/*.rs', '**/*.java', '**/*.rb', '**/*.cpp', '**/*.c'];
 
+    const skippedFiles: string[] = [];
+
     for (const pattern of patterns) {
       const uris = await vscode.workspace.findFiles(new vscode.RelativePattern(workspaceUri.fsPath, pattern), '**/node_modules/**');
-      
+
       for (const uri of uris) {
         try {
           const document = await vscode.workspace.openTextDocument(uri);
@@ -349,10 +351,17 @@ export class CodeFlowHandler {
             path: vscode.workspace.asRelativePath(uri),
             content: document.getText()
           });
-        } catch (error) {
-          // Skip files that can't be read
+        } catch (error: any) {
+          // Skip files that can't be read but log it to output channel/console
+          const relPath = vscode.workspace.asRelativePath(uri);
+          skippedFiles.push(relPath);
+          console.warn(`[CodeFlow] Skipped reading file: ${relPath}. Error: ${error.message}`);
         }
       }
+    }
+
+    if (skippedFiles.length > 0) {
+      console.warn(`[CodeFlow] Analysis completed with ${skippedFiles.length} skipped files:`, skippedFiles);
     }
 
     return files.slice(0, 100); // Limit to 100 files for performance
@@ -497,32 +506,32 @@ export class CodeFlowHandler {
         <div id="graph"></div>
         <script>
           const graphData = ${JSON.stringify(graph)};
-          
+
           const width = document.getElementById('graph').clientWidth;
           const height = 600;
-          
+
           const svg = d3.select('#graph')
             .append('svg')
             .attr('width', width)
             .attr('height', height);
-          
+
           const simulation = d3.forceSimulation(graphData.nodes)
             .force('link', d3.forceLink(graphData.edges).id(d => d.id).distance(100))
             .force('charge', d3.forceManyBody().strength(-300))
             .force('center', d3.forceCenter(width / 2, height / 2));
-          
+
           const link = svg.append('g')
             .selectAll('line')
             .data(graphData.edges)
             .enter().append('line')
             .attr('class', 'link');
-          
+
           const node = svg.append('g')
             .selectAll('g')
             .data(graphData.nodes)
             .enter().append('g')
             .attr('class', 'node');
-          
+
           node.append('circle')
             .attr('r', d => Math.sqrt(d.metrics?.linesOfCode || 1) * 2 + 5)
             .attr('fill', d => {
@@ -531,19 +540,19 @@ export class CodeFlowHandler {
               if (d.type === 'class') return '#ffd700';
               return '#ff8c00';
             });
-          
+
           node.append('text')
             .attr('dx', 12)
             .attr('dy', 4)
             .text(d => d.label);
-          
+
           simulation.on('tick', () => {
             link
               .attr('x1', d => d.source.x)
               .attr('y1', d => d.source.y)
               .attr('x2', d => d.target.x)
               .attr('y2', d => d.target.y);
-            
+
             node
               .attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
           });
@@ -588,7 +597,7 @@ export class CodeFlowHandler {
           <h1>📊 CodeFlow Dashboard</h1>
           <div class="score ${analysis.healthScore.grade}">${analysis.healthScore.score}</div>
         </div>
-        
+
         <div class="metrics">
           <div class="metric">
             <div class="metric-value">${analysis.files.length}</div>
@@ -603,7 +612,7 @@ export class CodeFlowHandler {
             <div class="metric-label">Patterns</div>
           </div>
         </div>
-        
+
         <div class="section">
           <h3>Health Score Breakdown</h3>
           ${Object.entries(analysis.healthScore.breakdown).map(([key, value]) => `
@@ -612,7 +621,7 @@ export class CodeFlowHandler {
             </div>
           `).join('')}
         </div>
-        
+
         ${analysis.securityIssues.length > 0 ? `
           <div class="section">
             <h3>Security Issues</h3>
@@ -625,7 +634,7 @@ export class CodeFlowHandler {
             ${analysis.securityIssues.length > 5 ? `<p>... and ${analysis.securityIssues.length - 5} more</p>` : ''}
           </div>
         ` : ''}
-        
+
         ${analysis.patterns.length > 0 ? `
           <div class="section">
             <h3>Design Patterns Detected</h3>
@@ -637,7 +646,7 @@ export class CodeFlowHandler {
             `).join('')}
           </div>
         ` : ''}
-        
+
         <button onclick="acquireVsCodeApi().postMessage({ command: 'refresh' })">🔄 Refresh Analysis</button>
       </body>
       </html>
@@ -666,20 +675,20 @@ export class CodeFlowHandler {
       </head>
       <body>
         <h1>🔧 Error Resolution</h1>
-        
+
         <div class="root-cause">
           <h3>Root Cause</h3>
           <p>${response.rootCause}</p>
           <p><strong>Confidence:</strong> ${Math.round(response.confidence * 100)}%</p>
         </div>
-        
+
         ${response.affectedFiles.length > 0 ? `
           <div class="root-cause">
             <h3>Affected Files</h3>
             ${response.affectedFiles.map((file: string) => `<code>${file}</code>`).join('<br>')}
           </div>
         ` : ''}
-        
+
         <h3>Suggested Fixes</h3>
         ${response.suggestedFixes.map((fix: any) => `
           <div class="fix ${fix.difficulty}">

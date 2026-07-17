@@ -579,7 +579,8 @@ class MultiAccountRotator:
                             return api_key
                 except asyncio.CancelledError:
                     raise
-                except Exception:  # noqa: BLE001
+                except Exception as sel_err:  # noqa: BLE001
+                    logger.debug(f"[ROTATOR] Selector '{selector}' failed extraction: {sel_err}")
                     continue
 
             logger.warning(f"[ROTATOR] Could not extract API key for {provider_name} from dashboard. Admin must add it manually.")

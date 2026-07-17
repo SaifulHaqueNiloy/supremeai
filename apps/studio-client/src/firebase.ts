@@ -13,12 +13,16 @@ const getFirebaseConfig = async () => {
       return data;
     }
   } catch (e) {
-    // Ignore error and fallback
+    if (import.meta.env.PROD) {
+      console.error("🔥 Failed to fetch Firebase init configuration in production:", e);
+      throw new Error("Firebase initialization failed: Configuration endpoint is unreachable.");
+    }
   }
   const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
   if (!apiKey) {
     if (import.meta.env.PROD) {
       console.error("🔥 VITE_FIREBASE_API_KEY is missing in production environment!");
+      throw new Error("VITE_FIREBASE_API_KEY missing in production.");
     } else {
       console.warn("⚠️ Using fake Firebase API key for local development. Please copy .env.example to .env and configure Firebase.");
     }

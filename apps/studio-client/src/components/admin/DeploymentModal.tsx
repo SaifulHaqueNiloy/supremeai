@@ -65,6 +65,7 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
   // ডিপ্লয় স্ট্যাটাস পোলিং
   useEffect(() => {
     if (!isDeploymentModalOpen) return;
+    let failureCount = 0;
     const interval = setInterval(async () => {
       if (!deploymentStatus || deploymentStatus.status !== 'running') return;
       try {
@@ -73,8 +74,18 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
           ...statusRes,
           url: statusRes.url || deploymentStatus.url,
         });
-      } catch {
-        // ignore polling errors while running; next tick will recover or onError fires in mutation
+        failureCount = 0; // reset on success
+      } catch (err) {
+        failureCount += 1;
+        console.warn(`[Deployment] Polling failed (${failureCount}/5):`, err);
+        if (failureCount >= 5) {
+          setDeploymentStatus({
+            status: 'failed',
+            message: 'Deployment status could not be retrieved. Connection lost.'
+          });
+          setLogs((prev) => [...prev, { status: 'ERROR', message: 'Deployment status checking failed. Polling stopped.' }]);
+          clearInterval(interval);
+        }
       }
     }, 5000);
     return () => clearInterval(interval);
@@ -83,7 +94,7 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
   // CI লগগুলো প্রসেস করে ডিসপ্লেble logs এ রূপান্তরকারী
   useEffect(() => {
     if (!ciLogs) return;
-    
+
     // বাংলা মন্তব্য: set-state-in-effect ফিক্স — লগ প্রসেসিং async ফাংশনের ভেতরে করা হয়েছে
     const processCILogs = async () => {
       const resolved = (Array.isArray(ciLogs) ? ciLogs : []).map((log: { status?: string; message?: string; commit_message?: string; branch?: string; created_at?: number }) => ({
@@ -94,7 +105,7 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
       }));
       setLogs((prev) => (prev.length ? [...prev, ...resolved] : resolved));
     };
-    
+
     processCILogs();
   }, [ciLogs]);
 
@@ -113,7 +124,7 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
             url: mapped.status === 'success' ? 'https://supremeai-api-565236080752.us-central1.run.app' : undefined,
           });
         };
-        
+
         initDeploymentStatus();
       }
     }

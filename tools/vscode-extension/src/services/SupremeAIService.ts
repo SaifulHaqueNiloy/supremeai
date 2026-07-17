@@ -300,11 +300,16 @@ export class SupremeAIService {
           const decoder = new TextDecoder();
           // বাংলা মন্তব্য: 'fullText' ভ্যারিয়েবল ডিক্লেয়ার করা হলো এবং 'no-constant-condition' এড়াতে 'for (;;)' ব্যবহার করা হলো
           let fullText = '';
+          let buffer = '';
           for (;;) {
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
-            const parts = chunk.split('\n');
+            buffer += chunk;
+            const parts = buffer.split('\n');
+            // Keep the last incomplete part in the buffer
+            buffer = parts.pop() || '';
+
             for (const part of parts) {
               if (!part.trim()) continue;
               try {
@@ -312,9 +317,21 @@ export class SupremeAIService {
                 const token = parsed.message?.content || '';
                 fullText += token;
                 onToken(token);
-              } catch {
-                // বাংলা মন্তব্য: 'no-empty' এড়াতে মন্তব্য যোগ করা হলো
+              } catch (err: any) {
+                // বাংলা মন্তব্য: ইনভ্যালিড পে-লোড হলে সতর্ক লগ এবং পারশিয়াল রেসপন্স প্রোভাইড করা হচ্ছে
+                console.warn('[SupremeAI] Error parsing stream JSON chunk:', err.message, 'Chunk content:', part);
               }
+            }
+          }
+          // Process remaining buffer if it looks like complete JSON
+          if (buffer.trim()) {
+            try {
+              const parsed = JSON.parse(buffer);
+              const token = parsed.message?.content || '';
+              fullText += token;
+              onToken(token);
+            } catch {
+              console.warn('[SupremeAI] Dropped trailing malformed chunk:', buffer);
             }
           }
           return fullText;
@@ -353,12 +370,16 @@ export class SupremeAIService {
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let fullText = '';
+          let buffer = '';
           // বাংলা মন্তব্য: 'no-constant-condition' এড়াতে 'for (;;)' ব্যবহার করা হলো
           for (;;) {
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
-            const parts = chunk.split('\n');
+            buffer += chunk;
+            const parts = buffer.split('\n');
+            buffer = parts.pop() || '';
+
             for (const part of parts) {
               const trimmed = part.trim();
               if (!trimmed.startsWith('data:')) continue;
@@ -369,8 +390,21 @@ export class SupremeAIService {
                 const token = parsed.choices?.[0]?.delta?.content || '';
                 fullText += token;
                 onToken(token);
+              } catch (err: any) {
+                console.warn('[SupremeAI] Error parsing OpenRouter stream JSON payload:', err.message, 'Payload:', payload);
+              }
+            }
+          }
+          if (buffer.trim() && buffer.trim().startsWith('data:')) {
+            const payload = buffer.trim().slice(5).trim();
+            if (payload !== '[DONE]') {
+              try {
+                const parsed = JSON.parse(payload);
+                const token = parsed.choices?.[0]?.delta?.content || '';
+                fullText += token;
+                onToken(token);
               } catch {
-                // বাংলা মন্তব্য: 'no-empty' এড়াতে মন্তব্য যোগ করা হলো
+                console.warn('[SupremeAI] Dropped trailing malformed OpenRouter chunk:', buffer);
               }
             }
           }
