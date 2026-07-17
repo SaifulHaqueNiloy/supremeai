@@ -315,7 +315,16 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
         exchange_rate = float(getattr(settings, "bdt_exchange_rate", "0.0085"))
         amount_usd = Decimal(str(round(amount_bdt * exchange_rate, 6)))
 
+        # idempotency check: `val_id` has unique mapping to `transaction_id` in ledger for SSLCommerz
         async with session.begin():
+            # SSLCommerz-এর unique `val_id` দিয়ে ledger এ অলরেডি এন্ট্রি আছে কিনা চেক করি
+            existing_tx = await session.execute(
+                select(TransactionLedgerEntry).where(TransactionLedgerEntry.transaction_id == val_id)
+            )
+            if existing_tx.scalars().first():
+                logger.info(f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success.")
+                return {"status": "processed", "message": f"Transaction already credited via SSLCommerz."}
+
             result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
             wallet = result.scalars().first()
 
@@ -325,13 +334,12 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
 
             wallet.balance_usd += amount_usd
 
-            tx_id = str(uuid.uuid4())
             entry = TransactionLedgerEntry(
-                transaction_id=tx_id,
+                transaction_id=val_id, # transaction_id হিসেবে val_id ব্যবহার করা হচ্ছে ইউনিকনেস নিশ্চিত করতে
                 user_id=user_id,
                 amount_usd=amount_usd,
                 transaction_type="topup",
-                description=f"Fund deposit via SSLCommerz (Tk.{amount_bdt} MFS)",
+                description=f"Fund deposit via SSLCommerz (Tk.{amount_bdt} MFS, val_id: {val_id})",
             )
             session.add(entry)
 

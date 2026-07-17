@@ -27,22 +27,42 @@ class MockAsyncSession:
         self.added = []
 
     async def execute(self, statement):
+        # We need to distinguish between UserWallet queries and TransactionLedgerEntry queries
+        stmt_str = str(statement).lower()
+
         class MockResult:
-            def __init__(self, val):
+            def __init__(self, val, is_empty=False):
                 self.val = val
+                self.is_empty = is_empty
 
             def scalars(self):
+                val_to_use = self.val
+                is_empty_to_use = self.is_empty
                 class MockScalars:
                     def __init__(self, val):
                         self.val = val
 
                     def first(self):
+                        if is_empty_to_use:
+                            return None
                         return self.val
 
                     def all(self):
+                        if is_empty_to_use:
+                            return []
                         return [self.val]
 
-                return MockScalars(self.val)
+                return MockScalars(val_to_use)
+
+        if "transaction_ledger" in stmt_str:
+            # For idempotency check, default mock session should pretend transaction does not exist yet
+            # Find if we already added a TransactionLedgerEntry with this ID in self.added
+            matching_tx = None
+            for item in self.added:
+                if item.__class__.__name__ == "TransactionLedgerEntry":
+                    matching_tx = item
+                    break
+            return MockResult(matching_tx, is_empty=(matching_tx is None))
 
         return MockResult(self._wallet)
 
