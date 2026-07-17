@@ -5,8 +5,19 @@ import os
 from google import genai
 from google.genai import types
 
+from core.resilience.circuit_breaker import CircuitBreaker
+from core.resilience.circuit_breaker import CircuitBreakerOpenError
+
 
 logger = logging.getLogger("supremeai.skills.doc_summarizer")
+
+# বাংলা মন্তব্য: Doc Summarizer এর জন্য প্রথক Circuit Breaker রেজিস্ট্রি
+# knowledge_qa এর ব্রেকার থেকে আলাদা রাখা হয়েছে যাতে একটা failure অন্যটার সার্কিট block না করে
+_gemini_summarizer_breaker: CircuitBreaker = CircuitBreaker(
+    name="gemini_doc_summarizer",
+    failure_threshold=5,
+    recovery_timeout=60,
+)
 
 
 def execute_tool(payload: dict) -> dict:
@@ -46,15 +57,24 @@ def execute_tool(payload: dict) -> dict:
         {file_content}
         """
 
-        # ৫. ২০২৬ স্টেবল ফ্ল্যাশ মডেল দিয়ে হাই-স্পিড ইনফারেন্স
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.3,  # অ্যানালিটিক্যাল কনসিস্টেন্সির জন্য অপ্টিমাইজড
-            ),
-        )
+        # বাংলা মন্তব্য: Circuit Breaker দিয়ে Gemini ইনফারেন্স কল র্যাপ করা হতেছে
+        # OPEN স্টেটে Gemini API হিট না করে তাৎক্ষণিক ফরোয়ার্ড রিজেক্ট হয়
+        try:
+            response = _gemini_summarizer_breaker.call(
+                client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.3,
+                ),
+            )
+        except CircuitBreakerOpenError as cb_exc:
+            logger.warning(f"🚨 Doc Summarizer Circuit Breaker OPEN: {cb_exc}")
+            return {
+                "success": False,
+                "error": "LLM infrastructure is temporarily unavailable. Circuit breaker active. Please retry in 60 seconds.",
+            }
 
         return {
             "success": True,
