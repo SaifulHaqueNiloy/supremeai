@@ -20,10 +20,11 @@
         "package-lock.json"
       ],
       "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
+        { "source": "/api/config/public", "destination": "https://supremeai-backend-08zd.onrender.com/api/config/public" },
+        { "source": "/api/task/stream", "destination": "https://supremeai-backend-08zd.onrender.com/api/task/stream" },
+        { "source": "/api/preferences/**", "destination": "https://supremeai-backend-08zd.onrender.com/api/preferences/**" },
+        { "source": "/api/**", "destination": "https://supremeai-backend-08zd.onrender.com/api/**" },
+        { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
         {
@@ -62,10 +63,11 @@
         "package-lock.json"
       ],
       "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
+        { "source": "/api/config/public", "destination": "https://supremeai-backend-08zd.onrender.com/api/config/public" },
+        { "source": "/api/task/stream", "destination": "https://supremeai-backend-08zd.onrender.com/api/task/stream" },
+        { "source": "/api/preferences/**", "destination": "https://supremeai-backend-08zd.onrender.com/api/preferences/**" },
+        { "source": "/api/**", "destination": "https://supremeai-backend-08zd.onrender.com/api/**" },
+        { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
         {
