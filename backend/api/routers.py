@@ -35,7 +35,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.agent", ""),
     ("api.routes.admin", ""),
     ("api.routes.tools_registry", ""),
-    ("api.routes.preferences", ""),
+    ("api.routes.preferences", "/api"),
     ("api.routes.usage_metrics", ""),
     ("api.routes.sso", ""),
     ("api.routes.health", "/api/v1"),
