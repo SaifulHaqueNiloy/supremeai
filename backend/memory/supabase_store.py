@@ -81,6 +81,25 @@ class SupabaseStore(SQLiteMemoryStore):
             return []
         return self.get_session_messages(session_id)
 
+    def _generate_embedding(self, text: str) -> list[float] | None:
+        # বাংলা মন্তব্য: LiteLLM ব্যবহার করে টেক্সটের জন্য ১৫৩৬ ডাইমেনশনের ভেক্টর এমবেডিং তৈরি করা হচ্ছে।
+        try:
+            import asyncio
+            import litellm
+            # litellm.embedding() সিঙ্ক পদ্ধতিতে এমবেডিং জেনারেট করে যা আমাদের সিঙ্ক থ্রেডের জন্য উপযুক্ত
+            response = litellm.embedding(
+                model="text-embedding-3-small",
+                input=text
+            )
+            return response.data[0]["embedding"]
+        except Exception as e:
+            try:
+                from loguru import logger
+                logger.error(f"Embedding generation failed: {e}")
+            except ImportError:
+                pass
+            return None
+
     def save_learned_fact(self, fact: dict) -> None:
         fact_id = fact.get("id")
         if not fact_id:
@@ -88,15 +107,27 @@ class SupabaseStore(SQLiteMemoryStore):
             fact["id"] = fact_id
         fact["created_at"] = fact.get("created_at", datetime.now(UTC).isoformat())
         if self._provider == "supabase":
-            client = self._get_supabase_client()
-            client.table("learned_facts").upsert(
-                {
+            try:
+                content_text = fact.get("content", fact.get("text", ""))
+                embedding = self._generate_embedding(content_text)
+
+                client = self._get_supabase_client()
+                data = {
                     "id": fact_id,
                     "content": json.dumps(fact),
                     "tags": json.dumps(fact.get("tags", [])),
                     "created_at": fact["created_at"],
                 }
-            ).execute()
+                if embedding:
+                    data["embedding"] = embedding
+
+                client.table("learned_facts").upsert(data).execute()
+            except Exception as e:
+                try:
+                    from loguru import logger
+                    logger.error(f"Failed to save fact with embedding: {e}")
+                except ImportError:
+                    pass
         else:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -109,7 +140,38 @@ class SupabaseStore(SQLiteMemoryStore):
 
     def search_facts(self, query: str) -> list:
         if self._provider == "supabase":
-            client = self._get_supabase_client()
-            result = client.table("learned_facts").select("content").ilike("content", f"%{query}%").execute()
-            return [json.loads(row["content"]) for row in result.data]
+            try:
+                # বাংলা মন্তব্য: সার্চ কুয়েরির জন্য এমবেডিং জেনারেট করে RPC-র সাহায্যে pgvector সেম্যান্টিক সার্চ চেষ্টা করা হচ্ছে।
+                query_embedding = self._generate_embedding(query)
+                if query_embedding:
+                    client = self._get_supabase_client()
+                    response = client.rpc(
+                        "match_learned_facts",
+                        {
+                            "query_embedding": query_embedding,
+                            "match_threshold": 0.3,
+                            "match_count": 5
+                        }
+                    ).execute()
+                    if response.data:
+                        return [json.loads(row["content"]) if isinstance(row["content"], str) else row["content"] for row in response.data]
+            except Exception as e:
+                try:
+                    from loguru import logger
+                    logger.warning(f"pgvector RPC failed, falling back to ilike: {e}")
+                except ImportError:
+                    pass
+
+            # বাংলা মন্তব্য: রেজিলিয়েন্স ফলব্যাক - ভেক্টর সার্চ কাজ না করলে সাধারণ ilike সাবস্ট্রিং সার্চ চালানো হবে।
+            try:
+                client = self._get_supabase_client()
+                result = client.table("learned_facts").select("content").ilike("content", f"%{query}%").execute()
+                return [json.loads(row["content"]) if isinstance(row["content"], str) else row["content"] for row in result.data]
+            except Exception as e:
+                try:
+                    from loguru import logger
+                    logger.error(f"Fallback search failed: {e}")
+                except ImportError:
+                    pass
+                return []
         return []
