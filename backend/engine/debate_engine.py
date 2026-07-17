@@ -173,7 +173,8 @@ class ConsensusOrchestrator:
                 কিন্তু পুরো debate cycle crash করবে না।"""
                 from core.llm.llm_gateway import get_llm_gateway
 
-                role = agent_id.split("_")[0].lower()
+                # বাংলা মন্তব্য: PLC0207 ফিক্স — maxsplit=1 যোগ করা হয়েছে, শুধু প্রথম underscore-এ ভাগ দরকার
+                role = agent_id.split("_", maxsplit=1)[0].lower()
                 task_type = _AGENT_ROLE_TASK_TYPE.get(role, "general")
                 role_instructions = {
                     "architect": "Propose a high-level system design and architecture for the task.",
