@@ -92,10 +92,10 @@ class DiagramToArchitecture:
                 "identified_components": components,
                 "code": code.strip(),
             }
-        except ImportError:
-            logger.warning("ModelRouter not available. Returning mock architecture.")
-            return self._mock_output(provider, iac_tool)
         except Exception as e:  # noqa: BLE001
+            # ✅ FIXED: ImportError (ModelRouter unavailable) no longer silently returns
+            # hardcoded infrastructure — every failure path now surfaces the real error
+            # so the API caller knows generation did not actually happen.
             logger.error(f"Architecture generation failed: {str(e)}")
             return {"status": "error", "error": str(e)}
 
@@ -119,10 +119,14 @@ class DiagramToArchitecture:
                 images=[{"base64": base64_image, "mime": "image/png"}],
             )
             code = result.get("text", "") if isinstance(result, dict) else ""
+            if not code:
+                raise RuntimeError("Model returned empty Terraform response.")
             return TerraformCode(code=code.strip(), provider=cloud_provider)
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Terraform generation failed, using fallback: {e}")
-            return TerraformCode(code=self._mock_terraform(cloud_provider), provider=cloud_provider)
+            # ✅ FIXED: removed hardcoded HCL fallback — a generation failure must be
+            # visible to the caller, not disguised as a valid (fake) result.
+            logger.error(f"Terraform generation failed: {e}")
+            raise RuntimeError(f"Terraform generation failed: {e}") from e
 
     async def to_kubernetes(self, diagram_path: str) -> K8sManifest:
         """Cloud architecture diagram → Kubernetes YAML (Deployment, Service, Ingress)।"""
@@ -144,10 +148,13 @@ class DiagramToArchitecture:
                 images=[{"base64": base64_image, "mime": "image/png"}],
             )
             code = result.get("text", "") if isinstance(result, dict) else ""
+            if not code:
+                raise RuntimeError("Model returned empty Kubernetes manifest response.")
             return K8sManifest(code=code.strip())
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Kubernetes generation failed, using fallback: {e}")
-            return K8sManifest(code=self._mock_k8s())
+            # ✅ FIXED: removed hardcoded manifest fallback for the same reason as Terraform above.
+            logger.error(f"Kubernetes generation failed: {e}")
+            raise RuntimeError(f"Kubernetes generation failed: {e}") from e
 
     async def to_database_schema(self, er_diagram_path: str, orm: str = "sqlalchemy") -> SchemaCode:
         """ER diagram → SQLAlchemy Model / Prisma Schema।"""
@@ -175,10 +182,13 @@ class DiagramToArchitecture:
                 images=[{"base64": base64_image, "mime": "image/png"}],
             )
             code = result.get("text", "") if isinstance(result, dict) else ""
+            if not code:
+                raise RuntimeError("Model returned empty schema response.")
             return SchemaCode(code=code.strip(), orm=orm)
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Schema generation failed, using fallback: {e}")
-            return SchemaCode(code=self._mock_schema(orm), orm=orm)
+            # ✅ FIXED: removed hardcoded schema fallback for the same reason as Terraform above.
+            logger.error(f"Schema generation failed: {e}")
+            raise RuntimeError(f"Schema generation failed: {e}") from e
 
     async def generate_api_spec(self, diagram_path: str) -> dict[str, Any]:
         """Generate OpenAPI spec from a sequence/flowchart diagram."""
@@ -202,106 +212,6 @@ class DiagramToArchitecture:
             return {"status": "success", "openapi_yaml": yaml_spec}
         except Exception as e:  # noqa: BLE001
             return {"status": "error", "error": str(e)}
-
-    # ------------------------------------------------------------------ #
-    # Fallback / mock generators
-    # ------------------------------------------------------------------ #
-    def _mock_output(self, provider: str, iac_tool: str) -> dict[str, Any]:
-        mock_code = f"""provider "{provider}" {{
-  region = "us-east-1"
-}}
-
-resource "{provider}_vpc" "main" {{
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  tags = {{ Name = "SupremeAI-VPC" }}
-}}
-
-resource "{provider}_subnet" "public" {{
-  vpc_id            = {provider}_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
-}}"""
-        return {
-            "status": "success",
-            "iac_tool": iac_tool,
-            "provider": provider,
-            "identified_components": [
-                {"type": "VPC", "details": "10.0.0.0/16"},
-                {"type": "Subnet", "details": "Public — 10.0.1.0/24"},
-            ],
-            "code": mock_code,
-        }
-
-    def _mock_terraform(self, provider: str) -> str:
-        return self._mock_output(provider, "terraform")["code"]
-
-    def _mock_k8s(self) -> str:
-        return """apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: supremeai-app
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: supremeai-app
-  template:
-    metadata:
-      labels:
-        app: supremeai-app
-    spec:
-      containers:
-        - name: app
-          image: supremeai/app:latest
-          ports:
-            - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: supremeai-service
-spec:
-  selector:
-    app: supremeai-app
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: LoadBalancer
-"""
-
-    def _mock_schema(self, orm: str) -> str:
-        if orm == "prisma":
-            return (
-                "model User {\n"
-                "  id    Int    @id @default(autoincrement())\n"
-                "  email String @unique\n"
-                "  posts Post[]\n"
-                "}\n\n"
-                "model Post {\n"
-                "  id       Int    @id @default(autoincrement())\n"
-                "  title    String\n"
-                "  author   User   @relation(fields: [authorId], references: [id])\n"
-                "  authorId Int\n"
-                "}\n"
-            )
-        return (
-            "from sqlalchemy import Column, Integer, String, ForeignKey\n"
-            "from sqlalchemy.orm import relationship\n"
-            "from database.base import Base\n\n"
-            "class User(Base):\n"
-            '    __tablename__ = "users"\n'
-            "    id = Column(Integer, primary_key=True)\n"
-            "    email = Column(String, unique=True)\n"
-            '    posts = relationship("Post", back_populates="author")\n\n'
-            "class Post(Base):\n"
-            '    __tablename__ = "posts"\n'
-            "    id = Column(Integer, primary_key=True)\n"
-            "    title = Column(String)\n"
-            '    author_id = Column(Integer, ForeignKey("users.id"))\n'
-            '    author = relationship("User", back_populates="posts")\n'
-        )
 
     def _parse_components_from_code(self, code: str, iac_tool: str) -> list[dict[str, str]]:
         components: list[dict[str, str]] = []
@@ -346,6 +256,8 @@ async def generate_from_diagram(
     finally:
         os.unlink(tmp_path)
 
+    if result.get("status") == "error":
+        raise HTTPException(status_code=502, detail=result.get("error"))
     return result
 
 
@@ -360,6 +272,8 @@ async def api_to_terraform(file: UploadFile = File(...), cloud_provider: str = F
     try:
         result = await _converter.to_terraform(tmp_path, cloud_provider=cloud_provider)
         return {"status": "success", **result.to_dict()}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Terraform generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
 
@@ -375,6 +289,8 @@ async def api_to_kubernetes(file: UploadFile = File(...)):
     try:
         result = await _converter.to_kubernetes(tmp_path)
         return {"status": "success", **result.to_dict()}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Kubernetes generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
 
@@ -390,6 +306,8 @@ async def api_to_schema(file: UploadFile = File(...), orm: str = Form("sqlalchem
     try:
         result = await _converter.to_database_schema(tmp_path, orm=orm)
         return {"status": "success", **result.to_dict()}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Schema generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
 
