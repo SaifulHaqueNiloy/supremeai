@@ -3,7 +3,8 @@ import json
 import os
 import uuid
 from collections.abc import Callable
-from typing import Any, AsyncIterator
+from typing import Any
+from collections.abc import AsyncIterator
 
 from loguru import logger
 

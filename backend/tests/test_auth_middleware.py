@@ -1,6 +1,5 @@
 """Auth middleware tests for SupremeAI 2.0."""
 
-import os
 import pytest
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock

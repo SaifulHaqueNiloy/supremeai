@@ -1,6 +1,5 @@
 import json
 import os
-from unittest.mock import patch
 import pytest
 
 from core.knowledge_base import get_from_memory, save_to_memory, MEMORY_FILE_PATH

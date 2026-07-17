@@ -1,7 +1,6 @@
 from core.config import settings
 import os
 import json
-from typing import List
 from loguru import logger
 
 
@@ -13,7 +12,7 @@ class ProxyManager:
 
     def __init__(self, config_path: str = "config/proxy_list.json"):
         self.config_path = config_path
-        self.proxies: List[str] = []
+        self.proxies: list[str] = []
         self.index = 0
         self._load_proxies()
 
