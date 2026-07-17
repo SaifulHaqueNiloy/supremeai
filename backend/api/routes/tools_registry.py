@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from database.supabase_client import db
 
 
-router = APIRouter(prefix="/tools", tags=["tools"])
+router = APIRouter(prefix="/api/v1/tools-registry", tags=["tools-registry"])
 
 
 class ToolCreate(BaseModel):

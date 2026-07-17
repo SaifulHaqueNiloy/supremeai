@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 
-router = APIRouter(prefix="/agents", tags=["specialized-agents"])
+router = APIRouter(prefix="/api/agents", tags=["specialized-agents"])
 
 
 class SymptomRequest(BaseModel):
