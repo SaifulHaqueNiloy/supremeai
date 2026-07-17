@@ -87,7 +87,7 @@ class Settings(BaseSettings):
     docs_password: SecretStr = Field(default=SecretStr("dev_password_only"), validation_alias="SUPREMEAI_DOCS_PASSWORD")
 
     # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
-    port: int = Field(default=8000, validation_alias="PORT")
+    port: int = Field(default=8080, validation_alias="PORT")  # বাংলা: Dockerfile CMD-এর ${PORT:-8080} default-এর সাথে consistent
     host: str = Field(default="0.0.0.0", validation_alias="HOST")  # nosec B104
 
     # বাংলা মন্তব্য: CORS origins এখন সম্পূর্ণ env-driven।
