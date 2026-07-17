@@ -1,6 +1,6 @@
 export const RENDER_BACKENDS = [
-  import.meta.env.VITE_PRIMARY_BACKEND || 'https://supremeai-backend-08zd.onrender.com', // Primary
-  import.meta.env.VITE_SECONDARY_BACKEND || 'https://supremeai-backend-secondary.onrender.com' // Fallback
+  import.meta.env.VITE_PRIMARY_BACKEND || 'https://supremeai-backend-65hl.onrender.com', // Primary (Backup account active service)
+  import.meta.env.VITE_SECONDARY_BACKEND || 'https://supremeai-backend.onrender.com' // Fallback (New image service)
 ];
 
 export const switchActiveBackend = (): string => {
