@@ -39,13 +39,12 @@ def test_auth_middleware_blocks_protected_route_without_token():
         mock_settings.supremeai_public_paths = []
         resp = client.get("/api/task/execute")
     assert resp.status_code == 401
-    import os
 
     os.environ["SUPREMEAI_API_TOKEN"] = "secure-test-token-value"
     app = FastAPI()
 
     @app.get("/api/task/execute")
-    def task():
+    def task_context():
         return PlainTextResponse("ok")
 
     app.add_middleware(AuthMiddleware)

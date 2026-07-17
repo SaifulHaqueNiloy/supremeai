@@ -1,15 +1,10 @@
-import os
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import HTTPException
-from httpx import AsyncClient
 
 from tools.media.multilingual_tts import (
     MultilingualTTS,
-    TTSRequest,
-    router,
 )
 
 

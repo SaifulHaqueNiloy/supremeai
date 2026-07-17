@@ -79,7 +79,7 @@ class KnowledgeBaseIndexer:
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 class_doc = ast.get_docstring(node) or ""
-                methods = [m.name for m in node.body if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))]
+                methods = [m.name for m in node.body if isinstance(m, ast.FunctionDef | ast.AsyncFunctionDef)]
                 docs.append(
                     {
                         "id": f"{filename}::{node.name}",

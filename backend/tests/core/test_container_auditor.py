@@ -2,9 +2,7 @@
 # বাংলা মন্তব্য: ContainerAuditor-এর জন্য comprehensive unit tests।
 # Docker commands mock করা হয়েছে — actual Docker dependency ছাড়াই।
 
-import asyncio
 import json
-from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import patch
 

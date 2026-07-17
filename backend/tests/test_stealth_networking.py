@@ -2,7 +2,6 @@ import pytest
 import os
 from unittest.mock import patch
 from core.config import settings
-from core.orchestration.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
 from tools.security_tools.proxy_manager import ProxyManager
 from tools.browser.stealth_http_client import StealthHTTPClient
 
@@ -17,7 +16,6 @@ async def test_production_sandbox_fails_without_docker():
     settings.env = "production"
 
     executor = LocalCodeExecutor()
-    import sys
     from unittest.mock import MagicMock
 
     # Mock docker to fail
