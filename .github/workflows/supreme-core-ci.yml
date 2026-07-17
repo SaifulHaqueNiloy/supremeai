@@ -828,10 +828,10 @@ jobs:
   deploy-admin-firebase:
     name: 🚀 Deploy Admin Portal (Firebase)
     needs: [pre-merge-gate, changes]
-    # Trigger if admin files changed OR shared files changed
+    # Trigger if frontend files changed
     if: |
       always() &&
-      needs.changes.outputs.admin_needed == 'true' &&
+      needs.changes.outputs.frontend == 'true' &&
       github.ref == 'refs/heads/main' &&
       needs.pre-merge-gate.result == 'success'
     runs-on: ubuntu-latest
@@ -854,10 +854,10 @@ jobs:
   deploy-user-vercel:
     name: 🚀 Deploy User Portal (Vercel)
     needs: [pre-merge-gate, changes]
-    # Trigger if user files changed OR shared files changed
+    # Trigger if frontend files changed
     if: |
       always() &&
-      needs.changes.outputs.user_needed == 'true' &&
+      needs.changes.outputs.frontend == 'true' &&
       github.ref == 'refs/heads/main' &&
       needs.pre-merge-gate.result == 'success'
     runs-on: ubuntu-latest
