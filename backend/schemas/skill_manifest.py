@@ -1,7 +1,10 @@
-from pydantic import BaseModel, Field, HttpUrl
-from typing import List, Optional, Dict
 from datetime import datetime
 from enum import Enum
+
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import HttpUrl
+
 
 class SkillStatus(str, Enum):
     STAGING = "staging"
@@ -11,11 +14,32 @@ class SkillStatus(str, Enum):
     REJECTED = "rejected"
     DEPRECATED_PENDING = "deprecation_pending"
 
+
 class SkillPermissions(BaseModel):
     allow_network: bool = Field(default=False, description="স্কিলটি ইন্টারনেট অ্যাক্সেস করতে পারবে কিনা")
-    allowed_domains: List[str] = Field(default_factory=list, description="নেটওয়ার্ক ট্রাস্টেড ওরিজিন ডোমেইন লিস্ট")
+    allowed_domains: list[str] = Field(default_factory=list, description="নেটওয়ার্ক ট্রাস্টেড ওরিজিন ডোমেইন লিস্ট")
     allow_filesystem_write: bool = Field(default=False, description="লোকাল ফাইলে রাইট করার অনুমতি")
-    required_env_vars: List[str] = Field(default_factory=list, description="কাজ করার জন্য প্রয়োজনীয় পরিবেশ ভ্যারিয়েবল")
+    required_env_vars: list[str] = Field(default_factory=list, description="কাজ করার জন্য প্রয়োজনীয় পরিবেশ ভ্যারিয়েবল")
+
+
+class SkillGovernance(BaseModel):
+    """Runtime contract for a published skill.
+
+    The defaults deliberately deny data, tools, and execution approvals.  A skill
+    must opt in to every capability in its manifest instead of inheriting broad
+    platform access.
+    """
+
+    owner: str = Field(..., min_length=1)
+    allowed_data: list[str] = Field(default_factory=list)
+    allowed_roles: list[str] = Field(default_factory=list)
+    tools_allowed: list[str] = Field(default_factory=list)
+    human_approval_points: dict[str, bool] = Field(default_factory=dict)
+    success_metrics: dict[str, str] = Field(default_factory=dict)
+    evaluation_tests: list[str] = Field(default_factory=list)
+    budget: dict[str, float] = Field(default_factory=dict)
+    audit_logging: list[str] = Field(default_factory=list)
+
 
 class SkillManifest(BaseModel):
     skill_id: str = Field(..., description="ইউনিক স্কিল আইডেন্টিফায়ার (slug)")
@@ -26,13 +50,14 @@ class SkillManifest(BaseModel):
     checksum: str = Field(..., description="SHA-256 কোড ইন্টিগ্রিটি হ্যাশ")
     status: SkillStatus = Field(default=SkillStatus.STAGING)
     permissions: SkillPermissions = Field(default_factory=SkillPermissions)
+    governance: SkillGovernance | None = None
 
     # ইউজেস এবং মেটাডেটা ট্র্যাকিং
     usage_count: int = Field(default=0)
     failure_count: int = Field(default=0)
-    last_used_at: Optional[datetime] = None
+    last_used_at: datetime | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
     class Config:
         from_attributes = True
