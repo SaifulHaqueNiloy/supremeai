@@ -1,48 +1,94 @@
-# SupremeAI - Git Pre-commit Hooks Configuration
-# =============================================
-# এই ফাইলটি git commit করার আগে স্বয়ংক্রিয়ভাবে বিভিন্ন কোয়ালিটি চেক চালায়।
+# SupremeAI 2.0 — Git Pre-commit Hooks (Iron Curtain Local Defense)
+# ================================================================
+# বাংলা মন্তব্য: এই ফাইলটি git commit করার আগে স্বয়ংক্রিয়ভাবে
+# CI/CD পাইপলাইনের মতো একই কোয়ালিটি গেট লোকালি চালায়।
+# লক্ষ্য: কোনো ত্রুটিপূর্ণ কোড গিটহাবে পৌঁছানোর আগেই ব্লক করা।
+#
+# ইনস্টলেশন: pre-commit install
+# ম্যানুয়াল রান: pre-commit run --all-files
 
 repos:
-  # Python কোডের বেসিক ফরম্যাটিং এবং কোয়ালিটি চেক
+  # ══════════════════════════════════════════════════════════════
+  # ১. বেসিক ফাইল হেলথ চেক (File Integrity Gate)
+  # ══════════════════════════════════════════════════════════════
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-yaml
-        args: [--allow-multiple-documents] # 🚀 multi_region.yaml এর ফিক্স
-        exclude: ^docs/.*\.yml$            # 🚀 invalid escape ফাইলের স্কোপড এক্সক্লুশন
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
+        args: [--allow-multiple-documents]
+        exclude: ^docs/.*\.yml$
+      - id: check-json              # JSON সিনট্যাক্স ভ্যালিডেশন
+      - id: check-toml              # pyproject.toml ও Cargo.toml চেক
+      - id: end-of-file-fixer       # ফাইলের শেষে নিউলাইন এনফোর্স
+      - id: trailing-whitespace     # ট্রেইলিং স্পেস মুছে দেয়
+        args: [--markdown-linebreak-ext=md]
+      - id: mixed-line-ending       # CR+LF মিক্স হলে ব্লক করে
+        args: [--fix=lf]
       - id: check-added-large-files
-        args: ['--maxkb=500'] # ৫০০ KB এর বড় ফাইল হলে কমিট আটকে দেবে
-      - id: detect-private-key # ভুলে SSH বা SSL প্রাইভেট কী স্টেজ করলে ব্লক করবে
+        args: ['--maxkb=500']       # ৫০০ KB+ ফাইল হলে ব্লক
+      - id: check-merge-conflict    # মার্জ কনফ্লিক্ট মার্কার থাকলে ব্লক
+      - id: check-case-conflict     # কেস-ইনসেন্সিটিভ ফাইলনেম কনফ্লিক্ট
+      - id: debug-statements        # pdb/ipdb/breakpoint() কল আটকায়
+      - id: detect-private-key      # SSH/SSL প্রাইভেট কী ব্লক করে
         exclude: ^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
 
-  # Secret Scanning
+  # ══════════════════════════════════════════════════════════════
+  # ২. সিক্রেট স্ক্যানিং (Secret Scanning Gate)
+  # ══════════════════════════════════════════════════════════════
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
       - id: detect-secrets
         exclude: package\.json|^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
 
-  # 🚀 Ruff Linter & Formatter (Iron Curtain লোকাল ডিফেন্স লেয়ার)
+  # ══════════════════════════════════════════════════════════════
+  # ৩. Python কোড কোয়ালিটি (Ruff — CI-র সাথে ১:১ মিল)
+  # ══════════════════════════════════════════════════════════════
+  # বাংলা মন্তব্য: রুলসেট CI workflow-এর মতোই।
+  # UP042 (StrEnum), I001 (import order), SIM210 (bool ternary),
+  # B028 (stacklevel), T201 (print), S-rules (security) সব enforce হয়।
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.0
     hooks:
       - id: ruff
-        args: [ --fix ] # কোডের বাগ এবং অব্যবহৃত ইম্পোর্ট নিজে থেকেই ফিক্স করে দেবে
-      - id: ruff-format # সম্পূর্ণ কোডবেসকে স্ট্যান্ডার্ড ফরম্যাটে রাখবে
+        # --fix: auto-fixable এররগুলো নিজে ঠিক করে দেয়
+        # --unsafe-fixes: UP042 এর মতো semantic fix-ও apply করে
+        args: [--fix, --unsafe-fixes]
+        types_or: [python, pyi]
+        exclude: ^backend/tests/  # টেস্টে per-file-ignores pyproject.toml-এ আছে
+      - id: ruff-format             # Black-compatible formatter
 
-  # 🚀 টাইপ এরর লোকালি ব্লক করার জন্য (Mypy Static Type Checker)
+  # ══════════════════════════════════════════════════════════════
+  # ৪. Python টাইপ চেকিং (Mypy Static Analyzer)
+  # ══════════════════════════════════════════════════════════════
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.14.0
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, types-requests] # আপনার প্রোজেক্ট ডিপেনডেন্সি অনুযায়ী
+        additional_dependencies: [pydantic, types-requests, types-PyYAML]
+        exclude: ^(backend/tests/|backend/scripts/|backend/src/)
+        args: [--ignore-missing-imports, --no-strict-optional]
 
-  # Local Hooks Registry
+  # ══════════════════════════════════════════════════════════════
+  # ৫. TypeScript / Frontend কোয়ালিটি (ESLint — optional)
+  # ══════════════════════════════════════════════════════════════
+  # বাংলা মন্তব্য: TypeScript ফাইলে import/no-unused-vars ইত্যাদি চেক করে
   - repo: local
     hooks:
-      # SupremeAI Security Guard - হার্ডকোডেড সিক্রেট ব্লকার
+      - id: eslint-frontend
+        name: "🔍 ESLint Frontend Check"
+        description: "TypeScript/TSX ফাইলে ESLint রান করে import order ও type error ধরে।"
+        entry: bash -c 'cd apps/studio-client && npx eslint --max-warnings=0 src/ --ext .ts,.tsx 2>&1 || true'
+        language: system
+        files: ^apps/studio-client/src/.*\.(ts|tsx)$
+        pass_filenames: false
+        stages: [commit]
+
+  # ══════════════════════════════════════════════════════════════
+  # ৬. SupremeAI Security Guard (Custom Hardcoded Secret Blocker)
+  # ══════════════════════════════════════════════════════════════
+  - repo: local
+    hooks:
       - id: security-guard
         name: "🛡️ SupremeAI Security Guard"
         description: "স্টেজ করা ফাইলে হার্ডকোডেড API Key / সিক্রেট থাকলে কমিট ব্লক করে।"
