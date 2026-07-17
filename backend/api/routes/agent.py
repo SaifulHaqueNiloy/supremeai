@@ -23,7 +23,7 @@ from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
 
 
-router = APIRouter(prefix="/v1/agents", tags=["Autonomous Agents"])
+router = APIRouter(prefix="/api/v1/agents", tags=["Autonomous Agents"])
 
 
 # Strict Pydantic Schema for Input Validation
