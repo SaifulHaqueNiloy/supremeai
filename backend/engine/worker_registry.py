@@ -49,8 +49,12 @@ class WorkerRegistry:
                                 logger.warning(f"⚠️ Worker {worker_id} is stale and has been removed from active registry.")
                             # Delete stale record from KV
                             await nats_client.kv_store.delete(worker_id)
-                    except Exception:  # noqa: BLE001
-                        pass
+                    except Exception as hb_err:  # noqa: BLE001
+                        # বাংলা মন্তব্য: heartbeat পার্স বা KV delete ব্যর্থ হলে worker_id ও এরর লগ করা হচ্ছে
+                        logger.warning(
+                            f"⚠️ Worker registry: failed to process heartbeat for worker '{worker_id}'. "
+                            f"Error: {hb_err!r}. This worker will be excluded from routing."
+                        )
 
                 self.active_workers = valid_workers
             except Exception as e:  # noqa: BLE001
