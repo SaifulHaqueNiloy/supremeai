@@ -41,7 +41,7 @@ services:
       - key: CI_WEBHOOK_SECRET
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://supremeai-studio-client.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app"]'
+        value: '["https://supremeai-studio-client.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app", "https://supremeai-a.web.app", "https://supremeai-admin.web.app"]'
 
   # ২. ফ্রন্টএন্ড (Render 100% Free Static Hosting)
   - type: web
