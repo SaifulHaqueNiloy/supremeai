@@ -120,8 +120,9 @@ class Settings(BaseSettings):
     # বাংলা মন্তব্য: Encryption key — fail-fast on missing
     encryption_key: SecretStr = Field(
         default=SecretStr(""),
-        validation_alias="ENCRYPTION_KEY",
+        validation_alias="SUPREMEAI_ENCRYPTION_KEY",
     )
+
 
     # ── Stripe credentials — SecretStr দিয়ে log-safe ────────────────────────
     stripe_api_key: SecretStr = Field(default=SecretStr(""), validation_alias="STRIPE_API_KEY")
