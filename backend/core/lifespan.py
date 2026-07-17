@@ -259,9 +259,15 @@ async def app_lifespan(app):
         from database import db as supabase_db
 
         if os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL_POOLER"):
-            # বাংলা: sync call in async context - run in thread to avoid blocking
-            await asyncio.to_thread(supabase_db.bootstrap_schema)
+            # বাংলা: sync call in async context — thread-এ চালানো হচ্ছে blocking এড়াতে।
+            # wait_for 30s timeout দেওয়া হলো: psycopg2.connect হ্যাং করলে lifespan ব্লক না হয়।
+            await asyncio.wait_for(
+                asyncio.to_thread(supabase_db.bootstrap_schema),
+                timeout=30.0
+            )
             logger.info("Supabase schema bootstrap complete")
+    except asyncio.TimeoutError:
+        logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
         error_event_bus.emit(
