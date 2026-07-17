@@ -323,7 +323,7 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
             )
             if existing_tx.scalars().first():
                 logger.info(f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success.")
-                return {"status": "processed", "message": f"Transaction already credited via SSLCommerz."}
+                return {"status": "processed", "message": "Transaction already credited via SSLCommerz."}
 
             result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
             wallet = result.scalars().first()
