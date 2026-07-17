@@ -825,13 +825,68 @@ jobs:
 
 
 
+  deploy-admin-firebase:
+    name: 🚀 Deploy Admin Portal (Firebase)
+    needs: [pre-merge-gate, changes]
+    # Trigger if admin files changed OR shared files changed
+    if: |
+      always() &&
+      needs.changes.outputs.admin_needed == 'true' &&
+      github.ref == 'refs/heads/main' &&
+      needs.pre-merge-gate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Install Dependencies
+        run: pnpm install
+      - name: Build Admin
+        run: VITE_PORTAL_TYPE=admin pnpm --dir apps/studio-client run build
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: supremeai-admin-portal
+          target: admin-hosting
+
+  deploy-user-vercel:
+    name: 🚀 Deploy User Portal (Vercel)
+    needs: [pre-merge-gate, changes]
+    # Trigger if user files changed OR shared files changed
+    if: |
+      always() &&
+      needs.changes.outputs.user_needed == 'true' &&
+      github.ref == 'refs/heads/main' &&
+      needs.pre-merge-gate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vercel CLI & pnpm
+        run: |
+          npm install -g pnpm
+          npm install --global vercel@latest
+      - name: Install Dependencies
+        run: pnpm install
+      - name: Build User Portal
+        run: VITE_PORTAL_TYPE=user pnpm --dir apps/studio-client run build
+      - name: Deploy to Vercel
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
   sync-mirror:
     name: 📤 Sync to Secondary Repo
-    needs: [deploy-backend, security-audit]
+    needs: [deploy-backend, deploy-admin-firebase, deploy-user-vercel, security-audit]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
       needs.deploy-backend.result != 'failure' && needs.deploy-backend.result != 'cancelled' &&
+      needs.deploy-admin-firebase.result != 'failure' && needs.deploy-admin-firebase.result != 'cancelled' &&
+      needs.deploy-user-vercel.result != 'failure' && needs.deploy-user-vercel.result != 'cancelled' &&
       needs.security-audit.result != 'failure' && needs.security-audit.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
