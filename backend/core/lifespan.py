@@ -114,6 +114,7 @@ async def app_lifespan(app):
     Handles high-concurrency initialization and defensive teardowns.
     """
     logger.info("🌐 Core Infrastructure Bootstrapping Active...")
+    app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
 
     # OpenTelemetry tracing initialization
     try:
@@ -160,6 +161,7 @@ async def app_lifespan(app):
         # Health endpoint, SSE stream, config cache সব চলবে DB ছাড়া।
         logger.error(f"❌ Failed to initialize DB Pool: {exc}")
         app.state.db_pool = None
+        app.state.subsystem_status["db"] = "down"
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -180,6 +182,7 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         # প্রোডাকশনে ডাটাবেজ সাময়িক ডাউন থাকলেও সার্ভার যেন বুট হতে পারে
         logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
+        app.state.subsystem_status["config"] = "fallback"
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -203,6 +206,7 @@ async def app_lifespan(app):
             logger.info("✅ Redis connection verified successfully.")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize Redis Manager: {e}")
+        app.state.subsystem_status["redis"] = "down"
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
