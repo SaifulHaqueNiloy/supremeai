@@ -2,7 +2,6 @@
 # বাংলা মন্তব্য: CostGuard-এর জন্য comprehensive unit tests।
 # Database এবং HTTP exceptions mock করা হয়েছে।
 
-import asyncio
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import patch

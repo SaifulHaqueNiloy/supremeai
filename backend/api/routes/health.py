@@ -27,9 +27,11 @@ from fastapi import Response
 # render.yaml-এ healthCheckPath: /api/v1/health নির্ধারিত।
 # এটি prefix="/api/v1" সহ register করা হয়, তাই path="/health" যথেষ্ট।
 
+
 def _timestamp() -> str:
     """Return a timezone-aware timestamp suitable for infrastructure probes."""
     return datetime.now(UTC).isoformat()
+
 
 @router.get("/health")
 async def health_check(request: Request, response: Response):
@@ -79,10 +81,7 @@ async def health_check(request: Request, response: Response):
 @router.get("/live", tags=["Infrastructure Monitor"])
 async def liveness_probe():
     """💓 Liveness Probe: Render রাউটিং মেশকে প্রসেসের সচলতা নিশ্চিত করে।"""
-    return {
-        "status": "alive",
-        "timestamp": int(time.time())
-    }
+    return {"status": "alive", "timestamp": int(time.time())}
 
 
 @router.get("/ready", tags=["Infrastructure Monitor"])

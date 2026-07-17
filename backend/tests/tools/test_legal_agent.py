@@ -1,11 +1,10 @@
 # বাংলা মন্তব্য: Legal Agent-এর contract/terms generation ফাংজনালিটি টেস্ট।
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from tools.ai_agents.legal_agent import LegalAgent
-from core.llm.llm_gateway import LLMGateway
 
 
 @pytest.fixture

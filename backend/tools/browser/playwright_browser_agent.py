@@ -6,7 +6,6 @@ import json
 import secrets
 
 random = secrets.SystemRandom()
-import asyncio
 import time
 import base64
 from collections.abc import Callable

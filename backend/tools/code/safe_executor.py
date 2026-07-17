@@ -104,7 +104,7 @@ def validate_ast(source: str) -> None:
             raise ValueError(f"Security error: AST node type {type(node).__name__} is not allowed")
 
         # 2. Prevent import statements entirely (Imports are not in ALLOWED_NODE_TYPES, but check as safety net)
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
+        if isinstance(node, ast.Import | ast.ImportFrom):
             raise ValueError("Security error: Import statements are strictly forbidden")
 
         # 3. Prevent all attribute access to be safer

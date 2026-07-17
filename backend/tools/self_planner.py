@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Any, Set
+from typing import Any
 
 import networkx as nx
 from fastapi import APIRouter
@@ -20,7 +20,7 @@ class SelfPlanner:
     def __init__(self, llm_client=None):
         self.llm_client = llm_client
         # বাংলা মন্তব্য: রানিং ব্যাকগ্রাউন্ড টাস্কগুলোর স্ট্রং রেফারেন্স ধরে রাখার জন্য সেট ইনিশিয়ালাইজেশন
-        self.active_tasks: Set[asyncio.Task] = set()
+        self.active_tasks: set[asyncio.Task] = set()
         logger.info("Initialized SelfPlanner")
 
     async def generate_plan(self, objective: str) -> nx.DiGraph:

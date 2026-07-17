@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch, mock_open, MagicMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 

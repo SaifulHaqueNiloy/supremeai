@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from database.supabase_client import SupabaseDB
 
 # বাংলা মন্তব্য: SupabaseDB-এর ডায়নামিক এসিঙ্ক প্রক্সি মেথডগুলোর সঠিক কার্যকারিতা পরীক্ষা করার জন্য ইউনিট টেস্ট।

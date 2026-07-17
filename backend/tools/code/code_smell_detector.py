@@ -40,16 +40,7 @@ class CodeSmellDetector:
         for child in ast.walk(node):
             if isinstance(
                 child,
-                (
-                    ast.If,
-                    ast.IfExp,
-                    ast.For,
-                    ast.While,
-                    ast.ExceptHandler,
-                    ast.With,
-                    ast.Assert,
-                    ast.BoolOp,
-                ),
+                ast.If | ast.IfExp | ast.For | ast.While | ast.ExceptHandler | ast.With | ast.Assert | ast.BoolOp,
             ):
                 complexity += 1
             if isinstance(child, ast.BoolOp):
@@ -77,7 +68,7 @@ class CodeSmellDetector:
             tree = ast.parse(content)
 
             for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                     complexity = self._calculate_complexity(node)
                     if complexity > complexity_threshold:
                         smells.append(
@@ -142,7 +133,7 @@ class CodeSmellDetector:
                         )
 
                 if isinstance(node, ast.ClassDef):
-                    methods = sum(1 for child in ast.iter_child_nodes(node) if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)))
+                    methods = sum(1 for child in ast.iter_child_nodes(node) if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef))
                     if methods > class_methods_threshold:
                         smells.append(
                             {
@@ -203,7 +194,7 @@ class CodeSmellDetector:
         smells: list[dict[str, Any]] = []
         bodies: dict[str, list[dict[str, Any]]] = {}
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 src = ast.dump(node.body)
                 norm = self._normalize(src)
                 bodies.setdefault(norm, []).append(
@@ -606,7 +597,7 @@ class CodeSmellDetector:
             os.makedirs(os.path.dirname(hook_path), exist_ok=True)
             with open(hook_path, "w", encoding="utf-8") as f:
                 f.write("#!/bin/sh\n# বাংলা মন্তব্য: SupremeAI কোড স্মেল প্রি-কমিট হুক।\npython -m tools.code_smell_detector --check || true\n")
-            os.chmod(hook_path, 0o755)
+            os.chmod(hook_path, 0o755)  # noqa: S103
             logger.success(f"Pre-commit hook installed at {hook_path}")
             return True
         except Exception as e:  # noqa: BLE001
