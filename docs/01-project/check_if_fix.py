@@ -6,8 +6,8 @@ import requests
 def set_output(name: str, value: str):
     """Sets a GitHub Actions output."""
     print(f"Setting output: {name}={value}")
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as hf:
-        hf.write(f'{name}={value}\n')
+    with open(os.environ["GITHUB_OUTPUT"], "a") as hf:
+        hf.write(f"{name}={value}\n")
 
 
 def main():
@@ -36,15 +36,17 @@ def main():
         workflows_resp = requests.get(workflows_url, headers=headers, timeout=10)
         workflows_resp.raise_for_status()
         workflows = workflows_resp.json().get("workflows", [])
-        
+
         workflow_id = None
         for wf in workflows:
             if wf["name"] == workflow_name_to_check:
                 workflow_id = wf["id"]
                 break
-        
+
         if not workflow_id:
-            print(f"::warning::Could not find workflow named '{workflow_name_to_check}'.")
+            print(
+                f"::warning::Could not find workflow named '{workflow_name_to_check}'."
+            )
             set_output("is_fix", "false")
             sys.exit(0)
 
@@ -54,14 +56,15 @@ def main():
         print(f"::error::Failed to fetch workflows: {e}")
         sys.exit(1)
 
-
     # 2. Get the most recent runs for that workflow on the specific branch
-    runs_url = f"https://api.github.com/repos/{repo}/actions/workflows/{workflow_id}/runs"
+    runs_url = (
+        f"https://api.github.com/repos/{repo}/actions/workflows/{workflow_id}/runs"
+    )
     params = {
         "branch": branch,
         "event": "push",
         "status": "completed",
-        "per_page": 20, # Check the last 20 runs
+        "per_page": 20,  # Check the last 20 runs
     }
     try:
         runs_resp = requests.get(runs_url, headers=headers, params=params, timeout=10)
@@ -87,7 +90,9 @@ def main():
                     set_output("failed_run_id", str(run["id"]))
                     sys.exit(0)
                 else:
-                    print("Previous run was not a failure. No training data to generate.")
+                    print(
+                        "Previous run was not a failure. No training data to generate."
+                    )
                     set_output("is_fix", "false")
                     sys.exit(0)
 

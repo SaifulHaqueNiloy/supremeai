@@ -36,18 +36,17 @@ if _async_url.startswith("sqlite"):
     engine_kwargs["poolclass"] = StaticPool
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 if _async_url.startswith("postgresql"):
-    engine_kwargs.update({
-        "pool_size": 20,
-        "max_overflow": 0,
-        "pool_timeout": 30,
-        "pool_recycle": 1800,
-        "connect_args": {"command_timeout": 30, "server_settings": {"application_name": "supremeai_2.0"}},
-    })
+    engine_kwargs.update(
+        {
+            "pool_size": 20,
+            "max_overflow": 0,
+            "pool_timeout": 30,
+            "pool_recycle": 1800,
+            "connect_args": {"command_timeout": 30, "server_settings": {"application_name": "supremeai_2.0"}},
+        }
+    )
 
-engine = create_async_engine(
-    _async_url,
-    **engine_kwargs
-)
+engine = create_async_engine(_async_url, **engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 

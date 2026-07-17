@@ -12,10 +12,10 @@ spec:
         # Autoscale bounds
         autoscaling.knative.dev/minScale: "1"
         autoscaling.knative.dev/maxScale: "10"
-        
+
         # CPU allocation: CPU is always allocated so background tasks (agents) can run
         run.googleapis.com/cpu-throttling: "false"
-        
+
         # Concurrency
         autoscaling.knative.dev/target: "80"
     spec:

@@ -1,8 +1,8 @@
 # 🚨 SupremeAI রিপোজিটরি সাইজ অপ্টিমাইজেশন রিপোর্ট
 
-> **তারিখ:** ২৮ জুন ২০২৬  
-> **রিপোজিটরি:** `paykaribazaronline/supremeai`  
-> **বর্তমান সাইজ:** ~৪৭৫ MB (GitHub API অনুযায়ী)  
+> **তারিখ:** ২৮ জুন ২০২৬
+> **রিপোজিটরি:** `paykaribazaronline/supremeai`
+> **বর্তমান সাইজ:** ~৪৭৫ MB (GitHub API অনুযায়ী)
 > **লক্ষ্য সাইজ:** ~১০-২০ MB (কোড + কনফিগuration মাত্র)
 
 ---
@@ -15,9 +15,9 @@
 
 ## 🔴 ক্রিটিক্যাল ইস্যু #১: Rust Build Artifacts (`target/` ফোল্ডার)
 
-**পথ:** `apps/desktop/src-tauri/target/debug/`  
-**ফাইল সংখ্যা:** ৩,৬৩৪টি  
-**আকার:** ~**৭৬০ MB** (মোট রিপোজিটরির ~৮০%)  
+**পথ:** `apps/desktop/src-tauri/target/debug/`
+**ফাইল সংখ্যা:** ৩,৬৩৪টি
+**আকার:** ~**৭৬০ MB** (মোট রিপোজিটরির ~৮০%)
 **গুরুত্ব:** 🔴🔴🔴🔴🔴 (অত্যন্ত জরুরি)
 
 ### সমস্যা কী?
@@ -62,9 +62,9 @@ Tauri অ্যাপের `target/` ফোল্ডার সবসময়�
 
 ## 🟠 ক্রিটিক্যাল ইস্যু #২: AI Context Export ফাইলস
 
-**পথ:** `context_export/`  
-**ফাইল সংখ্যা:** ৭টি  
-**আকার:** ~**১১.৭ MB**  
+**পথ:** `context_export/`
+**ফাইল সংখ্যা:** ৭টি
+**আকার:** ~**১১.৭ MB**
 **গুরুত্ব:** 🟠🟠🟠🟠🟠 (জরুরি)
 
 ### সমস্যা কী?
@@ -100,9 +100,9 @@ git rm -r context_export/
 
 ## 🟡 ক্রিটিক্যাল ইস্যু #৩: Scraped Data JSON ফাইলস
 
-**পথ:** `scripts/resource_scraping/`  
-**ফাইল সংখ্যা:** ৩টি JSON + ৩টি Python script  
-**আকার:** ~**১ MB**  
+**পথ:** `scripts/resource_scraping/`
+**ফাইল সংখ্যা:** ৩টি JSON + ৩টি Python script
+**আকার:** ~**১ MB**
 **গুরুত্ব:** 🟡🟡🟡🟡 (মাঝারি-জরুরি)
 
 ### সমস্যা কী?
@@ -137,9 +137,9 @@ Scraper scripts-এর মধ্যে ক্যাশিং লজিক যো
 
 ## 🟡 ক্রিটিক্যাল ইস্যু #৪: CI Logs (`logs/ci/`)
 
-**পথ:** `logs/ci/`  
-**ফাইল সংখ্যা:** ~১০০টি (JSON + MD)  
-**আকার:** ~**২০০ KB** (কিন্তু ফাইল সংখ্যা বাড়ছে)  
+**পথ:** `logs/ci/`
+**ফাইল সংখ্যা:** ~১০০টি (JSON + MD)
+**আকার:** ~**২০০ KB** (কিন্তু ফাইল সংখ্যা বাড়ছে)
 **গুরুত্ব:** 🟡🟡🟡 (মাঝারি)
 
 ### সমস্যা কী?
@@ -176,9 +176,9 @@ git rm -r logs/ci/
 
 ## 🟡 ক্রিটিক্যাল ইস্যু #৫: Code Files in `docs/` Directory
 
-**পথ:** `docs/-01-admin's plan/`  
-**ফাইল সংখ্যা:** ১৮+টি code ফাইল  
-**আকার:** ~**৫০০ KB**  
+**পথ:** `docs/-01-admin's plan/`
+**ফাইল সংখ্যা:** ১৮+টি code ফাইল
+**আকার:** ~**৫০০ KB**
 **গুরুত্ব:** 🟡🟡🟡 (মাঝারি)
 
 ### সমস্যা কী?
@@ -226,8 +226,8 @@ git rm "docs/-01-admin's plan/monorepo_ci_cd_smart_retry.yml"
 
 ## 🟡 ক্রিটিক্যাল ইস্যু #৬: Embeddings Data in Repo
 
-**পথ:** `data/frontier/search_embeddings.json`  
-**আকার:** ১৮৪ KB  
+**পথ:** `data/frontier/search_embeddings.json`
+**আকার:** ১৮৪ KB
 **গুরুত্ব:** 🟡🟡 (কম)
 
 ### সমস্যা কী?
@@ -249,8 +249,8 @@ SQLite বা vector DB (Chroma, Pinecone) ব্যবহার করুন।
 
 ## 🟡 ক্রিটিক্যাল ইস্যু #৭: Large Image in Docs
 
-**পথ:** `docs/04-development/models_visualizations/supremeai2_top50_models_visual.png`  
-**আকার:** ৯৩৯ KB  
+**পথ:** `docs/04-development/models_visualizations/supremeai2_top50_models_visual.png`
+**আকার:** ৯৩৯ KB
 **গুরুত্ব:** 🟡🟡 (কম)
 
 ### সমস্যা কী?
@@ -276,14 +276,14 @@ git lfs track "apps/mobile/**/AppIcon*.png"
 
 ## 🟡 ক্রিটিক্যাল ইস্যু #৮: Lock Files (poetry.lock + package-lock.json)
 
-**পথ:**  
-- `backend/poetry.lock` — ৮৭৭ KB  
-- `apps/studio-client/package-lock.json` — ২২৮ KB  
-- `tools/vscode-extension/package-lock.json` — ২১৫ KB  
-- `apps/desktop/package-lock.json` — ৫২ KB  
-- `infrastructure/firebase_functions/firebase_functions_v1/package-lock.json` — ৩৩৮ KB  
+**পথ:**
+- `backend/poetry.lock` — ৮৭৭ KB
+- `apps/studio-client/package-lock.json` — ২২৮ KB
+- `tools/vscode-extension/package-lock.json` — ২১৫ KB
+- `apps/desktop/package-lock.json` — ৫২ KB
+- `infrastructure/firebase_functions/firebase_functions_v1/package-lock.json` — ৩৩৮ KB
 
-**মোট:** ~**১.৭ MB**  
+**মোট:** ~**১.৭ MB**
 **গুরুত্ব:** 🟡 (নিম্ন)
 
 ### সমস্যা কী?

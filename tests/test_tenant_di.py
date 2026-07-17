@@ -1,6 +1,7 @@
 from backend.api.dependencies import get_tenant_db
 from fastapi import HTTPException
 
+
 def test_di():
     # Mocking JWT payload
     payload = {"sub": "test_tenant@supremeai.com", "role": "admin"}
@@ -10,6 +11,7 @@ def test_di():
         assert db.tenant_id == "test_tenant@supremeai.com"
     except HTTPException as e:
         print("❌ Failed:", e.detail)
+
 
 if __name__ == "__main__":
     test_di()

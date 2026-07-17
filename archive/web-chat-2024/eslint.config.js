@@ -27,7 +27,7 @@ export default [
       // Base rules
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-      
+
       // Strict Type Safety (Anti `any` Rules)
       "@typescript-eslint/no-explicit-any": "error", // No explicit any
       "@typescript-eslint/no-unsafe-assignment": "error", // No assigning any
@@ -36,7 +36,7 @@ export default [
       "@typescript-eslint/no-unsafe-return": "error", // No returning any
       "@typescript-eslint/no-unsafe-argument": "error", // No passing any as argument
       "@typescript-eslint/explicit-function-return-type": ["warn", { allowExpressions: true }],
-      
+
       // Strict Error Handling (Anti-Silent Error Rules)
       "no-empty": ["error", { allowEmptyCatch: false }], // No empty try/catch blocks
       "@typescript-eslint/no-floating-promises": "error", // Promises must be handled

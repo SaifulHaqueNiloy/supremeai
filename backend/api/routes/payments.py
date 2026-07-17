@@ -112,10 +112,7 @@ async def stripe_webhook_endpoint(request: Request):
     if not webhook_secret or not sig_header:
         # বাংলা মন্তব্য: সিক্রেট বা সিগনেচার না থাকলে সাইলেন্টলি ইগনোর না করে ৫০০ এরর দেয়া হলো
         logger.critical("🚨 STRIPE WEBHOOK MISCONFIGURED: Secret or signature missing!")
-        raise HTTPException(
-            status_code=500,
-            detail="Webhook configuration error. Webhook secret is missing on the server."
-        )
+        raise HTTPException(status_code=500, detail="Webhook configuration error. Webhook secret is missing on the server.")
 
     payload = await request.body()
     try:

@@ -35,7 +35,7 @@ This Non-Disclosure Agreement ("Agreement") is made between:
 3. Governed by laws of Bangladesh
 
 IN WITNESS WHEREOF, the parties have executed this Agreement.
-"""
+""",
         }
 
         result = await agent.generate_contract(
@@ -67,7 +67,7 @@ Clause Analysis:
 - Duration: 5 years (standard)
 - Risk Level: Low
 - Recommendations: Consider adding specific definitions for "confidential information"
-"""
+""",
         }
 
         result = await agent.analyze_clause(clause_text, jurisdiction="BD")
@@ -98,7 +98,7 @@ Compliance Report:
 - GDPR: Compliant (data collection disclosed)
 - CCPA: Compliant (opt-out rights mentioned)
 - Issues: None found
-"""
+""",
         }
 
         result = await agent.check_compliance(document, regulation="GDPR")
@@ -133,7 +133,7 @@ All content is owned by the company.
 
 4. GOVERNING LAW
 These terms are governed by the laws of Bangladesh.
-"""
+""",
         }
 
         result = await agent.generate_tos(product_description="AI-powered code generation platform", jurisdiction="BD")
@@ -161,7 +161,7 @@ We respect your privacy. This policy explains:
 - Data retention period
 
 Contact: privacy@company.com
-"""
+""",
         }
 
         result = await agent.generate_tos(product_description="Web application that collects user data", jurisdiction="BD")
@@ -189,7 +189,7 @@ Terms:
 - Working hours: 8 hours per day
 - Leave: As per Bangladesh law
 - Termination: 30 days notice
-"""
+""",
         }
 
         result = await agent.generate_contract(contract_type="Employment", parties=["Employer", "Employee"], terms={"jurisdiction": "Bangladesh"})

@@ -153,7 +153,7 @@ export class AIService {
   }
 
   private getSystemPrompt(language: string, context?: string): string {
-    return `You are SupremeAI, an AI coding assistant for ${language}. ${context || ''} 
+    return `You are SupremeAI, an AI coding assistant for ${language}. ${context || ''}
 You help developers by providing code suggestions, explanations, and improvements.
 Always respond with working, production-ready code.`;
   }

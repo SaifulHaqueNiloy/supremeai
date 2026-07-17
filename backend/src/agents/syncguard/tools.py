@@ -1,21 +1,20 @@
 import os
-import httpx
-from typing import Dict, Any
+from typing import Any
+
 from loguru import logger
 
-async def check_infrastructure_drift(github_repo_url: str) -> Dict[str, Any]:
+
+async def check_infrastructure_drift(github_repo_url: str) -> dict[str, Any]:
     """
     Checks if the live Render deployment matches the GitHub render.yaml blueprint.
     (In a real scenario, this calls Render API and GitHub API).
     """
     # Mocked check for demonstration
     logger.info("[SyncGuard Tool] Scanning render.yaml in GitHub vs Live State...")
-    return {
-        "status": "matched",
-        "message": "Live infrastructure perfectly matches render.yaml blueprint."
-    }
+    return {"status": "matched", "message": "Live infrastructure perfectly matches render.yaml blueprint."}
 
-async def check_env_secrets_sync(required_keys: list) -> Dict[str, Any]:
+
+async def check_env_secrets_sync(required_keys: list) -> dict[str, Any]:
     """
     Checks if all required environment variables exist in the live environment.
     """
@@ -25,6 +24,7 @@ async def check_env_secrets_sync(required_keys: list) -> Dict[str, Any]:
     if missing_keys:
         return {"status": "un-synced", "missing": missing_keys}
     return {"status": "synced", "missing": []}
+
 
 async def check_redis_connection(redis_url: str) -> bool:
     """

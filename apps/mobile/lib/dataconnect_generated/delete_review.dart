@@ -22,7 +22,7 @@ class DeleteReviewReviewDelete {
   final String userId;
   final String movieId;
   DeleteReviewReviewDelete.fromJson(dynamic json):
-  
+
   userId = nativeFromJson<String>(json['userId']),
   movieId = nativeFromJson<String>(json['movieId']);
   @override
@@ -35,13 +35,13 @@ class DeleteReviewReviewDelete {
     }
 
     final DeleteReviewReviewDelete otherTyped = other as DeleteReviewReviewDelete;
-    return userId == otherTyped.userId && 
+    return userId == otherTyped.userId &&
     movieId == otherTyped.movieId;
-    
+
   }
   @override
   int get hashCode => Object.hashAll([userId.hashCode, movieId.hashCode]);
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -60,7 +60,7 @@ class DeleteReviewReviewDelete {
 class DeleteReviewData {
   final DeleteReviewReviewDelete? review_delete;
   DeleteReviewData.fromJson(dynamic json):
-  
+
   review_delete = json['review_delete'] == null ? null : DeleteReviewReviewDelete.fromJson(json['review_delete']);
   @override
   bool operator ==(Object other) {
@@ -73,11 +73,11 @@ class DeleteReviewData {
 
     final DeleteReviewData otherTyped = other as DeleteReviewData;
     return review_delete == otherTyped.review_delete;
-    
+
   }
   @override
   int get hashCode => review_delete.hashCode;
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -97,7 +97,7 @@ class DeleteReviewVariables {
   final String movieId;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   DeleteReviewVariables.fromJson(Map<String, dynamic> json):
-  
+
   movieId = nativeFromJson<String>(json['movieId']);
   @override
   bool operator ==(Object other) {
@@ -110,11 +110,11 @@ class DeleteReviewVariables {
 
     final DeleteReviewVariables otherTyped = other as DeleteReviewVariables;
     return movieId == otherTyped.movieId;
-    
+
   }
   @override
   int get hashCode => movieId.hashCode;
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -126,4 +126,3 @@ class DeleteReviewVariables {
     required this.movieId,
   });
 }
-

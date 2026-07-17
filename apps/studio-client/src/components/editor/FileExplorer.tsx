@@ -16,17 +16,17 @@ export const FileExplorer: React.FC = () => {
 
   useEffect(() => {
     if (!webContainer) return;
-    
+
     const loadFiles = async () => {
       try {
         const rootEntries = await webContainer.fs.readdir('/', { withFileTypes: true });
-        
+
         const buildTree = async (entries: any[], currentPath: string): Promise<FileNode[]> => {
           const nodes: FileNode[] = [];
           for (const entry of entries) {
             const path = `${currentPath === '/' ? '' : currentPath}/${entry.name}`;
             const isDir = entry.isDirectory();
-            
+
             nodes.push({
               name: entry.name,
               isDirectory: isDir,
@@ -72,7 +72,7 @@ export const FileExplorer: React.FC = () => {
           const langMap: Record<string, string> = {
             'js': 'javascript', 'ts': 'typescript', 'json': 'json', 'html': 'html', 'css': 'css', 'md': 'markdown'
           };
-          
+
           openFile({
             path: node.path,
             name: node.name,
@@ -92,7 +92,7 @@ export const FileExplorer: React.FC = () => {
       const isExpanded = expandedFolders.has(node.path);
       return (
         <div key={node.path} className="select-none">
-          <div 
+          <div
             className={`flex items-center px-2 py-1 cursor-pointer hover:bg-gray-700 text-sm text-gray-300 ${depth > 0 ? 'ml-4' : ''}`}
             onClick={() => handleFileClick(node)}
           >

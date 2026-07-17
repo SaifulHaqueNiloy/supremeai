@@ -28,7 +28,7 @@ const AuditLogsPanel: React.FC = () => {
 
   useEffect(() => {
     if (activePanel !== 'Audit') return;
-    
+
     // বাংলা মন্তব্য: set-state-in-effect ফিক্স — লোডিং স্টেট অ্যাজাস্টমেন্ট async ফাংশনের ভেতরে করা হয়েছে
     const loadAuditLogs = async () => {
       setLoading(true);
@@ -41,7 +41,7 @@ const AuditLogsPanel: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     loadAuditLogs();
   }, [activePanel]);
 

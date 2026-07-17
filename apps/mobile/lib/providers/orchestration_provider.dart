@@ -87,7 +87,7 @@ class OrchestrationProvider with ChangeNotifier {
 
   void initRealTimeTaskStream(String taskId, String authToken) {
     final url = Uri.parse('https://supremeai-api-lhlwyikwlq-uc.a.run.app/api/task/stream/$taskId');
-    
+
     final request = http.Request('GET', url)
       ..headers['Authorization'] = 'Bearer $authToken'
       ..headers['Accept'] = 'text/event-stream';

@@ -1,10 +1,12 @@
 # backend/agents/morphic_adapter.py
 import os
 import re
-from typing import Dict, Any
+from typing import Any
+
 # 🚀 গুগলের নতুন এবং অফিসিয়াল মডার্ন SDK ইম্পোর্ট
 from google import genai
 from google.genai import types
+
 
 class MorphicAdapter:
     def __init__(self):
@@ -35,7 +37,7 @@ class MorphicAdapter:
         - NEVER output markdown text, conversational explanations, or backticks (```python). Output ONLY clean, valid, executable Python code.
         """
 
-    def adapt_code_to_contract(self, raw_code: str, skill_description: str) -> Dict[str, Any]:
+    def adapt_code_to_contract(self, raw_code: str, skill_description: str) -> dict[str, Any]:
         """কাঁচা পাইথন কোডকে মডার্ন জেমিনি ক্লায়েন্ট দিয়ে সুপ্রীম চুক্তিতে রি-রাইট করে"""
         if not self.client:
             return {"success": False, "code": "", "detail": "Gemini API Client is not configured in environment."}
@@ -58,7 +60,7 @@ class MorphicAdapter:
                 config=types.GenerateContentConfig(
                     system_instruction=self._get_morphic_system_prompt(),
                     temperature=0.1,  # কাঠামোগত কোড আউটপুটের জন্য একদম লো-টেম্পারেচার
-                )
+                ),
             )
 
             if not response.text:
@@ -67,19 +69,11 @@ class MorphicAdapter:
             adapted_code = response.text.strip()
 
             # ডিফেন্সিভ ক্লিনআপ: মডেল যদি ভুল করে মার্কডাউন ব্যাকটিকস (```) দেয়, তা ছেঁটে ফেলা
-            adapted_code = re.sub(r'^```python\s*', '', adapted_code)
-            adapted_code = re.sub(r'^```\s*', '', adapted_code)
-            adapted_code = re.sub(r'\s*```$', '', adapted_code)
+            adapted_code = re.sub(r"^```python\s*", "", adapted_code)
+            adapted_code = re.sub(r"^```\s*", "", adapted_code)
+            adapted_code = re.sub(r"\s*```$", "", adapted_code)
             adapted_code = adapted_code.strip()
 
-            return {
-                "success": True,
-                "code": adapted_code,
-                "detail": "Morphic adaptation rewrite completed successfully via modern SDK."
-            }
+            return {"success": True, "code": adapted_code, "detail": "Morphic adaptation rewrite completed successfully via modern SDK."}
         except Exception as e:
-            return {
-                "success": False,
-                "code": "",
-                "detail": f"LLM Morphic adaptation failure: {str(e)}"
-            }
+            return {"success": False, "code": "", "detail": f"LLM Morphic adaptation failure: {str(e)}"}

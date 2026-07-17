@@ -34,7 +34,7 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
             const response = await axios.get(backendUrl, {
                 headers: { 'Authorization': 'Bearer YOUR_VALID_PRODUCTION_TEST_JWT_TOKEN' }
             });
-            
+
             if (response.status === 200 && response.data) {
                 return response.data.skills || response.data; // ডিবি স্কিল অ্যারে
             }
@@ -75,7 +75,7 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
                                 container.innerHTML = 'No active automation recipes found.';
                                 return;
                             }
-                            
+
                             container.innerHTML = ''; // ক্লিয়ার বাফার
                             recipes.forEach(recipe => {
                                 const card = document.createElement('div');

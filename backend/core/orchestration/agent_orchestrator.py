@@ -228,10 +228,8 @@ class AsyncTaskManager:
         self._queue_init_failed = False
         # বাংলা মন্তব্য: pytest রান করার সময় স্বয়ংক্রিয়ভাবে ইন-মেমোরি টাস্ক ম্যানেজার ব্যবহার করতে sys.modules চেক করা হচ্ছে।
         import sys
-        self._allow_memory_fallback = (
-            os.getenv("ENV", "production") in ("dev", "test", "local")
-            or "pytest" in sys.modules
-        )
+
+        self._allow_memory_fallback = os.getenv("ENV", "production") in ("dev", "test", "local") or "pytest" in sys.modules
 
     def _get_queue(self):
         # বাংলা মন্তব্য: টেস্ট ও লোকাল রান টাইমে ফলব্যাক নিশ্চিত করার জন্য সরাসরি None রিটার্ন করা হলো।
@@ -241,6 +239,7 @@ class AsyncTaskManager:
         if self._queue is None and not self._queue_init_failed:
             try:
                 from core.queue.task_queue_enhanced import EnhancedTaskQueue
+
                 self._queue = EnhancedTaskQueue()
             except Exception as exc:
                 self._queue_init_failed = True
@@ -254,12 +253,16 @@ class AsyncTaskManager:
                     logger.critical(f"[AsyncTaskManager] Task queue backend failed to initialize in production: {exc}")
                     from core.messaging.event_bus import ErrorEvent
                     from core.messaging.event_bus import error_event_bus
-                    error_event_bus.emit(ErrorEvent(
-                        module="agent_orchestrator",
-                        error_type="TASK_QUEUE_INIT_FAILED",
-                        message=str(exc),
-                        severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
-                    ))
+
+                    error_event_bus.emit(
+                        ErrorEvent(
+                            module="agent_orchestrator",
+                            error_type="TASK_QUEUE_INIT_FAILED",
+                            message=str(exc),
+                            severity="CRITICAL",
+                            structured_context=ErrorContext(module="auto_fixed"),
+                        )
+                    )
                     raise RuntimeError(f"Task queue unavailable in production (ENV={os.getenv('ENV')}): {exc}") from exc
         return self._queue
 

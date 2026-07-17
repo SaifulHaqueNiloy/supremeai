@@ -5,11 +5,11 @@ export class SupremeAIActionProvider implements vscode.CodeActionProvider<vscode
     // In a real implementation, you might map filePath -> array of patched lines.
     // We will keep it simple and register globally, but the UI should only trigger on active patches.
     // Since we are applying a diff view, the original file hasn't changed.
-    
+
     public provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext, token: vscode.CancellationToken): any {
         // We only provide this action if there are diagnostics indicating an error
         const hasError = context.diagnostics.some(d => d.severity === vscode.DiagnosticSeverity.Error);
-        
+
         if (!hasError) {
             return [];
         }
@@ -21,7 +21,7 @@ export class SupremeAIActionProvider implements vscode.CodeActionProvider<vscode
             arguments: [document.uri, range.start.line]
         };
         action.isPreferred = true;
-        
+
         return [action];
     }
 }

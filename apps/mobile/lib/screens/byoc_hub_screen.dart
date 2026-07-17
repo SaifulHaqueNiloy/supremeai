@@ -14,12 +14,12 @@ class ByocHubScreen extends StatefulWidget {
 class _ByocHubScreenState extends State<ByocHubScreen> {
   final ByocService _byocService = ByocService();
   final DeploymentStream _deploymentStream = DeploymentStream();
-  
+
   Map<String, dynamic>? _tempCredentials;
   bool _isUploading = false;
   bool _isDeploying = false;
   String? _activeJobId;
-  
+
   // Stream tracking deployment
   Stream<Map<String, dynamic>>? _logsStream;
 
@@ -39,7 +39,7 @@ class _ByocHubScreenState extends State<ByocHubScreen> {
     });
 
     final res = await _byocService.uploadCredentials(_tempCredentials!);
-    
+
     setState(() {
       _isUploading = false;
       // Zero-Trust: Clear credentials immediately from RAM memory space
@@ -63,7 +63,7 @@ class _ByocHubScreenState extends State<ByocHubScreen> {
     });
 
     final res = await _byocService.deployContainer("supremeai-sandbox");
-    
+
     if (res['success'] == true) {
       final jobId = res['job_id'];
       setState(() {
@@ -120,7 +120,7 @@ class _ByocHubScreenState extends State<ByocHubScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // 🛡️ Step 1: Upload Credentials Block
             Card(
               elevation: 0,
@@ -200,7 +200,7 @@ class _ByocHubScreenState extends State<ByocHubScreen> {
                 ),
               ),
             ),
-            
+
             // 📊 Step 3: Isolated Real-time logs terminal (Preventing Jank)
             if (_activeJobId != null && _logsStream != null) ...[
               const SizedBox(height: 24),
@@ -209,7 +209,7 @@ class _ByocHubScreenState extends State<ByocHubScreen> {
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              
+
               // Isolated UI Rebuild Block using StreamBuilder
               // বাংলা মন্তব্য: UI রি-রেন্ডারিং জ্যাঙ্ক এড়াতে স্ট্রিম-বিল্ডার ব্যবহার করে টার্মিনাল লগ আইসোলেট করা হয়েছে।
               StreamBuilder<Map<String, dynamic>>(
@@ -221,11 +221,11 @@ class _ByocHubScreenState extends State<ByocHubScreen> {
                   if (!snapshot.hasData) {
                     return const LiveTerminal(logs: ["Waiting for logs stream..."]);
                   }
-                  
+
                   final job = snapshot.data!;
                   final List<dynamic> logsDyn = job['logs'] ?? [];
                   final logs = logsDyn.map((e) => e.toString()).toList();
-                  
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

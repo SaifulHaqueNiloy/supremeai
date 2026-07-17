@@ -242,5 +242,3 @@
 - **Fully Async Engine & Code Cleanup (Phase 3):** `chat.py` এন্ডপয়েন্টগুলোকে native async gemini calls-এ রূপান্তর এবং `SemanticCache`, Loguru interceptor, ও Prometheus metric registry ডুপ্লিকেশন ফিক্স করা হয়েছে।
 - **Terraform IaC & Github Route Fix (Phase 4):** জিসিপি, রেন্ডার ও রেলওয়ের জন্য টেরাফর্ম ফাইলসমূহ প্রভিশন করা হয়েছে এবং গিটহাব অ্যাকশনসে অটোমেট করা হয়েছে। ডামি গিটহাব রিপোজিটরি দূর করে Firestore tenant profile থেকে ডাইনামিকালি কানেকশন নেওয়ার সুবিধা যুক্ত করা হয়েছে।
 - **Discord Bot Integration (Phase 5):** `SupremeDiscordBot` কে সম্পূর্ণরূপে কনফিগার ও FastAPI Lifespan-এর সাথে ব্যাকগ্রাউন্ড টাস্ক হিসেবে অ্যাসিনক্রোনাসলি বাইন্ড করা হয়েছে। ২০০০+ ক্যারেক্টার লিমিট ডাইনামিকালি স্প্লিট করার ব্যবস্থা সম্পন্ন হয়েছে।
-
-

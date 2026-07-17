@@ -41,7 +41,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
       };
       loadConfig();
     }
-     
+
   }, [isConfigLoaded, setConfig]);
 
   if (!isConfigLoaded) {

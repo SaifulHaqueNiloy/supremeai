@@ -9,14 +9,14 @@ def run_migrations():
     # Fetch database connection string
     conn_string = os.getenv("SUPABASE_DATABASE_URL")
     pooler_string = os.getenv("SUPABASE_DATABASE_URL_POOLER")
-    
+
     if not conn_string and not pooler_string:
         print("[Error] No database URL found in environment variables.")
         return
 
     print("[Info] Connecting to Supabase PostgreSQL database...")
     conn = None
-    
+
     # Try direct connection URL first
     if conn_string:
         try:
@@ -36,7 +36,7 @@ def run_migrations():
     if not conn:
         print("[Error] Could not connect to any database connection string. Please check internet connection or database credentials.")
         return
-        
+
     conn.autocommit = True
 
     migrations_dir = os.path.join("backend", "database", "migrations")
@@ -66,7 +66,7 @@ def run_migrations():
     for file_name in migration_files:
         file_path = os.path.join(migrations_dir, file_name)
         print(f"[Run] Running migration: {file_name}...")
-        
+
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 sql_script = f.read()

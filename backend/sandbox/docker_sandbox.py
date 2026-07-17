@@ -1,7 +1,11 @@
 # backend/sandbox/docker_sandbox.py
+import logging
 import subprocess
 from pathlib import Path
 from typing import Any
+
+
+logger = logging.getLogger("supremeai.sandbox.docker")
 
 
 class DockerSandbox:
@@ -56,3 +60,45 @@ class DockerSandbox:
             }
         except Exception as e:
             return {"exit_code": -1, "stdout": "", "stderr": f"Docker execution engine failure: {str(e)}"}
+
+    def run_safe_container(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """
+        হোস্টের আইসোলেটেড ফাইলকে কন্টেইনারের ভেতর Read-Only মাউন্ট করে
+        নিরাপদে পাইথন স্ক্রিপ্ট এক্সিকিউট করে এবং আউটপুট রিটার্ন করে।
+        """
+        script = payload.get("script", "")
+        bind_source = payload.get("bind_mount_source", "")
+        bind_target = payload.get("bind_mount_target", "")
+
+        if not script:
+            return {"exit_code": 1, "stdout": "", "stderr": "No script provided for sandbox execution."}
+
+        # 🛡️ ডকার সিকিউরিটি এবং আইসোলেশন ফ্ল্যাগস এনফোর্সমেন্ট
+        docker_command = [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "-v",
+            f"{bind_source}:{bind_target}:ro",
+            self.image_name,
+            "python3",
+            "-c",
+            script,
+        ]
+
+        try:
+            logger.info(f"⚡ Spawning Docker Sandbox for source volume: {bind_source}")
+
+            result = subprocess.run(docker_command, capture_output=True, text=True, timeout=self.timeout_seconds, check=False)
+
+            return {"exit_code": result.returncode, "stdout": result.stdout.strip(), "stderr": result.stderr.strip()}
+
+        except subprocess.TimeoutExpired:
+            logger.error(f"❌ Sandbox execution timed out after {self.timeout_seconds}s limit.")
+            return {"exit_code": 124, "stdout": "", "stderr": f"Execution barrier breached: Timeout of {self.timeout_seconds}s exceeded."}
+        except Exception as e:
+            logger.error(f"Critical exception inside Docker execution wrapper: {str(e)}")
+            return {"exit_code": -1, "stdout": "", "stderr": f"Sandbox Runtime Anomaly: {str(e)}"}

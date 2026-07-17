@@ -15,7 +15,7 @@ def audit_directory(base_dir: str):
     for filepath in base_path.rglob("*.py"):
         if "venv" in str(filepath) or ".venv" in str(filepath):
             continue
-            
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()

@@ -133,6 +133,7 @@ class ErrorRemediation:
             qdrant_url: str = ""
             try:
                 from core.config import settings as app_settings
+
                 qdrant_url = getattr(app_settings, "qdrant_url", "")
             except ImportError:
                 pass

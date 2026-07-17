@@ -10,6 +10,7 @@ Key Features:
 - Bengali native enforcement rules
 - Intent classification (keyword-based)
 """
+
 from __future__ import annotations
 
 import re
@@ -56,6 +57,7 @@ _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
 # Pre-compiled regex cache for fast heuristic matching
 _compiled_patterns: list[re.Pattern] = []
 
+
 def _get_compiled_patterns() -> list[re.Pattern]:
     global _compiled_patterns  # noqa
     if not _compiled_patterns:
@@ -72,8 +74,10 @@ def _get_compiled_patterns() -> list[re.Pattern]:
             except Exception as e:  # noqa: BLE001
                 # বাংলা মন্তব্য: pattern compile ব্যর্থ হলে তা লগ করা হচ্ছে যাতে সিকিউরিটি রুল কার্যকর না হওয়ার কারণ বোঝা যায়।
                 from core.logger import logger
+
                 logger.error(f"[PromptFirewall] Failed to compile blocked pattern '{p}': {e}")
     return _compiled_patterns
+
 
 _BENGALI_ENFORCEMENT_HEADER: str = (
     "BENGALI NATIVE ENFORCEMENT RULES:\n"

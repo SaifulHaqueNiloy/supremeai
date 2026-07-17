@@ -19,7 +19,7 @@ run_task() {
 
     echo "Running task '$task_name' in $worktree_path"
     cd "$worktree_path"
-    
+
     if [ -f "pyproject.toml" ]; then
         poetry run $command
     elif [ -f "package.json" ]; then

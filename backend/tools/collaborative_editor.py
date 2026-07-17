@@ -207,7 +207,15 @@ class CollaborativeEditor:
             logger.error(f"Collaboration session error: {e}")
             from core.messaging.event_bus import error_event_bus, ErrorEvent
 
-            error_event_bus.emit(ErrorEvent(module="collaborative_editor", error_type="SESSION_ERROR", message=str(e)[:200], severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="collaborative_editor",
+                    error_type="SESSION_ERROR",
+                    message=str(e)[:200],
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
             raise RuntimeError("Collaboration session failed.") from e
 
 

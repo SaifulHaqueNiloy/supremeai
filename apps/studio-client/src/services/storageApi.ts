@@ -23,7 +23,7 @@ export const uploadFileToR2 = async (file: File) => {
                 folder: 'custom_skills'
             })
         });
-        
+
         if (!response.ok) {
             throw new Error('Failed to generate upload URL');
         }

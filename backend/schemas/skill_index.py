@@ -2,13 +2,12 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict
+
 from backend.schemas.skill_manifest import SkillManifest
 
-VERIFIED_MCP_SOURCES = [
-    "https://github.com/modelcontextprotocol/servers",
-    "https://github.com/paykaribazaronline/supreme-verified-skills"
-]
+
+VERIFIED_MCP_SOURCES = ["https://github.com/modelcontextprotocol/servers", "https://github.com/paykaribazaronline/supreme-verified-skills"]
+
 
 class SkillIndexManager:
     def __init__(self, index_path: str = "backend/skills/manifests/.index.json"):
@@ -17,9 +16,9 @@ class SkillIndexManager:
         if not self.path.exists():
             self._atomic_write({})
 
-    def load_index(self) -> Dict[str, dict]:
+    def load_index(self) -> dict[str, dict]:
         try:
-            with open(self.path, "r", encoding="utf-8") as f:
+            with open(self.path, encoding="utf-8") as f:
                 return json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return {}

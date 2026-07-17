@@ -15,7 +15,7 @@ def top_level_function():
 
 class SampleClass:
     """A sample class."""
-    
+
     def method_one(self):
         """Method one docstring."""
         pass

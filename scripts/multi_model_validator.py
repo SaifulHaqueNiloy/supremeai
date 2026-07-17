@@ -21,7 +21,7 @@ except ImportError:
 class MultiModelValidator:
     """
     মাল্টি-মডেল কোড ভ্যালিডেশন ইঞ্জিন
-    
+
     - সিকিউরিটি স্ক্যান (SQL Injection, XSS, Auth Bypass)
     - লজিক ভ্যালিডেশন
     - পারফরম্যান্স চেক
@@ -57,7 +57,7 @@ class MultiModelValidator:
         # প্রতিটি ভ্যালিডেটর দিয়ে চেক করুন
         for model, validator_type in self.validators:
             logger.info(f"🔍 Validating {file_path} with {model}...")
-            
+
             validation_result = await self._validate_with_model(
                 model,
                 code_content,
@@ -65,7 +65,7 @@ class MultiModelValidator:
                 validator_type
             )
             results["validations"].append(validation_result)
-            
+
             # রিস্ক লেভেল আপডেট করুন
             if validation_result["risk_level"] in ["CRITICAL", "HIGH"]:
                 results["passed"] = False
@@ -81,7 +81,7 @@ class MultiModelValidator:
         validator_type: str
     ) -> dict[str, Any]:
         """একটি নির্দিষ্ট মডেল দিয়ে কোড ভ্যালিডেট করুন"""
-        
+
         system_prompts = {
             "security_validator": f"""আপনি একজন নিরাপত্তা বিশেষজ্ঞ। নিচের {file_ext} কোডে নিরাপত্তা সমস্যা খুঁজুন:
 - SQL Injection ভালনারেবিলিটি
@@ -97,7 +97,7 @@ class MultiModelValidator:
   ],
   "risk_level": "CRITICAL|HIGH|MEDIUM|LOW"
 }}""",
-            
+
             "logic_validator": f"""আপনি একজন সিনিয়র কোড রিভিউয়ার। নিচের {file_ext} কোডে লজিক্যাল এরর খুঁজুন:
 - ইনফিনিট লুপ
 - রেস কন্ডিশন
@@ -131,7 +131,7 @@ class MultiModelValidator:
 
         try:
             prompt = f"{system_prompts.get(validator_type, 'Review this code')}\n\nকোড:\n```{file_ext[1:]}\n{code_content}\n```"
-            
+
             # LiteLLM দিয়ে API কল করুন
             response = await litellm.acompletion(
                 model=model,
@@ -140,9 +140,9 @@ class MultiModelValidator:
                 max_tokens=1000,
                 timeout=30
             )
-            
+
             response_text = response.choices[0].message.content
-            
+
             # JSON parse করার চেষ্টা করুন
             try:
                 parsed = json.loads(response_text)
@@ -152,14 +152,14 @@ class MultiModelValidator:
                     "raw_response": response_text,
                     "risk_level": "LOW"
                 }
-            
+
             return {
                 "model": model,
                 "validator_type": validator_type,
                 **parsed,
                 "status": "success"
             }
-            
+
         except Exception as e:
             logger.error(f"Validation failed with {model}: {e}")
             return {
@@ -173,7 +173,7 @@ class MultiModelValidator:
     async def validate_file_changes(self, diff_content: str) -> dict[str, Any]:
         """গিট ডিফ থেকে শুধু পরিবর্তিত অংশ ভ্যালিডেট করুন"""
         logger.info("🔍 Validating file changes from diff...")
-        
+
         # Groq দিয়ে দ্রুত প্রাথমিক স্ক্যান করুন
         try:
             response = await litellm.acompletion(
@@ -193,10 +193,10 @@ class MultiModelValidator:
                 temperature=0.2,
                 max_tokens=500
             )
-            
+
             parsed = json.loads(response.choices[0].message.content)
             return parsed
-            
+
         except Exception as e:
             logger.error(f"Diff validation failed: {e}")
             return {"has_issues": False, "status": "error"}
@@ -205,10 +205,10 @@ class MultiModelValidator:
         """ভ্যালিডেশন রিপোর্ট এক্সপোর্ট করুন"""
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
-        
+
         logger.info(f"✅ Validation report saved to {output_file}")
 
 
@@ -224,33 +224,33 @@ async def validate_critical_files(repo_root: str = ".") -> dict[str, Any]:
         "**/admin*.py",
         "**/permissions*.py"
     ]
-    
+
     critical_files = []
     for pattern in critical_patterns:
         critical_files.extend(Path(repo_root).glob(pattern))
-    
+
     results = {
         "validated_files": [],
         "total_files": len(critical_files),
         "critical_issues": 0,
         "all_passed": True
     }
-    
+
     for file_path in critical_files[:5]:  # লিমিট করুন খরচ বাঁচানোর জন্য
         file_result = await validator.validate_code(str(file_path))
         results["validated_files"].append(file_result)
-        
+
         if not file_result.get("passed", True):
             results["critical_issues"] += 1
             results["all_passed"] = False
-    
+
     return results
 
 
 if __name__ == "__main__":
     import asyncio
     import sys
-    
+
     if len(sys.argv) > 1:
         file_to_validate = sys.argv[1]
         validator = MultiModelValidator()

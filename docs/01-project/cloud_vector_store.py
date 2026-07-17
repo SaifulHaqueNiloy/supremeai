@@ -2,9 +2,11 @@
 Cloud-native vector store using Pinecone or Qdrant.
 Replaces local ChromaDB for production.
 """
+
 import os
 from typing import Dict, Any, List
 from loguru import logger
+
 
 class CloudVectorStore:
     """
@@ -20,6 +22,7 @@ class CloudVectorStore:
     def _init_client(self):
         if self.provider == "pinecone":
             from pinecone import Pinecone
+
             api_key = os.getenv("PINECONE_API_KEY")
             if api_key:
                 self.client = Pinecone(api_key=api_key)
@@ -28,6 +31,7 @@ class CloudVectorStore:
                 logger.info(f"Pinecone index '{index_name}' connected")
         elif self.provider == "qdrant":
             from qdrant_client import QdrantClient
+
             url = os.getenv("QDRANT_URL")
             api_key = os.getenv("QDRANT_API_KEY")
             if url:
@@ -48,7 +52,9 @@ class CloudVectorStore:
             logger.error(f"Vector upsert failed: {e}")
             return False
 
-    def query(self, vector: List[float], top_k: int = 5, namespace: str = "default") -> List[Dict]:
+    def query(
+        self, vector: List[float], top_k: int = 5, namespace: str = "default"
+    ) -> List[Dict]:
         """Query similar vectors."""
         if not self.index:
             return []
@@ -59,7 +65,7 @@ class CloudVectorStore:
                     vector=vector,
                     top_k=top_k,
                     namespace=namespace,
-                    include_metadata=True
+                    include_metadata=True,
                 )
                 return result.matches
         except Exception as e:
@@ -68,10 +74,13 @@ class CloudVectorStore:
 
         return []
 
+
 # Keep ChromaDB fallback for local dev
 class ChromaDBStore:
     """Local ChromaDB for development only."""
+
     def __init__(self, persist_dir: str = "data/frontier/chroma"):
         import chromadb
+
         self.client = chromadb.PersistentClient(path=persist_dir)
         # ... existing ChromaDB implementation ...

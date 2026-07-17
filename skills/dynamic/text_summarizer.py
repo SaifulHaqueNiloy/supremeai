@@ -10,5 +10,5 @@ def run(text: str, max_sentences: int = 3):
     return {
         "original_length": len(text),
         "summary": summary,
-        "sentences_count": len(sentences)
+        "sentences_count": len(sentences),
     }

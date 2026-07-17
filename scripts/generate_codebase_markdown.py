@@ -6,7 +6,7 @@ import json
 def load_env_manually():
     # Load from system environment first (e.g. GitHub Actions secrets)
     env_vars = dict(os.environ)
-    
+
     # Try loading from local .env
     env_path = Path(".env")
     if env_path.exists():
@@ -25,27 +25,27 @@ def generate_markdown():
     root = Path(".")
     output_file = Path("docs/codebase_dump.md")
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    
+
     exclude_dirs = {
-        ".git", "node_modules", ".venv", "dist", "build", 
-        "__pycache__", ".next", ".turbo", ".idea", ".vscode", 
+        ".git", "node_modules", ".venv", "dist", "build",
+        "__pycache__", ".next", ".turbo", ".idea", ".vscode",
         "artifacts", "brain", ".agents"
     }
-    
+
     allowed_extensions = {
         ".py", ".ts", ".tsx", ".css", ".html", ".js", ".jsx", ".json", ".sh", ".ps1", ".yml", ".yaml"
     }
-    
+
     exclude_files = {
         "pnpm-lock.yaml", "package-lock.json", "poetry.lock", "codebase_dump.md"
     }
-    
+
     markdown_lines = [
         "# 🧠 SupremeAI 2.0 Codebase Analysis\n",
         "# বাংলা মন্তব্য: এটি একটি স্বয়ংক্রিয়ভাবে জেনারেট করা কোডবেস ডাম্প ফাইল যা প্রজেক্টের সামগ্রিক বিশ্লেষণের জন্য ব্যবহৃত হয়।\n\n"
     ]
     markdown_lines.append(f"Generated at: {datetime.utcnow().isoformat()} UTC\n\n")
-    
+
     for path in sorted(root.rglob("*")):
         if path.is_file():
             parts = path.parts
@@ -55,12 +55,12 @@ def generate_markdown():
                 continue
             if path.suffix not in allowed_extensions:
                 continue
-                
+
             try:
                 content = path.read_text(encoding="utf-8")
                 rel_path = path.as_posix()
                 markdown_lines.append(f"## File: `{rel_path}`\n")
-                
+
                 lang = path.suffix.lstrip(".")
                 if lang in ("tsx", "ts", "jsx", "js"):
                     lang = "typescript" if lang.startswith("t") else "javascript"
@@ -72,11 +72,11 @@ def generate_markdown():
                     lang = "bash"
                 elif lang == "ps1":
                     lang = "powershell"
-                
+
                 markdown_lines.append(f"```{lang}\n{content}\n```\n\n")
             except Exception:
                 continue
-                
+
     output_content = "".join(markdown_lines)
     output_file.write_text(output_content, encoding="utf-8")
     print(f"Generated codebase markdown locally at {output_file}")
@@ -85,18 +85,18 @@ def generate_markdown():
 def send_to_telegram(file_path: Path, env: dict):
     token = env.get("TELEGRAM_BOT_TOKEN")
     chat_id = env.get("ADMIN_TELEGRAM_CHAT_ID")
-    
+
     if not token or not chat_id:
         print("Telegram configuration missing. Skipping Telegram send.")
         return
-        
+
     print("Sending codebase dump to Telegram...")
     url = f"https://api.telegram.org/bot{token}/sendDocument"
-    
+
     # Using urllib/http.client to avoid external requests/dependencies (like requests) in lightweight runners
     import urllib.request
     import urllib.parse
-    
+
     try:
         boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
         data = []
@@ -104,7 +104,7 @@ def send_to_telegram(file_path: Path, env: dict):
         data.append('Content-Disposition: form-data; name="chat_id"'.encode('utf-8'))
         data.append(''.encode('utf-8'))
         data.append(str(chat_id).encode('utf-8'))
-        
+
         data.append(f"--{boundary}".encode('utf-8'))
         filename = f"codebase_dump_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         data.append(f'Content-Disposition: form-data; name="document"; filename="{filename}"'.encode('utf-8'))
@@ -112,11 +112,11 @@ def send_to_telegram(file_path: Path, env: dict):
         data.append(''.encode('utf-8'))
         data.append(file_path.read_bytes())
         data.append(f"--{boundary}--".encode('utf-8'))
-        
+
         body = b"\r\n".join(data)
         req = urllib.request.Request(url, data=body)
         req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
-        
+
         with urllib.request.urlopen(req) as res:
             res.read().decode('utf-8')
             print("Telegram document sent successfully!")
@@ -128,19 +128,19 @@ def sync_to_supabase(file_path: Path, env: dict):
     # Prefer Service Role key for administrative operations like write/delete
     supabase_key = env.get("SUPABASE_SERVICE_ROLE_KEY") or env.get("SUPABASE_KEY")
     bucket_name = "codebase-dumps"
-    
+
     if not supabase_url or not supabase_key:
         print("Supabase configuration missing. Skipping Supabase sync.")
         return
-        
+
     print("Uploading codebase dump to Supabase Storage...")
     import urllib.request
     import urllib.parse
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"codebase_dump_{timestamp}.md"
     upload_url = f"{supabase_url}/storage/v1/object/{bucket_name}/{filename}"
-    
+
     try:
         # Create bucket if it doesn't exist (fails silently if exists)
         create_bucket_url = f"{supabase_url}/storage/v1/bucket"
@@ -160,7 +160,7 @@ def sync_to_supabase(file_path: Path, env: dict):
                 br.read()
         except Exception:
             pass # Bucket already exists or creation failed due to lack of rights
-            
+
         # Upload File
         upload_req = urllib.request.Request(
             upload_url,
@@ -176,7 +176,7 @@ def sync_to_supabase(file_path: Path, env: dict):
         with urllib.request.urlopen(upload_req) as ur:
             ur.read()
             print(f"Successfully uploaded {filename} to Supabase Storage!")
-            
+
         # Enforce last 5 retention policy
         list_url = f"{supabase_url}/storage/v1/object/list/{bucket_name}"
         list_req = urllib.request.Request(
@@ -192,14 +192,14 @@ def sync_to_supabase(file_path: Path, env: dict):
         )
         with urllib.request.urlopen(list_req) as lr:
             files = json.loads(lr.read().decode('utf-8'))
-            
+
         # Filter files starting with codebase_dump_
         dump_files = [f for f in files if f.get("name", "").startswith("codebase_dump_")]
-        
+
         if len(dump_files) > 5:
             files_to_delete = dump_files[:-5]
             print(f"Found {len(dump_files)} files. Deleting oldest {len(files_to_delete)} files...")
-            
+
             delete_url = f"{supabase_url}/storage/v1/object/{bucket_name}"
             delete_req = urllib.request.Request(
                 delete_url,
@@ -213,7 +213,7 @@ def sync_to_supabase(file_path: Path, env: dict):
             with urllib.request.urlopen(delete_req) as dr:
                 dr.read()
                 print("Old codebase dumps deleted successfully!")
-                
+
     except Exception as e:
         print(f"Failed to sync with Supabase: {e}")
 

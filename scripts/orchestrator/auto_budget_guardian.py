@@ -24,7 +24,7 @@ Usage:
 auto_budget_guardian.py
 SupremeAI 2.0 Budget Guardian — Serverless-Ready Version.
 
-ব্যবহার: 
+ব্যবহার:
   1. Cloud Scheduler / Cron Job হিসেবে: প্রতি ৫ মিনিটে `run_budget_guardian_check()` কল করুন
   2. Persistent process হিসেবে: `main()` দিয়ে infinite loop চালান (শুধুমাত্র VM/Bare-metal এ)
 
@@ -59,7 +59,7 @@ def send_discord_notification(message: str) -> None:
     if not DISCORD_WEBHOOK_URL:
         logger.debug("Discord webhook not configured, skipping notification")
         return
-    
+
     try:
         import requests
         payload = {
@@ -75,29 +75,29 @@ def check_and_protect_budgets() -> None:
     """Check all providers and pause those exceeding threshold."""
     tracker = get_tracker()
     status = tracker.get_status()
-    
+
     providers_to_pause: list[str] = []
     providers_to_resume: list[str] = []
-    
+
     for provider_name, provider_status in status["providers"].items():
         # Skip if already paused (we don't want to double-pause)
         if provider_status.get("paused_until"):
             continue
-            
+
         # Check each metric against threshold
         rpm_usage = provider_status["rpm_used"] / provider_status["rpm_limit"] if provider_status["rpm_limit"] > 0 else 0
         tpm_usage = provider_status["tpm_used"] / provider_status["tpm_limit"] if provider_status["tpm_limit"] > 0 else 0
         rpd_usage = provider_status["rpd_used"] / provider_status["rpd_limit"] if provider_status["rpd_limit"] > 0 else 0
-        
+
         max_usage = max(rpm_usage, tpm_usage, rpd_usage)
-        
+
         if max_usage >= THRESHOLD_PERCENT:
             providers_to_pause.append(provider_name)
             logger.warning(
                 f"Provider {provider_name} exceeded {THRESHOLD_PERCENT*100}% usage: "
                 f"RPM={rpm_usage:.2%}, TPM={tpm_usage:.2%}, RPD={rpd_usage:.2%}"
             )
-    
+
     # Pause providers that are over threshold
     for provider in providers_to_pause:
         tracker._budgets[provider].pause(PAUSE_DURATION_SECONDS)
@@ -114,7 +114,7 @@ def check_and_protect_budgets() -> None:
         )
         send_discord_notification(msg)
         logger.info(f"Paused {provider} for {PAUSE_DURATION_SECONDS} seconds")
-    
+
     # Check for paused providers that might be ready to resume
     # (The tracker automatically resumes after pause duration, but we can log when they become available)
     for provider_name, provider_status in status["providers"].items():
@@ -124,7 +124,7 @@ def check_and_protect_budgets() -> None:
                 # It should have been auto-resumed by the tracker, but let's verify
                 if tracker.is_available(provider_name):
                     providers_to_resume.append(provider_name)
-    
+
     # Notify about resumed providers
     for provider in providers_to_resume:
         # We need to get the current status for this provider to report usage
@@ -145,16 +145,16 @@ def run_budget_guardian_check() -> None:
     """Execute a single budget guard check - designed to be called by external schedulers."""
     from core.config_cache import config_cache
     import asyncio
-    
+
     now = int(time.time())
-    
+
     # Idempotency check: skip if ran within the last 60 seconds
     try:
         last_run = config_cache.get("budget_guardian_last_run", 0)
         if last_run and now - int(last_run) < 60:
             logger.info("Budget guardian already ran in the last minute. Skipping duplicate execution.")
             return
-            
+
         asyncio.run(config_cache.set("budget_guardian_last_run", now))
     except Exception as cache_err:
         logger.warning(f"Failed to check/set idempotency via ConfigCache: {cache_err}")

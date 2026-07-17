@@ -94,7 +94,8 @@ class VisionAgent:
                     module="backend.tools.vision_agent",
                     error_type=type(e).__name__,
                     message=str(e),
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"action": "extract_pdf_text_fitz"},
                 )
             )
@@ -115,7 +116,8 @@ class VisionAgent:
                     module="backend.tools.vision_agent",
                     error_type=type(e).__name__,
                     message=str(e),
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"action": "extract_pdf_text_pdfplumber"},
                 )
             )

@@ -14,9 +14,9 @@ export const EditorTabs: React.FC = () => {
       {openFiles.map(path => {
         const file = files[path];
         if (!file) return null;
-        
+
         const isActive = activeFile === path;
-        
+
         return (
           <div
             key={path}
@@ -28,7 +28,7 @@ export const EditorTabs: React.FC = () => {
           >
             <span className="truncate flex-1 text-sm">{file.name}</span>
             {file.isModified && <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 ml-1"></span>}
-            
+
             <button
               onClick={(e) => {
                 e.stopPropagation();

@@ -41,8 +41,8 @@ export function CostAuditor({ costReport }: CostAuditorProps) {
             <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Budget Cap</span>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-2xl font-bold text-slate-300 font-mono">${limit.toFixed(2)}</span>
-              <button 
-                onClick={() => setLimit(prev => prev + 50)} 
+              <button
+                onClick={() => setLimit(prev => prev + 50)}
                 className="text-[9px] font-bold bg-[#00f3ff]/10 hover:bg-[#00f3ff]/20 text-[#00f3ff] border border-[#00f3ff]/20 px-2 py-0.5 rounded transition-all font-mono"
               >
                 INCREASE
@@ -57,7 +57,7 @@ export function CostAuditor({ costReport }: CostAuditorProps) {
 
         {/* Progress Bar */}
         <div className="w-full bg-slate-950 border border-slate-900 h-2.5 rounded-full overflow-hidden">
-          <div 
+          <div
             className="bg-gradient-to-r from-[#00f3ff] to-[#00ff66] h-full transition-all duration-500 shadow-[0_0_10px_rgba(0,243,255,0.3)]"
             style={{ width: `${percentage}%` }}
           />
@@ -76,7 +76,7 @@ export function CostAuditor({ costReport }: CostAuditorProps) {
                 <span className="text-[10px] font-bold text-slate-400 font-mono">${prov.spent.toFixed(2)} / ${prov.quota.toFixed(0)}</span>
               </div>
               <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`bg-gradient-to-r ${prov.color} h-full`}
                   style={{ width: `${provPercent}%` }}
                 />

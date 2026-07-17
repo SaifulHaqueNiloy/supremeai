@@ -11,7 +11,7 @@ export const EvolutionForgeWidget: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!skillName || !userDemand) return;
-    
+
     // Pre-flight cost check (estimated cost: 0.05 for generating a skill)
     const hasBudget = await checkBudget(0.05);
     if (!hasBudget) return;
@@ -33,7 +33,7 @@ export const EvolutionForgeWidget: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-[10px] uppercase font-mono tracking-widest text-slate-400">Skill Class Name</label>
-          <input 
+          <input
             type="text"
             value={skillName}
             onChange={(e) => setSkillName(e.target.value)}
@@ -46,7 +46,7 @@ export const EvolutionForgeWidget: React.FC = () => {
 
         <div>
           <label className="block text-[10px] uppercase font-mono tracking-widest text-slate-400">Behavioral / Prompt Demand</label>
-          <textarea 
+          <textarea
             value={userDemand}
             onChange={(e) => setUserDemand(e.target.value)}
             placeholder="Describe the exact functionality, API integrations, and SEO prompt strategy required for this skill..."
@@ -57,12 +57,12 @@ export const EvolutionForgeWidget: React.FC = () => {
           />
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isForging}
           className={`w-full font-mono font-bold text-xs py-2.5 px-4 rounded-lg shadow-md transition-all ${
-            isForging 
-              ? "bg-slate-800 text-slate-500 cursor-not-allowed animate-pulse" 
+            isForging
+              ? "bg-slate-800 text-slate-500 cursor-not-allowed animate-pulse"
               : "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-100"
           }`}
         >

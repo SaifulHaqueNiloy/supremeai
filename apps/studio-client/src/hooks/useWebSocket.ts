@@ -44,11 +44,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
-  
+
   // বাংলা মন্তব্য: P2 Fix — reconnectAttempts এবং reconnectInterval কে ref এ রাখা হয়েছে যাতে useCallback dependency list পরিবর্তন না হয়
   const reconnectAttemptsRef = useRef(reconnectAttempts);
   const reconnectIntervalRef = useRef(reconnectInterval);
-  
+
   // Sync refs when options change
   useEffect(() => {
     reconnectAttemptsRef.current = reconnectAttempts;
@@ -66,7 +66,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const onOpenRef = useRef(onOpen);
   const onCloseRef = useRef(onClose);
   const onErrorRef = useRef(onError);
-  
+
   // Keep refs updated when callbacks change
   useEffect(() => {
     onMessageRef.current = onMessage;
@@ -75,7 +75,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     onErrorRef.current = onError;
   }, [onMessage, onOpen, onClose, onError]);
 
-  // বাংলা মন্তব্য: connectRef এ connect function এর রেফারেন্স রাখা হয়, 
+  // বাংলা মন্তব্য: connectRef এ connect function এর রেফারেন্স রাখা হয়,
   // যাতে reconnect টাইমআউটে রেফারেন্স থাকে
   const connectRef = useRef<() => void>();
 
@@ -178,7 +178,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     }
   }, []);
 
-  // বাংলা মন্তব্য: autoConnect এর জন্য useEffect ব্যবহার করা হয়, 
+  // বাংলা মন্তব্য: autoConnect এর জন্য useEffect ব্যবহার করা হয়,
   // connect() কে useEffect এর ভিতরে কল করা হয়, যা set-state-in-effect এর সমস্যা তৈরি করে
   // এটি একটি স্বচ্ছতা নীতি ভঙ্গি, তবে এটি একটি ব্যবস্থামান্য প্যাটার্ন
   useEffect(() => {

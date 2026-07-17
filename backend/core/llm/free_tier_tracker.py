@@ -195,7 +195,8 @@ class ProviderBudget:
                 module="free_tier_tracker",
                 error_type="PROVIDER_PAUSED",
                 message=f"Provider {self.provider} paused for {seconds:.0f}s",
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"provider": self.provider, "pause_duration": seconds},
             )
         )
@@ -291,7 +292,15 @@ class FreeTierTracker:
                     from core.messaging.event_bus import ErrorEvent
                     from core.messaging.event_bus import error_event_bus
 
-                    error_event_bus.emit(ErrorEvent(module="free_tier_tracker", error_type="DB_FETCH_ERROR", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+                    error_event_bus.emit(
+                        ErrorEvent(
+                            module="free_tier_tracker",
+                            error_type="DB_FETCH_ERROR",
+                            message=str(e),
+                            severity="WARNING",
+                            structured_context=ErrorContext(module="auto_fixed"),
+                        )
+                    )
                 except ImportError:
                     pass
             return None, None

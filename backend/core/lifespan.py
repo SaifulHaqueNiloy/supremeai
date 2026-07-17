@@ -106,7 +106,6 @@ async def _ensure_api_key_tables() -> None:
     logger.info("✅ API key tables ensured")
 
 
-
 @asynccontextmanager
 async def app_lifespan(app):
     """
@@ -130,7 +129,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="TRACING_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"component": "opentelemetry"},
             )
         )
@@ -167,7 +167,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="DB_POOL_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
+                severity="CRITICAL",
+                structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
                 context={"db_url": db_url[:50] if db_url else "", "env": settings.env},
             )
         )
@@ -188,7 +189,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="CONFIG_CACHE_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"fallback": "DEFAULT_CONFIGS"},
             )
         )
@@ -212,7 +214,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="REDIS_INIT_FAILED",
                 message=str(e)[:200],
-                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
+                severity="CRITICAL",
+                structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
                 context={"env": settings.env},
             )
         )
@@ -251,7 +254,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="ORCHESTRATOR_INIT_FAILED",
                 message=str(e)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"component": "orchestrator"},
             )
         )
@@ -265,12 +269,9 @@ async def app_lifespan(app):
         if os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL_POOLER"):
             # বাংলা: sync call in async context — thread-এ চালানো হচ্ছে blocking এড়াতে।
             # wait_for 30s timeout দেওয়া হলো: psycopg2.connect হ্যাং করলে lifespan ব্লক না হয়।
-            await asyncio.wait_for(
-                asyncio.to_thread(supabase_db.bootstrap_schema),
-                timeout=30.0
-            )
+            await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
             logger.info("Supabase schema bootstrap complete")
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
@@ -279,7 +280,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SUPABASE_BOOTSTRAP_FAILED",
                 message=str(exc)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"component": "supabase"},
             )
         )
@@ -310,7 +312,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_ORCHESTRATOR_FAILED",
                 message=str(e)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -362,7 +365,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_DB_POOL_FAILED",
                 message=str(e)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -378,7 +382,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_REDIS_FAILED",
                 message=str(e)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -395,7 +400,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_HTTP_CLIENT_FAILED",
                 message=str(e)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )
@@ -412,7 +418,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="SHUTDOWN_BROWSER_FAILED",
                 message=str(e)[:200],
-                severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"phase": "shutdown"},
             )
         )

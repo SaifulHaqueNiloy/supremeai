@@ -19,20 +19,20 @@ sequenceDiagram
 
     User->>GitHub: git push origin main
     GitHub->>GitHubActions: Trigger Workflow on push
-    
+
     GitHubActions->>CanaryScript: Run script
     CanaryScript->>GCR: Build and Push new Docker image (v2)
     GCR-->>CanaryScript: Image pushed successfully
-    
+
     CanaryScript->>CloudRun: Deploy new revision (v2) without routing traffic
     CloudRun-->>CanaryScript: Revision ready
-    
+
     CanaryScript->>CloudRun: Split traffic: 95% to stable (v1), 5% to canary (v2)
-    
+
     loop For 10 minutes
         CanaryScript->>CloudRun: Monitor metrics (errors, latency)
     end
-    
+
     alt Metrics are healthy
         CanaryScript->>CloudRun: Gradually increase traffic to 100% for v2
         CanaryScript->>CloudRun: Mark v2 as the new 'stable' revision

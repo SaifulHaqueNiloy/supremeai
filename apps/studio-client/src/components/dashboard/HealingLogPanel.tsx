@@ -109,7 +109,7 @@ export function HealingLogPanel() {
 
               {/* Body */}
               <div className="p-5 flex flex-col lg:flex-row gap-6">
-                
+
                 {/* Data Column */}
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex items-center gap-4 mb-6">

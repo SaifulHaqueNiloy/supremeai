@@ -10,7 +10,7 @@ export class AudioPlaybackService {
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = 256;
-    
+
     // Load voices
     this.loadVoices();
     if (this.synth.onvoiceschanged !== undefined) {
@@ -37,15 +37,15 @@ export class AudioPlaybackService {
     if (this.voice) {
       utterance.voice = this.voice;
     }
-    
+
     // Cyber-Filter adjustments (Pitch & Rate) to simulate JARVIS/SupremeAI
     utterance.pitch = 0.8; // Slightly lower pitch
     utterance.rate = 1.1;  // Slightly faster
 
-    // Note: True routing of SpeechSynthesis through Web Audio BiquadFilterNode 
-    // is limited by browser security/APIs. We simulate the visualizer via a dummy oscillator 
+    // Note: True routing of SpeechSynthesis through Web Audio BiquadFilterNode
+    // is limited by browser security/APIs. We simulate the visualizer via a dummy oscillator
     // while the speech is active to drive the WaveformVisualizer UI.
-    
+
     let osc: OscillatorNode | null = null;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -58,7 +58,7 @@ export class AudioPlaybackService {
       osc = this.audioContext.createOscillator();
       const gain = this.audioContext.createGain();
       gain.gain.value = 0; // Silent oscillator, only used for data
-      
+
       // Modulate oscillator frequency to make the waveform look like speech
       intervalId = setInterval(() => {
         if (osc) osc.frequency.value = 100 + Math.random() * 400;

@@ -46,7 +46,7 @@ const AethelNode = ({ data, isConnectable }: AethelNodeProps) => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.05 }}
@@ -55,11 +55,11 @@ const AethelNode = ({ data, isConnectable }: AethelNodeProps) => {
       className={`aethel-node ${getGlowClass(data.type)} group relative min-w-[130px]`}
     >
       <Handle type="target" position={Position.Left} isConnectable={isConnectable} className="!bg-[var(--accent-primary)] !w-2 !h-2 !border-none" />
-      
+
       {/* Holographic Tooltip */}
       <AnimatePresence>
         {isHovered && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
@@ -72,7 +72,7 @@ const AethelNode = ({ data, isConnectable }: AethelNodeProps) => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <div className="flex flex-col gap-1 w-full">
         {/* Node Category & Status Light */}
         <div className="flex justify-between items-center w-full pb-1 border-b border-[var(--border-accent)] mb-1 transition-colors duration-500">
@@ -81,13 +81,13 @@ const AethelNode = ({ data, isConnectable }: AethelNodeProps) => {
           </span>
           <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(data.status)}`} />
         </div>
-        
+
         {/* Main Content */}
         <div className="text-[10px] font-bold text-[var(--node-text)] w-full truncate">
           {data.label}
         </div>
       </div>
-      
+
       <Handle type="source" position={Position.Right} isConnectable={isConnectable} className="!bg-[var(--accent-primary)] !w-2 !h-2 !border-none" />
     </motion.div>
   );

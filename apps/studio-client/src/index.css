@@ -216,7 +216,7 @@ body {
 
 /* Deep Space — নিয়ন গ্র্যাডিয়েন্ট ব্যাকগ্রাউন্ড */
 body.dark {
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(0, 243, 255, 0.06) 0%, transparent 40%),
     radial-gradient(circle at 90% 80%, rgba(188, 19, 254, 0.05) 0%, transparent 40%);
 }

@@ -24,7 +24,7 @@ class ExtensionScreen extends StatelessWidget {
             const SizedBox(height: 32),
             _buildRequirementForm(context),
             const SizedBox(height: 40),
-            Text('extension.past_extensions'.tr().toUpperCase(), 
+            Text('extension.past_extensions'.tr().toUpperCase(),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
             ),
             const SizedBox(height: 16),
@@ -53,11 +53,11 @@ class ExtensionScreen extends StatelessWidget {
         children: [
           const Icon(Icons.extension_rounded, color: Colors.purpleAccent, size: 48),
           const SizedBox(height: 16),
-          Text('extension.subtitle'.tr(), 
+          Text('extension.subtitle'.tr(),
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text('extension.description'.tr(), 
+          Text('extension.description'.tr(),
             style: const TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
             textAlign: TextAlign.center,
           ),
@@ -77,7 +77,7 @@ class ExtensionScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('extension.requirement_label'.tr(), 
+          Text('extension.requirement_label'.tr(),
             style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)
           ),
           const SizedBox(height: 12),

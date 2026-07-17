@@ -11,12 +11,14 @@ import sys
 import importlib.machinery
 from unittest.mock import MagicMock, patch
 
+
 def create_mock_module(name, is_package=False):
     m = MagicMock()
     m.__spec__ = importlib.machinery.ModuleSpec(name=name, loader=MagicMock(), is_package=is_package)
     if is_package:
         m.__path__ = []
     return m
+
 
 # বাংলা মন্তব্য: টেস্টে Supabase নেটওয়ার্ক রিকোয়েস্ট আটকাতে module import এর আগেই
 # SUPABASE_URL ও SUPABASE_KEY খালি করা হচ্ছে। SupabaseDB.__init__() এ শর্ত আছে:
@@ -27,8 +29,10 @@ os.environ["SUPABASE_KEY"] = ""
 sys.modules["slowapi"] = create_mock_module("slowapi", is_package=True)
 sys.modules["slowapi.util"] = create_mock_module("slowapi.util")
 
+
 class RateLimitExceeded(Exception):
     pass
+
 
 slowapi_errors_mock = create_mock_module("slowapi.errors")
 slowapi_errors_mock.RateLimitExceeded = RateLimitExceeded
@@ -78,13 +82,13 @@ os.environ["SUPABASE_DATABASE_URL_POOLER"] = "sqlite+aiosqlite:///:memory:"
 # যার ফলে create_client() রিয়াল Supabase URL-এ নেটওয়ার্ক রিকোয়েস্ট পাঠাবে।
 try:
     from core.config import settings, secret_vault
+
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
 except Exception as e:
     import warnings
+
     warnings.warn(f"Failed to clear settings caches during test setup: {e}", UserWarning)
-
-
 
 
 # Mock Google Auth credentials and services globally during tests
@@ -161,6 +165,7 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv(key, value)
         try:
             import brain.model_router
+
             if hasattr(brain.model_router.ModelRouter, "_breakers"):
                 brain.model_router.ModelRouter._breakers.clear()
         except ImportError:
@@ -289,6 +294,7 @@ async def setup_test_database():
     import models.system_config
     import models.target_platform_credential
     import models.voice_interaction
+
     # বাংলা: wallet.py তে UserWallet ও TransactionLedgerEntry (SQLAlchemy) আছে — সরাসরি ইম্পোর্ট করো
     import models.wallet  # UserWallet + TransactionLedgerEntry (SQLAlchemy) আছে এখানে
 
@@ -305,6 +311,7 @@ async def async_session():
     from unittest.mock import AsyncMock
 
     yield AsyncMock()
+
 
 @pytest.fixture(autouse=True)
 def clear_settings_cache():
@@ -336,8 +343,10 @@ def mock_supabase():
     os.environ["SUPABASE_URL"] = ""
     os.environ["SUPABASE_KEY"] = ""
 
-    with patch("database.supabase_client.create_client") as mock_create, \
-         patch("database.supabase_client.SupabaseDB.__init__", return_value=None) as mock_init:
+    with (
+        patch("database.supabase_client.create_client") as mock_create,
+        patch("database.supabase_client.SupabaseDB.__init__", return_value=None) as mock_init,
+    ):
         mock_db = MagicMock()
         mock_db.client = MagicMock()
         mock_create.return_value = mock_db.client
@@ -349,9 +358,11 @@ def mock_supabase():
     if old_key:
         os.environ["SUPABASE_KEY"] = old_key
 
+
 @pytest.fixture(autouse=True)
 def mock_network():
     # সব ধরণের আউটগোয়িং নেটওয়ার্ক কল ব্লক করুন
     import respx
+
     with respx.mock(base_url="https://mock.supabase.co", assert_all_mocked=False) as respx_mock:
         yield respx_mock

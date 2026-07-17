@@ -63,7 +63,13 @@ class AutoSkillCreator:
                     from core.messaging.event_bus import error_event_bus
 
                     error_event_bus.emit(
-                        ErrorEvent(module="auto_skill_creator", error_type="FIRESTORE_INIT_FAILED", message=str(e), severity="WARNING", structured_context=ErrorContext(module="auto_fixed"))
+                        ErrorEvent(
+                            module="auto_skill_creator",
+                            error_type="FIRESTORE_INIT_FAILED",
+                            message=str(e),
+                            severity="WARNING",
+                            structured_context=ErrorContext(module="auto_fixed"),
+                        )
                     )
                 except ImportError:
                     pass
@@ -216,6 +222,7 @@ class AutoSkillCreator:
             schema_file = quarantine_dir / "schema.json"
 
             from core.security.resource_guard import ResourceGuard
+
             ResourceGuard.write_text(entry_file, code_block)
             ResourceGuard.write_text(schema_file, json.dumps(schema_dict, indent=4))
 

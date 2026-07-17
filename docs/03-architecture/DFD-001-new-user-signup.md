@@ -14,7 +14,7 @@ The following diagram illustrates how data moves from user signup to the final p
 graph TD
     A[User Signs Up via Frontend] -->|Signup Request| B(Authentication Service);
     B -->|Triggers Event (e.g., Pub/Sub)| C(auto_tenant_setup.py);
-    
+
     subgraph Tenant Setup Process
         C -->|Reads Tenant Info| C;
         C -->|1. Create Tenant Document| D[Firestore Database];
@@ -23,7 +23,7 @@ graph TD
         C -->|4. Send Welcome Email| E(SMTP Service);
         C -->|5. Notify Admin| F(Admin Notification Channel);
     end
-    
+
     D -->|Tenant Data| G(SupremeAI Backend);
     E -->|Welcome Email| H[New User's Email];
     F -->|New Tenant Alert| I[Admin's Email/Slack];

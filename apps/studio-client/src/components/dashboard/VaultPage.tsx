@@ -22,10 +22,10 @@ export function VaultPage() {
   const [status, setStatus] = useState<SurfStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Tab State
   const [importTab, setImportTab] = useState<'oauth' | 'cookie' | 'manual'>('manual');
-  
+
   // Form State
   const [serviceName, setServiceName] = useState('');
   const [username, setUsername] = useState('');
@@ -124,7 +124,7 @@ export function VaultPage() {
             Connected Platforms
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Zero-knowledge credential vault for autonomous site execution. 
+            Zero-knowledge credential vault for autonomous site execution.
           </p>
         </div>
         <button
@@ -138,39 +138,39 @@ export function VaultPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Left Column: Import Panel */}
         <div className="col-span-1 flex flex-col gap-4">
           <div className="bg-[#1e1e1e] rounded-xl border border-gray-800 shadow-xl overflow-hidden">
             {/* Tab Strip */}
             <div className="flex border-b border-gray-800">
-              <button 
+              <button
                 onClick={() => setImportTab('oauth')}
                 className={`flex-1 flex justify-center items-center py-3 text-xs font-medium transition-colors ${importTab === 'oauth' ? 'text-blue-400 border-b-2 border-blue-500 bg-blue-500/5' : 'text-gray-400 hover:text-gray-200'}`}
               >
                 <Globe size={14} className="mr-2" /> OAuth2
               </button>
-              <button 
+              <button
                 onClick={() => setImportTab('cookie')}
                 className={`flex-1 flex justify-center items-center py-3 text-xs font-medium transition-colors ${importTab === 'cookie' ? 'text-blue-400 border-b-2 border-blue-500 bg-blue-500/5' : 'text-gray-400 hover:text-gray-200'}`}
               >
                 <FileCode2 size={14} className="mr-2" /> Cookie Sync
               </button>
-              <button 
+              <button
                 onClick={() => setImportTab('manual')}
                 className={`flex-1 flex justify-center items-center py-3 text-xs font-medium transition-colors ${importTab === 'manual' ? 'text-blue-400 border-b-2 border-blue-500 bg-blue-500/5' : 'text-gray-400 hover:text-gray-200'}`}
               >
                 <Key size={14} className="mr-2" /> Manual Paste
               </button>
             </div>
-            
+
             <div className="p-5 flex flex-col gap-4">
               {importTab !== 'manual' && (
                 <div className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 p-3 rounded-lg mb-2">
                   Feature '{importTab}' requires the browser extension or OAuth callback URL configuration. Falling back to manual ingestion fields.
                 </div>
               )}
-              
+
               <div className="flex flex-col gap-3">
                 <input
                   value={serviceName}
@@ -200,11 +200,11 @@ export function VaultPage() {
                   Import to Vault
                 </button>
               </div>
-              
+
               {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
             </div>
           </div>
-          
+
           {/* Connection Status Box */}
           <div
             className={`flex items-center gap-3 rounded-xl p-4 mt-2 shadow-lg ${
@@ -252,8 +252,8 @@ export function VaultPage() {
                     <div className="p-4 flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded bg-gray-900 flex items-center justify-center border border-gray-800 p-1">
-                          <img 
-                            src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} 
+                          <img
+                            src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
                             alt={domain}
                             className="w-full h-full object-contain opacity-90 group-hover:opacity-100"
                             onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdib3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTNhM2FmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJhMTAgMTAgMCAxIDAgMCAyMGExMCAxMCAwIDAgMCAwLTIweiIvPjwvc3ZnPg==' }}
@@ -272,7 +272,7 @@ export function VaultPage() {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                    
+
                     <div className="px-4 py-3 bg-black/20 border-t border-gray-800 flex items-center justify-between mt-auto">
                       <div className="flex items-center gap-2">
                         {renderStatusBadge(c.status)}

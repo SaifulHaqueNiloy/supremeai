@@ -116,7 +116,15 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L1 cache read error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L1_READ_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="multi_layer_cache",
+                    error_type="L1_READ_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
 
         try:
             # Layer 2: Semantic Cache
@@ -128,7 +136,15 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L2 semantic cache error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_READ_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="multi_layer_cache",
+                    error_type="L2_READ_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
 
         try:
             # Layer 3: Prefix Cache (Redis) — এখন একটাই batched round-trip
@@ -155,7 +171,15 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L3 prefix cache error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_READ_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="multi_layer_cache",
+                    error_type="L3_READ_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
 
         # Layer 4: Session Cache (In-memory LRU)
         if session_id:
@@ -181,7 +205,15 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L1 cache write error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L1_WRITE_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="multi_layer_cache",
+                    error_type="L1_WRITE_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
 
         try:
             await self._get_semantic_cache().set(prompt, response, task_type="general")
@@ -189,7 +221,15 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L2 semantic cache write error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L2_WRITE_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="multi_layer_cache",
+                    error_type="L2_WRITE_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
 
         try:
             prefix_cache = self._get_prefix_cache()
@@ -216,7 +256,15 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L3 prefix cache write error: {e}")
-            error_event_bus.emit(ErrorEvent(module="multi_layer_cache", error_type="L3_WRITE_FAILED", message=str(e)[:200], severity="WARNING", structured_context=ErrorContext(module="auto_fixed")))
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="multi_layer_cache",
+                    error_type="L3_WRITE_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
 
         if session_id:
             _set_session_cache(session_id, prompt, response)
@@ -269,6 +317,7 @@ def _cache_invalidation_listener(event: ErrorEvent) -> None:
 
 error_event_bus.register_listener(_cache_invalidation_listener)
 
+
 async def start_swarm_cache_invalidator():
     """বাংলা মন্তব্য: SwarmPubSub থেকে domain ইভেন্ট শুনে ক্যাশ ক্লিয়ার করা।"""
     try:
@@ -283,7 +332,7 @@ async def start_swarm_cache_invalidator():
                     "TENANT_CONFIG_CHANGED",
                     "TENANT_DELETED",
                     "SYSTEM_CIRCUIT_OPEN",
-                    "CACHE_INVALIDATE_REQUESTED"
+                    "CACHE_INVALIDATE_REQUESTED",
                 ]
 
                 if event_type in target_events:
@@ -294,7 +343,9 @@ async def start_swarm_cache_invalidator():
                             keys_to_delete = [k for k in _session_cache if tenant_id in str(k)]
                             for k in keys_to_delete:
                                 del _session_cache[k]
-                            logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event_type}.")
+                            logger.info(
+                                f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event_type}."
+                            )
                         else:
                             _session_cache.clear()
                             logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared entire session cache due to {event_type}.")
@@ -307,6 +358,7 @@ async def start_swarm_cache_invalidator():
         logger.info("Swarm cache invalidator task cancelled.")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Swarm cache invalidator crashed: {e}")
+
 
 # Global instance — lazy init, no network on import
 multi_layer_cache = MultiLayerCache()

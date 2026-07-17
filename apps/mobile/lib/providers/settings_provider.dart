@@ -208,7 +208,7 @@ class SettingsProvider extends ChangeNotifier {
     try {
       final request = http.Request('GET', Uri.parse(url));
       final response = await client.send(request);
-      
+
       response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
         if (line.startsWith('data: ')) {
           final dataString = line.substring(6);

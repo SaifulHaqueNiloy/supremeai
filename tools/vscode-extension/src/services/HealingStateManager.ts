@@ -18,7 +18,7 @@ export interface HealingStateEvent {
 export class HealingStateManager extends BaseDisposable {
     private static instance: HealingStateManager;
     private currentState: HealingState = HealingState.IDLE;
-    
+
     // 🔥 VS Code Native EventEmitter
     private readonly _onDidChangeState = new vscode.EventEmitter<HealingStateEvent>();
     public readonly onDidChangeState = this._onDidChangeState.event;
@@ -38,7 +38,7 @@ export class HealingStateManager extends BaseDisposable {
     public setState(state: HealingState, message?: string) {
         this.currentState = state;
         this._onDidChangeState.fire({ state, message });
-        
+
         // Error হলে একটি গ্লোবাল VS Code Notification দেখাবো
         if (state === HealingState.FAILED && message) {
             vscode.window.showErrorMessage(`SupremeAI Healing Error: ${message}`);

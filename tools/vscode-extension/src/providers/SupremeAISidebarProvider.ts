@@ -45,10 +45,10 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
     };
 
     this.setupWebviewMessageListener(webviewView);
-    
+
     // Set initial loading state to avoid blank screen
     webviewView.webview.html = this.getLoadingHTML();
-    
+
     this.updateContent(webviewView);
     this.startPeriodicUpdates();
   }

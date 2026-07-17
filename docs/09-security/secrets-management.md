@@ -18,7 +18,7 @@ This document defines the secrets storage, access, and rotation guidelines for S
 
 - **No Raw Password Storage:** Credentials must never be saved in plain text database fields or committed to git repositories.
 - **External Secrets Manager:** All tokens, app passwords, and private keys must be stored in secure secrets managers (e.g., HashiCorp Vault, AWS Secrets Manager, GitHub Secrets, or encrypted local environment).
-- **Token Rotation Policy:** 
+- **Token Rotation Policy:**
   - OAuth refresh tokens and app passwords must be rotated every **90 days**.
   - GitHub App keys and PATs should be audited and rotated annually or immediately upon suspected breach.
 - **Governance & Approval Rules:**

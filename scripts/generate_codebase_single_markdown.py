@@ -40,44 +40,44 @@ def generate_full_codebase_markdown():
     # ডিরেক্টরি সেটআপ (বাংলা মন্তব্য: docs/autogen/full ডিরেক্টরি তৈরি করা হচ্ছে)
     base_dir = Path("docs/autogen/full")
     base_dir.mkdir(parents=True, exist_ok=True)
-    
+
     output_file_path = base_dir / "codebase_full.md"
-    
+
     print(f"Generating full codebase markdown at: {output_file_path}")
-    
+
     file_count = 0
     total_size = 0
     full_dump_content = "# 🧠 SupremeAI 2.0 Full Codebase Dump\n"
     full_dump_content += "# বাংলা মন্তব্য: এটি একটি স্বয়ংক্রিয়ভাবে জেনারেট করা একক-ফাইল কোডবেস ডাম্প যা পুরো কোডবেস একসাথে দেখতে সাহায্য করে।\n\n"
     full_dump_content += f"Generated at: {datetime.now().isoformat()}\n\n"
-    
+
     # কোডবেসের সব ফাইল ঘুরে দেখা (বাংলা মন্তব্য: os.walk ব্যবহার করে পুরো প্রজেক্ট স্ক্যান করা হচ্ছে)
     for root, dirs, files in os.walk("."):
         dirs[:] = [d for d in dirs if not should_skip_path(os.path.join(root, d))]
-        
+
         for file in files:
             file_path = Path(root) / file
-            
+
             if file_path.suffix not in DOCUMENT_EXTENSIONS:
                 continue
-                
+
             try:
                 content = file_path.read_text(encoding='utf-8', errors='replace')
                 rel_path = file_path.relative_to(".")
-                
+
                 file_size = len(content.encode('utf-8'))
                 total_size += file_size
-                
+
                 # ফাইলে অ্যাপেন্ড করা (বাংলা মন্তব্য: প্রতিটি ফাইলের কোড ফরম্যাট সহ যোগ করা হচ্ছে)
                 full_dump_content += f"\n## File: `{rel_path}`\n"
                 full_dump_content += f"**Size:** {file_size:,} bytes  \n"
                 full_dump_content += f"**Path:** [file:///{file_path.absolute().as_posix()}]\n\n"
                 full_dump_content += f"```{file_path.suffix[1:]}\n{content}\n```\n"
-                
+
                 file_count += 1
             except Exception as e:
                 print(f"Skipped {file_path}: {e}")
-                
+
     # রাইট করা (বাংলা মন্তব্য: সব কনটেন্টকে codebase_full.md ফাইলে রাইট করা হচ্ছে)
     output_file_path.write_text(full_dump_content, encoding='utf-8')
     print(f"Successfully documented {file_count} files ({total_size:,} bytes) into {output_file_path}")

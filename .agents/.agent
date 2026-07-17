@@ -2,7 +2,7 @@
 # These guidelines prevent recurring build, Docker, and CI deployment errors.
 
 1. TEST DEPENDENCY MOCKING:
-   - When writing tests for modules that import heavy optional dependencies (e.g., `opentelemetry`, `matplotlib`), ALWAYS wrap the import in `try...except ImportError` and mock the missing modules in `sys.modules`. 
+   - When writing tests for modules that import heavy optional dependencies (e.g., `opentelemetry`, `matplotlib`), ALWAYS wrap the import in `try...except ImportError` and mock the missing modules in `sys.modules`.
    - CI runs tests without the `ml` and `tools` dependency groups.
    - Use `# noqa: F401` on conditionally imported mocks to satisfy Ruff linter.
 

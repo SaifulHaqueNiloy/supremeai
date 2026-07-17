@@ -21,7 +21,7 @@ The system has been successfully audited for **Zero-Operating Cost** and **Produ
 
 ## 4. Scale-To-Zero Verification (Zero-Cost Execution)
 - **Cloud Run / Firecracker MicroVMs:** After the load test, all instances successfully terminated within the configured idle timeout period.
-- **Resource Usage at Idle:** 
+- **Resource Usage at Idle:**
   - Compute: 0vCPU, 0MB RAM
   - Cost Run Rate: $0.00 / hour
 - **Cloud Scheduler Orchestrator (Wave 3):** Background loops have been entirely eliminated. The `Orchestrator` is now triggered strictly via HTTP REST endpoints by GCP Cloud Scheduler, allowing instances to sleep securely without ghost-thread overhead.

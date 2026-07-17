@@ -25,7 +25,7 @@ class _TerminalViewState extends State<TerminalView> {
   Future<void> _fetchAndSimulateLogs() async {
     final rawMarkdown = await _syncService.fetchLatestLog();
     final lines = rawMarkdown.split('\n').where((line) => line.trim().isNotEmpty).take(40).toList();
-    
+
     // Simulate real-time typing effect
     for (int i = 0; i < lines.length; i++) {
       await Future.delayed(const Duration(milliseconds: 150));

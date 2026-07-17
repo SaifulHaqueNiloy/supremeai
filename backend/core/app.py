@@ -189,6 +189,7 @@ try:
 
     # মক হলে fallback ক্লাস ব্যবহার করো
     if not isinstance(_SlowAPIRateLimitExceeded, type) or not issubclass(_SlowAPIRateLimitExceeded, Exception):
+
         class RateLimitExceeded(Exception):  # type: ignore[no-redef]
             """Fallback RateLimitExceeded for test environments where slowapi is mocked."""
 
@@ -275,18 +276,20 @@ async def health() -> dict[str, Any]:
         except Exception:  # noqa: BLE001
             logger.exception("Health check failed on redis connection")
             error_event_bus.emit(
-                ErrorEvent(module="app.health", error_type="REDIS_HEALTH_FAIL", message="Redis health error", severity="ERROR", structured_context=ErrorContext(module="auto_fixed"))
+                ErrorEvent(
+                    module="app.health",
+                    error_type="REDIS_HEALTH_FAIL",
+                    message="Redis health error",
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
             )
             redis_ok = False
     else:
         redis_ok = True
 
     api_keys_ok = bool(
-        settings.openrouter_api_key
-        or settings.gemini_api_key
-        or settings.deepseek_api_key
-        or settings.groq_api_key
-        or settings.nvidia_api_key
+        settings.openrouter_api_key or settings.gemini_api_key or settings.deepseek_api_key or settings.groq_api_key or settings.nvidia_api_key
     )
     checks = {"redis": redis_ok, "api_keys_configured": api_keys_ok}
     all_ok = all(checks.values())
@@ -310,8 +313,7 @@ def router_health_check(fastapi_app: FastAPI) -> None:
     expected_count = int(os.getenv("MIN_EXPECTED_ROUTES", "20"))
     if len(fastapi_app.routes) < expected_count:
         logger.critical(
-            f"🔥 CRITICAL: Only {len(fastapi_app.routes)} routes loaded. "
-            f"Expected at least {expected_count}. Some routers failed to load!"
+            f"🔥 CRITICAL: Only {len(fastapi_app.routes)} routes loaded. Expected at least {expected_count}. Some routers failed to load!"
         )
         sys.exit(1)
 

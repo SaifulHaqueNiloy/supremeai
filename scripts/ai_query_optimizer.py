@@ -5,7 +5,7 @@ def main():
     print("🧠 AI Database Query Optimizer is starting...")
     # TODO: Add logic to fetch slow queries from Supabase and use Gemini to suggest indexes
     print("✅ No slow queries detected. Database is optimized.")
-    
+
     # Write to GitHub Step Summary
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_file:

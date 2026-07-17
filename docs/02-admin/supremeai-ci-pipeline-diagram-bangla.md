@@ -41,16 +41,16 @@ graph TD
     PR --> SA
     PR --> WT
     PR --> FC
-    
+
     BC --> PE
     BC --> DB
     FC --> PE
     FC --> DF
-    
+
     DB --> SM
     DF --> SM
     SA --> SM
-    
+
     style CB fill:#ff6b6b,stroke:#333,stroke-width:2px
     style DC fill:#4ecdc4,stroke:#333,stroke-width:2px
     style PR fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
