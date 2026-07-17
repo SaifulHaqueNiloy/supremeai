@@ -154,14 +154,6 @@ async def basic_auth_for_docs_middleware(request: Request, call_next: Any) -> JS
     return await call_next(request)
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "X-API-Key", "X-Correlation-ID"],
-)
-
 # SupremeContextMiddleware - must be first to capture all requests
 app.add_middleware(SupremeContextMiddleware)
 app.add_middleware(TrustedOriginMiddleware)
@@ -177,6 +169,14 @@ app.add_middleware(APIKeyAuthMiddleware)
 # ResponseStandardizationMiddleware normalizes non-JSON error responses into the
 # standard envelope as the last middleware in the chain.
 app.add_middleware(ResponseStandardizationMiddleware)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "X-API-Key", "X-Correlation-ID"],
+)
 
 
 # বাংলা মন্তব্য: slowapi টেস্টে মক করা হলেও RateLimitExceeded যেন সত্যিকারের Exception ক্লাস থাকে
