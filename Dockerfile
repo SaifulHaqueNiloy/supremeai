@@ -29,6 +29,9 @@ COPY backend/ .
 # বাংলা মন্তব্য: রুট-লেভেল 'skills' ডিরেক্টরি কপি করা হচ্ছে যাতে
 # core/evolution/auto_skill_creator.py সঠিকভাবে 'skills.installer' ইম্পোর্ট করতে পারে।
 COPY skills/ ./skills/
+# বাংলা মন্তব্য: রুট-লেভেলের ask_scribe.py কপি করা হলো যাতে api/routes/knowledge.py সফলভাবে এটি ইম্পোর্ট করতে পারে।
+COPY ask_scribe.py ./
+
 
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
