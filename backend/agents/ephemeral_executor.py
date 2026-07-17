@@ -2,8 +2,10 @@
 import re
 import shutil
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
+
 from backend.sandbox.docker_sandbox import DockerSandbox
+
 
 class EphemeralExecutor:
     def __init__(self, base_skills_dir: str = "backend/skills"):
@@ -12,9 +14,9 @@ class EphemeralExecutor:
         self.ephemeral_dir.mkdir(parents=True, exist_ok=True)
         self.sandbox = DockerSandbox()
 
-    def execute_use_and_throw(self, skill_id: str, raw_code: str, test_payload: str) -> Dict[str, Any]:
+    def execute_use_and_throw(self, skill_id: str, raw_code: str, test_payload: str) -> dict[str, Any]:
         # 🛡️ কঠোর Path Traversal ইনজেকশন ফিল্টারিং
-        if not re.match(r'^[a-zA-Z0-9_]+$', skill_id):
+        if not re.match(r"^[a-zA-Z0-9_]+$", skill_id):
             return {"exit_code": -1, "stdout": "", "stderr": "Blocked: Malicious Path Traversal Character in Skill ID"}
 
         runtime_dir = self.ephemeral_dir / skill_id

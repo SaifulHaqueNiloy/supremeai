@@ -239,7 +239,8 @@ class TokenBudgetManager:
                     module="token_budget",
                     error_type="BUDGET_EXHAUSTION",
                     message=msg,
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"provider": provider, "system_tokens": system_tokens, "max_input": max_input},
                 )
             )

@@ -27,7 +27,7 @@ StyleDictionary.registerFormat({
         colors[key] = token.value;
       }
     });
-    
+
     return JSON.stringify({
       name: "SupremeAI Theme",
       type: "dark",

@@ -10,24 +10,24 @@ The system uses a modular FastAPI backend acting as the API Gateway, coordinatin
 graph TD
     User[User / Client] --> Client[Studio Client / VS Code Extension / Mobile App]
     Client --> Gateway[FastAPI API Gateway]
-    
+
     Gateway --> Agent[Reasoning Orchestrator / Swarm Engine]
     Agent --> Router[Smart Model Router]
     Agent --> DB[(SQLite / Supabase Postgres)]
     Agent --> Vector[(ChromaDB Vector Store)]
-    
+
     %% Email Service Integration
     Agent --> EmailService[Email Service IMAP/SMTP/OAuth]
     EmailService --> TargetWeb[Target Website OAuth/Form]
-    
+
     %% GitHub Integration
     Agent --> GitHubAgent[GitHub App / PAT Client]
     GitHubAgent --> GitHubRepo[GitHub Repositories]
-    
+
     %% Marketplace & Repo Discovery
     Agent --> MarketplaceAggregator[Marketplace Aggregator Layer]
     MarketplaceAggregator --> ExtMarketplaces[DockerHub / npm / PyPI / VS Code / Chrome]
-    
+
     Agent --> RepoDiscovery[Repo Discovery Engine]
     RepoDiscovery --> GitHubSearch[GitHub Search & Semantic Code Search]
 ```
@@ -63,4 +63,3 @@ Allows the SupremeAI Agent to search for public/third-party tools and auto-insta
 Enables agent discovery of relevant repositories/libraries for building features or solving tasks.
 - **Discovery Channels:** GitHub Search API, GitHub Topics, awesome lists, Sourcegraph semantic code search, and self-hosted vector search.
 - **Compatibility Analysis:** Performs automated conflict analysis, license checks, and size estimations before importing.
-

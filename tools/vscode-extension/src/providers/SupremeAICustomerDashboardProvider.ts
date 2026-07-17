@@ -24,7 +24,7 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
 
     this.setupWebviewMessageListener(webviewView);
     webviewView.webview.html = this.getLoadingHTML();
-    
+
     this.updateContent(webviewView);
     this.startPeriodicUpdates();
   }

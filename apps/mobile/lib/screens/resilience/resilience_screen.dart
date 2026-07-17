@@ -23,7 +23,7 @@ class ResilienceScreen extends StatelessWidget {
           children: [
             _buildUptimeCard(context),
             const SizedBox(height: 32),
-            Text('resilience.healing_status'.tr().toUpperCase(), 
+            Text('resilience.healing_status'.tr().toUpperCase(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
             ),
             const SizedBox(height: 16),
@@ -47,11 +47,11 @@ class ResilienceScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('resilience.uptime'.tr().toUpperCase(), 
+          Text('resilience.uptime'.tr().toUpperCase(),
             style: const TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2)
           ),
           const SizedBox(height: 12),
-          const Text('99.99%', 
+          const Text('99.99%',
             style: TextStyle(color: Colors.greenAccent, fontSize: 48, fontWeight: FontWeight.w900)
           ),
           const SizedBox(height: 12),
@@ -66,7 +66,7 @@ class ResilienceScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.bolt, color: Colors.greenAccent, size: 16),
                 const SizedBox(width: 8),
-                Text('resilience.auto_recovery'.tr(), 
+                Text('resilience.auto_recovery'.tr(),
                   style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)
                 ),
               ],

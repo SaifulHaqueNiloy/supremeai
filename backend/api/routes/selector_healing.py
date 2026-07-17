@@ -35,23 +35,26 @@ async def get_healing_logs(session: AsyncSession = Depends(get_db_session)):
 
     formatted = []
     for evt in events:
-        formatted.append({
-            "id": str(evt.id),
-            "ts": "", # Add a timestamp field to model later
-            "action_id": str(evt.action_id),
-            "original_selector": evt.old_selector,
-            "healed_selector": evt.new_selector,
-            "confidence_score": float(evt.confidence_score),
-            "auto_applied": evt.auto_applied,
-            "screenshot_before_base64": evt.screenshot_before_url or "",
-            "screenshot_after_base64": evt.screenshot_after_url or "",
-        })
+        formatted.append(
+            {
+                "id": str(evt.id),
+                "ts": "",  # Add a timestamp field to model later
+                "action_id": str(evt.action_id),
+                "original_selector": evt.old_selector,
+                "healed_selector": evt.new_selector,
+                "confidence_score": float(evt.confidence_score),
+                "auto_applied": evt.auto_applied,
+                "screenshot_before_base64": evt.screenshot_before_url or "",
+                "screenshot_after_base64": evt.screenshot_after_url or "",
+            }
+        )
     return {"items": formatted}
 
 
 @router.post("/{event_id}/decision")
 async def make_healing_decision(event_id: str, payload: DecisionIn, session: AsyncSession = Depends(get_db_session)):
     import uuid
+
     try:
         eid = uuid.UUID(event_id)
     except ValueError:
@@ -65,14 +68,17 @@ async def make_healing_decision(event_id: str, payload: DecisionIn, session: Asy
     evt.auto_applied = payload.approve
     await session.commit()
 
-    return {"status": "success", "event": {
-        "id": str(evt.id),
-        "ts": "",
-        "action_id": str(evt.action_id),
-        "original_selector": evt.old_selector,
-        "healed_selector": evt.new_selector,
-        "confidence_score": float(evt.confidence_score),
-        "auto_applied": evt.auto_applied,
-        "screenshot_before_base64": evt.screenshot_before_url or "",
-        "screenshot_after_base64": evt.screenshot_after_url or "",
-    }}
+    return {
+        "status": "success",
+        "event": {
+            "id": str(evt.id),
+            "ts": "",
+            "action_id": str(evt.action_id),
+            "original_selector": evt.old_selector,
+            "healed_selector": evt.new_selector,
+            "confidence_score": float(evt.confidence_score),
+            "auto_applied": evt.auto_applied,
+            "screenshot_before_base64": evt.screenshot_before_url or "",
+            "screenshot_after_base64": evt.screenshot_after_url or "",
+        },
+    }

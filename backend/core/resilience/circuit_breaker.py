@@ -5,6 +5,7 @@
 Tracks failure/success counts and opens the circuit when threshold exceeded.
 After cooldown, transitions to half-open state for recovery testing.
 """
+
 from __future__ import annotations
 
 import threading
@@ -83,10 +84,7 @@ class CircuitBreaker:
 
     def __repr__(self) -> str:
         with self._lock:
-            return (
-                f"CircuitBreaker(name='{self.name}', state={self.state.value}, "
-                f"failures={self.failure_count}, successes={self.success_count})"
-            )
+            return f"CircuitBreaker(name='{self.name}', state={self.state.value}, failures={self.failure_count}, successes={self.success_count})"
 
     @property
     def is_open(self) -> bool:
@@ -214,9 +212,7 @@ class CircuitBreaker:
             self.last_failure_time = time.monotonic()
 
             if self.failure_count >= self.failure_threshold and self.state != CircuitBreakerState.OPEN:
-                logger.warning(
-                    f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures"
-                )
+                logger.warning(f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures")
                 self.state = CircuitBreakerState.OPEN
                 # বাংলা মন্তব্য: সার্কিট খোলার সময় opened_at সেট করা হচ্ছে
                 # যাতে _should_attempt_recovery() সঠিকভাবে কাজ করে এবং টেস্টে ম্যানিপুলেট করা যায়
@@ -259,17 +255,22 @@ class CircuitBreaker:
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         """Allow CircuitBreaker to be used as a decorator."""
-        import inspect
         import functools
+        import inspect
+
         if inspect.iscoroutinefunction(func):
+
             @functools.wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
                 return await self.acall(func, *args, **kwargs)
+
             return async_wrapper
         else:
+
             @functools.wraps(func)
             def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
                 return self.call(func, *args, **kwargs)
+
             return sync_wrapper
 
     def allow_request(self) -> bool:

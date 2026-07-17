@@ -43,7 +43,7 @@ for line in lines:
         elif 'high' in p: pri = 'high'
         elif 'low' in p: pri = 'low'
         repo_data['priority'] = pri
-        
+
         # Save repo
         if 'id' in repo_data and 'url' in repo_data:
             id_val = repo_data['id'].replace("'", "''")
@@ -53,7 +53,7 @@ for line in lines:
             pur_val = repo_data.get('purpose', '').replace("'", "''")
             pri_val = repo_data.get('priority', 'medium')
             stars_val = repo_data.get('stars', 0)
-            
+
             sql.append("INSERT INTO github_repos (id, name, url, category, purpose, priority, stars) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', {}) ON CONFLICT (id) DO NOTHING;".format(id_val, name_val, url_val, cat_val, pur_val, pri_val, stars_val))
         repo_data = {}
 

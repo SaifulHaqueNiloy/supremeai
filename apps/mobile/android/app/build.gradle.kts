@@ -27,7 +27,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        
+
         // Performance optimizations for Flutter
         // ABI filters are managed by Flutter splits (--split-per-abi) in CI
         // ndk {
@@ -49,11 +49,11 @@ android {
             isMinifyEnabled = false
         }
     }
-    
+
     buildFeatures {
         buildConfig = true
     }
-    
+
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

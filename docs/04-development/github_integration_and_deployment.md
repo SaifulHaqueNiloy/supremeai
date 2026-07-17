@@ -33,10 +33,10 @@ graph TD
     Detect -->|React client changes| StudioClient[Studio Client Build/Test]
     Detect -->|Flutter mobile changes| Flutter[Mobile App Tests]
     Detect -->|Static web changes| WebChat[Web Chat Check]
-    
+
     PyTest --> E2E[E2E Integration Tests]
     StudioClient --> E2E
-    
+
     E2E -->|Success & Branch is Main| Deploy[Blue-Green Deploy GCP]
     Deploy -->|Failure| Rollback[Auto Rollback]
 ```

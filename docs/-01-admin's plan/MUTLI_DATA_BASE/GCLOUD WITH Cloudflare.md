@@ -57,7 +57,7 @@ class R2StorageClient
         access_key = os.getenv(R2_ACCESS_KEY)
         secret_key = os.getenv(R2_SECRET_KEY)
         self.bucket_name = os.getenv(R2_BUCKET_NAME)
-        
+
         # Cloudflare R2 Endpoint
         endpoint_url = fhttps{account_id}.r2.cloudflarestorage.com
 
@@ -71,9 +71,9 @@ class R2StorageClient
         )
 
     def generate_presigned_upload_url(self, object_name str, file_type str, expiration=3600)
-        
+
         ক্লায়েন্টকে সরাসরি R2-তে ফাইল আপলোড করার জন্য একটি সাময়িক URL তৈরি করে দেয়।
-        
+
         try
             response = self.s3_client.generate_presigned_url(
                 'put_object',
@@ -90,9 +90,9 @@ class R2StorageClient
             return None
 
     def generate_presigned_download_url(self, object_name str, expiration=3600)
-        
+
         প্রাইভেট ফাইল ডাউনলোডের জন্য টেম্পোরারি URL জেনারেট করে।
-        
+
         try
             response = self.s3_client.generate_presigned_url(
                 'get_object',
@@ -128,15 +128,15 @@ async def get_upload_url(request UploadRequest, user=Depends(require_auth_token)
     # ইউনিক ফাইলের পাথ তৈরি (যাতে নাম ক্ল্যাশ না করে)
     import uuid
     safe_filename = f{request.folder}{user['id']}{uuid.uuid4().hex}_{request.file_name}
-    
+
     upload_url = storage_client.generate_presigned_upload_url(
         object_name=safe_filename,
         file_type=request.file_type
     )
-    
+
     if not upload_url
         raise HTTPException(status_code=500, detail=Could not generate upload URL)
-        
+
     return {
         upload_url upload_url,
         file_path safe_filename, # আপলোড শেষে ডাটাবেসে সেভ করার জন্য
@@ -163,7 +163,7 @@ export const uploadFileToR2 = async (file File) = {
                 folder custom_skills
             })
         });
-        
+
         const { upload_url, file_path } = await response.json();
 
          ২. সরাসরি Cloudflare R2-তে ফাইল আপলোড (ব্যাকএন্ড বাইপাস করে)

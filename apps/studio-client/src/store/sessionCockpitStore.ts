@@ -35,10 +35,10 @@ interface SessionCockpitState {
   sessionId: string | null;
   // We use a normal array but we will cap it at 10,000 in our mutations
   logBuffer: LogEntry[];
-  // Zustand isn't great with Maps in reactive state if they mutate often, 
+  // Zustand isn't great with Maps in reactive state if they mutate often,
   // but for the sake of the store structure we define it.
   // The actual FileTreePanel uses a useRef<Map> for performance.
-  fileTreeData: any; 
+  fileTreeData: any;
   reasoningChain: ReasoningEntry[];
   agentState: SujonState;
   controlMode: 'agent' | 'human';
@@ -50,7 +50,7 @@ interface SessionCockpitState {
   disconnectSSE: () => void;
   connectTakeoverWS: (sessionId: string, token: string) => void;
   disconnectTakeoverWS: () => void;
-  
+
   // Buffers
   addLog: (log: LogEntry) => void;
 }
@@ -116,7 +116,7 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
   connectTakeoverWS: (sessionId: string, token: string) => {
     get().disconnectTakeoverWS();
     const ws = new WebSocket(`ws://${window.location.host}/ws/session/${sessionId}/takeover?token=${token}`);
-    
+
     ws.onopen = () => {
       set({ controlMode: 'human' });
     };

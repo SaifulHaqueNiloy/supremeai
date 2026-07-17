@@ -33,16 +33,16 @@ export default function SkillGraph() {
           'Authorization': `Bearer ${getAdminToken()}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch graph data');
-      
+
       const data: GraphData = await response.json();
 
       // বাংলা মন্তব্য: নোডগুলোকে একটি জ্যামিতিক বৃত্তাকার (Circular) লেআউটে সাজানোর লজিক
       const radius = 250;
       const centerX = 400;
       const centerY = 300;
-      
+
       const formattedNodes = data.nodes.map((node, index) => {
         const angle = (index / data.nodes.length) * 2 * Math.PI;
         return {
@@ -103,10 +103,10 @@ export default function SkillGraph() {
         {/* বাংলা মন্তব্য: ইউজার যেন গ্রাফ জুম করতে এবং মিনিম্যাপ দেখতে পারে */}
         <Background color="#ccc" gap={16} />
         <Controls />
-        <MiniMap 
-          nodeStrokeWidth={3} 
-          nodeColor="#6366f1" 
-          maskColor="rgba(240, 240, 240, 0.6)" 
+        <MiniMap
+          nodeStrokeWidth={3}
+          nodeColor="#6366f1"
+          maskColor="rgba(240, 240, 240, 0.6)"
         />
       </ReactFlow>
     </div>

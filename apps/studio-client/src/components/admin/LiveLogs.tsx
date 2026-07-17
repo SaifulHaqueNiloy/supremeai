@@ -57,8 +57,8 @@ export function LiveLogs({ liveLogs, setLiveLogs }: LiveLogsProps) {
               </button>
             ))}
           </div>
-          <button 
-            onClick={() => setLiveLogs([])} 
+          <button
+            onClick={() => setLiveLogs([])}
             className="text-red-400 hover:text-red-300 font-bold text-[10px] ml-auto md:ml-2 uppercase"
           >
             Clear Screen
@@ -87,4 +87,3 @@ export function LiveLogs({ liveLogs, setLiveLogs }: LiveLogsProps) {
     </div>
   );
 }
-

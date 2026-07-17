@@ -6,12 +6,12 @@ export interface SupremeCardProps extends React.HTMLAttributes<HTMLDivElement> {
   blur?: boolean;
 }
 
-export const SupremeCard: React.FC<SupremeCardProps> = ({ 
-  children, 
-  glow = false, 
+export const SupremeCard: React.FC<SupremeCardProps> = ({
+  children,
+  glow = false,
   blur = true,
   className = '',
-  ...props 
+  ...props
 }) => {
   const baseStyle = "rounded-3xl border border-border-accent bg-card-bg transition-all";
   const motionStyle = "duration-[var(--supremeai-motion-duration-normal)] ease-[var(--supremeai-motion-easing-bounce)]";
@@ -19,7 +19,7 @@ export const SupremeCard: React.FC<SupremeCardProps> = ({
   const blurStyle = blur ? "backdrop-blur-xl" : "";
 
   return (
-    <div 
+    <div
       className={`${baseStyle} ${motionStyle} ${glowStyle} ${blurStyle} p-6 ${className}`}
       {...props}
     >

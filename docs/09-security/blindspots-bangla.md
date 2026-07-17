@@ -1,6 +1,6 @@
 ﻿# SupremeAI 2.0 — System Blind Spots (Full List in Bangla)
 
-> **Date:** 2026-07-02  
+> **Date:** 2026-07-02
 > **Scope:** Full monorepo (Backend, Frontend, Flutter, VS Code, Infrastructure, Evolution, Skills, Admin)
 
 ---

@@ -8,7 +8,7 @@ BASE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
 setup_local_runner() {
     echo "Setting up local development runner..."
-    
+
     # Ensure .env exists
     if [ ! -f "$BASE_DIR/.env" ]; then
         if [ -f "$BASE_DIR/.env.example" ]; then

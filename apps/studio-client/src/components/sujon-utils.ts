@@ -62,10 +62,10 @@ void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
     vec2 pos = (uv - 0.5) * 2.0;
     pos.x *= u_resolution.x / u_resolution.y;
-    
+
     vec3 color = u_baseColor;
     float n = 0.0;
-    
+
     if (u_stateId == 0) { // Idle
         n = noise(pos * 3.0 + u_time * 0.2) * 0.5;
         color *= (0.5 + n);
@@ -132,7 +132,7 @@ export function getStateId(state: string) {
     switch(state) {
         case 'idle': return 0;
         case 'scanning': return 1;
-        case 'executing': 
+        case 'executing':
         case 'processing': return 2;
         case 'self_healing': return 3;
         case 'circuit_open': return 4;

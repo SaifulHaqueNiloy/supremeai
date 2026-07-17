@@ -24,7 +24,7 @@ export class CodeEditHandler {
   register(): void {
     // Listen to text document changes
     vscode.workspace.onDidChangeTextDocument(this.onDocumentChanged, this);
-    
+
     // Also listen to document open/close for session tracking
     vscode.workspace.onDidOpenTextDocument(this.onDocumentOpened, this);
     vscode.workspace.onDidCloseTextDocument(this.onDocumentClosed, this);
@@ -56,7 +56,7 @@ export class CodeEditHandler {
   private async processDocumentChange(document: vscode.TextDocument, filePath: string): Promise<void> {
     try {
       const code = document.getText();
-      
+
       // Check if code actually changed (avoid sending identical content)
       const lastCode = this.lastSentCode.get(filePath);
       if (lastCode === code) {
@@ -65,7 +65,7 @@ export class CodeEditHandler {
 
       // Get original code (could be stored in workspace state or from git diff)
       const originalCode = await this.getOriginalCode(filePath, document);
-      
+
       if (originalCode !== null && originalCode !== code) {
         const edit: CodeEdit = {
           taskId: this.generateTaskId(filePath),
@@ -79,7 +79,7 @@ export class CodeEditHandler {
 
         const service = getSupremeAIService();
         const result = await service.sendCodeEdit(edit);
-        
+
         if (result.success) {
           console.log(`[SupremeAI] Learned from edit in ${filePath}`);
           this.lastSentCode.set(filePath, code);
@@ -96,11 +96,11 @@ export class CodeEditHandler {
     // 1. Undo stack (if available)
     // 2. Git diff (if file is tracked)
     // 3. Saved version from workspace state
-    
+
     // For now, use workspace state to store baseline on file open
     const stateKey = `original_code_${filePath}`;
     const saved = this.context.globalState.get<string>(stateKey);
-    
+
     if (saved) {
       return saved;
     }
@@ -115,7 +115,7 @@ export class CodeEditHandler {
 
   private onDocumentOpened(document: vscode.TextDocument): void {
     const filePath = document.uri.fsPath;
-    
+
     // Store initial version as baseline after 1 second (ensure file is settled)
     setTimeout(() => {
       if (!document.isDirty) {

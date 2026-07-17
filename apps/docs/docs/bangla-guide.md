@@ -154,7 +154,7 @@ Admin → Rate Limits ট্যাবে যান:
 ```
 Billing Tiers:
 ├── Free       — 20 req/min,  50K tokens/day
-├── Starter    — 60 req/min,  200K tokens/day  
+├── Starter    — 60 req/min,  200K tokens/day
 ├── Pro        — 200 req/min, 1M tokens/day
 └── Enterprise — 999 req/min, Unlimited
 ```
@@ -346,6 +346,6 @@ POST /api/referral/redeem
 
 ---
 
-_Last Updated: 2026-06-22_  
-_Version: SupremeAI 2.0_  
+_Last Updated: 2026-06-22_
+_Version: SupremeAI 2.0_
 _Language: বাংলা (Bengali)_

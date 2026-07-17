@@ -25,7 +25,7 @@ export class SandboxService {
       }
       return;
     }
-    
+
     this.isInitializing = true;
     console.log('Booting WebContainer...');
     try {
@@ -44,20 +44,20 @@ export class SandboxService {
    */
   async executeCommand(command: string, args: string[]): Promise<SandboxExecutionResult> {
     await this.initialize();
-    
+
     if (!this.containerInstance) {
       throw new Error('WebContainer is not initialized');
     }
-    
+
     console.log(`Executing in Sandbox: ${command} ${args.join(' ')} (Timeout: ${this.timeoutMs}ms)`);
-    
+
     const startTime = Date.now();
     let stdout = '';
     const stderr = '';
-    
+
     return new Promise((resolve) => {
       let isResolved = false;
-      
+
       const timer = setTimeout(() => {
         if (!isResolved) {
           isResolved = true;
@@ -69,11 +69,11 @@ export class SandboxService {
           });
         }
       }, this.timeoutMs);
-      
+
       (async () => {
         try {
           const process = await this.containerInstance!.spawn(command, args);
-          
+
           process.output.pipeTo(
             new WritableStream({
               write(data) {
@@ -81,9 +81,9 @@ export class SandboxService {
               },
             })
           );
-          
+
           const exitCode = await process.exit;
-          
+
           if (!isResolved) {
             isResolved = true;
             clearTimeout(timer);
@@ -112,4 +112,3 @@ export class SandboxService {
 }
 
 export const sandboxService = new SandboxService();
-

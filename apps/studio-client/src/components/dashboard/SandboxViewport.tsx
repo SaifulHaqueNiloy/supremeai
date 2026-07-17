@@ -45,7 +45,7 @@ export const SandboxViewport: React.FC = () => {
             // Clear image cache
             currentImageCache.src = '';
         };
-     
+
     }, [wsRef]);
 
     // Handle Human Takeover Dispatch
@@ -124,9 +124,9 @@ export const SandboxViewport: React.FC = () => {
         canvas.addEventListener('mousedown', onMouseDown);
         canvas.addEventListener('mouseup', onMouseUp);
         canvas.addEventListener('wheel', onWheel, { passive: true });
-        
+
         // Canvas needs tabIndex to receive keyboard events
-        canvas.tabIndex = 0; 
+        canvas.tabIndex = 0;
         canvas.addEventListener('keydown', onKeyDown);
         canvas.addEventListener('keyup', onKeyUp);
 
@@ -138,7 +138,7 @@ export const SandboxViewport: React.FC = () => {
             canvas.removeEventListener('keydown', onKeyDown);
             canvas.removeEventListener('keyup', onKeyUp);
         };
-     
+
     }, [controlMode, wsRef]);
 
     return (
@@ -152,8 +152,8 @@ export const SandboxViewport: React.FC = () => {
                 )}
             </div>
             <div className="flex-1 overflow-auto flex items-center justify-center p-4">
-                <canvas 
-                    ref={canvasRef} 
+                <canvas
+                    ref={canvasRef}
                     className={`max-w-full max-h-full object-contain shadow-2xl rounded-sm border ${controlMode === 'human' ? 'border-amber-500/50 cursor-crosshair outline-none' : 'border-slate-800'}`}
                     style={{ minWidth: '320px', minHeight: '240px' }}
                 />

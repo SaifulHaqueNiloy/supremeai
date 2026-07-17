@@ -10,7 +10,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const showToast = (message: string, type: ToastType = 'info') => {
     const id = Date.now().toString();
     setToasts((prev) => [...prev, { id, message, type }]);
-    
+
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
@@ -21,10 +21,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
         {toasts.map((toast) => (
-          <div 
-            key={toast.id} 
+          <div
+            key={toast.id}
             className={`px-4 py-3 rounded shadow-lg text-white font-brand text-sm transition-all animate-fade-in
-              ${toast.type === 'success' ? 'bg-green-600' : 
+              ${toast.type === 'success' ? 'bg-green-600' :
                 toast.type === 'error' ? 'bg-red-600' : 'bg-blue-600'}
             `}
           >

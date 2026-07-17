@@ -122,10 +122,7 @@ class StyleLearner:
                 patterns["docstring_coverage"] = round(docstring_count / func_count, 2)
 
             if skipped_ast_files:
-                logger.warning(
-                    f"[StyleLearner] Skipped AST parsing for {len(skipped_ast_files)} files. "
-                    f"Samples: {skipped_ast_files[:3]}"
-                )
+                logger.warning(f"[StyleLearner] Skipped AST parsing for {len(skipped_ast_files)} files. Samples: {skipped_ast_files[:3]}")
 
         except ImportError:
             logger.debug("tree-sitter not installed; using heuristic fallback.")
@@ -159,10 +156,7 @@ class StyleLearner:
                 break
 
         if skipped_sample_files:
-            logger.warning(
-                f"[StyleLearner] Skipped reading {len(skipped_sample_files)} files for sampling. "
-                f"Samples: {skipped_sample_files[:3]}"
-            )
+            logger.warning(f"[StyleLearner] Skipped reading {len(skipped_sample_files)} files for sampling. Samples: {skipped_sample_files[:3]}")
 
         if code_samples:
             try:

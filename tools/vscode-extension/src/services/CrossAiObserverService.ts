@@ -9,7 +9,7 @@ export class CrossAiObserverService {
 
         // ১. লোকাল টার্মিনাল কমান্ড ইন্টারসেপ্টর
         context.subscriptions.push(
-            vscode.window.onDidStartTerminalShellExecution ? 
+            vscode.window.onDidStartTerminalShellExecution ?
             vscode.window.onDidStartTerminalShellExecution(async (event) => {
                 const command = event.execution.commandLine.value;
                 // যদি কমান্ডের ভেতর অন্য AI এজেন্টের সিগনেচার থাকে (যেমন- npx interpreter, claude, etc.)

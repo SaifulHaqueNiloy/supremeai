@@ -16,10 +16,10 @@ class LearningScreen extends StatelessWidget {
             pinned: true,
             backgroundColor: Colors.black,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text('learning.matrix'.tr().toUpperCase(), 
+              title: Text('learning.matrix'.tr().toUpperCase(),
                 style: const TextStyle(
-                  fontSize: 12, 
-                  fontWeight: FontWeight.w900, 
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
                   letterSpacing: 2,
                   color: Colors.white
                 )

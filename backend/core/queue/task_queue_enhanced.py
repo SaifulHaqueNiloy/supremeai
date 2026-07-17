@@ -123,6 +123,7 @@ class TaskQueue:
     def _is_celery_available(self) -> bool:
         try:
             import celery  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -131,6 +132,7 @@ class TaskQueue:
     def _is_redis_available(self) -> bool:
         try:
             import redis.asyncio  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -139,6 +141,7 @@ class TaskQueue:
     def _is_pubsub_available(self) -> bool:
         try:
             from google.cloud import pubsub_v1  # noqa: F401
+
             return True
         except ImportError:
             return False

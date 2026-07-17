@@ -7,6 +7,7 @@ from core.cache.semantic_cache import SemanticCache
 
 # বাংলা মন্তব্য: মডিউল ৩-এর নতুন অপ্টিমাইজেশনগুলো টেস্ট করার জন্য ইউনিট টেস্ট।
 
+
 @pytest.mark.anyio
 async def test_multi_layer_cache_prefix_batched_lookup():
     cache = MultiLayerCache()
@@ -27,6 +28,7 @@ async def test_multi_layer_cache_prefix_batched_lookup():
 async def test_idempotency_lock_fail_closed():
     # Test Redis unavailable with fail_closed=True raises exception
     from unittest.mock import PropertyMock
+
     with patch("core.cache.redis_manager.SecureRedisManager.client", new_callable=PropertyMock) as mock_client:
         mock_client.return_value = None
         with pytest.raises(IdempotencyUnavailableError) as exc_info:
@@ -45,6 +47,7 @@ async def test_autocache_proxy_ttl_and_dynamic_costs():
 
     # Test request_history is a TTLCache
     from cachetools import TTLCache
+
     assert isinstance(proxy.request_history, TTLCache)
 
     # Test dynamic cost lookup

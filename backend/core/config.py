@@ -123,7 +123,6 @@ class Settings(BaseSettings):
         validation_alias="SUPREMEAI_ENCRYPTION_KEY",
     )
 
-
     # ── Stripe credentials — SecretStr দিয়ে log-safe ────────────────────────
     stripe_api_key: SecretStr = Field(default=SecretStr(""), validation_alias="STRIPE_API_KEY")
     stripe_webhook_secret: SecretStr = Field(default=SecretStr(""), validation_alias="STRIPE_WEBHOOK_SECRET")
@@ -152,21 +151,26 @@ class Settings(BaseSettings):
     admin_emails: list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
     supremeai_admin_password_hash: str | None = Field(default=None, validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH")
     supremeai_public_paths: list[str] = Field(
-        default=["/health", "/metrics", "/docs", "/openapi.json", "/api/v1/auth/token", "/actuator", "/api/admin/firebase-", "/api/v1/health", "/api/v1/health/", "/"],
-        validation_alias="SUPREMEAI_PUBLIC_PATHS"
+        default=[
+            "/health",
+            "/metrics",
+            "/docs",
+            "/openapi.json",
+            "/api/v1/auth/token",
+            "/actuator",
+            "/api/admin/firebase-",
+            "/api/v1/health",
+            "/api/v1/health/",
+            "/",
+        ],
+        validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )
 
     prompt_blocked_patterns: list[str] = Field(
-        default=["system prompt", "ignore all previous", "you are an administrative"],
-        validation_alias="PROMPT_BLOCKED_PATTERNS"
+        default=["system prompt", "ignore all previous", "you are an administrative"], validation_alias="PROMPT_BLOCKED_PATTERNS"
     )
     rbac_role_definitions: dict[str, list[str]] = Field(
-        default_factory=lambda: {
-            "admin": ["*"],
-            "user": ["read", "write"],
-            "guest": ["read"]
-        },
-        validation_alias="RBAC_ROLE_DEFINITIONS"
+        default_factory=lambda: {"admin": ["*"], "user": ["read", "write"], "guest": ["read"]}, validation_alias="RBAC_ROLE_DEFINITIONS"
     )
 
     # ── Circuit Breaker Config ───────────────────────────────────────────────
@@ -406,6 +410,7 @@ class Settings(BaseSettings):
             v = v.strip()
             try:
                 import json as _json
+
                 return _json.loads(v)
             except Exception:  # noqa: BLE001
                 return [p.strip() for p in v.split(",") if p.strip()]
@@ -419,6 +424,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             try:
                 import json as _json
+
                 return _json.loads(v)
             except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to parse rbac_role_definitions JSON: {e}. Defaulting to empty dictionary.")

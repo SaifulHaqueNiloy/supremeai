@@ -55,6 +55,7 @@ async def test_swarm_orchestrator_execute_task(mock_agents):
         result = await orchestrator.execute_task("write a python script", user_id="user1")
 
     from core.orchestration.swarm_orchestrator import ExecutionResult
+
     assert isinstance(result, ExecutionResult)
     workspace = result.workspace
     assert isinstance(workspace, SharedWorkspace)

@@ -32,7 +32,7 @@ describe('apiClient', () => {
     });
 
     const result = await apiClient.get('/test');
-    
+
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/test', expect.objectContaining({
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

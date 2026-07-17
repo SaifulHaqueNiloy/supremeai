@@ -6,15 +6,15 @@ export const AgentNode = ({ data }) => {
   // হেলথ স্ট্যাটাস এক্সট্র্যাক্ট করা
   const isAlive = data.health?.status === 'active';
   const latency = data.health?.latency || 0;
-  
+
   // ডাইনামিক স্টাইলিং
   const borderColor = isAlive ? 'border-green-500' : 'border-red-500/50';
   const shadowColor = isAlive ? 'shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'shadow-none';
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.5 }} 
-      animate={{ opacity: 1, scale: 1 }} 
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
       className={`p-4 rounded-lg bg-slate-900 border-2 ${borderColor} ${shadowColor} min-w-[160px] transition-colors duration-500`}
     >
@@ -23,7 +23,7 @@ export const AgentNode = ({ data }) => {
           <Bot size={20} />
           <span className="font-bold">{data.label}</span>
         </div>
-        
+
         {/* 🟢 Pulsing Status Dot */}
         <div className="relative flex h-3 w-3">
           {isAlive && (

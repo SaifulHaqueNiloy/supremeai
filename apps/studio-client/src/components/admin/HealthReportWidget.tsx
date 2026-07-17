@@ -50,8 +50,8 @@ export const HealthReportWidget: React.FC<HealthReportWidgetProps> = ({ healthMa
                   </div>
                 </div>
                 <div className={`text-[10px] px-2 py-1 rounded border font-semibold ${
-                  isHealthy 
-                    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' 
+                  isHealthy
+                    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'
                     : 'text-rose-400 border-rose-500/20 bg-rose-500/10'
                 }`}>
                   {details.status?.toUpperCase() || 'UNKNOWN'}

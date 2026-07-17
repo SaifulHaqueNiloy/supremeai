@@ -41,7 +41,7 @@ class GitScreen extends StatelessWidget {
             children: [
               _buildHeaderCard(context),
               const SizedBox(height: 32),
-              Text('git.recent_commits'.tr().toUpperCase(), 
+              Text('git.recent_commits'.tr().toUpperCase(),
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
               ),
               const SizedBox(height: 16),
@@ -68,11 +68,11 @@ class GitScreen extends StatelessWidget {
         children: [
           const Icon(Icons.commit, color: Colors.orangeAccent, size: 48),
           const SizedBox(height: 16),
-          Text('git.subtitle'.tr(), 
+          Text('git.subtitle'.tr(),
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text('git.description'.tr(), 
+          Text('git.description'.tr(),
             style: const TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
             textAlign: TextAlign.center,
           ),

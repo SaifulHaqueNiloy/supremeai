@@ -18,20 +18,20 @@ export const Header = ({
       <div className="flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--supremeai-color-neutral-500)]" />
-          <Input 
-            placeholder="Search AI models, integrations..." 
+          <Input
+            placeholder="Search AI models, integrations..."
             className="pl-9 bg-[var(--supremeai-color-neutral-100)] dark:bg-[var(--supremeai-color-neutral-900)] border-none"
           />
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-4">
         <Button variant="ghost" className="w-9 h-9 p-0 rounded-full">
           <Bell className="w-5 h-5 text-[var(--supremeai-color-neutral-500)]" />
         </Button>
-        <Button 
-          variant="ghost" 
-          onClick={toggleTheme} 
+        <Button
+          variant="ghost"
+          onClick={toggleTheme}
           className="w-9 h-9 p-0 rounded-full"
         >
           {theme === 'dark' ? (
@@ -40,7 +40,7 @@ export const Header = ({
             <Moon className="w-5 h-5 text-[var(--supremeai-color-neutral-500)]" />
           )}
         </Button>
-        
+
         <div className="h-8 w-8 rounded-full bg-[var(--supremeai-color-neutral-100)] dark:bg-[var(--supremeai-color-neutral-900)] flex items-center justify-center border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] overflow-hidden">
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />

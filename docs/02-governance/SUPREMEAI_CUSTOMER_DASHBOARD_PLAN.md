@@ -1,9 +1,9 @@
 # SUPREMEAI 2.0 — CUSTOMER DASHBOARD & PERSONALIZED WORKSPACE
 # Master Plan: Browser Preview, Mobile Simulator, GitHub Integration & Customizable UI
 
-> **Version:** 2.0.0  
-> **Date:** 2026-06-21  
-> **Status:** Master Plan — Awaiting Implementation  
+> **Version:** 2.0.0
+> **Date:** 2026-06-21
+> **Status:** Master Plan — Awaiting Implementation
 > **Vision:** Every user gets their own personalized AI command center tailored to their workflow, tools, and interests
 
 ---
@@ -713,8 +713,8 @@ function personalizeDashboard(user: UserProfile): DashboardConfig {
   // 5. Merge and return
   return mergeConfigs(roleDefaults, user.dashboard, {
     widgets: [...timeWidgets, ...recommendedTools, ...recentProjects],
-    toolOrder: user.dashboard.toolOrder.length > 0 
-      ? user.dashboard.toolOrder 
+    toolOrder: user.dashboard.toolOrder.length > 0
+      ? user.dashboard.toolOrder
       : roleDefaults.toolOrder,
   });
 }

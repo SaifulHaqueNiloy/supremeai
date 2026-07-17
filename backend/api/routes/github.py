@@ -89,12 +89,7 @@ class ImplementRequest(BaseModel):
 
 
 @router.post("/connect")
-async def connect_repo(
-    payload: ConnectRequest,
-    db=Depends(get_tenant_db),
-    user=Depends(get_current_user_token),
-    sql_db=Depends(get_db_session)
-):
+async def connect_repo(payload: ConnectRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
     async with handle_github_errors("connect", f"{payload.repo_owner}/{payload.repo_name}"):
         agent = await _get_agent(user, sql_db)
         inst_id = payload.installation_id if payload.installation_id is not None else ""
@@ -108,12 +103,7 @@ async def connect_repo(
 
 
 @router.post("/improve")
-async def improve_repo(
-    payload: ImproveRequest,
-    db=Depends(get_tenant_db),
-    user=Depends(get_current_user_token),
-    sql_db=Depends(get_db_session)
-):
+async def improve_repo(payload: ImproveRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
     async with handle_github_errors("improve", payload.repo):
         repo = _resolve_repo(payload.repo, db)
         agent = await _get_agent(user, sql_db)
@@ -122,12 +112,7 @@ async def improve_repo(
 
 
 @router.post("/push")
-async def push_improvements(
-    payload: PushRequest,
-    db=Depends(get_tenant_db),
-    user=Depends(get_current_user_token),
-    sql_db=Depends(get_db_session)
-):
+async def push_improvements(payload: PushRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
     async with handle_github_errors("push", payload.repo):
         repo = _resolve_repo(payload.repo, db)
         agent = await _get_agent(user, sql_db)
@@ -144,7 +129,7 @@ async def push_improvements(
             "branch": commit_res["branch"],
             "pr_title": pr_title,
             "pr_url": pr_res["pr_url"],
-            "message": "PR created successfully. Waiting for manual approval."
+            "message": "PR created successfully. Waiting for manual approval.",
         }
 
 
@@ -163,40 +148,37 @@ async def implement_repo(payload: ImplementRequest):
 
 
 @router.get("/repos")
-async def list_connected_repos(
-    db=Depends(get_tenant_db),
-    user=Depends(get_current_user_token),
-    sql_db=Depends(get_db_session)
-):
+async def list_connected_repos(db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
     profile = db.get_tenant_profile() or {}
     repo = profile.get("github_repo")
     if not repo:
         return []
 
     import httpx
+
     GITHUB_API_BASE = "https://api.github.com"
     agent = await _get_agent(user, sql_db)
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(
-            f"{GITHUB_API_BASE}/repos/{repo}",
-            headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"}
+            f"{GITHUB_API_BASE}/repos/{repo}", headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"}
         )
     resp.raise_for_status()
     data = resp.json()
-    return [{
-        "id": str(data["id"]), "name": data["name"], "branch": data["default_branch"],
-        "updated": data["updated_at"], "commits": data.get("size", 0),
-    }]
+    return [
+        {
+            "id": str(data["id"]),
+            "name": data["name"],
+            "branch": data["default_branch"],
+            "updated": data["updated_at"],
+            "commits": data.get("size", 0),
+        }
+    ]
 
 
 @router.get("/repos/{repo_id}/commits")
 async def list_repo_commits(
-    repo_id: str,
-    limit: int = 10,
-    db=Depends(get_tenant_db),
-    user=Depends(get_current_user_token),
-    sql_db=Depends(get_db_session)
+    repo_id: str, limit: int = 10, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)
 ):
     profile = db.get_tenant_profile() or {}
     repo = profile.get("github_repo")
@@ -204,16 +186,22 @@ async def list_repo_commits(
         raise HTTPException(status_code=404, detail="No repository connected.")
 
     import httpx
+
     GITHUB_API_BASE = "https://api.github.com"
     agent = await _get_agent(user, sql_db)
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(
             f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
-            headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"}
+            headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"},
         )
     resp.raise_for_status()
-    return [{
-        "hash": c["sha"][:7], "message": c["commit"]["message"].split("\n")[0],
-        "author": c["commit"]["author"]["name"], "time": c["commit"]["author"]["date"],
-    } for c in resp.json()]
+    return [
+        {
+            "hash": c["sha"][:7],
+            "message": c["commit"]["message"].split("\n")[0],
+            "author": c["commit"]["author"]["name"],
+            "time": c["commit"]["author"]["date"],
+        }
+        for c in resp.json()
+    ]

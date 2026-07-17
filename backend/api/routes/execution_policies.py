@@ -35,26 +35,25 @@ class ExecutionPolicyUpdate(BaseModel):
 
 
 @router.get("/")
-async def get_policies(
-    session: AsyncSession = Depends(get_db_session),
-    _admin: dict = Depends(require_admin)
-):
+async def get_policies(session: AsyncSession = Depends(get_db_session), _admin: dict = Depends(require_admin)):
     try:
         result = await session.execute(select(ExecutionPolicy))
         policies = result.scalars().all()
 
         formatted = []
         for pol in policies:
-            formatted.append({
-                "id": str(pol.id),
-                "scope": pol.scope.value,
-                "target_name": "*",
-                "max_timeout_ms": pol.max_timeout_seconds * 1000,
-                "max_compute_usd": float(pol.max_serverless_compute_budget_usd),
-                "max_retries": pol.max_retries,
-                "cb_failure_threshold": pol.circuit_breaker_failure_threshold,
-                "cooldown_window_sec": pol.circuit_breaker_cooldown_seconds,
-            })
+            formatted.append(
+                {
+                    "id": str(pol.id),
+                    "scope": pol.scope.value,
+                    "target_name": "*",
+                    "max_timeout_ms": pol.max_timeout_seconds * 1000,
+                    "max_compute_usd": float(pol.max_serverless_compute_budget_usd),
+                    "max_retries": pol.max_retries,
+                    "cb_failure_threshold": pol.circuit_breaker_failure_threshold,
+                    "cooldown_window_sec": pol.circuit_breaker_cooldown_seconds,
+                }
+            )
         return {"items": formatted}
     except Exception as e:  # noqa: BLE001
         logger.exception(f"Failed to fetch execution policies: {e}")
@@ -63,10 +62,7 @@ async def get_policies(
 
 @router.put("/{policy_id}")
 async def update_policy(
-    policy_id: str,
-    updates: ExecutionPolicyUpdate,
-    session: AsyncSession = Depends(get_db_session),
-    _admin: dict = Depends(require_admin)
+    policy_id: str, updates: ExecutionPolicyUpdate, session: AsyncSession = Depends(get_db_session), _admin: dict = Depends(require_admin)
 ):
     try:
         pid = uuid.UUID(policy_id)

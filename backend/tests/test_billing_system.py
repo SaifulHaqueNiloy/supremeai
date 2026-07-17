@@ -38,6 +38,7 @@ class MockAsyncSession:
             def scalars(self):
                 val_to_use = self.val
                 is_empty_to_use = self.is_empty
+
                 class MockScalars:
                     def __init__(self, val):
                         self.val = val

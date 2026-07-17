@@ -23,18 +23,18 @@ export const ExecutionShell: React.FC = React.memo(() => {
 
   // Virtualization logic
   const containerHeight = containerRef.current?.clientHeight || 600;
-  
+
   const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - 5);
   const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT) + 10;
   const endIndex = Math.min(logBuffer.length, startIndex + visibleCount);
-  
+
   const visibleItems = logBuffer.slice(startIndex, endIndex);
 
   // Scroll handler to detect manual scroll up
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     setScrollTop(target.scrollTop);
-    
+
     // If scrolled up from bottom by more than 10px, disable auto scroll
     const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 10;
     setAutoScroll(isAtBottom);
@@ -56,15 +56,15 @@ export const ExecutionShell: React.FC = React.memo(() => {
           <span className="text-xs text-gray-500">{logBuffer.length} events</span>
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Top: Viewport */}
         <div className="h-1/2 border-b border-gray-800">
           <SandboxViewport />
         </div>
-        
+
         {/* Bottom: Logs */}
-        <div 
+        <div
           ref={containerRef}
           onScroll={handleScroll}
           className="h-1/2 overflow-y-auto custom-scrollbar p-2 relative bg-[#121212]"
@@ -73,10 +73,10 @@ export const ExecutionShell: React.FC = React.memo(() => {
           {visibleItems.map((log, idx) => {
             const absoluteIndex = startIndex + idx;
             const colorClass = colorMap[log.log_type] || colorMap.shell_stdout;
-            
+
             return (
-              <div 
-                key={log.id} 
+              <div
+                key={log.id}
                 className={`absolute w-full px-2 flex whitespace-pre-wrap leading-6 hover:bg-white/5`}
                 style={{ top: `${absoluteIndex * ITEM_HEIGHT}px`, height: `${ITEM_HEIGHT}px` }}
               >
@@ -94,7 +94,7 @@ export const ExecutionShell: React.FC = React.memo(() => {
       </div>
 
       {!autoScroll && (
-        <button 
+        <button
           onClick={() => {
             setAutoScroll(true);
             if (containerRef.current) {

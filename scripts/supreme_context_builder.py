@@ -26,7 +26,7 @@ def generate_tree(dir_path, prefix=""):
     """প্রজেক্টের ডিরেক্টরি ট্রি তৈরি করে (AI এর Spatial Awareness এর জন্য)"""
     tree_str = ""
     try:
-        entries = sorted([e for e in os.listdir(dir_path) if e not in IGNORE_DIRS and not e.startswith('.')], 
+        entries = sorted([e for e in os.listdir(dir_path) if e not in IGNORE_DIRS and not e.startswith('.')],
                          key=lambda x: (not os.path.isdir(os.path.join(dir_path, x)), x))
     except PermissionError:
         return ""
@@ -35,7 +35,7 @@ def generate_tree(dir_path, prefix=""):
         path = os.path.join(dir_path, entry)
         is_last = (i == len(entries) - 1)
         connector = "└── " if is_last else "├── "
-        
+
         if os.path.isdir(path):
             tree_str += f"{prefix}{connector}{entry}/\n"
             extension = "    " if is_last else "│   "
@@ -48,12 +48,12 @@ def generate_tree(dir_path, prefix=""):
 def generate_ai_context():
     total_words = 0
     file_count = 0
-    
+
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as out_file:
         # ১. প্রজেক্ট মেটাডেটা
         out_file.write("\n")
         out_file.write("\n\n")
-        
+
         # ২. ডিরেক্টরি ট্রি (The Map)
         print("🗺️ Generating Directory Tree...")
         out_file.write("<project_structure>\n")
@@ -88,23 +88,23 @@ def generate_ai_context():
                             out_file.write("\n")
                         out_file.write("]]>\n")
                         out_file.write("</file>\n\n")
-                        
+
                         total_words += len(content.split())
                         file_count += 1
-                        
+
                 except Exception:
                     pass # বাইনারি বা আনরিডেবল ফাইলগুলো সাইলেন্টলি স্কিপ করবে
 
         out_file.write("</project_files>\n")
-        
+
         # ৪. টোকেন এস্টিমেশন (1 word ≈ 1.3 tokens)
         estimated_tokens = math.ceil(total_words * 1.3)
-        
+
         print("\n=======================================")
         print(f"✅ Success! File saved as: {OUTPUT_FILE}")
         print(f"📄 Total Files Scanned: {file_count}")
         print(f"🧠 Estimated AI Tokens: ~{estimated_tokens:,}")
-        
+
         if estimated_tokens > 2000000:
             print("⚠️ WARNING: This is larger than Gemini 1.5 Pro's 2M context window!")
         elif estimated_tokens > 200000:

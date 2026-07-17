@@ -11,7 +11,7 @@ class DeploymentStream {
   /// Starts polling the status endpoint using Exponential Backoff to optimize battery and servers.
   Stream<Map<String, dynamic>> monitorDeployment(String jobId) {
     _controller = StreamController<Map<String, dynamic>>.broadcast();
-    
+
     // Initial delays configuration
     int currentDelaySeconds = 1;
     const int maxDelaySeconds = 16;
@@ -32,7 +32,7 @@ class DeploymentStream {
             _controller?.close();
             return;
           }
-          
+
           // Exponential backoff multiplier
           currentDelaySeconds = (currentDelaySeconds * 2).clamp(1, maxDelaySeconds);
         } else {

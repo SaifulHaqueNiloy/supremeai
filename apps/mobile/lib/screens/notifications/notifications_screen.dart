@@ -19,7 +19,7 @@ class NotificationsScreen extends StatelessWidget {
             child: Container(color: Colors.black.withValues(alpha: 0.5)),
           ),
         ),
-        title: Text('insights.title'.tr().toUpperCase(), 
+        title: Text('insights.title'.tr().toUpperCase(),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white)
         ),
         actions: [
@@ -71,11 +71,11 @@ class NotificationsScreen extends StatelessWidget {
   }
 
   Widget _buildInsightCard(
-    BuildContext context, 
-    String category, 
-    String title, 
-    String description, 
-    String tag, 
+    BuildContext context,
+    String category,
+    String title,
+    String description,
+    String tag,
     Color color,
     IconData icon
   ) {
@@ -147,7 +147,7 @@ class NotificationsScreen extends StatelessWidget {
                       Expanded(
                         child: TextButton(
                           onPressed: () {},
-                          child: Text('btn.cancel'.tr().toUpperCase(), 
+                          child: Text('btn.cancel'.tr().toUpperCase(),
                             style: const TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold)
                           ),
                         ),
@@ -190,4 +190,3 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 }
-

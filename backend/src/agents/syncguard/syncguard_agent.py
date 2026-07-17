@@ -1,11 +1,16 @@
-import yaml
-from pathlib import Path
-from typing import Dict, Any
-from .tools import check_infrastructure_drift, check_env_secrets_sync, check_redis_connection
-import os
 import json
+import os
+from pathlib import Path
+from typing import Any
+
 import redis.asyncio as redis
+import yaml
 from loguru import logger
+
+from .tools import check_env_secrets_sync
+from .tools import check_infrastructure_drift
+from .tools import check_redis_connection
+
 
 class SyncGuardAgent:
     def __init__(self, llm_client=None):
@@ -18,10 +23,10 @@ class SyncGuardAgent:
 
     def _load_config(self) -> dict:
         config_path = Path(__file__).parent / "config.yaml"
-        with open(config_path, "r", encoding="utf-8") as file:
+        with open(config_path, encoding="utf-8") as file:
             return yaml.safe_load(file)
 
-    async def run_full_audit(self) -> Dict[str, Any]:
+    async def run_full_audit(self) -> dict[str, Any]:
         """
         Executes the full synchronization audit across the 10-Crore-Floor architecture.
         """
@@ -66,10 +71,12 @@ class SyncGuardAgent:
 
         return audit_report
 
+
 # Test Execution (If run directly)
 if __name__ == "__main__":
     import asyncio
     import sys
+
     agent = SyncGuardAgent()
     report = asyncio.run(agent.run_full_audit())
     if report["status"] == "SYNC_FAILED":

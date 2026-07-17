@@ -16,6 +16,7 @@ class ResourceGuard:
 
     # Dynamically determine sandbox root similar to microvm_sandbox
     import platform
+
     _default_sandbox = "C:\\tmp\\sandboxes" if platform.system() == "Windows" else "/tmp/sandboxes"
     SANDBOX_ROOT = Path(os.getenv("SANDBOX_ROOT", _default_sandbox)).resolve()
 

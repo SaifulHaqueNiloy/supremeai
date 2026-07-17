@@ -34,7 +34,7 @@ class SearchMovieMovies {
   final String? genre;
   final String imageUrl;
   SearchMovieMovies.fromJson(dynamic json):
-  
+
   id = nativeFromJson<String>(json['id']),
   title = nativeFromJson<String>(json['title']),
   genre = json['genre'] == null ? null : nativeFromJson<String>(json['genre']),
@@ -49,15 +49,15 @@ class SearchMovieMovies {
     }
 
     final SearchMovieMovies otherTyped = other as SearchMovieMovies;
-    return id == otherTyped.id && 
-    title == otherTyped.title && 
-    genre == otherTyped.genre && 
+    return id == otherTyped.id &&
+    title == otherTyped.title &&
+    genre == otherTyped.genre &&
     imageUrl == otherTyped.imageUrl;
-    
+
   }
   @override
   int get hashCode => Object.hashAll([id.hashCode, title.hashCode, genre.hashCode, imageUrl.hashCode]);
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -82,7 +82,7 @@ class SearchMovieMovies {
 class SearchMovieData {
   final List<SearchMovieMovies> movies;
   SearchMovieData.fromJson(dynamic json):
-  
+
   movies = (json['movies'] as List<dynamic>)
         .map((e) => SearchMovieMovies.fromJson(e))
         .toList();
@@ -97,11 +97,11 @@ class SearchMovieData {
 
     final SearchMovieData otherTyped = other as SearchMovieData;
     return movies == otherTyped.movies;
-    
+
   }
   @override
   int get hashCode => movies.hashCode;
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -120,15 +120,15 @@ class SearchMovieVariables {
   late final Optional<String>genre;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   SearchMovieVariables.fromJson(Map<String, dynamic> json) {
-  
-  
+
+
     titleInput = Optional.optional(nativeFromJson, nativeToJson);
     titleInput.value = json['titleInput'] == null ? null : nativeFromJson<String>(json['titleInput']);
-  
-  
+
+
     genre = Optional.optional(nativeFromJson, nativeToJson);
     genre.value = json['genre'] == null ? null : nativeFromJson<String>(json['genre']);
-  
+
   }
   @override
   bool operator ==(Object other) {
@@ -140,13 +140,13 @@ class SearchMovieVariables {
     }
 
     final SearchMovieVariables otherTyped = other as SearchMovieVariables;
-    return titleInput == otherTyped.titleInput && 
+    return titleInput == otherTyped.titleInput &&
     genre == otherTyped.genre;
-    
+
   }
   @override
   int get hashCode => Object.hashAll([titleInput.hashCode, genre.hashCode]);
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -164,4 +164,3 @@ class SearchMovieVariables {
     required this.genre,
   });
 }
-

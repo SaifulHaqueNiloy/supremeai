@@ -1,17 +1,17 @@
 part of 'generated.dart';
 
 class ListMoviesVariablesBuilder {
-  
+
   final FirebaseDataConnect _dataConnect;
   ListMoviesVariablesBuilder(this._dataConnect, );
   Deserializer<ListMoviesData> dataDeserializer = (dynamic json)  => ListMoviesData.fromJson(jsonDecode(json));
-  
+
   Future<QueryResult<ListMoviesData, void>> execute({QueryFetchPolicy fetchPolicy = QueryFetchPolicy.preferCache}) {
     return ref().execute(fetchPolicy: fetchPolicy);
   }
 
   QueryRef<ListMoviesData, void> ref() {
-    
+
     return _dataConnect.query("ListMovies", dataDeserializer, emptySerializer, null);
   }
 }
@@ -23,7 +23,7 @@ class ListMoviesMovies {
   final String imageUrl;
   final String? genre;
   ListMoviesMovies.fromJson(dynamic json):
-  
+
   id = nativeFromJson<String>(json['id']),
   title = nativeFromJson<String>(json['title']),
   imageUrl = nativeFromJson<String>(json['imageUrl']),
@@ -38,15 +38,15 @@ class ListMoviesMovies {
     }
 
     final ListMoviesMovies otherTyped = other as ListMoviesMovies;
-    return id == otherTyped.id && 
-    title == otherTyped.title && 
-    imageUrl == otherTyped.imageUrl && 
+    return id == otherTyped.id &&
+    title == otherTyped.title &&
+    imageUrl == otherTyped.imageUrl &&
     genre == otherTyped.genre;
-    
+
   }
   @override
   int get hashCode => Object.hashAll([id.hashCode, title.hashCode, imageUrl.hashCode, genre.hashCode]);
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -71,7 +71,7 @@ class ListMoviesMovies {
 class ListMoviesData {
   final List<ListMoviesMovies> movies;
   ListMoviesData.fromJson(dynamic json):
-  
+
   movies = (json['movies'] as List<dynamic>)
         .map((e) => ListMoviesMovies.fromJson(e))
         .toList();
@@ -86,11 +86,11 @@ class ListMoviesData {
 
     final ListMoviesData otherTyped = other as ListMoviesData;
     return movies == otherTyped.movies;
-    
+
   }
   @override
   int get hashCode => movies.hashCode;
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -102,4 +102,3 @@ class ListMoviesData {
     required this.movies,
   });
 }
-
