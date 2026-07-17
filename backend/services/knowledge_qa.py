@@ -51,7 +51,22 @@ class KnowledgeQAService:
         self.gateway = gateway or GatewayManager()
         self.audit_logger = audit_logger or AuditLogger()
         self.manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        self.governance = self.manifest["governance"]
+        # বাংলা মন্তব্য: manifest দুটো ফর্ম্যাট সাপোর্ট করে:
+        # ১. {"governance": {"allowed_roles": [...], ...}} — nested (new format)
+        # ২. {"allowed_roles": [...], "allowed_data": {...}, ...} — flat (current manifest format)
+        # KeyError এড়াতে defensive fallback যোগ করা হয়েছে
+        if "governance" in self.manifest:
+            self.governance = self.manifest["governance"]
+        else:
+            # flat manifest — normalize to governance shape
+            self.governance = {
+                "allowed_roles": self.manifest.get("allowed_roles", []),
+                "allowed_data": self.manifest.get("allowed_data", []),
+                "tools_allowed": self.manifest.get("tools_allowed", []),
+                "human_approval_points": self.manifest.get("human_approval_points", {}),
+                "budget": self.manifest.get("budget", {}),
+                "audit_logging": self.manifest.get("audit_logging", []),
+            }
 
     def _authorize(self, user: dict[str, Any]) -> tuple[str, str]:
         tenant_id = str(user.get("tenant_id") or user.get("sub") or "")
@@ -67,9 +82,22 @@ class KnowledgeQAService:
         # metadata is denied so legacy/unscoped records cannot leak across tenants.
         if metadata.get("tenant_id") != tenant_id:
             return False
-        if metadata.get("namespace") not in set(self.governance["allowed_data"]):
+
+        # বাংলা মন্তব্য: allowed_data দুই ফর্ম্যাট হ্যান্ডল করে:
+        # ১. list → ["public_sops", "hr_policies"] (governance block format)
+        # ২. dict → {"Admin": [...], "Manager": [...]} (flat manifest format — role-keyed)
+        allowed_data = self.governance.get("allowed_data", [])
+        if isinstance(allowed_data, dict):
+            # flat manifest: get namespaces for this specific role (case-insensitive)
+            role_key = next((k for k in allowed_data if k.lower() == role.lower()), None)
+            allowed_namespaces: set[str] = set(allowed_data.get(role_key, [])) if role_key else set()
+        else:
+            allowed_namespaces = set(allowed_data)
+
+        if metadata.get("namespace") not in allowed_namespaces:
             return False
-        allowed_roles = metadata.get("allowed_roles", self.governance["allowed_roles"])
+
+        allowed_roles = metadata.get("allowed_roles", self.governance.get("allowed_roles", []))
         return role in {str(item).lower() for item in allowed_roles}
 
     def retrieve(self, query: str, tenant_id: str, role: str, limit: int = 3) -> list[tuple[str, float, dict[str, Any]]]:
