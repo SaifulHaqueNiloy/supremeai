@@ -55,6 +55,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Windows কনসোলে ইউনিকোড ক্যারেক্টার (ইমোজি ও বাংলা) প্রিন্ট করার সময় UnicodeEncodeError এড়াতে stdout এবং stderr-কে utf-8 এনকোডিংয়ে রিকনফিগার করা হয়েছে।
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
+
 
 # =============================================================================
 # কনফিগারেশন: কোন ফাইল/ফোল্ডার বাদ দেওয়া হবে
