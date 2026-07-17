@@ -16,6 +16,7 @@ import { AgentWorkspace } from './pages/user/AgentWorkspace';
 import { IdeWorkspace } from './pages/user/IdeWorkspace';
 import { IntegrationsManager } from './pages/user/IntegrationsManager';
 import { ArchitectTower } from './pages/user/ArchitectTower';
+import { SkillCatalog } from './pages/user/SkillCatalog';
 import SwarmMap from './components/SwarmMap';
 import EvolutionForge from './pages/user/EvolutionForge/EvolutionForge';
 import { DashboardShell } from "./components/dashboard/DashboardShell";
@@ -186,6 +187,12 @@ const AppContent: React.FC = () => {
                 <Route path="/evolution-forge" element={
                   <ProtectedRoute>
                     <EvolutionForge />
+                  </ProtectedRoute>
+                } />
+                {/* বাংলা: /skills-catalog রাউট — রোল-ফিল্টারড ডাইনামিক ক্যাটালগ পেজ */}
+                <Route path="/skills-catalog" element={
+                  <ProtectedRoute>
+                    <SkillCatalog />
                   </ProtectedRoute>
                 } />
                 <Route path="/workspace/*" element={
