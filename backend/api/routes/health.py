@@ -75,15 +75,18 @@ async def health_check(request: Request, response: Response):
     }
 
 
-@router.get("/live")
-async def liveness_probe() -> dict[str, str]:
-    """Return process liveness without probing external dependencies."""
-    return {"status": "alive", "timestamp": _timestamp()}
+@router.get("/live", tags=["Infrastructure Monitor"])
+async def liveness_probe():
+    """💓 Liveness Probe: Render রাউটিং মেশকে প্রসেসের সচলতা নিশ্চিত করে।"""
+    return {
+        "status": "alive",
+        "timestamp": int(time.time())
+    }
 
 
-@router.get("/ready")
+@router.get("/ready", tags=["Infrastructure Monitor"])
 async def readiness_probe(request: Request, response: Response):
-    """Expose the dependency-aware readiness probe separately from liveness."""
+    """🚦 Readiness Probe: ডিপেনডেন্সি ও ফাইল সিস্টেমের রেডিনেস চেক ফায়ার করে।"""
     return await health_check(request, response)
 
 
