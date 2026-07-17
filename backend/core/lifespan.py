@@ -51,7 +51,10 @@ from core.pgbouncer_pool import init_db_pool  # noqa: E402
 async def _ensure_api_key_tables() -> None:
     """Ensure API key database tables exist."""
     pool = await get_db_pool()
-    async with pool.acquire() as conn:
+    # বাংলা মন্তব্য: PgBouncerConnectionPool.acquire() একটি coroutine হওয়ায় সরাসরি async context manager হিসেবে ব্যবহার করা যায় না।
+    # তাই এটিকে প্রথমে await করে কানেকশনটি তুলে আনা হচ্ছে এবং finally ব্লকে রিলিজ করা হচ্ছে।
+    conn = await pool.acquire()
+    try:
         async with conn.transaction():
             await conn.execute(
                 """
@@ -98,7 +101,10 @@ async def _ensure_api_key_tables() -> None:
             )
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)")
+    finally:
+        await pool.release(conn)
     logger.info("✅ API key tables ensured")
+
 
 
 @asynccontextmanager
