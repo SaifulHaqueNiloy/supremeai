@@ -91,6 +91,13 @@
           }
         },
         {
+          "source": "/api/preferences/:user_id/stream",
+          "run": {
+            "serviceId": "supremeai-api",
+            "region": "us-central1"
+          }
+        },
+        {
           "source": "/:user_id/stream",
           "run": {
             "serviceId": "supremeai-api",
@@ -204,6 +211,13 @@
         },
         {
           "source": "/default/stream",
+          "run": {
+            "serviceId": "supremeai-api",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/preferences/:user_id/stream",
           "run": {
             "serviceId": "supremeai-api",
             "region": "us-central1"
