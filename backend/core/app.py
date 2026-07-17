@@ -248,6 +248,22 @@ if isinstance(RateLimitExceeded, type) and issubclass(RateLimitExceeded, Excepti
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+@app.get("/")
+async def root() -> dict[str, Any]:
+    """Root endpoint — API info and health summary.
+
+    বাংলা: রুট এন্ডপয়েন্ট — API তথ্য এবং সার্ভার স্ট্যাটাস।
+    """
+    return {
+        "name": settings.app_name,
+        "version": "2.0.0",
+        "status": "online",
+        "docs": "/docs",
+        "health": "/api/v1/health",
+        "description": "Multi-cloud AI orchestration platform.",
+    }
+
+
 @app.get("/health")
 async def health() -> dict[str, Any]:
     """Comprehensive health check — Redis + API key status."""

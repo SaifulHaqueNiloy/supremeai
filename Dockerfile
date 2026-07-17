@@ -34,7 +34,8 @@ COPY ask_scribe.py ./
 
 
 ENV PATH="/app/.venv/bin:$PATH"
-EXPOSE 8000
+# বাংলা: EXPOSE port, CMD-এর ${PORT:-8080} default-এর সাথে consistent
+EXPOSE 8080
 
 # CRITICAL FIX (Cloud Run Port Binding):
 # Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).
