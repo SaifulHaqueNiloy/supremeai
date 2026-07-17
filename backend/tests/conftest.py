@@ -80,8 +80,9 @@ try:
     from core.config import settings, secret_vault
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
-except Exception:
-    pass
+except Exception as e:
+    import warnings
+    warnings.warn(f"Failed to clear settings caches during test setup: {e}", UserWarning)
 
 
 
