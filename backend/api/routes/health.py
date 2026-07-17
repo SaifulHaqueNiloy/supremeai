@@ -6,6 +6,7 @@ render.yaml-এ healthCheckPath: /api/v1/health সেট করা আছে।
 """
 
 import time
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -24,6 +25,11 @@ from fastapi import Response
 # বাংলা মন্তব্য: Render health check-এর জন্য এই endpoint অপরিহার্য।
 # render.yaml-এ healthCheckPath: /api/v1/health নির্ধারিত।
 # এটি prefix="/api/v1" সহ register করা হয়, তাই path="/health" যথেষ্ট।
+
+def _timestamp() -> str:
+    """Return a timezone-aware timestamp suitable for infrastructure probes."""
+    return datetime.now(UTC).isoformat()
+
 @router.get("/health")
 async def health_check(request: Request, response: Response):
     """Primary health check endpoint — checks actual database, redis and config health."""
@@ -56,7 +62,7 @@ async def health_check(request: Request, response: Response):
             "status": "degraded",
             "service": "supremeai-backend",
             "version": "2.0",
-            "timestamp": int(time.time()),
+            "timestamp": _timestamp(),
             "subsystems": subsystems,
         }
 
@@ -64,9 +70,21 @@ async def health_check(request: Request, response: Response):
         "status": "ok",
         "service": "supremeai-backend",
         "version": "2.0",
-        "timestamp": int(time.time()),
+        "timestamp": _timestamp(),
         "subsystems": subsystems,
     }
+
+
+@router.get("/live")
+async def liveness_probe() -> dict[str, str]:
+    """Return process liveness without probing external dependencies."""
+    return {"status": "alive", "timestamp": _timestamp()}
+
+
+@router.get("/ready")
+async def readiness_probe(request: Request, response: Response):
+    """Expose the dependency-aware readiness probe separately from liveness."""
+    return await health_check(request, response)
 
 
 class HealthRequest(BaseModel):
