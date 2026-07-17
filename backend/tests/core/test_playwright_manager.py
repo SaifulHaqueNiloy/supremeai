@@ -2,9 +2,7 @@
 # বাংলা মন্তব্য: Playwright manager-এর জন্য comprehensive unit tests।
 # Playwright browser mock করা হয়েছে — actual browser dependency ছাড়াই।
 
-import asyncio
 from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest

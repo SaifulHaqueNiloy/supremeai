@@ -1,11 +1,10 @@
 # বাংলা মন্তব্য: Image-to-Code টুলের React/Flutter output ফাংশনালিটি টেস্ট।
 
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import patch, AsyncMock
 
 import pytest
 
 from tools.code.image_to_code import ImageToCode
-from core.llm.llm_gateway import LLMGateway
 
 
 @pytest.fixture

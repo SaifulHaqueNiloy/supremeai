@@ -95,7 +95,6 @@ def test_invalid_env_raises(bad_env):
 
 def test_parse_admin_emails_empty_string():
     from core.config import Settings
-    from unittest.mock import MagicMock
 
     validator = Settings.parse_admin_emails
     assert validator("") == []

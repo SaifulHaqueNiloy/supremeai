@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from core.config_proxy import DynamicConfigProxy
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 @pytest.fixture

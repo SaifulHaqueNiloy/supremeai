@@ -1,5 +1,3 @@
-import os
-
 from fastapi.testclient import TestClient
 from jose import jwt
 
@@ -55,7 +53,6 @@ def test_create_checkout_session_mock():
 
 
 from pydantic import SecretStr
-from unittest.mock import patch
 
 
 def test_webhook_ignored_if_missing_config():

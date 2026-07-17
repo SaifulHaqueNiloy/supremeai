@@ -35,15 +35,6 @@ class BrowserStealth:
             raise RuntimeError("playwright not installed")
         self.playwright = await async_playwright().start()
         browser = await self.playwright.chromium.launch(headless=getattr(settings, "browser_headless", "true").lower() != "false")
-        args = [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-plugins-discovery",
-            "--disable-default-apps",
-            "--disable-prediction-service",
-            "--disable-component-update",
-            "--disable-popup-blocking",
-        ]
         from tools.security_tools.proxy_manager import ProxyManager
 
         proxy_mgr = ProxyManager()

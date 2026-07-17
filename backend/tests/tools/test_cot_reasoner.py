@@ -10,7 +10,6 @@ from backend.tools.code.cot_reasoner import DeepReasoningChain
 from backend.tools.code.cot_reasoner import Thought
 from backend.tools.code.cot_reasoner import _eval_node
 from backend.tools.code.cot_reasoner import _safe_eval_math
-from backend.tools.code.cot_reasoner import safe_execute
 from backend.tools.code.cot_reasoner import verify_symbolic_math
 
 

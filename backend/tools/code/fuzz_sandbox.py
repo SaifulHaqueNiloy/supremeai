@@ -35,7 +35,7 @@ def run_sandbox_ast_check(code: str) -> bool:
 
         for node in ast.walk(tree):
             # ২. Type-Safe Import Blocker
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.Import | ast.ImportFrom):
                 modules = [alias.name for alias in node.names] if isinstance(node, ast.Import) else [node.module]
                 for mod in modules:
                     if mod and mod.split(".")[0] in banned_imports:

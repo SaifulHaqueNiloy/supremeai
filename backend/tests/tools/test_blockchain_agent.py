@@ -1,6 +1,6 @@
 # বাংলা মন্তব্য: Blockchain Agent-এর Solidity contract জেনারেশন ও audit ফাংজনালিটি টেস্ট।
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
