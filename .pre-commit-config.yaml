@@ -51,11 +51,11 @@ repos:
     rev: v0.9.0
     hooks:
       - id: ruff
-        # --fix: auto-fixable এররগুলো নিজে ঠিক করে দেয়
-        # --unsafe-fixes: UP042 এর মতো semantic fix-ও apply করে
-        args: [--fix, --unsafe-fixes]
+        # বাংলা মন্তব্য: --fix: auto-fixable এররগুলো নিজে ঠিক করে।
+        # pyproject.toml থেকে রুলসেট রিড হয় — S বাদ দেওয়া হয়েছে কারণ
+        # detect-secrets + detect-private-key hooks সিকিউরিটি আলাদাভাবে কভার করে।
+        args: [--fix]
         types_or: [python, pyi]
-        exclude: ^backend/tests/  # টেস্টে per-file-ignores pyproject.toml-এ আছে
       - id: ruff-format             # Black-compatible formatter
 
   # ══════════════════════════════════════════════════════════════
