@@ -31,9 +31,9 @@ from loguru import logger
 from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 from skills.installer import SkillInstaller
-from tools.code.fuzz_sandbox import SecurityError
 
-# আমাদের হার্ডেনড স্যান্ডবক্স গেটকিপার ইম্পোর্ট
+# বাংলা: fuzz_sandbox থেকে SecurityError ও run_sandbox_ast_check একসাথে ইম্পোর্ট — I001 স্থায়ী ফিক্স
+from tools.code.fuzz_sandbox import SecurityError
 from tools.code.fuzz_sandbox import run_sandbox_ast_check
 
 
@@ -101,9 +101,9 @@ class AutoSkillCreator:
         import json
         import shutil
         import uuid
+        from pathlib import Path
 
         start_time = time.time()
-        from pathlib import Path
 
         from core.llm.llm_gateway import llm_gateway
         from skills.schema import UniversalSkillSchema
