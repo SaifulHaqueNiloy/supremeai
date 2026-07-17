@@ -239,6 +239,18 @@ import pytest_asyncio
 pytest_plugins = ["pytest_asyncio"]
 
 
+# ✅ FIXED: anyio's built-in `anyio_backend` fixture defaults to module scope, which is
+# narrower than our session-scoped `setup_test_database` fixture below. Any anyio-marked
+# async test then fails at setup with:
+#   "ScopeMismatch: You tried to access the module scoped fixture anyio_backend
+#    with a session scoped request object."
+# Overriding `anyio_backend` here at session scope (the standard anyio fix for this
+# exact conflict) resolves it for every @pytest.mark.anyio test in the suite.
+@pytest.fixture(scope="session")
+def anyio_backend():
+    return "asyncio"
+
+
 @pytest_asyncio.fixture(autouse=True, scope="session")  # বাংলা: টেস্ট রান টাইম কমাতে session scope ব্যবহার করা হচ্ছে
 async def setup_test_database():
     from sqlalchemy.ext.compiler import compiles

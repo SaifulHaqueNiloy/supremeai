@@ -349,6 +349,37 @@ class SupabaseDB:
             ");",
             "CREATE INDEX IF NOT EXISTS idx_proposal_status ON code_proposals (status);",
             "CREATE INDEX IF NOT EXISTS idx_skill_fitness_score ON skill_fitness (fitness_score DESC);",
+            # বাংলা মন্তব্য: pgvector এক্সটেনশন সক্রিয় করা এবং learned_facts টেবিলে ভেক্টর এমবেডিং ও RPC ফাংশন যুক্ত করা।
+            "CREATE EXTENSION IF NOT EXISTS vector;",
+            "ALTER TABLE learned_facts ADD COLUMN IF NOT EXISTS embedding vector(1536);",
+            """
+            CREATE OR REPLACE FUNCTION match_learned_facts (
+                query_embedding vector(1536),
+                match_threshold float,
+                match_count int
+            )
+            RETURNS TABLE (
+                id text,
+                content jsonb,
+                tags jsonb,
+                similarity float
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                RETURN QUERY
+                SELECT
+                    learned_facts.id,
+                    learned_facts.content,
+                    learned_facts.tags,
+                    1 - (learned_facts.embedding <=> query_embedding) AS similarity
+                FROM learned_facts
+                WHERE 1 - (learned_facts.embedding <=> query_embedding) > match_threshold
+                ORDER BY learned_facts.embedding <=> query_embedding
+                LIMIT match_count;
+            END;
+            $$;
+            """,
         ]
 
     def bootstrap_schema(self):
