@@ -96,7 +96,9 @@ export async function saveSessions(sessions: DashboardSession[]): Promise<void> 
   } else {
     try {
       localStorage.removeItem('supremeai_pending_sessions');
-    } catch {}
+    } catch (cleanupErr) {
+      console.debug('[Storage] Could not clear pending sessions queue:', cleanupErr);
+    }
   }
 
   // বাংলা মন্তব্য: সর্বদা localStorage-এ ক্যাশে আপডেট করি
