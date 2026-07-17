@@ -12,7 +12,7 @@ import threading
 import time
 from collections.abc import Awaitable
 from collections.abc import Callable
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from typing import TypeVar
 
@@ -24,7 +24,8 @@ from core.config import settings
 T = TypeVar("T")
 
 
-class CircuitBreakerState(str, Enum):
+# বাংলা মন্তব্য: UP042 ফিক্স — StrEnum ব্যবহার করা হয়েছে (Python 3.11+ এ (str, Enum) deprecated)
+class CircuitBreakerState(StrEnum):
     """Circuit breaker states."""
 
     CLOSED = "CLOSED"  # Normal operation — requests pass through
