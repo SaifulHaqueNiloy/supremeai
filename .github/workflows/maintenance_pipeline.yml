@@ -119,18 +119,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-backend
         with:
-          python-version: '3.11'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ needs.setup.outputs.requirements-cache-key }}
-      - name: "⚙️ Install Dependencies"
-        run: pip install -r requirements.txt
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: "🩺 Run Health Check"
         run: |
-          python -m backend.tools.health_checker
+          poetry run python -m backend.tools.health_checker
 
   auto-lint-fix:
     needs: setup
@@ -152,7 +146,7 @@ jobs:
         run: pip install black isort ruff
       - name: "💅 Run Auto-Lint & Format Fix"
         run: |
-          ruff --fix .
+          ruff check --fix .
           black .
           isort .
       - name: "🤖 Create Pull Request"
@@ -309,7 +303,11 @@ jobs:
 
       - name: Add Worker Test Results to GitHub Summary
         if: always()
-        run: python .github/scripts/generate-ci-report.py --vitest-json infrastructure/vitest-report.json --label "Cloudflare Worker"
+        run: |
+          # CRITICAL FIX: Replaced deleted generate-ci-report.py script with unified supreme_ci.py engine
+          python .github/scripts/supreme_ci.py generate-report \
+            --vitest-json infrastructure/vitest-report.json \
+            --label "Cloudflare Worker"
 
   generate-db-schema:
     name: 📊 Generate DB Schema Diagram
@@ -325,13 +323,13 @@ jobs:
       - name: Install Graphviz
         run: sudo apt-get update && sudo apt-get install -y graphviz
 
-      - name: Install erd-from-pydantic
-        run: pip install erd-from-pydantic
+      - name: Install erdantic
+        run: pip install erdantic
 
       - name: 📊 Generate ERD from Pydantic Models
         run: |
-          # backend/models ফোল্ডারে থাকা সব Pydantic মডেল থেকে ডায়াগ্রাম তৈরি করা হবে
-          erd-from-pydantic backend/models --output docs/autogen/db_schema.png
+          mkdir -p docs/autogen
+          erdantic backend.models -o docs/autogen/db_schema.png
           echo "✅ Database schema diagram generated at docs/autogen/db_schema.png" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Schema Diagram Artifact
@@ -721,6 +719,12 @@ jobs:
     needs: setup
     steps:
       - uses: actions/checkout@v4
+
+      # 🚀 CRITICAL FIX: Inject backend environment setup so runner can compute poetry runtime
+      - uses: ./.github/actions/setup-backend
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Run Cost Guard
         run: poetry run python scripts/cost_guard_monitor.py
     env:
@@ -732,6 +736,12 @@ jobs:
     needs: setup
     steps:
       - uses: actions/checkout@v4
+
+      # 🚀 CRITICAL FIX: Inject backend environment setup so runner can compute poetry runtime
+      - uses: ./.github/actions/setup-backend
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Run AI Query Optimizer
         run: poetry run python scripts/ai_query_optimizer.py
     env:
