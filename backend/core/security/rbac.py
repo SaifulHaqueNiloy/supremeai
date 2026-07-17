@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from dataclasses import field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.config import settings
@@ -19,7 +19,8 @@ from core.config import settings
 logger = logging.getLogger(__name__)
 
 
-class Role(str, Enum):
+# বাংলা মন্তব্য: UP042 ফিক্স — Role এর জন্য StrEnum ব্যবহার করা হয়েছে
+class Role(StrEnum):
     """Valid system roles with hierarchical permissions."""
 
     OWNER = "owner"
@@ -32,7 +33,8 @@ class Role(str, Enum):
         return any(value == r.value for r in cls)
 
 
-class Permission(str, Enum):
+# বাংলা মন্তব্য: UP042 ফিক্স — Permission এর জন্য StrEnum ব্যবহার করা হয়েছে
+class Permission(StrEnum):
     """Valid action permissions in the system."""
 
     READ = "read"

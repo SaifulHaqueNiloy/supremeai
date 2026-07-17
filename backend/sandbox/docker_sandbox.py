@@ -50,7 +50,9 @@ class DockerSandbox:
         ]
 
         try:
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=self.timeout_seconds, check=False)
+            # বাংলা মন্তব্য: UP022 ফিক্স — capture_output=True ব্যবহার করা হয়েছে
+            # stdout=PIPE + stderr=PIPE এর চেয়ে আধুনিক ও Pythonic পদ্ধতি
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=self.timeout_seconds, check=False)
             return {"exit_code": result.returncode, "stdout": result.stdout.strip(), "stderr": result.stderr.strip()}
         except subprocess.TimeoutExpired:
             return {
