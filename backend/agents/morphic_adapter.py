@@ -1,19 +1,24 @@
 # backend/agents/morphic_adapter.py
 import os
+import re
 from typing import Dict, Any
-import google.generativeai as genai
+# 🚀 গুগলের নতুন এবং অফিসিয়াল মডার্ন SDK ইম্পোর্ট
+from google import genai
+from google.genai import types
 
 class MorphicAdapter:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-pro')
+            # নতুন SDK-তে Client ইনিশিয়ালাইজেশন ইন্টারফেস
+            self.client = genai.Client(api_key=self.api_key)
+            # ২০২৬ সালের জন্য হাইলি স্টেবল, ফাস্ট এবং কস্ট-ইফেক্টিভ প্রোডাকশন মডেল
+            self.model_name = "gemini-2.5-flash"
         else:
-            self.model = None
+            self.client = None
 
     def _get_morphic_system_prompt(self) -> str:
-        """মর্ফিক ইঞ্জিনের জন্য ওয়াটারটাইট প্রম্পট আর্কিটেকচার"""
+        """মর্ফিক ইঞ্জিনের জন্য ওয়াটারটাইট প্রম্পট আর্কিটেকচার"""
         return """
         You are the Core Morphic Adaptation Engine of SupremeAI 2.0.
         Your sole task is to refactor arbitrary, raw Python code or MCP tools into a standardized Supreme Tool Contract.
@@ -31,8 +36,8 @@ class MorphicAdapter:
         """
 
     def adapt_code_to_contract(self, raw_code: str, skill_description: str) -> Dict[str, Any]:
-        """কাঁচা পাইথন কোডকে এআই প্রম্পটের মাধ্যমে সুপ্রীম চুক্তিতে রি-রাইট করে"""
-        if not self.model:
+        """কাঁচা পাইথন কোডকে মডার্ন জেমিনি ক্লায়েন্ট দিয়ে সুপ্রীম চুক্তিতে রি-রাইট করে"""
+        if not self.client:
             return {"success": False, "code": "", "detail": "Gemini API Client is not configured in environment."}
 
         prompt = f"""
@@ -46,22 +51,31 @@ class MorphicAdapter:
         """
 
         try:
-            response = self.model.generate_content(
+            # মডার্ন SDK-র স্ট্যান্ডার্ড জেনারেশন মেথড এবং সিস্টেম ইন্সট্রাকশন বাইন্ডিং
+            response = self.client.models.generate_content(
+                model=self.model_name,
                 contents=prompt,
-                generation_config={"temperature": 0.1}, # Low temperature for strict structural code
+                config=types.GenerateContentConfig(
+                    system_instruction=self._get_morphic_system_prompt(),
+                    temperature=0.1,  # কাঠামোগত কোড আউটপুটের জন্য একদম লো-টেম্পারেচার
+                )
             )
+
+            if not response.text:
+                return {"success": False, "code": "", "detail": "LLM returned an empty response."}
 
             adapted_code = response.text.strip()
 
-            if adapted_code.startswith("```python"):
-                adapted_code = adapted_code.split("```python")[1].split("```")[0].strip()
-            elif adapted_code.startswith("```"):
-                adapted_code = adapted_code.split("```")[1].split("```")[0].strip()
+            # ডিফেন্সিভ ক্লিনআপ: মডেল যদি ভুল করে মার্কডাউন ব্যাকটিকস (```) দেয়, তা ছেঁটে ফেলা
+            adapted_code = re.sub(r'^```python\s*', '', adapted_code)
+            adapted_code = re.sub(r'^```\s*', '', adapted_code)
+            adapted_code = re.sub(r'\s*```$', '', adapted_code)
+            adapted_code = adapted_code.strip()
 
             return {
                 "success": True,
                 "code": adapted_code,
-                "detail": "Morphic adaptation rewrite completed successfully."
+                "detail": "Morphic adaptation rewrite completed successfully via modern SDK."
             }
         except Exception as e:
             return {
