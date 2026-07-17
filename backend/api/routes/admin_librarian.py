@@ -1,10 +1,11 @@
 # backend/api/routes/admin_librarian.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
-from agents.skill_librarian import SkillLibrarian
+from backend.agents.skill_librarian import SkillLibrarian
 
-router = APIRouter(prefix="/api/admin/librarian", tags=["Librarian Gateway"])
+# 🔄 প্রিফিক্স ডুপ্লিকেশন ফিক্স (/api/api/admin... থেকে /api/admin...)
+router = APIRouter(prefix="/admin/librarian", tags=["Librarian Gateway"])
 librarian = SkillLibrarian()
 
 class ApprovalRequest(BaseModel):

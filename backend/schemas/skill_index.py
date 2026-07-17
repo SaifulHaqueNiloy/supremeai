@@ -1,0 +1,41 @@
+# backend/schemas/skill_index.py
+import json
+import os
+from pathlib import Path
+from typing import Dict
+from backend.schemas.skill_manifest import SkillManifest
+
+VERIFIED_MCP_SOURCES = [
+    "https://github.com/modelcontextprotocol/servers",
+    "https://github.com/paykaribazaronline/supreme-verified-skills"
+]
+
+class SkillIndexManager:
+    def __init__(self, index_path: str = "backend/skills/manifests/.index.json"):
+        self.path = Path(index_path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists():
+            self._atomic_write({})
+
+    def load_index(self) -> Dict[str, dict]:
+        try:
+            with open(self.path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {}
+
+    def update_skill(self, manifest: SkillManifest):
+        index = self.load_index()
+        index[manifest.skill_id] = manifest.model_dump(mode="json")
+        self._atomic_write(index)
+
+    def _atomic_write(self, data: dict):
+        """🔒 Temporary file swap এর মাধ্যমে race condition মুক্ত atomic write নিশ্চিত করে"""
+        temp_path = self.path.with_suffix(".tmp")
+        with open(temp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+        # কার্নেল স্তরে পারমাণবিক প্রতিস্থাপন (Atomic overwrite)
+        os.replace(temp_path, self.path)
+
+    def is_source_allowed(self, url: str) -> bool:
+        return any(url.startswith(src) for src in VERIFIED_MCP_SOURCES)
