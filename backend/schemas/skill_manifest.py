@@ -1,12 +1,13 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import HttpUrl
 
 
-class SkillStatus(str, Enum):
+# বাংলা মন্তব্য: StrEnum ব্যবহার করা হয়েছে (UP042) — Python 3.11+ এ (str, Enum) deprecated
+class SkillStatus(StrEnum):
     STAGING = "staging"
     QUARANTINE = "quarantine"
     APPROVED = "approved"
