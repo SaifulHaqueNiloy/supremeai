@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any
-from backend.src.agents.syncguard.syncguard_agent import SyncGuardAgent
+from typing import Any
+
+from fastapi import APIRouter
+from fastapi import HTTPException
+
+from src.agents.syncguard.syncguard_agent import SyncGuardAgent
+
 
 router = APIRouter(
     prefix="/syncguard",
@@ -8,8 +12,8 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/audit", response_model=Dict[str, Any])
-async def trigger_audit() -> Dict[str, Any]:
+@router.post("/audit", response_model=dict[str, Any])
+async def trigger_audit() -> dict[str, Any]:
     """
     Manually trigger a full infrastructure and configuration audit.
     Can be called via the 'Recheck Safeguard' button on Web, Mobile, or VS Code.
@@ -21,5 +25,6 @@ async def trigger_audit() -> Dict[str, Any]:
         # If the audit failed, we still return the report (maybe 200 OK or 400 depending on design)
         # Returning 200 OK so the client can parse the issues.
         return report
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Audit execution failed: {str(e)}")
+    except Exception as e:  # noqa: BLE001
+
+        raise HTTPException(status_code=500, detail=f"Audit execution failed: {str(e)}") from e
