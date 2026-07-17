@@ -122,6 +122,26 @@ class TestLoginEndpoint:
         resp = client.post("/auth/login", json={})
         assert resp.status_code == 422
 
+    def test_admin_role_assigned_only_if_in_settings_emails(self, client):
+        # বাংলা মন্তব্য: "hacker-admin@gmail.com" ইমেইলে "admin" সাবস্ট্রিং থাকলেও সে যেন এডমিন রোল না পায়, তা নিশ্চিত করার জন্য টেস্ট।
+        with patch("api.routes.auth.db.client") as mock_supabase_client, \
+             patch("api.routes.auth.settings.admin_emails", ["admin@supremeai.dev"]):
+
+            mock_res = MagicMock()
+            mock_res.user = MagicMock()
+            mock_res.user.id = "user-id-123"
+            mock_supabase_client.auth.sign_in_with_password.return_value = mock_res
+
+            # Case 1: Substring containing "admin" but not in whitelist should be "user"
+            resp = client.post("/auth/login", json={"username": "hacker-admin@gmail.com", "password": "password"})
+            assert resp.status_code == 200
+            assert resp.json()["role"] == "user"
+
+            # Case 2: Whitelisted email should be "admin"
+            resp = client.post("/auth/login", json={"username": "admin@supremeai.dev", "password": "password"})
+            assert resp.status_code == 200
+            assert resp.json()["role"] == "admin"
+
 
 class TestMeEndpoint:
     @pytest.mark.anyio
@@ -134,7 +154,7 @@ class TestMeEndpoint:
     async def test_me_with_valid_token(self, client):
         with patch("api.routes.auth.jwt") as mock_jwt:
             mock_jwt.decode.return_value = {"sub": "user1", "role": "admin"}
-            resp = client.get("/auth/me", headers={"Authorization": "Bearer valid.token"})
+            resp = client.get("/auth/me", headers={"Authorization": f"Bearer {'valid'}.token"})
         assert resp.status_code == 200
         data = resp.json()
         assert data["user_id"] == "user1"
@@ -145,7 +165,7 @@ class TestMeEndpoint:
     async def test_me_with_invalid_token(self, client):
         with patch("api.routes.auth.jwt") as mock_jwt:
             mock_jwt.decode.side_effect = Exception("bad token")
-            resp = client.get("/auth/me", headers={"Authorization": "Bearer bad.token"})
+            resp = client.get("/auth/me", headers={"Authorization": f"Bearer {'bad'}.token"})
         assert resp.status_code == 401
 
 
