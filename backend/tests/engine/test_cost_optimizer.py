@@ -29,13 +29,19 @@ class TestCostOptimizer:
 
     def test_register_litellm_callback(self):
         optimizer = CostOptimizer()
-        cb = lambda: None
+
+        def cb():
+            return None
+
         optimizer.register_litellm_callback(cb)
         assert cb in optimizer.litellm_callbacks
 
     def test_register_litellm_callback_duplicate(self):
         optimizer = CostOptimizer()
-        cb = lambda: None
+
+        def cb():
+            return None
+
         optimizer.register_litellm_callback(cb)
         optimizer.register_litellm_callback(cb)
         assert optimizer.litellm_callbacks.count(cb) == 1

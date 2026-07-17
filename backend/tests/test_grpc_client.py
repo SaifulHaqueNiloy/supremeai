@@ -1,6 +1,5 @@
 """gRPC client tests for SupremeAI 2.0."""
 
-import json
 from unittest.mock import MagicMock
 from unittest.mock import patch
 

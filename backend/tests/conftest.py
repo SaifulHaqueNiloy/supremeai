@@ -7,7 +7,6 @@ from loguru import logger
 logger.remove()
 
 # Mock external dependencies that are not installed
-import sys
 import importlib.machinery
 from unittest.mock import MagicMock, patch
 
@@ -93,7 +92,6 @@ except Exception as e:
 
 
 # Mock Google Auth credentials and services globally during tests
-from unittest.mock import MagicMock
 
 
 try:
@@ -119,7 +117,6 @@ except ImportError:
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/dev/null"
 
-import contextlib
 
 import pytest
 
@@ -273,31 +270,8 @@ async def setup_test_database():
     from models.base import Base
 
     # বাংলা মন্তব্য: সব মডেল স্পষ্টভাবে ইম্পোর্ট করা হলো যাতে Base.metadata তে রেজিস্ট্রি হয়
-    import models.admin
-    import models.agent_session
-    import models.api_key
-    import models.byoc_payloads
-    import models.ci_report
-    import models.deployment_logs
-    import models.dynamic_agent
-    import models.error_remediation
-    import models.evolution
-    import models.execution_log
-    import models.execution_policy
-    import models.handoff_event
-    import models.integration
-    import models.local_model_handler
-    import models.morphic
-    import models.pending_tasks
-    import models.selector_healing_event
-    import models.sentinel
-    import models.shared_workspace
-    import models.system_config
-    import models.target_platform_credential
-    import models.voice_interaction
 
     # বাংলা: wallet.py তে UserWallet ও TransactionLedgerEntry (SQLAlchemy) আছে — সরাসরি ইম্পোর্ট করো
-    import models.wallet  # UserWallet + TransactionLedgerEntry (SQLAlchemy) আছে এখানে
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)  # পরিষ্কার শুরু নিশ্চিত করতে
@@ -335,7 +309,7 @@ def mock_supabase():
     # বাংলা মন্তব্য: Supabase নেটওয়ার্ক লিক সম্পূর্ণ বন্ধ করা হলো।
     # create_client মক করার পাশাপাশি settings-এ supabase_url/key খালি রেখে
     # যেকোনো রিয়েল নেটওয়ার্ক রিকোয়েস্ট আটকানো হচ্ছে।
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import MagicMock
     import os
 
     # নিশ্চিত করো env-এ URL/KEY নেই যাতে create_client কল না হয়

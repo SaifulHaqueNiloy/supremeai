@@ -14,7 +14,7 @@ class DockerSandbox:
     def _check_docker(self) -> bool:
         try:
             # Check if docker daemon is running
-            subprocess.run(
+            subprocess.run(  # noqa: S603, S607
                 ["docker", "info"],
                 capture_output=True,
                 timeout=3,
@@ -94,14 +94,7 @@ class DockerSandbox:
                 use_shell = sys.platform == "win32"
                 # shell=True ব্যবহার করার সময় shlex.split ব্যবহার করা উচিত নয়
                 command_to_run = cmd if use_shell else shlex.split(cmd)
-                result = subprocess.run(
-                    command_to_run,
-                    shell=use_shell,
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=True,
-                )
+                result = subprocess.run(command_to_run, shell=use_shell, capture_output=True, text=True, timeout=5, check=True)  # noqa: S603
                 return {
                     "success": True,
                     "stdout": result.stdout,
@@ -127,7 +120,7 @@ class DockerSandbox:
                 "-c",
                 cmd,
             ]
-            result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=10, check=True)
+            result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=10, check=True)  # noqa: S603
             return {
                 "success": True,
                 "stdout": result.stdout,

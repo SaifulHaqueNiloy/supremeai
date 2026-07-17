@@ -6,18 +6,12 @@ import hashlib
 import os
 import struct
 import time
-from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-
-from core.admin_routes import router
-from models.admin import AdminFirebaseLoginRequest
-from models.admin import AdminFirebaseTotpSetupRequest
-from models.admin import AdminFirebaseTotpVerifyRequest
 
 
 class TestHelperFunctions:
@@ -29,7 +23,7 @@ class TestHelperFunctions:
             from core.admin_routes import _hash_password
 
             # If bcrypt is installed, this should work
-            import bcrypt
+            import bcrypt  # noqa: F401
 
             hashed = _hash_password("password")
             assert isinstance(hashed, str)

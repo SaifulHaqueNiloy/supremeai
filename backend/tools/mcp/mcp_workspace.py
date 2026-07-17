@@ -13,7 +13,7 @@ import time
 import tempfile
 import contextlib
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 from enum import StrEnum
 
 from loguru import logger
@@ -61,10 +61,10 @@ class ScopedFilePathInput(BaseModel):
     project_type: WorkspaceType | None = Field(default=None, description="প্রোজেক্টের ধরন")
 
 
-_workspace_config: Dict[str, Any] = {}
+_workspace_config: dict[str, Any] = {}
 
 
-def _load_workspace_config() -> Dict[str, Any]:
+def _load_workspace_config() -> dict[str, Any]:
     """ওয়ার্কস্পেস কনফিগারেশন লোড করে।"""
     config_path = Path(WORKSPACE_CONFIG_FILE)
     if config_path.exists():

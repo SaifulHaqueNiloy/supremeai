@@ -4,11 +4,8 @@
 import pytest
 import json
 import os
-import tempfile
-import asyncio
 import importlib
 import httpx
-from pathlib import Path
 from unittest.mock import patch, AsyncMock, MagicMock
 from pydantic import ValidationError
 
@@ -57,7 +54,7 @@ class TestCloudDeployMCP:
 
     def test_deploy_service_input_missing_provider(self):
         """প্রোভাইডার বাদে ইনপুট রিকেকশন টেস্ট।"""
-        from tools.mcp.mcp_cloud_deploy import DeployServiceInput, CloudProvider
+        from tools.mcp.mcp_cloud_deploy import DeployServiceInput
 
         with pytest.raises(ValidationError):
             DeployServiceInput(service_name="test-service", branch="main")
@@ -223,7 +220,7 @@ class TestMCPServerSync:
 
     def test_mcp_servers_run(self):
         """MCP সার্ভারগুলো run() মেথড কল করলে রান হয় কিনা যাচাই।"""
-        from tools import mcp_cloud_deploy, mcp_github_cicd, mcp_supabase, mcp_workspace
+        from tools import mcp_cloud_deploy, mcp_supabase
 
         with patch.object(mcp_cloud_deploy.mcp, "run") as mock_run_cloud:
             mcp_cloud_deploy.mcp.run()
@@ -939,7 +936,7 @@ class TestInputValidation:
 
     def test_execute_query_input_params_default(self):
         """ExecuteQueryInput এ params ডিফল্ট মান।"""
-        from tools.mcp.mcp_supabase import ExecuteQueryInput, ResponseFormat
+        from tools.mcp.mcp_supabase import ExecuteQueryInput
 
         params = ExecuteQueryInput(query="SELECT 1")
         assert params.params == []
