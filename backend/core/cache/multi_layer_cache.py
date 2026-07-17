@@ -298,8 +298,9 @@ async def start_swarm_cache_invalidator():
                         else:
                             _session_cache.clear()
                             logger.info(f"🧹 Swarm Event Cache Invalidation: Cleared entire session cache due to {event_type}.")
-            except json.JSONDecodeError:
-                pass
+            except json.JSONDecodeError as json_err:
+                # বাংলা মন্তব্য: malformed মেসেজ পেলে তা ড্রপ করার সময় সতর্কতা লগ করা হচ্ছে
+                logger.warning(f"🧹 Swarm Event Cache Invalidation: Malformed message payload dropped. Error: {json_err}")
             except Exception as e:  # noqa: BLE001
                 logger.error(f"Error in swarm cache invalidator processing: {e}")
     except asyncio.CancelledError:
