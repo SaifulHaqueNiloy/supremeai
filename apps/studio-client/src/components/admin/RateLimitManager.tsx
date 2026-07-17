@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from '../../services/adminTokenStore';
-import { getApiBaseUrl } from '../../utils/api';
 import { useToast } from '../../contexts/useToast';
 
 interface TenantLimit {
@@ -35,48 +34,55 @@ const TIER_LIMITS: Record<string, Partial<TenantLimit>> = {
 };
 
 const API_BASE = '/api';
-const isDevelopment = import.meta.env?.DEV || process.env.NODE_ENV === 'development';
 
 export const RateLimitManager: React.FC = () => {
   const [tenants, setTenants] = useState<TenantLimit[]>([]);
   const [usages, setUsages] = useState<Record<string, TenantUsage>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<TenantLimit>>({});
-  const { showToast } = useToast();
+  const { toast } = useToast();
   const [newTenant, setNewTenant] = useState({ tenant_id: '', org_name: '', billing_tier: 'free' as const });
   const [showNewForm, setShowNewForm] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const resp = await fetch(`${API_BASE}/admin/tenant-limits`, {
         headers: { 'Authorization': `Bearer ${getAdminToken()}` }
       });
-      if (resp.ok) {
-        const data = await resp.json();
-        setTenants(data.tenants || []);
-        const usageMap: Record<string, TenantUsage> = {};
-        (data.usages || []).forEach((u: TenantUsage) => { usageMap[u.tenant_id] = u; });
-        setUsages(usageMap);
+
+      // 🛡️ এপিআই স্ট্যাটাস হ্যান্ডশেক এবং সাইলেন্ট ফেইলর প্রোটেকশন
+      if (!resp.ok) {
+        throw new Error(`HTTP Error! Status: ${resp.status}`);
       }
-    } catch (e) {
-      // Fallback demo data for dev
-      setTenants([
-        { tenant_id: 'demo-org', org_name: 'Demo Organization', billing_tier: 'pro', requests_per_minute: 200, max_tokens_per_day: 1000000, max_concurrent_sessions: 20 },
-        { tenant_id: 'free-user', org_name: 'Free User', billing_tier: 'free', requests_per_minute: 20, max_tokens_per_day: 50000, max_concurrent_sessions: 2 },
-      ]);
+
+      const data = await resp.json();
+      setTenants(data.tenants || []);
+      const usageMap: Record<string, TenantUsage> = {};
+      (data.usages || []).forEach((u: TenantUsage) => { usageMap[u.tenant_id] = u; });
+      setUsages(usageMap);
+    } catch (e: unknown) {
+      // 🚫 Fake Fallback Data (demo-org, free-user) চিরতরে রিমুভ করা হলো
+      const errMsg = e instanceof Error ? e.message : 'Failed to fetch rate limit configuration.';
+      setError(errMsg);
+      setTenants([]);
+
+      // 🚨 অ্যাডমিনকে লাইভ ইনফর্ম করার জন্য টোস্ট নোটিফিকেশন ফায়ার
+      toast({
+        title: '⚠️ System Synchronization Failed',
+        description: errMsg,
+        variant: 'destructive',
+      });
     }
     setLoading(false);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
-    // বাংলা মন্তব্য: set-state-in-effect ফিক্স — fetchData কে async ফাংশনের ভেতরে র‍্যাপ করা হয়েছে
-    const loadData = async () => {
-      await fetchData();
-    };
-    loadData();
+    fetchData();
   }, [fetchData]);
 
   const handleEdit = (t: TenantLimit) => {
@@ -86,7 +92,7 @@ export const RateLimitManager: React.FC = () => {
 
   const handleTierChange = (tier: string) => {
     const defaults = TIER_LIMITS[tier] || {};
-    setEditValues(prev => ({ ...prev, billing_tier: tier as any, ...defaults }));
+    setEditValues(prev => ({ ...prev, billing_tier: tier as TenantLimit['billing_tier'], ...defaults }));
   };
 
   const handleSave = async (tenant_id: string) => {
@@ -101,21 +107,14 @@ export const RateLimitManager: React.FC = () => {
         body: JSON.stringify(editValues),
       });
       if (resp.ok) {
-        showToast('success', `✅ ${tenant_id} limits saved`);
+        toast({ title: 'Success', description: `✅ ${tenant_id} limits saved`, variant: 'default' });
         setTenants(prev => prev.map(t => t.tenant_id === tenant_id ? { ...t, ...editValues } : t));
         setEditingId(null);
       } else {
-        showToast('error', `❌ Save failed: ${resp.status}`);
+        toast({ title: 'Error', description: `❌ Save failed: ${resp.status}`, variant: 'destructive' });
       }
     } catch {
-      if (isDevelopment) {
-        // optimistic update for dev
-        setTenants(prev => prev.map(t => t.tenant_id === tenant_id ? { ...t, ...editValues } : t));
-        setEditingId(null);
-        showToast('success', `✅ Saved (offline mode)`);
-      } else {
-        showToast('error', `❌ Save failed - server unreachable`);
-      }
+      toast({ title: 'Error', description: `❌ Save failed - server unreachable`, variant: 'destructive' });
     }
     setSaving(null);
   };
@@ -138,18 +137,19 @@ export const RateLimitManager: React.FC = () => {
       setTenants(prev => [...prev, record]);
       setNewTenant({ tenant_id: '', org_name: '', billing_tier: 'free' });
       setShowNewForm(false);
-      showToast('success', `✅ Tenant ${record.tenant_id} created`);
-    } catch (e) {
-      console.error(e);
-      showToast('error', `❌ Failed to create tenant: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      toast({ title: 'Success', description: `✅ Tenant ${record.tenant_id} created`, variant: 'default' });
+    } catch (e: unknown) {
+      toast({ title: 'Error', description: `❌ Failed to create tenant: ${e instanceof Error ? e.message : 'Unknown error'}`, variant: 'destructive' });
     }
   };
 
   const usagePercent = (used: number, max: number) => Math.min(100, Math.round((used / max) * 100));
 
+  if (loading) return <div>Loading limits...</div>;
+  if (error) return <div className="text-red-500">Error: {error}</div>;
+
   return (
     <div style={styles.container}>
-
       {/* Header */}
       <div style={styles.header}>
         <div>
@@ -184,7 +184,7 @@ export const RateLimitManager: React.FC = () => {
             <select
               style={styles.select}
               value={newTenant.billing_tier}
-              onChange={e => setNewTenant(p => ({ ...p, billing_tier: e.target.value as any }))}
+              onChange={e => setNewTenant(p => ({ ...p, billing_tier: e.target.value as TenantLimit['billing_tier'] }))}
             >
               {Object.keys(TIER_LIMITS).map(t => <option key={t} value={t}>{t}</option>)}
             </select>
@@ -205,114 +205,110 @@ export const RateLimitManager: React.FC = () => {
       </div>
 
       {/* Tenant List */}
-      {loading ? (
-        <div style={styles.loading}>Loading tenant limits...</div>
-      ) : (
-        <div style={styles.list}>
-          {tenants.map(tenant => {
-            const isEditing = editingId === tenant.tenant_id;
-            const usage = usages[tenant.tenant_id];
-            return (
-              <div key={tenant.tenant_id} style={styles.card}>
-                <div style={styles.cardHeader}>
-                  <div>
-                    <span style={{ ...styles.tierBadge, background: TIER_COLORS[tenant.billing_tier] }}>
-                      {isEditing ? editValues.billing_tier || tenant.billing_tier : tenant.billing_tier}
-                    </span>
-                    <span style={styles.tenantId}>{tenant.tenant_id}</span>
-                    <span style={styles.orgName}>{tenant.org_name}</span>
-                  </div>
-                  <div style={styles.cardActions}>
-                    {isEditing ? (
-                      <>
-                        <button
-                          style={styles.btnSave}
-                          onClick={() => handleSave(tenant.tenant_id)}
-                          disabled={saving === tenant.tenant_id}
-                        >
-                          {saving === tenant.tenant_id ? 'Saving...' : '💾 Save'}
-                        </button>
-                        <button style={styles.btnCancel} onClick={() => setEditingId(null)}>Cancel</button>
-                      </>
-                    ) : (
-                      <button style={styles.btnEdit} onClick={() => handleEdit(tenant)}>✎ Edit</button>
-                    )}
-                  </div>
+      <div style={styles.list}>
+        {tenants.map(tenant => {
+          const isEditing = editingId === tenant.tenant_id;
+          const usage = usages[tenant.tenant_id];
+          return (
+            <div key={tenant.tenant_id} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <div>
+                  <span style={{ ...styles.tierBadge, background: TIER_COLORS[tenant.billing_tier] }}>
+                    {isEditing ? editValues.billing_tier || tenant.billing_tier : tenant.billing_tier}
+                  </span>
+                  <span style={styles.tenantId}>{tenant.tenant_id}</span>
+                  <span style={styles.orgName}>{tenant.org_name}</span>
                 </div>
-
-                {/* Limits Row */}
-                <div style={styles.limitsRow}>
+                <div style={styles.cardActions}>
                   {isEditing ? (
                     <>
-                      <div style={styles.limitGroup}>
-                        <label style={styles.limitLabel}>Tier</label>
-                        <select style={styles.selectSmall} value={editValues.billing_tier || tenant.billing_tier} onChange={e => handleTierChange(e.target.value)}>
-                          {Object.keys(TIER_LIMITS).map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                      <div style={styles.limitGroup}>
-                        <label style={styles.limitLabel}>Req/min</label>
-                        <input style={styles.inputSmall} type="number" value={editValues.requests_per_minute ?? tenant.requests_per_minute} onChange={e => setEditValues(p => ({ ...p, requests_per_minute: +e.target.value }))} />
-                      </div>
-                      <div style={styles.limitGroup}>
-                        <label style={styles.limitLabel}>Tokens/day</label>
-                        <input style={styles.inputSmall} type="number" value={editValues.max_tokens_per_day ?? tenant.max_tokens_per_day} onChange={e => setEditValues(p => ({ ...p, max_tokens_per_day: +e.target.value }))} />
-                      </div>
-                      <div style={styles.limitGroup}>
-                        <label style={styles.limitLabel}>Sessions</label>
-                        <input style={styles.inputSmall} type="number" value={editValues.max_concurrent_sessions ?? tenant.max_concurrent_sessions} onChange={e => setEditValues(p => ({ ...p, max_concurrent_sessions: +e.target.value }))} />
-                      </div>
+                      <button
+                        style={styles.btnSave}
+                        onClick={() => handleSave(tenant.tenant_id)}
+                        disabled={saving === tenant.tenant_id}
+                      >
+                        {saving === tenant.tenant_id ? 'Saving...' : '💾 Save'}
+                      </button>
+                      <button style={styles.btnCancel} onClick={() => setEditingId(null)}>Cancel</button>
                     </>
                   ) : (
-                    <>
-                      <div style={styles.limitChip}>🔁 {tenant.requests_per_minute} req/min</div>
-                      <div style={styles.limitChip}>📊 {tenant.max_tokens_per_day.toLocaleString()} tok/day</div>
-                      <div style={styles.limitChip}>🔗 {tenant.max_concurrent_sessions} sessions</div>
-                    </>
+                    <button style={styles.btnEdit} onClick={() => handleEdit(tenant)}>✎ Edit</button>
                   )}
                 </div>
+              </div>
 
-                {/* Usage Bar */}
-                {usage && (
-                  <div style={styles.usageSection}>
-                    <div style={styles.usageRow}>
-                      <span style={styles.usageLabel}>Today's Usage</span>
-                      <span style={styles.usageCost}>${usage.cost_today.toFixed(4)}</span>
+              {/* Limits Row */}
+              <div style={styles.limitsRow}>
+                {isEditing ? (
+                  <>
+                    <div style={styles.limitGroup}>
+                      <label style={styles.limitLabel}>Tier</label>
+                      <select style={styles.selectSmall} value={editValues.billing_tier || tenant.billing_tier} onChange={e => handleTierChange(e.target.value)}>
+                        {Object.keys(TIER_LIMITS).map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
                     </div>
-                    <div style={styles.progressOuter}>
-                      <div style={styles.progressLabel}>
-                        <span>Requests: {usage.requests_today.toLocaleString()}</span>
-                        <span>{usagePercent(usage.requests_today, tenant.requests_per_minute * 1440)}%</span>
-                      </div>
-                      <div style={styles.progressBar}>
-                        <div style={{
-                          ...styles.progressFill,
-                          width: `${usagePercent(usage.requests_today, tenant.requests_per_minute * 1440)}%`,
-                          background: usagePercent(usage.requests_today, tenant.requests_per_minute * 1440) > 80 ? '#ef4444' : '#22c55e',
-                        }} />
-                      </div>
-                      <div style={styles.progressLabel}>
-                        <span>Tokens: {usage.tokens_today.toLocaleString()}</span>
-                        <span>{usagePercent(usage.tokens_today, tenant.max_tokens_per_day)}%</span>
-                      </div>
-                      <div style={styles.progressBar}>
-                        <div style={{
-                          ...styles.progressFill,
-                          width: `${usagePercent(usage.tokens_today, tenant.max_tokens_per_day)}%`,
-                          background: usagePercent(usage.tokens_today, tenant.max_tokens_per_day) > 80 ? '#f59e0b' : '#3b82f6',
-                        }} />
-                      </div>
+                    <div style={styles.limitGroup}>
+                      <label style={styles.limitLabel}>Req/min</label>
+                      <input style={styles.inputSmall} type="number" value={editValues.requests_per_minute ?? tenant.requests_per_minute} onChange={e => setEditValues(p => ({ ...p, requests_per_minute: +e.target.value }))} />
                     </div>
-                  </div>
+                    <div style={styles.limitGroup}>
+                      <label style={styles.limitLabel}>Tokens/day</label>
+                      <input style={styles.inputSmall} type="number" value={editValues.max_tokens_per_day ?? tenant.max_tokens_per_day} onChange={e => setEditValues(p => ({ ...p, max_tokens_per_day: +e.target.value }))} />
+                    </div>
+                    <div style={styles.limitGroup}>
+                      <label style={styles.limitLabel}>Sessions</label>
+                      <input style={styles.inputSmall} type="number" value={editValues.max_concurrent_sessions ?? tenant.max_concurrent_sessions} onChange={e => setEditValues(p => ({ ...p, max_concurrent_sessions: +e.target.value }))} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={styles.limitChip}>🔁 {tenant.requests_per_minute} req/min</div>
+                    <div style={styles.limitChip}>📊 {tenant.max_tokens_per_day.toLocaleString()} tok/day</div>
+                    <div style={styles.limitChip}>🔗 {tenant.max_concurrent_sessions} sessions</div>
+                  </>
                 )}
               </div>
-            );
-          })}
-          {tenants.length === 0 && (
-            <div style={styles.emptyState}>No tenants configured. Create one above.</div>
-          )}
-        </div>
-      )}
+
+              {/* Usage Bar */}
+              {usage && (
+                <div style={styles.usageSection}>
+                  <div style={styles.usageRow}>
+                    <span style={styles.usageLabel}>Today's Usage</span>
+                    <span style={styles.usageCost}>${usage.cost_today.toFixed(4)}</span>
+                  </div>
+                  <div style={styles.progressOuter}>
+                    <div style={styles.progressLabel}>
+                      <span>Requests: {usage.requests_today.toLocaleString()}</span>
+                      <span>{usagePercent(usage.requests_today, tenant.requests_per_minute * 1440)}%</span>
+                    </div>
+                    <div style={styles.progressBar}>
+                      <div style={{
+                        ...styles.progressFill,
+                        width: `${usagePercent(usage.requests_today, tenant.requests_per_minute * 1440)}%`,
+                        background: usagePercent(usage.requests_today, tenant.requests_per_minute * 1440) > 80 ? '#ef4444' : '#22c55e',
+                      }} />
+                    </div>
+                    <div style={styles.progressLabel}>
+                      <span>Tokens: {usage.tokens_today.toLocaleString()}</span>
+                      <span>{usagePercent(usage.tokens_today, tenant.max_tokens_per_day)}%</span>
+                    </div>
+                    <div style={styles.progressBar}>
+                      <div style={{
+                        ...styles.progressFill,
+                        width: `${usagePercent(usage.tokens_today, tenant.max_tokens_per_day)}%`,
+                        background: usagePercent(usage.tokens_today, tenant.max_tokens_per_day) > 80 ? '#f59e0b' : '#3b82f6',
+                      }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {tenants.length === 0 && (
+          <div style={styles.emptyState}>No tenants configured. Create one above.</div>
+        )}
+      </div>
     </div>
   );
 };
