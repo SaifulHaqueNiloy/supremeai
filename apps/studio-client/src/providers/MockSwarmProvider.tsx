@@ -26,7 +26,7 @@ export const MockSwarmProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         const agentIds = ['Architect', 'Coder', 'QA', 'Deployer'];
         // বাংলা মন্তব্য: সরাসরি ব্যাকএন্ড এপিআই থেকে এজেন্টের হেলথ স্ট্যাটাস ফেচ করা হচ্ছে।
-        const data = await apiClient.post<Record<string, { status: string; latency: number }>>('/api/health/agents', {
+        const data = await apiClient.post<Record<string, { status: string; latency: number }>>('/api/v1/health/agents', {
           agent_ids: agentIds,
         });
 
