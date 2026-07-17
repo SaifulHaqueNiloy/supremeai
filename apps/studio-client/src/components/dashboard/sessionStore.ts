@@ -138,10 +138,54 @@ export async function deleteSession(id: string): Promise<DashboardSession[]> {
   const filtered = sessions.filter((s) => s.id !== id);
   try {
     await apiClient.delete(`/api/browser/sessions/${id}`);
-  } catch {
-    // বাংলা মন্তব্য: API কল ব্যর্থ — নীরবে উপেক্ষা
+    // বাংলা মন্তব্য: সফলভাবে মুছলে pending-delete কিউ থেকেও সরিয়ে দিই
+    try {
+      const pending = JSON.parse(localStorage.getItem('supremeai_pending_deletes') || '[]') as string[];
+      const updated = pending.filter((pid) => pid !== id);
+      localStorage.setItem('supremeai_pending_deletes', JSON.stringify(updated));
+    } catch (e) {
+      console.debug('[Storage] Could not clean pending-delete queue:', e);
+    }
+  } catch (err) {
+    // বাংলা মন্তব্য: API delete ব্যর্থ — pending-delete কিউতে id জমা করি, পরে sync হবে
+    console.warn(`[API] Failed to delete session ${id} on server. Queuing for retry.`, err);
+    try {
+      const pending = JSON.parse(localStorage.getItem('supremeai_pending_deletes') || '[]') as string[];
+      if (!pending.includes(id)) {
+        pending.push(id);
+        localStorage.setItem('supremeai_pending_deletes', JSON.stringify(pending));
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('supremeai-toast', {
+          detail: { message: 'Session delete is pending sync with server.', type: 'warning' }
+        }));
+      }
+    } catch (queueErr) {
+      console.debug('[Storage] Could not save pending-delete queue:', queueErr);
+    }
   }
   saveLocalSessions(filtered);
   window.dispatchEvent(new CustomEvent(SESSIONS_UPDATED_EVENT));
   return filtered;
+}
+
+// বাংলা মন্তব্য: pending-delete কিউ reconcile করার ফাংশন — saveSessions বা app init থেকে কল করা যায়
+export async function reconcilePendingDeletes(): Promise<void> {
+  try {
+    const pending = JSON.parse(localStorage.getItem('supremeai_pending_deletes') || '[]') as string[];
+    if (pending.length === 0) return;
+    const stillPending: string[] = [];
+    for (const id of pending) {
+      try {
+        await apiClient.delete(`/api/browser/sessions/${id}`);
+        console.debug(`[Sync] Pending delete reconciled for session ${id}`);
+      } catch {
+        stillPending.push(id);
+      }
+    }
+    localStorage.setItem('supremeai_pending_deletes', JSON.stringify(stillPending));
+  } catch (e) {
+    // বাংলা মন্তব্য: reconcile ব্যর্থ হলে debug লগ দিই; পরের save-এ আবার চেষ্টা হবে
+    console.debug('[Storage] reconcilePendingDeletes failed, will retry on next save:', e);
+  }
 }

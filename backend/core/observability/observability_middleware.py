@@ -117,8 +117,16 @@ class ObservabilityMiddleware:
                             payload = {"method": method, "path": path, "status": status_code, "duration": duration, "error": error_type}
                             await redis_manager.client.lpush(minute_key, json.dumps(payload))
                             await redis_manager.client.expire(minute_key, 86400)  # 24 hours retention
-                        except Exception:  # noqa: BLE001
-                            pass
+                        except Exception as redis_err:  # noqa: BLE001
+                            # বাংলা মন্তব্য: Redis traffic metric write ব্যর্থ — request ফেইল করব না কিন্তু failure গণনা করব
+                            _redis_metric_fail_count = getattr(self, "_redis_metric_fail_count", 0) + 1
+                            self._redis_metric_fail_count = _redis_metric_fail_count  # type: ignore[attr-defined]
+                            # Rate-limited warning: প্রতি ১০ বার ব্যর্থতায় একবার লগ করি
+                            if _redis_metric_fail_count == 1 or _redis_metric_fail_count % 10 == 0:
+                                logger.warning(
+                                    f"[Observability] Redis traffic metric write failed "
+                                    f"(total failures: {_redis_metric_fail_count}): {redis_err!r}"
+                                )
 
                     task = asyncio.create_task(push_traffic())
                     self.app._background_tasks.add(task)
