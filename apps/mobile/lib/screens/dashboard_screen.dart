@@ -25,15 +25,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // 🔥 safe প্র্যাকটিস: ফ্রেম রেন্ডারিং শেষ হওয়ার পর প্রোভাইডার থেকে ডেটা রিড করা হবে
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         context.read<DashboardProvider>().syncDashboard();
-        
+
         // ১. AuthProvider থেকে রিয়েল টোকেন ফেচ করা হচ্ছে
         final authToken = context.read<AuthProvider>().token ?? '';
-        
+
         // ২. DashboardProvider থেকে ডাইনামিক অ্যাক্টিভ টাস্ক আইডি ফেচ করা হচ্ছে
         final activeTaskId = context.read<DashboardProvider>().activeTaskId ?? '';
 
@@ -44,7 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         } else {
           debugPrint('⚠️ [Flutter Dashboard] Stream skipped: Missing Token ($authToken) or Task ID ($activeTaskId)');
         }
-        
+
         // 4. Start Theme Sync SSE stream
         context.read<SettingsProvider>().listenToThemeSyncStream('default');
       } catch (error) {
@@ -95,7 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     FadeInSlide(
                       delay: const Duration(milliseconds: 200),
                       child: Column(
@@ -190,7 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             itemBuilder: (context, index) {
                               final job = provider.jobs[index];
                               final isSuccess = job.status == 'success';
-                              
+
                               return ListTile(
                                 tileColor: DesignTokens.colorBgElevatedDark,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: DesignTokens.colorBorderAccentDark)),
@@ -232,12 +232,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
           const ShimmerLoading(width: double.infinity, height: 120),
           const SizedBox(height: 24),
-          
+
           const ShimmerLoading(width: 150, height: 24),
           const SizedBox(height: 12),
           const ShimmerLoading(width: double.infinity, height: 200),
           const SizedBox(height: 24),
-          
+
           const ShimmerLoading(width: 150, height: 24),
           const SizedBox(height: 12),
           const ShimmerLoading(width: double.infinity, height: 80),

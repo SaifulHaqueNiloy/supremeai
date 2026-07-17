@@ -112,7 +112,8 @@ class TestErrorEvent:
             module="test",
             error_type="TestError",
             message="Test",
-            severity="INFO", structured_context=ErrorContext(module="auto_fixed"),
+            severity="INFO",
+            structured_context=ErrorContext(module="auto_fixed"),
         )
         assert isinstance(event.timestamp, datetime)
         assert event.timestamp.tzinfo is not None  # Should be UTC
@@ -477,7 +478,8 @@ class TestLogEvent:
             module="critical_module",
             error_type="CriticalError",
             message="Critical failure",
-            severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
+            severity="CRITICAL",
+            structured_context=ErrorContext(module="auto_fixed"),
         )
         with patch("core.messaging.event_bus.logger") as mock_logger:
             event_bus._log_event(event)
@@ -488,7 +490,8 @@ class TestLogEvent:
             module="error_module",
             error_type="Error",
             message="Error occurred",
-            severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+            severity="ERROR",
+            structured_context=ErrorContext(module="auto_fixed"),
         )
         with patch("core.messaging.event_bus.logger") as mock_logger:
             event_bus._log_event(event)
@@ -499,7 +502,8 @@ class TestLogEvent:
             module="warn_module",
             error_type="Warning",
             message="Warning message",
-            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+            severity="WARNING",
+            structured_context=ErrorContext(module="auto_fixed"),
         )
         with patch("core.messaging.event_bus.logger") as mock_logger:
             event_bus._log_event(event)
@@ -510,7 +514,8 @@ class TestLogEvent:
             module="info_module",
             error_type="Info",
             message="Info message",
-            severity="INFO", structured_context=ErrorContext(module="auto_fixed"),
+            severity="INFO",
+            structured_context=ErrorContext(module="auto_fixed"),
         )
         with patch("core.messaging.event_bus.logger") as mock_logger:
             event_bus._log_event(event)

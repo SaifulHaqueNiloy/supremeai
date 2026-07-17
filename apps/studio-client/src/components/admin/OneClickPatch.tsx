@@ -63,7 +63,7 @@ export const OneClickPatch: React.FC<OneClickPatchProps> = ({ proposals, onPatch
               {applyingId === proposal.id ? 'Applying...' : 'Apply Patch'}
             </button>
           </div>
-          
+
           {/* Diff Viewer */}
           <div className="grid grid-cols-2 divide-x divide-slate-800">
             <div className="p-4">

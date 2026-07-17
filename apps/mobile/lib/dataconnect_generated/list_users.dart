@@ -1,17 +1,17 @@
 part of 'generated.dart';
 
 class ListUsersVariablesBuilder {
-  
+
   final FirebaseDataConnect _dataConnect;
   ListUsersVariablesBuilder(this._dataConnect, );
   Deserializer<ListUsersData> dataDeserializer = (dynamic json)  => ListUsersData.fromJson(jsonDecode(json));
-  
+
   Future<QueryResult<ListUsersData, void>> execute({QueryFetchPolicy fetchPolicy = QueryFetchPolicy.preferCache}) {
     return ref().execute(fetchPolicy: fetchPolicy);
   }
 
   QueryRef<ListUsersData, void> ref() {
-    
+
     return _dataConnect.query("ListUsers", dataDeserializer, emptySerializer, null);
   }
 }
@@ -21,7 +21,7 @@ class ListUsersUsers {
   final String id;
   final String username;
   ListUsersUsers.fromJson(dynamic json):
-  
+
   id = nativeFromJson<String>(json['id']),
   username = nativeFromJson<String>(json['username']);
   @override
@@ -34,13 +34,13 @@ class ListUsersUsers {
     }
 
     final ListUsersUsers otherTyped = other as ListUsersUsers;
-    return id == otherTyped.id && 
+    return id == otherTyped.id &&
     username == otherTyped.username;
-    
+
   }
   @override
   int get hashCode => Object.hashAll([id.hashCode, username.hashCode]);
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -59,7 +59,7 @@ class ListUsersUsers {
 class ListUsersData {
   final List<ListUsersUsers> users;
   ListUsersData.fromJson(dynamic json):
-  
+
   users = (json['users'] as List<dynamic>)
         .map((e) => ListUsersUsers.fromJson(e))
         .toList();
@@ -74,11 +74,11 @@ class ListUsersData {
 
     final ListUsersData otherTyped = other as ListUsersData;
     return users == otherTyped.users;
-    
+
   }
   @override
   int get hashCode => users.hashCode;
-  
+
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -90,4 +90,3 @@ class ListUsersData {
     required this.users,
   });
 }
-

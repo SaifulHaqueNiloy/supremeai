@@ -120,7 +120,7 @@ Example for `backend-test`:
     needs: [detect-changes, combine-decisions]
     timeout-minutes: 15
     if: |
-      needs.combine-decisions.outputs.backend_run == 'true' || 
+      needs.combine-decisions.outputs.backend_run == 'true' ||
       contains(fromJson(github.event.inputs.forced_jobs || '[]'), 'backend-test') ||
       contains(fromJson(github.event.inputs.forced_jobs || '[]'), 'backend_test') ||
       contains(fromJson(github.event.inputs.forced_jobs || '[]'), '🐍 Backend Tests')

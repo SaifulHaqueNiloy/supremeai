@@ -6,7 +6,7 @@ export default {
     if (url.pathname.startsWith('/cdn/')) {
       const cacheKey = new Request(url.toString(), request);
       const cache = caches.default;
-      
+
       let response = await cache.match(cacheKey);
       if (!response) {
         // Fetch from R2 bucket (assumed binding named STATIC_ASSETS)
@@ -32,7 +32,7 @@ export default {
     if (request.method === 'GET' && url.pathname.startsWith('/api/repos')) {
       const cache = caches.default;
       let response = await cache.match(request);
-      
+
       if (!response) {
         response = await fetch(request);
         if (response.ok) {

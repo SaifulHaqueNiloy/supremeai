@@ -49,7 +49,7 @@ export const useServerStream = () => {
         const backoff = Math.min(1000 * 2 ** reconnectAttempts, 30000);
         const jitter = Math.random() * 500;
         console.log(`🔄 SSE Reconnecting in ${(backoff + jitter) / 1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
-        
+
         if (isMounted) {
           setStreamStatus('connecting'); // Transition back to connecting during wait
           reconnectTimeout = setTimeout(connect, backoff + jitter);

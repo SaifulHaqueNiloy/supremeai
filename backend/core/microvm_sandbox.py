@@ -91,6 +91,7 @@ def _safe_vm_path(sandbox_root: Path, vm_id: str) -> Path:
     ResourceGuard.verify_path ব্যবহার করে path traversal check করা হয়।
     """
     from core.security.resource_guard import ResourceGuard
+
     vm_path = (sandbox_root / vm_id).resolve()
     return ResourceGuard.verify_path(vm_path)
 
@@ -160,6 +161,7 @@ class MicroVMSandbox:
         }
         config_path = vm_dir / "config.json"
         from core.security.resource_guard import ResourceGuard
+
         ResourceGuard.write_text(config_path, json.dumps(config), encoding="utf-8")
         return config_path
 
@@ -175,7 +177,8 @@ class MicroVMSandbox:
                         module="microvm_sandbox",
                         error_type="SANDBOX_UNAVAILABLE",
                         message="No MicroVM runtime (Firecracker/gVisor) available.",
-                        severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                        severity="ERROR",
+                        structured_context=ErrorContext(module="auto_fixed"),
                         context={"allow_fallback": False, "language": language},
                     )
                 )
@@ -212,7 +215,8 @@ class MicroVMSandbox:
                     module="microvm_sandbox",
                     error_type="EXECUTION_FAILED",
                     message=str(exc)[:500],
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"vm_id": vm_id, "vm_runtime": vm_runtime},
                 )
             )

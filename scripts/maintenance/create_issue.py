@@ -49,7 +49,7 @@ def main():
             body_lines.append(f"  - Details: {v.get('aliases', [])}")
 
     body = "\n".join(body_lines)
-    
+
     payload = {
         "title": "🚨 Security Vulnerability Detected by pip-audit",
         "body": body,

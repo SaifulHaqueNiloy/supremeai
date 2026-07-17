@@ -66,15 +66,15 @@ def validate_config() -> bool:
     if not PROJECT_ID:
         print("❌ Error: GOOGLE_CLOUD_PROJECT environment variable is not set")
         return False
-    
+
     if not BACKUP_BUCKET:
         print("❌ Error: BACKUP_BUCKET environment variable is not set")
         return False
-    
+
     # Validate bucket name format
     if not re.match(r'^[a-z0-9][a-z0-9\-_.]{1,61}[a-z0-9]$', BACKUP_BUCKET):
         print(f"⚠️  Warning: Bucket name '{BACKUP_BUCKET}' may not be valid")
-    
+
     return True
 
 def get_firestore_client():
@@ -112,22 +112,22 @@ def delete_old_backups(storage_client, bucket_name: str, prefix: str, days_to_ke
     try:
         bucket = storage_client.bucket(bucket_name)
         cutoff_time = datetime.utcnow() - timedelta(days=days_to_keep)
-        
+
         blobs = bucket.list_blobs(prefix=prefix)
         deleted_count = 0
-        
+
         for blob in blobs:
             # Check if the blob is older than the cutoff
             if blob.time_created < cutoff_time:
                 blob.delete()
                 deleted_count += 1
                 logger.info(f"Deleted old backup: {blob.name}")
-        
+
         if deleted_count > 0:
             logger.info(f"Deleted {deleted_count} old backup(s)")
         else:
             logger.info("No old backups to delete")
-            
+
     except Exception as e:
         logger.error(f"Error deleting old backups: {e}")
 
@@ -136,32 +136,32 @@ def create_firestore_backup() -> bool:
     # Validate configuration
     if not validate_config():
         return False
-    
+
     # Initialize clients
     firestore_client = get_firestore_client()
     storage_client = get_storage_client()
-    
+
     if not firestore_client or not storage_client:
         return False
-    
+
     # Generate backup timestamp and path
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     backup_name = f"{BACKUP_PREFIX}_{timestamp}"
     backup_path = f"gs://{BACKUP_BUCKET}/{backup_name}/"
-    
+
     print("🔥 Starting Firestore backup...")
     print(f"📁 Project: {PROJECT_ID}")
     print(f"🗄️  Database: {DATABASE_ID}")
     print(f"📦 Bucket: {BACKUP_BUCKET}")
     print(f"📍 Backup path: {backup_path}")
-    
+
     try:
         # Prepare export parameters
         database_path = f"projects/{PROJECT_ID}/databases/{DATABASE_ID}"
-        
+
         # Build output URL prefix
         output_uri_prefix = backup_path
-        
+
         # Prepare partition options if specific collections are requested
         partition_options = None
         collection_ids = None
@@ -172,34 +172,34 @@ def create_firestore_backup() -> bool:
                     "collection_ids": collection_ids
                 }
                 print(f"📋 Exporting specific collections: {', '.join(collection_ids)}")
-        
+
         # Create the export request
         request = {
             "name": f"{database_path}/exportDocuments/{backup_name}",
             "output_uri_prefix": output_uri_prefix,
         }
-        
+
         if USE_SNAPSHOT:
             request["snapshot_time"] = {"seconds": int(datetime.utcnow().timestamp())}
-        
+
         if partition_options:
             request["collection_ids"] = partition_options["collection_ids"]
-        
+
         # Start the export operation
         print("\u23f3 Starting export operation...")
         operation = firestore_client._firestore_api.document_service_client.export_documents(
             request=request
         )
-        
+
         print(f"\u23f3 Export operation started: {operation.name}")
         print(f"\u23f3 Polling for completion (timeout: {BACKUP_TIMEOUT_SECONDS}s)...")
-        
+
         # ── PHASE 6: Poll for completion instead of fire-and-forget ──
         try:
             operation.result(timeout=BACKUP_TIMEOUT_SECONDS)
             print("\u2705 Export COMPLETED successfully!")
             print(f"\U0001f4be Backup available at: {backup_path}")
-            
+
             # Write backup manifest to GCS
             manifest = {
                 "backup_name": backup_name,
@@ -215,21 +215,21 @@ def create_firestore_backup() -> bool:
             blob.upload_from_string(json.dumps(manifest, indent=2),
                                    content_type="application/json")
             print(f"\U0001f4cb Manifest written: gs://{BACKUP_BUCKET}/manifests/latest.json")
-            
+
             send_alert("info", f"Firestore backup completed: {backup_name}")
-            
+
         except Exception as poll_error:
             error_msg = f"Export operation FAILED or timed out: {poll_error}"
             logger.error(error_msg)
             send_alert("critical", f"Firestore backup FAILED for {PROJECT_ID}/{DATABASE_ID}: {poll_error}")
             return False
-        
+
         # Clean up old backups
         print(f"\U0001f9f9 Cleaning up backups older than {RETENTION_DAYS} days...")
         delete_old_backups(storage_client, BACKUP_BUCKET, f"{BACKUP_PREFIX}_", RETENTION_DAYS)
-        
+
         return True
-        
+
     except exceptions.GoogleAPICallError as e:
         logger.error(f"Google API error during backup: {e}")
         send_alert("critical", f"Firestore backup API error: {e}")
@@ -242,9 +242,9 @@ def create_firestore_backup() -> bool:
 def main() -> int:
     """Main function to execute Firestore backup."""
     print("☁️  Starting Firestore Auto Backup...")
-    
+
     success = create_firestore_backup()
-    
+
     if success:
         print("\n✅ Firestore backup initiated successfully!")
         return 0

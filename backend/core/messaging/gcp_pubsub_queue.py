@@ -188,9 +188,7 @@ class GCPPubSubQueue:
     def ack(self, message_id: str) -> dict[str, Any]:
         if self.subscriber is not None:
             try:
-                self.subscriber.acknowledge(
-                    request={"subscription": self.subscription_path, "ack_ids": [message_id]}
-                )
+                self.subscriber.acknowledge(request={"subscription": self.subscription_path, "ack_ids": [message_id]})
                 return {
                     "success": True,
                     "provider": "gcp_pubsub",

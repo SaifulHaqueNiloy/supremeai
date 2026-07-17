@@ -12,10 +12,10 @@ interface SessionDetailPageProps {
 }
 
 export function SessionDetailPage({ sessionId, onBack }: SessionDetailPageProps) {
-  const { 
-    resetSessionState, 
+  const {
+    resetSessionState,
     connectSSE,
-    agentState 
+    agentState
   } = useSessionCockpitStore();
 
   useEffect(() => {

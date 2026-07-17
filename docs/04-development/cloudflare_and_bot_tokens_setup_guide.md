@@ -43,7 +43,7 @@ addEventListener('fetch', event => {
 
 async function handleRequest(request) {
   const url = new URL(request.url);
-  
+
   // 1. Choose target backend based on weight
   let random = Math.random();
   let selectedBackend = BACKENDS[0];
@@ -58,7 +58,7 @@ async function handleRequest(request) {
   }
 
   const targetUrl = selectedBackend.url + url.pathname + url.search;
-  
+
   // Clone request headers & body for routing
   const modifiedRequest = new Request(targetUrl, {
     method: request.method,
@@ -76,11 +76,11 @@ async function handleRequest(request) {
     return response;
   } catch (err) {
     console.warn(`Primary backend ${selectedBackend.url} failed. Routing to fallback... Error: ${err.message}`);
-    
+
     // 2. Failover logic: Try all other backends sequentially
     for (const backend of BACKENDS) {
       if (backend.url === selectedBackend.url) continue;
-      
+
       try {
         const fallbackUrl = backend.url + url.pathname + url.search;
         const fallbackRequest = new Request(fallbackUrl, {
@@ -89,7 +89,7 @@ async function handleRequest(request) {
           body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.clone().blob() : null,
           redirect: 'follow'
         });
-        
+
         let response = await fetch(fallbackRequest);
         if (response.ok || response.status < 500) {
           return response;
@@ -98,9 +98,9 @@ async function handleRequest(request) {
         console.error(`Fallback backend ${backend.url} also failed:`, fallbackErr);
       }
     }
-    
+
     return new Response(
-      JSON.stringify({ error: "All multi-cloud backends are currently unreachable." }), 
+      JSON.stringify({ error: "All multi-cloud backends are currently unreachable." }),
       { status: 502, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -123,20 +123,20 @@ async function handleRequest(request) {
 
 1. **Open Telegram Application:**
    - Search for **@BotFather** (verified account with a blue checkmark).
-   
+
 2. **Start a Conversation:**
    - Click **Start** or send `/start`.
-   
+
 3. **Create the Bot:**
    - Send the `/newbot` command.
    - Follow the prompts:
      - Enter a **Display Name** for the bot (e.g., `SupremeAI Assistant`).
      - Enter a **Username** ending in `bot` (e.g., `supreme_ai_2_bot`).
-   
+
 4. **Acquire HTTP API Token:**
    - BotFather will reply with a message containing your token key:
      `Keep your token secure and store it safely, it looks like: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ`
-   
+
 5. **Configure your Env File:**
    - Copy the token and paste it into [.env](file:///c:/Users/n/supremeai/supremeai_2.0/.env):
      ```env

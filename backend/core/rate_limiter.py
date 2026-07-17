@@ -52,10 +52,7 @@ class AsyncRateLimiter:
             from core.config import settings as app_settings
 
             redis_url = (
-                getattr(app_settings, "redis_url", None)
-                or os.getenv("REDIS_URL")
-                or os.getenv("UPSTASH_REDIS_URL")
-                or "redis://localhost:6379"
+                getattr(app_settings, "redis_url", None) or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL") or "redis://localhost:6379"
             )
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis

@@ -24,17 +24,15 @@ if not ENCRYPTION_KEY:
                 module="security_vault",
                 error_type="MISSING_ENCRYPTION_KEY",
                 message="ENCRYPTION_KEY environment variable is missing",
-                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
+                severity="CRITICAL",
+                structured_context=ErrorContext(module="auto_fixed"),
             )
         )
         raise ValueError("CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!")
 
 # বাংলা মন্তব্য: ENCRYPTION_KEYS, ENCRYPTION_KEY এবং SUPREMEAI_CREDENTIAL_ENC_KEY সব চেক করা হচ্ছে রোটেশনের জন্য।
 _raw_keys = [
-    k for k in os.environ.get(
-        "ENCRYPTION_KEYS",
-        os.environ.get("SUPREMEAI_CREDENTIAL_ENC_KEY", ENCRYPTION_KEY or "")
-    ).split(",") if k.strip()
+    k for k in os.environ.get("ENCRYPTION_KEYS", os.environ.get("SUPREMEAI_CREDENTIAL_ENC_KEY", ENCRYPTION_KEY or "")).split(",") if k.strip()
 ]
 
 if not _raw_keys:
@@ -52,7 +50,15 @@ def encrypt_token(plain_text: str) -> str:
         return _vault.encrypt(plain_text.encode("utf-8")).decode("utf-8")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error encrypting token: {e}")
-        error_event_bus.emit(ErrorEvent(module="security_vault", error_type="ENCRYPTION_FAILED", message=str(e)[:200], severity="ERROR", structured_context=ErrorContext(module="auto_fixed")))
+        error_event_bus.emit(
+            ErrorEvent(
+                module="security_vault",
+                error_type="ENCRYPTION_FAILED",
+                message=str(e)[:200],
+                severity="ERROR",
+                structured_context=ErrorContext(module="auto_fixed"),
+            )
+        )
         raise RuntimeError("Token encryption failed.") from e
 
 
@@ -67,5 +73,13 @@ def decrypt_token(cipher_text: str, ttl: int | None = None) -> str:
         return _vault.decrypt(cipher_text.encode("utf-8"), ttl=ttl).decode("utf-8")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error decrypting token: {e}")
-        error_event_bus.emit(ErrorEvent(module="security_vault", error_type="DECRYPTION_FAILED", message=str(e)[:200], severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed")))
+        error_event_bus.emit(
+            ErrorEvent(
+                module="security_vault",
+                error_type="DECRYPTION_FAILED",
+                message=str(e)[:200],
+                severity="CRITICAL",
+                structured_context=ErrorContext(module="auto_fixed"),
+            )
+        )
         raise ValueError("Decryption failed: Invalid or corrupted token.") from e

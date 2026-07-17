@@ -77,55 +77,55 @@ resource "google_cloud_run_service" "supremeai_api" {
       # Main application container
       containers {
         image = "${var.project_id}-docker.pkg.dev/${var.project_id}/supremeai/app:${var.environment}"
-        
+
         resources {
           limits = {
             cpu    = var.limit_cpu
             memory = "4Gi"     # 4 GB RAM
           }
-          
+
           # Requests for better scheduling
           requests = {
             cpu    = var.request_cpu
             memory = var.request_memory
           }
         }
-        
+
         # Environment variables
         env {
           name  = "ENVIRONMENT"
           value = var.environment
         }
-        
+
         env {
           name  = "LOG_LEVEL"
           value = var.environment == "production" ? "info" : "debug"
         }
-        
+
         # Add more environment variables as needed
       }
-      
+
       # Autoscaling configuration
       autoscaling {
         # Max instances for burst traffic
         max_concurrency = var.max_concurrent_requests
-        
+
         # Scale to zero when idle (cost optimization)
         max_instance_count = var.max_instances
         min_instance_count = var.min_instances
-        
+
         # Scale based on concurrency (requests)
         # This is often better than CPU for API services
       }
-      
+
       # Timeout and concurrency settings
       timeout_seconds = 300
       container_concurrency = var.max_concurrent_requests
-      
+
       # Enable HTTP/2 for better performance
       protocol = "HTTP2"
     }
-    
+
     metadata {
       annotations = {
         "autoscaling.knative.dev/maxScale" = var.max_instances
@@ -135,7 +135,7 @@ resource "google_cloud_run_service" "supremeai_api" {
       }
     }
   }
-  
+
   # Traffic allocation - 100% to latest revision
   traffic {
     percent         = 100
@@ -151,13 +151,13 @@ resource "google_sql_database_instance" "supremeai_db" {
   name             = "supremeai-db-${var.environment}"
   database_version = "POSTGRES_15"
   region           = var.region
-  
+
   settings {
     tier = "db-custom-2-7680"  # 2 vCPU, 7.5 GB RAM
-    
+
     # Enable high availability for production
     availability_type = var.environment == "production" ? "REGIONAL" : "ZONAL"
-    
+
     # Backup configuration
     backup_configuration {
       enabled           = true
@@ -165,25 +165,25 @@ resource "google_sql_database_instance" "supremeai_db" {
       enabled           = true
       point_in_time_recovery_enabled = true
     }
-    
+
     # Performance settings
     database_flags {
       name  = "max_connections"
       value = "200"
     }
-    
+
     database_flags {
       name  = "shared_buffers"
       value = "256MB"
     }
-    
+
     # Enable storage auto increase
     disk_size        = 20
     disk_type        = "PD_SSD"
     disk_autoresize  = true
     disk_autoresize_limit = 100
   }
-  
+
   # Deletion protection for production
   deletion_protection = var.environment == "production"
 }
@@ -228,9 +228,9 @@ resource "google_pubsub_topic" "user_events" {
 resource "google_pubsub_subscription" "analytics_processor" {
   name  = "analytics-processor-${var.environment}"
   topic = google_pubsub_topic.user_events.name
-  
+
   ack_deadline_seconds = 20
-  
+
   # Enable dead letter topic for error handling
   dead_letter_policy {
     dead_letter_topic = google_pubsub_topic.dlq.name
@@ -274,20 +274,20 @@ resource "google_cloudfunctions2_function" "user_event_processor" {
     min_instance_count = 0
     available_memory   = "256M"
     timeout_seconds    = 60
-    
+
     # Environment variables
     environment_variables = {
       ENVIRONMENT = var.environment
       PROJECT_ID  = var.project_id
     }
-    
+
     # Enable VPC connector for database access
     # vpc_connector {
     #   name  = google_compute_network_vpc_access_connector.vpc_connector.name
     #   egress_settings = "ALL_TRAFFIC"
     # }
   }
-  
+
   # Trigger from Pub/Sub
   event_trigger {
     trigger_region = var.region
@@ -308,12 +308,12 @@ resource "google_storage_bucket" "assets" {
   name          = "supremeai-assets-${var.environment}"
   location      = var.region
   force_destroy = var.environment != "production"  # Only allow force destroy in non-prod
-  
+
   # Enable versioning for recovery
   versioning {
     enabled = true
   }
-  
+
   # Lifecycle rules - delete old versions after 30 days
   lifecycle_rule {
     action {
@@ -324,7 +324,7 @@ resource "google_storage_bucket" "assets" {
       matches_storage_class = ["STANDARD", "NEARLINE"]
     }
   }
-  
+
   # Uniform bucket-level access
   uniform_bucket_level_access = true
 }
@@ -334,7 +334,7 @@ resource "google_storage_bucket" "terraform_state" {
   name          = "supremeai-terraform-state-${var.environment}"
   location      = var.region
   force_destroy = var.environment != "production"
-  
+
   versioning {
     enabled = true
   }
@@ -350,7 +350,7 @@ resource "google_storage_bucket" "source_bucket" {
 resource "google_storage_bucket_object" "source_object" {
   name   = "source-code-${timestamp()}.zip"
   bucket = google_storage_bucket.source_bucket.name
-  
+
   source = "${path.module}/../../function-source.zip"
 }
 
@@ -362,7 +362,7 @@ resource "google_storage_bucket_object" "source_object" {
 resource "google_monitoring_alert_policy" "high_error_rate" {
   display_name = "High Error Rate - SupremeAPI"
   combiner     = "OR"
-  
+
   conditions {
     display_name = "Error rate > 5%"
     condition_threshold {
@@ -370,10 +370,10 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
         'metric.type="run.googleapis.com/request_count" AND resource.label."service_name"="%s" AND metric.label."response_code_code">="400"',
         google_cloud_run_service.supremeai_api.name
       )
-      
+
       comparison = "COMPARISON_GT"
       threshold_value = 0.05  # 5% error rate
-      
+
       duration = "300s"  # 5 minutes
       aggregations {
         alignment_period   = "60s"
@@ -381,7 +381,7 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
       }
     }
   }
-  
+
   # Notification channel (would need to be configured separately)
   # notification_channels = [google_monitoring_notification_channel.email.id]
 }
@@ -390,7 +390,7 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
 resource "google_monitoring_alert_policy" "high_latency" {
   display_name = "High Latency - SupremeAPI"
   combiner     = "OR"
-  
+
   conditions {
     display_name = "95th percentile latency > 2s"
     condition_threshold {
@@ -398,10 +398,10 @@ resource "google_monitoring_alert_policy" "high_latency" {
         'metric.type="run.googleapis.com/request_latencies" AND resource.label."service_name"="%s"',
         google_cloud_run_service.supremeai_api.name
       )
-      
+
       comparison = "COMPARISON_GT"
       threshold_value = 2.0  # 2 seconds
-      
+
       duration = "300s"  # 5 minutes
       aggregations {
         alignment_period   = "60s"
@@ -487,7 +487,7 @@ resource "google_project_iam_member" "cloudrun_pubsub_publisher" {
 #   name          = "vpc-connector-${var.environment}"
 #   region        = var.region
 #   subnet        = google_compute_subnetwork.default.id
-#   
+#
 #   # Throughput settings
 #   min_throughput = 200  # Mbps
 #   max_throughput = 300  # Mbps

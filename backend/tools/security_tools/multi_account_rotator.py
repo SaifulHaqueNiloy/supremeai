@@ -753,6 +753,7 @@ class MultiAccountRotator:
         # বাংলা মন্তব্য: CancelledError রেইজ করার স্ট্যান্ডার্ড বজায় রাখা হচ্ছে।
         try:
             from core.llm.llm_gateway import get_llm_gateway
+
             gateway = get_llm_gateway()
 
             # বাংলা মন্তব্য: প্রোভাইডারের প্রথম এভেইলেবল মডেলটি নেওয়া হচ্ছে যদি না kwargs-এ সুনির্দিষ্ট মডেল দেওয়া থাকে।
@@ -761,12 +762,7 @@ class MultiAccountRotator:
                 raise ValueError(f"Provider '{provider.name}'-এর জন্য কোনো মডেল নির্ধারিত নেই।")
 
             # বাংলা মন্তব্য: litellm গেটওয়ের acompletion কল করা হচ্ছে এবং rotator থেকে এপিআই কী পাস হচ্ছে।
-            response = await gateway.acompletion(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                api_key=account.api_key,
-                **kwargs
-            )
+            response = await gateway.acompletion(model=model, messages=[{"role": "user", "content": prompt}], api_key=account.api_key, **kwargs)
 
             if isinstance(response, dict) and response.get("success"):
                 return response.get("text") or ""

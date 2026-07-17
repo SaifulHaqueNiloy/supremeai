@@ -27,7 +27,8 @@ class SelfHealerService:
                     module="self_healer",
                     error_type="TIMEOUT",
                     message=f"Coroutine {coro.__name__} timed out after {timeout}s",
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"coroutine": coro.__name__, "timeout": timeout},
                 )
             )
@@ -38,7 +39,8 @@ class SelfHealerService:
                     module="self_healer",
                     error_type="CANCELLED",
                     message=f"Coroutine {coro.__name__} was cancelled",
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"coroutine": coro.__name__},
                 )
             )
@@ -49,7 +51,8 @@ class SelfHealerService:
                     module="self_healer",
                     error_type="ERROR",
                     message=str(e),
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"coroutine": coro.__name__, "traceback": traceback.format_exc()},
                 )
             )
@@ -119,7 +122,8 @@ class SelfHealerService:
                     module="self_healer",
                     error_type="HITL_REVIEW_REQUIRED",
                     message=f"Human review required for fix {fix_id}",
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"fix_id": fix_id, "tenant_id": tenant_id, "impact_score": impact_score},
                 )
             )

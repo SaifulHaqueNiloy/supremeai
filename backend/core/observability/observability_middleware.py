@@ -124,8 +124,7 @@ class ObservabilityMiddleware:
                             # Rate-limited warning: প্রতি ১০ বার ব্যর্থতায় একবার লগ করি
                             if _redis_metric_fail_count == 1 or _redis_metric_fail_count % 10 == 0:
                                 logger.warning(
-                                    f"[Observability] Redis traffic metric write failed "
-                                    f"(total failures: {_redis_metric_fail_count}): {redis_err!r}"
+                                    f"[Observability] Redis traffic metric write failed (total failures: {_redis_metric_fail_count}): {redis_err!r}"
                                 )
 
                     task = asyncio.create_task(push_traffic())

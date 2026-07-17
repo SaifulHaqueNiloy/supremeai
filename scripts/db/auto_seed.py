@@ -29,10 +29,10 @@ def seed_database() -> None:
         from core.database import init_db, SessionLocal
         from core.models import User, Skill, Config
         from core.security import get_password_hash
-        
+
         # Initialize database connection
         db = SessionLocal()
-        
+
         try:
             # Check if we already have an admin user
             admin_email = "admin@supremeai.com"
@@ -49,7 +49,7 @@ def seed_database() -> None:
                 print("✅ Created admin user")
             else:
                 print("ℹ️ Admin user already exists")
-            
+
             # Seed default skills if none exist
             skill_count = db.query(Skill).count()
             if skill_count == 0:
@@ -65,7 +65,7 @@ def seed_database() -> None:
                 print(f"✅ Seeded {len(default_skills)} default skills")
             else:
                 print(f"ℹ️ Skipping seed - {skill_count} skills already exist")
-            
+
             # Seed default configuration
             config_count = db.query(Config).count()
             if config_count == 0:
@@ -80,18 +80,18 @@ def seed_database() -> None:
                 print(f"✅ Seeded {len(default_configs)} default configurations")
             else:
                 print(f"ℹ️ Skipping seed - {config_count} configurations already exist")
-            
+
             # Commit all changes
             db.commit()
             print("✅ Database seeding completed successfully")
-            
+
         except Exception as e:
             db.rollback()
             print(f"❌ Error during seeding: {e}")
             raise
         finally:
             db.close()
-            
+
     except ImportError as e:
         print(f"❌ Failed to import application modules: {e}")
         print("Make sure you're running this from the project root and the backend is in your PYTHONPATH")

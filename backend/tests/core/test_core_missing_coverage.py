@@ -1,4 +1,5 @@
 from core.messaging.event_bus import ErrorContext
+
 # বাংলা মন্তব্য: core module-এর কম-কভার লাইন কভার করার জন্য অতিরিক্ত টেস্টসমূহ
 import asyncio
 import contextlib
@@ -321,7 +322,8 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+            severity="WARNING",
+            structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
 
@@ -342,7 +344,8 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+            severity="WARNING",
+            structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         await bus.emit_async(event)
@@ -362,7 +365,8 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+            severity="WARNING",
+            structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         await bus.emit_async(event)
@@ -385,7 +389,8 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+            severity="ERROR",
+            structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         await bus.emit_async(event)
@@ -419,7 +424,8 @@ class TestEventBusMissingBranches:
             module="test",
             error_type="Err",
             message="msg",
-            severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+            severity="ERROR",
+            structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
         with patch("core.event_bus.logger.critical") as mock_critical:
@@ -544,7 +550,10 @@ class TestSwarmOrchestratorMissingBranches:
         orchestrator = SwarmOrchestrator()
 
         with (
-            patch("core.orchestration.agent_orchestrator.budget_aware_route", return_value={"intent": "coding", "tier": "free", "best_provider": "gemini"}),
+            patch(
+                "core.orchestration.agent_orchestrator.budget_aware_route",
+                return_value={"intent": "coding", "tier": "free", "best_provider": "gemini"},
+            ),
             patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}),
             patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock) as mock_design,
             patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock) as mock_code,
@@ -1036,6 +1045,7 @@ class TestPlaywrightManagerMissingBranches:
         monkeypatch.setattr(pm, "_global_browser", None)
 
         import builtins
+
         original_callable = builtins.callable
 
         def mock_callable(obj):
@@ -1183,7 +1193,12 @@ class TestSwarmOrchestratorCircuitBreakerIntegration:
         # Mock _synthesize_tool to avoid LLM call
         with (
             patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}),
-            patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock, side_effect=CircuitBreakerOpenError("circuit open", state=CircuitBreakerState.OPEN)),
+            patch.object(
+                orchestrator.agents["architect"],
+                "run",
+                new_callable=AsyncMock,
+                side_effect=CircuitBreakerOpenError("circuit open", state=CircuitBreakerState.OPEN),
+            ),
             patch.object(orchestrator.agents["reflection"], "reflect_and_persist", new_callable=AsyncMock),
         ):
             # We verify that the circuit breaker error path is reached

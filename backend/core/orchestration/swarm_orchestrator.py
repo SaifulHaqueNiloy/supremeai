@@ -167,8 +167,7 @@ class SwarmOrchestrator:
         async def _execute_dag():
             # Standard DAG execution for non-loop parts
             while len(completed_tasks) < len(task_graph):
-                ready_tasks = [task for task, deps in task_graph.items()
-                               if task not in completed_tasks and all(d in completed_tasks for d in deps)]
+                ready_tasks = [task for task, deps in task_graph.items() if task not in completed_tasks and all(d in completed_tasks for d in deps)]
                 if not ready_tasks:
                     raise RuntimeError(f"DAG execution error: No ready tasks found, but not all tasks are complete. Completed: {completed_tasks}")
 
@@ -177,8 +176,7 @@ class SwarmOrchestrator:
                 if missing:
                     # ❗ আগে silently completed মার্ক হতো — এখন স্পষ্ট error, সিস্টেম জানবে সে কিছু মিস করছে
                     raise RuntimeError(
-                        f"SwarmOrchestrator: DAG references unregistered agent(s): {missing}. "
-                        f"Registered agents: {list(self.agents.keys())}"
+                        f"SwarmOrchestrator: DAG references unregistered agent(s): {missing}. Registered agents: {list(self.agents.keys())}"
                     )
 
                 coros = [self.agents[task].run(workspace, user_id) for task in runnable]
@@ -189,7 +187,7 @@ class SwarmOrchestrator:
                     failed_names = ", ".join(f"{t}: {e}" for t, e in failures)
                     raise RuntimeError(f"SwarmOrchestrator: task(s) failed in this batch — {failed_names}")
 
-                completed_tasks.update(runnable)   # শুধু যেগুলো সত্যিই সফলভাবে রান হয়েছে
+                completed_tasks.update(runnable)  # শুধু যেগুলো সত্যিই সফলভাবে রান হয়েছে
 
             # Special Handling for 'code_generation' intent's refinement loop
             if workspace.intent == "code_generation":
@@ -239,6 +237,7 @@ class SwarmOrchestrator:
         except Exception as e:  # noqa: BLE001
             # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে এবং ট্রেসব্যাক লগ করা হচ্ছে।
             from loguru import logger
+
             logger.opt(exception=True).error(f"DAG execution failed: {e}")
 
             from core.resilience.circuit_breaker import CircuitBreakerOpenError

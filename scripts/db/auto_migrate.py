@@ -18,15 +18,15 @@ def run_migrations() -> None:
     # Get the directory where this script is located
     script_dir = Path(__file__).parent.parent.parent  # Go up to project root
     backend_dir = script_dir / "backend"
-    
+
     # Change to the backend directory where alembic.ini is located
     os.chdir(backend_dir)
-    
+
     # Check if alembic.ini exists
     if not (backend_dir / "alembic.ini").exists():
         print("Error: alembic.ini not found in backend directory")
         sys.exit(1)
-    
+
     # Run the migration command
     try:
         print("Running database migrations...")

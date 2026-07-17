@@ -40,7 +40,7 @@ This architecture completely eliminates "multi-platform conflicts" and brings ou
 
 ## 3. Security & Data Flow (Critical)
 
-1. **Authentication Flow:** 
+1. **Authentication Flow:**
    The Admin Dashboard uses Firebase Auth to authenticate the user. Once authenticated, the client sends the Firebase `idToken` to the Render backend (`/api/admin/firebase-login`). The backend validates this token securely and issues a backend JWT if authorized.
 2. **Database Isolation:**
    Neither the Vercel app nor the Firebase app connects directly to the database. All data operations pass through the **Render API**, keeping the Supabase connection string completely hidden from the frontends.

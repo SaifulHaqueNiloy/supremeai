@@ -80,9 +80,7 @@ class JudgeAgent:
 
         from core.llm.llm_gateway import get_llm_gateway
 
-        proposals_block = "\n\n".join(
-            f"### Proposal from {p.agent_id}\n{p.content}" for p in proposals
-        )
+        proposals_block = "\n\n".join(f"### Proposal from {p.agent_id}\n{p.content}" for p in proposals)
         system_prompt = (
             "You are the Judge Agent in a multi-agent debate/consensus system. "
             "Evaluate the given proposals against the original task and pick the strongest one. "
@@ -184,8 +182,7 @@ class ConsensusOrchestrator:
                 }.get(role, "Propose a solution for the task.")
 
                 system_prompt = (
-                    f"You are '{agent_id}', a specialist agent in a multi-agent debate system. "
-                    f"{role_instructions} Be concise and specific."
+                    f"You are '{agent_id}', a specialist agent in a multi-agent debate system. {role_instructions} Be concise and specific."
                 )
 
                 try:

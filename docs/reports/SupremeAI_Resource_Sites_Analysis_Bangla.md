@@ -1,8 +1,8 @@
 # 🔱 SupremeAI 2.0 এর জন্য সেরা Open-Source Resource সাইটসমূহ — সম্পূর্ণ বিশ্লেষণ
 
-> **তারিখ:** ২০২৬-০৬-২৫  
-> **প্রজেক্ট:** SupremeAI 2.0 — Universal Self-Learning AI Agent  
-> **ভাষা:** বাংলা  
+> **তারিখ:** ২০২৬-০৬-২৫
+> **প্রজেক্ট:** SupremeAI 2.0 — Universal Self-Learning AI Agent
+> **ভাষা:** বাংলা
 > **উদ্দেশ্য:** SupremeAI-এর dynamic skill ecosystem-কে শক্তিশালী করার জন্য সেরা resource সাইটগুলো খুঁজে বের করা এবং তাদের থেকে কীভাবে সুবিধা নেওয়া যায় তার পরিকল্পনা
 
 ---
@@ -821,6 +821,6 @@ SupremeAI 2.0:
 
 *এই বিশ্লেষণ SupremeAI 2.0-এর dynamic skill ecosystem-কে বিশ্বের সেরা করার জন্য প্রস্তুত।*
 
-**তৈরি করেছে:** SupremeAI Team  
-**তারিখ:** ২০২৬-০৬-২৫  
+**তৈরি করেছে:** SupremeAI Team
+**তারিখ:** ২০২৬-০৬-২৫
 **ভার্সন:** 2.0.0

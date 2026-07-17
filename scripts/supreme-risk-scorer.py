@@ -6,7 +6,7 @@ class SupremeRiskScorer:
     def __init__(self):
         self.score = 0
         self.risk_factors = []
-        
+
     def evaluate_config(self):
         audit_path = Path("audit_report.json")
         if audit_path.exists():
@@ -49,16 +49,16 @@ class SupremeRiskScorer:
     def run(self):
         self.evaluate_config()
         self.evaluate_docker()
-        
+
         rating = self.get_risk_rating()
-        
+
         result = {
             "score": min(self.score, 100),
             "rating": rating,
             "risk_factors": self.risk_factors,
             "status": "BLOCK" if rating == "CRITICAL" else "PASS"
         }
-        
+
         print(json.dumps(result, indent=2))
         with open("risk_report.json", "w") as f:
             json.dump(result, f, indent=2)

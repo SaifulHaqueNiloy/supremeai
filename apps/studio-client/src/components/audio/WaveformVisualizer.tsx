@@ -6,8 +6,8 @@ interface WaveformVisualizerProps {
   color?: string;
 }
 
-export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ 
-  analyser, 
+export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({
+  analyser,
   isActive,
   color = 'var(--accent-primary, #00f0ff)'
 }) => {
@@ -76,10 +76,10 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({
   }, [analyser, isActive, color]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={200} 
-      height={40} 
+    <canvas
+      ref={canvasRef}
+      width={200}
+      height={40}
       className="w-full h-full rounded bg-transparent opacity-80"
     />
   );

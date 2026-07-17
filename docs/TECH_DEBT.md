@@ -5,7 +5,7 @@ This document tracks technical debt, known bugs, and workarounds within the Supr
 ## Identified Issues
 
 ### BUG-001: Legacy Tools Mocking Non-existent Router Method
-* **Location**: 
+* **Location**:
   - ackend/tests/tools/test_game_dev_agent.py
   - ackend/tests/tools/test_image_to_code_react.py
   - ackend/tests/tools/test_legal_agent.py

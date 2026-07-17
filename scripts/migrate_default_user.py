@@ -22,7 +22,7 @@ async def migrate_default_user(new_user_id: str):
             for wallet in wallets:
                 logger.info(f"Migrating wallet {wallet.id} to new user {new_user_id}")
                 wallet.user_id = new_user_id
-            
+
             # Update Ledgers
             result = await session.execute(
                 select(TransactionLedgerEntry).where(TransactionLedgerEntry.user_id == "default_user_session")
@@ -30,7 +30,7 @@ async def migrate_default_user(new_user_id: str):
             entries = result.scalars().all()
             for entry in entries:
                 entry.user_id = new_user_id
-            
+
             logger.info(f"Migrated {len(wallets)} wallets and {len(entries)} transaction entries.")
 
 if __name__ == "__main__":

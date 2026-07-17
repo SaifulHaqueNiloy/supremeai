@@ -78,7 +78,7 @@ listMoviesRef.operationName = 'ListMovies';
 exports.listMoviesRef = listMoviesRef;
 
 exports.listMovies = function listMovies(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(listMoviesRef(dcInstance, inputVars), inputOpts && inputOpts.fetchPolicy);
 }
@@ -93,7 +93,7 @@ listUsersRef.operationName = 'ListUsers';
 exports.listUsersRef = listUsersRef;
 
 exports.listUsers = function listUsers(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(listUsersRef(dcInstance, inputVars), inputOpts && inputOpts.fetchPolicy);
 }
@@ -108,7 +108,7 @@ listUserReviewsRef.operationName = 'ListUserReviews';
 exports.listUserReviewsRef = listUserReviewsRef;
 
 exports.listUserReviews = function listUserReviews(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(listUserReviewsRef(dcInstance, inputVars), inputOpts && inputOpts.fetchPolicy);
 }
@@ -123,7 +123,7 @@ getMovieByIdRef.operationName = 'GetMovieById';
 exports.getMovieByIdRef = getMovieByIdRef;
 
 exports.getMovieById = function getMovieById(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getMovieByIdRef(dcInstance, inputVars), inputOpts && inputOpts.fetchPolicy);
 }
@@ -138,7 +138,7 @@ searchMovieRef.operationName = 'SearchMovie';
 exports.searchMovieRef = searchMovieRef;
 
 exports.searchMovie = function searchMovie(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(searchMovieRef(dcInstance, inputVars), inputOpts && inputOpts.fetchPolicy);
 }

@@ -48,6 +48,7 @@ QUESTION: {question}
 ANSWER:
 """
 
+
 async def answer_question(question: str) -> str:
     """
     Answers a question about the codebase using RAG.
@@ -58,21 +59,27 @@ async def answer_question(question: str) -> str:
     if not api_key_str:
         return "I'm sorry, I don't have GEMINI_API_KEY configured in settings."
 
-    litellm.api_key = api_key_str.split(',')[0].strip()
+    litellm.api_key = api_key_str.split(",")[0].strip()
 
     try:
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+        sentence_transformer_ef = (
+            embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name="all-MiniLM-L6-v2"
+            )
+        )
         client = chromadb.PersistentClient(path=DB_PATH)
-        collection = client.get_collection(name=COLLECTION_NAME, embedding_function=sentence_transformer_ef)
+        collection = client.get_collection(
+            name=COLLECTION_NAME, embedding_function=sentence_transformer_ef
+        )
     except Exception as e:
         return f"Error: ChromaDB কালেকশন বা ক্লায়েন্ট লোড করতে ব্যর্থ হয়েছে — {e}"
 
     # ১. প্রাসঙ্গিক তথ্যের জন্য ChromaDB কোয়েরি করা
     try:
         results = collection.query(query_texts=[question], n_results=7)
-        if not results or not results.get('documents') or not results['documents'][0]:
+        if not results or not results.get("documents") or not results["documents"][0]:
             return "I'm sorry, no relevant context was found in the knowledge base."
-        context = "\n\n---\n\n".join(results['documents'][0])
+        context = "\n\n---\n\n".join(results["documents"][0])
     except Exception as e:
         return f"Error: ChromaDB কোয়েরি করার সময় এরর ঘটেছে — {e}"
 
@@ -81,11 +88,14 @@ async def answer_question(question: str) -> str:
         prompt = RAG_PROMPT_TEMPLATE.format(context=context, question=question)
         # বাংলা মন্তব্য: হার্ডকোডেড মডেল নামের বদলে সেটিংসের সেন্ট্রালাইজড মডেল নাম ব্যবহার করা হচ্ছে।
         model_name = settings.gemini_model_name
-        response = await litellm.acompletion(model=model_name, messages=[{"role": "user", "content": prompt}])
+        response = await litellm.acompletion(
+            model=model_name, messages=[{"role": "user", "content": prompt}]
+        )
         answer = response.choices[0].message.content
         return answer
     except Exception as e:
         return f"Error: LLM উত্তর তৈরি করতে ব্যর্থ হয়েছে — {e}"
+
 
 async def main(question: str):
     """Answers a question about the codebase using the indexed knowledge."""
@@ -93,9 +103,13 @@ async def main(question: str):
     print("\n🤖 AI Scribe's Answer:\n")
     print(answer)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Ask the AI Scribe about the SupremeAI codebase.")
+    parser = argparse.ArgumentParser(
+        description="Ask the AI Scribe about the SupremeAI codebase."
+    )
     parser.add_argument("question", type=str, help="Your question about the codebase.")
     args = parser.parse_args()
     import asyncio
+
     asyncio.run(main(args.question))

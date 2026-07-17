@@ -26,7 +26,7 @@ def call_llm(prompt):
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if "," in api_key:
             os.environ["GEMINI_API_KEY"] = api_key.split(",")[0]
-            
+
         print("Calling LLM via litellm...")
         response = completion(
             model="gemini/gemini-2.5-pro",
@@ -41,7 +41,7 @@ def call_llm(prompt):
 def generate_adr(diff):
     print("Generating ADR...")
     prompt = f"""
-You are an expert Enterprise Software Architect. Review this git diff and determine if a new Architecture Decision Record (ADR) is needed. 
+You are an expert Enterprise Software Architect. Review this git diff and determine if a new Architecture Decision Record (ADR) is needed.
 If yes, write a concise ADR in Markdown format. If no architectural changes are present, output EXACTLY "NO_ADR_NEEDED".
 Git Diff:
 ```diff
@@ -111,7 +111,7 @@ def main():
     if not diff.strip():
         print("No diff found. Exiting.")
         return
-        
+
     generate_adr(diff)
     generate_diagrams(diff)
     update_threat_model(diff)

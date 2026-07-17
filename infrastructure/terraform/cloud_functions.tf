@@ -2,7 +2,7 @@ resource "google_cloudfunctions2_function" "supremeai_ocr" {
   project  = var.project_id
   region   = var.region
   name     = "supremeai-ocr-trigger"
-  
+
   build_config {
     runtime           = "python311"
     entry_point       = "handle"
@@ -13,7 +13,7 @@ resource "google_cloudfunctions2_function" "supremeai_ocr" {
       }
     }
   }
-  
+
   service_config {
     max_instance_count = 1
     available_memory   = "256Mi"

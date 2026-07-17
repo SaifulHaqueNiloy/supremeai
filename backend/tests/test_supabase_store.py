@@ -64,10 +64,11 @@ def test_supabase_store_learned_fact_vector_search():
     mock_embedding_response = MagicMock()
     mock_embedding_response.data = [{"embedding": [0.1] * 1536}]
 
-    with patch.dict("sys.modules", {"supabase": mock_supabase_mod}), \
-         patch.dict(os.environ, {"SUPABASE_KEY": "my-key"}), \
-         patch("litellm.embedding", return_value=mock_embedding_response):
-
+    with (
+        patch.dict("sys.modules", {"supabase": mock_supabase_mod}),
+        patch.dict(os.environ, {"SUPABASE_KEY": "my-key"}),
+        patch("litellm.embedding", return_value=mock_embedding_response),
+    ):
         store = SupabaseStore(
             database_url="postgresql://db.supabase.co:5432/postgres",
             local_path=":memory:",
@@ -86,14 +87,7 @@ def test_supabase_store_learned_fact_vector_search():
         mock_rpc.execute.return_value = MagicMock(data=[{"content": '{"id": "fact-1", "content": "SupremeAI is awesome"}'}])
         results = store.search_facts("awesome")
 
-        mock_client.rpc.assert_called_with(
-            "match_learned_facts",
-            {
-                "query_embedding": [0.1] * 1536,
-                "match_threshold": 0.3,
-                "match_count": 5
-            }
-        )
+        mock_client.rpc.assert_called_with("match_learned_facts", {"query_embedding": [0.1] * 1536, "match_threshold": 0.3, "match_count": 5})
         assert len(results) == 1
         assert results[0]["id"] == "fact-1"
 

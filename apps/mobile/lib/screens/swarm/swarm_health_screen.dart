@@ -14,7 +14,7 @@ class SwarmHealthScreen extends StatefulWidget {
 
 class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
   Timer? _mockStreamTimer;
-  
+
   // Mock State
   String _circuitState = 'CLOSED';
   double _cpuUsage = 12.0;

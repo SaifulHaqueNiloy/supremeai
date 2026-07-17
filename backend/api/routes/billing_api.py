@@ -39,18 +39,22 @@ SSLCOMMERZ_VALIDATION_URL = "https://securepay.sslcommerz.com/validator/api/vali
 SSLCOMMERZ_STORE_ID = getattr(settings, "sslcommerz_store_id", None)
 SSLCOMMERZ_STORE_PASSWORD = getattr(settings, "sslcommerz_store_password", None)
 
+
 async def _verify_sslcommerz_transaction(val_id: str) -> dict | None:
     """SSLCommerz Validation API server-to-server validation"""
     if not SSLCOMMERZ_STORE_ID or not SSLCOMMERZ_STORE_PASSWORD:
         logger.critical("SSLCommerz credentials not configured — cannot verify transactions.")
         return None
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(SSLCOMMERZ_VALIDATION_URL, params={
-            "val_id": val_id,
-            "store_id": SSLCOMMERZ_STORE_ID,
-            "store_passwd": SSLCOMMERZ_STORE_PASSWORD,
-            "format": "json",
-        })
+        resp = await client.get(
+            SSLCOMMERZ_VALIDATION_URL,
+            params={
+                "val_id": val_id,
+                "store_id": SSLCOMMERZ_STORE_ID,
+                "store_passwd": SSLCOMMERZ_STORE_PASSWORD,
+                "format": "json",
+            },
+        )
     resp.raise_for_status()
     data = resp.json()
     return data if data.get("status") in ("VALID", "VALIDATED") else None
@@ -318,9 +322,7 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
         # idempotency check: `val_id` has unique mapping to `transaction_id` in ledger for SSLCommerz
         async with session.begin():
             # SSLCommerz-এর unique `val_id` দিয়ে ledger এ অলরেডি এন্ট্রি আছে কিনা চেক করি
-            existing_tx = await session.execute(
-                select(TransactionLedgerEntry).where(TransactionLedgerEntry.transaction_id == val_id)
-            )
+            existing_tx = await session.execute(select(TransactionLedgerEntry).where(TransactionLedgerEntry.transaction_id == val_id))
             if existing_tx.scalars().first():
                 logger.info(f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success.")
                 return {"status": "processed", "message": "Transaction already credited via SSLCommerz."}
@@ -335,7 +337,7 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
             wallet.balance_usd += amount_usd
 
             entry = TransactionLedgerEntry(
-                transaction_id=val_id, # transaction_id হিসেবে val_id ব্যবহার করা হচ্ছে ইউনিকনেস নিশ্চিত করতে
+                transaction_id=val_id,  # transaction_id হিসেবে val_id ব্যবহার করা হচ্ছে ইউনিকনেস নিশ্চিত করতে
                 user_id=user_id,
                 amount_usd=amount_usd,
                 transaction_type="topup",

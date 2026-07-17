@@ -3,11 +3,13 @@
 Cloud-native PostgreSQL store using Supabase/Cloud SQL.
 Replaces local SQLite for production.
 """
+
 import os
 from typing import Dict, Any, Optional, List
 from loguru import logger
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
 
 class CloudPostgresStore:
     """
@@ -17,8 +19,7 @@ class CloudPostgresStore:
 
     def __init__(self):
         self.conn_string = os.getenv(
-            "DATABASE_URL",
-            os.getenv("SUPABASE_DATABASE_URL", "")
+            "DATABASE_URL", os.getenv("SUPABASE_DATABASE_URL", "")
         )
         self._init_tables()
 
@@ -70,20 +71,23 @@ class CloudPostgresStore:
         """Save task execution record."""
         with self._get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO task_history 
+                cur.execute(
+                    """
+                    INSERT INTO task_history
                     (task_type, prompt, result, provider, cost, latency_ms, success)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
-                """, (
-                    task_data.get("task_type"),
-                    task_data.get("prompt"),
-                    task_data.get("result"),
-                    task_data.get("provider"),
-                    task_data.get("cost", 0.0),
-                    task_data.get("latency_ms", 0),
-                    task_data.get("success", True)
-                ))
+                """,
+                    (
+                        task_data.get("task_type"),
+                        task_data.get("prompt"),
+                        task_data.get("result"),
+                        task_data.get("provider"),
+                        task_data.get("cost", 0.0),
+                        task_data.get("latency_ms", 0),
+                        task_data.get("success", True),
+                    ),
+                )
                 result = cur.fetchone()
                 conn.commit()
                 return result["id"]
@@ -92,27 +96,35 @@ class CloudPostgresStore:
         """Get conversation context by session."""
         with self._get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT * FROM conversation_context 
-                    WHERE session_id = %s 
-                    ORDER BY updated_at DESC 
+                cur.execute(
+                    """
+                    SELECT * FROM conversation_context
+                    WHERE session_id = %s
+                    ORDER BY updated_at DESC
                     LIMIT 1
-                """, (session_id,))
+                """,
+                    (session_id,),
+                )
                 result = cur.fetchone()
                 return dict(result) if result else None
 
-    def update_conversation(self, session_id: str, messages: List[Dict], summary: str = ""):
+    def update_conversation(
+        self, session_id: str, messages: List[Dict], summary: str = ""
+    ):
         """Update or create conversation context."""
         with self._get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO conversation_context (session_id, messages, summary)
                     VALUES (%s, %s, %s)
                     ON CONFLICT (session_id) DO UPDATE SET
                         messages = EXCLUDED.messages,
                         summary = EXCLUDED.summary,
                         updated_at = CURRENT_TIMESTAMP
-                """, (session_id, Json(messages), summary))
+                """,
+                    (session_id, Json(messages), summary),
+                )
                 conn.commit()
 
     def get_stats(self) -> Dict[str, Any]:
@@ -120,7 +132,7 @@ class CloudPostgresStore:
         with self._get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT 
+                    SELECT
                         COUNT(*) as total_tasks,
                         AVG(cost) as avg_cost,
                         SUM(cost) as total_cost,
@@ -131,11 +143,12 @@ class CloudPostgresStore:
                 result = cur.fetchone()
                 return dict(result) if result else {}
 
+
 # Keep SQLite fallback for local dev
 class SQLiteStore:
     """Local SQLite store for development only."""
+
     def __init__(self, db_path: str = "data/supremeai.db"):
         self.db_path = db_path
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         # ... existing SQLite implementation ...
-

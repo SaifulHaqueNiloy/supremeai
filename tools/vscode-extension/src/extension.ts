@@ -77,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
   new HealingStatusBar(context);
   const { TelemetryTracker } = require('./services/TelemetryTracker');
   TelemetryTracker.initialize(context);
-  
+
   // 💡 Register Explain Fix CodeAction
   const { SupremeAIActionProvider } = require('./providers/SupremeAIActionProvider');
   context.subscriptions.push(
@@ -232,7 +232,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       vscode.window.showWarningMessage('No code selected to explain.');
       return;
     }
-    
+
     vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
       title: 'Explaining Code...',
@@ -268,7 +268,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       vscode.window.showWarningMessage('No code selected to review.');
       return;
     }
-    
+
     vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
       title: 'Reviewing Code...',
@@ -389,7 +389,7 @@ function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHa
       context: vscode.InlineCompletionContext,
       token: vscode.CancellationToken
     ): Promise<vscode.InlineCompletionList | vscode.InlineCompletionItem[] | undefined> {
-      
+
       const config = vscode.workspace.getConfiguration('supremeai');
       const enableRealTimeLearning = config.get<boolean>('enableRealTimeLearning', true);
       if (!enableRealTimeLearning) {
@@ -433,11 +433,11 @@ function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHa
             const items: vscode.InlineCompletionItem[] = response.suggestions.map((text) => {
               const item = new vscode.InlineCompletionItem(text);
               const suggestionId = `inline-${Date.now()}`;
-              
+
               fbHandler.captureSuggestionContext(
                 suggestionId,
                 `completion-${Date.now()}`,
-                '', 
+                '',
                 text,
                 `File: ${document.uri.fsPath}`,
                 position

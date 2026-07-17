@@ -50,14 +50,15 @@ class TestGuardEnumSuccess:
     @pytest.mark.anyio
     async def test_guard_enum_db_connection_error(self):
         from sqlalchemy.exc import SQLAlchemyError
+
         mock_conn = AsyncMock()
         mock_conn.execute.side_effect = SQLAlchemyError("DB connection failed")
-    
+
         from enum import Enum
-    
+
         class TestEnum(Enum):
             ACTIVE = "active"
-    
+
         await guard_enum(mock_conn, "test_enum", TestEnum)
 
     @pytest.mark.anyio

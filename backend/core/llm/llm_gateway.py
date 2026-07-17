@@ -107,7 +107,8 @@ class LLMGateway:
                     module="llm_gateway",
                     error_type="ROUTING_POLICY_LOAD_FAILED",
                     message=str(exc)[:500],
-                    severity="WARNING", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"policy_path": _POLICY_PATH},
                 )
             )
@@ -156,7 +157,8 @@ class LLMGateway:
                     module="llm_gateway",
                     error_type="LLM_CALL_FAILED",
                     message=str(exception_obj)[:500],
-                    severity="ERROR", structured_context=ErrorContext(module="auto_fixed"),
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
                     context={"model": model, "duration_s": round(duration, 2)},
                 )
             )
@@ -330,7 +332,8 @@ class LLMGateway:
                 module="llm_gateway",
                 error_type="ALL_MODELS_FAILED",
                 message=str(final_exception)[:500],
-                severity="CRITICAL", structured_context=ErrorContext(module="auto_fixed"),
+                severity="CRITICAL",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"tenant_id": tenant_id, "call_chain": call_chain},
             )
         )

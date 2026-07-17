@@ -4,7 +4,7 @@ import { useSessionCockpitStore, type FileNode } from '../../store/sessionCockpi
 
 export const FileTreePanel: React.FC = () => {
   const { fileTreeData } = useSessionCockpitStore();
-  
+
   // By using useRef<Map>, we avoid triggering React renders for every single patch.
   // We only force a re-render when we specifically want to update the tree view (e.g. via a throttled update).
   const treeRef = useRef<Map<string, FileNode>>(new Map());
@@ -18,7 +18,7 @@ export const FileTreePanel: React.FC = () => {
       treeRef.current.set('/', { name: 'workspace', path: '/', type: 'directory', status: 'unchanged' });
       setTreeMap(new Map(treeRef.current));
     }
-     
+
   }, [fileTreeData]);
 
   // Clean up on unmount or session reset is handled by the store, but we also clear the ref here.
@@ -27,7 +27,7 @@ export const FileTreePanel: React.FC = () => {
     return () => {
       currentTreeRef.clear();
     };
-     
+
   }, []);
 
   const toggleFolder = (path: string) => {
@@ -68,7 +68,7 @@ export const FileTreePanel: React.FC = () => {
 
     return (
       <div key={path}>
-        <div 
+        <div
           className={`flex items-center py-1 px-2 cursor-pointer select-none text-sm ${getStatusColor(node.status)}`}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => node.type === 'directory' && toggleFolder(path)}
@@ -83,7 +83,7 @@ export const FileTreePanel: React.FC = () => {
           {node.status === 'new' && <Plus className="w-3 h-3 ml-auto text-emerald-500" />}
           {node.status === 'deleted' && <Trash2 className="w-3 h-3 ml-auto text-red-500" />}
         </div>
-        
+
         {isExpanded && node.type === 'directory' && (
           <div>
             {children.map(child => renderNode(child.path, depth + 1))}

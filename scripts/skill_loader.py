@@ -21,7 +21,7 @@ class BulletproofASTSandbox(ast.NodeVisitor):
         self.filename = filename
         self.is_secure = True
         self.violation_reason = None
-        
+
         # ব্ল্যাকলিস্টেড মডিউল, অ্যাট্রিবিউটস এবং অবজেক্ট প্যারামিটার্স
         self.banned_tokens = {
             "__class__", "__subclasses__", "__globals__", "__code__",
@@ -134,7 +134,7 @@ class SkillLoader:
 
         spec = importlib.util.spec_from_file_location(f"skills.dynamic.{name}", candidate)
         mod = importlib.util.module_from_spec(spec)
-        
+
         # Pro-Tip: Delete dangerous builtins from the module's runtime global environment
         # This acts as a second layer of defense even if the AST check is somehow bypassed
         safe_globals = mod.__dict__
@@ -147,7 +147,7 @@ class SkillLoader:
                 b_dict = safe_globals['__builtins__'].__dict__ if hasattr(safe_globals['__builtins__'], '__dict__') else safe_globals['__builtins__']
                 if isinstance(b_dict, dict) and key in b_dict:
                     del b_dict[key]
-                    
+
         spec.loader.exec_module(mod)
         self._loaded[name] = mod
         return mod
