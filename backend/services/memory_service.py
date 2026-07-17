@@ -241,11 +241,12 @@ def helper_utils():
 """
     # 1. Test indexing
     indexed = test_service.chunk_and_embed("test_file.py", test_code)
-    print("Indexed output:", indexed)
+    # বাংলা মন্তব্য: Ruff T201 print এরর এড়াতে logger.info ব্যবহার করা হলো।
+    logger.info(f"Indexed output: {indexed}")
 
     # 2. Test semantic search query
     matches = test_service.query_context("Need a class to calculate and analyze data", top_k=1)
-    print("Semantic search match:", matches)
+    logger.info(f"Semantic search match: {matches}")
 
     # Clean up temp file
     try:
