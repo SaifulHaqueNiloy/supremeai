@@ -1,7 +1,7 @@
 from core.config import settings
 import json
 import logging
-import random
+import secrets
 import time
 from typing import Any
 
@@ -124,7 +124,7 @@ class VPNRotator:
                 resp = await client.get("https://www.proxy-list.download/api/v1/get?type=https")
                 text = resp.text.strip().splitlines()
                 if text:
-                    return {"proxy": random.choice(text).strip(), "source": "free"}
+                    return {"proxy": secrets.choice(text).strip(), "source": "free"}
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"free proxy fetch failed: {exc}")
         return {"proxy": None, "source": "free", "reason": "empty"}
