@@ -1,6 +1,5 @@
 """Error remediation tests for SupremeAI 2.0."""
 
-import sys
 from unittest.mock import MagicMock
 from unittest.mock import patch
 

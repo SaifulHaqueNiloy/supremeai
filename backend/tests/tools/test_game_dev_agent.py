@@ -1,11 +1,10 @@
 # বাংলা মন্তব্য: Game Dev Agent-এর Unity/Blender/GDD জেনারেশন ফাংজনালিটি টেস্ট।
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from tools.ai_agents.game_dev_agent import GameDevAgent
-from core.llm.llm_gateway import LLMGateway
 
 
 @pytest.fixture

@@ -1,6 +1,5 @@
 import httpx
 import pytest
-from typing import Dict
 
 try:
     from firebase_admin import auth as firebase_admin_auth
@@ -56,7 +55,7 @@ class FakeClient:
 class FakeFirestoreClient:
     def __init__(self, project=None):
         self.project = project
-        self._collections: Dict[str, list] = {}
+        self._collections: dict[str, list] = {}
 
     async def collection(self, name: str):
         self._collections.setdefault(name, [])
@@ -114,7 +113,7 @@ class FakeDocumentSnapshot:
 
 class FakeFirestoreQueue:
     def __init__(self):
-        self._store: Dict[str, dict] = {}
+        self._store: dict[str, dict] = {}
 
     def enqueue(self, task_id: str, payload: dict, priority: float = 1.0):
         self._store[task_id] = {

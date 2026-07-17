@@ -11,7 +11,7 @@ from core.config import settings
 # বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
 import os
 import json
-from typing import List, Any
+from typing import Any
 from enum import StrEnum
 
 import psycopg2
@@ -41,7 +41,7 @@ class ExecuteQueryInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     query: str = Field(..., description="এক্সিকিউট করার SQL কুয়েরি", min_length=1)
-    params: List[Any] | None = Field(default_factory=list, description="কুয়েরি প্যারামিটারস (ঐচ্ছিক)")
+    params: list[Any] | None = Field(default_factory=list, description="কুয়েরি প্যারামিটারস (ঐচ্ছিক)")
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN, description="আউটপুট ফরম্যাট")
 
 

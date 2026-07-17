@@ -6,7 +6,6 @@ Mocks asyncpg so tests run without a live database.
 
 import os
 import sys
-import types
 from unittest.mock import patch
 
 import pytest

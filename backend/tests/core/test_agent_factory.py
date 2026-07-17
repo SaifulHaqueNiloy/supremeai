@@ -1,9 +1,7 @@
 import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch, Mock
+from unittest.mock import AsyncMock, MagicMock, patch
 from core.queue.task_router import TaskRouter
 from core.agent_factory import DynamicAgentFactory
-from models.dynamic_agent import DynamicAgent
 
 
 @pytest.mark.asyncio

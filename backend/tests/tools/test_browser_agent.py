@@ -8,7 +8,6 @@ import pytest
 
 from core.playwright_manager import get_global_browser
 from tools.ai_agents.browser_agent import BrowserAgent
-from core.playwright_manager import get_global_browser
 from core.security import is_safe_url
 
 
