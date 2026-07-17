@@ -1,7 +1,11 @@
 """Health check endpoints for SupremeAI.
 
 বাংলা: স্বাস্থ্য পরীক্ষা এন্ডপয়েন্ট।
+render.yaml-এ healthCheckPath: /api/v1/health সেট করা আছে।
+তাই GET /api/v1/health অবশ্যই 200 রিটার্ন করতে হবে।
 """
+import time
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -9,6 +13,20 @@ from core.services import registry
 
 
 router = APIRouter()
+
+
+# বাংলা মন্তব্য: Render health check-এর জন্য এই endpoint অপরিহার্য।
+# render.yaml-এ healthCheckPath: /api/v1/health নির্ধারিত।
+# এটি prefix="/api/v1" সহ register করা হয়, তাই path="/health" যথেষ্ট।
+@router.get("/health")
+async def health_check():
+    """Primary health check endpoint — used by Render, Kubernetes, and uptime monitors."""
+    return {
+        "status": "ok",
+        "service": "supremeai-backend",
+        "version": "2.0",
+        "timestamp": int(time.time()),
+    }
 
 
 class HealthRequest(BaseModel):
