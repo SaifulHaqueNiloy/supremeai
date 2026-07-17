@@ -99,11 +99,21 @@ class NATSClient:
         if self.kv_store:
             try:
                 keys = await self.kv_store.keys()
-                for key in keys:
+            except Exception as keys_err:  # noqa: BLE001
+                # বাংলা মন্তব্য: KV store key list পেতে ব্যর্থ — swarm routing এ খালি list ফেরাবে
+                logger.error(f"[NATS] Failed to list worker keys from KV store: {keys_err!r}")
+                return workers
+            skipped: list[str] = []
+            for key in keys:
+                try:
                     entry = await self.kv_store.get(key)
                     workers[key] = json.loads(entry.value.decode())
-            except Exception:  # noqa: BLE001
-                pass
+                except Exception as entry_err:  # noqa: BLE001
+                    # বাংলা মন্তব্য: একটি key পার্স ব্যর্থ হলেও বাকিগুলো চলতে থাকবে
+                    skipped.append(key)
+                    logger.warning(f"[NATS] Skipped malformed worker entry '{key}': {entry_err!r}")
+            if skipped:
+                logger.warning(f"[NATS] {len(skipped)} worker entries skipped due to errors: {skipped}")
         return workers
 
 

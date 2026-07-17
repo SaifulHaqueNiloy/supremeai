@@ -117,7 +117,15 @@ class ExperienceDatabase:
         if self.encoder:
             try:
                 return self.encoder.encode(text).tolist()
-            except Exception:  # noqa: BLE001
+            except Exception as embed_err:  # noqa: BLE001
+                # বাংলা মন্তব্য: embedding তৈরি ব্যর্থ হলে সতর্ক লগ দিই — নীরবে None ফেরানো বন্ধ
+                logger.warning(
+                    f"[ExperienceDB] Embedding generation failed. "
+                    f"encoder={type(self.encoder).__name__!r} "
+                    f"text_length={len(text)} "
+                    f"error={embed_err!r}. "
+                    f"Semantic memory will degrade for this entry."
+                )
                 return None
         return None
 
