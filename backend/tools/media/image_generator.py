@@ -26,8 +26,8 @@ class HFImageGenerator:
         """
         model = model or self.default_model
         if not self.api_key:
-            logger.warning("HF_API_KEY is not set. Image generation will fall back to mock mode.")
-            return self._mock_generation(prompt, output_path)
+            # বাংলা মন্তব্য: এপিআই কী অনুপস্থিত থাকলে এআই মক করার বদলে সরাসরি ValueError ছুঁড়ে দেবে, জিরো-স্টাব পলিসি অনুযায়ী।
+            raise ValueError("HF_API_KEY is not configured. HuggingFace image generation requires a valid API key.")
 
         headers = {"Authorization": f"Bearer {self.api_key}"}
         url = f"https://api-inference.huggingface.co/models/{model}"
@@ -62,30 +62,9 @@ class HFImageGenerator:
                     "mock": False,
                 }
         except Exception as e:  # noqa: BLE001
-            logger.error(f"HuggingFace image generation failed: {e}. Falling back to mock generation.")
-            return self._mock_generation(prompt, output_path, error=str(e))
-
-    def _mock_generation(self, prompt: str, output_path: str, error: str | None = None) -> dict[str, Any]:
-        """Creates a placeholder image if API is offline or key is missing."""
-        try:
-            from PIL import Image
-            from PIL import ImageDraw
-
-            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-            img = Image.new("RGB", (512, 512), color=(73, 109, 137))
-            d = ImageDraw.Draw(img)
-            d.text(
-                (10, 10),
-                f"Mock Generation\nPrompt: {prompt[:40]}...\nError: {error or 'None'}",
-                fill=(255, 255, 0),
-            )
-            img.save(output_path)
+            # বাংলা মন্তব্য: কানেকশন বা সার্ভার এরর হলে এটি আর সাইলেন্টলি ফেইল না করে সরাসরি এরর ডিকশনারি রিটার্ন করবে।
+            logger.error(f"HuggingFace image generation failed: {e}")
             return {
-                "success": True,
-                "model": "mock-generator",
-                "prompt": prompt,
-                "output_path": output_path,
-                "mock": True,
+                "success": False,
+                "error": f"HuggingFace API call failed: {str(e)}"
             }
-        except Exception as ex:  # noqa: BLE001
-            return {"success": False, "error": f"Mock generation failed: {ex}"}
