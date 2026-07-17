@@ -32,7 +32,7 @@ class SkillLibrarian:
         index = self.index_manager.load_index()
         return [meta for meta in index.values() if meta.get("status") == SkillStatus.QUARANTINE]
 
-    def process_approval(self, skill_id: str, action: str, ai_patch_code: Optional[str] = None) -> Dict[str, Any]:
+    def process_approval(self, skill_id: str, action: str, ai_patch_code: str | None = None) -> dict[str, Any]:
         """Admin এর নির্দেশ অনুযায়ী স্কিল স্থানান্তর ও অনুমোদন গেটওয়ে এনফোর্স করে।"""
         try:
             logger.info(f"⚡ Background execution started for Skill: {skill_id} | Action: {action}")
