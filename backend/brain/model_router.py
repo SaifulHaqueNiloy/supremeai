@@ -108,22 +108,12 @@ class ModelRouter:
             res = run_async_as_sync(self.async_route_and_generate(prompt, task_type, max_cost))
 
         if res is None:
-            res = {
-                "success": True,
-                "model": "local_mock_fallback",
-                "text": json.dumps(
-                    {
-                        "app_type": "portfolio",
-                        "features": ["gallery", "contact"],
-                        "tech_stack": {"frontend": "react", "backend": "fastapi", "database": "sqlite"},
-                        "pages": ["home", "about"],
-                        "integrations": [],
-                        "deployment_target": None,
-                        "clarification_question": None,
-                    }
-                ),
-                "cost": 0.0,
-            }
+            # ✅ FIXED: previously returned the same hardcoded fake "portfolio app" JSON
+            # as success:True. async_route_and_generate now always returns a dict, so this
+            # path should not occur in practice — but if it ever does, report it honestly.
+            error_msg = "route_and_generate: no response obtained (async_route_and_generate returned None)."
+            logger.error(f"[ModelRouter] {error_msg}")
+            res = {"success": False, "model": None, "text": "", "error": error_msg, "cost": 0.0}
         return res
 
     async def async_route_and_generate(self, prompt: Any, task_type: str = "general", max_cost: float = 0.01, **kwargs) -> dict[str, Any]:
@@ -144,24 +134,21 @@ class ModelRouter:
         except Exception as e:  # noqa: BLE001
             return {"success": False, "text": f"Error: {e} (Services unavailable)", "error": str(e)}
 
-        # বাংলা মন্তব্য: এপিআই কী না থাকলে লাইভ গেটওয়ে এড়াতে ফলব্যাক রিটার্ন
+        # বাংলা মন্তব্য: এপিআই কী না থাকলে — আগে এখানে একটা হার্ডকোডেড fake "portfolio app"
+        # JSON success:True হিসেবে রিটার্ন হতো, যা প্রতিটি কলারের কাছে আসল LLM রেসপন্স হিসেবে
+        # চালিয়ে দেওয়া হতো। ✅ FIXED: এখন কনফিগারেশন সমস্যাটা স্পষ্ট error হিসেবে propagate হয়,
+        # যাতে self_planner/diagram_to_architecture/image_to_code-সহ কোনো কলারই ভুলবশত এই
+        # নির্দিষ্ট hardcoded স্কিমাকে বাস্তব জেনারেশন মনে না করে।
         if not settings.gemini_api_key and not settings.openrouter_api_key and "pytest" not in sys.modules:
             # We don't force fallback just because pytest is running,
             # so that mocked LLMGateway can be hit during testing.
+            error_msg = "No LLM provider configured: GEMINI_API_KEY and OPENROUTER_API_KEY are both unset."
+            logger.error(f"[ModelRouter] {error_msg}")
             return {
-                "success": True,
-                "model": "local_mock_fallback",
-                "text": json.dumps(
-                    {
-                        "app_type": "portfolio",
-                        "features": ["gallery", "contact"],
-                        "tech_stack": {"frontend": "react", "backend": "fastapi", "database": "sqlite"},
-                        "pages": ["home", "about"],
-                        "integrations": [],
-                        "deployment_target": None,
-                        "clarification_question": None,
-                    }
-                ),
+                "success": False,
+                "model": None,
+                "text": "",
+                "error": error_msg,
                 "cost": 0.0,
             }
 
