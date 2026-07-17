@@ -51,6 +51,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.websocket_hitl", ""),
     ("api.routes.syncguard", "/api/v1"),
     ("api.routes.admin_librarian", "/api"),
+    ("api.routes.skills", "/api"),
 ]
 
 optional_routers: list[tuple[str, str]] = [
