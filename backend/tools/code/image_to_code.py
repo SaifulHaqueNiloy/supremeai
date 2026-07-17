@@ -99,8 +99,7 @@ class ImageToCode:
                     f"pixel-perfect React component using {styling}. Return ONLY valid JSX/TSX code with no "
                     "markdown formatting or explanations."
                 )
-            result = await self._call_vision_model_raw(base64_image, prompt)
-            code = result if isinstance(result, str) else ""
+            code = await self._call_vision_model_raw(base64_image, prompt)
             component_name = "GeneratedComponent"
             if framework.lower() == "flutter":
                 match = re.search(r"class\s+(\w+)", code)
@@ -108,8 +107,10 @@ class ImageToCode:
                     component_name = match.group(1)
             return ComponentCode(framework=framework, code=code.strip(), component_name=component_name)
         except Exception as e:  # noqa: BLE001
+            # ✅ FIXED: previously returned an empty-code ComponentCode disguised as a
+            # normal result; now the failure is surfaced so the router returns a real error.
             logger.error(f"figma_to_react failed: {e}")
-            return ComponentCode(framework=framework, code="", component_name="GeneratedComponent")
+            raise RuntimeError(f"figma_to_react generation failed: {e}") from e
 
     async def extract_color_palette(self, image_path: str) -> ColorTheme:
         """UI screenshot থেকে কালার প্যালেট এক্সট্র্যাক্ট ও CSS variable জেনারেট করে।"""
@@ -134,11 +135,10 @@ class ImageToCode:
                 css_variables=parsed.get("css_variables", {}),
             )
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Color palette extraction failed, using fallback: {e}")
-            return ColorTheme(
-                palette=["#1f2937", "#3b82f6", "#ffffff"],
-                css_variables={"primary": "#3b82f6", "background": "#ffffff", "text": "#1f2937"},
-            )
+            # ✅ FIXED: removed hardcoded default palette fallback — a fake palette
+            # returned as "success" would silently corrupt downstream theming.
+            logger.error(f"Color palette extraction failed: {e}")
+            raise RuntimeError(f"Color palette extraction failed: {e}") from e
 
     async def detect_component_tree(self, image_path: str) -> ComponentHierarchy:
         """UI screenshot থেকে nested component গাছ (hierarchy) শনাক্ত করে।"""
@@ -159,25 +159,27 @@ class ImageToCode:
             parsed = json.loads(cleaned)
             return ComponentHierarchy(tree=parsed if isinstance(parsed, list) else [])
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Component tree detection failed, using fallback: {e}")
-            return ComponentHierarchy(tree=[{"name": "Root", "type": "Container", "children": []}])
+            # ✅ FIXED: removed hardcoded single-node tree fallback for the same reason as above.
+            logger.error(f"Component tree detection failed: {e}")
+            raise RuntimeError(f"Component tree detection failed: {e}") from e
 
     async def _call_vision_model_raw(self, base64_image: str, prompt: str) -> str:
         """ভিশন মডেল থেকে সরাসরি টেক্সট রেস্পন্স আনয়ন (JSON/code)।"""
-        try:
-            from brain.model_router import ModelRouter
+        from brain.model_router import ModelRouter
 
-            router_llm = ModelRouter()
-            result = await router_llm.async_route_and_generate(
-                prompt,
-                task_type="vision",
-                max_cost=0.05,
-                images=[{"base64": base64_image, "mime": "image/png"}],
-            )
-            return result.get("text", "") if isinstance(result, dict) else str(result)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Vision model unavailable ({e}); returning empty.")
-            return ""
+        router_llm = ModelRouter()
+        # ✅ FIXED: no longer swallows failures into an empty string — callers relied on
+        # that emptiness to silently fall back to fake defaults. Now the failure propagates.
+        result = await router_llm.async_route_and_generate(
+            prompt,
+            task_type="vision",
+            max_cost=0.05,
+            images=[{"base64": base64_image, "mime": "image/png"}],
+        )
+        text = result.get("text", "") if isinstance(result, dict) else str(result)
+        if not text:
+            raise RuntimeError("Vision model returned an empty response.")
+        return text
 
     async def _call_vision_model(self, base64_image: str, framework: str, styling: str) -> dict[str, Any]:
         try:
@@ -190,10 +192,15 @@ class ImageToCode:
                 f"Extract the styling, typography, colors, and generate pixel-perfect {framework} code using {styling}. "
                 "Include any necessary components and icons. "
                 "Return ONLY valid code. Do not include markdown formatting or explanations."
-                f"\n\n[IMAGE_DATA:{base64_image[:50]}...]"  # Vision input logic handled by ModelRouter's vision_agent if configured
             )
-            # In our system, ModelRouter handles VISION tasks
-            result = await router.async_route_and_generate(prompt, task_type="vision", max_cost=0.05)
+            # ✅ FIXED: image is now passed via the images kwarg (consistent with the rest of
+            # this module) instead of being truncated into the prompt text, which was a no-op.
+            result = await router.async_route_and_generate(
+                prompt,
+                task_type="vision",
+                max_cost=0.05,
+                images=[{"base64": base64_image, "mime": "image/png"}],
+            )
             code = result.get("text", "") if isinstance(result, dict) else ""
             if not code:
                 return {"status": "error", "error": "LLM returned empty response."}
@@ -203,27 +210,12 @@ class ImageToCode:
                 "styling": styling,
                 "code": code.strip(),
             }
-        except ImportError:
-            logger.warning("ModelRouter not available. Returning mock code.")
-            mock_code = """
-            import React from 'react';
-            export default function GeneratedComponent() {
-                return (
-                    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-4">Generated Component</h1>
-                        <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                            Click Me
-                        </button>
-                    </div>
-                );
-            }
-            """
-            return {
-                "status": "success",
-                "framework": framework,
-                "styling": styling,
-                "code": mock_code.strip(),
-            }
+        except Exception as e:  # noqa: BLE001
+            # ✅ FIXED: ImportError (ModelRouter unavailable) no longer silently returns a
+            # hardcoded placeholder component disguised as a successful generation — every
+            # failure now surfaces as a real error the caller can act on.
+            logger.error(f"Vision model code generation failed: {e}")
+            return {"status": "error", "error": str(e)}
 
 
 image_to_code_tool = ImageToCode()
@@ -266,6 +258,8 @@ async def api_figma_to_component(
     try:
         component = await image_to_code_tool.figma_to_react(tmp_path, framework=framework, styling=styling)
         return {"status": "success", **component.to_dict()}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Component generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
 
@@ -281,6 +275,8 @@ async def api_extract_palette(file: UploadFile = File(...)):
     try:
         theme = await image_to_code_tool.extract_color_palette(tmp_path)
         return {"status": "success", **theme.to_dict()}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Palette extraction failed: {e}") from e
     finally:
         os.unlink(tmp_path)
 
@@ -296,5 +292,7 @@ async def api_detect_tree(file: UploadFile = File(...)):
     try:
         hierarchy = await image_to_code_tool.detect_component_tree(tmp_path)
         return {"status": "success", **hierarchy.to_dict()}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Component tree detection failed: {e}") from e
     finally:
         os.unlink(tmp_path)
