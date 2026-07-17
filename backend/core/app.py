@@ -179,6 +179,28 @@ app.add_middleware(
 )
 
 
+# বাংলা মন্তব্য: Production CORS Hardening — wildcard '*' এবং empty origins প্রডাকশনে সরাসরি fail-fast করে
+if settings.env == "production":
+    if not settings.cors_origins:
+        raise RuntimeError("🔥 CRITICAL: Production CORS drift detected. cors_origins cannot be empty in production.")
+    if "*" in settings.cors_origins:
+        raise RuntimeError("🚨 SECURITY: Wildcard '*' is strictly prohibited in production CORS mesh. Set CORS_ORIGINS env var.")
+
+
+# বাংলা মন্তব্য: Dynamic role-based rate limiter key function
+# JWT role অনুযায়ী Admin (100 RPM) vs Standard User (20 RPM) থ্রেশহোল্ড নির্ধারণ
+# slowapi লিমিটার ডেকোরেটরে key_func হিসেবে ইউজ করুন
+def supremeai_dynamic_rate_evaluator(request: Request) -> str:
+    """ডাইনামিক rate key: JWT role বা IP fallback অনুযায়ী limiter বাউন্ডারি বাছাই করে।"""
+    user = getattr(request.state, "user", None)
+    user_role = user.get("role", "Standard_User") if isinstance(user, dict) else "Standard_User"
+    client_ip = request.client.host if request.client else "unknown"
+    # বাংলা: Admin ইউজারের জন্য হাই থ্রেশহোল্ড, Standard User-এর জন্য কড়া বাউন্ডারি
+    if user_role in {"Admin", "admin"}:
+        return f"admin:{client_ip}"
+    return f"user:{client_ip}"
+
+
 # বাংলা মন্তব্য: slowapi টেস্টে মক করা হলেও RateLimitExceeded যেন সত্যিকারের Exception ক্লাস থাকে
 # তা নিশ্চিত করা হলো। MagicMock দিয়ে issubclass() ডাকলে TypeError হয়।
 try:

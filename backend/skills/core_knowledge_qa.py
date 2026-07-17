@@ -6,8 +6,18 @@ from typing import Any
 from google import genai
 from google.genai import types
 
+from core.resilience.circuit_breaker import CircuitBreaker
+from core.resilience.circuit_breaker import CircuitBreakerOpenError
+
 
 logger = logging.getLogger("supremeai.skills.knowledge_qa")
+
+# বাংলা মন্তব্য: গ্লোবাল Gemini Circuit Breaker — ৫ বার ফেইল হলে OPEN, 60স পর HALF_OPEN
+_gemini_qa_breaker: CircuitBreaker = CircuitBreaker(
+    name="gemini_knowledge_qa",
+    failure_threshold=5,
+    recovery_timeout=60,
+)
 
 
 def _mock_vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
@@ -75,14 +85,24 @@ def execute_tool(payload: dict) -> dict:
         {query}
         """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.2,
-            ),
-        )
+        # বাংলা মন্তব্য: সার্কিট ব্রেকার দিয়ে Gemini API কল র্যাপ করা হতেছে
+        # OPEN অবস্থায় CircuitBreakerOpenError থ্রো করে ফরোয়ার্ডিং ব্লক করে
+        try:
+            response = _gemini_qa_breaker.call(
+                client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.2,
+                ),
+            )
+        except CircuitBreakerOpenError as cb_exc:
+            logger.warning(f"🚨 Gemini Circuit Breaker OPEN: {cb_exc}")
+            return {
+                "success": False,
+                "error": "LLM infrastructure is temporarily unavailable. Circuit breaker active. Please retry in 60 seconds.",
+            }
 
         return {"success": True, "result": {"answer": response.text.strip(), "citations": citations}}
 
