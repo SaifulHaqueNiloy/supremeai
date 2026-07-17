@@ -26,46 +26,42 @@ class SelfPlanner:
     async def generate_plan(self, objective: str) -> nx.DiGraph:
         logger.info(f"Generating plan for objective: {objective}")
 
+        from brain.model_router import ModelRouter
+
+        model_router = ModelRouter()
+        prompt = (
+            "You are an autonomous project planner. Break down the following objective into a JSON array of tasks. "
+            "Each task must have: id (string), description (string), depends_on (array of string task IDs). "
+            "Return ONLY a valid JSON array without markdown wrapping or explanations.\n\n"
+            f"Objective: {objective}"
+        )
         try:
-            from brain.model_router import ModelRouter
-
-            model_router = ModelRouter()
-            prompt = (
-                "You are an autonomous project planner. Break down the following objective into a JSON array of tasks. "
-                "Each task must have: id (string), description (string), depends_on (array of string task IDs). "
-                "Return ONLY a valid JSON array without markdown wrapping or explanations.\n\n"
-                f"Objective: {objective}"
-            )
             result = await model_router.async_route_and_generate(prompt, task_type="reasoning", max_cost=0.05)
-            text = result.get("text", "") if isinstance(result, dict) else ""
-
-            # Clean up JSON if it contains markdown blocks
-            text = text.strip()
-            if text.startswith("```json"):
-                text = text[7:]
-            if text.endswith("```"):
-                text = text[:-3]
-            text = text.strip()
-
-            plan = []
-            try:
-                plan = json.loads(text)
-                if not isinstance(plan, list):
-                    plan = []
-            except Exception as e:  # noqa: BLE001
-                try:
-                    import loguru
-
-                    loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
-                logger.warning("LLM returned non-JSON plan. Using fallback.")
-                plan = self._mock_plan(objective)
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"LLM planner failed: {e}. Using fallback.")
-            plan = self._mock_plan(objective)
+            # ✅ FIXED: LLM planning failures now propagate as real errors instead of
+            # being masked by a hardcoded fallback plan. A caller must know planning failed.
+            logger.error(f"LLM planner call failed: {e}")
+            raise RuntimeError(f"Agent planning failed: LLM call error ({e})") from e
+
+        text = result.get("text", "") if isinstance(result, dict) else ""
+
+        # Clean up JSON if it contains markdown blocks
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
+
+        try:
+            plan = json.loads(text)
+            if not isinstance(plan, list):
+                raise ValueError("LLM plan response was not a JSON array")
+        except Exception as e:  # noqa: BLE001
+            # ✅ FIXED: no more silent fallback to a hardcoded plan — an unparsable
+            # response means planning genuinely failed and must be surfaced as an error.
+            logger.error(f"LLM returned non-JSON/invalid plan: {e}")
+            raise RuntimeError(f"Agent planning failed: LLM returned an invalid plan ({e})") from e
 
         dag = nx.DiGraph()
         for task in plan:
@@ -82,30 +78,6 @@ class SelfPlanner:
 
         logger.info(f"Generated DAG with {dag.number_of_nodes()} tasks.")
         return dag
-
-    def _mock_plan(self, objective: str) -> list[dict[str, Any]]:
-        return [
-            {
-                "id": "task_1",
-                "description": f"Analyze objective: {objective[:50]}",
-                "depends_on": [],
-            },
-            {
-                "id": "task_2",
-                "description": "Implement core logic",
-                "depends_on": ["task_1"],
-            },
-            {
-                "id": "task_3",
-                "description": "Write unit tests",
-                "depends_on": ["task_2"],
-            },
-            {
-                "id": "task_4",
-                "description": "Update documentation",
-                "depends_on": ["task_2"],
-            },
-        ]
 
     def get_execution_order(self, dag: nx.DiGraph) -> list[list[str]]:
         batches = []
