@@ -88,7 +88,8 @@ try:
 except Exception as e:
     import warnings
 
-    warnings.warn(f"Failed to clear settings caches during test setup: {e}", UserWarning)
+    # বাংলা মন্তব্য: B028 ফিক্স — stacklevel=2 যোগ করা হয়েছে যাতে warning সঠিক caller লাইন দেখায়
+    warnings.warn(f"Failed to clear settings caches during test setup: {e}", UserWarning, stacklevel=2)
 
 
 # Mock Google Auth credentials and services globally during tests

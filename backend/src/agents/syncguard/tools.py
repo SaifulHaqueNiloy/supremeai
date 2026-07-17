@@ -32,4 +32,5 @@ async def check_redis_connection(redis_url: str) -> bool:
     """
     logger.info("[SyncGuard Tool] Pinging Message Broker (Redis)...")
     # Real implementation would use redis-py to ping
-    return True if redis_url else False
+    # বাংলা মন্তব্য: SIM210 ফিক্স — bool() সরাসরি ব্যবহার, ternary অপ্রয়োজনীয়
+    return bool(redis_url)
