@@ -70,6 +70,8 @@ class StyleLearner:
             docstring_count = 0
             func_count = 0
 
+            skipped_ast_files: list[str] = []
+
             for root, _, files in os.walk(repo_path):
                 if any(x in root for x in [".venv", "node_modules", "__pycache__", ".git"]):
                     continue
@@ -80,7 +82,8 @@ class StyleLearner:
                     try:
                         with open(path, encoding="utf-8") as f:
                             tree = parser.parse(f.read().encode("utf-8"))
-                    except Exception:  # noqa: BLE001
+                    except Exception as parse_err:  # noqa: BLE001
+                        skipped_ast_files.append(f"{path} ({parse_err})")
                         continue
 
                     for node in tree.root_node.children:
@@ -118,6 +121,12 @@ class StyleLearner:
                 patterns["comment_style"] = "docstring" if docstring_count >= func_count * 0.5 else "inline"
                 patterns["docstring_coverage"] = round(docstring_count / func_count, 2)
 
+            if skipped_ast_files:
+                logger.warning(
+                    f"[StyleLearner] Skipped AST parsing for {len(skipped_ast_files)} files. "
+                    f"Samples: {skipped_ast_files[:3]}"
+                )
+
         except ImportError:
             logger.debug("tree-sitter not installed; using heuristic fallback.")
         except Exception as e:  # noqa: BLE001
@@ -131,6 +140,7 @@ class StyleLearner:
         ast_patterns = self._analyze_ast_patterns(repo_path)
 
         code_samples: list[str] = []
+        skipped_sample_files: list[str] = []
         for root, _, files in os.walk(repo_path):
             if any(x in root for x in [".venv", "node_modules", "__pycache__", ".git"]):
                 continue
@@ -140,12 +150,19 @@ class StyleLearner:
                     try:
                         with open(path, encoding="utf-8") as f:
                             code_samples.append(f.read()[:1500])
-                    except Exception:  # noqa: BLE001
+                    except Exception as read_err:  # noqa: BLE001
+                        skipped_sample_files.append(f"{path} ({read_err})")
                         continue
                 if len(code_samples) >= 20:
                     break
             if len(code_samples) >= 20:
                 break
+
+        if skipped_sample_files:
+            logger.warning(
+                f"[StyleLearner] Skipped reading {len(skipped_sample_files)} files for sampling. "
+                f"Samples: {skipped_sample_files[:3]}"
+            )
 
         if code_samples:
             try:
@@ -219,8 +236,9 @@ class StyleLearner:
                     }
                 ).execute()
                 return
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as persist_err:  # noqa: BLE001
+            # বাংলা মন্তব্য: Supabase persist ব্যর্থ হলে warning দেওয়া হচ্ছে যাতে DB সমস্যাটি অগোচরে না থাকে।
+            logger.warning(f"[StyleLearner] Supabase style persist failed for {repo_path}: {persist_err}. Falling back to local storage.")
         # Local fallback
         try:
             os.makedirs("data/styles", exist_ok=True)
