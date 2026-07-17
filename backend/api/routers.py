@@ -20,7 +20,6 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.stream", ""),
     ("api.routes.media", ""),
     ("api.routes.graph", ""),
-    ("api.routes.knowledge", ""),
     ("api.routes.marketplace_endpoints", ""),
     ("api.routes.auth", "/api/v1"),
     ("api.routes.onboarding", "/api/v1/onboarding"),
@@ -54,7 +53,10 @@ core_routers: list[tuple[str, str]] = [
 ]
 
 optional_routers: list[tuple[str, str]] = [
+    # বাংলা মন্তব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
+    ("api.routes.knowledge", ""),
     ("api.routes.dock_actions", "/api"),
+
     ("api.routes.websocket_voice", ""),
     ("tools.collaborative_editor", "/api/v1"),
     ("tools.image_to_code", ""),
