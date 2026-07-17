@@ -661,9 +661,27 @@ jobs:
               echo "✅ Primary Render deploy triggered successfully!"
               PRIMARY_SUCCESS=true
             else
-              echo "⚠️ Primary hook failed. Trying backup..."
+              echo "⚠️ Primary hook failed."
             fi
           fi
+
+          # বাংলা: Primary hook ফেইল বা খালি হলে API দিয়ে চেষ্টা করি
+          if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "🔄 Using Render API to trigger primary deploy..."
+            PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "201" ]; then
+              echo "✅ Primary Render deploy triggered via API (status: $STATUS)!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary API deploy returned status: $STATUS"
+            fi
+          fi
+
 
           # বাংলা: Backup hook বা Render API দিয়ে backup service deploy করি
           if [ -n "$BACKUP_HOOK" ]; then
