@@ -157,7 +157,7 @@ hardcoded-tmp-directory = ["/tmp/supremeai_isolated_stage"]
 
 [tool.ruff.lint.per-file-ignores]
 # টেস্ট ও ডামি সিক্রেটের জন্য ফলস-পজিটিভ শিথিলকরণ (S101=assert, S105=hardcoded password strings)
-"backend/tests/**/*.py" = ["T201", "F841", "E501", "S101", "S105", "S106"]
+"tests/**/*.py" = ["T201", "F841", "E501", "S101", "S105", "S106"]
 
 [tool.ruff.lint.pylint]
 max-branches = 20

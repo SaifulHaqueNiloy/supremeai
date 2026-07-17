@@ -82,7 +82,7 @@ repos:
         language: system
         files: ^apps/studio-client/src/.*\.(ts|tsx)$
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
 
   # ══════════════════════════════════════════════════════════════
   # ৬. SupremeAI Security Guard (Custom Hardcoded Secret Blocker)
@@ -94,4 +94,4 @@ repos:
         entry: python3 packages/scripts/security_guard.py
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
