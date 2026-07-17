@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useState, useEffect } from 'react';
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
+import { getApiBaseUrl } from '../utils/api';
 
 export const useSwarmGraph = () => {
   const [nodes, setNodes] = useState([]);
@@ -9,7 +10,7 @@ export const useSwarmGraph = () => {
   const { data: delta } = useQuery({
     queryKey: ['swarm-graph'],
     queryFn: async () => {
-      const res = await fetch('/api/evolution/swarm-graph');
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/evolution/swarm-graph`);
       return res.json(); // ব্যাকএন্ড থেকে {added: {nodes:[], edges:[]}, removed: {nodes:[], edges:[]}}
     },
     refetchInterval: 2000, // ২ সেকেন্ড পর পর পোলিং
@@ -28,12 +29,12 @@ export const useSwarmGraph = () => {
 
   // 🧬 New: Agent Health Polling
   const agentIds = nodes.filter(n => n.type === 'agent').map(n => n.id);
-  
+
   const { data: healthData } = useQuery({
     queryKey: ['agent-health', agentIds],
     queryFn: async () => {
       if (agentIds.length === 0) return {};
-      const res = await fetch('/api/health/agents', {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/health/agents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_ids: agentIds })
