@@ -13,6 +13,7 @@ from backend.schemas.skill_manifest import SkillStatus
 
 logger = logging.getLogger("supremeai.skill_gc")
 
+
 class SkillGarbageCollector:
     def __init__(self, base_skills_dir: str = "backend/skills"):
         self.base_dir = Path(base_skills_dir)
