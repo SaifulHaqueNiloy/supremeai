@@ -14,16 +14,20 @@ from core.health.self_healer import SelfHealerService
 from utils.firestore_helpers import get_firestore_db
 
 
-router = APIRouter(prefix="/api/admin", tags=["Admin Control Center"])
-_db_path = str(Path(__file__).resolve().parent.parent.parent / "data" / "admin_rules.db")
-god_layer = AdminGodLayer(db_path=_db_path)
-
-
 def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
     if payload.get("role") != "admin":
         logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
         raise HTTPException(status_code=403, detail="Admin access required")
     return payload
+
+
+router = APIRouter(
+    prefix="/api/admin",
+    tags=["Admin Control Center"],
+    dependencies=[Depends(get_current_admin)],
+)
+_db_path = str(Path(__file__).resolve().parent.parent.parent / "data" / "admin_rules.db")
+god_layer = AdminGodLayer(db_path=_db_path)
 
 
 def get_healer_service() -> SelfHealerService:
