@@ -59,3 +59,52 @@ class CodeProposal(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     __mapper_args__ = {"version_id_col": version}
+
+
+class AgentPerformanceLog(Base):
+    """PerformanceOracle: Time-series performance metrics per agent."""
+
+    __tablename__ = "agent_performance_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+    # Core metrics
+    response_time_ms: Mapped[float] = mapped_column(Float, nullable=False)
+    accuracy_score: Mapped[float] = mapped_column(Float, nullable=False)  # 0.0-1.0
+    cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    tokens_input: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_output: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # Derived metrics
+    throughput_per_minute: Mapped[float | None] = mapped_column(Float, nullable=True)
+    error_rate: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0.0-1.0
+    user_satisfaction: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0.0-5.0
+
+    # Metadata
+    endpoint: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    model_used: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+
+
+class PerformanceAlert(Base):
+    """PerformanceOracle: Alerts when agents fall below thresholds."""
+
+    __tablename__ = "performance_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False)  # latency_spike, accuracy_drop, cost_surge, error_rate_high
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)  # warning, critical, emergency
+    metric_value: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold_value: Mapped[float] = mapped_column(Float, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    recommended_action: Mapped[str] = mapped_column(Text, nullable=False)
+
+    acknowledged_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
