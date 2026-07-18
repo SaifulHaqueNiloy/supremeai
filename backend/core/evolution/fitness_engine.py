@@ -6,6 +6,8 @@ metrics, calculating performance scores, and automatically deprecating
 or 'soft pruning' underperforming skills. It integrates with skill registries,
 databases, and the file system to manage skill status and deployment,
 ensuring quality control and evolutionary adaptation within the SupremeAI ecosystem.
+
+🛡️ PHASE 3: AutomatedFitnessEngine — Precision fitness scoring with zero fake fallbacks.
 """
 
 import json
@@ -15,6 +17,73 @@ import threading
 from typing import Any
 
 from loguru import logger
+
+
+class FitnessEngineError(ValueError):
+    """🛡️ Enterprise Vault: Fitness calculation failure exception"""
+
+    pass
+
+
+class AutomatedFitnessEngine:
+    """
+    🧬 PHASE 3: Precision fitness scoring engine with mathematical safety guards.
+
+    Eliminates silent ZeroDivisionError and fake fallback (0.5) patterns.
+    Enforces latency penalty layers and upstream Supabase propagation.
+    """
+
+    def __init__(self, target_success_rate: float = 0.95):
+        self.target_success_rate = target_success_rate
+
+    def calculate_fitness_score(self, success_count: int, failure_count: int, execution_time_ms: float) -> float:
+        """
+        🛡️ Auditor Fix: ZeroDivisionError swallowing eliminated.
+        Mathematical safety guard and performance penalty factor injected.
+
+        Returns 0.0 for untested proposals instead of blind 0.5 fallback.
+        Applies latency penalty for slow code (>500ms).
+        """
+        total_runs = success_count + failure_count
+        if total_runs == 0:
+            # Untested or new proposal: assign baseline zero-state instead of blind 0.5
+            return 0.0
+
+        try:
+            raw_success_rate = success_count / total_runs
+
+            # Performance penalty: slower code (>2000ms) reduces fitness score
+            latency_penalty = max(0.0, min(0.5, (execution_time_ms - 500) / 3000)) if execution_time_ms > 500 else 0.0
+            fitness_score = raw_success_rate - latency_penalty
+
+            return max(0.0, min(1.0, fitness_score))
+        except Exception as e:
+            logger.error(f"🚨 [FITNESS_CALCULATION_CRASH]: Precision mapping failed: {e}")
+            raise FitnessEngineError(f"Mathematical leak in fitness matrix: {e}") from e
+
+    def evaluate_proposal(self, proposal_id: str, context: dict[str, Any]) -> bool:
+        """
+        Proposal live evaluation gateway with upstream Supabase propagation.
+        """
+        try:
+            stats = context.get("runtime_stats", {})
+            score = self.calculate_fitness_score(
+                success_count=stats.get("success_count", 0),
+                failure_count=stats.get("failure_count", 0),
+                execution_time_ms=stats.get("execution_time_ms", 0.0),
+            )
+
+            # Database fitness matrix sync
+            from core.database.supabase_client import db
+
+            db.client.table("skill_fitness").upsert(
+                {"proposal_id": proposal_id, "fitness_score": score, "is_viable": score >= self.target_success_rate}
+            ).execute()
+
+            return score >= self.target_success_rate
+        except Exception as e:
+            logger.error(f"🚨 [PROPOSAL_EVALUATION_LEAK]: Failed to safely evaluate proposal {proposal_id}: {e}")
+            raise
 
 
 class FitnessEngine:
