@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 from core.evolution.fitness_engine import FitnessEngine
 from core.evolution.self_evolution_agent import SelfEvolutionAgent
 from core.evolution.skill_graph import EvolutionSkillGraph
-from core.observability.telemetry import tracer
+from core.observability.telemetry import trace_span
 
 
 logger = logging.getLogger(__name__)
@@ -172,7 +172,7 @@ class Orchestrator:
         start = datetime.now(UTC)
         logger.debug(f"Orchestrator tick at {start.isoformat()}")
         try:
-            with tracer.start_as_current_span("orchestrator.tick"):
+            with trace_span("orchestrator.tick"):
                 async with asyncio.TaskGroup() as tg:
                     for task_fn in self._tasks:
                         tg.create_task(task_fn())
