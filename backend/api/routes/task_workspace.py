@@ -79,6 +79,7 @@ async def get_quota(token_payload: dict = Depends(get_current_user_token)):
         raise HTTPException(status_code=401, detail="Invalid token")
     try:
         from core.cache.redis_manager import redis_manager
+
         remaining = await redis_manager.client.get(f"quota:{_tenant_id}:remaining")
         if remaining is not None:
             return {"remaining": int(remaining)}
