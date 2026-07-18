@@ -61,6 +61,7 @@ async def make_healing_decision(
 ):
     import uuid
     from loguru import logger
+
     logger.info(f"Admin {admin_user.get('sub')} making decision on healing event {event_id}")
 
     try:

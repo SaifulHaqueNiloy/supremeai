@@ -1,16 +1,17 @@
+import asyncio
 from loguru import logger
-import time
 
 
 # ১. Database Search Tool
-def search_database(query: str) -> str:
+async def search_database(query: str) -> str:
     """
     Searches the internal Supabase/PostgreSQL database for specific information.
     Use this tool when the user asks for historical tasks, user data, or project records.
     """
-    # বাস্তবে এখানে আপনার ডাটাবেস কোয়েরি থাকবে
+    # বাস্তবে এখানে আপনার ডাটাবেস কোয়েরি থাকবে
     logger.info(f"🔧 [TOOL CALLED] Searching database for: {query}")  # noqa: T201
-    time.sleep(1)  # Simulating network delay
+    # Replace blocking delay with non-blocking async sleep
+    await asyncio.sleep(1)
     return f"Database result for '{query}': Found 3 matching records indicating successful deployment."
 
 

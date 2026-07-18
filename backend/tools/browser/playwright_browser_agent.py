@@ -203,8 +203,8 @@ class PlaywrightBrowserAgent:
                         "Session invalid or expired, running login flow for '%s'.",
                         session_name,
                     )
-                    # Add a small delay to mimic human reading time
-                    time.sleep(random.uniform(1.0, 2.5))
+                    # Add a delay to mimic human reading time; Playwright wait keeps it observable
+                    page.wait_for_timeout(int(random.uniform(1000, 2500)))
                     login_flow(page, credentials)
                     page.wait_for_load_state("networkidle")
                     self._save_cookies(context, session_name)
@@ -407,7 +407,8 @@ class PlaywrightBrowserAgent:
 
             # Use human-like typing
             self._human_like_type(page, site_config["input_selector"], prompt)
-            time.sleep(random.uniform(0.5, 1.0))
+            # Non-blocking pause while waiting for UI readiness
+            page.wait_for_timeout(int(random.uniform(500, 1000)))
 
             # Click submit
             self._human_like_click(page, site_config["submit_button"])
@@ -465,7 +466,8 @@ class PlaywrightBrowserAgent:
 
         try:
             page.goto(url)
-            time.sleep(2)  # Wait for page to settle
+            # Use Playwright-native timeout instead of blocking sleep
+            page.wait_for_timeout(2000)
 
             for step in range(max_steps):
                 logger.info(f"Goal Execution Step {step + 1}/{max_steps}")
@@ -532,7 +534,8 @@ class PlaywrightBrowserAgent:
                 asyncio.run(self.memory.add_memory(learning, url, metadata=action))
 
                 page.wait_for_load_state("networkidle")
-                time.sleep(2)  # Wait for animations/transitions
+                # Page-settling pause via Playwright timeout to avoid blocking the event loop
+                page.wait_for_timeout(2000)
 
             return {"success": True, "result": f"Completed {max_steps} steps."}
         except Exception as exc:  # noqa: BLE001

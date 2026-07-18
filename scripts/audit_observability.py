@@ -1,17 +1,21 @@
 import ast
 import json
+import logging
 import sys
 import os
 from pathlib import Path
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 def audit_directory(base_dir: str):
-    report = {
+    base_path = Path(base_dir)
+    report: dict[str, list[dict[str, Any]]] = {
         "silent_exceptions": [],
-        "print_statements": []
+        "print_statements": [],
     }
     issues_found = False
 
-    base_path = Path(base_dir)
     for filepath in base_path.rglob("*.py"):
         if "venv" in str(filepath) or ".venv" in str(filepath):
             continue
@@ -58,8 +62,8 @@ def audit_directory(base_dir: str):
                                 "severity": "WARNING"
                             })
 
-        except Exception as e:
-            print(f"Failed to parse {filepath}: {e}")
+        except (SyntaxError, UnicodeDecodeError, OSError) as e:
+            logger.warning(f"Failed to parse {filepath}: {e}")
 
     return report, issues_found
 
