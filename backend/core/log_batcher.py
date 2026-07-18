@@ -17,12 +17,7 @@ class SupremeLogBatcher:
         self._last_flush_time = time.time()
 
     def append_log(self, level: str, message: str, metadata: dict = None) -> None:
-        log_entry = {
-            "level": level,
-            "message": message,
-            "metadata": metadata or {},
-            "timestamp": time.time()
-        }
+        log_entry = {"level": level, "message": message, "metadata": metadata or {}, "timestamp": time.time()}
 
         with self._lock:
             self._buffer.append(log_entry)
@@ -43,17 +38,12 @@ class SupremeLogBatcher:
                 db.append_evolution_log(log)
 
             self._last_flush_time = time.time()
-            logger.debug(
-                f"Successfully flushed {len(batch_to_process)} system logs to infrastructure ledger."
-            )
+            logger.debug(f"Successfully flushed {len(batch_to_process)} system logs to infrastructure ledger.")
 
         except Exception as e:
             with self._lock:
                 self._buffer = batch_to_process + self._buffer
 
-            err_msg = (
-                f"Failed to flush log batch of size {len(batch_to_process)}. "
-                f"Re-queueing tokens: {e}"
-            )
+            err_msg = f"Failed to flush log batch of size {len(batch_to_process)}. " f"Re-queueing tokens: {e}"
             logger.error(f"🚨 [LOG_BATCHER_LEAK]: {err_msg}")
             raise LogBatcherError(err_msg) from e
