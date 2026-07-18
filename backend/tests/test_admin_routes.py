@@ -287,3 +287,37 @@ class TestAdminRoutes:
         """Skills endpoint."""
         response = client.get("/skills")
         assert response.status_code == 200
+
+
+class TestGetCurrentAdminGuard:
+    """Regression tests for get_current_admin() — previously referenced an
+    undefined HTTP_403_FORBIDDEN name, so a non-admin request crashed with an
+    unhandled NameError (-> 500) instead of a clean 403. See core/admin_routes.py.
+    """
+
+    def test_non_admin_role_raises_403(self):
+        """অ-এডমিন role হলে পরিষ্কার 403 HTTPException রেইজ হওয়া উচিত, NameError না।"""
+        from core.admin_routes import get_current_admin
+
+        with pytest.raises(HTTPException) as exc_info:
+            get_current_admin({"role": "user", "sub": "someone@example.com"})
+
+        assert exc_info.value.status_code == 403
+        assert "Admin access required" in exc_info.value.detail
+
+    def test_missing_role_raises_403(self):
+        """payload-এ role কী-ই না থাকলেও 403 হওয়া উচিত।"""
+        from core.admin_routes import get_current_admin
+
+        with pytest.raises(HTTPException) as exc_info:
+            get_current_admin({"sub": "someone@example.com"})
+
+        assert exc_info.value.status_code == 403
+
+    def test_admin_role_passes_through(self):
+        """role == 'admin' হলে payload অপরিবর্তিত রিটার্ন হবে, কোনো exception ছাড়াই।"""
+        from core.admin_routes import get_current_admin
+
+        payload = {"role": "admin", "sub": "admin@example.com"}
+        result = get_current_admin(payload)
+        assert result == payload
