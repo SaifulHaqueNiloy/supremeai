@@ -394,8 +394,8 @@ class SupabaseDB:
         ]
 
     def bootstrap_schema(self):
-        db_url = os.environ.get("SUPABASE_DATABASE_URL")
-        pooler_url = os.environ.get("SUPABASE_DATABASE_URL_POOLER")
+        db_url = os.getenv("SUPABASE_DATABASE_URL")
+        pooler_url = os.getenv("SUPABASE_DATABASE_URL_POOLER")
         if not db_url and not pooler_url:
             logger.error("SUPABASE_DATABASE_URL or SUPABASE_DATABASE_URL_POOLER is required for schema bootstrap.")
             return

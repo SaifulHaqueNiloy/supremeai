@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from core.messaging.event_bus import ErrorContext
-
-
 """SupremeAI 2.0 — Core FastAPI app bootstrapping, middleware chain, and router loading.
 
 বাংলা: কোর FastAPI অ্যাপ বুটস্ট্র্যাপিং, মিডলওয়্যার চেইন এবং রাউটার লোডিং।
@@ -12,6 +9,8 @@ Key Components:
 - _safe_include_router: Dynamic lazy router loader with fail-fast.
 - router_health_check: Ensures minimum route count on startup.
 """
+
+from core.messaging.event_bus import ErrorContext
 
 import base64
 import logging
