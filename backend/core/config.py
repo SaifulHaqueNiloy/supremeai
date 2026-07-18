@@ -209,7 +209,6 @@ class Settings(BaseSettings):
     # বাংলা মন্তব্য: ChromaDB ভেক্টর ডাটাবেসের জন্য কনফিগারেবল পাথ যোগ করা হলো।
     chromadb_path: str = Field(default="supremeai_knowledge_base", validation_alias="CHROMADB_PATH")
 
-
     # ── Sandbox config — env-driven ──────────────────────────────────────────
     sandbox_root: str = Field(default="/tmp/sandboxes", validation_alias="SANDBOX_ROOT")  # nosec B108
     firecracker_path: str = Field(default="/usr/bin/firecracker", validation_alias="FIRECRACKER_PATH")

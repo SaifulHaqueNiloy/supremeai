@@ -311,9 +311,7 @@ Respond ONLY with the translated text. No explanations, no quotes around output.
 
         tasks = [_translate_one(item) for item in items]
         raw_results = await asyncio.gather(*tasks, return_exceptions=True)
-        valid_results: list[dict[str, Any]] = [
-            r for r in raw_results if not isinstance(r, BaseException)
-        ]
+        valid_results: list[dict[str, Any]] = [r for r in raw_results if not isinstance(r, BaseException)]
         return valid_results
 
     def get_cache_stats(self) -> dict[str, Any]:
