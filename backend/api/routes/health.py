@@ -12,7 +12,7 @@ from datetime import datetime
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from core.services import redis_manager
+from core.cache.redis_manager import redis_manager
 from core.services import registry
 
 
