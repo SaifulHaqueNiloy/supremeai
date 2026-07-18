@@ -240,8 +240,11 @@ async def record_usage_hook(key_id: int, request: Request, payload: dict):
 
 
 @router.get("/{key_id}/admin/quota-alert")
-async def quota_alert(key_id: int):
-    _ = _get_current_user.__wrapped__ if hasattr(_get_current_user, "__wrapped__") else None
+async def quota_alert(key_id: int, request: Request):
+    owner = _get_current_user(request)
+    rec = await get_api_key_by_id(key_id)
+    if not rec or rec["user_id"] != owner:
+        raise HTTPException(status_code=404, detail="API key not found")
     alert = await get_api_key_usage_stats(key_id)
     rpm_used = alert.get("total_requests", 0)
     return {

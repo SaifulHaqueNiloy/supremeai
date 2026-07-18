@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from api.routes.admin import get_current_admin
 from database.session import get_db_session
 from models.selector_healing_event import SelectorHealingEvent
 
@@ -52,8 +53,15 @@ async def get_healing_logs(session: AsyncSession = Depends(get_db_session)):
 
 
 @router.post("/{event_id}/decision")
-async def make_healing_decision(event_id: str, payload: DecisionIn, session: AsyncSession = Depends(get_db_session)):
+async def make_healing_decision(
+    event_id: str,
+    payload: DecisionIn,
+    session: AsyncSession = Depends(get_db_session),
+    admin_user: dict = Depends(get_current_admin),
+):
     import uuid
+    from loguru import logger
+    logger.info(f"Admin {admin_user.get('sub')} making decision on healing event {event_id}")
 
     try:
         eid = uuid.UUID(event_id)
