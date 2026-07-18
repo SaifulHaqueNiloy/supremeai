@@ -1,4 +1,3 @@
-# ruff: noqa: E402, F821
 #!/usr/bin/env python3
 """
 SupremeAI - Ask the Scribe
@@ -13,6 +12,7 @@ Date: July 12, 2026
 """
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 
@@ -20,13 +20,18 @@ import chromadb
 import litellm
 from chromadb.utils import embedding_functions
 
+# বাংলা মন্তব্য: ক্লিন ইমপোর্ট স্ট্রাকচার যাতে sys.path.insert হ্যাক এড়ানো যায়।
+try:
+    from backend.core.config import settings
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
+    from core.config import settings
+
 # --- Configuration ---
-DB_PATH = "supremeai_knowledge_base"
+# বাংলা মন্তব্য: হার্ডকোডেড পাথের বদলে সেটিংসের chromadb_path ব্যবহার করা হলো।
+DB_PATH = settings.chromadb_path
 COLLECTION_NAME = "codebase_docs"
 
-# Add backend to path to import settings
-sys.path.insert(0, str(Path(__file__).parent / "backend"))
-from core.config import settings
 
 # --- AI Prompt Template (RAG) ---
 RAG_PROMPT_TEMPLATE = """
@@ -110,6 +115,5 @@ if __name__ == "__main__":
     )
     parser.add_argument("question", type=str, help="Your question about the codebase.")
     args = parser.parse_args()
-    import asyncio
-
     asyncio.run(main(args.question))
+

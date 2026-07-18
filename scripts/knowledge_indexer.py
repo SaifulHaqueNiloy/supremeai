@@ -13,22 +13,31 @@ Date: July 12, 2026
 
 import ast
 import logging
+import sys
 from pathlib import Path
 
 import chromadb
 from chromadb.utils import embedding_functions
+
+# বাংলা মন্তব্য: ক্লিন ইমপোর্ট স্ট্রাকচার যাতে sys.path.insert হ্যাক এড়ানো যায়।
+try:
+    from backend.core.config import settings
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+    from core.config import settings
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
 # এই ডিরেক্টরিগুলো থেকে ডকুমেন্টেশন ইনডেক্স করা হবে
 TARGET_DIRECTORIES = ["backend/core", "backend/tools"]
-DB_PATH = "supremeai_knowledge_base"
+# বাংলা মন্তব্য: হার্ডকোডেড পাথের বদলে সেটিংসের chromadb_path ব্যবহার করা হলো।
+DB_PATH = settings.chromadb_path
 COLLECTION_NAME = "codebase_docs"
 
 # --- Setup ChromaDB and Embedding ---
 # litellm-এর মাধ্যমে যেকোনো embedding মডেল ব্যবহার করা যাবে, যেমন "text-embedding-ada-002"
-# "all-MiniLM-L6-v2" একটি ভালো, দ্রুত এবং লোকাল অল্টারনেটিভ
+# "all-MiniLM-L6-v2" একটি ভালো, দ্রুত এবং লোকাল অল্টারনে티브
 sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name="all-MiniLM-L6-v2"
 )
