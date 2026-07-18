@@ -53,14 +53,12 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
     try:
         stripe_key = settings.stripe_api_key
         if not stripe_key:
-            if os.environ.get("SUPREMEAI_ENV") == "production":
-                raise RuntimeError("Stripe API key not configured in production. Payment processing is unavailable.")
-            logger.warning("Stripe API key not set in settings. Using mock checkout session.")
-            return {
-                "status": "mock",
-                "session_id": "mock_session_123",
-                "url": payload.success_url + "?session_id=mock_session_123",
-            }
+            is_production = os.environ.get("SUPREMEAI_ENV", "local").lower() == "production"
+            if is_production:
+                logger.critical("🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: API key missing in production")
+                raise HTTPException(status_code=503, detail="Payment processing unavailable: Stripe not configured")
+            logger.warning("Stripe API key not set — returning 503 Service Unavailable (no mock)")
+            raise HTTPException(status_code=503, detail="Stripe not configured. Payment processing unavailable in non-production environments.")
 
         stripe.api_key = stripe_key
         session = stripe.checkout.Session.create(
