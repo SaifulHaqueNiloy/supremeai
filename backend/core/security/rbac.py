@@ -168,6 +168,15 @@ def authorize(user_role: str | Role, required_permission: str | Permission, cont
     return has_permission(user_role, required_permission)
 
 
+class PermissionDeniedError(Exception):
+    """Raised when an RBAC permission check fails in require() — callers must handle this explicitly."""
+
+    def __init__(self, role: str, action: str) -> None:
+        self.role = role
+        self.action = action
+        super().__init__(f"Role '{role}' lacks permission for '{action}'")
+
+
 # বাংলা মন্তব্য: ইউজার কনটেক্সট ক্লাস যা ইউজারের আইডি, রোল, মেয়াদ এবং স্কোপ ধারণ করে।
 @dataclass
 class UserContext:
@@ -216,6 +225,7 @@ class RoleBasedAccessControl:
         return self.has_permission(context.role, action)
 
     def require(self, context: UserContext, action: str | Permission) -> dict[str, Any]:
-        if self.check(context, action):
-            return {"allowed": True, "role": context.role}
-        return {"allowed": False, "reason": "Permission denied", "action": action.value if isinstance(action, Permission) else action}
+        """Raises PermissionDeniedError on failure — callers cannot accidentally ignore a denial."""
+        if not self.check(context, action):
+            raise PermissionDeniedError(role=context.role, action=action.value if isinstance(action, Permission) else action)
+        return {"allowed": True, "role": context.role, "action": action.value if isinstance(action, Permission) else action}
