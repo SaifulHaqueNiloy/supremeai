@@ -109,7 +109,44 @@ class TestSecurityUtilities:
         assert hash_api_key(key) == hash_api_key(key)
 
 
+class FakeRedisPipe:
+    def __init__(self, storage):
+        self.storage = storage
+        self.cmds = []
+
+    def incr(self, key):
+        self.cmds.append(("incr", key))
+
+    def expire(self, key, window):
+        self.cmds.append(("expire", key, window))
+
+    async def execute(self):
+        res = []
+        for cmd, *args in self.cmds:
+            if cmd == "incr":
+                self.storage[args[0]] = self.storage.get(args[0], 0) + 1
+                res.append(self.storage[args[0]])
+            elif cmd == "expire":
+                res.append(True)
+        self.cmds = []
+        return res
+
+
+class FakeRedisClient:
+    def __init__(self):
+        self.storage = {}
+
+    def pipeline(self):
+        return FakeRedisPipe(self.storage)
+
+
 class TestRateLimiter:
+    @pytest.fixture(autouse=True)
+    def patch_redis(self):
+        fake_redis = FakeRedisClient()
+        with patch("core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis):
+            yield
+
     @pytest.mark.asyncio
     async def test_allows_under_limit(self):
         rl = AsyncRateLimiter()

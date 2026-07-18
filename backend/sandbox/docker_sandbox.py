@@ -19,9 +19,9 @@ class DockerSandbox:
     def _sanitize_module_name(self, entry_file: str) -> str:
         """Sanitize entry file name - only allow alphanumeric and underscore to prevent injection."""
         # Remove .py extension and sanitize
-        safe_name = entry_file.replace('.py', '').replace('.PY', '').replace('.Py', '')
+        safe_name = entry_file.replace(".py", "").replace(".PY", "").replace(".Py", "")
         # Only allow alphanumeric and underscore characters
-        safe_name = re.sub(r'[^a-zA-Z0-9_]', '', safe_name)
+        safe_name = re.sub(r"[^a-zA-Z0-9_]", "", safe_name)
         if not safe_name:
             raise ValueError("Invalid entry file name after sanitization")
         return safe_name

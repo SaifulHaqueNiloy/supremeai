@@ -10,6 +10,7 @@ import logging
 import os
 
 import httpx
+
 # Lazy HTTP client — initialized on first use
 _http_client: httpx.AsyncClient | None = None
 
