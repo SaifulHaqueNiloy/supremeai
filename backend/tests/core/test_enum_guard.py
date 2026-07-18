@@ -1,93 +1,29 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from core.enum_guard import EnumMismatchError, guard_enum, run_enum_guards
+import enum
+from core.enum_guard import EnumGuard, EnumGuardError
 
 
-class TestGuardEnumSuccess:
-    @pytest.mark.anyio
-    async def test_guard_enum_matching_labels(self):
-        mock_conn = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.all.return_value = [("active",), ("pending",)]
-        mock_conn.execute = AsyncMock(return_value=mock_result)
-
-        mock_engine = MagicMock()
-        mock_ctx = AsyncMock()
-        mock_ctx.__aenter__.return_value = mock_conn
-        mock_ctx.__aexit__.return_value = False
-        mock_engine.connect.return_value = mock_ctx
-
-        with patch("core.enum_guard.engine", mock_engine):
-            from enum import Enum
-
-            class TestEnum(Enum):
-                ACTIVE = "active"
-                PENDING = "pending"
-
-            await guard_enum(mock_conn, "test_enum", TestEnum)
-
-    @pytest.mark.anyio
-    async def test_guard_enum_db_not_found(self):
-        mock_conn = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.all.return_value = []
-        mock_conn.execute = AsyncMock(return_value=mock_result)
-
-        mock_engine = MagicMock()
-        mock_ctx = AsyncMock()
-        mock_ctx.__aenter__.return_value = mock_conn
-        mock_ctx.__aexit__.return_value = False
-        mock_engine.connect.return_value = mock_ctx
-
-        with patch("core.enum_guard.engine", mock_engine):
-            from enum import Enum
-
-            class TestEnum(Enum):
-                ACTIVE = "active"
-
-            await guard_enum(mock_conn, "test_enum", TestEnum)
-
-    @pytest.mark.anyio
-    async def test_guard_enum_db_connection_error(self):
-        from sqlalchemy.exc import SQLAlchemyError
-
-        mock_conn = AsyncMock()
-        mock_conn.execute.side_effect = SQLAlchemyError("DB connection failed")
-
-        from enum import Enum
-
-        class TestEnum(Enum):
-            ACTIVE = "active"
-
-        await guard_enum(mock_conn, "test_enum", TestEnum)
-
-    @pytest.mark.anyio
-    async def test_guard_enum_mismatch_raises(self):
-        mock_conn = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.all.return_value = [("active",), ("archived",)]
-        mock_conn.execute = AsyncMock(return_value=mock_result)
-
-        mock_engine = MagicMock()
-        mock_ctx = AsyncMock()
-        mock_ctx.__aenter__.return_value = mock_conn
-        mock_ctx.__aexit__.return_value = False
-        mock_engine.connect.return_value = mock_ctx
-
-        with patch("core.enum_guard.engine", mock_engine):
-            from enum import Enum
-
-            class TestEnum(Enum):
-                ACTIVE = "active"
-                PENDING = "pending"
-
-            with pytest.raises(EnumMismatchError):
-                await guard_enum(mock_conn, "test_enum", TestEnum)
+class MockStatus(enum.Enum):
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
 
 
-class TestRunEnumGuards:
-    @pytest.mark.anyio
-    async def test_run_enum_guards(self):
-        with patch("core.enum_guard.guard_enum", new_callable=AsyncMock) as mock_guard:
-            await run_enum_guards()
-            assert mock_guard.call_count == 6
+def test_enum_guard_success_parse():
+    """নিশ্চিত করে যে সঠিক স্ট্রিং দিলে তা সঠিকভাবে এনাম অবজেক্টে কনভার্ট হয়।"""
+    result = EnumGuard.validate_and_parse(MockStatus, "success", context="Test Pipeline")
+    assert result == MockStatus.SUCCESS
+
+
+def test_enum_guard_explosive_exception():
+    """🛡️ সাইলেন্ট ফেইলর গার্ড: ইনভ্যালিড এনাম ভ্যালু দিলে যেন সাইলেন্টলি পাস না হয়ে এক্সেপশন রেইজ হয়।"""
+    with pytest.raises(EnumGuardError) as exc_info:
+        EnumGuard.validate_and_parse(MockStatus, "INVALID_STATE_MATRIX", context="Test Pipeline")
+
+    assert "Invalid enum value" in str(exc_info.value)
+
+
+def test_enum_guard_safe_fallback():
+    """নিশ্চিত করে যে এক্সপেক্টেড ফলব্যাক মেকানিজম সঠিকভাবে কাজ করছে।"""
+    result = EnumGuard.safe_fallback(MockStatus, "CORRUPTED_DATA", fallback=MockStatus.FAILED, context="Test Fallback")
+    assert result == MockStatus.FAILED
