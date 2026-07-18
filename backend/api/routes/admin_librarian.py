@@ -2,14 +2,20 @@
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
+from fastapi import Depends
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from api.routes.admin import get_current_admin
 from backend.agents.skill_librarian import SkillLibrarian
 
 
 # 🔄 প্রিফিক্স ডুপ্লিকেশন ফিক্স (/api/api/admin... থেকে /api/admin...)
-router = APIRouter(prefix="/admin/librarian", tags=["Librarian Gateway"])
+router = APIRouter(
+    prefix="/api/admin/librarian",
+    tags=["Librarian Gateway"],
+    dependencies=[Depends(get_current_admin)],
+)
 librarian = SkillLibrarian()
 
 
