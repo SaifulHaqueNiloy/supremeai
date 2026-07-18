@@ -1,43 +1,38 @@
-/**
- * In-memory admin session metadata store.
- * This intentionally keeps admin tokens out of browser-local storage
- * (since we use httpOnly cookies) but stores non-sensitive session metadata.
- */
-const METADATA_KEY = 'supreme_admin_metadata';
+// apps/studio-client/src/services/adminTokenStore.ts
+import { jwtDecode } from 'jwt-decode';
 
-export interface AdminSessionMetadata {
-  role?: string;
-  permissions?: string[];
-  expiry_timestamp?: number;
-}
+export const adminTokenStore = {
+  /**
+   * Decodes and validates admin JWT token from localStorage
+   * @returns Decoded token payload or null with comprehensive diagnostic logging
+   */
+  getDecodedToken: (): any | null => {
+    const token = localStorage.getItem('supreme_admin_jwt');
+    if (!token) {
+      console.debug("🔍 [TOKEN_STORE] No admin JWT token found in storage");
+      return null;
+    }
 
-export const setAdminMetadata = (metadata: AdminSessionMetadata) => {
-  if (typeof window !== 'undefined') {
-    sessionStorage.setItem(METADATA_KEY, JSON.stringify(metadata));
-  }
-};
+    try {
+      const decoded = jwtDecode(token);
 
-export const getAdminMetadata = (): AdminSessionMetadata | null => {
-  if (typeof window !== 'undefined') {
-    const data = sessionStorage.getItem(METADATA_KEY);
-    if (data) {
-      try {
-        return JSON.parse(data);
-      } catch (e) {
-        return null;
+      // Additional validation: ensure token has required structure
+      if (!decoded || typeof decoded !== 'object') {
+        throw new Error('Decoded token is not a valid object');
       }
+
+      return decoded;
+    } catch (error: any) {
+      // 🛡️ অডিটর ফিক্স: সাইলেন্ট ফেইলর ব্লাস্ট করে ইন্টারনাল ডায়াগনস্টিক ট্রেস এনফোর্স
+      console.warn("⚠️ [TOKEN_STORE_LEAK]: Failed to safely parse or decode admin JWT token.", {
+        error_message: error?.message || 'Malformed structure',
+        token_length: token.length,
+        timestamp: new Date().toISOString(),
+        token_preview: token.substring(0, 20) + '...' // Safe preview for debugging
+      });
+
+      // সেফ ফলব্যাক কিন্তু ট্রেসযোগ্য
+      return null;
     }
   }
-  return null;
-};
-
-export const clearAdminMetadata = () => {
-  if (typeof window !== 'undefined') {
-    sessionStorage.removeItem(METADATA_KEY);
-  }
-};
-
-// Legacy support to prevent build errors in components that haven't migrated to apiClient yet
-export const getAdminToken = (): string => {
-  return "";
 };
