@@ -19,7 +19,7 @@ interface GraphData {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 
 export default function SkillGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -30,7 +30,7 @@ export default function SkillGraph() {
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/v1/graph/skills`, {
         headers: {
-          'Authorization': `Bearer ${getAdminToken()}`
+          'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}`
         }
       });
 
