@@ -32,7 +32,7 @@ class MCPClient:
         except subprocess.TimeoutExpired:
             self.process.kill()
             self.process.wait()
-        except Exception as exc:  # noqa: BLE001
+        except (OSError, RuntimeError) as exc:
             logger.debug(f"MCP server termination cleanup: {exc}")
         finally:
             self.process = None
@@ -55,9 +55,9 @@ class MCPClient:
             while time.time() < deadline:
                 if self.process.poll() is not None:
                     raise RuntimeError(f"MCP server exited with code {self.process.returncode}")
-                time.sleep(0.1)
+                time.sleep(0.05)
             return True
-        except Exception as exc:  # noqa: BLE001
+        except (OSError, RuntimeError) as exc:
             logger.error(f"Failed to start MCP server {self.server_name}: {exc}")
             self._terminate()
             return False
@@ -88,7 +88,7 @@ class MCPClient:
             self._write_request({"jsonrpc": "2.0", "method": "tools/list", "id": 1})
             response = self._read_response()
             return response.get("result", {}).get("tools", [])
-        except Exception as exc:  # noqa: BLE001
+        except (RuntimeError, json.JSONDecodeError) as exc:
             logger.error(f"Error querying MCP tools: {exc}")
             return []
 
@@ -106,14 +106,14 @@ class MCPClient:
             try:
                 response = self._read_response()
                 return response.get("result", {})
-            except Exception as exc:  # noqa: BLE001
+            except (RuntimeError, json.JSONDecodeError) as exc:
                 logger.error(f"Error executing MCP tool '{name}': {exc}")
                 return {"error": str(exc)}
         finally:
             try:
                 if time.time() - self.last_used > 300:
                     self._terminate()
-            except Exception as exc:  # noqa: BLE001
+            except (OSError, RuntimeError) as exc:
                 logger.debug(f"MCP idle cleanup: {exc}")
 
     def disconnect(self) -> None:
