@@ -181,8 +181,10 @@ async def test_selector(req: TestSelectorRequest):
         if not row:
             raise HTTPException(status_code=404, detail="Action not found")
 
-    # Mock base64 1x1 transparent image for UI preview (in prod this is a real screenshot)
-    mock_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    is_production = getattr(settings, "env", "local").lower() == "production"
+    if is_production:
+        raise HTTPException(status_code=501, detail="Dry-run screenshot preview not available in production. Connect a real CDP proxy endpoint.")
 
-    # Simulate a hit
-    return {"found": True, "screenshot_base64": mock_b64, "metrics": {"time_to_find_ms": 142, "strategy_used": "exact"}}
+    # Only return mock data in non-production environments
+    mock_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    return {"found": True, "screenshot_base64": mock_b64, "metrics": {"time_to_find_ms": 142, "strategy_used": "exact_dry_run"}}
