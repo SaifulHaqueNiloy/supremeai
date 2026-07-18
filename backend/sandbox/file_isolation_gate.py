@@ -5,7 +5,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from backend.sandbox.docker_sandbox import DockerSandbox  # আপনার এক্সিস্টিং স্যান্ডবক্স ইঞ্জিন
+# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
+from sandbox.docker_sandbox import DockerSandbox  # আপনার এক্সিস্টিং স্যান্ডবক্স ইঞ্জিন
 
 
 logger = logging.getLogger("supremeai.sandbox.file_gate")

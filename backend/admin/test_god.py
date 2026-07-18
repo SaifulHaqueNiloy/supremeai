@@ -1,4 +1,10 @@
-# বাংলা মন্তব্য: অব্যবহৃত ইম্পোর্ট (os, time, MagicMock, logger) মুছে ফেলা হলো।
+# বাংলা মন্তব্য: অব্যবহৃত ইম্পোর্ট (os, time, MagicMock, logger) মুছে ফেলা হলো এবং ডকার লেআউটের জন্য ইম্পোর্ট ফ্ল্যাট করা হলো।
+import os
+
+# বাংলা মন্তব্য: টেস্ট ও সিআই পরিবেশে ক্র্যাশ এড়াতে ডামি এনভায়রনমেন্ট ভেরিয়েবল সেট করা হলো।
+os.environ["ENV"] = "test"
+os.environ["ENCRYPTION_KEY"] = "TEST_ONLY_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
+
 import asyncio
 import concurrent.futures
 import os
@@ -8,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from backend.admin.god import AdminGodLayer
+from admin.god import AdminGodLayer
 
 
 @pytest.fixture
@@ -34,7 +40,7 @@ class TestAdminGodLayer:
         if "pytest" in sys.modules:
             assert admin_god_layer._db is None
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_init_db_with_firestore(self, mock_get_db):
         # Test initializing AdminGodLayer with Firestore
         mock_db = mock_get_db.return_value
@@ -43,11 +49,11 @@ class TestAdminGodLayer:
 
     def test_init_db_no_firestore(self):
         # Test initializing AdminGodLayer without Firestore
-        with patch("backend.admin.god.get_firestore_db", return_value=None):
+        with patch("admin.god.get_firestore_db", return_value=None):
             admin_god_layer = AdminGodLayer()
             assert admin_god_layer._db is None
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_get_rule(self, mock_get_db):
         # Test getting a rule
         mock_db = mock_get_db.return_value
@@ -59,7 +65,7 @@ class TestAdminGodLayer:
         rule = admin_god_layer.get_rule("test_key")
         assert rule == "test_value"
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_get_rule_not_found(self, mock_get_db):
         # Test getting a rule that is not found
         mock_db = mock_get_db.return_value
@@ -70,7 +76,7 @@ class TestAdminGodLayer:
         rule = admin_god_layer.get_rule("test_key")
         assert rule is None
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_get_rule_with_default(self, mock_get_db):
         # Test getting a rule with a default value
         mock_db = mock_get_db.return_value
@@ -81,7 +87,7 @@ class TestAdminGodLayer:
         rule = admin_god_layer.get_rule("test_key", default="default_value")
         assert rule == "default_value"
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_set_rule(self, mock_get_db):
         # Test setting a rule
         mock_db = mock_get_db.return_value
@@ -89,7 +95,7 @@ class TestAdminGodLayer:
         admin_god_layer.set_rule("test_key", "test_value")
         mock_db.collection.assert_called_with(admin_god_layer.collection_name)
 
-    @patch("backend.admin.god.get_firestore_db", return_value=None)
+    @patch("admin.god.get_firestore_db", return_value=None)
     def test_set_rule_no_firestore(self, mock_get_db):
         # Test setting a rule without Firestore
         admin_god_layer = AdminGodLayer()
@@ -132,7 +138,7 @@ class TestAdminGodLayer:
         with pytest.raises(PermissionError):
             admin_god_layer.enforce("not_whitelist")
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_init_db_concurrent(self, mock_get_db):
         # Test initializing AdminGodLayer with Firestore concurrently
         mock_db = mock_get_db.return_value
@@ -148,7 +154,7 @@ class TestAdminGodLayer:
         os.remove(path)
         mock_db.collection.assert_called_with(admin_god_layer1.collection_name)
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_get_rule_concurrent(self, mock_get_db):
         # Test getting a rule concurrently
         mock_db = mock_get_db.return_value
@@ -164,7 +170,7 @@ class TestAdminGodLayer:
         os.remove(path)
         mock_db.collection.return_value.document.assert_called_with("test_key")
 
-    @patch("backend.admin.god.get_firestore_db")
+    @patch("admin.god.get_firestore_db")
     def test_set_rule_concurrent(self, mock_get_db):
         # Test setting a rule concurrently
         mock_db = mock_get_db.return_value
