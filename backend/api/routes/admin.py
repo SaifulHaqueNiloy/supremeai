@@ -23,7 +23,7 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
 
 router = APIRouter(
     prefix="/api/admin",
-    tags=["Admin Control Center"],
+    tags=["Core Admin"],
     dependencies=[Depends(get_current_admin)],
 )
 _db_path = str(Path(__file__).resolve().parent.parent.parent / "data" / "admin_rules.db")

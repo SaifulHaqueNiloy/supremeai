@@ -13,7 +13,7 @@ from backend.agents.skill_librarian import SkillLibrarian
 # 🔄 প্রিফিক্স ডুপ্লিকেশন ফিক্স (/api/api/admin... থেকে /api/admin...)
 router = APIRouter(
     prefix="/api/admin/librarian",
-    tags=["Librarian Gateway"],
+    tags=["Admin Librarian"],
     dependencies=[Depends(get_current_admin)],
 )
 librarian = SkillLibrarian()

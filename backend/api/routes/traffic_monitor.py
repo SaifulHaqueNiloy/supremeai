@@ -10,7 +10,7 @@ from api.routes.admin import get_current_admin
 from core.cache.redis_manager import redis_manager
 
 
-router = APIRouter(prefix="/api/admin/traffic", tags=["traffic"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/admin/traffic", tags=["Traffic Control"], dependencies=[Depends(get_current_admin)])
 
 
 @router.get("/live")
