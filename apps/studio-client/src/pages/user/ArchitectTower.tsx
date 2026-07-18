@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Activity, CheckCircle, Database } from 'lucide-react';
 import { OneClickPatch } from '../../components/admin/OneClickPatch';
 import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 
 export const ArchitectTower: React.FC = () => {
   const [fixes, setFixes] = useState<any[]>([]);
@@ -12,7 +12,7 @@ export const ArchitectTower: React.FC = () => {
   const fetchFixes = async () => {
     setLoading(true);
     try {
-      const token = getAdminToken();
+      const token = adminTokenStore.getDecodedToken();
       // If no token in standard store, we might be using the dev/local fallback in the backend, but let's pass what we have
       const res = await fetch(`${getApiBaseUrl()}/api/admin/fixes?tenant_id=supremeai-a`, {
         headers: {

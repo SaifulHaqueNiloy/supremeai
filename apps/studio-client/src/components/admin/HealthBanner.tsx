@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../services/apiClient';
 // বাংলা মন্তব্য: টোকেন গার্ড — টোকেন ছাড়া health-map রিকোয়েস্ট যাবে না, 401 স্টর্ম ঠেকাবে
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 
 const HealthBanner: React.FC = () => {
   const { data: health } = useQuery({
@@ -10,7 +10,7 @@ const HealthBanner: React.FC = () => {
     queryFn: () => apiClient.get<{ gcp: { status: string }; railway: { status: string }; render: { status: string } }>('/admin-api/health-map'),
     refetchInterval: (query: any) => query.state.error ? false : 30000,
     // বাংলা মন্তব্য: টোকেন না থাকলে কোয়েরি ডিসেবল — অপ্রয়োজনীয় 401 ঠেকাতে
-    enabled: !!getAdminToken(),
+    enabled: !!adminTokenStore.getDecodedToken(),
     staleTime: 20_000,
   });
 
