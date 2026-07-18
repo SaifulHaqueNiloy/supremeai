@@ -26,22 +26,34 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: SUPABASE_DATABASE_URL_POOLER
+        sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: SUPREMEAI_JWT_SECRET
         sync: false
       - key: SUPREMEAI_ADMIN_PASSWORD_HASH
         sync: false
+      - key: SUPREMEAI_ENCRYPTION_KEY
+        sync: false
+      - key: SUPREMEAI_DOCS_PASSWORD
+        sync: false
+      - key: SUPREMEAI_API_TOKEN
+        sync: false
       - key: STRIPE_API_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: SUPREMEAI_ENCRYPTION_KEY
-        sync: false
       - key: CI_WEBHOOK_SECRET
         sync: false
+      - key: INFISICAL_TOKEN
+        sync: false
+      - key: INFISICAL_CLIENT_SECRET
+        sync: false
       - key: CORS_ORIGINS
-        value: '["https://supremeai-studio-client.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app", "https://supremeai-a.web.app", "https://supremeai-admin.web.app"]'
+        value: '["https://supremeai-studio-client.onrender.com", "https://supremeai-studio-client-qb34.onrender.com", "https://tiny-stroopwafel-2d981c.netlify.app", "https://supremeai-lac.vercel.app", "https://supremeai-studio.vercel.app", "https://supremeai-a.web.app", "https://supremeai-admin.web.app"]'
+      - key: ALLOWED_HOSTS
+        value: 'supremeai-backend.onrender.com,supremeai-backend-65hl.onrender.com'
 
   # ২. ফ্রন্টএন্ড (Render 100% Free Static Hosting)
   - type: web
@@ -49,7 +61,7 @@ services:
     env: static
     buildCommand: "cd apps/studio-client && pnpm install && pnpm run build"
     staticPublishPath: "./apps/studio-client/dist-user"
-    autoDeploy: true
+    autoDeploy: false
     routes:
       - type: rewrite
         source: /*
