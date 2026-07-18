@@ -54,9 +54,11 @@ import time
 
 from fastapi import APIRouter
 from fastapi import Body
+from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 
+from api.dependencies import get_current_user_token
 from core import services
 from core.config import settings
 from core.gcp_firestore import get_firestore_client
@@ -67,6 +69,14 @@ from models.admin import AdminFirebaseTotpVerifyRequest
 
 
 router = APIRouter()
+
+
+def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Enforce admin role for sensitive admin routes (e.g. rules engine)."""
+    if payload.get("role") != "admin":
+        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Admin access required")
+    return payload
 
 auth = get_firebase_auth()
 
@@ -319,12 +329,12 @@ def gcp_pubsub_stats():
 
 
 @router.get("/admin/rules")
-def get_admin_rules():
+def get_admin_rules(_admin: dict = Depends(get_current_admin)):
     return services.rules_engine.rules
 
 
 @router.post("/admin/rules")
-def post_admin_rules(payload: dict = Body(...)):
+def post_admin_rules(payload: dict = Body(...), _admin: dict = Depends(get_current_admin)):
     new_rules = payload.get("rules")
     if new_rules:
         success = services.rules_engine.save_rules(new_rules)
