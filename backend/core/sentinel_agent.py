@@ -42,6 +42,27 @@ class SentinelAgent:
         # Track if single worker lock is engaged
         self._is_active = False
 
+    def _validate_endpoint_url(self, url: str) -> bool:
+        """Validate URL to prevent SSRF attacks - blocks metadata IPs and disallowed schemes."""
+        import re
+        from urllib.parse import urlparse
+
+        try:
+            parsed = urlparse(url)
+            # Block dangerous schemes
+            if parsed.scheme in {"file", "gopher", "ftp", "sftp"}:
+                return False
+            # Block cloud metadata IPs (AWS, GCP, Azure)
+            hostname = parsed.hostname or ""
+            if re.match(r"^(169\.254\.169\.|10\.\d+\.|172\.(1[6-9]|2[0-9]|3[01])\.)", hostname):
+                return False
+            # Block localhost access in production
+            if "localhost" in hostname or "127.0.0.1" in hostname:
+                return False
+            return True
+        except Exception:
+            return False
+
     async def monitor_endpoints(self):
         """
         Polls configured ApiEndpoints and logs SystemIncident if latency is high or status fails.
@@ -59,8 +80,18 @@ class SentinelAgent:
                     for ep in endpoints:
                         start_time = datetime.now(UTC)
                         try:
-                            # In real production, path might be absolute URL, handling relative for now
-                            url = ep.path if ep.path.startswith("http") else f"http://127.0.0.1:8080{ep.path}"
+                            # Secure URL construction with SSRF protection
+                            if ep.path.startswith("http"):
+                                url = ep.path
+                            else:
+                                url = f"http://127.0.0.1:8080{ep.path}"
+                            
+                            # SSRF protection
+                            if not self._validate_endpoint_url(url):
+                                logger.critical(f"SSRF Blocked: Attempted access to {url}")
+                                continue
+                            
+                            # Make the request only after SSRF validation
                             resp = await client.request(ep.method, url)
                             latency = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
