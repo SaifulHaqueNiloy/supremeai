@@ -8,7 +8,6 @@ from core.llm import free_tier_tracker
 from core.llm import llm_gateway
 from core.messaging import event_bus
 from core.messaging import nats_messaging
-from core.observability import log_batcher
 from core.observability import posthog_client
 from core.observability import telemetry
 from core.orchestration import agent_orchestrator
@@ -21,7 +20,6 @@ sys.modules["core.event_bus"] = event_bus
 sys.modules["core.swarm_orchestrator"] = swarm_orchestrator
 sys.modules["core.llm_gateway"] = llm_gateway
 sys.modules["core.nats_messaging"] = nats_messaging
-sys.modules["core.log_batcher"] = log_batcher
 sys.modules["core.agent_orchestrator"] = agent_orchestrator
 sys.modules["core.auth_middleware"] = auth_middleware
 sys.modules["core.free_tier_tracker"] = free_tier_tracker
@@ -37,7 +35,6 @@ __all__ = [
     "swarm_orchestrator",
     "llm_gateway",
     "nats_messaging",
-    "log_batcher",
     "agent_orchestrator",
     "auth_middleware",
     "free_tier_tracker",
