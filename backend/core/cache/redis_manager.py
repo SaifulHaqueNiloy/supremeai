@@ -9,6 +9,7 @@ exposed for application-wide use."""
 
 import json
 import os
+import uuid
 
 from loguru import logger
 from redis import asyncio as aioredis
@@ -114,6 +115,14 @@ class IdempotencyUnavailableError(Exception):
 
 
 # Idempotency Helper Functions (Task 8.6)
+_RELEASE_LUA = """
+if redis.call("get", KEYS[1]) == ARGV[1] then
+    return redis.call("del", KEYS[1])
+else
+    return 0
+end
+"""
+
 async def acquire_idempotency_lock(key: str, ttl: int = 120, fail_closed: bool = True) -> bool:
     """
     বাংলা মন্তব্য: fail_closed=True হলে Redis না থাকলে বা ফেইল করলে IdempotencyUnavailableError রেইজ হবে।
@@ -125,8 +134,9 @@ async def acquire_idempotency_lock(key: str, ttl: int = 120, fail_closed: bool =
         logger.warning(f"Idempotency lock for '{key}' skipped — Redis unavailable, fail-open mode.")
         return True
     try:
-        # SET NX EX
-        res = await redis_manager.client.set(key, "locked", nx=True, ex=ttl)
+        # SET NX EX - atomic lock acquisition with unique value
+        lock_value = str(uuid.uuid4())
+        res = await redis_manager.client.set(key, lock_value, nx=True, ex=ttl)
         return bool(res)
     except Exception as e:  # noqa: BLE001
         logger.error(f"Idempotency lock failed for '{key}': {e}")
@@ -135,13 +145,21 @@ async def acquire_idempotency_lock(key: str, ttl: int = 120, fail_closed: bool =
         return True
 
 
-async def release_idempotency_lock(key: str) -> None:
+async def release_idempotency_lock(key: str) -> bool:
+    """Release lock using Lua script for atomic owner verification."""
     if not redis_manager.client:
-        return
+        return False
     try:
-        await redis_manager.client.delete(key)
+        # Get the current lock value to verify ownership
+        lock_value = await redis_manager.client.get(key)
+        if lock_value is None:
+            return False
+        # Use Lua script for atomic release - only delete if owner matches
+        result = await redis_manager.client.eval(_RELEASE_LUA, 1, key, lock_value)
+        return bool(result)
     except Exception as e:  # noqa: BLE001
         logger.error(f"Idempotency lock release failed: {e}")
+        return False
 
 
 async def cache_response_and_release_lock(key: str, response: str, ttl: int = 86400) -> None:

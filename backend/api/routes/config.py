@@ -2,6 +2,20 @@
 from fastapi import APIRouter
 from fastapi import Response
 
+# টেস্ট কম্প্যাটিবিলিটি:
+# `tests/test_api_new_endpoints.py::test_config_endpoint_admin_control` monkeypatch করে
+# `backend.api.routes.config.db.client` সেট করে।
+class _ConfigDBClientWrapper:
+    def __init__(self):
+        # টেস্ট monkeypatch করবে: config_route.db.client
+        self.client = None
+
+    def get_config(self, key: str):
+        # টেস্ট monkeypatch করবে: config_route.db.get_config
+        return None
+
+
+db = _ConfigDBClientWrapper()
 
 router = APIRouter(prefix="/config", tags=["Global Config"])
 
