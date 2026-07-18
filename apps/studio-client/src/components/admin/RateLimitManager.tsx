@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 import { useToast } from '../../contexts/useToast';
 
 interface TenantLimit {
@@ -52,7 +52,7 @@ export const RateLimitManager: React.FC = () => {
     setError(null);
     try {
       const resp = await fetch(`${API_BASE}/admin/tenant-limits`, {
-        headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+        headers: { 'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}` }
       });
 
       // 🛡️ এপিআই স্ট্যাটাস হ্যান্ডশেক এবং সাইলেন্ট ফেইলর প্রোটেকশন
@@ -102,7 +102,7 @@ export const RateLimitManager: React.FC = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAdminToken()}`,
+          'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}`,
         },
         body: JSON.stringify(editValues),
       });

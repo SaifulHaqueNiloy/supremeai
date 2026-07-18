@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 
 interface Action {
   id: string;
@@ -64,7 +64,7 @@ export function ActionCard({ rawContent, onSaveToProject, onPreview }: ActionCar
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${getAdminToken()}`
+              'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}`
             }
           });
           if (res.ok) {
