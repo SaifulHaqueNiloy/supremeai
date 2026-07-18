@@ -84,32 +84,41 @@ class ASTSecurityScanner(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Subscript(self, node: ast.Subscript) -> None:
-        """Block sandbox escape via subscript access: __builtins__['exec'](), builtins['eval']()"""
+        """Block sandbox escape via subscript access: __builtins__['exec'](), builtins['eval'](), and dunder chains."""
+        # Block builtins/__builtins__ subscript access
         if isinstance(node.value, ast.Name) and node.value.id in {"builtins", "__builtins__"}:
-            raise SecuritySandboxError(f"Sandbox escape via subscript blocked: {node.value.id}[...]")
+            raise SecuritySandboxError("Sandbox escape via subscript blocked: builtins/__builtins__ access")
+        # Block chained dunder attribute access via subscript (e.g., obj.__class__.__bases__[0])
+        if isinstance(node.value, ast.Attribute):
+            if node.value.attr in self.banned_attributes:
+                raise SecuritySandboxError(f"Dunder attribute access via subscript blocked: {node.value.attr}")
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call):
+        # Block all Attribute access to reflection methods (prevents sandbox escape)
+        if isinstance(node.func, ast.Attribute):
+            # Block getattr/hasattr/setattr/delattr - critical for RCE bypass
+            if node.func.attr in {"getattr", "hasattr", "setattr", "delattr"}:
+                raise SecuritySandboxError(f"Banned reflection function call detected: {node.func.attr}")
+            # Block dangerous module methods
+            if node.func.attr in {"import_module", "system", "popen", "spawn", "fork", "run", "run_async"}:
+                raise SecuritySandboxError(f"Banned method invocation detected: {node.func.attr}")
+
         # Block direct function calls like eval(), __import__()
         if isinstance(node.func, ast.Name) and node.func.id in self.banned_functions:
             raise SecuritySandboxError(f"Banned function call detected: {node.func.id}")
 
-        # Block malicious module methods like importlib.import_module() or os.system()
-        elif isinstance(node.func, ast.Attribute) and node.func.attr in {"import_module", "system", "popen", "spawn", "fork"}:
-            raise SecuritySandboxError(f"Banned method invocation detected: {node.func.attr}")
-
         # Block subscript calls: builtins["exec"]("...")
-        elif isinstance(node.func, ast.Subscript):
+        if isinstance(node.func, ast.Subscript):
             self.visit_Subscript(node.func)
 
         self.generic_visit(node)
 
     def visit_Attribute(self, node: ast.Attribute):
         # Block access to dunder attributes used for sandbox escapes
-        if node.attr in self.banned_attributes or node.attr in self.banned_functions:
+        if node.attr in self.banned_attributes:
             raise SecuritySandboxError(f"Sandbox escape pattern blocked: {node.attr}")
         self.generic_visit(node)
-
 
 class ImmuneSystemScanner:
     """
