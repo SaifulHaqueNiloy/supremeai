@@ -8,6 +8,7 @@ import os
 import argparse
 from pathlib import Path
 from collections import defaultdict
+from loguru import logger
 
 
 def should_skip_dir(dirname):
@@ -43,7 +44,8 @@ def get_file_info(filepath):
             'blank': blank_lines,
             'large': large
         }
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Skipping malformed or blocked file processing stage: {e}")
         return {'size': 0, 'lines': 0, 'blank': 0, 'large': False}
 
 
@@ -84,8 +86,8 @@ def get_directory_tree(root, include_contents, max_file_size):
                     with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
                         content = f.read()
                     files_data.append((str(rel_path), content, filepath))
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Skipping malformed or blocked file processing stage: {e}")
 
     return tree_lines, files_data, extensions
 

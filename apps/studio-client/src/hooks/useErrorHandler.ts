@@ -1,0 +1,52 @@
+// apps/studio-client/src/hooks/useErrorHandler.ts
+// 🛡️ Centralized error handling hook for production-grade frontend resilience
+
+import { useCallback } from 'react';
+
+export interface ErrorContext {
+  componentStack?: string;
+  errorId?: string;
+  timestamp: string;
+  userAgent?: string;
+}
+
+export interface ErrorHandlerOptions {
+  context?: string;
+  showToast?: boolean;
+  fallbackData?: any;
+}
+
+export const useErrorHandler = () => {
+  const handleError = useCallback(
+    (error: any, context?: string, options?: ErrorHandlerOptions): void => {
+      const errorInfo: ErrorContext = {
+        timestamp: new Date().toISOString(),
+        componentStack: options?.context || context,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      };
+
+      // 🔍 Log for observability
+      console.error('🚨 [GLOBAL_ERROR_HANDLER]', {
+        message: error?.message || String(error),
+        context: context || options?.context,
+        stack: error?.stack,
+        ...errorInfo,
+      });
+
+      // 🚨 Show global toast if available and not suppressed
+      if (options?.showToast !== false && (window as any).showGlobalToast) {
+        const toastMessage = error?.message || 'An unexpected error occurred';
+        (window as any).showGlobalToast('error', toastMessage);
+      }
+
+      // 📊 In production, could integrate with error monitoring services
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
+        // Ready for Sentry, LogRocket, etc. integration
+        // Example: Sentry.captureException(error, { contexts: { errorInfo } });
+      }
+    },
+    []
+  );
+
+  return { handleError };
+};
