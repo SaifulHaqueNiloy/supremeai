@@ -32,7 +32,7 @@ interface InteractiveChatTabProps {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 
 
 export function InteractiveChatTab({

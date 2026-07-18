@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '../services/apiClient';
-import { getAdminToken } from '../services/adminTokenStore';
+import { adminTokenStore } from '../services/adminTokenStore';
 import { useErrorHandler } from './useErrorHandler';
 
 export interface MetricsData {
@@ -51,7 +51,7 @@ export interface ThreatScanResult {
 }
 
 // 🛡️ অডিটর ফিক্স: টোকেন চেক হেল্পার এবং useErrorHandler integrate করা হয়েছে
-const hasToken = (): boolean => !!getAdminToken();
+const hasToken = (): boolean => !!adminTokenStore.getDecodedToken();
 
 // 🛡️ অডিটর ফিক্স: আপনার exact useDashboardData implementation
 export const useDashboardData = () => {
