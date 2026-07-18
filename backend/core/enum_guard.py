@@ -29,7 +29,7 @@ class EnumGuard:
                     return member
 
         # 🚨 সাইলেন্ট ড্রপ প্রতিরোধ: ইনভ্যালিড ভ্যালু পেলে সাথে সাথে এক্সপ্লোসিভ এক্সেপশন থ্রো
-        err_msg = f"Invalid enum value '{value}' for type " f"'{enum_cls.__name__}' inside context: [{context}]."
+        err_msg = f"Invalid enum value '{value}' for type '{enum_cls.__name__}' inside context: [{context}]."
         logger.error(f"🚨 [ENUM_GUARD_VIOLATION]: {err_msg}")
         raise EnumGuardError(err_msg)
 
