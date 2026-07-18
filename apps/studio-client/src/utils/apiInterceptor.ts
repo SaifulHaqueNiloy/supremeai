@@ -1,5 +1,30 @@
-import { getApiBaseUrl } from './api';
+// apps/studio-client/src/utils/apiInterceptor.ts
+// 🛡️ Production-ready API interceptor with structured error handling
 
+export const apiInterceptor = async (response: Response): Promise<any> => {
+  const contentType = response.headers.get("content-type");
+  
+  if (!response.ok) {
+    throw new Error(`API Transport Failed. Status: ${response.status}`);
+  }
+
+  // 🛡️ অডিটর ফিক্স: সাইলেন্ট কমেন্ট রিমুভ করে মালফর্মড বডি ভ্যালিডেশন
+  if (contentType && contentType.includes("application/json")) {
+    try {
+      return await response.json();
+    } catch (parseError: any) {
+      console.error("🚨 [INTERCEPTOR_PARSING_CRASH]: Body claimed JSON but failed to decode.", parseError);
+      throw new Error("Malformed JSON response packet received from SupremeAI core backend.");
+    }
+  }
+
+  // স্ট্রিম বা প্লেইন টেক্সট মেসেজের জন্য সেফ গ্রেসফুল ফলব্যাক
+  const rawText = await response.text();
+  console.debug("ℹ️ [NON_JSON_STREAM_TRAFFIC]: Handling streaming or text matrix payload.", { length: rawText.length });
+  return rawText;
+};
+
+// Legacy support: Keep existing fetch interceptor for backward compatibility
 export function setupGlobalFetchInterceptor() {
   if (typeof window === 'undefined') return;
 
@@ -7,12 +32,12 @@ export function setupGlobalFetchInterceptor() {
 
   window.fetch = async function (...args) {
     const url = args[0];
-    let options: RequestInit = args[1] || {};
-    const apiBase = getApiBaseUrl();
+    let options: any = args[1];
+    const apiBase = (await import('./api')).getApiBaseUrl();
 
     if (typeof url === 'string' && url.startsWith(apiBase)) {
-      // Ensure cookies are sent with every cross-origin API request
-      options = { ...options, credentials: 'include' };
+      options = options || {};
+      options.credentials = 'include';
       args[1] = options;
     }
 
@@ -21,7 +46,6 @@ export function setupGlobalFetchInterceptor() {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          // Handle unauthorized access globally
           import('../store/adminStore').then(({ useAdminStore }) => {
             const store = useAdminStore.getState();
             if (store.adminAuthenticated) {
@@ -30,30 +54,19 @@ export function setupGlobalFetchInterceptor() {
           });
         }
 
-        const contentType = response.headers.get('content-type');
         let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
-        
-        // 🛡️ অডিটর ফিক্স: সাইলেন্ট কমেন্ট রিমুভ করে মালফর্মড বডি ভ্যালিডেশন
-        if (contentType && contentType.includes('application/json')) {
-          try {
-            const clone = response.clone();
-            const text = await clone.text();
-            if (text) {
-              const parsed = JSON.parse(text);
-              if (parsed.error) errorMsg = parsed.error;
-              else if (parsed.message) errorMsg = parsed.message;
-              else if (parsed.detail) errorMsg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
-            }
-          } catch (parseError: any) {
-            // Structured error logging for malformed JSON
-            console.error('🚨 [INTERCEPTOR_PARSING_CRASH]: Body claimed JSON but failed to decode.', parseError);
-            errorMsg = 'Malformed JSON response packet received from SupremeAI core backend.';
+        try {
+          const clone = response.clone();
+          const text = await clone.text();
+          if (text) {
+            const parsed = JSON.parse(text);
+            if (parsed.error) errorMsg = parsed.error;
+            else if (parsed.message) errorMsg = parsed.message;
+            else if (parsed.detail) errorMsg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
+            else errorMsg = text.slice(0, 50);
           }
-        } else {
-          // Non-JSON response: graceful text handling
-          const text = await response.text();
-          console.debug('ℹ️ [NON_JSON_STREAM_TRAFFIC]: Handling streaming or text matrix payload.', { length: text.length });
-          errorMsg = text.slice(0, 100);
+        } catch (e) {
+          console.error('🚨 [INTERCEPTOR_ERROR]: Failed to parse error response', e);
         }
 
         if ((window as any).showGlobalToast) {
@@ -62,9 +75,9 @@ export function setupGlobalFetchInterceptor() {
       }
 
       return response;
-    } catch (error: any) {
+    } catch (error) {
       if ((window as any).showGlobalToast) {
-        (window as any).showGlobalToast('error', `Network Error: ${error?.message || 'Unknown'}`);
+        (window as any).showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
       throw error;
     }

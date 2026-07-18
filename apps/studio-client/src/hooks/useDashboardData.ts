@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '../services/apiClient';
 import { getAdminToken } from '../services/adminTokenStore';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface MetricsData {
   latency_p50_ms: number;
@@ -51,22 +53,33 @@ export interface ThreatScanResult {
 // 🛡️ অডিটর ফিক্স: টোকেন চেক হেল্পার এবং useErrorHandler integrate করা হয়েছে
 const hasToken = (): boolean => !!getAdminToken();
 
-// Centralized error handler for dashboard operations
-const useDashboardErrorHandler = () => {
-  const handleError = (error: any, context: string) => {
-    console.error(`🚨 [DASHBOARD_PIPELINE_ERROR]: ${context}`, {
-      message: error?.message || String(error),
-      stack: error?.stack,
-      timestamp: new Date().toISOString(),
-    });
+// 🛡️ অডিটর ফিক্স: আপনার exact useDashboardData implementation
+export const useDashboardData = () => {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { handleError } = useErrorHandler();
 
-    // Show global toast if available
-    if ((window as any).showGlobalToast) {
-      (window as any).showGlobalToast('error', error?.message || context);
+  const loadMetrics = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/v1/dashboard/metrics');
+      if (!response.ok) throw new Error(`Metrics sync drop out. Status: ${response.status}`);
+      const data = await response.json();
+      setMetrics(data);
+    } catch (error: any) {
+      // 🛡️ অডিটর ফিক্স: সائেন্ট কনসোল ড্রপ বন্ধ করে প্রপার গ্লোবাল টোস্ট এবং ফলব্যাক ট্রিগার
+      handleError(error, "Dashboard global metrics core pipeline crash");
+      setMetrics(null); 
+    } finally {
+      setLoading(false);
     }
   };
 
-  return { handleError };
+  useEffect(() => {
+    loadMetrics();
+  }, []);
+
+  return { metrics, loading, refetch: loadMetrics };
 };
 
 // বাংলা মন্তব্য: পোলিং বন্ধ করে SSE-এর মাধ্যমে ডেটা আপডেট করা হবে
