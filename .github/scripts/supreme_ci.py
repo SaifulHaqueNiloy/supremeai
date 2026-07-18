@@ -198,8 +198,9 @@ def cmd_deploy(args):
                     if resp.status == 200:
                         is_healthy = True
                         break
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"🚨 [FATAL CI EXCEPTION] Pipeline state evaluator broke: {e}")
+                sys.exit(2)
             time.sleep(2.5)
 
         if not is_healthy:

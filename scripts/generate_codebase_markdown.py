@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
+from loguru import logger
 
 def load_env_manually():
     # Load from system environment first (e.g. GitHub Actions secrets)
@@ -74,8 +75,8 @@ def generate_markdown():
                     lang = "powershell"
 
                 markdown_lines.append(f"```{lang}\n{content}\n```\n\n")
-            except Exception:
-                continue
+            except Exception as e:
+                logger.debug(f"Skipping malformed or blocked file processing stage: {e}")
 
     output_content = "".join(markdown_lines)
     output_file.write_text(output_content, encoding="utf-8")
@@ -158,8 +159,8 @@ def sync_to_supabase(file_path: Path, env: dict):
         try:
             with urllib.request.urlopen(bucket_req) as br:
                 br.read()
-        except Exception:
-            pass # Bucket already exists or creation failed due to lack of rights
+        except Exception as e:
+            logger.debug(f"Google Cloud Storage bucket operation failed or conflicted: {e}")
 
         # Upload File
         upload_req = urllib.request.Request(
