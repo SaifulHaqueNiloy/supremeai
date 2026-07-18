@@ -11,7 +11,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import WebSocket
-from fastapi import status
 from fastapi.websockets import WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel

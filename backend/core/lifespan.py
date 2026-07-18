@@ -30,7 +30,6 @@ Dependencies:
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
 # Moving this file will break relative paths, imports, and core app lifespan management.
 import asyncio  # noqa: E402
-import os  # noqa: E402
 from contextlib import asynccontextmanager  # noqa: E402
 
 import httpx  # noqa: E402
