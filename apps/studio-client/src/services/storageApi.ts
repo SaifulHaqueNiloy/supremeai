@@ -1,11 +1,11 @@
 // FrR2 Storage API
 
 import { getApiBaseUrl } from './utils/api';
-import { getAdminToken } from './adminTokenStore';
+import { adminTokenStore } from './adminTokenStore';
 
 
 const getAuthToken = () => {
-    return getAdminToken();
+    return adminTokenStore.getDecodedToken();
 };
 
 export const uploadFileToR2 = async (file: File) => {
