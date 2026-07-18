@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { getApiBaseUrl } from '../../utils/api';
 import { AppDefaults } from '../../config/constants';
-import { setApiConcurrency } from '../../services/apiClient';
+import { apiClient, setApiConcurrency } from '../../services/apiClient';
 
 interface GlobalConfigInitializerProps {
   children: React.ReactNode;
@@ -16,15 +16,11 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
     const fetchConfig = async () => {
       setError(null);
       try {
-        const res = await fetch(`${getApiBaseUrl()}/api/config/public`);
-        if (res.ok) {
-          const data = await res.json();
-          setConfig(data);
-          if (data.maxConcurrency) {
-            setApiConcurrency(data.maxConcurrency);
-          }
-        } else {
-          throw new Error(`Failed to load config: ${res.statusText}`);
+        // বাংলা মন্তব্য: raw fetch এর বদলে apiClient.get ব্যবহার করা হচ্ছে যাতে টাইমআউট এবং ফেইলওভার সুবিধা পাওয়া যায়।
+        const data = await apiClient.get<any>('/api/config/public');
+        setConfig(data);
+        if (data.maxConcurrency) {
+          setApiConcurrency(data.maxConcurrency);
         }
       } catch (err) {
         console.error("Config fetch error:", err);
