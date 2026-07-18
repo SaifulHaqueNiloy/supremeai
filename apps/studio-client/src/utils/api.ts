@@ -1,6 +1,7 @@
+// বাংলা মন্তব্য: প্রধান অ্যাকাউন্টের লিমিট শেষ হওয়ায় ব্যাকআপ ইউআরএলটি এখন প্রাইমারি হিসেবে ব্যবহার করা হচ্ছে।
 export const RENDER_BACKENDS = [
-  import.meta.env.VITE_PRIMARY_BACKEND || 'https://supremeai-backend-65hl.onrender.com', // Primary (Backup account active service)
-  import.meta.env.VITE_SECONDARY_BACKEND || 'https://supremeai-backend.onrender.com' // Fallback (New image service)
+  import.meta.env.VITE_PRIMARY_BACKEND || 'https://supremeai-backend.onrender.com', // Primary (Backup account active service)
+  import.meta.env.VITE_SECONDARY_BACKEND || 'https://supremeai-backend-65hl.onrender.com' // Fallback (New image service)
 ];
 
 export const switchActiveBackend = (): string => {
