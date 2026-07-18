@@ -4,14 +4,14 @@ import { Card, Badge } from '../ui';
 import { Shield, UserPlus, Trash2, Settings2, CheckCircle2, XCircle } from 'lucide-react';
 // বাংলা মন্তব্য: raw fetch()-এর বদলে apiClient ব্যবহার — auth হেডার ও থ্রটল নিশ্চিত করে
 import { apiClient } from '../../services/apiClient';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 
 export function RBACManager() {
   // বাংলা মন্তব্য: queryKey ম্যাচ করানো হয়েছে useAdminApi.useAdminUsers()-এর সাথে — ক্যাশ শেয়ার হবে
   const { data: users } = useQuery({
     queryKey: ['admin', 'users'],
     queryFn: () => apiClient.get<any[]>('/admin-api/users'),
-    enabled: !!getAdminToken(),
+    enabled: !!adminTokenStore.getDecodedToken(),
     staleTime: 30_000,
   });
   const qc = useQueryClient();
