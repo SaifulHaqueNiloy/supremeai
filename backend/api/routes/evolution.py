@@ -304,18 +304,19 @@ async def breed_agents(payload: BreedRequest, db: AsyncSession = Depends(get_db_
         )
     breeder = AgentBreeder(db, config=config)
     from sqlalchemy import select
+
     q = select(AgentGenome).where(AgentGenome.agent_name.in_([payload.parent_1, payload.parent_2]))
     r = await db.execute(q)
     genomes = {g.agent_name: g for g in r.scalars().all()}
     if payload.parent_1 not in genomes or payload.parent_2 not in genomes:
         raise HTTPException(status_code=404, detail="Parent genomes not found")
-    
+
     parent_a = genomes[payload.parent_1]
     parent_b = genomes[payload.parent_2]
     offspring = await breeder.breed(parent_a, parent_b)
     await breeder.evaluate_offspring(offspring)
     promoted = await breeder.promote_if_elite(offspring, parent_a, parent_b)
-    
+
     return {
         "success": True,
         "method": payload.method,
@@ -330,6 +331,7 @@ async def evaluate_performance(payload: PerformanceRequest, db: AsyncSession = D
     """Evaluate agent performance and trigger alerts if thresholds are breached."""
     # বাংলা মন্তব্য: এজেন্টের কাজের গতি ও নির্ভুলতা বিশ্লেষণ করে কোনো অ্যালার্ট ট্রিগার হচ্ছে কি না তা বের করা
     from models.meta_ai import MetricType, SuggestionAction
+
     oracle = PerformanceOracle(db)
     for key, value in payload.metrics.items():
         try:
@@ -342,17 +344,19 @@ async def evaluate_performance(payload: PerformanceRequest, db: AsyncSession = D
             )
         except (ValueError, TypeError):
             continue
-            
+
     reports = await oracle.identify_weakest_links([payload.agent_name])
     alerts = []
     for r in reports:
         if r.agent_name == payload.agent_name and r.suggestion != SuggestionAction.NO_ACTION:
-            alerts.append({
-                "severity": "critical" if r.suggestion == SuggestionAction.DEPRECATE or r.suggestion == SuggestionAction.REPLACE else "warning",
-                "recommended_action": r.suggestion.value,
-                "description": r.reasoning,
-            })
-            
+            alerts.append(
+                {
+                    "severity": "critical" if r.suggestion == SuggestionAction.DEPRECATE or r.suggestion == SuggestionAction.REPLACE else "warning",
+                    "recommended_action": r.suggestion.value,
+                    "description": r.reasoning,
+                }
+            )
+
     return {
         "success": True,
         "agent_name": payload.agent_name,
