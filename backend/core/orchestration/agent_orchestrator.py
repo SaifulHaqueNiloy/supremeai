@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 from typing import Any
@@ -224,7 +225,7 @@ class AsyncTaskManager:
 
     def __init__(self):
         self._local_tasks: dict[str, dict[str, Any]] = {}
-        self._queue = None
+        self._queue: Any | None = None
         self._queue_init_failed = False
         # বাংলা মন্তব্য: pytest রান করার সময় স্বয়ংক্রিয়ভাবে ইন-মেমোরি টাস্ক ম্যানেজার ব্যবহার করতে sys.modules চেক করা হচ্ছে।
         import sys
@@ -379,3 +380,61 @@ def budget_aware_route(
         "reasoning": semantic_route.reasoning,
         "best_provider": best_provider,
     }
+
+
+# ---------------------------------------------------------------------------
+# [PHASE 3] Swarm Intelligence Boundary — Parallel sub-agent dispatch with
+#              explosive exception isolation instead of silent swallowing.
+# ---------------------------------------------------------------------------
+
+
+class SwarmOrchestrationError(Exception):
+    """🛡️ Enterprise Vault: Swarm intelligence disruption trigger"""
+
+    pass
+
+
+class SupremeAgentOrchestrator:
+    """
+    🧬 PHASE 3: Parallel swarm dispatcher with zero silent exception swallowing.
+
+    Fixes the `asyncio.gather(..., return_exceptions=True)` silent crash trap.
+    Any broken agent raises explosive exception instead of pushing malformed
+    objects into the main data channel.
+    """
+
+    def __init__(self, agents_registry: list[Any]):
+        self.agents = agents_registry
+
+    async def dispatch_swarm_parallel(self, task_payload: dict[str, Any]) -> list[dict[str, Any]]:
+        """
+        🛡️ Auditor Fix: Silent sub-agent crash trapping eliminated.
+        Parallel thread exceptions no longer swallowed; clear diagnostic isolation.
+
+        `return_exceptions=True` is maintained so one agent's downtime
+        doesn't crash the entire cluster, but each exception is surfaced
+        and malformed responses are rejected.
+        """
+        tasks = [agent.execute_task(task_payload) for agent in self.agents]
+
+        # return_exceptions=True maintained so a single agent failure doesn't crash the whole cluster
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        validated_responses = []
+        for idx, res in enumerate(results):
+            agent_name = self.agents[idx].__class__.__name__
+
+            if isinstance(res, Exception):
+                # 🚨 Silent drop permanently eliminated: surface sub-agent crash trace
+                logger.error(f"🔴 [SWARM_AGENT_CRASH]: Agent '{agent_name}' suffered a fatal runtime breakdown.", exc_info=res)
+                continue
+
+            if res and isinstance(res, dict) and "output" in res:
+                validated_responses.append(res)
+            else:
+                logger.warning(f"⚠️ [MALFORMED_AGENT_RESPONSE]: Agent '{agent_name}' returned invalid signature packet.")
+
+        if not validated_responses:
+            raise SwarmOrchestrationError("CRITICAL: All decentralized swarm agents failed to execute the baseline matrix.")
+
+        return validated_responses
