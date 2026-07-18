@@ -57,20 +57,20 @@ class AsyncRateLimiter:
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
 
-    async def acquire(self, key: str, limit: int, window: int) -> bool:
-        if not self._rate_limit_enabled:
-            return True
-        try:
-            client = await self._get_redis()
-            pipe = client.pipeline()
-            pipe.incr(key)
-            pipe.expire(key, window)
-            results = await pipe.execute()
-            current = results[0]
-            return current <= limit
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Redis rate limiter unavailable: {e}. Falling back to in-memory rate limiter.")
-            return self._fallback_limiter.is_allowed(key, limit)
+     async def acquire(self, key: str, limit: int, window: int) -> bool:
+         if not self._rate_limit_enabled:
+             return True
+         try:
+             client = await self._get_redis()
+             pipe = client.pipeline()
+             pipe.incr(key)
+             pipe.expire(key, window)
+             results = await pipe.execute()
+             current = results[0]
+             return current <= limit
+         except Exception as e:  # noqa: BLE001
+             logger.critical(f"Redis rate limiter unavailable: {e}. Rejecting requests (Fail-Closed) to ensure distributed rate limiting.")
+             raise RuntimeError("Rate limiting service unavailable - rejecting all requests") from e
 
     async def close(self):
         if self._redis:
