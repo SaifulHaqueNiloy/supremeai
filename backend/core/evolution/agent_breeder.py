@@ -443,9 +443,11 @@ class AgentBreeder:
                     error_type="BREEDING_CYCLE_FAILURE",
                     message=str(e)[:500],
                     severity="ERROR",
-                    context=ErrorContext(
-                        correlation_id=f"breed-{uuid.uuid4().hex[:8]}",
-                        extra={"pool_name": pool_name},
+                    context={"pool_name": pool_name or "default"},
+                    structured_context=ErrorContext(
+                        module="AgentBreeder",
+                        request_id=f"breed-{uuid.uuid4().hex[:8]}",
+                        extra={"pool_name": pool_name or "default"},
                     ),
                 )
             )
