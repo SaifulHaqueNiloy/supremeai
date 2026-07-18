@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import httpx
 from loguru import logger
+
+from core.config import settings
 
 
 class UpstashRedisQueue:
@@ -14,8 +15,8 @@ class UpstashRedisQueue:
         token: str | None = None,
         timeout: float = 10.0,
     ) -> None:
-        self.rest_url = (rest_url or os.getenv("UPSTASH_REDIS_REST_URL", "")).rstrip("/")
-        self.token = token or os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
+        self.rest_url = (rest_url or getattr(settings, "upstash_redis_rest_url", "") or "").rstrip("/")
+        self.token = token or getattr(settings, "upstash_redis_rest_token", "") or ""
         self.timeout = timeout
         self._client = httpx.Client(timeout=self.timeout) if self.rest_url and self.token else None
 

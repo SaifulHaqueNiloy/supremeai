@@ -4,12 +4,19 @@ from contextlib import contextmanager
 
 from loguru import logger
 
+from core.config import settings
+
 
 class AuditLogger:
     def __init__(self, db_path: str | None = None):
         if db_path is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            self.db_path = os.path.join(base_dir, "data", "supreme_memory.db")
+            # Config-driven: Use MEMORY_DB_DIR setting or fallback to default
+            memory_db_dir = getattr(settings, "memory_db_dir", None) or os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))
+            )
+            if memory_db_dir and not os.path.exists(memory_db_dir):
+                os.makedirs(memory_db_dir, exist_ok=True)
+            self.db_path = os.path.join(memory_db_dir, "supreme_memory.db") if memory_db_dir else "supreme_memory.db"
         else:
             self.db_path = db_path
         self._init_db()

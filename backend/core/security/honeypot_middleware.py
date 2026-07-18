@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import os
 import re
+import sys
 import time
 import uuid
 
@@ -10,8 +13,6 @@ from loguru import logger
 
 from core.messaging.event_bus import ErrorContext
 from core.messaging.event_bus import ErrorEvent
-
-
 class HoneypotMiddleware:
     def __init__(self, app):
         self.app = app
@@ -26,9 +27,6 @@ class HoneypotMiddleware:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-
-        import os
-        import sys
 
         env = os.getenv("ENV", "").lower()
         if env == "test" or ("pytest" in sys.modules and env not in {"production", "prod"}):
@@ -162,8 +160,6 @@ class HoneypotMiddleware:
     def _log_threat_intelligence(self, ip: str, payload: str, endpoint: str):
         logger.info(f"Threat studied and recorded for IP {ip}")
         try:
-            import asyncio
-
             loop = asyncio.get_running_loop()
             # বাংলা মন্তব্য: P1 Fix — run_in_executor নিজেই Future রিটার্ন করে।
             # asyncio.ensure_future() দিয়ে double-wrap করা নিষিদ্ধ — Python 3.10+ DeprecationWarning দেয়।

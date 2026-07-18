@@ -5,10 +5,11 @@
 
 from collections.abc import Callable
 from typing import Any
+import asyncio
+import logging
+import os
 
 import httpx
-
-
 # Lazy HTTP client — initialized on first use
 _http_client: httpx.AsyncClient | None = None
 
@@ -101,8 +102,6 @@ def __getattr__(name: str) -> Any:
     if reg:
         if hasattr(reg, "get") and name in reg._services:
             # Return the service factory, not the instance
-            import asyncio
-
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
@@ -113,11 +112,7 @@ def __getattr__(name: str) -> Any:
         if hasattr(reg, "_services") and name in reg._services:
             return reg._services[name]
 
-    import os
-
     if os.getenv("ENV", "local").lower() in ("test", "testing", "ci"):
-        import logging
-
         logging.getLogger(__name__).warning(f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!")
         from unittest.mock import MagicMock
 

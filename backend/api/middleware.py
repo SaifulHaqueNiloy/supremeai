@@ -199,7 +199,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                         content=cached_data.get("body", {}),
                         headers={"X-Cache-Lookup": "HIT - Idempotency Lock"},
                     )
-            except Exception as e:  # noqa  # noqa
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"[Idempotency] Cache read failed — continuing: {e}")
 
         acquired = await acquire_idempotency_lock(idempotency_key, IDEMPOTENCY_TTL_SECONDS)
@@ -229,7 +229,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     body_str = body_bytes.decode("utf-8")
                     cache_data = json.dumps({"status_code": 200, "body": json.loads(body_str)})
                     await cache_response_and_release_lock(idempotency_key, cache_data, IDEMPOTENCY_TTL_SECONDS * 5)
-                except Exception as cache_err:  # noqa  # noqa
+                except Exception as cache_err:  # noqa: BLE001
                     logger.warning(f"[Idempotency] Response caching failed (non-blocking): {cache_err}")
                     await release_idempotency_lock(idempotency_key)
             else:
