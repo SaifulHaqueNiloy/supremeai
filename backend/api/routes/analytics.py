@@ -42,14 +42,14 @@ async def generate_report(
 ):
     """Generate analytics report."""
     # বাংলা মন্তব্য: ট্রেন্ড ও অসঙ্গতি বিশ্লেষণ করে অটো-রিপোর্ট তৈরির এন্ডপয়েন্ট
+    days = 7 if payload.time_range == "last_7_days" else 30
     result = await mage.generate_report(
-        report_type=payload.report_type,
-        data_source=payload.data_source,
-        time_range=payload.time_range,
+        tenant_id="default",
+        collection=payload.data_source,
+        value_field=payload.report_type,
+        days=days,
         force_refresh=payload.force_refresh,
     )
-    if not result.get("success", False):
-        raise HTTPException(status_code=400, detail=result.get("message", "Failed to generate report"))
     return result
 
 

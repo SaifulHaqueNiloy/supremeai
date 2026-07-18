@@ -29,7 +29,8 @@ from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 from database.session import get_db_session
 from models.evolution import CodeProposal
-from core.evolution.agent_breeder import AgentBreeder
+from models.meta_ai import AgentGenome, AgentOffspring
+from core.evolution.agent_breeder import AgentBreeder, BreederConfig
 from core.evolution.performance_oracle import PerformanceOracle
 
 
@@ -287,26 +288,71 @@ class PerformanceRequest(BaseModel):
 
 
 @router.post("/breed")
-async def breed_agents(payload: BreedRequest):
+async def breed_agents(payload: BreedRequest, db: AsyncSession = Depends(get_db_session)):
     """Breed new agent genetic offspring from parents."""
     # বাংলা মন্তব্য: জেনেটিক অ্যালগরিদমের মাধ্যমে এজেন্টের জিনোমে ব্রিডিং ও মিউটেশন পরিচালনা এন্ডপয়েন্ট
-    breeder = AgentBreeder(mutation_rate=payload.mutation_rate)
-    child_dna = breeder.crossover(payload.parent_1, payload.parent_2, method=payload.method)
-    mutated_dna = breeder.mutate(child_dna)
+    config = BreederConfig.from_settings()
+    if payload.mutation_rate:
+        config = BreederConfig(
+            mutation_rate=payload.mutation_rate,
+            crossover_rate=config.crossover_rate,
+            elite_ratio=config.elite_ratio,
+            tournament_size=config.tournament_size,
+            max_generations=config.max_generations,
+            llm_temperature=config.llm_temperature,
+            llm_model_name=config.llm_model_name,
+        )
+    breeder = AgentBreeder(db, config=config)
+    from sqlalchemy import select
+    q = select(AgentGenome).where(AgentGenome.agent_name.in_([payload.parent_1, payload.parent_2]))
+    r = await db.execute(q)
+    genomes = {g.agent_name: g for g in r.scalars().all()}
+    if payload.parent_1 not in genomes or payload.parent_2 not in genomes:
+        raise HTTPException(status_code=404, detail="Parent genomes not found")
+    
+    parent_a = genomes[payload.parent_1]
+    parent_b = genomes[payload.parent_2]
+    offspring = await breeder.breed(parent_a, parent_b)
+    await breeder.evaluate_offspring(offspring)
+    promoted = await breeder.promote_if_elite(offspring, parent_a, parent_b)
+    
     return {
         "success": True,
         "method": payload.method,
-        "inherited_traits": child_dna,
-        "novel_traits": mutated_dna,
+        "inherited_traits": offspring.chromosome,
+        "novel_traits": offspring.chromosome,
+        "promoted": promoted is not None,
     }
 
 
 @router.post("/evaluate-performance")
-async def evaluate_performance(payload: PerformanceRequest):
+async def evaluate_performance(payload: PerformanceRequest, db: AsyncSession = Depends(get_db_session)):
     """Evaluate agent performance and trigger alerts if thresholds are breached."""
     # বাংলা মন্তব্য: এজেন্টের কাজের গতি ও নির্ভুলতা বিশ্লেষণ করে কোনো অ্যালার্ট ট্রিগার হচ্ছে কি না তা বের করা
-    oracle = PerformanceOracle()
-    alerts = oracle.evaluate_performance(payload.agent_name, payload.metrics)
+    from models.meta_ai import MetricType, SuggestionAction
+    oracle = PerformanceOracle(db)
+    for key, value in payload.metrics.items():
+        try:
+            mtype = MetricType(key)
+            await oracle.record_metric(
+                agent_name=payload.agent_name,
+                metric_type=mtype,
+                value=float(value),
+                unit="ms" if "time" in key or "latency" in key else "score",
+            )
+        except (ValueError, TypeError):
+            continue
+            
+    reports = await oracle.identify_weakest_links([payload.agent_name])
+    alerts = []
+    for r in reports:
+        if r.agent_name == payload.agent_name and r.suggestion != SuggestionAction.NO_ACTION:
+            alerts.append({
+                "severity": "critical" if r.suggestion == SuggestionAction.DEPRECATE or r.suggestion == SuggestionAction.REPLACE else "warning",
+                "recommended_action": r.suggestion.value,
+                "description": r.reasoning,
+            })
+            
     return {
         "success": True,
         "agent_name": payload.agent_name,
