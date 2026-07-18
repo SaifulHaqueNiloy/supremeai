@@ -69,7 +69,7 @@ export const useDashboardData = () => {
     } catch (error: any) {
       // 🛡️ অডিটর ফিক্স: সائেন্ট কনসোল ড্রপ বন্ধ করে প্রপার গ্লোবাল টোস্ট এবং ফলব্যাক ট্রিগার
       handleError(error, "Dashboard global metrics core pipeline crash");
-      setMetrics(null); 
+      setMetrics(null);
     } finally {
       setLoading(false);
     }
@@ -192,7 +192,6 @@ export function useDashboardReports(reportName?: string) {
 }
 
 // SSE Listener Hook
-import { useEffect } from 'react';
 import { getApiBaseUrl } from '../utils/api';
 
 
