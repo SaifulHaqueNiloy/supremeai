@@ -20,6 +20,16 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+try:
+    from core.evolution.auto_skill_creator import AutoSkillCreator
+except ImportError:
+    AutoSkillCreator = None  # type: ignore[misc,assignment]
+
+try:
+    from core.evolution.fitness_engine import FitnessEngine
+except ImportError:
+    FitnessEngine = None  # type: ignore[misc,assignment]
+
 from core.immune_system import ImmuneSystemScanner
 from models.evolution import CodeProposal
 
@@ -38,11 +48,18 @@ class SelfEvolutionAgent:
         min_runs_before_action: int = 5,
         max_consecutive_penalties: int = 3,
     ) -> None:
-        from core.evolution.auto_skill_creator import AutoSkillCreator
-        from core.evolution.fitness_engine import FitnessEngine
+        # Conditional instantiation to avoid AttributeError when imports failed
+        if fitness_engine is None:
+            if FitnessEngine is None:
+                raise RuntimeError("FitnessEngine failed to import - core.evolution.fitness_engine not available")
+            fitness_engine = FitnessEngine()
+        if auto_skill_creator is None:
+            if AutoSkillCreator is None:
+                raise RuntimeError("AutoSkillCreator failed to import - core.evolution.auto_skill_creator not available")
+            auto_skill_creator = AutoSkillCreator()
 
-        self.fitness_engine = fitness_engine or FitnessEngine()
-        self.auto_skill_creator = auto_skill_creator or AutoSkillCreator()
+        self.fitness_engine = fitness_engine
+        self.auto_skill_creator = auto_skill_creator
         self.interval_seconds = interval_seconds
         self.fitness_threshold = fitness_threshold
         self.refactor_penalty_threshold = refactor_penalty_threshold

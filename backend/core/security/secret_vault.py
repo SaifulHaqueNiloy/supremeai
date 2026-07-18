@@ -1,8 +1,3 @@
-from __future__ import annotations
-
-from core.messaging.event_bus import ErrorContext
-
-
 """Enterprise Cloud Secret Vault (Infisical / Doppler).
 
 বাংলা: এন্টারপ্রাইজ ক্লাউড সিক্রেট ভল্ট — ইন-মেমরি ক্যাশে TTL-সহ, Fail-Closed।
@@ -10,15 +5,18 @@ Fetches production API keys directly into memory from Infisical.
 Removes the need for monolithic GCP Secret Manager.
 """
 
-import asyncio  # noqa: E402
-import os  # noqa: E402
-import time  # noqa: E402
+from __future__ import annotations
 
-from loguru import logger  # noqa: E402
+import asyncio
+import os
+import time
+from typing import Any
 
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
+from loguru import logger
 
+from core.messaging.event_bus import ErrorContext
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 try:
     from infisical_client import AuthenticationOptions
