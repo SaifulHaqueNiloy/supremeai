@@ -121,7 +121,8 @@ def _session_file_lock(lock_path: Path):
             acquired = True
             break
         except FileExistsError:
-            time.sleep(0.1)
+            # Reduced sleep to minimize event-loop blocking in async callers.
+            time.sleep(0.05)
     try:
         yield acquired
     finally:
