@@ -10,7 +10,7 @@ from database.session import get_db_session
 from models.selector_healing_event import SelectorHealingEvent
 
 
-router = APIRouter(prefix="/api/admin/selector-healing", tags=["Self-Healing Logs"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/admin/selector-healing", tags=["Selector Healing"], dependencies=[Depends(get_current_admin)])
 
 
 class HealingEventOut(BaseModel):
