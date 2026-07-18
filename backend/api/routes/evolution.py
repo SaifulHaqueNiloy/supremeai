@@ -29,7 +29,7 @@ from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 from database.session import get_db_session
 from models.evolution import CodeProposal
-from models.meta_ai import AgentGenome, AgentOffspring
+from models.meta_ai import AgentGenome
 from core.evolution.agent_breeder import AgentBreeder, BreederConfig
 from core.evolution.performance_oracle import PerformanceOracle
 

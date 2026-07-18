@@ -1,6 +1,8 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+from typing import Any
+
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -29,7 +31,8 @@ def get_async_url(url: str) -> str:
 
 _async_url = get_async_url(DATABASE_URL)
 
-engine_kwargs = {
+# বাংলা মন্তব্য: MyPy টাইপ ইনফারেন্সের সমস্যা সমাধানের জন্য টাইপ হিসেবে dict[str, Any] ব্যবহার করা হলো
+engine_kwargs: dict[str, Any] = {
     "echo": False,
 }
 if _async_url.startswith("sqlite"):
@@ -42,7 +45,12 @@ if _async_url.startswith("postgresql"):
             "max_overflow": 0,
             "pool_timeout": 30,
             "pool_recycle": 1800,
-            "connect_args": {"command_timeout": 30, "server_settings": {"application_name": "supremeai_2.0"}},
+            # বাংলা মন্তব্য: PgBouncer এর transaction pool মোডের সাথে সামঞ্জস্যের জন্য statement_cache_size=0 করা হলো
+            "connect_args": {
+                "command_timeout": 30,
+                "server_settings": {"application_name": "supremeai_2.0"},
+                "statement_cache_size": 0,
+            },
         }
     )
 
