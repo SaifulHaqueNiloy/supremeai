@@ -37,7 +37,7 @@ if sys.platform == "win32":
 
 # --- Path Setup ---
 try:
-    from core.config import settings
+    from core.config import settings  # noqa: F401
     from core.gcp_firestore import get_firestore_client
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
