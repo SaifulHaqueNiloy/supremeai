@@ -166,8 +166,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="DB_POOL_INIT_FAILED",
                 message=str(exc)[:200],
-                severity="CRITICAL",
-                structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
+                severity="CRITICAL" if settings.env == "production" else "WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"db_url": db_url[:50] if db_url else "", "env": settings.env},
             )
         )
@@ -213,8 +213,8 @@ async def app_lifespan(app):
                 module="lifespan",
                 error_type="REDIS_INIT_FAILED",
                 message=str(e)[:200],
-                severity="CRITICAL",
-                structured_context=ErrorContext(module="auto_fixed") if settings.env == "production" else "WARNING",
+                severity="CRITICAL" if settings.env == "production" else "WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
                 context={"env": settings.env},
             )
         )
