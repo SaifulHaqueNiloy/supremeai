@@ -28,9 +28,12 @@ export default function SkillGraph() {
   // বাংলা মন্তব্য: ব্যাকএন্ড থেকে গ্রাফ ডেটা ফেচ করার ফাংশন
   const fetchGraphData = async () => {
     try {
+      const decodedToken = adminTokenStore.getDecodedToken();
+      const token = localStorage.getItem('supreme_admin_jwt');
+      
       const response = await fetch(`${getApiBaseUrl()}/api/v1/graph/skills`, {
         headers: {
-          'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}`
+          'Authorization': `Bearer ${token || decodedToken}`
         }
       });
 
