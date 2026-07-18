@@ -1,4 +1,5 @@
 import os
+from loguru import logger
 
 EXCLUDE_DIRS = {
     'node_modules', '.venv', '.git', '__pycache__', '.pytest_cache',
@@ -86,10 +87,10 @@ def write_file_to_markdown(filepath, relpath, ext, out):
         if not content.endswith('\n'):
             out.write("\n")
         out.write("```\n\n")
-    except UnicodeDecodeError:
-        pass
-    except Exception:
-        pass
+    except UnicodeDecodeError as e:
+        logger.debug(f"Skipping malformed or blocked file processing stage: {e}")
+    except Exception as e:
+        logger.debug(f"Skipping malformed or blocked file processing stage: {e}")
 
 def generate_docs(root_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
