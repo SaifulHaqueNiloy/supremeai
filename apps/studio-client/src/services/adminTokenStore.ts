@@ -15,7 +15,7 @@ export const adminTokenStore = {
 
       const base64Url = tokenParts[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      
+
       // UTF-8 Compliant Native Base64 Parsing
       const jsonPayload = decodeURIComponent(
         window.atob(base64)
@@ -31,7 +31,7 @@ export const adminTokenStore = {
         token_length: token.length,
         timestamp: new Date().toISOString()
       });
-      
+
       return null;
     }
   }
