@@ -33,25 +33,25 @@ def test_defaults():
         "port": "9000",
         "host": "0.0.0.0",
         "supremeai_admin_password_hash": "mock_hash_value_for_test_pass",
-        "openrouter_api_key": "sk-openrouter",
-        "hf_api_key": "sk-hf",
-        "gemini_api_key": "sk-gemini",
-        "deepseek_api_key": "sk-deepseek",
-        "groq_api_key": "sk-groq",
-        "nvidia_api_key": "sk-nvidia",
-        "firecrawl_api_key": "sk-firecrawl",
+        "openrouter_api_key": "TEST_ONLY_OPENROUTER_API_KEY",
+        "hf_api_key": "TEST_ONLY_HF_API_KEY",
+        "gemini_api_key": "TEST_ONLY_GEMINI_API_KEY",
+        "deepseek_api_key": "TEST_ONLY_DEEPSEEK_API_KEY",
+        "groq_api_key": "TEST_ONLY_GROQ_API_KEY",
+        "nvidia_api_key": "TEST_ONLY_NVIDIA_API_KEY",
+        "firecrawl_api_key": "TEST_ONLY_FIRECRAWL_API_KEY",
         "sentry_dsn": "https://sentry.io/123",
         "ollama_url": "http://ollama:11434",
         "gcp_project_id": "test-project",
         "gcp_region": "europe-west1",
         "max_cost_per_task": "1.5",
-        "STRIPE_API_KEY": "sk_test_123",
-        "STRIPE_WEBHOOK_SECRET": "whsec_123",
-        "CI_WEBHOOK_SECRET": "supreme-ci-secret-2026",
+        "STRIPE_API_KEY": "TEST_ONLY_STRIPE_API_KEY",
+        "STRIPE_WEBHOOK_SECRET": "TEST_ONLY_STRIPE_WEBHOOK_SECRET",
+        "CI_WEBHOOK_SECRET": "TEST_ONLY_CI_WEBHOOK_SECRET",
         "ADMIN_RULES_DB_PATH": "/tmp/rules.db",
         "MEMORY_DB_DIR": "/tmp/memory",
         "SKILL_REGISTRY_PATH": "/tmp/skills.json",
-        "SUPREMEAI_JWT_SECRET": "a" * 128,
+        "SUPREMEAI_JWT_SECRET": "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD",
         "CORS_ORIGINS": '["https://supremeai.web.app"]',
         "ALLOWED_HOSTS": '["api.supremeai.com"]',
     },
@@ -66,13 +66,13 @@ def test_env_override(mock_fetch):
     assert s.port == 9000
     assert s.host == "0.0.0.0"
     assert s.supremeai_admin_password_hash == "mock_hash_value_for_test_pass"
-    assert s.openrouter_api_key == "sk-openrouter"
-    assert s.hf_api_key == "sk-hf"
-    assert s.gemini_api_key == "sk-gemini"
-    assert s.deepseek_api_key == "sk-deepseek"
-    assert s.groq_api_key == "sk-groq"
-    assert s.nvidia_api_key == "sk-nvidia"
-    assert s.firecrawl_api_key == "sk-firecrawl"
+    assert s.openrouter_api_key == "TEST_ONLY_OPENROUTER_API_KEY"
+    assert s.hf_api_key == "TEST_ONLY_HF_API_KEY"
+    assert s.gemini_api_key == "TEST_ONLY_GEMINI_API_KEY"
+    assert s.deepseek_api_key == "TEST_ONLY_DEEPSEEK_API_KEY"
+    assert s.groq_api_key == "TEST_ONLY_GROQ_API_KEY"
+    assert s.nvidia_api_key == "TEST_ONLY_NVIDIA_API_KEY"
+    assert s.firecrawl_api_key == "TEST_ONLY_FIRECRAWL_API_KEY"
     assert s.sentry_dsn == "https://sentry.io/123"
     assert s.ollama_url == "http://ollama:11434"
     assert s.gcp_project_id == "test-project"
@@ -109,15 +109,15 @@ def test_parse_allowed_hosts_empty_string():
 @patch("core.config.secret_vault.fetch_secret", side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()))
 def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
     monkeypatch.setenv("ENV", "production")
-    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-mock-123")
-    monkeypatch.setenv("GEMINI_API_KEY", "mock-key")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "TEST_ONLY_OPENROUTER_API_KEY")
+    monkeypatch.setenv("GEMINI_API_KEY", "TEST_ONLY_GEMINI_API_KEY")
     monkeypatch.setenv("CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
-    monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "a" * 128)
+    monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD")
     monkeypatch.setenv("SUPREMEAI_ADMIN_PASSWORD_HASH", "mock_hash_value_for_test_pass")
     monkeypatch.setenv("ALLOWED_HOSTS", '["api.supremeai.com"]')
-    monkeypatch.setenv("STRIPE_API_KEY", "sk_test_123")
-    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_123")
-    monkeypatch.setenv("CI_WEBHOOK_SECRET", "supreme-ci-secret-2026")
+    monkeypatch.setenv("STRIPE_API_KEY", "TEST_ONLY_STRIPE_API_KEY")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "TEST_ONLY_STRIPE_WEBHOOK_SECRET")
+    monkeypatch.setenv("CI_WEBHOOK_SECRET", "TEST_ONLY_CI_WEBHOOK_SECRET")
     s = Settings()
     assert "http://127.0.0.1:3000" not in s.cors_origins
     assert "https://example.com" in s.cors_origins
@@ -130,9 +130,9 @@ def test_validate_production_completeness_raises_on_missing_production_keys(mock
     s = Settings.model_construct(
         env="production",
         jwt_secret="secret",
-        ci_webhook_secret="supreme-ci-secret-2026",
-        stripe_api_key="sk_test_123",
-        stripe_webhook_secret="whsec_123",
+        ci_webhook_secret="TEST_ONLY_CI_WEBHOOK_SECRET",
+        stripe_api_key="TEST_ONLY_STRIPE_API_KEY",
+        stripe_webhook_secret="TEST_ONLY_STRIPE_WEBHOOK_SECRET",
     )
     with pytest.raises(ValueError):
         s.validate_production_completeness()

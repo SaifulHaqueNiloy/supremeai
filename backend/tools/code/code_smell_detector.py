@@ -195,7 +195,7 @@ class CodeSmellDetector:
         bodies: dict[str, list[dict[str, Any]]] = {}
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-                src = ast.dump(node.body)
+                src = "\n".join(ast.dump(stmt) for stmt in node.body)
                 norm = self._normalize(src)
                 bodies.setdefault(norm, []).append(
                     {
@@ -529,7 +529,7 @@ class CodeSmellDetector:
 
         results: analyze_directory()-এর আউটপুট (path -> list of smells)
         """
-        rules: dict[str, dict[str, str]] = {}
+        rules: dict[str, Any] = {}
         sarif_results: list[dict[str, Any]] = []
 
         severity_map = {
@@ -600,8 +600,8 @@ class CodeSmellDetector:
             os.chmod(hook_path, 0o755)  # noqa: S103
             logger.success(f"Pre-commit hook installed at {hook_path}")
             return True
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to install pre-commit hook: {e}")
+        except (OSError, TypeError) as e:
+            logger.error(f"Failed to install pre-commit hook: {e}", exc_info=True)
             return False
 
     def track_history(self, results: dict[str, list[dict[str, Any]]], history_file: str = "data/code_smell_history.json") -> dict[str, Any]:
@@ -611,14 +611,15 @@ class CodeSmellDetector:
         প্রতি রানে মোট স্মেল সংখ্যা সংরক্ষণ করে ট্রেন্ড তৈরি করে।
         """
         total_smells = sum(len(v) for k, v in results.items() if not k.startswith("_"))
-        record = {"timestamp": time.time(), "total_smells": total_smells, "files_affected": len(results)}
+        record: dict[str, Any] = {"timestamp": time.time(), "total_smells": total_smells, "files_affected": len(results)}
 
         history: list[dict[str, Any]] = []
         try:
             if os.path.exists(history_file):
                 with open(history_file, encoding="utf-8") as f:
                     history = json.load(f)
-        except Exception:  # noqa: BLE001
+        except (json.JSONDecodeError, OSError, TypeError) as e:
+            logger.warning(f"History file read failed for {history_file}: {e}")
             history = []
 
         history.append(record)
@@ -626,7 +627,7 @@ class CodeSmellDetector:
             os.makedirs(os.path.dirname(history_file), exist_ok=True)
             with open(history_file, "w", encoding="utf-8") as f:
                 json.dump(history[-100:], f, indent=2)
-        except Exception as e:  # noqa: BLE001
+        except (OSError, TypeError) as e:
             logger.debug(f"History tracking write failed: {e}")
 
         # বাংলা মন্তব্য: ট্রেন্ড — আগের রানের চেয়ে কম স্মেল হলে উন্নতি।
