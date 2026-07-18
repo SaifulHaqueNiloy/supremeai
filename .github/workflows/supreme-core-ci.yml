@@ -178,6 +178,14 @@ jobs:
           ruff check backend/ --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501
           echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
 
+      - name: 🛡️ Gate 3.5 — Admin Router Auth Lint Guard
+        if: needs.changes.outputs.docs_only != 'true'
+        # বাংলা মন্তব্য: অ্যাডমিন রাউটার বা乞丐-level `Depends(get_current_admin)` enforcement
+        run: |
+          echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
+          python .github/scripts/verify_admin_auth.py
+          echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
+
       - name: 📋 Gate 3 — Observability Check (No httpx without timeout)
         if: needs.changes.outputs.docs_only != 'true'
         # বাংলা মন্তব্য: timeout ছাড়া httpx.AsyncClient() ব্যবহার করলে fail

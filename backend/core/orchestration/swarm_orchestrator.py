@@ -162,7 +162,7 @@ class SwarmOrchestrator:
         task_graph = await self._get_dag_for_intent(workspace.intent)
         workspace.log(f"SwarmOrchestrator: Constructed DAG with nodes: {list(task_graph.keys())}")
 
-        completed_tasks = set()
+        completed_tasks: set[str] = set()
 
         async def _execute_dag():
             # Standard DAG execution for non-loop parts
