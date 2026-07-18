@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAdminToken } from '../services/adminTokenStore';
+import { adminTokenStore } from '../services/adminTokenStore';
 import { getApiBaseUrl } from '../utils/api';
 import { THEME_ORDER } from './ThemeConstants';
 import { ThemeContext } from './ThemeContext';
@@ -13,7 +13,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     // বাংলা মন্তব্য: Race Condition এড়াতে AbortController ব্যবহার করা হয়েছে
     const controller = new AbortController();
-    const token = getAdminToken();
+    const token = adminTokenStore.getDecodedToken();
 
     if (!token) return;
 
@@ -73,7 +73,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // ব্যাকএন্ডে async সিঙ্ক করা
     const API_BASE = getApiBaseUrl();
-    const token = getAdminToken();
+    const token = adminTokenStore.getDecodedToken();
     fetch(`${API_BASE}/api/v1/preferences`, {
       method: 'POST',
       headers: {

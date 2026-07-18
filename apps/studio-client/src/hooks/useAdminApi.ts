@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/apiClient';
-import { getAdminToken } from '../services/adminTokenStore';
+import { adminTokenStore } from '../services/adminTokenStore';
 
 // বাংলা মন্তব্য: টোকেন চেক — টোকেন ছাড়া কোনো admin-api কল হবে না
-const hasToken = (): boolean => !!getAdminToken();
+const hasToken = (): boolean => !!adminTokenStore.getDecodedToken();
 
 export function useAdminRules() {
   return useQuery({

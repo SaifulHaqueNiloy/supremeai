@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { useCIReports } from '../../hooks/useAdminApi';
 import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken } from '../../services/adminTokenStore';
+import { adminTokenStore } from '../../services/adminTokenStore';
 import { apiClient } from '../../services/apiClient';
 import type { CIReport } from '../../types';
 
@@ -73,7 +73,7 @@ export function CICDVisualizer() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAdminToken()}`
+          'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}`
         }
       });
       if (res.ok) {
