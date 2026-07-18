@@ -7,16 +7,18 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from backend.schemas.skill_index import SkillIndexManager
-from backend.schemas.skill_manifest import SkillManifest
-from backend.schemas.skill_manifest import SkillStatus
+# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. schemas ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest
+from schemas.skill_manifest import SkillStatus
 
 
 logger = logging.getLogger("supremeai.librarian")
 
 
 class SkillLibrarian:
-    def __init__(self, base_skills_dir: str = "backend/skills"):
+    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
+    def __init__(self, base_skills_dir: str = "skills"):
         self.base_dir = Path(base_skills_dir)
         self.quarantine_dir = self.base_dir / "quarantine"
         self.approved_dir = self.base_dir / "approved"
@@ -24,7 +26,7 @@ class SkillLibrarian:
 
         self.approved_dir.mkdir(parents=True, exist_ok=True)
         self.index_manager = SkillIndexManager()
-        # এনভায়রনমেন্ট থেকে ডিসকর্ড ওয়েবহুক ইউআরএল লোড
+        # এনভায়রনমেন্ট থেকে ডিসকورد ওয়েবহুক ইউআরএল লোড
         self.webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
 
     def list_quarantine_queue(self) -> list[dict[str, Any]]:
@@ -65,7 +67,7 @@ class SkillLibrarian:
             else:
                 return {"success": False, "detail": "Invalid approval action identifier."}
 
-            # গ্লোবাল ইনডেক্স ফাইল আপডেট
+            # গলোবাল ইনডেক্স ফাইল আপডেট
             self.index_manager.update_skill(manifest)
             self._trigger_admin_notification(skill_id, action)
 

@@ -15,6 +15,7 @@ from fastapi.websockets import WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel
 
+from core.code_validator import AICodeValidator
 from core.security.auth_middleware import verify_admin_session_fail_closed
 from models.pending_tasks import TaskStatus
 from models.pending_tasks import list_pending
@@ -70,12 +71,13 @@ def approve_task(
             if not skill_name.replace("_", "").replace("-", "").isalnum():
                 raise HTTPException(status_code=400, detail="Invalid skill name format")
 
-            validator = CodeValidator()
+            # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের জন্য সঠিক AICodeValidator ক্লাস এবং can_use ভ্যালিডেশন কী ব্যবহার করা হলো
+            validator = AICodeValidator()
             validation_result = validator.validate_before_use(code)
-            if not validation_result.get("valid", False):
+            if not validation_result.get("can_use", False):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Code validation failed: {validation_result.get('error', 'Unknown error')}",
+                    detail=f"Code validation failed: {validation_result.get('checks', {})}",
                 )
 
             skills_dir = _get_allowed_skills_dir()

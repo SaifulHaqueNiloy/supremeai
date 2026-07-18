@@ -11,18 +11,20 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from backend.agents.morphic_adapter import MorphicAdapter
-from backend.sandbox.docker_sandbox import DockerSandbox
-from backend.schemas.skill_index import SkillIndexManager
-from backend.schemas.skill_manifest import SkillManifest
-from backend.schemas.skill_manifest import SkillStatus
+# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
+from agents.morphic_adapter import MorphicAdapter
+from sandbox.docker_sandbox import DockerSandbox
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest
+from schemas.skill_manifest import SkillStatus
 
 
 logger = logging.getLogger("supremeai.skill_ingestor")
 
 
 class SkillIngestor:
-    def __init__(self, base_skills_dir: str = "backend/skills"):
+    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
+    def __init__(self, base_skills_dir: str = "skills"):
         self.base_dir = Path(base_skills_dir)
         self.staging_dir = self.base_dir / "staging"
         self.quarantine_dir = self.base_dir / "quarantine"

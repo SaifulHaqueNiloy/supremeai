@@ -4,11 +4,13 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from backend.sandbox.docker_sandbox import DockerSandbox
+# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
+from sandbox.docker_sandbox import DockerSandbox
 
 
 class EphemeralExecutor:
-    def __init__(self, base_skills_dir: str = "backend/skills"):
+    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
+    def __init__(self, base_skills_dir: str = "skills"):
         self.base_dir = Path(base_skills_dir)
         self.ephemeral_dir = self.base_dir / "ephemeral"
         self.ephemeral_dir.mkdir(parents=True, exist_ok=True)
