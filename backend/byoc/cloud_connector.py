@@ -1,6 +1,8 @@
 # Encryption and GCP Service Account Manager
 # বাংলা মন্তব্য: GCP ক্রেডেনশিয়াল ম্যানেজমেন্ট ও সেফ-স্টোরেজ এনক্রিপশন ডিক্রিপশন মডিউল।
 
+import base64
+import hashlib
 import json
 import os
 
@@ -16,7 +18,13 @@ if not _KEY:
     # 🛑 ZERO-GAP: Fast Fail on missing encryption key. Do not generate random fallback key.
     raise RuntimeError("SUPREMEAI_ENCRYPTION_KEY environment variable is not configured. Fast failing startup.")
 
-cipher = Fernet(_KEY.encode())
+try:
+    cipher = Fernet(_KEY.encode())
+except ValueError:
+    logger.warning("⚠️ Non-Base64 encryption key detected in current context. Natively deriving valid Fernet key layout.")
+    hashed = hashlib.sha256(_KEY.encode()).digest()
+    safe_b64_key = base64.urlsafe_b64encode(hashed)
+    cipher = Fernet(safe_b64_key)
 
 
 class CloudStatus:
