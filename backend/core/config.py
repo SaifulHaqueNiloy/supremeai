@@ -206,6 +206,9 @@ class Settings(BaseSettings):
     admin_rules_db: str = Field(default="", validation_alias="ADMIN_RULES_DB_PATH")
     memory_db_dir: str = Field(default="", validation_alias="MEMORY_DB_DIR")
     skill_registry_path: str = Field(default="", validation_alias="SKILL_REGISTRY_PATH")
+    # বাংলা মন্তব্য: ChromaDB ভেক্টর ডাটাবেসের জন্য কনফিগারেবল পাথ যোগ করা হলো।
+    chromadb_path: str = Field(default="supremeai_knowledge_base", validation_alias="CHROMADB_PATH")
+
 
     # ── Sandbox config — env-driven ──────────────────────────────────────────
     sandbox_root: str = Field(default="/tmp/sandboxes", validation_alias="SANDBOX_ROOT")  # nosec B108
