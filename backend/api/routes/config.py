@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 from fastapi import Response
 
+
 # টেস্ট কম্প্যাটিবিলিটি:
 # `tests/test_api_new_endpoints.py::test_config_endpoint_admin_control` monkeypatch করে
 # `backend.api.routes.config.db.client` সেট করে।
