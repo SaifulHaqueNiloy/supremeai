@@ -44,6 +44,6 @@ class SupremeLogBatcher:
             with self._lock:
                 self._buffer = batch_to_process + self._buffer
 
-            err_msg = f"Failed to flush log batch of size {len(batch_to_process)}. " f"Re-queueing tokens: {e}"
+            err_msg = f"Failed to flush log batch of size {len(batch_to_process)}. Re-queueing tokens: {e}"
             logger.error(f"🚨 [LOG_BATCHER_LEAK]: {err_msg}")
             raise LogBatcherError(err_msg) from e
