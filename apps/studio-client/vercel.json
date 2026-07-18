@@ -2,35 +2,35 @@
   "rewrites": [
     {
       "source": "/api/preferences/:user_id/stream",
-      "destination": "https://supremeai-backend-65hl.onrender.com/api/preferences/:user_id/stream"
+      "destination": "https://supremeai-backend.onrender.com/api/preferences/:user_id/stream"
     },
     {
       "source": "/logs/stream",
-      "destination": "https://supremeai-backend-65hl.onrender.com/logs/stream"
+      "destination": "https://supremeai-backend.onrender.com/logs/stream"
     },
     {
       "source": "/default/stream",
-      "destination": "https://supremeai-backend-65hl.onrender.com/default/stream"
+      "destination": "https://supremeai-backend.onrender.com/default/stream"
     },
     {
       "source": "/:user_id/stream",
-      "destination": "https://supremeai-backend-65hl.onrender.com/:user_id/stream"
+      "destination": "https://supremeai-backend.onrender.com/:user_id/stream"
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://supremeai-backend-65hl.onrender.com/api/$1"
+      "destination": "https://supremeai-backend.onrender.com/api/$1"
     },
     {
       "source": "/admin-api/(.*)",
-      "destination": "https://supremeai-backend-65hl.onrender.com/admin-api/$1"
+      "destination": "https://supremeai-backend.onrender.com/admin-api/$1"
     },
     {
       "source": "/ws/(.*)",
-      "destination": "https://supremeai-backend-65hl.onrender.com/ws/$1"
+      "destination": "https://supremeai-backend.onrender.com/ws/$1"
     },
     {
       "source": "/telemetry/(.*)",
-      "destination": "https://supremeai-backend-65hl.onrender.com/telemetry/$1"
+      "destination": "https://supremeai-backend.onrender.com/telemetry/$1"
     },
     {
       "source": "/(.*)",
