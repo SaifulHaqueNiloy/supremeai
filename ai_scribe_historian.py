@@ -15,15 +15,17 @@ import concurrent.futures
 import threading
 
 import sys
-# Python path-এ backend, scripts এবং root ডিরেক্টরি যোগ করা হচ্ছে যাতে মডিউলগুলো খুঁজে পাওয়া যায়।
-sys.path.insert(0, str(Path(__file__).parent / "backend"))
-sys.path.insert(0, str(Path(__file__).parent / "scripts"))
-sys.path.insert(0, str(Path(__file__).parent))
-from core.config import settings
 import ast
-
-# নলেজ বেস ইনডেক্সার ইম্পোর্ট করা
-from knowledge_indexer import run_indexing as run_knowledge_indexing
+# বাংলা মন্তব্য: ক্লিন ইমপোর্ট স্ট্রাকচার যাতে sys.path.insert হ্যাক এড়ানো যায়।
+try:
+    from backend.core.config import settings
+    from scripts.knowledge_indexer import run_indexing as run_knowledge_indexing
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from core.config import settings
+    from knowledge_indexer import run_indexing as run_knowledge_indexing
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -32,10 +34,22 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 litellm.set_verbose=False
 CACHE_FILE = Path(__file__).parent / ".scribe_cache.json"
 litellm.max_retries = 3
-litellm.retry_strategy = {
-    "wait_time": 16, # wait 16 seconds between retries
-    "allowed_exceptions": [Exception] # retry on all exceptions
-}
+
+# বাংলা মন্তব্য: অনির্দিষ্ট Exceptions-এ রিট্রাই বন্ধ করা হলো এবং litellm এর ডিফল্ট হ্যান্ডলিং বা নির্দিষ্ট ক্লাস ব্যবহার করা হচ্ছে।
+try:
+    import litellm.exceptions
+    litellm.retry_strategy = {
+        "wait_time": 16,
+        "allowed_exceptions": [
+            litellm.exceptions.RateLimitError,
+            litellm.exceptions.Timeout,
+            litellm.exceptions.APIConnectionError,
+            litellm.exceptions.InternalServerError
+        ]
+    }
+except AttributeError:
+    pass
+
 
 
 TARGET_DIRECTORIES = ["backend/core", "backend/tools"]
@@ -161,10 +175,12 @@ def get_ai_response(prompt: str, max_retries_per_key: int = 3, retry_backoff_sec
         except Exception as e:
             last_error = e
             error_msg = str(e)
-            recoverable = any(code in error_msg for code in ("429", "RESOURCE_EXHAUSTED", "RateLimit", "403", "PERMISSION_DENIED", "API_KEY_SERVICE_BLOCKED"))
+            # বাংলা মন্তব্য: শুধুমাত্র transient/rate limit এবং key block এররের জন্য কী রোটেট বা রিট্রাই করা হবে। অথরাইজেশন এরর (403, PERMISSION_DENIED) সরাসরি রেইজ করা হবে।
+            recoverable = any(code in error_msg for code in ("429", "RESOURCE_EXHAUSTED", "RateLimit", "500", "502", "503", "504", "Timeout", "API_KEY_SERVICE_BLOCKED"))
             if not recoverable:
-                # বাংলা মন্তব্য: অপ্রত্যাশিত এরর সাথে সাথে থ্রো করা হচ্ছে।
+                # বাংলা মন্তব্য: অপ্রত্যাশিত বা স্থায়ী এরর সাথে সাথে থ্রো করা হচ্ছে।
                 raise
+
 
             logging.warning(f"Key ending in ...{current_key[-4:]} failed (attempt {attempt+1}/{max_retries}), rotating key...")
             with api_key_lock:
