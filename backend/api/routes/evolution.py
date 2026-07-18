@@ -6,6 +6,8 @@ from datetime import UTC
 from datetime import datetime
 from pathlib import Path
 
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -27,6 +29,8 @@ from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 from database.session import get_db_session
 from models.evolution import CodeProposal
+from core.evolution.agent_breeder import AgentBreeder
+from core.evolution.performance_oracle import PerformanceOracle
 
 
 class GraphNode(BaseModel):
@@ -264,3 +268,48 @@ async def execute_swarm_blueprint(flow_id: str, payload: dict = None):
     """
     logger.info(f"Executing swarm blueprint flow: {flow_id}")
     return {"status": "success", "message": f"Swarm blueprint flow {flow_id} executed successfully"}
+
+
+# --- Extended Breeder & Oracle Routes ---
+# বাংলা মন্তব্য: জেনেটিক প্রম্পট ব্রিডার এবং পারফরম্যান্স মূল্যায়ন এপিআই এন্ডপয়েন্টসমূহ।
+
+
+class BreedRequest(BaseModel):
+    parent_1: dict[str, Any]
+    parent_2: dict[str, Any]
+    method: str = "uniform"
+    mutation_rate: float = 0.05
+
+
+class PerformanceRequest(BaseModel):
+    agent_name: str
+    metrics: dict[str, Any]
+
+
+@router.post("/breed")
+async def breed_agents(payload: BreedRequest):
+    """Breed new agent genetic offspring from parents."""
+    # বাংলা মন্তব্য: জেনেটিক অ্যালগরিদমের মাধ্যমে এজেন্টের জিনোমে ব্রিডিং ও মিউটেশন পরিচালনা এন্ডপয়েন্ট
+    breeder = AgentBreeder(mutation_rate=payload.mutation_rate)
+    child_dna = breeder.crossover(payload.parent_1, payload.parent_2, method=payload.method)
+    mutated_dna = breeder.mutate(child_dna)
+    return {
+        "success": True,
+        "method": payload.method,
+        "inherited_traits": child_dna,
+        "novel_traits": mutated_dna,
+    }
+
+
+@router.post("/evaluate-performance")
+async def evaluate_performance(payload: PerformanceRequest):
+    """Evaluate agent performance and trigger alerts if thresholds are breached."""
+    # বাংলা মন্তব্য: এজেন্টের কাজের গতি ও নির্ভুলতা বিশ্লেষণ করে কোনো অ্যালার্ট ট্রিগার হচ্ছে কি না তা বের করা
+    oracle = PerformanceOracle()
+    alerts = oracle.evaluate_performance(payload.agent_name, payload.metrics)
+    return {
+        "success": True,
+        "agent_name": payload.agent_name,
+        "alerts_triggered": alerts,
+        "alerts_count": len(alerts),
+    }
