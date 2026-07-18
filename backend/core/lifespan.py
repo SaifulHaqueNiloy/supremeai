@@ -266,7 +266,7 @@ async def app_lifespan(app):
     try:
         from database import db as supabase_db
 
-        if os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL_POOLER"):
+        if settings.supabase_database_url:
             # বাংলা: sync call in async context — thread-এ চালানো হচ্ছে blocking এড়াতে।
             # wait_for 30s timeout দেওয়া হলো: psycopg2.connect হ্যাং করলে lifespan ব্লক না হয়।
             await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)

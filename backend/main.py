@@ -24,21 +24,16 @@ setup_logging()
 
 
 def _handle_sigterm(signum: int, frame: object) -> None:  # noqa: ANN401
-    """SIGTERM/SIGINT handler — performs graceful shutdown with configurable drain window."""
-    logger.info("\ud83d\uded1 SIGTERM received. Initiating graceful shutdown mesh...")
-    # বাংলা মন্তব্য: চলমান Docker Sandbox ট্রান্জাকশন ও background task drain করার জন্য
-    # কনফিগারেবল grace period (default 10s, Gemini avg latency 4.75s এর double safety margin)
-    drain_seconds = int(os.getenv("SIGTERM_DRAIN_SECONDS", "10"))
-    logger.info(f"⏳ Waiting {drain_seconds} seconds for running sandbox tasks to drain safely...")
-    # Incremental sleep to allow signal re-entry and responsive shutdown
-    waited = 0
-    while waited < drain_seconds:
-        time.sleep(1)
-        waited += 1
-        if waited % 5 == 0:
-            logger.debug(f"Shutdown drain progress: {waited}/{drain_seconds}s elapsed")
-    logger.info("🧹 All engine threads drained. Exiting process safely.")
-    sys.exit(0)
+    """SIGTERM/SIGINT handler.
+
+    SupremeAI FastAPI shutdown is handled by Uvicorn + `lifespan.app_lifespan`.
+    This handler must NOT force `sys.exit()` because that can bypass lifespan teardown.
+    """
+    logger.info(f"🚨 Signal received ({signum}). Initiating graceful shutdown via Uvicorn/FastAPI lifespan...")
+    # Best-effort observability: let operators know shutdown intent was triggered.
+    os.environ["UVICORN_SHUTDOWN_REQUESTED"] = "1"
+    # Do not block here; return control to Uvicorn so it can run shutdown hooks.
+    return
 
 
 signal.signal(signal.SIGTERM, _handle_sigterm)
@@ -78,8 +73,8 @@ def run_server() -> None:
                 import sentry_sdk
 
                 sentry_sdk.capture_exception(exc)
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as sentry_exc:  # noqa: BLE001
+                logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
     except OSError as exc:
         logger.critical(f"Server failed to start (port/bind error on {settings.host}:{port}): {exc}")
@@ -88,8 +83,8 @@ def run_server() -> None:
                 import sentry_sdk
 
                 sentry_sdk.capture_exception(exc)
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as sentry_exc:  # noqa: BLE001
+                logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
 
 

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from datetime import UTC
 from datetime import datetime
@@ -54,8 +55,6 @@ class NightlyChaosAuditor:
                         failures += 1
                         logger.critical("🚨 [SECURITY BREACH] Sandbox bypass detected during autonomous fuzzing!")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
                     logging.warning(f"Exception suppressed: {e}")  # SecurityError আশা করা হচ্ছে, তাই এটি পাস
 
             # 🧪 টেস্ট ২: রানটাইম কানেকশন পুল স্ট্রেস চেক (Synthetic Heavy Requests)

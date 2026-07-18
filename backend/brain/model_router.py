@@ -5,6 +5,7 @@ import asyncio
 import inspect
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from loguru import logger
@@ -12,10 +13,24 @@ from loguru import logger
 from core.config import settings
 from core.llm.llm_gateway import llm_gateway
 
+try:
+    from core.resilience.circuit_breaker import CircuitBreaker
+except ImportError:
+    CircuitBreaker = None  # type: ignore[misc,assignment]
+
+try:
+    from core.services import redis_queue
+except ImportError:
+    redis_queue = None  # type: ignore[misc,assignment]
+
+try:
+    from core.llm.free_tier_tracker import get_tracker
+except ImportError:
+    get_tracker = None  # type: ignore[misc,assignment]
+
 
 def run_async_as_sync(coro):
     """Run async coroutine in sync context."""
-    from concurrent.futures import ThreadPoolExecutor
 
     try:
         loop = asyncio.get_running_loop()
@@ -46,9 +61,8 @@ class ModelRouter:
 
     def _get_breaker(self, task_type: str):
         # বাংলা মন্তব্য: প্রতিটি টাস্ক টাইপের জন্য গ্লোবাল রেডিস-ব্যাকড সার্কিট ব্রেকার তৈরি
-        from core.resilience.circuit_breaker import CircuitBreaker
-        from core.services import redis_queue
-
+        if CircuitBreaker is None or redis_queue is None:
+            return None
         if task_type not in self._breakers:
             self._breakers[task_type] = CircuitBreaker(
                 name=f"router_task_{task_type}", failure_threshold=5, recovery_timeout=30.0, redis_queue=redis_queue
@@ -177,10 +191,12 @@ class ModelRouter:
                 logger.warning(f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request.")
                 return {"success": False, "text": "{}", "error": f"Circuit breaker open for {task_type}"}
 
-            from core.llm.free_tier_tracker import get_tracker
-
-            tracker = get_tracker()
-            best_provider = tracker.get_best_provider(["gemini", "groq", "openrouter"])
+            if get_tracker is None:
+                logger.warning("[ModelRouter] free_tier_tracker unavailable, using default provider")
+                best_provider = "gemini"
+            else:
+                tracker = get_tracker()
+                best_provider = tracker.get_best_provider(["gemini", "groq", "openrouter"])
 
             if not best_provider:
                 logger.warning("[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock).")

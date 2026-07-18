@@ -1,20 +1,41 @@
+"""Approval Manager — Human-in-the-Loop approval workflow with secure file operations.
+
+বাংলা: মানবাধীন অনুমোদন কর্মকাণ্ড ও নিরাপদ ফাইল অপারেশন সহ।
+"""
+
 import asyncio
+import os
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import WebSocket
+from fastapi import status
 from fastapi.websockets import WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel
 
+from core.security.auth_middleware import verify_admin_session_fail_closed
 from models.pending_tasks import TaskStatus
 from models.pending_tasks import list_pending
 from models.pending_tasks import update_task_status
 
-
 router = APIRouter()
 
 _connections: list[WebSocket] = []
+
+# Path validation for skill generation
+_ALLOWED_SKILLS_DIR = None
+
+
+def _get_allowed_skills_dir() -> str:
+    """Get canonical skills directory path once."""
+    global _ALLOWED_SKILLS_DIR
+    if _ALLOWED_SKILLS_DIR is None:
+        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        _ALLOWED_SKILLS_DIR = os.path.join(backend_dir, "skills")
+    return _ALLOWED_SKILLS_DIR
 
 
 class ApproveRequest(BaseModel):
@@ -23,53 +44,79 @@ class ApproveRequest(BaseModel):
 
 
 @router.get("/pending")
-def get_pending() -> list[dict[str, Any]]:
+def get_pending(_: dict = Depends(verify_admin_session_fail_closed)) -> list[dict[str, Any]]:
+    """Get all pending tasks - REQUIRES admin authentication."""
     return [t.model_dump() for t in list_pending()]
 
 
 @router.post("/approve/{task_id}")
-def approve_task(task_id: str, req: ApproveRequest):
+def approve_task(
+    task_id: str,
+    req: ApproveRequest,
+    _: dict = Depends(verify_admin_session_fail_closed),
+) -> dict[str, Any]:
+    """Approve a pending task - REQUIRES admin authentication."""
     task = update_task_status(task_id, TaskStatus.APPROVED, req.resolved_by, req.reason)
     if not task:
-        return {"status": "error", "detail": "not_found"}
+        raise HTTPException(status_code=404, detail="Task not found")
 
-    # ── Execute Task Logic ──
-    # বাংলা মন্তব্য: অনুমোদিত হওয়ার পর কাজটির ধরণ অনুযায়ী সংশ্লিষ্ট স্কিল বা অ্যাকশন এক্সিকিউট করা হচ্ছে
     if task.task_type == "SKILL_GENERATION":
         try:
-            import os
-
             skill_name = task.payload.get("skill_name")
             code = task.payload.get("generated_code")
-            if skill_name and code:
-                # Resolve paths
-                # বাংলা মন্তব্য: backend root থেকে skills ডিরেক্টরি সঠিক পথে রাইট করা হচ্ছে
-                backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                skills_dir = os.path.join(backend_dir, "skills")
-                os.makedirs(skills_dir, exist_ok=True)
-                path = os.path.join(skills_dir, f"{skill_name}.py")
-                with open(path, "w", encoding="utf-8") as f:
-                    f.write(code)
-                logger.info(f"✅ Approved skill '{skill_name}' successfully written to {path}")
-        except Exception as e:  # noqa: BLE001
+
+            if not skill_name or not code:
+                raise HTTPException(status_code=400, detail="Missing skill_name or generated_code")
+
+            if not skill_name.replace("_", "").replace("-", "").isalnum():
+                raise HTTPException(status_code=400, detail="Invalid skill name format")
+
+            validator = CodeValidator()
+            validation_result = validator.validate_before_use(code)
+            if not validation_result.get("valid", False):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Code validation failed: {validation_result.get('error', 'Unknown error')}",
+                )
+
+            skills_dir = _get_allowed_skills_dir()
+            os.makedirs(skills_dir, exist_ok=True)
+            path = os.path.join(skills_dir, f"{skill_name}.py")
+
+            real_path = os.path.realpath(path)
+            if not real_path.startswith(os.path.realpath(skills_dir)):
+                raise HTTPException(status_code=403, detail="Path traversal attempt blocked")
+
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(code)
+            logger.info(f"✅ Approved skill '{skill_name}' successfully written to {path}")
+
+        except HTTPException:
+            raise
+        except Exception as e:
             logger.error(f"Failed to execute approved skill generation: {e}")
-            return {"status": "execution_failed", "detail": str(e), "task": task.model_dump()}
+            raise HTTPException(status_code=500, detail=f"Execution failed: {e}") from e
 
     return {"status": "approved", "task": task.model_dump()}
 
 
 @router.post("/reject/{task_id}")
-def reject_task(task_id: str, req: ApproveRequest):
+def reject_task(
+    task_id: str,
+    req: ApproveRequest,
+    _: dict = Depends(verify_admin_session_fail_closed),
+) -> dict[str, Any]:
+    """Reject a pending task - REQUIRES admin authentication."""
     task = update_task_status(task_id, TaskStatus.REJECTED, req.resolved_by, req.reason)
     if not task:
-        return {"status": "error", "detail": "not_found"}
-    # If rejected, we simply update the status and drop the execution
+        raise HTTPException(status_code=404, detail="Task not found")
     logger.info(f"❌ Task {task_id} rejected by {req.resolved_by}. Reason: {req.reason}")
     return {"status": "rejected", "task": task.model_dump()}
 
 
 @router.websocket("/ws/hitl")
 async def hitl_ws(ws: WebSocket):
+    """WebSocket endpoint for HITL notifications - no auth (notifications only)."""
     await ws.accept()
     _connections.append(ws)
     try:
@@ -77,3 +124,6 @@ async def hitl_ws(ws: WebSocket):
             await asyncio.sleep(1)
     except WebSocketDisconnect:
         _connections.remove(ws)
+    except asyncio.CancelledError:
+        _connections.remove(ws)
+        raise

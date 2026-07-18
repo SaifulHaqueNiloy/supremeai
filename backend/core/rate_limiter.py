@@ -57,7 +57,7 @@ class AsyncRateLimiter:
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
 
-     async def acquire(self, key: str, limit: int, window: int) -> bool:
+    async def acquire(self, key: str, limit: int, window: int) -> bool:
          if not self._rate_limit_enabled:
              return True
          try:
