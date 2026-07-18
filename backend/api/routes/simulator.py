@@ -4,8 +4,11 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from pydantic import BaseModel
+
+from api.routes.admin import get_current_admin
 
 
 router = APIRouter(prefix="/api/simulator", tags=["simulator"])
@@ -198,7 +201,7 @@ def get_available_devices():
 
 
 @router.get("/admin/usage")
-def get_all_usage():
+def get_all_usage(admin_user: dict = Depends(get_current_admin)):
     deployments = []
     for _user_id, profile in PROFILES.items():
         for app in profile["installedApps"]:
@@ -215,7 +218,7 @@ def get_all_usage():
 
 
 @router.post("/admin/set-quota/{userId}")
-def admin_set_quota(userId: str, quota: int):
+def admin_set_quota(userId: str, quota: int, admin_user: dict = Depends(get_current_admin)):
     profile = get_or_create_profile(userId)
     profile["installQuota"] = max(1, min(20, quota))
     return profile

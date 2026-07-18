@@ -1,15 +1,18 @@
 import time
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 from pydantic import BaseModel
+
+from api.routes.admin import get_current_admin
 
 
 # For this demo/implementation we use dummy functions that would hook into actual services
 # (e.g. GCP, Cloudflare, Upstash, OpenAI keys manager).
 
-router = APIRouter(prefix="/api/admin/cloud-mesh", tags=["cloud-mesh"])
+router = APIRouter(prefix="/api/admin/cloud-mesh", tags=["cloud-mesh"], dependencies=[Depends(get_current_admin)])
 
 
 class CloudNodeTarget(BaseModel):

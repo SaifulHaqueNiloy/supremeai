@@ -14,12 +14,14 @@ import time
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
+from api.routes.admin import get_current_admin
 from loguru import logger
 from pydantic import BaseModel
 
 
-router = APIRouter(prefix="/admin/tenant-limits", tags=["tenant-admin"])
+router = APIRouter(prefix="/admin/tenant-limits", tags=["tenant-admin"], dependencies=[Depends(get_current_admin)])
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
