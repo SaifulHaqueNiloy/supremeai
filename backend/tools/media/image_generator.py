@@ -15,18 +15,20 @@ class HFImageGenerator:
         self.api_key = api_key or getattr(settings, "hf_api_key", "")
         self.default_model = "stabilityai/stable-diffusion-xl-base-1.0"
 
-    def generate_image(
+    async def generate_image(
         self,
         prompt: str,
         model: str | None = None,
         output_path: str = "data/generated_image.png",
     ) -> dict[str, Any]:
         """
-        Calls HuggingFace Inference API text-to-image pipeline.
+        Calls HuggingFace Inference API text-to-image pipeline asynchronously.
         """
+        import asyncio
+
         model = model or self.default_model
         if not self.api_key:
-            # বাংলা মন্তব্য: এপিআই কী অনুপস্থিত থাকলে এআই মক করার বদলে সরাসরি ValueError ছুঁড়ে দেবে, জিরো-স্টাব পলিসি অনুযায়ী।
+            # বাংলা মন্তব্য: এপিআই কী অনুপস্থিত থাকলে এআই মক করার বদলে সরাসরি ValueError ছুঁড়ে দেবে, জিরো-স্টাব পলিসি অনুযায়ী।
             raise ValueError("HF_API_KEY is not configured. HuggingFace image generation requires a valid API key.")
 
         headers = {"Authorization": f"Bearer {self.api_key}"}
@@ -34,17 +36,16 @@ class HFImageGenerator:
 
         try:
             logger.info(f"Generating image via HF Model '{model}' with prompt: {prompt}")
-            with httpx.Client(timeout=60.0) as client:
-                res = client.post(url, headers=headers, json={"inputs": prompt})
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                res = await client.post(url, headers=headers, json={"inputs": prompt})
 
                 # Check for model loading
                 if res.status_code == 503:
-                    estimated_time = res.json().get("estimated_time", 20.0)
+                    estimated_time = float(res.json().get("estimated_time", 20.0))
                     logger.warning(f"HF Model is loading. Estimated time: {estimated_time}s. Retrying once...")
-                    import time
-
-                    time.sleep(estimated_time)
-                    res = client.post(url, headers=headers, json={"inputs": prompt})
+                    # Use non-blocking delays for async HTTP retry
+                    await asyncio.sleep(min(estimated_time, 60.0))
+                    res = await client.post(url, headers=headers, json={"inputs": prompt})
 
                 res.raise_for_status()
                 image_data = res.content
