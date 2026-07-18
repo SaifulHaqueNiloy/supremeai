@@ -17,7 +17,9 @@ from redis import asyncio as aioredis
 
 class SecureRedisManager:
     def __init__(self):
-        self.url = os.getenv("REDIS_URL")
+        from core.config import settings
+
+        self.url = settings.redis_url or os.getenv("REDIS_URL")
         self._client = None
         self._initialized = False
 

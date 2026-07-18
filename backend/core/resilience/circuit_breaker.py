@@ -20,11 +20,9 @@ from loguru import logger
 
 from core.config import settings
 
-
 T = TypeVar("T")
 
 
-# বাংলা মন্তব্য: UP042 ফিক্স — StrEnum ব্যবহার করা হয়েছে (Python 3.11+ এ (str, Enum) deprecated)
 class CircuitBreakerState(StrEnum):
     """Circuit breaker states."""
 
@@ -125,6 +123,8 @@ class CircuitBreaker:
         if inspect.iscoroutinefunction(func):
             return self.acall(func, *args, **kwargs)  # type: ignore[return-value]
 
+        correlation_id = kwargs.pop("_correlation_id", None)
+
         with self._lock:
             if self.state == CircuitBreakerState.OPEN:
                 if self._should_attempt_recovery():
@@ -132,10 +132,13 @@ class CircuitBreaker:
                     self.state = CircuitBreakerState.HALF_OPEN
                     self._recovery_in_progress = True
                 else:
-                    raise CircuitBreakerOpenError(self.name, self.state)
+                    err = CircuitBreakerOpenError(self.name, self.state)
+                    logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
+                    raise err
             elif self.state == CircuitBreakerState.HALF_OPEN:
                 if self._recovery_in_progress:
-                    raise CircuitBreakerOpenError(self.name, self.state)
+                    err = CircuitBreakerOpenError(self.name, self.state)
+                    raise err
                 self._recovery_in_progress = True
 
         try:
@@ -146,8 +149,12 @@ class CircuitBreaker:
             logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
             self._mark_failure()
             raise
-        except Exception:
-            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error")
+        except CircuitBreakerOpenError:
+            raise
+        except Exception as exc:
+            logger.opt(exception=True).error(
+                f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}"
+            )
             self._mark_failure()
             raise
 
@@ -159,6 +166,8 @@ class CircuitBreaker:
         Raises:
             CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
         """
+        correlation_id = kwargs.pop("_correlation_id", None)
+
         with self._lock:
             if self.state == CircuitBreakerState.OPEN:
                 if self._should_attempt_recovery():
@@ -166,10 +175,13 @@ class CircuitBreaker:
                     self.state = CircuitBreakerState.HALF_OPEN
                     self._recovery_in_progress = True
                 else:
-                    raise CircuitBreakerOpenError(self.name, self.state)
+                    err = CircuitBreakerOpenError(self.name, self.state)
+                    logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
+                    raise err
             elif self.state == CircuitBreakerState.HALF_OPEN:
                 if self._recovery_in_progress:
-                    raise CircuitBreakerOpenError(self.name, self.state)
+                    err = CircuitBreakerOpenError(self.name, self.state)
+                    raise err
                 self._recovery_in_progress = True
 
         try:
@@ -180,8 +192,12 @@ class CircuitBreaker:
             logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
             self._mark_failure()
             raise
-        except Exception:
-            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error")
+        except CircuitBreakerOpenError:
+            raise
+        except Exception as exc:
+            logger.opt(exception=True).error(
+                f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}"
+            )
             self._mark_failure()
             raise
 

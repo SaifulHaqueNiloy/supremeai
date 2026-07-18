@@ -98,9 +98,9 @@ class Settings(BaseSettings):
     )
 
     # বাংলা মন্তব্য: Admin email list সম্পূর্ণ env-driven
-    admin_emails: list[str] = Field(default=[], validation_alias="ADMIN_EMAILS")
+    # (Moved to Security & Auth Config section to avoid duplication)
 
-    # বাংলা মন্তব্য: Zero-Trust Host Validation — empty = crash
+    # বালা মন্তব্য: Zero-Trust Host Validation — empty = crash
     allowed_hosts: str | list[str] = Field(
         default_factory=list,
         validation_alias="ALLOWED_HOSTS",
@@ -110,11 +110,6 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(
         default="",
         validation_alias="SUPREMEAI_JWT_SECRET",
-    )
-
-    supremeai_admin_password_hash: str | None = Field(
-        default=None,
-        validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH",
     )
 
     # বাংলা মন্তব্য: Encryption key — fail-fast on missing

@@ -8,6 +8,8 @@
 
 import asyncio
 import logging
+import os
+import sys
 from collections.abc import Callable
 from datetime import UTC
 from datetime import datetime
@@ -51,9 +53,6 @@ class Orchestrator:
         # Add budget guardian task
         async def _run_budget_guardian() -> None:
             try:
-                import os
-                import sys
-
                 # Still need to add to sys.path safely if running from backend root
                 script_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
                 if script_dir not in sys.path:
