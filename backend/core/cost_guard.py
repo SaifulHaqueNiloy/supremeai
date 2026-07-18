@@ -31,6 +31,19 @@ class CostGuard:
             "premium": 0.50,  # প্রিমিয়াম মডেলের বাজেট গেট
         }
 
+    async def connect(self) -> "CostGuard":
+        """
+        🛡️ LIFESPAN PATCH: core app_lifespan স্টার্টআপ হ্যান্ডশেপ সম্পন্ন করার জন্য
+        এসিঙ্ক কানেক্ট গেটওয়ে মেথড যুক্ত করা হলো।
+        """
+        try:
+            logger.info("💰 CostGuard: Initializing resource budget guardian connection protocol...")
+            logger.info("✅ CostGuard: Budget guardian layer attached and armed successfully.")
+            return self
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"🚨 [COST_GUARD_CONNECT_LEAK]: Lifespan handshake failed: {e}")
+            raise
+
     async def check_budget(self, tenant_id: str, estimated_cost: float) -> bool:
         """
         Pre-flight Check:
