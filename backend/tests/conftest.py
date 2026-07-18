@@ -43,13 +43,14 @@ sys.modules["chromadb.utils"] = create_mock_module("chromadb.utils", is_package=
 sys.modules["chromadb.utils.embedding_functions"] = create_mock_module("chromadb.utils.embedding_functions")
 sys.modules["cachetools"] = create_mock_module("cachetools", is_package=True)
 
-os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_RqaVwno="
-os.environ["ENCRYPTION_KEY"] = "9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_RqaVwno="
-os.environ["STRIPE_API_KEY"] = "dummy_stripe_key"
-os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_dummy"
-os.environ["OPENROUTER_API_KEY"] = "sk-or-v1-dummy"
-os.environ["GEMINI_API_KEY"] = "AIzaSy_dummy"
-os.environ["CI_WEBHOOK_SECRET"] = "dummy_ci"
+# ✅ SECURITY: Use explicit test-only placeholders that cannot be mistaken for real credentials.
+os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
+os.environ["ENCRYPTION_KEY"] = "TEST_ONLY_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
+os.environ["STRIPE_API_KEY"] = "TEST_ONLY_STRIPE_API_KEY"
+os.environ["STRIPE_WEBHOOK_SECRET"] = "TEST_ONLY_STRIPE_WEBHOOK_SECRET"
+os.environ["OPENROUTER_API_KEY"] = "TEST_ONLY_OPENROUTER_API_KEY"
+os.environ["GEMINI_API_KEY"] = "TEST_ONLY_GEMINI_API_KEY"
+os.environ["CI_WEBHOOK_SECRET"] = "TEST_ONLY_CI_WEBHOOK_SECRET"
 os.environ["ENV"] = "test"
 os.environ["DOCS_PASSWORD"] = "dummy_pass"
 os.environ["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "dummy_admin_hash"
@@ -125,13 +126,13 @@ from core.security.rbac import RoleBasedAccessControl
 
 _TEST_ENV_DEFAULTS = {
     "ENV": "test",
-    "OPENROUTER_API_KEY": "mock_openrouter",
-    "HF_API_KEY": "mock_hf",
-    "GEMINI_API_KEY": "mock_gemini",
-    "DEEPSEEK_API_KEY": "mock_deepseek",
-    "GROQ_API_KEY": "mock_groq",
-    "NVIDIA_API_KEY": "mock_nvidia",
-    "FIRECRAWL_API_KEY": "mock_firecrawl",
+    "OPENROUTER_API_KEY": "TEST_ONLY_OPENROUTER_API_KEY",
+    "HF_API_KEY": "TEST_ONLY_HF_API_KEY",
+    "GEMINI_API_KEY": "TEST_ONLY_GEMINI_API_KEY",
+    "DEEPSEEK_API_KEY": "TEST_ONLY_DEEPSEEK_API_KEY",
+    "GROQ_API_KEY": "TEST_ONLY_GROQ_API_KEY",
+    "NVIDIA_API_KEY": "TEST_ONLY_NVIDIA_API_KEY",
+    "FIRECRAWL_API_KEY": "TEST_ONLY_FIRECRAWL_API_KEY",
     "OLLAMA_URL": "http://127.0.0.1:11434",
     "SUPREMEAI_API_TOKEN": "",
     "SENTRY_DSN": "",
@@ -139,11 +140,11 @@ _TEST_ENV_DEFAULTS = {
     "GCP_REGION": "",
     "SUPABASE_DATABASE_URL": "sqlite+aiosqlite:///:memory:",
     "SUPABASE_DATABASE_URL_POOLER": "sqlite+aiosqlite:///:memory:",
-    "GITHUB_TOKEN": "mock_dummy_token",
-    "RENDER_API_KEY": "mock_render_key",
+    "GITHUB_TOKEN": "TEST_ONLY_GITHUB_TOKEN",
+    "RENDER_API_KEY": "TEST_ONLY_RENDER_API_KEY",
     "ADMIN_AUTHORIZED": "false",
-    "RAILWAY_TOKEN": "mock_railway_token",
-    "ORACLE_CLOUD_API_KEY": "mock_oracle_key",
+    "RAILWAY_TOKEN": "TEST_ONLY_RAILWAY_TOKEN",
+    "ORACLE_CLOUD_API_KEY": "TEST_ONLY_ORACLE_CLOUD_API_KEY",
     "AUTOFIX_AUTHORIZED": "false",
     "EXPERIENCE_DB_PATH": f"data/test_experience_{os.getpid()}.db",
     "LITELLM_DISABLE_ASYNC_CLIENT_CLEANUP": "True",
