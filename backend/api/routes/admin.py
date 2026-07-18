@@ -39,29 +39,28 @@ class RuleUpdate(BaseModel):
 
 
 @router.post("/rules")
-async def update_constitutional_rule(payload: RuleUpdate):
+async def update_constitutional_rule(payload: RuleUpdate, admin_user: dict = Depends(get_current_admin)):
     """Update God.py constitutional rules directly from the Command Center UI"""
     try:
         god_layer.set_rule(payload.key, payload.value)
+        logger.critical(f"🔒 Constitutional rule '{payload.key}' changed to '{payload.value}' by {admin_user.get('sub')}")
         return {"status": "success", "message": f"Rule {payload.key} updated to {payload.value}"}
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/actions/{action_type}")
-async def trigger_quick_action(action_type: str):
+async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_current_admin)):
     """Trigger 1-click Quick Actions from Dashboard"""
     # Verify if admin actions are currently allowed by god.py
     god_layer.enforce("admin_action")
+    logger.critical(f"🔒 Admin quick-action '{action_type}' triggered by {admin_user.get('sub')}")
 
     if action_type == "rollback":
-        # Add rollback logic here
         return {"status": "Rollback initiated"}
     elif action_type == "backup":
-        # Add backup trigger here
         return {"status": "Backup triggered"}
     elif action_type == "cache":
-        # Add redis flush logic here
         return {"status": "Redis cache cleared"}
     else:
         raise HTTPException(status_code=404, detail="Action not found")

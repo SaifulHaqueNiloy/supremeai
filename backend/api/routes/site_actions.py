@@ -5,13 +5,15 @@ import threading
 import time
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from api.routes.admin import get_current_admin
 from core.config import settings
 
 
-router = APIRouter(prefix="/api/admin/site-actions", tags=["Site Actions Registry"])
+router = APIRouter(prefix="/api/admin/site-actions", tags=["Site Actions Registry"], dependencies=[Depends(get_current_admin)])
 
 DB_PATH = getattr(settings, "site_actions_db", "data/site_actions.db")
 _lock = threading.Lock()

@@ -3,11 +3,13 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
+from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Request
 from loguru import logger
 
+from api.routes.admin import get_current_admin
 from core.config import settings
 
 # শেয়ার্ড ইউটিলিটি — Firestore ইনিশিয়ালাইজেশন কেন্দ্রীভূত
@@ -15,7 +17,7 @@ from utils.firestore_helpers import get_firestore_db
 from workers.chaos_worker import NightlyChaosAuditor
 
 
-router = APIRouter(prefix="/api/admin/metrics", tags=["infrastructure-metrics"])
+router = APIRouter(prefix="/api/admin/metrics", tags=["infrastructure-metrics"], dependencies=[Depends(get_current_admin)])
 auditor = NightlyChaosAuditor()
 
 

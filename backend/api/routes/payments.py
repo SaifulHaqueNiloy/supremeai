@@ -39,14 +39,17 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
         token = auth_header[7:]
     if not token:
         raise HTTPException(status_code=401, detail="Missing authorization token")
-    try:
-        from jose import jwt
 
+    from jose import jwt
+
+    try:
         decoded = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
-        if decoded.get("user_id") != payload.user_id and decoded.get("sub") != payload.user_id:
-            raise HTTPException(status_code=403, detail="User mismatch")
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=401, detail=f"Invalid token: {e}") from e
+
+    if decoded.get("user_id") != payload.user_id and decoded.get("sub") != payload.user_id:
+        raise HTTPException(status_code=403, detail="User mismatch")
+
     try:
         stripe_key = settings.stripe_api_key
         if not stripe_key:
@@ -101,8 +104,18 @@ async def get_plans():
 
 
 # বাংলা মন্তব্য: স্ট্রাইপ ওয়েবহুক ইভেন্ট রিসিভ ও যাচাই করার জন্য এন্ডপয়েন্ট
+# ⚠️ WARNING: This endpoint only verifies the webhook signature and returns success.
+# It does NOT process payments, credit wallets, or activate subscriptions.
+# The real payment processing webhook is at /api/billing/webhook/stripe (billing_api.py).
+# If Stripe Dashboard is configured to send to this URL, customers will be charged
+# but never receive their product — this is a silent revenue leak.
 @router.post("/webhook")
 async def stripe_webhook_endpoint(request: Request):
+    logger.critical(
+        "🔴 STRIPE WEBHOOK HIT DEPRECATED ENDPOINT /payments/webhook — this endpoint does NOT process payments. "
+        "The correct endpoint is /api/billing/webhook/stripe. Update the Stripe Dashboard webhook URL immediately. "
+        "Customers charged via this endpoint will NOT have their wallets credited or subscriptions activated."
+    )
     sig_header = request.headers.get("stripe-signature", "")
     webhook_secret = None
     if settings.stripe_webhook_secret:

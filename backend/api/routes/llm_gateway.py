@@ -4,13 +4,15 @@
 # প্রোভাইডার তালিকা, ফলব্যাক রাউটিং চেইন, লাইভ মডেল ওভাররাইড ও সিস্টেম রুল মিউটেশন এখানে হয়।
 
 from fastapi import APIRouter
+from fastapi import Depends
 from pydantic import BaseModel
 
+from api.routes.admin import get_current_admin
 from core import services
 from core.config import settings
 
 
-router = APIRouter(prefix="/api/admin/llm", tags=["LLM Gateway"])
+router = APIRouter(prefix="/api/admin/llm", tags=["LLM Gateway"], dependencies=[Depends(get_current_admin)])
 
 # বাংলা মন্তব্য: ইন-মেমরি লাইভ মডেল ওভাররাইড স্টেট (ফলব্যাক চেইনের উপর প্রাধান্য পায়)
 _ROUTER_STATE: dict[str, object] = {
