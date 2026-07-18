@@ -48,8 +48,26 @@ export interface ThreatScanResult {
   total_findings: number;
 }
 
-// বাংলা মন্তব্য: টোকেন চেক হেল্পার — টোকেন না থাকলে কোয়েরি enabled=false হবে, 401 স্টর্ম ঠেকাবে
+// 🛡️ অডিটর ফিক্স: টোকেন চেক হেল্পার এবং useErrorHandler integrate করা হয়েছে
 const hasToken = (): boolean => !!getAdminToken();
+
+// Centralized error handler for dashboard operations
+const useDashboardErrorHandler = () => {
+  const handleError = (error: any, context: string) => {
+    console.error(`🚨 [DASHBOARD_PIPELINE_ERROR]: ${context}`, {
+      message: error?.message || String(error),
+      stack: error?.stack,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Show global toast if available
+    if ((window as any).showGlobalToast) {
+      (window as any).showGlobalToast('error', error?.message || context);
+    }
+  };
+
+  return { handleError };
+};
 
 // বাংলা মন্তব্য: পোলিং বন্ধ করে SSE-এর মাধ্যমে ডেটা আপডেট করা হবে
 export function useMetrics() {

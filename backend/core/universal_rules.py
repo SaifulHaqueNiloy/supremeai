@@ -51,8 +51,8 @@ class UniversalRulesEngine:
             if conn:
                 try:  # noqa
                     conn.close()
-                except Exception:  # noqa: BLE001
-                    pass
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(f"Failed to close connection: {e}")
 
         # Default fallback rules (Admin definitions)
         default_rules = {

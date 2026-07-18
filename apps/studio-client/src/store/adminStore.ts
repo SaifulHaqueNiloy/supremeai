@@ -1,15 +1,29 @@
 import { create } from 'zustand';
 import { getApiBaseUrl } from '../utils/api';
 
-const decodeJwt = (token: string) => {
+const decodeJwt = (token: string): Record<string, unknown> | null => {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (e) {
+    const decoded = JSON.parse(jsonPayload);
+
+    // Validate decoded structure
+    if (!decoded || typeof decoded !== 'object') {
+      throw new Error('Decoded JWT payload is not a valid object');
+    }
+
+    return decoded;
+  } catch (e: any) {
+    // 🛡️ অডিটর ফিক্স: সাইলেন্ট ফেইলর ব্লাস্ট করে ইন্টারনাল ডায়াগনস্টিক ট্রেস এনফোর্স
+    console.warn("⚠️ [JWT_DECODE_LEAK]: Failed to safely parse admin JWT token.", {
+      error_message: e?.message || 'Malformed JWT structure',
+      token_length: token.length,
+      timestamp: new Date().toISOString(),
+      token_preview: token.substring(0, 20) + '...'
+    });
     return null;
   }
 };

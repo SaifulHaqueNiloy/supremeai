@@ -2,6 +2,7 @@ export { useChat } from './useChat';
 export { useAuth } from './useAuth';
 export { useWebSocket } from './useWebSocket';
 export { useTranslation } from './useTranslation';
+export { useErrorHandler } from './useErrorHandler';
 export {
   useAdminRules,
   useSaveRules,
