@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import os
 from abc import ABC
 from abc import abstractmethod
@@ -38,7 +39,16 @@ class RotatingFernet:
     def __init__(self, keys: list[str]) -> None:
         if not keys:
             raise ValueError("At least one key is required")
-        self._fernets = [Fernet(k.encode() if isinstance(k, str) else k) for k in keys]
+        self._fernets = []
+        for k in keys:
+            raw_key = k.encode() if isinstance(k, str) else k
+            try:
+                self._fernets.append(Fernet(raw_key))
+            except ValueError:
+                logger.warning("⚠️ Non-Base64 encryption key detected in current context. Natively deriving valid Fernet key layout.")
+                hashed = hashlib.sha256(raw_key).digest()
+                safe_b64_key = base64.urlsafe_b64encode(hashed)
+                self._fernets.append(Fernet(safe_b64_key))
 
     @property
     def primary(self) -> Fernet:
