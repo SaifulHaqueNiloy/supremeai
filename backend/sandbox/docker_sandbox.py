@@ -1,5 +1,6 @@
 # backend/sandbox/docker_sandbox.py
 import logging
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,16 @@ class DockerSandbox:
         self.cpu_limit = "0.5"
         self.timeout_seconds = 10
 
+    def _sanitize_module_name(self, entry_file: str) -> str:
+        """Sanitize entry file name - only allow alphanumeric and underscore to prevent injection."""
+        # Remove .py extension and sanitize
+        safe_name = entry_file.replace('.py', '').replace('.PY', '').replace('.Py', '')
+        # Only allow alphanumeric and underscore characters
+        safe_name = re.sub(r'[^a-zA-Z0-9_]', '', safe_name)
+        if not safe_name:
+            raise ValueError("Invalid entry file name after sanitization")
+        return safe_name
+
     def run_quarantine_test(self, staging_path: Path, entry_file: str, test_payload: str) -> dict[str, Any]:
         """
         Default-deny network এবং Read-only মাউন্টে একটি পাইথন ফাইল স্যান্ডবক্সে রান করায়।
@@ -27,6 +38,9 @@ class DockerSandbox:
         target_file_path = staging_path / entry_file
         if not target_file_path.exists():
             return {"exit_code": -1, "stdout": "", "stderr": f"Entry file {entry_file} not found."}
+
+        # নিরাপত্তা: entry_file নাম স্যানিটাইজ করা হচ্ছে (শুধুমাত্র alphanumeric ও underscore)
+        safe_module_name = self._sanitize_module_name(entry_file)
 
         # Subprocess এর মাধ্যমে সরাসরি ডকার সিএলআই এনফোর্সমেন্ট
         cmd = [
@@ -46,7 +60,7 @@ class DockerSandbox:
             self.image_name,
             "python",
             "-c",
-            f"import sys; import json; import {entry_file.replace('.py', '')} as tool; print(json.dumps(tool.execute_tool({test_payload})))",
+            f"import sys; import json; import {safe_module_name} as tool; print(json.dumps(tool.execute_tool({test_payload})))",
         ]
 
         try:
@@ -76,6 +90,11 @@ class DockerSandbox:
             return {"exit_code": 1, "stdout": "", "stderr": "No script provided for sandbox execution."}
 
         # 🛡️ ডকার সিকিউরিটি এবং আইসোলেশন ফ্ল্যাগস এনফোর্সমেন্ট
+        # অতিরিক্ত সুরক্ষা: bind_source-এর path traversal প্রতিরোধ
+        if ".." in bind_source or ".." in bind_target:
+            logger.critical(f"Suspicious path detected in bind mount: {bind_source}")
+            return {"exit_code": 1, "stdout": "", "stderr": "Invalid bind mount path detected."}
+
         docker_command = [
             "docker",
             "run",

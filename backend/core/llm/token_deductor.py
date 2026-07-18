@@ -39,10 +39,18 @@ class TokenDeductor:
     def _acquire_distributed_lock(self, lock_key: str, lock_value: str, ttl: int = 10) -> bool:
         """
         Acquires a distributed lock using Upstash Redis SET NX.
+        Raises RuntimeError if Redis unavailable in production (Fail-Closed).
         """
         # বাংলা মন্তব্য: গ্লোবাল রেডিস কী লক সেট করা হচ্ছে ডাবল-স্পেন্ডিং ঠেকাতে।
         if not redis_queue.configured:
-            # Fallback for local testing without active Upstash credentials
+            # Fail-Closed: Redis unavailable in production means potential double-spending
+            from core.config import settings as _settings
+            if _settings.env in {"production", "staging"}:
+                raise RuntimeError(
+                    "Redis unavailable in production/staging - cannot guarantee idempotency. "
+                    "Double-spending risk detected. Fail-Closed."
+                )
+            logger.warning("Redis lock not configured - proceeding in test mode only")
             return True
 
         try:
@@ -50,6 +58,9 @@ class TokenDeductor:
             return redis_queue.set_nx(lock_key, lock_value, ex=ttl)
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to acquire distributed lock: {e}")
+            from core.config import settings as _settings
+            if _settings.env in {"production", "staging"}:
+                raise RuntimeError("Redis lock acquisition failed. Fail-Closed.") from e
             return False
 
     def _release_distributed_lock(self, lock_key: str, lock_value: str):
@@ -92,10 +103,12 @@ class TokenDeductor:
             return False
 
         try:
-            # Calculate rates accurately and cast to Decimal for strict precision
+            # Calculate rates accurately using Decimal for strict precision (no floating-point loss)
             rates = self.config.get("token_rates_usd_per_1k", {"input": 0.0015, "output": 0.0020})
-            cost_float = (input_tokens / 1000.0 * rates["input"]) + (output_tokens / 1000.0 * rates["output"])
-            cost = Decimal(str(round(cost_float, 6)))
+            input_rate = Decimal(str(rates["input"]))
+            output_rate = Decimal(str(rates["output"]))
+            cost = (Decimal(input_tokens) / Decimal(1000) * input_rate) + (Decimal(output_tokens) / Decimal(1000) * output_rate)
+            cost = cost.quantize(Decimal("0.000001"))  # 6 decimal places for USD precision
 
             # Atomic Transaction Block
             async with session.begin():

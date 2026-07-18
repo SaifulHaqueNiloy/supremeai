@@ -179,7 +179,7 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
             }
 
         stripe.api_key = stripe_key
-        session = stripe.checkout.Session.create(
+        stripe_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{"price": payload.price_id, "quantity": 1}],
             mode="subscription",
@@ -188,10 +188,11 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
             client_reference_id=user_id,
             metadata={"price_id": payload.price_id},
         )
-        return {"status": "success", "session_id": session.id, "url": session.url}
+        return {"status": "success", "session_id": stripe_session.id, "url": stripe_session.url}
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to create Stripe checkout session: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # Generic message to client (never expose internals or stack traces)
+        raise HTTPException(status_code=500, detail="Payment processing error. Please contact support.") from e
 
 
 # ==========================================
@@ -205,9 +206,11 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
     payload = await request.body()
     sig_header = request.headers.get("Stripe-Signature")
 
+    # Fail-safe: production-grade security, but never 500 on misconfiguration.
+    # If secrets/signature are missing, ignore webhook and return 200.
     if not STRIPE_WEBHOOK_SECRET or not sig_header:
-        logger.critical("Stripe webhook secrets or signature missing. Possible attack blocked.")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Security validation failed")
+        logger.warning("Stripe webhook ignored due to missing secret or signature header.")
+        return {"status": "ignored", "reason": "missing_stripe_webhook_secret_or_signature"}
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
