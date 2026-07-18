@@ -56,6 +56,7 @@ from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import status
 from loguru import logger
 
 from api.dependencies import get_current_user_token
@@ -75,7 +76,8 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
     """Enforce admin role for sensitive admin routes (e.g. rules engine)."""
     if payload.get("role") != "admin":
         logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Admin access required")
+        # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের জন্য সঠিক status.HTTP_403_FORBIDDEN অবজেক্ট ব্যবহার করা হলো
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return payload
 
 
