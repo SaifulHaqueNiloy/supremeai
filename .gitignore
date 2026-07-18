@@ -200,3 +200,33 @@ dist-user/
 .git_backup/
 blackbox_mcp_settings.json
 full_codebase_export.md
+
+# ============================================
+# EXPLICIT SENSITIVE HOTFIX IGNORES
+# ============================================
+.env*
+*.log
+firebase-debug.log
+blackbox_mcp_settings.json
+__pycache__/
+.venv/
+
+# ============================================
+# AGENT CACHES & REPORTS
+# ============================================
+.scribe_cache.json
+.bug_prophet_cache.json
+.refactor_wiz_cache.json
+bug_prophet_report.md
+refactor_wiz_report.md
+.cloudwatch_history.json
+**/.*_history.json
+**/.*_cache.json
+**/.*_state.json
+**/.*_db.json
+**/.*_budget.json
+
+
+
+
+
