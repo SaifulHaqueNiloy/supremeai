@@ -10,7 +10,6 @@ from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from api.dependencies import get_current_user_token
 from api.routes.admin import get_current_admin
 from database.session import get_db_session
 from models.execution_policy import ExecutionPolicy
@@ -58,9 +57,7 @@ async def get_policies(session: AsyncSession = Depends(get_db_session)):
 
 
 @router.put("/{policy_id}")
-async def update_policy(
-    policy_id: str, updates: ExecutionPolicyUpdate, session: AsyncSession = Depends(get_db_session)
-):
+async def update_policy(policy_id: str, updates: ExecutionPolicyUpdate, session: AsyncSession = Depends(get_db_session)):
     try:
         pid = uuid.UUID(policy_id)
     except ValueError:

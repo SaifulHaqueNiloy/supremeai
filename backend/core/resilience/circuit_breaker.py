@@ -123,7 +123,7 @@ class CircuitBreaker:
         if inspect.iscoroutinefunction(func):
             return self.acall(func, *args, **kwargs)  # type: ignore[return-value]
 
-        correlation_id = kwargs.pop("_correlation_id", None)
+        kwargs.pop("_correlation_id", None)
 
         with self._lock:
             if self.state == CircuitBreakerState.OPEN:
@@ -152,9 +152,7 @@ class CircuitBreaker:
         except CircuitBreakerOpenError:
             raise
         except Exception as exc:
-            logger.opt(exception=True).error(
-                f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}"
-            )
+            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}")
             self._mark_failure()
             raise
 
@@ -166,7 +164,7 @@ class CircuitBreaker:
         Raises:
             CircuitBreakerOpenError: If circuit is OPEN and not ready for recovery.
         """
-        correlation_id = kwargs.pop("_correlation_id", None)
+        kwargs.pop("_correlation_id", None)
 
         with self._lock:
             if self.state == CircuitBreakerState.OPEN:
@@ -195,9 +193,7 @@ class CircuitBreaker:
         except CircuitBreakerOpenError:
             raise
         except Exception as exc:
-            logger.opt(exception=True).error(
-                f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}"
-            )
+            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}")
             self._mark_failure()
             raise
 

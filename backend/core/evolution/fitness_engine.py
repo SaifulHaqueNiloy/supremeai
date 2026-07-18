@@ -29,6 +29,8 @@ try:
     from core.skill_manager import SkillManager
 except ImportError:
     SkillManager = None  # type: ignore[assignment]
+
+
 class FitnessEngineError(ValueError):
     """🛡️ Enterprise Vault: Fitness calculation failure exception"""
 

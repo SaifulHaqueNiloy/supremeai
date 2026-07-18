@@ -78,6 +78,7 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Admin access required")
     return payload
 
+
 auth = get_firebase_auth()
 
 

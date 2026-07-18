@@ -45,10 +45,10 @@ class TokenDeductor:
         if not redis_queue.configured:
             # Fail-Closed: Redis unavailable in production means potential double-spending
             from core.config import settings as _settings
+
             if _settings.env in {"production", "staging"}:
                 raise RuntimeError(
-                    "Redis unavailable in production/staging - cannot guarantee idempotency. "
-                    "Double-spending risk detected. Fail-Closed."
+                    "Redis unavailable in production/staging - cannot guarantee idempotency. " "Double-spending risk detected. Fail-Closed."
                 )
             logger.warning("Redis lock not configured - proceeding in test mode only")
             return True
@@ -59,6 +59,7 @@ class TokenDeductor:
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to acquire distributed lock: {e}")
             from core.config import settings as _settings
+
             if _settings.env in {"production", "staging"}:
                 raise RuntimeError("Redis lock acquisition failed. Fail-Closed.") from e
             return False

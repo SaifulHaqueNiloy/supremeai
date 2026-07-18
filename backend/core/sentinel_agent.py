@@ -85,12 +85,12 @@ class SentinelAgent:
                                 url = ep.path
                             else:
                                 url = f"http://127.0.0.1:8080{ep.path}"
-                            
+
                             # SSRF protection
                             if not self._validate_endpoint_url(url):
                                 logger.critical(f"SSRF Blocked: Attempted access to {url}")
                                 continue
-                            
+
                             # Make the request only after SSRF validation
                             resp = await client.request(ep.method, url)
                             latency = (datetime.now(UTC) - start_time).total_seconds() * 1000

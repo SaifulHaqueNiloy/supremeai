@@ -6,7 +6,6 @@
 import os
 import signal
 import sys
-import time
 
 
 if not os.getenv("ENV"):
