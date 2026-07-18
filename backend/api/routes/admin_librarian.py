@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 from api.routes.admin import get_current_admin
-from backend.agents.skill_librarian import SkillLibrarian
+from agents.skill_librarian import SkillLibrarian
 
 
 # 🔄 প্রিফিক্স ডুপ্লিকেশন ফিক্স (/api/api/admin... থেকে /api/admin...)
