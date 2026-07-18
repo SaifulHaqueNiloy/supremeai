@@ -11,22 +11,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from api.dependencies import get_current_user_token
+from api.routes.admin import get_current_admin
 from database.session import get_db_session
 from models.execution_policy import ExecutionPolicy
 
 
-def require_admin(token: dict = Depends(get_current_user_token)):
-    """Ensure the user is an admin."""
-    if token.get("role") != "admin":
-        logger.warning(f"Unauthorized access attempt by {token.get('sub')}")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required")
-    return token
-
-
 router = APIRouter(
     prefix="/api/admin/execution-policies",
-    tags=["Guardrails"],
-    dependencies=[Depends(require_admin)],
+    tags=["Execution Policies"],
+    dependencies=[Depends(get_current_admin)],
 )
 
 
@@ -39,7 +32,7 @@ class ExecutionPolicyUpdate(BaseModel):
 
 
 @router.get("/")
-async def get_policies(session: AsyncSession = Depends(get_db_session), _admin: dict = Depends(require_admin)):
+async def get_policies(session: AsyncSession = Depends(get_db_session)):
     try:
         result = await session.execute(select(ExecutionPolicy))
         policies = result.scalars().all()
@@ -66,7 +59,7 @@ async def get_policies(session: AsyncSession = Depends(get_db_session), _admin: 
 
 @router.put("/{policy_id}")
 async def update_policy(
-    policy_id: str, updates: ExecutionPolicyUpdate, session: AsyncSession = Depends(get_db_session), _admin: dict = Depends(require_admin)
+    policy_id: str, updates: ExecutionPolicyUpdate, session: AsyncSession = Depends(get_db_session)
 ):
     try:
         pid = uuid.UUID(policy_id)
