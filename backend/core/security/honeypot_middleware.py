@@ -13,6 +13,8 @@ from loguru import logger
 
 from core.messaging.event_bus import ErrorContext
 from core.messaging.event_bus import ErrorEvent
+
+
 class HoneypotMiddleware:
     def __init__(self, app):
         self.app = app

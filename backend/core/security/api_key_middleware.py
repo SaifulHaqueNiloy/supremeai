@@ -73,7 +73,14 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
 
         rps = int(row.get("rate_limit_rps") or 6)
         key_prefix = api_key_header[:12]
-        if not self.limiter.is_allowed(key_prefix, rps=rps):
+
+        try:
+            is_allowed = await self.limiter.acquire(key_prefix, limit=rps, window=60)
+        except RuntimeError as exc:
+            logger.critical(f"Rate limiter failed: {exc}")
+            raise HTTPException(status_code=503, detail="Rate limiting service unavailable") from exc
+
+        if not is_allowed:
             logger.warning(f"Rate limit hit for API key: {row['id']}")
             raise HTTPException(status_code=429, detail="API key rate limit exceeded")
 

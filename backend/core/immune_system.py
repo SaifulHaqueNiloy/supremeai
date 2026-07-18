@@ -120,6 +120,7 @@ class ASTSecurityScanner(ast.NodeVisitor):
             raise SecuritySandboxError(f"Sandbox escape pattern blocked: {node.attr}")
         self.generic_visit(node)
 
+
 class ImmuneSystemScanner:
     """
     Scans generated python code using AST parser to block execution of unsafe or malicious code before execution.
