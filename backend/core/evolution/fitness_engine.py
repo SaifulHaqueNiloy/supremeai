@@ -18,7 +18,17 @@ from typing import Any
 
 from loguru import logger
 
+# Conditional imports to avoid circular dependency issues
+# These are used inside methods but defined here for cleaner structure
+try:
+    from core.database.supabase_client import db
+except ImportError:
+    db = None  # type: ignore[assignment]
 
+try:
+    from core.skill_manager import SkillManager
+except ImportError:
+    SkillManager = None  # type: ignore[assignment]
 class FitnessEngineError(ValueError):
     """🛡️ Enterprise Vault: Fitness calculation failure exception"""
 
@@ -74,11 +84,10 @@ class AutomatedFitnessEngine:
             )
 
             # Database fitness matrix sync
-            from core.database.supabase_client import db
-
-            db.client.table("skill_fitness").upsert(
-                {"proposal_id": proposal_id, "fitness_score": score, "is_viable": score >= self.target_success_rate}
-            ).execute()
+            if db is not None:
+                db.client.table("skill_fitness").upsert(
+                    {"proposal_id": proposal_id, "fitness_score": score, "is_viable": score >= self.target_success_rate}
+                ).execute()
 
             return score >= self.target_success_rate
         except Exception as e:
@@ -109,10 +118,12 @@ class FitnessEngine:
         # রেস কন্ডিশন এবং ফাইল করাপশন এড়াতে থ্রেড লক ব্যবহার করা হচ্ছে
         self._lock = threading.Lock()
 
-        # Initialize SkillManager
-        from core.skill_manager import SkillManager
-
-        self.registry = SkillManager()
+        # Initialize SkillManager - uses conditional import at top to avoid circular dependency
+        if SkillManager is not None:
+            self.registry = SkillManager()
+        else:
+            self.registry = None
+            logger.warning("SkillManager not available during FitnessEngine init - using None")
 
         self.metrics = self._load_metrics()
 

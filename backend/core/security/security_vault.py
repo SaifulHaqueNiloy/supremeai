@@ -1,19 +1,24 @@
+"""Security Vault - Fernet encryption with fail-fast key validation.
+
+বাংলা: সিকিউরিটি ভল্ট — settings.encryption_key থেকে encryption key নেয়।
+"""
+
 import os
 
 from cryptography.fernet import Fernet
 from loguru import logger
 
+from core.config import settings
 from core.messaging.event_bus import ErrorContext
 from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
 from core.security.secure_credential_store import RotatingFernet
 
-
-# বাংলা মন্তব্য: Module-level key read-এ fail-fast রাখা হচ্ছে, কারণ ক্রিপ্টোগ্রাফি স্টার্টআপেই ফেইল হওয়া উচিত।
-# তবে ENCRYPTION_KEY যেন settings থেকে আসে তা নিশ্চিত করতে হবে, আপাতত os.environ.get ব্যবহার করলেও fail-fast আছে।
-ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+# বাংলা মন্তব্য: Module-level key read-এ fail-fast রাখা হচ্ছে, কারণ ক্রিপ্টোগ্রাফি স্টার্টআপেই ফেইল হওয়া উচিি।
+# ENCRYPTION_KEY settings.encryption_key থেকে আসছে (computed field via secret_vault)
+ENCRYPTION_KEY = settings.encryption_key.get_secret_value() if settings.encryption_key else os.environ.get("ENCRYPTION_KEY")
 if not ENCRYPTION_KEY:
-    # বাংলা মন্তব্য: টেস্ট ও সিআই পরিবেশে ক্র্যাশ এড়াতে একটি ডামি/এফেমেরাল কী জেনারেট করা হচ্ছে, তবে প্রোডাকশনে ফেইল-ফাস্ট থাকবে।
+    # বাংলা মন্তব্য: টেস্ট ও সিআই পরিবেশে ক্র্যাশ এড়াতে একটি ডামি/এফেমেরাল কী জেনারেট করা হচ্ছে, তবে প্রোডাকশনে ফেইল-ফাস্ট থাকবে।
     if (os.environ.get("ENV") == "test" or os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true") and os.environ.get(
         "STRICT_ENCRYPTION_CHECK"
     ) != "true":
@@ -65,7 +70,7 @@ def encrypt_token(plain_text: str) -> str:
 def decrypt_token(cipher_text: str, ttl: int | None = None) -> str:
     """Decrypts a token using AES (Fernet) via central RotatingFernet.
 
-    বাংলা মন্তব্য: OAuth দীর্ঘমেয়াদী টোকেনের মেয়াদোত্তীর্ণ এড়াতে ডিফল্ট ttl=None রাখা হয়েছে।
+    বাংলা মন্তব্য: OAuth দীর্ঘমেয়াদী টোকেনের মেয়াদোত্তীর্ণ এড়াতে ডিফল্ট ttl=None রাখা হয়েছে।
     """
     if not cipher_text:
         return ""
