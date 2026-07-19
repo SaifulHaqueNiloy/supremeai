@@ -97,6 +97,20 @@ class Settings(BaseSettings):
         validation_alias="CORS_ORIGINS",
     )
 
+    # বাংলা মন্তব্য: রোল-ভিত্তিক CORS সেটিংস এবং সিকিউরিটি টগল
+    user_cors_origins: str | list[str] = Field(
+        default_factory=list,
+        validation_alias="USER_CORS_ORIGINS",
+    )
+    admin_cors_origins: str | list[str] = Field(
+        default_factory=list,
+        validation_alias="ADMIN_CORS_ORIGINS",
+    )
+    enforce_anti_hacking: bool = Field(
+        default=False,
+        validation_alias="ENFORCE_ANTI_HACKING",
+    )
+
     # বাংলা মন্তব্য: Admin email list সম্পূর্ণ env-driven
     # (Moved to Security & Auth Config section to avoid duplication)
 
@@ -258,6 +272,24 @@ class Settings(BaseSettings):
     @property
     def supabase_database_url(self) -> str:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
+
+    # বাংলা মন্তব্য: Anti-Hacking এবং OTP রাউটার সিক্রেটসমূহ
+    @computed_field
+    @property
+    def discord_otp_webhook_url(self) -> SecretStr | None:
+        url = self._get_cached_secret("DISCORD_OTP_WEBHOOK_URL")
+        return SecretStr(url) if url else None
+
+    @computed_field
+    @property
+    def resend_api_key(self) -> SecretStr | None:
+        key = self._get_cached_secret("RESEND_API_KEY")
+        return SecretStr(key) if key else None
+
+    @computed_field
+    @property
+    def admin_notification_email(self) -> str | None:
+        return self._get_cached_secret("ADMIN_NOTIFICATION_EMAIL")
 
     @computed_field
     @property
@@ -483,7 +515,7 @@ class Settings(BaseSettings):
             raise ValueError("supremeai_admin_password_hash must be explicitly set.")
         return v
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
         # বাংলা: import json এখন ফাইলের শীর্ষে সরাসরি করা হয়েছে, প্রতিটি কলে re-import নেই
@@ -497,7 +529,7 @@ class Settings(BaseSettings):
                 return [o.strip() for o in v.split(",") if o.strip()]
         return v or []
 
-    @field_validator("cors_origins", mode="after")
+    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="after")
     @classmethod
     def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
         env = info.data.get("env", "local")
