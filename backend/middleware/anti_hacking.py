@@ -57,7 +57,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                 mismatch = False
                 caution = False
                 if last:
-                    ip_country_mismatch = (last.get("ip") != signal["ip"] or last.get("country") != signal["country"])
+                    ip_country_mismatch = last.get("ip") != signal["ip"] or last.get("country") != signal["country"]
                     last_fp = last.get("fingerprint")
                     if last_fp and last_fp != "unknown":
                         # বাংলা মন্তব্য: ফিঙ্গারপ্রিন্ট মিললে আইপি পরিবর্তন হলেও ওটিপি লাগবে না (ভিপিএন/মোবাইল নেটওয়ার্কের জন্য)
@@ -74,6 +74,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
 
                 if caution:
                     from loguru import logger as _logger
+
                     _logger.info(f"CAUTION: partial context match for admin {admin_id} (same_ua/subnet, no OTP fired): {signal} vs last {last}")
                     if redis_manager and redis_manager.client:
                         await redis_manager.client.lpush(f"{_CAUTION_LOG_PREFIX}{admin_id}", json.dumps(signal))
@@ -84,22 +85,18 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                     cooldown_key = f"{_OTP_COOLDOWN_PREFIX}{admin_id}"
                     cooldown_active = False
                     if redis_manager and redis_manager.client:
-                        acquired = await redis_manager.client.set(
-                            cooldown_key, "1", nx=True, ex=settings.otp_cooldown_seconds
-                        )
+                        acquired = await redis_manager.client.set(cooldown_key, "1", nx=True, ex=settings.otp_cooldown_seconds)
                         cooldown_active = not bool(acquired)
 
                     if cooldown_active:
                         from loguru import logger as _logger2
+
                         _logger2.info(f"OTP cooldown active for admin {admin_id} - suppressing duplicate send/notification.")
                         request.state.security_otp_pending = True
                         if settings.enforce_anti_hacking:
                             return JSONResponse(
                                 status_code=403,
-                                content={
-                                    "error": "context_mismatch",
-                                    "detail": "OTP verification required — check your configured channel."
-                                },
+                                content={"error": "context_mismatch", "detail": "OTP verification required — check your configured channel."},
                             )
                         await redis_manager.set_cache(key, json.dumps(signal), ex_seconds=_CONTEXT_TTL)
                         return await call_next(request)
@@ -118,13 +115,11 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                     if settings.enforce_anti_hacking:
                         return JSONResponse(
                             status_code=403,
-                            content={
-                                "error": "context_mismatch",
-                                "detail": "OTP verification required — check your configured channel."
-                            },
+                            content={"error": "context_mismatch", "detail": "OTP verification required — check your configured channel."},
                         )
                     # alert-only: log and continue
                     from loguru import logger
+
                     logger.warning(f"🔓 [ALERT-ONLY] Context mismatch for admin {admin_id}: {signal} vs last {last}")
 
                 await redis_manager.set_cache(key, json.dumps(signal), ex_seconds=_CONTEXT_TTL)
