@@ -284,8 +284,22 @@ class BackupProviderSwitch:
         if state_path.exists():
             try:
                 self.active_provider = json.loads(state_path.read_text(encoding="utf-8"))
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                # বাংলা: state ফাইল corrupt/unreadable হলে চুপচাপ খালি অবস্থায় শুরু করা যাবে না —
+                # তাহলে কোন সার্ভিস backup provider-এ ছিল সেই তথ্য হারিয়ে যায় এবং AutoHealer
+                # ভুল করে down থাকা primary-তে আবার ট্রাফিক পাঠাতে পারে। তাই এটাকে জোরালোভাবে
+                # log + alert করা হচ্ছে, এবং করাপ্ট ফাইলটা backup রেখে override হওয়া থেকে বাঁচানো হচ্ছে।
+                logger.error(
+                    f"❌ Failed to load provider-switch state from {state_path} "
+                    f"(failover routing knowledge may be lost): {e}"
+                )
+                try:
+                    corrupt_backup = state_path.with_suffix(".json.corrupt")
+                    state_path.replace(corrupt_backup)
+                    logger.warning(f"⚠️ Corrupted state file moved to {corrupt_backup} for inspection.")
+                except Exception as move_err:  # noqa: BLE001
+                    logger.error(f"❌ Could not preserve corrupted state file: {move_err}")
+                self.active_provider = {}
 
     def _save_state(self):
         state_path = Path(__file__).parent / ".provider_state.json"

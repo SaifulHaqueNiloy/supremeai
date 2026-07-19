@@ -1,6 +1,9 @@
-// বাংলা মন্তব্য: Devin-স্টাইল ড্যাশবোর্ড শেল — বাম সাইডবার নেভিগেশন সহ ইউজার ও অ্যাডমিন উভয়ের জন্য মূল লেআউট
-// হ্যাশ-ভিত্তিক রাউটিং, Sujon ব্যাকগ্রাউন্ড ইন্টিগ্রেশন ও পেজ রেন্ডারিং
+// বাংলা মন্তব্য: Devin-স্টাইল ড্যাশবোর্ড শেল — "Living Workspace" রিফ্যাক্টর
+// হ্যাশ-ভিত্তিক রাউটিং অপরিবর্তিত রাখা হয়েছে (কোনো নতুন রুট তৈরি হয়নি, শুধু লেআউট ও মোশন যোগ হয়েছে)।
+// নতুন যোগ হয়েছে: (1) ডান পাশে সবসময়-দৃশ্যমান LiveSimulator, (2) নিচে ড্র্যাগেবল ActionDock,
+// (3) Sessions/Vault/Settings-এর জন্য একটি কোলাপসিবল SidebarSettings হাব।
 import { type ReactNode, useMemo } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutList,
   Boxes,
@@ -16,11 +19,8 @@ import {
   Wifi,
   WifiOff,
   Activity,
-  AlertCircle,
 } from 'lucide-react';
-import { useHashRoute, type DashboardRoute, parseHash } from './useHashRoute';
-import { Link } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { useHashRoute, type DashboardRoute } from './useHashRoute';
 import { SessionsPage } from './SessionsPage';
 import { SessionDetailPage } from './SessionDetailPage';
 import { KnowledgePage } from './KnowledgePage';
@@ -35,7 +35,9 @@ import { LiveSujonBackground } from '../LiveSujonBackground';
 import { setSujonState, type SujonState } from '../sujon-utils';
 import { MockSwarmProvider } from '../../providers/MockSwarmProvider';
 import { SwarmHealthDashboard } from '../swarm/SwarmHealthDashboard';
+import { LiveSimulator } from './LiveSimulator';
 import { ActionDock } from './ActionDock';
+import { SidebarSettings } from './SidebarSettings';
 
 interface NavItem {
   id: DashboardRoute;
@@ -54,7 +56,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: <Settings size={15} /> },
 ];
 
-// বাংলা মন্তব্য: সুপার-অ্যাডমিন কন্ট্রোল লেয়ার — সাইট অ্যাকশন রেজিস্ট্রি ও LLM গেটওয়ে
+// বাংলা মন্তব্য: সুপার-অ্যাডমিন কন্ট্রোল লেয়ার — সাইট অ্যাকশন রেজিস্ট্রি ও LLM গেটওয়ে
 const ADMIN_NAV_ITEMS: NavItem[] = [
   { id: 'site-actions', label: 'Site Actions', icon: <Table2 size={15} /> },
   { id: 'llm-gateway', label: 'LLM Gateway', icon: <Cpu size={15} /> },
@@ -72,7 +74,6 @@ interface DashboardShellProps {
 
 export function DashboardShell(props: DashboardShellProps) {
   const [route, navigate] = useHashRoute();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // বাংলা মন্তব্য: রাউটের ভিত্তিতে Sujon স্টেট সেট করা — টাস্ক এক্সিকিউশন আরম্ভ হলে processing, সেশন শেষে idle
   useMemo(() => {
@@ -90,6 +91,8 @@ export function DashboardShell(props: DashboardShellProps) {
       usage: 'idle',
       settings: 'idle',
       admin: 'idle',
+      guardrails: 'idle',
+      'healing-log': 'idle',
     };
     setSujonState(sujonState[route.page] || 'idle');
   }, [route.page]);
@@ -98,7 +101,7 @@ export function DashboardShell(props: DashboardShellProps) {
     navigate('session', id);
   };
 
-  // বাংলা মন্তব্য: হ্যাশ রাউটের ভিত্তিতে সংশ্লিষ্ট পেজ রেন্ডার করা হয়
+  // বাংলা মন্তব্য: হ্যাশ রাউটের ভিত্তিতে সংশ্লিষ্ট পেজ রেন্ডার করা হয় — লজিক অপরিবর্তিত
   const renderPage = () => {
     switch (route.page) {
       case 'session':
@@ -124,7 +127,6 @@ export function DashboardShell(props: DashboardShellProps) {
       case 'settings':
         return <SettingsPage />;
       case 'admin':
-        // বাংলা মন্তব্য: অ্যাডমিন কনসোলের জন্য #/admin রুট
         return <div className="p-6 text-text-secondary text-xs">Admin console (use /admin subdomain)</div>;
       case 'sessions':
       default:
@@ -136,25 +138,23 @@ export function DashboardShell(props: DashboardShellProps) {
 
   return (
     <MockSwarmProvider>
-      <div className="relative min-h-screen flex bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] text-foreground">
-        {/* বাংলা মন্তব্য: Sujon অ্যাম্বিয়েন্ট ব্যাকগ্রাউন্ড */}
+      <div className="relative flex h-screen overflow-hidden bg-[var(--supremeai-color-bg-void-light)] text-foreground dark:bg-[var(--supremeai-color-bg-void-dark)]">
+        {/* বাংলা মন্তব্য: Sujon অ্যাম্বিয়েন্ট ব্যাকগ্রাউন্ড — matte ash canvas এর উপর হালকা light-reactive লেয়ার */}
         <LiveSujonBackground />
 
-        {/* সাইডবার */}
+        {/* প্রাইমারি নেভিগেশন — অপরিবর্তিত হ্যাশ-রাউট নেভ */}
         <aside
           data-testid="dashboard-sidebar"
-          className="relative z-10 w-64 shrink-0 border-r border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] bg-[var(--supremeai-color-bg-elevated-light)] dark:bg-[var(--supremeai-color-bg-elevated-dark)] flex flex-col transition-colors"
+          className="relative z-10 flex w-64 shrink-0 flex-col border-r border-[var(--supremeai-color-border-accent-light)] bg-[var(--supremeai-color-bg-elevated-light)] transition-colors dark:border-[var(--supremeai-color-border-accent-dark)] dark:bg-[var(--supremeai-color-bg-elevated-dark)]"
         >
-          {/* হেডার */}
-          <div className="flex items-center gap-2 px-6 py-4 border-b border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)]">
-            <div className="bg-[var(--supremeai-color-brand-500)] h-8 w-8 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">SAI</span>
+          <div className="flex items-center gap-2 border-b border-[var(--supremeai-color-border-accent-light)] px-6 py-4 dark:border-[var(--supremeai-color-border-accent-dark)]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--supremeai-color-brand-500)]">
+              <span className="text-xs font-bold text-white">SAI</span>
             </div>
-            <span className="font-bold text-xl tracking-tight">SupremeAI</span>
+            <span className="text-xl font-bold tracking-tight">SupremeAI</span>
           </div>
 
-          {/* সাইডবার নেভিগেশন লিংক */}
-          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+          <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
             {navItems.map((item) => {
               const isActive = route.page === item.id;
               return (
@@ -162,10 +162,10 @@ export function DashboardShell(props: DashboardShellProps) {
                   key={item.id}
                   data-testid={`nav-${item.id}`}
                   onClick={() => navigate(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
+                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-[var(--supremeai-color-brand-50)] text-[var(--supremeai-color-brand-600)] dark:bg-[var(--supremeai-color-brand-500)]/10 dark:text-[var(--supremeai-color-brand-500)]'
-                      : 'text-[var(--supremeai-color-neutral-500)] hover:text-foreground hover:bg-[var(--supremeai-color-neutral-100)] dark:hover:bg-[var(--supremeai-color-neutral-900)]'
+                      : 'text-[var(--supremeai-color-neutral-500)] hover:bg-[var(--supremeai-color-neutral-100)] hover:text-foreground dark:hover:bg-[var(--supremeai-color-neutral-900)]'
                   }`}
                 >
                   {item.icon}
@@ -175,27 +175,27 @@ export function DashboardShell(props: DashboardShellProps) {
             })}
           </nav>
 
-          {/* স্ট্যাটাস ও থিম */}
-          <div className="px-4 py-4 border-t border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] space-y-3">
-            <div
-              data-testid="sidebar-server-status"
-              className="flex items-center gap-2 text-xs"
-            >
+          <div className="space-y-3 border-t border-[var(--supremeai-color-border-accent-light)] px-4 py-4 dark:border-[var(--supremeai-color-border-accent-dark)]">
+            <div data-testid="sidebar-server-status" className="flex items-center gap-2 text-xs">
               {props.isServerOnline ? (
                 <>
                   <Wifi size={14} className="text-[var(--supremeai-color-brand-success-light)] dark:text-[var(--supremeai-color-brand-success-dark)]" />
-                  <span className="text-[var(--supremeai-color-brand-success-light)] dark:text-[var(--supremeai-color-brand-success-dark)] font-medium">Online</span>
+                  <span className="font-medium text-[var(--supremeai-color-brand-success-light)] dark:text-[var(--supremeai-color-brand-success-dark)]">
+                    Online
+                  </span>
                 </>
               ) : (
                 <>
                   <WifiOff size={14} className="text-[var(--supremeai-color-brand-danger-light)] dark:text-[var(--supremeai-color-brand-danger-dark)]" />
-                  <span className="text-[var(--supremeai-color-brand-danger-light)] dark:text-[var(--supremeai-color-brand-danger-dark)] font-medium">Offline</span>
+                  <span className="font-medium text-[var(--supremeai-color-brand-danger-light)] dark:text-[var(--supremeai-color-brand-danger-dark)]">
+                    Offline
+                  </span>
                 </>
               )}
             </div>
             <button
               onClick={props.toggleTheme}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-[var(--supremeai-color-neutral-500)] hover:text-foreground hover:bg-[var(--supremeai-color-neutral-100)] dark:hover:bg-[var(--supremeai-color-neutral-900)] transition-colors"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--supremeai-color-neutral-500)] transition-colors hover:bg-[var(--supremeai-color-neutral-100)] hover:text-foreground dark:hover:bg-[var(--supremeai-color-neutral-900)]"
             >
               <Shield size={14} />
               {props.theme === 'dark' ? 'Dark' : 'Light'} mode
@@ -203,27 +203,33 @@ export function DashboardShell(props: DashboardShellProps) {
           </div>
         </aside>
 
-        {/* মূল কন্টেন্ট এলাকা */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
-          {!isAuthenticated && (
-            <div className="shrink-0 bg-rose-500/10 border-b border-rose-500/20 px-4 py-2 flex items-center justify-center gap-3 shadow-sm z-10">
-              <AlertCircle className="w-4 h-4 text-rose-400" />
-              <span className="text-xs font-medium text-slate-300">
-                You are exploring in <span className="text-rose-400">Guest Mode</span>.
-              </span>
-              <div className="h-3 w-px bg-slate-700"></div>
-              <Link to="/login" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors">
-                Login / Sign Up
-              </Link>
-              <span className="text-xs text-slate-500 hidden sm:inline">to save your progress.</span>
-            </div>
-          )}
-          <main className="flex-1 overflow-y-auto bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)]">
-            {renderPage()}
+        {/* Sessions/Vault/Settings কুইক-অ্যাক্সেস হাব — কোলাপসিবল, বিদ্যমান পেজ কম্পোনেন্ট পুনর্ব্যবহার করে */}
+        <SidebarSettings onOpenSession={handleOpenSession} navigate={navigate} />
 
-            {/* Action Dock Integration */}
-            <ActionDock sessionId="test-session" />
-          </main>
+        {/* মূল কন্টেন্ট এলাকা — Control Hub (কেন্দ্র) + Live Simulator (ডান, সবসময় দৃশ্যমান) */}
+        <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1">
+            <main className="min-w-0 flex-1 overflow-y-auto bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={route.page + (route.param ?? '')}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="h-full"
+                >
+                  {renderPage()}
+                </motion.div>
+              </AnimatePresence>
+            </main>
+
+            {/* বাংলা মন্তব্য: "Magic Window" — মেন্ডেটরি, ফিক্সড-সাইজ, সব রাউটে সবসময় দৃশ্যমান */}
+            <LiveSimulator />
+          </div>
+
+          {/* Bottom Action-Dock — ড্র্যাগ-অ্যান্ড-ড্রপ, ইউজার-কনফিগারযোগ্য */}
+          <ActionDock />
         </div>
       </div>
     </MockSwarmProvider>

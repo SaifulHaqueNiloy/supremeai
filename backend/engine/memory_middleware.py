@@ -26,6 +26,13 @@ class MemoryMiddleware:
             # 2. Query past experiences
             experiences = await self.vector_db.find_similar_experiences(vector, top_k=2)
 
+            if getattr(self.vector_db, "degraded", False):
+                # বাংলা: এটা "কোনো past experience নেই" এর মতো না — memory backend নিজেই
+                # অনুপস্থিত/down। agent-কে ভুল করে "clean slate" ভাবতে দেওয়া যাবে না,
+                # তাই error-level এ স্পষ্টভাবে জানানো হচ্ছে যাতে health monitoring ধরতে পারে।
+                logger.error("🧠 MemoryMiddleware: vector memory backend is DEGRADED — proceeding WITHOUT historical context.")
+                return task_prompt
+
             if not experiences:
                 logger.info("🧠 MemoryMiddleware: No relevant past experiences found.")
                 return task_prompt
@@ -35,8 +42,8 @@ class MemoryMiddleware:
             memory_context = "\n".join([f"- Past insight: {exp['metadata'].get('solution', 'Unknown')}" for exp in experiences])
             return f"{task_prompt}\n\n--- RELEVANT PAST EXPERIENCE ---\n{memory_context}\n--------------------------------"
         except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to augment task with memory: {str(e)}")
-            return task_prompt  # Fallback to original prompt
+            logger.error(f"❌ Failed to augment task with memory (proceeding WITHOUT historical context): {str(e)}")
+            return task_prompt  # Fallback to original prompt, but now logged as ERROR not silent
 
 
 memory_mw = MemoryMiddleware()

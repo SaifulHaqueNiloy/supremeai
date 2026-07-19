@@ -24,12 +24,17 @@ class VectorDatabaseClient:
 
         # In a real environment, this blocks. Best to call async initialization
         # or handle exceptions gracefully if the key is dummy.
+        # বাংলা: index না থাকলে save/find silently কোনো কাজ না করেই সফল রেজাল্ট রিটার্ন করে —
+        # এই ফ্ল্যাগ দিয়ে caller (memory_middleware) বুঝতে পারবে memory backend আসলে
+        # অনুপস্থিত/degraded, "কোনো memory নেই" এর সাথে গুলিয়ে ফেলবে না।
+        self.degraded = False
         try:
             self._ensure_index()
             self.index = self.pc.Index(self.index_name)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Pinecone init skipped (Missing API Key or Connection Error): {str(e)}")
             self.index = None
+            self.degraded = True
 
     def _ensure_index(self):
         indexes = [idx.name for idx in self.pc.list_indexes()]
@@ -49,10 +54,16 @@ class VectorDatabaseClient:
         def _upsert():
             if self.index:
                 self.index.upsert(vectors=[(doc_id, vector, metadata)])
+                return True
+            return False
 
         # Using asyncio.to_thread to prevent blocking the async event loop
-        await asyncio.to_thread(_upsert)
-        logger.debug(f"🧠 Saved neural memory experience: {doc_id}")
+        saved = await asyncio.to_thread(_upsert)
+        if saved:
+            logger.debug(f"🧠 Saved neural memory experience: {doc_id}")
+        else:
+            self.degraded = True
+            logger.error(f"❌ save_experience() skipped: vector index unavailable (doc_id={doc_id}). Experience NOT persisted.")
 
     async def find_similar_experiences(self, vector: list[float], top_k: int = 3):
         """Retrieves relevant past experiences for RAG."""
@@ -60,9 +71,11 @@ class VectorDatabaseClient:
         def _query():
             if self.index:
                 return self.index.query(vector=vector, top_k=top_k, include_metadata=True)
-            return {"matches": []}
+            return {"matches": [], "_degraded": True}
 
         results = await asyncio.to_thread(_query)
+        if results.get("_degraded"):
+            logger.error("❌ find_similar_experiences() skipped: vector index unavailable, not 'no matches found'.")
         return results.get("matches", [])
 
 
