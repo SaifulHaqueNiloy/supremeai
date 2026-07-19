@@ -28,6 +28,9 @@ import { getAethelResponse } from "./services/chatService";
 import type { ChatMessage } from "./services/chatService";
 import { useServerStream } from "./hooks/useServerStream";
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
+import { primeDeviceFingerprint } from "./utils/deviceFingerprint";
+
+primeDeviceFingerprint(); // বাংলা মন্তব্য: অ্যাপ বুট হওয়ার সাথে সাথে ব্যাকগ্রাউন্ডে ফিঙ্গারপ্রিন্ট হ্যাশ প্রিলোড হচ্ছে
 
 const queryClient = new QueryClient({
   defaultOptions: {
