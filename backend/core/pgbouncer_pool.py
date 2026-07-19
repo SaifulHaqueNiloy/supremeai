@@ -2,12 +2,30 @@
 
 import asyncio
 import logging
+import os
 
 import asyncpg
 from asyncpg.connection import Connection  # Corrected import
 
 
 logger = logging.getLogger(__name__)
+
+# বাংলা মন্তব্য: User ও Admin — দুই আলাদা Render instance একই Supabase PgBouncer পুলে
+# কানেক্ট করে। database/session.py-এর SQLAlchemy engine ইতিমধ্যে SERVICE_ROLE অনুযায়ী
+# pool ভাগ করে (user: 2+13=15, admin: 1+2=3), কিন্তু এই raw-asyncpg pool আগে হার্ডকোডেড
+# min=5/max=30 ব্যবহার করত — উভয় role-এর instance যোগ করলে ৩০+১৫=৪৫ বা তার বেশি
+# কানেকশন claim করতে পারত, যা Supabase ফ্রি-টিয়ার PgBouncer pool exhaust করতে পারে।
+# একই role-aware bracket এখানে পুনরায় ব্যবহার করা হলো, যোগফল হিসাব করে (এই pool +
+# session.py engine) instance প্রতি মোট কানেকশন যুক্তিসঙ্গত রাখা হয়েছে।
+_ROLE_POOL_BRACKETS: dict[str, tuple[int, int]] = {
+    "admin": (1, 3),   # low-traffic internal panel
+    "user": (3, 12),   # high-traffic client-facing
+}
+
+
+def _role_pool_sizes() -> tuple[int, int]:
+    role = os.getenv("SERVICE_ROLE", "user").lower()
+    return _ROLE_POOL_BRACKETS.get(role, _ROLE_POOL_BRACKETS["user"])
 
 
 class PgBouncerConnectionPool:
@@ -16,16 +34,17 @@ class PgBouncerConnectionPool:
         self._pool = None
 
     async def connect(self):
-        """Initializes the asyncpg connection pool."""
+        """Initializes the asyncpg connection pool, sized by SERVICE_ROLE."""
+        min_size, max_size = _role_pool_sizes()
         self._pool = await asyncpg.create_pool(
             dsn=self._dsn,
-            min_size=5,
-            max_size=30,
+            min_size=min_size,
+            max_size=max_size,
             max_inactive_connection_lifetime=300,
             statement_cache_size=0,
             command_timeout=30,
         )
-        logger.info("PgBouncer connection pool initialized.")
+        logger.info(f"PgBouncer connection pool initialized (min_size={min_size}, max_size={max_size}, role={os.getenv('SERVICE_ROLE', 'user')}).")
 
     async def acquire(self) -> Connection:
         """Acquires a connection from the pool."""
