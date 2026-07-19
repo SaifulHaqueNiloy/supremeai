@@ -47,7 +47,7 @@ def _acquire_distributed_lock(self, lock_key: str, lock_value: str, ttl: int = 1
             raise RuntimeError("Redis unavailable in production - cannot guarantee idempotency. Fail-Closed.")
         logger.warning("Redis lock not configured - proceeding in test mode only")
         return True
-    
+
     try:
         return redis_queue.set_nx(lock_key, lock_value, ex=ttl)
     except Exception as e:
@@ -105,11 +105,11 @@ def visit_Call(self, node: ast.Call):
             raise SecuritySandboxError(f"Banned reflection function call detected: {node.func.attr}")
         if node.func.attr in {"import_module", "system", "popen", "spawn", "fork", "run", "run_async"}:
             raise SecuritySandboxError(f"Banned method invocation detected: {node.func.attr}")
-    
+
     # Block direct function calls
     if isinstance(node.func, ast.Name) and node.func.id in self.banned_functions:
         raise SecuritySandboxError(f"Banned function call detected: {node.func.id}")
-    
+
     self.generic_visit(node)
 ```
 
