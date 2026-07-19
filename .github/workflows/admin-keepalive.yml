@@ -1,0 +1,36 @@
+# SupremeAI — Admin Instance Keep-Alive (Cold-Start Elimination)
+# বাংলা মন্তব্য: Render.com ফ্রি-টিয়ারে ১৫ মিনিট নিষ্ক্রিয় থাকলে ইনস্ট্যান্স স্লিপে চলে যায়।
+# এই ওয়ার্কফ্লো প্রতি ১৪ মিনিটে Admin API-এর /health এন্ডপয়েন্টে পিং করে ঘুম প্রতিরোধ করে,
+# যাতে JIT OTP / security lifecycle timeout-এর সমস্যা না হয়। সম্পূর্ণ Zero-Cost (GitHub Actions free tier)।
+#
+# Setup: repo → Settings → Secrets and variables → Actions → New repository secret
+#   ADMIN_HEALTH_URL = https://<your-admin-render-service>.onrender.com/api/v1/health
+
+name: "🫀 Admin Instance Keep-Alive"
+
+on:
+  schedule:
+    # প্রতি ১৪ মিনিটে — GitHub Actions cron সর্বনিম্ন প্রতি ৫ মিনিট সাপোর্ট করে, তাই কোল্ড-স্টার্ট
+    # উইন্ডো (Render free tier ~15 min idle timeout) নিরাপদে কভার হয়।
+    - cron: '*/14 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Admin API health endpoint
+        env:
+          ADMIN_HEALTH_URL: ${{ secrets.ADMIN_HEALTH_URL }}
+        run: |
+          if [ -z "$ADMIN_HEALTH_URL" ]; then
+            echo "⚠️ ADMIN_HEALTH_URL secret not set — skipping keep-alive ping. See workflow header for setup."
+            exit 0
+          fi
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$ADMIN_HEALTH_URL" || echo "000")
+          echo "Admin health check responded with HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "🔴 Admin instance did not return 200 — it may be cold-starting or down. Not failing the job (this is best-effort)."
+          else
+            echo "🟢 Admin instance is warm."
+          fi
