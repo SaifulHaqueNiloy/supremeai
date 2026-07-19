@@ -107,17 +107,25 @@ class MaintenancePipeline:
         """
         logger.info("🛡️ Immune System: Running performance regression detection...")
         try:
-            # This would be a real call to a monitoring service like Prometheus/Datadog
-            # For demonstration, we use a placeholder function.
-            # p95_latency = await monitoring_service.get_p95_latency("api_main_router")
-            p95_latency = 150  # Simulated latency in ms
+            from api.routes.metrics import metrics_engine  # noqa: PLC0415
+            history = metrics_engine.latency_history
+            if not history:
+                logger.info("🛡️ Immune System: Latency logs empty. Skipping regression check.")
+                return
 
-            LATENCY_THRESHOLD_MS = 100
+            # বাংলা মন্তব্য: P95 ল্যাটেন্সি গণনা করা। 
+            # হিস্ট্রি সর্ট করে ৯৫তম পার্সেন্টাইল ভ্যালু বের করা হচ্ছে।
+            sorted_history = sorted(history)
+            idx = int(len(sorted_history) * 0.95)
+            # duration-টি সেকেন্ডে থাকে, তাই ms-এ রূপান্তর করছি
+            p95_latency = sorted_history[min(idx, len(sorted_history) - 1)] * 1000.0
 
+            LATENCY_THRESHOLD_MS = 500.0  # Dev default threshold 500ms
+
+            logger.info(f"🛡️ Immune System: Current real P95 Latency = {p95_latency:.2f}ms")
             if p95_latency > LATENCY_THRESHOLD_MS:
-                logger.critical(f"🚨 Performance Regression Detected! p95 latency ({p95_latency}ms) exceeds threshold ({LATENCY_THRESHOLD_MS}ms).")
+                logger.critical(f"🚨 Performance Regression Detected! p95 latency ({p95_latency:.2f}ms) exceeds threshold ({LATENCY_THRESHOLD_MS}ms).")
                 # In a real scenario, this would trigger a GitHub Actions workflow to rollback the deployment.
-                # For example: call_github_action_webhook("rollback_deployment")
 
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to run performance regression check: {e}")
