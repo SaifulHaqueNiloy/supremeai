@@ -187,6 +187,7 @@ async def logs_stream():
                     await asyncio.sleep(1.0)
         except asyncio.CancelledError:
             logger.info("Log stream client disconnected")
+            raise
         finally:
             if file_obj:
                 with contextlib.suppress(Exception):
@@ -669,12 +670,18 @@ def get_full_data_export():
 def run_security_scan():
     findings = []
     try:
-        if not settings.jwt_secret or settings.jwt_secret == "np97Qpdqi9VdRyiANqjfKZn8/u7s/WCjtG8UsjbhhS0=":
+        # Configuration Drift Filter: never compare against a literal secret
+        # value in source (that value itself becomes a leaked credential the
+        # moment it's committed). Use structural checks instead — the same
+        # ones already enforced by Settings.validate_jwt_secret_strength.
+        _jwt_secret = settings.jwt_secret or ""
+        _weak_secrets = {"secret", "password", "123456", "changeme", "admin", "jwt_secret"}
+        if not _jwt_secret or len(_jwt_secret) < 64 or _jwt_secret.lower() in _weak_secrets:
             findings.append(
                 {
                     "item": "jwt_secret",
                     "severity": "critical",
-                    "message": "JWT secret is using a default/weak value",
+                    "message": "JWT secret is missing, too short (<64 bytes entropy), or a known-weak value",
                 }
             )
         if settings.debug:
@@ -870,7 +877,7 @@ async def get_events(limit: int = Query(50, ge=1, le=200)):
 
 @router.get("/reports")
 async def list_reports(report_name: str = None):
-    # বাংলা মন্তব্য: ডিরেক্টরি থেকে দৈনিক স্ট্যান্ডআপ রিপোর্টের মতো ফাইলগুলো তালিকাভুক্ত বা নির্দিষ্ট রিপোর্ট রিট্রিভ করার এন্ডপয়েন্ট
+    # বাংলা মন্তব্য: ডিরেক্টরি থেকে দৈনিক স্ট্যান্ডআপ রিপোর্টের মতো ফাইলগুলো স্ট্যান্ডআপ রিপোর্টের মতো ফাইলগুলো তালিকাভুক্ত বা নির্দিষ্ট রিপোর্ট রিট্রিভ করার এন্ডপয়েন্ট
     reports_dir = "data/reports"
     if not os.path.isdir(reports_dir):
         reports_dir = "/app/data/reports"

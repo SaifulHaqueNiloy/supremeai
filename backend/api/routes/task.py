@@ -388,6 +388,7 @@ async def task_stream():
                 await asyncio.sleep(15)
         except asyncio.CancelledError:
             logger.debug("Task stream keepalive cancelled (client disconnected)")
+            raise
 
     return StreamingResponse(
         keepalive(),
