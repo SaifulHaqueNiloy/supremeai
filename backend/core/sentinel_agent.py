@@ -127,18 +127,60 @@ class SentinelAgent:
 
     async def audit_dependencies(self):
         """
-        Runs heavy auditing logic (e.g., pip list --outdated equivalent)
-        and updates SystemDependency status.
+        Runs heavy auditing logic (e.g., pip-audit / pip list --outdated)
+        and updates SystemDependency status dynamically.
+        
+        বাংলা মন্তব্য: আগে এখানে শুধু ডামি রিলেশন টাচ করে টাইমস্ট্যাম্প আপডেট করা হতো।
+        এখন এটি pip-audit/pip command রান করে অরফ্যানড বা আউটডেটেড প্যাকেজ সনাক্ত করে 
+        সিস্টেমের ডিপেনডেন্সি ডাটাবেস আপডেট করে।
         """
+        import asyncio
+        import json
+        import shutil
+        logger.info("[SentinelAgent] Running dependency audit via system environment tools...")
+        
+        # Check if pip-audit is available, fallback to pip list --outdated
+        audit_cmd = None
+        if shutil.which("pip-audit"):
+            audit_cmd = ["pip-audit", "--format=json"]
+        elif shutil.which("pip"):
+            audit_cmd = ["pip", "list", "--outdated", "--format=json"]
+
+        vulnerabilities = []
+        if audit_cmd:
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *audit_cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, _ = await proc.communicate()
+                if proc.returncode in (0, 1) and stdout:
+                    vulnerabilities = json.loads(stdout.decode("utf-8"))
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f"[SentinelAgent] Failed executing audit process: {e}")
+
         try:
             async with AsyncSessionLocal() as session:
-                logger.info("[SentinelAgent] Running dependency audit...")
-                # Placeholder logic: Here we would use pip or subprocess
-                # For now, we just touch the dependencies to update audit time
                 result = await session.execute(select(SystemDependency))
                 deps = result.scalars().all()
                 for dep in deps:
                     dep.last_audit_at = datetime.now(UTC)
+                    # Check if package is flagged as vulnerable in scan report
+                    # Depending on command output structure (dict or list)
+                    is_vuln = False
+                    if isinstance(vulnerabilities, list):
+                        is_vuln = any(v.get("name", "").lower() == dep.package_name.lower() for v in vulnerabilities)
+                    elif isinstance(vulnerabilities, dict):
+                        is_vuln = dep.package_name in vulnerabilities.get("dependencies", {})
+                        
+                    if is_vuln:
+                        dep.status = "vulnerable"
+                        # Trigger immediate remediation alert
+                        logger.error(f"[SentinelAgent] Flagged security risk: package {dep.package_name} is vulnerable!")
+                        await self.trigger_event("SECURITY_RISK", f"Dependency {dep.package_name} failed security scan.")
+                    else:
+                        dep.status = "secure"
                 await session.commit()
         except Exception as e:  # noqa: BLE001
             logger.error(f"[SentinelAgent] Error during audit_dependencies: {e}")
