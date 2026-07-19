@@ -295,9 +295,29 @@ async def app_lifespan(app):
     app.state.sentinel_task = asyncio.create_task(sentinel.run_periodic_loop())
     app.state.swarm_cache_task = asyncio.create_task(start_swarm_cache_invalidator())
 
+    # Start Tier-8 Meta-Self Agents
+    try:
+        from core.tier8.tier8_integration import init_tier8
+
+        # বাংলা মন্তব্য: গ্লোবাল সার্ভিস রেজিস্ট্রিতে Tier-8 এজেন্টস ইন্টিগ্রেট ও স্টার্ট করার জন্য
+        await init_tier8(services.registry)
+        logger.info("✅ Tier-8 Meta-Self subsystem initialized successfully.")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
+
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 
     logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
+
+    # Shutdown Tier-8 Meta-Self Agents
+    try:
+        from core.tier8.tier8_integration import shutdown_tier8
+
+        # বাংলা মন্তব্য: Graceful shutdown এর সময় Tier-8 এজেন্টস স্টপ করা হচ্ছে
+        await shutdown_tier8()
+        logger.info("✅ Tier-8 Meta-Self subsystem shutdown completed.")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ Tier-8 shutdown failed: {exc}")
 
     # Orchestrator cleanup
     try:

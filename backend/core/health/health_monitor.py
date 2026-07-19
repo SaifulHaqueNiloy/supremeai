@@ -25,6 +25,8 @@ class HealthMonitor:
         self.cpu_threshold = 85.0
         self.mem_threshold = 90.0
         self.metrics_port = metrics_port
+        # বাংলা মন্তব্য: কাস্টম প্রোবস রেজিস্টার করার জন্য ডিকশনারি
+        self.probes: dict[str, Any] = {}
         if _PROMETHEUS_AVAILABLE:
             self._setup_metrics()
             try:
@@ -32,6 +34,11 @@ class HealthMonitor:
                 logger.info(f"Prometheus metrics server started on port {metrics_port}")
             except OSError as exc:
                 logger.warning(f"Could not start metrics server: {exc}")
+
+    def register_probe(self, name: str, probe_fn: Any) -> None:
+        """Register a custom health check probe."""
+        # বাংলা মন্তব্য: কাস্টম হেলথ চেক প্রোব রেজিস্টার করার জন্য
+        self.probes[name] = probe_fn
 
     def _setup_metrics(self):
         self.uptime_seconds = Gauge("supremeai_uptime_seconds", "Server uptime in seconds")
@@ -54,6 +61,18 @@ class HealthMonitor:
         status = "healthy"
         if cpu_percent > self.cpu_threshold or mem.percent > self.mem_threshold:
             status = "degraded"
+
+        # বাংলা মন্তব্য: রেজিস্টার্ড কাস্টম প্রোবস সম্পাদন করা হচ্ছে
+        probe_results = {}
+        for name, fn in self.probes.items():
+            try:
+                res = fn()
+                if asyncio.iscoroutine(res):
+                    res = await res
+                probe_results[name] = res
+            except Exception as e:  # noqa: BLE001
+                probe_results[name] = {"status": "error", "message": str(e)}
+
         result = {
             "status": status,
             "uptime_seconds": int(time.time() - self.start_time),
@@ -62,6 +81,8 @@ class HealthMonitor:
             "memory_available_mb": mem.available / (1024 * 1024),
             "active_tasks": len(asyncio.all_tasks()),
         }
+        if probe_results:
+            result["probes"] = probe_results
         if _PROMETHEUS_AVAILABLE:
             try:
                 self.uptime_seconds.set(result["uptime_seconds"])
