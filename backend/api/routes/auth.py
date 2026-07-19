@@ -24,6 +24,7 @@ except ImportError:
 
 from core.config import settings
 from core.security.rbac import UserContext
+from core.cache.redis_manager import redis_manager
 from database.supabase_client import db
 
 
@@ -85,7 +86,7 @@ class MeResponse(BaseModel):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest):
+async def login(body: LoginRequest, request: Request):
     if not db.client:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Supabase client is not initialized")
 
@@ -105,6 +106,13 @@ async def login(body: LoginRequest):
             "method": "supabase_auth",
         }
         access_token = create_access_token(token_data)
+
+        # 🔐 Phase 2: Known Fingerprint Registration
+        fp = request.headers.get("x-device-fingerprint")
+        if fp and fp != "unknown" and redis_manager and redis_manager.client:
+            # বাংলা মন্তব্য: লগইন করার সময় ডিভাইস ফিঙ্গারপ্রিন্ট পরিচিত ডিভাইস হিসেবে সংরক্ষণ করা হচ্ছে
+            await redis_manager.client.sadd(f"device:known:{user_id}", fp)
+
         return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))

@@ -68,7 +68,12 @@ class InstallRequest(BaseModel):
 
 def _use_redis() -> bool:
     try:
-        return redis_manager is not None and redis_manager.client is not None
+        if redis_manager is None or redis_manager.client is None:
+            return False
+        url = getattr(redis_manager, "url", "")
+        if not url or "mock" in url.lower():
+            return False
+        return True
     except Exception:
         return False
 
