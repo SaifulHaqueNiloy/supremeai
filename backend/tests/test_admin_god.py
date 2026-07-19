@@ -154,6 +154,7 @@ class TestAdminGodLayer:
     def test_enforce_with_none_context(self):
         """None কন্টেক্সটে ডিফল্ট ভিউয়ার রোল ব্যবহার হয়।"""
         from core.security.rbac import PermissionDeniedError
+
         layer = AdminGodLayer()
         # This raises PermissionDeniedError for permission denied
         with pytest.raises(PermissionDeniedError):
@@ -162,6 +163,7 @@ class TestAdminGodLayer:
     def test_enforce_permission_denied(self):
         """অনুমতি ছাড়াই enforce করলে PermissionDeniedError দেওয়া হয়।"""
         from core.security.rbac import PermissionDeniedError
+
         layer = AdminGodLayer()
         ctx = UserContext(user_id="test-user", role="viewer")
         # The actual error message is "Role 'viewer' lacks permission for 'admin'"
@@ -293,6 +295,7 @@ class TestRBACIntegration:
     def test_rbac_permission_denied_viewer_admin(self):
         """ভিউয়ার রোলের অ্যাডমিন অ্যাকশন অনুমতি নেই।"""
         from core.security.rbac import PermissionDeniedError
+
         layer = AdminGodLayer()
         ctx = UserContext(user_id="viewer", role="viewer")
         with pytest.raises(PermissionDeniedError):
