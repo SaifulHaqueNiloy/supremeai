@@ -1,6 +1,6 @@
-# Full Modified Codebase - JIT OTP & Device Fingerprinting & Dual-Instance Hardening
+# Full Modified Codebase - JIT OTP & Device Fingerprinting & Dual-Instance Hardening & Security Audit Patches
 
-This file compiles all backend and frontend changes implemented in the split APIs, Redis simulator, JIT OTP router, device fingerprinting, and Phase 2 dual-instance hardening.
+This file compiles all backend and frontend changes implemented in the split APIs, Redis simulator, JIT OTP router, device fingerprinting, Phase 2 dual-instance hardening, and July 19 Security Audit Patches.
 
 ## File: `backend/main.py`
 Path: [file:///c:/Users/n/supremeai/supremeai_2.0\backend/main.py](file:///c:/Users/n/supremeai/supremeai_2.0\backend/main.py)
@@ -1248,12 +1248,14 @@ optional_routers: list[tuple[str, str]] = [
 
 
 # Identify admin router paths
+# বাংলা মন্তব্য: tools_ops যোগ করা হলো — এটি DevOps/deploy টুলিং (docker-compose/helm
+# ফাইল-রাইট সহ) যা আগে ভুলবশত User API-তে এক্সপোজড ছিল (route-leakage)।
 _admin_paths = {
     "api.routes.simulator_admin", "api.routes.site_actions", "api.routes.llm_gateway",
     "api.routes.browser", "api.routes.evolution", "api.routes.meta_ai",
     "api.routes.admin_dashboard", "api.routes.internal", "api.routes.admin",
     "api.routes.traffic_monitor", "api.routes.admin_librarian", "api.routes.tenant_admin",
-    "api.routes.metrics", "api.routes.cloud_mesh"
+    "api.routes.metrics", "api.routes.cloud_mesh", "api.routes.tools_ops",
 }
 
 # ADMIN_ROUTERS includes health and specific admin routes
@@ -1274,6 +1276,7 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
     ("api.routes.tenant_admin", "/api"),
     ("api.routes.metrics", ""),
     ("api.routes.cloud_mesh", ""),
+    ("api.routes.tools_ops", ""),
 ]
 
 # USER_ROUTERS is all other routers
@@ -2969,6 +2972,67 @@ services:
       - key: ALLOWED_HOSTS
         value: 'supremeai-backend.onrender.com,supremeai-backend-65hl.onrender.com'
 
+  # ১.৫. অ্যাডমিন ব্যাকএন্ড (আলাদা, আইসোলেটেড Render instance — core/app_admin.py)
+  # বাংলা মন্তব্য: core/app_admin.py আগে থেকেই কোডে ছিল (Anti-Hacking OTP মিডলওয়্যার +
+  # শুধু admin রাউট), কিন্তু render.yaml-এ এর কোনো ম্যাচিং সার্ভিস ছিল না — ফলে এটি কখনো
+  # deploy-ই হতো না এবং প্রকৃত সার্ভার-লেভেল আইসোলেশন অর্জিত হয়নি। ডোমেইন/সিক্রেট আলাদা
+  # হওয়ায় ইউজার instance ক্র্যাশ করলেও অ্যাডমিন প্যানেল প্রভাবিত হবে না, এবং উল্টোটাও।
+  - type: web
+    name: supremeai-admin
+    env: image
+    image:
+      url: ghcr.io/paykaribazaronline/supremeai/supremeai-backend:latest
+    region: singapore
+    plan: free
+    healthCheckPath: /api/v1/health
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: ENV
+        value: production
+      - key: REDIS_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL_POOLER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPREMEAI_JWT_SECRET
+        sync: false
+      - key: SUPREMEAI_ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SUPREMEAI_ENCRYPTION_KEY
+        sync: false
+      - key: SUPREMEAI_DOCS_PASSWORD
+        sync: false
+      - key: SUPREMEAI_API_TOKEN
+        sync: false
+      - key: DISCORD_OTP_WEBHOOK_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false
+      - key: INFISICAL_TOKEN
+        sync: false
+      - key: INFISICAL_CLIENT_SECRET
+        sync: false
+      # বাংলা মন্তব্য: শুধুমাত্র অ্যাডমিন কনসোল origin — Vercel/Netlify user client নয়
+      - key: ADMIN_CORS_ORIGINS
+        value: '["https://supremeai-admin.web.app"]'
+      - key: SERVICE_ROLE
+        value: admin
+      - key: ALLOWED_HOSTS
+        value: 'supremeai-admin.onrender.com'
+
   # ২. ফ্রন্টএন্ড (Render 100% Free Static Hosting)
   - type: web
     name: supremeai-studio-client
@@ -3269,6 +3333,362 @@ async def test_otp_cooldown_suppresses_duplicate_sends(mock_redis):
         req3 = _make_request("5.5.5.5", "FR", "firefox-v1", "fp-yyy")
         await mw.dispatch(req3, _call_next)
         assert mock_send.call_count == 1  # unchanged — cooldown suppressed the second send
+
+```
+
+---
+
+## File: `backend/api/routes/tools_ops.py`
+Path: [file:///c:/Users/n/supremeai/supremeai_2.0\backend/api/routes/tools_ops.py](file:///c:/Users/n/supremeai/supremeai_2.0\backend/api/routes/tools_ops.py)
+
+```python
+from __future__ import annotations
+
+import os
+from typing import Any
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from loguru import logger
+from pydantic import BaseModel
+
+from api.dependencies import get_current_user_token
+from tools.code.code_smell_detector import CodeSmellDetector
+from tools.devops.on_premise_deployer import OnPremiseDeployer
+from tools.learning.domain_adapter import DomainAdapter
+from tools.learning.skill_recommender import SkillRecommender
+from tools.security_tools.vulnerability_predictor import VulnerabilityPredictor
+
+
+def _require_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Gate DevOps/deploy tooling behind an authenticated admin role.
+
+    বাংলা মন্তব্য: এই রাউটারে ফাইল-সিস্টেম রিড (smell/vuln scan) এবং ডিপ্লয়মেন্ট
+    ফাইল-রাইট (docker-compose/helm) অপারেশন আছে, যা আগে কোনো auth ছাড়াই User-facing
+    API-তে এক্সপোজড ছিল (route-leakage: এই মডিউলটি `_admin_paths`-এ ছিল না)।
+    এখন প্রতিটি এন্ডপয়েন্টে admin-role JWT বাধ্যতামূলক করা হলো।
+    """
+    if payload.get("role") != "admin":
+        logger.warning(f"🚫 Unauthorized tools-ops access attempt by {payload.get('sub', 'unknown')}")
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return payload
+
+
+router = APIRouter(prefix="/tools", tags=["tools-ops"], dependencies=[Depends(_require_admin)])
+
+
+class SmellCheckRequest(BaseModel):
+    path: str
+    thresholds: dict[str, int] | None = None
+
+
+class SmellCheckResponse(BaseModel):
+    path: str
+    smells: list[dict[str, Any]]
+    summary: dict[str, int]
+
+
+class VulnCheckRequest(BaseModel):
+    file_path: str | None = None
+    diff: str | None = None
+
+
+class VulnCheckResponse(BaseModel):
+    file: str
+    vulnerability_score: float
+    critical_count: int
+    high_count: int
+    medium_count: int
+    low_count: int
+    findings: list[dict[str, Any]]
+    recommendation: str
+
+
+class SkillRecRequest(BaseModel):
+    user_id: str
+    task_description: str
+    top_k: int = 5
+
+
+class SkillRecResponse(BaseModel):
+    user_id: str
+    task: str
+    recommendations: list[dict[str, Any]]
+    count: int
+
+
+class DomainAdaptRequest(BaseModel):
+    domain: str
+    prompt: str
+    context: str | None = None
+
+
+class DomainAdaptResponse(BaseModel):
+    domain: str
+    response: str
+    disclaimer: str
+    model: str
+    provider: str
+
+
+class DeployComposeRequest(BaseModel):
+    overrides: dict[str, Any] | None = None
+
+
+class DeployHelmRequest(BaseModel):
+    release_name: str = "supremeai"
+    namespace: str = "default"
+    replicas: int = 3
+    image_tag: str = "latest"
+
+
+class DeployResponse(BaseModel):
+    output_path: str
+    format: str
+
+
+@router.post("/smell-check", response_model=SmellCheckResponse)
+async def smell_check(payload: SmellCheckRequest):
+    if not os.path.exists(payload.path):
+        raise HTTPException(status_code=404, detail="Path not found")
+
+    detector = CodeSmellDetector()
+    if os.path.isdir(payload.path):
+        result = detector.analyze_directory(payload.path, thresholds=payload.thresholds)
+        all_smells = [smell for smells in result.values() for smell in smells]
+    else:
+        all_smells = detector.analyze_python_file(payload.path, thresholds=payload.thresholds)
+        if payload.path.endswith((".js", ".ts", ".jsx", ".tsx")):
+            all_smells.extend(detector.analyze_js_ts_file(payload.path, thresholds=payload.thresholds))
+
+    by_severity: dict[str, int] = {"critical": 0, "warning": 0, "info": 0}
+    for s in all_smells:
+        sev = s.get("severity", "info")
+        by_severity[sev] = by_severity.get(sev, 0) + 1
+
+    return SmellCheckResponse(path=payload.path, smells=all_smells, summary=by_severity)
+
+
+@router.post("/vulnerability-check", response_model=VulnCheckResponse)
+async def vulnerability_check(payload: VulnCheckRequest):
+    predictor = VulnerabilityPredictor()
+    if payload.diff:
+        result = predictor.predict_diff(payload.diff)
+    elif payload.file_path:
+        if not os.path.exists(payload.file_path):
+            raise HTTPException(status_code=404, detail="file not found")
+        result = predictor.predict(payload.file_path)
+    else:
+        raise HTTPException(status_code=400, detail="Provide file_path or diff")
+    return VulnCheckResponse(**result)
+
+
+@router.post("/skills/recommend", response_model=SkillRecResponse)
+async def recommend_skills(payload: SkillRecRequest):
+    recommender = SkillRecommender()
+    result = recommender.record_and_recommend(payload.user_id, payload.task_description, top_k=payload.top_k)
+    return SkillRecResponse(**result)
+
+
+@router.post("/domain/adapt", response_model=DomainAdaptResponse)
+async def domain_adapt(payload: DomainAdaptRequest):
+    adapter = DomainAdapter()
+    result = adapter.adapt_request(payload.domain, payload.prompt, context=payload.context)
+    return DomainAdaptResponse(
+        domain=payload.domain,
+        response=result.get("response", ""),
+        disclaimer=result.get("disclaimer", ""),
+        model=result.get("model", "unknown"),
+        provider=result.get("provider", "unknown"),
+    )
+
+
+@router.post("/deploy/compose", response_model=DeployResponse)
+async def deploy_compose(payload: DeployComposeRequest):
+    deployer = OnPremiseDeployer()
+    path = deployer.write_compose(overrides=payload.overrides)
+    return DeployResponse(output_path=path, format="docker-compose")
+
+
+@router.post("/deploy/helm", response_model=DeployResponse)
+async def deploy_helm(payload: DeployHelmRequest):
+    deployer = OnPremiseDeployer()
+    path = deployer.write_helm()
+    return DeployResponse(output_path=path, format="helm-chart")
+
+```
+
+---
+
+## File: `backend/core/pgbouncer_pool.py`
+Path: [file:///c:/Users/n/supremeai/supremeai_2.0\backend/core/pgbouncer_pool.py](file:///c:/Users/n/supremeai/supremeai_2.0\backend/core/pgbouncer_pool.py)
+
+```python
+# FILE_PATH: backend/core/pgbouncer_pool.py
+
+import asyncio
+import logging
+import os
+
+import asyncpg
+from asyncpg.connection import Connection  # Corrected import
+
+
+logger = logging.getLogger(__name__)
+
+# বাংলা মন্তব্য: User ও Admin — দুই আলাদা Render instance একই Supabase PgBouncer পুলে
+# কানেক্ট করে। database/session.py-এর SQLAlchemy engine ইতিমধ্যে SERVICE_ROLE অনুযায়ী
+# pool ভাগ করে (user: 2+13=15, admin: 1+2=3), কিন্তু এই raw-asyncpg pool আগে হার্ডকোডেড
+# min=5/max=30 ব্যবহার করত — উভয় role-এর instance যোগ করলে ৩০+১৫=৪৫ বা তার বেশি
+# কানেকশন claim করতে পারত, যা Supabase ফ্রি-টিয়ার PgBouncer pool exhaust করতে পারে।
+# একই role-aware bracket এখানে পুনরায় ব্যবহার করা হলো, যোগফল হিসাব করে (এই pool +
+# session.py engine) instance প্রতি মোট কানেকশন যুক্তিসঙ্গত রাখা হয়েছে।
+_ROLE_POOL_BRACKETS: dict[str, tuple[int, int]] = {
+    "admin": (1, 3),   # low-traffic internal panel
+    "user": (3, 12),   # high-traffic client-facing
+}
+
+
+def _role_pool_sizes() -> tuple[int, int]:
+    role = os.getenv("SERVICE_ROLE", "user").lower()
+    return _ROLE_POOL_BRACKETS.get(role, _ROLE_POOL_BRACKETS["user"])
+
+
+class PgBouncerConnectionPool:
+    def __init__(self, dsn: str):
+        self._dsn = dsn
+        self._pool = None
+
+    async def connect(self):
+        """Initializes the asyncpg connection pool, sized by SERVICE_ROLE."""
+        min_size, max_size = _role_pool_sizes()
+        self._pool = await asyncpg.create_pool(
+            dsn=self._dsn,
+            min_size=min_size,
+            max_size=max_size,
+            max_inactive_connection_lifetime=300,
+            statement_cache_size=0,
+            command_timeout=30,
+        )
+        logger.info(f"PgBouncer connection pool initialized (min_size={min_size}, max_size={max_size}, role={os.getenv('SERVICE_ROLE', 'user')}).")
+
+    async def acquire(self) -> Connection:
+        """Acquires a connection from the pool."""
+        if not self._pool:
+            raise RuntimeError("Connection pool not initialized. Call connect() first.")
+        return await self._pool.acquire()
+
+    async def release(self, conn: Connection):
+        """Releases a connection back to the pool."""
+        if self._pool:
+            await self._pool.release(conn)
+
+    # asyncpg.Pool এর মেথডগুলোকে সরাসরি কল করার জন্য proxy মেথডগুলো যুক্ত করা হলো
+    # যাতে কোডবেসে pool.execute() বা pool.fetch() কল করলে কোনো Attribute Error না দেয়।
+    async def execute(self, query: str, *args, **kwargs):
+        """Executes a query using the pool."""
+        if not self._pool:
+            raise RuntimeError("Connection pool not initialized.")
+        return await self._pool.execute(query, *args, **kwargs)
+
+    async def fetch(self, query: str, *args, **kwargs):
+        """Fetches rows using the pool."""
+        if not self._pool:
+            raise RuntimeError("Connection pool not initialized.")
+        return await self._pool.fetch(query, *args, **kwargs)
+
+    async def fetchrow(self, query: str, *args, **kwargs):
+        """Fetches a single row using the pool."""
+        if not self._pool:
+            raise RuntimeError("Connection pool not initialized.")
+        return await self._pool.fetchrow(query, *args, **kwargs)
+
+    async def fetchval(self, query: str, *args, **kwargs):
+        """Fetches a single value using the pool."""
+        if not self._pool:
+            raise RuntimeError("Connection pool not initialized.")
+        return await self._pool.fetchval(query, *args, **kwargs)
+
+    async def close(self):
+        """Closes the connection pool."""
+        if self._pool:
+            await self._pool.close()
+            logger.info("PgBouncer connection pool closed.")
+            self._pool = None
+
+
+_db_pool_instance = None
+_pool_lock = asyncio.Lock()
+
+
+async def get_db_pool() -> PgBouncerConnectionPool:
+    """Provides a singleton instance of the PgBouncerConnectionPool.
+
+    RuntimeError is raised if the pool has not been initialized yet.
+    """
+    if _db_pool_instance is None:
+        raise RuntimeError("DB pool was accessed before app startup initialized it. Call init_db_pool() explicitly during the FastAPI lifespan.")
+    return _db_pool_instance
+
+
+async def init_db_pool(dsn: str) -> PgBouncerConnectionPool:
+    """Initializes the DB pool singleton and returns it."""
+    global _db_pool_instance
+    async with _pool_lock:
+        if _db_pool_instance is None:
+            pool = PgBouncerConnectionPool(dsn)
+            await pool.connect()
+            _db_pool_instance = pool
+        return _db_pool_instance
+
+```
+
+---
+
+## File: `.github/workflows/user-keepalive.yml`
+Path: [file:///c:/Users/n/supremeai/supremeai_2.0\.github/workflows/user-keepalive.yml](file:///c:/Users/n/supremeai/supremeai_2.0\.github/workflows/user-keepalive.yml)
+
+```yaml
+# SupremeAI — User Instance Keep-Alive (Cold-Start Elimination)
+# বাংলা মন্তব্য: render.yaml-এ প্রকৃতপক্ষে যেই ব্যাকএন্ড ডিপ্লয় করা হয় (supremeai-backend,
+# SERVICE_ROLE=user) সেটির জন্য আগে কোনো keep-alive workflow ছিল না — শুধু admin-keepalive.yml
+# ছিল, যেটি এমন একটি Admin instance পিং করে যা render.yaml-এ ডিফাইনই করা নেই। ফলে
+# প্রকৃত ইউজার-ফেসিং ট্রাফিক সার্ভ করা instance-টিই cold-start-এর ঝুঁকিতে ছিল।
+# এই ওয়ার্কফ্লো প্রতি ১৪ মিনিটে User API-এর /health এন্ডপয়েন্টে পিং করে ঘুম প্রতিরোধ করে।
+# সম্পূর্ণ Zero-Cost (GitHub Actions free tier)।
+#
+# Setup: repo → Settings → Secrets and variables → Actions → New repository secret
+#   USER_HEALTH_URL = https://<your-user-render-service>.onrender.com/api/v1/health
+
+name: "🫀 User Instance Keep-Alive"
+
+on:
+  schedule:
+    # প্রতি ১৪ মিনিটে — GitHub Actions cron সর্বনিম্ন প্রতি ৫ মিনিট সাপোর্ট করে, তাই কোল্ড-স্টার্ট
+    # উইন্ডো (Render free tier ~15 min idle timeout) নিরাপদে কভার হয়।
+    - cron: '*/14 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping-user:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping User API health endpoint
+        env:
+          USER_HEALTH_URL: ${{ secrets.USER_HEALTH_URL }}
+        run: |
+          if [ -z "$USER_HEALTH_URL" ]; then
+            echo "⚠️ USER_HEALTH_URL secret not set — skipping keep-alive ping. See workflow header for setup."
+            exit 0
+          fi
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$USER_HEALTH_URL" || echo "000")
+          echo "User health check responded with HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "🔴 User instance did not return 200 — it may be cold-starting or down. Not failing the job (this is best-effort)."
+          else
+            echo "🟢 User instance is warm."
+          fi
 
 ```
 
