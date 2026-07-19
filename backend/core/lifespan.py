@@ -43,6 +43,8 @@ from core.maintenance_pipeline import maintenance_pipeline  # noqa: E402
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
 from core.messaging.event_bus import error_event_bus  # noqa: E402
 from core.orchestration.orchestrator import Orchestrator  # noqa: E402
+from core.persistence import pooled_pg  # noqa: E402
+from core.persistence.write_behind import flush_all as flush_write_behind_batchers  # noqa: E402
 from core.pgbouncer_pool import get_db_pool  # noqa: E402
 from core.pgbouncer_pool import init_db_pool  # noqa: E402
 from core.startup_validator import StartupValidator  # noqa: E402
@@ -376,12 +378,34 @@ async def app_lifespan(app):
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error closing background tasks: {e}")
 
+    # Flush write-behind batchers (audit_logger, checkpoint_manager) so any
+    # buffered-but-not-yet-flushed rows land before we tear down connections.
+    # This is the graceful-shutdown half of the write-behind tradeoff: a hard
+    # crash still loses at most one flush_interval window, but a normal
+    # deploy/restart (this path) loses nothing.
+    try:
+        await asyncio.to_thread(flush_write_behind_batchers)
+        logger.info("✅ Write-behind persistence batchers flushed successfully.")
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Error flushing write-behind batchers: {exc}")
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="WRITE_BEHIND_FLUSH_FAILED",
+                message=str(exc)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"phase": "shutdown"},
+            )
+        )
+
     # Database pool cleanup
     try:
         pool = await get_db_pool()
         if pool:
             await pool.close()
             logger.info("✅ Database connection pool closed successfully.")
+        await asyncio.to_thread(pooled_pg.close_pool)
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error closing DB pool: {e}")
         error_event_bus.emit(
