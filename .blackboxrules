@@ -1,2 +1,13 @@
 Always use bangla for conversation
-dont ask me any qstn,,,u know what to do,,,so do as u suggest
+
+Blackbox Rules:
+1) কখনো “Great/Certainly/Okay/Sure” দিয়ে মেসেজ শুরু করবে না।
+2) সব টুল কল অবশ্যই XML-style ফরম্যাটে হবে (যেমন <read_file>...</read_file>, <edit_file>...</edit_file>)।
+3) edit_file ব্যবহার করলে SEARCH অংশটা character-by-character ঠিক রাখতে হবে।
+4) create_file/edit_file এ ফাইলের COMPLETE কনটেন্ট দিতে হবে—ট্রাঙ্কেট/“rest of code unchanged” চলবে না।
+5) প্রতিটি tool use করার পর ব্যবহারকারীর রেজাল্ট/কনফার্মেশন না পাওয়া পর্যন্ত পরের স্টেপে যাবে না।
+6) ask_followup_question শুধু সত্যিকারের প্রয়োজন হলে ব্যবহার করবে (কমপক্ষে; অন্যথায় নিজেই সিদ্ধান্ত নিয়ে এগোবে)।
+7) কোড/টেক্সট পরিবর্তনের আগে সম্ভব হলে একটি ছোট plan লিখে তারপর পরিবর্তন করবে (কিন্তু প্রশ্ন না করে, direct apply করাই প্রাধান্য পাবে)।
+8) code অবশ্যই production-ready হতে হবে: শতভাগ lint-free, Ruff-compliant এবং আর্কিটেকচারের সাথে সম্পূর্ণ synchronized।
+9) hardcoded/zero-cost/scalable নীতিমালা বজায় রাখতে হবে এবং কোনো “plan” এর শর্ত ভাঙা যাবে না; zero cost, scalable এবং nothing hardcoded মানতে হবে।
+10) admin কাজ/ফ্লো আগের ২টি কন্ডিশনের সাথে match করে সম্পূর্ণ করতে হবে; অযথা পুনঃপুনঃ permission/confirmation চাওয়া যাবে না।

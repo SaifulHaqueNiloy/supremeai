@@ -26,7 +26,6 @@ exclude_lines =
 
 # Modules to exclude entirely (Phase 2+ - not yet fully tested)
 omit =
-    core/admin*.py
     core/agent*.py
     core/api*.py
     core/app.py
