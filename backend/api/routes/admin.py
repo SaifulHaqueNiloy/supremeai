@@ -1,3 +1,5 @@
+import json
+import secrets
 from datetime import UTC
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +13,7 @@ from pydantic import BaseModel
 from admin.god import AdminGodLayer  # Your existing god.py
 from api.dependencies import get_current_user_token
 from core.health.self_healer import SelfHealerService
+from core.cache.redis_manager import redis_manager
 from utils.firestore_helpers import get_firestore_db
 
 
@@ -129,3 +132,44 @@ async def reject_fix(fix_id: str, tenant_id: str = "default", admin_user: dict =
         doc_ref.update(update_data)
 
     return {"status": "success", "fix_id": fix_id}
+
+
+class VerifyOtpRequest(BaseModel):
+    code: str
+
+
+@router.post("/verify-otp")
+async def verify_otp(payload: VerifyOtpRequest, admin_user: dict = Depends(get_current_admin)):
+    """Validate a JIT OTP issued by AntiHackingContextMiddleware and promote the
+    pending (mismatched) context to trusted, so the admin isn't re-challenged
+    on their next request from this IP/fingerprint.
+
+    বাংলা: অ্যাডমিন OTP সাবমিট করলে এখানে ভ্যালিডেট হয় এবং সফল হলে Redis-এ
+    ট্রাস্টেড কনটেক্সট (last_context) আপডেট হয়ে যায়।
+    """
+    admin_id = admin_user.get("sub", "unknown_admin")
+
+    if not redis_manager or not redis_manager.client:
+        raise HTTPException(status_code=503, detail="Security store unavailable")
+
+    pending_key = f"security:otp_pending:{admin_id}"
+    raw_pending = await redis_manager.get_cache(pending_key)
+    if not raw_pending:
+        raise HTTPException(status_code=400, detail="No pending verification for this admin, or it has expired")
+
+    pending = json.loads(raw_pending)
+
+    if not secrets.compare_digest(str(pending["code"]), str(payload.code)):
+        logger.warning(f"❌ Failed OTP verification attempt for admin {admin_id}")
+        raise HTTPException(status_code=401, detail="Invalid code")
+
+    # বাংলা: সফল ভেরিফিকেশনে বর্তমান (আগে মিসম্যাচড) সিগন্যালকেই নতুন ট্রাস্টেড কনটেক্সট হিসেবে সেট করা হচ্ছে
+    await redis_manager.set_cache(
+        f"security:last_context:{admin_id}",
+        json.dumps(pending["signal"]),
+        ex_seconds=86400,
+    )
+    await redis_manager.client.delete(pending_key)
+
+    logger.info(f"✅ Admin {admin_id} passed OTP verification — context promoted to trusted")
+    return {"status": "verified"}
