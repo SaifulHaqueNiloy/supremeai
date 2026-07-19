@@ -74,6 +74,7 @@ class ConfigCache:
         self._last_refresh: float = 0.0
         self._lock = threading.Lock()
         self._loaded = False
+        self._refresh_pending = False
 
     def _should_refresh(self) -> bool:
         """TTL expire হয়েছে কিনা চেক করে।"""
@@ -120,6 +121,29 @@ class ConfigCache:
             self._last_refresh = time.time()
             self._loaded = True
 
+    def _schedule_refresh(self) -> None:
+        """Schedule a single async refresh task (coalescing guard).
+
+        Multiple concurrent calls during TTL expiry will share one refresh task.
+        """
+        if self._refresh_pending:
+            return
+        self._refresh_pending = True
+        try:
+            import asyncio
+
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._coalesced_refresh())
+        except RuntimeError:
+            self._refresh_pending = False
+
+    async def _coalesced_refresh(self) -> None:
+        try:
+            await self.refresh_async()
+        finally:
+            with self._lock:
+                self._refresh_pending = False
+
     def get(self, key: str, default: Any = None) -> Any:
         """
         কনফিগ ভ্যালু রিটার্ন করে।
@@ -127,13 +151,7 @@ class ConfigCache:
         - DB না থাকলে DEFAULT_CONFIGS থেকে নেয়
         """
         if not self._loaded or self._should_refresh():
-            import asyncio
-
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self.refresh_async())
-            except RuntimeError:
-                pass
+            self._schedule_refresh()
 
         with self._lock:
             return self._cache.get(key, default)
@@ -141,13 +159,7 @@ class ConfigCache:
     def get_all(self, category: str | None = None) -> dict[str, Any]:
         """সব কনফিগ (অথবা নির্দিষ্ট category) রিটার্ন করে।"""
         if not self._loaded or self._should_refresh():
-            import asyncio
-
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self.refresh_async())
-            except RuntimeError:
-                pass
+            self._schedule_refresh()
 
         with self._lock:
             if category:

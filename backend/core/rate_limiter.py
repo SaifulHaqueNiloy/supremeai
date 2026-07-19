@@ -69,8 +69,8 @@ class AsyncRateLimiter:
             current = results[0]
             return current <= limit
         except Exception as e:  # noqa: BLE001
-            logger.critical(f"Redis rate limiter unavailable: {e}. Rejecting requests (Fail-Closed) to ensure distributed rate limiting.")
-            raise RuntimeError("Rate limiting service unavailable - rejecting all requests") from e
+            logger.warning(f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode).")
+            return self._fallback_limiter.is_allowed(key, limit=limit)
 
     async def close(self):
         if self._redis:

@@ -46,6 +46,7 @@ from core.messaging.event_bus import error_event_bus
 from core.observability.observability_middleware import ObservabilityMiddleware
 from core.security.api_key_middleware import APIKeyAuthMiddleware
 from core.security.auth_middleware import AuthMiddleware
+from core.security.autonoguard_middleware import AutonoGuardMiddleware
 from core.security.honeypot_middleware import HoneypotMiddleware
 from core.security.origin_validator import TrustedOriginMiddleware
 from core.request_context import RequestContextMiddleware
@@ -217,11 +218,15 @@ def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs"
     fastapi_app.add_middleware(ChaosInjectorMiddleware)
     fastapi_app.add_middleware(ObservabilityMiddleware)
     fastapi_app.add_middleware(HoneypotMiddleware)
+
     fastapi_app.add_middleware(AuthMiddleware)
     fastapi_app.add_middleware(TenantExtractionMiddleware)
     fastapi_app.add_middleware(IdempotencyMiddleware)
     fastapi_app.add_middleware(APIKeyAuthMiddleware)
     fastapi_app.add_middleware(ResponseStandardizationMiddleware)
+    fastapi_app.add_middleware(AutonoGuardMiddleware)
+    # বাংলা মন্তব্য: AutonoGuard Middleware-কে AuthMiddleware-এর পরে রাখা হয়েছে
+    # যাতে user identity প্রথমে স্থাপন হয় এবং তারপর JIT OTP enforce করা যায়।
 
     fastapi_app.state.limiter = limiter
 
