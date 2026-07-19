@@ -73,7 +73,12 @@ class PushRequest(BaseModel):
     repo: str | None = None
     branch: str = "main"
     commit_message: str = "AI: Automated improvements"
-    files_changed: list[str]
+    # গ্যাপ ফিক্স: আগে শুধু ফাইলের নাম (files_changed: list[str]) নেওয়া হতো এবং প্রতিটি ফাইলের
+    # আসল কনটেন্ট না জেনেই "Optimized content placeholder" স্ট্রিং কমিট করে দেওয়া হতো — অর্থাৎ
+    # এই এন্ডপয়েন্ট ইউজারের রিয়েল GitHub রিপোর প্রতিটি টার্গেট ফাইল ওভাররাইট করে ডেটা নষ্ট করত।
+    # এখন কলারকে (real, reviewed) কনটেন্ট সরবরাহ করতেই হবে; খালি/অনুপস্থিত হলে ৪০০ এরর দিয়ে
+    # fail-fast করা হয়, যাতে কখনোই fabricated কনটেন্ট রিয়েল রিপোতে কমিট না হয়।
+    file_contents: dict[str, str]
 
 
 class DiscoverRequest(BaseModel):
@@ -114,11 +119,18 @@ async def improve_repo(payload: ImproveRequest, db=Depends(get_tenant_db), user=
 @router.post("/push")
 async def push_improvements(payload: PushRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
     async with handle_github_errors("push", payload.repo):
+        if not payload.file_contents:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "file_contents is required — no automatic code-generation step is wired to this endpoint yet. "
+                    "Supply the real, reviewed content for each file (path -> new content) to commit."
+                ),
+            )
         repo = _resolve_repo(payload.repo, db)
         agent = await _get_agent(user, sql_db)
 
-        improvements_content = {f: "Optimized content placeholder" for f in payload.files_changed}
-        commit_res = await agent.commit_changes(repo, improvements_content, payload.commit_message, payload.branch)
+        commit_res = await agent.commit_changes(repo, payload.file_contents, payload.commit_message, payload.branch)
 
         pr_title = "SupremeAI: Automated Code Improvements"
         pr_body = "AI has analyzed the repository and suggested changes.\n\nNote: Customer approval is required before merging."
