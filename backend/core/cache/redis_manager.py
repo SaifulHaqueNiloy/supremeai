@@ -25,8 +25,16 @@ class SecureRedisManager:
 
     def _ensure_connected(self):
         if self.url:
-            self._client = aioredis.from_url(self.url, decode_responses=True)
-            logger.info("⚡ Serverless Upstash Redis REST Provider Active.")
+            # বাংলা মন্তব্য: Upstash Redis free tier-এর ৩০টি concurrent connection সীমার সাথে সামঞ্জস্য রেখে সর্বোচ্চ ২০টি কানেকশন পুল করা হলো।
+            pool = aioredis.ConnectionPool.from_url(
+                self.url,
+                max_connections=20,
+                socket_keepalive=True,
+                socket_connect_timeout=5.0,
+                decode_responses=True,
+            )
+            self._client = aioredis.Redis(connection_pool=pool)
+            logger.info("⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20).")
         else:
             logger.critical("🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state.")
         self._initialized = True
