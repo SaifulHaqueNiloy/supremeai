@@ -20,8 +20,8 @@ from core.cache.redis_manager import redis_manager
 
 CHANNEL_DISCORD = "discord"
 CHANNEL_EMAIL = "email"
-CHANNEL_TELEGRAM = "telegram"     # manual only
-CHANNEL_WHATSAPP = "whatsapp"     # manual only
+CHANNEL_TELEGRAM = "telegram"  # manual only
+CHANNEL_WHATSAPP = "whatsapp"  # manual only
 
 _REDIS_KEY_PREFIX = "otp:channel:"  # per-admin channel override, TTL'd
 
@@ -96,10 +96,7 @@ async def _send_email(admin_id: str, code: str, context: dict) -> bool:
         "from": "SupremeAI Security <security@supremeai.app>",
         "to": [to_addr],
         "subject": f"Admin Login Verification — {admin_id}",
-        "html": (
-            f"<p>Code: <b>{code}</b></p>"
-            f"<p>IP: {context.get('ip', 'unknown')} · Country: {context.get('country', 'unknown')}</p>"
-        ),
+        "html": (f"<p>Code: <b>{code}</b></p>" f"<p>IP: {context.get('ip', 'unknown')} · Country: {context.get('country', 'unknown')}</p>"),
     }
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
