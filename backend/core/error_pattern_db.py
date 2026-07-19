@@ -1,27 +1,79 @@
-"""This module defines the `ErrorPatternDB` class, a specialized component for managing a persistent SQLite database dedicated to logging, retrieving, and analyzing AI model errors and specific AI mistakes. Within the SupremeAI project, it serves as a crucial feedback mechanism, enabling the system to learn from past failures, identify recurring patterns (e.g., hallucinations), and derive actionable prevention strategies to continuously improve the reliability, accuracy, and robustness of AI agent outputs.
+"""This module defines the `ErrorPatternDB` class, a specialized component for managing a persistent database
+dedicated to logging, retrieving, and analyzing AI model errors and specific AI mistakes. Within the SupremeAI
+project, it serves as a crucial feedback mechanism, enabling the system to learn from past failures, identify
+recurring patterns (e.g., hallucinations), and derive actionable prevention strategies to continuously improve
+the reliability, accuracy, and robustness of AI agent outputs.
+
+Persistence: backed by the shared pooled Postgres connection (core.persistence.pooled_pg) so learned error
+patterns survive container restarts/redeploys. Falls back to a local SQLite file only if Postgres is
+unavailable (e.g. local dev without SUPABASE_DATABASE_URL_POOLER set) — in that fallback case state is, as
+before, not durable across restarts, but the system stays functional rather than crashing.
 
 Key Components:
-- `ErrorPatternDB`: Manages an SQLite database to store and retrieve historical data on general AI errors and detailed AI model mistakes.
+- `ErrorPatternDB`: Manages storage/retrieval of historical AI error and mistake data.
 - `ErrorPatternDB.log_error()`: Records a general error pattern, its type, and a correction into the `errors` table.
-- `ErrorPatternDB.log_ai_mistake()`: Logs comprehensive details about a specific AI model mistake, including the model, task, original/correct output, root cause, and a prevention strategy, into the `ai_mistakes` table.
-- `ErrorPatternDB.get_prevention_strategy()`: Queries the database to retrieve the most frequently recorded prevention strategy for a given AI model and task type.
-- `ErrorPatternDB.check_pattern()`: Analyzes a given AI output string against known error patterns in the database to identify potential matches and suggest prevention.
-
-Dependencies:
-- `sqlite3`: For interacting with the SQLite database to store and retrieve error patterns and AI mistakes.
-- `datetime`: For generating precise timestamps for all database entries."""
+- `ErrorPatternDB.log_ai_mistake()`: Logs comprehensive details about a specific AI model mistake into `ai_mistakes`.
+- `ErrorPatternDB.get_prevention_strategy()`: Retrieves the most frequently recorded prevention strategy.
+- `ErrorPatternDB.check_pattern()`: Analyzes AI output against known error patterns.
+"""
 
 import sqlite3
 from datetime import UTC
 from datetime import datetime
 
+from loguru import logger
+
+from core.persistence import pooled_pg
+
+
+_PG_SCHEMA = (
+    """
+    CREATE TABLE IF NOT EXISTS error_patterns (
+        id SERIAL PRIMARY KEY,
+        output TEXT,
+        error_type TEXT,
+        correction TEXT,
+        timestamp TIMESTAMPTZ DEFAULT now()
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS ai_mistakes (
+        id SERIAL PRIMARY KEY,
+        model_name TEXT,
+        mistake_type TEXT,
+        task_description TEXT,
+        original_output TEXT,
+        correct_output TEXT,
+        root_cause TEXT,
+        prevention_strategy TEXT,
+        timestamp TIMESTAMPTZ DEFAULT now()
+    )
+    """,
+)
+
 
 class ErrorPatternDB:
-    def __init__(self, db_path: str = "hallucination_patterns.db"):
-        self.db_path = db_path
-        self._init_db()
+    def __init__(self, db_path: str | None = None):
+        # Ripple-Effect Guard: an explicitly-passed db_path (used by tests for
+        # isolation, e.g. a temp file or ":memory:") must force local SQLite —
+        # only the no-args default is eligible for the shared Postgres backend.
+        explicit_path = db_path is not None
+        self.db_path = db_path or "hallucination_patterns.db"
+        self._use_pg = (not explicit_path) and pooled_pg.is_available()
+        if self._use_pg:
+            try:
+                for stmt in _PG_SCHEMA:
+                    pooled_pg.execute(stmt)
+                logger.info("ErrorPatternDB: using pooled Postgres backend.")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"ErrorPatternDB: Postgres schema init failed, falling back to SQLite: {exc}")
+                self._use_pg = False
+        if not self._use_pg:
+            self._init_sqlite()
+            logger.warning(f"ErrorPatternDB: running on local SQLite fallback at {self.db_path} — NOT durable across restarts.")
 
-    def _init_db(self):
+    # ---------------------------------------------------------------- SQLite fallback (unchanged behavior) ----
+    def _init_sqlite(self):
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = conn.cursor()
         cursor.execute(
@@ -53,7 +105,18 @@ class ErrorPatternDB:
         conn.commit()
         conn.close()
 
+    # ---------------------------------------------------------------- Public API (unchanged signatures) -------
     def log_error(self, output: str, error_type: str, correction: str):
+        if self._use_pg:
+            try:
+                pooled_pg.execute(
+                    "INSERT INTO error_patterns (output, error_type, correction) VALUES (%s, %s, %s)",
+                    (output, error_type, correction),
+                )
+                return
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"ErrorPatternDB.log_error: Postgres write failed: {exc}")
+                return
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = conn.cursor()
         cursor.execute(
@@ -64,27 +127,50 @@ class ErrorPatternDB:
         conn.close()
 
     def log_ai_mistake(self, mistake: dict):
+        args = (
+            mistake.get("model", "unknown"),
+            mistake.get("type", "unknown"),
+            mistake.get("task", "unknown"),
+            mistake.get("original", ""),
+            mistake.get("correct", ""),
+            mistake.get("root_cause", ""),
+            mistake.get("prevention", ""),
+        )
+        if self._use_pg:
+            try:
+                pooled_pg.execute(
+                    "INSERT INTO ai_mistakes (model_name, mistake_type, task_description, "
+                    "original_output, correct_output, root_cause, prevention_strategy) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    args,
+                )
+                return
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"ErrorPatternDB.log_ai_mistake: Postgres write failed: {exc}")
+                return
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO ai_mistakes (model_name, mistake_type, task_description, "
             "original_output, correct_output, root_cause, prevention_strategy, "
             "timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                mistake.get("model", "unknown"),
-                mistake.get("type", "unknown"),
-                mistake.get("task", "unknown"),
-                mistake.get("original", ""),
-                mistake.get("correct", ""),
-                mistake.get("root_cause", ""),
-                mistake.get("prevention", ""),
-                datetime.now(UTC).isoformat(),
-            ),
+            (*args, datetime.now(UTC).isoformat()),
         )
         conn.commit()
         conn.close()
 
     def get_prevention_strategy(self, model: str, task_type: str) -> str:
+        if self._use_pg:
+            try:
+                rows = pooled_pg.query(
+                    "SELECT prevention_strategy FROM ai_mistakes WHERE model_name = %s AND "
+                    "task_description LIKE %s GROUP BY prevention_strategy ORDER BY COUNT(*) DESC LIMIT 1",
+                    (model, f"%{task_type}%"),
+                )
+                return rows[0][0] if rows else "No historical data - use default validation"
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"ErrorPatternDB.get_prevention_strategy: Postgres read failed: {exc}")
+                return "No historical data - use default validation"
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = conn.cursor()
         cursor.execute(
@@ -97,6 +183,17 @@ class ErrorPatternDB:
         return result[0] if result else "No historical data - use default validation"
 
     def check_pattern(self, output: str) -> dict:
+        if self._use_pg:
+            try:
+                rows = pooled_pg.query(
+                    "SELECT error_type, correction, COUNT(*) FROM error_patterns WHERE %s LIKE '%%' || output || '%%' "
+                    "GROUP BY error_type, correction",
+                    (output,),
+                )
+                return {"known_patterns": rows, "should_prevent": len(rows) > 0}
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"ErrorPatternDB.check_pattern: Postgres read failed: {exc}")
+                return {"known_patterns": [], "should_prevent": False}
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = conn.cursor()
         cursor.execute(

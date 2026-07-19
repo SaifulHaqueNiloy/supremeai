@@ -8,6 +8,8 @@ from typing import Any
 
 from loguru import logger
 
+from core.persistence import pooled_pg
+
 
 HAS_SENTENCE_TRANSFORMERS = importlib.util.find_spec("sentence_transformers") is not None
 
@@ -37,18 +39,42 @@ def hash_vectorize(text: str, size: int = 384) -> list[float]:
     return vector
 
 
+_PG_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS file_memories (
+        id SERIAL PRIMARY KEY,
+        file_path TEXT UNIQUE,
+        content TEXT,
+        summary TEXT,
+        structure TEXT,
+        embedding TEXT
+    )
+"""
+
+
 class CascadeMemoryService:
     """
-    Handles context memory operations for SupremeAI using a local SQLite vector-store fallback.
-    Optimized to store and retrieve 'Summary of Functions' and 'File Structure'
-    to save API tokens.
+    Handles context memory ("Summary of Functions" / "File Structure") operations for SupremeAI.
+    Persists to pooled Postgres by default (durable across restarts). Pass an explicit `db_path`
+    (or omit Postgres config) to force the local SQLite fallback — used by the __main__ self-test
+    below so it never touches the live memory store.
     """
 
-    def __init__(self, db_path: str = "data/memory.db"):
-        # Ensure directories exist
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
-        self.db_path = db_path
-        self._init_db()
+    def __init__(self, db_path: str | None = None):
+        self._use_pg = db_path is None and pooled_pg.is_available()
+        if self._use_pg:
+            try:
+                pooled_pg.execute(_PG_SCHEMA)
+                self.db_path = None
+                logger.info("CascadeMemoryService: using pooled Postgres backend.")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}")
+                self._use_pg = False
+
+        if not self._use_pg:
+            self.db_path = db_path or "data/memory.db"
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+            self._init_db()
+            logger.warning(f"CascadeMemoryService: running on local SQLite fallback at {self.db_path} — NOT durable across restarts.")
         self.encoder = None
 
         if HAS_SENTENCE_TRANSFORMERS:
@@ -142,6 +168,24 @@ class CascadeMemoryService:
         embedding = self._embed(summary)
         embedding_str = json.dumps(embedding)
 
+        if self._use_pg:
+            try:
+                pooled_pg.execute(
+                    """
+                    INSERT INTO file_memories (file_path, content, summary, structure, embedding)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (file_path) DO UPDATE SET
+                        content = EXCLUDED.content,
+                        summary = EXCLUDED.summary,
+                        structure = EXCLUDED.structure,
+                        embedding = EXCLUDED.embedding
+                    """,
+                    (file_path, content, summary, structure, embedding_str),
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"CascadeMemoryService.chunk_and_embed: Postgres write failed: {exc}")
+            return [{"file": file_path, "summary": summary, "vector": embedding}]
+
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -177,6 +221,25 @@ class CascadeMemoryService:
         query_vector = self._embed(prompt)
 
         results = []
+
+        if self._use_pg:
+            try:
+                rows = pooled_pg.query_dicts("SELECT file_path, summary, structure, embedding FROM file_memories")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
+                rows = []
+            for row in rows:
+                try:
+                    stored_vector = json.loads(row["embedding"])
+                    score = self._cosine_similarity(query_vector, stored_vector)
+                    results.append(
+                        {"file": row["file_path"], "summary": row["summary"], "structure": json.loads(row["structure"]), "score": score}
+                    )
+                except Exception as e:
+                    logger.warning(f"Error calculating similarity for {row.get('file_path')}: {e}")
+            results.sort(key=lambda x: x["score"], reverse=True)
+            return results[:top_k]
+
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
