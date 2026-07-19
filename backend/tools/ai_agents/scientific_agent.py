@@ -23,12 +23,16 @@ class ScientificAgent:
             }
         except Exception as exc:  # noqa: BLE001
             logger.error(f"Equation solving failed: {exc}")
+            # গ্যাপ ফিক্স (Anti-Silent-Failure): status="error" থাকা সত্ত্বেও আগে এখানে একটি
+            # fabricated "x = 42" solution ফেরত দেওয়া হতো — একটি careless caller/UI যদি শুধু
+            # `.solution` ফিল্ড পড়ে, সে fake উত্তরকে real মনে করতে পারত। এখন ব্যর্থতার সাথে কোনো
+            # fabricated ডেটা পাঠানো হয় না।
             return {
                 "status": "error",
                 "equation": equation,
                 "error": str(exc),
-                "solution": "x = 42",
-                "method": "mock_fallback",
+                "solution": None,
+                "method": "failed",
             }
 
     async def generate_simulation_script(self, phenomenon: str) -> dict[str, Any]:
