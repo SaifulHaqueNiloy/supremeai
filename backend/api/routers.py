@@ -88,6 +88,43 @@ optional_routers: list[tuple[str, str]] = [
 ]
 
 
+# Identify admin router paths
+_admin_paths = {
+    "api.routes.simulator_admin", "api.routes.site_actions", "api.routes.llm_gateway",
+    "api.routes.browser", "api.routes.evolution", "api.routes.meta_ai",
+    "api.routes.admin_dashboard", "api.routes.internal", "api.routes.admin",
+    "api.routes.traffic_monitor", "api.routes.admin_librarian", "api.routes.tenant_admin",
+    "api.routes.metrics", "api.routes.cloud_mesh"
+}
+
+# ADMIN_ROUTERS includes health and specific admin routes
+# বাংলা মন্তব্য: অ্যাডমিন এপিআই রাউটারসমূহ
+ADMIN_ROUTERS: list[tuple[str, str]] = [
+    ("api.routes.health", "/api/v1"),
+    ("api.routes.simulator_admin", ""),
+    ("api.routes.site_actions", ""),
+    ("api.routes.llm_gateway", ""),
+    ("api.routes.browser", ""),
+    ("api.routes.evolution", "/api/v1"),
+    ("api.routes.meta_ai", "/api/v1"),
+    ("api.routes.admin_dashboard", ""),
+    ("api.routes.internal", ""),
+    ("api.routes.admin", ""),
+    ("api.routes.traffic_monitor", ""),
+    ("api.routes.admin_librarian", "/api"),
+    ("api.routes.tenant_admin", "/api"),
+    ("api.routes.metrics", ""),
+    ("api.routes.cloud_mesh", ""),
+]
+
+# USER_ROUTERS is all other routers
+# বাংলা মন্তব্য: ইউজার এপিআই রাউটারসমূহ
+USER_ROUTERS: list[tuple[str, str]] = [
+    r for r in (core_routers + optional_routers)
+    if r[0] not in _admin_paths
+]
+
+
 def register_all_routers(app: FastAPI) -> None:
     """Register all core and optional routers on the FastAPI app."""
     for router_path, prefix in core_routers:
@@ -102,4 +139,26 @@ def register_all_routers(app: FastAPI) -> None:
         logger.warning("Universal BYOC router not loaded: ENCRYPTION_KEY missing")
 
 
-__all__ = ["register_all_routers", "core_routers", "optional_routers"]
+def include_user_routers(app: FastAPI) -> None:
+    """Register all user/client-facing routers on the FastAPI app."""
+    for router_path, prefix in USER_ROUTERS:
+        register_router(app, router_path, prefix=prefix, optional=True)
+    if settings.encryption_key and settings.encryption_key.get_secret_value():
+        register_router(app, "api.routes.byoc_api", "", optional=True)
+
+
+def include_admin_routers(app: FastAPI) -> None:
+    """Register all admin-facing routers on the FastAPI app."""
+    for router_path, prefix in ADMIN_ROUTERS:
+        register_router(app, router_path, prefix=prefix, optional=True)
+
+
+__all__ = [
+    "register_all_routers",
+    "include_user_routers",
+    "include_admin_routers",
+    "core_routers",
+    "optional_routers",
+    "USER_ROUTERS",
+    "ADMIN_ROUTERS"
+]

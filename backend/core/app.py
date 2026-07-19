@@ -114,101 +114,26 @@ tags_metadata = [
     {"name": "tools", "description": "Registry and management of integrated tools."},
 ]
 
-app = FastAPI(
-    title=f"{settings.app_name} (Production Ready)",
-    description="Multi-cloud AI orchestration platform with zero-cost edge computing.",
-    version="2.0.0",
-    openapi_tags=tags_metadata,
-    debug=settings.debug,
-    docs_url="/docs" if docs_enabled else None,
-    redoc_url="/redoc" if docs_enabled else None,
-    openapi_url="/openapi.json" if docs_enabled else None,
-)
-
-
-@app.middleware("http")
-async def basic_auth_for_docs_middleware(request: Request, call_next: Any) -> JSONResponse:  # noqa: ANN401
-    """Protect docs with Basic Auth if enabled."""
-    if settings.docs_auth_enabled and not settings.debug:
-        path = request.url.path
-        if path in {"/docs", "/redoc", "/openapi.json"}:
-            auth = request.headers.get("Authorization")
-            if not auth or not auth.startswith("Basic "):
-                return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Invalid credentials"},
-                    headers={"WWW-Authenticate": "Basic"},
-                )
-            try:
-                decoded = base64.b64decode(auth[6:]).decode("utf-8")
-                username, password = decoded.split(":", 1)
-                if username != settings.docs_username or password != settings.docs_password:
-                    raise ValueError("Mismatch")
-            except (ValueError, UnicodeDecodeError):
-                return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Invalid credentials"},
-                    headers={"WWW-Authenticate": "Basic"},
-                )
-    return await call_next(request)
-
-
-# SupremeContextMiddleware - must be first to capture all requests
-app.add_middleware(SupremeContextMiddleware)
-app.add_middleware(TrustedOriginMiddleware)
-app.add_middleware(ChaosInjectorMiddleware)
-app.add_middleware(ObservabilityMiddleware)
-app.add_middleware(HoneypotMiddleware)
-app.add_middleware(AuthMiddleware)
-# TenantExtractionMiddleware enriches request.state.tenant_id after auth so downstream
-# handlers and dependencies can rely on it without re-deriving context from JWT.
-app.add_middleware(TenantExtractionMiddleware)
-app.add_middleware(IdempotencyMiddleware)
-app.add_middleware(APIKeyAuthMiddleware)
-# ResponseStandardizationMiddleware normalizes non-JSON error responses into the
-# standard envelope as the last middleware in the chain.
-app.add_middleware(ResponseStandardizationMiddleware)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "X-API-Key", "X-Correlation-ID"],
-)
-
-
-# বাংলা মন্তব্য: Production CORS Hardening — wildcard '*' এবং empty origins প্রডাকশনে সরাসরি fail-fast করে
-if settings.env == "production":
-    if not settings.cors_origins:
-        raise RuntimeError("🔥 CRITICAL: Production CORS drift detected. cors_origins cannot be empty in production.")
-    if "*" in settings.cors_origins:
-        raise RuntimeError("🚨 SECURITY: Wildcard '*' is strictly prohibited in production CORS mesh. Set CORS_ORIGINS env var.")
-
 
 # বাংলা মন্তব্য: Dynamic role-based rate limiter key function
 # JWT role অনুযায়ী Admin (100 RPM) vs Standard User (20 RPM) থ্রেশহোল্ড নির্ধারণ
-# slowapi লিমিটার ডেকোরেটরে key_func হিসেবে ইউজ করুন
 def supremeai_dynamic_rate_evaluator(request: Request) -> str:
     """ডাইনামিক rate key: JWT role বা IP fallback অনুযায়ী limiter বাউন্ডারি বাছাই করে।"""
     user = getattr(request.state, "user", None)
     user_role = user.get("role", "Standard_User") if isinstance(user, dict) else "Standard_User"
     client_ip = request.client.host if request.client else "unknown"
-    # বাংলা: Admin ইউজারের জন্য হাই থ্রেশহোল্ড, Standard User-এর জন্য কড়া বাউন্ডারি
     if user_role in {"Admin", "admin"}:
         return f"admin:{client_ip}"
     return f"user:{client_ip}"
 
 
 # বাংলা মন্তব্য: slowapi টেস্টে মক করা হলেও RateLimitExceeded যেন সত্যিকারের Exception ক্লাস থাকে
-# তা নিশ্চিত করা হলো। MagicMock দিয়ে issubclass() ডাকলে TypeError হয়।
 try:
     from slowapi import Limiter
     from slowapi import _rate_limit_exceeded_handler as _slowapi_rate_limit_handler
     from slowapi.errors import RateLimitExceeded as _SlowAPIRateLimitExceeded
     from slowapi.util import get_remote_address as _slowapi_get_remote_address
 
-    # মক হলে fallback ক্লাস ব্যবহার করো
     if not isinstance(_SlowAPIRateLimitExceeded, type) or not issubclass(_SlowAPIRateLimitExceeded, Exception):
 
         class RateLimitExceeded(Exception):  # type: ignore[no-redef]
@@ -227,7 +152,6 @@ try:
         get_remote_address = _slowapi_get_remote_address
         limiter = Limiter(key_func=get_remote_address)
 except Exception:  # noqa: BLE001
-    # বাংলা মন্তব্য: slowapi ইম্পোর্ট সম্পূর্ণ ব্যর্থ হলে fallback
     class RateLimitExceeded(Exception):  # type: ignore[no-redef]
         """Fallback RateLimitExceeded for test environments."""
 
@@ -236,97 +160,137 @@ except Exception:  # noqa: BLE001
 
     limiter = None
 
-app.state.limiter = limiter
 
+def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs") -> FastAPI:
+    """Builds the base FastAPI shell with shared configuration, middleware, and exception handlers.
 
-@app.exception_handler(HTTPException)
-async def custom_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "title": "Task Execution Failed",
-            "detail": exc.detail,
-            "instance": request.url.path,
-        },
-    )
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Catch-all exception handler — never returns 500 detail to client in production."""
-    logger.error(f"Unhandled Exception on {request.url.path}: {exc}")
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "title": "Internal Server Error",
-            "detail": "An unexpected error occurred. This has been logged.",
-            "instance": request.url.path,
-        },
-    )
-
-
-# বাংলা মন্তব্য: শুধুমাত্র তখনই হ্যান্ডলার রেজিস্টার করো যখন RateLimitExceeded সত্যিকারের class
-if isinstance(RateLimitExceeded, type) and issubclass(RateLimitExceeded, Exception):
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-
-@app.get("/")
-async def root() -> dict[str, Any]:
-    """Root endpoint — API info and health summary.
-
-    বাংলা: রুট এন্ডপয়েন্ট — API তথ্য এবং সার্ভার স্ট্যাটাস।
+    বাংলা মন্তব্য: কোর FastAPI অ্যাপ সেল যা মিডলওয়্যার এবং এক্সেপশন হ্যান্ডলারগুলো ইনিশিয়ালাইজ করে।
     """
-    return {
-        "name": settings.app_name,
-        "version": "2.0.0",
-        "status": "online",
-        "docs": "/docs",
-        "health": "/api/v1/health",
-        "description": "Multi-cloud AI orchestration platform.",
-    }
+    is_prod = settings.env.lower() == "production"
+    docs_enabled = settings.debug or not is_prod or settings.docs_auth_enabled
 
-
-@app.get("/health")
-async def health() -> dict[str, Any]:
-    """Comprehensive health check — Redis + API key status."""
-    redis_ok = False
-    if hasattr(services, "redis_queue") and services.redis_queue.configured:
-        try:
-            services.redis_queue.set("health", "ok", ex=5)
-            redis_ok = services.redis_queue.get("health") == "ok"
-        except Exception:  # noqa: BLE001
-            logger.exception("Health check failed on redis connection")
-            error_event_bus.emit(
-                ErrorEvent(
-                    module="app.health",
-                    error_type="REDIS_HEALTH_FAIL",
-                    message="Redis health error",
-                    severity="ERROR",
-                    structured_context=ErrorContext(module="auto_fixed"),
-                )
-            )
-            redis_ok = False
-    else:
-        redis_ok = True
-
-    api_keys_ok = bool(
-        settings.openrouter_api_key or settings.gemini_api_key or settings.deepseek_api_key or settings.groq_api_key or settings.nvidia_api_key
+    fastapi_app = FastAPI(
+        title=title,
+        description="Multi-cloud AI orchestration platform with zero-cost edge computing.",
+        version="2.0.0",
+        openapi_tags=tags_metadata,
+        debug=settings.debug,
+        docs_url=docs_url if docs_enabled else None,
+        redoc_url=("/redoc" if docs_url else None) if docs_enabled else None,
+        openapi_url=("/openapi.json" if docs_url else None) if docs_enabled else None,
     )
-    checks = {"redis": redis_ok, "api_keys_configured": api_keys_ok}
-    all_ok = all(checks.values())
-    return {"status": "ok" if all_ok else "degraded", "orchestrator": "online", "checks": checks}
 
+    @fastapi_app.middleware("http")
+    async def basic_auth_for_docs_middleware(request: Request, call_next: Any) -> JSONResponse:  # noqa: ANN401
+        """Protect docs with Basic Auth if enabled."""
+        if settings.docs_auth_enabled and not settings.debug:
+            path = request.url.path
+            if path in {"/docs", "/redoc", "/openapi.json"}:
+                auth = request.headers.get("Authorization")
+                if not auth or not auth.startswith("Basic "):
+                    return JSONResponse(
+                        status_code=401,
+                        content={"detail": "Invalid credentials"},
+                        headers={"WWW-Authenticate": "Basic"},
+                    )
+                try:
+                    decoded = base64.b64decode(auth[6:]).decode("utf-8")
+                    username, password = decoded.split(":", 1)
+                    if username != settings.docs_username or password != settings.docs_password:
+                        raise ValueError("Mismatch")
+                except (ValueError, UnicodeDecodeError):
+                    return JSONResponse(
+                        status_code=401,
+                        content={"detail": "Invalid credentials"},
+                        headers={"WWW-Authenticate": "Basic"},
+                    )
+        return await call_next(request)
 
-@app.get("/actuator/health")
-def actuator_health() -> dict[str, str]:
-    return {"status": "UP", "orchestrator": "online"}
+    fastapi_app.add_middleware(SupremeContextMiddleware)
+    fastapi_app.add_middleware(TrustedOriginMiddleware)
+    fastapi_app.add_middleware(ChaosInjectorMiddleware)
+    fastapi_app.add_middleware(ObservabilityMiddleware)
+    fastapi_app.add_middleware(HoneypotMiddleware)
+    fastapi_app.add_middleware(AuthMiddleware)
+    fastapi_app.add_middleware(TenantExtractionMiddleware)
+    fastapi_app.add_middleware(IdempotencyMiddleware)
+    fastapi_app.add_middleware(APIKeyAuthMiddleware)
+    fastapi_app.add_middleware(ResponseStandardizationMiddleware)
 
+    fastapi_app.state.limiter = limiter
 
-app.include_router(admin_router)
+    @fastapi_app.exception_handler(HTTPException)
+    async def custom_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "title": "Task Execution Failed",
+                "detail": exc.detail,
+                "instance": request.url.path,
+            },
+        )
 
-register_all_routers(app)
+    @fastapi_app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.error(f"Unhandled Exception on {request.url.path}: {exc}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "title": "Internal Server Error",
+                "detail": "An unexpected error occurred. This has been logged.",
+                "instance": request.url.path,
+            },
+        )
 
-app.router.lifespan_context = lifespan.app_lifespan
+    if isinstance(RateLimitExceeded, type) and issubclass(RateLimitExceeded, Exception):
+        fastapi_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    @fastapi_app.get("/")
+    async def root() -> dict[str, Any]:
+        return {
+            "name": settings.app_name,
+            "version": "2.0.0",
+            "status": "online",
+            "docs": "/docs",
+            "health": "/api/v1/health",
+            "description": "Multi-cloud AI orchestration platform.",
+        }
+
+    @fastapi_app.get("/health")
+    async def health() -> dict[str, Any]:
+        redis_ok = False
+        if hasattr(services, "redis_queue") and services.redis_queue.configured:
+            try:
+                services.redis_queue.set("health", "ok", ex=5)
+                redis_ok = services.redis_queue.get("health") == "ok"
+            except Exception:  # noqa: BLE001
+                logger.exception("Health check failed on redis connection")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="app.health",
+                        error_type="REDIS_HEALTH_FAIL",
+                        message="Redis health error",
+                        severity="ERROR",
+                        structured_context=ErrorContext(module="auto_fixed"),
+                    )
+                )
+                redis_ok = False
+        else:
+            redis_ok = True
+
+        api_keys_ok = bool(
+            settings.openrouter_api_key or settings.gemini_api_key or settings.deepseek_api_key or settings.groq_api_key or settings.nvidia_api_key
+        )
+        checks = {"redis": redis_ok, "api_keys_configured": api_keys_ok}
+        all_ok = all(checks.values())
+        return {"status": "ok" if all_ok else "degraded", "orchestrator": "online", "checks": checks}
+
+    @fastapi_app.get("/actuator/health")
+    def actuator_health() -> dict[str, str]:
+        return {"status": "UP", "orchestrator": "online"}
+
+    fastapi_app.router.lifespan_context = lifespan.app_lifespan
+    return fastapi_app
 
 
 def router_health_check(fastapi_app: FastAPI) -> None:
@@ -339,4 +303,25 @@ def router_health_check(fastapi_app: FastAPI) -> None:
         sys.exit(1)
 
 
+# For backward compatibility and test suites
+# বাংলা মন্তব্য: ব্যাকওয়ার্ড কম্প্যাটিবিলিটি এবং টেস্ট কেসের জন্য ডিফল্ট গ্লোবাল অ্যাপ
+app = build_app_shell(title=f"{settings.app_name} (Production Ready)")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "X-API-Key", "X-Correlation-ID"],
+)
+
+if settings.env == "production":
+    if not settings.cors_origins:
+        raise RuntimeError("🔥 CRITICAL: Production CORS drift detected. cors_origins cannot be empty in production.")
+    if "*" in settings.cors_origins:
+        raise RuntimeError("🚨 SECURITY: Wildcard '*' is strictly prohibited in production CORS mesh. Set CORS_ORIGINS env var.")
+
+app.include_router(admin_router)
+register_all_routers(app)
 router_health_check(app)
+
+
