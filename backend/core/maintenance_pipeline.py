@@ -169,6 +169,24 @@ class MaintenancePipeline:
                 except Exception as e:  # noqa: BLE001
                     logger.error(f"Failed to recover Redis: {e}")
 
+        # বাংলা মন্তব্য: Health critical threshold-এ পৌঁছালে SelfEvolutionAgent-কে
+        # জরুরি evolution cycle চালাতে signal দেওয়া হচ্ছে।
+        # এটাই সেই bridge যেটা self-healing → self-evolution loop বন্ধ করে।
+        if self.health_score < 50:
+            try:
+                from core.evolution.self_evolution_agent import SelfEvolutionAgent  # noqa: PLC0415
+                import asyncio as _asyncio  # noqa: PLC0415
+                # শুধু tick() চালাই, পুরো loop নয় — non-blocking
+                _evo = SelfEvolutionAgent.__new__(SelfEvolutionAgent)
+                if hasattr(_evo, "_tick"):
+                    _asyncio.create_task(_evo._tick())
+                    logger.warning(
+                        f"🛡️→🧬 Health critical (score={self.health_score}), "
+                        "triggered emergency evolution tick."
+                    )
+            except Exception as evo_exc:  # noqa: BLE001
+                logger.debug(f"Evolution trigger skipped: {evo_exc!r}")
+
         logger.info("🚑 Remediation cycle completed.")
 
 
