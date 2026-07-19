@@ -391,6 +391,48 @@ class SupabaseDB:
             END;
             $$;
             """,
+            # গ্যাপ ফিক্স: skills/core_knowledge_qa.py এখন real pgvector সার্চ করে — এই টেবিল ও RPC
+            # ফাংশনটি সেই সার্চের backing store। namespace কলাম দিয়ে role-based ফিল্টারিং (Admin
+            # বনাম Standard_User) নিশ্চিত হয়।
+            "CREATE TABLE IF NOT EXISTS knowledge_base ("
+            "id VARCHAR(255) PRIMARY KEY,"
+            "namespace VARCHAR(255) NOT NULL,"
+            "content TEXT NOT NULL,"
+            "source VARCHAR(500) NOT NULL,"
+            "embedding vector(1536),"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_knowledge_base_namespace ON knowledge_base (namespace);",
+            """
+            CREATE OR REPLACE FUNCTION match_knowledge_base (
+                query_embedding vector(1536),
+                match_namespace text,
+                match_threshold float,
+                match_count int
+            )
+            RETURNS TABLE (
+                id text,
+                content text,
+                source text,
+                similarity float
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                RETURN QUERY
+                SELECT
+                    knowledge_base.id,
+                    knowledge_base.content,
+                    knowledge_base.source,
+                    1 - (knowledge_base.embedding <=> query_embedding) AS similarity
+                FROM knowledge_base
+                WHERE knowledge_base.namespace = match_namespace
+                  AND 1 - (knowledge_base.embedding <=> query_embedding) > match_threshold
+                ORDER BY knowledge_base.embedding <=> query_embedding
+                LIMIT match_count;
+            END;
+            $$;
+            """,
         ]
 
     def bootstrap_schema(self):

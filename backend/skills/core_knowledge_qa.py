@@ -20,22 +20,58 @@ _gemini_qa_breaker: CircuitBreaker = CircuitBreaker(
 )
 
 
-def _mock_vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
-    """Supabase Vector RPC এর মক রিট্রিভাল লেয়ার।"""
-    database_mock = {
-        "public_sops": [
-            {
-                "id": "doc_01",
-                "content": "SupremeAI office timing is from 9:00 AM to 6:00 PM, Sunday to Thursday.",
-                "source": "Employee Handbook 2026 v1",
-            },
-            {"id": "doc_02", "content": "Remote work is permitted on Wednesdays with manager approval.", "source": "Remote Work Policy v2"},
-        ],
-        "company_financials": [
-            {"id": "fin_99", "content": "SupremeAI Q1 2026 net profit margin increased by 14.2%.", "source": "Q1 Board Memo Private"}
-        ],
-    }
-    return database_mock.get(namespace, [])
+def _generate_embedding(text: str) -> list[float] | None:
+    """litellm দিয়ে real embedding তৈরি করে — memory/supabase_store.py-র একই প্যাটার্ন।"""
+    try:
+        import litellm
+
+        response = litellm.embedding(model="text-embedding-3-small", input=text)
+        return response.data[0]["embedding"]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Embedding generation failed: {exc}")
+        return None
+
+
+def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
+    """
+    গ্যাপ ফিক্স (Database-Driven Logic নীতি): আগে এখানে `_mock_vector_search()` ছিল যা query
+    যাই হোক না কেন সবসময় একই ২টা hardcoded fake ডকুমেন্ট রিটার্ন করত — ফলে "permission-aware
+    RAG" স্কিলটি আসলে ইউজারের প্রশ্নকে সম্পূর্ণ উপেক্ষা করত। এখন real Supabase pgvector RPC
+    (`match_knowledge_base`) দিয়ে সেম্যান্টিক সার্চ চেষ্টা করা হয়, ব্যর্থ হলে namespace-স্কোপড
+    ilike সাবস্ট্রিং সার্চে ফলব্যাক করে (memory/supabase_store.py-এর search_facts()-এর একই
+    resilience প্যাটার্ন)। Supabase কনফিগার করা না থাকলে fabricate না করে খালি লিস্ট রিটার্ন করে।
+    """
+    try:
+        from database.supabase_client import db as supabase_db
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Supabase client unavailable for knowledge_qa vector search: {exc}")
+        return []
+
+    client = getattr(supabase_db, "client", None)
+    if client is None:
+        logger.warning("Supabase client not configured — knowledge_qa returning no results instead of fabricated data.")
+        return []
+
+    query_embedding = _generate_embedding(query)
+    if query_embedding:
+        try:
+            response = client.rpc(
+                "match_knowledge_base",
+                {"query_embedding": query_embedding, "match_namespace": namespace, "match_threshold": 0.3, "match_count": 5},
+            ).execute()
+            if response.data:
+                return [{"id": row["id"], "content": row["content"], "source": row["source"]} for row in response.data]
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"pgvector RPC 'match_knowledge_base' failed, falling back to ilike: {exc}")
+
+    try:
+        result = (
+            client.table("knowledge_base").select("id, content, source").eq("namespace", namespace).ilike("content", f"%{query}%").limit(5).execute()
+        )
+        return result.data or []
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Fallback ilike search on knowledge_base failed: {exc}")
+        return []
 
 
 def execute_tool(payload: dict) -> dict:
@@ -53,7 +89,7 @@ def execute_tool(payload: dict) -> dict:
 
         retrieved_chunks = []
         for namespace in allowed_namespaces:
-            chunks = _mock_vector_search(query, namespace)
+            chunks = _vector_search(query, namespace)
             retrieved_chunks.extend(chunks)
 
         if not retrieved_chunks:

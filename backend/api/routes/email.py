@@ -28,6 +28,12 @@ async def gmail_auth(payload: GmailAuthRequest):
         if success:
             return {"status": "success", "message": "Connected Gmail via OAuth"}
         raise HTTPException(status_code=400, detail="Failed to connect Gmail OAuth")
+    except NotImplementedError as e:
+        # গ্যাপ ফিক্স: আগে এই পাথে কখনো পৌঁছানো যেত না কারণ connect_gmail_oauth() সবসময় True
+        # রিটার্ন করত (fake success)। এখন real না-হওয়া অবস্থা 501 হিসেবে honestly রিপোর্ট হয়।
+        raise HTTPException(status_code=501, detail=str(e)) from e
+    except HTTPException:
+        raise
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(e)) from e
 
