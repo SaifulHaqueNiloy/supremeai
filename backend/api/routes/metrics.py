@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api/admin/metrics", tags=["infrastructure-metrics"],
 auditor = NightlyChaosAuditor()
 
 
+class SupremeMetricsEngine:
     def __init__(self):
         # রিফ্যাক্টর: সরাসরি firestore.Client() এর বদলে শেয়ার্ড হেল্পার ব্যবহার
         self.db = get_firestore_db()

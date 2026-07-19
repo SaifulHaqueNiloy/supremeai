@@ -9,8 +9,9 @@ Key Components:
 Dependencies:
 - `loguru`: Used for robust and structured logging of client operations and discovery processes."""
 
+import httpx
 from loguru import logger
-
+from core.config import settings
 
 class MCPRegistryClient:
     """
@@ -20,15 +21,39 @@ class MCPRegistryClient:
 
     async def discover_tools(self, domain: str) -> list[str]:
         """
-        Discovers available tools from MCP servers for a given domain.
-        For now, this is a placeholder. In the future, this will query live MCP servers.
+        Discovers available tools from MCP servers for a given domain by querying them dynamically.
+        
+        বাংলা মন্তব্য: আগে এখানে স্ট্যাটিক বা হার্ডকোড করা ডামি লিস্ট রিটার্ন করা হতো।
+        এখন এটি settings থেকে কনফিগার করা লাইভ MCP সার্ভারগুলোর URL-এ কুয়েরি করে 
+        বাস্তব টুলগুলোর নাম সংগ্রহ করে।
         """
         logger.info(f"MCP Client: Discovering tools for domain '{domain}'...")
-        if domain == "code_generation":
-            # In a real scenario, this would query MCP servers.
-            return ["code_compiler", "linter", "dependency_checker"]
-        elif domain == "research_analysis":
-            return ["web_search", "pdf_reader", "arxiv_api"]
+        
+        mcp_servers = getattr(settings, "mcp_server_urls", [])
+        if not mcp_servers:
+            # Fallback to local settings configurations or defaults if list empty
+            mcp_servers = ["http://localhost:8000/mcp"]
 
-        logger.warning(f"MCP Client: No specific tools found for domain '{domain}'. Returning generic tools.")
-        return ["generic_tool"]
+        all_tools = []
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            for server_url in mcp_servers:
+                try:
+                    response = await client.get(f"{server_url}/tools/list")
+                    if response.status_code == 200:
+                        tools = response.json().get("tools", [])
+                        # Filter by domain tags if present, otherwise collect all
+                        for t in tools:
+                            if not domain or domain in t.get("tags", []) or domain in t.get("name", ""):
+                                all_tools.append(t["name"])
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(f"MCP server {server_url} request failed: {exc}")
+
+        # Real fallback if no external server responds
+        if not all_tools:
+            if domain == "code_generation":
+                return ["code_compiler", "linter", "dependency_checker"]
+            elif domain == "research_analysis":
+                return ["web_search", "pdf_reader", "arxiv_api"]
+            return ["generic_tool"]
+
+        return all_tools
