@@ -62,6 +62,67 @@ services:
       - key: ALLOWED_HOSTS
         value: 'supremeai-backend.onrender.com,supremeai-backend-65hl.onrender.com'
 
+  # ১.৫. অ্যাডমিন ব্যাকএন্ড (আলাদা, আইসোলেটেড Render instance — core/app_admin.py)
+  # বাংলা মন্তব্য: core/app_admin.py আগে থেকেই কোডে ছিল (Anti-Hacking OTP মিডলওয়্যার +
+  # শুধু admin রাউট), কিন্তু render.yaml-এ এর কোনো ম্যাচিং সার্ভিস ছিল না — ফলে এটি কখনো
+  # deploy-ই হতো না এবং প্রকৃত সার্ভার-লেভেল আইসোলেশন অর্জিত হয়নি। ডোমেইন/সিক্রেট আলাদা
+  # হওয়ায় ইউজার instance ক্র্যাশ করলেও অ্যাডমিন প্যানেল প্রভাবিত হবে না, এবং উল্টোটাও।
+  - type: web
+    name: supremeai-admin
+    env: image
+    image:
+      url: ghcr.io/paykaribazaronline/supremeai/supremeai-backend:latest
+    region: singapore
+    plan: free
+    healthCheckPath: /api/v1/health
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: ENV
+        value: production
+      - key: REDIS_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL_POOLER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPREMEAI_JWT_SECRET
+        sync: false
+      - key: SUPREMEAI_ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SUPREMEAI_ENCRYPTION_KEY
+        sync: false
+      - key: SUPREMEAI_DOCS_PASSWORD
+        sync: false
+      - key: SUPREMEAI_API_TOKEN
+        sync: false
+      - key: DISCORD_OTP_WEBHOOK_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false
+      - key: INFISICAL_TOKEN
+        sync: false
+      - key: INFISICAL_CLIENT_SECRET
+        sync: false
+      # বাংলা মন্তব্য: শুধুমাত্র অ্যাডমিন কনসোল origin — Vercel/Netlify user client নয়
+      - key: ADMIN_CORS_ORIGINS
+        value: '["https://supremeai-admin.web.app"]'
+      - key: SERVICE_ROLE
+        value: admin
+      - key: ALLOWED_HOSTS
+        value: 'supremeai-admin.onrender.com'
+
   # ২. ফ্রন্টএন্ড (Render 100% Free Static Hosting)
   - type: web
     name: supremeai-studio-client

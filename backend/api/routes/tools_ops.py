@@ -4,9 +4,12 @@ import os
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
+from loguru import logger
 from pydantic import BaseModel
 
+from api.dependencies import get_current_user_token
 from tools.code.code_smell_detector import CodeSmellDetector
 from tools.devops.on_premise_deployer import OnPremiseDeployer
 from tools.learning.domain_adapter import DomainAdapter
@@ -14,7 +17,21 @@ from tools.learning.skill_recommender import SkillRecommender
 from tools.security_tools.vulnerability_predictor import VulnerabilityPredictor
 
 
-router = APIRouter(prefix="/tools", tags=["tools-ops"])
+def _require_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Gate DevOps/deploy tooling behind an authenticated admin role.
+
+    বাংলা মন্তব্য: এই রাউটারে ফাইল-সিস্টেম রিড (smell/vuln scan) এবং ডিপ্লয়মেন্ট
+    ফাইল-রাইট (docker-compose/helm) অপারেশন আছে, যা আগে কোনো auth ছাড়াই User-facing
+    API-তে এক্সপোজড ছিল (route-leakage: এই মডিউলটি `_admin_paths`-এ ছিল না)।
+    এখন প্রতিটি এন্ডপয়েন্টে admin-role JWT বাধ্যতামূলক করা হলো।
+    """
+    if payload.get("role") != "admin":
+        logger.warning(f"🚫 Unauthorized tools-ops access attempt by {payload.get('sub', 'unknown')}")
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return payload
+
+
+router = APIRouter(prefix="/tools", tags=["tools-ops"], dependencies=[Depends(_require_admin)])
 
 
 class SmellCheckRequest(BaseModel):
