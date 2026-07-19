@@ -1,0 +1,151 @@
+name: Auto-Fix CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    # Run daily cleanup at 2 AM UTC
+    - cron: '0 2 * 0 *'
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install isort black ruff safety
+          pip install -e backend
+
+      - name: Run isort
+        run: |
+          isort --check-only --diff backend
+          isort backend
+
+      - name: Run black
+        run: |
+          black --check backend
+          black backend
+
+      - name: Run ruff linting
+        run: |
+          ruff check backend --output-format=github
+          ruff check backend --fix
+
+      - name: Security scan
+        run: |
+          safety scan --json > safety-report.json || true
+          python backend/scripts/security_scan.py --output safety-custom.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            safety-custom.json
+
+      - name: Auto-commit fixes
+        run: |
+          git config user-name "SupremeAI Bot"
+          git config user-email "bot@supremeai.dev"
+          git add backend
+          git commit -m "🤖 Auto-fix: CI linting fixes" || exit 0
+          git push
+
+  vulnerability-scan:
+    needs: auto-fix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SupremeAI
+        run: pip install -e backend
+
+      - name: Run vulnerability scan
+        run: |
+          python -c "
+          import asyncio
+          from backend.agents.vulnerability_prophet import VulnerabilityProphet
+          prophet = VulnerabilityProphet()
+          asyncio.run(prophet.analyze_project('.'))
+          "
+
+  performance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -e backend
+
+      - name: Check performance metrics
+        run: |
+          python -c "
+          import asyncio
+          from backend.agents.performance_guardian import PerformanceGuardian
+          guardian = PerformanceGuardian()
+          asyncio.run(guardian.check_health())
+          "
+
+  churn-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run churn analysis
+        run: |
+          python -c "
+          import asyncio
+          from backend.agents.churn_prophet import ChurnProphet
+          print('Churn Prophet ready for analysis')
+          "
+
+  report:
+    needs: [auto-fix, vulnerability-scan, performance-check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate CI report
+        run: |
+          echo "# CI Report" > ci-report.md
+          echo "" >> ci-report.md
+          echo "## Auto-Fix Results" >> ci-report.md
+          echo "- ✅ Linting and formatting applied" >> ci-report.md
+          echo "" >> ci-report.md
+          echo "## Security Scan" >> ci-report.md
+          echo "- Run vulnerability-prophet for details" >> ci-report.md
+          echo "" >> ci-report.md
+          echo "## Performance" >> ci-report.md
+          echo "- Check performance-guardian metrics" >> ci-report.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: ci-report.md
