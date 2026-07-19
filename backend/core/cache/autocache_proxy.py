@@ -35,7 +35,9 @@ class AutocacheProxy:
         # বাংলা মন্তব্য: মেমরি লিক এড়াতে plain dict-এর বদলে maxsize=5000 এবং ttl=3600 সেকেন্ডের TTLCache ব্যবহার করা হলো।
         from cachetools import TTLCache
 
-        self.request_history = TTLCache(maxsize=5000, ttl=3600)
+        # Ensure this remains a real TTLCache instance (tests assert the type).
+        self.request_history: TTLCache = TTLCache(maxsize=5000, ttl=3600)
+
         self.cost_metrics = {"total_requests": 0, "cached_hits": 0, "total_cost_saved": 0.0, "dedup_requests": 0}
         self.vendor_costs = {
             "openai/gpt-4o": {"input": 0.005, "output": 0.015},

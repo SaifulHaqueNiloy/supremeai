@@ -12,6 +12,8 @@ supports both if triggered explicitly by an admin.
 
 from __future__ import annotations
 
+import re
+
 import httpx
 from loguru import logger
 
@@ -24,6 +26,21 @@ CHANNEL_TELEGRAM = "telegram"  # manual only
 CHANNEL_WHATSAPP = "whatsapp"  # manual only
 
 _REDIS_KEY_PREFIX = "otp:channel:"  # per-admin channel override, TTL'd
+
+
+def _mask(value: str | None, visible: int = 4) -> str:
+    if not value:
+        return "***"
+    if len(value) <= visible * 2:
+        return "*" * len(value)
+    return f"{value[:visible]}...{value[-visible:]}"
+
+
+def _sanitize_error(exc: Exception) -> str:
+    msg = str(exc)
+    msg = re.sub(r"https?://[^\s]+", "[REDACTED_URL]", msg)
+    msg = re.sub(r"(Bearer\s+)[A-Za-z0-9_\-\.]+", r"\1[REDACTED_TOKEN]", msg)
+    return msg[:200]
 
 
 async def get_active_channel(admin_id: str) -> str:
@@ -42,7 +59,7 @@ async def set_active_channel(admin_id: str, channel: str, ttl_seconds: int = 360
         raise ValueError(f"Unknown OTP channel: {channel}")
     if redis_manager and redis_manager.client:
         await redis_manager.set_cache(f"{_REDIS_KEY_PREFIX}{admin_id}", channel, ex_seconds=ttl_seconds)
-    logger.info(f"🔐 OTP channel for admin {admin_id} switched to {channel} (ttl={ttl_seconds}s)")
+    logger.info(f"🔐 OTP channel for admin {_mask(admin_id)} switched to {channel} (ttl={ttl_seconds}s)")
 
 
 async def send_otp(admin_id: str, code: str, context: dict) -> bool:
@@ -53,12 +70,12 @@ async def send_otp(admin_id: str, code: str, context: dict) -> bool:
     if channel == CHANNEL_DISCORD:
         sent = await _send_discord(admin_id, code, context)
         if not sent:
-            logger.warning(f"Discord OTP delivery failed for {admin_id}, falling back to email.")
+            logger.warning(f"Discord OTP delivery failed for {_mask(admin_id)}, falling back to email.")
             sent = await _send_email(admin_id, code, context)
     elif channel == CHANNEL_EMAIL:
         sent = await _send_email(admin_id, code, context)
     elif channel in (CHANNEL_TELEGRAM, CHANNEL_WHATSAPP):
-        logger.warning(f"{channel} OTP requested for {admin_id} but not yet wired up — falling back to Discord.")
+        logger.warning(f"{channel} OTP requested for {_mask(admin_id)} but not yet wired up — falling back to Discord.")
         sent = await _send_discord(admin_id, code, context)
 
     return sent
@@ -69,9 +86,10 @@ async def _send_discord(admin_id: str, code: str, context: dict) -> bool:
     if not webhook_url or not webhook_url.get_secret_value():
         logger.error("DISCORD_OTP_WEBHOOK_URL not configured.")
         return False
+    masked_admin = _mask(admin_id, visible=3)
     payload = {
         "content": (
-            f"🚨 **Admin Login Verification** — `{admin_id}`\n"
+            f"🚨 **Admin Login Verification** — `{masked_admin}`\n"
             f"Code: `{code}`\n"
             f"IP: `{context.get('ip', 'unknown')}` · Country: `{context.get('country', 'unknown')}`\n"
             f"Reply is not monitored here — verify in the admin dashboard."
@@ -82,7 +100,7 @@ async def _send_discord(admin_id: str, code: str, context: dict) -> bool:
             resp = await client.post(webhook_url.get_secret_value(), json=payload)
             return resp.status_code in (200, 204)
     except httpx.HTTPError as exc:
-        logger.error(f"Discord OTP send failed: {exc}")
+        logger.error(f"Discord OTP send failed: {_sanitize_error(exc)}")
         return False
 
 
@@ -92,10 +110,11 @@ async def _send_email(admin_id: str, code: str, context: dict) -> bool:
     if not api_key or not api_key.get_secret_value() or not to_addr:
         logger.error("RESEND_API_KEY or ADMIN_NOTIFICATION_EMAIL not configured.")
         return False
+    masked_admin = _mask(admin_id, visible=3)
     payload = {
         "from": "SupremeAI Security <security@supremeai.app>",
         "to": [to_addr],
-        "subject": f"Admin Login Verification — {admin_id}",
+        "subject": f"Admin Login Verification — {masked_admin}",
         "html": (f"<p>Code: <b>{code}</b></p>" f"<p>IP: {context.get('ip', 'unknown')} · Country: {context.get('country', 'unknown')}</p>"),
     }
     try:
@@ -107,5 +126,5 @@ async def _send_email(admin_id: str, code: str, context: dict) -> bool:
             )
             return resp.status_code in (200, 201)
     except httpx.HTTPError as exc:
-        logger.error(f"Resend OTP email failed: {exc}")
+        logger.error(f"Resend OTP email failed: {_sanitize_error(exc)}")
         return False

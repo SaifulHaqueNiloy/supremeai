@@ -1,12 +1,25 @@
-"""This module provides robust error remediation strategies for the SupremeAI project, combining a vector database (Qdrant) for dynamic fix lookups with a resilient local fallback mechanism. It ensures system stability by incorporating circuit breaking and exponential backoff for external service interactions, offering automated suggestions for known error patterns to enhance the overall reliability of the AI ecosystem.
+"""This module provides robust error remediation strategies for the
+SupremeAI project, combining a vector database (Qdrant) for dynamic fix
+lookups with a resilient local fallback mechanism. It ensures system stability
+by incorporating circuit breaking and exponential backoff for external service
+interactions, offering automated suggestions for known error patterns to
+enhance the overall reliability of the AI ecosystem.
 
 Key Components:
-- `ErrorRemediation`: The central class responsible for managing error remediation strategies, including Qdrant integration, circuit breaking, and local fallback logic.
-- `_ensure_fallback_file()`: Initializes and ensures the presence of the local JSON file used for fallback error fixes.
-- `_load_local_fallback()`: Retrieves a default error fix from the module's local fallback JSON file.
-- `_backoff_retry()`: An asynchronous utility function that retries a given operation with exponential backoff, respecting the circuit breaker's state.
-- `lookup_fix()`: The primary method to find a remediation fix for a given error signature, leveraging Qdrant or falling back to a local solution.
-- `_compute_embedding()`: Generates a vector embedding from an error signature string using sentence-transformers (preferred) or a deterministic hash-based fallback.
+- `ErrorRemediation`: Central class for managing error remediation
+  strategies, including Qdrant integration, circuit breaking, and local
+  fallback logic.
+- `_ensure_fallback_file()`: Initializes and ensures the presence of the
+  local JSON file used for fallback error fixes.
+- `_load_local_fallback()`: Retrieves a default error fix from the module's
+  local fallback JSON file.
+- `_backoff_retry()`: Async utility that retries a given operation with
+  exponential backoff, respecting the circuit breaker's state.
+- `lookup_fix()`: Primary method to find a remediation fix for a given error
+  signature, leveraging Qdrant or falling back to a local solution.
+- `_compute_embedding()`: Generates a vector embedding from an error signature
+  string using sentence-transformers (preferred) or a deterministic hash-based
+  fallback.
 
 Fixes Applied (Autonomous Architecture Audit):
 - 🛑 [CRITICAL] Removed zero-vector placeholder `[0.0] * 384` — replaced with proper embedding function
@@ -26,6 +39,9 @@ from pathlib import Path
 from loguru import logger
 
 from core.resilience.circuit_breaker import CircuitBreaker
+from core.messaging.event_bus import ErrorContext
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 
 # ── Embedding Provider ─────────────────────────────────────────────────────────
@@ -264,7 +280,17 @@ class ErrorRemediation:
         self._init_qdrant()
 
         if not self._qdrant or not self.circuit_breaker.allow_request():
-            logger.debug("Qdrant unavailable or circuit breaker open. Using local fallback.")
+            reason = "Qdrant unavailable" if not self._qdrant else "Circuit breaker open"
+            logger.debug(f"{reason}. Using local fallback.")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="QDRANT_LOOKUP_SKIPPED",
+                    message=reason,
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
+                )
+            )
             return self._load_local_fallback(error_sig)
 
         embedding = _compute_embedding(error_sig, QDRANT_VECTOR_SIZE)
@@ -285,6 +311,15 @@ class ErrorRemediation:
                 logger.info(f"✅ Found Qdrant remediation (score={results[0].score:.3f})")
                 return fix
 
+        error_event_bus.emit(
+            ErrorEvent(
+                module="error_remediation",
+                error_type="QDRANT_NO_FIX_FOUND",
+                message="No remediation found in Qdrant for error signature",
+                severity="INFO",
+                structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
+            )
+        )
         return self._load_local_fallback(error_sig)
 
     async def insert_error_pattern(
@@ -325,9 +360,33 @@ class ErrorRemediation:
                 ],
             )
             logger.info(f"✅ Inserted error pattern ({len(embedding)}-dim): {error_sig[:80]}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="ERROR_PATTERN_INSERTED",
+                    message="Error pattern inserted into Qdrant",
+                    severity="INFO",
+                    structured_context=ErrorContext(
+                        module="error_remediation",
+                        extra={"error_sig": error_sig[:200], "fix_len": len(fix)},
+                    ),
+                )
+            )
             return True
         except Exception as exc:  # noqa: BLE001
             logger.error(f"Failed to insert error pattern into Qdrant: {exc}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="ERROR_PATTERN_INSERT_FAILED",
+                    message=f"Failed to insert error pattern into Qdrant: {exc}",
+                    severity="ERROR",
+                    structured_context=ErrorContext(
+                        module="error_remediation",
+                        extra={"error_sig": error_sig[:200], "exception": str(exc)[:200]},
+                    ),
+                )
+            )
             return False
 
 

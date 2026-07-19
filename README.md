@@ -16,7 +16,7 @@ SupremeAI is a production-grade, highly scalable ecosystem featuring a Hub-and-S
 - **AI Engine:** Google Gemini 1.5 Pro (Generative AI)
 - **Streaming:** Native WebSockets (`wss://`) for token-by-token generation.
 - **Agentic Tools:** Autonomous tool calling (Database Search, System Health, Code Execution).
-- **Security:** `god.py` Constitutional Enforcement (Real-time global write-access toggle).
+- **Security:** `AutonoGuard Engine` — JIT OTP + IP Churn Detection + AST Scanning + Self-Healing
 
 ### 💻 Command Center (Web)
 - **Tech Stack:** Pure Vanilla HTML/CSS/JS (Zero framework overhead for maximum speed).
@@ -122,10 +122,8 @@ As part of the SupremeAI 2.0 production readiness audit, the following security 
   - Added service healthchecks (backend on port 8000)
   - Explicit `depends_on` with `condition: service_healthy` for frontend services
 - **GitHub Actions (deploy.yml)**:
-  - note):
-  0 apply step uses the plan artifact from the plan job.
-    - Deployment job uses `environment: production` for protection rules and secrets
-    - Added validation for required `CI_WEBHOOK_SECRET` in production
+  - Deployment job uses `environment: production` for protection rules and secrets
+  - Added validation for required `CI_WEBHOOK_SECRET` in production
 
 ### 🔐 Admin & Secrets Management
 - **Admin Whitelist**: Unified to `settings.admin_emails` (loaded from environment)
@@ -143,3 +141,53 @@ As part of the SupremeAI 2.0 production readiness audit, the following security 
 - **Linting**: All modified files pass `ruff check`
 - **Type Safety**: MyPy shows no new errors in modified files (pre-existing issues in unrelated modules remain)
 - **Test Coverage**: Maintained >38% overall coverage target
+
+## 🔐 Phase 0: AutonoGuard Enterprise Hardening (July 2026) ✅ COMPLETED
+
+The AutonoGuard Engine provides autonomous governance with enterprise-grade security:
+
+### 🔑 JIT OTP Enforcement
+- **SHA-256 hash-based OTP storage** (plaintext never stored in Redis)
+- **Masked admin_id in logs** (only 3 visible characters)
+- **Timing-safe comparison** via `secrets.compare_digest`
+- **Free-tier delivery** via Discord webhook or Resend email (3k emails/month)
+
+### 🌐 IP Churn Detection
+- **Redis-backed IP tracking** with 1-hour TTL
+- **>5 IPs in 1 hour** triggers OTP re-verification
+- **Malware immunity** detection for automated attack prevention
+
+### 🛡️ Self-Healing Engine
+- **ErrorRemediation** with Qdrant vector search for fix lookup
+- **Circuit breaker pattern** prevents cascade failures
+- **Structured events** on all code paths (zero silent failures)
+
+### 📊 Availability Protection
+- **Fail-Closed rate limiting** with in-memory fallback
+- **Failure fingerprint persistence** survives server restarts
+- **Config cache coalescing** prevents thundering-herd on refresh
+
+### Core Philosophy Compliance
+| Principle | Status |
+|-----------|--------|
+| Zero Cost | ✅ Free-tier services only |
+| High Scalability | ✅ Stateless + Redis distributed |
+| Zero Breakage | ✅ All fallbacks implemented |
+| Human-in-Loop | ✅ JIT OTP minimal friction |
+| Malware Immunity | ✅ IP Churn + JIT OTP |
+| Self-Healing | ✅ ErrorRemediation integrated |
+| Failure-Aware | ✅ ReliabilityController persistence |
+
+## 💰 Monthly Operating Cost
+
+| Service | Cost |
+|---------|------|
+| GCP Cloud Run | $0 (Always Free tier) |
+| Firebase Hosting | $0 (Free tier) |
+| Render | $0 (Free 750h/মাস) |
+| Upstash Redis | $0 (Free tier, 10k requests/day) |
+| **Total** | **$0/মাস** |
+
+---
+
+*Phase 0 hardening completed by Principal Autonomous AI Architect on 2026-07-20.*

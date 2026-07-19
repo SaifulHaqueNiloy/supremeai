@@ -1,4 +1,11 @@
-"""This module provides the `DynamicConfigProxy` class, which is central to managing tenant-specific runtime configuration settings within the SupremeAI ecosystem. It facilitates the dynamic retrieval and caching of configuration parameters from a database, ensuring that each tenant can operate with its own customized settings. The proxy implements a time-based caching mechanism to optimize database access and includes robust error handling and fallback defaults, making it a critical component for supporting multi-tenancy and adaptable AI agent behavior.
+"""This module provides the `DynamicConfigProxy` class, which is central to
+managing tenant-specific runtime configuration settings within the SupremeAI
+ecosystem. It facilitates the dynamic retrieval and caching of configuration
+parameters from a database, ensuring that each tenant can operate with its own
+customized settings. The proxy implements a time-based caching mechanism to
+optimize database access and includes robust error handling and fallback
+defaults, making it a critical component for supporting multi-tenancy and
+adaptable AI agent behavior.
 
 Key Components:
 - `DynamicConfigProxy`: Manages tenant-specific dynamic configuration, including caching, database retrieval, and fallback defaults.
@@ -48,15 +55,18 @@ class DynamicConfigProxy:
                 self._cache = snapshot.to_dict()
                 self._expiry = datetime.now() + timedelta(minutes=1)
             else:
-                # ডামি ডকুমেন্ট তৈরি করা হচ্ছে (fallback/test)
+                # Source defaults from centralized config_cache instead of hardcoded dummy data
+                from core.config_cache import config_cache
+
                 self._cache = {
-                    "DEFAULT_CODE_SMELL_THRESHOLDS": {
-                        "complexity": 10,
-                        "lines": 75,
-                        "args": 5,
-                        "class_methods": 15,
-                    },
-                    "COMMON_STRINGS_TO_IGNORE": ["", "utf-8", "rb", "wb", "r", "w", "a", "x", "b", "t", "+"],
+                    "DEFAULT_CODE_SMELL_THRESHOLDS": config_cache.get(
+                        "DEFAULT_CODE_SMELL_THRESHOLDS",
+                        default={"complexity": 10, "lines": 75, "args": 5, "class_methods": 15},
+                    ),
+                    "COMMON_STRINGS_TO_IGNORE": config_cache.get(
+                        "COMMON_STRINGS_TO_IGNORE",
+                        default=["", "utf-8", "rb", "wb", "r", "w", "a", "x", "b", "t", "+"],
+                    ),
                 }
                 self._expiry = datetime.now() + timedelta(minutes=1)
         except Exception as e:  # noqa: BLE001

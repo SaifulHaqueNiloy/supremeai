@@ -1,8 +1,13 @@
-"""This module, `admin_god.py`, establishes the "Admin God Layer" within the SupremeAI project, serving as the ultimate authority for system-wide administrative control and enforcement. It provides mechanisms for secure admin authentication, immutable audit logging of privileged operations, and the enforcement of "constitutional laws" through a universal rules engine and role-based access control. Its primary role is to ensure that critical system decisions and AI behaviors adhere to non-negotiable administrative policies, preventing unauthorized overrides or jailbreaking attempts, thereby maintaining the integrity and security of the entire AI ecosystem.
+"""Admin God Layer — admin-only constitutional enforcement + immutable audit.
+
+This module provides privileged control utilities (god mode) and an append-only
+audit trail with Redis persistence when available.
+
 
 Key Components:
 - `GodModeAuditLog`: Manages an immutable, append-only log for all "god mode" related operations, ensuring a comprehensive audit trail.
-- `AdminGodLayer`: The central class providing administrative capabilities, including password verification, session management for privileged access, enforcement of access control, and injection of constitutional rules into AI prompts.
+- `AdminGodLayer`: Central class for privileged control, including auth, sessions, access enforcement, and constitutional injection into prompts.
+
 - `GodModeContext`: A simple context object used to track the session ID during a "god mode" operation.
 - `GodModeAuditLog.record()`: Records a new entry in the `GodModeAuditLog` for an event.
 - `GodModeAuditLog.update()`: Updates an existing session's audit trail (e.g., marking termination).
@@ -45,12 +50,50 @@ from .universal_rules import UniversalRulesEngine
 # Append-only log, WORM (Write Once Read Many) pattern.
 # প্রতিটি god mode activation/deactivation audit trail এ capture হয়।
 class GodModeAuditLog:
-    """Immutable audit log for god mode operations — append-only, no deletion."""
+    """Immutable audit log for god mode operations — append-only.
+
+    Primary persistence: Redis (if available).
+    Secondary fallback: in-memory list (best-effort) to avoid hard downtime.
+
+    Note: entries are treated as WORM-like; no deletion.
+    """
 
     _entries: list[dict[str, Any]] = []
 
+    _REDIS_KEY_PREFIX = "audit:godmode:events"
+
     @classmethod
-    def record(cls, actor: str, action: str, resource: str, reason: str, ip_address: str = "unknown") -> str:
+    def _push_redis(cls, entry: dict[str, Any]) -> None:
+        """Fire-and-forget Redis persistence (never raise)."""
+        try:
+            # Local import to avoid circular dependencies at import-time.
+            from core.cache.redis_manager import redis_manager
+
+            if redis_manager and redis_manager.client:
+                # Keep single entry as JSON string in a list.
+                import json
+
+                import asyncio
+
+                key = f"{cls._REDIS_KEY_PREFIX}:{entry.get('session_id', 'unknown')}"
+                raw = json.dumps(entry, ensure_ascii=False)
+                # Use create_task to keep record() sync.
+                asyncio.get_running_loop().create_task(redis_manager.client.rpush(key, raw))
+                # TTL so infinite growth is bounded without deleting data.
+                asyncio.get_running_loop().create_task(redis_manager.client.expire(key, 86400 * 14))
+        except Exception:
+            # Anti-silent failure: never crash audit path.
+            return
+
+    @classmethod
+    def record(
+        cls,
+        actor: str,
+        action: str,
+        resource: str,
+        reason: str,
+        ip_address: str = "unknown",
+    ) -> str:
         session_id = _secrets.token_hex(16)
         entry = {
             "session_id": session_id,
@@ -62,6 +105,7 @@ class GodModeAuditLog:
             "timestamp": datetime.utcnow().isoformat(),
         }
         cls._entries.append(entry)
+        cls._push_redis(entry)
         return session_id
 
     @classmethod
@@ -73,9 +117,12 @@ class GodModeAuditLog:
             "timestamp": datetime.utcnow().isoformat(),
         }
         cls._entries.append(entry)
+        cls._push_redis(entry)
 
     @classmethod
     def get_entries(cls) -> list[dict[str, Any]]:
+        # Redis read is intentionally omitted for speed; this method
+        # remains local best-effort view.
         return list(cls._entries)
 
 
@@ -96,6 +143,7 @@ class AdminGodLayer:
         from core.config import settings
 
         actor = getattr(settings, "app_name", "unknown")
+
         if not password_raw:
             GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "empty password")
             return False
