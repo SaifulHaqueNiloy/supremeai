@@ -48,6 +48,11 @@ class ExperienceDatabase:
         self.chroma_collection = None
         self.qdrant_client = None
         self.qdrant_collection = "experience"
+        # বাংলা: vector-DB backend fail করলে find_similar() একটা খালি লিস্ট রিটার্ন করে —
+        # যেটা "কোনো relevant memory নেই" এবং "vector DB নিজেই down" — এই দুই অবস্থাকে
+        # আলাদা করতে পারে না। এই ফ্ল্যাগ দিয়ে health_probes/self_healer বাস্তব degradation
+        # ধরতে পারবে, memory silently গায়েব হয়ে যাবে না।
+        self.vector_backend_degraded = False
         if HAS_SENTENCE_TRANSFORMERS:
             try:
                 from sentence_transformers import SentenceTransformer
@@ -183,9 +188,8 @@ class ExperienceDatabase:
                     documents=[text],
                 )
         except Exception as e:  # noqa: BLE001
-            import logging
-
-            logging.warning(f"Exception suppressed: {e}")
+            self.vector_backend_degraded = True
+            logger.error(f"Chroma upsert failed (vector memory degraded, exp_id={exp_id}): {e}")
         try:
             if self.qdrant_client:
                 from qdrant_client.models import PointStruct
@@ -195,9 +199,8 @@ class ExperienceDatabase:
                     points=[PointStruct(id=exp_id, vector=embedding, payload={"result": result, "text": text, "response": response_text})],
                 )
         except Exception as e:  # noqa: BLE001
-            import logging
-
-            logging.warning(f"Exception suppressed: {e}")
+            self.vector_backend_degraded = True
+            logger.error(f"Qdrant upsert failed (vector memory degraded, exp_id={exp_id}): {e}")
 
     def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
         import math
@@ -241,9 +244,8 @@ class ExperienceDatabase:
                             }
                         )
         except Exception as e:  # noqa: BLE001
-            import logging
-
-            logging.warning(f"Exception suppressed: {e}")
+            self.vector_backend_degraded = True
+            logger.error(f"find_similar() query failed (returning empty, but this is a DEGRADED state, not 'no matches'): {e}")
         return hits
 
     def get_experiences(self, limit: int = 50) -> list[Experience]:
