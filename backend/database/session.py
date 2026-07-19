@@ -39,20 +39,35 @@ if _async_url.startswith("sqlite"):
     engine_kwargs["poolclass"] = StaticPool
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 if _async_url.startswith("postgresql"):
+    # বাংলা মন্তব্য: User ও Admin — দুই আলাদা Render instance একই Supabase PgBouncer পুলে
+    # কানেক্ট করে, তাই SERVICE_ROLE অনুযায়ী pool limit ভাগ করা হচ্ছে যাতে কোনো একটি
+    # instance বাকিটার জন্য কানেকশন শেষ করে না ফেলে (pool exhaustion prevention)।
+    # User: high-traffic client-facing, বেশি concurrency দরকার -> min=2, max=15 (pool_size + max_overflow)
+    # Admin: low-traffic internal panel, সামান্য concurrency যথেষ্ট -> min=1, max=3
+    _role = settings.service_role.lower()
+    if _role == "admin":
+        _pool_size, _max_overflow = 1, 2  # base(1) + overflow(2) = max 3 concurrent
+    else:
+        _pool_size, _max_overflow = 2, 13  # base(2) + overflow(13) = max 15 concurrent
+
     engine_kwargs.update(
         {
-            "pool_size": 20,
-            "max_overflow": 0,
+            "pool_size": _pool_size,
+            "max_overflow": _max_overflow,
             "pool_timeout": 30,
             "pool_recycle": 1800,
+            # বাংলা মন্তব্য: stateless API রুট থেকে কানেকশন যেন দ্রুত রিলিজ হয়, তাই pre_ping দিয়ে
+            # স্টেল কানেকশন এড়ানো হচ্ছে (PgBouncer transaction-mode এ স্টেল হওয়া সাধারণ ঘটনা)।
+            "pool_pre_ping": True,
             # বাংলা মন্তব্য: PgBouncer এর transaction pool মোডের সাথে সামঞ্জস্যের জন্য statement_cache_size=0 করা হলো
             "connect_args": {
                 "command_timeout": 30,
-                "server_settings": {"application_name": "supremeai_2.0"},
+                "server_settings": {"application_name": f"supremeai_2.0_{_role}"},
                 "statement_cache_size": 0,
             },
         }
     )
+    logger.info(f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}")
 
 engine = create_async_engine(_async_url, **engine_kwargs)
 
