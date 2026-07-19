@@ -1,83 +1,139 @@
+"""engine/vector_db.py — Free-tier vector memory adapter.
+
+বাংলা মন্তব্য: এই ফাইলটি আর Pinecone-এর উপর নির্ভর করে না।
+এটি core/services.py-তে থাকা shared `experience_db` singleton-এর একটি adapter,
+যে একই instance crew_departments.py, auto_skill_creator.py এবং task.py ব্যবহার করে।
+ফলে সমস্ত agent এখন সত্যিকারের একটিই memory pool শেয়ার করে।
+Pinecone-shaped interface (save_experience, find_similar_experiences) অক্ষত রাখা হয়েছে
+যাতে কোনো caller ভাঙে না।
+"""
+
+from __future__ import annotations
+
 import asyncio
 import logging
-import os
-import uuid
 from typing import Any
 
-from pinecone import Pinecone
-from pinecone import ServerlessSpec
+from loguru import logger as _loguru_logger
 
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class VectorDatabaseClient:
     """
-    Manages long-term Neural Memory using Pinecone Vector DB.
-    Allows agents to recall past solutions using RAG architecture.
+    Free-tier vector memory adapter backed by the shared ExperienceDatabase singleton.
+    Previously used Pinecone (paid). Now delegates to the shared ChromaDB/Qdrant/SQLite
+    free backend that is already initialised in core/services.py.
     """
 
-    def __init__(self, index_name: str = "supreme-memory"):
-        api_key = os.getenv("PINECONE_API_KEY", "dummy_key_for_dev")
-        self.pc = Pinecone(api_key=api_key)
-        self.index_name = index_name
+    def __init__(self) -> None:
+        # বাংলা মন্তব্য: lazy import করা হচ্ছে circular-import এড়াতে।
+        # services.py এই module কে import করলে সরাসরি top-level import ঝুঁকিপূর্ণ।
+        self._exp_db = None
+        self.degraded: bool = False
+        _logger.debug("VectorDatabaseClient initialised (free-tier adapter, shared experience_db)")
 
-        # In a real environment, this blocks. Best to call async initialization
-        # or handle exceptions gracefully if the key is dummy.
-        # বাংলা: index না থাকলে save/find silently কোনো কাজ না করেই সফল রেজাল্ট রিটার্ন করে —
-        # এই ফ্ল্যাগ দিয়ে caller (memory_middleware) বুঝতে পারবে memory backend আসলে
-        # অনুপস্থিত/degraded, "কোনো memory নেই" এর সাথে গুলিয়ে ফেলবে না।
-        self.degraded = False
-        try:
-            self._ensure_index()
-            self.index = self.pc.Index(self.index_name)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Pinecone init skipped (Missing API Key or Connection Error): {str(e)}")
-            self.index = None
+    def _get_exp_db(self):
+        """Lazily fetch the shared experience_db singleton from core.services."""
+        if self._exp_db is None:
+            try:
+                import core.services as _services  # noqa: PLC0415
+
+                self._exp_db = _services.experience_db
+                # বাংলা মন্তব্য: singleton থেকে degraded state propagate করা হচ্ছে
+                if getattr(self._exp_db, "vector_backend_degraded", False):
+                    self.degraded = True
+            except Exception as exc:  # noqa: BLE001
+                _logger.error(
+                    f"VectorDatabaseClient: failed to fetch shared experience_db — "
+                    f"memory will be DEGRADED. error={exc!r}"
+                )
+                self.degraded = True
+        return self._exp_db
+
+    async def save_experience(self, vector: list[float], metadata: dict[str, Any]) -> None:
+        """
+        Saves an experience into the shared memory pool.
+        বাংলা মন্তব্য: vector argument এখন ignore করা হচ্ছে — experience_db নিজেই
+        sentence-transformers দিয়ে free embedding তৈরি করে। caller-এর interface অক্ষত রাখতে
+        এই parameter signature বজায় রাখা হলো।
+        """
+        exp_db = self._get_exp_db()
+        if exp_db is None:
             self.degraded = True
+            _logger.error(
+                "save_experience() skipped: shared experience_db unavailable (DEGRADED). "
+                "Experience NOT persisted."
+            )
+            return
 
-    def _ensure_index(self):
-        indexes = [idx.name for idx in self.pc.list_indexes()]
-        if self.index_name not in indexes:
-            logger.info(f"Creating Pinecone index: {self.index_name} (Dim: 1536)")
-            self.pc.create_index(
-                name=self.index_name,
-                dimension=1536,  # OpenAI text-embedding-3-small dimension
-                metric="cosine",
-                spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+        try:
+            from adaptive_engine.experience_db import Experience  # noqa: PLC0415
+
+            exp = Experience(
+                request=metadata.get("request", metadata.get("patch_id", "")),
+                action_taken=metadata.get("solution", metadata.get("action", "")),
+                result=metadata.get("result", "success"),
+                generated_code=metadata.get("generated_code"),
+                what_worked=metadata.get("what_worked", []),
+                what_failed=metadata.get("what_failed", []),
+            )
+            # বাংলা মন্তব্য: blocking SQLite write — thread-এ offload করা হচ্ছে
+            await asyncio.to_thread(exp_db.record_experience, exp)
+            _logger.debug(f"🧠 Saved neural memory experience via shared pool: {metadata.get('patch_id', 'n/a')}")
+        except Exception as exc:  # noqa: BLE001
+            self.degraded = True
+            _logger.error(
+                f"save_experience() failed (experience NOT persisted, DEGRADED): {exc!r}"
             )
 
-    async def save_experience(self, vector: list[float], metadata: dict[str, Any]):
-        """Saves a new code fix or logic insight into Pinecone."""
-        doc_id = metadata.get("patch_id", f"exp_{uuid.uuid4().hex[:8]}")
-
-        def _upsert():
-            if self.index:
-                self.index.upsert(vectors=[(doc_id, vector, metadata)])
-                return True
-            return False
-
-        # Using asyncio.to_thread to prevent blocking the async event loop
-        saved = await asyncio.to_thread(_upsert)
-        if saved:
-            logger.debug(f"🧠 Saved neural memory experience: {doc_id}")
-        else:
+    async def find_similar_experiences(self, vector: list[float], top_k: int = 3) -> list[dict[str, Any]]:
+        """
+        Retrieves past experiences from the shared free-tier vector backend.
+        বাংলা মন্তব্য: vector argument ignore করা হয় — experience_db.find_similar()
+        নিজেই query embedding করে। Pinecone-shaped return format বজায় রাখা হলো।
+        """
+        exp_db = self._get_exp_db()
+        if exp_db is None:
             self.degraded = True
-            logger.error(f"❌ save_experience() skipped: vector index unavailable (doc_id={doc_id}). Experience NOT persisted.")
+            _logger.error(
+                "find_similar_experiences() skipped: shared experience_db unavailable "
+                "(DEGRADED, not 'no matches found')."
+            )
+            return []
 
-    async def find_similar_experiences(self, vector: list[float], top_k: int = 3):
-        """Retrieves relevant past experiences for RAG."""
+        # বাংলা মন্তব্য: vector argument থেকে raw query text বের করার কোনো উপায় নেই,
+        # তাই caller যদি raw text পাঠায় (str), সেটা সরাসরি ব্যবহার করা হবে।
+        # memory_middleware এখন raw text পাঠায়, তাই এটা কাজ করে।
+        query_text = vector if isinstance(vector, str) else ""  # type: ignore[assignment]
 
-        def _query():
-            if self.index:
-                return self.index.query(vector=vector, top_k=top_k, include_metadata=True)
-            return {"matches": [], "_degraded": True}
+        if not query_text:
+            _logger.debug("find_similar_experiences(): no query text available, returning empty.")
+            return []
 
-        results = await asyncio.to_thread(_query)
-        if results.get("_degraded"):
-            logger.error("❌ find_similar_experiences() skipped: vector index unavailable, not 'no matches found'.")
-        return results.get("matches", [])
+        try:
+            hits = await asyncio.to_thread(exp_db.find_similar, query_text, top_k)
+            # বাংলা মন্তব্য: experience_db থেকে পাওয়া degraded state propagate করা হচ্ছে
+            if getattr(exp_db, "vector_backend_degraded", False):
+                self.degraded = True
+            # Pinecone-shaped format-এ রূপান্তর করা হচ্ছে callers-এর সাথে compatibility রাখতে
+            return [
+                {
+                    "id": h.get("id"),
+                    "score": h.get("score", 0.0),
+                    "metadata": h.get("meta", {}),
+                    "solution": h.get("response", ""),
+                }
+                for h in hits
+            ]
+        except Exception as exc:  # noqa: BLE001
+            self.degraded = True
+            _logger.error(
+                f"find_similar_experiences() failed (returning empty, DEGRADED state): {exc!r}"
+            )
+            return []
 
 
-# Global instance
+# Global instance — lazy singleton
 vector_db = VectorDatabaseClient()
