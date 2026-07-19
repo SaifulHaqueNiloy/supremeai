@@ -2,11 +2,13 @@ import os
 from unittest.mock import MagicMock, patch, AsyncMock
 
 from fastapi.testclient import TestClient
-from backend.api.routes import config as config_route
+
+# বাংলা মন্তব্য: sys.modules এ ডুপ্লিকেট মডিউল তৈরি হওয়া এড়াতে এবং monkeypatch ঠিকমতো কাজ করানোর জন্য ইমপোর্ট পাথ সংশোধন করা হলো।
+from api.routes import config as config_route
 from core.app import app
 
 
-auth_headers = {"Authorization": "Bearer test-token"}
+auth_headers = {"Authorization": f"Bearer {'test-token'}"}
 client = TestClient(app)
 
 import pytest
@@ -19,8 +21,10 @@ def setup_token():
     os.environ.pop("SUPREMEAI_API_TOKEN", None)
 
 
-def test_api_email_endpoints():
-    # test /integrations/email/gmail
+@patch("tools.social.email_agent.imaplib.IMAP4_SSL")
+def test_api_email_endpoints(mock_imap_ssl):
+    # গ্যাপ ফিক্স রিগ্রেশন টেস্ট: Gmail OAuth এখন real ফ্লো না থাকায় honestly 501 রিটার্ন করে,
+    # আগের মতো fake 200/success নয়।
     resp = client.post(
         "/integrations/email/gmail",
         json={
@@ -29,10 +33,14 @@ def test_api_email_endpoints():
         },
         headers=auth_headers,
     )
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "success"
+    assert resp.status_code == 501
 
-    # test /integrations/email/imap
+    # test /integrations/email/imap — real IMAP লগইন (মকড) যাচাই হয়ে তবেই success আসবে
+    mock_conn = MagicMock()
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.__exit__.return_value = False
+    mock_imap_ssl.return_value = mock_conn
+
     resp2 = client.post(
         "/integrations/email/imap",
         json={
@@ -45,6 +53,7 @@ def test_api_email_endpoints():
     )
     assert resp2.status_code == 200
     assert resp2.json()["status"] == "success"
+    mock_conn.login.assert_called_once_with("supremeai@paykaribazar.com", "secret_password")
 
 
 @patch("api.routes.github._get_agent", new_callable=AsyncMock)
@@ -80,19 +89,43 @@ def test_api_github_endpoints(mock_get_agent):
     assert resp.status_code == 200
     assert resp.json()["analysis"]["score"] == 85
 
-    # test /github/push
+    # test /github/push — গ্যাপ ফিক্স: আর placeholder কনটেন্ট auto-generate হয় না, caller-কে
+    # real file_contents সরবরাহ করতে হয়
     resp = client.post(
         "/github/push",
         json={
             "repo": "owner/repo",
             "branch": "supremeai-improvements-1718952000",
             "commit_message": "AI: Optimized database queries",
-            "files_changed": ["src/db.py", "src/cache.py"],
+            "file_contents": {
+                "src/db.py": "# real optimized content here\n",
+                "src/cache.py": "# real optimized content here\n",
+            },
         },
         headers=auth_headers,
     )
     assert resp.status_code == 200
     assert resp.json()["status"] == "success"
+    mock_agent.commit_changes.assert_called_once()
+    committed_content = mock_agent.commit_changes.call_args.args[1]
+    assert committed_content == {
+        "src/db.py": "# real optimized content here\n",
+        "src/cache.py": "# real optimized content here\n",
+    }
+
+    # গ্যাপ ফিক্স রিগ্রেশন টেস্ট: file_contents ছাড়া push করলে ৪০০ — কখনো fabricated content
+    # কমিট হবে না
+    resp_empty = client.post(
+        "/github/push",
+        json={
+            "repo": "owner/repo",
+            "branch": "supremeai-improvements-1718952000",
+            "commit_message": "AI: Optimized database queries",
+            "file_contents": {},
+        },
+        headers=auth_headers,
+    )
+    assert resp_empty.status_code == 400
 
     # test /github/discover
     resp = client.post(
