@@ -1,6 +1,3 @@
-# Pricing configurations for hybrid subscription and tokenomics models
-# বাংলা মন্তব্য: হাইব্রিড সাবস্ক্রিপশন ও টোকেন প্রাইসিং কনফিগারেশন প্যারামিটার।
-
 {
   "signup_bonus_usd": 5.00,
   "tiers": {

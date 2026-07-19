@@ -231,3 +231,25 @@ class ErrorEventBus:
 
 # বাংলা মন্তব্য: Module-level singleton — সিস্টেমে একটিই ErrorEventBus instance থাকবে।
 error_event_bus: ErrorEventBus = ErrorEventBus()
+
+
+class EventBus:
+    """
+    বাংলা মন্তব্য: টপিক-ভিত্তিক মেসেজিং ও সাবস্ক্রিপশনের জন্য সাধারণ ইভেন্ট বাস ক্লাস।
+    """
+
+    def __init__(self) -> None:
+        self._listeners: dict[str, list[Callable]] = {}
+
+    async def register_listener(self, topic: str, listener: Callable) -> None:
+        self._listeners.setdefault(topic, []).append(listener)
+
+    async def emit(self, topic: str, event: dict[str, Any]) -> None:
+        listeners = self._listeners.get(topic, [])
+        for listener in listeners:
+            try:
+                res = listener(event)
+                if asyncio.iscoroutine(res):
+                    await res
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"[EventBus] Error in listener on topic '{topic}': {e}")
