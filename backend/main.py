@@ -14,7 +14,12 @@ if not os.getenv("ENV"):
 import uvicorn
 from loguru import logger
 
-from core.app import app
+# বাংলা মন্তব্য: SERVICE_ROLE অনুযায়ী ইউজার বা অ্যাডমিন এন্ট্রি পয়েন্ট ডাইনামিকালি ইমপোর্ট করা হচ্ছে
+role = os.getenv("SERVICE_ROLE", "user").lower()
+if role == "admin":
+    from core.app_admin import app
+else:
+    from core.app_user import app
 from core.config import settings
 from core.logging_config import setup_logging
 

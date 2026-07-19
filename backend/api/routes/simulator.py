@@ -1,23 +1,31 @@
-import typing
-from datetime import UTC
-from datetime import datetime
+"""Simulator user API — device profile / install / session management.
+
+State moved from in-memory dicts to Upstash Redis (2026-07-19) so the
+User and Admin services (separate processes) see consistent data.
+
+Falls back to in-memory dicts if Redis is unavailable (e.g. in test environments).
+
+বাংলা মন্তব্য: সিমুলেটর ইউজার এপিআই যা আপস্ট্যাশ রেডিস ডেটাবেস ব্যবহার করে, কিন্তু টেস্ট এনভায়রনমেন্টে লোকাল মেমোরি ফলব্যাক ব্যবহার করে।
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from api.routes.admin import get_current_admin
-
+from core.cache.redis_manager import redis_manager
 
 router = APIRouter(prefix="/api/simulator", tags=["simulator"])
 
-# Mock database / state store
-PROFILES: dict[str, typing.Any] = {}
-SESSIONS: dict[str, typing.Any] = {}
+_PROFILE_KEY = "simulator:profile:{user_id}"
+_SESSION_KEY = "simulator:session:{user_id}"
+_KNOWN_USERS_SET = "simulator:known_users"
+_PROFILE_TTL = 30 * 86400  # 30 days — mock/test data, not meant to be permanent
 
-# Default device profiles
 DEVICE_PROFILES = [
     {
         "type": "PIXEL_6",
@@ -34,6 +42,11 @@ DEVICE_PROFILES = [
         "densityDpi": 460,
     },
 ]
+
+# Fallbacks for test/local environments when Redis is not running
+_IN_MEMORY_PROFILES: dict[str, Any] = {}
+_IN_MEMORY_SESSIONS: dict[str, Any] = {}
+_IN_MEMORY_KNOWN_USERS: set[str] = set()
 
 
 class DeviceUpdateRequest(BaseModel):
@@ -53,51 +66,121 @@ class InstallRequest(BaseModel):
     deviceProfile: str | None = "PIXEL_6"
 
 
-def get_or_create_profile(user_id: str) -> dict[str, Any]:
-    if user_id not in PROFILES:
-        PROFILES[user_id] = {
-            "userId": user_id,
-            "installQuota": 5,
-            "activeInstalls": 0,
-            "device": DEVICE_PROFILES[0],
-            "installedApps": [],
-        }
-    return PROFILES[user_id]
+def _use_redis() -> bool:
+    try:
+        return redis_manager is not None and redis_manager.client is not None
+    except Exception:
+        return False
+
+
+def _redis():
+    if not _use_redis():
+        raise HTTPException(status_code=503, detail="Simulator state store unavailable")
+    return redis_manager
+
+
+async def get_or_create_profile(user_id: str) -> dict[str, Any]:
+    if not _use_redis():
+        if user_id not in _IN_MEMORY_PROFILES:
+            _IN_MEMORY_PROFILES[user_id] = {
+                "userId": user_id,
+                "installQuota": 5,
+                "activeInstalls": 0,
+                "device": DEVICE_PROFILES[0],
+                "installedApps": [],
+            }
+            _IN_MEMORY_KNOWN_USERS.add(user_id)
+        return _IN_MEMORY_PROFILES[user_id]
+
+    redis_mgr = redis_manager
+    raw = await redis_mgr.get_cache(_PROFILE_KEY.format(user_id=user_id))
+    if raw:
+        return json.loads(raw)
+
+    profile = {
+        "userId": user_id,
+        "installQuota": 5,
+        "activeInstalls": 0,
+        "device": DEVICE_PROFILES[0],
+        "installedApps": [],
+    }
+    await _save_profile(user_id, profile)
+    await redis_mgr.client.sadd(_KNOWN_USERS_SET, user_id)
+    return profile
+
+
+async def _save_profile(user_id: str, profile: dict[str, Any]) -> None:
+    if not _use_redis():
+        _IN_MEMORY_PROFILES[user_id] = profile
+        return
+
+    redis_mgr = redis_manager
+    await redis_mgr.set_cache(
+        _PROFILE_KEY.format(user_id=user_id),
+        json.dumps(profile),
+        ex_seconds=_PROFILE_TTL
+    )
+
+
+async def _get_session(user_id: str) -> dict[str, Any] | None:
+    if not _use_redis():
+        return _IN_MEMORY_SESSIONS.get(user_id)
+
+    redis_mgr = redis_manager
+    raw = await redis_mgr.get_cache(_SESSION_KEY.format(user_id=user_id))
+    return json.loads(raw) if raw else None
+
+
+async def _save_session(user_id: str, session: dict[str, Any]) -> None:
+    if not _use_redis():
+        _IN_MEMORY_SESSIONS[user_id] = session
+        return
+
+    redis_mgr = redis_manager
+    await redis_mgr.set_cache(
+        _SESSION_KEY.format(user_id=user_id),
+        json.dumps(session),
+        ex_seconds=_PROFILE_TTL
+    )
+
+
+async def _delete_session(user_id: str) -> None:
+    if not _use_redis():
+        _IN_MEMORY_SESSIONS.pop(user_id, None)
+        return
+
+    redis_mgr = redis_manager
+    await redis_mgr.client.delete(_SESSION_KEY.format(user_id=user_id))
 
 
 @router.get("/profile")
-def get_profile(userId: str = "default"):
-    return get_or_create_profile(userId)
+async def get_profile(userId: str = "default"):
+    return await get_or_create_profile(userId)
 
 
 @router.post("/profile")
-def update_profile(updates: ProfileUpdateRequest, userId: str = "default"):
-    profile = get_or_create_profile(userId)
+async def update_profile(updates: ProfileUpdateRequest, userId: str = "default"):
+    profile = await get_or_create_profile(userId)
     if updates.installQuota is not None:
         profile["installQuota"] = updates.installQuota
     if updates.device is not None:
-        device_update = updates.device.model_dump(exclude_unset=True)
-        profile["device"].update(device_update)
+        profile["device"].update(updates.device.model_dump(exclude_unset=True))
+    await _save_profile(userId, profile)
     return profile
 
 
 @router.post("/install")
-def install_app(req: InstallRequest, userId: str = "default"):
-    profile = get_or_create_profile(userId)
-
+async def install_app(req: InstallRequest, userId: str = "default"):
+    profile = await get_or_create_profile(userId)
     if profile["activeInstalls"] >= profile["installQuota"]:
         raise HTTPException(status_code=400, detail="Install quota exceeded")
 
-    # Check if already installed
-    existing = next((app for app in profile["installedApps"] if app["appId"] == req.appId), None)
+    existing = next((a for a in profile["installedApps"] if a["appId"] == req.appId), None)
     if existing:
         return {
             "success": True,
             "app": existing,
-            "quota": {
-                "used": profile["activeInstalls"],
-                "total": profile["installQuota"],
-            },
+            "quota": {"used": profile["activeInstalls"], "total": profile["installQuota"]},
         }
 
     app = {
@@ -110,10 +193,9 @@ def install_app(req: InstallRequest, userId: str = "default"):
         "lastLaunchedAt": None,
         "status": "INSTALLED",
     }
-
     profile["installedApps"].append(app)
     profile["activeInstalls"] += 1
-
+    await _save_profile(userId, profile)
     return {
         "success": True,
         "app": app,
@@ -122,20 +204,19 @@ def install_app(req: InstallRequest, userId: str = "default"):
 
 
 @router.delete("/install/{appId}")
-def uninstall_app(appId: str, userId: str = "default"):
-    profile = get_or_create_profile(userId)
+async def uninstall_app(appId: str, userId: str = "default"):
+    profile = await get_or_create_profile(userId)
     initial_len = len(profile["installedApps"])
-    profile["installedApps"] = [app for app in profile["installedApps"] if app["appId"] != appId]
-
+    profile["installedApps"] = [a for a in profile["installedApps"] if a["appId"] != appId]
     if len(profile["installedApps"]) < initial_len:
         profile["activeInstalls"] -= 1
-
+    await _save_profile(userId, profile)
     return {"success": True}
 
 
 @router.get("/installed")
-def get_installed_apps(userId: str = "default"):
-    profile = get_or_create_profile(userId)
+async def get_installed_apps(userId: str = "default"):
+    profile = await get_or_create_profile(userId)
     return {
         "installedApps": profile["installedApps"],
         "quota": {"used": profile["activeInstalls"], "total": profile["installQuota"]},
@@ -143,8 +224,8 @@ def get_installed_apps(userId: str = "default"):
 
 
 @router.post("/session/start")
-def start_session(appId: str, userId: str = "default"):
-    profile = get_or_create_profile(userId)
+async def start_session(appId: str, userId: str = "default"):
+    profile = await get_or_create_profile(userId)
     app = next((a for a in profile["installedApps"] if a["appId"] == appId), None)
     if not app:
         raise HTTPException(status_code=404, detail="App not installed")
@@ -152,6 +233,7 @@ def start_session(appId: str, userId: str = "default"):
     app["launchCount"] += 1
     app["lastLaunchedAt"] = datetime.now(UTC).isoformat()
     app["status"] = "RUNNING"
+    await _save_profile(userId, profile)
 
     session_id = f"sess_{userId}_{appId}"
     session = {
@@ -163,29 +245,29 @@ def start_session(appId: str, userId: str = "default"):
         "activeAppId": appId,
         "lastHeartbeat": datetime.now(UTC).isoformat(),
     }
-    SESSIONS[userId] = session
+    await _save_session(userId, session)
     return session
 
 
 @router.post("/session/stop")
-def stop_session(userId: str = "default"):
-    if userId in SESSIONS:
-        session = SESSIONS[userId]
+async def stop_session(userId: str = "default"):
+    session = await _get_session(userId)
+    if session:
         app_id = session.get("activeAppId")
-        profile = get_or_create_profile(userId)
+        profile = await get_or_create_profile(userId)
         app = next((a for a in profile["installedApps"] if a["appId"] == app_id), None)
         if app:
             app["status"] = "INSTALLED"
-        del SESSIONS[userId]
+            await _save_profile(userId, profile)
+        await _delete_session(userId)
     return {"success": True}
 
 
 @router.get("/session/status")
-def get_session_status(userId: str = "default"):
-    if userId not in SESSIONS:
+async def get_session_status(userId: str = "default"):
+    session = await _get_session(userId)
+    if not session:
         return {"hasSession": False}
-
-    session = SESSIONS[userId]
     return {
         "hasSession": True,
         "sessionId": session["sessionId"],
@@ -198,27 +280,3 @@ def get_session_status(userId: str = "default"):
 @router.get("/devices")
 def get_available_devices():
     return DEVICE_PROFILES
-
-
-@router.get("/admin/usage")
-def get_all_usage(admin_user: dict = Depends(get_current_admin)):
-    deployments = []
-    for _user_id, profile in PROFILES.items():
-        for app in profile["installedApps"]:
-            deployments.append(
-                {
-                    "appId": app["appId"],
-                    "deviceType": profile["device"]["type"],
-                    "previewUrl": app["previewUrl"],
-                    "status": app["status"],
-                    "deployedAt": app["installedAt"],
-                }
-            )
-    return {"totalDeployments": len(deployments), "deployments": deployments}
-
-
-@router.post("/admin/set-quota/{userId}")
-def admin_set_quota(userId: str, quota: int, admin_user: dict = Depends(get_current_admin)):
-    profile = get_or_create_profile(userId)
-    profile["installQuota"] = max(1, min(20, quota))
-    return profile
