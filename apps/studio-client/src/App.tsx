@@ -8,20 +8,22 @@ import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializ
 import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { ToastProvider } from './components/ui/Toast';
 
-// Pages
-import { AdminShell } from "./pages/admin/AdminShell";
+// Pages (Core Layouts & Auth)
 import { LoginScreen } from './pages/auth/LoginScreen';
 import { RegisterScreen } from './pages/auth/RegisterScreen';
-import { AgentWorkspace } from './pages/user/AgentWorkspace';
-import { IdeWorkspace } from './pages/user/IdeWorkspace';
-import { IntegrationsManager } from './pages/user/IntegrationsManager';
-import { ArchitectTower } from './pages/user/ArchitectTower';
-import { SkillCatalog } from './pages/user/SkillCatalog';
-import SwarmMap from './components/SwarmMap';
-import EvolutionForge from './pages/user/EvolutionForge/EvolutionForge';
 import { DashboardShell } from "./components/dashboard/DashboardShell";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
+
+// বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।
+const AdminShell = React.lazy(() => import("./pages/admin/AdminShell").then(m => ({ default: m.AdminShell })));
+const AgentWorkspace = React.lazy(() => import("./pages/user/AgentWorkspace").then(m => ({ default: m.AgentWorkspace })));
+const IdeWorkspace = React.lazy(() => import("./pages/user/IdeWorkspace").then(m => ({ default: m.IdeWorkspace })));
+const IntegrationsManager = React.lazy(() => import("./pages/user/IntegrationsManager").then(m => ({ default: m.IntegrationsManager })));
+const ArchitectTower = React.lazy(() => import("./pages/user/ArchitectTower").then(m => ({ default: m.ArchitectTower })));
+const SkillCatalog = React.lazy(() => import("./pages/user/SkillCatalog").then(m => ({ default: m.SkillCatalog })));
+const SwarmMap = React.lazy(() => import("./components/SwarmMap"));
+const EvolutionForge = React.lazy(() => import("./pages/user/EvolutionForge/EvolutionForge"));
 
 // Services & Hooks
 import { getAethelResponse } from "./services/chatService";
@@ -133,88 +135,94 @@ const AppContent: React.FC = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <GlobalConfigInitializer>
-          <Routes>
-            {PORTAL_TYPE === 'admin' ? (
-              /* =========================================
-                 ADMIN PORTAL
-              ========================================= */
-              <>
-                <Route path="/" element={<Navigate to="/admin" replace />} />
-                <Route path="/admin/*" element={<AdminShell />} />
-                <Route path="*" element={<Navigate to="/admin" replace />} />
-              </>
-            ) : (
-              /* =========================================
-                 USER PORTAL (State Machine Routing)
-              ========================================= */
-              <>
-                {/* GUEST STATE */}
-                <Route path="/login" element={
-                  <GuestRoute>
-                    <LoginScreen />
-                  </GuestRoute>
-                } />
-                <Route path="/register" element={
-                  <GuestRoute>
-                    <RegisterScreen />
-                  </GuestRoute>
-                } />
-                <Route path="/" element={<Navigate to="/workspace" replace />} />
+          <React.Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-400">
+              <div className="animate-pulse">Loading Workspace...</div>
+            </div>
+          }>
+            <Routes>
+              {PORTAL_TYPE === 'admin' ? (
+                /* =========================================
+                   ADMIN PORTAL
+                ========================================= */
+                <>
+                  <Route path="/" element={<Navigate to="/admin" replace />} />
+                  <Route path="/admin/*" element={<AdminShell />} />
+                  <Route path="*" element={<Navigate to="/admin" replace />} />
+                </>
+              ) : (
+                /* =========================================
+                   USER PORTAL (State Machine Routing)
+                ========================================= */
+                <>
+                  {/* GUEST STATE */}
+                  <Route path="/login" element={
+                    <GuestRoute>
+                      <LoginScreen />
+                    </GuestRoute>
+                  } />
+                  <Route path="/register" element={
+                    <GuestRoute>
+                      <RegisterScreen />
+                    </GuestRoute>
+                  } />
+                  <Route path="/" element={<Navigate to="/workspace" replace />} />
 
-                {/* AUTHENTICATED STATE */}
-                <Route path="/workspace/agent" element={
-                  <ProtectedRoute>
-                    <AgentWorkspace />
-                  </ProtectedRoute>
-                } />
-                <Route path="/workspace/ide" element={
-                  <ProtectedRoute>
-                    <IdeWorkspace />
-                  </ProtectedRoute>
-                } />
-                <Route path="/integrations" element={
-                  <ProtectedRoute>
-                    <IntegrationsManager />
-                  </ProtectedRoute>
-                } />
-                <Route path="/architect-tower" element={
-                  <ProtectedRoute>
-                    <ArchitectTower />
-                  </ProtectedRoute>
-                } />
-                <Route path="/swarm" element={
-                  <ProtectedRoute>
-                    <SwarmMap />
-                  </ProtectedRoute>
-                } />
-                <Route path="/evolution-forge" element={
-                  <ProtectedRoute>
-                    <EvolutionForge />
-                  </ProtectedRoute>
-                } />
-                {/* বাংলা: /skills-catalog রাউট — রোল-ফিল্টারড ডাইনামিক ক্যাটালগ পেজ */}
-                <Route path="/skills-catalog" element={
-                  <ProtectedRoute>
-                    <SkillCatalog />
-                  </ProtectedRoute>
-                } />
-                <Route path="/workspace/*" element={
-                  <DashboardShell
-                    theme={theme}
-                    toggleTheme={toggleTheme}
-                    isServerOnline={isServerOnline}
-                    workspace={legacyWorkspace}
-                  />
-                } />
-                <Route path="/workspace/live" element={
-                  <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
-                } />
+                  {/* AUTHENTICATED STATE */}
+                  <Route path="/workspace/agent" element={
+                    <ProtectedRoute>
+                      <AgentWorkspace />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/workspace/ide" element={
+                    <ProtectedRoute>
+                      <IdeWorkspace />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/integrations" element={
+                    <ProtectedRoute>
+                      <IntegrationsManager />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/architect-tower" element={
+                    <ProtectedRoute>
+                      <ArchitectTower />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/swarm" element={
+                    <ProtectedRoute>
+                      <SwarmMap />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/evolution-forge" element={
+                    <ProtectedRoute>
+                      <EvolutionForge />
+                    </ProtectedRoute>
+                  } />
+                  {/* বাংলা: /skills-catalog রাউট — রোল-ফিল্টারড ডাইনামিক ক্যাটালগ পেজ */}
+                  <Route path="/skills-catalog" element={
+                    <ProtectedRoute>
+                      <SkillCatalog />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/workspace/*" element={
+                    <DashboardShell
+                      theme={theme}
+                      toggleTheme={toggleTheme}
+                      isServerOnline={isServerOnline}
+                      workspace={legacyWorkspace}
+                    />
+                  } />
+                  <Route path="/workspace/live" element={
+                    <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
+                  } />
 
-                {/* Users trying to access admin are redirected */}
-                <Route path="/admin/*" element={<Navigate to="/" replace />} />
-              </>
-            )}
-          </Routes>
+                  {/* Users trying to access admin are redirected */}
+                  <Route path="/admin/*" element={<Navigate to="/" replace />} />
+                </>
+              )}
+            </Routes>
+          </React.Suspense>
         </GlobalConfigInitializer>
       </QueryClientProvider>
     </ErrorBoundary>
