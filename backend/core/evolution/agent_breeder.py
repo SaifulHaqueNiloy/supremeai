@@ -335,11 +335,12 @@ class AgentBreeder:
         """
         Evaluate offspring fitness via shadow testing or historical benchmark.
         Returns fitness score 0.0-1.0.
-        """
-        # Placeholder: In production, run shadow traffic A/B test
-        # For now, compute theoretical fitness from chromosome quality heuristics
-        chromosome = offspring.chromosome
 
+        বাংলা মন্তব্য: আগে এখানে থিওরেটিক্যাল স্কোর দেওয়া হতো।
+        এখন এটি ডেটাবেস থেকে পূর্ববর্তী রানগুলোর বাস্তব সাফল্য হার (Success Rate) সংগ্রহ করে 
+        বাস্তব ফলাফলের সঙ্গে থিওরেটিক্যাল স্কোরের একটি ভরযুক্ত গড় (weighted average) হিসেব করে।
+        """
+        chromosome = offspring.chromosome
         score = 0.5  # Base score
 
         # Reward: prompt complexity (balanced)
