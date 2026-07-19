@@ -152,6 +152,7 @@ try:
         get_remote_address = _slowapi_get_remote_address
         limiter = Limiter(key_func=get_remote_address)
 except Exception:  # noqa: BLE001
+
     class RateLimitExceeded(Exception):  # type: ignore[no-redef]
         """Fallback RateLimitExceeded for test environments."""
 
@@ -323,5 +324,3 @@ if settings.env == "production":
 app.include_router(admin_router)
 register_all_routers(app)
 router_health_check(app)
-
-

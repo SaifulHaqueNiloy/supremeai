@@ -8,14 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from api.routes.admin import get_current_admin
-from api.routes.simulator import (
-    _redis,
-    _use_redis,
-    _KNOWN_USERS_SET,
-    _IN_MEMORY_KNOWN_USERS,
-    get_or_create_profile,
-    _save_profile
-)
+from api.routes.simulator import _redis, _use_redis, _KNOWN_USERS_SET, _IN_MEMORY_KNOWN_USERS, get_or_create_profile, _save_profile
 
 router = APIRouter(prefix="/api/simulator", tags=["simulator-admin"])
 
@@ -32,13 +25,15 @@ async def get_all_usage(admin_user: dict = Depends(get_current_admin)):
     for user_id in user_ids:
         profile = await get_or_create_profile(user_id)
         for app in profile["installedApps"]:
-            deployments.append({
-                "appId": app["appId"],
-                "deviceType": profile["device"]["type"],
-                "previewUrl": app["previewUrl"],
-                "status": app["status"],
-                "deployedAt": app["installedAt"],
-            })
+            deployments.append(
+                {
+                    "appId": app["appId"],
+                    "deviceType": profile["device"]["type"],
+                    "previewUrl": app["previewUrl"],
+                    "status": app["status"],
+                    "deployedAt": app["installedAt"],
+                }
+            )
     return {"totalDeployments": len(deployments), "deployments": deployments}
 
 
