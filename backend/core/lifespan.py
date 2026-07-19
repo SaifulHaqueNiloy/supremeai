@@ -312,6 +312,54 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
 
+    # বাংলা মন্তব্য: SelfEvolutionAgent শুরু করা — এটা সবচেয়ে গুরুত্বপূর্ণ fix।
+    # আগে এই agent কোনোদিন start হয়নি, সিস্টেম কখনো সত্যিকারের self-evolving ছিল না।
+    try:
+        from core.evolution.self_evolution_agent import SelfEvolutionAgent
+
+        _evo_agent = SelfEvolutionAgent(interval_seconds=300)  # 5 min cycle
+        await _evo_agent.start()
+        app.state.evo_agent = _evo_agent
+        logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ SelfEvolutionAgent failed to start: {exc}")
+        app.state.evo_agent = None
+
+    # বাংলা মন্তব্য: DailyLearner শুরু করা — প্রতিদিন ArXiv/GitHub scan করে নতুন technique শেখে।
+    try:
+        from core.evolution.daily_learner import DailyLearner
+
+        _daily_learner = DailyLearner()
+        # DailyLearner-এর learn_and_plan() সরাসরি loop নেই, তাই wrapper task তৈরি করতে হবে
+        async def _daily_learner_loop() -> None:
+            import asyncio as _asyncio
+            while True:
+                try:
+                    await _daily_learner.learn_and_plan(
+                        "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
+                    )
+                except Exception as _exc:  # noqa: BLE001
+                    logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
+                await _asyncio.sleep(86400)  # 24 hours
+
+        app.state.daily_learner_task = asyncio.create_task(
+            _daily_learner_loop(), name="daily-learner"
+        )
+        logger.info("✅ DailyLearner background task started (24h research scan cycle).")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
+
+    # বাংলা মন্তব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
+    # আগে auto_healer.py একটি standalone script ছিল, server-এ প্রতিবার চলত না।
+    try:
+        from core.auto_healer_service import auto_healer_service
+
+        await auto_healer_service.start()
+        app.state.auto_healer = auto_healer_service
+        logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
+
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 
     logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
@@ -347,6 +395,23 @@ async def app_lifespan(app):
     # Background tasks cleanup
     tasks: list[asyncio.Task] = []  # noqa: F821
     try:
+        # বাংলা: SelfEvolutionAgent graceful stop
+        evo_agent = getattr(app.state, "evo_agent", None)
+        if evo_agent is not None:
+            await evo_agent.stop()
+            logger.info("✅ SelfEvolutionAgent stopped.")
+
+        # বাংলা: AutoHealerService graceful stop
+        auto_healer = getattr(app.state, "auto_healer", None)
+        if auto_healer is not None:
+            await auto_healer.stop()
+
+        # বাংলা: DailyLearner task cancel
+        daily_learner_task = getattr(app.state, "daily_learner_task", None)
+        if daily_learner_task and not daily_learner_task.done():
+            daily_learner_task.cancel()
+            tasks.append(daily_learner_task)
+
         sentinel_task = getattr(app.state, "sentinel_task", None)
         if sentinel_task and not sentinel_task.done():
             from core.sentinel_agent import sentinel
