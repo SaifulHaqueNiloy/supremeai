@@ -7,9 +7,32 @@ from typing import Any
 
 from loguru import logger
 
+from core.persistence import pooled_pg
+from core.persistence.write_behind import WriteBehindBatcher
+
 # শেয়ার্ড ইউটিলিটি — Firestore ও টেস্ট এনভায়রনমেন্ট চেক কেন্দ্রীভূত
 from utils.environment import is_test_environment
 from utils.firestore_helpers import firestore, get_firestore_db
+
+
+_PG_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS task_checkpoints (
+        task_id TEXT PRIMARY KEY,
+        step_index INTEGER,
+        state TEXT,
+        created_at TIMESTAMPTZ DEFAULT now(),
+        resumed BOOLEAN DEFAULT FALSE
+    )
+"""
+
+_UPSERT_SQL = """
+    INSERT INTO task_checkpoints (task_id, step_index, state, resumed)
+    VALUES (%s, %s, %s, %s)
+    ON CONFLICT (task_id) DO UPDATE SET
+        step_index = EXCLUDED.step_index,
+        state = EXCLUDED.state,
+        created_at = now()
+"""
 
 
 @dataclass
@@ -22,7 +45,11 @@ class Checkpoint:
 
 
 class CheckpointManager:
-    """Persists task execution state in SQLite (local) or Google Cloud Firestore (Serverless & Stateful)."""
+    """Persists task execution state in Postgres (preferred, durable across restarts),
+    Google Cloud Firestore (Serverless & Stateful, unchanged fallback), or local SQLite
+    (last-resort fallback / explicit test mode — NOT durable across restarts)."""
+
+    _batcher: WriteBehindBatcher | None = None
 
     def __init__(self, db_path: str = None):
         self.collection_name = "checkpoints"
@@ -35,16 +62,30 @@ class CheckpointManager:
             self.db_path = db_path or "checkpoints.db"
             self._init_sqlite()
             logger.info(f"Initialized SQLite CheckpointManager at {self.db_path}")
+        elif pooled_pg.is_available():
+            try:
+                pooled_pg.execute(_PG_SCHEMA)
+                if CheckpointManager._batcher is None:
+                    CheckpointManager._batcher = WriteBehindBatcher(name="task_checkpoints", flush_interval=1.0, max_batch=100)
+                self.mode = "pg"
+                logger.info("Initialized Postgres CheckpointManager (write-behind batched).")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Postgres CheckpointManager init failed, falling back: {exc}")
+                self._init_fallback()
         else:
-            self._db = get_firestore_db()
-            if self._db is not None:
-                self.mode = "firestore"
-                logger.info("Initialized Firestore CheckpointManager")
-            else:
-                self.mode = "sqlite"
-                self.db_path = "checkpoints.db"
-                self._init_sqlite()
-                logger.info(f"Initialized SQLite CheckpointManager at {self.db_path}")
+            self._init_fallback()
+
+    def _init_fallback(self) -> None:
+        """Firestore, then local SQLite as a last resort — unchanged prior behavior."""
+        self._db = get_firestore_db()
+        if self._db is not None:
+            self.mode = "firestore"
+            logger.info("Initialized Firestore CheckpointManager")
+        else:
+            self.mode = "sqlite"
+            self.db_path = "checkpoints.db"
+            self._init_sqlite()
+            logger.warning(f"Initialized SQLite CheckpointManager at {self.db_path} — NOT durable across restarts.")
 
     def _init_sqlite(self):
         conn = sqlite3.connect(self.db_path)
@@ -65,6 +106,17 @@ class CheckpointManager:
             conn.close()
 
     def save(self, task_id: str, step_index: int, state: dict[str, Any]) -> bool:
+        if self.mode == "pg":
+            try:
+                # `resumed` intentionally not reset here — ON CONFLICT preserves
+                # whatever value is already in the row, matching prior SQLite semantics
+                # where an existing row's `resumed` flag was read-then-reused.
+                CheckpointManager._batcher.submit(_UPSERT_SQL, (task_id, step_index, json.dumps(state), False))
+                return True
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Failed to save Postgres checkpoint: {exc}")
+                return False
+
         if self.mode == "sqlite":
             try:
                 conn = sqlite3.connect(self.db_path)
@@ -116,6 +168,31 @@ class CheckpointManager:
             return False
 
     def load(self, task_id: str) -> Checkpoint | None:
+        if self.mode == "pg":
+            try:
+                # Flush first: a task resuming immediately after a save() (same
+                # process, e.g. crash-recovery retry loop) must see its own write.
+                CheckpointManager._batcher.flush()
+                rows = pooled_pg.query(
+                    "SELECT task_id, step_index, state, created_at, resumed FROM task_checkpoints WHERE task_id = %s",
+                    (task_id,),
+                )
+                if not rows:
+                    return None
+                row = rows[0]
+                cp = Checkpoint(
+                    task_id=row[0],
+                    step_index=row[1],
+                    state=json.loads(row[2]),
+                    created_at=str(row[3]),
+                    resumed=bool(row[4]),
+                )
+                pooled_pg.execute("UPDATE task_checkpoints SET resumed = TRUE WHERE task_id = %s", (task_id,))
+                return cp
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Failed to load Postgres checkpoint: {exc}")
+                return None
+
         if self.mode == "sqlite":
             try:
                 conn = sqlite3.connect(self.db_path)
@@ -168,6 +245,19 @@ class CheckpointManager:
             return None
 
     def list_all(self) -> list[dict[str, Any]]:
+        if self.mode == "pg":
+            try:
+                CheckpointManager._batcher.flush()
+                rows = pooled_pg.query(
+                    "SELECT task_id, step_index, created_at, resumed FROM task_checkpoints ORDER BY created_at DESC"
+                )
+                return [
+                    {"task_id": r[0], "step_index": r[1], "created_at": str(r[2]), "resumed": bool(r[3])} for r in rows
+                ]
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Failed to list Postgres checkpoints: {exc}")
+                return []
+
         if self.mode == "sqlite":
             try:
                 conn = sqlite3.connect(self.db_path)
@@ -206,6 +296,15 @@ class CheckpointManager:
             return []
 
     def clear(self, task_id: str) -> bool:
+        if self.mode == "pg":
+            try:
+                CheckpointManager._batcher.flush()
+                pooled_pg.execute("DELETE FROM task_checkpoints WHERE task_id = %s", (task_id,))
+                return True
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Failed to clear Postgres checkpoint: {exc}")
+                return False
+
         if self.mode == "sqlite":
             try:
                 conn = sqlite3.connect(self.db_path)

@@ -81,8 +81,18 @@ async def get_quota(token_payload: dict = Depends(get_current_user_token)):
         from core.cache.redis_manager import redis_manager
 
         remaining = await redis_manager.client.get(f"quota:{_tenant_id}:remaining")
-        if remaining is not None:
-            return {"remaining": int(remaining)}
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as e:  # noqa: BLE001
+        # Ripple-Effect Guard: do NOT report 0 here — that is indistinguishable
+        # from "quota genuinely exhausted" and will silently block legitimate
+        # users during a Redis outage. Surface a distinct error state instead.
+        logger.error(f"Quota lookup failed for tenant={_tenant_id}: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Quota service temporarily unavailable. Please retry shortly.",
+        ) from e
+
+    if remaining is not None:
+        return {"remaining": int(remaining)}
+    # Key genuinely absent (e.g. new tenant, quota not yet provisioned) — this
+    # is a real "0" state, not a masked failure.
     return {"remaining": 0}

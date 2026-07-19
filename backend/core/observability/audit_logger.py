@@ -5,19 +5,60 @@ from contextlib import contextmanager
 from loguru import logger
 
 from core.config import settings
+from core.persistence import pooled_pg
+from core.persistence.write_behind import WriteBehindBatcher
+
+
+_PG_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS audit_logs (
+        id SERIAL PRIMARY KEY,
+        action_type TEXT,
+        decision_details TEXT,
+        reasoning TEXT,
+        timestamp TIMESTAMPTZ DEFAULT now()
+    )
+"""
+
+_INSERT_SQL = "INSERT INTO audit_logs (action_type, decision_details, reasoning) VALUES (%s, %s, %s)"
 
 
 class AuditLogger:
+    """Tamper-evident audit trail for autonomous decisions.
+
+    Persistence: pooled Postgres via a write-behind batcher — audit writes are
+    high-frequency, so batching avoids a connection checkout per log line while
+    still flushing at most every ~2s (or on graceful shutdown, see
+    core/lifespan.py -> write_behind.flush_all()). Falls back to local SQLite
+    (previous behavior) only if Postgres isn't configured.
+    """
+
+    _batcher: WriteBehindBatcher | None = None
+
     def __init__(self, db_path: str | None = None):
-        if db_path is None:
-            # Config-driven: Use MEMORY_DB_DIR setting or fallback to default
-            memory_db_dir = getattr(settings, "memory_db_dir", None) or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            if memory_db_dir and not os.path.exists(memory_db_dir):
-                os.makedirs(memory_db_dir, exist_ok=True)
-            self.db_path = os.path.join(memory_db_dir, "supreme_memory.db") if memory_db_dir else "supreme_memory.db"
-        else:
-            self.db_path = db_path
-        self._init_db()
+        # Ripple-Effect Guard: explicit db_path (tests pass a tmp_path fixture
+        # for isolation) must force local SQLite, matching prior behavior.
+        explicit_path = db_path is not None
+        self._use_pg = (not explicit_path) and pooled_pg.is_available()
+        if self._use_pg:
+            try:
+                pooled_pg.execute(_PG_SCHEMA)
+                if AuditLogger._batcher is None:
+                    AuditLogger._batcher = WriteBehindBatcher(name="audit_logs", flush_interval=2.0, max_batch=200)
+                logger.info("AuditLogger: using pooled Postgres backend (write-behind batched).")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"AuditLogger: Postgres schema init failed, falling back to SQLite: {exc}")
+                self._use_pg = False
+
+        if not self._use_pg:
+            if db_path is None:
+                memory_db_dir = getattr(settings, "memory_db_dir", None) or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                if memory_db_dir and not os.path.exists(memory_db_dir):
+                    os.makedirs(memory_db_dir, exist_ok=True)
+                self.db_path = os.path.join(memory_db_dir, "supreme_memory.db") if memory_db_dir else "supreme_memory.db"
+            else:
+                self.db_path = db_path
+            self._init_sqlite()
+            logger.warning(f"AuditLogger: running on local SQLite fallback at {self.db_path} — NOT durable across restarts.")
 
     @contextmanager
     def _get_conn(self):
@@ -27,7 +68,7 @@ class AuditLogger:
         finally:
             conn.close()
 
-    def _init_db(self):
+    def _init_sqlite(self):
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         with self._get_conn() as conn:
             conn.execute(
@@ -44,8 +85,11 @@ class AuditLogger:
             conn.commit()
 
     def log_decision(self, action_type: str, decision_details: str, reasoning: str):
-        """Logs an autonomous decision or rotation details to the tamper-proof audit trail."""
+        """Logs an autonomous decision or rotation details to the tamper-evident audit trail."""
         logger.info(f"[AUDIT LOG] {action_type} - Details: {decision_details} - Reason: {reasoning}")
+        if self._use_pg and AuditLogger._batcher is not None:
+            AuditLogger._batcher.submit(_INSERT_SQL, (action_type, decision_details, reasoning))
+            return
         try:
             with self._get_conn() as conn:
                 conn.execute(
@@ -57,6 +101,15 @@ class AuditLogger:
             logger.error(f"Failed to write to audit database: {e}")
 
     def get_audit_trail(self) -> list:
+        if self._use_pg:
+            try:
+                # Ensure any not-yet-flushed rows are visible before reading.
+                if AuditLogger._batcher is not None:
+                    AuditLogger._batcher.flush()
+                return pooled_pg.query_dicts("SELECT * FROM audit_logs ORDER BY timestamp DESC")
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Failed to query audit trail from Postgres: {e}")
+                return []
         try:
             with self._get_conn() as conn:
                 conn.row_factory = sqlite3.Row
