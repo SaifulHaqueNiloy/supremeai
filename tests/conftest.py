@@ -55,20 +55,20 @@ def mock_genai():
         mock_types = MagicMock()
         mock_types.GenerateContentResponse = MagicMock
         mock_types.Content = MagicMock
-        
+
         # Create a mock response
         mock_response = MagicMock()
         mock_response.text = "Test answer from AI"
         mock_response.candidates = []
-        
+
         mock_client.Client.return_value = MagicMock()
         mock_client.Client.return_value.models = MagicMock()
         mock_client.Client.return_value.models.generate_content.return_value = mock_response
-        
+
         mock_genai_module.Client = MagicMock(return_value=MagicMock())
         mock_genai_module.Client.return_value.models = MagicMock()
         mock_genai_module.Client.return_value.models.generate_content.return_value = mock_response
-        
+
         yield mock_client
 
 
