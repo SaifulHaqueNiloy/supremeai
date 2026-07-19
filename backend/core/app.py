@@ -48,6 +48,9 @@ from core.security.api_key_middleware import APIKeyAuthMiddleware
 from core.security.auth_middleware import AuthMiddleware
 from core.security.honeypot_middleware import HoneypotMiddleware
 from core.security.origin_validator import TrustedOriginMiddleware
+from core.request_context import RequestContextMiddleware
+from core.reliability_controller import ReliabilityController
+from core.startup_validator import StartupValidator
 
 
 class InterceptHandler(logging.Handler):
@@ -207,6 +210,8 @@ def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs"
                     )
         return await call_next(request)
 
+    # বাংলা মন্তব্য: রিকোয়েস্ট ট্রেসিংয়ের সুবিধার্থে কোরিলেশন আইডি জেনারেট করার মিডলওয়্যার যোগ করা হলো।
+    fastapi_app.add_middleware(RequestContextMiddleware)
     fastapi_app.add_middleware(SupremeContextMiddleware)
     fastapi_app.add_middleware(TrustedOriginMiddleware)
     fastapi_app.add_middleware(ChaosInjectorMiddleware)
@@ -233,13 +238,18 @@ def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs"
 
     @fastapi_app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-        logger.error(f"Unhandled Exception on {request.url.path}: {exc}")
+        # বাংলা মন্তব্য: এরর ট্র্যাকিং ও ফিঙ্গারপ্রিন্টিং সিস্টেম ইন্টিগ্রেশন।
+        failure = await ReliabilityController.register_failure(request, exc)
+        logger.error(
+            f"Unhandled Exception on {request.url.path}: {exc} [Correlation ID: {failure.correlation_id}, Fingerprint: {failure.fingerprint}]"
+        )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "title": "Internal Server Error",
                 "detail": "An unexpected error occurred. This has been logged.",
                 "instance": request.url.path,
+                "correlation_id": failure.correlation_id,
             },
         )
 
@@ -282,8 +292,14 @@ def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs"
         api_keys_ok = bool(
             settings.openrouter_api_key or settings.gemini_api_key or settings.deepseek_api_key or settings.groq_api_key or settings.nvidia_api_key
         )
-        checks = {"redis": redis_ok, "api_keys_configured": api_keys_ok}
-        all_ok = all(checks.values())
+        # বাংলা মন্তব্য: নির্ভরযোগ্যতা এবং স্টার্টআপ ভ্যালিডেশন মেট্রিক্স হেলথ চেকে যুক্ত করা হলো।
+        checks = {
+            "redis": redis_ok,
+            "api_keys_configured": api_keys_ok,
+            "reliability_controller": ReliabilityController.health(),
+            "startup_validation": StartupValidator.last_status(),
+        }
+        all_ok = redis_ok and api_keys_ok and StartupValidator.last_status().get("success", True)
         return {"status": "ok" if all_ok else "degraded", "orchestrator": "online", "checks": checks}
 
     @fastapi_app.get("/actuator/health")
