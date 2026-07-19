@@ -61,11 +61,13 @@ def migrate_skills(conn):
                     # একটি সাধারণ ডেসক্রিপশন তৈরি করা হলো
                     description = f"Skill for {skill_name.replace('_', ' ')}. Automatically migrated."
 
+                    # বাংলা মন্তব্য: ON CONFLICT DO UPDATE এ রূপান্তর করা হলো যাতে কোড আপডেট হলে DB-তেও আপডেট হয়।
                     cursor.execute(
                         """
                         INSERT INTO skills (skill_name, description, code, status, version)
                         VALUES (%s, %s, %s, 'active', 1)
-                        ON CONFLICT (skill_name) DO NOTHING;
+                        ON CONFLICT (skill_name) DO UPDATE 
+                        SET code = EXCLUDED.code, description = EXCLUDED.description, updated_at = NOW();
                         """,
                         (skill_name, description, code),
                     )
@@ -86,7 +88,8 @@ def migrate_rules(conn):
     'docs/context_modules' থেকে .xml ফাইল পড়ে 'rules' টেবিলে মাইগ্রেট করে।
     """
     logger.info("Starting rule migration...")
-    rules_dir = os.path.join(backend_dir, "docs", "context_modules")
+    # বাংলা মন্তব্য: রুট ডিরেক্টরির docs/context_modules/ পাথ রিসলভ করা হলো
+    rules_dir = os.path.join(os.path.dirname(backend_dir), "docs", "context_modules")
     if not os.path.isdir(rules_dir):
         logger.warning(f"Rules directory not found at {rules_dir}. Skipping.")
         return
@@ -99,27 +102,28 @@ def migrate_rules(conn):
             try:
                 tree = ET.parse(file_path)
                 root = tree.getroot()
-                category = os.path.splitext(filename)[0].replace("_context", "")
 
-                for rule_tag in root.findall("rule"):
-                    rule_key = rule_tag.get("key", f"{category}_{migrated_count}")
-                    value = rule_tag.text.strip()
-                    description = rule_tag.get("description", f"Rule for {category}")
+                # Parse XML rules mapping
+                rule_key = root.get("id") or os.path.splitext(filename)[0]
+                category = root.get("category") or "general"
+                value = ET.tostring(root, encoding="utf-8").decode("utf-8")
+                description = root.find("description").text if root.find("description") is not None else ""
 
-                    cursor.execute(
-                        """
-                        INSERT INTO rules (rule_key, category, value, description, is_enabled)
-                        VALUES (%s, %s, %s, %s, TRUE)
-                        ON CONFLICT (rule_key) DO NOTHING;
-                        """,
-                        (rule_key, category, value, description),
-                    )
-                    if cursor.rowcount > 0:
-                        migrated_count += 1
-                        logger.success(f"  -> Migrated rule: {rule_key}")
+                cursor.execute(
+                    """
+                    INSERT INTO rules (rule_key, category, value, description)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (rule_key) DO UPDATE
+                    SET value = EXCLUDED.value, category = EXCLUDED.category, updated_at = NOW();
+                    """,
+                    (rule_key, category, value, description),
+                )
+                if cursor.rowcount > 0:
+                    migrated_count += 1
+                    logger.success(f"  -> Migrated rule: {rule_key}")
 
             except Exception as e:  # noqa: BLE001
-                logger.error(f"Failed to parse or migrate rules from {filename}: {e}")
+                logger.error(f"Failed to migrate rule {filename}: {e}")
 
     conn.commit()
     cursor.close()
@@ -128,23 +132,24 @@ def migrate_rules(conn):
 
 def migrate_agent_configs(conn):
     """
-    'tools/headless_agent_registry.py' থেকে কনফিগারেশন নিয়ে 'agent_configs' টেবিলে মাইগ্রেট করে।
+    Headless agent configurations মাইগ্রেট করে।
     """
-    logger.info("Starting agent configuration migration...")
+    logger.info("Starting agent configurations migration...")
     try:
-        agent_configs = get_headless_agent_configs()
         cursor = conn.cursor()
         migrated_count = 0
+        configs = get_headless_agent_configs()
 
-        for agent_name, config in agent_configs.items():
-            description = config.get("description", f"Configuration for {agent_name}")
+        for agent_name, config in configs.items():
             config_json = json.dumps(config)
+            description = f"Headless config for {agent_name}."
 
             cursor.execute(
                 """
-                INSERT INTO agent_configs (agent_name, description, config_json, status)
-                VALUES (%s, %s, %s, 'active')
-                ON CONFLICT (agent_name) DO NOTHING;
+                INSERT INTO agent_configs (agent_name, description, config_json)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (agent_name) DO UPDATE
+                SET config_json = EXCLUDED.config_json, updated_at = NOW();
                 """,
                 (agent_name, description, config_json),
             )
@@ -167,11 +172,8 @@ def create_tables(conn):
     logger.info("Ensuring database tables exist...")
     cursor = conn.cursor()
     try:
+        # বাংলা মন্তব্য: DROP TABLE সারণীগুলো মুছে ফেলা হলো যাতে existing ডাটা লস না হয়।
         cursor.execute("""
-        DROP TABLE IF EXISTS skills CASCADE;
-        DROP TABLE IF EXISTS rules CASCADE;
-        DROP TABLE IF EXISTS agent_configs CASCADE;
-
         -- Skills Table
         CREATE TABLE IF NOT EXISTS skills (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
