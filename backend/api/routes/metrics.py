@@ -21,10 +21,12 @@ router = APIRouter(prefix="/api/admin/metrics", tags=["infrastructure-metrics"],
 auditor = NightlyChaosAuditor()
 
 
-class SupremeMetricsEngine:
     def __init__(self):
         # রিফ্যাক্টর: সরাসরি firestore.Client() এর বদলে শেয়ার্ড হেল্পার ব্যবহার
         self.db = get_firestore_db()
+        # বাংলা মন্তব্য: P95 ল্যাটেন্সি রিয়াল-টাইম ট্র্যাকিং করার জন্য একটি সার্কুলার বাফারের মতো লিস্ট।
+        # এটি মেমোরিতে শেষ ১০০০টি রিকোয়েস্টের ল্যাটেন্সি ট্র্যাক করে।
+        self.latency_history: list[float] = []
 
     async def calculate_system_roi(self) -> dict[str, Any]:
         """সিস্টেমের সেভ করা কস্ট এবং ব্লক করা অ্যাটাকের রিয়াল-টাইম ম্যাট্রিক্স ক্যালকুলেটর"""
@@ -191,6 +193,14 @@ def record_error(error_type: str, endpoint: str) -> None:
 
 
 def record_request_duration(method: str, path: str, duration: float) -> None:
+    # বাংলা মন্তব্য: metrics_engine-এর রিয়াল ল্যাটেন্সি ট্র্যাকিং লিস্টে ডাটা পুশ করা।
+    try:
+        metrics_engine.latency_history.append(duration)
+        if len(metrics_engine.latency_history) > 1000:
+            metrics_engine.latency_history.pop(0)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"Failed to record local latency log: {exc}")
+
     if _PROMETHEUS_AVAILABLE:
         try:
             request_duration_seconds.labels(method=method, endpoint=path).observe(duration)
