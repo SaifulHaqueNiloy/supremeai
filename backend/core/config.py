@@ -111,6 +111,13 @@ class Settings(BaseSettings):
         validation_alias="ENFORCE_ANTI_HACKING",
     )
 
+    # বাংলা মন্তব্য: main.py-এর app_user/app_admin bootstrap-এর সাথে সামঞ্জস্যপূর্ণ একই SERVICE_ROLE flag।
+    # DB pool sizing (database/session.py) এই মানের উপর ভিত্তি করে User vs Admin instance-এ আলাদা limit প্রয়োগ করে।
+    service_role: str = Field(default="user", validation_alias="SERVICE_ROLE")
+
+    # বাংলা মন্তব্য: JIT OTP over-saturation protection — প্রতি admin প্রতি এই সেকেন্ডে সর্বোচ্চ ১টি OTP।
+    otp_cooldown_seconds: int = Field(default=60, validation_alias="OTP_COOLDOWN_SECONDS")
+
     # বাংলা মন্তব্য: Admin email list সম্পূর্ণ env-driven
     # (Moved to Security & Auth Config section to avoid duplication)
 

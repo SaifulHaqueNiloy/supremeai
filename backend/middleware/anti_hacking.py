@@ -22,6 +22,19 @@ from core.cache.redis_manager import redis_manager
 
 _CONTEXT_KEY_PREFIX = "security:last_context:"
 _CONTEXT_TTL = 86400
+_OTP_COOLDOWN_PREFIX = "security:otp_cooldown:"
+_CAUTION_LOG_PREFIX = "security:caution_log:"
+_CAUTION_LOG_TTL = 86400
+
+
+def _octet3(ip: str) -> str:
+    """First 3 octets of an IPv4 address (e.g. '1.2.3.4' -> '1.2.3'). Falls back to
+    the full value for IPv6/unknown so those never spuriously match each other.
+
+    বাংলা: IPv4-এর প্রথম ৩টি অক্টেট বের করে — CGNAT/mobile handoff-এ সাধারণত শেষ অক্টেটই বদলায়।
+    """
+    parts = ip.split(".")
+    return ".".join(parts[:3]) if len(parts) == 4 else ip
 
 
 class AntiHackingContextMiddleware(BaseHTTPMiddleware):
@@ -42,6 +55,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                 last = json.loads(raw_last) if raw_last else None
 
                 mismatch = False
+                caution = False
                 if last:
                     ip_country_mismatch = (last.get("ip") != signal["ip"] or last.get("country") != signal["country"])
                     last_fp = last.get("fingerprint")
@@ -51,7 +65,45 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                     else:
                         mismatch = ip_country_mismatch
 
+                    if mismatch:
+                        same_ua = last.get("ua") not in (None, "unknown") and last.get("ua") == signal["ua"]
+                        same_subnet = bool(signal["ip"]) and _octet3(last.get("ip", "")) == _octet3(signal["ip"])
+                        if same_ua or same_subnet:
+                            caution = True
+                            mismatch = False
+
+                if caution:
+                    from loguru import logger as _logger
+                    _logger.info(f"CAUTION: partial context match for admin {admin_id} (same_ua/subnet, no OTP fired): {signal} vs last {last}")
+                    if redis_manager and redis_manager.client:
+                        await redis_manager.client.lpush(f"{_CAUTION_LOG_PREFIX}{admin_id}", json.dumps(signal))
+                        await redis_manager.client.ltrim(f"{_CAUTION_LOG_PREFIX}{admin_id}", 0, 49)
+                        await redis_manager.client.expire(f"{_CAUTION_LOG_PREFIX}{admin_id}", _CAUTION_LOG_TTL)
+
                 if mismatch:
+                    cooldown_key = f"{_OTP_COOLDOWN_PREFIX}{admin_id}"
+                    cooldown_active = False
+                    if redis_manager and redis_manager.client:
+                        acquired = await redis_manager.client.set(
+                            cooldown_key, "1", nx=True, ex=settings.otp_cooldown_seconds
+                        )
+                        cooldown_active = not bool(acquired)
+
+                    if cooldown_active:
+                        from loguru import logger as _logger2
+                        _logger2.info(f"OTP cooldown active for admin {admin_id} - suppressing duplicate send/notification.")
+                        request.state.security_otp_pending = True
+                        if settings.enforce_anti_hacking:
+                            return JSONResponse(
+                                status_code=403,
+                                content={
+                                    "error": "context_mismatch",
+                                    "detail": "OTP verification required — check your configured channel."
+                                },
+                            )
+                        await redis_manager.set_cache(key, json.dumps(signal), ex_seconds=_CONTEXT_TTL)
+                        return await call_next(request)
+
                     code = f"{secrets.randbelow(900000) + 100000}"
                     await send_otp(admin_id, code, signal)
                     request.state.security_otp_pending = True
