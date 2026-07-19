@@ -45,6 +45,8 @@ from core.messaging.event_bus import error_event_bus  # noqa: E402
 from core.orchestration.orchestrator import Orchestrator  # noqa: E402
 from core.pgbouncer_pool import get_db_pool  # noqa: E402
 from core.pgbouncer_pool import init_db_pool  # noqa: E402
+from core.startup_validator import StartupValidator  # noqa: E402
+from core.reliability_controller import ReliabilityController  # noqa: E402
 
 
 async def _ensure_api_key_tables() -> None:
@@ -112,6 +114,9 @@ async def app_lifespan(app):
     Handles high-concurrency initialization and defensive teardowns.
     """
     logger.info("🌐 Core Infrastructure Bootstrapping Active...")
+    # বাংলা মন্তব্য: স্টার্টআপ ভ্যালিডেশন এবং নির্ভরযোগ্যতা নিয়ন্ত্রণ প্যানেল বুটস্ট্র্যাপ করা।
+    await StartupValidator.validate()
+    await ReliabilityController.initialize()
     app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
 
     # OpenTelemetry tracing initialization

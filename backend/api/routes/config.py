@@ -1,6 +1,6 @@
-# backend/api/routes/config.py
-from fastapi import APIRouter
-from fastapi import Response
+from typing import Any
+from fastapi import APIRouter, Depends, Response, HTTPException, Body
+from api.routes.admin_dashboard import require_admin_token
 
 
 # টেস্ট কম্প্যাটিবিলিটি:
@@ -15,6 +15,10 @@ class _ConfigDBClientWrapper:
         # টেস্ট monkeypatch করবে: config_route.db.get_config
         return None
 
+    def set_config(self, key: str, value: Any, category: str = "general"):
+        # টেস্ট monkeypatch করবে: config_route.db.set_config
+        return None
+
 
 db = _ConfigDBClientWrapper()
 
@@ -24,7 +28,7 @@ router = APIRouter(prefix="/config", tags=["Global Config"])
 @router.get("/public")
 async def get_public_config(response: Response):
     """
-    পাবলিক কনফিগ ডেটা সরাসরি ব্রাউজার এবং CDN (Cloudflare/Vercel) এ ক্যাশ করবে,
+    পাবলিক কনфিগ ডেটা সরাসরি ব্রাউজার এবং CDN (Cloudflare/Vercel) এ ক্যাশ করবে,
     যাতে প্রতিবার ব্যাকএন্ড সার্ভারে হিট না আসে।
     """
     config_data = {
@@ -36,3 +40,19 @@ async def get_public_config(response: Response):
     # 🛡️ Edge Caching Enforcer (১ ঘণ্টা ব্রাউজার / ২৪ ঘণ্টা শেয়ার্ড CDN ক্যাশ)
     response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400"
     return config_data
+
+
+# বাংলা মন্তব্য: অ্যাডমিন ট্রাস্টেড এক্সেস কন্ট্রোলের মাধ্যমে নির্দিষ্ট কনফিগ কি রিড করার এন্ডপয়েন্ট।
+@router.get("/{key}")
+async def get_config_by_key(key: str, admin: str = Depends(require_admin_token)):
+    val = db.get_config(key)
+    if val is None:
+        raise HTTPException(status_code=404, detail="Config key not found")
+    return {"key": key, "value": val}
+
+
+# বাংলা মন্তব্য: অ্যাডমিন ট্রাস্টেড এক্সেস কন্ট্রোলের মাধ্যমে নির্দিষ্ট কনফিগ কি আপডেট করার এন্ডপয়েন্ট।
+@router.put("/{key}")
+async def update_config_by_key(key: str, value: Any = Body(...), admin: str = Depends(require_admin_token)):
+    db.set_config(key, value)
+    return {"status": "success"}
