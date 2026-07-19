@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 # একই role-aware bracket এখানে পুনরায় ব্যবহার করা হলো, যোগফল হিসাব করে (এই pool +
 # session.py engine) instance প্রতি মোট কানেকশন যুক্তিসঙ্গত রাখা হয়েছে।
 _ROLE_POOL_BRACKETS: dict[str, tuple[int, int]] = {
-    "admin": (1, 3),   # low-traffic internal panel
-    "user": (3, 12),   # high-traffic client-facing
+    "admin": (1, 3),  # low-traffic internal panel
+    "user": (3, 12),  # high-traffic client-facing
 }
 
 
