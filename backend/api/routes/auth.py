@@ -22,9 +22,9 @@ except ImportError:
     JWTError = Exception  # type: ignore[misc,assignment]
     jwt = None  # type: ignore[assignment]
 
+from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.security.rbac import UserContext
-from core.cache.redis_manager import redis_manager
 from database.supabase_client import db
 
 
@@ -107,11 +107,15 @@ async def login(body: LoginRequest, request: Request):
         }
         access_token = create_access_token(token_data)
 
-        # 🔐 Phase 2: Known Fingerprint Registration
-        fp = request.headers.get("x-device-fingerprint")
-        if fp and fp != "unknown" and redis_manager and redis_manager.client:
-            # বাংলা মন্তব্য: লগইন করার সময় ডিভাইস ফিঙ্গারপ্রিন্ট পরিচিত ডিভাইস হিসেবে সংরক্ষণ করা হচ্ছে
-            await redis_manager.client.sadd(f"device:known:{user_id}", fp)
+        # বাংলা মন্তব্য: Phase 2 — Hybrid Fingerprint Login। হেডারটি ঐচ্ছিক, তাই না থাকলেও
+        # লগইন স্বাভাবিকভাবে চলবে (ব্রেকিং চেঞ্জ নয়); থাকলে ডিভাইসটি known-devices সেটে যোগ হয়
+        # যা AntiHackingContextMiddleware admin scope-এ তৃতীয় সিগন্যাল হিসেবে ব্যবহার করে।
+        fingerprint = request.headers.get("x-device-fingerprint")
+        if fingerprint and redis_manager and redis_manager.client:
+            try:
+                await redis_manager.client.sadd(f"device:known:{user_id}", fingerprint)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(f"Failed to register device fingerprint for {user_id}: {exc}")
 
         return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
     except Exception as e:
