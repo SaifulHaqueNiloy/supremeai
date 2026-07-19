@@ -92,11 +92,21 @@ optional_routers: list[tuple[str, str]] = [
 # বাংলা মন্তব্য: tools_ops যোগ করা হলো — এটি DevOps/deploy টুলিং (docker-compose/helm
 # ফাইল-রাইট সহ) যা আগে ভুলবশত User API-তে এক্সপোজড ছিল (route-leakage)।
 _admin_paths = {
-    "api.routes.simulator_admin", "api.routes.site_actions", "api.routes.llm_gateway",
-    "api.routes.browser", "api.routes.evolution", "api.routes.meta_ai",
-    "api.routes.admin_dashboard", "api.routes.internal", "api.routes.admin",
-    "api.routes.traffic_monitor", "api.routes.admin_librarian", "api.routes.tenant_admin",
-    "api.routes.metrics", "api.routes.cloud_mesh", "api.routes.tools_ops",
+    "api.routes.simulator_admin",
+    "api.routes.site_actions",
+    "api.routes.llm_gateway",
+    "api.routes.browser",
+    "api.routes.evolution",
+    "api.routes.meta_ai",
+    "api.routes.admin_dashboard",
+    "api.routes.internal",
+    "api.routes.admin",
+    "api.routes.traffic_monitor",
+    "api.routes.admin_librarian",
+    "api.routes.tenant_admin",
+    "api.routes.metrics",
+    "api.routes.cloud_mesh",
+    "api.routes.tools_ops",
 }
 
 # ADMIN_ROUTERS includes health and specific admin routes
@@ -122,10 +132,7 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
 
 # USER_ROUTERS is all other routers
 # বাংলা মন্তব্য: ইউজার এপিআই রাউটারসমূহ
-USER_ROUTERS: list[tuple[str, str]] = [
-    r for r in (core_routers + optional_routers)
-    if r[0] not in _admin_paths
-]
+USER_ROUTERS: list[tuple[str, str]] = [r for r in (core_routers + optional_routers) if r[0] not in _admin_paths]
 
 
 def register_all_routers(app: FastAPI) -> None:
@@ -163,5 +170,5 @@ __all__ = [
     "core_routers",
     "optional_routers",
     "USER_ROUTERS",
-    "ADMIN_ROUTERS"
+    "ADMIN_ROUTERS",
 ]

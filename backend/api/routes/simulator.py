@@ -120,11 +120,7 @@ async def _save_profile(user_id: str, profile: dict[str, Any]) -> None:
         return
 
     redis_mgr = redis_manager
-    await redis_mgr.set_cache(
-        _PROFILE_KEY.format(user_id=user_id),
-        json.dumps(profile),
-        ex_seconds=_PROFILE_TTL
-    )
+    await redis_mgr.set_cache(_PROFILE_KEY.format(user_id=user_id), json.dumps(profile), ex_seconds=_PROFILE_TTL)
 
 
 async def _get_session(user_id: str) -> dict[str, Any] | None:
@@ -142,11 +138,7 @@ async def _save_session(user_id: str, session: dict[str, Any]) -> None:
         return
 
     redis_mgr = redis_manager
-    await redis_mgr.set_cache(
-        _SESSION_KEY.format(user_id=user_id),
-        json.dumps(session),
-        ex_seconds=_PROFILE_TTL
-    )
+    await redis_mgr.set_cache(_SESSION_KEY.format(user_id=user_id), json.dumps(session), ex_seconds=_PROFILE_TTL)
 
 
 async def _delete_session(user_id: str) -> None:

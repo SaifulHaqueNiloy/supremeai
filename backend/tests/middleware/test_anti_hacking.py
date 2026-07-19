@@ -2,9 +2,9 @@
 
 বাংলা: নতুন Caution tier (partial IP/UA match) এবং OTP cooldown throttle-এর জন্য টেস্ট।
 """
+
 from __future__ import annotations
 
-import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -67,8 +67,7 @@ def mock_redis():
 
 @pytest.mark.asyncio
 async def test_first_request_no_prior_context_passes_through(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), \
-         patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
         req = _make_request("1.2.3.4", "BD", "chrome", "fp-abc")
         result = await mw.dispatch(req, _call_next)
@@ -78,8 +77,7 @@ async def test_first_request_no_prior_context_passes_through(mock_redis):
 
 @pytest.mark.asyncio
 async def test_full_mismatch_triggers_otp(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), \
-         patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         # Establish trusted context first
@@ -95,8 +93,7 @@ async def test_full_mismatch_triggers_otp(mock_redis):
 
 @pytest.mark.asyncio
 async def test_partial_match_same_subnet_is_caution_not_otp(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), \
-         patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         req1 = _make_request("1.2.3.4", "BD", "chrome-v1", "fp-abc")
@@ -112,8 +109,7 @@ async def test_partial_match_same_subnet_is_caution_not_otp(mock_redis):
 
 @pytest.mark.asyncio
 async def test_partial_match_same_user_agent_is_caution_not_otp(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), \
-         patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         req1 = _make_request("1.2.3.4", "BD", "chrome-v1", "fp-abc")
@@ -128,8 +124,7 @@ async def test_partial_match_same_user_agent_is_caution_not_otp(mock_redis):
 
 @pytest.mark.asyncio
 async def test_otp_cooldown_suppresses_duplicate_sends(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), \
-         patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         req1 = _make_request("1.2.3.4", "BD", "chrome-v1", "fp-abc")
