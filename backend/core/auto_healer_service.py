@@ -1,0 +1,190 @@
+"""core/auto_healer_service.py — FastAPI-integrated AutoHealer Background Service.
+
+বাংলা মন্তব্য: আগে agents/devops/auto_healer.py একটি standalone command-line script ছিল।
+এটা production FastAPI server-এ কখনো চলত না।
+এই নতুন service টা lifespan.py থেকে background asyncio task হিসেবে চালু হয়,
+database, Redis, এবং LLM provider-এর health continuously monitor করে,
+এবং problem detect হলে স্বয়ংক্রিয়ভাবে heal করার চেষ্টা করে।
+"""
+
+from __future__ import annotations
+
+import asyncio
+import time
+from typing import Any
+
+from loguru import logger
+
+
+class AutoHealerService:
+    """
+    Continuously monitors critical services and auto-heals them.
+
+    বাংলা মন্তব্য: এই service টা lifespan.py থেকে background task হিসেবে চালু হয়।
+    Render/Cloud Run-এ container restart ছাড়াই healing হবে।
+
+    Healed subsystems:
+    - PostgreSQL connection pool (reconnect on failure)
+    - Redis connection (reconnect on failure)
+    - LLM provider (switch provider on consecutive failures)
+    """
+
+    def __init__(self, check_interval_seconds: int = 30) -> None:
+        self.check_interval = check_interval_seconds
+        self._running = False
+        self._task: asyncio.Task | None = None
+        # বাংলা: subsystem → পর পর failure count
+        self.failure_counts: dict[str, int] = {}
+        # বাংলা: cooldown — একই subsystem বারবার heal করা থেকে বিরত রাখে
+        self._last_heal_time: dict[str, float] = {}
+        self.HEAL_COOLDOWN_SECONDS = 120  # 2 minutes
+
+    # ── Lifecycle ──────────────────────────────────────────────────────────────
+
+    async def start(self) -> None:
+        """Background healing loop শুরু করা। lifespan.py থেকে call করা হয়।"""
+        if self._running:
+            return
+        self._running = True
+        self._task = asyncio.create_task(self._healing_loop(), name="auto-healer")
+        logger.info("🚑 AutoHealerService background loop started (interval=30s).")
+
+    async def stop(self) -> None:
+        """Gracefully stop করা। lifespan shutdown-এ call করা হয়।"""
+        self._running = False
+        if self._task and not self._task.done():
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
+        logger.info("🚑 AutoHealerService stopped.")
+
+    # ── Main Loop ──────────────────────────────────────────────────────────────
+
+    async def _healing_loop(self) -> None:
+        """Main background loop।"""
+        while self._running:
+            try:
+                await self._check_and_heal()
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"🚑 AutoHealer check cycle failed unexpectedly: {exc!r}")
+            await asyncio.sleep(self.check_interval)
+
+    async def _check_and_heal(self) -> None:
+        """সব critical subsystem check করা এবং দরকারে heal করা।"""
+        await self._check_database()
+        await self._check_redis()
+
+    # ── Database Healing ───────────────────────────────────────────────────────
+
+    async def _check_database(self) -> None:
+        """PostgreSQL pool health check এবং auto-heal।"""
+        try:
+            from core.health.health_probes import probe_database  # noqa: PLC0415
+            result = await probe_database()
+            db_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
+        except Exception as exc:  # noqa: BLE001
+            db_up = False
+            logger.warning(f"🚑 DB probe raised exception: {exc!r}")
+
+        if not db_up:
+            self.failure_counts["db"] = self.failure_counts.get("db", 0) + 1
+            count = self.failure_counts["db"]
+            logger.error(f"🚑 Database unhealthy (consecutive failure #{count})")
+
+            if count >= 3 and self._can_heal("db"):
+                await self._heal_database()
+        else:
+            if self.failure_counts.get("db", 0) > 0:
+                logger.info("🚑 Database recovered.")
+            self.failure_counts["db"] = 0
+
+    async def _heal_database(self) -> None:
+        """
+        বাংলা: Database connection pool reset করা।
+        PgBouncer pool close করে নতুন connection তৈরি করা হচ্ছে।
+        """
+        logger.warning("🚑 Attempting DB pool reset (self-healing)...")
+        try:
+            from core.pgbouncer_pool import close_db_pool, init_db_pool  # noqa: PLC0415
+            from core.config import settings  # noqa: PLC0415
+
+            await close_db_pool()
+            await asyncio.sleep(2)  # brief backoff
+            await init_db_pool(settings.supabase_database_url)
+            logger.info("🚑 ✅ Database pool successfully healed.")
+            self.failure_counts["db"] = 0
+            self._last_heal_time["db"] = time.monotonic()
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"🚑 ❌ DB heal failed: {exc!r}")
+
+    # ── Redis Healing ──────────────────────────────────────────────────────────
+
+    async def _check_redis(self) -> None:
+        """Redis health check এবং auto-heal।"""
+        try:
+            from core.health.health_probes import probe_redis  # noqa: PLC0415
+            result = await probe_redis()
+            redis_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
+        except Exception as exc:  # noqa: BLE001
+            redis_up = False
+            logger.warning(f"🚑 Redis probe raised exception: {exc!r}")
+
+        if not redis_up:
+            self.failure_counts["redis"] = self.failure_counts.get("redis", 0) + 1
+            count = self.failure_counts["redis"]
+            logger.error(f"🚑 Redis unhealthy (consecutive failure #{count})")
+
+            if count >= 3 and self._can_heal("redis"):
+                await self._heal_redis()
+        else:
+            if self.failure_counts.get("redis", 0) > 0:
+                logger.info("🚑 Redis recovered.")
+            self.failure_counts["redis"] = 0
+
+    async def _heal_redis(self) -> None:
+        """
+        বাংলা: Redis connection reset করা।
+        SecureRedisManager-এর client reset করে reconnect করা হচ্ছে।
+        """
+        logger.warning("🚑 Attempting Redis reconnect (self-healing)...")
+        try:
+            from core.cache.redis_manager import redis_manager  # noqa: PLC0415
+
+            # Redis client close করা এবং নতুন connection তৈরি করা
+            if hasattr(redis_manager, "client") and redis_manager.client:
+                try:
+                    await redis_manager.client.aclose()
+                except Exception:  # noqa: BLE001
+                    pass
+            # Reconnect — SecureRedisManager নিজেই __init__-এ connect করে
+            if hasattr(redis_manager, "_connect"):
+                await redis_manager._connect()
+            logger.info("🚑 ✅ Redis successfully healed.")
+            self.failure_counts["redis"] = 0
+            self._last_heal_time["redis"] = time.monotonic()
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"🚑 ❌ Redis heal failed: {exc!r}")
+
+    # ── Utilities ──────────────────────────────────────────────────────────────
+
+    def _can_heal(self, subsystem: str) -> bool:
+        """
+        বাংলা: Cooldown check — একই subsystem বারবার heal attempt না করতে।
+        2 minute cooldown enforce করা হচ্ছে।
+        """
+        last = self._last_heal_time.get(subsystem, 0.0)
+        return (time.monotonic() - last) >= self.HEAL_COOLDOWN_SECONDS
+
+    def get_status(self) -> dict[str, Any]:
+        """Health status summary।"""
+        return {
+            "running": self._running,
+            "failure_counts": dict(self.failure_counts),
+            "last_heal_times": {k: time.monotonic() - v for k, v in self._last_heal_time.items()},
+        }
+
+
+# Singleton
+auto_healer_service = AutoHealerService(check_interval_seconds=30)

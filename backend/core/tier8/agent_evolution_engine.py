@@ -21,9 +21,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
 
-from backend.core.base import BaseSkill
-from backend.core.llm.llm_gateway import LLMGateway, get_llm_gateway
-from backend.core.observability.telemetry import get_tracer, trace_span
+# বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
+from core.base import BaseSkill
+from core.llm.llm_gateway import LLMGateway, get_llm_gateway
+from core.observability.telemetry import get_tracer, trace_span
 
 
 @dataclass(frozen=True, slots=True)
