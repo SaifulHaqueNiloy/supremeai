@@ -3,7 +3,7 @@
 
 export const apiInterceptor = async (response: Response): Promise<any> => {
   const contentType = response.headers.get("content-type");
-  
+
   if (!response.ok) {
     throw new Error(`API Transport Failed. Status: ${response.status}`);
   }

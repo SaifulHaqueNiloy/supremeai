@@ -281,13 +281,13 @@ class StaticBugVisitor(ast.NodeVisitor):
                     # Avoid matching env var lookups
                     if "os.getenv" not in line and "environ" not in line and "settings." not in line:
                         self._add("BP010", "Security", SEVERITY_HIGH,
-                                  "Possible hardcoded secret detected. Move to environment variables or secrets manager.", 
+                                  "Possible hardcoded secret detected. Move to environment variables or secrets manager.",
                                   type('obj', (object,), {'lineno': line_no, 'col_offset': line.index('=') if '=' in line else 0})())
 
             # BP011: TODO/FIXME with high severity keywords
             if "#" in stripped and any(k in stripped.lower() for k in ["hack", "temporary", "temp fix", "xxx"]):
                 self._add("BP011", "Maintainability", SEVERITY_LOW,
-                          "Temporary/hacky code comment found. Address before merging.", 
+                          "Temporary/hacky code comment found. Address before merging.",
                           type('obj', (object,), {'lineno': line_no, 'col_offset': 0})())
 
 
