@@ -89,12 +89,14 @@ optional_routers: list[tuple[str, str]] = [
 
 
 # Identify admin router paths
+# বাংলা মন্তব্য: tools_ops যোগ করা হলো — এটি DevOps/deploy টুলিং (docker-compose/helm
+# ফাইল-রাইট সহ) যা আগে ভুলবশত User API-তে এক্সপোজড ছিল (route-leakage)।
 _admin_paths = {
     "api.routes.simulator_admin", "api.routes.site_actions", "api.routes.llm_gateway",
     "api.routes.browser", "api.routes.evolution", "api.routes.meta_ai",
     "api.routes.admin_dashboard", "api.routes.internal", "api.routes.admin",
     "api.routes.traffic_monitor", "api.routes.admin_librarian", "api.routes.tenant_admin",
-    "api.routes.metrics", "api.routes.cloud_mesh"
+    "api.routes.metrics", "api.routes.cloud_mesh", "api.routes.tools_ops",
 }
 
 # ADMIN_ROUTERS includes health and specific admin routes
@@ -115,6 +117,7 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
     ("api.routes.tenant_admin", "/api"),
     ("api.routes.metrics", ""),
     ("api.routes.cloud_mesh", ""),
+    ("api.routes.tools_ops", ""),
 ]
 
 # USER_ROUTERS is all other routers
