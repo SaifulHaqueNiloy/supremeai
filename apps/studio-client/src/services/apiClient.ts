@@ -2,7 +2,7 @@
 // বাংলা মন্তব্য: এটি অ্যাপ্লিকেশনের সেন্ট্রাল এপিআই ক্লায়েন্ট যা হেডার, টোকেন এবং সিকিউর রেট লিমিট (429) / ভ্যালিডেশন এরর ইন্টারসেপ্ট করে।
 
 import { getApiBaseUrl, switchActiveBackend } from '../utils/api';
-import { getDeviceFingerprint } from '../utils/deviceFingerprint'; // 🔐 নতুন ইম্পোর্ট
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 import PQueue from 'p-queue';
 
 // বাংলা মন্তব্য: কাস্টম এরর ক্লাস — status প্রপার্টি দিয়ে React Query retry ফাংশন সঠিকভাবে 401/403/429 চিহ্নিত করতে পারে
@@ -42,11 +42,12 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
     headers['Authorization'] = `Bearer ${cachedToken}`;
   }
 
-  // 🔐 Phase 2: Hybrid Fingerprint Login
+  // 🔐 Phase 2: Hybrid Fingerprint Login — AntiHackingContextMiddleware ব্যবহার করে
+  // IP/country-এর পাশাপাশি তৃতীয় কনটেক্সট সিগন্যাল হিসেবে
   try {
     headers['X-Device-Fingerprint'] = await getDeviceFingerprint();
   } catch {
-    // WebCrypto না থাকলে (পুরনো ব্রাউজার) নীরবে স্কিপ — request block হবে না
+    // বাংলা: WebCrypto অনুপস্থিত থাকলে (পুরনো ব্রাউজার) নীরবে বাদ দেওয়া হচ্ছে — request ব্লক হবে না
   }
 
   return headers;
