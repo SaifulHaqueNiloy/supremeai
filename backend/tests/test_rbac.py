@@ -1,4 +1,6 @@
 import datetime
+from core.utils.time_utils import utc_now
+from datetime import UTC
 
 import pytest
 
@@ -37,13 +39,20 @@ def test_unknown_role_no_permission(rbac):
 
 
 def test_check_expired_context(rbac):
-    past = (datetime.datetime.now() - datetime.timedelta(hours=1)).isoformat()
+    past = (utc_now() - datetime.timedelta(hours=1)).isoformat()
+    ctx = UserContext(user_id="u1", role="admin", expires_at=past)
+    assert rbac.check(ctx, "read") is False
+
+
+def test_check_expired_context_timezone_aware(rbac):
+    # Regression test for TypeError crash when expires_at has timezone
+    past = (datetime.datetime.now(UTC) - datetime.timedelta(hours=1)).isoformat()
     ctx = UserContext(user_id="u1", role="admin", expires_at=past)
     assert rbac.check(ctx, "read") is False
 
 
 def test_check_valid_context(rbac):
-    future = (datetime.datetime.now() + datetime.timedelta(hours=1)).isoformat()
+    future = (utc_now() + datetime.timedelta(hours=1)).isoformat()
     ctx = UserContext(user_id="u1", role="admin", expires_at=future)
     assert rbac.check(ctx, "read") is True
 

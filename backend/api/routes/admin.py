@@ -85,7 +85,6 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
         try:
             from database.session import get_db_session
             from sqlalchemy import text
-            import os
 
             backup_data = {}
             async for session in get_db_session():
@@ -101,13 +100,16 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                                 row[k] = v.isoformat()
                     backup_data[table] = rows
 
-            os.makedirs("backup", exist_ok=True)
-            backup_path = f"backup/db_backup_{int(datetime.now(UTC).timestamp())}.json"
+            backend_dir = Path(__file__).resolve().parent.parent.parent
+            backup_dir = backend_dir / "backup"
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            backup_path = backup_dir / f"db_backup_{int(datetime.now(UTC).timestamp())}.json"
+
             with open(backup_path, "w", encoding="utf-8") as f:
                 json.dump(backup_data, f, indent=2)
 
             logger.info(f"Database backup saved successfully to {backup_path}")
-            return {"status": "success", "message": f"Database backup saved successfully to {backup_path}"}
+            return {"status": "success", "message": f"Database backup saved successfully to {backup_path.name}"}
         except Exception as e:
             logger.error(f"Database backup failed: {e}")
             raise HTTPException(status_code=500, detail=f"Database backup failed: {e}")
