@@ -59,7 +59,7 @@ repos:
     hooks:
       - id: ruff
         name: ⚡ Ruff Linter with Unsafe Semantic Fixes
-        entry: python -m ruff check backend --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501
+        entry: python -m ruff check backend --fix --unsafe-fixes --extend-ignore=S101,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501
         language: system
         pass_filenames: false
         types_or: [python, pyi]

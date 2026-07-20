@@ -20,11 +20,11 @@ Dependencies:
 - `loguru`: For structured logging of errors and information."""
 
 import asyncio
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Any
 
 from loguru import logger
+from core.utils.time_utils import utc_now
 
 
 class DynamicConfigProxy:
@@ -32,11 +32,11 @@ class DynamicConfigProxy:
         self._tenant_id = tenant_id
         self._db = db
         self._cache = {}
-        self._expiry = datetime.min
+        self._expiry = datetime.min.replace(tzinfo=UTC)
 
     async def get(self, key: str, default: Any = None) -> Any:
         # TTL চেক (১ মিনিট)
-        if datetime.now() > self._expiry:
+        if utc_now() > self._expiry:
             await self._refresh_cache()
 
         return self._cache.get(key, default)
@@ -53,7 +53,7 @@ class DynamicConfigProxy:
 
             if snapshot.exists:
                 self._cache = snapshot.to_dict()
-                self._expiry = datetime.now() + timedelta(minutes=1)
+                self._expiry = utc_now() + timedelta(minutes=1)
             else:
                 # Source defaults from centralized config_cache instead of hardcoded dummy data
                 from core.config_cache import config_cache
@@ -68,7 +68,7 @@ class DynamicConfigProxy:
                         default=["", "utf-8", "rb", "wb", "r", "w", "a", "x", "b", "t", "+"],
                     ),
                 }
-                self._expiry = datetime.now() + timedelta(minutes=1)
+                self._expiry = utc_now() + timedelta(minutes=1)
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to refresh config from DB: {e}")
             raise RuntimeError(f"Failed to refresh config from DB: {e}") from e
