@@ -1,6 +1,7 @@
-import pytest
 from unittest.mock import patch
-from core.log_batcher import SupremeLogBatcher, LogBatcherError
+
+import pytest
+from core.log_batcher import LogBatcherError, SupremeLogBatcher
 
 
 def test_log_batcher_append_and_size_flush():
@@ -17,7 +18,10 @@ def test_log_batcher_fault_tolerance_requeue():
     batcher = SupremeLogBatcher(max_batch_size=10)
     batcher.append_log("ERROR", "Sensitive transaction log entry")
 
-    with patch("core.log_batcher.db.append_evolution_log", side_effect=RuntimeError("Network DropOut")):
+    with patch(
+        "core.log_batcher.db.append_evolution_log",
+        side_effect=RuntimeError("Network DropOut"),
+    ):
         with pytest.raises(LogBatcherError):
             batcher.flush_buffer()
 

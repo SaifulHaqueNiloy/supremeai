@@ -1,10 +1,12 @@
 # backend/tools/mcp_server.py
-import json
 import asyncio
-from mcp.server import Server
-from mcp import types
-from tools.graph_service import GraphService
+import json
+
 from loguru import logger
+from mcp import types
+from mcp.server import Server
+
+from tools.graph_service import GraphService
 
 # বাংলা মন্তব্য: নলেজ গ্রাফের জন্য একটি অফিসিয়াল MCP সার্ভার ইনিশিয়ালাইজ করা হচ্ছে
 app = Server("supremeai-knowledge-graph")
@@ -45,7 +47,9 @@ async def handle_list_tools() -> list[types.Tool]:
 
 
 @app.call_tool()
-async def handle_call_tool(name: str, arguments: dict | None) -> list[types.TextContent]:
+async def handle_call_tool(
+    name: str, arguments: dict | None
+) -> list[types.TextContent]:
     """বাংলা মন্তব্য: এআই এজেন্টের রিকোয়েস্ট অনুযায়ী নির্দিষ্ট গ্রাফ কোয়েরি এক্সিকিউট করে কনটেক্সট রিটার্ন করবে।"""
     if not arguments:
         arguments = {}
@@ -60,7 +64,9 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 }
             else:
                 async with graph_service.driver.session() as session:
-                    result = await session.run("MATCH (n:Skill) RETURN n.name AS name LIMIT 50")
+                    result = await session.run(
+                        "MATCH (n:Skill) RETURN n.name AS name LIMIT 50"
+                    )
                     records = await result.data()
                     graph_data = {"nodes": [r["name"] for r in records]}
 
@@ -88,7 +94,11 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
 
     except Exception as e:  # noqa: BLE001
         logger.error(f"MCP Server execution error: {e}")
-        return [types.TextContent(type="text", text=f"Error gathering graph context: {str(e)}")]
+        return [
+            types.TextContent(
+                type="text", text=f"Error gathering graph context: {str(e)}"
+            )
+        ]
 
 
 async def main():

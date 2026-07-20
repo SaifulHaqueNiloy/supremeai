@@ -2,15 +2,17 @@
 # এই মডিউলটি ইউজারের টাইপ করা কোডের আগের ও পরের কনটেক্সট পড়ে
 # GitHub Copilot-এর মত ডাইনামিক ইনলাইন কোড কমপ্লিশন জেনারেট করে।
 
-from loguru import logger
 from core.llm.llm_gateway import GatewayManager
+from loguru import logger
 
 
 class LanguageServerBridge:
     def __init__(self, gateway: GatewayManager = None):
         self.gateway = gateway or GatewayManager()
 
-    async def get_inline_completion(self, prefix: str, suffix: str, file_path: str) -> str:
+    async def get_inline_completion(
+        self, prefix: str, suffix: str, file_path: str
+    ) -> str:
         """
         Generates contextual inline code completions.
         Args:
@@ -33,7 +35,12 @@ class LanguageServerBridge:
             )
 
             # Using deepseek or gemini-flash for fast code generation
-            response = await self.gateway.acompletion(prompt=prompt, model="deepseek/deepseek-coder", task_type="coding", stream=False)
+            response = await self.gateway.acompletion(
+                prompt=prompt,
+                model="deepseek/deepseek-coder",
+                task_type="coding",
+                stream=False,
+            )
 
             completion_text = response.get("text", "").strip()
 

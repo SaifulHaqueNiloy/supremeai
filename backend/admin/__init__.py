@@ -11,8 +11,7 @@ SupremeAI 2.0 — Admin Package Initialization
 from __future__ import annotations
 
 from admin.god import AdminGodLayer
-from core.admin_god import GodModeAuditLog
-from core.admin_god import GodModeContext
+from core.admin_god import GodModeAuditLog, GodModeContext
 
 __all__ = [
     "AdminGodLayer",

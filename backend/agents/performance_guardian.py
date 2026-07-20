@@ -15,16 +15,13 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime
-from datetime import UTC
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.llm_router import LLMRouter
-
+from loguru import logger
 
 # ── Constants ────────────────────────────────────────────────────────────────
 METRIC_CACHE_TTL = 300  # 5 minutes
@@ -98,7 +95,12 @@ class AnomalyDetector:
     def __init__(self, cache: Any | None = None) -> None:
         self.cache = cache or get_cache()
 
-    def detect(self, metric_name: str, values: list[float], threshold: float = ANOMALY_THRESHOLD) -> tuple[bool, float]:
+    def detect(
+        self,
+        metric_name: str,
+        values: list[float],
+        threshold: float = ANOMALY_THRESHOLD,
+    ) -> tuple[bool, float]:
         """
         Detect if current value is anomalous.
 
@@ -183,7 +185,11 @@ class PerformanceGuardian:
         self.alerts.extend(alerts)
 
         return {
-            "status": "healthy" if not any(a.severity == MetricSeverity.CRITICAL for a in alerts) else "degraded",
+            "status": (
+                "healthy"
+                if not any(a.severity == MetricSeverity.CRITICAL for a in alerts)
+                else "degraded"
+            ),
             "metrics": metrics,
             "alerts": [
                 {
@@ -197,7 +203,9 @@ class PerformanceGuardian:
             "checked_at": datetime.now(UTC).isoformat(),
         }
 
-    async def analyze_bottleneck(self, operation_name: str, duration_ms: float) -> dict[str, Any]:
+    async def analyze_bottleneck(
+        self, operation_name: str, duration_ms: float
+    ) -> dict[str, Any]:
         """
         Analyze performance bottleneck.
 
@@ -248,7 +256,9 @@ class PerformanceGuardian:
                 "error": str(e),
             }
 
-    async def get_scaling_recommendation(self, current_load: float, predicted_load: float) -> dict[str, Any]:
+    async def get_scaling_recommendation(
+        self, current_load: float, predicted_load: float
+    ) -> dict[str, Any]:
         """
         Recommend scaling actions.
 

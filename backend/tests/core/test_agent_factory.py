@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from core.queue.task_router import TaskRouter
+
+import pytest
 from core.agent_factory import DynamicAgentFactory
+from core.queue.task_router import TaskRouter
 
 
 @pytest.mark.asyncio
@@ -16,9 +17,15 @@ async def test_agent_factory_creates_and_saves_agent():
     factory = DynamicAgentFactory(mock_db)
 
     # Mock LLMGateway.acompletion to return our expected JSON string
-    mock_res = {"text": '{"agent_name": "AmazonTracker", "description": "Track prices", "execution_steps": [{"action": "click"}]}'}
+    mock_res = {
+        "text": '{"agent_name": "AmazonTracker", "description": "Track prices", "execution_steps": [{"action": "click"}]}'
+    }
 
-    with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock, return_value=mock_res):
+    with patch(
+        "core.llm.llm_gateway.LLMGateway.acompletion",
+        new_callable=AsyncMock,
+        return_value=mock_res,
+    ):
         config = await factory.create_specialized_agent("Track prices on Amazon")
         assert config["agent_name"] == "AmazonTracker"
         assert config["execution_steps"] == [{"action": "click"}]
@@ -31,13 +38,21 @@ async def test_task_router_dispatches_local_scraping_task():
     """Ensures the TaskRouter correctly dispatches a 'web_scraping_local' task to the local executor."""
     router = TaskRouter()
 
-    router.local_executor.execute_local_code = AsyncMock(return_value={"status": "success", "data": "DOM Result"})
+    router.local_executor.execute_local_code = AsyncMock(
+        return_value={"status": "success", "data": "DOM Result"}
+    )
 
-    task_context = {"task_type": "web_scraping_local", "code": "print('scraping')", "cost_limit": 0.05}
+    task_context = {
+        "task_type": "web_scraping_local",
+        "code": "print('scraping')",
+        "cost_limit": 0.05,
+    }
 
     response = await router.route_and_dispatch(task_context)
 
     assert response["status"] == "success"
     assert response["cost"] == 0.05
     assert response["data"] == "DOM Result"
-    router.local_executor.execute_local_code.assert_called_once_with("print('scraping')")
+    router.local_executor.execute_local_code.assert_called_once_with(
+        "print('scraping')"
+    )

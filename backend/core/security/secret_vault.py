@@ -11,18 +11,17 @@ import asyncio
 import os
 import time
 
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from loguru import logger
 
-from core.messaging.event_bus import ErrorContext
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
-
 try:
-    from infisical_client import AuthenticationOptions
-    from infisical_client import ClientSettings
-    from infisical_client import GetSecretOptions
-    from infisical_client import InfisicalClient
-    from infisical_client import UniversalAuthMethod
+    from infisical_client import (
+        AuthenticationOptions,
+        ClientSettings,
+        GetSecretOptions,
+        InfisicalClient,
+        UniversalAuthMethod,
+    )
 except ImportError:
     InfisicalClient = None  # type: ignore[assignment]
 
@@ -65,7 +64,9 @@ class ProductionSecretVault:
         if InfisicalClient and (self.token or (self.client_id and self.client_secret)):
             self._init_infisical_client()
         else:
-            logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
+            logger.info(
+                "Infisical missing or no credentials found. Bypassing Cloud Vault."
+            )
 
     def _init_infisical_client(self) -> None:
         """Initialize Infisical client with timeout protection."""
@@ -73,17 +74,28 @@ class ProductionSecretVault:
             if self.client_id and self.client_secret:
                 self.client = InfisicalClient(
                     ClientSettings(
-                        auth=AuthenticationOptions(universal_auth=UniversalAuthMethod(client_id=self.client_id, client_secret=self.client_secret))
+                        auth=AuthenticationOptions(
+                            universal_auth=UniversalAuthMethod(
+                                client_id=self.client_id,
+                                client_secret=self.client_secret,
+                            )
+                        )
                     )
                 )
-                logger.info("Production Secret Vault hooked into Infisical via Machine Identity")
+                logger.info(
+                    "Production Secret Vault hooked into Infisical via Machine Identity"
+                )
             elif self.token:
                 self.client = InfisicalClient(ClientSettings(access_token=self.token))
                 logger.info("Production Secret Vault hooked into Infisical via Token")
         except (ConnectionError, TimeoutError, ValueError) as exc:
-            logger.warning(f"Failed to bind Infisical Client: {exc}. Falling back to raw env.")
+            logger.warning(
+                f"Failed to bind Infisical Client: {exc}. Falling back to raw env."
+            )
         except Exception:  # noqa: BLE001
-            logger.opt(exception=True).warning("Unexpected error initializing Infisical client. Falling back to raw env.")
+            logger.opt(exception=True).warning(
+                "Unexpected error initializing Infisical client. Falling back to raw env."
+            )
 
     def fetch_secret(self, secret_id: str, default: str | None = None) -> str:
         """Fetch a secret from Infisical with TTL-based caching.
@@ -106,7 +118,11 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
         try:
-            env_name = self.env if self.env in ("production", "staging", "development") else "development"
+            env_name = (
+                self.env
+                if self.env in ("production", "staging", "development")
+                else "development"
+            )
             options = GetSecretOptions(
                 environment=env_name,
                 project_id=self.project_id,
@@ -123,12 +139,16 @@ class ProductionSecretVault:
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
                         sleep_time = 2**attempt
-                        logger.warning(f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}")
+                        logger.warning(
+                            f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}"
+                        )
                         time.sleep(sleep_time)
                     else:
                         raise exc
         except (ConnectionError, TimeoutError) as exc:
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment.")
+            logger.warning(
+                f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -141,7 +161,9 @@ class ProductionSecretVault:
             )
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:  # noqa: BLE001
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Using fallback.")
+            logger.opt(exception=True).warning(
+                f"Unexpected error fetching {secret_id} from Infisical. Using fallback."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -162,14 +184,20 @@ class ProductionSecretVault:
         env_fallback = os.getenv(secret_id, default)
         if env_fallback is None:
             if self.env in ("test", "testing", "ci", "local"):
-                logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
+                logger.warning(
+                    f"Mocking missing secret '{secret_id}' for {self.env} environment."
+                )
                 env_fallback = f"mock_{secret_id}"
             else:
-                raise RuntimeError(f"Secret '{secret_id}' not found in Infisical and no env fallback provided! Fail-closed triggered.")
+                raise RuntimeError(
+                    f"Secret '{secret_id}' not found in Infisical and no env fallback provided! Fail-closed triggered."
+                )
         self._cache[secret_id] = _CacheEntry(env_fallback)
         return env_fallback
 
-    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
+    async def fetch_secret_async(
+        self, secret_id: str, default: str | None = None
+    ) -> str:
         """Async wrapper — runs fetch_secret in a thread to avoid blocking the event loop.
 
         বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।

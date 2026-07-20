@@ -1,9 +1,7 @@
 # backend/middleware/tenant_rate_limiter.py
-from fastapi import HTTPException
-from fastapi import Request
-from loguru import logger
-
 from core.services import registry  # আমাদের নতুন ডায়নামিক সার্ভিস রেজিস্ট্রি চেইন
+from fastapi import HTTPException, Request
+from loguru import logger
 
 
 async def enforce_tenant_rate_limit(request: Request):
@@ -12,7 +10,9 @@ async def enforce_tenant_rate_limit(request: Request):
     redis_mgr = registry.get_service("redis_manager")
 
     if not redis_mgr:
-        logger.warning("⚠️ Redis manager unavailable. Bypassing rate limiter gateway for resilience.")
+        logger.warning(
+            "⚠️ Redis manager unavailable. Bypassing rate limiter gateway for resilience."
+        )
         return
 
     cache_key = f"rate_limit:{tenant_id}"
@@ -25,7 +25,9 @@ async def enforce_tenant_rate_limit(request: Request):
         hits = int(current_hits)
         if hits >= 100:
             logger.critical(f"🚨 Rate Limit Exceeded for Tenant: {tenant_id}!")
-            raise HTTPException(status_code=429, detail="Too Many Requests. Rate limit exceeded.")
+            raise HTTPException(
+                status_code=429, detail="Too Many Requests. Rate limit exceeded."
+            )
 
         # কাউন্টার ইনক্রিমেন্ট এবং আপডেট
         await redis_mgr.set_cache(cache_key, str(hits + 1), ex_seconds=60)

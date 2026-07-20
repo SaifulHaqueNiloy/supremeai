@@ -18,9 +18,7 @@ import secrets
 import time
 from typing import Any
 
-from loguru import logger
-from pydantic import BaseModel
-
+from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.error_remediation import error_remediator
 from core.failure_fingerprint import make_fingerprint
@@ -28,8 +26,8 @@ from core.immune_system import ImmuneSystemScanner
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.otp_router import send_otp
 from core.resilience.circuit_breaker import CircuitBreaker
-from core.cache.redis_manager import redis_manager
-
+from loguru import logger
+from pydantic import BaseModel
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -80,7 +78,9 @@ class AutonoGuardEngine:
     বাংলা: JIT OTP + Immune Scan + Self-Heal + IP Churn Detection-এর একমাত্র এন্ডপইন্ট।
     """
 
-    _circuit_breaker: CircuitBreaker = CircuitBreaker(name="autonoguard", failure_threshold=5, recovery_timeout=60.0)
+    _circuit_breaker: CircuitBreaker = CircuitBreaker(
+        name="autonoguard", failure_threshold=5, recovery_timeout=60.0
+    )
     _scanner: ImmuneSystemScanner = ImmuneSystemScanner()
 
     def __init__(self) -> None:
@@ -104,7 +104,9 @@ class AutonoGuardEngine:
         এটি Malware Immunity (DNA #5) এর অংশ।
         """
         if not redis_manager or not redis_manager.client:
-            return ChurnDetection(is_churn=False, previous_ips=[], first_seen=time.time(), churn_count=0)
+            return ChurnDetection(
+                is_churn=False, previous_ips=[], first_seen=time.time(), churn_count=0
+            )
 
         key = f"{_ip_churn_prefix}{admin_id}"
         # বাংলা: hgetall ব্যবহার করা হচ্ছে যাতে একাধিক IP track করা যায়
@@ -177,7 +179,11 @@ class AutonoGuardEngine:
         Redis-এ OTP-এর sha256 হ্যাশ হিসেবে স্টোর করা হয় যাতে verify_jit_otp deterministic থাকে।
         """
         requested_key = f"{_redis_key_prefix}{admin_id}:requested"
-        last_request = await redis_manager.get_cache(requested_key) if redis_manager and redis_manager.client else None
+        last_request = (
+            await redis_manager.get_cache(requested_key)
+            if redis_manager and redis_manager.client
+            else None
+        )
 
         if last_request:
             return False  # Cooldown active
@@ -186,9 +192,15 @@ class AutonoGuardEngine:
         code_hash = hashlib.sha256(code.encode()).hexdigest()
 
         if redis_manager and redis_manager.client:
-            await redis_manager.set_cache(requested_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS)
+            await redis_manager.set_cache(
+                requested_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS
+            )
             # Store only hash for verification
-            await redis_manager.set_cache(f"{_redis_key_prefix}{admin_id}", code_hash, ex_seconds=OTP_COOLDOWN_SECONDS * 2)
+            await redis_manager.set_cache(
+                f"{_redis_key_prefix}{admin_id}",
+                code_hash,
+                ex_seconds=OTP_COOLDOWN_SECONDS * 2,
+            )
 
         return await send_otp(admin_id, code, context)
 
@@ -202,7 +214,9 @@ class AutonoGuardEngine:
 
         churn = await self.detect_ip_churn(admin_id, ip)
         if churn.is_churn:
-            logger.warning(f"🚨 IP Churn detected for admin {admin_id} ({churn.churn_count} IPs in 1h)")
+            logger.warning(
+                f"🚨 IP Churn detected for admin {admin_id} ({churn.churn_count} IPs in 1h)"
+            )
             return False
 
         return True
@@ -252,7 +266,9 @@ class AutonoGuardEngine:
         fix = await error_remediator.lookup_fix(error_sig)
 
         if fix:
-            logger.info(f"🔧 AutonoGuard found remediation for {fingerprint[:16]}: {fix[:80]}")
+            logger.info(
+                f"🔧 AutonoGuard found remediation for {fingerprint[:16]}: {fix[:80]}"
+            )
             self._circuit_breaker.mark_success()
             return fix
 
@@ -281,7 +297,11 @@ class AutonoGuardEngine:
         # JIT OTP check
         if ANTI_HACKING_ENABLED:
             bypass_key = f"{_redis_key_prefix}{admin_id}:bypass"
-            bypass_verified = await redis_manager.get_cache(bypass_key) if redis_manager and redis_manager.client else None
+            bypass_verified = (
+                await redis_manager.get_cache(bypass_key)
+                if redis_manager and redis_manager.client
+                else None
+            )
 
             if not bypass_verified and not otp_code:
                 if await self.request_jit_otp(admin_id, {"ip": ip, "path": path}):
@@ -293,7 +313,9 @@ class AutonoGuardEngine:
 
                 # Mark session bypass
                 if redis_manager and redis_manager.client:
-                    await redis_manager.set_cache(bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2)
+                    await redis_manager.set_cache(
+                        bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2
+                    )
 
         # AST Security Scan (if code provided)
         if code_to_scan:

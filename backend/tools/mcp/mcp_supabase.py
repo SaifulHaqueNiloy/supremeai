@@ -6,17 +6,17 @@ MCP Server for Supabase/Postgres Database Integration in SupremeAI 2.0.
 টেবিল মাইগ্রেশন এবং SQL কুয়েরি রান করার ক্ষমতা দেয়।
 """
 
-from core.config import settings
+import json
 
 # বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
 import os
-import json
-from typing import Any
 from enum import StrEnum
+from typing import Any
 
 import psycopg2
-from pydantic import BaseModel, Field, ConfigDict
+from core.config import settings
 from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel, ConfigDict, Field
 
 mcp = FastMCP("supabase_mcp")
 
@@ -25,7 +25,11 @@ CHARACTER_LIMIT = 25000
 
 def _get_supabase_db_url() -> str:
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে SUPABASE_DATABASE_URL চেক করা হবে যা টেস্ট কেসগুলোর জন্য জরুরী।
-    return getattr(settings, "supabase_database_url", "") or os.environ.get("SUPABASE_DATABASE_URL", "") or os.environ.get("DATABASE_URL", "")
+    return (
+        getattr(settings, "supabase_database_url", "")
+        or os.environ.get("SUPABASE_DATABASE_URL", "")
+        or os.environ.get("DATABASE_URL", "")
+    )
 
 
 class ResponseFormat(StrEnum):
@@ -41,8 +45,12 @@ class ExecuteQueryInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     query: str = Field(..., description="এক্সিকিউট করার SQL কুয়েরি", min_length=1)
-    params: list[Any] | None = Field(default_factory=list, description="কুয়েরি প্যারামিটারস (ঐচ্ছিক)")
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN, description="আউটপুট ফরম্যাট")
+    params: list[Any] | None = Field(
+        default_factory=list, description="কুয়েরি প্যারামিটারস (ঐচ্ছিক)"
+    )
+    response_format: ResponseFormat = Field(
+        default=ResponseFormat.MARKDOWN, description="আউটপুট ফরম্যাট"
+    )
 
 
 class CreateTableInput(BaseModel):
@@ -50,7 +58,9 @@ class CreateTableInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
-    table_name: str = Field(..., description="তৈরি করার টেবিলের নাম", min_length=1, max_length=100)
+    table_name: str = Field(
+        ..., description="তৈরি করার টেবিলের নাম", min_length=1, max_length=100
+    )
     columns: str = Field(..., description="কলাম ডেফিনিশন (SQL সিনট্যাক্স)", min_length=1)
     if_not_exists: bool = Field(default=True, description="IF NOT EXISTS যোগ করবে কিনা")
 
@@ -60,7 +70,9 @@ class MigrationInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
-    migration_name: str = Field(..., description="মাইগ্রেশনের নাম", min_length=1, max_length=100)
+    migration_name: str = Field(
+        ..., description="মাইগ্রেশনের নাম", min_length=1, max_length=100
+    )
     up_sql: str = Field(..., description="UP migration SQL", min_length=1)
     down_sql: str = Field(..., description="DOWN migration SQL", min_length=1)
 
@@ -125,24 +137,34 @@ async def supabase_execute_sql(params: ExecuteQueryInput) -> str:
     """
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ADMIN_AUTHORIZED চেক করা হবে যা টেস্টে ব্যবহৃত হয়
     admin_authorized = (
-        getattr(settings, "admin_authorized", "false").lower() == "true" or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
+        getattr(settings, "admin_authorized", "false").lower() == "true"
+        or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
     )
     # বাংলা মন্তব্য: কেবলমাত্র সত্যিকারের ডেস্ট্রাকটিভ অপারেশনগুলো চেক করা হচ্ছে
     destructive_keywords = ["drop", "delete", "truncate", "alter"]
-    if not admin_authorized and any(kw in params.query.lower() for kw in destructive_keywords):
+    if not admin_authorized and any(
+        kw in params.query.lower() for kw in destructive_keywords
+    ):
         return json.dumps(
-            {"error": "Admin authorization required for destructive operations", "message": "Set ADMIN_AUTHORIZED=true in environment"},
+            {
+                "error": "Admin authorization required for destructive operations",
+                "message": "Set ADMIN_AUTHORIZED=true in environment",
+            },
             ensure_ascii=False,
         )
 
     if not _get_supabase_db_url():
-        return json.dumps({"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False
+        )
 
     conn = None
     try:
         conn = _get_connection()
         if not conn:
-            return json.dumps({"error": "Failed to connect to database"}, ensure_ascii=False)
+            return json.dumps(
+                {"error": "Failed to connect to database"}, ensure_ascii=False
+            )
 
         cur = conn.cursor()
         cur.execute(params.query, params.params if params.params else None)
@@ -164,7 +186,14 @@ async def supabase_execute_sql(params: ExecuteQueryInput) -> str:
                         lines.append(f"\n*Showing 100 of {len(rows)} rows*")
                     result = "\n".join(lines)
             else:
-                result = json.dumps({"columns": columns, "rows": [list(row) for row in rows], "row_count": len(rows)}, ensure_ascii=False)
+                result = json.dumps(
+                    {
+                        "columns": columns,
+                        "rows": [list(row) for row in rows],
+                        "row_count": len(rows),
+                    },
+                    ensure_ascii=False,
+                )
 
             cur.close()
             return result
@@ -174,7 +203,12 @@ async def supabase_execute_sql(params: ExecuteQueryInput) -> str:
         cur.close()
 
         return json.dumps(
-            {"success": True, "affected_rows": affected, "message": f"Query executed successfully. Affected {affected} rows."}, ensure_ascii=False
+            {
+                "success": True,
+                "affected_rows": affected,
+                "message": f"Query executed successfully. Affected {affected} rows.",
+            },
+            ensure_ascii=False,
         )
 
     except Exception as e:  # noqa: BLE001
@@ -220,13 +254,19 @@ async def supabase_create_table(params: CreateTableInput) -> str:
     """
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ADMIN_AUTHORIZED চেক করা হবে যা টেস্টে ব্যবহৃত হয়
     admin_authorized = (
-        getattr(settings, "admin_authorized", "false").lower() == "true" or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
+        getattr(settings, "admin_authorized", "false").lower() == "true"
+        or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
     )
     if not admin_authorized:
-        return json.dumps({"error": "Admin authorization required for table creation"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "Admin authorization required for table creation"},
+            ensure_ascii=False,
+        )
 
     if not _get_supabase_db_url():
-        return json.dumps({"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False
+        )
 
     if_not_exists = "IF NOT EXISTS" if params.if_not_exists else ""
     query = f"CREATE TABLE {if_not_exists} {params.table_name} ({params.columns})"
@@ -235,7 +275,9 @@ async def supabase_create_table(params: CreateTableInput) -> str:
     try:
         conn = _get_connection()
         if not conn:
-            return json.dumps({"error": "Failed to connect to database"}, ensure_ascii=False)
+            return json.dumps(
+                {"error": "Failed to connect to database"}, ensure_ascii=False
+            )
 
         cur = conn.cursor()
         cur.execute(query)
@@ -243,7 +285,12 @@ async def supabase_create_table(params: CreateTableInput) -> str:
         cur.close()
 
         return json.dumps(
-            {"success": True, "table_name": params.table_name, "message": f"Table '{params.table_name}' created successfully."}, ensure_ascii=False
+            {
+                "success": True,
+                "table_name": params.table_name,
+                "message": f"Table '{params.table_name}' created successfully.",
+            },
+            ensure_ascii=False,
         )
 
     except Exception as e:  # noqa: BLE001
@@ -292,23 +339,31 @@ async def supabase_run_migration(params: MigrationInput) -> str:
     """
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ADMIN_AUTHORIZED চেক করা হবে যা টেস্টে ব্যবহৃত হয়
     admin_authorized = (
-        getattr(settings, "admin_authorized", "false").lower() == "true" or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
+        getattr(settings, "admin_authorized", "false").lower() == "true"
+        or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
     )
     if not admin_authorized:
-        return json.dumps({"error": "Admin authorization required for migrations"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "Admin authorization required for migrations"}, ensure_ascii=False
+        )
 
     if not _get_supabase_db_url():
-        return json.dumps({"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False
+        )
 
     conn = None
     try:
         conn = _get_connection()
         if not conn:
-            return json.dumps({"error": "Failed to connect to database"}, ensure_ascii=False)
+            return json.dumps(
+                {"error": "Failed to connect to database"}, ensure_ascii=False
+            )
 
         cur = conn.cursor()
 
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS migrations (
                 id SERIAL PRIMARY KEY,
                 name TEXT NOT NULL UNIQUE,
@@ -316,20 +371,33 @@ async def supabase_run_migration(params: MigrationInput) -> str:
                 down_sql TEXT,
                 applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
-        """)
+        """
+        )
 
-        cur.execute("SELECT id FROM migrations WHERE name = %s", (params.migration_name,))
+        cur.execute(
+            "SELECT id FROM migrations WHERE name = %s", (params.migration_name,)
+        )
         if cur.fetchone():
             conn.close()
-            return json.dumps({"message": f"Migration '{params.migration_name}' already applied"}, ensure_ascii=False)
+            return json.dumps(
+                {"message": f"Migration '{params.migration_name}' already applied"},
+                ensure_ascii=False,
+            )
 
         cur.execute(params.up_sql)
-        cur.execute("INSERT INTO migrations (name, up_sql, down_sql) VALUES (%s, %s, %s)", (params.migration_name, params.up_sql, params.down_sql))
+        cur.execute(
+            "INSERT INTO migrations (name, up_sql, down_sql) VALUES (%s, %s, %s)",
+            (params.migration_name, params.up_sql, params.down_sql),
+        )
         conn.commit()
         cur.close()
 
         return json.dumps(
-            {"success": True, "migration": params.migration_name, "message": f"Migration '{params.migration_name}' applied successfully."},
+            {
+                "success": True,
+                "migration": params.migration_name,
+                "message": f"Migration '{params.migration_name}' applied successfully.",
+            },
             ensure_ascii=False,
         )
 
@@ -369,25 +437,37 @@ async def supabase_list_tables() -> str:
         str: টেবিল তালিকা JSON ফরম্যাটে
     """
     if not _get_supabase_db_url():
-        return json.dumps({"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False
+        )
 
     conn = None
     try:
         conn = _get_connection()
         if not conn:
-            return json.dumps({"error": "Failed to connect to database"}, ensure_ascii=False)
+            return json.dumps(
+                {"error": "Failed to connect to database"}, ensure_ascii=False
+            )
 
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             SELECT table_name, table_type
             FROM information_schema.tables
             WHERE table_schema = 'public'
             ORDER BY table_name
-        """)
+        """
+        )
         tables = cur.fetchall()
         cur.close()
 
-        return json.dumps({"tables": [{"name": t[0], "type": t[1]} for t in tables], "count": len(tables)}, ensure_ascii=False)
+        return json.dumps(
+            {
+                "tables": [{"name": t[0], "type": t[1]} for t in tables],
+                "count": len(tables),
+            },
+            ensure_ascii=False,
+        )
 
     except Exception as e:  # noqa: BLE001
         return _handle_db_error(e)

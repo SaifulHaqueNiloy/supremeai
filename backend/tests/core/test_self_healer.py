@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.health.self_healer import SelfHealerService
 
 
@@ -41,7 +42,11 @@ async def test_self_healer_rejects_dangerous_code(mock_db):
 
     with pytest.raises(ValueError, match="Dangerous keyword 'exec\\(' detected"):
         await service.propose_fix(
-            tenant_id="tenant-1", error_pattern="Any error", proposed_fix="exec('rm -rf /')", impact_score=0.1, dependency_tree=[]
+            tenant_id="tenant-1",
+            error_pattern="Any error",
+            proposed_fix="exec('rm -rf /')",
+            impact_score=0.1,
+            dependency_tree=[],
         )
 
 
@@ -50,11 +55,23 @@ async def test_self_healer_rejects_invalid_impact_score(mock_db):
     service = SelfHealerService(mock_db)
 
     with pytest.raises(ValueError, match="Impact score must be between 0.0 and 1.0"):
-        await service.propose_fix(tenant_id="tenant-1", error_pattern="Any error", proposed_fix="valid code", impact_score=1.5, dependency_tree=[])
+        await service.propose_fix(
+            tenant_id="tenant-1",
+            error_pattern="Any error",
+            proposed_fix="valid code",
+            impact_score=1.5,
+            dependency_tree=[],
+        )
 
 
 @pytest.mark.asyncio
 async def test_self_healer_test_sandbox_placeholder(mock_db):
     service = SelfHealerService(mock_db)
-    result = await service.propose_fix(tenant_id="tenant-1", error_pattern="Any error", proposed_fix="pass", impact_score=0.1, dependency_tree=[])
+    result = await service.propose_fix(
+        tenant_id="tenant-1",
+        error_pattern="Any error",
+        proposed_fix="pass",
+        impact_score=0.1,
+        dependency_tree=[],
+    )
     assert isinstance(result, str)

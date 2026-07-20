@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from loguru import logger
 from core.config import settings
+from loguru import logger
 
 
 class StartupValidator:
@@ -9,7 +9,11 @@ class StartupValidator:
     বাংলা মন্তব্য: সার্ভার স্টার্টআপের সময় প্রয়োজনীয় এনভায়রনমেন্ট ভ্যারিয়েবল এবং ডিরেক্টরি ভ্যালিডেশন করে।
     """
 
-    _last_status: dict[str, bool | str | None] = {"validated": False, "success": False, "error": None}
+    _last_status: dict[str, bool | str | None] = {
+        "validated": False,
+        "success": False,
+        "error": None,
+    }
 
     @classmethod
     async def validate(cls) -> None:

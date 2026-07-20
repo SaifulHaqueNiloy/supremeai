@@ -8,16 +8,18 @@ Date: July 18, 2026
 """
 
 from __future__ import annotations
+
+import datetime
+import json
+import logging
 import os
 import sys
-import json
 import time
-import logging
-import datetime
-from pathlib import Path
-from enum import Enum, auto
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from enum import Enum, auto
+from pathlib import Path
+
 import requests
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
@@ -39,7 +41,9 @@ except ImportError:
     from core.config import settings
 
 # --- Configuration ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger("autohealer")
 
 REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS", "10"))
@@ -52,7 +56,9 @@ STATE_FILE = Path(__file__).parent / ".autohealer_state.json"
 RENDER_API_KEY = os.getenv("RENDER_API_KEY", "")
 RENDER_API_KEY_BACKUP = os.getenv("RENDER_API_KEY_BACKUP", "")
 VERCEL_TOKEN = os.getenv("VERCEL_OIDC_TOKEN", "")
-DISCORD_WEBHOOK = getattr(settings, "discord_webhook_url", os.getenv("DISCORD_WEBHOOK_URL", ""))
+DISCORD_WEBHOOK = getattr(
+    settings, "discord_webhook_url", os.getenv("DISCORD_WEBHOOK_URL", "")
+)
 BACKUP_PROVIDER_URL = os.getenv("BACKUP_PROVIDER_URL", "")
 
 
@@ -88,7 +94,10 @@ class ServiceConfig:
 
     def __post_init__(self):
         if self.healing_actions is None:
-            self.healing_actions = [HealingAction.RESTART, HealingAction.SWITCH_PROVIDER]
+            self.healing_actions = [
+                HealingAction.RESTART,
+                HealingAction.SWITCH_PROVIDER,
+            ]
 
 
 @dataclass
@@ -106,7 +115,11 @@ class HealingRecord:
 class CircuitBreaker:
     """Circuit breaker pattern implementation."""
 
-    def __init__(self, threshold: int = CIRCUIT_BREAKER_THRESHOLD, timeout: int = CIRCUIT_BREAKER_TIMEOUT):
+    def __init__(
+        self,
+        threshold: int = CIRCUIT_BREAKER_THRESHOLD,
+        timeout: int = CIRCUIT_BREAKER_TIMEOUT,
+    ):
         self.threshold = threshold
         self.timeout = timeout
         self.failures: dict[str, int] = {}
@@ -122,7 +135,10 @@ class CircuitBreaker:
                 for svc, st in data.get("states", {}).items():
                     self.state[svc] = CircuitState[st]
                 self.failures = data.get("failures", {})
-                self.last_failure_time = {k: datetime.datetime.fromisoformat(v) for k, v in data.get("last_failure", {}).items()}
+                self.last_failure_time = {
+                    k: datetime.datetime.fromisoformat(v)
+                    for k, v in data.get("last_failure", {}).items()
+                }
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"⚠️ Failed to load circuit breaker state: {e}")
 
@@ -132,7 +148,9 @@ class CircuitBreaker:
             data = {
                 "states": {k: v.name for k, v in self.state.items()},
                 "failures": self.failures,
-                "last_failure": {k: v.isoformat() for k, v in self.last_failure_time.items()},
+                "last_failure": {
+                    k: v.isoformat() for k, v in self.last_failure_time.items()
+                },
             }
             STATE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
         except Exception as e:  # noqa: BLE001
@@ -153,14 +171,18 @@ class CircuitBreaker:
 
         if self.state.get(service_name) == CircuitState.OPEN:
             last_fail = self.last_failure_time.get(service_name)
-            if last_fail and (now - last_fail) > datetime.timedelta(seconds=self.timeout):
+            if last_fail and (now - last_fail) > datetime.timedelta(
+                seconds=self.timeout
+            ):
                 self.state[service_name] = CircuitState.HALF_OPEN
                 logger.info(f"🔓 Circuit breaker HALF_OPEN for {service_name}")
             return self.state[service_name]
 
         if self.failures[service_name] >= self.threshold:
             self.state[service_name] = CircuitState.OPEN
-            logger.warning(f"🔒 Circuit breaker OPEN for {service_name} ({self.failures[service_name]} failures)")
+            logger.warning(
+                f"🔒 Circuit breaker OPEN for {service_name} ({self.failures[service_name]} failures)"
+            )
         else:
             self.state[service_name] = CircuitState.CLOSED
 
@@ -173,7 +195,9 @@ class CircuitBreaker:
             return True
         if state == CircuitState.OPEN:
             last_fail = self.last_failure_time.get(service_name)
-            if last_fail and (datetime.datetime.now(datetime.UTC) - last_fail) > datetime.timedelta(seconds=self.timeout):
+            if last_fail and (
+                datetime.datetime.now(datetime.UTC) - last_fail
+            ) > datetime.timedelta(seconds=self.timeout):
                 self.state[service_name] = CircuitState.HALF_OPEN
                 self._save_state()
                 return True
@@ -218,7 +242,10 @@ class HealthChecker:
 class RenderHealer:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+        }
 
     def restart_service(self, service_id: str) -> tuple[bool, str]:
         if not self.api_key:
@@ -232,7 +259,9 @@ class RenderHealer:
             )
             resp.raise_for_status()
             deploy_id = resp.json().get("deploy", {}).get("id", "unknown")
-            logger.info(f"🔄 Render service {service_id} restart triggered. Deploy ID: {deploy_id}")
+            logger.info(
+                f"🔄 Render service {service_id} restart triggered. Deploy ID: {deploy_id}"
+            )
             return True, f"Restart triggered (deploy: {deploy_id})"
         except requests.RequestException as e:
             logger.error(f"❌ Render restart failed for {service_id}: {e}")
@@ -249,7 +278,9 @@ class VercelHealer:
             return False, "VERCEL_OIDC_TOKEN not configured"
         try:
             resp = requests.get(
-                f"https://api.vercel.com/v6/deployments?projectId={project_id}&limit=5&state=READY", headers=self.headers, timeout=REQUEST_TIMEOUT
+                f"https://api.vercel.com/v6/deployments?projectId={project_id}&limit=5&state=READY",
+                headers=self.headers,
+                timeout=REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
             deployments = resp.json().get("deployments", [])
@@ -261,12 +292,18 @@ class VercelHealer:
             redeploy_resp = requests.post(
                 "https://api.vercel.com/v13/deployments",
                 headers=self.headers,
-                json={"deploymentId": target_id, "projectId": project_id, "target": "production"},
+                json={
+                    "deploymentId": target_id,
+                    "projectId": project_id,
+                    "target": "production",
+                },
                 timeout=REQUEST_TIMEOUT,
             )
             redeploy_resp.raise_for_status()
             new_deploy_id = redeploy_resp.json().get("id", "unknown")
-            logger.info(f"⏪ Vercel project {project_id} rolled back to {target_id}. New deploy: {new_deploy_id}")
+            logger.info(
+                f"⏪ Vercel project {project_id} rolled back to {target_id}. New deploy: {new_deploy_id}"
+            )
             return True, f"Rolled back to {target_id} (new deploy: {new_deploy_id})"
         except requests.RequestException as e:
             logger.error(f"❌ Vercel rollback failed for {project_id}: {e}")
@@ -283,37 +320,54 @@ class BackupProviderSwitch:
         state_path = Path(__file__).parent / ".provider_state.json"
         if state_path.exists():
             try:
-                self.active_provider = json.loads(state_path.read_text(encoding="utf-8"))
+                self.active_provider = json.loads(
+                    state_path.read_text(encoding="utf-8")
+                )
             except Exception as e:  # noqa: BLE001
                 # বাংলা: state ফাইল corrupt/unreadable হলে চুপচাপ খালি অবস্থায় শুরু করা যাবে না —
                 # তাহলে কোন সার্ভিস backup provider-এ ছিল সেই তথ্য হারিয়ে যায় এবং AutoHealer
                 # ভুল করে down থাকা primary-তে আবার ট্রাফিক পাঠাতে পারে। তাই এটাকে জোরালোভাবে
                 # log + alert করা হচ্ছে, এবং করাপ্ট ফাইলটা backup রেখে override হওয়া থেকে বাঁচানো হচ্ছে।
-                logger.error(f"❌ Failed to load provider-switch state from {state_path} " f"(failover routing knowledge may be lost): {e}")
+                logger.error(
+                    f"❌ Failed to load provider-switch state from {state_path} "
+                    f"(failover routing knowledge may be lost): {e}"
+                )
                 try:
                     corrupt_backup = state_path.with_suffix(".json.corrupt")
                     state_path.replace(corrupt_backup)
-                    logger.warning(f"⚠️ Corrupted state file moved to {corrupt_backup} for inspection.")
+                    logger.warning(
+                        f"⚠️ Corrupted state file moved to {corrupt_backup} for inspection."
+                    )
                 except Exception as move_err:  # noqa: BLE001
-                    logger.error(f"❌ Could not preserve corrupted state file: {move_err}")
+                    logger.error(
+                        f"❌ Could not preserve corrupted state file: {move_err}"
+                    )
                 self.active_provider = {}
 
     def _save_state(self):
         state_path = Path(__file__).parent / ".provider_state.json"
         try:
-            state_path.write_text(json.dumps(self.active_provider, indent=2), encoding="utf-8")
+            state_path.write_text(
+                json.dumps(self.active_provider, indent=2), encoding="utf-8"
+            )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"⚠️ Failed to save provider state: {e}")
 
-    def switch_to_backup(self, service_name: str, original_url: str) -> tuple[bool, str]:
+    def switch_to_backup(
+        self, service_name: str, original_url: str
+    ) -> tuple[bool, str]:
         if not self.backup_url:
             return False, "BACKUP_PROVIDER_URL not configured"
         self.active_provider[service_name] = self.backup_url
         self._save_state()
-        logger.warning(f"🔄 Traffic switched for {service_name}: {original_url} → {self.backup_url}")
+        logger.warning(
+            f"🔄 Traffic switched for {service_name}: {original_url} → {self.backup_url}"
+        )
         return True, f"Switched to backup provider: {self.backup_url}"
 
-    def switch_to_primary(self, service_name: str, primary_url: str) -> tuple[bool, str]:
+    def switch_to_primary(
+        self, service_name: str, primary_url: str
+    ) -> tuple[bool, str]:
         if service_name in self.active_provider:
             del self.active_provider[service_name]
             self._save_state()
@@ -337,13 +391,26 @@ class AlertManager:
             "fields": [
                 {"name": "🔧 Service", "value": record.service_name, "inline": True},
                 {"name": "⚡ Action", "value": record.action, "inline": True},
-                {"name": "⏱️ Duration", "value": f"{record.duration_seconds:.1f}s", "inline": True},
-                {"name": "💬 Result", "value": record.error_message or "Success", "inline": False},
+                {
+                    "name": "⏱️ Duration",
+                    "value": f"{record.duration_seconds:.1f}s",
+                    "inline": True,
+                },
+                {
+                    "name": "💬 Result",
+                    "value": record.error_message or "Success",
+                    "inline": False,
+                },
             ],
             "footer": {"text": f"SupremeAI AutoHealer | {record.timestamp}"},
         }
         try:
-            resp = requests.post(self.webhook_url, json={"embeds": [embed]}, timeout=REQUEST_TIMEOUT, headers={"Content-Type": "application/json"})
+            resp = requests.post(
+                self.webhook_url,
+                json={"embeds": [embed]},
+                timeout=REQUEST_TIMEOUT,
+                headers={"Content-Type": "application/json"},
+            )
             resp.raise_for_status()
             return True
         except Exception as e:  # noqa: BLE001
@@ -388,7 +455,9 @@ class AutoHealer:
                 duration_seconds=time.time() - start_time,
             )
 
-        logger.warning(f"💔 {service.name} is DOWN (HTTP {status_code}, error: {error})")
+        logger.warning(
+            f"💔 {service.name} is DOWN (HTTP {status_code}, error: {error})"
+        )
         self.circuit_breaker.record_failure(service.name)
 
         success = False
@@ -396,20 +465,30 @@ class AutoHealer:
         error_msg = error
 
         for action in service.healing_actions:
-            if action == HealingAction.RESTART and service.provider == "render" and service.service_id:
+            if (
+                action == HealingAction.RESTART
+                and service.provider == "render"
+                and service.service_id
+            ):
                 success, msg = self.render_healer.restart_service(service.service_id)
                 action_taken = HealingAction.RESTART
                 error_msg = msg
                 if success:
                     break
-            elif action == HealingAction.ROLLBACK and service.provider == "vercel" and service.service_id:
+            elif (
+                action == HealingAction.ROLLBACK
+                and service.provider == "vercel"
+                and service.service_id
+            ):
                 success, msg = self.vercel_healer.rollback(service.service_id)
                 action_taken = HealingAction.ROLLBACK
                 error_msg = msg
                 if success:
                     break
             elif action == HealingAction.SWITCH_PROVIDER and service.backup_url:
-                success, msg = self.backup_switch.switch_to_backup(service.name, service.url)
+                success, msg = self.backup_switch.switch_to_backup(
+                    service.name, service.url
+                )
                 action_taken = HealingAction.SWITCH_PROVIDER
                 error_msg = msg
                 if success:
@@ -443,7 +522,9 @@ class AutoHealer:
         records: list[HealingRecord] = []
 
         with ThreadPoolExecutor(max_workers=min(len(services), 5)) as pool:
-            futures = {pool.submit(self.heal_service, svc): svc.name for svc in services}
+            futures = {
+                pool.submit(self.heal_service, svc): svc.name for svc in services
+            }
             for future in as_completed(futures):
                 svc_name = futures[future]
                 try:

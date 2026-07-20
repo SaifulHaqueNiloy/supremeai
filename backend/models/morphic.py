@@ -1,17 +1,17 @@
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import Float
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy import Text
+from models.base import Base
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
-
-from models.base import Base
-from utils.uuid_gen import UUIDv7
-from utils.uuid_gen import generate_uuid7
+from utils.uuid_gen import UUIDv7, generate_uuid7
 
 
 class AgentReflection(Base):

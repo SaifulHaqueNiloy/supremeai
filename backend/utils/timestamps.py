@@ -7,8 +7,7 @@
 শুধু এখানে একবার করলেই সর্বত্র প্রযোজ্য হবে।
 """
 
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 def utc_now_iso() -> str:

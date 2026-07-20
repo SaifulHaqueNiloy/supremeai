@@ -5,9 +5,7 @@ Focus: chunking/embedding logic and query routing.
 
 from __future__ import annotations
 
-
 from services.memory_service import CascadeMemoryService, hash_vectorize
-
 
 # ── hash_vectorize ─────────────────────────────────────────────────────────────
 

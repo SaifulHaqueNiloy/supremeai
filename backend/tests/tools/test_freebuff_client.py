@@ -2,6 +2,7 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from backend.tools.freebuff_client import FreebuffClient
 
 
@@ -22,7 +23,12 @@ async def test_delegate_task_success(mock_subprocess):
 
     # যাচাই করা হচ্ছে যে সাবপ্রসেস সঠিক আর্গুমেন্ট দিয়ে কল হয়েছে
     mock_subprocess.assert_awaited_once_with(
-        "/usr/local/bin/freebuff", "generate", "--prompt", "hello", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        "/usr/local/bin/freebuff",
+        "generate",
+        "--prompt",
+        "hello",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
 
     assert result["exit_code"] == 0

@@ -13,7 +13,6 @@ import tempfile
 from unittest.mock import patch
 
 import pytest
-
 from admin.god import AdminGodLayer
 
 
@@ -179,8 +178,12 @@ class TestAdminGodLayer:
         admin_god_layer1 = AdminGodLayer(db_path=path)
         admin_god_layer2 = AdminGodLayer(db_path=path)
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future1 = executor.submit(admin_god_layer1.set_rule, "test_key", "test_value")
-            future2 = executor.submit(admin_god_layer2.set_rule, "test_key", "test_value")
+            future1 = executor.submit(
+                admin_god_layer1.set_rule, "test_key", "test_value"
+            )
+            future2 = executor.submit(
+                admin_god_layer2.set_rule, "test_key", "test_value"
+            )
             future1.result()
             future2.result()
         os.remove(path)
@@ -191,14 +194,20 @@ class TestAdminGodLayer:
         # Test initializing AdminGodLayer with Firestore concurrently using asyncio
         admin_god_layer1 = AdminGodLayer()
         admin_god_layer2 = AdminGodLayer()
-        await asyncio.gather(asyncio.to_thread(admin_god_layer1._init_db), asyncio.to_thread(admin_god_layer2._init_db))
+        await asyncio.gather(
+            asyncio.to_thread(admin_god_layer1._init_db),
+            asyncio.to_thread(admin_god_layer2._init_db),
+        )
 
     @pytest.mark.asyncio
     async def test_get_rule_concurrent_async(self):
         # Test getting a rule concurrently using asyncio
         admin_god_layer1 = AdminGodLayer()
         admin_god_layer2 = AdminGodLayer()
-        await asyncio.gather(asyncio.to_thread(admin_god_layer1.get_rule, "test_key"), asyncio.to_thread(admin_god_layer2.get_rule, "test_key"))
+        await asyncio.gather(
+            asyncio.to_thread(admin_god_layer1.get_rule, "test_key"),
+            asyncio.to_thread(admin_god_layer2.get_rule, "test_key"),
+        )
 
     @pytest.mark.asyncio
     async def test_set_rule_concurrent_async(self):

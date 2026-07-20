@@ -9,8 +9,8 @@ This module tests:
 - SQL injection prevention
 """
 
-import tempfile
 import os
+import tempfile
 
 from core.error_pattern_db import ErrorPatternDB
 
@@ -69,7 +69,9 @@ class TestErrorPatternDB:
         db = ErrorPatternDB()
 
         # First log an error pattern
-        db.log_error("hallucinated fact about quantum physics", "hallucination", "verify facts")
+        db.log_error(
+            "hallucinated fact about quantum physics", "hallucination", "verify facts"
+        )
 
         result = db.check_pattern("quantum physics")
 

@@ -1,7 +1,6 @@
 import contextlib
 
 import pytest
-
 from core.resilience.circuit_breaker import CircuitBreaker
 
 
@@ -128,7 +127,10 @@ def test_openai_compatible_helper_uses_first_key():
         res = await router._http_client.post(base_url, headers=headers)
         res.raise_for_status()
         data = res.json()
-        return {"text": data["choices"][0]["message"]["content"], "provider": provider_name}
+        return {
+            "text": data["choices"][0]["message"]["content"],
+            "provider": provider_name,
+        }
 
     router._call_openai_compatible = _call_openai_compatible
 

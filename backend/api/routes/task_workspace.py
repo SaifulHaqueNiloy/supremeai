@@ -1,13 +1,8 @@
-from fastapi import APIRouter
-from fastapi import BackgroundTasks
-from fastapi import Depends
-from fastapi import HTTPException
-from loguru import logger
-from pydantic import BaseModel
-
 from api.dependencies import get_current_user_token
 from core.llm.llm_gateway import llm_gateway
-
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from loguru import logger
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/workspace/task", tags=["Supreme Workspace Tasks"])
 
@@ -30,7 +25,11 @@ class TaskPayload(BaseModel):
 # 🚀 ROUTE: /task/execute
 # ==========================================
 @router.post("/execute")
-async def execute_task(payload: TaskPayload, background_tasks: BackgroundTasks, token_payload: dict = Depends(get_current_user_token)):
+async def execute_task(
+    payload: TaskPayload,
+    background_tasks: BackgroundTasks,
+    token_payload: dict = Depends(get_current_user_token),
+):
     """
     Handles user prompts from the Vanilla JS Customer Dashboard.
     Integrates Redis rate limiting, RAM conversation history, and Supabase persistent storage.
@@ -43,14 +42,28 @@ async def execute_task(payload: TaskPayload, background_tasks: BackgroundTasks, 
         # বাংলা মন্তব্য: মেসেজ হিস্ট্রি এবং নতুন টাস্ক প্রম্পটকে গেটওয়ের উপযোগী মেসেজ লিস্ট স্কিমায় কনভার্ট করা হচ্ছে
         messages_payload = []
         for msg in payload.messages[-5:]:
-            messages_payload.append({"role": "user" if msg.role.lower() == "user" else "assistant", "content": msg.content})
+            messages_payload.append(
+                {
+                    "role": "user" if msg.role.lower() == "user" else "assistant",
+                    "content": msg.content,
+                }
+            )
 
-        messages_payload.append({"role": "user", "content": f"Current Task ({payload.task_type}): {payload.task}"})
+        messages_payload.append(
+            {
+                "role": "user",
+                "content": f"Current Task ({payload.task_type}): {payload.task}",
+            }
+        )
 
         # ৩. Generate AI Response
         # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
-        response = await llm_gateway.acompletion(prompt=messages_payload, task_type=payload.task_type, stream=False)
-        result_text = response.get("text", "") if isinstance(response, dict) else str(response)
+        response = await llm_gateway.acompletion(
+            prompt=messages_payload, task_type=payload.task_type, stream=False
+        )
+        result_text = (
+            response.get("text", "") if isinstance(response, dict) else str(response)
+        )
 
         # ৫. Save to Supabase (Database - Long Term) - Background Task
         # রেসপন্স যেন ফাস্ট হয়, তাই ডাটাবেসে সেভ করার কাজটি ব্যাকগ্রাউন্ডে দেওয়া হলো
@@ -63,7 +76,9 @@ async def execute_task(payload: TaskPayload, background_tasks: BackgroundTasks, 
 
     except Exception as e:  # noqa: BLE001
         logger.info(f"❌ Neural Pipeline Error: {str(e)}")  # noqa: T201
-        raise HTTPException(status_code=500, detail="Neural connection pipeline error.") from e
+        raise HTTPException(
+            status_code=500, detail="Neural connection pipeline error."
+        ) from e
 
 
 # ==========================================

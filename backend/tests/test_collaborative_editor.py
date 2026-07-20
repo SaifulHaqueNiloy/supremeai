@@ -1,6 +1,8 @@
 import json
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from tools.collaborative_editor import CollaborativeEditor
 
 

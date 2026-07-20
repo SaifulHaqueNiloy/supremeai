@@ -2,6 +2,7 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from backend.tools.code.local_code_executor import LocalCodeExecutor
 
 
@@ -13,7 +14,13 @@ async def test_execute_local_code_with_docker_success(MockDockerSandbox):
     """
     # ডকার স্যান্ডবক্সের run_secure মেথডকে মক করা হচ্ছে
     mock_sandbox_instance = MockDockerSandbox.return_value
-    mock_sandbox_instance.run_secure = AsyncMock(return_value={"success": True, "output": "Docker execution success", "error": ""})
+    mock_sandbox_instance.run_secure = AsyncMock(
+        return_value={
+            "success": True,
+            "output": "Docker execution success",
+            "error": "",
+        }
+    )
 
     executor = LocalCodeExecutor(use_docker=True)
     result = await executor.execute_local_code("print('hello from docker')")
@@ -27,12 +34,16 @@ async def test_execute_local_code_with_docker_success(MockDockerSandbox):
 @pytest.mark.asyncio
 @patch("backend.tools.code.local_code_executor.DockerSandbox")
 @patch("asyncio.create_subprocess_exec")
-async def test_execute_local_code_docker_fails_fallback_to_subprocess(mock_subprocess, MockDockerSandbox):
+async def test_execute_local_code_docker_fails_fallback_to_subprocess(
+    mock_subprocess, MockDockerSandbox
+):
     """
     বাংলা মন্তব্য: ডকার এক্সিকিউশন ব্যর্থ হলে সিস্টেমটি হোস্ট সাবপ্রসেসে ফলব্যাক করে কিনা তা পরীক্ষা করা হচ্ছে।
     """
     # ডকারকে ব্যর্থ হিসেবে সিমুলেট করা হচ্ছে
-    MockDockerSandbox.return_value.run_secure.side_effect = Exception("Docker not available")
+    MockDockerSandbox.return_value.run_secure.side_effect = Exception(
+        "Docker not available"
+    )
 
     # সাবপ্রসেসকে সফল হিসেবে সিমুলেট করা হচ্ছে
     mock_proc = AsyncMock()
@@ -98,7 +109,9 @@ async def test_execute_host_subprocess_timeout(mock_subprocess):
     mock_subprocess.return_value = mock_proc
 
     executor = LocalCodeExecutor(use_docker=False)
-    result = await executor.execute_local_code("import time; time.sleep(5)", timeout_seconds=2)
+    result = await executor.execute_local_code(
+        "import time; time.sleep(5)", timeout_seconds=2
+    )
 
     assert result["success"] is False
     assert result["error"] == "Execution TimeoutExpired"

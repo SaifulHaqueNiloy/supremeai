@@ -1,15 +1,17 @@
 import asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
-from backend.tools.devops.github_agent import create_autonomous_pr
-
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from backend.tools.devops.github_agent import create_autonomous_pr
 
 
 @pytest.mark.asyncio
 async def test_dry_run_pr(async_session):
     # Testing create_autonomous_pr in dry-run mode
-    with patch("backend.tools.devops.github_agent.httpx.AsyncClient") as mock_client_cls:
+    with patch(
+        "backend.tools.devops.github_agent.httpx.AsyncClient"
+    ) as mock_client_cls:
         mock_client = AsyncMock()
         mock_client_cls.return_value.__aenter__.return_value = mock_client
 
@@ -30,7 +32,10 @@ async def test_dry_run_pr(async_session):
 
         mock_pr_response = MagicMock()
         mock_pr_response.status_code = 201
-        mock_pr_response.json.return_value = {"html_url": "https://github.com/mock/pr/1", "number": 1}
+        mock_pr_response.json.return_value = {
+            "html_url": "https://github.com/mock/pr/1",
+            "number": 1,
+        }
 
         mock_client.get.side_effect = [mock_repo_info, mock_ref_info]
         mock_client.post.side_effect = [mock_branch_res, mock_pr_response]
@@ -38,7 +43,10 @@ async def test_dry_run_pr(async_session):
 
         mock_client.put.return_value = mock_commit_res
 
-        with patch("backend.tools.devops.github_agent.get_user_github_token", return_value="mock_token"):
+        with patch(
+            "backend.tools.devops.github_agent.get_user_github_token",
+            return_value="mock_token",
+        ):
             pr_url = await create_autonomous_pr(
                 user_id="test_user",
                 repo_name="test/repo",

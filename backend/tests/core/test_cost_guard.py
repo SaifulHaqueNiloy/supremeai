@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from fastapi import HTTPException
+
+import pytest
 from core.cost_guard import CostGuard
+from fastapi import HTTPException
 
 
 @pytest.fixture
@@ -63,5 +64,7 @@ async def test_cost_guard_raises_runtime_error_on_db_failure(mock_db):
     mock_db.collection.return_value.document.return_value = doc_ref
 
     guard = CostGuard(mock_db)
-    with pytest.raises(RuntimeError, match="CostGuard failed to verify budget: Firestore Offline"):
+    with pytest.raises(
+        RuntimeError, match="CostGuard failed to verify budget: Firestore Offline"
+    ):
         await guard.check_budget("tenant-1", 1.0)

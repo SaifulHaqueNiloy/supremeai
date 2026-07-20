@@ -4,7 +4,6 @@ Tests for core/intent.py
 
 from __future__ import annotations
 
-
 from core.intent import IntentClassifier
 
 
