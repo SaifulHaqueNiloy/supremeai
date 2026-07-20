@@ -109,11 +109,24 @@ class Orchestrator:
                 # Simulate executing the skill and updating weights on success
                 # Trigger simulated failure specifically on B to verify fallback
                 has_trigger = False
-                if isinstance(current_data, dict) and (
-                    current_data.get("trigger_failure")
-                    or (isinstance(current_data.get("data"), dict) and current_data["data"].get("trigger_failure"))
-                ):
-                    has_trigger = True
+                if isinstance(current_data, dict):
+                    # Accept both shapes:
+                    # 1) {"trigger_failure": True}
+                    # 2) {"data": {"trigger_failure": True}}
+                    if current_data.get("trigger_failure") is True:
+                        has_trigger = True
+                    elif isinstance(current_data.get("data"), dict) and current_data["data"].get("trigger_failure") is True:
+                        has_trigger = True
+
+                    # Also handle the wrapper added after each step:
+                    # {"processed_by": <skill>, "data": <previous_current_data>}
+                    if not has_trigger and isinstance(current_data.get("data"), dict):
+                        inner = current_data["data"]
+                        if inner.get("trigger_failure") is True:
+                            has_trigger = True
+                        elif isinstance(inner.get("data"), dict) and inner["data"].get("trigger_failure") is True:
+                            has_trigger = True
+
                 if skill == "Skill_B" and has_trigger:
                     raise RuntimeError("Simulated execution failure inside Skill_B")
 

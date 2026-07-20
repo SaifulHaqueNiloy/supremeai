@@ -109,7 +109,8 @@ class AnomalyDetector:
             return False, 0.0
 
         mean = sum(values) / len(values)
-        variance = sum((v - mean) ** 2 for v in values) / len(values)
+        # Sample variance (n-1) makes the detector more sensitive for small windows
+        variance = sum((v - mean) ** 2 for v in values) / max(1, (len(values) - 1))
         std_dev = variance**0.5
 
         if std_dev == 0:
@@ -118,7 +119,7 @@ class AnomalyDetector:
         current = values[-1]
         z_score = abs(current - mean) / std_dev
 
-        return z_score > threshold, z_score
+        return z_score >= threshold, z_score
 
 
 class PerformanceGuardian:
