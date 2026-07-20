@@ -6,6 +6,18 @@ vi.mock('./services/chatService', () => ({
   getAethelResponse: vi.fn().mockImplementation(() => new Promise(() => {})),
 }));
 
+vi.mock('./services/apiClient', () => ({
+  apiClient: {
+    get: vi.fn().mockImplementation((path: string) => {
+      if (path === '/api/browser/sessions') return new Promise(() => {}); // never resolves
+      return Promise.resolve({ items: [], keys: [], total: 0 });
+    }),
+    post: vi.fn().mockResolvedValue({}),
+    put: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue({}),
+  },
+}));
+
 import { App } from './App';
 import { getAethelResponse } from './services/chatService';
 
