@@ -248,12 +248,8 @@ class CheckpointManager:
         if self.mode == "pg":
             try:
                 CheckpointManager._batcher.flush()
-                rows = pooled_pg.query(
-                    "SELECT task_id, step_index, created_at, resumed FROM task_checkpoints ORDER BY created_at DESC"
-                )
-                return [
-                    {"task_id": r[0], "step_index": r[1], "created_at": str(r[2]), "resumed": bool(r[3])} for r in rows
-                ]
+                rows = pooled_pg.query("SELECT task_id, step_index, created_at, resumed FROM task_checkpoints ORDER BY created_at DESC")
+                return [{"task_id": r[0], "step_index": r[1], "created_at": str(r[2]), "resumed": bool(r[3])} for r in rows]
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"Failed to list Postgres checkpoints: {exc}")
                 return []
