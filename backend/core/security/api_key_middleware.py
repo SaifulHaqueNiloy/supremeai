@@ -8,7 +8,6 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from fastapi import HTTPException
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from loguru import logger

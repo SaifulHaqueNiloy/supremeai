@@ -36,12 +36,13 @@ function layoutY(index: number, total: number): number {
 }
 
 export function LiveSimulator({ state, nodeStatus, enabledIntegrations }: LiveSimulatorProps) {
-  const errorLogs = Object.entries(nodeStatus)
+  const errorLogs = Object.entries(nodeStatus || {})
     .filter(([_, info]) => info.status === 'error')
     .map(([platform, info]) => ({ platform, message: info.message }));
 
   // বাংলা মন্তব্য: কোনো ইন্টিগ্রেশন enabled না থাকলে dummy নোড বসানো হয় না — খালি স্টেট সরাসরি জানানো হয়
-  if (enabledIntegrations.length === 0) {
+  const integrations = enabledIntegrations || [];
+  if (integrations.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-xs text-slate-500 px-6 text-center">
         No integrations enabled — turn one on in Sidebar → Integrations to see the transformation map.
@@ -58,9 +59,9 @@ export function LiveSimulator({ state, nodeStatus, enabledIntegrations }: LiveSi
         role="img"
         aria-label="Live orchestrator transformation map"
       >
-        {enabledIntegrations.map((integration, i) => {
+        {integrations.map((integration, i) => {
           const status = nodeStatus[integration.id]?.status ?? 'idle';
-          const y = layoutY(i, enabledIntegrations.length);
+          const y = layoutY(i, integrations.length);
           const colors = NODE_COLORS[status];
           const path = `M ${LAYOUT.chatX + 20} ${LAYOUT.chatY} C ${LAYOUT.chatX + 120} ${LAYOUT.chatY}, ${LAYOUT.nodeX - 100} ${y}, ${LAYOUT.nodeX - 20} ${y}`;
 
