@@ -108,12 +108,13 @@ class MaintenancePipeline:
         logger.info("🛡️ Immune System: Running performance regression detection...")
         try:
             from api.routes.metrics import metrics_engine  # noqa: PLC0415
+
             history = metrics_engine.latency_history
             if not history:
                 logger.info("🛡️ Immune System: Latency logs empty. Skipping regression check.")
                 return
 
-            # বাংলা মন্তব্য: P95 ল্যাটেন্সি গণনা করা। 
+            # বাংলা মন্তব্য: P95 ল্যাটেন্সি গণনা করা।
             # হিস্ট্রি সর্ট করে ৯৫তম পার্সেন্টাইল ভ্যালু বের করা হচ্ছে।
             sorted_history = sorted(history)
             idx = int(len(sorted_history) * 0.95)
@@ -124,7 +125,9 @@ class MaintenancePipeline:
 
             logger.info(f"🛡️ Immune System: Current real P95 Latency = {p95_latency:.2f}ms")
             if p95_latency > LATENCY_THRESHOLD_MS:
-                logger.critical(f"🚨 Performance Regression Detected! p95 latency ({p95_latency:.2f}ms) exceeds threshold ({LATENCY_THRESHOLD_MS}ms).")
+                logger.critical(
+                    f"🚨 Performance Regression Detected! p95 latency ({p95_latency:.2f}ms) exceeds threshold ({LATENCY_THRESHOLD_MS}ms)."
+                )
                 # In a real scenario, this would trigger a GitHub Actions workflow to rollback the deployment.
 
         except Exception as e:  # noqa: BLE001
@@ -184,14 +187,12 @@ class MaintenancePipeline:
             try:
                 from core.evolution.self_evolution_agent import SelfEvolutionAgent  # noqa: PLC0415
                 import asyncio as _asyncio  # noqa: PLC0415
+
                 # শুধু tick() চালাই, পুরো loop নয় — non-blocking
                 _evo = SelfEvolutionAgent.__new__(SelfEvolutionAgent)
                 if hasattr(_evo, "_tick"):
                     _asyncio.create_task(_evo._tick())
-                    logger.warning(
-                        f"🛡️→🧬 Health critical (score={self.health_score}), "
-                        "triggered emergency evolution tick."
-                    )
+                    logger.warning(f"🛡️→🧬 Health critical (score={self.health_score}), " "triggered emergency evolution tick.")
             except Exception as evo_exc:  # noqa: BLE001
                 logger.debug(f"Evolution trigger skipped: {evo_exc!r}")
 
