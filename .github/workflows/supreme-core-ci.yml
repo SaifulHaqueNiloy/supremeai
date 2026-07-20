@@ -686,7 +686,7 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
               -H "Content-Type: application/json" \
               -d '{"clearCache":"do_not_clear"}')
-            if [ "$STATUS" = "201" ]; then
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
               echo "✅ Primary Render deploy triggered via API (status: $STATUS)!"
               PRIMARY_SUCCESS=true
             else
@@ -711,7 +711,7 @@ jobs:
               -H "Authorization: Bearer $BACKUP_API_KEY" \
               -H "Content-Type: application/json" \
               -d '{"clearCache":"do_not_clear"}')
-            if [ "$STATUS" = "201" ]; then
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
               echo "✅ Backup Render deploy triggered via API (status: $STATUS)!"
               BACKUP_SUCCESS=true
             else
