@@ -61,14 +61,73 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     """Trigger 1-click Quick Actions from Dashboard"""
     # Verify if admin actions are currently allowed by god.py
     god_layer.enforce("admin_action")
-    logger.critical(f"🔒 Admin quick-action '{action_type}' triggered by {admin_user.get('sub')}")
+    logger.critical(f"🔒 Admin quick-action '{action_type}' requested by {admin_user.get('sub')}")
 
-    if action_type == "rollback":
-        return {"status": "Rollback initiated"}
+    # বাংলা মন্তব্য: প্রতিটি কুইক অ্যাকশনের জন্য রিয়েল ইমপ্লিমেন্টেশন করা হয়েছে
+    if action_type == "cache":
+        redis_client = redis_manager.client
+        if redis_client:
+            # সেশন ও ওটিপি কী সুরক্ষিত রাখতে শুধুমাত্র সাধারণ ক্যাশ প্যাটার্নগুলো স্ক্যান করে ডিলেট করা হচ্ছে
+            patterns = ["bhasha_bot:*", "user_profile:*", "user_session:*", "semantic_cache:*", "cache:*", "health:*"]
+            total_deleted = 0
+            for pattern in patterns:
+                keys = await redis_client.keys(pattern)
+                if keys:
+                    await redis_client.delete(*keys)
+                    total_deleted += len(keys)
+            logger.info(f"Successfully cleared {total_deleted} cache keys from Redis.")
+            return {"status": "success", "message": f"Selective cache cleared. Deleted {total_deleted} keys."}
+        else:
+            raise HTTPException(status_code=503, detail="Redis client unavailable")
+
     elif action_type == "backup":
-        return {"status": "Backup triggered"}
-    elif action_type == "cache":
-        return {"status": "Redis cache cleared"}
+        # বাংলা মন্তব্য: ডাটাবেস টেবিল স্ক্যান করে JSON ব্যাকআপ ফাইল তৈরি করার ব্যাকগ্রাউন্ড টাস্ক
+        try:
+            from database.session import get_db_session
+            from sqlalchemy import text
+            import os
+
+            backup_data = {}
+            async for session in get_db_session():
+                result = await session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'"))
+                tables = [row[0] for row in result.fetchall()]
+                for table in tables:
+                    rows_res = await session.execute(text(f"SELECT * FROM {table}"))
+                    columns = rows_res.keys()
+                    rows = [dict(zip(columns, row)) for row in rows_res.fetchall()]
+                    for row in rows:
+                        for k, v in row.items():
+                            if hasattr(v, "isoformat"):
+                                row[k] = v.isoformat()
+                    backup_data[table] = rows
+
+            os.makedirs("backup", exist_ok=True)
+            backup_path = f"backup/db_backup_{int(datetime.now(UTC).timestamp())}.json"
+            with open(backup_path, "w", encoding="utf-8") as f:
+                json.dump(backup_data, f, indent=2)
+
+            logger.info(f"Database backup saved successfully to {backup_path}")
+            return {"status": "success", "message": f"Database backup saved successfully to {backup_path}"}
+        except Exception as e:
+            logger.error(f"Database backup failed: {e}")
+            raise HTTPException(status_code=500, detail=f"Database backup failed: {e}")
+
+    elif action_type == "rollback":
+        # বাংলা মন্তব্য: Alembic প্রোগ্রামাটিক রোলব্যাক মেকানিজম
+        try:
+            import alembic.config
+            import alembic.command
+
+            alembic_cfg = alembic.config.Config("backend/alembic.ini")
+            alembic_cfg.set_main_option("script_location", "backend/alembic")
+            alembic.command.downgrade(alembic_cfg, "-1")
+
+            logger.info("Alembic rollback to previous revision completed successfully.")
+            return {"status": "success", "message": "Database rollback to previous revision executed successfully."}
+        except Exception as e:
+            logger.error(f"Rollback failed: {e}")
+            raise HTTPException(status_code=500, detail=f"Rollback operation failed: {e}")
+
     else:
         raise HTTPException(status_code=404, detail="Action not found")
 

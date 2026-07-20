@@ -77,3 +77,77 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
     assert len(response.json()["fixes"]) == 1
 
     app.dependency_overrides = {}
+
+
+@patch("api.routes.admin.god_layer")
+@patch("api.routes.admin.redis_manager")
+@patch("database.session.get_db_session")
+@patch("alembic.command.downgrade")
+@patch("api.routes.admin.get_current_user_token")
+@patch("core.security.auth_middleware._decode_jwt")
+def test_quick_actions_success(mock_decode_jwt, mock_token, mock_downgrade, mock_db_session, mock_redis_manager, mock_god_layer):
+    """বাংলা: নতুন রিয়েল কুইক অ্যাকশন (cache/backup/rollback) সফলভাবে সম্পন্ন হচ্ছে কিনা যাচাই করে।"""
+    mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+
+    from api.routes.admin import get_current_admin
+
+    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+
+    # Redis mock
+    mock_redis_client = AsyncMock()
+    mock_redis_client.keys = AsyncMock(return_value=["cache:test_key"])
+    mock_redis_client.delete = AsyncMock(return_value=1)
+    mock_redis_manager.client = mock_redis_client
+
+    # DB session mock for backup
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock()
+
+    mock_result_tables = MagicMock()
+    mock_result_tables.fetchall.return_value = [("test_table",)]
+
+    mock_result_rows = MagicMock()
+    mock_result_rows.keys.return_value = ["id"]
+    mock_result_rows.fetchall.return_value = [("row_id",)]
+
+    mock_session.execute.side_effect = [mock_result_tables, mock_result_rows]
+
+    async def mock_generator():
+        yield mock_session
+
+    mock_db_session.return_value = mock_generator()
+
+    # Test cache action
+    response = client.post("/api/admin/actions/cache", headers={"Authorization": "Bearer dummy"})
+    assert response.status_code == 200
+    assert "Deleted 6 keys" in response.json()["message"]
+
+    # Test backup action
+    response = client.post("/api/admin/actions/backup", headers={"Authorization": "Bearer dummy"})
+    assert response.status_code == 200
+    assert "backup" in response.json()["message"]
+
+    # Test rollback action
+    response = client.post("/api/admin/actions/rollback", headers={"Authorization": "Bearer dummy"})
+    assert response.status_code == 200
+    mock_downgrade.assert_called_once()
+
+    app.dependency_overrides = {}
+
+
+@patch("api.routes.admin.god_layer")
+@patch("api.routes.admin.get_current_user_token")
+@patch("core.security.auth_middleware._decode_jwt")
+def test_quick_action_unknown_returns_404(mock_decode_jwt, mock_token, mock_god_layer):
+    mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+
+    from api.routes.admin import get_current_admin
+
+    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+
+    response = client.post("/api/admin/actions/not_a_real_action", headers={"Authorization": "Bearer dummy"})
+    assert response.status_code == 404
+
+    app.dependency_overrides = {}
