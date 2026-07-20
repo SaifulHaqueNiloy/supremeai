@@ -18,6 +18,7 @@ from dataclasses import field
 from datetime import datetime
 from datetime import timedelta
 from enum import Enum
+from core.utils.time_utils import utc_now
 from typing import Any
 
 from core.config_cache import config_cache
@@ -80,7 +81,7 @@ class Account:
             return False
 
         # Check rate limiting
-        return not (self.reset_time and datetime.now() < self.reset_time)
+        return not (self.reset_time and utc_now() < self.reset_time)
 
     def get_health_score(self) -> float:
         """Calculate account health score (0-100)"""
@@ -100,7 +101,7 @@ class Account:
 
     def record_request(self, success: bool = True):
         """Record a request attempt"""
-        self.last_used = datetime.now()
+        self.last_used = utc_now()
         self.total_requests += 1
 
         if not success:
@@ -110,7 +111,7 @@ class Account:
         """Record a rate limit hit"""
         self.rate_limit_hits += 1
         # Set reset time to 1 minute from now
-        self.reset_time = datetime.now() + timedelta(minutes=1)
+        self.reset_time = utc_now() + timedelta(minutes=1)
 
 
 @dataclass
