@@ -8,6 +8,7 @@ import shutil
 from typing import Any
 
 from fastapi import APIRouter
+from core.utils.time_utils import utc_now
 from fastapi import Depends
 from fastapi import HTTPException
 
@@ -576,7 +577,7 @@ def emergency_deploy():
 
 @router.post("/backup")
 def trigger_backup():
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = utc_now().strftime("%Y%m%d_%H%M%S")
     backup_dir = f"backups/backup_{timestamp}"
     os.makedirs(backup_dir, exist_ok=True)
     for fname in [".env", "data/constitutional_rules.db", "data/users.json"]:
@@ -705,7 +706,7 @@ def run_security_scan():
         return {"status": "error", "detail": str(e)}
     return {
         "status": "success",
-        "scan_time": datetime.datetime.now().isoformat(),
+        "scan_time": utc_now().isoformat(),
         "findings": findings,
         "total_findings": len(findings),
     }
@@ -727,7 +728,7 @@ async def admin_websocket(websocket: WebSocket):
                             "metrics": metrics,
                             "providers": providers_status,
                             "health": health,
-                            "timestamp": datetime.datetime.now().isoformat(),
+                            "timestamp": utc_now().isoformat(),
                         },
                     }
                 )
