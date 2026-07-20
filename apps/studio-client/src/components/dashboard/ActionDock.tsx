@@ -18,9 +18,9 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Github,
+  Code2,
   Mail,
-  Facebook,
+  Globe,
   MessagesSquare,
   NotebookText,
   HardDrive,
@@ -34,9 +34,9 @@ import { useDashboardActions } from '../../hooks/useDashboardActions';
 
 // বাংলা মন্তব্য: icon name (string, store-এ persist হয়) থেকে আসল lucide কম্পোনেন্টে ম্যাপ করা হয়
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
-  Github,
+  Github: Code2,
   Mail,
-  Facebook,
+  Facebook: Globe,
   MessagesSquare,
   NotebookText,
   HardDrive,
