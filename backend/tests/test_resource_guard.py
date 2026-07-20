@@ -7,11 +7,11 @@ This module tests:
 - Permission errors for unauthorized paths
 """
 
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from core.security.resource_guard import ResourceGuard
 
 
@@ -49,7 +49,9 @@ class TestResourceGuard:
             external_path = Path(tmpdir) / "external.txt"
             external_path.write_text("test", encoding="utf-8")
 
-            with patch.object(ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()):
+            with patch.object(
+                ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()
+            ):
                 with pytest.raises(PermissionError) as exc_info:
                     ResourceGuard.verify_path(str(external_path))
 
@@ -72,7 +74,9 @@ class TestResourceGuard:
             test_file = Path(tmpdir) / "secret.txt"
             test_file.write_text("secret data", encoding="utf-8")
 
-            with patch.object(ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()):
+            with patch.object(
+                ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()
+            ):
                 with pytest.raises(PermissionError):
                     ResourceGuard.read_text(str(test_file))
 
@@ -89,9 +93,13 @@ class TestResourceGuard:
     def test_write_text_path_outside_root(self):
         """Test write_text raises error for path outside root."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch.object(ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()):
+            with patch.object(
+                ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()
+            ):
                 with pytest.raises(PermissionError):
-                    ResourceGuard.write_text(str(Path(tmpdir) / "hack.txt"), "malicious")
+                    ResourceGuard.write_text(
+                        str(Path(tmpdir) / "hack.txt"), "malicious"
+                    )
 
     def test_symlink_resolution(self):
         """Test that symlinks are resolved properly."""
@@ -111,9 +119,15 @@ class TestResourceGuard:
 
     def test_invalid_path_raises_error(self):
         """Test that invalid paths raise appropriate errors."""
-        with patch.object(ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()):
+        with patch.object(
+            ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()
+        ):
             # Mock resolve to raise OSError
-            with patch.object(Path, "resolve", side_effect=OSError("too many levels of symbolic links")):
+            with patch.object(
+                Path,
+                "resolve",
+                side_effect=OSError("too many levels of symbolic links"),
+            ):
                 with pytest.raises(ValueError):
                     ResourceGuard.verify_path("some_path")
 
@@ -136,7 +150,9 @@ class TestResourceGuard:
             sandbox_file.write_text("sandbox content", encoding="utf-8")
 
             with (
-                patch.object(ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()),
+                patch.object(
+                    ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()
+                ),
                 patch.object(ResourceGuard, "SANDBOX_ROOT", Path(tmpdir).resolve()),
             ):
                 result = ResourceGuard.verify_path("sandbox.txt")
@@ -149,8 +165,12 @@ class TestResourceGuard:
             data_file.write_text("data content", encoding="utf-8")
 
             with (
-                patch.object(ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()),
-                patch.object(ResourceGuard, "PERSISTENT_DATA_DIR", Path(tmpdir).resolve()),
+                patch.object(
+                    ResourceGuard, "PROJECT_ROOT", Path("/nonexistent").resolve()
+                ),
+                patch.object(
+                    ResourceGuard, "PERSISTENT_DATA_DIR", Path(tmpdir).resolve()
+                ),
             ):
                 result = ResourceGuard.verify_path("data.txt")
                 assert result.exists()

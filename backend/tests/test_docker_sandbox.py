@@ -1,6 +1,5 @@
 import subprocess
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -26,7 +25,15 @@ def test_check_docker_success(sandbox):
         )
 
 
-@pytest.mark.parametrize("exception", [FileNotFoundError, subprocess.TimeoutExpired("cmd", 3), OSError, subprocess.CalledProcessError(1, "cmd")])
+@pytest.mark.parametrize(
+    "exception",
+    [
+        FileNotFoundError,
+        subprocess.TimeoutExpired("cmd", 3),
+        OSError,
+        subprocess.CalledProcessError(1, "cmd"),
+    ],
+)
 def test_check_docker_failure(sandbox, exception):
     """ডকার অনুপস্থিত বা ত্রুটিযুক্ত হলে False রিটার্ন করে কিনা তা পরীক্ষা করে।"""
     with patch("subprocess.run", side_effect=exception) as mock_run:
@@ -86,7 +93,9 @@ def test_execute_command_local_fallback_success(sandbox, monkeypatch):
 
     sandbox.docker_available = False
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=0, stdout="local output", stderr="")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="local output", stderr=""
+        )
         result = sandbox.execute_command("echo 'local output'")
 
         assert result["success"] is True
@@ -123,7 +132,9 @@ def test_execute_command_local_fallback_timeout(sandbox, monkeypatch):
     monkeypatch.setattr(settings, "env", "development")
 
     sandbox.docker_available = False
-    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 5)) as mock_run:
+    with patch(
+        "subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 5)
+    ) as mock_run:
         result = sandbox.execute_command("sleep 10")
 
         assert result["success"] is False

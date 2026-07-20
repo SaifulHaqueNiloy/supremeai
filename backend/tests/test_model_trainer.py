@@ -1,6 +1,5 @@
 import os
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -31,7 +30,9 @@ async def test_trigger_lora_finetune_runpod(mock_post):
         mock_settings.runpod_api_key = "test-key"
         mock_settings.runpod_endpoint_id = "unsloth-training"
         trainer = ModelTrainer(provider="runpod")
-        res = await trainer.trigger_lora_finetune("tests/mock_dataset.jsonl", "llama3-8b")
+        res = await trainer.trigger_lora_finetune(
+            "tests/mock_dataset.jsonl", "llama3-8b"
+        )
         assert res["status"] == "success"
         assert res["job_id"] is not None
     assert res["provider"] == "runpod"

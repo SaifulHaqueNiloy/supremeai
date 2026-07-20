@@ -1,9 +1,6 @@
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from core.human_behavior import HumanBehaviorSimulators
 
 
@@ -19,7 +16,9 @@ async def test_generate_bezier_points_sanity():
 async def test_natural_mouse_move_and_click(monkeypatch):
     page = MagicMock()
     element = MagicMock()
-    element.bounding_box = AsyncMock(return_value={"x": 10, "y": 20, "width": 20, "height": 10})
+    element.bounding_box = AsyncMock(
+        return_value={"x": 10, "y": 20, "width": 20, "height": 10}
+    )
     page.wait_for_selector = AsyncMock(return_value=element)
     page.mouse.move = AsyncMock()
     page.mouse.click = AsyncMock()

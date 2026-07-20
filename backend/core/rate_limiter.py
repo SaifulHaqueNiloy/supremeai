@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-
 if TYPE_CHECKING:
     import redis.asyncio
 
@@ -41,7 +40,11 @@ class AsyncRateLimiter:
 
     def __init__(self):
         self._redis: redis.asyncio.Redis | None = None
-        self._rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {"true", "1", "yes"}
+        self._rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {
+            "true",
+            "1",
+            "yes",
+        }
         self._fallback_limiter = InMemoryFallbackLimiter()
 
     async def _get_redis(self):
@@ -52,7 +55,10 @@ class AsyncRateLimiter:
             from core.config import settings as app_settings
 
             redis_url = (
-                getattr(app_settings, "redis_url", None) or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL") or "redis://localhost:6379"
+                getattr(app_settings, "redis_url", None)
+                or os.getenv("REDIS_URL")
+                or os.getenv("UPSTASH_REDIS_URL")
+                or "redis://localhost:6379"
             )
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
@@ -69,7 +75,9 @@ class AsyncRateLimiter:
             current = results[0]
             return current <= limit
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode).")
+            logger.warning(
+                f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode)."
+            )
             return self._fallback_limiter.is_allowed(key, limit=limit)
 
     async def close(self):

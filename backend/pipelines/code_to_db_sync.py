@@ -13,15 +13,12 @@ Syncs code changes to database for tracking and analysis.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
-
+from loguru import logger
 
 # ── Constants ────────────────────────────────────────────────────────────────
 SYNC_CACHE_TTL = 86400  # 24 hours
@@ -75,7 +72,9 @@ class CodeToDBSync:
 
         # Update state
         await self.cache.set(self._file_hashes_key, current_hashes, ttl=SYNC_CACHE_TTL)
-        await self.cache.set(self._last_sync_key, datetime.now(UTC).isoformat(), ttl=SYNC_CACHE_TTL)
+        await self.cache.set(
+            self._last_sync_key, datetime.now(UTC).isoformat(), ttl=SYNC_CACHE_TTL
+        )
 
         return {
             "status": "success",

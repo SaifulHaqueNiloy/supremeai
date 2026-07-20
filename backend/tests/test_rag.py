@@ -18,7 +18,14 @@ async def main():
         vector = await embedding_service.generate_embedding(dummy_text)
 
         logger.info("Saving experience to Vector DB (Pinecone)...")
-        await vector_db.save_experience(vector=vector, metadata={"issue": "IndexError", "solution": dummy_text, "language": "python"})
+        await vector_db.save_experience(
+            vector=vector,
+            metadata={
+                "issue": "IndexError",
+                "solution": dummy_text,
+                "language": "python",
+            },
+        )
 
         query_text = "How to prevent list index out of range in python?"
         logger.info(f"Generating embedding for query: '{query_text}'")

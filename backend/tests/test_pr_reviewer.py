@@ -1,5 +1,4 @@
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,9 +8,7 @@ from tools.code.pr_reviewer import PRReviewer
 @pytest.mark.anyio
 async def test_static_security_scan_detects_secret():
     reviewer = PRReviewer()
-    diff = (
-        "diff --git a/src/config.py b/src/config.py\n--- a/src/config.py\n+++ b/src/config.py\n@@ -1,3 +1,4 @@\n+aws_key = 'AKIA1234567890123456'\n"
-    )
+    diff = "diff --git a/src/config.py b/src/config.py\n--- a/src/config.py\n+++ b/src/config.py\n@@ -1,3 +1,4 @@\n+aws_key = 'AKIA1234567890123456'\n"
     comments = await reviewer.analyze_diff(diff)
     assert len(comments) == 1
     assert comments[0]["severity"] == "critical"

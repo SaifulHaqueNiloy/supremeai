@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-
 from services.rider_tracker import RiderTracker
 
 

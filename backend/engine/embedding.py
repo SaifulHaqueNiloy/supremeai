@@ -2,7 +2,6 @@ import logging
 
 import litellm
 
-
 logger = logging.getLogger(__name__)
 
 

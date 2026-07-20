@@ -4,16 +4,16 @@ import sqlite3
 import threading
 import time
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from pydantic import BaseModel
-
 from api.routes.admin import get_current_admin
 from core.config import settings
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
-
-router = APIRouter(prefix="/api/admin/site-actions", tags=["Site Actions Registry"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(
+    prefix="/api/admin/site-actions",
+    tags=["Site Actions Registry"],
+    dependencies=[Depends(get_current_admin)],
+)
 
 DB_PATH = getattr(settings, "site_actions_db", "data/site_actions.db")
 _lock = threading.Lock()
@@ -46,11 +46,17 @@ def _conn() -> sqlite3.Connection:
     cur.execute("PRAGMA table_info(site_actions)")
     columns = [col[1] for col in cur.fetchall()]
     if "fallback_selectors" not in columns:
-        conn.execute("ALTER TABLE site_actions ADD COLUMN fallback_selectors TEXT DEFAULT '[]'")
+        conn.execute(
+            "ALTER TABLE site_actions ADD COLUMN fallback_selectors TEXT DEFAULT '[]'"
+        )
     if "selector_strategy" not in columns:
-        conn.execute("ALTER TABLE site_actions ADD COLUMN selector_strategy TEXT DEFAULT 'exact'")
+        conn.execute(
+            "ALTER TABLE site_actions ADD COLUMN selector_strategy TEXT DEFAULT 'exact'"
+        )
     if "health_score" not in columns:
-        conn.execute("ALTER TABLE site_actions ADD COLUMN health_score INTEGER DEFAULT 100")
+        conn.execute(
+            "ALTER TABLE site_actions ADD COLUMN health_score INTEGER DEFAULT 100"
+        )
 
     return conn
 
@@ -92,7 +98,9 @@ def _row_to_dict(row: tuple) -> dict:
 @router.get("/")
 def list_site_actions():
     with _lock, _conn() as conn:
-        rows = conn.execute("SELECT * FROM site_actions ORDER BY updated_at DESC").fetchall()
+        rows = conn.execute(
+            "SELECT * FROM site_actions ORDER BY updated_at DESC"
+        ).fetchall()
     return {"items": [_row_to_dict(r) for r in rows], "total": len(rows)}
 
 
@@ -122,7 +130,9 @@ def create_site_action(payload: SiteActionIn):
         )
         conn.commit()
         new_id = cur.lastrowid
-        row = conn.execute("SELECT * FROM site_actions WHERE id = ?", (new_id,)).fetchone()
+        row = conn.execute(
+            "SELECT * FROM site_actions WHERE id = ?", (new_id,)
+        ).fetchone()
     return _row_to_dict(row)
 
 
@@ -155,7 +165,9 @@ def update_site_action(action_id: int, payload: SiteActionIn):
         conn.commit()
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Site action not found")
-        row = conn.execute("SELECT * FROM site_actions WHERE id = ?", (action_id,)).fetchone()
+        row = conn.execute(
+            "SELECT * FROM site_actions WHERE id = ?", (action_id,)
+        ).fetchone()
     return _row_to_dict(row)
 
 
@@ -177,14 +189,23 @@ async def test_selector(req: TestSelectorRequest):
     For now, it simulates a visual hit.
     """
     with _lock, _conn() as conn:
-        row = conn.execute("SELECT selector FROM site_actions WHERE id = ?", (req.action_id,)).fetchone()
+        row = conn.execute(
+            "SELECT selector FROM site_actions WHERE id = ?", (req.action_id,)
+        ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Action not found")
 
     is_production = getattr(settings, "env", "local").lower() == "production"
     if is_production:
-        raise HTTPException(status_code=501, detail="Dry-run screenshot preview not available in production. Connect a real CDP proxy endpoint.")
+        raise HTTPException(
+            status_code=501,
+            detail="Dry-run screenshot preview not available in production. Connect a real CDP proxy endpoint.",
+        )
 
     # Only return mock data in non-production environments
     mock_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-    return {"found": True, "screenshot_base64": mock_b64, "metrics": {"time_to_find_ms": 142, "strategy_used": "exact_dry_run"}}
+    return {
+        "found": True,
+        "screenshot_base64": mock_b64,
+        "metrics": {"time_to_find_ms": 142, "strategy_used": "exact_dry_run"},
+    }

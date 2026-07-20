@@ -2,12 +2,9 @@
 import logging
 import os
 
+from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
 from google import genai
 from google.genai import types
-
-from core.resilience.circuit_breaker import CircuitBreaker
-from core.resilience.circuit_breaker import CircuitBreakerOpenError
-
 
 logger = logging.getLogger("supremeai.skills.doc_summarizer")
 
@@ -28,17 +25,26 @@ def execute_tool(payload: dict) -> dict:
         summary_length = payload.get("summary_length", "concise")  # concise, detailed
 
         if not file_content:
-            return {"success": False, "error": "Document content is empty or unreadable."}
+            return {
+                "success": False,
+                "error": "Document content is empty or unreadable.",
+            }
 
         # ২. ডিফেন্সিভ সাইজ গার্ড (বাজেট এনফোর্সমেন্ট)
         # অতিরিক্ত বড় ফাইল হলে টোকেন কস্ট ও লেটেন্সি বাউন্ডারি ব্রেক করা রুখতে
         if len(file_content) > 100000:  # আনুমানিক ২৫,০০০ শব্দ
-            return {"success": False, "error": "Document exceeds the maximum permissible payload for this skill."}
+            return {
+                "success": False,
+                "error": "Document exceeds the maximum permissible payload for this skill.",
+            }
 
         # ৩. মডার্ন Gemini Client ইনিশিয়ালাইজেশন
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            return {"success": False, "error": "Gemini API key configuration drift detected."}
+            return {
+                "success": False,
+                "error": "Gemini API key configuration drift detected.",
+            }
 
         client = genai.Client(api_key=api_key)
 

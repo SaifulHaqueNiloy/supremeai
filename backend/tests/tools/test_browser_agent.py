@@ -1,14 +1,12 @@
 import socket
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
-
 from core.playwright_manager import get_global_browser
-from tools.ai_agents.browser_agent import BrowserAgent
 from core.security import is_safe_url
+
+from tools.ai_agents.browser_agent import BrowserAgent
 
 
 @pytest.fixture(autouse=True)
@@ -102,7 +100,9 @@ async def test_get_global_browser_initialization(mock_async_playwright):
 
 
 @patch("tools.browser_agent.is_safe_url", return_value=True)
-@patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None)
+@patch(
+    "tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None
+)
 @patch(
     "httpx.get",
     return_value=MagicMock(
@@ -112,7 +112,9 @@ async def test_get_global_browser_initialization(mock_async_playwright):
     ),
 )
 @pytest.mark.asyncio
-async def test_navigate_and_interact_fallback_scraper(mock_get, mock_browser, mock_is_safe, agent):
+async def test_navigate_and_interact_fallback_scraper(
+    mock_get, mock_browser, mock_is_safe, agent
+):
     """প্লেরাইট না থাকলে স্ক্র্যাপার ফলব্যাক পরীক্ষা করে।"""
     result = await agent.navigate_and_interact("http://example.com")
     assert result["success"] is True
@@ -129,10 +131,14 @@ async def test_navigate_and_interact_unsafe_url(mock_is_safe, agent):
 
 
 @patch("tools.browser_agent.is_safe_url", return_value=True)
-@patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None)
+@patch(
+    "tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None
+)
 @patch("httpx.get", side_effect=httpx.RequestError("Network error"))
 @pytest.mark.asyncio
-async def test_navigate_and_interact_network_error(mock_get, mock_browser, mock_is_safe, agent):
+async def test_navigate_and_interact_network_error(
+    mock_get, mock_browser, mock_is_safe, agent
+):
     """নেটওয়ার্ক ত্রুটি সঠিকভাবে হ্যান্ডেল করে কিনা তা পরীক্ষা করে।"""
     result = await agent.navigate_and_interact("http://example.com")
     assert result["success"] is False
@@ -166,7 +172,9 @@ async def test_execute_recipe_success(mock_async_playwright, agent):
 
     assert result["status"] == "success"
     assert result["data"]["#result"] == "Extracted Value"
-    mock_page.goto.assert_called_once_with("http://example.com", wait_until="networkidle", timeout=30000)
+    mock_page.goto.assert_called_once_with(
+        "http://example.com", wait_until="networkidle", timeout=30000
+    )
     # HumanBehaviorSimulators মক করা হয়েছে
     # mock_page.click.assert_called_once_with("#button")
     # mock_page.fill.assert_called_once_with("#input", "test")

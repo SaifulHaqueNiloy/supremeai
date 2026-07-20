@@ -1,23 +1,15 @@
 # ruff: noqa: BLE001, B904, E722
 from __future__ import annotations
 
-from datetime import UTC
-from datetime import datetime
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 from pydantic import BaseModel
 
-
 try:
-    from jose import JWTError
-    from jose import jwt
+    from jose import JWTError, jwt
 except ImportError:
     JWTError = Exception  # type: ignore[misc,assignment]
     jwt = None  # type: ignore[assignment]
@@ -26,7 +18,6 @@ from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.security.rbac import UserContext
 from database.supabase_client import db
-
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -41,7 +32,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     if jwt is None:
         raise RuntimeError("python-jose[cryptography] is required for token issuance")
     to_encode = data.copy()
-    expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(UTC) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -88,16 +81,26 @@ class MeResponse(BaseModel):
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, request: Request):
     if not db.client:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Supabase client is not initialized")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Supabase client is not initialized",
+        )
 
     try:
-        res = db.client.auth.sign_in_with_password({"email": body.username, "password": body.password})
+        res = db.client.auth.sign_in_with_password(
+            {"email": body.username, "password": body.password}
+        )
         if not res.user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
 
         user_id = res.user.id
         # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
-        is_admin = body.username and any(body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails)
+        is_admin = body.username and any(
+            body.username.lower() == admin_email.lower()
+            for admin_email in settings.admin_emails
+        )
         primary_role = "admin" if is_admin else "user"
         token_data = {
             "sub": user_id,
@@ -115,9 +118,13 @@ async def login(body: LoginRequest, request: Request):
             try:
                 await redis_manager.client.sadd(f"device:known:{user_id}", fingerprint)
             except Exception as exc:  # noqa: BLE001
-                logger.warning(f"Failed to register device fingerprint for {user_id}: {exc}")
+                logger.warning(
+                    f"Failed to register device fingerprint for {user_id}: {exc}"
+                )
 
-        return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
+        return TokenResponse(
+            access_token=access_token, user_id=user_id, role=primary_role
+        )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -125,16 +132,26 @@ async def login(body: LoginRequest, request: Request):
 @router.post("/register", response_model=TokenResponse)
 async def register(body: RegisterRequest):
     if not db.client:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Supabase client is not initialized")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Supabase client is not initialized",
+        )
 
     try:
-        res = db.client.auth.sign_up({"email": body.username, "password": body.password})
+        res = db.client.auth.sign_up(
+            {"email": body.username, "password": body.password}
+        )
         if not res.user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed"
+            )
 
         user_id = res.user.id
         # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
-        is_admin = body.username and any(body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails)
+        is_admin = body.username and any(
+            body.username.lower() == admin_email.lower()
+            for admin_email in settings.admin_emails
+        )
         primary_role = "admin" if is_admin else "user"
         token_data = {
             "sub": user_id,
@@ -143,7 +160,9 @@ async def register(body: RegisterRequest):
             "method": "supabase_auth",
         }
         access_token = create_access_token(token_data)
-        return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)
+        return TokenResponse(
+            access_token=access_token, user_id=user_id, role=primary_role
+        )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -151,10 +170,14 @@ async def register(body: RegisterRequest):
 @router.get("/me", response_model=MeResponse)
 async def me(current_user: UserContext | None = Depends(optional_current_user)):
     if current_user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
     # বাংলা মন্তব্য: scopes যদি None হয় তবে MeResponse ভ্যালিডেশন পাস করানোর জন্য খালি টুপল পাস করা হচ্ছে।
     scopes_val = current_user.scopes if current_user.scopes is not None else ()
-    return MeResponse(user_id=current_user.user_id, role=current_user.role, scopes=scopes_val)
+    return MeResponse(
+        user_id=current_user.user_id, role=current_user.role, scopes=scopes_val
+    )
 
 
 @router.get("/verify")
@@ -162,4 +185,9 @@ async def verify_token(request: Request):
     user = getattr(request.state, "user", None)
     if not user:
         raise HTTPException(status_code=401, detail="Missing or invalid token")
-    return {"valid": True, "user_id": user.get("sub"), "role": user.get("role"), "message": "Authentication successful"}
+    return {
+        "valid": True,
+        "user_id": user.get("sub"),
+        "role": user.get("role"),
+        "message": "Authentication successful",
+    }

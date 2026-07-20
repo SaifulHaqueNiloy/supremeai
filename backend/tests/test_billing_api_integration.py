@@ -1,6 +1,7 @@
 from unittest.mock import patch
-from fastapi.testclient import TestClient
+
 from core.app import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -21,6 +22,13 @@ def test_billing_history_unauthorized(mock_is_test):
 
 @patch("api.dependencies.is_test_environment", return_value=False)
 def test_billing_checkout_unauthorized(mock_is_test):
-    response = client.post("/api/billing/checkout", json={"price_id": "test_price", "success_url": "http://test", "cancel_url": "http://test"})
+    response = client.post(
+        "/api/billing/checkout",
+        json={
+            "price_id": "test_price",
+            "success_url": "http://test",
+            "cancel_url": "http://test",
+        },
+    )
     assert response.status_code == 401
     assert response.json()["detail"] == "Unauthorized"

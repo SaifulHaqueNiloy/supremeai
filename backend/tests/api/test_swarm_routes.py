@@ -4,12 +4,10 @@ emergency-stop halt/resume) 404 দিত। এই টেস্টগুলো 
 mounting এবং নতুন halt/resume/telemetry endpoint-গুলো সত্যিই কাজ করে।
 """
 
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 from main import app
 
 client = TestClient(app)
@@ -32,7 +30,9 @@ def test_halt_requires_admin(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "user_test", "role": "user"}
     app.dependency_overrides[mock_token] = lambda: {"sub": "user_test", "role": "user"}
 
-    response = client.post("/api/v1/swarm/halt", headers={"Authorization": "Bearer dummy"})
+    response = client.post(
+        "/api/v1/swarm/halt", headers={"Authorization": "Bearer dummy"}
+    )
     assert response.status_code in (401, 403)
 
     app.dependency_overrides = {}
@@ -42,17 +42,25 @@ def test_halt_requires_admin(mock_decode_jwt, mock_token):
 @patch("core.security.auth_middleware._decode_jwt")
 def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     from api.routes.admin import get_current_admin
 
-    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[get_current_admin] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     with patch("api.routes.swarm.swarm_streamer") as mock_streamer:
         mock_streamer.set_halt = AsyncMock()
         mock_streamer.broadcast = AsyncMock()
 
-        response = client.post("/api/v1/swarm/halt", headers={"Authorization": "Bearer dummy"})
+        response = client.post(
+            "/api/v1/swarm/halt", headers={"Authorization": "Bearer dummy"}
+        )
 
         assert response.status_code == 202
         assert response.json()["status"] == "halted"
@@ -67,22 +75,32 @@ def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
 @patch("core.security.auth_middleware._decode_jwt")
 def test_resume_clears_flag_and_broadcasts(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     from api.routes.admin import get_current_admin
 
-    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[get_current_admin] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     with patch("api.routes.swarm.swarm_streamer") as mock_streamer:
         mock_streamer.clear_halt = AsyncMock()
         mock_streamer.broadcast = AsyncMock()
 
-        response = client.post("/api/v1/swarm/resume", headers={"Authorization": "Bearer dummy"})
+        response = client.post(
+            "/api/v1/swarm/resume", headers={"Authorization": "Bearer dummy"}
+        )
 
         assert response.status_code == 202
         assert response.json()["status"] == "resumed"
         mock_streamer.clear_halt.assert_called_once()
-        assert mock_streamer.broadcast.call_args.kwargs["event_type"] == "CIRCUIT_CLOSED"
+        assert (
+            mock_streamer.broadcast.call_args.kwargs["event_type"] == "CIRCUIT_CLOSED"
+        )
 
     app.dependency_overrides = {}
 

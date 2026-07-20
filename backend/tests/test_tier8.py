@@ -1,12 +1,12 @@
 import pytest
 from core.services import ServiceRegistry
-from core.tier8.tier8_integration import init_tier8, shutdown_tier8
 from core.tier8 import (
-    get_self_improvement_agent,
     get_agent_evolution_engine,
-    get_swarm_coordination_agent,
+    get_self_improvement_agent,
     get_skill_marketplace_curator,
+    get_swarm_coordination_agent,
 )
+from core.tier8.tier8_integration import init_tier8, shutdown_tier8
 
 
 # বাংলা মন্তব্য: Tier-8 মেটা-সেলফ এজেন্টস সাবসিস্টেমের ইন্টিগ্রেশন টেস্ট

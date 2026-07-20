@@ -2,12 +2,9 @@ import os
 import sys
 from unittest.mock import MagicMock
 
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from brain.crewai_agents import CrewAgent
-from brain.crewai_agents import CrewTask
-from brain.crewai_agents import SupremeCrew
+from brain.crewai_agents import CrewAgent, CrewTask, SupremeCrew
 from brain.mcp_client import MCPClient
 
 
@@ -75,15 +72,22 @@ class SwarmOrchestrator:
         self.agents = agents
 
     def execute_swarm(self, tasks):
-        return {task.description: task.agent.model_router.route_and_generate()["text"] for task in tasks}
+        return {
+            task.description: task.agent.model_router.route_and_generate()["text"]
+            for task in tasks
+        }
 
 
 def test_swarm_orchestrator():
     mock_router = MagicMock()
     mock_router.route_and_generate.return_value = {"text": "swarm response"}
 
-    agent1 = CrewAgent(role="Agent1", goal="Goal1", backstory="Back1", model_router=mock_router)
-    agent2 = CrewAgent(role="Agent2", goal="Goal2", backstory="Back2", model_router=mock_router)
+    agent1 = CrewAgent(
+        role="Agent1", goal="Goal1", backstory="Back1", model_router=mock_router
+    )
+    agent2 = CrewAgent(
+        role="Agent2", goal="Goal2", backstory="Back2", model_router=mock_router
+    )
 
     task1 = CrewTask("Task 1 description", agent1)
     task2 = CrewTask("Task 2 description", agent2)

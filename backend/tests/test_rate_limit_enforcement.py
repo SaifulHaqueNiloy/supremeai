@@ -35,7 +35,10 @@ class TestRateLimitEnforcement:
 
     @pytest.mark.asyncio
     async def test_get_tier_without_redis(self):
-        with patch("tools.tenant_rate_limiter.TenantRateLimiter._resolve_redis_queue", return_value=None):
+        with patch(
+            "tools.tenant_rate_limiter.TenantRateLimiter._resolve_redis_queue",
+            return_value=None,
+        ):
             limiter = TenantRateLimiter(redis_client=None)
             tier = await limiter.get_tier("tenant-1")
             assert tier == "free"
@@ -60,7 +63,10 @@ class TestRateLimitEnforcement:
 
     @pytest.mark.asyncio
     async def test_check_quota_no_redis(self):
-        with patch("tools.tenant_rate_limiter.TenantRateLimiter._resolve_redis_queue", return_value=None):
+        with patch(
+            "tools.tenant_rate_limiter.TenantRateLimiter._resolve_redis_queue",
+            return_value=None,
+        ):
             limiter = TenantRateLimiter(redis_client=None)
             limiter.queue = None
             res = await limiter.check_quota("tenant-1", cost=0.0)
@@ -69,14 +75,18 @@ class TestRateLimitEnforcement:
 
     @pytest.mark.asyncio
     async def test_check_quota_rpm_exceeded(self, limiter):
-        limiter.queue.get.side_effect = lambda key: b"100" if key.endswith(":rpm") else b"0"
+        limiter.queue.get.side_effect = lambda key: (
+            b"100" if key.endswith(":rpm") else b"0"
+        )
         res = await limiter.check_quota("tenant-1", cost=0.0)
         assert res["allowed"] is False
         assert res["reason"] == "rpm_exceeded"
 
     @pytest.mark.asyncio
     async def test_check_quota_rpd_exceeded(self, limiter):
-        limiter.queue.get.side_effect = lambda key: b"0" if key.endswith(":rpm") else b"100000"
+        limiter.queue.get.side_effect = lambda key: (
+            b"0" if key.endswith(":rpm") else b"100000"
+        )
         res = await limiter.check_quota("tenant-1", cost=0.0)
         assert res["allowed"] is False
         assert res["reason"] == "rpd_exceeded"
@@ -90,7 +100,10 @@ class TestRateLimitEnforcement:
 
     @pytest.mark.asyncio
     async def test_record_usage_without_redis(self):
-        with patch("tools.tenant_rate_limiter.TenantRateLimiter._resolve_redis_queue", return_value=None):
+        with patch(
+            "tools.tenant_rate_limiter.TenantRateLimiter._resolve_redis_queue",
+            return_value=None,
+        ):
             limiter = TenantRateLimiter(redis_client=None)
             limiter.queue = None
             res = await limiter.record_usage("tenant-1", cost=0.5, tokens=10)

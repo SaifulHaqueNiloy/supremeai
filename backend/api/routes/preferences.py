@@ -1,16 +1,11 @@
 import asyncio
 import json
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Query
-from fastapi import Request
-from pydantic import BaseModel
-from sse_starlette.sse import EventSourceResponse
-
 from core.messaging.pubsub import global_pubsub as theme_pubsub
 from database.supabase_client import db
-
+from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 
 router = APIRouter(prefix="/preferences", tags=["preferences"])
 
@@ -37,7 +32,12 @@ async def get_preferences(user_id: str = Query(default="default")):
             "custom_shortcuts": {},
         }
     try:
-        res = db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
+        res = (
+            db.client.table("user_preferences")
+            .select("*")
+            .eq("user_id", user_id)
+            .execute()
+        )
         rows = res.data or []
         if rows:
             return rows[0]
@@ -54,7 +54,9 @@ async def get_preferences(user_id: str = Query(default="default")):
 
 
 @router.post("/")
-async def upsert_preferences(user_id: str = Query(default="default"), payload: PreferenceUpdate = ...):
+async def upsert_preferences(
+    user_id: str = Query(default="default"), payload: PreferenceUpdate = ...
+):
     if not db.client:
         # For offline/local mode, still broadcast the theme
         if payload.theme:
@@ -83,7 +85,10 @@ async def stream_preferences(request: Request, user_id: str):
         queue = await theme_pubsub.subscribe(user_id)
         try:
             # Yield connection success
-            yield {"event": "connected", "data": json.dumps({"status": "connected to theme stream"})}
+            yield {
+                "event": "connected",
+                "data": json.dumps({"status": "connected to theme stream"}),
+            }
 
             while True:
                 if await request.is_disconnected():
@@ -94,7 +99,10 @@ async def stream_preferences(request: Request, user_id: str):
                     yield {"event": "message", "data": json.dumps(item)}
                 except TimeoutError:
                     # Heartbeat ping
-                    yield {"event": "ping", "data": json.dumps({"channel": "heartbeat"})}
+                    yield {
+                        "event": "ping",
+                        "data": json.dumps({"channel": "heartbeat"}),
+                    }
         finally:
             await theme_pubsub.unsubscribe(user_id, queue)
 

@@ -1,9 +1,7 @@
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
+import sys
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-import sys
 
 # Import guard: agents package init may import optional google.genai.
 if "google" not in sys.modules:
@@ -11,8 +9,7 @@ if "google" not in sys.modules:
 if "google.genai" not in sys.modules:
     sys.modules["google.genai"] = MagicMock()
 
-from agents.performance_guardian import AnomalyDetector
-from agents.performance_guardian import PerformanceGuardian
+from agents.performance_guardian import AnomalyDetector, PerformanceGuardian
 
 
 def test_anomaly_detector_requires_minimum_points():
@@ -53,7 +50,9 @@ async def test_check_health_builds_alerts(monkeypatch):
 async def test_analyze_bottleneck_uses_llm_and_cache(monkeypatch):
     pg = PerformanceGuardian()
 
-    pg.collector.collect_system_metrics = MagicMock(return_value={"cpu_percent": 1.0, "memory_percent": 2.0})
+    pg.collector.collect_system_metrics = MagicMock(
+        return_value={"cpu_percent": 1.0, "memory_percent": 2.0}
+    )
 
     pg.cache.get = AsyncMock(return_value=None)
     pg.cache.set = AsyncMock(return_value=True)

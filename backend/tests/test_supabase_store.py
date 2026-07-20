@@ -1,6 +1,5 @@
 import os
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from memory.supabase_store import SupabaseStore
 
@@ -31,7 +30,9 @@ def test_supabase_store_cloud_upsert():
     mock_supabase_mod = MagicMock()
     mock_supabase_mod.create_client.return_value = mock_client
 
-    with patch.dict("sys.modules", {"supabase": mock_supabase_mod}), patch.dict(os.environ, {"SUPABASE_KEY": "my-key"}):
+    with patch.dict("sys.modules", {"supabase": mock_supabase_mod}), patch.dict(
+        os.environ, {"SUPABASE_KEY": "my-key"}
+    ):
         store = SupabaseStore(
             database_url="postgresql://db.supabase.co:5432/postgres",
             local_path=":memory:",
@@ -84,10 +85,15 @@ def test_supabase_store_learned_fact_vector_search():
         assert upsert_data["embedding"] == [0.1] * 1536
 
         # Test 2: search_facts triggers RPC
-        mock_rpc.execute.return_value = MagicMock(data=[{"content": '{"id": "fact-1", "content": "SupremeAI is awesome"}'}])
+        mock_rpc.execute.return_value = MagicMock(
+            data=[{"content": '{"id": "fact-1", "content": "SupremeAI is awesome"}'}]
+        )
         results = store.search_facts("awesome")
 
-        mock_client.rpc.assert_called_with("match_learned_facts", {"query_embedding": [0.1] * 1536, "match_threshold": 0.3, "match_count": 5})
+        mock_client.rpc.assert_called_with(
+            "match_learned_facts",
+            {"query_embedding": [0.1] * 1536, "match_threshold": 0.3, "match_count": 5},
+        )
         assert len(results) == 1
         assert results[0]["id"] == "fact-1"
 
@@ -98,7 +104,9 @@ def test_supabase_store_learned_fact_vector_search():
 
         mock_table.select.return_value = mock_ilike
         mock_ilike.ilike.return_value = mock_execute
-        mock_execute.execute.return_value = MagicMock(data=[{"content": '{"id": "fact-1", "content": "SupremeAI is awesome"}'}])
+        mock_execute.execute.return_value = MagicMock(
+            data=[{"content": '{"id": "fact-1", "content": "SupremeAI is awesome"}'}]
+        )
 
         results_fallback = store.search_facts("awesome")
         assert len(results_fallback) == 1

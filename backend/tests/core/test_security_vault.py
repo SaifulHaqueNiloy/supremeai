@@ -11,8 +11,8 @@ os.environ.setdefault("ENCRYPTION_KEY", "9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_Rqa
 if "core.security.security_vault" in sys.modules:
     importlib.reload(sys.modules["core.security.security_vault"])
 
-from core.security.security_vault import encrypt_token, decrypt_token
 from core.security import security_vault
+from core.security.security_vault import decrypt_token, encrypt_token
 
 
 def test_encrypt_token_returns_string():

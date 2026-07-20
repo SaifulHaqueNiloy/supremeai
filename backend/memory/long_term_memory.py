@@ -4,7 +4,6 @@ from typing import Any
 
 from loguru import logger
 
-
 try:
     from brain.model_router import ModelRouter
     from database.supabase_client import db
@@ -26,7 +25,9 @@ class MemoryManager:
         self.db_client = db.client
         logger.info("Initialized MemoryManager.")
 
-    async def add_memory(self, learning: str, url: str, metadata: dict[str, Any] | None = None):
+    async def add_memory(
+        self, learning: str, url: str, metadata: dict[str, Any] | None = None
+    ):
         """
         Adds a new learning to the long-term memory.
         """
@@ -41,7 +42,14 @@ class MemoryManager:
         # 2. Store in Supabase 'agent_memories' table
         await (
             self.db_client.table("agent_memories")
-            .insert({"content": learning, "embedding": embedding, "source_url": url, "metadata": metadata or {}})
+            .insert(
+                {
+                    "content": learning,
+                    "embedding": embedding,
+                    "source_url": url,
+                    "metadata": metadata or {},
+                }
+            )
             .execute()
         )
 
@@ -59,7 +67,12 @@ class MemoryManager:
 
         # 2. Call a Supabase RPC function to perform vector similarity search
         result = await self.db_client.rpc(
-            "match_memories", {"query_embedding": query_embedding, "match_threshold": 0.75, "match_count": top_k}
+            "match_memories",
+            {
+                "query_embedding": query_embedding,
+                "match_threshold": 0.75,
+                "match_count": top_k,
+            },
         ).execute()
 
         memories = [item["content"] for item in result.data] if result.data else []
@@ -74,7 +87,13 @@ class LongTermMemory:
         self._facts: list[dict[str, Any]] = []
         self._summaries: list[dict[str, Any]] = []
 
-    def remember_fact(self, content: str, category: str = "general", importance: float = 0.5, source: str = "unknown") -> dict[str, Any]:
+    def remember_fact(
+        self,
+        content: str,
+        category: str = "general",
+        importance: float = 0.5,
+        source: str = "unknown",
+    ) -> dict[str, Any]:
         """Store a simple fact in memory for later recall and context building."""
         fact = {
             "content": content,
@@ -101,7 +120,9 @@ class LongTermMemory:
         """Build a simple human-readable context string from stored facts and summaries."""
         parts: list[str] = []
         if self._summaries:
-            parts.append("Summary: " + "; ".join(item["content"] for item in self._summaries))
+            parts.append(
+                "Summary: " + "; ".join(item["content"] for item in self._summaries)
+            )
         if self._facts:
             parts.append("Facts: " + "; ".join(item["content"] for item in self._facts))
         return "\n".join(parts) if parts else "No memory available."

@@ -6,15 +6,16 @@ MCP Server for GitHub CI/CD Integration in SupremeAI 2.0.
 CI/CD অপারেশন (Issue, PR, Auto-fix) সরাসরে চ্যাটবক্স থেকে করার ক্ষমতা দেয়।
 """
 
-from core.config import settings
+import json
 
 # বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
 import os
-import json
 from enum import StrEnum
+
 import httpx
-from pydantic import BaseModel, Field, ConfigDict
+from core.config import settings
 from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel, ConfigDict, Field
 
 # শেয়ার্ড ইউটিলিটি — ডুপ্লিকেট কোড দূর করতে কেন্দ্রীয় মডিউল থেকে ইম্পোর্ট
 from utils.environment import is_admin_authorized, is_autofix_authorized
@@ -100,8 +101,16 @@ async def github_create_pull_request(params: CreatePRInput) -> str:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/pulls",
-                headers={"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"},
-                json={"title": params.title, "body": params.body, "head": params.head, "base": params.base},
+                headers={
+                    "Authorization": f"token {github_token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
+                json={
+                    "title": params.title,
+                    "body": params.body,
+                    "head": params.head,
+                    "base": params.base,
+                },
             )
             response.raise_for_status()
             data = response.json()
@@ -149,7 +158,13 @@ async def github_run_auto_fix(params: FixIssueInput) -> str:
         str: অটো-ফিক্স স্ট্যাটাস
     """
     if not is_autofix_authorized():
-        return json.dumps({"error": "Auto-fix authorization required", "message": "Set AUTOFIX_AUTHORIZED=true in environment"}, ensure_ascii=False)
+        return json.dumps(
+            {
+                "error": "Auto-fix authorization required",
+                "message": "Set AUTOFIX_AUTHORIZED=true in environment",
+            },
+            ensure_ascii=False,
+        )
 
     github_token = _get_github_token()
     if not github_token:
@@ -159,8 +174,14 @@ async def github_run_auto_fix(params: FixIssueInput) -> str:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/actions/workflows/ci-auto-fix-v3.yml/dispatches",
-                headers={"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"},
-                json={"ref": params.branch, "inputs": {"issue_number": str(params.issue_number)}},
+                headers={
+                    "Authorization": f"token {github_token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
+                json={
+                    "ref": params.branch,
+                    "inputs": {"issue_number": str(params.issue_number)},
+                },
             )
             response.raise_for_status()
 
@@ -218,7 +239,10 @@ async def github_list_issues(state: str = "open", labels: str | None = None) -> 
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/issues",
-                headers={"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"},
+                headers={
+                    "Authorization": f"token {github_token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
                 params=params,
             )
             response.raise_for_status()
@@ -275,13 +299,21 @@ async def github_get_ci_status(branch: str = "main") -> str:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/commits/{branch}/status",
-                headers={"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"},
+                headers={
+                    "Authorization": f"token {github_token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
             )
             response.raise_for_status()
             data = response.json()
 
             return json.dumps(
-                {"branch": branch, "state": data.get("state"), "statuses": data.get("statuses", []), "total_count": data.get("total_count", 0)},
+                {
+                    "branch": branch,
+                    "state": data.get("state"),
+                    "statuses": data.get("statuses", []),
+                    "total_count": data.get("total_count", 0),
+                },
                 ensure_ascii=False,
             )
 

@@ -2,10 +2,10 @@ import os
 import sys
 import tempfile
 
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.observability.audit_logger import AuditLogger
+
 from tools.billing.cost_auditor import CostAuditor
 from tools.devops.docker_sandbox import DockerSandbox
 from tools.health_checker import HealthChecker
@@ -53,7 +53,9 @@ def test_cost_auditor_generation():
         except ImportError:
             import logging
 
-            logging.warning("matplotlib not installed, skipping image report check in test_monitoring")
+            logging.warning(
+                "matplotlib not installed, skipping image report check in test_monitoring"
+            )
 
 
 def test_plan_sorter():

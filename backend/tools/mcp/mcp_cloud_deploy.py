@@ -6,18 +6,18 @@ MCP Server for Cloud Deployment Integration in SupremeAI 2.0.
 কোড ডিপ্লয় ও লগ মনিটর করার ক্ষমতা দেয়।
 """
 
-from core.config import settings
+import json
 
 # বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
 import os
-import json
 import re
 from enum import StrEnum
 
 import httpx
+from core.config import settings
 from loguru import logger
-from pydantic import BaseModel, Field, ConfigDict
 from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel, ConfigDict, Field
 
 # শেয়ার্ড ইউটিলিটি — ডুপ্লিকেট কোড দূর করতে কেন্দ্রীয় মডিউল থেকে ইম্পোর্ট
 from utils.environment import is_admin_authorized
@@ -31,7 +31,9 @@ CHARACTER_LIMIT = 25000
 
 def _get_render_api_key() -> str:
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে RENDER_API_KEY চেক করা হবে
-    return getattr(settings, "render_api_key", "") or os.environ.get("RENDER_API_KEY", "")
+    return getattr(settings, "render_api_key", "") or os.environ.get(
+        "RENDER_API_KEY", ""
+    )
 
 
 def _get_railway_token() -> str:
@@ -41,15 +43,21 @@ def _get_railway_token() -> str:
 
 def _get_oracle_api_key() -> str:
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ORACLE_CLOUD_API_KEY চেক করা হবে
-    return getattr(settings, "oracle_cloud_api_key", "") or os.environ.get("ORACLE_CLOUD_API_KEY", "")
+    return getattr(settings, "oracle_cloud_api_key", "") or os.environ.get(
+        "ORACLE_CLOUD_API_KEY", ""
+    )
 
 
 def _get_oracle_region() -> str:
-    region = getattr(settings, "oracle_region", "us-phoenix-1") or getattr(settings, "oracle_region", "us-phoenix-1")
+    region = getattr(settings, "oracle_region", "us-phoenix-1") or getattr(
+        settings, "oracle_region", "us-phoenix-1"
+    )
     if not region:
         return "us-phoenix-1"
     if not re.match(r"^[a-z0-9\-]+$", region):
-        logger.error(f"Invalid ORACLE_REGION format: '{region}'. It should only contain lowercase letters, numbers, and hyphens.")
+        logger.error(
+            f"Invalid ORACLE_REGION format: '{region}'. It should only contain lowercase letters, numbers, and hyphens."
+        )
         return "us-phoenix-1"
     return region
 
@@ -75,8 +83,16 @@ class DeployServiceInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     provider: CloudProvider = Field(..., description="ডিপ্লয় করার ক্লাউড প্রোভাইডার")
-    service_name: str = Field(..., description="সার্ভিসের নাম", min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9\-_]+$")
-    branch: str | None = Field(default="main", description="ডিপ্লয় ব্রাঞ্চ", pattern=r"^[^\s;]+$")
+    service_name: str = Field(
+        ...,
+        description="সার্ভিসের নাম",
+        min_length=1,
+        max_length=100,
+        pattern=r"^[a-zA-Z0-9\-_]+$",
+    )
+    branch: str | None = Field(
+        default="main", description="ডিপ্লয় ব্রাঞ্চ", pattern=r"^[^\s;]+$"
+    )
 
 
 class GetLogsInput(BaseModel):
@@ -85,7 +101,9 @@ class GetLogsInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     provider: CloudProvider = Field(..., description="ক্লাউড প্রোভাইডার")
-    service_name: str = Field(..., description="সার্ভিসের নাম", min_length=1, pattern=r"^[a-zA-Z0-9\-_]+$")
+    service_name: str = Field(
+        ..., description="সার্ভিসের নাম", min_length=1, pattern=r"^[a-zA-Z0-9\-_]+$"
+    )
     lines: int = Field(default=100, description="রিট্রিভ করার লাইন সংখ্যা", ge=1, le=1000)
 
 
@@ -127,7 +145,11 @@ async def cloud_deploy_service(params: DeployServiceInput) -> str:
     """
     if not is_admin_authorized():
         return json.dumps(
-            {"error": "Admin authorization required for deployments", "message": "Set ADMIN_AUTHORIZED=true in environment"}, ensure_ascii=False
+            {
+                "error": "Admin authorization required for deployments",
+                "message": "Set ADMIN_AUTHORIZED=true in environment",
+            },
+            ensure_ascii=False,
         )
 
     headers = {}
@@ -156,7 +178,11 @@ async def cloud_deploy_service(params: DeployServiceInput) -> str:
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(api_url, headers=headers, json={"serviceName": params.service_name, "branch": params.branch})
+            response = await client.post(
+                api_url,
+                headers=headers,
+                json={"serviceName": params.service_name, "branch": params.branch},
+            )
             response.raise_for_status()
             data = response.json()
 
@@ -227,14 +253,21 @@ async def cloud_get_deployment_logs(params: GetLogsInput) -> str:
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(api_url, headers=headers, params={"lines": params.lines})
+            response = await client.get(
+                api_url, headers=headers, params={"lines": params.lines}
+            )
             response.raise_for_status()
             data = response.json()
 
             logs = data.get("logs", []) if isinstance(data, dict) else data
 
             return json.dumps(
-                {"provider": params.provider.value, "service": params.service_name, "logs": logs[: params.lines], "total_lines": len(logs)},
+                {
+                    "provider": params.provider.value,
+                    "service": params.service_name,
+                    "logs": logs[: params.lines],
+                    "total_lines": len(logs),
+                },
                 ensure_ascii=False,
             )
 
@@ -267,11 +300,19 @@ async def cloud_list_services() -> str:
     if render_api_key:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get("https://api.render.com/v1/services", headers={"Authorization": f"Bearer {render_api_key}"})
+                response = await client.get(
+                    "https://api.render.com/v1/services",
+                    headers={"Authorization": f"Bearer {render_api_key}"},
+                )
                 if response.status_code == 200:
                     for svc in response.json():
                         services.append(
-                            {"provider": "render", "name": svc.get("serviceName"), "status": svc.get("status"), "url": svc.get("url", "")}
+                            {
+                                "provider": "render",
+                                "name": svc.get("serviceName"),
+                                "status": svc.get("status"),
+                                "url": svc.get("url", ""),
+                            }
                         )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to list services from Render: {e}")
@@ -280,14 +321,26 @@ async def cloud_list_services() -> str:
     if railway_token:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get("https://back-end.railway.app/v2/services", headers={"Authorization": f"Bearer {railway_token}"})
+                response = await client.get(
+                    "https://back-end.railway.app/v2/services",
+                    headers={"Authorization": f"Bearer {railway_token}"},
+                )
                 if response.status_code == 200:
                     for svc in response.json():
-                        services.append({"provider": "railway", "name": svc.get("name"), "status": svc.get("status"), "url": svc.get("url", "")})
+                        services.append(
+                            {
+                                "provider": "railway",
+                                "name": svc.get("name"),
+                                "status": svc.get("status"),
+                                "url": svc.get("url", ""),
+                            }
+                        )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to list services from Railway: {e}")
 
-    return json.dumps({"services": services, "count": len(services)}, ensure_ascii=False)
+    return json.dumps(
+        {"services": services, "count": len(services)}, ensure_ascii=False
+    )
 
 
 if __name__ == "__main__":

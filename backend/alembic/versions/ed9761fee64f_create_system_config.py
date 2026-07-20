@@ -9,10 +9,8 @@ Create Date: 2026-07-08 02:54:58.952639
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "ed9761fee64f"
@@ -26,9 +24,24 @@ def upgrade() -> None:
     op.add_column("system_config", sa.Column("id", sa.UUID(), nullable=True))
     op.add_column("system_config", sa.Column("is_active", sa.Boolean(), nullable=True))
     op.add_column("system_config", sa.Column("version", sa.Integer(), nullable=True))
-    op.add_column("system_config", sa.Column("created_at", sa.DateTime(timezone=True), nullable=True))
-    op.alter_column("system_config", "key", existing_type=sa.TEXT(), type_=sa.String(length=255), existing_nullable=False)
-    op.alter_column("system_config", "category", existing_type=sa.TEXT(), type_=sa.String(length=100), nullable=False)
+    op.add_column(
+        "system_config",
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+    )
+    op.alter_column(
+        "system_config",
+        "key",
+        existing_type=sa.TEXT(),
+        type_=sa.String(length=255),
+        existing_nullable=False,
+    )
+    op.alter_column(
+        "system_config",
+        "category",
+        existing_type=sa.TEXT(),
+        type_=sa.String(length=100),
+        nullable=False,
+    )
     op.alter_column(
         "system_config",
         "updated_at",

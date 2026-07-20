@@ -8,7 +8,6 @@ from __future__ import annotations
 import time
 
 import pytest
-
 from services.escrow_service import (
     ESCROW_TTL,
     RELEASE_TIMEOUT,
@@ -17,7 +16,6 @@ from services.escrow_service import (
     EscrowStatus,
     get_escrow_service,
 )
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -192,7 +190,7 @@ async def test_auto_release_check_returns_expired_condition_met():
 
     escrow_id = await svc.create_escrow("p1", "p2", 10.0, expires_in_days=8)
     # Work around: write back clean dataclass-compatible data.
-    from datetime import datetime, UTC, timedelta
+    from datetime import UTC, datetime, timedelta
 
     data = await fake_cache.get(f"escrow:{escrow_id}")
     data["status"] = EscrowStatus.CONDITION_MET.value

@@ -1,6 +1,5 @@
 import os
 
-
 os.environ.setdefault("OPENROUTER_API_KEY", "")
 os.environ.setdefault("HF_API_KEY", "")
 os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
@@ -94,6 +93,8 @@ class TestCodeValidator:
 
     @patch("core.code_validator.re.findall")
     def test_validate_text_with_blocked_url(self, mock_find, validator):
-        mock_find.side_effect = lambda p, t, f=None: ["https://github.com/nadim9/supremeai"] if "https?://" in p else []
+        mock_find.side_effect = lambda p, t, f=None: (
+            ["https://github.com/nadim9/supremeai"] if "https?://" in p else []
+        )
         res = validator.validate("see https://github.com/nadim9/supremeai")
         assert res["is_valid"] is False

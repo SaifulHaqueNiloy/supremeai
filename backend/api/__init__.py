@@ -10,13 +10,9 @@ from __future__ import annotations
 import importlib
 import logging
 
-from fastapi import FastAPI
-
 from core.config import settings  # noqa  # noqa
-from core.messaging.event_bus import ErrorContext
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
-
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from fastapi import FastAPI
 
 logger = logging.getLogger("SupremeAI.API")
 
