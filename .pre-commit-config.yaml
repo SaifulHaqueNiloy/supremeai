@@ -34,6 +34,9 @@ repos:
       - id: detect-private-key
         name: 🔑 SSH/SSL Private Key Blocker
         exclude: ^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
+      - id: check-ast
+        name: 🐍 Python Syntax Gatekeeper (Check AST)
+        description: পাইথন কোডে কোনো সিনট্যাক্স এরর (Syntax Error) থাকলে কমিট ব্লক করে।
 
   # ══════════════════════════════════════════════════════════════
   # ২. সিক্রেট স্ক্যানিং (Secret Scanning Gate)
