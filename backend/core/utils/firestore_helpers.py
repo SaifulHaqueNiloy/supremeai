@@ -25,7 +25,8 @@ import uuid
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
+from collections.abc import Generator
 
 from loguru import logger
 
@@ -60,7 +61,7 @@ def _init_sqlite_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_collection ON firestore_documents(collection);
         CREATE INDEX IF NOT EXISTS idx_updated ON firestore_documents(updated_at);
-        
+
         CREATE TABLE IF NOT EXISTS firestore_collections (
             name TEXT PRIMARY KEY,
             created_at TEXT NOT NULL
@@ -76,38 +77,37 @@ def get_firestore_db(
 ) -> Any:
     """
     Get or create singleton Firestore client.
-    
+
     বাংলা মন্তব্য: প্রথম কলে Firestore ক্লায়েন্ট তৈরি করে, পরবর্তীতে
     একই ইনস্ট্যান্স রিটার্ন করে। লোকাল ডেভেলপমেন্টে SQLite ফলব্যাক ব্যবহার করে।
-    
+
     Args:
         project_id: GCP project ID (defaults to env var)
         credentials: Service account credentials
         use_emulator: Force emulator mode (auto-detected from env if None)
-    
+
     Returns:
         Firestore client or SQLite fallback connection
     """
     global _FIRESTORE_CLIENT
-    
+
     if _FIRESTORE_CLIENT is not None:
         return _FIRESTORE_CLIENT
-    
+
     with _FIRESTORE_LOCK:
         if _FIRESTORE_CLIENT is not None:
             return _FIRESTORE_CLIENT
-        
+
         # Check for emulator
         emulator_host = os.getenv("FIRESTORE_EMULATOR_HOST")
         if use_emulator is None:
             use_emulator = emulator_host is not None
-        
+
         project_id = project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
-        
+
         try:
             from google.cloud import firestore
-            from google.api_core.exceptions import ServiceUnavailable
-            
+
             if use_emulator and emulator_host:
                 logger.info(f"🔧 Using Firestore emulator at {emulator_host}")
                 _FIRESTORE_CLIENT = firestore.Client(
@@ -119,15 +119,15 @@ def get_firestore_db(
                     project=project_id,
                     credentials=credentials,
                 )
-            
+
             logger.info(f"✅ Firestore client initialized (project: {project_id})")
             return _FIRESTORE_CLIENT
-            
+
         except ImportError:
             logger.warning("⚠️ google-cloud-firestore not installed, using SQLite fallback")
             _FIRESTORE_CLIENT = _get_sqlite_fallback()
             return _FIRESTORE_CLIENT
-            
+
         except Exception as exc:
             logger.warning(f"⚠️ Firestore connection failed ({exc}), using SQLite fallback")
             _FIRESTORE_CLIENT = _get_sqlite_fallback()
@@ -147,12 +147,12 @@ def reset_firestore_client() -> None:
 def firestore_transaction(db: Any | None = None) -> Generator[Any, None, None]:
     """
     Context manager for Firestore transactions.
-    
+
     বাংলা মন্তব্য: ট্রানজ্যাকশন ব্লকের জন্য কনটেক্সট ম্যানেজার।
     Firestore না থাকলে SQLite ফলব্যাকে সাধারণ কমিট/রোলব্যাক।
     """
     db = db or get_firestore_db()
-    
+
     # Check if it's a SQLite connection
     if isinstance(db, sqlite3.Connection):
         try:
@@ -182,14 +182,14 @@ def doc_to_firestore(
 ) -> str:
     """
     Upsert a document to Firestore or SQLite fallback.
-    
+
     Returns:
         Document ID
     """
     db = db or get_firestore_db()
     doc_id = doc_id or str(uuid.uuid4())
     now = datetime.now(UTC).isoformat()
-    
+
     # SQLite fallback
     if isinstance(db, sqlite3.Connection):
         if merge:
@@ -197,9 +197,9 @@ def doc_to_firestore(
             if existing:
                 existing.update(data)
                 data = existing
-        
+
         db.execute(
-            """INSERT OR REPLACE INTO firestore_documents 
+            """INSERT OR REPLACE INTO firestore_documents
                (collection, doc_id, data, created_at, updated_at)
                VALUES (?, ?, ?, COALESCE(
                    (SELECT created_at FROM firestore_documents WHERE collection=? AND doc_id=?),
@@ -213,7 +213,7 @@ def doc_to_firestore(
         )
         db.commit()
         return doc_id
-    
+
     # Native Firestore
     doc_ref = db.collection(collection).document(doc_id)
     if merge:
@@ -230,14 +230,14 @@ def get_doc_from_firestore(
 ) -> dict[str, Any] | None:
     """Retrieve a single document."""
     db = db or get_firestore_db()
-    
+
     if isinstance(db, sqlite3.Connection):
         row = db.execute(
             "SELECT data FROM firestore_documents WHERE collection=? AND doc_id=?",
             (collection, doc_id),
         ).fetchone()
         return json.loads(row["data"]) if row else None
-    
+
     # Native Firestore
     doc = db.collection(collection).document(doc_id).get()
     return doc.to_dict() if doc.exists else None
@@ -250,7 +250,7 @@ def delete_doc_from_firestore(
 ) -> bool:
     """Delete a document. Returns True if existed."""
     db = db or get_firestore_db()
-    
+
     if isinstance(db, sqlite3.Connection):
         cursor = db.execute(
             "DELETE FROM firestore_documents WHERE collection=? AND doc_id=?",
@@ -258,7 +258,7 @@ def delete_doc_from_firestore(
         )
         db.commit()
         return cursor.rowcount > 0
-    
+
     doc_ref = db.collection(collection).document(doc_id)
     if doc_ref.get().exists:
         doc_ref.delete()
@@ -275,7 +275,7 @@ def query_collection(
 ) -> list[dict[str, Any]]:
     """
     Query a collection with optional filters.
-    
+
     Args:
         filters: List of (field, op, value) tuples. op: "==", ">", "<", ">=", "<="
         order_by: Field to order by (prefix with - for descending)
@@ -283,48 +283,48 @@ def query_collection(
     """
     db = db or get_firestore_db()
     results: list[dict[str, Any]] = []
-    
+
     if isinstance(db, sqlite3.Connection):
         # SQLite fallback — simple filtering
         query = "SELECT data FROM firestore_documents WHERE collection=?"
         params: list[Any] = [collection]
-        
+
         # Note: Full query emulation in SQLite is limited; this is basic
         if filters:
             for field_name, op, value in filters:
                 if op == "==":
                     # JSON extraction for simple equality
                     query += f" AND json_extract(data, '$.{field_name}') = ?"
-                    params.append(json.dumps(value) if isinstance(value, (dict, list)) else value)
-        
+                    params.append(json.dumps(value) if isinstance(value, dict | list) else value)
+
         if order_by:
             direction = "DESC" if order_by.startswith("-") else "ASC"
             field = order_by.lstrip("-")
             query += f" ORDER BY json_extract(data, '$.{field}') {direction}"
-        
+
         if limit:
             query += f" LIMIT {limit}"
-        
+
         rows = db.execute(query, params).fetchall()
         results = [json.loads(row["data"]) for row in rows]
     else:
         # Native Firestore query
         query_ref = db.collection(collection)
-        
+
         if filters:
             for field_name, op, value in filters:
                 query_ref = query_ref.where(field_name, op, value)
-        
+
         if order_by:
             direction = "DESCENDING" if order_by.startswith("-") else "ASCENDING"
             field = order_by.lstrip("-")
             query_ref = query_ref.order_by(field, direction=direction)
-        
+
         if limit:
             query_ref = query_ref.limit(limit)
-        
+
         results = [doc.to_dict() for doc in query_ref.stream()]
-    
+
     return results
 
 
@@ -335,22 +335,22 @@ def batch_write(
 ) -> list[str]:
     """
     Batch write multiple documents.
-    
+
     Args:
         documents: List of (doc_id, data) tuples. doc_id=None for auto-generate.
-    
+
     Returns:
         List of document IDs
     """
     db = db or get_firestore_db()
     doc_ids: list[str] = []
-    
+
     if isinstance(db, sqlite3.Connection):
         now = datetime.now(UTC).isoformat()
         for doc_id, data in documents:
             doc_id = doc_id or str(uuid.uuid4())
             db.execute(
-                """INSERT OR REPLACE INTO firestore_documents 
+                """INSERT OR REPLACE INTO firestore_documents
                    (collection, doc_id, data, created_at, updated_at)
                    VALUES (?, ?, ?, ?, ?)""",
                 (collection, doc_id, json.dumps(data), now, now),
@@ -365,21 +365,21 @@ def batch_write(
             batch.set(doc_ref, data)
             doc_ids.append(doc_id)
         batch.commit()
-    
+
     return doc_ids
 
 
 def collection_exists(collection: str, db: Any | None = None) -> bool:
     """Check if a collection has any documents."""
     db = db or get_firestore_db()
-    
+
     if isinstance(db, sqlite3.Connection):
         row = db.execute(
             "SELECT 1 FROM firestore_collections WHERE name=?",
             (collection,),
         ).fetchone()
         return row is not None
-    
+
     # Firestore: check if any documents exist
     docs = list(db.collection(collection).limit(1).stream())
     return len(docs) > 0
@@ -388,7 +388,7 @@ def collection_exists(collection: str, db: Any | None = None) -> bool:
 def get_collection_stats(collection: str, db: Any | None = None) -> dict[str, Any]:
     """Get statistics for a collection."""
     db = db or get_firestore_db()
-    
+
     if isinstance(db, sqlite3.Connection):
         row = db.execute(
             "SELECT COUNT(*) as count FROM firestore_documents WHERE collection=?",
@@ -399,7 +399,7 @@ def get_collection_stats(collection: str, db: Any | None = None) -> dict[str, An
             "document_count": row["count"] if row else 0,
             "backend": "sqlite",
         }
-    
+
     # Firestore doesn't have efficient count; estimate
     docs = list(db.collection(collection).limit(1000).stream())
     return {

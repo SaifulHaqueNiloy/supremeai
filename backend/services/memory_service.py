@@ -124,11 +124,12 @@ class CascadeMemoryService:
         try:
             tree = ast.parse(content)
             summary_parts = [f"File: {file_path}"]
-            structure = {"classes": [], "functions": []}
+            structure: dict[str, list[Any]] = {"classes": [], "functions": []}
 
             for node in ast.iter_child_nodes(tree):
                 if isinstance(node, ast.ClassDef):
-                    class_info = {"name": node.name, "methods": [], "docstring": ast.get_docstring(node) or ""}
+                    # mypy-এর জন্য class_info-এ explicit type দেওয়া হচ্ছে যাতে .append() কাজ করে
+                    class_info: dict[str, Any] = {"name": node.name, "methods": [], "docstring": ast.get_docstring(node) or ""}
                     summary_parts.append(f"Class: {node.name}")
                     if class_info["docstring"]:
                         summary_parts.append(f"  Docstring: {class_info['docstring']}")
@@ -232,9 +233,7 @@ class CascadeMemoryService:
                 try:
                     stored_vector = json.loads(row["embedding"])
                     score = self._cosine_similarity(query_vector, stored_vector)
-                    results.append(
-                        {"file": row["file_path"], "summary": row["summary"], "structure": json.loads(row["structure"]), "score": score}
-                    )
+                    results.append({"file": row["file_path"], "summary": row["summary"], "structure": json.loads(row["structure"]), "score": score})
                 except Exception as e:
                     logger.warning(f"Error calculating similarity for {row.get('file_path')}: {e}")
             results.sort(key=lambda x: x["score"], reverse=True)
