@@ -2,8 +2,8 @@
 import logging
 import shutil
 import tarfile
-from datetime import datetime
 from datetime import timedelta
+from core.utils.time_utils import utc_now
 from pathlib import Path
 
 # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
@@ -81,6 +81,6 @@ class SkillGarbageCollector:
         if not target_path.exists():
             return
 
-        archive_file = self.archive_dir / f"{skill_id}_{datetime.now().strftime('%Y%m%d')}.tar.gz"
+        archive_file = self.archive_dir / f"{skill_id}_{utc_now().strftime('%Y%m%d')}.tar.gz"
         with tarfile.open(archive_file, "w:gz") as tar:
             tar.add(target_path, arcname=skill_id)
