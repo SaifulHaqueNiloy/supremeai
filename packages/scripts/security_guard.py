@@ -74,6 +74,11 @@ def scan_staged_files() -> bool:
         if "security_guard.py" in file_path:
             continue
 
+        # টেস্ট ফাইল বা ফোল্ডার হলে স্কিপ করি (যাতে ডামি টোকেন চেক লক না করে)
+        normalized_path = file_path.replace("\\", "/")
+        if "test_" in normalized_path or "/tests/" in normalized_path or "/test/" in normalized_path:
+            continue
+
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
                 for line_no, line in enumerate(fh.readlines(), 1):

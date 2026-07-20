@@ -31,7 +31,7 @@ import httpx
 
 # Internal core imports
 from core.cache import get_redis_client
-from core.circuit_breaker import circuit_breaker
+from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.config import settings
 from core.exceptions import LLMProviderError, QuotaExceededError
 from core.logging import get_logger

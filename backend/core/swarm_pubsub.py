@@ -50,7 +50,7 @@ class SwarmPubSub:
     def _get_redis(self):
         if self._redis is not None:
             return self._redis
-        import redis.asyncio as aioredis
+        import redis.asyncio as aioredis  # type: ignore[import-untyped]
 
         from core.config import settings
 
@@ -117,6 +117,59 @@ class SwarmPubSub:
                 )
             )
             raise
+
+    async def set_halt(self, reason: str = "manual_emergency_stop") -> None:
+        """বাংলা মন্তব্য: গ্লোবাল ইমার্জেন্সি-স্টপ ফ্ল্যাগ সেট করে (Redis-backed, multi-worker safe)।
+        মোবাইল অ্যাপের 'Hold to Kill' বাটন থেকে আসা একমাত্র সত্যিকারের হল্ট সিগন্যাল —
+        TTL সহ, যাতে কোনো কারণে clear_halt() না চললেও সিস্টেম চিরস্থায়ীভাবে আটকে না থাকে।
+        """
+        try:
+            redis_client = self._get_redis()
+            await redis_client.set("swarm:halt:global", reason, ex=3600)
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub: failed to set halt flag: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="HALT_FLAG_SET_FAILED",
+                    message=str(e)[:200],
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            raise
+
+    async def clear_halt(self) -> None:
+        """বাংলা মন্তব্য: ইমার্জেন্সি-স্টপ ফ্ল্যাগ ক্লিয়ার করে, সোয়ার্ম আবার এক্সিকিউশন শুরু করতে পারবে।"""
+        try:
+            redis_client = self._get_redis()
+            await redis_client.delete("swarm:halt:global")
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub: failed to clear halt flag: {e}")
+            raise
+
+    async def is_halted(self) -> bool:
+        """বাংলা মন্তব্য: এক্সিকিউশন লুপে চেক করার জন্য — গ্লোবাল হল্ট চালু আছে কিনা।
+        Redis সাময়িকভাবে আনরিচেবল হলে fail-open (halted=False) থাকবে, কারণ একটি
+        flaky Redis-এর কারণে পুরো সিস্টেমের সব টাস্ক আটকে যাওয়া (নতুন outage vector)
+        চাওয়া হয় না — বরং এরর ইভেন্ট এমিট করে অবজার্ভেবিলিটির মাধ্যমে সতর্ক করা হয়।
+        """
+        try:
+            redis_client = self._get_redis()
+            value = await redis_client.get("swarm:halt:global")
+            return value is not None
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="HALT_FLAG_CHECK_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            return False
 
     async def broadcast(self, event_type: str, payload: dict):
         """বাংলা মন্তব্য: সকল অ্যাক্টিভ ক্লায়েন্টকে Redis চ্যানেলে ডেটা পুশ করবে।"""

@@ -1,5 +1,10 @@
 # বাংলা মন্তব্য: টেস্ট ও মকিং সহজ করার জন্য টুলস নেমস্পেসে বিভিন্ন সাবমডিউল এক্সপোজ এবং sys.modules এ রেজিস্টার করা হলো
 import sys
+
+# isolated tests বা venv-এ sys.modules['tools'] KeyError এড়াতে সেলফ-ম্যাপিং
+if "tools" not in sys.modules:
+    sys.modules["tools"] = sys.modules[__name__]
+
 from tools.mcp import mcp_cloud_deploy
 from tools.mcp import mcp_github_cicd
 from tools.mcp import mcp_supabase

@@ -1,7 +1,10 @@
 package com.supremeai.grpc;
 
 import com.supremeai.models.TaskEntity;
+import com.supremeai.models.AuditEntity;
 import com.supremeai.repositories.TaskRepository;
+import com.supremeai.repositories.AuditRepository;
+import com.supremeai.tasks.TaskProcessingService;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.slf4j.Logger;
@@ -18,6 +21,12 @@ public class WorkerServiceImpl extends WorkerServiceGrpc.WorkerServiceImplBase {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private AuditRepository auditRepository;
+
+    @Autowired
+    private TaskProcessingService taskProcessingService;
+
     @Override
     public void submitTask(TaskRequest request, StreamObserver<TaskResponse> responseObserver) {
         logger.info("Received SubmitTask request of type: {}", request.getTaskType());
@@ -30,7 +39,11 @@ public class WorkerServiceImpl extends WorkerServiceGrpc.WorkerServiceImplBase {
 
         task = taskRepository.save(task);
 
-        // TODO: Publish to internal Kafka/RabbitMQ queue or ThreadPool executor for async processing
+        // বাংলা মন্তব্য: আগে এখানে শুধু একটা TODO কমেন্ট ছিল — টাস্ক QUEUED অবস্থায়
+        // চিরকাল আটকে থাকত, কোনো error ছাড়াই। এখন সত্যিই async প্রসেসিং শুরু হয়;
+        // gRPC caller-কে ব্লক না করেই (fire-and-forget, status getTaskStatus() দিয়ে
+        // পরে চেক করা যাবে)।
+        taskProcessingService.processAsync(task.getId());
 
         TaskResponse response = TaskResponse.newBuilder()
                 .setTaskId(task.getId())
@@ -72,7 +85,16 @@ public class WorkerServiceImpl extends WorkerServiceGrpc.WorkerServiceImplBase {
         logger.info("AUDIT LOG | Event: {} | User: {} | Resource: {}",
                 request.getEventType(), request.getUserId(), request.getResource());
 
-        // TODO: Save audit log to dedicated AuditEntity table or external storage (e.g., Elasticsearch)
+        // বাংলা মন্তব্য: অডিট লগ ডাটাবেসে supreme_audit_logs টেবিলে সংরক্ষণ করা হচ্ছে।
+        try {
+            AuditEntity audit = new AuditEntity();
+            audit.setEventType(request.getEventType());
+            audit.setUserId(request.getUserId());
+            audit.setResource(request.getResource());
+            auditRepository.save(audit);
+        } catch (Exception e) {
+            logger.error("Failed to persist audit log: {}", e.getMessage());
+        }
 
         AuditLogResponse response = AuditLogResponse.newBuilder()
                 .setSuccess(true)

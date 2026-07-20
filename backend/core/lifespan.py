@@ -302,6 +302,15 @@ async def app_lifespan(app):
     app.state.sentinel_task = asyncio.create_task(sentinel.run_periodic_loop())
     app.state.swarm_cache_task = asyncio.create_task(start_swarm_cache_invalidator())
 
+    # Start System Telemetry Broadcaster
+    try:
+        from core.telemetry.system_telemetry import run_system_telemetry_loop
+
+        app.state.system_telemetry_task = asyncio.create_task(run_system_telemetry_loop())
+        logger.info("✅ System Telemetry Broadcaster background loop started.")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
+
     # Start Tier-8 Meta-Self Agents
     try:
         from core.tier8.tier8_integration import init_tier8
@@ -429,6 +438,11 @@ async def app_lifespan(app):
         if swarm_cache_task and not swarm_cache_task.done():
             swarm_cache_task.cancel()
             tasks.append(swarm_cache_task)
+
+        system_telemetry_task = getattr(app.state, "system_telemetry_task", None)
+        if system_telemetry_task and not system_telemetry_task.done():
+            system_telemetry_task.cancel()
+            tasks.append(system_telemetry_task)
 
         if tasks:
             try:
