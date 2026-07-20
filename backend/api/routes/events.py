@@ -1,12 +1,9 @@
 import asyncio
 import json
 
-from fastapi import APIRouter
-from fastapi import Request
-from sse_starlette.sse import EventSourceResponse
-
 from core.messaging.pubsub import global_pubsub
-
+from fastapi import APIRouter, Request
+from sse_starlette.sse import EventSourceResponse
 
 router = APIRouter(tags=["Events"])
 
@@ -33,7 +30,11 @@ async def dashboard_stream(request: Request):
                 metrics_task = asyncio.create_task(metrics_queue.get())
                 tasks_task = asyncio.create_task(tasks_queue.get())
 
-                done, pending = await asyncio.wait([dashboard_task, metrics_task, tasks_task], timeout=20, return_when=asyncio.FIRST_COMPLETED)
+                done, pending = await asyncio.wait(
+                    [dashboard_task, metrics_task, tasks_task],
+                    timeout=20,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
 
                 if not done:
                     # Heartbeat
@@ -42,7 +43,10 @@ async def dashboard_stream(request: Request):
                     for task in done:
                         result = task.result()
                         # Assuming the result is a dict with 'type' and 'payload'
-                        yield {"event": result.get("type", "message"), "data": json.dumps(result.get("payload", {}))}
+                        yield {
+                            "event": result.get("type", "message"),
+                            "data": json.dumps(result.get("payload", {})),
+                        }
 
                 for t in pending:
                     t.cancel()

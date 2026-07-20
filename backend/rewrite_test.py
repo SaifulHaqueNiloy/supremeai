@@ -19,11 +19,36 @@ def rewrite_test_func(match):
 
 
 # We will apply this to all the test functions that use client.get
-content = re.sub(r"    def test_validates_valid_api_key.*?assert resp\.status_code == 200", rewrite_test_func, content, flags=re.DOTALL)
-content = re.sub(r"    def test_rejects_invalid_api_key.*?assert resp\.status_code == 401", rewrite_test_func, content, flags=re.DOTALL)
-content = re.sub(r"    def test_rejects_revoked_api_key.*?assert resp\.status_code == 403", rewrite_test_func, content, flags=re.DOTALL)
-content = re.sub(r"    def test_rejects_expired_api_key.*?assert resp\.status_code == 403", rewrite_test_func, content, flags=re.DOTALL)
-content = re.sub(r"    def test_rate_limit_exceeded.*?assert resp\.status_code == 429", rewrite_test_func, content, flags=re.DOTALL)
+content = re.sub(
+    r"    def test_validates_valid_api_key.*?assert resp\.status_code == 200",
+    rewrite_test_func,
+    content,
+    flags=re.DOTALL,
+)
+content = re.sub(
+    r"    def test_rejects_invalid_api_key.*?assert resp\.status_code == 401",
+    rewrite_test_func,
+    content,
+    flags=re.DOTALL,
+)
+content = re.sub(
+    r"    def test_rejects_revoked_api_key.*?assert resp\.status_code == 403",
+    rewrite_test_func,
+    content,
+    flags=re.DOTALL,
+)
+content = re.sub(
+    r"    def test_rejects_expired_api_key.*?assert resp\.status_code == 403",
+    rewrite_test_func,
+    content,
+    flags=re.DOTALL,
+)
+content = re.sub(
+    r"    def test_rate_limit_exceeded.*?assert resp\.status_code == 429",
+    rewrite_test_func,
+    content,
+    flags=re.DOTALL,
+)
 
 with open("tests/test_api_key_middleware.py", "w", encoding="utf-8") as f:
     f.write(content)

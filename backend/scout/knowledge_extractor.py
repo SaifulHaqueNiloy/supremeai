@@ -1,6 +1,5 @@
 from typing import Any
 
-
 try:
     from sentence_transformers import SentenceTransformer
 

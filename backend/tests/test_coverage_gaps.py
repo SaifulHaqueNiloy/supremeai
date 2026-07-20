@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 class TestDecisionEngine:
@@ -22,4 +23,6 @@ class TestDecisionEngine:
         with patch("core.decision_engine.logger") as mock_logger:
             result = await engine.decide({"key": "value"})
             assert result == {"action": "proceed", "confidence": 1.0, "trace": None}
-            mock_logger.debug.assert_called_once_with("Decision engine processing context")
+            mock_logger.debug.assert_called_once_with(
+                "Decision engine processing context"
+            )

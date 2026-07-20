@@ -1,13 +1,14 @@
-import sys
 import os
 import sqlite3
+import sys
 
 # Add backend to path
 sys.path.insert(0, os.path.abspath("backend"))
 
-from core.evolution.evolution_engine import EvolutionEngine
 from unittest.mock import patch
+
 import database.supabase_client
+from core.evolution.evolution_engine import EvolutionEngine
 
 
 def test_saga():
@@ -21,8 +22,13 @@ def test_saga():
     # Force db.client to be truthy so it enters the block
     database.supabase_client.db.client = True
 
-    with patch("database.supabase_client.db.insert_task_history", side_effect=Exception("Simulated Supabase Failure")):
-        res = engine.learn_from_success("saga_test_task", "test_approach", "test_result")
+    with patch(
+        "database.supabase_client.db.insert_task_history",
+        side_effect=Exception("Simulated Supabase Failure"),
+    ):
+        res = engine.learn_from_success(
+            "saga_test_task", "test_approach", "test_result"
+        )
         # Check Saga Response
 
         conn = sqlite3.connect(db_path)

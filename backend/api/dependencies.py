@@ -10,27 +10,18 @@ Provides:
 
 from __future__ import annotations
 
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import status
-from fastapi.security import HTTPAuthorizationCredentials
-from fastapi.security import HTTPBearer
-from jose import JWTError
-from jose import jwt
+from core.config import settings
+from core.evolution.fitness_engine import FitnessEngine
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.tenant_db import TenantAwareFirestore
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from jose.exceptions import ExpiredSignatureError
 from loguru import logger
 
-from core.config import settings
-from core.evolution.fitness_engine import FitnessEngine
-from core.messaging.event_bus import ErrorContext
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
-from core.tenant_db import TenantAwareFirestore
-
 # শেয়ার্ড ইউটিলিটি — টেস্ট এনভায়রনমেন্ট চেক কেন্দ্রীভূত
 from utils.environment import is_test_environment
-
 
 security = HTTPBearer()
 
@@ -78,7 +69,11 @@ async def verify_autonomous_agent_token(
                 severity="WARNING",
                 context={
                     "correlation_id": correlation_id,
-                    "token_prefix": credentials.credentials[:10] if credentials.credentials else "none",
+                    "token_prefix": (
+                        credentials.credentials[:10]
+                        if credentials.credentials
+                        else "none"
+                    ),
                 },
                 structured_context=ErrorContext(
                     module="api.dependencies",

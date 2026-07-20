@@ -3,11 +3,11 @@
 বাংলা: কোর সার্ভিস রেজিস্ট্রি এবং লেজি ইনিশিয়ালাইজেশন।
 """
 
-from collections.abc import Callable
-from typing import Any
 import asyncio
 import logging
 import os
+from collections.abc import Callable
+from typing import Any
 
 import httpx
 
@@ -76,7 +76,6 @@ from brain.model_router import ModelRouter  # noqa: E402
 from core.intent import IntentClassifier  # noqa: E402
 from core.messaging.upstash_redis_queue import UpstashRedisQueue  # noqa: E402
 
-
 redis_queue = UpstashRedisQueue()
 admin_god = AdminGodLayer()
 model_router = ModelRouter()
@@ -114,9 +113,14 @@ def __getattr__(name: str) -> Any:
             return reg._services[name]
 
     if os.getenv("ENV", "local").lower() in ("test", "testing", "ci"):
-        logging.getLogger(__name__).warning(f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!")
+        logging.getLogger(__name__).warning(
+            f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!"
+        )
         try:
-            from core.messaging.event_bus import error_event_bus, ErrorEvent  # noqa: PLC0415
+            from core.messaging.event_bus import (
+                ErrorEvent,  # noqa: PLC0415
+                error_event_bus,
+            )
 
             error_event_bus.emit(
                 ErrorEvent(

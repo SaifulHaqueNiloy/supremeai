@@ -1,17 +1,11 @@
 import asyncio
 import json
 
-from fastapi import APIRouter
-from fastapi import Query
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
-from fastapi import status
-from loguru import logger
-
 from core.llm.llm_gateway import llm_gateway
 from core.security import verify_token
 from database.supabase_client import SupabaseDB
-
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
+from loguru import logger
 
 router = APIRouter(prefix="/ws", tags=["Neural Engine Stream"])
 
@@ -47,8 +41,14 @@ Return ONLY a valid JSON object matching this structure (merge with existing if 
 JSON:"""
 
         try:
-            response = await llm_gateway.acompletion(prompt=analysis_prompt, task_type="analysis", stream=False)
-            text = response.get("text", "{}") if isinstance(response, dict) else str(response)
+            response = await llm_gateway.acompletion(
+                prompt=analysis_prompt, task_type="analysis", stream=False
+            )
+            text = (
+                response.get("text", "{}")
+                if isinstance(response, dict)
+                else str(response)
+            )
 
             if "```" in text:
                 parts = text.split("```")
@@ -59,10 +59,15 @@ JSON:"""
             new_prefs = json.loads(text.strip())
             if new_prefs:
                 merged_prefs = {**existing_prefs, **new_prefs}
-                await asyncio.to_thread(db.upsert_user_preferences, {"user_id": user_id, "preferences": merged_prefs})
+                await asyncio.to_thread(
+                    db.upsert_user_preferences,
+                    {"user_id": user_id, "preferences": merged_prefs},
+                )
                 logger.info(f"🤖 [WS] Updated user preferences for {user_id}")
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"⚠️ [WS] Failed to analyze user preferences: {type(e).__name__}: {e}")
+            logger.warning(
+                f"⚠️ [WS] Failed to analyze user preferences: {type(e).__name__}: {e}"
+            )
 
 
 # ==========================================
@@ -89,7 +94,9 @@ class ConnectionManager:
         # আগে anonymous user-কে {"sub": "anonymous"} দিয়ে LLM access দেওয়া হতো — এটি বন্ধ করা হয়েছে।
         token = websocket.query_params.get("token")
         if not token:
-            logger.warning("[WS] Rejected unauthenticated WebSocket connection — no token provided.")
+            logger.warning(
+                "[WS] Rejected unauthenticated WebSocket connection — no token provided."
+            )
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
         try:
@@ -162,7 +169,9 @@ async def websocket_chat_endpoint(
             try:
                 chat_history.append({"role": "user", "content": content_to_send})
 
-                system_instructions = "You are SupremeAI, a personalized autonomous coding assistant."
+                system_instructions = (
+                    "You are SupremeAI, a personalized autonomous coding assistant."
+                )
                 if user_prefs:
                     system_instructions += (
                         f" The user prefers: Answering Style: {user_prefs.get('answering_style', 'default')}, "
@@ -170,9 +179,13 @@ async def websocket_chat_endpoint(
                         f"Work Type: {user_prefs.get('work_type', 'default')}."
                     )
 
-                messages_payload = [{"role": "system", "content": system_instructions}] + chat_history
+                messages_payload = [
+                    {"role": "system", "content": system_instructions}
+                ] + chat_history
 
-                response_stream = await llm_gateway.acompletion(prompt=messages_payload, task_type="chat", stream=True)
+                response_stream = await llm_gateway.acompletion(
+                    prompt=messages_payload, task_type="chat", stream=True
+                )
 
                 response_content = ""
                 async for chunk in response_stream:
@@ -186,7 +199,9 @@ async def websocket_chat_endpoint(
                 await websocket.send_text("[DONE]")
                 logger.info("✅ [AI]: Stream completed.")
 
-                pref_task = asyncio.create_task(analyze_and_save_preferences(user_id, content_to_send))
+                pref_task = asyncio.create_task(
+                    analyze_and_save_preferences(user_id, content_to_send)
+                )
                 manager.track_pref_task(user_id, pref_task)
 
             except Exception as e:  # noqa: BLE001

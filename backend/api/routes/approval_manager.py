@@ -7,19 +7,13 @@ import asyncio
 import os
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import WebSocket
-from fastapi.websockets import WebSocketDisconnect
-from loguru import logger
-from pydantic import BaseModel
-
 from core.code_validator import AICodeValidator
 from core.security.auth_middleware import verify_admin_session_fail_closed
-from models.pending_tasks import TaskStatus
-from models.pending_tasks import list_pending
-from models.pending_tasks import update_task_status
+from fastapi import APIRouter, Depends, HTTPException, WebSocket
+from fastapi.websockets import WebSocketDisconnect
+from loguru import logger
+from models.pending_tasks import TaskStatus, list_pending, update_task_status
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -33,7 +27,9 @@ def _get_allowed_skills_dir() -> str:
     """Get canonical skills directory path once."""
     global _ALLOWED_SKILLS_DIR
     if _ALLOWED_SKILLS_DIR is None:
-        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        backend_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
         _ALLOWED_SKILLS_DIR = os.path.join(backend_dir, "skills")
     return _ALLOWED_SKILLS_DIR
 
@@ -44,7 +40,9 @@ class ApproveRequest(BaseModel):
 
 
 @router.get("/pending")
-def get_pending(_: dict = Depends(verify_admin_session_fail_closed)) -> list[dict[str, Any]]:
+def get_pending(
+    _: dict = Depends(verify_admin_session_fail_closed),
+) -> list[dict[str, Any]]:
     """Get all pending tasks - REQUIRES admin authentication."""
     return [t.model_dump() for t in list_pending()]
 
@@ -66,7 +64,9 @@ def approve_task(
             code = task.payload.get("generated_code")
 
             if not skill_name or not code:
-                raise HTTPException(status_code=400, detail="Missing skill_name or generated_code")
+                raise HTTPException(
+                    status_code=400, detail="Missing skill_name or generated_code"
+                )
 
             if not skill_name.replace("_", "").replace("-", "").isalnum():
                 raise HTTPException(status_code=400, detail="Invalid skill name format")
@@ -86,11 +86,15 @@ def approve_task(
 
             real_path = os.path.realpath(path)
             if not real_path.startswith(os.path.realpath(skills_dir)):
-                raise HTTPException(status_code=403, detail="Path traversal attempt blocked")
+                raise HTTPException(
+                    status_code=403, detail="Path traversal attempt blocked"
+                )
 
             with open(path, "w", encoding="utf-8") as f:
                 f.write(code)
-            logger.info(f"✅ Approved skill '{skill_name}' successfully written to {path}")
+            logger.info(
+                f"✅ Approved skill '{skill_name}' successfully written to {path}"
+            )
 
         except HTTPException:
             raise
@@ -111,7 +115,9 @@ def reject_task(
     task = update_task_status(task_id, TaskStatus.REJECTED, req.resolved_by, req.reason)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    logger.info(f"❌ Task {task_id} rejected by {req.resolved_by}. Reason: {req.reason}")
+    logger.info(
+        f"❌ Task {task_id} rejected by {req.resolved_by}. Reason: {req.reason}"
+    )
     return {"status": "rejected", "task": task.model_dump()}
 
 

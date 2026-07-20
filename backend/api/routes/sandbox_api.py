@@ -16,12 +16,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
 
 router = APIRouter(prefix="/api/v1/sandbox", tags=["sandbox"])
 
@@ -71,12 +68,16 @@ async def execute_command(sandbox_id: str, req: ExecuteRequest) -> dict[str, Any
     manager = _get_manager()
     if sandbox_id not in manager._sessions:
         raise HTTPException(status_code=404, detail=f"Sandbox {sandbox_id} not found")
-    result = await manager.execute_in_session(sandbox_id, req.command, timeout=req.timeout)
+    result = await manager.execute_in_session(
+        sandbox_id, req.command, timeout=req.timeout
+    )
     return result
 
 
 @router.get("/{sandbox_id}/logs")
-async def stream_logs(sandbox_id: str, request: Request, command: str, timeout: int = 300):
+async def stream_logs(
+    sandbox_id: str, request: Request, command: str, timeout: int = 300
+):
     """লাইভ লগ স্ট্রিমিং (Server-Sent Events)।"""
     manager = _get_manager()
     if sandbox_id not in manager._sessions:
@@ -98,7 +99,10 @@ async def destroy_sandbox(sandbox_id: str) -> dict[str, Any]:
     manager = _get_manager()
     success = await manager.destroy_sandbox(sandbox_id)
     if not success:
-        raise HTTPException(status_code=404, detail=f"Sandbox {sandbox_id} not found or already destroyed")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Sandbox {sandbox_id} not found or already destroyed",
+        )
     return {"status": "success", "destroyed": sandbox_id}
 
 

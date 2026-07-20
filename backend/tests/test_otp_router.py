@@ -9,21 +9,20 @@ This module tests:
 - Fallback behavior
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from core.otp_router import (
-    get_active_channel,
-    set_active_channel,
-    send_otp,
-    _mask,
-    _sanitize_error,
     CHANNEL_DISCORD,
     CHANNEL_EMAIL,
     CHANNEL_TELEGRAM,
     CHANNEL_WHATSAPP,
+    _mask,
+    _sanitize_error,
+    get_active_channel,
+    send_otp,
+    set_active_channel,
 )
-
 
 # --- Helper Function Tests ---
 
@@ -140,8 +139,13 @@ class TestDiscordDelivery:
     @pytest.mark.asyncio
     async def test_send_discord_success(self):
         """Test successful Discord delivery."""
-        with patch("core.otp_router.settings") as mock_settings, patch("httpx.AsyncClient") as mock_client:
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+        with (
+            patch("core.otp_router.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client,
+        ):
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
 
             mock_response = MagicMock()
             mock_response.status_code = 204
@@ -159,8 +163,13 @@ class TestDiscordDelivery:
     @pytest.mark.asyncio
     async def test_send_discord_failure(self):
         """Test Discord delivery failure handling."""
-        with patch("core.otp_router.settings") as mock_settings, patch("httpx.AsyncClient") as mock_client:
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+        with (
+            patch("core.otp_router.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client,
+        ):
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
 
             mock_response = MagicMock()
             mock_response.status_code = 500
@@ -195,7 +204,10 @@ class TestEmailDelivery:
     @pytest.mark.asyncio
     async def test_send_email_success(self):
         """Test successful email delivery."""
-        with patch("core.otp_router.settings") as mock_settings, patch("httpx.AsyncClient") as mock_client:
+        with (
+            patch("core.otp_router.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client,
+        ):
             mock_api_key = MagicMock()
             mock_api_key.get_secret_value = MagicMock(return_value="test-key")
 
@@ -227,12 +239,20 @@ class TestFallback:
         """Test Telegram/WA fallback to Discord."""
         with (
             patch("core.otp_router.settings") as mock_settings,
-            patch("core.otp_router._send_discord", new_callable=AsyncMock, return_value=True),
+            patch(
+                "core.otp_router._send_discord",
+                new_callable=AsyncMock,
+                return_value=True,
+            ),
             patch("core.otp_router.redis_manager", None),
         ):
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
 
-            result = await send_otp("admin-123", "123456", {}, channel_override=CHANNEL_TELEGRAM)
+            result = await send_otp(
+                "admin-123", "123456", {}, channel_override=CHANNEL_TELEGRAM
+            )
 
         # Should fallback to Discord
         assert result is True
@@ -242,14 +262,22 @@ class TestFallback:
         """Test Discord failure triggers email fallback."""
         with (
             patch("core.otp_router.settings") as mock_settings,
-            patch("core.otp_router._send_discord", new_callable=AsyncMock, return_value=False),
-            patch("core.otp_router._send_email", new_callable=AsyncMock, return_value=True),
+            patch(
+                "core.otp_router._send_discord",
+                new_callable=AsyncMock,
+                return_value=False,
+            ),
+            patch(
+                "core.otp_router._send_email", new_callable=AsyncMock, return_value=True
+            ),
             patch("core.otp_router.redis_manager", None),
         ):
             mock_api_key = MagicMock()
             mock_api_key.get_secret_value = MagicMock(return_value="test-key")
 
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
             mock_settings.resend_api_key = mock_api_key
             mock_settings.admin_notification_email = "admin@example.com"
 

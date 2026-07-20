@@ -8,13 +8,11 @@ Defines roles, permissions, and authorization logic for the entire platform.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
 from core.config import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +122,11 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
     বাংলা: একটি রোলের নির্দিষ্ট পারমিশন আছে কিনা চেক করে।
     """
     try:
-        req_perm_str = required_permission.value if isinstance(required_permission, Permission) else required_permission.lower()
+        req_perm_str = (
+            required_permission.value
+            if isinstance(required_permission, Permission)
+            else required_permission.lower()
+        )
         role_perms = get_role_permissions(role)
 
         # wildcard support
@@ -145,11 +147,17 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
 
         return False
     except Exception as exc:  # noqa: BLE001
-        logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}")
+        logger.warning(
+            f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}"
+        )
         return False
 
 
-def authorize(user_role: str | Role, required_permission: str | Permission, context: dict[str, Any] | None = None) -> bool:
+def authorize(
+    user_role: str | Role,
+    required_permission: str | Permission,
+    context: dict[str, Any] | None = None,
+) -> bool:
     """Authorize a user action based on their role.
 
     বাংলা: ইউজারের রোলের ভিত্তিতে অ্যাকশন অথরাইজ করে।
@@ -211,7 +219,8 @@ class RoleBasedAccessControl:
         if context.expires_at:
             try:
                 import datetime
-                from core.utils.time_utils import utc_now, ensure_aware
+
+                from core.utils.time_utils import ensure_aware, utc_now
 
                 expires = datetime.datetime.fromisoformat(context.expires_at)
                 expires = ensure_aware(expires)
@@ -230,5 +239,12 @@ class RoleBasedAccessControl:
     def require(self, context: UserContext, action: str | Permission) -> dict[str, Any]:
         """Raises PermissionDeniedError on failure — callers cannot accidentally ignore a denial."""
         if not self.check(context, action):
-            raise PermissionDeniedError(role=context.role, action=action.value if isinstance(action, Permission) else action)
-        return {"allowed": True, "role": context.role, "action": action.value if isinstance(action, Permission) else action}
+            raise PermissionDeniedError(
+                role=context.role,
+                action=action.value if isinstance(action, Permission) else action,
+            )
+        return {
+            "allowed": True,
+            "role": context.role,
+            "action": action.value if isinstance(action, Permission) else action,
+        }

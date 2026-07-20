@@ -1,9 +1,7 @@
-from unittest.mock import MagicMock
-from unittest.mock import patch
+import sys
+from unittest.mock import MagicMock, patch
 
 import pytest
-
-import sys
 
 # Import guard: agents package init may import optional google.genai.
 if "google" not in sys.modules:

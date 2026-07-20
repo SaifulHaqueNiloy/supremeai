@@ -8,14 +8,15 @@ from pathlib import Path
 
 from schemas.skill_manifest import SkillManifest
 
-
 VERIFIED_MCP_SOURCES = [
     "https://github.com/modelcontextprotocol/servers",
     "https://github.com/paykaribazaronline/supreme-verified-skills",
 ]
 
 # বাংলা মন্তব্য: __file__ থেকে absolute path — relative path CI-তে ভাঙে
-_DEFAULT_INDEX_PATH = Path(__file__).resolve().parent.parent / "skills" / "manifests" / ".index.json"
+_DEFAULT_INDEX_PATH = (
+    Path(__file__).resolve().parent.parent / "skills" / "manifests" / ".index.json"
+)
 
 
 class SkillIndexManager:

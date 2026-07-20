@@ -1,10 +1,8 @@
 """Cloud storage manager tests for SupremeAI 2.0."""
 
-import pytest
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from core.cloud_storage import CloudStorageManager
 
 
@@ -63,7 +61,9 @@ class TestCloudStorageManager:
                 mock_client.post = AsyncMock(return_value=mock_response)
                 mock_client_class.return_value = mock_client
 
-                result = await manager.upload_file_async("test/file.json", b'{"data": "test"}')
+                result = await manager.upload_file_async(
+                    "test/file.json", b'{"data": "test"}'
+                )
                 assert "test.file.json" in result or "supabase" in result
 
     @pytest.mark.anyio
@@ -88,15 +88,17 @@ class TestCloudStorageManager:
                 mock_client_class.return_value = mock_client
 
                 with pytest.raises(HTTPException) as exc_info:
-                    await manager.upload_file_async("test/file.json", b'{"data": "test"}')
+                    await manager.upload_file_async(
+                        "test/file.json", b'{"data": "test"}'
+                    )
 
                 assert exc_info.value.status_code == 400
 
     @pytest.mark.anyio
     async def test_upload_file_network_error(self):
         """নেটওয়ার্ক ত্রুটি হলে আপলোড ব্যর্থ হয়।"""
-        from fastapi import HTTPException
         import httpx
+        from fastapi import HTTPException
 
         with patch("core.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = "https://test.supabase.co"
@@ -107,10 +109,14 @@ class TestCloudStorageManager:
                 mock_client = AsyncMock()
                 mock_client.__aenter__ = AsyncMock(return_value=mock_client)
                 mock_client.__aexit__ = AsyncMock(return_value=None)
-                mock_client.post = AsyncMock(side_effect=httpx.HTTPError("Network error"))
+                mock_client.post = AsyncMock(
+                    side_effect=httpx.HTTPError("Network error")
+                )
                 mock_client_class.return_value = mock_client
 
                 with pytest.raises(HTTPException) as exc_info:
-                    await manager.upload_file_async("test/file.json", b'{"data": "test"}')
+                    await manager.upload_file_async(
+                        "test/file.json", b'{"data": "test"}'
+                    )
 
                 assert exc_info.value.status_code == 503

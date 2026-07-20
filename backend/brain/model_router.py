@@ -8,10 +8,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
 from core.llm.llm_gateway import llm_gateway
+from loguru import logger
 
 try:
     from core.resilience.circuit_breaker import CircuitBreaker
@@ -65,11 +64,16 @@ class ModelRouter:
             return None
         if task_type not in self._breakers:
             self._breakers[task_type] = CircuitBreaker(
-                name=f"router_task_{task_type}", failure_threshold=5, recovery_timeout=30.0, redis_queue=redis_queue
+                name=f"router_task_{task_type}",
+                failure_threshold=5,
+                recovery_timeout=30.0,
+                redis_queue=redis_queue,
             )
         return self._breakers[task_type]
 
-    def route_and_generate_with_cot(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
+    def route_and_generate_with_cot(
+        self, prompt: str, task_type: str = "general", max_cost: float = 0.01
+    ) -> dict[str, Any]:
         # বাংলা মন্তব্য: CoT সাপোর্টের জন্য cot_reasoner এর মকিং প্রপার্টিসমূহ রিটার্ন করা হয়েছে
         res = self.route_and_generate(prompt, task_type, max_cost)
 
@@ -81,11 +85,15 @@ class ModelRouter:
             except Exception as exc:  # noqa: BLE001
                 logger.warning(f"CoT reasoner failed (null-safe guard): {exc}")
         type_name = type(reasoning_res).__name__
-        if type_name == "MagicMock" or (hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)):
+        if type_name == "MagicMock" or (
+            hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)
+        ):
             # Fallback mock dict structure
             reasoning_res = {
                 "iterations": 1,
-                "thoughts": [{"type": "thought", "content": "step one", "reasoning_depth": 0}],
+                "thoughts": [
+                    {"type": "thought", "content": "step one", "reasoning_depth": 0}
+                ],
                 "final_answer": "42",
                 "last_output": {},
             }
@@ -107,19 +115,27 @@ class ModelRouter:
             "cot_verification": verification_res,
         }
 
-    def route_and_generate(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
+    def route_and_generate(
+        self, prompt: str, task_type: str = "general", max_cost: float = 0.01
+    ) -> dict[str, Any]:
         # বাংলা মন্তব্য: টেস্টে যদি async_route_and_generate কে mock করা হয়, তবে সেটিকেও সাপোর্ট করার জন্য ডাইনামিক কলিং
         res = None
         async_func = getattr(self, "async_route_and_generate", None)
         if (
             async_func
             and async_func != ModelRouter.async_route_and_generate
-            and (inspect.iscoroutinefunction(async_func) or hasattr(async_func, "assert_called_with") or type(async_func).__name__ == "AsyncMock")
+            and (
+                inspect.iscoroutinefunction(async_func)
+                or hasattr(async_func, "assert_called_with")
+                or type(async_func).__name__ == "AsyncMock"
+            )
         ):
             res = run_async_as_sync(async_func(prompt, task_type, max_cost))
 
         if res is None:
-            res = run_async_as_sync(self.async_route_and_generate(prompt, task_type, max_cost))
+            res = run_async_as_sync(
+                self.async_route_and_generate(prompt, task_type, max_cost)
+            )
 
         if res is None:
             # ✅ FIXED: previously returned the same hardcoded fake "portfolio app" JSON
@@ -127,10 +143,18 @@ class ModelRouter:
             # path should not occur in practice — but if it ever does, report it honestly.
             error_msg = "route_and_generate: no response obtained (async_route_and_generate returned None)."
             logger.error(f"[ModelRouter] {error_msg}")
-            res = {"success": False, "model": None, "text": "", "error": error_msg, "cost": 0.0}
+            res = {
+                "success": False,
+                "model": None,
+                "text": "",
+                "error": error_msg,
+                "cost": 0.0,
+            }
         return res
 
-    async def async_route_and_generate(self, prompt: Any, task_type: str = "general", max_cost: float = 0.01, **kwargs) -> dict[str, Any]:
+    async def async_route_and_generate(
+        self, prompt: Any, task_type: str = "general", max_cost: float = 0.01, **kwargs
+    ) -> dict[str, Any]:
         logger.info(f"[ModelRouter] Forwarding task_type='{task_type}' to LLMGateway")
 
         # বাংলা মন্তব্য: টেস্ট কেসে যদি monkeypatch করা মেথডসমূহ থাকে, তবে ফলব্যাক রান করানো হচ্ছে
@@ -146,14 +170,22 @@ class ModelRouter:
                     else:
                         return val(p_str, "model")
         except Exception as e:  # noqa: BLE001
-            return {"success": False, "text": f"Error: {e} (Services unavailable)", "error": str(e)}
+            return {
+                "success": False,
+                "text": f"Error: {e} (Services unavailable)",
+                "error": str(e),
+            }
 
         # বাংলা মন্তব্য: এপিআই কী না থাকলে — আগে এখানে একটা হার্ডকোডেড fake "portfolio app"
         # JSON success:True হিসেবে রিটার্ন হতো, যা প্রতিটি কলারের কাছে আসল LLM রেসপন্স হিসেবে
         # চালিয়ে দেওয়া হতো। ✅ FIXED: এখন কনফিগারেশন সমস্যাটা স্পষ্ট error হিসেবে propagate হয়,
         # যাতে self_planner/diagram_to_architecture/image_to_code-সহ কোনো কলারই ভুলবশত এই
         # নির্দিষ্ট hardcoded স্কিমাকে বাস্তব জেনারেশন মনে না করে।
-        if not settings.gemini_api_key and not settings.openrouter_api_key and "pytest" not in sys.modules:
+        if (
+            not settings.gemini_api_key
+            and not settings.openrouter_api_key
+            and "pytest" not in sys.modules
+        ):
             # We don't force fallback just because pytest is running,
             # so that mocked LLMGateway can be hit during testing.
             error_msg = "No LLM provider configured: GEMINI_API_KEY and OPENROUTER_API_KEY are both unset."
@@ -175,43 +207,70 @@ class ModelRouter:
             elif isinstance(prompt, list):
                 # If it's a messages list, verify structure
                 normalized_prompt = [
-                    {"role": item.get("role", "user"), "content": str(item.get("content", ""))} for item in prompt if isinstance(item, dict)
+                    {
+                        "role": item.get("role", "user"),
+                        "content": str(item.get("content", "")),
+                    }
+                    for item in prompt
+                    if isinstance(item, dict)
                 ]
             elif isinstance(prompt, dict):
                 # Extract prompt text or list from dictionary
                 if "messages" in prompt:
                     normalized_prompt = prompt["messages"]
                 else:
-                    normalized_prompt = str(prompt.get("prompt", prompt.get("content", str(prompt))))
+                    normalized_prompt = str(
+                        prompt.get("prompt", prompt.get("content", str(prompt)))
+                    )
             else:
                 normalized_prompt = str(prompt)
 
             breaker = self._get_breaker(task_type)
             if not breaker.allow_request():
-                logger.warning(f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request.")
-                return {"success": False, "text": "{}", "error": f"Circuit breaker open for {task_type}"}
+                logger.warning(
+                    f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request."
+                )
+                return {
+                    "success": False,
+                    "text": "{}",
+                    "error": f"Circuit breaker open for {task_type}",
+                }
 
             if get_tracker is None:
-                logger.warning("[ModelRouter] free_tier_tracker unavailable, using default provider")
+                logger.warning(
+                    "[ModelRouter] free_tier_tracker unavailable, using default provider"
+                )
                 best_provider = "gemini"
             else:
                 tracker = get_tracker()
-                best_provider = tracker.get_best_provider(["gemini", "groq", "openrouter"])
+                best_provider = tracker.get_best_provider(
+                    ["gemini", "groq", "openrouter"]
+                )
 
             if not best_provider:
-                logger.warning("[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock).")
+                logger.warning(
+                    "[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock)."
+                )
                 return {
                     "success": True,
                     "model": "eco_mode_offline",
                     "eco_mode": True,  # Flag to be converted to X-SupremeAI-Status: Eco-Mode header
-                    "text": json.dumps({"response": "System is running in Eco-Mode. Minimal response generated."}),
+                    "text": json.dumps(
+                        {
+                            "response": "System is running in Eco-Mode. Minimal response generated."
+                        }
+                    ),
                     "cost": 0.0,
                 }
 
             # Delegate directly to our new LiteLLM universal gateway
             try:
                 response = await llm_gateway.acompletion(
-                    prompt=normalized_prompt, task_type=task_type, provider=best_provider, stream=False, **kwargs
+                    prompt=normalized_prompt,
+                    task_type=task_type,
+                    provider=best_provider,
+                    stream=False,
+                    **kwargs,
                 )
                 if response and response.get("success"):
                     breaker.mark_success()
@@ -219,7 +278,11 @@ class ModelRouter:
                     breaker.mark_failure()
 
                 if response is None:
-                    return {"success": False, "text": "{}", "error": "LLM Gateway returned None"}
+                    return {
+                        "success": False,
+                        "text": "{}",
+                        "error": "LLM Gateway returned None",
+                    }
                 return response
             except Exception as exc:  # noqa: BLE001
                 breaker.mark_failure()
@@ -234,7 +297,9 @@ class ModelRouter:
             return self._local_rag.semantic_search(query)
         return {"status": "error", "message": "RAG engine not initialized"}
 
-    def route_and_stream(self, prompt: str, task_type: str = "general", *args, **kwargs):
+    def route_and_stream(
+        self, prompt: str, task_type: str = "general", *args, **kwargs
+    ):
         # বাংলা মন্তব্য: স্ট্রিমিং ফলব্যাক মেথড যুক্ত করা হয়েছে
         if hasattr(self, "_stream_ollama") and callable(self._stream_ollama):
             yield from self._stream_ollama(prompt, "qwen")

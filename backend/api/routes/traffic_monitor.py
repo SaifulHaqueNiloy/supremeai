@@ -2,15 +2,15 @@ import json
 import time
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-
 from api.routes.admin import get_current_admin
 from core.cache.redis_manager import redis_manager
+from fastapi import APIRouter, Depends, HTTPException
 
-
-router = APIRouter(prefix="/api/admin/traffic", tags=["Traffic Control"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(
+    prefix="/api/admin/traffic",
+    tags=["Traffic Control"],
+    dependencies=[Depends(get_current_admin)],
+)
 
 
 @router.get("/live")
@@ -24,7 +24,10 @@ async def get_live_traffic(admin: dict = Depends(get_current_admin)) -> dict[str
     now = int(time.time())
     current_minute = now // 60
     # Fetch data for the current and previous minute to have a smooth rolling window
-    keys_to_fetch = [f"traffic:live:{current_minute}", f"traffic:live:{current_minute - 1}"]
+    keys_to_fetch = [
+        f"traffic:live:{current_minute}",
+        f"traffic:live:{current_minute - 1}",
+    ]
 
     total_requests = 0
     errors = 0

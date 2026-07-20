@@ -6,7 +6,6 @@ from pathlib import Path
 
 from loguru import logger
 
-
 _ALLOWED_BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -22,7 +21,9 @@ class SelfUpdater:
     def _validate_path(self, file_path: str) -> Path:
         target = Path(file_path).resolve()
         if not str(target).startswith(str(_ALLOWED_BASE_DIR)):
-            raise ValueError(f"Hotfix target '{file_path}' is outside allowed project directory.")
+            raise ValueError(
+                f"Hotfix target '{file_path}' is outside allowed project directory."
+            )
         if not target.exists():
             raise ValueError(f"Target file does not exist: {file_path}")
         return target

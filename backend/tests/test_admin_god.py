@@ -1,9 +1,9 @@
 """Admin God Layer tests for SupremeAI 2.0."""
 
 import os
-import pytest
 from unittest.mock import patch
 
+import pytest
 from core.admin_god import AdminGodLayer, GodModeAuditLog, GodModeContext
 from core.security.rbac import UserContext
 
@@ -17,7 +17,11 @@ class TestGodModeAuditLog:
         GodModeAuditLog._entries = []
 
         session_id = GodModeAuditLog.record(
-            actor="test_user", action="TEST_ACTION", resource="test_resource", reason="test_reason", ip_address="192.168.1.1"
+            actor="test_user",
+            action="TEST_ACTION",
+            resource="test_resource",
+            reason="test_reason",
+            ip_address="192.168.1.1",
         )
 
         assert session_id is not None
@@ -28,7 +32,12 @@ class TestGodModeAuditLog:
         """ডিফল্ট IP ঠিক আছে।"""
         GodModeAuditLog._entries = []
 
-        session_id = GodModeAuditLog.record(actor="test_user", action="TEST_ACTION", resource="test_resource", reason="test_reason")
+        session_id = GodModeAuditLog.record(
+            actor="test_user",
+            action="TEST_ACTION",
+            resource="test_resource",
+            reason="test_reason",
+        )
 
         assert session_id is not None
         assert GodModeAuditLog._entries[0]["ip_address"] == "unknown"
@@ -37,7 +46,12 @@ class TestGodModeAuditLog:
         """Update মেথড একটি নতুন entry যোগ করে।"""
         GodModeAuditLog._entries = []
 
-        session_id = GodModeAuditLog.record(actor="test_user", action="GOD_MODE_ACTIVATED", resource="system", reason="test")
+        session_id = GodModeAuditLog.record(
+            actor="test_user",
+            action="GOD_MODE_ACTIVATED",
+            resource="system",
+            reason="test",
+        )
 
         GodModeAuditLog.update(session_id, "GOD_MODE_TERMINATED", 100.5)
 
@@ -49,7 +63,9 @@ class TestGodModeAuditLog:
         """Update এর ডিফল্ট duration_ms ঠিক আছে।"""
         GodModeAuditLog._entries = []
 
-        session_id = GodModeAuditLog.record(actor="test_user", action="ACTIVATED", resource="system", reason="test")
+        session_id = GodModeAuditLog.record(
+            actor="test_user", action="ACTIVATED", resource="system", reason="test"
+        )
 
         GodModeAuditLog.update(session_id, "TERMINATED")
 
@@ -59,8 +75,12 @@ class TestGodModeAuditLog:
         """get_entries মূল লিস্টের কপি রিটার্ন করে।"""
         GodModeAuditLog._entries = []
 
-        GodModeAuditLog.record(actor="user1", action="ACTION1", resource="res1", reason="reason1")
-        GodModeAuditLog.record(actor="user2", action="ACTION2", resource="res2", reason="reason2")
+        GodModeAuditLog.record(
+            actor="user1", action="ACTION1", resource="res1", reason="reason1"
+        )
+        GodModeAuditLog.record(
+            actor="user2", action="ACTION2", resource="res2", reason="reason2"
+        )
 
         entries = GodModeAuditLog.get_entries()
         assert len(entries) == 2
@@ -75,7 +95,13 @@ class TestGodModeAuditLog:
         """Entry-এর structure সঠিক।"""
         GodModeAuditLog._entries = []
 
-        GodModeAuditLog.record(actor="test_actor", action="TEST_ACTION", resource="test_resource", reason="test_reason", ip_address="10.0.0.1")
+        GodModeAuditLog.record(
+            actor="test_actor",
+            action="TEST_ACTION",
+            resource="test_resource",
+            reason="test_reason",
+            ip_address="10.0.0.1",
+        )
 
         entry = GodModeAuditLog._entries[0]
         assert entry["session_id"] is not None
@@ -231,7 +257,12 @@ class TestAdminGodLayer:
         result = layer.verify_admin("wrong_password")
         assert result is False
 
-    @patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": "dGhpcyBpcyBhIGJhdnNwYXJzaHdpY2FsbHkgaGFnZSBmb3IgZW5jb2Rpbmc="})
+    @patch.dict(
+        os.environ,
+        {
+            "SUPREMEAI_ADMIN_PASSWORD_HASH": "dGhpcyBpcyBhIGJhdnNwYXJzaHdpY2FsbHkgaGFnZSBmb3IgZW5jb2Rpbmc="
+        },
+    )
     def test_verify_admin_bcrypt_exception(self):
         """bcrypt exception during verification is handled gracefully."""
         layer = AdminGodLayer()
@@ -255,10 +286,14 @@ class TestAdminGodLayerSessions:
             assert ctx is not None
             assert ctx.session_id is not None
             # Session is active
-            assert any(e["action"] == "GOD_MODE_ACTIVATED" for e in GodModeAuditLog._entries)
+            assert any(
+                e["action"] == "GOD_MODE_ACTIVATED" for e in GodModeAuditLog._entries
+            )
 
         # After context exit, terminated entry should be added
-        assert any(e["action"] == "GOD_MODE_TERMINATED" for e in GodModeAuditLog._entries)
+        assert any(
+            e["action"] == "GOD_MODE_TERMINATED" for e in GodModeAuditLog._entries
+        )
 
     @pytest.mark.anyio
     async def test_god_mode_session_logs_ip_address(self):
@@ -266,11 +301,15 @@ class TestAdminGodLayerSessions:
         GodModeAuditLog._entries = []
         layer = AdminGodLayer()
 
-        async with layer.god_mode_session("user123", "test reason", ip_address="192.168.1.100"):
+        async with layer.god_mode_session(
+            "user123", "test reason", ip_address="192.168.1.100"
+        ):
             pass
 
         entries = GodModeAuditLog.get_entries()
-        activated_entry = next((e for e in entries if e["action"] == "GOD_MODE_ACTIVATED"), None)
+        activated_entry = next(
+            (e for e in entries if e["action"] == "GOD_MODE_ACTIVATED"), None
+        )
         assert activated_entry is not None
         assert activated_entry["ip_address"] == "192.168.1.100"
 

@@ -23,7 +23,12 @@ def replace_in_func(match):
     return func_content
 
 
-content = re.sub(r"def test_rate_limit_exceeded.*?assert resp\.status_code == 429", replace_in_func, content, flags=re.DOTALL)
+content = re.sub(
+    r"def test_rate_limit_exceeded.*?assert resp\.status_code == 429",
+    replace_in_func,
+    content,
+    flags=re.DOTALL,
+)
 
 with open("tests/test_api_key_middleware.py", "w", encoding="utf-8") as f:
     f.write(content)

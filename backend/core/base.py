@@ -9,8 +9,7 @@ Dependencies:
 - `abc`: Utilized for defining abstract base classes (`ABC`) and abstract methods (`abstractmethod`), enforcing the skill contract.
 - `typing`: Used for type hinting, specifically `Any`, to indicate flexible input and output types for skill execution."""
 
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any
 
 

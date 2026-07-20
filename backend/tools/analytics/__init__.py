@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from tools.analytics.insight_mage import InsightMage
 from tools.analytics.churn_prophet import ChurnProphet
+from tools.analytics.insight_mage import InsightMage
 
 __all__ = ["InsightMage", "ChurnProphet"]

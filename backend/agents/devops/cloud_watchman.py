@@ -8,16 +8,18 @@ Date: July 18, 2026
 """
 
 from __future__ import annotations
-import os
-import sys
+
+import datetime
 import json
 import logging
-import time
-import datetime
+import os
 import statistics
-from pathlib import Path
-from dataclasses import dataclass
+import sys
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from pathlib import Path
+
 import requests
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
@@ -39,7 +41,9 @@ except ImportError:
     from core.config import settings
 
 # --- Configuration ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger("cloudwatchman")
 
 REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS", "15"))
@@ -47,8 +51,12 @@ MAX_WORKERS = int(os.getenv("CLOUDWATCH_CONCURRENCY", "5"))
 ANOMALY_Z_THRESHOLD = float(os.getenv("ANOMALY_Z_THRESHOLD", "2.5"))
 HISTORY_FILE = Path(__file__).parent / ".cloudwatch_history.json"
 
-DISCORD_WEBHOOK = getattr(settings, "discord_webhook_url", os.getenv("DISCORD_WEBHOOK_URL", ""))
-GCP_PROJECT_ID = getattr(settings, "gcp_project_id", os.getenv("GOOGLE_CLOUD_PROJECT", ""))
+DISCORD_WEBHOOK = getattr(
+    settings, "discord_webhook_url", os.getenv("DISCORD_WEBHOOK_URL", "")
+)
+GCP_PROJECT_ID = getattr(
+    settings, "gcp_project_id", os.getenv("GOOGLE_CLOUD_PROJECT", "")
+)
 VERCEL_TOKEN = os.getenv("VERCEL_OIDC_TOKEN", "")
 
 
@@ -96,7 +104,9 @@ class AnomalyDetector:
     def _save_history(self):
         # বাংলা মন্তব্য: মেমোরি থেকে হিস্ট্রি ক্যাশে ফাইল রাইট করা।
         try:
-            HISTORY_FILE.write_text(json.dumps(self.history, indent=2), encoding="utf-8")
+            HISTORY_FILE.write_text(
+                json.dumps(self.history, indent=2), encoding="utf-8"
+            )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"⚠️ Failed to save history: {e}")
 
@@ -126,20 +136,36 @@ class AnomalyDetector:
         z_score = (snapshot.value - mean) / stdev if stdev > 0 else 0.0
 
         sorted_vals = sorted(values)
-        q1 = sorted_vals[len(sorted_vals) // 4] if len(sorted_vals) >= 4 else sorted_vals[0]
-        q3 = sorted_vals[3 * len(sorted_vals) // 4] if len(sorted_vals) >= 4 else sorted_vals[-1]
+        q1 = (
+            sorted_vals[len(sorted_vals) // 4]
+            if len(sorted_vals) >= 4
+            else sorted_vals[0]
+        )
+        q3 = (
+            sorted_vals[3 * len(sorted_vals) // 4]
+            if len(sorted_vals) >= 4
+            else sorted_vals[-1]
+        )
         iqr = q3 - q1
         lower_bound = q1 - 1.5 * iqr
         upper_bound = q3 + 1.5 * iqr
 
-        is_anomaly = abs(z_score) > ANOMALY_Z_THRESHOLD or snapshot.value < lower_bound or snapshot.value > upper_bound
+        is_anomaly = (
+            abs(z_score) > ANOMALY_Z_THRESHOLD
+            or snapshot.value < lower_bound
+            or snapshot.value > upper_bound
+        )
 
         self.add_value(snapshot)
         self._save_history()
 
         if is_anomaly:
-            severity = "critical" if abs(z_score) > ANOMALY_Z_THRESHOLD * 1.5 else "warning"
-            suggestion = self._generate_suggestion(snapshot.source, snapshot.metric_name, snapshot.value, mean, upper_bound)
+            severity = (
+                "critical" if abs(z_score) > ANOMALY_Z_THRESHOLD * 1.5 else "warning"
+            )
+            suggestion = self._generate_suggestion(
+                snapshot.source, snapshot.metric_name, snapshot.value, mean, upper_bound
+            )
             return AnomalyReport(
                 timestamp=snapshot.timestamp,
                 source=snapshot.source,
@@ -151,7 +177,9 @@ class AnomalyDetector:
             )
         return None
 
-    def _generate_suggestion(self, source: str, metric: str, value: float, mean: float, upper: float) -> str:
+    def _generate_suggestion(
+        self, source: str, metric: str, value: float, mean: float, upper: float
+    ) -> str:
         if source == "firebase" and "quota" in metric:
             return "🔥 Firebase quota spike detected! Consider enabling Firestore caching or upgrading Blaze plan."
         elif source == "vercel" and "bandwidth" in metric:
@@ -182,20 +210,38 @@ class AlertManager:
             "fields": [
                 {"name": "☁️ Source", "value": report.source.upper(), "inline": True},
                 {"name": "📊 Metric", "value": report.metric_name, "inline": True},
-                {"name": "🔢 Current Value", "value": f"{report.current_value:.2f}", "inline": True},
-                {"name": "📈 Expected Range", "value": f"{report.expected_range[0]:.2f} - {report.expected_range[1]:.2f}", "inline": True},
+                {
+                    "name": "🔢 Current Value",
+                    "value": f"{report.current_value:.2f}",
+                    "inline": True,
+                },
+                {
+                    "name": "📈 Expected Range",
+                    "value": f"{report.expected_range[0]:.2f} - {report.expected_range[1]:.2f}",
+                    "inline": True,
+                },
                 {"name": "💡 Suggestion", "value": report.suggestion, "inline": False},
             ],
             "footer": {"text": f"SupremeAI CloudWatchman | {report.timestamp}"},
             "timestamp": report.timestamp,
         }
 
-        payload = {"embeds": [embed], "content": f"<@&admin> **{report.severity.upper()}** anomaly detected in `{report.source}`!"}
+        payload = {
+            "embeds": [embed],
+            "content": f"<@&admin> **{report.severity.upper()}** anomaly detected in `{report.source}`!",
+        }
 
         try:
-            resp = requests.post(self.webhook_url, json=payload, timeout=REQUEST_TIMEOUT, headers={"Content-Type": "application/json"})
+            resp = requests.post(
+                self.webhook_url,
+                json=payload,
+                timeout=REQUEST_TIMEOUT,
+                headers={"Content-Type": "application/json"},
+            )
             resp.raise_for_status()
-            logger.info(f"✅ Alert sent to Discord for {report.source}:{report.metric_name}")
+            logger.info(
+                f"✅ Alert sent to Discord for {report.source}:{report.metric_name}"
+            )
             return True
         except requests.RequestException as e:
             logger.error(f"❌ Discord alert failed: {e}")
@@ -207,10 +253,16 @@ class AlertManager:
 
         lines = ["📋 **CloudWatchman Health Summary**\n"]
         for s in snapshots:
-            lines.append(f"• `{s.source}` | `{s.metric_name}` = **{s.value:.2f}** {s.unit}")
+            lines.append(
+                f"• `{s.source}` | `{s.metric_name}` = **{s.value:.2f}** {s.unit}"
+            )
 
         try:
-            requests.post(self.webhook_url, json={"content": "\n".join(lines[:15])}, timeout=REQUEST_TIMEOUT)
+            requests.post(
+                self.webhook_url,
+                json={"content": "\n".join(lines[:15])},
+                timeout=REQUEST_TIMEOUT,
+            )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Summary send failed: {e}")
 
@@ -229,7 +281,9 @@ class FirebaseMonitor:
             client = monitoring_v3.MetricServiceClient()
             project_name = f"projects/{GCP_PROJECT_ID}"
             now_sec = int(time.time())
-            interval = monitoring_v3.TimeInterval(end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600})
+            interval = monitoring_v3.TimeInterval(
+                end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600}
+            )
             results = client.list_time_series(
                 request={
                     "name": project_name,
@@ -238,7 +292,9 @@ class FirebaseMonitor:
                     "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
                 }
             )
-            total_reads = sum(point.value.int64_value for ts in results for point in ts.points)
+            total_reads = sum(
+                point.value.int64_value for ts in results for point in ts.points
+            )
             return MetricSnapshot(
                 timestamp=datetime.datetime.now(datetime.UTC).isoformat(),
                 source="firebase",
@@ -252,7 +308,10 @@ class FirebaseMonitor:
 
     def check_firebase_status(self) -> MetricSnapshot | None:
         try:
-            resp = requests.get("https://status.firebase.google.com/incidents.json", timeout=REQUEST_TIMEOUT)
+            resp = requests.get(
+                "https://status.firebase.google.com/incidents.json",
+                timeout=REQUEST_TIMEOUT,
+            )
             resp.raise_for_status()
             active_incidents = [i for i in resp.json() if i.get("status") != "resolved"]
             return MetricSnapshot(
@@ -269,7 +328,10 @@ class FirebaseMonitor:
     def get_all_metrics(self) -> list[MetricSnapshot]:
         metrics = []
         with ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [pool.submit(self.check_firestore_quota), pool.submit(self.check_firebase_status)]
+            futures = [
+                pool.submit(self.check_firestore_quota),
+                pool.submit(self.check_firebase_status),
+            ]
             for future in as_completed(futures):
                 res = future.result()
                 if res:
@@ -286,12 +348,18 @@ class VercelMonitor:
         if not self.token:
             return None
         try:
-            resp = requests.get("https://api.vercel.com/v6/deployments?limit=10", headers=self.headers, timeout=REQUEST_TIMEOUT)
+            resp = requests.get(
+                "https://api.vercel.com/v6/deployments?limit=10",
+                headers=self.headers,
+                timeout=REQUEST_TIMEOUT,
+            )
             resp.raise_for_status()
             deployments = resp.json().get("deployments", [])
             if not deployments:
                 return None
-            failed = sum(1 for d in deployments if d.get("state") in ["ERROR", "CANCELED"])
+            failed = sum(
+                1 for d in deployments if d.get("state") in ["ERROR", "CANCELED"]
+            )
             return MetricSnapshot(
                 timestamp=datetime.datetime.now(datetime.UTC).isoformat(),
                 source="vercel",
@@ -307,9 +375,15 @@ class VercelMonitor:
         if not self.token:
             return None
         try:
-            resp = requests.get("https://api.vercel.com/v1/projects", headers=self.headers, timeout=REQUEST_TIMEOUT)
+            resp = requests.get(
+                "https://api.vercel.com/v1/projects",
+                headers=self.headers,
+                timeout=REQUEST_TIMEOUT,
+            )
             resp.raise_for_status()
-            total_bandwidth = sum(p.get("bandwidth", 0) for p in resp.json().get("projects", []))
+            total_bandwidth = sum(
+                p.get("bandwidth", 0) for p in resp.json().get("projects", [])
+            )
             return MetricSnapshot(
                 timestamp=datetime.datetime.now(datetime.UTC).isoformat(),
                 source="vercel",
@@ -324,7 +398,10 @@ class VercelMonitor:
     def get_all_metrics(self) -> list[MetricSnapshot]:
         metrics = []
         with ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [pool.submit(self.check_deployments), pool.submit(self.check_bandwidth)]
+            futures = [
+                pool.submit(self.check_deployments),
+                pool.submit(self.check_bandwidth),
+            ]
             for future in as_completed(futures):
                 res = future.result()
                 if res:
@@ -364,7 +441,9 @@ class GCPMonitor:
             client = monitoring_v3.MetricServiceClient()
             project_name = f"projects/{self.project_id}"
             now_sec = int(time.time())
-            interval = monitoring_v3.TimeInterval(end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600})
+            interval = monitoring_v3.TimeInterval(
+                end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600}
+            )
             results = client.list_time_series(
                 request={
                     "name": project_name,
@@ -373,7 +452,9 @@ class GCPMonitor:
                     "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
                 }
             )
-            total_requests = sum(point.value.int64_value for ts in results for point in ts.points)
+            total_requests = sum(
+                point.value.int64_value for ts in results for point in ts.points
+            )
             return MetricSnapshot(
                 timestamp=datetime.datetime.now(datetime.UTC).isoformat(),
                 source="gcp",
@@ -388,7 +469,10 @@ class GCPMonitor:
     def get_all_metrics(self) -> list[MetricSnapshot]:
         metrics = []
         with ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [pool.submit(self.check_billing), pool.submit(self.check_api_quota)]
+            futures = [
+                pool.submit(self.check_billing),
+                pool.submit(self.check_api_quota),
+            ]
             for future in as_completed(futures):
                 res = future.result()
                 if res:
@@ -420,7 +504,9 @@ class CloudWatchman:
                 try:
                     snapshots = future.result()
                     all_snapshots.extend(snapshots)
-                    logger.info(f"✅ {source.upper()}: {len(snapshots)} metrics loaded sync.")
+                    logger.info(
+                        f"✅ {source.upper()}: {len(snapshots)} metrics loaded sync."
+                    )
                 except Exception as e:  # noqa: BLE001
                     logger.error(f"❌ {source} metrics aggregator failed: {e}")
 

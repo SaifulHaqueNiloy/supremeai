@@ -1,15 +1,17 @@
 import time
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-
 from core.observability.observability_middleware import ObservabilityMiddleware
 
 
 class _FakeResponseStart:
     def __init__(self, status_code=200):
-        self.message = {"type": "http.response.start", "status": status_code, "headers": []}
+        self.message = {
+            "type": "http.response.start",
+            "status": status_code,
+            "headers": [],
+        }
 
 
 class _FakeApp:
@@ -55,9 +57,18 @@ async def test_bypass_metrics_path():
     async def receive():
         return None
 
-    scope = {"type": "http", "path": "/metrics", "headers": [], "method": "GET", "scheme": "http", "server": ("x", 80)}
+    scope = {
+        "type": "http",
+        "path": "/metrics",
+        "headers": [],
+        "method": "GET",
+        "scheme": "http",
+        "server": ("x", 80),
+    }
     await mw(scope, receive, send)
-    assert len(sent) == 2  # middleware bypasses metrics endpoint but Fake app still runs
+    assert (
+        len(sent) == 2
+    )  # middleware bypasses metrics endpoint but Fake app still runs
 
 
 @pytest.mark.anyio
@@ -65,7 +76,12 @@ async def test_records_metrics_and_triggers_sentinel_on_500(monkeypatch):
     app = _FakeApp()
 
     # Force redis sampling off
-    monkeypatch.setattr(ObservabilityMiddleware, "__init__", ObservabilityMiddleware.__init__, raising=False)
+    monkeypatch.setattr(
+        ObservabilityMiddleware,
+        "__init__",
+        ObservabilityMiddleware.__init__,
+        raising=False,
+    )
     mw = ObservabilityMiddleware(app)
     mw._redis_traffic_sampling_rate = 0.0
 
@@ -84,8 +100,17 @@ async def test_records_metrics_and_triggers_sentinel_on_500(monkeypatch):
         patch("core.sentinel_agent.sentinel.trigger_event", new_callable=MagicMock),
     ):
         sentinel_mock = MagicMock()
-        with patch("core.sentinel_agent.sentinel", new=MagicMock(trigger_event=sentinel_mock)):
-            scope = {"type": "http", "path": "/api/x", "headers": [], "method": "GET", "scheme": "http", "server": ("x", 80)}
+        with patch(
+            "core.sentinel_agent.sentinel", new=MagicMock(trigger_event=sentinel_mock)
+        ):
+            scope = {
+                "type": "http",
+                "path": "/api/x",
+                "headers": [],
+                "method": "GET",
+                "scheme": "http",
+                "server": ("x", 80),
+            }
 
             async def receive():
                 return None

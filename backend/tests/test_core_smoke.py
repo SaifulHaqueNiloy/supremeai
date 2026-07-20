@@ -1,5 +1,6 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
 
 
 def test_setup_logging_runs():
@@ -39,7 +40,10 @@ async def test_llm_gateway_acompletion_monkeypatched(monkeypatch, tmp_path):
     from core.llm.llm_gateway import LLMGateway
 
     with patch("litellm.acompletion", new=fake_acompletion):
-        with patch("core.cache.semantic_cache.SemanticCache.query_similar", new=AsyncMock(return_value=None)):
+        with patch(
+            "core.cache.semantic_cache.SemanticCache.query_similar",
+            new=AsyncMock(return_value=None),
+        ):
             gateway = LLMGateway()
             res = await gateway.acompletion(prompt="hi")
             assert res["success"] is True

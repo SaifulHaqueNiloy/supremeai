@@ -6,7 +6,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-
 logger = logging.getLogger(__name__)
 
 # বাংলা মন্তব্য: Judge-এর জন্য consensus থ্রেশহোল্ড — hardcode value নয়, একটি নামযুক্ত
@@ -68,19 +67,29 @@ class JudgeAgent:
     def __init__(self, model_name: str = "gpt-4o"):
         self.model_name = model_name
 
-    async def evaluate_proposals(self, task_prompt: str, proposals: list[Proposal]) -> dict[str, Any]:
+    async def evaluate_proposals(
+        self, task_prompt: str, proposals: list[Proposal]
+    ) -> dict[str, Any]:
         """
         Evaluates the given proposals against the original task prompt.
         Returns the evaluation result including decision state and the winning proposal (if any).
         """
-        logger.info(f"Judge Agent [{self.model_name}] evaluating {len(proposals)} proposals...")
+        logger.info(
+            f"Judge Agent [{self.model_name}] evaluating {len(proposals)} proposals..."
+        )
 
         if not proposals:
-            return {"decision": DebateState.RETHINKING, "best_proposal": None, "feedback": "No proposals to evaluate."}
+            return {
+                "decision": DebateState.RETHINKING,
+                "best_proposal": None,
+                "feedback": "No proposals to evaluate.",
+            }
 
         from core.llm.llm_gateway import get_llm_gateway
 
-        proposals_block = "\n\n".join(f"### Proposal from {p.agent_id}\n{p.content}" for p in proposals)
+        proposals_block = "\n\n".join(
+            f"### Proposal from {p.agent_id}\n{p.content}" for p in proposals
+        )
         system_prompt = (
             "You are the Judge Agent in a multi-agent debate/consensus system. "
             "Evaluate the given proposals against the original task and pick the strongest one. "
@@ -90,7 +99,9 @@ class JudgeAgent:
             "Set consensus_reached to true only if the winning proposal genuinely and completely "
             "solves the task; otherwise set it to false and explain what is missing in feedback."
         )
-        user_prompt = f"## Original Task\n{task_prompt}\n\n## Proposals\n{proposals_block}"
+        user_prompt = (
+            f"## Original Task\n{task_prompt}\n\n## Proposals\n{proposals_block}"
+        )
 
         try:
             gateway = get_llm_gateway()
@@ -112,7 +123,11 @@ class JudgeAgent:
                 "feedback": f"Judge evaluation unavailable (LLM error: {exc}). Retrying next cycle.",
             }
 
-        parsed = _extract_json_object(response.get("text", "")) if isinstance(response, dict) else None
+        parsed = (
+            _extract_json_object(response.get("text", ""))
+            if isinstance(response, dict)
+            else None
+        )
         if not parsed:
             logger.warning(f"Judge Agent returned non-JSON response: {response}")
             return {
@@ -122,17 +137,28 @@ class JudgeAgent:
             }
 
         winning_agent_id = parsed.get("winning_agent_id")
-        winner = next((p for p in proposals if p.agent_id == winning_agent_id), proposals[0])
+        winner = next(
+            (p for p in proposals if p.agent_id == winning_agent_id), proposals[0]
+        )
         try:
             winner.score = float(parsed.get("score", 0.0))
         except (TypeError, ValueError):
             winner.score = 0.0
         winner.feedback = parsed.get("feedback", "")
 
-        consensus_reached = bool(parsed.get("consensus_reached")) and winner.score >= _CONSENSUS_SCORE_THRESHOLD
-        decision = DebateState.CONSENSUS if consensus_reached else DebateState.RETHINKING
+        consensus_reached = (
+            bool(parsed.get("consensus_reached"))
+            and winner.score >= _CONSENSUS_SCORE_THRESHOLD
+        )
+        decision = (
+            DebateState.CONSENSUS if consensus_reached else DebateState.RETHINKING
+        )
 
-        return {"decision": decision, "best_proposal": winner, "feedback": winner.feedback}
+        return {
+            "decision": decision,
+            "best_proposal": winner,
+            "feedback": winner.feedback,
+        }
 
 
 class ConsensusOrchestrator:
@@ -156,15 +182,27 @@ class ConsensusOrchestrator:
 
         from core.swarm_pubsub import swarm_streamer
 
-        await swarm_streamer.broadcast("DEBATE_UPDATE", {"session_id": self.session_id, "state": self.current_state})
+        await swarm_streamer.broadcast(
+            "DEBATE_UPDATE",
+            {"session_id": self.session_id, "state": self.current_state},
+        )
 
         while self.iteration < self.max_iterations:
             self.iteration += 1
-            logger.info(f"Debate Cycle {self.iteration}/{self.max_iterations} for session {self.session_id}")
+            logger.info(
+                f"Debate Cycle {self.iteration}/{self.max_iterations} for session {self.session_id}"
+            )
 
             # 1. Proposing Phase
             self.current_state = DebateState.PROPOSING
-            await swarm_streamer.broadcast("DEBATE_UPDATE", {"session_id": self.session_id, "state": self.current_state, "iteration": self.iteration})
+            await swarm_streamer.broadcast(
+                "DEBATE_UPDATE",
+                {
+                    "session_id": self.session_id,
+                    "state": self.current_state,
+                    "iteration": self.iteration,
+                },
+            )
 
             async def generate_proposal(agent_id: str, prompt: str) -> Proposal:
                 """বাংলা মন্তব্য: এজেন্টের role (agent_id প্রিফিক্স থেকে) অনুযায়ী
@@ -182,9 +220,7 @@ class ConsensusOrchestrator:
                     "qa": "Propose a test and edge-case coverage plan, and flag potential failure modes.",
                 }.get(role, "Propose a solution for the task.")
 
-                system_prompt = (
-                    f"You are '{agent_id}', a specialist agent in a multi-agent debate system. {role_instructions} Be concise and specific."
-                )
+                system_prompt = f"You are '{agent_id}', a specialist agent in a multi-agent debate system. {role_instructions} Be concise and specific."
 
                 try:
                     gateway = get_llm_gateway()
@@ -195,12 +231,16 @@ class ConsensusOrchestrator:
                         ],
                         task_type=task_type,
                     )
-                    content = response.get("text", "") if isinstance(response, dict) else ""
+                    content = (
+                        response.get("text", "") if isinstance(response, dict) else ""
+                    )
                     if not content:
                         raise RuntimeError("Empty response from LLM gateway.")
                     return Proposal(agent_id=agent_id, content=content)
                 except Exception as exc:  # noqa: BLE001
-                    logger.warning(f"Proposer '{agent_id}' failed to generate a proposal: {exc}")
+                    logger.warning(
+                        f"Proposer '{agent_id}' failed to generate a proposal: {exc}"
+                    )
                     return Proposal(
                         agent_id=agent_id,
                         content="[PROPOSAL_GENERATION_FAILED]",
@@ -218,27 +258,51 @@ class ConsensusOrchestrator:
             # 2. Judging Phase
             self.current_state = DebateState.JUDGING
             await swarm_streamer.broadcast(
-                "DEBATE_UPDATE", {"session_id": self.session_id, "state": self.current_state, "proposals_count": len(self.proposals)}
+                "DEBATE_UPDATE",
+                {
+                    "session_id": self.session_id,
+                    "state": self.current_state,
+                    "proposals_count": len(self.proposals),
+                },
             )
 
-            judge_result = await self.judge.evaluate_proposals(task_prompt, self.proposals)
+            judge_result = await self.judge.evaluate_proposals(
+                task_prompt, self.proposals
+            )
 
             if judge_result["decision"] == DebateState.CONSENSUS:
                 self.current_state = DebateState.CONSENSUS
                 await swarm_streamer.broadcast(
                     "DEBATE_UPDATE",
-                    {"session_id": self.session_id, "state": self.current_state, "winning_agent": judge_result["best_proposal"].agent_id},
+                    {
+                        "session_id": self.session_id,
+                        "state": self.current_state,
+                        "winning_agent": judge_result["best_proposal"].agent_id,
+                    },
                 )
                 return judge_result["best_proposal"]
             else:
                 self.current_state = DebateState.RETHINKING
                 await swarm_streamer.broadcast(
-                    "DEBATE_UPDATE", {"session_id": self.session_id, "state": self.current_state, "feedback": judge_result.get("feedback")}
+                    "DEBATE_UPDATE",
+                    {
+                        "session_id": self.session_id,
+                        "state": self.current_state,
+                        "feedback": judge_result.get("feedback"),
+                    },
                 )
 
                 # Append feedback to the prompt for the next cycle
-                task_prompt = task_prompt + f"\n\nFeedback from Judge: {judge_result.get('feedback', 'Improve the proposal.')}"
+                task_prompt = (
+                    task_prompt
+                    + f"\n\nFeedback from Judge: {judge_result.get('feedback', 'Improve the proposal.')}"
+                )
 
         # 3. Fallback Solution if no consensus
-        logger.warning(f"Max iterations reached for session {self.session_id}. Returning FALLBACK_SOLUTION.")
-        return Proposal(agent_id="Fallback_Agent", content="System fallback executed due to lack of consensus.")
+        logger.warning(
+            f"Max iterations reached for session {self.session_id}. Returning FALLBACK_SOLUTION."
+        )
+        return Proposal(
+            agent_id="Fallback_Agent",
+            content="System fallback executed due to lack of consensus.",
+        )

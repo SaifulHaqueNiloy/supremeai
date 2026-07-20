@@ -1,7 +1,8 @@
-import pytest
-from unittest.mock import MagicMock
-from core.config_proxy import DynamicConfigProxy
 from datetime import datetime
+from unittest.mock import MagicMock
+
+import pytest
+from core.config_proxy import DynamicConfigProxy
 
 
 @pytest.fixture
@@ -33,7 +34,10 @@ async def test_dynamic_config_proxy_loads_from_db(mock_db):
     doc_ref = MagicMock()
     snapshot = MagicMock()
     snapshot.exists = True
-    snapshot.to_dict.return_value = {"DEFAULT_CODE_SMELL_THRESHOLDS": {"complexity": 20}, "COMMON_STRINGS_TO_IGNORE": ["a", "b"]}
+    snapshot.to_dict.return_value = {
+        "DEFAULT_CODE_SMELL_THRESHOLDS": {"complexity": 20},
+        "COMMON_STRINGS_TO_IGNORE": ["a", "b"],
+    }
     doc_ref.get.return_value = snapshot
     mock_db.collection.return_value.document.return_value = doc_ref
 
@@ -55,7 +59,9 @@ async def test_dynamic_config_proxy_raises_runtime_error_on_db_failure(mock_db):
 
     proxy = DynamicConfigProxy("tenant-123", mock_db)
 
-    with pytest.raises(RuntimeError, match="Failed to refresh config from DB: DB Connection Timeout"):
+    with pytest.raises(
+        RuntimeError, match="Failed to refresh config from DB: DB Connection Timeout"
+    ):
         await proxy.get("DEFAULT_CODE_SMELL_THRESHOLDS")
 
 

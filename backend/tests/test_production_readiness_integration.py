@@ -3,12 +3,12 @@ Integration tests for Phase 1 Production Readiness Systems
 বাংলা মন্তব্য: Safety Guard, Multi-Model Validator, Codegraph, এবং AI Agent System সব সিস্টেমের একীভূত পরীক্ষা।
 """
 
-import pytest
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -53,7 +53,16 @@ class TestProductionReadinessSystems:
                     {
                         "message": {
                             "content": json.dumps(
-                                {"vulnerabilities": [{"type": "SQL Injection", "severity": "HIGH", "line": 42}], "risk_level": "MEDIUM"}
+                                {
+                                    "vulnerabilities": [
+                                        {
+                                            "type": "SQL Injection",
+                                            "severity": "HIGH",
+                                            "line": 42,
+                                        }
+                                    ],
+                                    "risk_level": "MEDIUM",
+                                }
                             )
                         }
                     }
@@ -72,7 +81,9 @@ class TestProductionReadinessSystems:
             pytest.skip("codegraph_integration module not available")
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            generator = CodeGraphGenerator(codebase_path=str(REPO_ROOT), output_dir=tmpdir)
+            generator = CodeGraphGenerator(
+                codebase_path=str(REPO_ROOT), output_dir=tmpdir
+            )
 
             # সম্পূর্ণ বিশ্লেষণ চালান
             result = generator.generate_knowledge_index()
@@ -118,11 +129,19 @@ class TestProductionReadinessSystems:
         # বাংলা মন্তব্য: প্রতিটি Phase 1 সিস্টেমের ডকুমেন্টেশন আছে নিশ্চিত করুন
         contributing_path = REPO_ROOT / "CONTRIBUTING.md"
 
-        assert contributing_path.exists(), f"CONTRIBUTING.md not found at {contributing_path}"
+        assert (
+            contributing_path.exists()
+        ), f"CONTRIBUTING.md not found at {contributing_path}"
         content = contributing_path.read_text(encoding="utf-8")
 
         # সব সিস্টেমের উল্লেখ আছে নিশ্চিত করুন
-        systems = ["Safety Guard", "Multi-Model Validator", "Autocache", "Codegraph", "AI Agent"]
+        systems = [
+            "Safety Guard",
+            "Multi-Model Validator",
+            "Autocache",
+            "Codegraph",
+            "AI Agent",
+        ]
 
         for system in systems:
             assert system in content, f"{system} not documented in CONTRIBUTING.md"
@@ -145,7 +164,9 @@ class TestProductionReadinessSystems:
         """কোড স্টাইল গাইড বাংলা মন্তব্য অন্তর্ভুক্ত করে"""
         contributing_path = REPO_ROOT / "CONTRIBUTING.md"
 
-        assert contributing_path.exists(), f"CONTRIBUTING.md not found at {contributing_path}"
+        assert (
+            contributing_path.exists()
+        ), f"CONTRIBUTING.md not found at {contributing_path}"
         content = contributing_path.read_text(encoding="utf-8")
 
         # বাংলা মন্তব্য প্যাটার্ন উল্লেখ করা আছে নিশ্চিত করুন
@@ -178,7 +199,9 @@ class TestTeamOnboarding:
         """ডেভেলপমেন্ট ওয়ার্কফ্লো স্পষ্টভাবে নথিভুক্ত"""
         contributing_path = REPO_ROOT / "CONTRIBUTING.md"
 
-        assert contributing_path.exists(), f"CONTRIBUTING.md not found at {contributing_path}"
+        assert (
+            contributing_path.exists()
+        ), f"CONTRIBUTING.md not found at {contributing_path}"
         content = contributing_path.read_text(encoding="utf-8")
 
         # মূল ওয়ার্কফ্লো পদক্ষেপ অন্তর্ভুক্ত হওয়া উচিত
@@ -195,7 +218,9 @@ class TestTeamOnboarding:
         """টেস্টিং উদাহরণ এবং টেমপ্লেট অন্তর্ভুক্ত"""
         contributing_path = REPO_ROOT / "CONTRIBUTING.md"
 
-        assert contributing_path.exists(), f"CONTRIBUTING.md not found at {contributing_path}"
+        assert (
+            contributing_path.exists()
+        ), f"CONTRIBUTING.md not found at {contributing_path}"
         content = contributing_path.read_text(encoding="utf-8")
 
         # টেস্ট কোড উদাহরণ আছে নিশ্চিত করুন

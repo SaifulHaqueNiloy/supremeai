@@ -2,19 +2,12 @@
 import sys
 
 from core import evolution
-from core.evolution import auto_skill_creator
-from core.evolution import self_evolution_agent
-from core.llm import free_tier_tracker
-from core.llm import llm_gateway
-from core.messaging import event_bus
-from core.messaging import nats_messaging
-from core.observability import posthog_client
-from core.observability import telemetry
-from core.orchestration import agent_orchestrator
-from core.orchestration import swarm_orchestrator
-from core.security import auth_middleware
-from core.security import security_vault
-
+from core.evolution import auto_skill_creator, self_evolution_agent
+from core.llm import free_tier_tracker, llm_gateway
+from core.messaging import event_bus, nats_messaging
+from core.observability import posthog_client, telemetry
+from core.orchestration import agent_orchestrator, swarm_orchestrator
+from core.security import auth_middleware, security_vault
 
 sys.modules["core.event_bus"] = event_bus
 sys.modules["core.swarm_orchestrator"] = swarm_orchestrator

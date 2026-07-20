@@ -1,11 +1,9 @@
 import os
 import sys
 import tempfile
-from unittest.mock import MagicMock, AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -14,9 +12,10 @@ from core.queue.task_router import TaskRouter
 from memory.chromadb_store import ChromaDBStore
 from memory.rag_pipeline import RAGPipeline
 from memory.sqlite_store import SQLiteMemoryStore
-from tools.api_gateway import APIGateway
+
 from tools.ai_agents.browser_agent import BrowserAgent
 from tools.ai_agents.computer_agent import ComputerAgent
+from tools.api_gateway import APIGateway
 from tools.security_tools.multi_account_rotator import MultiAccountRotator
 from tools.social.telegram_bot import TelegramBotHandler
 
@@ -71,11 +70,15 @@ def test_rag_pipeline():
 async def test_browser_agent():
     agent = BrowserAgent()
     with patch("tools.ai_agents.browser_agent.is_safe_url", return_value=True):
-        with patch("tools.ai_agents.browser_agent.get_global_browser", new_callable=AsyncMock) as mock_browser:
+        with patch(
+            "tools.ai_agents.browser_agent.get_global_browser", new_callable=AsyncMock
+        ) as mock_browser:
             mock_browser.return_value = None
             with patch("httpx.get") as mock_get:
                 mock_resp = MagicMock()
-                mock_resp.text = "<html><title>Sample Site</title><body>Hello world</body></html>"
+                mock_resp.text = (
+                    "<html><title>Sample Site</title><body>Hello world</body></html>"
+                )
                 mock_resp.is_success = True
                 mock_get.return_value = mock_resp
 
@@ -113,7 +116,7 @@ def test_telegram_bot_handler():
 
 @pytest.mark.asyncio
 async def test_task_queue():
-    from core.queue.task_queue_enhanced import submit_task, get_task_result
+    from core.queue.task_queue_enhanced import get_task_result, submit_task
 
     async def mock_task():
         return "done"

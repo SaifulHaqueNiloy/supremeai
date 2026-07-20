@@ -5,8 +5,7 @@ Uses raw asyncpg via PgBouncerConnectionPool
 
 from __future__ import annotations
 
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from core.pgbouncer_pool import get_db_pool

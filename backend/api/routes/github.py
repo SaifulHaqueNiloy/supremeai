@@ -1,21 +1,16 @@
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
+from api.dependencies import get_current_user_token, get_tenant_db
+from database.session import get_db_session
+from fastapi import APIRouter, Depends, HTTPException
 from firebase_admin import firestore
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.dependencies import get_current_user_token
-from api.dependencies import get_tenant_db
-from database.session import get_db_session
-from tools.devops.github_agent import GitHubAgent
-from tools.devops.github_agent import get_user_github_token
+from tools.devops.github_agent import GitHubAgent, get_user_github_token
 from tools.repo_discovery_agent import RepoDiscoveryAgent
-
 
 router = APIRouter(prefix="/github", tags=["github"])
 repo_discovery_agent = RepoDiscoveryAgent()
@@ -44,7 +39,9 @@ async def handle_github_errors(operation_name: str, repo: str | None = None):
         error_id = uuid.uuid4().hex[:8]
         repo_info = f" for repo={repo}" if repo else ""
         logger.error(f"[{error_id}] github/{operation_name} failed{repo_info}: {e}")
-        raise HTTPException(status_code=502, detail=f"GitHub operation failed (ref: {error_id})") from e
+        raise HTTPException(
+            status_code=502, detail=f"GitHub operation failed (ref: {error_id})"
+        ) from e
 
 
 async def _get_agent(user: dict, sql_db: AsyncSession) -> GitHubAgent:
@@ -53,7 +50,9 @@ async def _get_agent(user: dict, sql_db: AsyncSession) -> GitHubAgent:
         raise HTTPException(status_code=401, detail="Unauthorized")
     token = await get_user_github_token(user_id, sql_db)
     if not token:
-        raise HTTPException(status_code=403, detail="GitHub integration not connected or token invalid.")
+        raise HTTPException(
+            status_code=403, detail="GitHub integration not connected or token invalid."
+        )
     return GitHubAgent(token=token)
 
 
@@ -94,13 +93,22 @@ class ImplementRequest(BaseModel):
 
 
 @router.post("/connect")
-async def connect_repo(payload: ConnectRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
-    async with handle_github_errors("connect", f"{payload.repo_owner}/{payload.repo_name}"):
+async def connect_repo(
+    payload: ConnectRequest,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session),
+):
+    async with handle_github_errors(
+        "connect", f"{payload.repo_owner}/{payload.repo_name}"
+    ):
         agent = await _get_agent(user, sql_db)
         inst_id = payload.installation_id if payload.installation_id is not None else ""
         await agent.connect_repo(payload.repo_owner, payload.repo_name, inst_id)
         tenant_ref = db.tenant_root
-        tenant_ref.set({"github_repo": f"{payload.repo_owner}/{payload.repo_name}"}, merge=True)
+        tenant_ref.set(
+            {"github_repo": f"{payload.repo_owner}/{payload.repo_name}"}, merge=True
+        )
         return {
             "status": "success",
             "message": f"Connected to {payload.repo_owner}/{payload.repo_name}",
@@ -108,7 +116,12 @@ async def connect_repo(payload: ConnectRequest, db=Depends(get_tenant_db), user=
 
 
 @router.post("/improve")
-async def improve_repo(payload: ImproveRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
+async def improve_repo(
+    payload: ImproveRequest,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session),
+):
     async with handle_github_errors("improve", payload.repo):
         repo = _resolve_repo(payload.repo, db)
         agent = await _get_agent(user, sql_db)
@@ -117,7 +130,12 @@ async def improve_repo(payload: ImproveRequest, db=Depends(get_tenant_db), user=
 
 
 @router.post("/push")
-async def push_improvements(payload: PushRequest, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
+async def push_improvements(
+    payload: PushRequest,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session),
+):
     async with handle_github_errors("push", payload.repo):
         if not payload.file_contents:
             raise HTTPException(
@@ -130,7 +148,9 @@ async def push_improvements(payload: PushRequest, db=Depends(get_tenant_db), use
         repo = _resolve_repo(payload.repo, db)
         agent = await _get_agent(user, sql_db)
 
-        commit_res = await agent.commit_changes(repo, payload.file_contents, payload.commit_message, payload.branch)
+        commit_res = await agent.commit_changes(
+            repo, payload.file_contents, payload.commit_message, payload.branch
+        )
 
         pr_title = "SupremeAI: Automated Code Improvements"
         pr_body = "AI has analyzed the repository and suggested changes.\n\nNote: Customer approval is required before merging."
@@ -148,19 +168,27 @@ async def push_improvements(payload: PushRequest, db=Depends(get_tenant_db), use
 @router.post("/discover")
 async def discover_repos(payload: DiscoverRequest):
     async with handle_github_errors("discover"):
-        repos = repo_discovery_agent.discover_repos(payload.requirement, payload.tech_stack, payload.criteria)
+        repos = repo_discovery_agent.discover_repos(
+            payload.requirement, payload.tech_stack, payload.criteria
+        )
         return {"status": "success", "repos": repos}
 
 
 @router.post("/implement")
 async def implement_repo(payload: ImplementRequest):
     async with handle_github_errors("implement", payload.repo_url):
-        res = repo_discovery_agent.implement_repo(payload.repo_url, payload.integration_method, payload.target_project)
+        res = repo_discovery_agent.implement_repo(
+            payload.repo_url, payload.integration_method, payload.target_project
+        )
         return res
 
 
 @router.get("/repos")
-async def list_connected_repos(db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)):
+async def list_connected_repos(
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session),
+):
     profile = db.get_tenant_profile() or {}
     repo = profile.get("github_repo")
     if not repo:
@@ -173,7 +201,11 @@ async def list_connected_repos(db=Depends(get_tenant_db), user=Depends(get_curre
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(
-            f"{GITHUB_API_BASE}/repos/{repo}", headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"}
+            f"{GITHUB_API_BASE}/repos/{repo}",
+            headers={
+                "Authorization": f"Bearer {agent.token}",
+                "Accept": "application/vnd.github.v3+json",
+            },
         )
     resp.raise_for_status()
     data = resp.json()
@@ -190,7 +222,11 @@ async def list_connected_repos(db=Depends(get_tenant_db), user=Depends(get_curre
 
 @router.get("/repos/{repo_id}/commits")
 async def list_repo_commits(
-    repo_id: str, limit: int = 10, db=Depends(get_tenant_db), user=Depends(get_current_user_token), sql_db=Depends(get_db_session)
+    repo_id: str,
+    limit: int = 10,
+    db=Depends(get_tenant_db),
+    user=Depends(get_current_user_token),
+    sql_db=Depends(get_db_session),
 ):
     profile = db.get_tenant_profile() or {}
     repo = profile.get("github_repo")
@@ -205,7 +241,10 @@ async def list_repo_commits(
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(
             f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
-            headers={"Authorization": f"Bearer {agent.token}", "Accept": "application/vnd.github.v3+json"},
+            headers={
+                "Authorization": f"Bearer {agent.token}",
+                "Accept": "application/vnd.github.v3+json",
+            },
         )
     resp.raise_for_status()
     return [

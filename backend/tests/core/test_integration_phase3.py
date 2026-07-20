@@ -1,5 +1,6 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from core.llm.llm_gateway import llm_gateway
 
 
@@ -29,7 +30,9 @@ def mock_db_integration():
 @pytest.mark.asyncio
 @patch("core.llm_gateway.get_firestore_db")
 @patch("litellm.acompletion")
-async def test_llm_gateway_self_healer_integration(mock_acompletion, mock_get_firestore_db, mock_db_integration):
+async def test_llm_gateway_self_healer_integration(
+    mock_acompletion, mock_get_firestore_db, mock_db_integration
+):
     db, doc_ref_fixes = mock_db_integration
     mock_get_firestore_db.return_value = db
 
@@ -37,7 +40,11 @@ async def test_llm_gateway_self_healer_integration(mock_acompletion, mock_get_fi
     mock_acompletion.side_effect = Exception("LiteLLM RateLimitError")
 
     with pytest.raises(Exception, match="LiteLLM RateLimitError"):
-        await llm_gateway.acompletion(prompt="Hello unique integration test prompt", model="openai/gpt-3.5-turbo", tenant_id="tenant-integration")
+        await llm_gateway.acompletion(
+            prompt="Hello unique integration test prompt",
+            model="openai/gpt-3.5-turbo",
+            tenant_id="tenant-integration",
+        )
 
     # Verify SelfHealer was called and pending_review is saved
     doc_ref_fixes.set.assert_called_once()

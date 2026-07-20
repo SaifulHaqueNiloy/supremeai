@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # 对环境变量做最小设置,避免导入时触发外部依赖
 os.environ.setdefault("OPENROUTER_API_KEY", "")
 os.environ.setdefault("HF_API_KEY", "")
@@ -164,7 +163,9 @@ class TestDetectBroadExceptions:
         assert result == []
 
     def test_specific_exception_ignored(self, detector):
-        code = "def foo():\n    try:\n        pass\n    except ValueError:\n        pass\n"
+        code = (
+            "def foo():\n    try:\n        pass\n    except ValueError:\n        pass\n"
+        )
         tree = ast.parse(code)
         result = detector._detect_broad_exceptions(tree, "test.py")
         assert result == []
@@ -206,7 +207,10 @@ class TestDetectDuplicateFunctions:
         code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    x = 1\n    return x\n"
         tree = ast.parse(code)
         with patch.object(detector, "_normalize", return_value="same_norm"):
-            with patch("backend.tools.code.code_smell_detector.ast.dump", side_effect=lambda node: "same"):
+            with patch(
+                "backend.tools.code.code_smell_detector.ast.dump",
+                side_effect=lambda node: "same",
+            ):
                 result = detector._detect_duplicate_functions(tree, "test.py")
         assert len(result) == 1
         assert result[0]["type"] == "Duplicate Code"
@@ -246,12 +250,16 @@ class TestAnalyzePythonFile:
         assert any(s["type"] == "Long Method" for s in result)
 
     def test_large_class_detected(self, detector, tmp_path):
-        methods = "\n".join(f"    def method_{i}(self):\n        pass" for i in range(25))
+        methods = "\n".join(
+            f"    def method_{i}(self):\n        pass" for i in range(25)
+        )
         src = f"class BigClass:\n{methods}\n"
         f = tmp_path / "bigclass.py"
         f.write_text(src, encoding="utf-8")
         result = detector.analyze_python_file(str(f), {"class_methods": 20})
-        assert any(s["type"] == "Large Class" and s["class"] == "BigClass" for s in result)
+        assert any(
+            s["type"] == "Large Class" and s["class"] == "BigClass" for s in result
+        )
 
     def test_syntax_error_reported(self, detector, tmp_path):
         f = tmp_path / "bad.py"
@@ -272,7 +280,11 @@ class TestAnalyzePythonFile:
         f = tmp_path / "safe.py"
         f.write_text(src, encoding="utf-8")
         with patch.object(detector, "_detect_duplicate_functions", return_value=[]):
-            with patch.object(detector, "compute_coupling_metrics", return_value={"unique_modules": 0, "fan_out": 0}):
+            with patch.object(
+                detector,
+                "compute_coupling_metrics",
+                return_value={"unique_modules": 0, "fan_out": 0},
+            ):
                 result = detector.analyze_python_file(str(f))
         assert isinstance(result, list)
 
@@ -337,7 +349,10 @@ class TestAnalyzeJsTsFile:
 
 class TestAnalyzeRadon:
     def test_returns_empty_when_radon_missing(self, detector):
-        with patch.dict(sys.modules, {"radon": None, "radon.complexity": None, "radon.metrics": None}):
+        with patch.dict(
+            sys.modules,
+            {"radon": None, "radon.complexity": None, "radon.metrics": None},
+        ):
             result = detector._analyze_radon("test.py", None, 10)
         assert result == []
 
@@ -356,10 +371,20 @@ class TestAnalyzeRadon:
         block = MagicMock(complexity=20, lineno=1, endline=10, name="foo")
         fake_complexity.cc_visit = MagicMock(return_value=[block])
 
-        with patch.dict(sys.modules, {"radon": fake_radon, "radon.complexity": fake_complexity, "radon.metrics": fake_metrics}):
+        with patch.dict(
+            sys.modules,
+            {
+                "radon": fake_radon,
+                "radon.complexity": fake_complexity,
+                "radon.metrics": fake_metrics,
+            },
+        ):
             tree = ast.parse("def foo():\n    return 1\n")
             result = detector._analyze_radon("test.py", tree, 10)
-        assert any(s["type"] == "High Complexity (radon)" and s.get("complexity") == 20 for s in result)
+        assert any(
+            s["type"] == "High Complexity (radon)" and s.get("complexity") == 20
+            for s in result
+        )
 
     def test_low_maintainability_detected(self, detector):
         fake_radon, fake_complexity, fake_metrics = _make_fake_radon(
@@ -367,10 +392,20 @@ class TestAnalyzeRadon:
             mi_return=30.0,
         )
 
-        with patch.dict(sys.modules, {"radon": fake_radon, "radon.complexity": fake_complexity, "radon.metrics": fake_metrics}):
+        with patch.dict(
+            sys.modules,
+            {
+                "radon": fake_radon,
+                "radon.complexity": fake_complexity,
+                "radon.metrics": fake_metrics,
+            },
+        ):
             tree = ast.parse("def foo():\n    return 1\n")
             result = detector._analyze_radon("test.py", tree, 10)
-        assert any(s["type"] == "Low Maintainability" and "30.0" in s.get("message", "") for s in result)
+        assert any(
+            s["type"] == "Low Maintainability" and "30.0" in s.get("message", "")
+            for s in result
+        )
 
     def test_reparses_when_tree_none(self, detector, tmp_path):
         fake_radon, fake_complexity, fake_metrics = _make_fake_radon(
@@ -381,8 +416,17 @@ class TestAnalyzeRadon:
         f = tmp_path / "x.py"
         f.write_text("def foo():\n    return 1\n", encoding="utf-8")
 
-        with patch.dict(sys.modules, {"radon": fake_radon, "radon.complexity": fake_complexity, "radon.metrics": fake_metrics}):
-            with patch("backend.tools.code.code_smell_detector.ast.parse") as mock_parse:
+        with patch.dict(
+            sys.modules,
+            {
+                "radon": fake_radon,
+                "radon.complexity": fake_complexity,
+                "radon.metrics": fake_metrics,
+            },
+        ):
+            with patch(
+                "backend.tools.code.code_smell_detector.ast.parse"
+            ) as mock_parse:
                 mock_parse.return_value = ast.parse("def foo():\n    return 1\n")
                 detector._analyze_radon(str(f), None, 10)
         assert mock_parse.call_count >= 1
@@ -454,7 +498,9 @@ class TestConstructorAvailability:
         assert d.pylint_available is False
 
     def test_check_radon_true_when_available(self):
-        with patch.dict(sys.modules, {"radon": MagicMock(), "radon.complexity": MagicMock()}):
+        with patch.dict(
+            sys.modules, {"radon": MagicMock(), "radon.complexity": MagicMock()}
+        ):
             assert CodeSmellDetector()._check_radon() is True
 
     def test_check_radon_false_when_missing(self):

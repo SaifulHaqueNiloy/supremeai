@@ -2,15 +2,10 @@ import hashlib
 import hmac
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import BackgroundTasks
-from fastapi import HTTPException
-from fastapi import Request
+from core.config import settings
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from loguru import logger
 from pydantic import BaseModel
-
-from core.config import settings
-
 
 router = APIRouter(prefix="/cdc", tags=["cdc"])
 

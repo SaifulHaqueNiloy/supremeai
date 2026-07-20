@@ -18,7 +18,10 @@ async def test_generate_unity_script(mock_game_dev):
     # বাংলা মন্তব্য: Unity C# script জেনারেশন টেস্ট
     agent = GameDevAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -39,7 +42,9 @@ public class PlayerController : MonoBehaviour
 """,
         }
 
-        result = await agent.generate_unity_script(description="Create a player controller script", script_type="MonoBehaviour")
+        result = await agent.generate_unity_script(
+            description="Create a player controller script", script_type="MonoBehaviour"
+        )
 
     assert result is not None
     assert "PlayerController" in result["code"]
@@ -66,7 +71,10 @@ async def test_gdd_to_code(mock_game_dev):
 - C# scripting
 """
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -94,7 +102,10 @@ async def test_generate_asset_script(mock_game_dev):
     # বাংলা মন্তব্য: Asset description থেকে Blender Python script জেনারেশন টেস্ট
     agent = GameDevAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -112,7 +123,9 @@ cube.data.materials.append(mat)
 """,
         }
 
-        result = await agent.generate_asset_script(asset_description="Create a red cube with material")
+        result = await agent.generate_asset_script(
+            asset_description="Create a red cube with material"
+        )
 
     assert result is not None
     assert "bpy" in result["blender_script"]
@@ -135,7 +148,10 @@ void Update()
 }
 """
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -159,7 +175,10 @@ async def test_generate_unity_coroutine():
     # বাংলা মন্তব্য: Unity coroutine script জেনারেশন টেস্ট
     agent = GameDevAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -177,7 +196,9 @@ public class AsyncLoader : MonoBehaviour
 """,
         }
 
-        result = await agent.generate_unity_script(description="Create a coroutine for async loading", script_type="Coroutine")
+        result = await agent.generate_unity_script(
+            description="Create a coroutine for async loading", script_type="Coroutine"
+        )
 
     assert result is not None
     assert "IEnumerator" in result["code"]

@@ -3,12 +3,9 @@ import logging
 import os
 from typing import Any
 
+from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
 from google import genai
 from google.genai import types
-
-from core.resilience.circuit_breaker import CircuitBreaker
-from core.resilience.circuit_breaker import CircuitBreakerOpenError
-
 
 logger = logging.getLogger("supremeai.skills.knowledge_qa")
 
@@ -44,12 +41,16 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
     try:
         from database.supabase_client import db as supabase_db
     except Exception as exc:  # noqa: BLE001
-        logger.warning(f"Supabase client unavailable for knowledge_qa vector search: {exc}")
+        logger.warning(
+            f"Supabase client unavailable for knowledge_qa vector search: {exc}"
+        )
         return []
 
     client = getattr(supabase_db, "client", None)
     if client is None:
-        logger.warning("Supabase client not configured — knowledge_qa returning no results instead of fabricated data.")
+        logger.warning(
+            "Supabase client not configured — knowledge_qa returning no results instead of fabricated data."
+        )
         return []
 
     query_embedding = _generate_embedding(query)
@@ -57,16 +58,35 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
         try:
             response = client.rpc(
                 "match_knowledge_base",
-                {"query_embedding": query_embedding, "match_namespace": namespace, "match_threshold": 0.3, "match_count": 5},
+                {
+                    "query_embedding": query_embedding,
+                    "match_namespace": namespace,
+                    "match_threshold": 0.3,
+                    "match_count": 5,
+                },
             ).execute()
             if response.data:
-                return [{"id": row["id"], "content": row["content"], "source": row["source"]} for row in response.data]
+                return [
+                    {
+                        "id": row["id"],
+                        "content": row["content"],
+                        "source": row["source"],
+                    }
+                    for row in response.data
+                ]
         except Exception as exc:  # noqa: BLE001
-            logger.warning(f"pgvector RPC 'match_knowledge_base' failed, falling back to ilike: {exc}")
+            logger.warning(
+                f"pgvector RPC 'match_knowledge_base' failed, falling back to ilike: {exc}"
+            )
 
     try:
         result = (
-            client.table("knowledge_base").select("id, content, source").eq("namespace", namespace).ilike("content", f"%{query}%").limit(5).execute()
+            client.table("knowledge_base")
+            .select("id, content, source")
+            .eq("namespace", namespace)
+            .ilike("content", f"%{query}%")
+            .limit(5)
+            .execute()
         )
         return result.data or []
     except Exception as exc:  # noqa: BLE001
@@ -83,7 +103,11 @@ def execute_tool(payload: dict) -> dict:
         if not query:
             return {"success": False, "error": "Query content cannot be empty."}
 
-        role_permissions = {"Admin": ["company_financials", "public_sops"], "Manager": ["public_sops"], "Standard_User": ["public_sops"]}
+        role_permissions = {
+            "Admin": ["company_financials", "public_sops"],
+            "Manager": ["public_sops"],
+            "Standard_User": ["public_sops"],
+        }
 
         allowed_namespaces = role_permissions.get(user_role, ["public_sops"])
 
@@ -93,17 +117,30 @@ def execute_tool(payload: dict) -> dict:
             retrieved_chunks.extend(chunks)
 
         if not retrieved_chunks:
-            return {"success": True, "result": {"answer": "I could not find any relevant documents you have permission to access.", "citations": []}}
+            return {
+                "success": True,
+                "result": {
+                    "answer": "I could not find any relevant documents you have permission to access.",
+                    "citations": [],
+                },
+            }
 
         context_str = ""
         citations = []
         for idx, chunk in enumerate(retrieved_chunks, 1):
-            context_str += f"[{idx}] Source: {chunk['source']}\nContent: {chunk['content']}\n\n"
-            citations.append({"citation_id": idx, "source": chunk["source"], "doc_id": chunk["id"]})
+            context_str += (
+                f"[{idx}] Source: {chunk['source']}\nContent: {chunk['content']}\n\n"
+            )
+            citations.append(
+                {"citation_id": idx, "source": chunk["source"], "doc_id": chunk["id"]}
+            )
 
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            return {"success": False, "error": "Gemini API key is missing from environment."}
+            return {
+                "success": False,
+                "error": "Gemini API key is missing from environment.",
+            }
 
         client = genai.Client(api_key=api_key)
 
@@ -140,7 +177,10 @@ def execute_tool(payload: dict) -> dict:
                 "error": "LLM infrastructure is temporarily unavailable. Circuit breaker active. Please retry in 60 seconds.",
             }
 
-        return {"success": True, "result": {"answer": response.text.strip(), "citations": citations}}
+        return {
+            "success": True,
+            "result": {"answer": response.text.strip(), "citations": citations},
+        }
 
     except Exception as e:
         logger.error(f"Failed inside core_knowledge_qa skill loop: {str(e)}")

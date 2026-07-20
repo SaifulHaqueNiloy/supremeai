@@ -5,18 +5,12 @@ import sys
 if "tools" not in sys.modules:
     sys.modules["tools"] = sys.modules[__name__]
 
-from tools.mcp import mcp_cloud_deploy
-from tools.mcp import mcp_github_cicd
-from tools.mcp import mcp_supabase
-from tools.mcp import mcp_workspace
-from tools.localization import bangla_voice
-from tools.learning import model_trainer
-from tools.code import pr_reviewer
-from tools.learning import skill_recommender
 from tools.ai_agents import browser_agent
-from tools.learning import style_learner
+from tools.code import image_to_code, pr_reviewer
 from tools.devops import auto_coverage_improver
-from tools.code import image_to_code
+from tools.learning import model_trainer, skill_recommender, style_learner
+from tools.localization import bangla_voice
+from tools.mcp import mcp_cloud_deploy, mcp_github_cicd, mcp_supabase, mcp_workspace
 from tools.media import multilingual_tts
 
 sys.modules["tools.mcp_cloud_deploy"] = mcp_cloud_deploy

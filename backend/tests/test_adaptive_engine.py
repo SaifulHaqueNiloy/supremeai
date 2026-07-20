@@ -1,13 +1,10 @@
 from unittest.mock import MagicMock
 
 import pytest
-
-from adaptive_engine.experience_db import Experience
-from adaptive_engine.experience_db import ExperienceDatabase
+from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from adaptive_engine.intent_parser import IntentParser
 from adaptive_engine.platform_learner import PlatformLearner
-from adaptive_engine.registry import PlatformProfile
-from adaptive_engine.registry import PlatformRegistry
+from adaptive_engine.registry import PlatformProfile, PlatformRegistry
 
 
 def test_platform_registry():

@@ -2,11 +2,9 @@
 
 import os
 import sys
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from core.idempotency_middleware import IdempotencyMiddleware
 
 
@@ -78,7 +76,9 @@ class TestIdempotencyMiddleware:
                 del sys.modules["pytest"]
 
             with patch.dict(os.environ, {"ENV": "production", "REDIS_URL": ""}):
-                with patch.object(middleware, "_get_redis", new_callable=AsyncMock, return_value=None):
+                with patch.object(
+                    middleware, "_get_redis", new_callable=AsyncMock, return_value=None
+                ):
                     await middleware(scope, MagicMock(), MagicMock())
                     mock_app.assert_called_once()
 

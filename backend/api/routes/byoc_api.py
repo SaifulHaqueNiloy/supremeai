@@ -3,22 +3,15 @@
 import json
 import os
 import uuid
-from datetime import UTC
-from datetime import datetime
-
-from fastapi import APIRouter
-from fastapi import BackgroundTasks
-from fastapi import Depends
-from fastapi import HTTPException
-from loguru import logger
+from datetime import UTC, datetime
 
 from api.dependencies import get_current_user_token
 from byoc.cloud_connector import GCPCredentialManager
 from byoc.container_orchestrator import ContainerOrchestrator
-from models.byoc_payloads import BYOCCredentialsPayload
-from models.byoc_payloads import BYOCDeployRequest
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from loguru import logger
+from models.byoc_payloads import BYOCCredentialsPayload, BYOCDeployRequest
 from models.deployment_logs import DeploymentJob
-
 
 router = APIRouter(prefix="/api/byoc", tags=["BYOC Management"])
 orchestrator = ContainerOrchestrator()
@@ -32,7 +25,10 @@ encrypted_vault: dict[str, bytes] = {}
 # 🔐 ROUTE: Upload & Encrypt Credentials
 # ==========================================
 @router.post("/credentials")
-async def save_credentials(payload: BYOCCredentialsPayload, token_payload: dict = Depends(get_current_user_token)):
+async def save_credentials(
+    payload: BYOCCredentialsPayload,
+    token_payload: dict = Depends(get_current_user_token),
+):
     """
     Encrypts and saves client-provided cloud service credentials securely.
     """
@@ -40,7 +36,10 @@ async def save_credentials(payload: BYOCCredentialsPayload, token_payload: dict 
     sa_dict = payload.gcp_credentials.model_dump()
     is_valid = GCPCredentialManager.validate_service_account(sa_dict)
     if not is_valid:
-        raise HTTPException(status_code=400, detail="GCP Service Account validation failed: Key is invalid or malformed.")
+        raise HTTPException(
+            status_code=400,
+            detail="GCP Service Account validation failed: Key is invalid or malformed.",
+        )
 
     # বাংলা মন্তব্য: প্লেইন-টেক্সট সেভ না করে Fernet কী দিয়ে এনক্রিপ্ট করে সিকিউরড ভোল্ট-এ রাখা হচ্ছে
     try:
@@ -50,23 +49,35 @@ async def save_credentials(payload: BYOCCredentialsPayload, token_payload: dict 
             raise HTTPException(status_code=401, detail="Invalid token")
         encrypted_vault[user_id] = encrypted_data
 
-        return {"status": "success", "message": "GCP Service Account credentials encrypted and securely saved.", "provider": payload.provider}
+        return {
+            "status": "success",
+            "message": "GCP Service Account credentials encrypted and securely saved.",
+            "provider": payload.provider,
+        }
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"Failed to encrypt credentials: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Failed to encrypt credentials: {str(e)}"
+        ) from e
 
 
 # ==========================================
 # 🚀 ROUTE: Trigger Terraform Container Deploy
 # ==========================================
 @router.post("/deploy")
-async def deploy_container(payload: BYOCDeployRequest, background_tasks: BackgroundTasks, token_payload: dict = Depends(get_current_user_token)):
+async def deploy_container(
+    payload: BYOCDeployRequest,
+    background_tasks: BackgroundTasks,
+    token_payload: dict = Depends(get_current_user_token),
+):
     """
     Checks user tier quota limits and starts background container deployment.
     """
     user_id = token_payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    user_tier = token_payload.get("plan_id", "free")  # প্রোডাকশনে সেশন ও সাবস্ক্রিপশন টিয়ার থেকে আসবে
+    user_tier = token_payload.get(
+        "plan_id", "free"
+    )  # প্রোডাকশনে সেশন ও সাবস্ক্রিপশন টিয়ার থেকে আসবে
 
     # Load quota limits
     # বাংলা মন্তব্য: রাউট লেভেলেই কোটা চেক করে রিকোয়েস্ট ফিল্টার করা হচ্ছে যাতে ওভারফ্লো না হয়
@@ -81,15 +92,23 @@ async def deploy_container(payload: BYOCDeployRequest, background_tasks: Backgro
         user_limits = {"max_containers": 1, "max_memory": "256Mi", "max_cpu": "500m"}
 
     # Count active containers (simulation check)
-    current_active = sum(1 for job in active_jobs.values() if job.user_id == user_id and job.status == "success")
+    current_active = sum(
+        1
+        for job in active_jobs.values()
+        if job.user_id == user_id and job.status == "success"
+    )
     if current_active >= user_limits["max_containers"]:
         raise HTTPException(
-            status_code=403, detail=f"Deployment blocked: Account tier limit reached ({user_limits['max_containers']} active containers max)."
+            status_code=403,
+            detail=f"Deployment blocked: Account tier limit reached ({user_limits['max_containers']} active containers max).",
         )
 
     # Check if credentials exist in secure vault
     if user_id not in encrypted_vault:
-        raise HTTPException(status_code=400, detail="GCP Service Account credentials not found. Please upload credentials first.")
+        raise HTTPException(
+            status_code=400,
+            detail="GCP Service Account credentials not found. Please upload credentials first.",
+        )
 
     # Initiate background job deployment
     job_id = str(uuid.uuid4())
@@ -100,7 +119,10 @@ async def deploy_container(payload: BYOCDeployRequest, background_tasks: Backgro
         provider=payload.provider,
         status="deploying",
         started_at=datetime.now(UTC),
-        logs=["Initializing Terraform build pipeline...", "Spinning up GCP Cloud Run service context..."],
+        logs=[
+            "Initializing Terraform build pipeline...",
+            "Spinning up GCP Cloud Run service context...",
+        ],
     )
     active_jobs[job_id] = job
 
@@ -111,7 +133,9 @@ async def deploy_container(payload: BYOCDeployRequest, background_tasks: Backgro
             if res.get("status") == "deployed":
                 job.status = "success"
                 job.finished_at = datetime.now(UTC)
-                job.service_url = f"https://byoc-skill-{payload.skill_name}-mock-url.a.run.app"
+                job.service_url = (
+                    f"https://byoc-skill-{payload.skill_name}-mock-url.a.run.app"
+                )
                 job.logs.append("✅ Cloud Run deployment finished successfully.")
             else:
                 job.status = "failed"
@@ -126,7 +150,11 @@ async def deploy_container(payload: BYOCDeployRequest, background_tasks: Backgro
 
     background_tasks.add_task(run_deployment)
 
-    return {"status": "pending", "job_id": job_id, "message": f"Deployment pipeline initialized for skill '{payload.skill_name}'."}
+    return {
+        "status": "pending",
+        "job_id": job_id,
+        "message": f"Deployment pipeline initialized for skill '{payload.skill_name}'.",
+    }
 
 
 # ==========================================

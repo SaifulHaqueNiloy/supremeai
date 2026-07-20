@@ -1,6 +1,5 @@
 from core.messaging.event_bus import ErrorContext
 
-
 """This module serves as the central FastAPI application lifespan manager for the SupremeAI project, orchestrating the robust startup and graceful shutdown of all critical backend infrastructure. It handles the initialization of essential services such as database connection pools, Redis caches, global HTTP clients, OpenTelemetry tracing, the core AI Orchestrator, and various background agents, ensuring the application is fully prepared to serve requests. The module is designed with defensive programming principles, allowing the application to start in a degraded mode if certain non-critical services fail to initialize, thereby enhancing operational stability and resilience in a highly scalable AI ecosystem.
 
 Key Components:
@@ -33,8 +32,6 @@ import asyncio  # noqa: E402
 from contextlib import asynccontextmanager  # noqa: E402
 
 import httpx  # noqa: E402
-from loguru import logger  # noqa: E402
-
 from core import services  # noqa: E402
 from core.cache.redis_manager import redis_manager  # noqa: E402
 from core.config import settings  # noqa: E402
@@ -44,11 +41,14 @@ from core.messaging.event_bus import ErrorEvent  # noqa: E402
 from core.messaging.event_bus import error_event_bus  # noqa: E402
 from core.orchestration.orchestrator import Orchestrator  # noqa: E402
 from core.persistence import pooled_pg  # noqa: E402
-from core.persistence.write_behind import flush_all as flush_write_behind_batchers  # noqa: E402
+from core.persistence.write_behind import (
+    flush_all as flush_write_behind_batchers,
+)  # noqa: E402
 from core.pgbouncer_pool import get_db_pool  # noqa: E402
 from core.pgbouncer_pool import init_db_pool  # noqa: E402
-from core.startup_validator import StartupValidator  # noqa: E402
 from core.reliability_controller import ReliabilityController  # noqa: E402
+from core.startup_validator import StartupValidator  # noqa: E402
+from loguru import logger  # noqa: E402
 
 
 async def _ensure_api_key_tables() -> None:
@@ -102,8 +102,12 @@ async def _ensure_api_key_tables() -> None:
                 )
                 """
             )
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)")
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
+            )
     finally:
         await pool.release(conn)
     logger.info("✅ API key tables ensured")
@@ -155,11 +159,15 @@ async def app_lifespan(app):
     try:
         db_url = settings.supabase_database_url
         if "sqlite" in db_url:
-            logger.info("💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization.")
+            logger.info(
+                "💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization."
+            )
             app.state.db_pool = None
         else:
             await init_db_pool(db_url)
-            logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
+            logger.info(
+                "⚡ PgBouncer connection pool successfully initialized at startup."
+            )
             await _ensure_api_key_tables()
     except Exception as exc:  # noqa: BLE001
         # বাংলা মন্তব্য: P1 Fix — DB fail হলে startup crash করা হবে না।
@@ -180,7 +188,9 @@ async def app_lifespan(app):
         )
         if settings.env == "production":
             # Production-এ Sentry-তে alert পাঠান, কিন্তু crash করবেন না
-            logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
+            logger.critical(
+                "🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503."
+            )
 
     # Config cache initialization
     try:
@@ -188,7 +198,9 @@ async def app_lifespan(app):
         logger.info("✅ System configuration cache successfully initialized.")
     except Exception as exc:  # noqa: BLE001
         # প্রোডাকশনে ডাটাবেজ সাময়িক ডাউন থাকলেও সার্ভার যেন বুট হতে পারে
-        logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
+        logger.warning(
+            f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}"
+        )
         app.state.subsystem_status["config"] = "fallback"
         error_event_bus.emit(
             ErrorEvent(
@@ -226,7 +238,9 @@ async def app_lifespan(app):
             )
         )
         if settings.env == "production":
-            logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
+            logger.critical(
+                "🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail."
+            )
             # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
 
     # CostGuard initialization (for distributed budget tracking)
@@ -275,12 +289,18 @@ async def app_lifespan(app):
         if settings.supabase_database_url:
             # বাংলা: sync call in async context — thread-এ চালানো হচ্ছে blocking এড়াতে।
             # wait_for 30s timeout দেওয়া হলো: psycopg2.connect হ্যাং করলে lifespan ব্লক না হয়।
-            await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
+            await asyncio.wait_for(
+                asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0
+            )
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
-        logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
+        logger.warning(
+            "Supabase schema bootstrap timed out after 30s — continuing without full schema init."
+        )
     except Exception as exc:  # noqa: BLE001
-        logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
+        logger.warning(
+            f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap."
+        )
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -306,7 +326,9 @@ async def app_lifespan(app):
     try:
         from core.telemetry.system_telemetry import run_system_telemetry_loop
 
-        app.state.system_telemetry_task = asyncio.create_task(run_system_telemetry_loop())
+        app.state.system_telemetry_task = asyncio.create_task(
+            run_system_telemetry_loop()
+        )
         logger.info("✅ System Telemetry Broadcaster background loop started.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
@@ -329,7 +351,9 @@ async def app_lifespan(app):
         _evo_agent = SelfEvolutionAgent(interval_seconds=300)  # 5 min cycle
         await _evo_agent.start()
         app.state.evo_agent = _evo_agent
-        logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")
+        logger.info(
+            "✅ SelfEvolutionAgent background loop started (5-min evolution cycle)."
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ SelfEvolutionAgent failed to start: {exc}")
         app.state.evo_agent = None
@@ -346,13 +370,19 @@ async def app_lifespan(app):
 
             while True:
                 try:
-                    await _daily_learner.learn_and_plan("Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency")
+                    await _daily_learner.learn_and_plan(
+                        "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
+                    )
                 except Exception as _exc:  # noqa: BLE001
                     logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
                 await _asyncio.sleep(86400)  # 24 hours
 
-        app.state.daily_learner_task = asyncio.create_task(_daily_learner_loop(), name="daily-learner")
-        logger.info("✅ DailyLearner background task started (24h research scan cycle).")
+        app.state.daily_learner_task = asyncio.create_task(
+            _daily_learner_loop(), name="daily-learner"
+        )
+        logger.info(
+            "✅ DailyLearner background task started (24h research scan cycle)."
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
@@ -363,13 +393,17 @@ async def app_lifespan(app):
 
         await auto_healer_service.start()
         app.state.auto_healer = auto_healer_service
-        logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
+        logger.info(
+            "✅ AutoHealerService started (DB/Redis healing active, 30s check interval)."
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
 
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 
-    logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
+    logger.critical(
+        "🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator."
+    )
 
     # Shutdown Tier-8 Meta-Self Agents
     try:
@@ -446,10 +480,14 @@ async def app_lifespan(app):
 
         if tasks:
             try:
-                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=10.0)
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks, return_exceptions=True), timeout=10.0
+                )
                 logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")
             except TimeoutError:
-                logger.warning("⚠️ Background tasks did not finish within 10s shutdown window.")
+                logger.warning(
+                    "⚠️ Background tasks did not finish within 10s shutdown window."
+                )
             except asyncio.CancelledError:
                 pass
     except Exception as e:  # noqa: BLE001

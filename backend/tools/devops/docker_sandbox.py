@@ -1,8 +1,8 @@
-from core.config import settings
-import subprocess
 import shlex
+import subprocess
 from typing import Any
 
+from core.config import settings
 from loguru import logger
 
 
@@ -21,8 +21,15 @@ class DockerSandbox:
                 check=True,
             )
             return True
-        except (FileNotFoundError, subprocess.TimeoutExpired, OSError, subprocess.CalledProcessError) as e:
-            logger.warning(f"Docker check failed: {e}. Docker-based execution will be unavailable.")
+        except (
+            FileNotFoundError,
+            subprocess.TimeoutExpired,
+            OSError,
+            subprocess.CalledProcessError,
+        ) as e:
+            logger.warning(
+                f"Docker check failed: {e}. Docker-based execution will be unavailable."
+            )
             return False
 
     def execute_command(self, cmd: str) -> dict[str, Any]:
@@ -62,31 +69,41 @@ class DockerSandbox:
         ]
 
         cmd_lower = cmd.lower()
-        if any(kw in cmd_lower for kw in harmful_keywords) or any(re.search(pat, cmd_lower) for pat in forbidden_patterns):
-            logger.warning("Security Firewall: Command blocked due to high-risk pattern.")
+        if any(kw in cmd_lower for kw in harmful_keywords) or any(
+            re.search(pat, cmd_lower) for pat in forbidden_patterns
+        ):
+            logger.warning(
+                "Security Firewall: Command blocked due to high-risk pattern."
+            )
             return {
                 "success": False,
                 "error": "Security Firewall block: command contains forbidden patterns.",
             }
 
         if not self.docker_available:
-            env_name = getattr(settings, "env", None) or getattr(settings, "env", "").lower()
+            env_name = (
+                getattr(settings, "env", None) or getattr(settings, "env", "").lower()
+            )
             allow_fallback_str = getattr(settings, "allow_local_sandbox_fallback", None)
             if allow_fallback_str is not None:
                 allow_fallback = allow_fallback_str.lower() == "true"
             else:
-                allow_fallback = getattr(settings, "allow_local_sandbox_fallback", None) == "true" or getattr(
-                    settings, "allow_sandbox_fallback", False
-                )
+                allow_fallback = getattr(
+                    settings, "allow_local_sandbox_fallback", None
+                ) == "true" or getattr(settings, "allow_sandbox_fallback", False)
 
             if env_name in {"production", "staging"} or not allow_fallback:
-                logger.error("Docker is not available and local execution fallback is disabled.")
+                logger.error(
+                    "Docker is not available and local execution fallback is disabled."
+                )
                 return {
                     "success": False,
                     "error": "Sandbox execution failed: Docker is not running and local execution is disabled for safety.",
                 }
 
-            logger.warning("Docker is not available. Simulating command execution in local process.")
+            logger.warning(
+                "Docker is not available. Simulating command execution in local process."
+            )
             try:
                 # বাংলা মন্তব্য: Windows এ echo এর মত built-in command fallback run করার জন্য shell config setup
                 import sys
@@ -94,7 +111,14 @@ class DockerSandbox:
                 use_shell = sys.platform == "win32"
                 # shell=True ব্যবহার করার সময় shlex.split ব্যবহার করা উচিত নয়
                 command_to_run = cmd if use_shell else shlex.split(cmd)
-                result = subprocess.run(command_to_run, shell=use_shell, capture_output=True, text=True, timeout=5, check=True)  # noqa: S603
+                result = subprocess.run(
+                    command_to_run,
+                    shell=use_shell,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=True,
+                )  # noqa: S603
                 return {
                     "success": True,
                     "stdout": result.stdout,
@@ -102,9 +126,19 @@ class DockerSandbox:
                     "exit_code": result.returncode,
                     "simulated": True,
                 }
-            except (FileNotFoundError, subprocess.TimeoutExpired, OSError, subprocess.CalledProcessError) as e:
+            except (
+                FileNotFoundError,
+                subprocess.TimeoutExpired,
+                OSError,
+                subprocess.CalledProcessError,
+            ) as e:
                 if isinstance(e, subprocess.CalledProcessError):
-                    return {"success": False, "error": e.stderr or str(e), "stdout": e.stdout, "simulated": True}
+                    return {
+                        "success": False,
+                        "error": e.stderr or str(e),
+                        "stdout": e.stdout,
+                        "simulated": True,
+                    }
                 return {"success": False, "error": str(e), "simulated": True}
 
         # Run command securely inside docker
@@ -120,7 +154,9 @@ class DockerSandbox:
                 "-c",
                 cmd,
             ]
-            result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=10, check=True)  # noqa: S603
+            result = subprocess.run(
+                docker_cmd, capture_output=True, text=True, timeout=10, check=True
+            )  # noqa: S603
             return {
                 "success": True,
                 "stdout": result.stdout,
@@ -128,7 +164,17 @@ class DockerSandbox:
                 "exit_code": result.returncode,
                 "simulated": False,
             }
-        except (FileNotFoundError, subprocess.TimeoutExpired, OSError, subprocess.CalledProcessError) as e:
+        except (
+            FileNotFoundError,
+            subprocess.TimeoutExpired,
+            OSError,
+            subprocess.CalledProcessError,
+        ) as e:
             if isinstance(e, subprocess.CalledProcessError):
-                return {"success": False, "error": e.stderr or str(e), "stdout": e.stdout, "simulated": False}
+                return {
+                    "success": False,
+                    "error": e.stderr or str(e),
+                    "stdout": e.stdout,
+                    "simulated": False,
+                }
             return {"success": False, "error": str(e), "simulated": False}

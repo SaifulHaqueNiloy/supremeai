@@ -7,13 +7,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import HTTPException
+from core.feedback_loop import FeedbackLoop
+from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
-
-from core.feedback_loop import FeedbackLoop
-
 
 DB_PATH = Path("data/feedback.db")
 _feedback_loop = FeedbackLoop()
@@ -57,7 +54,9 @@ async def feedback_lifespan(router: APIRouter):
     yield
 
 
-router = APIRouter(prefix="/api/feedback", tags=["feedback"], lifespan=feedback_lifespan)
+router = APIRouter(
+    prefix="/api/feedback", tags=["feedback"], lifespan=feedback_lifespan
+)
 
 
 class FeedbackEvent(BaseModel):
@@ -78,7 +77,9 @@ async def ingest(event: FeedbackEvent) -> FeedbackResponse:
         if handled.get("stored"):
             _persist_feedback(event.event_type, payload)
             return FeedbackResponse(success=True)
-        raise HTTPException(status_code=400, detail=handled.get("reason", "Unsupported feedback type"))
+        raise HTTPException(
+            status_code=400, detail=handled.get("reason", "Unsupported feedback type")
+        )
     except HTTPException:
         raise
     except Exception as exc:  # noqa: BLE001

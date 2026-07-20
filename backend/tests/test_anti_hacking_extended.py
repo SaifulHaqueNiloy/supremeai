@@ -8,9 +8,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from middleware.anti_hacking import AntiHackingContextMiddleware, _octet3
-
 
 # ── _octet3 helper ───────────────────────────────────────────────────────────
 
@@ -34,7 +32,12 @@ def test_octet3_empty_returns_empty():
 async def test_dispatch_no_admin_sets_signal_only():
     middleware = AntiHackingContextMiddleware(app=MagicMock())
     request = MagicMock()
-    request.headers = {"x-forwarded-for": "1.2.3.4", "cf-ipcountry": "BD", "user-agent": "UA", "x-device-fingerprint": "FP"}
+    request.headers = {
+        "x-forwarded-for": "1.2.3.4",
+        "cf-ipcountry": "BD",
+        "user-agent": "UA",
+        "x-device-fingerprint": "FP",
+    }
     request.state = MagicMock()
     request.state.user = None
     call_next = AsyncMock(return_value=MagicMock())

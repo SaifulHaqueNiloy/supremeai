@@ -1,9 +1,7 @@
 import os
 
 import pytest
-
 from fastapi import Request
-
 from middleware.chaos_injector import ChaosInjectorMiddleware
 
 

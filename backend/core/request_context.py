@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import contextvars
 import uuid
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # ContextVar ডিফাইন করা হচ্ছে
-correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("correlation_id", default="")
+correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "correlation_id", default=""
+)
 
 
 def get_correlation_id() -> str:

@@ -15,9 +15,7 @@ from typing import Any
 from agents.morphic_adapter import MorphicAdapter
 from sandbox.docker_sandbox import DockerSandbox
 from schemas.skill_index import SkillIndexManager
-from schemas.skill_manifest import SkillManifest
-from schemas.skill_manifest import SkillStatus
-
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 logger = logging.getLogger("supremeai.skill_ingestor")
 
@@ -41,19 +39,38 @@ class SkillIngestor:
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        if alias.name in ["os", "subprocess", "sys", "requests", "urllib", "socket"]:
+                        if alias.name in [
+                            "os",
+                            "subprocess",
+                            "sys",
+                            "requests",
+                            "urllib",
+                            "socket",
+                        ]:
                             return False, f"Forbidden import found: {alias.name}"
                 elif isinstance(node, ast.ImportFrom):
-                    if node.module in ["os", "subprocess", "sys", "requests", "urllib", "socket"]:
+                    if node.module in [
+                        "os",
+                        "subprocess",
+                        "sys",
+                        "requests",
+                        "urllib",
+                        "socket",
+                    ]:
                         return False, f"Forbidden from-import found: {node.module}"
                 if isinstance(node, ast.Call):
-                    if isinstance(node.func, ast.Name) and node.func.id in ["eval", "exec"]:
+                    if isinstance(node.func, ast.Name) and node.func.id in [
+                        "eval",
+                        "exec",
+                    ]:
                         return False, "Dangerous code pattern found: exec/eval usage."
             return True, "AST verified."
         except SyntaxError:
             return False, "Invalid Python syntax."
 
-    def ingest_mcp_skill(self, manifest: SkillManifest, zip_url: str, entry_file: str, test_payload: str) -> dict[str, Any]:
+    def ingest_mcp_skill(
+        self, manifest: SkillManifest, zip_url: str, entry_file: str, test_payload: str
+    ) -> dict[str, Any]:
         # 🛡️ ১. কঠোর Path Traversal এবং Injection ব্লকিং
         if not re.match(r"^[a-zA-Z0-9_]+$", manifest.skill_id):
             return {"success": False, "detail": "Malicious Skill ID pattern blocked."}
@@ -85,7 +102,9 @@ class SkillIngestor:
                     base_path = Path(os.path.abspath(skill_staging_dir))
 
                     if not target_path.resolve().is_relative_to(base_path.resolve()):
-                        raise PermissionError("🛑 Zip-Slip Malicious Payload Detected and Defused!")
+                        raise PermissionError(
+                            "🛑 Zip-Slip Malicious Payload Detected and Defused!"
+                        )
 
                 archive.extractall(path=skill_staging_dir)
 
@@ -101,8 +120,12 @@ class SkillIngestor:
                 return {"success": False, "detail": f"Static Failure: {static_msg}"}
 
             # ---- MORPHIC ADAPTATION LAYER START ----
-            logger.info(f"🧬 [MORPHIC ENGINE] Triggering AI Refactoring for skill: {manifest.skill_id}")
-            morphic_res = self.morphic_adapter.adapt_code_to_contract(raw_code=code_content, skill_description=manifest.description)
+            logger.info(
+                f"🧬 [MORPHIC ENGINE] Triggering AI Refactoring for skill: {manifest.skill_id}"
+            )
+            morphic_res = self.morphic_adapter.adapt_code_to_contract(
+                raw_code=code_content, skill_description=manifest.description
+            )
 
             if not morphic_res["success"]:
                 manifest.status = SkillStatus.REJECTED
@@ -116,7 +139,9 @@ class SkillIngestor:
             manifest.status = SkillStatus.QUARANTINE
             self.index_manager.update_skill(manifest)
 
-            sandbox_res = self.sandbox.run_quarantine_test(skill_staging_dir, entry_file, test_payload)
+            sandbox_res = self.sandbox.run_quarantine_test(
+                skill_staging_dir, entry_file, test_payload
+            )
 
             if sandbox_res["exit_code"] == 0:
                 # 🔄 ৩. Staging to Quarantine Safe Move (ওভাররাইট পলিসি সহ)
@@ -126,11 +151,19 @@ class SkillIngestor:
 
                 shutil.move(str(skill_staging_dir), str(skill_quarantine_dir))
 
-                return {"success": True, "status": "QUARANTINE_PASSED", "detail": "Skill verified and safely moved to quarantine queue."}
+                return {
+                    "success": True,
+                    "status": "QUARANTINE_PASSED",
+                    "detail": "Skill verified and safely moved to quarantine queue.",
+                }
             else:
                 manifest.status = SkillStatus.REJECTED
                 self.index_manager.update_skill(manifest)
-                return {"success": False, "status": "REJECTED", "detail": "Sandbox test failed."}
+                return {
+                    "success": False,
+                    "status": "REJECTED",
+                    "detail": "Sandbox test failed.",
+                }
 
         except Exception as e:
             manifest.status = SkillStatus.REJECTED
