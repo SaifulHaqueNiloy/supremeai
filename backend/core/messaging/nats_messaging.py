@@ -3,9 +3,20 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-import nats
-from nats.errors import NoServersError
-from nats.js.errors import KeyValueError
+try:
+    import nats
+    from nats.errors import NoServersError
+    from nats.js.errors import KeyValueError
+except ModuleNotFoundError:  # pragma: no cover
+    nats = None  # type: ignore[assignment]
+
+    class NoServersError(Exception):  # type: ignore[no-redef]
+        pass
+
+    class KeyValueError(Exception):  # type: ignore[no-redef]
+        pass
+
+
 from pydantic import BaseModel
 
 
@@ -27,6 +38,10 @@ class NATSClient:
 
     async def connect(self):
         """Establishes connection to NATS with Token Auth and enables JetStream."""
+        if nats is None:
+            logger.warning("[NATS] Optional dependency 'nats' is not installed. Skipping NATS connection.")
+            return
+
         try:
             connect_kwargs = {"servers": [self.url]}
             if self.token:
@@ -95,7 +110,7 @@ class NATSClient:
 
     async def get_all_workers(self) -> dict[str, dict]:
         """Retrieves all registered workers from the KV store."""
-        workers = {}
+        workers: dict[str, dict] = {}
         if self.kv_store:
             try:
                 keys = await self.kv_store.keys()
