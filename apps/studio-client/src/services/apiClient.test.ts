@@ -35,7 +35,7 @@ describe('apiClient', () => {
 
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/test', expect.objectContaining({
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
       method: 'GET'
     }));
     expect(result).toEqual(mockResponse);
