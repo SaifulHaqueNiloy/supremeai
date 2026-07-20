@@ -9,7 +9,6 @@ exclude = [
 
 [lint]
 ignore = [
-    "BLE001",
     "B904",
     "E722",
     "E402",
