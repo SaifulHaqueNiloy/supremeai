@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""বাংলা মন্তব্য: SupremeAI Self-Audit Static Scanner।
+"""বাংলা মন্তব্য: SupremeAI Self-Audit Static Scanner (উন্নত ও অপ্টিমাইজড সংস্করণ)।
 
 উদ্দেশ্য: `ruff`/`mypy`-এর মতো external dependency ছাড়াই (Zero Cost),
 শুধু Python stdlib `ast` module ব্যবহার করে পুরো কোডবেসে common bug
@@ -13,15 +13,9 @@ pattern খুঁজে বের করা — যাতে CI-তে network/p
   4. Naive `datetime.now()` ব্যবহার (timezone-unaware — multi-region risk)
   5. Byte-identical duplicate ফাইল (Zero-Duplication নীতি)
   6. Hardcoded secret-সদৃশ প্যাটার্ন (basic heuristic, false-positive-prone)
-
-ব্যবহার:
-    python3 scripts/quality/self_audit_scan.py [--path .] [--json report.json] [--fail-on-syntax-error]
-
-Self-Healing Engine নীতির সাথে সংযোগ: এই script-টা GitHub Actions-এ
-weekly cron হিসেবে চালানো যায় (`.github/workflows/self-audit.yml`)।
-Syntax error পেলে non-zero exit code দেয় (CI fail করানোর জন্য); বাকি
-findings শুধু রিপোর্ট করে, CI block করে না (যাতে false-positive দিয়ে
-deployment block না হয় — Zero Breakage)।
+  7. ডুপ্লিকেট ক্লাস মেথড ডিটেকশন (একই ক্লাসের ভেতর ডুপ্লিকেট মেথড ওভাররাইট - প্রপার্টি সেটার বাদে)
+  8. প্রোডাকশন কোডে debug print() স্টেটমেন্ট ডিটেকশন
+  9. TODO / FIXME / HACK / XXX ট্র্যাকিং
 """
 
 from __future__ import annotations
@@ -49,13 +43,16 @@ SECRET_RE = re.compile(
 
 
 def iter_files(root: Path, exts: tuple[str, ...]):
-    for path in root.rglob("*"):
-        if path.is_dir():
-            continue
-        if any(part in SKIP_DIRS for part in path.parts):
-            continue
-        if path.suffix in exts:
-            yield path
+    try:
+        for p in root.iterdir():
+            if p.name in SKIP_DIRS:
+                continue
+            if p.is_dir():
+                yield from iter_files(p, exts)
+            elif p.suffix in exts:
+                yield p
+    except PermissionError:
+        pass
 
 
 def scan_python(root: Path) -> dict:
@@ -63,6 +60,9 @@ def scan_python(root: Path) -> dict:
     mutable_defaults = []
     except_pass = []
     naive_datetime = []
+    duplicate_methods = []
+    print_statements = []
+    todo_fixmes = []
 
     for path in iter_files(root, CODE_EXTS):
         try:
@@ -75,6 +75,10 @@ def scan_python(root: Path) -> dict:
         for i, line in enumerate(src.splitlines(), 1):
             if "datetime.now()" in line and "utcnow" not in line:
                 naive_datetime.append(f"{rel}:{i}")
+            if any(x in line for x in ("TODO", "FIXME", "XXX", "HACK")):
+                todo_fixmes.append(f"{rel}:{i}: {line.strip()[:100]}")
+            if "print(" in line and "/tests/" not in rel and "test_" not in path.name and "/scripts/" not in rel:
+                print_statements.append(f"{rel}:{i}: {line.strip()[:100]}")
 
         try:
             tree = ast.parse(src, filename=rel)
@@ -90,12 +94,32 @@ def scan_python(root: Path) -> dict:
             if isinstance(node, ast.ExceptHandler):
                 if len(node.body) == 1 and isinstance(node.body[0], ast.Pass):
                     except_pass.append(f"{rel}:{node.lineno}")
+            if isinstance(node, ast.ClassDef):
+                seen = {}
+                for item in node.body:
+                    if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        # Getter/Setter/Deleter জোড়া বাদ দিয়ে ডুপ্লিকেট খোঁজা (False Positive এড়াতে)
+                        is_property_accessor = False
+                        for dec in item.decorator_list:
+                            if isinstance(dec, ast.Attribute) and dec.attr in ("setter", "deleter"):
+                                is_property_accessor = True
+                                break
+                        if is_property_accessor:
+                            continue
+
+                        if item.name in seen:
+                            duplicate_methods.append(f"{rel}:{item.lineno}: class {node.name} redefines method '{item.name}' (first at line {seen[item.name]})")
+                        else:
+                            seen[item.name] = item.lineno
 
     return {
         "syntax_errors": syntax_errors,
         "mutable_default_args": mutable_defaults,
         "except_pass_blocks": except_pass,
         "naive_datetime_now": naive_datetime,
+        "duplicate_methods_in_class": duplicate_methods,
+        "print_statements": print_statements,
+        "todo_fixmes": todo_fixmes,
     }
 
 
@@ -152,19 +176,25 @@ def main() -> int:
     }
 
     print("=== SupremeAI Self-Audit Scan ===")
-    print(f"Syntax errors:            {len(report['syntax_errors'])}")
-    print(f"Mutable default args:     {len(report['mutable_default_args'])}")
-    print(f"except: pass blocks:      {len(report['except_pass_blocks'])}")
-    print(f"Naive datetime.now():     {len(report['naive_datetime_now'])}")
-    print(f"Duplicate file groups:    {len(report['duplicate_file_groups'])}")
-    print(f"Possible hardcoded secret patterns: {len(report['possible_hardcoded_secrets'])}")
+    print(f"Syntax errors:              {len(report['syntax_errors'])}")
+    print(f"Mutable default args:       {len(report['mutable_default_args'])}")
+    print(f"except: pass blocks:        {len(report['except_pass_blocks'])}")
+    print(f"Naive datetime.now():       {len(report['naive_datetime_now'])}")
+    print(f"Duplicate file groups:      {len(report['duplicate_file_groups'])}")
+    print(f"Possible hardcoded secrets: {len(report['possible_hardcoded_secrets'])}")
+    print(f"Duplicate class methods:    {len(report['duplicate_methods_in_class'])}")
+    print(f"Production print() calls:   {len(report['print_statements'])}")
+    print(f"TODO/FIXME/HACK comments:   {len(report['todo_fixmes'])}")
 
     if args.json:
         Path(args.json).write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"\nJSON রিপোর্ট সেভ হয়েছে: {args.json}")
+        try:
+            print(f"\nJSON report saved to: {args.json}")
+        except UnicodeEncodeError:
+            print(f"\nJSON report saved successfully.")
 
     if args.fail_on_syntax_error and report["syntax_errors"]:
-        print("\n❌ Syntax error পাওয়া গেছে — CI ব্যর্থ হচ্ছে।")
+        print("\n❌ Syntax error detected - CI failing.")
         return 1
 
     return 0
