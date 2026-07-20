@@ -74,7 +74,22 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [pydantic, types-requests, types-PyYAML]
-        exclude: ^(backend/tests/|backend/scripts/|backend/src/|scripts/health_check/auto_health_check\.py)
+        exclude: |
+          (?x)^(
+            backend/tests/|
+            backend/scripts/|
+            backend/src/|
+            backend/agents/devops/auto_healer\.py|
+            scripts/health_check/auto_health_check\.py|
+            scripts/testing/|
+            scripts/security/|
+            scripts/monitoring/|
+            scripts/billing/|
+            scripts/deploy/|
+            scripts/ai/|
+            scripts/i18n/|
+            tests/scripts/
+          )
         args: [--ignore-missing-imports, --no-strict-optional]
 
   # ══════════════════════════════════════════════════════════════

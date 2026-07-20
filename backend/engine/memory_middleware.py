@@ -4,6 +4,7 @@
 আর paid OpenAI embedding call করে না — raw text সরাসরি vector_db adapter-এ পাঠায়,
 যেটা নিজেই free sentence-transformers দিয়ে embed করে।
 """
+
 import logging
 
 from engine.vector_db import vector_db
@@ -33,10 +34,7 @@ class MemoryMiddleware:
             # এর মতো না। memory backend নিজেই down/absent হলে agent ভুলে "clean slate"
             # ভাবতে পারে। তাই ERROR level-এ স্পষ্টভাবে জানানো হচ্ছে।
             if getattr(self.vector_db, "degraded", False):
-                logger.error(
-                    "🧠 MemoryMiddleware: vector memory backend is DEGRADED — "
-                    "proceeding WITHOUT historical context."
-                )
+                logger.error("🧠 MemoryMiddleware: vector memory backend is DEGRADED — " "proceeding WITHOUT historical context.")
                 return task_prompt
 
             if not experiences:
@@ -53,10 +51,7 @@ class MemoryMiddleware:
         except Exception as e:  # noqa: BLE001
             # বাংলা মন্তব্য: silent failure নিষিদ্ধ — ERROR level-এ log করা হচ্ছে
             # যাতে health monitoring এই failure ধরতে পারে।
-            logger.error(
-                f"❌ MemoryMiddleware.augment_task() FAILED "
-                f"(proceeding WITHOUT historical context): {e!r}"
-            )
+            logger.error(f"❌ MemoryMiddleware.augment_task() FAILED " f"(proceeding WITHOUT historical context): {e!r}")
             return task_prompt  # Fallback to original prompt — never crash the agent
 
 

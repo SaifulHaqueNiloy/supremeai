@@ -117,15 +117,18 @@ def __getattr__(name: str) -> Any:
         logging.getLogger(__name__).warning(f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!")
         try:
             from core.messaging.event_bus import error_event_bus, ErrorEvent  # noqa: PLC0415
-            error_event_bus.emit(ErrorEvent(
-                module="services_registry",
-                error_type="MOCK_SERVICE_INJECTED",
-                message=f"Missing service '{name}' was mock injected in test environment.",
-                severity="WARNING"
-            ))
+
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="services_registry",
+                    error_type="MOCK_SERVICE_INJECTED",
+                    message=f"Missing service '{name}' was mock injected in test environment.",
+                    severity="WARNING",
+                )
+            )
         except Exception:  # noqa: BLE001
             pass
-            
+
         from unittest.mock import MagicMock  # noqa: PLC0415
 
         return MagicMock()

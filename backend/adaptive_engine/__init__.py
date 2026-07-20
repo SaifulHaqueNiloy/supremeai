@@ -10,6 +10,8 @@ SupremeAI 2.0 — Adaptive Engine Package Initialization
 
 from __future__ import annotations
 
+from typing import Any
+
 from adaptive_engine.experience_db import Experience
 from adaptive_engine.experience_db import ExperienceDatabase
 from adaptive_engine.intent_parser import IntentParser
@@ -39,7 +41,7 @@ __version__ = "2.0.0"
 __engine_build__ = "2026.07.20"
 
 
-def get_engine_info() -> dict[str, str]:
+def get_engine_info() -> dict[str, Any]:
     """Return adaptive engine metadata."""
     return {
         "version": __version__,

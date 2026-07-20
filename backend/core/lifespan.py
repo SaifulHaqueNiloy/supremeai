@@ -330,21 +330,19 @@ async def app_lifespan(app):
         from core.evolution.daily_learner import DailyLearner
 
         _daily_learner = DailyLearner()
+
         # DailyLearner-এর learn_and_plan() সরাসরি loop নেই, তাই wrapper task তৈরি করতে হবে
         async def _daily_learner_loop() -> None:
             import asyncio as _asyncio
+
             while True:
                 try:
-                    await _daily_learner.learn_and_plan(
-                        "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
-                    )
+                    await _daily_learner.learn_and_plan("Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency")
                 except Exception as _exc:  # noqa: BLE001
                     logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
                 await _asyncio.sleep(86400)  # 24 hours
 
-        app.state.daily_learner_task = asyncio.create_task(
-            _daily_learner_loop(), name="daily-learner"
-        )
+        app.state.daily_learner_task = asyncio.create_task(_daily_learner_loop(), name="daily-learner")
         logger.info("✅ DailyLearner background task started (24h research scan cycle).")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
