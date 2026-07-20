@@ -101,10 +101,10 @@ describe('DashboardShell', () => {
     expect(await screen.findByTestId('sa-save-btn')).toBeInTheDocument();
   });
 
-  it('shows sessions page with composer by default', () => {
+  it('shows sessions page with composer by default', async () => {
     renderShell();
-    expect(screen.getByTestId('session-composer')).toBeInTheDocument();
-    expect(screen.getByTestId('start-session-btn')).toBeInTheDocument();
+    expect((await screen.findAllByTestId('session-composer'))[0]).toBeInTheDocument();
+    expect((await screen.findAllByTestId('start-session-btn'))[0]).toBeInTheDocument();
   });
 
   it('navigates to workspace page rendering legacy dashboard', async () => {
@@ -113,7 +113,7 @@ describe('DashboardShell', () => {
       fireEvent.click(screen.getByTestId('nav-workspace'));
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
-    expect(screen.getByTestId('legacy-workspace')).toBeInTheDocument();
+    expect(await screen.findByTestId('legacy-workspace')).toBeInTheDocument();
   });
 
   it('navigates to knowledge page', async () => {
@@ -122,16 +122,16 @@ describe('DashboardShell', () => {
       fireEvent.click(screen.getByTestId('nav-knowledge'));
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
-    expect(screen.getByTestId('knowledge-search-input')).toBeInTheDocument();
+    expect(await screen.findByTestId('knowledge-search-input')).toBeInTheDocument();
   });
 
   it('starts a new session from the composer', async () => {
     renderShell();
-    fireEvent.change(screen.getByTestId('session-composer'), {
+    fireEvent.change((await screen.findAllByTestId('session-composer'))[0], {
       target: { value: 'Build a landing page' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByTestId('start-session-btn'));
+      fireEvent.click((await screen.findAllByTestId('start-session-btn'))[0]);
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
     // বাংলা মন্তব্য: সেশন ডিটেইল পেজ async loadSessions() কল করে — তাই find* ব্যবহার করা হয়
