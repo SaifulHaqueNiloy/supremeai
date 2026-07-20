@@ -5,15 +5,19 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from pydantic import BaseModel
 from pydantic import Field
 from sse_starlette.sse import EventSourceResponse
 
+from api.routes.admin import get_current_admin
 from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.swarm_pubsub import swarm_streamer
+from database.session import get_db_session
 from engine.forge_compiler import ForgeCompiler
+from models.patch_telemetry import PatchTelemetry
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +46,30 @@ async def stream_swarm_health(request: Request):
     return EventSourceResponse(event_generator())
 
 
-class PatchTelemetry(BaseModel):
+async def _save_telemetry_to_db(data: dict):
+    """বাংলা মন্তব্য: আগে এই ফাংশন শুধু logger.info() করত — ডেটা কখনো DB-তে যেত না
+    (silent data loss)। Self-Healing Engine-এর ফিডব্যাক লুপ (কোন প্যাচ ইউজার
+    Accept/Reject করেছে) এই ডেটার উপর নির্ভর করে, তাই এখন সত্যিই persist করা হচ্ছে।
+    """
+    async for session in get_db_session():
+        try:
+            session.add(
+                PatchTelemetry(
+                    error_id=data["error_id"],
+                    patch_id=data["patch_id"],
+                    file_path=data["file_path"],
+                    status=data["status"],
+                    similarity_score=data["similarity_score"],
+                )
+            )
+            await session.commit()
+            logger.info(f"Telemetry persisted to DB: {data.get('patch_id', 'Unknown')}")
+        except Exception:
+            logger.exception(f"Failed to persist telemetry for patch {data.get('patch_id', 'Unknown')}")
+            raise
+
+
+class PatchTelemetryPayload(BaseModel):
     error_id: str = Field(..., description="Unique ID for the intercepted error")
     patch_id: str = Field(..., description="Unique ID for the generated patch")
     file_path: str = Field(..., description="Path of the healed file")
@@ -50,15 +77,8 @@ class PatchTelemetry(BaseModel):
     similarity_score: float = Field(..., description="Levenshtein similarity score (0.0 to 1.0)")
 
 
-def _save_telemetry_to_db(data: dict):
-    # এখানে SQLModel বা Tortoise ORM এর মতো ORM ব্যবহার করে ইনসার্ট করবেন
-    # session.add(PatchTelemetryModel(**data))
-    # session.commit()
-    logger.info(f"Telemetry persisted to DB: {data.get('patch_id', 'Unknown')}")
-
-
 @router.post("/telemetry/patch-result", status_code=202)
-async def record_patch_telemetry(payload: PatchTelemetry, background_tasks: BackgroundTasks):
+async def record_patch_telemetry(payload: PatchTelemetryPayload, background_tasks: BackgroundTasks):
     """
     Receives telemetry on whether the user accepted, rejected, or modified the Swarm's proposed fix.
     """
@@ -66,6 +86,33 @@ async def record_patch_telemetry(payload: PatchTelemetry, background_tasks: Back
 
     logger.info(f"Telemetry received: Patch {payload.patch_id} was {payload.status} with score {payload.similarity_score}")
     return {"message": "Telemetry recorded"}
+
+
+@router.post("/halt", status_code=202)
+async def halt_swarm(admin_user: dict = Depends(get_current_admin)):
+    """বাংলা মন্তব্য: গ্লোবাল ইমার্জেন্সি-স্টপ — মোবাইল অ্যাপের 'Hold to Kill' বাটনের
+    সত্যিকারের ব্যাকএন্ড কাউন্টারপার্ট। আগে এই এন্ডপয়েন্টটি existই করত না, তাই বাটন
+    চাপলে শুধু UI-তে অ্যানিমেশন হতো, কোনো এজেন্ট আসলে থামত না।
+    """
+    await swarm_streamer.set_halt(reason=f"manual_stop_by:{admin_user.get('sub', 'unknown')}")
+    await swarm_streamer.broadcast(
+        event_type="CIRCUIT_OPEN",
+        payload={"message": "Emergency stop triggered — swarm execution halted.", "triggeredBy": admin_user.get("sub")},
+    )
+    logger.critical(f"🛑 Swarm emergency-stop triggered by {admin_user.get('sub')}")
+    return {"status": "halted"}
+
+
+@router.post("/resume", status_code=202)
+async def resume_swarm(admin_user: dict = Depends(get_current_admin)):
+    """বাংলা মন্তব্য: হল্ট ফ্ল্যাগ ক্লিয়ার করে সোয়ার্ম আবার চালু করে।"""
+    await swarm_streamer.clear_halt()
+    await swarm_streamer.broadcast(
+        event_type="CIRCUIT_CLOSED",
+        payload={"message": "Swarm execution resumed.", "triggeredBy": admin_user.get("sub")},
+    )
+    logger.critical(f"✅ Swarm resumed by {admin_user.get('sub')}")
+    return {"status": "resumed"}
 
 
 class SelfHealingRequest(BaseModel):
