@@ -2,7 +2,9 @@
 import logging
 import shutil
 import tarfile
-from datetime import timedelta
+
+# datetime class এবং timedelta উভয়ই import করা হচ্ছে — utcnow() ব্যবহারের জন্য
+from datetime import datetime, timedelta
 from core.utils.time_utils import utc_now
 from pathlib import Path
 
@@ -41,10 +43,22 @@ class SkillGarbageCollector:
 
             manifest = SkillManifest(**meta)
 
-            # শেষ ব্যবহারের সময় বা তৈরির সময় নির্ধারণ
-            last_used = manifest.last_used_at or manifest.created_at
+            # শেষ ব্যবহারের সময় বা তৈরির সময় নির্ধারণ
+            last_used_raw = manifest.last_used_at or manifest.created_at
 
-            # ক্যান্ডিডেট সিলেকশন: ৩০ দিনে ব্যবহার ৫ এর কম হলে
+            # ISO string → datetime parse (string হলে convert করতে হবে)
+            if isinstance(last_used_raw, str):
+                try:
+                    last_used = datetime.fromisoformat(
+                        last_used_raw.replace("Z", "+00:00").rstrip("+00:00") if last_used_raw.endswith("Z") else last_used_raw
+                    )
+                except ValueError:
+                    # Parse করতে না পারলে খুব পুরনো ধরে নাও
+                    last_used = datetime.min
+            else:
+                last_used = last_used_raw
+
+            # ক্যান্ডিডেট সিলেকশন: নির্দিষ্ট দিনে ব্যবহার threshold-এর কম হলে
             if manifest.usage_count < usage_threshold and last_used < cutoff_date:
                 if manifest.status == SkillStatus.APPROVED:
                     # ⚠️ ধাপ ১: সরাসরি ডিলেট না করে Deprecated Pending করা ও নোটিফিকেশন

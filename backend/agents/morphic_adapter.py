@@ -3,15 +3,19 @@ import os
 import re
 from typing import Any
 
-# 🚀 গুগলের নতুন এবং অফিসিয়াল মডার্ন SDK ইম্পোর্ট
-from google import genai
-from google.genai import types
+# 🚀 Google modern SDK is optional during test/CI
+try:
+    from google import genai  # type: ignore
+    from google.genai import types  # type: ignore
+except (ModuleNotFoundError, ImportError):  # pragma: no cover
+    genai = None  # type: ignore[assignment]
+    types = None  # type: ignore[assignment]
 
 
 class MorphicAdapter:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        if self.api_key:
+        if self.api_key and genai is not None:
             # নতুন SDK-তে Client ইনিশিয়ালাইজেশন ইন্টারফেস
             self.client = genai.Client(api_key=self.api_key)
             # ২০২৬ সালের জন্য হাইলি স্টেবল, ফাস্ট এবং কস্ট-ইফেক্টিভ প্রোডাকশন মডেল
@@ -51,6 +55,9 @@ class MorphicAdapter:
         [Raw Source Code]
         {raw_code}
         """
+
+        if types is None:
+            return {"success": False, "code": "", "detail": "Google GenAI SDK is not installed."}
 
         try:
             # মডার্ন SDK-র স্ট্যান্ডার্ড জেনারেশন মেথড এবং সিস্টেম ইন্সট্রাকশন বাইন্ডিং

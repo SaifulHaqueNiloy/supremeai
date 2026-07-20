@@ -1,0 +1,41 @@
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
+import pytest
+
+import sys
+
+# Import guard: agents package init may import optional google.genai.
+if "google" not in sys.modules:
+    sys.modules["google"] = MagicMock()
+if "google.genai" not in sys.modules:
+    sys.modules["google.genai"] = MagicMock()
+
+from agents.morphic_adapter import MorphicAdapter
+
+
+@pytest.mark.anyio
+async def test_morphic_adapter_no_api_key(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    adapter = MorphicAdapter()
+    res = adapter.adapt_code_to_contract("print('x')", "desc")
+    assert res["success"] is False
+    assert "not configured" in res["detail"].lower()
+
+
+def test_morphic_adapter_sanitizes_code_fences(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test")
+
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.text = "```python\ndef execute_tool(payload: dict) -> dict:\n    return {'success': True}\n```"
+
+    mock_client.models.generate_content = MagicMock(return_value=mock_resp)
+
+    with patch("agents.morphic_adapter.genai.Client", return_value=mock_client):
+        adapter = MorphicAdapter()
+        res = adapter.adapt_code_to_contract("raw", "desc")
+
+    assert res["success"] is True
+    assert "```" not in res["code"]
+    assert "def execute_tool" in res["code"]
