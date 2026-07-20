@@ -4,45 +4,45 @@ from loguru import logger
 
 
 class AutoRemediation:
-    """
-    Autonomous Auto-Remediation Loop (Compatibility / Mockable Wrapper for tests).
-    Detects CodeQL or security alerts, calls Gemini to get a secure patch,
-    and delegates the application to the RemediationPipeline.
+    """Autonomous Auto-Remediation Loop.
+
+    Detects CodeQL/security alerts, generates a secure patch, and delegates the
+    application to RemediationPipeline.
+
+    Note: This module is designed to be mockable for tests.
     """
 
     def __init__(self, gemini_api_key: str | None = None):
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY", "")
-        self._ALLOWED_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        # Allowed base dir is repo/backend (backend/core/resilience -> ../..)
+        self._ALLOWED_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
     def _validate_file_path(self, file_path: str) -> str:
-        """বাংলা মন্তব্য: P0 Fix — Path traversal attack প্রতিরোধ।
-        শুধুমাত্র project directory-র ভেতরের ফাইলগুলোতে write অনুমোদিত।
-        Symlink traversal রোধ করতে commonpath ব্যবহার করা হলো।
+        """Path traversal attack প্রতিরোধ.
+
+        Only allow reads/writes inside the allowed directory.
         """
         real_path = os.path.realpath(os.path.abspath(file_path))
-        # os.path.commonpath() ব্যবহার করে symlink traversal প্রতিরোধ
-        try:
-            common = os.path.commonpath([real_path, self._ALLOWED_BASE_DIR])
-            if common != self._ALLOWED_BASE_DIR:
-                raise ValueError(
-                    f"🛑 Path traversal detected: {file_path!r} resolves to {real_path!r} "
-                    f"which is outside allowed directory {self._ALLOWED_BASE_DIR!r}"
-                )
-        except ValueError as ve:
-            # Windows-এ drive letter mismatch হলে commonpath ValueError দেয়
+
+        common = os.path.commonpath([real_path, self._ALLOWED_BASE_DIR])
+        if common != self._ALLOWED_BASE_DIR:
             raise ValueError(
-                f"🛑 Path traversal detected: {file_path!r} resolves to {real_path!r} which is outside allowed directory {self._ALLOWED_BASE_DIR!r}"
-            ) from ve
+                f"🛑 Path traversal detected: {file_path!r} resolves to {real_path!r} "
+                f"which is outside allowed directory {self._ALLOWED_BASE_DIR!r}"
+            )
+
         return real_path
 
-    async def process_security_alert(self, file_path: str, line_number: int, issue: str, severity: str, tenant_id: str = "default_tenant") -> dict:
-        """বাংলা মন্তব্য: P1 Fix — method কে fully async করা হলো।
-        আগে: asyncio.run()/loop.run_until_complete() ব্যবহার হতো → running event loop-এ RuntimeError।
-        এখন: সব I/O অপারেশন await দিয়ে চলে — কোনো blocking নেই।
-        """
+    async def process_security_alert(
+        self,
+        file_path: str,
+        line_number: int,
+        issue: str,
+        severity: str,
+        tenant_id: str = "default_tenant",
+    ) -> dict:
         logger.info(f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}")
 
-        # Path traversal protection
         safe_path = self._validate_file_path(file_path)
 
         if not os.path.exists(safe_path):
@@ -56,48 +56,53 @@ class AutoRemediation:
         if not fixed_code:
             return {"success": False, "error": "AI failed to generate a secure patch"}
 
+        # Import inside function keeps tests isolated but also allows patching via module path.
         from core.health.self_healer import RemediationPipeline
 
         pipeline = RemediationPipeline()
 
-        # Determine impact score based on severity
-        impact_score = 0.8 if severity.lower() == "high" or severity.lower() == "critical" else 0.3
+        impact_score = 0.8 if severity.lower() in {"high", "critical"} else 0.3
 
         result = await pipeline.submit(tenant_id, issue, fixed_code, impact_score, [])
 
-        if result.startswith("reject"):
+        if str(result).startswith("reject"):
             return {"success": False, "error": f"Patch rejected by pipeline: {result}"}
 
         return {
             "success": True,
             "file": file_path,
-            "patch_applied": True,  # Or pending_review depending on impact score
+            "patch_applied": True,
             "branch": "supremeai-improvements",
             "pr_url": None,
             "message": f"Remediation patch processed by pipeline. ID: {result}",
         }
 
     async def _get_ai_patch(self, file_path: str, code: str, line_number: int, issue: str) -> str:
-        # বাংলা মন্তব্য: P1 Fix — asyncio.run() সরানো হয়েছে, এখন async/await ব্যবহার হচ্ছে।
+        # The actual LLM integration is intentionally dynamic to keep this module testable.
         from core.ld_client import get_ld_ai_components
 
         ld_ai_client, AICompletionConfigDefault, LDMessage, ModelConfig, Context = get_ld_ai_components()
 
-        default_prompt_template = """You are an elite secure coding assistant. Correct the security vulnerability in this file.
-        File: {file_path}
-        Line Number of Vulnerability: {line_number}
-        Vulnerability Description: {issue}
-
-        Provide the complete corrected file contents. Do NOT explain the changes. Return ONLY the code in plaintext with no markdown code blocks.
-
-        Original Code:
-        {code}
-        """
+        default_prompt_template = (
+            "You are an elite secure coding assistant. Correct the security vulnerability in this file.\n"
+            "File: {file_path}\n"
+            "Line Number of Vulnerability: {line_number}\n"
+            "Vulnerability Description: {issue}\n\n"
+            "Provide the complete corrected file contents. Do NOT explain the changes. "
+            "Return ONLY the code in plaintext with no markdown code blocks.\n\n"
+            "Original Code:\n{code}\n"
+        )
 
         context = None
         if Context is not None:
             context = Context.builder("auto-remediation-helper").kind("service").build()
-        prompt_vars = {"file_path": file_path, "line_number": str(line_number), "issue": issue, "code": code}
+
+        prompt_vars = {
+            "file_path": file_path,
+            "line_number": str(line_number),
+            "issue": issue,
+            "code": code,
+        }
 
         config = None
         if ld_ai_client and AICompletionConfigDefault and LDMessage and ModelConfig and context:
@@ -115,9 +120,9 @@ class AutoRemediation:
             except Exception as exc:  # noqa: BLE001
                 logger.warning(f"LaunchDarkly config evaluation failed, falling back: {exc}")
 
-        if config and config.enabled:
-            model_name = config.model.name if config.model else "gemini/gemini-2.5-pro"
-            prompt = config.messages[0].content if config.messages else default_prompt_template.format(**prompt_vars)
+        if config and getattr(config, "enabled", False):
+            model_name = config.model.name if getattr(config, "model", None) else "gemini/gemini-2.5-pro"
+            prompt = config.messages[0].content if getattr(config, "messages", None) else default_prompt_template.format(**prompt_vars)
         else:
             model_name = "gemini/gemini-2.5-pro"
             prompt = default_prompt_template.format(**prompt_vars)
@@ -125,12 +130,17 @@ class AutoRemediation:
         try:
             from core.llm.llm_gateway import llm_gateway
 
-            response = await llm_gateway.acompletion(prompt=prompt, task_type="coding", stream=False, model=model_name)
+            response = await llm_gateway.acompletion(
+                prompt=prompt,
+                task_type="coding",
+                stream=False,
+                model=model_name,
+            )
             raw_text = response.get("text", "") if isinstance(response, dict) else str(response)
 
             from utils.text_helpers import strip_markdown_code_block
 
             return strip_markdown_code_block(raw_text)
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to generate patch from Gemini: {e}")
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"Failed to generate patch from Gemini: {exc}")
             return ""

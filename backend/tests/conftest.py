@@ -42,6 +42,12 @@ sys.modules["chromadb.config"] = create_mock_module("chromadb.config")
 sys.modules["chromadb.utils"] = create_mock_module("chromadb.utils", is_package=True)
 sys.modules["chromadb.utils.embedding_functions"] = create_mock_module("chromadb.utils.embedding_functions")
 sys.modules["cachetools"] = create_mock_module("cachetools", is_package=True)
+sys.modules["nats"] = create_mock_module("nats", is_package=True)
+sys.modules["nats.aio"] = create_mock_module("nats.aio", is_package=True)
+sys.modules["nats.aio.client"] = create_mock_module("nats.aio.client")
+sys.modules["nats.errors"] = create_mock_module("nats.errors")
+sys.modules["docker"] = create_mock_module("docker", is_package=True)
+sys.modules["docker.errors"] = create_mock_module("docker.errors")
 
 # ✅ SECURITY: Use explicit test-only placeholders that cannot be mistaken for real credentials.
 os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
@@ -71,6 +77,7 @@ if REPO_ROOT not in sys.path:
 if os.path.isdir(SCRIPTS_DIR) and SCRIPTS_DIR not in sys.path:
     sys.path.append(SCRIPTS_DIR)
 os.environ.setdefault("OPENROUTER_API_KEY", "mock-key-value")
+os.environ.setdefault("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000")
 
 # বাংলা মন্তব্য: টেস্ট রান করার সময় রিয়াল ডাটাবেস এড়াতে এবং লক হওয়া রোধ করতে ইন-মেমোরি ডাটাবেস সেট করা হলো
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"

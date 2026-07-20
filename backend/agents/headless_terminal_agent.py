@@ -212,9 +212,54 @@ class HeadlessTerminalAgent:
         return await self._run_command(command)
 
     def _looks_like_command(self, text: str) -> bool:
-        """Heuristic to detect if text is already a command."""
-        cmd_indicators = ["ls", "cd", "grep", "find", "cat", "npm", "pip", "git"]
-        return any(text.strip().startswith(c) for c in cmd_indicators)
+        """Heuristic to detect if text is already a command.
+
+        বাংলা: বিপজ্জনক কমান্ডগুলো সহ সব shell কমান্ড prefix এখানে রাখা হয়েছে।
+        rm, sudo ইত্যাদি না থাকলে NL interpreter-এ যায় এবং safety check bypass হয় — critical bug।
+        """
+        cmd_indicators = [
+            # ফাইল অপারেশন
+            "ls",
+            "cd",
+            "grep",
+            "find",
+            "cat",
+            "rm",
+            "mv",
+            "cp",
+            "chmod",
+            "chown",
+            # বিপজ্জনক সিস্টেম কমান্ড — অবশ্যই safety check করতে হবে
+            "sudo",
+            "su",
+            "mkfs",
+            "dd",
+            "fdisk",
+            "parted",
+            # নেটওয়ার্ক ও ডাউনলোড
+            "wget",
+            "curl",
+            "ssh",
+            "scp",
+            "rsync",
+            # প্যাকেজ ম্যানেজার
+            "npm",
+            "pip",
+            "pip3",
+            "apt",
+            "apt-get",
+            "yum",
+            "brew",
+            # ভার্সন কন্ট্রোল ও ডেভ টুল
+            "git",
+            "docker",
+            "kubectl",
+            "python",
+            "python3",
+            "node",
+        ]
+        stripped = text.strip()
+        return any(stripped.startswith(c + " ") or stripped == c for c in cmd_indicators)
 
     async def _run_command(self, command: str) -> CommandResult:
         """Run command safely."""
@@ -272,7 +317,7 @@ class HeadlessTerminalAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.interpreter.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=200,
@@ -286,7 +331,7 @@ class HeadlessTerminalAgent:
         prompt = "Explain the following command output in 1-2 sentences:\n\n" f"{output[:2000]}"
 
         try:
-            result = await self.llm.route(
+            result = await self.interpreter.llm.route(
                 prompt=prompt,
                 task_type="summarization",
                 max_tokens=200,
