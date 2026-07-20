@@ -47,7 +47,6 @@ jobs:
       - name: Security scan
         run: |
           safety scan --json > safety-report.json || true
-          python backend/scripts/security_scan.py --output safety-custom.json || true
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4
@@ -55,12 +54,11 @@ jobs:
           name: security-reports
           path: |
             safety-report.json
-            safety-custom.json
 
       - name: Auto-commit fixes
         run: |
-          git config user-name "SupremeAI Bot"
-          git config user-email "bot@supremeai.dev"
+          git config user.name "SupremeAI Bot"
+          git config user.email "bot@supremeai.dev"
           git add backend
           git commit -m "🤖 Auto-fix: CI linting fixes" || exit 0
           git push
