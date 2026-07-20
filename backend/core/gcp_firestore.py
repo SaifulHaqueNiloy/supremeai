@@ -48,7 +48,7 @@ class GCPFirestoreVerificationQueue:
         self.collection_name = collection_name or os.getenv("GCP_FIRESTORE_COLLECTION", "verification_queue")
         self.project_id = project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
         self.client = None
-        self._memory_conn = None
+        self._memory_conn: sqlite3.Connection | None = None
         self.mode = "local_sqlite"
         self.db_path = db_path or os.getenv("GCP_FIRESTORE_SQLITE_PATH")
 
@@ -62,21 +62,16 @@ class GCPFirestoreVerificationQueue:
                 else:
                     self.client = firestore.Client(project=self.project_id)
                 self.mode = "gcp_firestore"
-                logger.info("Using GCP Firestore verification queue")
-            except Exception as exc:  # noqa: BLE001
-                logger.warning(f"Firestore unavailable, falling back to SQLite: {exc}")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Firestore: {e}. Falling back to SQLite.")
 
-        if self.mode == "local_sqlite":
+        if self.client is None:
             if not self.db_path:
                 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 self.db_path = os.path.join(base_dir, "data", "gcp_firestore_queue.db")
             if self.db_path != ":memory:":
                 os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             self._init_db()
-
-    @property
-    def provider(self) -> str:
-        return self.mode
 
     def _init_db(self) -> None:
         if self.db_path == ":memory:":
@@ -279,6 +274,10 @@ class GCPFirestoreVerificationQueue:
             self.client = None
         if self._memory_conn is not None:
             self._memory_conn.close()
+
+    @property
+    def provider(self) -> str:
+        return "gcp_firestore" if self.client else self.mode
 
     def _firestore_doc_to_dict(self, doc: Any) -> dict[str, Any]:
         data = doc.to_dict()
