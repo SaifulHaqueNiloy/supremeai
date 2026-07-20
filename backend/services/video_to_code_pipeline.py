@@ -136,7 +136,7 @@ class VideoFrameExtractor:
 
         try:
             subprocess.run(cmd, capture_output=True, check=True, timeout=120)
-            return list(output_dir.glob("*.jpg"))[:max_frames]
+            return [str(p) for p in output_dir.glob("*.jpg")][:max_frames]
         except (subprocess.SubprocessError, TimeoutError) as e:
             logger.error(f"Frame extraction failed: {e}")
             return []
@@ -265,9 +265,12 @@ class CodeGenerator:
         if cached:
             return cached  # type: ignore
 
-        component_descriptions = [
-            f"- {c.id}: {c.component_type}" f"{f' with text \"{c.detected_text}\"' if c.detected_text else ''}" for c in components
-        ]
+        component_descriptions = []
+        for c in components:
+            desc = f"- {c.id}: {c.component_type}"
+            if c.detected_text:
+                desc += f' with text "{c.detected_text}"'
+            component_descriptions.append(desc)
 
         prompt = (
             f"You are a UI component generator. Generate a complete {framework} component "
