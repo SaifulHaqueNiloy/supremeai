@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 import uuid
 
@@ -15,6 +16,12 @@ class ObservabilityMiddleware:
     def __init__(self, app) -> None:
         self.app = app
 
+        # Redis traffic monitoring is expensive. We sample and bound background tasks.
+        # Long-run safety: avoid cardinality/cost explosions and unbounded task growth.
+        self._redis_traffic_sampling_rate = float(os.getenv("REDIS_TRAFFIC_METRICS_SAMPLING_RATE", "0.05"))
+        self._redis_traffic_max_background_tasks = int(os.getenv("REDIS_TRAFFIC_MAX_BACKGROUND_TASKS", "50"))
+        self._redis_metric_fail_count = 0
+
     async def __call__(self, scope, receive, send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
@@ -28,12 +35,13 @@ class ObservabilityMiddleware:
         headers = scope.get("headers", [])
         trace_id = ""
         user_id = "anonymous_api_user"
-        authenticated_user = None
+
         for k, v in headers:
             if k.lower() in (b"x-trace-id", b"traceparent"):
                 trace_id = v.decode("utf-8")
             elif k.lower() == b"x-user-id":
                 user_id = v.decode("utf-8")
+
         from starlette.requests import Request
 
         request = Request(scope)
@@ -80,8 +88,10 @@ class ObservabilityMiddleware:
             raise
         finally:
             duration = time.perf_counter() - started
+
             record_request(method, path, status_code)
             record_request_duration(method, path, duration)
+
             try:
                 from core.observability.posthog_client import posthog_client
 
@@ -96,8 +106,6 @@ class ObservabilityMiddleware:
                     },
                 )
             except Exception as exc:  # noqa: BLE001
-                # বল মনতবয: PostHog টলমটর বযরথ হল রকয়সট হযনডলং থমন উচত নয়;
-                # তব নরব সযলপ ন কর ডবগ লগ কর হল যত টলমটর সমসয বঝ যয়
                 logger.debug(f"PostHog capture failed in observability middleware: {exc}")
 
             # --- START REDIS TRAFFIC MONITORING ---
@@ -105,34 +113,50 @@ class ObservabilityMiddleware:
                 import asyncio
                 import json
 
-                from core.cache.redis_manager import redis_manager
+                # Sampling: every Nth request will be written to Redis.
+                if self._redis_traffic_sampling_rate <= 0:
+                    redis_enabled = False
+                else:
+                    threshold = int(self._redis_traffic_sampling_rate * 10000)
+                    redis_enabled = (uuid.uuid4().int % 10000) < threshold
 
-                if redis_manager.client:
-                    now = int(time.time())
-                    # Push to time-series list for the current minute
-                    minute_key = f"traffic:live:{now // 60}"
+                if redis_enabled:
+                    from core.cache.redis_manager import redis_manager
 
-                    async def push_traffic():
-                        try:
-                            payload = {"method": method, "path": path, "status": status_code, "duration": duration, "error": error_type}
-                            await redis_manager.client.lpush(minute_key, json.dumps(payload))
-                            await redis_manager.client.expire(minute_key, 86400)  # 24 hours retention
-                        except Exception as redis_err:  # noqa: BLE001
-                            # বাংলা মন্তব্য: Redis traffic metric write ব্যর্থ — request ফেইল করব না কিন্তু failure গণনা করব
-                            _redis_metric_fail_count = getattr(self, "_redis_metric_fail_count", 0) + 1
-                            self._redis_metric_fail_count = _redis_metric_fail_count  # type: ignore[attr-defined]
-                            # Rate-limited warning: প্রতি ১০ বার ব্যর্থতায় একবার লগ করি
-                            if _redis_metric_fail_count == 1 or _redis_metric_fail_count % 10 == 0:
-                                logger.warning(
-                                    f"[Observability] Redis traffic metric write failed (total failures: {_redis_metric_fail_count}): {redis_err!r}"
-                                )
+                if redis_enabled and redis_manager and redis_manager.client:
+                    # Bound background tasks count to avoid memory pressure.
+                    bg_tasks = len(getattr(self.app, "_background_tasks", set()))
+                    if bg_tasks < self._redis_traffic_max_background_tasks:
+                        now = int(time.time())
+                        minute_key = f"traffic:live:{now // 60}"
 
-                    task = asyncio.create_task(push_traffic())
-                    self.app._background_tasks.add(task)
-                    task.add_done_callback(self.app._background_tasks.discard)
+                        async def push_traffic() -> None:
+                            try:
+                                payload = {
+                                    "method": method,
+                                    "path": path,
+                                    "status": status_code,
+                                    "duration": duration,
+                                    "error": error_type,
+                                }
+                                await redis_manager.client.lpush(minute_key, json.dumps(payload))
+                                await redis_manager.client.expire(minute_key, 86400)  # 24 hours retention
+                            except Exception as redis_err:  # noqa: BLE001
+                                self._redis_metric_fail_count += 1
+                                if self._redis_metric_fail_count == 1 or self._redis_metric_fail_count % 10 == 0:
+                                    logger.warning(
+                                        "[Observability] Redis traffic metric write failed " "(total failures: %s): %r",
+                                        self._redis_metric_fail_count,
+                                        redis_err,
+                                    )
+
+                        task = asyncio.create_task(push_traffic())
+                        self.app._background_tasks.add(task)
+                        task.add_done_callback(self.app._background_tasks.discard)
             except Exception as e:  # noqa: BLE001
                 logger.debug(f"Redis traffic monitoring failed: {e}")
             # --- END REDIS TRAFFIC MONITORING ---
+
             try:
                 from database.supabase_client import db
 
@@ -151,8 +175,6 @@ class ObservabilityMiddleware:
                         }
                     )
             except Exception as exc:  # noqa: BLE001
-                # বল মনতবয: ইভলউশন লগ Supabase-এ লখত বযরথ হল রকয়সট বযহত হয় ন;
-                # নরব সযলপর পরবরত ডবগ লগ যকত কর হল যত পরসসটনস বযরথত টর কর যয়
                 logger.debug(f"Evolution log persistence failed in observability middleware: {exc}")
 
             # --- START SENTINEL AGENT EVENT TRIGGER ---

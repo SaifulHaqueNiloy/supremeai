@@ -13,6 +13,7 @@ import httpx
 from loguru import logger
 from core.config import settings
 
+
 class MCPRegistryClient:
     """
     MCP-Hub: The Real-World Connector.
@@ -22,13 +23,13 @@ class MCPRegistryClient:
     async def discover_tools(self, domain: str) -> list[str]:
         """
         Discovers available tools from MCP servers for a given domain by querying them dynamically.
-        
+
         বাংলা মন্তব্য: আগে এখানে স্ট্যাটিক বা হার্ডকোড করা ডামি লিস্ট রিটার্ন করা হতো।
-        এখন এটি settings থেকে কনফিগার করা লাইভ MCP সার্ভারগুলোর URL-এ কুয়েরি করে 
+        এখন এটি settings থেকে কনফিগার করা লাইভ MCP সার্ভারগুলোর URL-এ কুয়েরি করে
         বাস্তব টুলগুলোর নাম সংগ্রহ করে।
         """
         logger.info(f"MCP Client: Discovering tools for domain '{domain}'...")
-        
+
         mcp_servers = getattr(settings, "mcp_server_urls", [])
         if not mcp_servers:
             # Fallback to local settings configurations or defaults if list empty

@@ -14,8 +14,6 @@ import asyncio
 import logging
 from typing import Any
 
-from loguru import logger as _loguru_logger
-
 
 _logger = logging.getLogger(__name__)
 
@@ -45,10 +43,7 @@ class VectorDatabaseClient:
                 if getattr(self._exp_db, "vector_backend_degraded", False):
                     self.degraded = True
             except Exception as exc:  # noqa: BLE001
-                _logger.error(
-                    f"VectorDatabaseClient: failed to fetch shared experience_db — "
-                    f"memory will be DEGRADED. error={exc!r}"
-                )
+                _logger.error(f"VectorDatabaseClient: failed to fetch shared experience_db — " f"memory will be DEGRADED. error={exc!r}")
                 self.degraded = True
         return self._exp_db
 
@@ -62,10 +57,7 @@ class VectorDatabaseClient:
         exp_db = self._get_exp_db()
         if exp_db is None:
             self.degraded = True
-            _logger.error(
-                "save_experience() skipped: shared experience_db unavailable (DEGRADED). "
-                "Experience NOT persisted."
-            )
+            _logger.error("save_experience() skipped: shared experience_db unavailable (DEGRADED). " "Experience NOT persisted.")
             return
 
         try:
@@ -84,9 +76,7 @@ class VectorDatabaseClient:
             _logger.debug(f"🧠 Saved neural memory experience via shared pool: {metadata.get('patch_id', 'n/a')}")
         except Exception as exc:  # noqa: BLE001
             self.degraded = True
-            _logger.error(
-                f"save_experience() failed (experience NOT persisted, DEGRADED): {exc!r}"
-            )
+            _logger.error(f"save_experience() failed (experience NOT persisted, DEGRADED): {exc!r}")
 
     async def find_similar_experiences(self, vector: list[float], top_k: int = 3) -> list[dict[str, Any]]:
         """
@@ -97,10 +87,7 @@ class VectorDatabaseClient:
         exp_db = self._get_exp_db()
         if exp_db is None:
             self.degraded = True
-            _logger.error(
-                "find_similar_experiences() skipped: shared experience_db unavailable "
-                "(DEGRADED, not 'no matches found')."
-            )
+            _logger.error("find_similar_experiences() skipped: shared experience_db unavailable " "(DEGRADED, not 'no matches found').")
             return []
 
         # বাংলা মন্তব্য: vector argument থেকে raw query text বের করার কোনো উপায় নেই,
@@ -129,9 +116,7 @@ class VectorDatabaseClient:
             ]
         except Exception as exc:  # noqa: BLE001
             self.degraded = True
-            _logger.error(
-                f"find_similar_experiences() failed (returning empty, DEGRADED state): {exc!r}"
-            )
+            _logger.error(f"find_similar_experiences() failed (returning empty, DEGRADED state): {exc!r}")
             return []
 
 

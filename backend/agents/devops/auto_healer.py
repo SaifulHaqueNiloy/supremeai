@@ -289,10 +289,7 @@ class BackupProviderSwitch:
                 # তাহলে কোন সার্ভিস backup provider-এ ছিল সেই তথ্য হারিয়ে যায় এবং AutoHealer
                 # ভুল করে down থাকা primary-তে আবার ট্রাফিক পাঠাতে পারে। তাই এটাকে জোরালোভাবে
                 # log + alert করা হচ্ছে, এবং করাপ্ট ফাইলটা backup রেখে override হওয়া থেকে বাঁচানো হচ্ছে।
-                logger.error(
-                    f"❌ Failed to load provider-switch state from {state_path} "
-                    f"(failover routing knowledge may be lost): {e}"
-                )
+                logger.error(f"❌ Failed to load provider-switch state from {state_path} " f"(failover routing knowledge may be lost): {e}")
                 try:
                     corrupt_backup = state_path.with_suffix(".json.corrupt")
                     state_path.replace(corrupt_backup)

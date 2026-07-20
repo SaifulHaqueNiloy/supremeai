@@ -66,7 +66,7 @@ def migrate_skills(conn):
                         """
                         INSERT INTO skills (skill_name, description, code, status, version)
                         VALUES (%s, %s, %s, 'active', 1)
-                        ON CONFLICT (skill_name) DO UPDATE 
+                        ON CONFLICT (skill_name) DO UPDATE
                         SET code = EXCLUDED.code, description = EXCLUDED.description, updated_at = NOW();
                         """,
                         (skill_name, description, code),

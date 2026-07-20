@@ -82,6 +82,7 @@ class AutoHealerService:
         """PostgreSQL pool health check এবং auto-heal।"""
         try:
             from core.health.health_probes import probe_database  # noqa: PLC0415
+
             result = await probe_database()
             db_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
         except Exception as exc:  # noqa: BLE001
@@ -125,6 +126,7 @@ class AutoHealerService:
         """Redis health check এবং auto-heal।"""
         try:
             from core.health.health_probes import probe_redis  # noqa: PLC0415
+
             result = await probe_redis()
             redis_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
         except Exception as exc:  # noqa: BLE001

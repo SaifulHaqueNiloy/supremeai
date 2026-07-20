@@ -129,16 +129,17 @@ class SentinelAgent:
         """
         Runs heavy auditing logic (e.g., pip-audit / pip list --outdated)
         and updates SystemDependency status dynamically.
-        
+
         বাংলা মন্তব্য: আগে এখানে শুধু ডামি রিলেশন টাচ করে টাইমস্ট্যাম্প আপডেট করা হতো।
-        এখন এটি pip-audit/pip command রান করে অরফ্যানড বা আউটডেটেড প্যাকেজ সনাক্ত করে 
+        এখন এটি pip-audit/pip command রান করে অরফ্যানড বা আউটডেটেড প্যাকেজ সনাক্ত করে
         সিস্টেমের ডিপেনডেন্সি ডাটাবেস আপডেট করে।
         """
         import asyncio
         import json
         import shutil
+
         logger.info("[SentinelAgent] Running dependency audit via system environment tools...")
-        
+
         # Check if pip-audit is available, fallback to pip list --outdated
         audit_cmd = None
         if shutil.which("pip-audit"):
@@ -149,11 +150,7 @@ class SentinelAgent:
         vulnerabilities = []
         if audit_cmd:
             try:
-                proc = await asyncio.create_subprocess_exec(
-                    *audit_cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
+                proc = await asyncio.create_subprocess_exec(*audit_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
                 stdout, _ = await proc.communicate()
                 if proc.returncode in (0, 1) and stdout:
                     vulnerabilities = json.loads(stdout.decode("utf-8"))
@@ -173,7 +170,7 @@ class SentinelAgent:
                         is_vuln = any(v.get("name", "").lower() == dep.package_name.lower() for v in vulnerabilities)
                     elif isinstance(vulnerabilities, dict):
                         is_vuln = dep.package_name in vulnerabilities.get("dependencies", {})
-                        
+
                     if is_vuln:
                         dep.status = "vulnerable"
                         # Trigger immediate remediation alert
