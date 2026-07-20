@@ -354,3 +354,68 @@ class TestSwarmPubSubIntegration:
         # Verify cleanup was called
         mock_pubsub.unsubscribe.assert_called_once_with("swarm_stream")
         mock_pubsub.close.assert_called_once()
+
+
+# -------------------- Tests: Emergency-Stop Halt Flag --------------------
+
+
+class TestHaltFlag:
+    """বাংলা মন্তব্য: set_halt/clear_halt/is_halted — মোবাইল অ্যাপের 'Hold to Kill'
+    বাটনের সত্যিকারের ব্যাকএন্ড কাউন্টারপার্ট। এই টেস্টগুলো নিশ্চিত করে যে হল্ট
+    ফ্ল্যাগ সত্যিই Redis-এ সেট/ক্লিয়ার/চেক হয়, এবং Redis আনরিচেবল হলে fail-open হয়।
+    """
+
+    @pytest.mark.asyncio
+    async def test_set_halt_writes_flag_with_ttl(self, swarm_pubsub, mock_redis):
+        swarm_pubsub.redis = mock_redis
+        mock_redis.set = AsyncMock()
+
+        await swarm_pubsub.set_halt(reason="manual_stop_by:admin1")
+
+        mock_redis.set.assert_called_once()
+        args, kwargs = mock_redis.set.call_args
+        assert args[0] == "swarm:halt:global"
+        assert args[1] == "manual_stop_by:admin1"
+        assert kwargs.get("ex") == 3600
+
+    @pytest.mark.asyncio
+    async def test_clear_halt_deletes_flag(self, swarm_pubsub, mock_redis):
+        swarm_pubsub.redis = mock_redis
+        mock_redis.delete = AsyncMock()
+
+        await swarm_pubsub.clear_halt()
+
+        mock_redis.delete.assert_called_once_with("swarm:halt:global")
+
+    @pytest.mark.asyncio
+    async def test_is_halted_true_when_flag_present(self, swarm_pubsub, mock_redis):
+        swarm_pubsub.redis = mock_redis
+        mock_redis.get = AsyncMock(return_value=b"manual_stop_by:admin1")
+
+        assert await swarm_pubsub.is_halted() is True
+
+    @pytest.mark.asyncio
+    async def test_is_halted_false_when_flag_absent(self, swarm_pubsub, mock_redis):
+        swarm_pubsub.redis = mock_redis
+        mock_redis.get = AsyncMock(return_value=None)
+
+        assert await swarm_pubsub.is_halted() is False
+
+    @pytest.mark.asyncio
+    async def test_is_halted_fails_open_on_redis_error(self, swarm_pubsub, mock_redis):
+        """বাংলা মন্তব্য: Redis error হলে পুরো সিস্টেম আটকে যাওয়া উচিত না — fail-open।"""
+        swarm_pubsub.redis = mock_redis
+        mock_redis.get = AsyncMock(side_effect=ConnectionError("redis down"))
+
+        assert await swarm_pubsub.is_halted() is False
+
+    @pytest.mark.asyncio
+    async def test_set_halt_raises_on_redis_error(self, swarm_pubsub, mock_redis):
+        """বাংলা মন্তব্য: হল্ট *সেট* করার সময় এরর হলে raise করা উচিত — caller-কে
+        জানতে হবে যে emergency-stop আসলে কার্যকর হয়নি (silent no-op নয়)।
+        """
+        swarm_pubsub.redis = mock_redis
+        mock_redis.set = AsyncMock(side_effect=ConnectionError("redis down"))
+
+        with pytest.raises(ConnectionError):
+            await swarm_pubsub.set_halt()
