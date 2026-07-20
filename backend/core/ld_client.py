@@ -19,18 +19,18 @@ import os
 
 from loguru import logger
 
-
 # Safe import to handle missing packages or environments
 try:
     import ldclient
     from ldai import LDAIClient
     from ldclient.config import Config
-    from ldobserve import ObservabilityConfig
-    from ldobserve import ObservabilityPlugin
+    from ldobserve import ObservabilityConfig, ObservabilityPlugin
 
     LD_SUPPORTED = True
 except ImportError as e:
-    logger.warning(f"LaunchDarkly SDK libraries not fully installed or import failed: {e}")
+    logger.warning(
+        f"LaunchDarkly SDK libraries not fully installed or import failed: {e}"
+    )
     LD_SUPPORTED = False
 
 
@@ -40,7 +40,9 @@ def init_ld_client() -> "LDAIClient | None":
 
     sdk_key = os.getenv("LAUNCHDARKLY_SDK_KEY")
     if not sdk_key:
-        logger.warning("LAUNCHDARKLY_SDK_KEY is not set in environment. LaunchDarkly integration disabled.")
+        logger.warning(
+            "LAUNCHDARKLY_SDK_KEY is not set in environment. LaunchDarkly integration disabled."
+        )
         return None
 
     try:
@@ -58,7 +60,9 @@ def init_ld_client() -> "LDAIClient | None":
                 ],
             )
         )
-        logger.info("LaunchDarkly AI Client successfully initialized with Observability.")
+        logger.info(
+            "LaunchDarkly AI Client successfully initialized with Observability."
+        )
         return LDAIClient(ldclient.get())
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize LaunchDarkly client: {e}")
@@ -75,9 +79,7 @@ def get_ld_ai_components():
     সব ব্যর্থ হলে (None, None, None, None, None) return করে।
     """
     try:
-        from ldai import AICompletionConfigDefault
-        from ldai import LDMessage
-        from ldai import ModelConfig
+        from ldai import AICompletionConfigDefault, LDMessage, ModelConfig
         from ldclient.context import Context
 
         return ld_ai_client, AICompletionConfigDefault, LDMessage, ModelConfig, Context

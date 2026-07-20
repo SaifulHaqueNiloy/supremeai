@@ -1,11 +1,9 @@
 import datetime
-from core.utils.time_utils import utc_now
 from datetime import UTC
 
 import pytest
-
-from core.security.rbac import RoleBasedAccessControl
-from core.security.rbac import UserContext
+from core.security.rbac import RoleBasedAccessControl, UserContext
+from core.utils.time_utils import utc_now
 
 
 def get_rbac():
@@ -73,7 +71,11 @@ def test_require_denied(rbac):
 
 
 def test_custom_role_matrix():
-    custom = {"custom": type("RBAC", (), {"role": "custom", "permissions": ("read", "custom_action")})()}
+    custom = {
+        "custom": type(
+            "RBAC", (), {"role": "custom", "permissions": ("read", "custom_action")}
+        )()
+    }
     rbac = RoleBasedAccessControl(role_matrix=custom)
     assert rbac.has_permission("custom", "custom_action") is True
     assert rbac.has_permission("custom", "admin") is False

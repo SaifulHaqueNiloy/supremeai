@@ -1,15 +1,11 @@
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Query
-from loguru import logger
-
 from api.routes.auth import optional_current_user
 from core.config import settings
-from tools.graph_service import GraphService
+from fastapi import APIRouter, Depends, HTTPException, Query
+from loguru import logger
 
+from tools.graph_service import GraphService
 
 # বাংলা মন্তব্য: ফ্রন্টএন্ডে নলেজ গ্রাফ ডেটা (Nodes & Edges) এবং লার্নিং পাথ এক্সপোজ করার API রাউটার।
 
@@ -63,7 +59,9 @@ async def get_skill_graph(user=Depends(require_auth_token)):
 
         # রিয়েল ডাটাবেস থেকে ফেচ করার লজিক (Cypher Query)
         async with graph_service.driver.session() as session:
-            result = await session.run("MATCH (n:Skill) OPTIONAL MATCH (n)-[r]->(m:Skill) RETURN n, r, m LIMIT 100")
+            result = await session.run(
+                "MATCH (n:Skill) OPTIONAL MATCH (n)-[r]->(m:Skill) RETURN n, r, m LIMIT 100"
+            )
             records = await result.data()
 
             nodes_dict = {}
@@ -101,7 +99,9 @@ async def get_skill_graph(user=Depends(require_auth_token)):
 
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error fetching skill graph: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch knowledge graph") from e
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch knowledge graph"
+        ) from e
 
 
 @router.get("/path")

@@ -60,7 +60,11 @@ class ExecutionResult:
     stdout: str
     stderr: str
     execution_time_ms: float
-    timestamp: str = field(default_factory=lambda: __import__("datetime").datetime.now(__import__("datetime").UTC).isoformat())
+    timestamp: str = field(
+        default_factory=lambda: __import__("datetime")
+        .datetime.now(__import__("datetime").UTC)
+        .isoformat()
+    )
     artifacts: dict[str, Any] = field(default_factory=dict)
     security_flags: list[str] = field(default_factory=list)
 
@@ -130,7 +134,9 @@ class SecurityScanner:
         self._entropy_scan(code)
 
         if self._violations:
-            logger.warning(f"🔒 Security scan blocked skill '{skill_id}': {self._violations}")
+            logger.warning(
+                f"🔒 Security scan blocked skill '{skill_id}': {self._violations}"
+            )
             return False, self._violations
 
         return True, []
@@ -157,7 +163,11 @@ class SecurityScanner:
                         self._violations.append(f"Forbidden from-import: {node.module}")
 
             elif isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Name) and node.func.id in ("eval", "exec", "compile"):
+                if isinstance(node.func, ast.Name) and node.func.id in (
+                    "eval",
+                    "exec",
+                    "compile",
+                ):
                     self._violations.append(f"Dangerous call: {node.func.id}()")
 
     def _pattern_scan(self, code: str) -> None:
@@ -174,7 +184,9 @@ class SecurityScanner:
             # Calculate Shannon entropy
             entropy = self._calculate_entropy(match)
             if entropy > 5.5:  # High entropy suggests encoding/obfuscation
-                self._violations.append(f"High-entropy string detected (possible obfuscation): entropy={entropy:.2f}")
+                self._violations.append(
+                    f"High-entropy string detected (possible obfuscation): entropy={entropy:.2f}"
+                )
                 break  # One flag is enough
 
     @staticmethod
@@ -262,7 +274,10 @@ class EphemeralExecutor:
         if not skill_id or len(skill_id) > 64:
             return False, "Skill ID must be 1-64 characters"
         if not self.SKILL_ID_PATTERN.match(skill_id):
-            return False, "Skill ID must start with letter, contain only a-z, A-Z, 0-9, _"
+            return (
+                False,
+                "Skill ID must start with letter, contain only a-z, A-Z, 0-9, _",
+            )
         # Additional check: no path traversal sequences
         if ".." in skill_id or "/" in skill_id or "\\" in skill_id:
             return False, "Path traversal characters detected"
@@ -341,7 +356,11 @@ class EphemeralExecutor:
             execution_time = (time.perf_counter() - start_time) * 1000
 
             # Determine status from exit code
-            status = ExecutionStatus.SUCCESS if sandbox_result.get("exit_code") == 0 else ExecutionStatus.FAILURE
+            status = (
+                ExecutionStatus.SUCCESS
+                if sandbox_result.get("exit_code") == 0
+                else ExecutionStatus.FAILURE
+            )
 
             # Check for timeout indication in stderr
             if "timeout" in sandbox_result.get("stderr", "").lower():
@@ -419,7 +438,11 @@ class EphemeralExecutor:
         """
         # Ensure test_payload is valid JSON
         try:
-            payload_json = json.dumps(json.loads(test_payload) if isinstance(test_payload, str) else test_payload)
+            payload_json = json.dumps(
+                json.loads(test_payload)
+                if isinstance(test_payload, str)
+                else test_payload
+            )
         except (json.JSONDecodeError, TypeError):
             payload_json = json.dumps({"input": str(test_payload)})
 

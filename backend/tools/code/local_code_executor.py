@@ -1,6 +1,8 @@
-from core.config import settings
 import asyncio
+
+from core.config import settings
 from loguru import logger
+
 from tools.devops.docker_sandbox import DockerSandbox  # আমাদের এক্সিস্টিং সুনির্দিষ্ট টুল
 
 
@@ -13,14 +15,22 @@ class LocalCodeExecutor:
 
     async def execute_local_code(self, code: str, timeout_seconds: int = 30) -> dict:
         env = getattr(settings, "env", "development").lower()
-        allow_fallback = getattr(settings, "allow_local_sandbox_fallback", "false").lower() == "true"
+        allow_fallback = (
+            getattr(settings, "allow_local_sandbox_fallback", "false").lower() == "true"
+        )
 
         if self.use_docker and self.docker_sandbox:
             try:
                 logger.info("🐳 Running code inside tight Docker Sandbox Container...")
                 if hasattr(self.docker_sandbox, "run_secure"):
-                    res = await self.docker_sandbox.run_secure(code, timeout=timeout_seconds)
-                    if res and (res.get("success") or isinstance(res, dict) and "success" not in res):
+                    res = await self.docker_sandbox.run_secure(
+                        code, timeout=timeout_seconds
+                    )
+                    if res and (
+                        res.get("success")
+                        or isinstance(res, dict)
+                        and "success" not in res
+                    ):
                         if "stdout" in res and "output" not in res:
                             res["output"] = res["stdout"]
                         if "stderr" in res and "error" not in res:
@@ -42,17 +52,32 @@ class LocalCodeExecutor:
         return await self._run_host_subprocess(code, timeout_seconds)
 
     async def _run_host_subprocess(self, code: str, timeout: int) -> dict:
-        logger.warning("⚠️ CRITICAL SECURITY NOTE: Running code directly on Host Subprocess!")
+        logger.warning(
+            "⚠️ CRITICAL SECURITY NOTE: Running code directly on Host Subprocess!"
+        )
         try:
             from tools.code.fuzz_sandbox import run_sandbox_ast_check
 
             if not run_sandbox_ast_check(code):
-                return {"success": False, "error": "Host execution blocked: Code failed AST security layout check."}
+                return {
+                    "success": False,
+                    "error": "Host execution blocked: Code failed AST security layout check.",
+                }
 
             # অসিঙ্ক্রোনাসভাবে লোকাল হোস্ট প্রসেস এক্সিকিউট করা হচ্ছে
-            proc = await asyncio.create_subprocess_exec("python", "-c", code, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            proc = await asyncio.create_subprocess_exec(
+                "python",
+                "-c",
+                code,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-            return {"success": proc.returncode == 0, "output": stdout.decode().strip(), "error": stderr.decode().strip()}
+            return {
+                "success": proc.returncode == 0,
+                "output": stdout.decode().strip(),
+                "error": stderr.decode().strip(),
+            }
         except TimeoutError:
             logger.error("🔴 Host subprocess timed out!")
             return {"success": False, "error": "Execution TimeoutExpired"}

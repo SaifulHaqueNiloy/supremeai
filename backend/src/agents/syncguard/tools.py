@@ -11,7 +11,10 @@ async def check_infrastructure_drift(github_repo_url: str) -> dict[str, Any]:
     """
     # Mocked check for demonstration
     logger.info("[SyncGuard Tool] Scanning render.yaml in GitHub vs Live State...")
-    return {"status": "matched", "message": "Live infrastructure perfectly matches render.yaml blueprint."}
+    return {
+        "status": "matched",
+        "message": "Live infrastructure perfectly matches render.yaml blueprint.",
+    }
 
 
 async def check_env_secrets_sync(required_keys: list) -> dict[str, Any]:

@@ -4,8 +4,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class DeploymentJob(BaseModel):

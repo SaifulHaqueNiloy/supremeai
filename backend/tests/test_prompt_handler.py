@@ -1,4 +1,4 @@
-from core.prompt_handler import normalize_prompt, estimate_tokens
+from core.prompt_handler import estimate_tokens, normalize_prompt
 
 
 def test_normalize_prompt_string():
@@ -7,7 +7,10 @@ def test_normalize_prompt_string():
 
 
 def test_normalize_prompt_list():
-    prompt = [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Tell me a joke."}]
+    prompt = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Tell me a joke."},
+    ]
     assert normalize_prompt(prompt) == "Tell me a joke."
 
 

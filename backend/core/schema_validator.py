@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from loguru import logger
-from pydantic import BaseModel
-from pydantic import ValidationError
-
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -46,7 +43,9 @@ class SchemaValidator:
             logger.error(f"Validation failed for {name}: {errors}")
             raise SchemaValidationError(name, errors) from exc
 
-    def _prepare_for_retry(self, name: str, payload: dict[str, Any], attempt: int) -> dict[str, Any]:
+    def _prepare_for_retry(
+        self, name: str, payload: dict[str, Any], attempt: int
+    ) -> dict[str, Any]:
         last = self.try_parse(name, payload)
         if last.get("status") == "ok":
             return last
@@ -57,7 +56,9 @@ class SchemaValidator:
             "last_error": str(last.get("error")),
         }
 
-    def validate_with_retry(self, name: str, payload: dict[str, Any], max_attempts: int = 2) -> dict[str, Any]:
+    def validate_with_retry(
+        self, name: str, payload: dict[str, Any], max_attempts: int = 2
+    ) -> dict[str, Any]:
         last = self.try_parse(name, payload)
         if last.get("status") == "ok":
             return last

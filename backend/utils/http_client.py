@@ -12,7 +12,6 @@ from typing import Any
 import httpx
 from loguru import logger
 
-
 # ডিফল্ট টাইমআউট সেকেন্ডে — বেশিরভাগ API কলের জন্য উপযুক্ত
 DEFAULT_TIMEOUT = httpx.Timeout(20.0, connect=5.0, read=30.0)
 

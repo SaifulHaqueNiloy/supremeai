@@ -19,10 +19,17 @@ def inject_env(match):
         return f'def {test_name}(self):\n        os.environ["RATE_LIMIT_ENABLED"] = "false"\n        app = FastAPI()'
 
 
-content = re.sub(r"def (test_[a-zA-Z0-9_]+)\(self\):\n\s*(?:\"\"\"[^\"]*\"\"\"\n\s*)?app = FastAPI\(\)", inject_env, content)
+content = re.sub(
+    r"def (test_[a-zA-Z0-9_]+)\(self\):\n\s*(?:\"\"\"[^\"]*\"\"\"\n\s*)?app = FastAPI\(\)",
+    inject_env,
+    content,
+)
 
 # Remove the get_redis patch I added
-content = content.replace('            patch("core.rate_limiter.AsyncRateLimiter._get_redis", side_effect=Exception("mock")),\n', "")
+content = content.replace(
+    '            patch("core.rate_limiter.AsyncRateLimiter._get_redis", side_effect=Exception("mock")),\n',
+    "",
+)
 
 # For test_rate_limit_exceeded, we need to mock _get_redis so it falls back to InMemoryFallbackLimiter and correctly rate limits.
 # I will use patch object to mock it.
@@ -66,7 +73,12 @@ rl_test = """
         assert resp.status_code == 429
 """
 
-content = re.sub(r"    def test_rate_limit_exceeded\(self\):.*?assert resp\.status_code == 429", rl_test.strip("\n"), content, flags=re.DOTALL)
+content = re.sub(
+    r"    def test_rate_limit_exceeded\(self\):.*?assert resp\.status_code == 429",
+    rl_test.strip("\n"),
+    content,
+    flags=re.DOTALL,
+)
 
 
 with open("tests/test_api_key_middleware.py", "w", encoding="utf-8") as f:

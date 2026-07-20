@@ -18,7 +18,10 @@ async def test_generate_contract(mock_legal):
     # বাংলা মন্তব্য: চুক্তি (Contract) তৈরি টেস্ট
     agent = LegalAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -38,7 +41,9 @@ IN WITNESS WHEREOF, the parties have executed this Agreement.
         }
 
         result = await agent.generate_contract(
-            contract_type="NDA", parties=["Company A", "Company B"], terms={"duration": "2 years", "jurisdiction": "Bangladesh"}
+            contract_type="NDA",
+            parties=["Company A", "Company B"],
+            terms={"duration": "2 years", "jurisdiction": "Bangladesh"},
         )
 
     assert result is not None
@@ -57,7 +62,10 @@ The party shall not disclose any confidential information for a period of 5 year
 This includes trade secrets, business plans, and technical data.
 """
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -89,7 +97,10 @@ Privacy Policy:
 - No third-party sharing without consent
 """
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -113,7 +124,10 @@ async def test_generate_tos(mock_legal):
     # বাংলা মন্তব্য: Terms of Service জেনারেশন টেস্ট
     agent = LegalAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -135,7 +149,9 @@ These terms are governed by the laws of Bangladesh.
 """,
         }
 
-        result = await agent.generate_tos(product_description="AI-powered code generation platform", jurisdiction="BD")
+        result = await agent.generate_tos(
+            product_description="AI-powered code generation platform", jurisdiction="BD"
+        )
 
     assert result is not None
     assert "TERMS OF SERVICE" in result["document"]
@@ -147,7 +163,10 @@ async def test_generate_privacy_policy(mock_legal):
     # বাংলা মন্তব্য: Privacy Policy জেনারেশন টেস্ট
     agent = LegalAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -163,7 +182,10 @@ Contact: privacy@company.com
 """,
         }
 
-        result = await agent.generate_tos(product_description="Web application that collects user data", jurisdiction="BD")
+        result = await agent.generate_tos(
+            product_description="Web application that collects user data",
+            jurisdiction="BD",
+        )
 
     assert result is not None
     assert "PRIVACY" in result["document"] or "privacy" in result["document"].lower()
@@ -175,7 +197,10 @@ async def test_legal_document_with_bangladesh_law(mock_legal):
     # বাংলা মন্তব্য: বাংলাদেশের আইন অনুযায়ী ডকুমেন্ট জেনারেশন টেস্ট
     agent = LegalAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -191,7 +216,11 @@ Terms:
 """,
         }
 
-        result = await agent.generate_contract(contract_type="Employment", parties=["Employer", "Employee"], terms={"jurisdiction": "Bangladesh"})
+        result = await agent.generate_contract(
+            contract_type="Employment",
+            parties=["Employer", "Employee"],
+            terms={"jurisdiction": "Bangladesh"},
+        )
 
     assert result is not None
     assert "Bangladesh" in result["document"]

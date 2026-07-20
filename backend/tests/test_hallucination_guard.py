@@ -3,7 +3,6 @@ import sys
 
 import pytest
 
-
 # Ensure supremeai root is in python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -11,8 +10,8 @@ from core.code_validator import CodeValidator
 from core.error_pattern_db import ErrorPatternDB
 from core.factual_verifier import FactualVerifier
 from core.generation_monitor import GenerationMonitor
-from core.security.input_sanitizer import InputSanitizer
 from core.output_validator import OutputValidator
+from core.security.input_sanitizer import InputSanitizer
 
 
 def test_input_sanitizer():
@@ -26,7 +25,9 @@ def test_input_sanitizer():
     assert res2["is_ambiguous"] is True
 
     # Test PII Stripping
-    cleaned = sanitizer.strip_pii("Contact me at test@example.com or call +1-555-123-4567. My server is 192.168.1.1.")
+    cleaned = sanitizer.strip_pii(
+        "Contact me at test@example.com or call +1-555-123-4567. My server is 192.168.1.1."
+    )
     assert "[EMAIL]" in cleaned
     assert "[PHONE_NUMBER]" in cleaned
     assert "[IP_ADDRESS]" in cleaned
@@ -97,8 +98,13 @@ def test_output_validator():
     assert "foo" in consensus_res["code"]
 
     # HumanReviewPolicy test
-    assert validator.human_policy.requires_human_review("python_code", {"overall": 0.9}) is True
-    assert validator.human_policy.requires_human_review("text", {"overall": 0.6}) is True
+    assert (
+        validator.human_policy.requires_human_review("python_code", {"overall": 0.9})
+        is True
+    )
+    assert (
+        validator.human_policy.requires_human_review("text", {"overall": 0.6}) is True
+    )
 
 
 def test_error_pattern_db():

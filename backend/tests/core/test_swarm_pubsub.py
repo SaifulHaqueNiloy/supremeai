@@ -4,14 +4,10 @@
 
 import asyncio
 import json
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from core.swarm_pubsub import SwarmPubSub
-
 
 # -------------------- Fixtures --------------------
 
@@ -73,7 +69,9 @@ class TestSubscribe:
     """বাংলা মন্তব্য: subscribe() async generator method টেস্ট।"""
 
     @pytest.mark.asyncio
-    async def test_subscribe_creates_pubsub(self, swarm_pubsub, mock_pubsub, mock_redis):
+    async def test_subscribe_creates_pubsub(
+        self, swarm_pubsub, mock_pubsub, mock_redis
+    ):
         """বাংলা মন্তব্য: subscribe() call করলে pubsub create হয়।"""
         swarm_pubsub.redis = mock_redis
         mock_redis.pubsub.return_value = mock_pubsub
@@ -86,7 +84,9 @@ class TestSubscribe:
         mock_pubsub.subscribe.assert_called_once_with("swarm_stream")
 
     @pytest.mark.asyncio
-    async def test_subscribe_yields_messages(self, swarm_pubsub, mock_pubsub, mock_redis):
+    async def test_subscribe_yields_messages(
+        self, swarm_pubsub, mock_pubsub, mock_redis
+    ):
         """বাংলা মন্তব্য: subscribe() messages yield করে।"""
         swarm_pubsub.redis = mock_redis
         mock_redis.pubsub.return_value = mock_pubsub
@@ -127,7 +127,9 @@ class TestSubscribe:
         assert received[2] == "message3"
 
     @pytest.mark.asyncio
-    async def test_subscribe_handles_cancelled_error(self, swarm_pubsub, mock_pubsub, mock_redis):
+    async def test_subscribe_handles_cancelled_error(
+        self, swarm_pubsub, mock_pubsub, mock_redis
+    ):
         """বাংলা মন্তব্য: CancelledError handle করে cleanup করে।"""
         swarm_pubsub.redis = mock_redis
         mock_redis.pubsub.return_value = mock_pubsub
@@ -144,7 +146,9 @@ class TestSubscribe:
         mock_pubsub.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_subscribe_sleeps_between_messages(self, swarm_pubsub, mock_pubsub, mock_redis):
+    async def test_subscribe_sleeps_between_messages(
+        self, swarm_pubsub, mock_pubsub, mock_redis
+    ):
         """বাংলা মন্তব্য: Message polling-এর between-এ sleep হয়।"""
         swarm_pubsub.redis = mock_redis
         mock_redis.pubsub.return_value = mock_pubsub
@@ -178,7 +182,9 @@ class TestSubscribe:
             mock_sleep.assert_any_call(0.01)
 
     @pytest.mark.asyncio
-    async def test_subscribe_ignores_subscribe_messages(self, swarm_pubsub, mock_pubsub, mock_redis):
+    async def test_subscribe_ignores_subscribe_messages(
+        self, swarm_pubsub, mock_pubsub, mock_redis
+    ):
         """বাংলা মন্তব্য: Subscribe confirmation messages ignore করা হয়।"""
         swarm_pubsub.redis = mock_redis
         mock_redis.pubsub.return_value = mock_pubsub
@@ -264,7 +270,10 @@ class TestBroadcast:
         complex_payload = {
             "task_id": "123",
             "agent_id": "agent-456",
-            "results": [{"step": 1, "status": "done"}, {"step": 2, "status": "pending"}],
+            "results": [
+                {"step": 1, "status": "done"},
+                {"step": 2, "status": "pending"},
+            ],
             "metadata": {"timestamp": "2024-01-01T00:00:00Z", "priority": "high"},
         }
 

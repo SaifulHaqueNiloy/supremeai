@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
 
 router = APIRouter(prefix="/api/agents", tags=["specialized-agents"])
 
@@ -60,7 +58,9 @@ async def medical_symptoms(payload: SymptomRequest):
         from agents.medical_agent import MedicalAgent
 
         agent = MedicalAgent()
-        result = agent.symptom_analysis(payload.symptoms, age=payload.age, medical_history=payload.medical_history)
+        result = agent.symptom_analysis(
+            payload.symptoms, age=payload.age, medical_history=payload.medical_history
+        )
         return result
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -128,7 +128,9 @@ async def research_search(payload: ResearchRequest):
         from agents.research_assistant import ResearchAssistant
 
         assistant = ResearchAssistant()
-        results = assistant.search(payload.query, source=payload.source, max_results=payload.max_results)
+        results = assistant.search(
+            payload.query, source=payload.source, max_results=payload.max_results
+        )
         return {
             "query": payload.query,
             "source": payload.source,

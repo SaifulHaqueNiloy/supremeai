@@ -1,6 +1,6 @@
 import os
-import pytest
 
+import pytest
 
 os.environ.setdefault("OPENROUTER_API_KEY", "")
 os.environ.setdefault("HF_API_KEY", "")
@@ -10,10 +10,13 @@ os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
 class TestTaskQueueBasic:
     @pytest.mark.asyncio
     async def test_submit_and_get_result(self):
-        from core.queue.task_queue_enhanced import submit_task, get_task_result
+        from core.queue.task_queue_enhanced import get_task_result, submit_task
 
         async def mock_task(project_id, req):
-            return {"status": "completed", "result": f"Processed {req} for {project_id}"}
+            return {
+                "status": "completed",
+                "result": f"Processed {req} for {project_id}",
+            }
 
         task_id = await submit_task(mock_task, "proj-1", "do something useful here")
         result = await get_task_result(task_id, timeout=2.0)
@@ -22,7 +25,7 @@ class TestTaskQueueBasic:
 
     @pytest.mark.asyncio
     async def test_task_failure(self):
-        from core.queue.task_queue_enhanced import submit_task, get_task_result
+        from core.queue.task_queue_enhanced import get_task_result, submit_task
 
         async def failing_task():
             raise ValueError("Intentional failure")

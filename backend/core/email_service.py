@@ -1,6 +1,5 @@
 from core.messaging.event_bus import ErrorContext
 
-
 """This module provides a robust and asynchronous email service for the SupremeAI project, centralizing the functionality for sending various transactional emails such as welcome messages, password reset links, and billing notifications. It integrates with an external email API (e.g., Resend) for delivery, leverages application settings for configuration, and reports errors via the internal event bus, ensuring reliable communication with users within the highly scalable AI ecosystem.
 
 Key Components:
@@ -24,10 +23,9 @@ Dependencies:
 import os  # noqa: E402
 
 import httpx  # noqa: E402
-from loguru import logger  # noqa: E402
-
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
 from core.messaging.event_bus import error_event_bus  # noqa: E402
+from loguru import logger  # noqa: E402
 
 
 class EmailService:
@@ -102,7 +100,10 @@ class EmailService:
                             message=response.text[:200],
                             severity="ERROR",
                             structured_context=ErrorContext(module="auto_fixed"),
-                            context={"status_code": response.status_code, "to_email": to_email},
+                            context={
+                                "status_code": response.status_code,
+                                "to_email": to_email,
+                            },
                         )
                     )
                     return False
@@ -121,9 +122,13 @@ class EmailService:
             )
             return False
 
-    async def send_welcome_email(self, user_email: str, user_name: str = "Developer") -> bool:
+    async def send_welcome_email(
+        self, user_email: str, user_name: str = "Developer"
+    ) -> bool:
         subject = "Welcome to SupremeAI 2.0 🚀"
-        frontend_url = getattr(self._get_settings(), "frontend_url", "https://supremeai.dev")
+        frontend_url = getattr(
+            self._get_settings(), "frontend_url", "https://supremeai.dev"
+        )
         html = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
@@ -149,7 +154,9 @@ class EmailService:
         """
         return await self._send_email(user_email, subject, html)
 
-    async def send_billing_notification(self, user_email: str, amount: float, usage: str) -> bool:
+    async def send_billing_notification(
+        self, user_email: str, amount: float, usage: str
+    ) -> bool:
         subject = "SupremeAI - Upcoming Invoice Notification"
         html = f"""
         <html>

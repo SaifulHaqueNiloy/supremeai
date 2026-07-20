@@ -1,5 +1,6 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi.testclient import TestClient
 from main import app
 
@@ -39,11 +40,16 @@ def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
 
     # We must also clear the get_current_admin override if it exists, or just mock it to raise 403
     app.dependency_overrides[get_current_admin] = lambda: (_ for _ in ()).throw(
-        __import__("fastapi").HTTPException(status_code=403, detail="Not enough permissions")
+        __import__("fastapi").HTTPException(
+            status_code=403, detail="Not enough permissions"
+        )
     )
 
     response = client.get("/api/admin/fixes", headers={"Authorization": "Bearer dummy"})
-    assert response.status_code in (401, 403), f"Unexpected status: {response.status_code}, details: {response.text}"
+    assert response.status_code in (
+        401,
+        403,
+    ), f"Unexpected status: {response.status_code}, details: {response.text}"
     app.dependency_overrides = {}
 
 
@@ -51,7 +57,10 @@ def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
 @patch("core.security.auth_middleware._decode_jwt")
 def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_firestore):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     # Mocking Firestore response
     mock_query = MagicMock()
@@ -64,15 +73,24 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
         return [mock_doc]
 
     mock_query.get = mock_get
-    mock_firestore.collection.return_value.document.return_value.collection.return_value.where.return_value = mock_query
+    mock_firestore.collection.return_value.document.return_value.collection.return_value.where.return_value = (
+        mock_query
+    )
 
     # We need to use app.dependency_overrides for proper injection testing
     from api.routes.admin import get_current_admin
 
-    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[get_current_admin] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
-    response = client.get("/api/admin/fixes?tenant_id=test", headers={"Authorization": "Bearer dummy"})
-    assert response.status_code == 200, f"Unexpected status: {response.status_code}, details: {response.text}"
+    response = client.get(
+        "/api/admin/fixes?tenant_id=test", headers={"Authorization": "Bearer dummy"}
+    )
+    assert (
+        response.status_code == 200
+    ), f"Unexpected status: {response.status_code}, details: {response.text}"
     assert "fixes" in response.json()
     assert len(response.json()["fixes"]) == 1
 
@@ -85,14 +103,27 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
 @patch("alembic.command.downgrade")
 @patch("api.routes.admin.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
-def test_quick_actions_success(mock_decode_jwt, mock_token, mock_downgrade, mock_db_session, mock_redis_manager, mock_god_layer):
+def test_quick_actions_success(
+    mock_decode_jwt,
+    mock_token,
+    mock_downgrade,
+    mock_db_session,
+    mock_redis_manager,
+    mock_god_layer,
+):
     """বাংলা: নতুন রিয়েল কুইক অ্যাকশন (cache/backup/rollback) সফলভাবে সম্পন্ন হচ্ছে কিনা যাচাই করে।"""
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     from api.routes.admin import get_current_admin
 
-    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[get_current_admin] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     # Redis mock
     mock_redis_client = AsyncMock()
@@ -119,17 +150,23 @@ def test_quick_actions_success(mock_decode_jwt, mock_token, mock_downgrade, mock
     mock_db_session.return_value = mock_generator()
 
     # Test cache action
-    response = client.post("/api/admin/actions/cache", headers={"Authorization": "Bearer dummy"})
+    response = client.post(
+        "/api/admin/actions/cache", headers={"Authorization": "Bearer dummy"}
+    )
     assert response.status_code == 200
     assert "Deleted 6 keys" in response.json()["message"]
 
     # Test backup action
-    response = client.post("/api/admin/actions/backup", headers={"Authorization": "Bearer dummy"})
+    response = client.post(
+        "/api/admin/actions/backup", headers={"Authorization": "Bearer dummy"}
+    )
     assert response.status_code == 200
     assert "backup" in response.json()["message"]
 
     # Test rollback action
-    response = client.post("/api/admin/actions/rollback", headers={"Authorization": "Bearer dummy"})
+    response = client.post(
+        "/api/admin/actions/rollback", headers={"Authorization": "Bearer dummy"}
+    )
     assert response.status_code == 200
     mock_downgrade.assert_called_once()
 
@@ -141,13 +178,22 @@ def test_quick_actions_success(mock_decode_jwt, mock_token, mock_downgrade, mock
 @patch("core.security.auth_middleware._decode_jwt")
 def test_quick_action_unknown_returns_404(mock_decode_jwt, mock_token, mock_god_layer):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[mock_token] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
     from api.routes.admin import get_current_admin
 
-    app.dependency_overrides[get_current_admin] = lambda: {"sub": "admin_test", "role": "admin"}
+    app.dependency_overrides[get_current_admin] = lambda: {
+        "sub": "admin_test",
+        "role": "admin",
+    }
 
-    response = client.post("/api/admin/actions/not_a_real_action", headers={"Authorization": "Bearer dummy"})
+    response = client.post(
+        "/api/admin/actions/not_a_real_action",
+        headers={"Authorization": "Bearer dummy"},
+    )
     assert response.status_code == 404
 
     app.dependency_overrides = {}

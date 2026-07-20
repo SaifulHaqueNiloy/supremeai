@@ -1,5 +1,6 @@
 import pytest
 from skill_loader import SkillLoader
+
 from skills.installer import SkillInstaller
 from skills.registry import SkillRegistry
 from skills.schema import UniversalSkillSchema

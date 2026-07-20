@@ -1,13 +1,12 @@
 """Admin routes tests for SupremeAI 2.0."""
 
 import base64
-import hmac
 import hashlib
+import hmac
 import os
 import struct
 import time
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -20,10 +19,9 @@ class TestHelperFunctions:
     def test_hash_password_requires_bcrypt(self):
         """bcrypt ছাড়া হ্যাশ fails."""
         try:
-            from core.admin_routes import _hash_password
-
             # If bcrypt is installed, this should work
             import bcrypt  # noqa: F401
+            from core.admin_routes import _hash_password
 
             hashed = _hash_password("password")
             assert isinstance(hashed, str)
@@ -71,7 +69,9 @@ class TestHelperFunctions:
     def test_get_admin_credentials_returns_hash(self):
         """যোগ্য এডমিন হ্যাশ রিটার্ন করে।"""
         test_hash = "test-admin-hash-value"
-        with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": test_hash}, clear=False):
+        with patch.dict(
+            os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": test_hash}, clear=False
+        ):
             from core.admin_routes import _get_admin_credentials
 
             assert _get_admin_credentials() == test_hash
@@ -141,7 +141,9 @@ class TestAdminRoutes:
         """TestClient with mocked dependencies and auth header."""
         from core.app import app as fastapi_app
 
-        return TestClient(fastapi_app, headers={"Authorization": "Bearer test-admin-token"})
+        return TestClient(
+            fastapi_app, headers={"Authorization": "Bearer test-admin-token"}
+        )
 
     def test_health(self, client):
         """Health endpoint."""
@@ -161,13 +163,17 @@ class TestAdminRoutes:
     def test_admin_firebase_login_mock_token_non_production(self, client):
         """মক ফায়ারবেস টোকেন লগইন non-production."""
         with patch("core.config.settings.env", "local"):
-            response = client.post("/api/admin/firebase-login", json={"id_token": "mock-test-token"})
+            response = client.post(
+                "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
+            )
             assert response.status_code in [200, 403]
 
     def test_admin_firebase_login_mock_token_production(self, client):
         """মক টোকেন প্রোডাকশন নিষিদ্ধ."""
         with patch("core.config.settings.env", "production"):
-            response = client.post("/api/admin/firebase-login", json={"id_token": "mock-test-token"})
+            response = client.post(
+                "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
+            )
             assert response.status_code == 403
 
     def test_admin_firebase_totp_setup_no_token(self, client):
@@ -185,7 +191,9 @@ class TestAdminRoutes:
         with patch("core.admin_routes.services") as mock_services:
             mock_provider = {"status": "active", "current_requests": 0}
             mock_services.parallel_router.PROVIDERS = {"provider1": mock_provider}
-            mock_services.parallel_router.get_distribution_stats = MagicMock(return_value={})
+            mock_services.parallel_router.get_distribution_stats = MagicMock(
+                return_value={}
+            )
 
             response = client.get("/admin/cloud-distribution")
             assert response.status_code == 200
@@ -197,7 +205,14 @@ class TestAdminRoutes:
 
         with patch("core.admin_routes.services") as mock_services:
             mock_services.get_tracker = MagicMock(return_value=mock_tracker)
-            with patch.dict("sys.modules", {"core.free_tier_tracker": MagicMock(get_tracker=MagicMock(return_value=mock_tracker))}):
+            with patch.dict(
+                "sys.modules",
+                {
+                    "core.free_tier_tracker": MagicMock(
+                        get_tracker=MagicMock(return_value=mock_tracker)
+                    )
+                },
+            ):
                 response = client.get("/admin/free-tier-status")
                 assert response.status_code == 200
 
@@ -206,7 +221,14 @@ class TestAdminRoutes:
         mock_tracker = MagicMock()
         mock_tracker.get_provider_status.return_value = None
 
-        with patch.dict("sys.modules", {"core.free_tier_tracker": MagicMock(get_tracker=MagicMock(return_value=mock_tracker))}):
+        with patch.dict(
+            "sys.modules",
+            {
+                "core.free_tier_tracker": MagicMock(
+                    get_tracker=MagicMock(return_value=mock_tracker)
+                )
+            },
+        ):
             response = client.get("/admin/free-tier-status/nonexistent")
             assert response.status_code == 404
 
@@ -215,7 +237,14 @@ class TestAdminRoutes:
         mock_tracker = MagicMock()
         mock_tracker.mark_rate_limited.return_value = None
 
-        with patch.dict("sys.modules", {"core.free_tier_tracker": MagicMock(get_tracker=MagicMock(return_value=mock_tracker))}):
+        with patch.dict(
+            "sys.modules",
+            {
+                "core.free_tier_tracker": MagicMock(
+                    get_tracker=MagicMock(return_value=mock_tracker)
+                )
+            },
+        ):
             response = client.post("/admin/free-tier-pause/provider1")
             assert response.status_code == 200
 
@@ -224,8 +253,17 @@ class TestAdminRoutes:
         mock_tracker = MagicMock()
         mock_tracker.override_limits.return_value = None
 
-        with patch.dict("sys.modules", {"core.free_tier_tracker": MagicMock(get_tracker=MagicMock(return_value=mock_tracker))}):
-            response = client.post("/admin/free-tier-override/provider1", json={"limit": 100})
+        with patch.dict(
+            "sys.modules",
+            {
+                "core.free_tier_tracker": MagicMock(
+                    get_tracker=MagicMock(return_value=mock_tracker)
+                )
+            },
+        ):
+            response = client.post(
+                "/admin/free-tier-override/provider1", json={"limit": 100}
+            )
             assert response.status_code == 200
 
     def test_token_budget_stats(self, client):
@@ -233,7 +271,14 @@ class TestAdminRoutes:
         mock_manager = MagicMock()
         mock_manager.get_stats.return_value = {"total": 1000}
 
-        with patch.dict("sys.modules", {"core.token_budget": MagicMock(get_budget_manager=MagicMock(return_value=mock_manager))}):
+        with patch.dict(
+            "sys.modules",
+            {
+                "core.token_budget": MagicMock(
+                    get_budget_manager=MagicMock(return_value=mock_manager)
+                )
+            },
+        ):
             response = client.get("/admin/token-budget-stats")
             assert response.status_code == 200
 

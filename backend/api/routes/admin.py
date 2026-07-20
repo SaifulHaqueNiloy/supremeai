@@ -1,19 +1,15 @@
 import json
 import secrets
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from loguru import logger
-from pydantic import BaseModel
 
 from admin.god import AdminGodLayer  # Your existing god.py
 from api.dependencies import get_current_user_token
-from core.health.self_healer import SelfHealerService
 from core.cache.redis_manager import redis_manager
+from core.health.self_healer import SelfHealerService
+from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
+from pydantic import BaseModel
 from utils.firestore_helpers import get_firestore_db
 
 
@@ -29,7 +25,9 @@ router = APIRouter(
     tags=["Core Admin"],
     dependencies=[Depends(get_current_admin)],
 )
-_db_path = str(Path(__file__).resolve().parent.parent.parent / "data" / "admin_rules.db")
+_db_path = str(
+    Path(__file__).resolve().parent.parent.parent / "data" / "admin_rules.db"
+)
 god_layer = AdminGodLayer(db_path=_db_path)
 
 
@@ -46,29 +44,47 @@ class RuleUpdate(BaseModel):
 
 
 @router.post("/rules")
-async def update_constitutional_rule(payload: RuleUpdate, admin_user: dict = Depends(get_current_admin)):
+async def update_constitutional_rule(
+    payload: RuleUpdate, admin_user: dict = Depends(get_current_admin)
+):
     """Update God.py constitutional rules directly from the Command Center UI"""
     try:
         god_layer.set_rule(payload.key, payload.value)
-        logger.critical(f"🔒 Constitutional rule '{payload.key}' changed to '{payload.value}' by {admin_user.get('sub')}")
-        return {"status": "success", "message": f"Rule {payload.key} updated to {payload.value}"}
+        logger.critical(
+            f"🔒 Constitutional rule '{payload.key}' changed to '{payload.value}' by {admin_user.get('sub')}"
+        )
+        return {
+            "status": "success",
+            "message": f"Rule {payload.key} updated to {payload.value}",
+        }
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/actions/{action_type}")
-async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_current_admin)):
+async def trigger_quick_action(
+    action_type: str, admin_user: dict = Depends(get_current_admin)
+):
     """Trigger 1-click Quick Actions from Dashboard"""
     # Verify if admin actions are currently allowed by god.py
     god_layer.enforce("admin_action")
-    logger.critical(f"🔒 Admin quick-action '{action_type}' requested by {admin_user.get('sub')}")
+    logger.critical(
+        f"🔒 Admin quick-action '{action_type}' requested by {admin_user.get('sub')}"
+    )
 
     # বাংলা মন্তব্য: প্রতিটি কুইক অ্যাকশনের জন্য রিয়েল ইমপ্লিমেন্টেশন করা হয়েছে
     if action_type == "cache":
         redis_client = redis_manager.client
         if redis_client:
             # সেশন ও ওটিপি কী সুরক্ষিত রাখতে শুধুমাত্র সাধারণ ক্যাশ প্যাটার্নগুলো স্ক্যান করে ডিলেট করা হচ্ছে
-            patterns = ["bhasha_bot:*", "user_profile:*", "user_session:*", "semantic_cache:*", "cache:*", "health:*"]
+            patterns = [
+                "bhasha_bot:*",
+                "user_profile:*",
+                "user_session:*",
+                "semantic_cache:*",
+                "cache:*",
+                "health:*",
+            ]
             total_deleted = 0
             for pattern in patterns:
                 keys = await redis_client.keys(pattern)
@@ -76,7 +92,10 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                     await redis_client.delete(*keys)
                     total_deleted += len(keys)
             logger.info(f"Successfully cleared {total_deleted} cache keys from Redis.")
-            return {"status": "success", "message": f"Selective cache cleared. Deleted {total_deleted} keys."}
+            return {
+                "status": "success",
+                "message": f"Selective cache cleared. Deleted {total_deleted} keys.",
+            }
         else:
             raise HTTPException(status_code=503, detail="Redis client unavailable")
 
@@ -88,7 +107,11 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
 
             backup_data = {}
             async for session in get_db_session():
-                result = await session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'"))
+                result = await session.execute(
+                    text(
+                        "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
+                    )
+                )
                 tables = [row[0] for row in result.fetchall()]
                 for table in tables:
                     rows_res = await session.execute(text(f"SELECT * FROM {table}"))
@@ -103,13 +126,18 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
             backend_dir = Path(__file__).resolve().parent.parent.parent
             backup_dir = backend_dir / "backup"
             backup_dir.mkdir(parents=True, exist_ok=True)
-            backup_path = backup_dir / f"db_backup_{int(datetime.now(UTC).timestamp())}.json"
+            backup_path = (
+                backup_dir / f"db_backup_{int(datetime.now(UTC).timestamp())}.json"
+            )
 
             with open(backup_path, "w", encoding="utf-8") as f:
                 json.dump(backup_data, f, indent=2)
 
             logger.info(f"Database backup saved successfully to {backup_path}")
-            return {"status": "success", "message": f"Database backup saved successfully to {backup_path.name}"}
+            return {
+                "status": "success",
+                "message": f"Database backup saved successfully to {backup_path.name}",
+            }
         except Exception as e:
             logger.error(f"Database backup failed: {e}")
             raise HTTPException(status_code=500, detail=f"Database backup failed: {e}")
@@ -117,18 +145,23 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     elif action_type == "rollback":
         # বাংলা মন্তব্য: Alembic প্রোগ্রামাটিক রোলব্যাক মেকানিজম
         try:
-            import alembic.config
             import alembic.command
+            import alembic.config
 
             alembic_cfg = alembic.config.Config("backend/alembic.ini")
             alembic_cfg.set_main_option("script_location", "backend/alembic")
             alembic.command.downgrade(alembic_cfg, "-1")
 
             logger.info("Alembic rollback to previous revision completed successfully.")
-            return {"status": "success", "message": "Database rollback to previous revision executed successfully."}
+            return {
+                "status": "success",
+                "message": "Database rollback to previous revision executed successfully.",
+            }
         except Exception as e:
             logger.error(f"Rollback failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Rollback operation failed: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Rollback operation failed: {e}"
+            )
 
     else:
         raise HTTPException(status_code=404, detail="Action not found")
@@ -163,7 +196,10 @@ async def get_fixes(
 
 @router.post("/fixes/{fix_id}/approve")
 async def approve_fix(
-    fix_id: str, tenant_id: str = "default", admin_user: dict = Depends(get_current_admin), healer: SelfHealerService = Depends(get_healer_service)
+    fix_id: str,
+    tenant_id: str = "default",
+    admin_user: dict = Depends(get_current_admin),
+    healer: SelfHealerService = Depends(get_healer_service),
 ):
     """Approve a pending fix."""
     admin_id = admin_user.get("sub", "unknown_admin")
@@ -171,21 +207,37 @@ async def approve_fix(
 
     success = await healer.apply_fix(tenant_id, fix_id, admin_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Failed to apply fix. It may not exist or is already processed.")
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to apply fix. It may not exist or is already processed.",
+        )
 
     return {"status": "success", "fix_id": fix_id}
 
 
 @router.post("/fixes/{fix_id}/reject")
-async def reject_fix(fix_id: str, tenant_id: str = "default", admin_user: dict = Depends(get_current_admin)):
+async def reject_fix(
+    fix_id: str,
+    tenant_id: str = "default",
+    admin_user: dict = Depends(get_current_admin),
+):
     """Reject a pending fix."""
     admin_id = admin_user.get("sub", "unknown_admin")
     logger.info(f"Admin {admin_id} rejecting fix {fix_id} for tenant {tenant_id}")
 
     db = get_firestore_db()
-    doc_ref = db.collection("tenants").document(tenant_id).collection("fixes").document(fix_id)
+    doc_ref = (
+        db.collection("tenants")
+        .document(tenant_id)
+        .collection("fixes")
+        .document(fix_id)
+    )
 
-    update_data = {"status": "rejected", "reviewed_by": admin_id, "applied_at": datetime.now(UTC).isoformat()}
+    update_data = {
+        "status": "rejected",
+        "reviewed_by": admin_id,
+        "applied_at": datetime.now(UTC).isoformat(),
+    }
 
     try:
         await doc_ref.update(update_data)
@@ -200,7 +252,9 @@ class VerifyOtpRequest(BaseModel):
 
 
 @router.post("/verify-otp")
-async def verify_otp(payload: VerifyOtpRequest, admin_user: dict = Depends(get_current_admin)):
+async def verify_otp(
+    payload: VerifyOtpRequest, admin_user: dict = Depends(get_current_admin)
+):
     """Validate a JIT OTP issued by AntiHackingContextMiddleware and promote the
     pending (mismatched) context to trusted, so the admin isn't re-challenged
     on their next request from this IP/fingerprint.
@@ -216,7 +270,10 @@ async def verify_otp(payload: VerifyOtpRequest, admin_user: dict = Depends(get_c
     pending_key = f"security:otp_pending:{admin_id}"
     raw_pending = await redis_manager.get_cache(pending_key)
     if not raw_pending:
-        raise HTTPException(status_code=400, detail="No pending verification for this admin, or it has expired")
+        raise HTTPException(
+            status_code=400,
+            detail="No pending verification for this admin, or it has expired",
+        )
 
     pending = json.loads(raw_pending)
 
@@ -232,5 +289,7 @@ async def verify_otp(payload: VerifyOtpRequest, admin_user: dict = Depends(get_c
     )
     await redis_manager.client.delete(pending_key)
 
-    logger.info(f"✅ Admin {admin_id} passed OTP verification — context promoted to trusted")
+    logger.info(
+        f"✅ Admin {admin_id} passed OTP verification — context promoted to trusted"
+    )
     return {"status": "verified"}

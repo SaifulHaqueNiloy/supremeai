@@ -9,9 +9,7 @@ from typing import Any
 
 # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. schemas ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
 from schemas.skill_index import SkillIndexManager
-from schemas.skill_manifest import SkillManifest
-from schemas.skill_manifest import SkillStatus
-
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 logger = logging.getLogger("supremeai.librarian")
 
@@ -32,15 +30,26 @@ class SkillLibrarian:
     def list_quarantine_queue(self) -> list[dict[str, Any]]:
         """কোয়ারেন্টাইনে থাকা পেন্ডিং স্কিলগুলোর মেটাডেটা তালিকা রিটার্ন করে।"""
         index = self.index_manager.load_index()
-        return [meta for meta in index.values() if meta.get("status") == SkillStatus.QUARANTINE]
+        return [
+            meta
+            for meta in index.values()
+            if meta.get("status") == SkillStatus.QUARANTINE
+        ]
 
-    def process_approval(self, skill_id: str, action: str, ai_patch_code: str | None = None) -> dict[str, Any]:
+    def process_approval(
+        self, skill_id: str, action: str, ai_patch_code: str | None = None
+    ) -> dict[str, Any]:
         """Admin এর নির্দেশ অনুযায়ী স্কিল স্থানান্তর ও অনুমোদন গেটওয়ে এনফোর্স করে।"""
         try:
-            logger.info(f"⚡ Background execution started for Skill: {skill_id} | Action: {action}")
+            logger.info(
+                f"⚡ Background execution started for Skill: {skill_id} | Action: {action}"
+            )
             index = self.index_manager.load_index()
             if skill_id not in index:
-                return {"success": False, "detail": "Skill not found in global registry."}
+                return {
+                    "success": False,
+                    "detail": "Skill not found in global registry.",
+                }
 
             manifest_data = index[skill_id]
             manifest = SkillManifest(**manifest_data)
@@ -65,17 +74,25 @@ class SkillLibrarian:
                 if source_path.exists():
                     shutil.rmtree(source_path)
             else:
-                return {"success": False, "detail": "Invalid approval action identifier."}
+                return {
+                    "success": False,
+                    "detail": "Invalid approval action identifier.",
+                }
 
             # গলোবাল ইনডেক্স ফাইল আপডেট
             self.index_manager.update_skill(manifest)
             self._trigger_admin_notification(skill_id, action)
 
-            return {"success": True, "detail": f"Skill {skill_id} state successfully updated to {manifest.status}."}
+            return {
+                "success": True,
+                "detail": f"Skill {skill_id} state successfully updated to {manifest.status}.",
+            }
 
         except Exception as e:
             # ব্যাকগ্রাউন্ড ফেইলর সাইলেন্টলি লগ করা হচ্ছে যাতে থ্রেড বা সার্ভার ক্র্যাশ না করে
-            logger.error(f"❌ Critical failure in librarian background loop for skill {skill_id}: {str(e)}")
+            logger.error(
+                f"❌ Critical failure in librarian background loop for skill {skill_id}: {str(e)}"
+            )
 
             # ব্যর্থতার অ্যালার্ট ডিসকর্ডে পাঠানো হচ্ছে (যদি কনফিগার করা থাকে)
             self._send_discord_message(
@@ -104,17 +121,28 @@ class SkillLibrarian:
     def _send_discord_message(self, content: str):
         """Native urllib ব্যবহার করে কোনো এক্সটার্নাল ডিপেনডেন্সি ছাড়াই নোটিফিকেশন পাঠায়"""
         if not self.webhook_url:
-            logger.warning("Discord Webhook URL not configured. Skipping webhook dispatch.")
+            logger.warning(
+                "Discord Webhook URL not configured. Skipping webhook dispatch."
+            )
             return
 
         try:
             payload = json.dumps({"content": content}).encode("utf-8")
             req = urllib.request.Request(
-                self.webhook_url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "SupremeAI-Librarian-Engine"}
+                self.webhook_url,
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "SupremeAI-Librarian-Engine",
+                },
             )
             # নেটওয়ার্ক হ্যান্ডশেক ফায়ার
             with urllib.request.urlopen(req) as response:
                 if response.status not in [200, 204]:
-                    logger.error(f"Discord Webhook returned invalid status code: {response.status}")
+                    logger.error(
+                        f"Discord Webhook returned invalid status code: {response.status}"
+                    )
         except Exception as net_err:
-            logger.error(f"Failed to transmit payload to Discord Webhook channel: {str(net_err)}")
+            logger.error(
+                f"Failed to transmit payload to Discord Webhook channel: {str(net_err)}"
+            )

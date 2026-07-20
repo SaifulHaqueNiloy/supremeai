@@ -9,7 +9,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-
 from core.config import Settings
 
 
@@ -65,7 +64,10 @@ def test_parse_admin_emails_list_passthrough():
 
 # ── parse_allowed_hosts ────────────────────────────────────────────────
 def test_parse_allowed_hosts_comma_separated():
-    assert Settings.parse_allowed_hosts("localhost, example.com") == ["localhost", "example.com"]
+    assert Settings.parse_allowed_hosts("localhost, example.com") == [
+        "localhost",
+        "example.com",
+    ]
 
 
 def test_parse_allowed_hosts_empty_returns_empty_list():
@@ -77,7 +79,10 @@ def test_parse_allowed_hosts_list_passthrough():
 
 
 # ── validate_production_completeness ───────────────────────────────────────────────────────
-@pytest.mark.parametrize("value,expected", [("LOCAL", "local"), ("Production", "production"), ("test", "test")])
+@pytest.mark.parametrize(
+    "value,expected",
+    [("LOCAL", "local"), ("Production", "production"), ("test", "test")],
+)
 def test_validate_env_normalizes_case(value, expected):
     assert Settings.validate_env(value) == expected
 
@@ -99,7 +104,9 @@ def test_set_jwt_secret_raises_in_production_when_missing():
 
 
 def test_set_jwt_secret_keeps_provided_value():
-    assert Settings.set_jwt_secret("real-secret", _info(env="production")) == "real-secret"
+    assert (
+        Settings.set_jwt_secret("real-secret", _info(env="production")) == "real-secret"
+    )
 
 
 # ── validate_debug_mode ──────────────────────────────────

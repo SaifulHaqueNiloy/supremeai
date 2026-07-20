@@ -1,10 +1,17 @@
-import uuid
-import time
 import random
-from locust import HttpUser, task, between, events
+import time
+import uuid
+
+from locust import HttpUser, between, events, task
 
 # ডাটাবেজ স্ট্রেস করতে র্যান্ডম রিকোয়েস্ট কিওয়ার্ড পুল
-TEST_KEYWORDS = ["Amazon laptops", "Zara mens jacket", "Nike running shoes", "Ebay smartphone prices", "H&M summer dress"]
+TEST_KEYWORDS = [
+    "Amazon laptops",
+    "Zara mens jacket",
+    "Nike running shoes",
+    "Ebay smartphone prices",
+    "H&M summer dress",
+]
 
 
 class SupremeAILoadTestUser(HttpUser):
@@ -14,20 +21,25 @@ class SupremeAILoadTestUser(HttpUser):
     def on_start(self):
         """ইউজার বুট হওয়ার সময় ভ্যালিড এনভায়রনমেন্ট সিক্রেট টোকেন লোড করবে"""
         # প্রডাকশনে পুশ করার সময় secrets বা env থেকে আসল ভ্যালিড টেস্ট টোকেনটি এখানে বসাবে
-        self.auth_token = (
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MDQxNTM2MDB9.s1MP9mE1Jq_xV8u_D5-uF..."
-        )
-        self.headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.auth_token}"}
+        self.auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MDQxNTM2MDB9.s1MP9mE1Jq_xV8u_D5-uF..."
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.auth_token}",
+        }
 
     @task(2)
     def fetch_skills(self):
         """GET /api/skills এন্ডপয়েন্টের ল্যাটেন্সি এবং ডিবি পুল টেস্ট"""
         # timeout=(connect_timeout, read_timeout) কড়াভাবে মেইনটেইন করা হয়েছে
-        with self.client.get("/api/skills", headers=self.headers, timeout=(5, 10), catch_response=True) as response:
+        with self.client.get(
+            "/api/skills", headers=self.headers, timeout=(5, 10), catch_response=True
+        ) as response:
             if response.status_code == 200:
                 response.success()
             else:
-                response.failure(f"Failed to fetch skills: {response.status_code} - {response.text}")
+                response.failure(
+                    f"Failed to fetch skills: {response.status_code} - {response.text}"
+                )
 
     @task(1)
     def execute_and_stream_task(self):
@@ -43,9 +55,17 @@ class SupremeAILoadTestUser(HttpUser):
         }
 
         # কড়া ৫ সেকেন্ড কানেক্ট টাইমআউট জিজিপি ক্লাউড রানের জন্য
-        with self.client.post("/api/task", json=payload, headers=self.headers, timeout=(5, 30), catch_response=True) as response:
+        with self.client.post(
+            "/api/task",
+            json=payload,
+            headers=self.headers,
+            timeout=(5, 30),
+            catch_response=True,
+        ) as response:
             if response.status_code not in [200, 201, 202]:
-                response.failure(f"Task submission failed: {response.status_code} - {response.text}")
+                response.failure(
+                    f"Task submission failed: {response.status_code} - {response.text}"
+                )
                 return
             response.success()
 
@@ -54,10 +74,16 @@ class SupremeAILoadTestUser(HttpUser):
         try:
             # stream=True এবং কড়া read_timeout দিয়ে কানেকশন ওপেন রাখা হচ্ছে
             with self.client.get(
-                f"/api/task/stream/{task_id}", headers=self.headers, stream=True, timeout=(5, 45), catch_response=True
+                f"/api/task/stream/{task_id}",
+                headers=self.headers,
+                stream=True,
+                timeout=(5, 45),
+                catch_response=True,
             ) as sse_response:
                 if sse_response.status_code != 200:
-                    sse_response.failure(f"SSE Gate Blocked: {sse_response.status_code}")
+                    sse_response.failure(
+                        f"SSE Gate Blocked: {sse_response.status_code}"
+                    )
                     return
 
                 # রিয়েল-টাইম চাঙ্ক বাফার রিড লুপ

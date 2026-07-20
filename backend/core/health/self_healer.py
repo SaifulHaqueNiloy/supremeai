@@ -1,15 +1,11 @@
 import asyncio
 import traceback
 import uuid
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from loguru import logger
-
-from core.messaging.event_bus import ErrorContext
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
 
 
 class SelfHealerService:
@@ -53,7 +49,10 @@ class SelfHealerService:
                     message=str(e),
                     severity="ERROR",
                     structured_context=ErrorContext(module="auto_fixed"),
-                    context={"coroutine": coro.__name__, "traceback": traceback.format_exc()},
+                    context={
+                        "coroutine": coro.__name__,
+                        "traceback": traceback.format_exc(),
+                    },
                 )
             )
             raise
@@ -65,12 +64,27 @@ class SelfHealerService:
         """
         Safety Filter: Ensure dangerous commands are not proposed in the fix.
         """
-        dangerous_keywords = ["exec(", "eval(", "os.system", "subprocess.call", "__import__"]
+        dangerous_keywords = [
+            "exec(",
+            "eval(",
+            "os.system",
+            "subprocess.call",
+            "__import__",
+        ]
         for keyword in dangerous_keywords:
             if keyword in proposed_fix:
-                raise ValueError(f"Dangerous keyword '{keyword}' detected in proposed fix. Rejected by Safety Filter.")
+                raise ValueError(
+                    f"Dangerous keyword '{keyword}' detected in proposed fix. Rejected by Safety Filter."
+                )
 
-    async def propose_fix(self, tenant_id: str, error_pattern: str, proposed_fix: str, impact_score: float, dependency_tree: list[str]) -> str:
+    async def propose_fix(
+        self,
+        tenant_id: str,
+        error_pattern: str,
+        proposed_fix: str,
+        impact_score: float,
+        dependency_tree: list[str],
+    ) -> str:
         """
         Generates and stores an automatic fix for an error in the Firestore database
         with a 'pending_review' status for Human-in-the-Loop (HITL) approval.
@@ -91,8 +105,7 @@ class SelfHealerService:
             return fix_id
 
         doc_ref = self._db.collection(f"tenants/{tenant_id}/fixes").document(fix_id)
-        from datetime import UTC
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         fix_data = {
             "trace_id": trace_id,
@@ -113,7 +126,9 @@ class SelfHealerService:
         else:
             doc_ref.set(fix_data)
 
-        logger.info(f"Generated auto-fix {fix_id} for trace {trace_id} (Status: pending_review)")
+        logger.info(
+            f"Generated auto-fix {fix_id} for trace {trace_id} (Status: pending_review)"
+        )
 
         # Broadcast real-time HITL Review Required event to WebSockets
         try:
@@ -124,7 +139,11 @@ class SelfHealerService:
                     message=f"Human review required for fix {fix_id}",
                     severity="WARNING",
                     structured_context=ErrorContext(module="auto_fixed"),
-                    context={"fix_id": fix_id, "tenant_id": tenant_id, "impact_score": impact_score},
+                    context={
+                        "fix_id": fix_id,
+                        "tenant_id": tenant_id,
+                        "impact_score": impact_score,
+                    },
                 )
             )
         except Exception as e:  # noqa: BLE001
@@ -140,7 +159,14 @@ class RemediationPipeline:
         self._db = db
         self.self_healer = SelfHealerService(db)
 
-    async def submit(self, tenant_id: str, error_pattern: str, proposed_fix: str, impact_score: float, dependency_tree: list[str]) -> str:
+    async def submit(
+        self,
+        tenant_id: str,
+        error_pattern: str,
+        proposed_fix: str,
+        impact_score: float,
+        dependency_tree: list[str],
+    ) -> str:
         """
         Unified entry point for all auto-fixes.
         """
@@ -158,12 +184,20 @@ class RemediationPipeline:
         sandbox_result = await self._run_in_sandbox(proposed_fix)
 
         if not sandbox_result.get("tests_passed"):
-            return await self._reject(tenant_id, proposed_fix, sandbox_result.get("log", ""))
+            return await self._reject(
+                tenant_id, proposed_fix, sandbox_result.get("log", "")
+            )
 
-        if impact_score <= self.AUTO_APPLY_THRESHOLD and sandbox_result.get("tests_passed"):
-            return await self._apply_and_pr(tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree)
+        if impact_score <= self.AUTO_APPLY_THRESHOLD and sandbox_result.get(
+            "tests_passed"
+        ):
+            return await self._apply_and_pr(
+                tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree
+            )
 
-        return await self.self_healer.propose_fix(tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree)
+        return await self.self_healer.propose_fix(
+            tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree
+        )
 
     async def _run_in_sandbox(self, fix_code: str) -> dict[str, Any]:
         """
@@ -194,20 +228,37 @@ except Exception as e:
         result = await sandbox.execute_async(test_wrapper_code, timeout=30)
 
         tests_passed = result.get("success", False) and result.get("exit_code", 1) == 0
-        return {"tests_passed": tests_passed, "log": result.get("stdout", "") + result.get("stderr", "")}
+        return {
+            "tests_passed": tests_passed,
+            "log": result.get("stdout", "") + result.get("stderr", ""),
+        }
 
     async def _reject(self, tenant_id: str, fix_code: str, log: str) -> str:
         logger.warning(f"Fix rejected due to sandbox test failure. Log: {log[:200]}")
         return f"reject-sandbox-{uuid.uuid4().hex[:8]}"
 
-    async def _apply_and_pr(self, tenant_id: str, error_pattern: str, fix_code: str, impact_score: float, dependency_tree: list[str]) -> str:
-        logger.info(f"Auto-applying fix for {tenant_id} and preparing PR. Impact score: {impact_score}")
+    async def _apply_and_pr(
+        self,
+        tenant_id: str,
+        error_pattern: str,
+        fix_code: str,
+        impact_score: float,
+        dependency_tree: list[str],
+    ) -> str:
+        logger.info(
+            f"Auto-applying fix for {tenant_id} and preparing PR. Impact score: {impact_score}"
+        )
         # Mimic applying the patch and generating a PR (logic from auto_remediation)
-        fix_id = await self.self_healer.propose_fix(tenant_id, error_pattern, fix_code, impact_score, dependency_tree)
+        fix_id = await self.self_healer.propose_fix(
+            tenant_id, error_pattern, fix_code, impact_score, dependency_tree
+        )
         # Apply the logic: update db status to applied
         if self._db:
             doc_ref = self._db.collection(f"tenants/{tenant_id}/fixes").document(fix_id)
-            update_data = {"status": "applied", "applied_at": datetime.now(UTC).isoformat()}
+            update_data = {
+                "status": "applied",
+                "applied_at": datetime.now(UTC).isoformat(),
+            }
             import asyncio
 
             if asyncio.iscoroutinefunction(doc_ref.update):
@@ -222,7 +273,9 @@ async def _self_healer_error_listener(event: ErrorEvent):
     Listens to the centralized error event bus.
     If an error meets the criteria, it can trigger the self healer's propose_fix logic.
     """
-    logger.info(f"SelfHealer triggered by event from {event.module}: {event.error_type}")
+    logger.info(
+        f"SelfHealer triggered by event from {event.module}: {event.error_type}"
+    )
 
 
 # Register the listener

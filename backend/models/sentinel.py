@@ -1,13 +1,7 @@
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import Integer
-from sqlalchemy import Text
-from sqlalchemy.sql import func
-
 from models.base import Base
-from utils.uuid_gen import UUIDv7
-from utils.uuid_gen import generate_uuid7
+from sqlalchemy import Boolean, Column, DateTime, Integer, Text
+from sqlalchemy.sql import func
+from utils.uuid_gen import UUIDv7, generate_uuid7
 
 
 class SystemDependency(Base):

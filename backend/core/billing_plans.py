@@ -33,7 +33,11 @@ SUBSCRIPTION_PLANS = [
         "price": 49.99,
         "currency": "usd",
         "interval": "month",
-        "features": ["Unlimited AI Credits", "Premium Models (GPT-4, Claude Opus)", "Priority Support"],
+        "features": [
+            "Unlimited AI Credits",
+            "Premium Models (GPT-4, Claude Opus)",
+            "Priority Support",
+        ],
     },
     {
         "id": "price_enterprise_monthly",

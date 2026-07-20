@@ -17,7 +17,10 @@ async def test_generate_contract(mock_blockchain):
     # বাংলা মন্তব্য: Solidity smart contract জেনারেশন টেস্ট
     agent = BlockchainAgent()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_router:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_router:
         mock_router.return_value = {
             "text": """
 // SPDX-License-Identifier: MIT
@@ -45,7 +48,9 @@ contract MyToken {
 """
         }
 
-        result = await agent.generate_contract(description="Create an ERC-20 token contract", standard="ERC20")
+        result = await agent.generate_contract(
+            description="Create an ERC-20 token contract", standard="ERC20"
+        )
 
     assert result is not None
     assert "MyToken" in result.get("contract")
@@ -70,7 +75,9 @@ contract VulnerableToken {
 }
 """
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate") as mock_router:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate"
+    ) as mock_router:
         mock_router.return_value.async_route_and_generate = AsyncMock(
             return_value={
                 "text": """
@@ -105,7 +112,10 @@ function expensiveLoop(uint256 n) public pure returns (uint256) {
 """
 
     # বাংলা মন্তব্য: new_callable=AsyncMock ব্যবহার করে ডাইরেক্টলি ডিকশনারি রিটার্ন সেট করা হলো
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_router:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_router:
         mock_router.return_value = {
             "text": """
 // Optimized version
@@ -137,7 +147,10 @@ contract SimpleStorage {
 """
 
     # বাংলা মন্তব্য: new_callable=AsyncMock ব্যবহার করে ডাইরেক্টলি ডিকশনারি রিটার্ন সেট করা হলো
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_router:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_router:
         mock_router.return_value = {
             "text": """
 const { expect } = require("chai");
@@ -167,7 +180,10 @@ async def test_erc721_nft_contract(mock_blockchain):
     agent = BlockchainAgent()
 
     # বাংলা মন্তব্য: new_callable=AsyncMock ব্যবহার করে ডাইরেক্টলি ডিকশনারি রিটার্ন সেট করা হলো
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_router:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_router:
         mock_router.return_value = {
             "text": """
 // SPDX-License-Identifier: MIT
@@ -192,7 +208,9 @@ contract MyNFT is ERC721 {
 """
         }
 
-        result = await agent.generate_contract(description="Create an ERC-721 NFT contract", standard="ERC721")
+        result = await agent.generate_contract(
+            description="Create an ERC-721 NFT contract", standard="ERC721"
+        )
 
     assert result is not None
     assert "ERC721" in result.get("contract")

@@ -1,5 +1,3 @@
-from core.messaging.event_bus import ErrorContext
-
 # বাংলা মন্তব্য: core module-এর কম-কভার লাইন কভার করার জন্য অতিরিক্ত টেস্টসমূহ
 import asyncio
 import contextlib
@@ -11,6 +9,7 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from core.messaging.event_bus import ErrorContext
 
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
@@ -71,13 +70,17 @@ class TestSettingsValidators:
     def test_validate_debug_mode(self):
         from core.config import Settings
 
-        result = Settings.validate_debug_mode(True, type("FakeInfo", (), {"data": {"env": "production"}})())
+        result = Settings.validate_debug_mode(
+            True, type("FakeInfo", (), {"data": {"env": "production"}})()
+        )
         assert result is False
 
     def test_set_jwt_secret_non_production_returns_placeholder(self):
         from core.config import Settings
 
-        result = Settings.set_jwt_secret(None, type("FakeInfo", (), {"data": {"env": "test"}})())
+        result = Settings.set_jwt_secret(
+            None, type("FakeInfo", (), {"data": {"env": "test"}})()
+        )
         assert len(result) == 128
 
     def test_get_cached_secret_caches_value(self, monkeypatch):
@@ -99,7 +102,9 @@ class TestSettingsValidators:
     def test_computed_fields_read_from_vault(self, monkeypatch):
         from core.config import Settings
 
-        monkeypatch.setattr("core.config.secret_vault.fetch_secret", lambda k: f"val-{k}")
+        monkeypatch.setattr(
+            "core.config.secret_vault.fetch_secret", lambda k: f"val-{k}"
+        )
         s = Settings()
         assert s.supabase_database_url == "val-SUPABASE_DATABASE_URL_POOLER"
         assert s.redis_url == "redis://val-REDIS_URL"
@@ -125,7 +130,7 @@ class TestConfigCacheMissingBranches:
         assert cache._should_refresh() is False
 
     def test_refresh_sync_loads_defaults_on_db_failure(self, monkeypatch):
-        from core.config_cache import ConfigCache, DEFAULT_CONFIGS
+        from core.config_cache import DEFAULT_CONFIGS, ConfigCache
 
         async def fake_load_from_db_async(self):
             raise RuntimeError("db down")
@@ -134,10 +139,12 @@ class TestConfigCacheMissingBranches:
         cache = ConfigCache()
         cache.refresh_sync_bootstrap()
         assert cache._loaded is True
-        assert cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
+        assert (
+            cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
+        )
 
     def test_get_all_category_filter(self):
-        from core.config_cache import ConfigCache, DEFAULT_CONFIGS
+        from core.config_cache import DEFAULT_CONFIGS, ConfigCache
 
         cache = ConfigCache()
         cache._loaded = True
@@ -147,7 +154,7 @@ class TestConfigCacheMissingBranches:
         assert "feature_semantic_cache" not in filtered
 
     def test_get_all_no_category_returns_copy(self):
-        from core.config_cache import ConfigCache, DEFAULT_CONFIGS
+        from core.config_cache import DEFAULT_CONFIGS, ConfigCache
 
         cache = ConfigCache()
         cache._loaded = True
@@ -203,13 +210,17 @@ class TestConfigCacheMissingBranches:
 
     @pytest.mark.asyncio
     async def test_refresh_async_db_failure_uses_defaults(self):
-        from core.config_cache import ConfigCache, DEFAULT_CONFIGS
+        from core.config_cache import DEFAULT_CONFIGS, ConfigCache
 
         cache = ConfigCache()
-        with patch("database.session.AsyncSessionLocal", side_effect=RuntimeError("db down")):
+        with patch(
+            "database.session.AsyncSessionLocal", side_effect=RuntimeError("db down")
+        ):
             await cache.refresh_async()
         assert cache._loaded is True
-        assert cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
+        assert (
+            cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
+        )
 
 
 # ========================== config_proxy.py ==========================
@@ -279,7 +290,11 @@ class TestCostGuardMissingBranches:
         from core.cost_guard import CostGuard
 
         guard = CostGuard()
-        with patch("core.cache.redis_manager.redis_manager.get_cache", new_callable=AsyncMock, return_value="0.0"):
+        with patch(
+            "core.cache.redis_manager.redis_manager.get_cache",
+            new_callable=AsyncMock,
+            return_value="0.0",
+        ):
             for tier in ("free", "economy", "premium"):
                 assert await guard.validate_budget("t1", tier) is True
 
@@ -376,7 +391,11 @@ class TestEventBusMissingBranches:
 
     @pytest.mark.asyncio
     async def test_handler_failure_routes_to_dlq(self):
-        from core.messaging.event_bus import DeadLetterQueueItem, ErrorEvent, ErrorEventBus
+        from core.messaging.event_bus import (
+            DeadLetterQueueItem,
+            ErrorEvent,
+            ErrorEventBus,
+        )
 
         bus = ErrorEventBus()
         dlq_handler = AsyncMock()
@@ -403,7 +422,11 @@ class TestEventBusMissingBranches:
 
     @pytest.mark.asyncio
     async def test_dlq_full_drops_and_logs_critical(self):
-        from core.messaging.event_bus import DeadLetterQueueItem, ErrorEvent, ErrorEventBus
+        from core.messaging.event_bus import (
+            DeadLetterQueueItem,
+            ErrorEvent,
+            ErrorEventBus,
+        )
 
         bus = ErrorEventBus()
         # Pre-fill DLQ to maxsize
@@ -438,7 +461,9 @@ class TestEventBusMissingBranches:
         from core.messaging.event_bus import DeadLetterQueueItem, ErrorEventBus
 
         bus = ErrorEventBus()
-        item = DeadLetterQueueItem(event_type="e", handler_name="h", error="err", timestamp=datetime.now(UTC))
+        item = DeadLetterQueueItem(
+            event_type="e", handler_name="h", error="err", timestamp=datetime.now(UTC)
+        )
         bus._dlq.put_nowait(item)
         processed = await bus.process_dead_letter_queue(max_items=10)
         assert len(processed) == 1
@@ -512,7 +537,9 @@ class TestKnowledgeBaseMissingBranches:
         # বাংলা মন্তব্য: reloading logic matching এর জন্য environmental variables set করা হলো
         monkeypatch.setenv("SUPREMEAI_BASE_DIR", str(tmp_path))
         monkeypatch.setenv("SUPREMEAI_DATA_DIR", str(tmp_path / "data"))
-        monkeypatch.setenv("SUPREMEAI_MEMORY_FILE_PATH", str(tmp_path / "data" / "memory_vault.json"))
+        monkeypatch.setenv(
+            "SUPREMEAI_MEMORY_FILE_PATH", str(tmp_path / "data" / "memory_vault.json")
+        )
 
         import core.knowledge_base as kb
 
@@ -552,15 +579,41 @@ class TestSwarmOrchestratorMissingBranches:
         with (
             patch(
                 "core.orchestration.agent_orchestrator.budget_aware_route",
-                return_value={"intent": "coding", "tier": "free", "best_provider": "gemini"},
+                return_value={
+                    "intent": "coding",
+                    "tier": "free",
+                    "best_provider": "gemini",
+                },
             ),
-            patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}),
-            patch.object(orchestrator.agents["architect"], "run", new_callable=AsyncMock) as mock_design,
-            patch.object(orchestrator.agents["coder"], "run", new_callable=AsyncMock) as mock_code,
-            patch.object(orchestrator.agents["guardian"], "run", new_callable=AsyncMock) as mock_verify,
-            patch.object(orchestrator.agents["guardian"], "validate", new_callable=AsyncMock, return_value=(True, "OK")),
-            patch.object(orchestrator.agents["reflection"], "run", new_callable=AsyncMock) as mock_reflection,
-            patch.object(orchestrator.agents["reflection"], "reflect_and_persist", new_callable=AsyncMock) as mock_reflect_persist,
+            patch.object(
+                orchestrator,
+                "_synthesize_tool",
+                new_callable=AsyncMock,
+                return_value={"agent_name": "mocked"},
+            ),
+            patch.object(
+                orchestrator.agents["architect"], "run", new_callable=AsyncMock
+            ) as mock_design,
+            patch.object(
+                orchestrator.agents["coder"], "run", new_callable=AsyncMock
+            ) as mock_code,
+            patch.object(
+                orchestrator.agents["guardian"], "run", new_callable=AsyncMock
+            ) as mock_verify,
+            patch.object(
+                orchestrator.agents["guardian"],
+                "validate",
+                new_callable=AsyncMock,
+                return_value=(True, "OK"),
+            ),
+            patch.object(
+                orchestrator.agents["reflection"], "run", new_callable=AsyncMock
+            ) as mock_reflection,
+            patch.object(
+                orchestrator.agents["reflection"],
+                "reflect_and_persist",
+                new_callable=AsyncMock,
+            ) as mock_reflect_persist,
         ):
             workspace = await orchestrator.execute_task("write a python script", "uid")
             mock_design.assert_called_once()
@@ -571,7 +624,11 @@ class TestSwarmOrchestratorMissingBranches:
     @pytest.mark.anyio
     async def test_circuit_breaker_opens_after_threshold(self):
         # বাংলা মন্তব্য: CircuitBreaker ও সম্পর্কিত স্টেট/এরর সরাসরি core.resilience.circuit_breaker থেকে ইম্পোর্ট করা হলো।
-        from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitBreakerState
+        from core.resilience.circuit_breaker import (
+            CircuitBreaker,
+            CircuitBreakerOpenError,
+            CircuitBreakerState,
+        )
 
         cb = CircuitBreaker(name="morphic", failure_threshold=2, recovery_timeout=0.1)
 
@@ -616,7 +673,9 @@ class TestSwarmOrchestratorMissingBranches:
 
 
 class TestLLMGatewayMissingBranches:
-    @pytest.mark.skip(reason="Technical Debt: CostGuard mock needs update. Tracked in TECH_DEBT.md")
+    @pytest.mark.skip(
+        reason="Technical Debt: CostGuard mock needs update. Tracked in TECH_DEBT.md"
+    )
     @pytest.mark.anyio
     async def test_acompletion_cost_guard_check(self, monkeypatch):
         from core.llm.llm_gateway import LLMGateway
@@ -716,7 +775,11 @@ class TestLLMGatewayMissingBranches:
             patch("core.llm_gateway.get_firestore_db", return_value=mock_db),
             patch("core.llm_gateway.SelfHealerService", return_value=mock_healer),
             patch("core.llm_gateway.CostGuard", return_value=mock_cost_guard),
-            patch("litellm.acompletion", new_callable=AsyncMock, side_effect=Exception("fail")),
+            patch(
+                "litellm.acompletion",
+                new_callable=AsyncMock,
+                side_effect=Exception("fail"),
+            ),
         ):
             os.environ["OPENAI_API_KEY"] = "mock"
             with pytest.raises(Exception):
@@ -815,7 +878,10 @@ class TestContainerAuditorMissingBranches:
         from core.container_auditor import ContainerAuditor
 
         auditor = ContainerAuditor(check_interval_seconds=1)
-        monkeypatch.setattr("subprocess.run", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")),
+        )
         assert auditor.get_container_stats() == []
 
     def test_parse_memory_percent_valid(self):
@@ -835,7 +901,9 @@ class TestContainerAuditorMissingBranches:
         from core.container_auditor import ContainerAuditor
 
         auditor = ContainerAuditor(check_interval_seconds=1)
-        monkeypatch.setattr(auditor, "get_container_stats", lambda: [{"Name": "c1", "MemPerc": "82.0%"}])
+        monkeypatch.setattr(
+            auditor, "get_container_stats", lambda: [{"Name": "c1", "MemPerc": "82.0%"}]
+        )
         with patch("core.container_auditor.logger.warning") as mock_warning:
             await auditor.audit_cycle()
             mock_warning.assert_called_once()
@@ -845,7 +913,9 @@ class TestContainerAuditorMissingBranches:
         from core.container_auditor import ContainerAuditor
 
         auditor = ContainerAuditor(check_interval_seconds=1)
-        monkeypatch.setattr(auditor, "get_container_stats", lambda: [{"Name": "c1", "MemPerc": "96.0%"}])
+        monkeypatch.setattr(
+            auditor, "get_container_stats", lambda: [{"Name": "c1", "MemPerc": "96.0%"}]
+        )
         with (
             patch("core.container_auditor.logger.error") as mock_error,
             patch("subprocess.run") as mock_run,
@@ -859,7 +929,9 @@ class TestContainerAuditorMissingBranches:
         from core.container_auditor import ContainerAuditor
 
         auditor = ContainerAuditor(check_interval_seconds=1)
-        monkeypatch.setattr(auditor, "get_container_stats", lambda: [{"Name": "c1", "MemPerc": "99.0%"}])
+        monkeypatch.setattr(
+            auditor, "get_container_stats", lambda: [{"Name": "c1", "MemPerc": "99.0%"}]
+        )
         with (
             patch("core.container_auditor.logger.error") as mock_error,
             patch("subprocess.run", side_effect=RuntimeError("kill fail")),
@@ -924,7 +996,11 @@ class TestNATSMessagingMissingBranches:
         mock_js.key_value.side_effect = Exception("not found")
         mock_js.create_key_value = AsyncMock(return_value=mock_kv)
 
-        with patch("core.nats_messaging.nats.connect", new_callable=AsyncMock, return_value=mock_nc):
+        with patch(
+            "core.nats_messaging.nats.connect",
+            new_callable=AsyncMock,
+            return_value=mock_nc,
+        ):
             await client.connect()
 
         assert client.nc is mock_nc
@@ -982,7 +1058,9 @@ class TestNATSMessagingMissingBranches:
         client = NATSClient()
         client.kv_store = MagicMock()
         client.kv_store.put = AsyncMock()
-        client.kv_store.get = AsyncMock(return_value=MagicMock(value=json.dumps({"id": "w1"}).encode()))
+        client.kv_store.get = AsyncMock(
+            return_value=MagicMock(value=json.dumps({"id": "w1"}).encode())
+        )
 
         await client.register_worker("w1", {"id": "w1"})
         worker = await client.get_worker("w1")
@@ -1066,8 +1144,14 @@ class TestPlaywrightManagerMissingBranches:
         mock_runner = MagicMock()
         monkeypatch.setattr("core.playwright_manager._global_browser", mock_browser)
         monkeypatch.setattr("core.playwright_manager._playwright_runner", mock_runner)
-        monkeypatch.setattr("core.playwright_manager._global_browser.close", AsyncMock(side_effect=RuntimeError("close fail")))
-        monkeypatch.setattr("core.playwright_manager._playwright_runner.stop", AsyncMock(side_effect=RuntimeError("stop fail")))
+        monkeypatch.setattr(
+            "core.playwright_manager._global_browser.close",
+            AsyncMock(side_effect=RuntimeError("close fail")),
+        )
+        monkeypatch.setattr(
+            "core.playwright_manager._playwright_runner.stop",
+            AsyncMock(side_effect=RuntimeError("stop fail")),
+        )
 
         # The function should complete without raising, even with errors
         await shutdown_global_browser()
@@ -1078,7 +1162,9 @@ class TestPlaywrightManagerMissingBranches:
 
 
 class TestSwarmPubSubMissingBranches:
-    @pytest.mark.skip(reason="SwarmPubSub requires Redis connection - integration test needed")
+    @pytest.mark.skip(
+        reason="SwarmPubSub requires Redis connection - integration test needed"
+    )
     @pytest.mark.asyncio
     async def test_subscribe_yields_messages(self, monkeypatch):
         from core.swarm_pubsub import SwarmPubSub
@@ -1086,13 +1172,17 @@ class TestSwarmPubSubMissingBranches:
         pubsub = SwarmPubSub()
         mock_pubsub = MagicMock()
         mock_pubsub.subscribe = AsyncMock()
-        mock_pubsub.get_message = AsyncMock(side_effect=[{"data": b"hello"}, None, {"data": b"world"}])
+        mock_pubsub.get_message = AsyncMock(
+            side_effect=[{"data": b"hello"}, None, {"data": b"world"}]
+        )
         mock_pubsub.unsubscribe = AsyncMock()
         mock_pubsub.close = AsyncMock()
 
         mock_redis = MagicMock()
         mock_redis.pubsub = MagicMock(return_value=mock_pubsub)
-        monkeypatch.setattr("core.swarm_pubsub.redis.from_url", lambda *args, **kwargs: mock_redis)
+        monkeypatch.setattr(
+            "core.swarm_pubsub.redis.from_url", lambda *args, **kwargs: mock_redis
+        )
 
         messages = []
 
@@ -1111,7 +1201,9 @@ class TestSwarmPubSubMissingBranches:
         # Verify messages were received (mock should return them)
         assert len(messages) >= 1
 
-    @pytest.mark.skip(reason="SwarmPubSub requires Redis connection - integration test needed")
+    @pytest.mark.skip(
+        reason="SwarmPubSub requires Redis connection - integration test needed"
+    )
     @pytest.mark.asyncio
     async def test_broadcast_publishes_event(self, monkeypatch):
         from core.swarm_pubsub import SwarmPubSub
@@ -1122,7 +1214,9 @@ class TestSwarmPubSubMissingBranches:
         mock_redis.pubsub = MagicMock(return_value=MagicMock())
 
         # Completely mock the redis client to prevent any actual connection attempts
-        monkeypatch.setattr("core.swarm_pubsub.redis.from_url", lambda *args, **kwargs: mock_redis)
+        monkeypatch.setattr(
+            "core.swarm_pubsub.redis.from_url", lambda *args, **kwargs: mock_redis
+        )
 
         await pubsub.broadcast("theme_changed", {"theme": "dark"})
 
@@ -1146,7 +1240,9 @@ class TestHumanBehaviorMissingBranches:
     def test_bezier_points_generation(self):
         from core.human_behavior import HumanBehaviorSimulators
 
-        points = HumanBehaviorSimulators._generate_bezier_points((0, 0), (100, 100), steps=5)
+        points = HumanBehaviorSimulators._generate_bezier_points(
+            (0, 0), (100, 100), steps=5
+        )
         assert len(points) == 5
         assert points[0] == (0, 0)
         assert points[-1] == (100, 100)
@@ -1183,8 +1279,11 @@ class TestSecurityUtilsMissingBranches:
 class TestSwarmOrchestratorCircuitBreakerIntegration:
     @pytest.mark.anyio
     async def test_execute_task_handles_circuit_breaker_open(self):
-        from core.resilience.circuit_breaker import CircuitBreakerOpenError, CircuitBreakerState
         from core.orchestration.swarm_orchestrator import SwarmOrchestrator
+        from core.resilience.circuit_breaker import (
+            CircuitBreakerOpenError,
+            CircuitBreakerState,
+        )
 
         orchestrator = SwarmOrchestrator()
 
@@ -1192,16 +1291,30 @@ class TestSwarmOrchestratorCircuitBreakerIntegration:
 
         # Mock _synthesize_tool to avoid LLM call
         with (
-            patch.object(orchestrator, "_synthesize_tool", new_callable=AsyncMock, return_value={"agent_name": "mocked"}),
+            patch.object(
+                orchestrator,
+                "_synthesize_tool",
+                new_callable=AsyncMock,
+                return_value={"agent_name": "mocked"},
+            ),
             patch.object(
                 orchestrator.agents["architect"],
                 "run",
                 new_callable=AsyncMock,
-                side_effect=CircuitBreakerOpenError("circuit open", state=CircuitBreakerState.OPEN),
+                side_effect=CircuitBreakerOpenError(
+                    "circuit open", state=CircuitBreakerState.OPEN
+                ),
             ),
-            patch.object(orchestrator.agents["reflection"], "reflect_and_persist", new_callable=AsyncMock),
+            patch.object(
+                orchestrator.agents["reflection"],
+                "reflect_and_persist",
+                new_callable=AsyncMock,
+            ),
         ):
             # We verify that the circuit breaker error path is reached
             workspace = await orchestrator.execute_task("write a python script", "uid")
             # বাংলা মন্তব্য: সার্কিট ব্রেকার রিয়েল এক্সেপশন মেসেজ "circuit breaker" হ্যান্ডেল করার জন্য অ্যাসারশন আপডেট করা হলো।
-            assert "circuit open" in workspace.errors[0] or "circuit breaker" in workspace.errors[0].lower()
+            assert (
+                "circuit open" in workspace.errors[0]
+                or "circuit breaker" in workspace.errors[0].lower()
+            )

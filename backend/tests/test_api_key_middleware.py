@@ -1,12 +1,11 @@
 import time
 from unittest.mock import AsyncMock, patch
 
+from core.security import hash_api_key, mask_api_key
+from core.security.api_key_middleware import APIKeyAuthMiddleware
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from starlette.testclient import TestClient
-
-from core.security import mask_api_key, hash_api_key
-from core.security.api_key_middleware import APIKeyAuthMiddleware
 
 
 async def acquire_true(*args, **kwargs):
@@ -23,7 +22,9 @@ class TestAPIKeyAuthMiddleware:
 
         @app.get("/api/test")
         def test_endpoint(request: Request):
-            return PlainTextResponse(f"user: {getattr(request.state, 'api_key', {}).get('id', 'none')}")
+            return PlainTextResponse(
+                f"user: {getattr(request.state, 'api_key', {}).get('id', 'none')}"
+            )
 
         mock_row = {
             "id": "key-123",
@@ -34,9 +35,15 @@ class TestAPIKeyAuthMiddleware:
         }
 
         with (
-            patch("core.security.api_key_middleware.is_test_environment", return_value=False),
+            patch(
+                "core.security.api_key_middleware.is_test_environment",
+                return_value=False,
+            ),
             patch("core.security.api_key_middleware.get_db_pool") as mock_pool,
-            patch("core.security.api_key_middleware.hash_api_key", return_value="hashed_key"),
+            patch(
+                "core.security.api_key_middleware.hash_api_key",
+                return_value="hashed_key",
+            ),
             patch("core.rate_limiter.AsyncRateLimiter.acquire", acquire_true),
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
@@ -59,9 +66,15 @@ class TestAPIKeyAuthMiddleware:
             return PlainTextResponse("ok")
 
         with (
-            patch("core.security.api_key_middleware.is_test_environment", return_value=False),
+            patch(
+                "core.security.api_key_middleware.is_test_environment",
+                return_value=False,
+            ),
             patch("core.security.api_key_middleware.get_db_pool") as mock_pool,
-            patch("core.security.api_key_middleware.hash_api_key", return_value="hashed_key"),
+            patch(
+                "core.security.api_key_middleware.hash_api_key",
+                return_value="hashed_key",
+            ),
             patch("core.rate_limiter.AsyncRateLimiter.acquire", acquire_true),
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=None)
@@ -92,9 +105,15 @@ class TestAPIKeyAuthMiddleware:
         }
 
         with (
-            patch("core.security.api_key_middleware.is_test_environment", return_value=False),
+            patch(
+                "core.security.api_key_middleware.is_test_environment",
+                return_value=False,
+            ),
             patch("core.security.api_key_middleware.get_db_pool") as mock_pool,
-            patch("core.security.api_key_middleware.hash_api_key", return_value="hashed_key"),
+            patch(
+                "core.security.api_key_middleware.hash_api_key",
+                return_value="hashed_key",
+            ),
             patch("core.rate_limiter.AsyncRateLimiter.acquire", acquire_true),
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
@@ -125,9 +144,15 @@ class TestAPIKeyAuthMiddleware:
         }
 
         with (
-            patch("core.security.api_key_middleware.is_test_environment", return_value=False),
+            patch(
+                "core.security.api_key_middleware.is_test_environment",
+                return_value=False,
+            ),
             patch("core.security.api_key_middleware.get_db_pool") as mock_pool,
-            patch("core.security.api_key_middleware.hash_api_key", return_value="hashed_key"),
+            patch(
+                "core.security.api_key_middleware.hash_api_key",
+                return_value="hashed_key",
+            ),
             patch("core.rate_limiter.AsyncRateLimiter.acquire", acquire_true),
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
@@ -158,9 +183,15 @@ class TestAPIKeyAuthMiddleware:
         }
 
         with (
-            patch("core.security.api_key_middleware.is_test_environment", return_value=False),
+            patch(
+                "core.security.api_key_middleware.is_test_environment",
+                return_value=False,
+            ),
             patch("core.security.api_key_middleware.get_db_pool") as mock_pool,
-            patch("core.security.api_key_middleware.hash_api_key", return_value="hashed_key"),
+            patch(
+                "core.security.api_key_middleware.hash_api_key",
+                return_value="hashed_key",
+            ),
             patch("core.rate_limiter.AsyncRateLimiter.acquire", acquire_false),
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)

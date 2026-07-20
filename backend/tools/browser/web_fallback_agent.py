@@ -28,11 +28,19 @@ class WebFallbackAgent:
             # বাংলা মন্তব্য: Playwright dynamically import করা হচ্ছে যাতে dependency না থাকলে ক্র্যাশ না হয়
             from playwright.async_api import async_playwright  # noqa: PLC0415
 
-            steps_executed.append({"step": 1, "action": f"Launch browser and navigate to {url}", "status": "running"})
+            steps_executed.append(
+                {
+                    "step": 1,
+                    "action": f"Launch browser and navigate to {url}",
+                    "status": "running",
+                }
+            )
 
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
-                context = await browser.new_context(viewport={"width": 1280, "height": 800})
+                context = await browser.new_context(
+                    viewport={"width": 1280, "height": 800}
+                )
                 page = await context.new_page()
 
                 await page.goto(url, wait_until="domcontentloaded", timeout=15000)
@@ -40,7 +48,13 @@ class WebFallbackAgent:
 
                 # Perform basic login sequence if credentials present in task
                 if "login_selector" in task and "username" in task:
-                    steps_executed.append({"step": 2, "action": "Perform auto-login sequence", "status": "running"})
+                    steps_executed.append(
+                        {
+                            "step": 2,
+                            "action": "Perform auto-login sequence",
+                            "status": "running",
+                        }
+                    )
                     await page.fill(task["login_selector"], task["username"])
                     if "password_selector" in task and "password" in task:
                         await page.fill(task["password_selector"], task["password"])
@@ -51,7 +65,13 @@ class WebFallbackAgent:
 
                 # Perform custom action (e.g. click, fill or scrape)
                 action = task.get("action")
-                steps_executed.append({"step": 3, "action": f"Execute action: {action}", "status": "running"})
+                steps_executed.append(
+                    {
+                        "step": 3,
+                        "action": f"Execute action: {action}",
+                        "status": "running",
+                    }
+                )
 
                 result_content = ""
                 if action == "click" and "selector" in task:
@@ -72,7 +92,13 @@ class WebFallbackAgent:
                 steps_executed[-1]["status"] = "completed"
 
                 # Capture final result screenshot (saved in temporary dir)
-                steps_executed.append({"step": 4, "action": "Extract results and screenshot", "status": "completed"})
+                steps_executed.append(
+                    {
+                        "step": 4,
+                        "action": "Extract results and screenshot",
+                        "status": "completed",
+                    }
+                )
                 screenshot_data = await page.screenshot(type="png", full_page=False)
 
                 await browser.close()
@@ -88,12 +114,30 @@ class WebFallbackAgent:
                 }
 
         except ImportError:
-            logger.warning("Playwright is not installed. Falling back to simulated headless runner.")
+            logger.warning(
+                "Playwright is not installed. Falling back to simulated headless runner."
+            )
             mock_steps = [
-                {"step": 1, "action": f"Navigate to {url} (Simulated)", "status": "completed"},
-                {"step": 2, "action": "Perform login sequence (Simulated)", "status": "completed"},
-                {"step": 3, "action": f"Perform task: {task.get('action')} (Simulated)", "status": "completed"},
-                {"step": 4, "action": "Extract results from UI elements (Simulated)", "status": "completed"},
+                {
+                    "step": 1,
+                    "action": f"Navigate to {url} (Simulated)",
+                    "status": "completed",
+                },
+                {
+                    "step": 2,
+                    "action": "Perform login sequence (Simulated)",
+                    "status": "completed",
+                },
+                {
+                    "step": 3,
+                    "action": f"Perform task: {task.get('action')} (Simulated)",
+                    "status": "completed",
+                },
+                {
+                    "step": 4,
+                    "action": "Extract results from UI elements (Simulated)",
+                    "status": "completed",
+                },
             ]
             return {
                 "success": True,
@@ -105,4 +149,10 @@ class WebFallbackAgent:
             }
         except Exception as exc:  # noqa: BLE001
             logger.error(f"Playwright execution failed: {exc}")
-            return {"success": False, "tool": tool_name, "url": url, "steps_executed": steps_executed, "error": str(exc)}
+            return {
+                "success": False,
+                "tool": tool_name,
+                "url": url,
+                "steps_executed": steps_executed,
+                "error": str(exc),
+            }

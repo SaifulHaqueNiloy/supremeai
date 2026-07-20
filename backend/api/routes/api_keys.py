@@ -6,32 +6,24 @@ from __future__ import annotations
 
 import time
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import status
-from loguru import logger
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import field_validator
-
 from core.rate_limiter import AsyncRateLimiter
-from core.security import generate_api_key
-from core.security import hash_api_key
-from core.security import mask_api_key
-from core.security import verify_api_key
-from models.api_key import create_api_key
-from models.api_key import delete_api_key
-from models.api_key import get_all_api_keys
-from models.api_key import get_api_key_by_id
-from models.api_key import get_api_key_usage
-from models.api_key import get_api_key_usage_stats
-from models.api_key import get_api_keys_by_user
-from models.api_key import record_api_key_event
-from models.api_key import record_api_key_usage
-from models.api_key import revoke_api_key
-from models.api_key import rotate_api_key
-
+from core.security import generate_api_key, hash_api_key, mask_api_key, verify_api_key
+from fastapi import APIRouter, HTTPException, Request, status
+from loguru import logger
+from models.api_key import (
+    create_api_key,
+    delete_api_key,
+    get_all_api_keys,
+    get_api_key_by_id,
+    get_api_key_usage,
+    get_api_key_usage_stats,
+    get_api_keys_by_user,
+    record_api_key_event,
+    record_api_key_usage,
+    revoke_api_key,
+    rotate_api_key,
+)
+from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(prefix="/api/api-keys", tags=["api-keys"])
 limiter = AsyncRateLimiter()
@@ -44,7 +36,9 @@ class CreateAPIKeyRequest(BaseModel):
     user_id: str = Field(..., min_length=1, description="Owner user ID (email or uid)")
     name: str = Field(..., min_length=1, max_length=255)
     rate_limit_rps: int = Field(default=6, ge=1, le=1000)
-    expires_in_days: int | None = Field(default=None, ge=1, description="Expires in N days, null = no expiry")
+    expires_in_days: int | None = Field(
+        default=None, ge=1, description="Expires in N days, null = no expiry"
+    )
 
     @field_validator("user_id", "name", mode="before")
     @classmethod
@@ -194,7 +188,9 @@ async def rotate_key(key_id: int, req: RotateAPIKeyRequest, request: Request):
     if not updated:
         raise HTTPException(status_code=500, detail="Failed to rotate key")
 
-    await record_api_key_event(key_id, "rotated", f"Grace period: {req.grace_period_hours}h")
+    await record_api_key_event(
+        key_id, "rotated", f"Grace period: {req.grace_period_hours}h"
+    )
     logger.info(f"API key rotated: {key_id}")
     return {
         "status": "rotated",

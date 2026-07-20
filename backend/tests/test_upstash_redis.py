@@ -1,5 +1,4 @@
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from core.messaging.upstash_redis_queue import UpstashRedisQueue
 

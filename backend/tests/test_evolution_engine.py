@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 import tempfile
 from unittest.mock import MagicMock
-import pytest
 
+import pytest
 from core.evolution.evolution_engine import EvolutionEngine
 
 

@@ -6,12 +6,12 @@ import os
 import sqlite3
 from typing import Any
 
+from core.persistence import pooled_pg
 from loguru import logger
 
-from core.persistence import pooled_pg
-
-
-HAS_SENTENCE_TRANSFORMERS = importlib.util.find_spec("sentence_transformers") is not None
+HAS_SENTENCE_TRANSFORMERS = (
+    importlib.util.find_spec("sentence_transformers") is not None
+)
 
 
 def hash_vectorize(text: str, size: int = 384) -> list[float]:
@@ -67,14 +67,18 @@ class CascadeMemoryService:
                 self.db_path = None
                 logger.info("CascadeMemoryService: using pooled Postgres backend.")
             except Exception as exc:  # noqa: BLE001
-                logger.error(f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}")
+                logger.error(
+                    f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}"
+                )
                 self._use_pg = False
 
         if not self._use_pg:
             self.db_path = db_path or "data/memory.db"
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             self._init_db()
-            logger.warning(f"CascadeMemoryService: running on local SQLite fallback at {self.db_path} — NOT durable across restarts.")
+            logger.warning(
+                f"CascadeMemoryService: running on local SQLite fallback at {self.db_path} — NOT durable across restarts."
+            )
         self.encoder = None
 
         if HAS_SENTENCE_TRANSFORMERS:
@@ -82,9 +86,13 @@ class CascadeMemoryService:
                 from sentence_transformers import SentenceTransformer
 
                 self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
-                logger.info("Initialized SentenceTransformer encoder for memory service")
+                logger.info(
+                    "Initialized SentenceTransformer encoder for memory service"
+                )
             except Exception as e:
-                logger.warning(f"Failed to load SentenceTransformer: {e}. Using hash fallback.")
+                logger.warning(
+                    f"Failed to load SentenceTransformer: {e}. Using hash fallback."
+                )
 
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
@@ -108,7 +116,9 @@ class CascadeMemoryService:
             try:
                 return self.encoder.encode(text).tolist()
             except Exception as e:
-                logger.warning(f"Embedding failed: {e}. Falling back to hash vectorizer.")
+                logger.warning(
+                    f"Embedding failed: {e}. Falling back to hash vectorizer."
+                )
         return hash_vectorize(text)
 
     def _parse_code_structure(self, file_path: str, content: str) -> dict[str, Any]:
@@ -129,31 +139,49 @@ class CascadeMemoryService:
             for node in ast.iter_child_nodes(tree):
                 if isinstance(node, ast.ClassDef):
                     # mypy-এর জন্য class_info-এ explicit type দেওয়া হচ্ছে যাতে .append() কাজ করে
-                    class_info: dict[str, Any] = {"name": node.name, "methods": [], "docstring": ast.get_docstring(node) or ""}
+                    class_info: dict[str, Any] = {
+                        "name": node.name,
+                        "methods": [],
+                        "docstring": ast.get_docstring(node) or "",
+                    }
                     summary_parts.append(f"Class: {node.name}")
                     if class_info["docstring"]:
                         summary_parts.append(f"  Docstring: {class_info['docstring']}")
 
                     for subnode in node.body:
                         if isinstance(subnode, ast.FunctionDef):
-                            method_info = {"name": subnode.name, "docstring": ast.get_docstring(subnode) or ""}
+                            method_info = {
+                                "name": subnode.name,
+                                "docstring": ast.get_docstring(subnode) or "",
+                            }
                             class_info["methods"].append(method_info)
                             summary_parts.append(f"  Method: {subnode.name}")
                             if method_info["docstring"]:
-                                summary_parts.append(f"    Docstring: {method_info['docstring']}")
+                                summary_parts.append(
+                                    f"    Docstring: {method_info['docstring']}"
+                                )
                     structure["classes"].append(class_info)
 
                 elif isinstance(node, ast.FunctionDef):
-                    func_info = {"name": node.name, "docstring": ast.get_docstring(node) or ""}
+                    func_info = {
+                        "name": node.name,
+                        "docstring": ast.get_docstring(node) or "",
+                    }
                     summary_parts.append(f"Function: {node.name}")
                     if func_info["docstring"]:
                         summary_parts.append(f"  Docstring: {func_info['docstring']}")
                     structure["functions"].append(func_info)
 
-            return {"summary": "\n".join(summary_parts), "structure": json.dumps(structure)}
+            return {
+                "summary": "\n".join(summary_parts),
+                "structure": json.dumps(structure),
+            }
         except Exception as e:
             logger.warning(f"AST parsing failed for {file_path}: {e}")
-            return {"summary": f"File: {file_path} (AST parsing error)", "structure": json.dumps({"error": str(e)})}
+            return {
+                "summary": f"File: {file_path} (AST parsing error)",
+                "structure": json.dumps({"error": str(e)}),
+            }
 
     def chunk_and_embed(self, file_path: str, content: str) -> list[dict[str, Any]]:
         """
@@ -184,7 +212,9 @@ class CascadeMemoryService:
                     (file_path, content, summary, structure, embedding_str),
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.error(f"CascadeMemoryService.chunk_and_embed: Postgres write failed: {exc}")
+                logger.error(
+                    f"CascadeMemoryService.chunk_and_embed: Postgres write failed: {exc}"
+                )
             return [{"file": file_path, "summary": summary, "vector": embedding}]
 
         with sqlite3.connect(self.db_path) as conn:
@@ -225,33 +255,57 @@ class CascadeMemoryService:
 
         if self._use_pg:
             try:
-                rows = pooled_pg.query_dicts("SELECT file_path, summary, structure, embedding FROM file_memories")
+                rows = pooled_pg.query_dicts(
+                    "SELECT file_path, summary, structure, embedding FROM file_memories"
+                )
             except Exception as exc:  # noqa: BLE001
-                logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
+                logger.error(
+                    f"CascadeMemoryService.query_context: Postgres read failed: {exc}"
+                )
                 rows = []
             for row in rows:
                 try:
                     stored_vector = json.loads(row["embedding"])
                     score = self._cosine_similarity(query_vector, stored_vector)
-                    results.append({"file": row["file_path"], "summary": row["summary"], "structure": json.loads(row["structure"]), "score": score})
+                    results.append(
+                        {
+                            "file": row["file_path"],
+                            "summary": row["summary"],
+                            "structure": json.loads(row["structure"]),
+                            "score": score,
+                        }
+                    )
                 except Exception as e:
-                    logger.warning(f"Error calculating similarity for {row.get('file_path')}: {e}")
+                    logger.warning(
+                        f"Error calculating similarity for {row.get('file_path')}: {e}"
+                    )
             results.sort(key=lambda x: x["score"], reverse=True)
             return results[:top_k]
 
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("SELECT file_path, summary, structure, embedding FROM file_memories")
+            cursor.execute(
+                "SELECT file_path, summary, structure, embedding FROM file_memories"
+            )
             rows = cursor.fetchall()
 
             for row in rows:
                 try:
                     stored_vector = json.loads(row["embedding"])
                     score = self._cosine_similarity(query_vector, stored_vector)
-                    results.append({"file": row["file_path"], "summary": row["summary"], "structure": json.loads(row["structure"]), "score": score})
+                    results.append(
+                        {
+                            "file": row["file_path"],
+                            "summary": row["summary"],
+                            "structure": json.loads(row["structure"]),
+                            "score": score,
+                        }
+                    )
                 except Exception as e:
-                    logger.warning(f"Error calculating similarity for {row['file_path']}: {e}")
+                    logger.warning(
+                        f"Error calculating similarity for {row['file_path']}: {e}"
+                    )
 
         # Sort by similarity score descending
         results.sort(key=lambda x: x["score"], reverse=True)
@@ -289,7 +343,9 @@ def helper_utils():
     logger.info(f"Indexed output: {indexed}")
 
     # 2. Test semantic search query
-    matches = test_service.query_context("Need a class to calculate and analyze data", top_k=1)
+    matches = test_service.query_context(
+        "Need a class to calculate and analyze data", top_k=1
+    )
     logger.info(f"Semantic search match: {matches}")
 
     # Clean up temp file

@@ -4,14 +4,15 @@
 
 from __future__ import annotations
 
-import pytest
-from unittest.mock import patch, AsyncMock
-from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from core.evolution.agent_breeder import AgentBreeder, BreederConfig
+from core.evolution.performance_oracle import OracleConfig, PerformanceOracle
 from core.localization.bhasha_bot import BhashaBot
 from core.localization.voice_didi import VoiceDidi
-from core.evolution.agent_breeder import AgentBreeder, BreederConfig
-from core.evolution.performance_oracle import PerformanceOracle, OracleConfig
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from tools.analytics.churn_prophet import ChurnProphet
 from tools.analytics.insight_mage import InsightMage
 
@@ -56,7 +57,9 @@ async def test_voice_didi_command():
     bot = BhashaBot(model_router=router)
     didi = VoiceDidi(model_router=router, bhasha_bot=bot)
 
-    res = await didi.process_voice_command(audio_duration_ms=5000, transcript_hint="ami bhat khai")
+    res = await didi.process_voice_command(
+        audio_duration_ms=5000, transcript_hint="ami bhat khai"
+    )
     assert res["success"] is True
     assert res["intent"] == "order"
     assert res["confidence"] == 0.95
@@ -78,8 +81,16 @@ async def test_agent_breeder():
     )
     breeder = AgentBreeder(db_mock, config=config)
 
-    p1 = {"prompt_dna": {"system_prompt": "Prompt A"}, "tool_dna": {}, "routing_dna": {}}
-    p2 = {"prompt_dna": {"system_prompt": "Prompt B"}, "tool_dna": {}, "routing_dna": {}}
+    p1 = {
+        "prompt_dna": {"system_prompt": "Prompt A"},
+        "tool_dna": {},
+        "routing_dna": {},
+    }
+    p2 = {
+        "prompt_dna": {"system_prompt": "Prompt B"},
+        "tool_dna": {},
+        "routing_dna": {},
+    }
 
     child = await breeder._crossover.crossover(p1, p2)  # crossover strategy object call
     assert child is not None
@@ -132,8 +143,17 @@ async def test_churn_prophet():
     }
 
     with (
-        patch.object(prophet, "_fetch_user_signals", new_callable=AsyncMock, return_value=mock_signals),
-        patch("core.llm_router.LLMRouter.route", new_callable=AsyncMock, return_value=mock_strategy),
+        patch.object(
+            prophet,
+            "_fetch_user_signals",
+            new_callable=AsyncMock,
+            return_value=mock_signals,
+        ),
+        patch(
+            "core.llm_router.LLMRouter.route",
+            new_callable=AsyncMock,
+            return_value=mock_strategy,
+        ),
     ):
         res = await prophet.get_retention_strategy("tenant_123", "user_123")
         assert res is not None
@@ -150,12 +170,25 @@ async def test_insight_mage():
     # Mock Firestore time-series fetch
     mock_time_series = ([100.0, 110.0, 105.0, 95.0, 150.0], [])
 
-    mock_report = {"content": "## Summary\nThe sales are showing an upward trend of 15%."}
+    mock_report = {
+        "content": "## Summary\nThe sales are showing an upward trend of 15%."
+    }
 
     with (
-        patch.object(mage, "_fetch_time_series", new_callable=AsyncMock, return_value=mock_time_series),
-        patch("core.llm_router.LLMRouter.route", new_callable=AsyncMock, return_value=mock_report),
+        patch.object(
+            mage,
+            "_fetch_time_series",
+            new_callable=AsyncMock,
+            return_value=mock_time_series,
+        ),
+        patch(
+            "core.llm_router.LLMRouter.route",
+            new_callable=AsyncMock,
+            return_value=mock_report,
+        ),
     ):
-        res = await mage.generate_report("tenant_123", "sales_data", "revenue", force_refresh=True)
+        res = await mage.generate_report(
+            "tenant_123", "sales_data", "revenue", force_refresh=True
+        )
         assert res is not None
         assert "Summary" in res.sections[0]["title"]

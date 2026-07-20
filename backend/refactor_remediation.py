@@ -1,12 +1,18 @@
 import re
 
-
-filepath = r"c:\Users\n\supremeai\supremeai_2.0\backend\core\resilience\auto_remediation.py"
+filepath = (
+    r"c:\Users\n\supremeai\supremeai_2.0\backend\core\resilience\auto_remediation.py"
+)
 with open(filepath, encoding="utf-8") as f:
     content = f.read()
 
 # 1. Remove AutoRemediationEngine completely
-content = re.sub(r"class AutoRemediationEngine:.*?class AutoRemediation:", "class AutoRemediation:", content, flags=re.DOTALL)
+content = re.sub(
+    r"class AutoRemediationEngine:.*?class AutoRemediation:",
+    "class AutoRemediation:",
+    content,
+    flags=re.DOTALL,
+)
 
 # 2. Add _create_github_pr to AutoRemediation
 new_method = '''
@@ -41,7 +47,9 @@ new_method = '''
         )
 '''
 # Insert it after __init__
-content = content.replace("def _validate_file_path", new_method.strip() + "\n\n    def _validate_file_path")
+content = content.replace(
+    "def _validate_file_path", new_method.strip() + "\n\n    def _validate_file_path"
+)
 
 # 3. Use _create_github_pr instead of commit_changes
 content = content.replace(

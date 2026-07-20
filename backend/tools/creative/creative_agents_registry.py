@@ -17,11 +17,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from backend.tools.creative.video_production_agent import VideoProductionAgent
-from backend.tools.creative.game_design_agent import GameDesignAgent
 from backend.tools.creative.audio_engineering_agent import AudioEngineeringAgent
 from backend.tools.creative.brand_identity_agent import BrandIdentityAgent
-
+from backend.tools.creative.game_design_agent import GameDesignAgent
+from backend.tools.creative.video_production_agent import VideoProductionAgent
 
 _AGENT_CLASSES: tuple[type, ...] = (
     VideoProductionAgent,

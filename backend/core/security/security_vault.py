@@ -7,15 +7,11 @@ from __future__ import annotations
 
 import os
 
+from core.config import settings
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.security.secure_credential_store import RotatingFernet
 from cryptography.fernet import Fernet
 from loguru import logger
-
-from core.config import settings
-from core.messaging.event_bus import ErrorContext
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
-from core.security.secure_credential_store import RotatingFernet
-
 
 # Fail-fast policy:
 # STRICT_ENCRYPTION_CHECK=true হলে encryption key শুধুই raw environment থেকে নেয়া হবে।
@@ -23,7 +19,9 @@ from core.security.secure_credential_store import RotatingFernet
 strict_enabled = os.environ.get("STRICT_ENCRYPTION_CHECK") == "true"
 
 if strict_enabled:
-    ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY") or os.environ.get("SUPREMEAI_ENCRYPTION_KEY")
+    ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY") or os.environ.get(
+        "SUPREMEAI_ENCRYPTION_KEY"
+    )
     if not ENCRYPTION_KEY:
         error_event_bus.emit(
             ErrorEvent(
@@ -34,14 +32,24 @@ if strict_enabled:
                 structured_context=ErrorContext(module="auto_fixed"),
             )
         )
-        raise ValueError("CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!")
+        raise ValueError(
+            "CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!"
+        )
 else:
     # Normal mode: settings.encryption_key থেকে আসে (computed field via secret_vault)
-    ENCRYPTION_KEY = settings.encryption_key.get_secret_value() if settings.encryption_key else os.environ.get("ENCRYPTION_KEY")
+    ENCRYPTION_KEY = (
+        settings.encryption_key.get_secret_value()
+        if settings.encryption_key
+        else os.environ.get("ENCRYPTION_KEY")
+    )
 
     if not ENCRYPTION_KEY:
         # টেস্ট ও সিআই পরিবেশে ক্র্যাশ এড়াতে একটি ডামি/এফেমেরাল কী জেনারেট করা হচ্ছে।
-        if os.environ.get("ENV") in {"test", "testing", "ci"} or os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        if (
+            os.environ.get("ENV") in {"test", "testing", "ci"}
+            or os.environ.get("CI") == "true"
+            or os.environ.get("GITHUB_ACTIONS") == "true"
+        ):
             ENCRYPTION_KEY = Fernet.generate_key().decode("utf-8")
         else:
             error_event_bus.emit(
@@ -53,16 +61,25 @@ else:
                     structured_context=ErrorContext(module="auto_fixed"),
                 )
             )
-            raise ValueError("CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!")
+            raise ValueError(
+                "CRITICAL: ENCRYPTION_KEY environment variable is not set. Halting application for security reasons. Fail-Fast!"
+            )
 
 
 # Encryption key rotation support.
 _raw_keys = [
-    k for k in os.environ.get("ENCRYPTION_KEYS", os.environ.get("SUPREMEAI_CREDENTIAL_ENC_KEY", ENCRYPTION_KEY or "")).split(",") if k.strip()
+    k
+    for k in os.environ.get(
+        "ENCRYPTION_KEYS",
+        os.environ.get("SUPREMEAI_CREDENTIAL_ENC_KEY", ENCRYPTION_KEY or ""),
+    ).split(",")
+    if k.strip()
 ]
 
 if not _raw_keys:
-    raise ValueError("CRITICAL: No encryption keys configured (ENCRYPTION_KEYS). Fail-Fast!")
+    raise ValueError(
+        "CRITICAL: No encryption keys configured (ENCRYPTION_KEYS). Fail-Fast!"
+    )
 
 _vault = RotatingFernet(_raw_keys)
 

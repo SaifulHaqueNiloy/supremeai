@@ -1,10 +1,10 @@
 import sys
-from unittest.mock import MagicMock
-
-import pytest
 from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 from unittest.mock import MagicMock as _MagicMock
 from unittest.mock import patch
+
+import pytest
 
 # Import guard: agents package init may import optional google.genai.
 if "google" not in sys.modules:
@@ -12,8 +12,7 @@ if "google" not in sys.modules:
 if "google.genai" not in sys.modules:
     sys.modules["google.genai"] = MagicMock()
 
-from agents.headless_terminal_agent import CommandSafety
-from agents.headless_terminal_agent import HeadlessTerminalAgent
+from agents.headless_terminal_agent import CommandSafety, HeadlessTerminalAgent
 
 
 @pytest.mark.anyio
@@ -44,8 +43,16 @@ async def test_execute_natural_language_interpret_path():
     mock_proc.returncode = 0
 
     with (
-        patch("agents.headless_terminal_agent.asyncio.create_subprocess_shell", new_callable=AsyncMock, return_value=mock_proc),
-        patch("agents.headless_terminal_agent.asyncio.wait_for", new_callable=AsyncMock, return_value=(b"out", b"")),
+        patch(
+            "agents.headless_terminal_agent.asyncio.create_subprocess_shell",
+            new_callable=AsyncMock,
+            return_value=mock_proc,
+        ),
+        patch(
+            "agents.headless_terminal_agent.asyncio.wait_for",
+            new_callable=AsyncMock,
+            return_value=(b"out", b""),
+        ),
     ):
         res = await agent.execute("what is the status", auto_confirm=True, context={})
 
@@ -63,8 +70,16 @@ async def test_execute_command_timeout():
     mock_proc.kill = MagicMock()
 
     with (
-        patch("agents.headless_terminal_agent.asyncio.create_subprocess_shell", new_callable=AsyncMock, return_value=mock_proc),
-        patch("agents.headless_terminal_agent.asyncio.wait_for", new_callable=AsyncMock, side_effect=TimeoutError),
+        patch(
+            "agents.headless_terminal_agent.asyncio.create_subprocess_shell",
+            new_callable=AsyncMock,
+            return_value=mock_proc,
+        ),
+        patch(
+            "agents.headless_terminal_agent.asyncio.wait_for",
+            new_callable=AsyncMock,
+            side_effect=TimeoutError,
+        ),
     ):
         res = await agent.execute("ls")
 

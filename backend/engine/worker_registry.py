@@ -1,10 +1,8 @@
 import asyncio
 import logging
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 
 from core.messaging.nats_messaging import nats_client
-
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +40,15 @@ class WorkerRegistry:
 
                         if delta < 15:
                             if worker_id not in self.active_workers:
-                                logger.info(f"🟢 New Worker Discovered: {worker_id} [{data.get('agent_type')}]")
+                                logger.info(
+                                    f"🟢 New Worker Discovered: {worker_id} [{data.get('agent_type')}]"
+                                )
                             valid_workers[worker_id] = data
                         else:
                             if worker_id in self.active_workers:
-                                logger.warning(f"⚠️ Worker {worker_id} is stale and has been removed from active registry.")
+                                logger.warning(
+                                    f"⚠️ Worker {worker_id} is stale and has been removed from active registry."
+                                )
                             # Delete stale record from KV
                             await nats_client.kv_store.delete(worker_id)
                     except Exception as hb_err:  # noqa: BLE001
@@ -64,9 +66,13 @@ class WorkerRegistry:
 
     def get_workers_by_type(self, agent_type: str) -> list[dict]:
         """Returns active workers matching the requested type."""
-        return [w for w in self.active_workers.values() if w.get("agent_type") == agent_type]
+        return [
+            w for w in self.active_workers.values() if w.get("agent_type") == agent_type
+        ]
 
-    def get_smart_route(self, agent_type: str, requires_gpu: bool = False) -> str | None:
+    def get_smart_route(
+        self, agent_type: str, requires_gpu: bool = False
+    ) -> str | None:
         """
         Implements Smart Routing:
         Finds the best available worker for the task.

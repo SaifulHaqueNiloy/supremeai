@@ -41,10 +41,16 @@ class MorphicAdapter:
         - NEVER output markdown text, conversational explanations, or backticks (```python). Output ONLY clean, valid, executable Python code.
         """
 
-    def adapt_code_to_contract(self, raw_code: str, skill_description: str) -> dict[str, Any]:
+    def adapt_code_to_contract(
+        self, raw_code: str, skill_description: str
+    ) -> dict[str, Any]:
         """কাঁচা পাইথন কোডকে মডার্ন জেমিনি ক্লায়েন্ট দিয়ে সুপ্রীম চুক্তিতে রি-রাইট করে"""
         if not self.client:
-            return {"success": False, "code": "", "detail": "Gemini API Client is not configured in environment."}
+            return {
+                "success": False,
+                "code": "",
+                "detail": "Gemini API Client is not configured in environment.",
+            }
 
         prompt = f"""
         Refactor the following raw code to fit the execute_tool(payload: dict) -> dict contract.
@@ -57,7 +63,11 @@ class MorphicAdapter:
         """
 
         if types is None:
-            return {"success": False, "code": "", "detail": "Google GenAI SDK is not installed."}
+            return {
+                "success": False,
+                "code": "",
+                "detail": "Google GenAI SDK is not installed.",
+            }
 
         try:
             # মডার্ন SDK-র স্ট্যান্ডার্ড জেনারেশন মেথড এবং সিস্টেম ইন্সট্রাকশন বাইন্ডিং
@@ -71,7 +81,11 @@ class MorphicAdapter:
             )
 
             if not response.text:
-                return {"success": False, "code": "", "detail": "LLM returned an empty response."}
+                return {
+                    "success": False,
+                    "code": "",
+                    "detail": "LLM returned an empty response.",
+                }
 
             adapted_code = response.text.strip()
 
@@ -81,6 +95,14 @@ class MorphicAdapter:
             adapted_code = re.sub(r"\s*```$", "", adapted_code)
             adapted_code = adapted_code.strip()
 
-            return {"success": True, "code": adapted_code, "detail": "Morphic adaptation rewrite completed successfully via modern SDK."}
+            return {
+                "success": True,
+                "code": adapted_code,
+                "detail": "Morphic adaptation rewrite completed successfully via modern SDK.",
+            }
         except Exception as e:
-            return {"success": False, "code": "", "detail": f"LLM Morphic adaptation failure: {str(e)}"}
+            return {
+                "success": False,
+                "code": "",
+                "detail": f"LLM Morphic adaptation failure: {str(e)}",
+            }

@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import pytest
+from core.failure_fingerprint import make_fingerprint
+from core.reliability_controller import ReliabilityController
+from core.request_context import RequestContextMiddleware, get_correlation_id
+from core.retry_budget import RetryBudget
+from core.startup_validator import StartupValidator
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
-from core.failure_fingerprint import make_fingerprint
-from core.retry_budget import RetryBudget
-from core.request_context import RequestContextMiddleware, get_correlation_id
-from core.startup_validator import StartupValidator
-from core.reliability_controller import ReliabilityController
 
 
 def test_failure_fingerprint():

@@ -20,11 +20,11 @@ Dependencies:
 - `loguru`: For structured logging of errors and information."""
 
 import asyncio
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from loguru import logger
 from core.utils.time_utils import utc_now
+from loguru import logger
 
 
 class DynamicConfigProxy:
@@ -43,7 +43,9 @@ class DynamicConfigProxy:
 
     async def _refresh_cache(self):
         try:
-            doc_ref = self._db.collection(f"tenants/{self._tenant_id}/config/runtime").document("settings")
+            doc_ref = self._db.collection(
+                f"tenants/{self._tenant_id}/config/runtime"
+            ).document("settings")
 
             # handle both sync and async get() based on the db client
             if asyncio.iscoroutinefunction(doc_ref.get):
@@ -61,11 +63,28 @@ class DynamicConfigProxy:
                 self._cache = {
                     "DEFAULT_CODE_SMELL_THRESHOLDS": config_cache.get(
                         "DEFAULT_CODE_SMELL_THRESHOLDS",
-                        default={"complexity": 10, "lines": 75, "args": 5, "class_methods": 15},
+                        default={
+                            "complexity": 10,
+                            "lines": 75,
+                            "args": 5,
+                            "class_methods": 15,
+                        },
                     ),
                     "COMMON_STRINGS_TO_IGNORE": config_cache.get(
                         "COMMON_STRINGS_TO_IGNORE",
-                        default=["", "utf-8", "rb", "wb", "r", "w", "a", "x", "b", "t", "+"],
+                        default=[
+                            "",
+                            "utf-8",
+                            "rb",
+                            "wb",
+                            "r",
+                            "w",
+                            "a",
+                            "x",
+                            "b",
+                            "t",
+                            "+",
+                        ],
                     ),
                 }
                 self._expiry = utc_now() + timedelta(minutes=1)

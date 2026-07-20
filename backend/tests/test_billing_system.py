@@ -1,5 +1,6 @@
-import pytest
 import os
+
+import pytest
 
 # Set mock environment variables for encryption key and stripe configuration before importing core modules
 # বাংলা মন্তব্য: রানিং টেস্টে ক্লাউড কানেকশন ড্রাইভার ফাস্ট-ফেইল আটকাতে মক এনক্রিপশন কী সেট করা হলো
@@ -8,12 +9,12 @@ os.environ["STRIPE_SECRET_KEY"] = "dummy_stripe_key"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
 
 from decimal import Decimal
-from fastapi.testclient import TestClient
 from unittest.mock import patch
 
 from core.app import app
-from models.wallet import UserWallet
 from database.session import get_db_session
+from fastapi.testclient import TestClient
+from models.wallet import UserWallet
 
 client = TestClient(app)
 
@@ -22,7 +23,10 @@ client = TestClient(app)
 class MockAsyncSession:
     def __init__(self):
         self._wallet = UserWallet(
-            user_id="default_user_session", balance_usd=Decimal("5.000000"), monthly_allowance_usd=Decimal("0.000000"), version=1
+            user_id="default_user_session",
+            balance_usd=Decimal("5.000000"),
+            monthly_allowance_usd=Decimal("0.000000"),
+            version=1,
         )
         self.added = []
 
@@ -112,7 +116,9 @@ async def test_token_deductor_deducts_main_balance(mock_db_session):
     from api.routes.billing_api import token_deductor
 
     # 1000 input, 1000 output. Pricing tiers: input: 0.0015, output: 0.0020. Total: 0.0035 USD
-    res = await token_deductor.deduct_tokens(mock_db_session, "default_user_session", 1000, 1000, "gemini-2.5-pro")
+    res = await token_deductor.deduct_tokens(
+        mock_db_session, "default_user_session", 1000, 1000, "gemini-2.5-pro"
+    )
     assert res is True
     assert mock_db_session._wallet.balance_usd == Decimal("4.996500")
     assert len(mock_db_session.added) == 1
@@ -123,7 +129,9 @@ async def test_token_deductor_insufficient_funds(mock_db_session):
     from api.routes.billing_api import token_deductor
 
     mock_db_session._wallet.balance_usd = Decimal("0.000000")
-    res = await token_deductor.deduct_tokens(mock_db_session, "default_user_session", 1000, 1000, "gemini-2.5-pro")
+    res = await token_deductor.deduct_tokens(
+        mock_db_session, "default_user_session", 1000, 1000, "gemini-2.5-pro"
+    )
     assert res is False
 
 
@@ -143,7 +151,9 @@ def test_stripe_webhook_adds_credit(mock_db_session):
         with patch("stripe.api_key", "dummy_stripe_key"):
             with patch("api.routes.billing_api.STRIPE_WEBHOOK_SECRET", "whsec_test"):
                 resp = client.post(
-                    "/api/billing/webhook/stripe", json={"type": "payment_intent.succeeded"}, headers={"Stripe-Signature": "t=123,v1=abc"}
+                    "/api/billing/webhook/stripe",
+                    json={"type": "payment_intent.succeeded"},
+                    headers={"Stripe-Signature": "t=123,v1=abc"},
                 )
                 assert resp.status_code == 200
                 assert resp.json() == {"status": "success"}
@@ -170,7 +180,10 @@ def test_sslcommerz_webhook_adds_credit(mock_db_session):
         "value_a": "default_user_session",
     }
 
-    with patch("api.routes.billing_api._verify_sslcommerz_transaction", new=AsyncMock(return_value=verified_response)):
+    with patch(
+        "api.routes.billing_api._verify_sslcommerz_transaction",
+        new=AsyncMock(return_value=verified_response),
+    ):
         resp = client.post("/api/billing/webhook/sslcommerz", json=ssl_payload)
     assert resp.status_code == 200
     assert resp.json()["status"] == "processed"

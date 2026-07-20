@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from core.messaging.event_bus import ErrorContext
 
 """
@@ -19,15 +20,15 @@ Setup:
 """
 
 
-# বাংলা মন্তব্য: ওএস মডিউল ইম্পোর্ট করা হলো যাতে os.environ ঠিকমত কাজ করে
-import os
-from core.config import settings
-
 import asyncio
 import contextlib
+
+# বাংলা মন্তব্য: ওএস মডিউল ইম্পোর্ট করা হলো যাতে os.environ ঠিকমত কাজ করে
+import os
 from typing import Any
 
 import httpx
+from core.config import settings
 from loguru import logger
 
 
@@ -53,7 +54,9 @@ class TelegramBotHandler:
 
     def __init__(self, task_processor_interface=None) -> None:
         # বাংলা মন্তব্য: settings থেকে না পাওয়া গেলে os.environ থেকে fallback রিড করা হবে, যা টেস্ট কেসগুলোর জন্য সুবিধাজনক।
-        self.bot_token: str = getattr(settings, "telegram_bot_token", None) or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        self.bot_token: str = getattr(
+            settings, "telegram_bot_token", None
+        ) or os.environ.get("TELEGRAM_BOT_TOKEN", "")
         self.api_base: str = f"https://api.telegram.org/bot{self.bot_token}"
         self.processor = task_processor_interface
 
@@ -66,7 +69,9 @@ class TelegramBotHandler:
 
     # ── Telegram API helpers ──────────────────────────────────────
 
-    async def send_message(self, chat_id: int | str, text: str, parse_mode: str = "Markdown") -> bool:
+    async def send_message(
+        self, chat_id: int | str, text: str, parse_mode: str = "Markdown"
+    ) -> bool:
         if not self.configured:
             return False
         try:
@@ -135,7 +140,9 @@ class TelegramBotHandler:
 
     def handle_message(self, text: str, user_id: str = "user") -> str:
         """Synchronous message handler used by tests and scripts."""
-        command = text.strip().split()[0].lower() if text.strip().startswith("/") else None
+        command = (
+            text.strip().split()[0].lower() if text.strip().startswith("/") else None
+        )
         if command and command in self.COMMANDS:
             return self.COMMANDS[command]
         try:
@@ -208,10 +215,16 @@ class TelegramBotHandler:
     async def _ai_response(self, text: str, user_id: str) -> str:
         if self.processor:
             try:
-                task_type = "coding" if any(k in text.lower() for k in ["code", "function", "script"]) else "general"
+                task_type = (
+                    "coding"
+                    if any(k in text.lower() for k in ["code", "function", "script"])
+                    else "general"
+                )
                 loop = asyncio.get_event_loop()
                 # Run synchronous orchestrator call in executor to prevent blocking the event loop
-                result = await loop.run_in_executor(None, lambda: self.processor.execute_task(text, task_type))
+                result = await loop.run_in_executor(
+                    None, lambda: self.processor.execute_task(text, task_type)
+                )
                 return result.get("result", "Sorry, I couldn't process that.")
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"Orchestrator error: {exc}")
@@ -234,13 +247,17 @@ class TelegramBotHandler:
         url = f"https://api.telegram.org/bot{self.bot_token}/setWebhook"
         try:
             import httpx
-            from core.messaging.event_bus import error_event_bus, ErrorEvent
+            from core.messaging.event_bus import ErrorEvent, error_event_bus
 
             # সংশোধন: Explicit timeout যোগ করা হয়েছে
-            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(10.0, connect=5.0)
+            ) as client:
                 resp = await client.post(url, json={"url": webhook_url})
                 if resp.status_code == 200:
-                    logger.info(f"Successfully registered Telegram Webhook to {webhook_url}")
+                    logger.info(
+                        f"Successfully registered Telegram Webhook to {webhook_url}"
+                    )
                 else:
                     logger.error(f"Failed to register webhook: {resp.text}")
                     error_event_bus.emit(
@@ -254,7 +271,7 @@ class TelegramBotHandler:
                     )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Webhook setup exception: {e}")
-            from core.messaging.event_bus import error_event_bus, ErrorEvent
+            from core.messaging.event_bus import ErrorEvent, error_event_bus
 
             error_event_bus.emit(
                 ErrorEvent(
@@ -273,9 +290,7 @@ class TelegramBotHandler:
 
 def create_telegram_router(handler: TelegramBotHandler):
     """Returns a FastAPI router for Telegram webhook endpoint."""
-    from fastapi import APIRouter
-    from fastapi import Request
-    from fastapi import Response
+    from fastapi import APIRouter, Request, Response
 
     router = APIRouter(prefix="/telegram", tags=["telegram"])
 

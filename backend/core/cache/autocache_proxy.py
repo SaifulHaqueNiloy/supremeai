@@ -6,6 +6,7 @@ This module defines the `AutocacheProxy` class, designed to intercept and manage
 - **Cost Estimation and Tracking:** Providing insights into potential and actual cost
 
 """
+
 # 🚀 Autocache Proxy - API Cost Optimization Engine
 # বাংলা মন্তব্য: এটি সব API রিকোয়েস্ট ইন্টারসেপ্ট করে সিমান্টিক ক্যাশিং এবং রিকোয়েস্ট ডিডুপ্লিকেশনের মাধ্যমে ৯০% খরচ কমায়
 
@@ -13,10 +14,9 @@ import hashlib
 import time
 from typing import Any
 
-from loguru import logger
-
 from core.cache.semantic_cache import SemanticCache
 from core.prompt_handler import estimate_tokens
+from loguru import logger
 
 
 class AutocacheProxy:
@@ -38,7 +38,12 @@ class AutocacheProxy:
         # Ensure this remains a real TTLCache instance (tests assert the type).
         self.request_history: TTLCache = TTLCache(maxsize=5000, ttl=3600)
 
-        self.cost_metrics = {"total_requests": 0, "cached_hits": 0, "total_cost_saved": 0.0, "dedup_requests": 0}
+        self.cost_metrics = {
+            "total_requests": 0,
+            "cached_hits": 0,
+            "total_cost_saved": 0.0,
+            "dedup_requests": 0,
+        }
         self.vendor_costs = {
             "openai/gpt-4o": {"input": 0.005, "output": 0.015},
             "openai/gpt-4-turbo": {"input": 0.01, "output": 0.03},
@@ -52,7 +57,9 @@ class AutocacheProxy:
         content = f"{model}:{prompt}"
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
+    def _calculate_cost(
+        self, model: str, input_tokens: int, output_tokens: int
+    ) -> float:
         """API কল খরচ ক্যালকুলেট করুন"""
         # বাংলা মন্তব্য: ডাটাবেস-ড্রিভেন লজিক ডিজাইন প্রিন্সিপাল অনুযায়ী config_cache থেকে কস্ট নেওয়ার চেষ্টা করা হচ্ছে।
         from core.config_cache import config_cache
@@ -63,7 +70,9 @@ class AutocacheProxy:
         output_cost = config_cache.get(f"vendor_cost_{model_key}_output")
 
         if input_cost is not None and output_cost is not None:
-            return (input_tokens * float(input_cost)) + (output_tokens * float(output_cost))
+            return (input_tokens * float(input_cost)) + (
+                output_tokens * float(output_cost)
+            )
 
         if model not in self.vendor_costs:
             logger.warning(f"Unknown model: {model}, assuming free tier")
@@ -73,7 +82,13 @@ class AutocacheProxy:
         total_cost = (input_tokens * costs["input"]) + (output_tokens * costs["output"])
         return total_cost
 
-    async def should_use_cache(self, model: str, prompt: str, task_type: str = "general", similarity_threshold: float = 0.85) -> dict[str, Any]:
+    async def should_use_cache(
+        self,
+        model: str,
+        prompt: str,
+        task_type: str = "general",
+        similarity_threshold: float = 0.85,
+    ) -> dict[str, Any]:
         """
         সিমান্টিক ক্যাশ থেকে রেসপন্স পাওয়া যাবে কিনা চেক করুন
 
@@ -109,7 +124,12 @@ class AutocacheProxy:
                 "cache_score": 0.95,  # Semantic match score
             }
 
-        return {"should_cache": False, "cached_response": None, "estimated_cost_saved": 0.0, "cache_score": 0.0}
+        return {
+            "should_cache": False,
+            "cached_response": None,
+            "estimated_cost_saved": 0.0,
+            "cache_score": 0.0,
+        }
 
     async def deduplicate_request(self, model: str, prompt: str) -> dict[str, Any]:
         """
@@ -124,9 +144,15 @@ class AutocacheProxy:
             # ৫ মিনিটের মধ্যে একই রিকোয়েস্ট হলে রিইউজ করুন
             if time.time() - entry["timestamp"] < 300:
                 self.cost_metrics["dedup_requests"] += 1
-                logger.info(f"♻️ [DEDUP HIT] Reusing response from {(time.time() - entry['timestamp']):.1f}s ago")
+                logger.info(
+                    f"♻️ [DEDUP HIT] Reusing response from {(time.time() - entry['timestamp']):.1f}s ago"
+                )
 
-                return {"is_duplicate": True, "cached_response": entry["response"], "original_timestamp": entry["timestamp"]}
+                return {
+                    "is_duplicate": True,
+                    "cached_response": entry["response"],
+                    "original_timestamp": entry["timestamp"],
+                }
 
         return {"is_duplicate": False}
 
@@ -135,7 +161,12 @@ class AutocacheProxy:
         req_hash = self._compute_request_hash(model, prompt)
         cost = self._calculate_cost(model, estimate_tokens(prompt), tokens_used)
 
-        self.request_history[req_hash] = {"response": response, "timestamp": time.time(), "cost": cost, "tokens": tokens_used}
+        self.request_history[req_hash] = {
+            "response": response,
+            "timestamp": time.time(),
+            "cost": cost,
+            "tokens": tokens_used,
+        }
 
     def get_cost_summary(self) -> dict[str, Any]:
         """সাম্প্রতিক কস্ট সেভিংস সামারি পান"""
@@ -148,10 +179,14 @@ class AutocacheProxy:
             "cache_hit_rate_percent": cache_hit_rate,
             "dedup_requests": self.cost_metrics["dedup_requests"],
             "total_cost_saved_usd": round(self.cost_metrics["total_cost_saved"], 2),
-            "estimated_monthly_savings_usd": round(self.cost_metrics["total_cost_saved"] * 30, 2),
+            "estimated_monthly_savings_usd": round(
+                self.cost_metrics["total_cost_saved"] * 30, 2
+            ),
         }
 
-    async def intercept_api_call(self, model: str, prompt: str, task_type: str = "general", **kwargs) -> dict[str, Any]:
+    async def intercept_api_call(
+        self, model: str, prompt: str, task_type: str = "general", **kwargs
+    ) -> dict[str, Any]:
         """
         সব API কল এর আগে ইন্টারসেপ্ট করুন এবং সিদ্ধান্ত নিন
 
@@ -185,7 +220,12 @@ class AutocacheProxy:
             }
 
         # API কল করা দরকার
-        return {"proceed": True, "cached_response": None, "cost_saved": 0.0, "recommendation": "PROCEED - No cache hit, call API"}
+        return {
+            "proceed": True,
+            "cached_response": None,
+            "cost_saved": 0.0,
+            "recommendation": "PROCEED - No cache hit, call API",
+        }
 
 
 # গ্লোবাল ইন্সট্যান্স (সব মডুলে ব্যবহারের জন্য)

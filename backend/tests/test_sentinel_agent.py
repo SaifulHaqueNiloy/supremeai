@@ -8,10 +8,10 @@ This module tests:
 - Periodic loop execution
 """
 
-import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from core.sentinel_agent import SentinelAgent, sentinel
 
 
@@ -22,7 +22,10 @@ class TestValidateEndpointUrl:
         "url,expected",
         [
             ("https://api.example.com/v1/test", True),
-            ("http://localhost:8080/health", True),  # localhost allowed in non-production
+            (
+                "http://localhost:8080/health",
+                True,
+            ),  # localhost allowed in non-production
             ("file:///etc/passwd", False),  # Block file scheme
             ("ftp://files.example.com/data", False),  # Block ftp scheme
             ("http://169.254.169.254/latest/meta-data/", False),  # Block AWS metadata
@@ -58,7 +61,9 @@ class TestSentinelAgent:
             mock_result.scalars.return_value.all.return_value = []
 
             with patch("core.sentinel_agent.AsyncSessionLocal") as mock_session:
-                mock_session.return_value.__aenter__.return_value.execute.return_value = mock_result
+                mock_session.return_value.__aenter__.return_value.execute.return_value = (
+                    mock_result
+                )
 
                 await agent.monitor_endpoints()
 
@@ -69,10 +74,14 @@ class TestSentinelAgent:
         """Test dependency audit when pip-audit unavailable."""
         agent = SentinelAgent()
 
-        with patch("core.sentinel_agent.shutil.which", return_value=None), patch("core.sentinel_agent.AsyncSessionLocal") as mock_session:
+        with patch("core.sentinel_agent.shutil.which", return_value=None), patch(
+            "core.sentinel_agent.AsyncSessionLocal"
+        ) as mock_session:
             mock_session.return_value.__aenter__ = AsyncMock()
             mock_session.return_value.__aexit__ = AsyncMock()
-            mock_session.return_value.execute.return_value.scalars.return_value.all.return_value = []
+            mock_session.return_value.execute.return_value.scalars.return_value.all.return_value = (
+                []
+            )
 
             await agent.audit_dependencies()
 

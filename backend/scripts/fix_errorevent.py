@@ -22,7 +22,9 @@ def main():
                     continue
 
                 new_content = re.sub(
-                    r'(severity=[\'"][^\'"]+[\'"])(?!\s*,\s*structured_context)', r'\1, structured_context=ErrorContext(module="auto_fixed")', content
+                    r'(severity=[\'"][^\'"]+[\'"])(?!\s*,\s*structured_context)',
+                    r'\1, structured_context=ErrorContext(module="auto_fixed")',
+                    content,
                 )
 
                 if new_content != content:
@@ -35,7 +37,10 @@ def main():
                             new_content,
                         )
                         if "ErrorContext" not in new_content:
-                            new_content = "from core.messaging.event_bus import ErrorContext\n" + new_content
+                            new_content = (
+                                "from core.messaging.event_bus import ErrorContext\n"
+                                + new_content
+                            )
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(new_content)
                     count += 1

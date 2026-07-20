@@ -1,11 +1,11 @@
-import pytest
-from datetime import datetime, UTC, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
+import pytest
 from adaptive_engine.learning_loop import (
-    LearningLoop,
-    LearningCycleResult,
     ExperienceClusterer,
+    LearningCycleResult,
+    LearningLoop,
     PerformanceDriftDetector,
 )
 
@@ -15,9 +15,21 @@ def test_experience_clusterer():
     clusterer = ExperienceClusterer()
     experiences = [
         {"result": "success", "action_taken": "query_db"},
-        {"result": "failure", "error_message": "connection timeout", "action_taken": "query_db"},
-        {"result": "failure", "error_message": "redis connection error", "action_taken": "cache_fetch"},
-        {"result": "failure", "error_message": "timeout on query", "action_taken": "query_db"},
+        {
+            "result": "failure",
+            "error_message": "connection timeout",
+            "action_taken": "query_db",
+        },
+        {
+            "result": "failure",
+            "error_message": "redis connection error",
+            "action_taken": "cache_fetch",
+        },
+        {
+            "result": "failure",
+            "error_message": "timeout on query",
+            "action_taken": "query_db",
+        },
     ]
     clusters = clusterer.cluster_failures(experiences)
     assert len(clusters) > 0

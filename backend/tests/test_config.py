@@ -2,7 +2,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from core.config import Settings
 
 
@@ -59,7 +58,10 @@ def test_defaults():
     },
     clear=False,
 )
-@patch("core.config.secret_vault.fetch_secret", side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()))
+@patch(
+    "core.config.secret_vault.fetch_secret",
+    side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()),
+)
 def test_env_override(mock_fetch):
     s = Settings()
     assert s.PROJECT_NAME == "TestApp"
@@ -108,15 +110,26 @@ def test_parse_allowed_hosts_empty_string():
     assert Settings.parse_allowed_hosts("") == []
 
 
-@patch("core.config.secret_vault.fetch_secret", side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()))
+@patch(
+    "core.config.secret_vault.fetch_secret",
+    side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()),
+)
 def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
     monkeypatch.setenv("ENV", "production")
     monkeypatch.setenv("OPENROUTER_API_KEY", "TEST_ONLY_OPENROUTER_API_KEY")
     monkeypatch.setenv("GEMINI_API_KEY", "TEST_ONLY_GEMINI_API_KEY")
-    monkeypatch.setenv("CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
-    monkeypatch.setenv("USER_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
-    monkeypatch.setenv("ADMIN_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
-    monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD")
+    monkeypatch.setenv(
+        "CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]'
+    )
+    monkeypatch.setenv(
+        "USER_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]'
+    )
+    monkeypatch.setenv(
+        "ADMIN_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]'
+    )
+    monkeypatch.setenv(
+        "SUPREMEAI_JWT_SECRET", "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD"
+    )
     monkeypatch.setenv("SUPREMEAI_ADMIN_PASSWORD_HASH", "mock_hash_value_for_test_pass")
     monkeypatch.setenv("ALLOWED_HOSTS", '["api.supremeai.com"]')
     monkeypatch.setenv("STRIPE_API_KEY", "TEST_ONLY_STRIPE_API_KEY")
