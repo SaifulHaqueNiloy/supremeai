@@ -225,3 +225,7 @@ refactor_wiz_report.md
 **/.*_state.json
 **/.*_db.json
 **/.*_budget.json
+
+# Database backups
+backend/backup/
+
