@@ -5,11 +5,12 @@
 from __future__ import annotations
 
 from typing import Any
-from fastapi import APIRouter, HTTPException, Depends
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from tools.analytics.insight_mage import InsightMage
 from tools.analytics.churn_prophet import ChurnProphet
+from tools.analytics.insight_mage import InsightMage
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -66,5 +67,7 @@ async def predict_churn(
         model_version=payload.model_version,
     )
     if not result.get("success", False):
-        raise HTTPException(status_code=400, detail=result.get("details", "Failed to predict churn"))
+        raise HTTPException(
+            status_code=400, detail=result.get("details", "Failed to predict churn")
+        )
     return result

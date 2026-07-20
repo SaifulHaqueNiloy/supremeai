@@ -1,6 +1,7 @@
 from unittest.mock import patch
-from fastapi.testclient import TestClient
+
 from core.app import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -18,7 +19,10 @@ def test_byoc_credentials_upload_validates_and_encrypts():
     }
 
     # Mock validate_service_account to pass
-    with patch("byoc.cloud_connector.GCPCredentialManager.validate_service_account", return_value=True):
+    with patch(
+        "byoc.cloud_connector.GCPCredentialManager.validate_service_account",
+        return_value=True,
+    ):
         resp = client.post("/api/byoc/credentials", json=sa_payload)
 
     assert resp.status_code == 200
@@ -42,7 +46,7 @@ def test_byoc_credentials_upload_fails_on_malformed_fields():
 
 
 def test_byoc_deployment_fails_without_credentials():
-    from api.routes.byoc_api import encrypted_vault, active_jobs
+    from api.routes.byoc_api import active_jobs, encrypted_vault
 
     encrypted_vault.clear()
     active_jobs.clear()
@@ -55,7 +59,7 @@ def test_byoc_deployment_fails_without_credentials():
 
 
 def test_byoc_deployment_triggers_quota_enforcement():
-    from api.routes.byoc_api import encrypted_vault, active_jobs
+    from api.routes.byoc_api import active_jobs, encrypted_vault
 
     encrypted_vault.clear()
     active_jobs.clear()
@@ -71,7 +75,10 @@ def test_byoc_deployment_triggers_quota_enforcement():
             "client_email": "sa@valid-gcp-project.iam.gserviceaccount.com",
         },
     }
-    with patch("byoc.cloud_connector.GCPCredentialManager.validate_service_account", return_value=True):
+    with patch(
+        "byoc.cloud_connector.GCPCredentialManager.validate_service_account",
+        return_value=True,
+    ):
         client.post("/api/byoc/credentials", json=sa_payload)
 
     # 2. Trigger deployment (should succeed/pending 200 OK)

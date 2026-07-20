@@ -1,9 +1,8 @@
 from typing import Any
 
 import httpx
-from loguru import logger
-
 from core.skills.base import BaseSkill
+from loguru import logger
 from models.shared_workspace import SharedWorkspace
 
 
@@ -16,11 +15,15 @@ class SlackIntegrationSkill(BaseSkill):
     def name(self) -> str:
         return "SlackIntegrationSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, **kwargs: Any) -> Any:
+    async def execute(
+        self, workspace: SharedWorkspace, user_id: str, **kwargs: Any
+    ) -> Any:
         slack_token = kwargs.get("slack_token")
         if not slack_token:
             workspace.log(f"{self.name}: Failed to execute. Missing slack_token.")
-            raise ValueError("Slack token is required to execute SlackIntegrationSkill.")
+            raise ValueError(
+                "Slack token is required to execute SlackIntegrationSkill."
+            )
 
         content = kwargs.get("content", workspace.original_prompt)
         channel = kwargs.get("context", {}).get("channel", "#general")
@@ -68,7 +71,9 @@ class NotionSyncSkill(BaseSkill):
     def name(self) -> str:
         return "NotionSyncSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, **kwargs: Any) -> Any:
+    async def execute(
+        self, workspace: SharedWorkspace, user_id: str, **kwargs: Any
+    ) -> Any:
         notion_token = kwargs.get("notion_token")
         if not notion_token:
             workspace.log(f"{self.name}: Failed to execute. Missing notion_token.")
@@ -94,7 +99,15 @@ class NotionSyncSkill(BaseSkill):
         payload = {
             "parent": {"page_id": parent_page_id},
             "properties": {"title": [{"text": {"content": "AI Synced Document"}}]},
-            "children": [{"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": content}}]}}],
+            "children": [
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {
+                        "rich_text": [{"type": "text", "text": {"content": content}}]
+                    },
+                }
+            ],
         }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -111,7 +124,9 @@ class NotionSyncSkill(BaseSkill):
             except Exception as e:
                 logger.error(f"Notion integration unexpected error: {e}")
                 workspace.log(f"{self.name}: Unexpected Error: {e}")
-                raise RuntimeError(f"Unexpected error in Notion integration: {e}") from e
+                raise RuntimeError(
+                    f"Unexpected error in Notion integration: {e}"
+                ) from e
 
 
 class GithubSyncSkill(BaseSkill):
@@ -123,7 +138,9 @@ class GithubSyncSkill(BaseSkill):
     def name(self) -> str:
         return "GithubSyncSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, **kwargs: Any) -> Any:
+    async def execute(
+        self, workspace: SharedWorkspace, user_id: str, **kwargs: Any
+    ) -> Any:
         github_token = kwargs.get("github_token")
         if not github_token:
             workspace.log(f"{self.name}: Failed to execute. Missing github_token.")
@@ -132,7 +149,9 @@ class GithubSyncSkill(BaseSkill):
         content = kwargs.get("content", workspace.original_prompt)
         repo_name = kwargs.get("context", {}).get("repo", "user/repo")
 
-        workspace.log(f"{self.name}: Syncing content to GitHub repository {repo_name}...")
+        workspace.log(
+            f"{self.name}: Syncing content to GitHub repository {repo_name}..."
+        )
 
         url = f"https://api.github.com/repos/{repo_name}/issues"
         headers = {
@@ -156,4 +175,6 @@ class GithubSyncSkill(BaseSkill):
             except Exception as e:
                 logger.error(f"GitHub integration unexpected error: {e}")
                 workspace.log(f"{self.name}: Unexpected Error: {e}")
-                raise RuntimeError(f"Unexpected error in GitHub integration: {e}") from e
+                raise RuntimeError(
+                    f"Unexpected error in GitHub integration: {e}"
+                ) from e

@@ -1,6 +1,7 @@
-from core.config import settings
 import asyncio
 import secrets
+
+from core.config import settings
 
 random = secrets.SystemRandom()
 import string
@@ -34,7 +35,9 @@ class BrowserStealth:
         if not HAS_PLAYWRIGHT:
             raise RuntimeError("playwright not installed")
         self.playwright = await async_playwright().start()
-        browser = await self.playwright.chromium.launch(headless=getattr(settings, "browser_headless", "true").lower() != "false")
+        browser = await self.playwright.chromium.launch(
+            headless=getattr(settings, "browser_headless", "true").lower() != "false"
+        )
         from tools.security_tools.proxy_manager import ProxyManager
 
         proxy_mgr = ProxyManager()
@@ -58,7 +61,9 @@ class BrowserStealth:
             logger.info(f"Playwright stealth browser launching via proxy: {next_proxy}")
 
         self.context = await browser.new_context(**context_kwargs)
-        await self.context.route("**/*.{png,jpg,jpeg,gif,svg,woff,woff2}", lambda route: route.abort())
+        await self.context.route(
+            "**/*.{png,jpg,jpeg,gif,svg,woff,woff2}", lambda route: route.abort()
+        )
         await self.context.add_init_script(
             """
             (() => {
@@ -120,19 +125,28 @@ class BrowserStealth:
     async def simulate_human_behavior(self, page: Page) -> None:
         try:
             for _ in range(random.randint(1, 3)):
-                await page.mouse.move(random.randint(0, 400), random.randint(0, 400), steps=random.randint(3, 6))
+                await page.mouse.move(
+                    random.randint(0, 400),
+                    random.randint(0, 400),
+                    steps=random.randint(3, 6),
+                )
                 await asyncio.sleep(random.uniform(0.3, 1.2))
                 await page.mouse.wheel(0, random.randint(-120, 120))
                 await page.keyboard.press(random.choice(["Space", "PageDown", "End"]))
             if random.random() > 0.6:
-                await page.mouse.click(random.randint(50, 300), random.randint(80, 300), delay=random.randint(80, 220))
+                await page.mouse.click(
+                    random.randint(50, 300),
+                    random.randint(80, 300),
+                    delay=random.randint(80, 220),
+                )
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Human behavior simulation skipped: {exc}")
 
     async def safe_screenshot(self, page: Page, path: str | None = None) -> str | None:
         try:
             target = (
-                path or f"data/artifacts/screenshot_{int(time.time())}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}.png"
+                path
+                or f"data/artifacts/screenshot_{int(time.time())}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}.png"
             )
             Path("data/artifacts").mkdir(parents=True, exist_ok=True)
             await page.screenshot(path=target, full_page=True)

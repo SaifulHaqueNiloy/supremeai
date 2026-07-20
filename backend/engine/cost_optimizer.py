@@ -22,9 +22,21 @@ class ComplexityAnalyzer:
 
 class CostOptimizer:
     ROUTE_LADDER = {
-        "simple": ["ollama/llama3.2", "openrouter/mistral-7b-free", "gemini/gemini-flash"],
-        "medium": ["gemini/gemini-flash", "openai/gpt-4o-mini", "openrouter/mistral-7b-free"],
-        "complex": ["openai/gpt-4o-mini", "anthropic/claude-3-haiku", "ollama/llama3.2"],
+        "simple": [
+            "ollama/llama3.2",
+            "openrouter/mistral-7b-free",
+            "gemini/gemini-flash",
+        ],
+        "medium": [
+            "gemini/gemini-flash",
+            "openai/gpt-4o-mini",
+            "openrouter/mistral-7b-free",
+        ],
+        "complex": [
+            "openai/gpt-4o-mini",
+            "anthropic/claude-3-haiku",
+            "ollama/llama3.2",
+        ],
     }
 
     def __init__(self) -> None:

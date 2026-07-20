@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import pytest
+from core.schema_validator import SchemaValidationError, SchemaValidator
 from pydantic import BaseModel
-
-from core.schema_validator import SchemaValidationError
-from core.schema_validator import SchemaValidator
 
 
 class SimpleModel(BaseModel):

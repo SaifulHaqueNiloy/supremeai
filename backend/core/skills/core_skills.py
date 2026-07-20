@@ -15,13 +15,24 @@ class SystemDesignSkill(BaseSkill):
     def name(self) -> str:
         return "SystemDesignSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+        **kwargs: Any,
+    ) -> Any:
         workspace.log(f"{self.name}: Starting system architecture layout analysis...")
         sys_prompt = "You are a lead system architect. Define file structures, component breakdown, and database schemas."
         user_prompt = f"Design architecture for task: {workspace.original_prompt}"
 
-        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -34,14 +45,25 @@ class CodeGenerationSkill(BaseSkill):
     def name(self) -> str:
         return "CodeGenerationSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+        **kwargs: Any,
+    ) -> Any:
         workspace.log(f"{self.name}: Generating raw code from blueprints...")
         sys_prompt = "You are an elite Coder Agent. Write the code implementation based on the architecture blueprint provided."
         blueprint = kwargs.get("blueprint", workspace.original_prompt)
         user_prompt = f"Write code for this blueprint:\n{blueprint}"
 
-        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -54,14 +76,25 @@ class StaticAnalysisSkill(BaseSkill):
     def name(self) -> str:
         return "StaticAnalysisSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+        **kwargs: Any,
+    ) -> Any:
         workspace.log(f"{self.name}: Simulating static analysis and QA review...")
         sys_prompt = "You are a QA Agent. Analyze the provided code for bugs, security issues, and style violations. Respond with APPROVED or FAILED and feedback."
         code = kwargs.get("code", "")
         user_prompt = f"Analyze this code:\n{code}"
 
-        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -74,14 +107,25 @@ class ResearchSkill(BaseSkill):
     def name(self) -> str:
         return "ResearchSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+        **kwargs: Any,
+    ) -> Any:
         workspace.log(f"{self.name}: Synthesizing research data...")
         sys_prompt = "You are a Research Agent. Conduct a detailed synthesis of the requested topic and provide actionable insights."
         topic = kwargs.get("topic", workspace.original_prompt)
         user_prompt = f"Research this topic:\n{topic}"
 
-        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -94,14 +138,25 @@ class ToolSynthesisSkill(BaseSkill):
     def name(self) -> str:
         return "ToolSynthesisSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+        **kwargs: Any,
+    ) -> Any:
         workspace.log(f"{self.name}: Synthesizing JSON definition for new tool...")
         sys_prompt = "You are an AI Tool Synthesizer. Generate a JSON schema for a new tool that can solve the user's missing capability."
         capability = kwargs.get("capability", "unknown capability")
         user_prompt = f"Create a tool JSON for capability: {capability}"
 
-        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -114,14 +169,25 @@ class ToolExecutionSkill(BaseSkill):
     def name(self) -> str:
         return "ToolExecutionSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+        **kwargs: Any,
+    ) -> Any:
         tool_name = kwargs.get("tool_name", "unknown_tool")
         workspace.log(f"{self.name}: Executing tool {tool_name}...")
         sys_prompt = "You are an Execution Agent. Simulate the output of running a specific tool."
         user_prompt = f"Simulate execution of tool: {tool_name} with args: {kwargs.get('tool_args', {})}"
 
-        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -134,7 +200,13 @@ class ExperiencePersistenceSkill(BaseSkill):
     def name(self) -> str:
         return "ExperiencePersistenceSkill"
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash", **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+        **kwargs: Any,
+    ) -> Any:
         workspace.log(f"{self.name}: Saving execution experience to memory...")
         experience_summary = kwargs.get("summary", "Task completed.")
         return f"Saved experience: {experience_summary}"

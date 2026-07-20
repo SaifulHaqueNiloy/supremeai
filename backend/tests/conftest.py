@@ -13,7 +13,9 @@ from unittest.mock import MagicMock, patch
 
 def create_mock_module(name, is_package=False):
     m = MagicMock()
-    m.__spec__ = importlib.machinery.ModuleSpec(name=name, loader=MagicMock(), is_package=is_package)
+    m.__spec__ = importlib.machinery.ModuleSpec(
+        name=name, loader=MagicMock(), is_package=is_package
+    )
     if is_package:
         m.__path__ = []
     return m
@@ -40,7 +42,9 @@ sys.modules["pinecone"] = create_mock_module("pinecone", is_package=True)
 sys.modules["chromadb"] = create_mock_module("chromadb", is_package=True)
 sys.modules["chromadb.config"] = create_mock_module("chromadb.config")
 sys.modules["chromadb.utils"] = create_mock_module("chromadb.utils", is_package=True)
-sys.modules["chromadb.utils.embedding_functions"] = create_mock_module("chromadb.utils.embedding_functions")
+sys.modules["chromadb.utils.embedding_functions"] = create_mock_module(
+    "chromadb.utils.embedding_functions"
+)
 sys.modules["cachetools"] = create_mock_module("cachetools", is_package=True)
 sys.modules["nats"] = create_mock_module("nats", is_package=True)
 sys.modules["nats.aio"] = create_mock_module("nats.aio", is_package=True)
@@ -50,7 +54,9 @@ sys.modules["docker"] = create_mock_module("docker", is_package=True)
 sys.modules["docker.errors"] = create_mock_module("docker.errors")
 
 # ✅ SECURITY: Use explicit test-only placeholders that cannot be mistaken for real credentials.
-os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
+os.environ["SUPREMEAI_ENCRYPTION_KEY"] = (
+    "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
+)
 os.environ["ENCRYPTION_KEY"] = "TEST_ONLY_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
 os.environ["STRIPE_API_KEY"] = "TEST_ONLY_STRIPE_API_KEY"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "TEST_ONLY_STRIPE_WEBHOOK_SECRET"
@@ -61,6 +67,7 @@ os.environ["ENV"] = "test"
 os.environ["DOCS_PASSWORD"] = "dummy_pass"
 os.environ["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "dummy_admin_hash"
 import sys
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -88,7 +95,7 @@ os.environ["SUPABASE_DATABASE_URL_POOLER"] = "sqlite+aiosqlite:///:memory:"
 # এটা না করলে settings.supabase_url পুরানো ক্যাশড মান return করতে পারে,
 # যার ফলে create_client() রিয়াল Supabase URL-এ নেটওয়ার্ক রিকোয়েস্ট পাঠাবে।
 try:
-    from core.config import settings, secret_vault
+    from core.config import secret_vault, settings
 
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
@@ -96,7 +103,11 @@ except Exception as e:
     import warnings
 
     # বাংলা মন্তব্য: B028 ফিক্স — stacklevel=2 যোগ করা হয়েছে যাতে warning সঠিক caller লাইন দেখায়
-    warnings.warn(f"Failed to clear settings caches during test setup: {e}", UserWarning, stacklevel=2)
+    warnings.warn(
+        f"Failed to clear settings caches during test setup: {e}",
+        UserWarning,
+        stacklevel=2,
+    )
 
 
 # Mock Google Auth credentials and services globally during tests
@@ -127,9 +138,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/dev/null"
 
 
 import pytest
-
 from core.security.rbac import RoleBasedAccessControl
-
 
 _TEST_ENV_DEFAULTS = {
     "ENV": "test",
@@ -181,7 +190,9 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
                 setattr(core.config.settings, key.lower(), value)
             elif hasattr(core.config.settings, key):
                 setattr(core.config.settings, key, value)
-            elif getattr(core.config.settings.model_config, "extra", "ignore") == "allow":
+            elif (
+                getattr(core.config.settings.model_config, "extra", "ignore") == "allow"
+            ):
                 setattr(core.config.settings, key.lower(), value)
         except AttributeError:
             pass
@@ -189,12 +200,17 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture(autouse=True)
 def override_auth():
+    from api.dependencies import get_current_user_token, verify_autonomous_agent_token
     from core.app import app
-    from api.dependencies import get_current_user_token
-    from api.dependencies import verify_autonomous_agent_token
 
-    app.dependency_overrides[get_current_user_token] = lambda: {"sub": "test_admin@supremeai.com", "role": "admin"}
-    app.dependency_overrides[verify_autonomous_agent_token] = lambda: {"sub": "test_admin@supremeai.com", "role": "admin"}
+    app.dependency_overrides[get_current_user_token] = lambda: {
+        "sub": "test_admin@supremeai.com",
+        "role": "admin",
+    }
+    app.dependency_overrides[verify_autonomous_agent_token] = lambda: {
+        "sub": "test_admin@supremeai.com",
+        "role": "admin",
+    }
     yield
     app.dependency_overrides = {}
 
@@ -263,12 +279,14 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")  # বাংলা: টেস্ট রান টাইম কমাতে session scope ব্যবহার করা হচ্ছে
+@pytest_asyncio.fixture(
+    autouse=True, scope="session"
+)  # বাংলা: টেস্ট রান টাইম কমাতে session scope ব্যবহার করা হচ্ছে
 async def setup_test_database():
-    from sqlalchemy.ext.compiler import compiles
-    from sqlalchemy.dialects.postgresql import JSONB
-    from sqlalchemy.types import JSON  # noqa: F401
     import sqlalchemy.dialects.sqlite as sqlite_dialect  # noqa: F401
+    from sqlalchemy.dialects.postgresql import JSONB
+    from sqlalchemy.ext.compiler import compiles
+    from sqlalchemy.types import JSON  # noqa: F401
 
     @compiles(JSONB, "sqlite")
     def compile_jsonb_sqlite(type_, compiler, **kw):
@@ -278,17 +296,22 @@ async def setup_test_database():
     from models.base import Base
 
     # বাংলা মন্তব্য: সব মডেল স্পষ্টভাবে ইম্পোর্ট করা হলো যাতে Base.metadata তে রেজিস্ট্রি হয়
-
     # বাংলা: wallet.py তে UserWallet ও TransactionLedgerEntry (SQLAlchemy) আছে — সরাসরি ইম্পোর্ট করো
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)  # à¦ªà¦°à¦¿à¦·à§à¦•à¦¾à¦° à¦¶à§à¦°à§ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¤à§‡
+        await conn.run_sync(
+            Base.metadata.drop_all
+        )  # à¦ªà¦°à¦¿à¦·à§à¦•à¦¾à¦° à¦¶à§à¦°à§ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¤à§‡
         try:
-            await conn.run_sync(Base.metadata.create_all)  # à¦¸à¦¬ à¦Ÿà§‡à¦¬à¦¿à¦² à¦¤à§ˆà¦°à¦¿
+            await conn.run_sync(
+                Base.metadata.create_all
+            )  # à¦¸à¦¬ à¦Ÿà§‡à¦¬à¦¿à¦² à¦¤à§ˆà¦°à¦¿
         except Exception as e:  # noqa: BLE001
             import warnings
 
-            warnings.warn(f"Test database setup skipped due to schema issue: {e}", stacklevel=2)
+            warnings.warn(
+                f"Test database setup skipped due to schema issue: {e}", stacklevel=2
+            )
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -305,8 +328,8 @@ async def async_session():
 def clear_settings_cache():
     """Clear cached secrets before each test to prevent test bleed."""
     import os
-    from core.config import settings
-    from core.config import secret_vault
+
+    from core.config import secret_vault, settings
 
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
@@ -322,8 +345,8 @@ def mock_supabase():
     # বাংলা মন্তব্য: Supabase নেটওয়ার্ক লিক সম্পূর্ণ বন্ধ করা হলো।
     # create_client মক করার পাশাপাশি settings-এ supabase_url/key খালি রেখে
     # যেকোনো রিয়েল নেটওয়ার্ক রিকোয়েস্ট আটকানো হচ্ছে।
-    from unittest.mock import MagicMock
     import os
+    from unittest.mock import MagicMock
 
     # নিশ্চিত করো env-এ URL/KEY নেই যাতে create_client কল না হয়
     old_url = os.environ.get("SUPABASE_URL", "")
@@ -333,7 +356,9 @@ def mock_supabase():
 
     with (
         patch("database.supabase_client.create_client") as mock_create,
-        patch("database.supabase_client.SupabaseDB.__init__", return_value=None) as mock_init,
+        patch(
+            "database.supabase_client.SupabaseDB.__init__", return_value=None
+        ) as mock_init,
     ):
         mock_db = MagicMock()
         mock_db.client = MagicMock()
@@ -352,5 +377,7 @@ def mock_network():
     # সব ধরণের আউটগোয়িং নেটওয়ার্ক কল ব্লক করুন
     import respx
 
-    with respx.mock(base_url="https://mock.supabase.co", assert_all_mocked=False) as respx_mock:
+    with respx.mock(
+        base_url="https://mock.supabase.co", assert_all_mocked=False
+    ) as respx_mock:
         yield respx_mock

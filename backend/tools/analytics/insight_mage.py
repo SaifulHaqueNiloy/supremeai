@@ -4,13 +4,15 @@
 
 from __future__ import annotations
 
-from agents.insight_mage import InsightMage
-from agents.insight_mage import TrendDetector
-from agents.insight_mage import AnomalyDetector
-from agents.insight_mage import ReportFormatter
-from agents.insight_mage import TrendResult
-from agents.insight_mage import AnomalyResult
-from agents.insight_mage import ReportResult
+from agents.insight_mage import (
+    AnomalyDetector,
+    AnomalyResult,
+    InsightMage,
+    ReportFormatter,
+    ReportResult,
+    TrendDetector,
+    TrendResult,
+)
 
 __all__ = [
     "InsightMage",

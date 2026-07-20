@@ -4,9 +4,8 @@ import re
 from email.header import decode_header
 from typing import Any
 
-from loguru import logger
-
 from core.security.secure_credential_store import SecureCredentialStore
+from loguru import logger
 
 
 class EmailAgent:
@@ -35,13 +34,17 @@ class EmailAgent:
         """Gmail OAuth এখনো real consent/token-exchange ফ্লো-র সাথে ওয়্যার করা হয়নি।
         আগে এখানে চুপচাপ True রিটার্ন হতো — এখন স্পষ্টভাবে ব্যর্থ হয়, যাতে caller
         ভুল করে ধরে না নেয় যে ইমেইল অ্যাকাউন্ট আসলে কানেক্টেড।"""
-        logger.warning(f"Gmail OAuth connect requested (provider={provider}, scopes={scopes}) — OAuth flow not implemented yet.")
+        logger.warning(
+            f"Gmail OAuth connect requested (provider={provider}, scopes={scopes}) — OAuth flow not implemented yet."
+        )
         raise NotImplementedError(
             "Gmail OAuth is not implemented yet (no real consent/redirect flow wired up). "
             "Use IMAP with an app password via connect_imap() instead."
         )
 
-    def connect_imap(self, host: str, port: int, username: str, app_password: str) -> bool:
+    def connect_imap(
+        self, host: str, port: int, username: str, app_password: str
+    ) -> bool:
         """একটি রিয়েল IMAP লগইন করে ক্রেডেনশিয়াল যাচাই করে, তারপর এনক্রিপ্ট করে সংরক্ষণ করে।"""
         try:
             with imaplib.IMAP4_SSL(host, port, timeout=10) as imap:
@@ -52,22 +55,35 @@ class EmailAgent:
             return False
 
         ciphertext, key_ref = self._credential_store.encrypt(app_password)
-        self._imap_config = {"host": host, "port": port, "username": username, "ciphertext": ciphertext, "key_ref": key_ref}
+        self._imap_config = {
+            "host": host,
+            "port": port,
+            "username": username,
+            "ciphertext": ciphertext,
+            "key_ref": key_ref,
+        }
         self.auth_method = "imap"
         self.connected = True
-        logger.info(f"IMAP connection verified and credentials stored (encrypted) for {username}@{host}:{port}")
+        logger.info(
+            f"IMAP connection verified and credentials stored (encrypted) for {username}@{host}:{port}"
+        )
         return True
 
     def receive_otp(self, website: str, lookback: int = 10) -> str:
         """সংযুক্ত ইনবক্স থেকে সাম্প্রতিক unread মেইল পোল করে `website`-সম্পর্কিত একটি রিয়েল OTP খোঁজে।
-        কোনো লাইভ কানেকশন না থাকলে বা OTP না পাওয়া গেলে খালি স্ট্রিং রিটার্ন করে — কখনো fabricate করে না।"""
+        কোনো লাইভ কানেকশন না থাকলে বা OTP না পাওয়া গেলে খালি স্ট্রিং রিটার্ন করে — কখনো fabricate করে না।
+        """
         if self.auth_method != "imap" or not self._imap_config or not self.connected:
-            logger.warning("receive_otp() called without a live IMAP connection — cannot fetch a real OTP.")
+            logger.warning(
+                "receive_otp() called without a live IMAP connection — cannot fetch a real OTP."
+            )
             return ""
 
         cfg = self._imap_config
         try:
-            app_password = self._credential_store.decrypt(cfg["ciphertext"], cfg["key_ref"])
+            app_password = self._credential_store.decrypt(
+                cfg["ciphertext"], cfg["key_ref"]
+            )
         except Exception as exc:  # noqa: BLE001
             logger.error(f"Failed to decrypt stored IMAP credentials: {exc}")
             return ""
@@ -95,7 +111,9 @@ class EmailAgent:
                     if otp:
                         return otp
         except (imaplib.IMAP4.error, OSError) as exc:
-            logger.error(f"IMAP poll failed while looking for OTP from {website}: {exc}")
+            logger.error(
+                f"IMAP poll failed while looking for OTP from {website}: {exc}"
+            )
         return ""
 
     @staticmethod
@@ -113,17 +131,25 @@ class EmailAgent:
     def _extract_body(msg) -> str:
         if msg.is_multipart():
             for part in msg.walk():
-                if part.get_content_type() == "text/plain" and "attachment" not in str(part.get("Content-Disposition")):
+                if part.get_content_type() == "text/plain" and "attachment" not in str(
+                    part.get("Content-Disposition")
+                ):
                     try:
                         payload = part.get_payload(decode=True)
                         if payload:
-                            return payload.decode(part.get_content_charset() or "utf-8", errors="ignore")
+                            return payload.decode(
+                                part.get_content_charset() or "utf-8", errors="ignore"
+                            )
                     except Exception:  # noqa: BLE001, S112
                         continue
             return ""
         try:
             payload = msg.get_payload(decode=True)
-            return payload.decode(msg.get_content_charset() or "utf-8", errors="ignore") if payload else ""
+            return (
+                payload.decode(msg.get_content_charset() or "utf-8", errors="ignore")
+                if payload
+                else ""
+            )
         except Exception:  # noqa: BLE001
             return ""
 
@@ -138,7 +164,10 @@ class EmailAgent:
         """সংযুক্ত ইনবক্স থেকে রিয়েল OTP পোল করে — কখনো fabricated OTP বা fake 'stored_in_vault' দাবি করে না।"""
         logger.info(f"Starting automated signup flow for {website_url}")
         if not self.connected:
-            return {"status": "failed", "reason": "No email account connected. Call connect_imap() first."}
+            return {
+                "status": "failed",
+                "reason": "No email account connected. Call connect_imap() first.",
+            }
         otp = self.receive_otp(website_url)
         if otp:
             return {"status": "success", "credentials_encrypted": True, "otp": otp}

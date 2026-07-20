@@ -1,5 +1,7 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from tools.graph_service import GraphService
 
 # বাংলা মন্তব্য: Neo4j নলেজ গ্রাফ সার্ভিসের লজিক টেস্ট করা হচ্ছে.
@@ -12,7 +14,9 @@ async def test_graph_service_dry_run():
         service = GraphService()
         assert service.dry_run is True
 
-        sync_result = await service.sync_skills_to_graph([{"id": "1", "name": "Python", "category": "Coding"}])
+        sync_result = await service.sync_skills_to_graph(
+            [{"id": "1", "name": "Python", "category": "Coding"}]
+        )
         assert sync_result is True
 
         rel_result = await service.create_relationship("1", "2", "DEPENDS_ON")

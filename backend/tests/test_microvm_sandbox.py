@@ -11,21 +11,20 @@ This module tests:
 - CancelledError handling
 """
 
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
 from core.microvm_sandbox import (
-    MicroVMSandbox,
-    get_sandbox,
-    execute_code_securely,
-    _validate_sandbox_root,
-    _validate_vm_id,
     _ALLOWED_DOCKER_IMAGES,
     _VM_ID_PATTERN,
+    MicroVMSandbox,
+    _validate_sandbox_root,
+    _validate_vm_id,
+    execute_code_securely,
+    get_sandbox,
 )
-
 
 # --- Validation Tests ---
 
@@ -64,7 +63,9 @@ class TestValidation:
         # Use a whitelisted path
         whitelist = {"/tmp/sandboxes", "C:\\tmp\\sandboxes"}
 
-        with patch("core.microvm_sandbox._SANDBOX_ROOT_WHITELIST", frozenset(whitelist)):
+        with patch(
+            "core.microvm_sandbox._SANDBOX_ROOT_WHITELIST", frozenset(whitelist)
+        ):
             result = _validate_sandbox_root("/tmp/sandboxes")
 
             assert result == Path("/tmp/sandboxes")
@@ -87,7 +88,10 @@ class TestMicroVMSandbox:
         """Test MicroVMSandbox initialization with valid sandbox root."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
         ):
             mock_settings.sandbox_root = "/tmp/sandboxes"
             mock_settings.firecracker_path = "/usr/bin/firecracker"
@@ -148,7 +152,10 @@ class TestExecuteCodeSecurely:
         """Test execution when no runtime is available."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
             patch("core.microvm_sandbox.shutil.which", return_value=None),
         ):
             mock_settings.sandbox_root = "/tmp/sandboxes"
@@ -166,7 +173,10 @@ class TestExecuteCodeSecurely:
         """Test execution uses Docker fallback when enabled."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
             patch("core.microvm_sandbox.shutil.which", return_value=None),
             patch("core.microvm_sandbox.subprocess.run") as mock_run,
             tempfile.TemporaryDirectory() as tmpdir,
@@ -191,7 +201,10 @@ class TestExecuteCodeSecurely:
         """Test that CancelledError is always re-raised."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
             patch("core.microvm_sandbox.shutil.which", return_value=None),
             patch("core.microvm_sandbox.subprocess.run", side_effect=Exception("test")),
         ):
@@ -224,7 +237,10 @@ class TestMicroVMHealthCheck:
         """Test sandbox health check returns status."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
         ):
             mock_settings.sandbox_root = "/tmp/sandboxes"
             mock_settings.firecracker_path = "/usr/bin/firecracker"
@@ -248,7 +264,10 @@ class TestLazySingleton:
         """Test that get_sandbox returns a MicroVMSandbox instance."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
         ):
             mock_settings.sandbox_root = "/tmp/sandboxes"
 
@@ -260,7 +279,10 @@ class TestLazySingleton:
         """Test that get_sandbox returns the same instance."""
         with (
             patch("core.microvm_sandbox.settings") as mock_settings,
-            patch("core.microvm_sandbox._validate_sandbox_root", return_value=Path("/tmp/sandboxes")),
+            patch(
+                "core.microvm_sandbox._validate_sandbox_root",
+                return_value=Path("/tmp/sandboxes"),
+            ),
         ):
             mock_settings.sandbox_root = "/tmp/sandboxes"
 

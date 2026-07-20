@@ -5,22 +5,22 @@ from typing import Any
 from opentelemetry import trace as otel_trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import Span
-from opentelemetry.trace import Status
-from opentelemetry.trace import StatusCode
-from opentelemetry.trace import Tracer
-
+from opentelemetry.trace import Span, Status, StatusCode, Tracer
 
 _tracer: Tracer | None = None
 
 
-def setup_tracing(service_name: str = "supremeai", otlp_endpoint: str | None = None) -> None:
+def setup_tracing(
+    service_name: str = "supremeai", otlp_endpoint: str | None = None
+) -> None:
     global _tracer
     endpoint = otlp_endpoint or os.getenv("OTLP_ENDPOINT", "")
     provider = TracerProvider()
     if endpoint:
         try:
-            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+                OTLPSpanExporter,
+            )
 
             exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
             provider.add_span_processor(BatchSpanProcessor(exporter))
@@ -38,7 +38,9 @@ def get_tracer() -> Tracer | None:
 
 
 @contextmanager
-def trace_span(name: str, attributes: dict[str, Any] | None = None, kind: str = "internal"):
+def trace_span(
+    name: str, attributes: dict[str, Any] | None = None, kind: str = "internal"
+):
     tracer = get_tracer()
     if tracer is None:
         yield _NoOpSpan()

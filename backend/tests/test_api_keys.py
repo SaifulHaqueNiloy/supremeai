@@ -11,7 +11,6 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-
 os.environ.setdefault("OPENROUTER_API_KEY", "mock-key-value")
 os.environ.setdefault("ENV", "test")
 
@@ -48,17 +47,21 @@ class FakePool:
 
 
 # Ensure `core.app` is reloaded fresh in test runs (avoid cached app state)
-for _mod in [m for m in list(sys.modules) if m == "core.app" or m.startswith("core.app.")]:
+for _mod in [
+    m for m in list(sys.modules) if m == "core.app" or m.startswith("core.app.")
+]:
     del sys.modules[_mod]
 
 from api.routes.api_keys import router
-from core.rate_limiter import AsyncRateLimiter
 from core.app import app
-from core.security import API_KEY_PREFIX
-from core.security import generate_api_key
-from core.security import hash_api_key
-from core.security import mask_api_key
-from core.security import verify_api_key
+from core.rate_limiter import AsyncRateLimiter
+from core.security import (
+    API_KEY_PREFIX,
+    generate_api_key,
+    hash_api_key,
+    mask_api_key,
+    verify_api_key,
+)
 
 
 @pytest.fixture
@@ -144,7 +147,9 @@ class TestRateLimiter:
     @pytest.fixture(autouse=True)
     def patch_redis(self):
         fake_redis = FakeRedisClient()
-        with patch("core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis):
+        with patch(
+            "core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis
+        ):
             yield
 
     @pytest.mark.asyncio

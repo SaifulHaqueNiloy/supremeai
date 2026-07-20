@@ -1,6 +1,5 @@
 import os
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from tools.media.voice import VoiceInterface
 
@@ -27,7 +26,9 @@ def test_voice_interface_stt_success(mock_post):
     try:
         os.environ["HF_API_KEY"] = "mock_key"
         vi = VoiceInterface()
-        vi.hf_token = "mock_key"  # Force set since config might not read env dynamically
+        vi.hf_token = (
+            "mock_key"  # Force set since config might not read env dynamically
+        )
         res = vi.speech_to_text(dummy_path)
         assert res == "hello world"
     finally:
@@ -67,4 +68,6 @@ def test_local_ocr_extractor():
     except ImportError:
         import logging
 
-        logging.warning("Optional dependencies not installed, skipping excel export test")
+        logging.warning(
+            "Optional dependencies not installed, skipping excel export test"
+        )

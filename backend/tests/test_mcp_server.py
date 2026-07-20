@@ -1,7 +1,8 @@
 # backend/tests/test_mcp_server.py
 import pytest
 from mcp import types
-from tools.mcp.mcp_server import handle_list_tools, handle_call_tool
+
+from tools.mcp.mcp_server import handle_call_tool, handle_list_tools
 
 
 @pytest.mark.anyio

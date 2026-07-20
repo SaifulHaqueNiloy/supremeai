@@ -3,11 +3,9 @@ import logging
 import os
 import platform
 import uuid
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 
 from core.messaging.nats_messaging import NATSClient
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +19,10 @@ class SwarmWorkerNode:
     def __init__(self, agent_type: str = "general"):
         self.worker_id = f"worker_{uuid.uuid4().hex[:8]}"
         self.agent_type = agent_type
-        self.nats = NATSClient(url=os.getenv("NATS_URL", "nats://localhost:4222"), token=os.getenv("NATS_TOKEN", "super_secret_token"))
+        self.nats = NATSClient(
+            url=os.getenv("NATS_URL", "nats://localhost:4222"),
+            token=os.getenv("NATS_TOKEN", "super_secret_token"),
+        )
         self.is_running = True
 
     def get_capabilities(self):

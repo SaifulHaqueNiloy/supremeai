@@ -7,15 +7,11 @@ This module provides shared error models and a centralized handler.
 
 from __future__ import annotations
 
-from fastapi import HTTPException
-from fastapi import Request
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
-
-from core.messaging.event_bus import ErrorContext
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
 
 
 class APIErrorDetail(BaseModel):
@@ -63,7 +59,9 @@ def raise_bad_request(detail: str, *, code: str | None = None) -> HTTPException:
     return HTTPException(status_code=400, detail=detail)
 
 
-def raise_unauthorized(detail: str = "Missing or invalid authentication token") -> HTTPException:
+def raise_unauthorized(
+    detail: str = "Missing or invalid authentication token",
+) -> HTTPException:
     return HTTPException(status_code=401, detail=detail)
 
 

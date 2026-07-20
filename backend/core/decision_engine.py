@@ -16,13 +16,30 @@ class DecisionEngine:
 
         if sandbox_passed is False:
             logger.warning("DecisionEngine: sandbox failed, blocking action")
-            return {"action": "block", "confidence": 1.0, "reason": "sandbox_failed", "trace": None}
+            return {
+                "action": "block",
+                "confidence": 1.0,
+                "reason": "sandbox_failed",
+                "trace": None,
+            }
 
         if risk_flags:
-            logger.info(f"DecisionEngine: risk flags present {risk_flags}, routing to review")
-            return {"action": "review", "confidence": 0.5, "reason": "risk_flags", "trace": None}
+            logger.info(
+                f"DecisionEngine: risk flags present {risk_flags}, routing to review"
+            )
+            return {
+                "action": "review",
+                "confidence": 0.5,
+                "reason": "risk_flags",
+                "trace": None,
+            }
 
         confidence = max(0.0, 1.0 - error_rate)
         action = "proceed" if confidence >= self._min_confidence else "review"
         logger.debug(f"DecisionEngine: action={action} confidence={confidence:.2f}")
-        return {"action": action, "confidence": confidence, "reason": None, "trace": None}
+        return {
+            "action": action,
+            "confidence": confidence,
+            "reason": None,
+            "trace": None,
+        }

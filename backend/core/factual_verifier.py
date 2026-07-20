@@ -28,7 +28,6 @@ import re
 
 import httpx
 
-
 _logger = logging.getLogger(__name__)
 
 _ALLOWED_OPERATORS = {
@@ -85,7 +84,9 @@ class FactualVerifier:
 
             self.local_rag = LocalSearchRAG()
         except (ImportError, RuntimeError) as e:
-            _logger.warning(f"LocalSearchRAG not available or failed to initialize, RAG-based verification disabled: {e}")
+            _logger.warning(
+                f"LocalSearchRAG not available or failed to initialize, RAG-based verification disabled: {e}"
+            )
             self.local_rag = None
 
     def verify_with_local_rag(self, claim: str) -> dict:
@@ -117,7 +118,9 @@ class FactualVerifier:
                 "method": "no_matches",
             }
         except Exception as e:  # noqa: BLE001
-            _logger.warning(f"RAG verification failed for claim: {claim[:50]}... error: {e}")
+            _logger.warning(
+                f"RAG verification failed for claim: {claim[:50]}... error: {e}"
+            )
             return {
                 "claim": claim,
                 "is_verified": False,
