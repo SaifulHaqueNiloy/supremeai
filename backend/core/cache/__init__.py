@@ -33,3 +33,8 @@ class SimpleCacheProxy:
 def get_cache() -> SimpleCacheProxy:
     """Return the SimpleCacheProxy instance."""
     return SimpleCacheProxy()
+
+
+def get_redis_client() -> Any:
+    """Return the raw redis client for custom operations."""
+    return redis_manager.client
