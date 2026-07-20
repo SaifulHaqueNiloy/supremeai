@@ -3,16 +3,13 @@ import os
 import sqlite3
 import uuid
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Request
+from database.supabase_client import db
+from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
 from pydantic import BaseModel
 
-from database.supabase_client import db
 from tools.resource_catalog import ResourceCatalog
 from tools.social.marketplace_agent import MarketplaceAgent
-
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 marketplace_agent = MarketplaceAgent()
@@ -30,7 +27,11 @@ DB_PATH = os.environ.get("SUPREMEAI_MARKETPLACE_DB", "data/marketplace.db")
 
 
 def _get_conn() -> sqlite3.Connection:
-    (os.makedirs(os.path.dirname(DB_PATH), exist_ok=True) if os.path.dirname(DB_PATH) else None)
+    (
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        if os.path.dirname(DB_PATH)
+        else None
+    )
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute(
@@ -82,7 +83,15 @@ def _seed(conn: sqlite3.Connection) -> None:
     for item in _SEED_INDEX:
         conn.execute(
             "INSERT INTO skills (id, name, version, description, dependencies, installed, source, installed_at) VALUES (?, ?, ?, ?, ?, 0, ?, ?)",
-            (str(uuid.uuid4()), item["name"], item["version"], item["description"], item["dependencies"], item["source"], now),
+            (
+                str(uuid.uuid4()),
+                item["name"],
+                item["version"],
+                item["description"],
+                item["dependencies"],
+                item["source"],
+                now,
+            ),
         )
     conn.commit()
     _seeded = True
@@ -112,7 +121,9 @@ def get_enabled_catalog_sources() -> list[str]:
     return enabled_sources or DEFAULT_CATALOG_SOURCES
 
 
-def filter_requested_catalog_sources(categories: list[str], enabled_sources: list[str]) -> list[str]:
+def filter_requested_catalog_sources(
+    categories: list[str], enabled_sources: list[str]
+) -> list[str]:
     return [c for c in categories if c in enabled_sources]
 
 
@@ -137,7 +148,9 @@ async def search_marketplaces(payload: SearchRequest, request: Request):
         filters = payload.filters if payload.filters is not None else {}
 
         # 1. Search Remote Marketplaces
-        results = marketplace_agent.search_marketplaces(payload.query, categories, filters)
+        results = marketplace_agent.search_marketplaces(
+            payload.query, categories, filters
+        )
 
         enabled_sources = get_enabled_catalog_sources()
         catalog_sources = filter_requested_catalog_sources(categories, enabled_sources)
@@ -146,7 +159,9 @@ async def search_marketplaces(payload: SearchRequest, request: Request):
 
         http_client = getattr(request.app.state, "http_client", None)
         async with ResourceCatalog(http_client=http_client) as catalog:
-            resource_results = await catalog.search(payload.query, sources=catalog_sources, limit=5)
+            resource_results = await catalog.search(
+                payload.query, sources=catalog_sources, limit=5
+            )
 
         if resource_results:
             results.extend(resource_results)
@@ -163,7 +178,13 @@ async def search_marketplaces(payload: SearchRequest, request: Request):
             rows = conn.execute(sql, params).fetchall()
             for r in rows:
                 results.append(
-                    {"name": r["name"], "marketplace": "local_db", "description": r["description"], "installed": bool(r["installed"]), "id": r["id"]}
+                    {
+                        "name": r["name"],
+                        "marketplace": "local_db",
+                        "description": r["description"],
+                        "installed": bool(r["installed"]),
+                        "id": r["id"],
+                    }
                 )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Local DB search error: {e}")
@@ -183,20 +204,38 @@ async def install_tool(payload: InstallRequest):
         local_tool = None
         try:
             _seed(conn)
-            local_tool = conn.execute("SELECT id, name, installed FROM skills WHERE name = ?", (payload.tool_id,)).fetchone()
+            local_tool = conn.execute(
+                "SELECT id, name, installed FROM skills WHERE name = ?",
+                (payload.tool_id,),
+            ).fetchone()
             if local_tool:
                 if local_tool["installed"]:
-                    return {"success": True, "tool_id": payload.tool_id, "installed": True, "message": "Already installed locally."}
-                conn.execute("UPDATE skills SET installed = 1, installed_at = ? WHERE id = ?", (__import__("time").time(), local_tool["id"]))
+                    return {
+                        "success": True,
+                        "tool_id": payload.tool_id,
+                        "installed": True,
+                        "message": "Already installed locally.",
+                    }
+                conn.execute(
+                    "UPDATE skills SET installed = 1, installed_at = ? WHERE id = ?",
+                    (__import__("time").time(), local_tool["id"]),
+                )
                 conn.commit()
-                return {"success": True, "tool_id": payload.tool_id, "installed": True, "message": "Installed locally via legacy DB."}
+                return {
+                    "success": True,
+                    "tool_id": payload.tool_id,
+                    "installed": True,
+                    "message": "Installed locally via legacy DB.",
+                }
         except Exception as e:  # noqa: BLE001
             logger.error(f"Local install error: {e}")
         finally:
             conn.close()
 
         # Fallback to Agent Remote Installation
-        res = marketplace_agent.install_tool(payload.tool_id, payload.target_environment, payload.sandbox)
+        res = marketplace_agent.install_tool(
+            payload.tool_id, payload.target_environment, payload.sandbox
+        )
         return res
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(e)) from e

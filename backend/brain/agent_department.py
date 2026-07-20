@@ -12,7 +12,9 @@ class CodingAgent:
     def execute(self, description: str, context: str = "") -> dict[str, Any]:
         prompt = f"R-A-C-E Framework\nRole: {self.role}\nAction: {description}\nContext: {context}\nExpectation: Return implementation with tests."
         try:
-            raw = self.model_router.route_and_generate(prompt=prompt, task_type="coding", max_cost=0.01)
+            raw = self.model_router.route_and_generate(
+                prompt=prompt, task_type="coding", max_cost=0.01
+            )
             if raw.get("success") or raw.get("text"):
                 return {
                     "role": self.role,
@@ -44,7 +46,11 @@ class ReviewAgent:
             "Action: {description}\n"
             "Expectation: Review findings with severity and suggested fixes."
         )
-        prompt_params = {"role": self.role, "description": description, "context": context}
+        prompt_params = {
+            "role": self.role,
+            "description": description,
+            "context": context,
+        }
         try:
             raw = self.model_router.route_and_generate(
                 prompt_template=prompt_template,
@@ -86,7 +92,9 @@ class QAAgent:
             f"Context: {context}"
         )
         try:
-            raw = self.model_router.route_and_generate(prompt=prompt, task_type="testing", max_cost=0.01)
+            raw = self.model_router.route_and_generate(
+                prompt=prompt, task_type="testing", max_cost=0.01
+            )
             if raw.get("success") or raw.get("text"):
                 return {
                     "role": self.role,

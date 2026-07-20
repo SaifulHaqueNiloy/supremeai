@@ -19,23 +19,20 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import (
-    Any,
-    Protocol,
-)
-from collections.abc import AsyncGenerator
+from typing import Any, Protocol
 
 import httpx
 
 # Internal core imports
 from core.cache import get_redis_client
-from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.config import settings
 from core.exceptions import LLMProviderError, QuotaExceededError
 from core.logging import get_logger
 from core.metrics import counter, timed
+from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 
 # Import UniversalRulesEngine for all AI models to follow cine rules
 try:
@@ -83,8 +80,19 @@ class TaskType(str, Enum):
 
 # Provider capability matrix - শুধু ফ্রি/ওপেন সোর্স প্রোভাইডারগুলো ব্যবহার করবেন (ZERO-108)
 PROVIDER_CAPABILITIES: dict[Provider, list[TaskType]] = {
-    Provider.MOONSHOT: [TaskType.CHAT, TaskType.BENGALI, TaskType.SUMMARIZE, TaskType.TRANSLATE, TaskType.CLASSIFY],
-    Provider.DEEPSEEK: [TaskType.CHAT, TaskType.CODE, TaskType.SUMMARIZE, TaskType.CLASSIFY],
+    Provider.MOONSHOT: [
+        TaskType.CHAT,
+        TaskType.BENGALI,
+        TaskType.SUMMARIZE,
+        TaskType.TRANSLATE,
+        TaskType.CLASSIFY,
+    ],
+    Provider.DEEPSEEK: [
+        TaskType.CHAT,
+        TaskType.CODE,
+        TaskType.SUMMARIZE,
+        TaskType.CLASSIFY,
+    ],
     Provider.TOGETHER: [TaskType.CHAT, TaskType.CODE, TaskType.EMBEDDING],
     Provider.GEMINI: [TaskType.CHAT, TaskType.SUMMARIZE, TaskType.TRANSLATE],
     Provider.OLLAMA: [TaskType.CHAT, TaskType.CODE, TaskType.SUMMARIZE],
@@ -101,7 +109,12 @@ PROVIDER_COSTS: dict[Provider, tuple[float, float]] = {
 
 # Default fallback chain per task type - AI-96: Fallback Mechanisms
 FALLBACK_CHAINS: dict[TaskType, list[Provider]] = {
-    TaskType.CHAT: [Provider.MOONSHOT, Provider.DEEPSEEK, Provider.GEMINI, Provider.OLLAMA],
+    TaskType.CHAT: [
+        Provider.MOONSHOT,
+        Provider.DEEPSEEK,
+        Provider.GEMINI,
+        Provider.OLLAMA,
+    ],
     TaskType.CODE: [Provider.DEEPSEEK, Provider.GEMINI, Provider.OLLAMA],
     TaskType.BENGALI: [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA],
     TaskType.SUMMARIZE: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.OLLAMA],
@@ -124,7 +137,11 @@ class TokenBudget:
     def check(self, estimated_input: int, estimated_output: int) -> bool:
         # Core Philosophy: 80% context window limit
         total = estimated_input + estimated_output
-        return estimated_input <= self.max_input and estimated_output <= self.max_output and (self.used_today + total) <= self.daily_limit
+        return (
+            estimated_input <= self.max_input
+            and estimated_output <= self.max_output
+            and (self.used_today + total) <= self.daily_limit
+        )
 
     def consume(self, tokens: int) -> None:
         self.used_today += tokens
@@ -199,7 +216,9 @@ class MoonshotProvider:
             "max_tokens": max_tokens,
             "temperature": temperature,
             "stream": stream,
-            "response_format": {"type": "json_object"} if kwargs.get("json_mode", False) else None,  # AI-098: Structured outputs
+            "response_format": (
+                {"type": "json_object"} if kwargs.get("json_mode", False) else None
+            ),  # AI-098: Structured outputs
         }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
@@ -212,8 +231,12 @@ class MoonshotProvider:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
-        async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream(
+            "POST", "/chat/completions", json=payload
+        ) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):
@@ -267,7 +290,9 @@ class DeepSeekProvider:
             "max_tokens": max_tokens,
             "temperature": temperature,
             "stream": stream,
-            "response_format": {"type": "json_object"} if kwargs.get("json_mode", False) else None,
+            "response_format": (
+                {"type": "json_object"} if kwargs.get("json_mode", False) else None
+            ),
         }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
@@ -280,8 +305,12 @@ class DeepSeekProvider:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
-        async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream(
+            "POST", "/chat/completions", json=payload
+        ) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):
@@ -346,8 +375,12 @@ class TogetherProvider:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
-        async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream(
+            "POST", "/chat/completions", json=payload
+        ) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):
@@ -412,7 +445,9 @@ class OllamaProvider:
         data = resp.json()
         return data.get("response", "")
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/api/generate", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -520,8 +555,12 @@ class LLMRouter:
             chain = []
 
         # Add fallback chain - শুধু ফ্রি/ওপেন সোর্স প্রথমে আনা হবে
-        for provider in FALLBACK_CHAINS.get(task_type, [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA]):
-            if provider not in chain and task_type in PROVIDER_CAPABILITIES.get(provider, []):
+        for provider in FALLBACK_CHAINS.get(
+            task_type, [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA]
+        ):
+            if provider not in chain and task_type in PROVIDER_CAPABILITIES.get(
+                provider, []
+            ):
                 chain.append(provider)
 
         # Cost-sensitive: sort by cost - ZERO-108: Zero Cost Policy
@@ -555,7 +594,11 @@ class LLMRouter:
         Route prompt to optimal LLM provider with automatic fallback.
         সকল রুলস যাচাই করে এবং মেনে চালায়।
         """
-        task = TaskType(task_type) if task_type in [t.value for t in TaskType] else TaskType.CHAT
+        task = (
+            TaskType(task_type)
+            if task_type in [t.value for t in TaskType]
+            else TaskType.CHAT
+        )
 
         # AGENT-101: Check token budget before processing
         estimated_tokens = self._estimate_tokens(prompt) + max_tokens
@@ -563,12 +606,17 @@ class LLMRouter:
             logger.error(f"❌ Token budget exceeded: {estimated_tokens}")
 
         # Normalize Bengali text
-        if normalize_bengali and self.normalizer.detect_script(prompt) in ("mixed", "roman"):
+        if normalize_bengali and self.normalizer.detect_script(prompt) in (
+            "mixed",
+            "roman",
+        ):
             prompt = self.normalizer.normalize(prompt)
             logger.debug("bengali_normalized", original_length=len(prompt))
 
         # Check cache - AI-094: Semantic Caching
-        cache_key = self._cache_key(prompt, task.value, max_tokens=max_tokens, temperature=temperature)
+        cache_key = self._cache_key(
+            prompt, task.value, max_tokens=max_tokens, temperature=temperature
+        )
         if use_cache and not stream:
             cached_result = await self.cache.get(cache_key)
             if cached_result:
@@ -628,7 +676,9 @@ class LLMRouter:
                 )
 
                 if stream:
-                    return self._stream_with_fallback(provider, prompt, max_tokens, temperature, chain, **kwargs)
+                    return self._stream_with_fallback(
+                        provider, prompt, max_tokens, temperature, chain, **kwargs
+                    )
 
                 result = await provider.acompletion(
                     prompt,
@@ -648,7 +698,10 @@ class LLMRouter:
 
                 latency = (time.perf_counter() - start_time) * 1000
                 tokens = estimated_input + self._estimate_tokens(result)
-                cost = (tokens / 1000) * (PROVIDER_COSTS[provider_name][0] * 0.3 + PROVIDER_COSTS[provider_name][1] * 0.7)
+                cost = (tokens / 1000) * (
+                    PROVIDER_COSTS[provider_name][0] * 0.3
+                    + PROVIDER_COSTS[provider_name][1] * 0.7
+                )
 
                 self.budget.consume(tokens)
 
@@ -689,7 +742,11 @@ class LLMRouter:
 
         # All providers failed - SELF-113: Self-Healing
         latency = (time.perf_counter() - start_time) * 1000
-        logger.error("all_providers_failed", chain=[p.value for p in chain], error=str(last_error))
+        logger.error(
+            "all_providers_failed",
+            chain=[p.value for p in chain],
+            error=str(last_error),
+        )
         raise LLMProviderError(
             message=f"All providers failed for task {task.value}",
             details={
@@ -744,8 +801,13 @@ class LLMRouter:
                 "used_today": self.budget.used_today,
                 "remaining": self.budget.daily_limit - self.budget.used_today,
             },
-            "provider_costs": {p.value: {"input": c[0], "output": c[1]} for p, c in PROVIDER_COSTS.items()},
-            "rules_enforced": self.rules.validate_critical_rules() if self.rules else [],
+            "provider_costs": {
+                p.value: {"input": c[0], "output": c[1]}
+                for p, c in PROVIDER_COSTS.items()
+            },
+            "rules_enforced": (
+                self.rules.validate_critical_rules() if self.rules else []
+            ),
         }
 
 

@@ -4,11 +4,8 @@ from typing import Any
 
 from loguru import logger
 
-
 try:
-    from prometheus_client import Gauge
-    from prometheus_client import Histogram
-    from prometheus_client import start_http_server
+    from prometheus_client import Gauge, Histogram, start_http_server
 
     _PROMETHEUS_AVAILABLE = True
 except ImportError:
@@ -41,17 +38,29 @@ class HealthMonitor:
         self.probes[name] = probe_fn
 
     def _setup_metrics(self):
-        self.uptime_seconds = Gauge("supremeai_uptime_seconds", "Server uptime in seconds")
-        self.cpu_usage_percent = Gauge("supremeai_cpu_usage_percent", "CPU usage percentage")
-        self.memory_usage_percent = Gauge("supremeai_memory_usage_percent", "Memory usage percentage")
-        self.memory_available_mb = Gauge("supremeai_memory_available_mb", "Available memory in MB")
+        self.uptime_seconds = Gauge(
+            "supremeai_uptime_seconds", "Server uptime in seconds"
+        )
+        self.cpu_usage_percent = Gauge(
+            "supremeai_cpu_usage_percent", "CPU usage percentage"
+        )
+        self.memory_usage_percent = Gauge(
+            "supremeai_memory_usage_percent", "Memory usage percentage"
+        )
+        self.memory_available_mb = Gauge(
+            "supremeai_memory_available_mb", "Available memory in MB"
+        )
         self.request_duration_seconds = Histogram(
             "supremeai_request_duration_seconds",
             "HTTP request latency in seconds",
             buckets=[0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 2.5, 5.0],
         )
-        self.active_tasks = Gauge("supremeai_active_tasks", "Number of active asyncio tasks")
-        self.status = Gauge("supremeai_health_status", "Health status (1=healthy, 0=degraded)")
+        self.active_tasks = Gauge(
+            "supremeai_active_tasks", "Number of active asyncio tasks"
+        )
+        self.status = Gauge(
+            "supremeai_health_status", "Health status (1=healthy, 0=degraded)"
+        )
 
     async def get_system_metrics(self) -> dict[str, Any]:
         import psutil

@@ -1,5 +1,6 @@
 from __future__ import annotations
-from datetime import datetime, timedelta, UTC
+
+from datetime import UTC, datetime, timedelta
 
 
 def utc_now() -> datetime:

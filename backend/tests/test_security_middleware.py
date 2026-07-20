@@ -1,10 +1,10 @@
 import os
 
+from core.security.auth_middleware import AuthMiddleware
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from starlette.responses import PlainTextResponse
 
-from core.security.auth_middleware import AuthMiddleware
 # Rate limiter tests have been migrated to APIKeyRateLimiter and TenantRateLimiter
 
 
@@ -53,7 +53,10 @@ def test_auth_middleware_blocks_protected_route_without_token():
         with patch("core.security.auth_middleware.settings") as mock_settings:
             mock_settings.supremeai_api_token = "secure-test-token-value"
             mock_settings.supremeai_public_paths = []
-            resp = client.get("/api/task/execute", headers={"Authorization": "Bearer secure-test-token-value"})
+            resp = client.get(
+                "/api/task/execute",
+                headers={"Authorization": "Bearer secure-test-token-value"},
+            )
         assert resp.status_code == 200
     finally:
         os.environ.pop("SUPREMEAI_API_TOKEN", None)

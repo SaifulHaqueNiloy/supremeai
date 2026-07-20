@@ -5,6 +5,5 @@ SupremeAI 2.0 — Celery Worker entrypoint.
 
 from core.queue.task_queue_enhanced import celery_app
 
-
 # Expose the app for the Celery command-line interface
 app = celery_app

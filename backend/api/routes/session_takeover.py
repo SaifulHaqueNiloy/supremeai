@@ -2,14 +2,9 @@ import asyncio
 import os
 import time
 
-from fastapi import APIRouter
-from fastapi import Query
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
-from loguru import logger
-
 from core.messaging.event_bus import ErrorContext
-
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from loguru import logger
 
 router = APIRouter()
 
@@ -29,15 +24,20 @@ async def _redis_client():
     """Best-effort shared Redis client for single-use token consumption. Returns None if unavailable."""
     try:
         import redis.asyncio as aioredis
-
         from core.config import settings as app_settings
 
-        redis_url = getattr(app_settings, "redis_url", None) or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL")
+        redis_url = (
+            getattr(app_settings, "redis_url", None)
+            or os.getenv("REDIS_URL")
+            or os.getenv("UPSTASH_REDIS_URL")
+        )
         if not redis_url:
             return None
         return aioredis.from_url(redis_url, decode_responses=True)
     except Exception as exc:  # noqa: BLE001
-        logger.debug(f"Redis unavailable for takeover-token consumption, falling back to base check only: {exc}")
+        logger.debug(
+            f"Redis unavailable for takeover-token consumption, falling back to base check only: {exc}"
+        )
         return None
 
 
@@ -59,12 +59,18 @@ async def verify_takeover_token(token: str) -> bool:
         if client is not None:
             try:
                 # SETNX-স্টাইল single-use consumption — token একবার ব্যবহার হলে ৫ মিনিটের জন্য লক থাকে
-                consumed = await client.set(f"takeover_used:{token}", "1", nx=True, ex=300)
+                consumed = await client.set(
+                    f"takeover_used:{token}", "1", nx=True, ex=300
+                )
                 if not consumed:
-                    logger.warning(f"Replay attempt detected for already-used takeover token: {token[:10]}...")
+                    logger.warning(
+                        f"Replay attempt detected for already-used takeover token: {token[:10]}..."
+                    )
                     return False
             except Exception as exc:  # noqa: BLE001
-                logger.warning(f"Redis single-use check failed, allowing on base validation only: {exc}")
+                logger.warning(
+                    f"Redis single-use check failed, allowing on base validation only: {exc}"
+                )
 
         return True
     except Exception as e:  # noqa: BLE001
@@ -88,14 +94,15 @@ async def dev_mock_screencast_emitter(websocket: WebSocket, session_id: str):
     try:
         while True:
             await asyncio.sleep(0.1)
-            await websocket.send_json({"channel": "screencast", "data": MOCK_FRAME_B64, "mock": True})
+            await websocket.send_json(
+                {"channel": "screencast", "data": MOCK_FRAME_B64, "mock": True}
+            )
     except asyncio.CancelledError:
         logger.warning("⚠️ Task execution was intentionally cancelled.")
         raise
     except Exception as e:  # noqa: BLE001
         logger.exception(f"❌ Critical task failure in session_takeover.py: {e}")
-        from core.messaging.event_bus import ErrorEvent
-        from core.messaging.event_bus import error_event_bus
+        from core.messaging.event_bus import ErrorEvent, error_event_bus
 
         await error_event_bus.emit_async(
             ErrorEvent(
@@ -112,8 +119,7 @@ async def dev_mock_screencast_emitter(websocket: WebSocket, session_id: str):
 async def _report_screencast_unavailable(websocket: WebSocket, session_id: str) -> None:
     """Production fallback: no real CDP/Playwright frame source is wired to this gateway yet.
     Tell the client honestly instead of faking a live feed, and log it centrally."""
-    from core.messaging.event_bus import ErrorEvent
-    from core.messaging.event_bus import error_event_bus
+    from core.messaging.event_bus import ErrorEvent, error_event_bus
 
     await websocket.send_json(
         {
@@ -135,7 +141,9 @@ async def _report_screencast_unavailable(websocket: WebSocket, session_id: str) 
 
 
 @router.websocket("/ws/session/{session_id}/takeover")
-async def takeover_session_websocket(websocket: WebSocket, session_id: str, token: str = Query(...)):
+async def takeover_session_websocket(
+    websocket: WebSocket, session_id: str, token: str = Query(...)
+):
     """
     Ephemeral WebSocket gateway for Sandbox Viewport takeover.
     Validates token, streams CDP frames to client, and receives mouse/keyboard events.
@@ -144,7 +152,9 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str, toke
     await websocket.accept()
 
     if not await verify_takeover_token(token):
-        await websocket.send_json({"error": "Invalid, expired, or already-used takeover token"})
+        await websocket.send_json(
+            {"error": "Invalid, expired, or already-used takeover token"}
+        )
         await websocket.close(code=1008)
         return
 
@@ -154,7 +164,9 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str, toke
         await _report_screencast_unavailable(websocket, session_id)
         emitter_task = None
     else:
-        emitter_task = asyncio.create_task(dev_mock_screencast_emitter(websocket, session_id))
+        emitter_task = asyncio.create_task(
+            dev_mock_screencast_emitter(websocket, session_id)
+        )
 
     start_time = time.monotonic()
     try:
@@ -167,7 +179,9 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str, toke
                 break
             elif str(action).startswith("Input.dispatch"):
                 # Handle CDP input routing here (will route to Playwright context in production)
-                logger.debug(f"CDP Event [{session_id}]: {action} - {data.get('params')}")
+                logger.debug(
+                    f"CDP Event [{session_id}]: {action} - {data.get('params')}"
+                )
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket takeover disconnected for session {session_id}")
@@ -178,4 +192,6 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str, toke
             emitter_task.cancel()
         if websocket.client_state.name != "DISCONNECTED":
             await websocket.close()
-        logger.debug(f"Takeover session {session_id} lasted {time.monotonic() - start_time:.1f}s")
+        logger.debug(
+            f"Takeover session {session_id} lasted {time.monotonic() - start_time:.1f}s"
+        )

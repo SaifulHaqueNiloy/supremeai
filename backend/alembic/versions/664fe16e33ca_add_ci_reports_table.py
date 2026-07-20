@@ -10,7 +10,6 @@ from collections.abc import Sequence
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision: str = "664fe16e33ca"
 down_revision: str | Sequence[str] | None = None
@@ -41,7 +40,9 @@ def upgrade() -> None:
         """
     )
     op.execute("CREATE INDEX IF NOT EXISTS idx_ci_reports_run_id ON ci_reports(run_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_ci_reports_created ON ci_reports(created_at DESC)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ci_reports_created ON ci_reports(created_at DESC)"
+    )
 
 
 def downgrade() -> None:

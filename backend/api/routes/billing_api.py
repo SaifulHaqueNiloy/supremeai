@@ -7,35 +7,31 @@ from decimal import Decimal
 
 import httpx
 import stripe
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import status
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm.exc import StaleDataError
-
 from api.dependencies import get_current_user_token
-from core.billing_plans import SUBSCRIPTION_PLANS
-from core.billing_plans import CheckoutRequest
+from core.billing_plans import SUBSCRIPTION_PLANS, CheckoutRequest
 from core.config import settings
 from core.gcp_firestore import get_firestore_client
 from core.llm.token_deductor import TokenDeductor
 from database.session import get_db_session
-from models.wallet import TransactionLedgerEntry
-from models.wallet import UserWallet
-
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from loguru import logger
+from models.wallet import TransactionLedgerEntry, UserWallet
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm.exc import StaleDataError
 
 router = APIRouter(prefix="/api/billing", tags=["Billing & Credit Wallet"])
 token_deductor = TokenDeductor()
 
-_raw_stripe_key = settings.stripe_api_key.get_secret_value() if settings.stripe_api_key else None
+_raw_stripe_key = (
+    settings.stripe_api_key.get_secret_value() if settings.stripe_api_key else None
+)
 stripe.api_key = _raw_stripe_key
 STRIPE_WEBHOOK_SECRET = getattr(settings, "stripe_webhook_secret", None)
 
-SSLCOMMERZ_VALIDATION_URL = "https://securepay.sslcommerz.com/validator/api/validationserverAPI.php"
+SSLCOMMERZ_VALIDATION_URL = (
+    "https://securepay.sslcommerz.com/validator/api/validationserverAPI.php"
+)
 SSLCOMMERZ_STORE_ID = getattr(settings, "sslcommerz_store_id", None)
 SSLCOMMERZ_STORE_PASSWORD = getattr(settings, "sslcommerz_store_password", None)
 
@@ -43,7 +39,9 @@ SSLCOMMERZ_STORE_PASSWORD = getattr(settings, "sslcommerz_store_password", None)
 async def _verify_sslcommerz_transaction(val_id: str) -> dict | None:
     """SSLCommerz Validation API server-to-server validation"""
     if not SSLCOMMERZ_STORE_ID or not SSLCOMMERZ_STORE_PASSWORD:
-        logger.critical("SSLCommerz credentials not configured — cannot verify transactions.")
+        logger.critical(
+            "SSLCommerz credentials not configured — cannot verify transactions."
+        )
         return None
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(
@@ -63,10 +61,17 @@ async def _verify_sslcommerz_transaction(val_id: str) -> dict | None:
 # Pre-seed default user wallet with SignUp Bonus
 # বাংলা মন্তব্য: নতুন ইউজারের জন্য $5.00 বোনাস ক্রেডিট সহ ওয়ালেট ইনিশিয়ালাইজ করা হচ্ছে
 async def _ensure_wallet(session: AsyncSession, user_id: str) -> UserWallet:
-    result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
+    result = await session.execute(
+        select(UserWallet).where(UserWallet.user_id == user_id)
+    )
     wallet = result.scalars().first()
     if not wallet:
-        wallet = UserWallet(user_id=user_id, balance_usd=Decimal("5.000000"), monthly_allowance_usd=Decimal("0.000000"), version=1)
+        wallet = UserWallet(
+            user_id=user_id,
+            balance_usd=Decimal("5.000000"),
+            monthly_allowance_usd=Decimal("0.000000"),
+            version=1,
+        )
         session.add(wallet)
         await session.commit()
     return wallet
@@ -84,7 +89,11 @@ async def get_wallet_balance(
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
     wallet = await _ensure_wallet(session, user_id)
-    return {"user_id": wallet.user_id, "balance_usd": float(wallet.balance_usd), "monthly_allowance_usd": float(wallet.monthly_allowance_usd)}
+    return {
+        "user_id": wallet.user_id,
+        "balance_usd": float(wallet.balance_usd),
+        "monthly_allowance_usd": float(wallet.monthly_allowance_usd),
+    }
 
 
 # ==========================================
@@ -99,7 +108,9 @@ async def get_transaction_history(
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
     result = await session.execute(
-        select(TransactionLedgerEntry).where(TransactionLedgerEntry.user_id == user_id).order_by(TransactionLedgerEntry.timestamp.desc())
+        select(TransactionLedgerEntry)
+        .where(TransactionLedgerEntry.user_id == user_id)
+        .order_by(TransactionLedgerEntry.timestamp.desc())
     )
     entries = result.scalars().all()
     return [
@@ -126,7 +137,9 @@ async def add_funds(
     token_payload: dict = Depends(get_current_user_token),
 ):
     if amount <= 0.0:
-        raise HTTPException(status_code=400, detail="Topup amount must be greater than zero.")
+        raise HTTPException(
+            status_code=400, detail="Topup amount must be greater than zero."
+        )
 
     user_id = token_payload.get("sub")
     if not user_id:
@@ -138,7 +151,9 @@ async def add_funds(
     # বাংলা মন্তব্য: ডাইনামিক অরিজিন ডিটেকশন (Zero-Config)
     checkout_base = getattr(settings, "checkout_base_url", None)
     if not checkout_base:
-        checkout_base = request.headers.get("origin") or request.headers.get("referer", "http://localhost:3000")
+        checkout_base = request.headers.get("origin") or request.headers.get(
+            "referer", "http://localhost:3000"
+        )
     checkout_base = checkout_base.rstrip("/")
 
     return {
@@ -161,7 +176,9 @@ async def get_subscription_plans():
 # 💳 ROUTE: Create Checkout Session
 # ==========================================
 @router.post("/checkout")
-async def create_checkout_session(payload: CheckoutRequest, token_payload: dict = Depends(get_current_user_token)):
+async def create_checkout_session(
+    payload: CheckoutRequest, token_payload: dict = Depends(get_current_user_token)
+):
     user_id = token_payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -170,8 +187,12 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
         stripe_key = settings.stripe_api_key
         if not stripe_key:
             if os.environ.get("SUPREMEAI_ENV") == "production":
-                raise RuntimeError("Stripe API key not configured in production. Payment processing is unavailable.")
-            logger.warning("Stripe API key not set in settings. Using mock checkout session.")
+                raise RuntimeError(
+                    "Stripe API key not configured in production. Payment processing is unavailable."
+                )
+            logger.warning(
+                "Stripe API key not set in settings. Using mock checkout session."
+            )
             return {
                 "status": "mock",
                 "session_id": "mock_session_123",
@@ -188,18 +209,26 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
             client_reference_id=user_id,
             metadata={"price_id": payload.price_id},
         )
-        return {"status": "success", "session_id": stripe_session.id, "url": stripe_session.url}
+        return {
+            "status": "success",
+            "session_id": stripe_session.id,
+            "url": stripe_session.url,
+        }
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to create Stripe checkout session: {e}")
         # Generic message to client (never expose internals or stack traces)
-        raise HTTPException(status_code=500, detail="Payment processing error. Please contact support.") from e
+        raise HTTPException(
+            status_code=500, detail="Payment processing error. Please contact support."
+        ) from e
 
 
 # ==========================================
 # 🕸️ ROUTE: Stripe Webhook Listener
 # ==========================================
 @router.post("/webhook/stripe")
-async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_db_session)):
+async def stripe_webhook(
+    request: Request, session: AsyncSession = Depends(get_db_session)
+):
     """
     Zero-Gap Stripe Webhook with strict signature validation and atomic DB updates.
     """
@@ -209,17 +238,28 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
     # Fail-safe: production-grade security, but never 500 on misconfiguration.
     # If secrets/signature are missing, ignore webhook and return 200.
     if not STRIPE_WEBHOOK_SECRET or not sig_header:
-        logger.warning("Stripe webhook ignored due to missing secret or signature header.")
-        return {"status": "ignored", "reason": "missing_stripe_webhook_secret_or_signature"}
+        logger.warning(
+            "Stripe webhook ignored due to missing secret or signature header."
+        )
+        return {
+            "status": "ignored",
+            "reason": "missing_stripe_webhook_secret_or_signature",
+        }
 
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
     except stripe.error.SignatureVerificationError as e:
         logger.warning("Invalid Stripe signature detected. Dropping request.")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature") from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature"
+        ) from e
     except Exception as e:  # noqa: BLE001
         logger.error(f"Webhook payload validation error: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payload validation failed") from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Payload validation failed"
+        ) from e
 
     user_id: str | None = None
     try:
@@ -229,16 +269,23 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
             amount_received = Decimal(str(payment_intent["amount_received"] / 100.0))
 
             if not user_id:
-                logger.error(f"Payment intent {payment_intent['id']} missing user_id in metadata.")
+                logger.error(
+                    f"Payment intent {payment_intent['id']} missing user_id in metadata."
+                )
                 return {"status": "ignored", "reason": "missing metadata"}
 
             async with session.begin():
-                result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
+                result = await session.execute(
+                    select(UserWallet).where(UserWallet.user_id == user_id)
+                )
                 wallet = result.scalars().first()
 
                 if not wallet:
                     logger.error(f"Wallet not found for user: {user_id} during top-up.")
-                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User wallet not found")
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="User wallet not found",
+                    )
 
                 wallet.balance_usd += amount_received
 
@@ -251,7 +298,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                 )
                 session.add(entry)
 
-            logger.success(f"Successfully credited ${amount_received} to user {user_id}")
+            logger.success(
+                f"Successfully credited ${amount_received} to user {user_id}"
+            )
 
         elif event["type"] == "checkout.session.completed":
             session_obj = event["data"]["object"]
@@ -271,7 +320,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                         }
                     )
                 except Exception as e:  # noqa: BLE001
-                    logger.error(f"Failed to update user subscription status in Firestore: {e}")
+                    logger.error(
+                        f"Failed to update user subscription status in Firestore: {e}"
+                    )
 
                 try:
                     from core.observability.posthog_client import posthog_client
@@ -279,17 +330,28 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                     posthog_client.capture(
                         distinct_id=user_id or "anonymous",
                         event="subscription_completed",
-                        properties={"subscription_id": subscription_id, "price_id": price_id},
+                        properties={
+                            "subscription_id": subscription_id,
+                            "price_id": price_id,
+                        },
                     )
                 except Exception as exc:  # noqa: BLE001
                     logger.debug(f"PostHog subscription capture failed: {exc}")
 
     except StaleDataError as e:
-        logger.critical(f"Concurrency Failure on Webhook for user {user_id}. Requires manual intervention.")
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Transaction conflict. Please contact support.") from e
+        logger.critical(
+            f"Concurrency Failure on Webhook for user {user_id}. Requires manual intervention."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Transaction conflict. Please contact support.",
+        ) from e
     except Exception as e:  # noqa: BLE001
         logger.error(f"Internal server error during webhook processing: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error") from e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        ) from e
 
     return {"status": "success"}
 
@@ -298,7 +360,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
 # 🕸️ ROUTE: SSLCommerz Webhook Listener
 # ==========================================
 @router.post("/webhook/sslcommerz")
-async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = Depends(get_db_session)):
+async def sslcommerz_webhook_listener(
+    request: Request, session: AsyncSession = Depends(get_db_session)
+):
     """
     Asynchronously processes local currency MFS payments success logs from SSLCommerz securely.
     """
@@ -311,12 +375,19 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
 
         verified = await _verify_sslcommerz_transaction(val_id)
         if not verified:
-            logger.warning(f"SSLCommerz webhook rejected — val_id {val_id} could not be verified.")
-            raise HTTPException(status_code=400, detail="Transaction could not be verified.")
+            logger.warning(
+                f"SSLCommerz webhook rejected — val_id {val_id} could not be verified."
+            )
+            raise HTTPException(
+                status_code=400, detail="Transaction could not be verified."
+            )
 
         user_id = verified.get("value_a")
         if not user_id:
-            raise HTTPException(status_code=400, detail="Missing user reference in verified transaction.")
+            raise HTTPException(
+                status_code=400,
+                detail="Missing user reference in verified transaction.",
+            )
 
         amount_bdt = float(verified.get("amount", 0))
         exchange_rate = float(getattr(settings, "bdt_exchange_rate", "0.0085"))
@@ -325,17 +396,33 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
         # idempotency check: `val_id` has unique mapping to `transaction_id` in ledger for SSLCommerz
         async with session.begin():
             # SSLCommerz-এর unique `val_id` দিয়ে ledger এ অলরেডি এন্ট্রি আছে কিনা চেক করি
-            existing_tx = await session.execute(select(TransactionLedgerEntry).where(TransactionLedgerEntry.transaction_id == val_id))
+            existing_tx = await session.execute(
+                select(TransactionLedgerEntry).where(
+                    TransactionLedgerEntry.transaction_id == val_id
+                )
+            )
             if existing_tx.scalars().first():
-                logger.info(f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success.")
-                return {"status": "processed", "message": "Transaction already credited via SSLCommerz."}
+                logger.info(
+                    f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success."
+                )
+                return {
+                    "status": "processed",
+                    "message": "Transaction already credited via SSLCommerz.",
+                }
 
-            result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
+            result = await session.execute(
+                select(UserWallet).where(UserWallet.user_id == user_id)
+            )
             wallet = result.scalars().first()
 
             if not wallet:
-                logger.error(f"Wallet not found for user: {user_id} during SSLCommerz top-up.")
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User wallet not found")
+                logger.error(
+                    f"Wallet not found for user: {user_id} during SSLCommerz top-up."
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User wallet not found",
+                )
 
             wallet.balance_usd += amount_usd
 
@@ -348,13 +435,23 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
             )
             session.add(entry)
 
-        return {"status": "processed", "message": f"Successfully credited ${amount_usd} (BDT {amount_bdt}) via SSLCommerz."}
+        return {
+            "status": "processed",
+            "message": f"Successfully credited ${amount_usd} (BDT {amount_bdt}) via SSLCommerz.",
+        }
 
     except StaleDataError as e:
-        logger.critical(f"Concurrency Failure on SSLCommerz Webhook for val_id {val_id}.")
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Transaction conflict.") from e
+        logger.critical(
+            f"Concurrency Failure on SSLCommerz Webhook for val_id {val_id}."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Transaction conflict."
+        ) from e
     except HTTPException:
         raise
     except Exception as e:  # noqa: BLE001
         logger.error(f"SSLCommerz Webhook processing failed: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error") from e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        ) from e

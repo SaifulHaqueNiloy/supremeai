@@ -1,10 +1,7 @@
 import os
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Request
+from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
-
 
 try:
     import stripe
@@ -24,7 +21,6 @@ except ImportError:
 
     stripe = _MockStripe
 from core.config import settings
-
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -47,18 +43,33 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=401, detail=f"Invalid token: {e}") from e
 
-    if decoded.get("user_id") != payload.user_id and decoded.get("sub") != payload.user_id:
+    if (
+        decoded.get("user_id") != payload.user_id
+        and decoded.get("sub") != payload.user_id
+    ):
         raise HTTPException(status_code=403, detail="User mismatch")
 
     try:
         stripe_key = settings.stripe_api_key
         if not stripe_key:
-            is_production = os.environ.get("SUPREMEAI_ENV", "local").lower() == "production"
+            is_production = (
+                os.environ.get("SUPREMEAI_ENV", "local").lower() == "production"
+            )
             if is_production:
-                logger.critical("🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: API key missing in production")
-                raise HTTPException(status_code=503, detail="Payment processing unavailable: Stripe not configured")
-            logger.warning("Stripe API key not set — returning 503 Service Unavailable (no mock)")
-            raise HTTPException(status_code=503, detail="Stripe not configured. Payment processing unavailable in non-production environments.")
+                logger.critical(
+                    "🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: API key missing in production"
+                )
+                raise HTTPException(
+                    status_code=503,
+                    detail="Payment processing unavailable: Stripe not configured",
+                )
+            logger.warning(
+                "Stripe API key not set — returning 503 Service Unavailable (no mock)"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="Stripe not configured. Payment processing unavailable in non-production environments.",
+            )
 
         stripe.api_key = stripe_key
         session = stripe.checkout.Session.create(
@@ -123,7 +134,10 @@ async def stripe_webhook_endpoint(request: Request):
     if not webhook_secret or not sig_header:
         # Fail-safe: misconfiguration shouldn't break production/CI; ignore webhook.
         logger.warning("Stripe webhook ignored (missing secret or signature header).")
-        return {"status": "ignored", "reason": "missing_stripe_webhook_secret_or_signature"}
+        return {
+            "status": "ignored",
+            "reason": "missing_stripe_webhook_secret_or_signature",
+        }
 
     payload = await request.body()
     try:

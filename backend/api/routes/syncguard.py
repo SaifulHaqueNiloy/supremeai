@@ -1,10 +1,7 @@
 from typing import Any
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-
+from fastapi import APIRouter, HTTPException
 from src.agents.syncguard.syncguard_agent import SyncGuardAgent
-
 
 router = APIRouter(
     prefix="/syncguard",
@@ -27,4 +24,6 @@ async def trigger_audit() -> dict[str, Any]:
         # Returning 200 OK so the client can parse the issues.
         return report
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"Audit execution failed: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Audit execution failed: {str(e)}"
+        ) from e

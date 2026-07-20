@@ -1,6 +1,5 @@
 from core.messaging.event_bus import ErrorContext
 
-
 # ruff: noqa: E402
 """
 Provides the `AutoSkillCreator` class, the core of the SupremeAI self-evolution engine.
@@ -12,10 +11,8 @@ This module orchestrates the autonomous generation, rigorous validation (includi
 import os
 import sys
 import time
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
-
 
 # বাংলা মন্তব্য: রুটের 'skills' মডিউল লোড করার জন্য রিপোজিটরি রুট ডিরেক্টরি sys.path-এ যোগ করা হচ্ছে (core.skills এড়ানো হচ্ছে)।
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,10 +23,10 @@ for _ in range(5):
         break
     current_dir = os.path.dirname(current_dir)
 
-from loguru import logger
-
 from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
+from loguru import logger
+
 from skills.installer import SkillInstaller
 
 # বাংলা মন্তব্য: রুটের 'skills' মডিউল লোড করার জন্য রিপোজিটরি রুট ডিরেক্টরি sys.path-এ যোগ করা হচ্ছে (core.skills এড়ানো হচ্ছে)।
@@ -83,8 +80,7 @@ class AutoSkillCreator:
                     self.skills_ref = client.collection("supreme_dynamic_skills")
             except Exception as e:  # noqa: BLE001
                 try:
-                    from core.messaging.event_bus import ErrorEvent
-                    from core.messaging.event_bus import error_event_bus
+                    from core.messaging.event_bus import ErrorEvent, error_event_bus
 
                     error_event_bus.emit(
                         ErrorEvent(
@@ -111,17 +107,29 @@ class AutoSkillCreator:
         # Initialize FitnessEngine for telemetry
         self.fitness_engine = FitnessEngine(db=self.db)
 
-    def analyze_demand_patterns(self, task_history: list[dict[str, Any]], rules_engine: Any = None) -> list[str]:
+    def analyze_demand_patterns(
+        self, task_history: list[dict[str, Any]], rules_engine: Any = None
+    ) -> list[str]:
         """
         Merged from legacy: Analyze task history and rules to find repeating patterns or failures.
         """
         pattern_source = []
         if rules_engine and hasattr(rules_engine, "rules"):
-            pattern_source.extend(rules_engine.rules.get("patterns", {}).get("repeated_tasks", []))
-        failed = list({str(t.get("task")) for t in task_history if t.get("success") is False and t.get("task")})
+            pattern_source.extend(
+                rules_engine.rules.get("patterns", {}).get("repeated_tasks", [])
+            )
+        failed = list(
+            {
+                str(t.get("task"))
+                for t in task_history
+                if t.get("success") is False and t.get("task")
+            }
+        )
         return list(set(pattern_source + failed))
 
-    async def generate_and_deploy_skill(self, user_demand: str, skill_name: str) -> dict:
+    async def generate_and_deploy_skill(
+        self, user_demand: str, skill_name: str
+    ) -> dict:
         import json
         import shutil
         import uuid
@@ -130,9 +138,12 @@ class AutoSkillCreator:
         start_time = time.time()
 
         from core.llm.llm_gateway import llm_gateway
+
         from skills.schema import UniversalSkillSchema
 
-        logger.info(f"🧠 Self-Evolution Triggered: Designing skill '{skill_name}' for demand: '{user_demand}'")
+        logger.info(
+            f"🧠 Self-Evolution Triggered: Designing skill '{skill_name}' for demand: '{user_demand}'"
+        )
 
         trace_id = uuid.uuid4().hex
         generation_timestamp = datetime.now(UTC).isoformat()
@@ -196,8 +207,14 @@ class AutoSkillCreator:
         try:
             # ২. অন-দি-ফ্লাই কোড জেনারেশন
             # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
-            response = await llm_gateway.acompletion(prompt=system_prompt, task_type="coding", stream=False)
-            raw_content = response.get("text", "") if isinstance(response, dict) else str(response)
+            response = await llm_gateway.acompletion(
+                prompt=system_prompt, task_type="coding", stream=False
+            )
+            raw_content = (
+                response.get("text", "")
+                if isinstance(response, dict)
+                else str(response)
+            )
             raw_content = raw_content.strip()
 
             # Extract JSON block
@@ -214,17 +231,26 @@ class AutoSkillCreator:
             schema_dict = data.get("schema", {})
 
             # Traceability enhancements
-            schema_dict["metadata"]["tags"] = schema_dict["metadata"].get("tags", []) + [f"trace_id:{trace_id}"]
+            schema_dict["metadata"]["tags"] = schema_dict["metadata"].get(
+                "tags", []
+            ) + [f"trace_id:{trace_id}"]
             schema_dict["metadata"]["author"] = f"supremeai_agent_id:{trace_id}"
-            schema_dict["metadata"]["description"] = schema_dict["metadata"].get("description", "") + f" (Generated at {generation_timestamp})"
+            schema_dict["metadata"]["description"] = (
+                schema_dict["metadata"].get("description", "")
+                + f" (Generated at {generation_timestamp})"
+            )
 
             # 🛡️ ৩. দ্য আলটিমেট স্যান্ডবক্স গেটকিপার ভ্যালিডেশন (The Iron Cage Check)
             try:
                 is_safe = run_sandbox_ast_check(code_block)
                 if not is_safe:
-                    raise SecurityError("Generated code failed AST layout normalization.")
+                    raise SecurityError(
+                        "Generated code failed AST layout normalization."
+                    )
             except SecurityError as sec_err:
-                logger.critical(f"🚨 [EVOLUTION BLOCKED] AI generated a dangerous skill payload! Threat defused: {str(sec_err)}")
+                logger.critical(
+                    f"🚨 [EVOLUTION BLOCKED] AI generated a dangerous skill payload! Threat defused: {str(sec_err)}"
+                )
                 return {
                     "success": False,
                     "error": f"Security Sandbox Violation: {str(sec_err)}",
@@ -259,7 +285,9 @@ class AutoSkillCreator:
 
             # Execute validation tests loop inside the sandbox
             for idx, test in enumerate(uss.validation.tests):
-                logger.info(f"Running validation test case {idx + 1}/{len(uss.validation.tests)} inside the secure sandbox...")
+                logger.info(
+                    f"Running validation test case {idx + 1}/{len(uss.validation.tests)} inside the secure sandbox..."
+                )
 
                 # Construct executable script to evaluate inputs and output results to stdout as JSON
                 sandbox_script = f"""
@@ -277,25 +305,39 @@ asyncio.run(run())
 """
                 is_safe_test = run_sandbox_ast_check(sandbox_script)
                 if not is_safe_test:
-                    raise SecurityError("Generated test harness failed AST layout normalization.")
+                    raise SecurityError(
+                        "Generated test harness failed AST layout normalization."
+                    )
                 run_res = await sandbox.execute_local_code(sandbox_script)
                 if not run_res.get("success"):
                     err_msg = run_res.get("error", run_res.get("stderr"))
-                    raise ValueError(f"Validation test {idx + 1} crashed or timed out in sandbox. Error: {err_msg}")
+                    raise ValueError(
+                        f"Validation test {idx + 1} crashed or timed out in sandbox. Error: {err_msg}"
+                    )
 
                 # In execute_local_code, standard output is usually under 'output' not 'stdout'
                 run_res["stdout"] = run_res.get("output", "")
 
                 # Parse stdout logs for output result
-                output_line = [line for line in run_res["stdout"].splitlines() if line.startswith("RESULT:")]
+                output_line = [
+                    line
+                    for line in run_res["stdout"].splitlines()
+                    if line.startswith("RESULT:")
+                ]
                 if not output_line:
-                    raise ValueError(f"Validation test {idx + 1} did not produce executable result in sandbox. Stdout: {run_res['stdout']}")
+                    raise ValueError(
+                        f"Validation test {idx + 1} did not produce executable result in sandbox. Stdout: {run_res['stdout']}"
+                    )
 
                 res_val = json.loads(output_line[0][7:])
                 if res_val != test.expected_output:
-                    raise ValueError(f"Validation test {idx + 1} failed in sandbox. Expected {test.expected_output}, got {res_val}")
+                    raise ValueError(
+                        f"Validation test {idx + 1} failed in sandbox. Expected {test.expected_output}, got {res_val}"
+                    )
 
-            logger.info(f"✅ All {len(uss.validation.tests)} validation tests passed for skill '{skill_name}' inside the sandbox!")
+            logger.info(
+                f"✅ All {len(uss.validation.tests)} validation tests passed for skill '{skill_name}' inside the sandbox!"
+            )
 
             # ৬. Finalize Registration & Storage Deployment
             installer = SkillInstaller()
@@ -326,20 +368,27 @@ asyncio.run(run())
                 "uss": schema_dict,
             }
             self.skills_ref.document(skill_name).set(skill_meta)
-            logger.info(f"🏆 Deployed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!")
+            logger.info(
+                f"🏆 Deployed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!"
+            )
 
             # Record successful experience for future pattern matching (Merged from legacy)
             try:
-                from adaptive_engine.experience_db import Experience
-                from adaptive_engine.experience_db import ExperienceDatabase
+                from adaptive_engine.experience_db import Experience, ExperienceDatabase
 
                 exp_db = ExperienceDatabase()
-                exp_db.record_experience(Experience(request=user_demand, generated_code=code_block, result="success"))
+                exp_db.record_experience(
+                    Experience(
+                        request=user_demand, generated_code=code_block, result="success"
+                    )
+                )
             except Exception as exp_e:  # noqa: BLE001
                 logger.warning(f"Failed to record verified skill experience: {exp_e}")
 
             latency = time.time() - start_time
-            self.fitness_engine.track_execution(skill_name, success=True, latency=latency)
+            self.fitness_engine.track_execution(
+                skill_name, success=True, latency=latency
+            )
             return {
                 "success": True,
                 "skill_name": skill_name,
@@ -349,7 +398,9 @@ asyncio.run(run())
         except Exception as e:  # noqa: BLE001
             logger.error(f"❌ Self-Evolution loop crashed: {str(e)}")
             latency = time.time() - start_time
-            self.fitness_engine.track_execution(skill_name, success=False, latency=latency)
+            self.fitness_engine.track_execution(
+                skill_name, success=False, latency=latency
+            )
             # Cleanup quarantine on failure
             if quarantine_dir.exists():
                 shutil.rmtree(quarantine_dir)

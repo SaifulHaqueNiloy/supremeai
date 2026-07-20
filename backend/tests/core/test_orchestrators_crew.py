@@ -1,6 +1,9 @@
 import pytest
-
-from core.orchestration.crew_departments import ArchitectureAgent, CodeGeneratorAgent, QAAgent
+from core.orchestration.crew_departments import (
+    ArchitectureAgent,
+    CodeGeneratorAgent,
+    QAAgent,
+)
 from models.shared_workspace import SharedWorkspace
 
 

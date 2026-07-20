@@ -4,8 +4,7 @@ Tests for services/project_context_service.py
 
 from __future__ import annotations
 
-
-from services.project_context_service import ProjectContextService, ContextType
+from services.project_context_service import ContextType, ProjectContextService
 
 
 def test_is_ignored_hidden_file():

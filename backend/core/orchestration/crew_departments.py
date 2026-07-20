@@ -2,10 +2,9 @@
 # বাংলা মন্তব্য: মাস্টার প্ল্যানিং, কোড জেনারেশন ও স্যান্ডবক্স টেস্টিং এর জন্য স্পেশালাইজড সোয়ার্ম ডিপার্টমেন্ট।
 import asyncio
 
-from loguru import logger
-
 from core.llm.llm_gateway import llm_gateway
 from core.skill_manager import skill_manager
+from loguru import logger
 from models.shared_workspace import SharedWorkspace
 
 
@@ -14,26 +13,43 @@ class SwarmAgentBase:
     বাংলা মন্তব্য: স্কিল-ভিত্তিক আর্কিটেকচারের জন্য আপডেট করা বেস এজেন্ট।
     """
 
-    async def run(self, workspace: "SharedWorkspace", user_id: str, model_name: str) -> None:
-        raise NotImplementedError(f"{self.__class__.__name__}.run() must be implemented")
+    async def run(
+        self, workspace: "SharedWorkspace", user_id: str, model_name: str
+    ) -> None:
+        raise NotImplementedError(
+            f"{self.__class__.__name__}.run() must be implemented"
+        )
 
-    async def _safe_skill_run(self, skill_name: str, workspace: "SharedWorkspace", **kwargs):
+    async def _safe_skill_run(
+        self, skill_name: str, workspace: "SharedWorkspace", **kwargs
+    ):
         """বাংলা মন্তব্য: Skill failure কে gracefully handle করে।"""
         try:
             return await self.use_skill(skill_name, workspace=workspace, **kwargs)
         except ValueError as e:
             from loguru import logger
 
-            logger.warning(f"{self.__class__.__name__}: Skill '{skill_name}' unavailable: {e}. Falling back to direct gateway call.")
+            logger.warning(
+                f"{self.__class__.__name__}: Skill '{skill_name}' unavailable: {e}. Falling back to direct gateway call."
+            )
             workspace.log(f"Warning: Skill '{skill_name}' unavailable. Using fallback.")
             return None
 
     async def call_gateway(
-        self, system_prompt: str, user_prompt: str, user_id: str = "default_user", model_name: str = "gemini/gemini-2.5-flash"
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        user_id: str = "default_user",
+        model_name: str = "gemini/gemini-2.5-flash",
     ) -> str:
         # বাংলা মন্তব্য: প্রতিটি এজেন্ট কল গেটওয়ের মাধ্যমে রাউট করা হচ্ছে যাতে কস্ট ট্র্যাকিং এনাবেল থাকে।
-        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
-        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        resp = await llm_gateway.acompletion(
+            model=model_name, messages=messages, user_id=user_id
+        )
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
     async def use_skill(self, skill_name: str, **kwargs):
@@ -49,53 +65,106 @@ class SwarmAgentBase:
 
 
 class ArchitectureAgent(SwarmAgentBase):
-    async def design(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
-        workspace.log("ArchitectureAgent: Starting system architecture layout analysis...")
+    async def design(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
+        workspace.log(
+            "ArchitectureAgent: Starting system architecture layout analysis..."
+        )
         sys_prompt = "You are a lead system architect. Define file structures, component breakdown, and database schemas."
         user_prompt = f"Design architecture for task: {workspace.original_prompt}"
 
-        design_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        design_output = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         # বাংলা মন্তব্য: ডোমেইন-অ্যাগনস্টিক work_product ব্যবহার করা হচ্ছে।
         workspace.work_product["architecture_design"] = design_output
         workspace.log("ArchitectureAgent: System design blueprint completed.")
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         # await self.design(workspace, user_id, model_name)
-        logger.info("ArchitectureAgent: Using 'SystemDesignSkill' to plan architecture.")
-        design_output = await self._safe_skill_run("SystemDesignSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        logger.info(
+            "ArchitectureAgent: Using 'SystemDesignSkill' to plan architecture."
+        )
+        design_output = await self._safe_skill_run(
+            "SystemDesignSkill",
+            workspace=workspace,
+            user_id=user_id,
+            model_name=model_name,
+        )
         workspace.work_product["architecture_design"] = design_output
 
 
 class CodeGeneratorAgent(SwarmAgentBase):
-    async def generate_code(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def generate_code(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         workspace.log("CodeGeneratorAgent: Injecting layout and writing core codes...")
         sys_prompt = "You are an expert backend engineer. Output only clean python code blocks for specified files."
         user_prompt = f"Design blueprint:\n{workspace.work_product.get('architecture_design', '')}\nGenerate the python code matching this design."
 
-        code_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        code_output = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         workspace.work_product["generated_code"] = {"main.py": code_output}
         workspace.log("CodeGeneratorAgent: Core files successfully generated.")
 
-    async def refine(self, workspace: SharedWorkspace, feedback: str, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def refine(
+        self,
+        workspace: SharedWorkspace,
+        feedback: str,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         workspace.log("CodeGeneratorAgent: Refining code based on Guardian feedback...")
         sys_prompt = "You are an expert backend engineer. Refine the python code based on the feedback."
         user_prompt = f"Original Code:\n{workspace.work_product.get('generated_code', {}).get('main.py', '')}\nFeedback:\n{feedback}\nGenerate the fixed python code matching the constraints."  # noqa: E501
-        code_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        code_output = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         workspace.work_product["generated_code"]["main.py"] = code_output
         workspace.log("CodeGeneratorAgent: Code successfully refined.")
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         # await self.generate_code(workspace, user_id, model_name)
         logger.info("CodeGeneratorAgent: Using 'CodeGenerationSkill' to write code.")
-        code_output = await self._safe_skill_run("CodeGenerationSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        code_output = await self._safe_skill_run(
+            "CodeGenerationSkill",
+            workspace=workspace,
+            user_id=user_id,
+            model_name=model_name,
+        )
         workspace.work_product["generated_code"] = {"main.py": code_output}
 
 
 class QAAgent(SwarmAgentBase):
-    async def verify(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def verify(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         workspace.log("QAAgent: Initiating test suites and static CodeQL scans...")
         # Simulating running ImmuneSystem AST scan and Python validations
-        code_to_test = workspace.work_product.get("generated_code", {}).get("main.py", "")
+        code_to_test = workspace.work_product.get("generated_code", {}).get(
+            "main.py", ""
+        )
 
         from core.immune_system import ImmuneSystemScanner
 
@@ -105,7 +174,9 @@ class QAAgent(SwarmAgentBase):
         if not scan_result.get("safe", False):
             workspace.test_results["safe"] = False
             workspace.test_results["error"] = scan_result.get("error", "Unknown error")
-            workspace.log(f"QAAgent: 🚨 Immune System scan failed: {workspace.test_results['error']}")
+            workspace.log(
+                f"QAAgent: 🚨 Immune System scan failed: {workspace.test_results['error']}"
+            )
         else:
             workspace.test_results["safe"] = True
             workspace.test_results["passed"] = True
@@ -113,13 +184,25 @@ class QAAgent(SwarmAgentBase):
 
         sys_prompt = "You are a QA engineer. Review code and validation results and give feedback. State clearly if the code is APPROVED or FAILED."
         user_prompt = f"Code:\n{code_to_test}\nResults: {workspace.test_results}"
-        qa_feedback = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        qa_feedback = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         workspace.test_results["feedback"] = qa_feedback
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         # await self.verify(workspace, user_id, model_name)
         logger.info("QAAgent: Using 'StaticAnalysisSkill' to verify code.")
-        qa_feedback = await self._safe_skill_run("StaticAnalysisSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        qa_feedback = await self._safe_skill_run(
+            "StaticAnalysisSkill",
+            workspace=workspace,
+            user_id=user_id,
+            model_name=model_name,
+        )
         workspace.test_results["feedback"] = qa_feedback
 
 
@@ -130,15 +213,33 @@ class GuardianAgent(SwarmAgentBase):
     acts as the "Immune System" by delegating to specialized sensory units.
     """
 
-    async def _run_sub_agent(self, sub_agent_name: str, system_prompt: str, user_prompt: str, user_id: str, model_name: str) -> str:
+    async def _run_sub_agent(
+        self,
+        sub_agent_name: str,
+        system_prompt: str,
+        user_prompt: str,
+        user_id: str,
+        model_name: str,
+    ) -> str:
         """Helper to run a specialized sub-agent, optimized for speed and cost."""
         logger.info(f"GuardianManager: Delegating task to {sub_agent_name}...")
         # Using a faster model for specialized, smaller tasks
-        return await self.call_gateway(system_prompt, user_prompt, user_id, model_name="gemini/gemini-2.5-flash")
+        return await self.call_gateway(
+            system_prompt, user_prompt, user_id, model_name="gemini/gemini-2.5-flash"
+        )
 
-    async def validate(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro") -> tuple[bool, str]:
-        workspace.log("GuardianManager: Orchestrating compliance scan with sub-agents...")
-        code_to_analyze = workspace.work_product.get("generated_code", {}).get("main.py", "")
+    async def validate(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ) -> tuple[bool, str]:
+        workspace.log(
+            "GuardianManager: Orchestrating compliance scan with sub-agents..."
+        )
+        code_to_analyze = workspace.work_product.get("generated_code", {}).get(
+            "main.py", ""
+        )
         if not code_to_analyze:
             return True, "APPROVED: No code to analyze."
 
@@ -153,14 +254,20 @@ class GuardianAgent(SwarmAgentBase):
         user_prompt_template = f"Analyze this code and report any violations based on your specialty:\n```python\n{code_to_analyze}\n```"
 
         # Run sub-agents in parallel using asyncio.gather for efficiency
-        tasks = [self._run_sub_agent(name, prompt, user_prompt_template, user_id, model_name) for name, prompt in sub_agents.items()]
+        tasks = [
+            self._run_sub_agent(name, prompt, user_prompt_template, user_id, model_name)
+            for name, prompt in sub_agents.items()
+        ]
 
         results = await asyncio.gather(*tasks)
 
         violations = []
         for agent_name, report in zip(sub_agents.keys(), results, strict=False):
             # Check if the report indicates a pass or contains actual findings
-            if not any(keyword in report for keyword in ["SECURITY_OK", "QUALITY_OK", "COMPLIANCE_OK", "DOCS_OK"]):
+            if not any(
+                keyword in report
+                for keyword in ["SECURITY_OK", "QUALITY_OK", "COMPLIANCE_OK", "DOCS_OK"]
+            ):
                 violations.append(f"--- VIOLATIONS FROM {agent_name} ---\n{report}")
 
         if not violations:
@@ -171,7 +278,12 @@ class GuardianAgent(SwarmAgentBase):
             workspace.log(f"GuardianAgent: Violations found. {feedback}")
             return False, feedback
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         logger.info("GuardianAgent: Using sub-agent swarm for compliance validation.")
         is_approved, feedback = await self.validate(workspace, user_id, model_name)
         workspace.work_product["guardian_feedback"] = feedback
@@ -184,32 +296,54 @@ class ResearchAgent(SwarmAgentBase):
     এটি সিস্টেমের Universal Utility Mode-এর একটি অংশ।
     """
 
-    async def analyze(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def analyze(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         workspace.log("ResearchAgent: Starting analysis and information synthesis...")
         sys_prompt = "You are a world-class research analyst. Analyze the user's prompt, synthesize information, and provide a structured summary."
-        analysis_output = await self.call_gateway(sys_prompt, workspace.original_prompt, user_id, model_name=model_name)
+        analysis_output = await self.call_gateway(
+            sys_prompt, workspace.original_prompt, user_id, model_name=model_name
+        )
         workspace.work_product["research_summary"] = analysis_output
         workspace.log("ResearchAgent: Analysis complete.")
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         # await self.analyze(workspace, user_id, model_name)
         logger.info("ResearchAgent: Using 'ResearchSkill' for analysis.")
-        analysis_output = await self._safe_skill_run("ResearchSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        analysis_output = await self._safe_skill_run(
+            "ResearchSkill", workspace=workspace, user_id=user_id, model_name=model_name
+        )
         workspace.work_product["research_summary"] = analysis_output
 
 
 class ReflectionAgent(SwarmAgentBase):
-    async def reflect_and_persist(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
-        workspace.log("ReflectionAgent: Analyzing task outcome to generate experience...")
+    async def reflect_and_persist(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
+        workspace.log(
+            "ReflectionAgent: Analyzing task outcome to generate experience..."
+        )
         sys_prompt = "You are an AI Reflection engine. Analyze the workspace logs and extract what worked, what failed, and suggested improvements. Return JSON with 'what_worked', 'what_failed', 'suggested_improvements'."  # noqa: E501
         user_prompt = f"Logs: {workspace.execution_logs}\nOriginal Prompt: {workspace.original_prompt}"
 
-        analysis = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        analysis = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
 
         # Save to ExperienceDatabase
         try:
-            from adaptive_engine.experience_db import Experience
-            from adaptive_engine.experience_db import ExperienceDatabase
+            from adaptive_engine.experience_db import Experience, ExperienceDatabase
 
             db = ExperienceDatabase()
 
@@ -218,7 +352,11 @@ class ReflectionAgent(SwarmAgentBase):
             try:
                 parsed = json.loads(analysis)
             except Exception:  # noqa: BLE001
-                parsed = {"what_worked": [analysis], "what_failed": [], "suggested_improvements": []}
+                parsed = {
+                    "what_worked": [analysis],
+                    "what_failed": [],
+                    "suggested_improvements": [],
+                }
 
             exp = Experience(
                 user_id=user_id,
@@ -230,16 +368,28 @@ class ReflectionAgent(SwarmAgentBase):
                 suggested_improvements=parsed.get("suggested_improvements", []),
             )
             db.record_experience(exp)
-            workspace.log("ReflectionAgent: Experience successfully saved to Vector DB.")
+            workspace.log(
+                "ReflectionAgent: Experience successfully saved to Vector DB."
+            )
         except Exception as e:  # noqa: BLE001
             workspace.log(f"ReflectionAgent: Failed to persist experience: {e}")
 
         return analysis
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         # await self.reflect_and_persist(workspace, user_id, model_name)
         logger.info("ReflectionAgent: Using 'ExperiencePersistenceSkill' to learn.")
-        await self._safe_skill_run("ExperiencePersistenceSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        await self._safe_skill_run(
+            "ExperiencePersistenceSkill",
+            workspace=workspace,
+            user_id=user_id,
+            model_name=model_name,
+        )
 
 
 class ToolSynthesizerAgent(SwarmAgentBase):
@@ -248,24 +398,47 @@ class ToolSynthesizerAgent(SwarmAgentBase):
     এই এজেন্টটি ಅಗತ್ಯ অনুযায়ী ফ্লাইতে নতুন টুল তৈরি করে।
     """
 
-    async def synthesize(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def synthesize(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         workspace.log("ToolSynthesizerAgent: Starting Zero-Shot Tool Synthesis...")
         sys_prompt = "You are a master tool builder. Based on a task intent, create a JSON definition for a new tool. The definition must include a name, description, and a list of parameters."  # noqa: E501
         user_prompt = f"Create a tool definition for the intent: '{workspace.original_prompt}'. Respond with only the JSON object."
 
-        tool_definition_str = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        tool_definition_str = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         import json
 
         tool_definition = json.loads(tool_definition_str)
         workspace.work_product["synthesized_tool"] = tool_definition
-        workspace.log(f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized.")
+        workspace.log(
+            f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized."
+        )
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         # await self.synthesize(workspace, user_id, model_name)
-        logger.info("ToolSynthesizerAgent: Using 'ToolSynthesisSkill' to create a new tool.")
-        tool_definition = await self._safe_skill_run("ToolSynthesisSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        logger.info(
+            "ToolSynthesizerAgent: Using 'ToolSynthesisSkill' to create a new tool."
+        )
+        tool_definition = await self._safe_skill_run(
+            "ToolSynthesisSkill",
+            workspace=workspace,
+            user_id=user_id,
+            model_name=model_name,
+        )
         workspace.work_product["synthesized_tool"] = tool_definition
-        workspace.log(f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized.")
+        workspace.log(
+            f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized."
+        )
 
 
 class ToolExecutorAgent(SwarmAgentBase):
@@ -274,7 +447,12 @@ class ToolExecutorAgent(SwarmAgentBase):
     এই এজেন্টটি যেকোনো টুল (আবিষ্কৃত বা সিন্থেসাইজড) এক্সিকিউট করতে পারে।
     """
 
-    async def execute(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def execute(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         workspace.log("ToolExecutorAgent: Preparing to execute available tools...")
         tools = workspace.work_product.get("available_tools", [])
         if not tools:
@@ -285,27 +463,67 @@ class ToolExecutorAgent(SwarmAgentBase):
         # A real implementation would involve a more complex selection and execution logic.
         tool_to_run = tools[0]
         workspace.log(f"ToolExecutorAgent: Executing tool '{tool_to_run}'...")
-        workspace.work_product["execution_result"] = f"Successfully executed tool: {tool_to_run}"
+        workspace.work_product["execution_result"] = (
+            f"Successfully executed tool: {tool_to_run}"
+        )
 
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-pro"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-pro",
+    ):
         # await self.execute(workspace, user_id, model_name)
         logger.info("ToolExecutorAgent: Using 'ToolExecutionSkill' to run a tool.")
-        await self._safe_skill_run("ToolExecutionSkill", workspace=workspace, user_id=user_id, model_name=model_name)
+        await self._safe_skill_run(
+            "ToolExecutionSkill",
+            workspace=workspace,
+            user_id=user_id,
+            model_name=model_name,
+        )
 
 
 class IntegrationAgent(SwarmAgentBase):
-    async def run(self, workspace: SharedWorkspace, user_id: str, model_name: str = "gemini/gemini-2.5-flash"):
+    async def run(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str,
+        model_name: str = "gemini/gemini-2.5-flash",
+    ):
         from loguru import logger
 
-        logger.info(f"IntegrationAgent: Executing integration for intent {workspace.intent}")
+        logger.info(
+            f"IntegrationAgent: Executing integration for intent {workspace.intent}"
+        )
         kwargs = getattr(workspace, "kwargs", {})
         if workspace.intent == "sync_to_slack":
-            result = await self._safe_skill_run("SlackIntegrationSkill", workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
+            result = await self._safe_skill_run(
+                "SlackIntegrationSkill",
+                workspace=workspace,
+                user_id=user_id,
+                model_name=model_name,
+                **kwargs,
+            )
         elif workspace.intent == "sync_to_notion":
-            result = await self._safe_skill_run("NotionSyncSkill", workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
+            result = await self._safe_skill_run(
+                "NotionSyncSkill",
+                workspace=workspace,
+                user_id=user_id,
+                model_name=model_name,
+                **kwargs,
+            )
         elif workspace.intent == "sync_to_github":
-            result = await self._safe_skill_run("GithubSyncSkill", workspace=workspace, user_id=user_id, model_name=model_name, **kwargs)
+            result = await self._safe_skill_run(
+                "GithubSyncSkill",
+                workspace=workspace,
+                user_id=user_id,
+                model_name=model_name,
+                **kwargs,
+            )
         else:
             workspace.log(f"IntegrationAgent: Unknown intent {workspace.intent}")
-            result = {"status": "error", "message": f"Unknown integration intent {workspace.intent}"}
+            result = {
+                "status": "error",
+                "message": f"Unknown integration intent {workspace.intent}",
+            }
         workspace.work_product["integration_result"] = result

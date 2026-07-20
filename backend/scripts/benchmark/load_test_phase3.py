@@ -1,15 +1,12 @@
 import asyncio
 import sys
 import time
-from unittest.mock import AsyncMock
-from unittest.mock import patch
-
-from loguru import logger
+from unittest.mock import AsyncMock, patch
 
 from core.llm.llm_gateway import llm_gateway
 from core.orchestration.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
+from loguru import logger
 from utils.firestore_helpers import get_firestore_db
-
 
 logger.remove()
 logger.add(sys.stdout, level="INFO")
@@ -17,7 +14,11 @@ logger.add(sys.stdout, level="INFO")
 
 async def simulate_request(tenant_id: str, request_id: int):
     try:
-        await llm_gateway.acompletion(prompt=f"Test prompt {request_id}", model="openai/gpt-3.5-turbo", tenant_id=tenant_id)
+        await llm_gateway.acompletion(
+            prompt=f"Test prompt {request_id}",
+            model="openai/gpt-3.5-turbo",
+            tenant_id=tenant_id,
+        )
         return "success"
     except Exception as e:  # noqa: BLE001
         if "402 Payment Required" in str(e):
@@ -32,7 +33,12 @@ async def main():
 
     # Pre-configure mock DB if needed
     if db:
-        budget_ref = db.collection("tenants").document(tenant_id).collection("budget").document("current")
+        budget_ref = (
+            db.collection("tenants")
+            .document(tenant_id)
+            .collection("budget")
+            .document("current")
+        )
         await budget_ref.set({"monthly_limit": 100.0, "spent_amount": 0.0})
 
     # Mock LiteLLM so we don't make real API calls
@@ -61,10 +67,14 @@ async def main():
         print("\n=== Load Test Results ===")  # noqa: T201
         print("Total Requests: 1000")  # noqa: T201
         print(f"Success: {successes}")  # noqa: T201
-        print(f"402 Payment Required (False Positives?): {payment_required}")  # noqa: T201
+        print(
+            f"402 Payment Required (False Positives?): {payment_required}"
+        )  # noqa: T201
         print(f"Other Errors (Triggered SelfHealer): {errors}")  # noqa: T201
         print(f"Total Time: {elapsed:.2f} seconds")  # noqa: T201
-        print(f"Latency: {(elapsed / 1000) * 1000:.2f} ms / request (avg concurrency)")  # noqa: T201
+        print(
+            f"Latency: {(elapsed / 1000) * 1000:.2f} ms / request (avg concurrency)"
+        )  # noqa: T201
         print(f"RPS: {1000 / elapsed:.2f} req/s")  # noqa: T201
 
         # Test Sandbox TTL
@@ -77,7 +87,9 @@ async def main():
         }
 
         print(f"Injected sandbox {sandbox_id} with age 11.6 minutes.")  # noqa: T201
-        print("Starting auto_destroy_worker for 1 iteration (mocked sleep to exit)...")  # noqa: T201
+        print(
+            "Starting auto_destroy_worker for 1 iteration (mocked sleep to exit)..."
+        )  # noqa: T201
 
         with patch("asyncio.sleep", AsyncMock(side_effect=Exception("Exit Loop"))):
             try:
@@ -87,7 +99,9 @@ async def main():
                     pass
 
         remaining = len(orchestrator._active_sandboxes)
-        print(f"Remaining sandboxes after cleanup: {remaining} (Expected 0)")  # noqa: T201
+        print(
+            f"Remaining sandboxes after cleanup: {remaining} (Expected 0)"
+        )  # noqa: T201
 
 
 if __name__ == "__main__":

@@ -12,15 +12,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from adaptive_engine.experience_db import Experience
-from adaptive_engine.experience_db import ExperienceDatabase
+from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from adaptive_engine.intent_parser import IntentParser
-from adaptive_engine.learning_loop import LearningCycleResult
-from adaptive_engine.learning_loop import LearningInsight
-from adaptive_engine.learning_loop import LearningLoop
-from adaptive_engine.learning_loop import create_learning_loop
-from adaptive_engine.platform_learner import PlatformLearner
-from adaptive_engine.platform_learner import PlatformProfile
+from adaptive_engine.learning_loop import (
+    LearningCycleResult,
+    LearningInsight,
+    LearningLoop,
+    create_learning_loop,
+)
+from adaptive_engine.platform_learner import PlatformLearner, PlatformProfile
 from adaptive_engine.registry import PlatformRegistry
 
 __all__ = [

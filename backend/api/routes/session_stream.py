@@ -1,19 +1,18 @@
 import asyncio
 import json
 
-from fastapi import APIRouter
-from fastapi import Path
-from fastapi import Request
-from sse_starlette.sse import EventSourceResponse
-
 from core.observability.log_batcher import batcher
-
+from fastapi import APIRouter, Path, Request
+from sse_starlette.sse import EventSourceResponse
 
 router = APIRouter()
 
 
 @router.get("/session/{session_id}/stream")
-async def stream_session(request: Request, session_id: str = Path(..., title="The ID of the session to stream")):
+async def stream_session(
+    request: Request,
+    session_id: str = Path(..., title="The ID of the session to stream"),
+):
     """
     SSE endpoint for multiplexed session logs, state changes, and filetree diffs.
     Heartbeat every 15 seconds.
@@ -23,7 +22,12 @@ async def stream_session(request: Request, session_id: str = Path(..., title="Th
         queue = batcher.subscribe(session_id)
         try:
             # Send initial state or connection confirmed
-            yield {"event": "connected", "data": json.dumps({"channel": "system", "data": "connected to stream"})}
+            yield {
+                "event": "connected",
+                "data": json.dumps(
+                    {"channel": "system", "data": "connected to stream"}
+                ),
+            }
 
             while True:
                 if await request.is_disconnected():
@@ -40,10 +44,16 @@ async def stream_session(request: Request, session_id: str = Path(..., title="Th
                     elif item.get("log_type") in ("file_write", "file_delete"):
                         channel = "filetree"
 
-                    yield {"event": "message", "data": json.dumps({"channel": channel, "data": item})}
+                    yield {
+                        "event": "message",
+                        "data": json.dumps({"channel": channel, "data": item}),
+                    }
                 except TimeoutError:
                     # Heartbeat
-                    yield {"event": "ping", "data": json.dumps({"channel": "heartbeat"})}
+                    yield {
+                        "event": "ping",
+                        "data": json.dumps({"channel": "heartbeat"}),
+                    }
         finally:
             batcher.unsubscribe(session_id, queue)
 

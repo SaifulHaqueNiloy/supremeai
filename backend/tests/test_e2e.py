@@ -4,10 +4,10 @@ import sys
 import pytest
 from fastapi.testclient import TestClient
 
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.app import app
+
 from tools.media.voice import VoiceInterface
 
 
@@ -50,7 +50,12 @@ def test_e2e_mobile_and_studio_task_execution(mock_generate, client):
     E2E Test simulating the Mobile App / Studio client executing a task.
     It hits the /task/execute endpoint and verifies the JSONResponse structure.
     """
-    mock_generate.return_value = {"success": True, "text": "Hola", "provider": "mock-translation-provider", "cost": 0.001}
+    mock_generate.return_value = {
+        "success": True,
+        "text": "Hola",
+        "provider": "mock-translation-provider",
+        "cost": 0.001,
+    }
     payload = {
         "task": "Translate 'Hello' to Spanish",
         "task_type": "translation",

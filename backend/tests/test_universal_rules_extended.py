@@ -13,8 +13,8 @@ This module tests extended functionality:
 """
 
 import json
-import tempfile
 import os
+import tempfile
 
 from core.universal_rules import UniversalRulesEngine
 

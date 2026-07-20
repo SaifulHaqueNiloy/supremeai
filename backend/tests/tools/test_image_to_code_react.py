@@ -1,6 +1,6 @@
 # বাংলা মন্তব্য: Image-to-Code টুলের React/Flutter output ফাংশনালিটি টেস্ট।
 
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +9,10 @@ from tools.code.image_to_code import ImageToCode
 
 @pytest.fixture
 def mock_image_to_code():
-    with patch("tools.image_to_code.ImageToCode._encode_image_file", return_value="dummy_base64"):
+    with patch(
+        "tools.image_to_code.ImageToCode._encode_image_file",
+        return_value="dummy_base64",
+    ):
         yield
 
 
@@ -19,7 +22,10 @@ async def test_figma_to_react(mock_image_to_code):
     # বাংলা মন্তব্য: Figma/UI screenshot থেকে React component জেনারেশন টেস্ট
     converter = ImageToCode()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -48,7 +54,10 @@ async def test_figma_to_flutter(mock_image_to_code):
     # বাংলা মন্তব্য: Figma/UI screenshot থেকে Flutter widget জেনারেশন টেস্ট
     converter = ImageToCode()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -79,7 +88,10 @@ async def test_extract_color_palette(mock_image_to_code):
     # বাংলা মন্তব্য: Color palette extraction এবং CSS variable generation টেস্ট
     converter = ImageToCode()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
@@ -106,7 +118,10 @@ async def test_detect_component_tree(mock_image_to_code):
     # বাংলা মন্তব্য: Component tree extraction (nested components) টেস্ট
     converter = ImageToCode()
 
-    with patch("brain.model_router.ModelRouter.async_route_and_generate", new_callable=AsyncMock) as mock_acompletion:
+    with patch(
+        "brain.model_router.ModelRouter.async_route_and_generate",
+        new_callable=AsyncMock,
+    ) as mock_acompletion:
         mock_acompletion.return_value = {
             "success": True,
             "text": """
