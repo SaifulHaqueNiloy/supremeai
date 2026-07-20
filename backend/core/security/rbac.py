@@ -211,11 +211,14 @@ class RoleBasedAccessControl:
         if context.expires_at:
             try:
                 import datetime
+                from core.utils.time_utils import utc_now, ensure_aware
 
                 expires = datetime.datetime.fromisoformat(context.expires_at)
-                if datetime.datetime.now() > expires:
+                expires = ensure_aware(expires)
+
+                if utc_now() > expires:
                     return False
-            except ValueError:
+            except (ValueError, TypeError):
                 return False
         # বাংলা মন্তব্য: স্কোপ চেক করা হচ্ছে।
         if context.scopes is not None:
