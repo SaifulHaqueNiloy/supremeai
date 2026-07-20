@@ -125,11 +125,14 @@ class SkillInstaller:
         code: str,
         version: str,
         description: str,
-        dependencies: List[str] = [],
-        uss: dict = None,
+        dependencies: List[str] | None = None,
+        uss: dict | None = None,
     ) -> bool:
-        """Writes custom skill code into the local skills workspace and registers it."""
+        """Writes custom skill code into the local skills workspace and registers it.
+        বাংলা মন্তব্য: মিউটেবল ডিফল্ট আর্গুমেন্ট (List[str] = []) পরিহার করে None সেন্টিনেল প্যাটার্ন ব্যবহার করা হলো।
+        """
         import os
+        actual_deps = list(dependencies) if dependencies is not None else []
 
         if uss:
             from skills.schema import UniversalSkillSchema
@@ -154,7 +157,7 @@ class SkillInstaller:
             logger.error(f"Security scan failed before writing skill '{name}': {e}")
             return False
 
-        success = self.install_dependencies(dependencies)
+        success = self.install_dependencies(actual_deps)
         if not success:
             return False
 
@@ -174,7 +177,7 @@ class SkillInstaller:
                     json.dump(uss, sf, indent=4)
 
             self.registry.register_skill(
-                safe_name, version, description, entry_file, dependencies, uss=uss
+                safe_name, version, description, entry_file, actual_deps, uss=uss
             )
             return True
         except Exception as e:

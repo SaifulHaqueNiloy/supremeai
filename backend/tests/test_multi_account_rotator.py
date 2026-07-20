@@ -1,7 +1,8 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
+from core.utils.time_utils import utc_now
 
 import pytest
 
@@ -98,7 +99,7 @@ class TestAccount:
             provider="groq",
             email="a@b.com",
             status=ProviderStatus.ACTIVE,
-            reset_time=datetime.now() + timedelta(minutes=1),
+            reset_time=utc_now() + timedelta(minutes=1),
         )
         assert acc.is_available() is False
 
@@ -137,7 +138,7 @@ class TestAccount:
             email="a@b.com",
             total_requests=0,
         )
-        before = datetime.now()
+        before = utc_now()
         acc.record_request(success=True)
         assert acc.total_requests == 1
         assert acc.last_used >= before
@@ -163,7 +164,7 @@ class TestAccount:
             email="a@b.com",
             rate_limit_hits=0,
         )
-        before = datetime.now()
+        before = utc_now()
         acc.record_rate_limit()
         assert acc.rate_limit_hits == 1
         assert acc.reset_time >= before + timedelta(minutes=1)
