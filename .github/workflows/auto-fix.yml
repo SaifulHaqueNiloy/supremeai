@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install isort black ruff safety
-          pip install -e backend
+          pip install -r backend/requirements.txt
 
       - name: Run isort
         run: |
@@ -75,7 +75,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install SupremeAI
-        run: pip install -e backend
+        run: pip install -r backend/requirements.txt
 
       - name: Run vulnerability scan
         run: |
@@ -97,7 +97,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -e backend
+        run: pip install -r backend/requirements.txt
 
       - name: Check performance metrics
         run: |
