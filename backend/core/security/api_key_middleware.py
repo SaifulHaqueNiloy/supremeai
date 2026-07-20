@@ -59,17 +59,17 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             )
         except ConnectionError as exc:
             logger.error(f"DB connection failed during API key lookup: {exc}")
-            raise HTTPException(status_code=503, detail="Authentication service unavailable") from exc
+            return JSONResponse(status_code=503, content={"detail": "Authentication service unavailable"})
 
         if not row:
             logger.warning(f"Invalid API key attempt: {mask_api_key(api_key_header)}")
-            raise HTTPException(status_code=401, detail="Invalid API key")
+            return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
         if row["revoked"]:
             logger.warning(f"Revoked API key used: {row['id']}")
-            raise HTTPException(status_code=403, detail="API key has been revoked")
+            return JSONResponse(status_code=403, content={"detail": "API key has been revoked"})
         if row["expires_at"] and row["expires_at"] < int(time.time()):
             logger.warning(f"Expired API key used: {row['id']}")
-            raise HTTPException(status_code=403, detail="API key has expired")
+            return JSONResponse(status_code=403, content={"detail": "API key has expired"})
 
         rps = int(row.get("rate_limit_rps") or 6)
         key_prefix = api_key_header[:12]
@@ -78,11 +78,11 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             is_allowed = await self.limiter.acquire(key_prefix, limit=rps, window=60)
         except RuntimeError as exc:
             logger.critical(f"Rate limiter failed: {exc}")
-            raise HTTPException(status_code=503, detail="Rate limiting service unavailable") from exc
+            return JSONResponse(status_code=503, content={"detail": "Rate limiting service unavailable"})
 
         if not is_allowed:
             logger.warning(f"Rate limit hit for API key: {row['id']}")
-            raise HTTPException(status_code=429, detail="API key rate limit exceeded")
+            return JSONResponse(status_code=429, content={"detail": "API key rate limit exceeded"})
 
         request.state.api_key = {
             "id": row["id"],
