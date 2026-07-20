@@ -55,6 +55,11 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.syncguard", "/api/v1"),
     ("api.routes.admin_librarian", "/api"),
     ("api.routes.skills", "/api"),
+    # বাংলা মন্তব্য: এই রাউটারটি আগে এখানে যোগই করা হয়নি — ফলে /api/v1/swarm/*
+    # (real-time SSE stream, patch-telemetry persistence, VSCode self-healing
+    # endpoint, এবং নতুন emergency-stop /halt+/resume) সব HTTP 404 দিত।
+    # Kill-switch ও Swarm Health স্ক্রিন কাজ না করার আসল root cause এটিই ছিল।
+    ("api.routes.swarm", "/api/v1/swarm"),
 ]
 
 optional_routers: list[tuple[str, str]] = [

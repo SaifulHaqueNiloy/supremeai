@@ -165,8 +165,17 @@ class SwarmOrchestrator:
         completed_tasks: set[str] = set()
 
         async def _execute_dag():
+            from core.swarm_pubsub import swarm_streamer
+
             # Standard DAG execution for non-loop parts
             while len(completed_tasks) < len(task_graph):
+                # বাংলা মন্তব্য: প্রতিটি ব্যাচ শুরুর আগে গ্লোবাল emergency-stop চেক করা হয়।
+                # /api/v1/swarm/halt কল হলে চলমান নতুন ব্যাচ শুরু হবে না, workspace-এ
+                # স্পষ্ট এরর লগ হবে (silent hang নয়)।
+                if await swarm_streamer.is_halted():
+                    workspace.log("SwarmOrchestrator: Execution halted by emergency stop (swarm:halt:global).")
+                    raise RuntimeError("Swarm execution halted by emergency stop")
+
                 ready_tasks = [task for task, deps in task_graph.items() if task not in completed_tasks and all(d in completed_tasks for d in deps)]
                 if not ready_tasks:
                     raise RuntimeError(f"DAG execution error: No ready tasks found, but not all tasks are complete. Completed: {completed_tasks}")
