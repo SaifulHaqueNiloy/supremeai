@@ -134,5 +134,9 @@ describe('App component', () => {
     expect(screen.getByText('Test message')).toBeInTheDocument();
     expect(screen.getByText('Analyzing request "Test message"... Processing on central core.')).toBeInTheDocument();
     expect(getAethelResponse).toHaveBeenCalledWith('Test message', expect.any(Array));
+
+    await waitFor(() => {
+      expect(screen.getByText('Mock Aethel backend response')).toBeInTheDocument();
+    });
   });
 });
