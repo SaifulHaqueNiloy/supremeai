@@ -17,6 +17,7 @@ class UpstashRedisQueue:
     ) -> None:
         self.rest_url = (rest_url or getattr(settings, "upstash_redis_rest_url", "") or "").rstrip("/")
         self.token = token or getattr(settings, "upstash_redis_rest_token", "") or ""
+        self.timeout = timeout
         # বাংলা মন্তব্য: Upstash Rest Queue ক্লায়েন্টে সর্বোচ্চ ১০টি কানেকশন এবং ৫টি কিপ-অলাইভ কানেকশনের সীমা যুক্ত করা হলো।
         self._client = (
             httpx.Client(

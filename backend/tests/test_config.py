@@ -12,7 +12,7 @@ def test_defaults():
     assert s.app_name == "SupremeAI 2.0"
     assert s.env == "local"
     assert s.debug is True
-    assert s.port == 8000
+    assert s.port == 8080
     assert s.host == "0.0.0.0"
     assert s.supremeai_admin_password_hash is None
     assert s.ollama_url == ""
@@ -53,6 +53,8 @@ def test_defaults():
         "SKILL_REGISTRY_PATH": "/tmp/skills.json",
         "SUPREMEAI_JWT_SECRET": "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD",
         "CORS_ORIGINS": '["https://supremeai.web.app"]',
+        "USER_CORS_ORIGINS": '["https://supremeai.web.app"]',
+        "ADMIN_CORS_ORIGINS": '["https://admin.supremeai.web.app"]',
         "ALLOWED_HOSTS": '["api.supremeai.com"]',
     },
     clear=False,
@@ -112,6 +114,8 @@ def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "TEST_ONLY_OPENROUTER_API_KEY")
     monkeypatch.setenv("GEMINI_API_KEY", "TEST_ONLY_GEMINI_API_KEY")
     monkeypatch.setenv("CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
+    monkeypatch.setenv("USER_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
+    monkeypatch.setenv("ADMIN_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
     monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD")
     monkeypatch.setenv("SUPREMEAI_ADMIN_PASSWORD_HASH", "mock_hash_value_for_test_pass")
     monkeypatch.setenv("ALLOWED_HOSTS", '["api.supremeai.com"]')
