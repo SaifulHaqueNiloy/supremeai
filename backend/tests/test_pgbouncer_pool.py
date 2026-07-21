@@ -18,7 +18,9 @@ async def test_singleton_pattern():
 @pytest.mark.asyncio
 async def test_connect():
     pool = PgBouncerConnectionPool("test_dsn")
-    with patch("core.pgbouncer_pool.asyncpg.create_pool", new_callable=AsyncMock) as mock_create_pool:
+    with patch(
+        "core.pgbouncer_pool.asyncpg.create_pool", new_callable=AsyncMock
+    ) as mock_create_pool:
         mock_pool = MagicMock()
         mock_create_pool.return_value = mock_pool
         await pool.connect()
