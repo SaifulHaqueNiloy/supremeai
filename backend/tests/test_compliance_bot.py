@@ -165,9 +165,7 @@ class TestGDPRChecker:
         """Mock Firestore client."""
         with patch("core.security.compliance_bot.get_firestore_client") as mock:
             client = MagicMock()
-            client.collection.return_value.document.return_value.get.return_value.exists = (
-                False
-            )
+            client.collection.return_value.document.return_value.get.return_value.exists = False
             mock.return_value = client
             yield client
 
@@ -196,9 +194,7 @@ class TestGDPRChecker:
             "granted": True,
             "granted_at": datetime.now(UTC).isoformat(),
         }
-        mock_firestore.collection.return_value.document.return_value.get.return_value = (
-            mock_doc
-        )
+        mock_firestore.collection.return_value.document.return_value.get.return_value = mock_doc
 
         result = gdpr_checker.check_lawful_basis("user123", "data_processing")
 
@@ -244,9 +240,7 @@ class TestGDPRChecker:
         """Test right to deletion check detects pending requests."""
         mock_doc = MagicMock()
         mock_doc.to_dict.return_value = {"user_id": "user123", "status": "pending"}
-        mock_firestore.collection.return_value.where.return_value.where.return_value.stream.return_value = [
-            mock_doc
-        ]
+        mock_firestore.collection.return_value.where.return_value.where.return_value.stream.return_value = [mock_doc]
 
         result = gdpr_checker.check_right_to_deletion("user123")
 
@@ -317,9 +311,7 @@ class TestDigitalSecurityActChecker:
     def test_check_lawful_interception_readiness(self, dsa_checker, mock_firestore):
         """Test lawful interception readiness check."""
         # Mock no audit logs existing
-        mock_firestore.collection.return_value.limit.return_value.stream.return_value = (
-            []
-        )
+        mock_firestore.collection.return_value.limit.return_value.stream.return_value = []
 
         result = dsa_checker.check_lawful_interception_readiness()
 
@@ -329,9 +321,7 @@ class TestDigitalSecurityActChecker:
 
     def test_check_cybersecurity_reporting(self, dsa_checker, mock_firestore):
         """Test cybersecurity reporting check for incident response plan."""
-        mock_firestore.collection.return_value.document.return_value.get.return_value.exists = (
-            False
-        )
+        mock_firestore.collection.return_value.document.return_value.get.return_value.exists = False
 
         result = dsa_checker.check_cybersecurity_reporting()
 
@@ -385,13 +375,9 @@ class TestConsentManager:
             "granted": True,
             "granted_at": datetime.now(UTC).isoformat(),
         }
-        mock_firestore.collection.return_value.document.return_value.get.return_value = (
-            mock_doc
-        )
+        mock_firestore.collection.return_value.document.return_value.get.return_value = mock_doc
 
-        result = consent_manager.withdraw_consent(
-            "user123", ConsentType.DATA_PROCESSING
-        )
+        result = consent_manager.withdraw_consent("user123", ConsentType.DATA_PROCESSING)
 
         assert result is not None
         assert result.granted is False
@@ -401,13 +387,9 @@ class TestConsentManager:
         """Test withdrawing consent when record not found."""
         mock_doc = MagicMock()
         mock_doc.exists = False
-        mock_firestore.collection.return_value.document.return_value.get.return_value = (
-            mock_doc
-        )
+        mock_firestore.collection.return_value.document.return_value.get.return_value = mock_doc
 
-        result = consent_manager.withdraw_consent(
-            "user123", ConsentType.DATA_PROCESSING
-        )
+        result = consent_manager.withdraw_consent("user123", ConsentType.DATA_PROCESSING)
 
         assert result is None
 
@@ -422,9 +404,7 @@ class TestConsentManager:
         }
         mock_docs.append(mock_doc)
 
-        mock_firestore.collection.return_value.where.return_value.stream.return_value = (
-            mock_docs
-        )
+        mock_firestore.collection.return_value.where.return_value.stream.return_value = mock_docs
 
         result = consent_manager.get_consent_status("user123")
 
@@ -453,9 +433,7 @@ class TestDataRetentionPolicy:
     def test_enforce_retention(self, retention_policy, mock_firestore):
         """Test enforcing retention policy deletes old records."""
         # Mock empty stream (no records to delete)
-        mock_firestore.collection.return_value.where.return_value.stream.return_value = (
-            []
-        )
+        mock_firestore.collection.return_value.where.return_value.stream.return_value = []
 
         count = retention_policy.enforce_retention("session_logs", 30)
 
@@ -478,29 +456,17 @@ class TestComplianceBot:
         """Test full compliance check returns a valid report."""
         with (
             patch.object(compliance_bot.gdpr, "check_lawful_basis", return_value=None),
-            patch.object(
-                compliance_bot.gdpr, "check_data_minimization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.gdpr, "check_right_to_deletion", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_data_localization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_content_moderation", return_value=None
-            ),
+            patch.object(compliance_bot.gdpr, "check_data_minimization", return_value=None),
+            patch.object(compliance_bot.gdpr, "check_right_to_deletion", return_value=None),
+            patch.object(compliance_bot.dsa, "check_data_localization", return_value=None),
+            patch.object(compliance_bot.dsa, "check_content_moderation", return_value=None),
             patch.object(
                 compliance_bot.dsa,
                 "check_lawful_interception_readiness",
                 return_value=None,
             ),
-            patch.object(
-                compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None
-            ),
-            patch.object(
-                compliance_bot.consent_mgr, "get_consent_status", return_value={}
-            ),
+            patch.object(compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None),
+            patch.object(compliance_bot.consent_mgr, "get_consent_status", return_value={}),
         ):
             report = compliance_bot.run_compliance_check(
                 user_id="user123",
@@ -527,29 +493,17 @@ class TestComplianceBot:
                     description="No consent",
                 ),
             ),
-            patch.object(
-                compliance_bot.gdpr, "check_data_minimization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.gdpr, "check_right_to_deletion", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_data_localization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_content_moderation", return_value=None
-            ),
+            patch.object(compliance_bot.gdpr, "check_data_minimization", return_value=None),
+            patch.object(compliance_bot.gdpr, "check_right_to_deletion", return_value=None),
+            patch.object(compliance_bot.dsa, "check_data_localization", return_value=None),
+            patch.object(compliance_bot.dsa, "check_content_moderation", return_value=None),
             patch.object(
                 compliance_bot.dsa,
                 "check_lawful_interception_readiness",
                 return_value=None,
             ),
-            patch.object(
-                compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None
-            ),
-            patch.object(
-                compliance_bot.consent_mgr, "get_consent_status", return_value={}
-            ),
+            patch.object(compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None),
+            patch.object(compliance_bot.consent_mgr, "get_consent_status", return_value={}),
         ):
             report = compliance_bot.run_compliance_check(
                 user_id="user123",

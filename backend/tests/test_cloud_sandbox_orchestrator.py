@@ -18,10 +18,7 @@ async def test_delegate_to_freebuff_missing_binary(monkeypatch):
             res = await orch.delegate_to_freebuff("print('hi')", working_dir=".")
 
     assert res["status"] == "error"
-    assert (
-        "not installed" in res["error"].lower()
-        or "freebuff cli not found" in res["error"].lower()
-    )
+    assert "not installed" in res["error"].lower() or "freebuff cli not found" in res["error"].lower()
 
 
 @pytest.mark.anyio
