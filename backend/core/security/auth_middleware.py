@@ -45,7 +45,9 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
         Decoded payload dict, or None if invalid/expired.
     """
     if not settings.jwt_secret:
-        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        logger.critical(
+            "JWT_SECRET is missing. Rejecting authentication under fail-closed security policy."
+        )
         return None
 
     try:
@@ -119,7 +121,9 @@ class AuthMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
 
-    async def __call__(self, scope: ASGIScope, receive: ASGIReceive, send: ASGISend) -> None:
+    async def __call__(
+        self, scope: ASGIScope, receive: ASGIReceive, send: ASGISend
+    ) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
@@ -128,7 +132,9 @@ class AuthMiddleware:
 
         # Skip auth for public paths or test environment (only if no api token env is configured)
         # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে অথেন্টিকেশন বাইপাস করা হয়, যদি না সরাসরি API টোকেন চেক করা হচ্ছে।
-        if _is_public_path(path) or (is_test_environment() and not settings.supremeai_api_token):
+        if _is_public_path(path) or (
+            is_test_environment() and not settings.supremeai_api_token
+        ):
             await self.app(scope, receive, send)
             return
 
@@ -147,7 +153,9 @@ class AuthMiddleware:
 
         # API Key validation for system components / testing
         # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
-        if settings.supremeai_api_token and hmac.compare_digest(token.encode("utf-8"), settings.supremeai_api_token.encode("utf-8")):
+        if settings.supremeai_api_token and hmac.compare_digest(
+            token.encode("utf-8"), settings.supremeai_api_token.encode("utf-8")
+        ):
             scope["user"] = {
                 "sub": "system_api_key",
                 "role": "admin",
@@ -196,8 +204,12 @@ async def verify_admin_session_fail_closed(request: Any) -> dict[str, Any]:
 
     # Fail-closed check for JWT secret config
     if not settings.jwt_secret:
-        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
-        raise HTTPException(status_code=500, detail="Authentication server configuration error")
+        logger.critical(
+            "JWT_SECRET is missing. Rejecting authentication under fail-closed security policy."
+        )
+        raise HTTPException(
+            status_code=500, detail="Authentication server configuration error"
+        )
 
     try:
         payload = jwt.decode(
@@ -215,7 +227,9 @@ async def verify_admin_session_fail_closed(request: Any) -> dict[str, Any]:
 
     role = payload.get("role")
     if role not in ("admin", "master_admin"):
-        logger.warning(f"Access denied: role '{role}' is not authorized for admin session")
+        logger.warning(
+            f"Access denied: role '{role}' is not authorized for admin session"
+        )
         raise HTTPException(status_code=401, detail="Not authorized")
 
     return payload
