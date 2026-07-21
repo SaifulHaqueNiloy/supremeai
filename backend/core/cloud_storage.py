@@ -14,9 +14,10 @@ Dependencies:
 # সার্ভারলেস এনভায়রনমেন্টে ডেটা লস রুখতে এটি লোকাল ফাইল রাইটের বদলে সরাসরি ক্লাউড বাকেটে ফাইল আপলোড ও রিড করে।
 
 import httpx
+from fastapi import HTTPException, status
+
 from core.config import settings
 from core.logging_config import logger
-from fastapi import HTTPException, status
 
 
 class CloudStorageManager:
@@ -67,7 +68,9 @@ class CloudStorageManager:
             return public_url
 
         except httpx.HTTPError as http_err:
-            logger.critical(f"🔥 Network Failure during cloud file streaming: {str(http_err)}")
+            logger.critical(
+                f"🔥 Network Failure during cloud file streaming: {str(http_err)}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Storage cluster network timeout.",
