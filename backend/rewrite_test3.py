@@ -10,9 +10,7 @@ content = content.replace(
 )
 
 # 2. Remove mock_acquire argument
-content = re.sub(
-    r"def test_([a-zA-Z0-9_]+)\(self, mock_acquire\):", r"def test_\1(self):", content
-)
+content = re.sub(r"def test_([a-zA-Z0-9_]+)\(self, mock_acquire\):", r"def test_\1(self):", content)
 
 # 3. Remove mock_acquire assignment
 content = re.sub(r"\s*mock_acquire\.return_value = (True|False)\n", "\n", content)
@@ -28,19 +26,7 @@ keys = [
 
 parts = content.split('"sk-supreme-1234567890abcdef"')
 if len(parts) == 6:
-    content = (
-        parts[0]
-        + keys[0]
-        + parts[1]
-        + keys[1]
-        + parts[2]
-        + keys[2]
-        + parts[3]
-        + keys[3]
-        + parts[4]
-        + keys[4]
-        + parts[5]
-    )
+    content = parts[0] + keys[0] + parts[1] + keys[1] + parts[2] + keys[2] + parts[3] + keys[3] + parts[4] + keys[4] + parts[5]
 
 
 # 5. Make test_rate_limit_exceeded do two requests

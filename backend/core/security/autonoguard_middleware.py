@@ -69,9 +69,7 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                 if raw_body:
                     try:
                         payload = json.loads(raw_body)
-                        code_to_scan = payload.get("code") or payload.get(
-                            "generated_code"
-                        )
+                        code_to_scan = payload.get("code") or payload.get("generated_code")
                     except json.JSONDecodeError:
                         pass
             except Exception as exc:  # noqa: BLE001
