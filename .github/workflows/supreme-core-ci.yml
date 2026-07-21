@@ -273,7 +273,8 @@ jobs:
         working-directory: backend
         run: |
           echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1 || true
+          # বাংলা মন্তব্য (জরুরি): || true বন্ধ করা হলো যাতে সেফটি গার্ড ফেল করলে সাইলেন্টলি ওভাররাইড না হয় (Anti-Silent Failure)
+          python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1
 
           # Parse and summarize
           if [ -f safety-report.json ]; then
@@ -287,13 +288,15 @@ jobs:
         working-directory: backend
         run: |
           echo "## 🔍 মাল্টি-মডেল কোড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          python ../scripts/multi_model_validator.py ../backend/core/ --json-output validator-report.json 2>&1 || true
+          # বাংলা মন্তব্য (জরুরি): || true বন্ধ করা হলো যাতে কোনো ত্রুটি সাইলেন্ট না থাকে
+          python ../scripts/multi_model_validator.py ../backend/core/ --json-output validator-report.json 2>&1
 
           # Check for critical issues
           if [ -f validator-report.json ]; then
             CRITICAL=$(grep -c "risk_level.*CRITICAL" validator-report.json || echo "0")
             if [ "$CRITICAL" -gt 0 ]; then
-              echo "⚠️ Found $CRITICAL critical issues - review required" >> $GITHUB_STEP_SUMMARY
+              echo "❌ Found $CRITICAL CRITICAL security issues — blocking merge/deploy!" >> $GITHUB_STEP_SUMMARY
+              exit 1
             else
               echo "✅ কোনো ক্রিটিকাল সিকিউরিটি ইস্যু পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
             fi
@@ -741,12 +744,13 @@ jobs:
 
   deploy-user-backend:
     name: 🚀 Deploy User Backend (Render)
-    needs: [build-backend-image, changes, check-render-quota]
+    needs: [build-backend-image, production-readiness, changes, check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     if: |
       always() &&
       needs.build-backend-image.result == 'success' &&
+      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       needs.changes.outputs.customer_backend_changed == 'true' &&
       needs.changes.outputs.admin_backend_changed == 'false'
     steps:
@@ -815,12 +819,13 @@ jobs:
 
   deploy-admin-backend:
     name: 🚀 Deploy Admin Backend (Render)
-    needs: [build-backend-image, changes, check-render-quota]
+    needs: [build-backend-image, production-readiness, changes, check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     if: |
       always() &&
       needs.build-backend-image.result == 'success' &&
+      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       needs.changes.outputs.admin_backend_changed == 'true' &&
       needs.changes.outputs.customer_backend_changed == 'false'
     steps:
@@ -831,15 +836,13 @@ jobs:
         run: |
           IMAGE_URL="ghcr.io/${{ github.repository }}/supremeai-backend:sha-${{ github.sha }}"
           echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          BACKUP_SVC_ID="srv-d9d3pgvavr4c738a46mg"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
             -H "Content-Type: application/json" \
             -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
           if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
-            echo "✅ Backup Render deploy triggered via API with prebuilt image (status: $STATUS)!"
-          else
             echo "❌ Backup API deploy with prebuilt image returned status: $STATUS"
             exit 1
           fi
@@ -888,12 +891,13 @@ jobs:
 
   deploy-combined-backend:
     name: 🚀 Deploy Combined Backend (Render)
-    needs: [build-backend-image, changes, check-render-quota]
+    needs: [build-backend-image, production-readiness, changes, check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     if: |
       always() &&
       needs.build-backend-image.result == 'success' &&
+      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       needs.changes.outputs.admin_backend_changed == 'true' &&
       needs.changes.outputs.customer_backend_changed == 'true'
     steps:
