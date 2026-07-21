@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from core.health.self_healer import SelfHealerService
 
 

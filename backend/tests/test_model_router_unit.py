@@ -1,6 +1,7 @@
 import contextlib
 
 import pytest
+
 from core.resilience.circuit_breaker import CircuitBreaker
 
 

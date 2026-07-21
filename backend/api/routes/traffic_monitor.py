@@ -2,9 +2,10 @@ import json
 import time
 from typing import Any
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from api.routes.admin import get_current_admin
 from core.cache.redis_manager import redis_manager
-from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter(
     prefix="/api/admin/traffic",

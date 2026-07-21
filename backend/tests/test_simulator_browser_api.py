@@ -1,5 +1,6 @@
-from core.app import app
 from fastapi.testclient import TestClient
+
+from core.app import app
 
 client = TestClient(app)
 
@@ -25,7 +26,9 @@ def test_simulator_profile_endpoints():
 
 def test_simulator_install_uninstall():
     # Install app
-    resp = client.post("/api/simulator/install?userId=testuser", json={"appId": "myapp"})
+    resp = client.post(
+        "/api/simulator/install?userId=testuser", json={"appId": "myapp"}
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True

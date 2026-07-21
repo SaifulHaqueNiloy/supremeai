@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 
 class StartupValidator:
