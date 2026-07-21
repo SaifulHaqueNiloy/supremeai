@@ -811,8 +811,8 @@ jobs:
             exit 1
           fi
 
-      - name: Verify Render Deploy Health
-        run: python .github/scripts/verify-render-deploy.py
+      - name: Verify User Backend Deploy Status
+        run: python .github/scripts/verify-render-deploy.py --service-id srv-d9d3n58js32c738n79k0 --name "User Backend"
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
