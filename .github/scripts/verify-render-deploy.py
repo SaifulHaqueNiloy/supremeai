@@ -8,6 +8,13 @@ import time
 import requests
 from datetime import datetime, timezone, timedelta
 
+# Force stdout/stderr to use UTF-8 to prevent UnicodeEncodeError on Windows terminals when printing emojis
+# বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইমোজি প্রিন্ট করার সময় UnicodeEncodeError এড়াতে stdout এবং stderr-কে UTF-8 এ কনফিগার করা হলো।
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # Services to monitor
 SERVICES = [
     {
@@ -76,15 +83,27 @@ def monitor_service(service):
             print(f"⚠️ No deploys found for {name}. Checking HTTP health directly.")
             return check_http_health(service["url"], name)
 
-        latest_deploy = deploys[0]
+        # বাংলা মন্তব্য: Render API-র রেসপন্স লিস্টে প্রতিটি ডেপ্লয়মেন্ট অবজেক্ট "deploy" কী-এর অধীনে র‍্যাপ করা থাকে।
+        # তাই প্রথমে সেটি ডিকশনারি থেকে এক্সট্র্যাক্ট করে নিচ্ছি।
+        latest_deploy_item = deploys[0]
+        if isinstance(latest_deploy_item, dict) and "deploy" in latest_deploy_item:
+            latest_deploy = latest_deploy_item["deploy"]
+        else:
+            latest_deploy = latest_deploy_item
+
         deploy_id = latest_deploy.get("id")
         status = latest_deploy.get("status")
         created_at_str = latest_deploy.get("createdAt")
 
         print(f"📋 Latest Deploy details: ID={deploy_id}, Status={status}, CreatedAt={created_at_str}")
 
+        if not created_at_str:
+            print(f"⚠️ createdAt timestamp is missing. Checking HTTP health directly.")
+            return check_http_health(service["url"], name)
+
         # 2. Check if this deploy was triggered recently (within the last 15 minutes)
         # Parse ISO timestamp
+        # বাংলা মন্তব্য: ISO টাইমস্ট্যাম্প পার্স করার সময় safe-replace ব্যবহার করা হচ্ছে যাতে NoneType এরর না হয়।
         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
 
@@ -113,7 +132,12 @@ def monitor_service(service):
             res = requests.get(deploy_url, headers=headers, timeout=15)
             if res.status_code == 200:
                 deploy_info = res.json()
-                status = deploy_info.get("status", "").lower()
+                # বাংলা মন্তব্য: পোলিং রেসপন্স যদি "deploy" কী দ্বারা আবৃত থাকে তবে সেটি আনর‍্যাপ করার জন্য চেক করছি।
+                if isinstance(deploy_info, dict) and "deploy" in deploy_info:
+                    deploy_data = deploy_info["deploy"]
+                else:
+                    deploy_data = deploy_info
+                status = deploy_data.get("status", "").lower()
                 print(f"  Deploy {deploy_id} status: {status} (elapsed: {int(elapsed)}s)")
 
                 if status == "live":
