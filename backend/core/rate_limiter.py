@@ -60,10 +60,7 @@ class AsyncRateLimiter:
             from core.config import settings as app_settings
 
             redis_url = (
-                getattr(app_settings, "redis_url", None)
-                or os.getenv("REDIS_URL")
-                or os.getenv("UPSTASH_REDIS_URL")
-                or "redis://localhost:6379"
+                getattr(app_settings, "redis_url", None) or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL") or "redis://localhost:6379"
             )
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
@@ -80,9 +77,7 @@ class AsyncRateLimiter:
             current = results[0]
             return current <= limit
         except Exception as e:  # noqa: BLE001
-            logger.warning(
-                f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode)."
-            )
+            logger.warning(f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode).")
             return self._fallback_limiter.is_allowed(key, limit=limit)
 
     async def close(self):
