@@ -190,12 +190,12 @@ strict = true
 exclude = ["^backend/tests/.*", "^backend/tools/.*/test_.*"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=core --cov-report=term-missing --cov-report=json:coverage.json --cov-config=.coveragerc"
+addopts = "--cov=core --cov=api --cov=tools --cov=services --cov=models --cov-report=term-missing --cov-report=json:coverage.json --cov-config=.coveragerc"
 testpaths = ["tests"]
 norecursedirs = [".venv", "venv", ".git", "build", "dist"]
 # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে এবং ইম্পোর্ট পাথ ভুলত্রুটি এড়াতে pythonpath থেকে ".." বাদ দেওয়া হলো
 pythonpath = ["."]
 
 [tool.coverage.report]
-fail_under = 25
-# বাংলা মন্তব্য: কভারেজ বেসলাইন ২৫% সেট করা হলো যাতে কোডবেসের স্ট্যাবিলিটি ঠিক থাকে
+fail_under = 45
+# বাংলা মন্তব্য: কভারেজ বেসলাইন ৪৫% এ উন্নীত — CI-তে supreme-core-ci.yml ইতিমধ্যে core-প্যাকেজের জন্য --cov-fail-under=45 এনফোর্স করছে। এখন সব প্যাকেজ (core, api, tools, services, models) কভারেজে থাকায় fail_under সামঞ্জস্যপূর্ণ করা হলো। ধাপে ধাপে ৯০%-এ উন্নীত করা হবে।

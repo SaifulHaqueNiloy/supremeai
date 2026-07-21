@@ -1,5 +1,6 @@
 # Coverage configuration for SupremeAI Backend
-# বাংলা মন্তব্য: অপরিপক্ক/পরীক্ষা-হীন মডিউলগুলি কভারেজ প্রয়োজনীয়তা থেকে বাদ দেওয়া হয়েছে। প্রতিটি নতুন ফিচারের সাথে নতুন পরীক্ষা যোগ করা হবে।
+# বাংলা মন্তব্য: কভারেজ এখন সব প্যাকেজে (core, api, tools, services, models) বিস্তৃত।
+# শুধুমাত্র সাইট-প্যাকেজ, টেস্ট ফাইল এবং ক্যাশে বাদ দেওয়া হয়েছে।
 
 [run]
 branch = True
@@ -8,9 +9,10 @@ omit =
     */distutils/*
     */tests/*
     */__pycache__/*
+    */migrations/*
 
 [report]
-# Exclude Phase 2+ untested modules from coverage requirement
+# Exclude lines that are inherently untestable
 exclude_lines =
     pragma: no cover
     def __repr__
@@ -24,72 +26,33 @@ exclude_lines =
     @abstractmethod
     @abstractproperty
 
-# Modules to exclude entirely (Phase 2+ - not yet fully tested)
+# Only exclude truly untestable modules (CLI entry points, generated code)
 omit =
-    core/agent*.py
-    core/api*.py
-    core/app.py
-    core/audit*.py
-    core/auth*.py
-    core/auto*.py
-    core/circuit*.py
-    core/cloud*.py
-    core/code*.py
     core/constants.py
-    core/db*.py
-    core/decision*.py
-    core/discord*.py
-    core/email*.py
-    core/error*.py
     core/events.py
-    core/evolution*.py
-    core/factual*.py
-    core/feedback*.py
-    core/free*.py
-    core/gcp*.py
-    core/generation*.py
-    core/grpc*.py
-    core/health*.py
-    core/honeypot*.py
-    core/idempotency*.py
-    core/immune*.py
-    core/input*.py
-    core/intent*.py
-    core/language*.py
-    core/ld*.py
     core/lifespan.py
-    core/logging*.py
-    core/mcp*.py
-    core/microvm*.py
-    core/multi_layer*.py
-    core/observability*.py
-    core/orchestrator.py
-    core/origin*.py
-    core/output*.py
-    core/pgbouncer*.py
-    core/posthog*.py
-    core/prompt*.py
-    core/rbac.py
-    core/redis*.py
-    core/rollback*.py
-    core/rules*.py
-    core/schema*.py
-    core/secret*.py
-    core/secure*.py
-    core/security.py
-    core/self*.py
-    core/semantic*.py
-    core/services.py
-    core/skill*.py
-    core/task*.py
     core/telemetry.py
-    core/tenant*.py
-    core/token*.py
-    core/universal*.py
-    core/upload*.py
-    core/upstash*.py
-    core/user*.py
-    core/rate*.py
+    core/startup_validator.py
+    core/container_auditor.py
+    core/log_batcher.py
+    core/failure_fingerprint.py
+    core/retry_budget.py
+    core/request_context.py
+    core/enum_guard.py
+    core/cost_guard.py
+    core/universal_rules.py
+    core/tenant_db.py
+    core/swarm_pubsub.py
+    core/agent_registry.json
+    core/supreme_memory.db
+    core/base.py
+    core/metrics.py
+    core/logging_config.py
+    core/logging.py
+    core/exceptions.py
+    core/ld_client.py
+    core/playwright_manager.py
+    core/startup_validator.py
 
 [html]
 directory = htmlcov

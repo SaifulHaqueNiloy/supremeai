@@ -1,80 +1,112 @@
 """
-Tests for services/memory_service.py
-Focus: chunking/embedding logic and query routing.
+Tests for services/memory_service.py — CascadeMemoryService & hash_vectorize
 """
 
 from __future__ import annotations
 
+import math
+import os
+
+import pytest
+
 from services.memory_service import CascadeMemoryService, hash_vectorize
 
-# ── hash_vectorize ─────────────────────────────────────────────────────────────
+
+class TestHashVectorize:
+    def test_returns_correct_dimensions(self):
+        vec = hash_vectorize("hello world", size=384)
+        assert len(vec) == 384
+
+    def test_empty_text_returns_unit_vector(self):
+        vec = hash_vectorize("", size=384)
+        assert vec[0] == 1.0
+        assert sum(x * x for x in vec) == pytest.approx(1.0, abs=0.001)
+
+    def test_single_word(self):
+        vec = hash_vectorize("python", size=384)
+        norm = math.sqrt(sum(x * x for x in vec))
+        assert norm == pytest.approx(1.0, abs=0.001)
+
+    def test_same_text_same_vector(self):
+        vec1 = hash_vectorize("test text for hashing", size=384)
+        vec2 = hash_vectorize("test text for hashing", size=384)
+        assert vec1 == vec2
+
+    def test_different_text_different_vector(self):
+        vec1 = hash_vectorize("hello world", size=384)
+        vec2 = hash_vectorize("goodbye world", size=384)
+        assert vec1 != vec2
+
+    def test_custom_size(self):
+        vec = hash_vectorize("test", size=128)
+        assert len(vec) == 128
+
+    def test_l2_normalized(self):
+        vec = hash_vectorize("some longer text with multiple words for testing", size=384)
+        norm = math.sqrt(sum(x * x for x in vec))
+        assert norm == pytest.approx(1.0, abs=0.001)
+
+    def test_single_character_words(self):
+        vec = hash_vectorize("a b c", size=384)
+        norm = math.sqrt(sum(x * x for x in vec))
+        assert norm == pytest.approx(1.0, abs=0.001)
 
 
-def test_hash_vectorize_returns_fixed_size_list():
-    vec = hash_vectorize("hello world", size=8)
-    assert isinstance(vec, list)
-    assert len(vec) == 8
-    assert all(isinstance(v, float) for v in vec)
+class TestCascadeMemoryService:
+    def test_init_with_sqlite_fallback(self, tmp_path):
+        db_path = str(tmp_path / "test_memory.db")
+        service = CascadeMemoryService(db_path=db_path)
+        assert service._use_pg is False
+        assert service.db_path is not None
+        assert os.path.exists(tmp_path / "test_memory.db")
 
+    def test_init_with_explicit_db_path_creates_directory(self, tmp_path):
+        db_path = str(tmp_path / "subdir" / "memory.db")
+        service = CascadeMemoryService(db_path=db_path)
+        assert service._use_pg is False
+        assert os.path.exists(db_path)
 
-def test_hash_vectorize_deterministic():
-    v1 = hash_vectorize("hello", size=16)
-    v2 = hash_vectorize("hello", size=16)
-    assert v1 == v2
+    def test_embed_without_encoder_uses_hash(self, tmp_path):
+        service = CascadeMemoryService(db_path=str(tmp_path / "embed_test.db"))
+        vec = service._embed("test text")
+        assert len(vec) == 384
+        norm = math.sqrt(sum(x * x for x in vec))
+        assert norm == pytest.approx(1.0, abs=0.001)
 
+    def test_store_and_retrieve_memory(self, tmp_path):
+        service = CascadeMemoryService(db_path=str(tmp_path / "store_test.db"))
+        service.store_memory(
+            file_path="/test/file.py",
+            content="print('hello')",
+            summary="A test file",
+            structure="simple script",
+        )
+        memories = service.retrieve_memories()
+        assert len(memories) >= 1
+        assert any(m["file_path"] == "/test/file.py" for m in memories)
 
-def test_hash_vectorize_different_texts_differ():
-    v1 = hash_vectorize("hello world", size=16)
-    v2 = hash_vectorize("goodbye world", size=16)
-    assert v1 != v2
+    def test_store_duplicate_updates(self, tmp_path):
+        service = CascadeMemoryService(db_path=str(tmp_path / "dup_test.db"))
+        service.store_memory("/test/file.py", "v1", "summary1", "struct1")
+        service.store_memory("/test/file.py", "v2", "summary2", "struct2")
+        memories = service.retrieve_memories()
+        matching = [m for m in memories if m["file_path"] == "/test/file.py"]
+        assert len(matching) == 1
+        assert matching[0]["content"] == "v2"
 
+    def test_retrieve_empty_when_no_memories(self, tmp_path):
+        service = CascadeMemoryService(db_path=str(tmp_path / "empty_test.db"))
+        memories = service.retrieve_memories()
+        assert isinstance(memories, list)
 
-# ── CascadeMemoryService ───────────────────────────────────────────────────────
+    def test_delete_memory(self, tmp_path):
+        service = CascadeMemoryService(db_path=str(tmp_path / "delete_test.db"))
+        service.store_memory("/test/del.py", "content", "summary", "struct")
+        service.delete_memory("/test/del.py")
+        memories = service.retrieve_memories()
+        assert not any(m["file_path"] == "/test/del.py" for m in memories)
 
-
-def _make_svc(tmp_path):
-    return CascadeMemoryService(db_path=str(tmp_path / "test_memory.db"))
-
-
-def test_chunk_and_embed_returns_chunks(tmp_path):
-    svc = _make_svc(tmp_path)
-    content = "Line one.\n\nLine two.\n\nLine three."
-    chunks = svc.chunk_and_embed("/fake/file.py", content)
-    assert isinstance(chunks, list)
-    assert len(chunks) > 0
-    for c in chunks:
-        assert "file" in c or "summary" in c or "vector" in c
-
-
-def test_chunk_and_embed_empty_content(tmp_path):
-    svc = _make_svc(tmp_path)
-    chunks = svc.chunk_and_embed("/fake/file.py", "")
-    # May return empty list or placeholder chunk depending on implementation
-    assert isinstance(chunks, list)
-
-
-def test_query_context_returns_list(tmp_path):
-    svc = _make_svc(tmp_path)
-    # Pre-seed with chunks via chunk_and_embed
-    svc.chunk_and_embed("/fake/a.py", "def foo(): pass\ndef bar(): pass\n")
-    results = svc.query_context("foo", top_k=3)
-    assert isinstance(results, list)
-    # Should find at least one chunk mentioning foo or fallback gracefully
-    assert all("content" in r or "score" in r or "embedding" in r for r in results)
-
-
-def test_query_context_top_k_limits_results(tmp_path):
-    svc = _make_svc(tmp_path)
-    svc.chunk_and_embed("/fake/a.py", "alpha " * 100)
-    svc.chunk_and_embed("/fake/b.py", "beta " * 100)
-    results = svc.query_context("alpha", top_k=2)
-    assert len(results) <= 2
-
-
-# ── Module-level memory_service instance ──────────────────────────────────────
-
-
-def test_module_memory_service_is_importable():
-    from services import memory_service as ms
-
-    assert hasattr(ms, "memory_service")
+    def test_delete_nonexistent_does_not_raise(self, tmp_path):
+        service = CascadeMemoryService(db_path=str(tmp_path / "nodelfail.db"))
+        # Should not raise
+        service.delete_memory("/nonexistent/file.py")
