@@ -255,11 +255,30 @@ except Exception as e:
 
 async def _self_healer_error_listener(event: ErrorEvent):
     """
-    Listens to the centralized error event bus.
     If an error meets the criteria, it can trigger the self healer's propose_fix logic.
     """
     logger.info(f"SelfHealer triggered by event from {event.module}: {event.error_type}")
 
 
-# Register the listener
-error_event_bus.register_listener(_self_healer_error_listener)
+# বাংলা মন্তব্য: লিসেনার রেজিস্ট্রেশন এখন মডিউল লেভেলে নেই — এটি ইম্পোর্ট সাইড ইফেক্ট তৈরি করত।
+# এখন এটি একটি ফাংশনের মাধ্যমে এক্সপ্লিসিটলি কল করতে হবে (যেমন lifespan-এ)।
+# পুরানো কোড ভাঙতে পারে — তাই __getattr__ হ্যান্ডলার যোগ করা হলো।
+_listener_registered: bool = False
+
+
+def register_self_healer_listener() -> None:
+    """বাংলা মন্তব্য: Self-healer error listener এক্সপ্লিসিটলি রেজিস্টার করে।
+    এটি lifespan-এ বা app startup-এ কল করতে হবে — মডিউল ইম্পোর্টে নয়।
+    """
+    global _listener_registered  # noqa: PLW0603
+    if not _listener_registered:
+        error_event_bus.register_listener(_self_healer_error_listener)
+        _listener_registered = True
+        logger.info("✅ SelfHealer error listener registered explicitly.")
+
+
+def __getattr__(name: str):
+    """বাংলা মন্তব্য: Backward-compatible — পুরানো কোড যদি সরাসরি listener রেজিস্টার্ড আশা করে।"""
+    if name == "error_event_bus":
+        return error_event_bus
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
