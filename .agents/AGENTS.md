@@ -8,6 +8,10 @@ _Last Updated: 2026-06-22_
 
 SupremeAI 2.0 is a multi-cloud AI orchestration platform built on FastAPI with React/Vite frontend, Flutter mobile, and VS Code extension. It targets zero-cost operation through aggressive free-tier utilization across 8+ AI providers.
 
+- **Multi-Platform Secret Synchronization (REAL-TIME):**
+  - Whenever any API key or secret in `.env` is modified, created, or rotated, it **MUST be updated across ALL connected platforms** (GitHub Actions, Render Web Services, Vercel Projects, Infisical, etc.) at the exact same time.
+  - If new platforms are added in the future (e.g., 100 platforms), all keys must be automatically propagated to all 100 platforms using the centralized sync script `python scripts/sync_all_platforms_env.py`.
+
 ## Core Directories
 
 | Directory | Purpose |
