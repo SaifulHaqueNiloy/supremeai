@@ -1,9 +1,10 @@
 import asyncio
 import json
 
-from core.observability.log_batcher import batcher
 from fastapi import APIRouter, Path, Request
 from sse_starlette.sse import EventSourceResponse
+
+from core.observability.log_batcher import batcher
 
 router = APIRouter()
 
@@ -24,7 +25,9 @@ async def stream_session(
             # Send initial state or connection confirmed
             yield {
                 "event": "connected",
-                "data": json.dumps({"channel": "system", "data": "connected to stream"}),
+                "data": json.dumps(
+                    {"channel": "system", "data": "connected to stream"}
+                ),
             }
 
             while True:

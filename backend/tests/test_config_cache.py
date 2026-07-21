@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from core.config_cache import DEFAULT_CONFIGS, config_cache
 
 
@@ -26,7 +27,10 @@ async def test_config_cache_refresh_async(mock_session_local):
     assert config_cache._loaded is True
 
     # Verify default configs are present
-    assert config_cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
+    assert (
+        config_cache.get("cache_threshold_code")
+        == DEFAULT_CONFIGS["cache_threshold_code"]
+    )
 
 
 def test_config_cache_get_fallback():

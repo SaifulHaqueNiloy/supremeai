@@ -1,7 +1,8 @@
 import uuid
 
-from models.evolution import Base, CodeProposal, SkillFitness
 from sqlalchemy.orm import DeclarativeBase
+
+from models.evolution import Base, CodeProposal, SkillFitness
 
 
 def test_skill_fitness_defaults():

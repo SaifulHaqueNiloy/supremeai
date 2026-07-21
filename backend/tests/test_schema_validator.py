@@ -67,7 +67,9 @@ class TestSchemaValidator:
         assert result["data"]["enabled"] is True
 
     def test_validate_extra_fields_ignored(self, validator):
-        result = validator.validate("test", {"name": "Bob", "age": 25, "extra": "ignored"})
+        result = validator.validate(
+            "test", {"name": "Bob", "age": 25, "extra": "ignored"}
+        )
         assert result["status"] == "ok"
         assert "extra" not in result["data"]
 

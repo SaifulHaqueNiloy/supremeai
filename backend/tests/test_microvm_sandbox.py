@@ -16,6 +16,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from core.microvm_sandbox import (
     _ALLOWED_DOCKER_IMAGES,
     _VM_ID_PATTERN,
@@ -63,7 +64,9 @@ class TestValidation:
         # Use a whitelisted path
         whitelist = {"/tmp/sandboxes", "C:\\tmp\\sandboxes"}
 
-        with patch("core.microvm_sandbox._SANDBOX_ROOT_WHITELIST", frozenset(whitelist)):
+        with patch(
+            "core.microvm_sandbox._SANDBOX_ROOT_WHITELIST", frozenset(whitelist)
+        ):
             result = _validate_sandbox_root("/tmp/sandboxes")
 
             assert result == Path("/tmp/sandboxes")
