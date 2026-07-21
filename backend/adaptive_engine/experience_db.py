@@ -43,40 +43,54 @@ class ExperienceDatabase:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
         self.encoder = None
-        self.chroma_collection = None
-        self.qdrant_client = None
+        self.chroma_collection: Any = None
+        self._chroma_initialized = False
+        self.qdrant_client: Any = None
+        self._qdrant_initialized = False
         self.qdrant_collection = "experience"
         # বাংলা: vector-DB backend fail করলে find_similar() একটা খালি লিস্ট রিটার্ন করে —
-        # যেটা "কোনো relevant memory নেই" এবং "vector DB নিজেই down" — এই দুই অবস্থাকে
+        # যেটা "কোনো relevant memory নেই" এবং "vector DB নিজেই down" — এই due অবস্থাকে
         # আলাদা করতে পারে না। এই ফ্ল্যাগ দিয়ে health_probes/self_healer বাস্তব degradation
         # ধরতে পারবে, memory silently গায়েব হয়ে যাবে না।
         self.vector_backend_degraded = False
-        # বাংলা মন্তব্য: স্টার্টআপে ভারী HuggingFace মডেল লোড এড়াতে encoder অলসভাবে (lazily) লোড করা হবে
+
+    def _ensure_chroma(self) -> None:
+        """
+        বাংলা মন্তব্য: মেমরি ও রিসোর্স সাশ্রয় করতে ChromaDB ক্লায়েন্ট অলসভাবে (lazily) তৈরি করা হচ্ছে।
+        """
+        if self._chroma_initialized:
+            return
+        self._chroma_initialized = True
         if HAS_CHROMADB:
             try:
                 import chromadb
 
+                logger.info("Initializing ChromaDB EphemeralClient lazily...")
                 self.chroma_collection = chromadb.EphemeralClient().get_or_create_collection("experience")
             except Exception as exc:  # noqa: BLE001
-                import loguru
+                logger.error(f"ChromaDB lazy init failed: {exc}")
 
-                loguru.logger.debug(f"ChromaDB init failed: {exc}")
+    def _ensure_qdrant(self) -> None:
+        """
+        বাংলা মন্তব্য: মেমরি ও রিসোর্স সাশ্রয় করতে QdrantClient অলসভাবে (lazily) তৈরি করা হচ্ছে।
+        """
+        if self._qdrant_initialized:
+            return
+        self._qdrant_initialized = True
         if HAS_QDRANT:
             try:
                 from qdrant_client import QdrantClient
-
-                self.qdrant_client = QdrantClient(":memory:")
                 from qdrant_client.models import Distance, VectorParams
 
+                logger.info("Initializing QdrantClient(':memory:') lazily...")
+                self.qdrant_client = QdrantClient(":memory:")
                 if not self.qdrant_client.collection_exists(collection_name=self.qdrant_collection):
                     self.qdrant_client.create_collection(
                         collection_name=self.qdrant_collection,
                         vectors_config=VectorParams(size=384, distance=Distance.COSINE),
                     )
             except Exception as exc:  # noqa: BLE001
-                import loguru
-
-                loguru.logger.debug(f"Qdrant init failed: {exc}")
+                logger.error(f"Qdrant lazy init failed: {exc}")
 
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
@@ -185,6 +199,9 @@ class ExperienceDatabase:
         result: str,
         response_text: str = "",
     ) -> None:
+        # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
+        self._ensure_chroma()
+        self._ensure_qdrant()
         try:
             if self.chroma_collection:
                 self.chroma_collection.upsert(
@@ -229,6 +246,9 @@ class ExperienceDatabase:
         return dot / (norm_a * norm_b)
 
     def find_similar(self, query: str, limit: int = 5, threshold: float = 0.7) -> list[dict[str, Any]]:
+        # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
+        self._ensure_chroma()
+        self._ensure_qdrant()
         embedding = self._embed(query)
         if not embedding:
             return []
