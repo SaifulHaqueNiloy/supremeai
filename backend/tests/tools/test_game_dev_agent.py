@@ -42,9 +42,7 @@ public class PlayerController : MonoBehaviour
 """,
         }
 
-        result = await agent.generate_unity_script(
-            description="Create a player controller script", script_type="MonoBehaviour"
-        )
+        result = await agent.generate_unity_script(description="Create a player controller script", script_type="MonoBehaviour")
 
     assert result is not None
     assert "PlayerController" in result["code"]
@@ -123,9 +121,7 @@ cube.data.materials.append(mat)
 """,
         }
 
-        result = await agent.generate_asset_script(
-            asset_description="Create a red cube with material"
-        )
+        result = await agent.generate_asset_script(asset_description="Create a red cube with material")
 
     assert result is not None
     assert "bpy" in result["blender_script"]
@@ -196,9 +192,7 @@ public class AsyncLoader : MonoBehaviour
 """,
         }
 
-        result = await agent.generate_unity_script(
-            description="Create a coroutine for async loading", script_type="Coroutine"
-        )
+        result = await agent.generate_unity_script(description="Create a coroutine for async loading", script_type="Coroutine")
 
     assert result is not None
     assert "IEnumerator" in result["code"]

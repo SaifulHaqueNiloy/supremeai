@@ -33,15 +33,11 @@ async def test_idempotency_lock_fail_closed():
     # Test Redis unavailable with fail_closed=True raises exception
     from unittest.mock import PropertyMock
 
-    with patch(
-        "core.cache.redis_manager.SecureRedisManager.client", new_callable=PropertyMock
-    ) as mock_client:
+    with patch("core.cache.redis_manager.SecureRedisManager.client", new_callable=PropertyMock) as mock_client:
         mock_client.return_value = None
         with pytest.raises(IdempotencyUnavailableError) as exc_info:
             await acquire_idempotency_lock("payment:key", fail_closed=True)
-        assert "Redis অনুপলব্ধ" in str(
-            exc_info.value
-        ) or "Redis is not configured" in str(exc_info.value)
+        assert "Redis অনুপলব্ধ" in str(exc_info.value) or "Redis is not configured" in str(exc_info.value)
 
         # Test fail_closed=False passes through
         res = await acquire_idempotency_lock("noncritical:key", fail_closed=False)
@@ -66,9 +62,7 @@ async def test_autocache_proxy_ttl_and_dynamic_costs():
 
     # Test dynamic cost lookup
     mock_config = MagicMock()
-    mock_config.get.side_effect = lambda k: (
-        0.02 if "input" in k else 0.04 if "output" in k else None
-    )
+    mock_config.get.side_effect = lambda k: (0.02 if "input" in k else 0.04 if "output" in k else None)
 
     with patch("core.config_cache.config_cache", mock_config):
         # Calculation: 10 input * 0.02 + 5 output * 0.04 = 0.20 + 0.20 = 0.40
