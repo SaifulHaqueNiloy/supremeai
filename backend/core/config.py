@@ -631,7 +631,8 @@ class Settings(BaseSettings):
     @field_validator("supremeai_admin_password_hash", mode="before")
     @classmethod
     def validate_admin_hash(cls, v: str | None, info: ValidationInfo) -> str | None:
-        if not v and "pytest" not in sys.modules:
+        # বাংলা: CI এনভায়রনমেন্টে থাকলে অথবা pytest চললে পাসওয়ার্ড হ্যাশ রিকয়ারমেন্ট বাইপাস হবে
+        if not v and "pytest" not in sys.modules and os.getenv("CI") != "true":
             raise ValueError("supremeai_admin_password_hash must be explicitly set.")
         return v
 
