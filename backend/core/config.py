@@ -288,10 +288,8 @@ class Settings(BaseSettings):
     _cached_secrets: dict[str, str] = PrivateAttr(default_factory=dict)
 
     def _get_cached_secret(self, key: str) -> str:
-        # বাংলা মন্তব্য: lazy cache — প্রতিটি secret একবারই fetch হয়।
-        if key not in self._cached_secrets:
-            self._cached_secrets[key] = secret_vault.fetch_secret(key)
-        return self._cached_secrets[key]
+        # বাংলা মন্তব্য: lazy cache — secret_vault নিজে থেকেই TTL ক্যাশ হ্যান্ডেল করে, তাই স্থায়ীভাবে মেমোরিতে ক্যাশ করার পরিবর্তে সরাসরি কল করা হচ্ছে।
+        return secret_vault.fetch_secret(key)
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
     @computed_field

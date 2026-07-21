@@ -187,8 +187,9 @@ class TokenDeductor:
             return False
 
         try:
-            cost_float = self.config.get("byoc_deployment_fee_usd", 0.05)
-            cost = Decimal(str(round(cost_float, 6)))
+            cost_val = self.config.get("byoc_deployment_fee_usd", 0.05)
+            # বাংলা মন্তব্য: precision loss এড়াতে float টাইপ সরাসরি ব্যবহার না করে string-এর মাধ্যমে Decimal-এ কনভার্ট করা হলো।
+            cost = Decimal(str(cost_val)).quantize(Decimal("0.000001"))
 
             async with session.begin():
                 # বাংলা কমেন্ট: .with_for_update() ব্যবহার করে ডাটাবেসের নির্দিষ্ট রো-টি লক করা হচ্ছে (Zero-Gap Concurrency)
