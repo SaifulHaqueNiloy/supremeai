@@ -10,9 +10,9 @@ from loguru import logger
 
 from core.persistence import pooled_pg
 
-HAS_SENTENCE_TRANSFORMERS = (
-    importlib.util.find_spec("sentence_transformers") is not None
-)
+# বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
+LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
+HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec("sentence_transformers") is not None
 
 
 def hash_vectorize(text: str, size: int = 384) -> list[float]:
@@ -184,17 +184,11 @@ class CascadeMemoryService:
                 "structure": json.dumps({"error": str(e)}),
             }
 
-    def chunk_and_embed(self, file_path: str, content: str) -> list[dict[str, Any]]:
-        """
-        Parses raw code, extracts function summaries and structure,
-        generates vector embeddings, and saves them to the local SQLite database.
-        """
-        logger.info(f"Extracting summary and embedding for {file_path}")
-        parsed_data = self._parse_code_structure(file_path, content)
-        summary = parsed_data["summary"]
-        structure = parsed_data["structure"]
+    def store_memory(self, file_path: str, content: str, summary: str, structure: str) -> None:
+        """Stores or updates a memory entry in the database.
 
-        # Generate embedding for the structural summary
+        বাংলা মন্তব্য: ডেটাবেসে মেমোরি এন্ট্রি স্টোর বা আপডেট করার কোর মেথড।
+        """
         embedding = self._embed(summary)
         embedding_str = json.dumps(embedding)
 
@@ -214,9 +208,9 @@ class CascadeMemoryService:
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.error(
-                    f"CascadeMemoryService.chunk_and_embed: Postgres write failed: {exc}"
+                    f"CascadeMemoryService.store_memory: Postgres write failed: {exc}"
                 )
-            return [{"file": file_path, "summary": summary, "vector": embedding}]
+            return
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
@@ -233,6 +227,74 @@ class CascadeMemoryService:
                 (file_path, content, summary, structure, embedding_str),
             )
             conn.commit()
+
+    def retrieve_memories(self) -> list[dict[str, Any]]:
+        """Retrieves all memory entries from the database.
+
+        বাংলা মন্তব্য: ডেটাবেসে থাকা সকল মেমোরি এন্ট্রি রিট্রিভ করার কোর মেথড।
+        """
+        results = []
+        if self._use_pg:
+            try:
+                rows = pooled_pg.query_dicts("SELECT file_path, content, summary, structure FROM file_memories")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
+                rows = []
+            for row in rows:
+                results.append({
+                    "file_path": row["file_path"],
+                    "content": row["content"],
+                    "summary": row["summary"],
+                    "structure": row["structure"],
+                })
+            return results
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT file_path, content, summary, structure FROM file_memories")
+            rows = cursor.fetchall()
+            for row in rows:
+                results.append({
+                    "file_path": row["file_path"],
+                    "content": row["content"],
+                    "summary": row["summary"],
+                    "structure": row["structure"],
+                })
+        return results
+
+    def delete_memory(self, file_path: str) -> None:
+        """Deletes a memory entry from the database by its file path.
+
+        বাংলা মন্তব্য: ফাইল পাথ দিয়ে ডেটাবেস থেকে কোনো নির্দিষ্ট মেমোরি এন্ট্রি মুছে ফেলে।
+        """
+        if self._use_pg:
+            try:
+                pooled_pg.execute("DELETE FROM file_memories WHERE file_path = %s", (file_path,))
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"CascadeMemoryService.delete_memory: Postgres delete failed: {exc}")
+            return
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM file_memories WHERE file_path = ?", (file_path,))
+            conn.commit()
+
+    def chunk_and_embed(self, file_path: str, content: str) -> list[dict[str, Any]]:
+        """
+        Parses raw code, extracts function summaries and structure,
+        generates vector embeddings, and saves them to the local SQLite database.
+        """
+        logger.info(f"Extracting summary and embedding for {file_path}")
+        parsed_data = self._parse_code_structure(file_path, content)
+        summary = parsed_data["summary"]
+        structure = parsed_data["structure"]
+
+        # Generate embedding for the structural summary
+        embedding = self._embed(summary)
+
+        # Save memory
+        self.store_memory(file_path, content, summary, structure)
 
         return [{"file": file_path, "summary": summary, "vector": embedding}]
 
