@@ -20,11 +20,13 @@ from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.otp_router import send_otp
 
+import os
+
 _CONTEXT_KEY_PREFIX = "security:last_context:"
-_CONTEXT_TTL = 86400
+_CONTEXT_TTL = int(os.getenv("SECURITY_CONTEXT_TTL", "86400"))
 _OTP_COOLDOWN_PREFIX = "security:otp_cooldown:"
 _CAUTION_LOG_PREFIX = "security:caution_log:"
-_CAUTION_LOG_TTL = 86400
+_CAUTION_LOG_TTL = int(os.getenv("SECURITY_CAUTION_LOG_TTL", "86400"))
 
 
 def _octet3(ip: str) -> str:
