@@ -44,6 +44,7 @@ on:
 # DO NOT ALLOW AI AGENTS TO MODIFY THIS CONCURRENCY LOGIC.
 # Purpose: Ensures new pushes cancel pending/running jobs in this pipeline.
 # ==============================================================================
+# বাংলা মন্তব্য: নতুন পুশ আসলে শুধুমাত্র এই পাইপলাইনের পুরানো রানিং জবগুলো যেন বাতিল হয়ে যায় সেজন্য cancel-in-progress: true সেট করা হলো।
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
