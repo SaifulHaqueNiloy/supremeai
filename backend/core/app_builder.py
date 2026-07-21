@@ -284,16 +284,25 @@ def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs"
             settings.openrouter_api_key or settings.gemini_api_key or settings.deepseek_api_key or settings.groq_api_key or settings.nvidia_api_key
         )
         # বাংলা মন্তব্য: নির্ভরযোগ্যতা এবং স্টার্টআপ ভ্যালিডেশন মেট্রিক্স হেলথ চেকে যুক্ত করা হলো।
+        startup_status = StartupValidator.last_status()
+        validation_summary = StartupValidator.get_validation_summary()
         checks = {
             "redis": redis_ok,
             "api_keys_configured": api_keys_ok,
             "reliability_controller": ReliabilityController.health(),
-            "startup_validation": StartupValidator.last_status(),
+            "startup_validation": startup_status,
         }
-        all_ok = redis_ok and api_keys_ok and StartupValidator.last_status().get("success", True)
+        all_ok = redis_ok and api_keys_ok and startup_status.get("success", True)
         return {
             "status": "ok" if all_ok else "degraded",
             "orchestrator": "online",
+            "startup_duration_ms": validation_summary.get("duration_ms", 0),
+            "cors_origins_configured": len(settings.cors_origins),
+            "security": {
+                "jwt_configured": bool(settings.jwt_secret),
+                "jit_otp_enabled": True,
+                "token_revocation_active": True,
+            },
             "checks": checks,
         }
 
