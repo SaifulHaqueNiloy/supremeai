@@ -1,6 +1,10 @@
+import os
 from typing import Any
 
 try:
+    # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
+    if os.getenv("LOW_MEMORY_MODE", "false").lower() == "true":
+        raise ImportError("Low memory mode enabled. Skipping sentence-transformers.")
     from sentence_transformers import SentenceTransformer
 
     HAS_ST = True
