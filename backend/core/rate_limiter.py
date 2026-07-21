@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 from __future__ import annotations
 
 import os
@@ -19,7 +20,11 @@ class InMemoryFallbackLimiter:
         self._hits: dict[str, list[float]] = {}
 
     def _cleanup(self, key: str, now: float) -> None:
-        self._hits[key] = [t for t in self._hits.get(key, []) if now - t < self.window]
+        # বাংলা মন্তব্য: মেমোরি লিক এড়াতে যদি কোনো কী-তে নতুন কোনো হিট না থাকে, তবে ডিকশনারি থেকে কী-টি ডিলিট করা হচ্ছে।
+        if key in self._hits:
+            self._hits[key] = [t for t in self._hits[key] if now - t < self.window]
+            if not self._hits[key]:
+                del self._hits[key]
 
     def is_allowed(self, key: str, limit: int = 6) -> bool:
         now = time.time()

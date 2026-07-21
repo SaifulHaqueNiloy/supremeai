@@ -50,6 +50,7 @@ class DockerSandbox:
         safe_module_name = self._sanitize_module_name(entry_file)
 
         # Subprocess এর মাধ্যমে সরাসরি ডকার সিএলআই এনফোর্সমেন্ট
+        # বাংলা মন্তব্য: পাইথন ইনজেকশন এড়াতে payload-টি সরাসরি কমান্ড স্ট্রিং-এ কনক্যাট না করে এনভায়রনমেন্ট ভ্যারিয়েবল হিসেবে পাস করা হচ্ছে।
         cmd = [
             "docker",
             "run",
@@ -60,6 +61,8 @@ class DockerSandbox:
             self.memory_limit,  # 📉 মেমরি ক্যাপ
             "--cpus",
             self.cpu_limit,  # 📊 সিপিইউ ক্যাপ
+            "-e",
+            f"SANDBOX_PAYLOAD={test_payload}",
             "-v",
             f"{staging_path.resolve()}:/workspace:ro",  # 📁 রিড-ওনলি মাউন্ট
             "-w",
@@ -67,7 +70,9 @@ class DockerSandbox:
             self.image_name,
             "python",
             "-c",
-            f"import sys; import json; import {safe_module_name} as tool; print(json.dumps(tool.execute_tool({test_payload})))",
+            f"import os, sys, json, ast; import {safe_module_name} as tool; "
+            f"payload = ast.literal_eval(os.environ.get('SANDBOX_PAYLOAD', '{{}}')); "
+            f"print(json.dumps(tool.execute_tool(payload)))",
         ]
 
         try:
