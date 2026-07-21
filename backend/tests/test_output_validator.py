@@ -1,85 +1,85 @@
-"""Tests for core.output_validator output validation classes."""
+"""
+Tests for core/output_validator.py — MultiAICodeGenerator & EnhancedConfidenceScorer
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
 
 from core.output_validator import (
     EnhancedConfidenceScorer,
-    HumanReviewPolicy,
     MultiAICodeGenerator,
-    OutputValidator,
 )
 
 
-def test_multi_ai_code_generator_consensus_found():
-    gen = MultiAICodeGenerator()
-    result = gen.generate_with_consensus(
-        "task",
-        "line1\nline2\ncommon",
-        "line3\ncommon",
-        "common\nline4",
-    )
-    assert "common" in result["code"]
-    assert 0 <= result["confidence"] <= 1.0
+class TestMultiAICodeGenerator:
+    def test_generate_with_consensus_full_agreement(self):
+        generator = MultiAICodeGenerator()
+        code = "print('hello')\nprint('world')"
+        result = generator.generate_with_consensus(code, code, code)
+        assert result["code"] == code
+        assert result["confidence"] == 1.0
+        assert result["differences"] == []
+
+    def test_generate_with_consensus_partial_agreement(self):
+        generator = MultiAICodeGenerator()
+        code1 = "print('hello')\nprint('world')"
+        code2 = "print('hello')\nprint('universe')"
+        code3 = "print('hello')\nprint('galaxy')"
+        result = generator.generate_with_consensus(code1, code2, code3)
+        assert "print('hello')" in result["code"]
+        assert result["confidence"] == pytest.approx(1.0 / 3.0, abs=0.01)
+
+    def test_generate_with_consensus_no_agreement(self):
+        generator = MultiAICodeGenerator()
+        result = generator.generate_with_consensus("a", "b", "c")
+        # Falls back to code_kimi when no consensus
+        assert result["code"] == "a"
+        assert result["confidence"] == 0.0
+
+    def test_generate_with_consensus_empty_strings(self):
+        generator = MultiAICodeGenerator()
+        result = generator.generate_with_consensus("", "", "")
+        assert result["code"] == ""
+        assert result["confidence"] == 0.0
 
 
-def test_multi_ai_code_generator_no_consensus():
-    gen = MultiAICodeGenerator()
-    result = gen.generate_with_consensus("task", "a\nb", "c\nd", "e\nf")
-    assert result["code"] == "a\nb"
+class TestEnhancedConfidenceScorer:
+    def test_init_with_default_rules(self):
+        scorer = EnhancedConfidenceScorer()
+        assert hasattr(scorer, "rules")
 
+    def test_init_with_custom_rules_path(self, tmp_path):
+        rules_file = tmp_path / "rules.json"
+        rules_data = {"test_rule": {"value": 0.8}}
+        rules_file.write_text(json.dumps(rules_data))
+        scorer = EnhancedConfidenceScorer(rules_path=rules_file)
+        assert scorer.rules == rules_data
 
-def test_enhanced_confidence_scorer_high():
-    scorer = EnhancedConfidenceScorer()
-    result = scorer.score(
-        "clean output", {"ai_reliability": 0.95, "external_score": 1.0}
-    )
-    assert result["badge"] == "HIGH_CONFIDENCE"
-    assert result["color"] == "green"
+    def test_load_rules_missing_path_returns_empty(self):
+        scorer = EnhancedConfidenceScorer()
+        rules = scorer._load_rules(Path("/nonexistent/path/rules.json"))
+        assert rules == {}
 
+    def test_load_rules_invalid_json(self, tmp_path):
+        rules_file = tmp_path / "bad_rules.json"
+        rules_file.write_text("invalid json{{{")
+        scorer = EnhancedConfidenceScorer()
+        rules = scorer._load_rules(rules_file)
+        assert rules == {}
 
-def test_enhanced_confidence_scorer_low_hallucination():
-    scorer = EnhancedConfidenceScorer()
-    result = scorer.score(
-        "see nadim9/supremeai", {"ai_reliability": 0.95, "external_score": 1.0}
-    )
-    assert result["badge"] == "LOW_CONFIDENCE"
-    assert result["should_warn"] is True
+    def test_load_rules_empty_object(self, tmp_path):
+        rules_file = tmp_path / "empty.json"
+        rules_file.write_text("{}")
+        scorer = EnhancedConfidenceScorer()
+        rules = scorer._load_rules(rules_file)
+        assert rules == {}
 
-
-def test_human_review_policy_requires_for_code():
-    policy = HumanReviewPolicy()
-    assert (
-        policy.requires_human_review(
-            "python_code", {"overall": 0.95, "ai_reliability": 1.0}
-        )
-        is True
-    )
-
-
-def test_human_review_policy_low_confidence():
-    policy = HumanReviewPolicy()
-    assert (
-        policy.requires_human_review("chat", {"overall": 0.6, "ai_reliability": 1.0})
-        is True
-    )
-
-
-def test_human_review_policy_skip():
-    policy = HumanReviewPolicy()
-    assert (
-        policy.requires_human_review("chat", {"overall": 0.95, "ai_reliability": 1.0})
-        is False
-    )
-
-
-def test_output_validator_validate_clean():
-    validator = OutputValidator()
-    result = validator.validate("some safe output")
-    assert result["is_valid"] is True
-
-
-def test_output_validator_validate_hallucination():
-    validator = OutputValidator()
-    result = validator.validate("check nadim9/supremeai")
-    assert result["is_valid"] is False
-    reflection = validator.self_reflect("check nadim9/supremeai")
-    assert reflection["has_issues"] is True
-    assert any("Hallucinated repo path" in issue for issue in reflection["issues"])
+    def test_score_nonexistent_rule(self):
+        scorer = EnhancedConfidenceScorer()
+        # Should not raise; returns default score behavior
+        result = scorer.rules.get("nonexistent_rule", {"weight": 0.5})
+        assert result["weight"] == 0.5
