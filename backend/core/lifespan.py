@@ -311,59 +311,74 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
 
+    import os
+
     # Start Tier-8 Meta-Self Agents
     try:
-        from core.tier8.tier8_integration import init_tier8
+        if os.getenv("ENABLE_TIER8", "false").lower() == "true":
+            from core.tier8.tier8_integration import init_tier8
 
-        # বাংলা মন্তব্য: গ্লোবাল সার্ভিস রেজিস্ট্রিতে Tier-8 এজেন্টস ইন্টিগ্রেট ও স্টার্ট করার জন্য
-        await init_tier8(services.registry)
-        logger.info("✅ Tier-8 Meta-Self subsystem initialized successfully.")
+            # বাংলা মন্তব্য: গ্লোবাল সার্ভিস রেজিস্ট্রিতে Tier-8 এজেন্টস ইন্টিগ্রেট ও স্টার্ট করার জন্য
+            await init_tier8(services.registry)
+            logger.info("✅ Tier-8 Meta-Self subsystem initialized successfully.")
+        else:
+            logger.info("ℹ️ Tier-8 Meta-Self subsystem disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
 
     # বাংলা মন্তব্য: SelfEvolutionAgent শুরু করা — এটা সবচেয়ে গুরুত্বপূর্ণ fix।
     # আগে এই agent কোনোদিন start হয়নি, সিস্টেম কখনো সত্যিকারের self-evolving ছিল না।
     try:
-        from core.evolution.self_evolution_agent import SelfEvolutionAgent
+        if os.getenv("ENABLE_EVOLUTION", "false").lower() == "true":
+            from core.evolution.self_evolution_agent import SelfEvolutionAgent
 
-        _evo_agent = SelfEvolutionAgent(interval_seconds=300)  # 5 min cycle
-        await _evo_agent.start()
-        app.state.evo_agent = _evo_agent
-        logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")
+            _evo_agent = SelfEvolutionAgent(interval_seconds=300)  # 5 min cycle
+            await _evo_agent.start()
+            app.state.evo_agent = _evo_agent
+            logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")
+        else:
+            app.state.evo_agent = None
+            logger.info("ℹ️ SelfEvolutionAgent disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ SelfEvolutionAgent failed to start: {exc}")
         app.state.evo_agent = None
 
     # বাংলা মন্তব্য: DailyLearner শুরু করা — প্রতিদিন ArXiv/GitHub scan করে নতুন technique শেখে।
     try:
-        from core.evolution.daily_learner import DailyLearner
+        if os.getenv("ENABLE_DAILY_LEARNER", "false").lower() == "true":
+            from core.evolution.daily_learner import DailyLearner
 
-        _daily_learner = DailyLearner()
+            _daily_learner = DailyLearner()
 
-        # DailyLearner-এর learn_and_plan() সরাসরি loop নেই, তাই wrapper task তৈরি করতে হবে
-        async def _daily_learner_loop() -> None:
-            import asyncio as _asyncio
+            # DailyLearner-এর learn_and_plan() সরাসরি loop নেই, তাই wrapper task তৈরি করতে হবে
+            async def _daily_learner_loop() -> None:
+                import asyncio as _asyncio
 
-            while True:
-                try:
-                    await _daily_learner.learn_and_plan("Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency")
-                except Exception as _exc:  # noqa: BLE001
-                    logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
-                await _asyncio.sleep(86400)  # 24 hours
+                while True:
+                    try:
+                        await _daily_learner.learn_and_plan("Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency")
+                    except Exception as _exc:  # noqa: BLE001
+                        logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
+                    await _asyncio.sleep(86400)  # 24 hours
 
-        app.state.daily_learner_task = asyncio.create_task(_daily_learner_loop(), name="daily-learner")
-        logger.info("✅ DailyLearner background task started (24h research scan cycle).")
+            app.state.daily_learner_task = asyncio.create_task(_daily_learner_loop(), name="daily-learner")
+            logger.info("✅ DailyLearner background task started (24h research scan cycle).")
+        else:
+            logger.info("ℹ️ DailyLearner disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
     # বাংলা মন্তব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
     # আগে auto_healer.py একটি standalone script ছিল, server-এ প্রতিবার চলত না।
     try:
-        from core.auto_healer_service import auto_healer_service
+        if os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true":
+            from core.auto_healer_service import auto_healer_service
 
-        await auto_healer_service.start()
-        app.state.auto_healer = auto_healer_service
-        logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
+            await auto_healer_service.start()
+            app.state.auto_healer = auto_healer_service
+            logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
+        else:
+            logger.info("ℹ️ AutoHealerService disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
 
