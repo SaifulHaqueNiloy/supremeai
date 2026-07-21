@@ -1,7 +1,7 @@
 [build]
-  base = "apps/studio-client"
-  command = "pnpm install && turbo run build"
-  publish = "dist-user"
+  base = "."
+  command = "VITE_PORTAL_TYPE=user pnpm --dir apps/studio-client run build"
+  publish = "apps/studio-client/dist-user"
 
 [[redirects]]
   from = "/*"

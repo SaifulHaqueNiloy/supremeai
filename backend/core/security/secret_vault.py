@@ -203,14 +203,36 @@ class ProductionSecretVault:
 
 # Global Vault Singleton Instance
 _secret_vault_instance: ProductionSecretVault | None = None
+_vault_initialized: bool = False
 
 
 def get_secret_vault() -> ProductionSecretVault:
-    """Get or create the global secret vault singleton."""
-    global _secret_vault_instance  # noqa: PLW0603
-    if _secret_vault_instance is None:
+    """Get or create the global secret vault singleton.
+
+    বাংলা মন্তব্য: লেজি সিঙ্গেলটন — প্রথম ব্যবহারের সময় ইনিশিয়ালাইজ হয়।
+    ইম্পোর্ট টাইমে নয়, তাই settings লোড হওয়ার আগে vault তৈরি হয় না।
+    """
+    global _secret_vault_instance, _vault_initialized  # noqa: PLW0603
+    if not _vault_initialized:
         _secret_vault_instance = ProductionSecretVault()
+        _vault_initialized = True
     return _secret_vault_instance
 
 
-secret_vault = get_secret_vault()
+def reset_secret_vault() -> None:
+    """বাংলা মন্তব্য: টেস্ট আইসোলেশনের জন্য vault রিসেট — শুধু টেস্টে ব্যবহার করুন।"""
+    global _secret_vault_instance, _vault_initialized  # noqa: PLW0603
+    _secret_vault_instance = None
+    _vault_initialized = False
+
+
+# বাংলা মন্তব্য: Module-level instantiation সরানো হলো — এখন লেজি।
+# পুরানো কোড যদি `from core.security.secret_vault import secret_vault` করে,
+# তাহলে এটি এখনও কাজ করবে কারণ __getattr__ ডাইনামিকালি get_secret_vault() কল করবে।
+# কিন্তু সরাসরি `secret_vault` ভ্যারিয়েবল আর module level-এ নেই।
+# Backward compatibility-র জন্য __getattr__ হ্যান্ডলার যোগ করা হলো।
+def __getattr__(name: str):
+    """বাংলা মন্তব্য: Backward-compatible lazy access — পুরানো import প্যাটার্ন ভাঙে না।"""
+    if name == "secret_vault":
+        return get_secret_vault()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

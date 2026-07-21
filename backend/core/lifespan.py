@@ -213,6 +213,9 @@ async def app_lifespan(app):
         if getattr(redis_manager, "client", None):
             await redis_manager.client.ping()
             logger.info("✅ Redis connection verified successfully.")
+            # বাংলা মন্তব্য: Redis থেকে ReliabilityController-এর failure fingerprints পুনরুদ্ধার করা হচ্ছে।
+            # এটি নিশ্চিত করে যে পূর্বের ব্যর্থতার ইতিহাস হারিয়ে না যায় (Self-Healing DNA #7)।
+            await ReliabilityController.restore_from_persistence()
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize Redis Manager: {e}")
         app.state.subsystem_status["redis"] = "down"
@@ -382,6 +385,17 @@ async def app_lifespan(app):
             logger.info("ℹ️ AutoHealerService disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
+
+    # বাংলা মন্তব্য: SelfHealer error listener এক্সপ্লিসিটলি রেজিস্টার করা হচ্ছে।
+    # এটি নিশ্চিত করে যে error_event_bus-এ ইভেন্ট এমিট হলে self_healer সেটা শুনতে পায়।
+    # আগে এটি মডিউল লেভেলে রেজিস্টার্ড ছিল — এখন এক্সপ্লিসিট কলের মাধ্যমে করা হচ্ছে।
+    try:
+        from core.health.self_healer import register_self_healer_listener
+
+        register_self_healer_listener()
+        logger.info("✅ SelfHealer error listener registered in lifespan.")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"⚠️ SelfHealer listener registration failed: {exc}")
 
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 

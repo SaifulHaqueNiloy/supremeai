@@ -176,6 +176,9 @@ class Settings(BaseSettings):
     enable_token_compression: bool = True
 
     # ── Security & Auth Config ──────────────────────────────────────────────
+    security_context_ttl: int = Field(default=86400, validation_alias="SECURITY_CONTEXT_TTL")
+    security_caution_log_ttl: int = Field(default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL")
+    otp_cooldown_seconds: int = Field(default=300, validation_alias="OTP_COOLDOWN_SECONDS")
     admin_emails: list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
     supremeai_admin_password_hash: str | None = Field(default=None, validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH")
     supremeai_public_paths: list[str] = Field(

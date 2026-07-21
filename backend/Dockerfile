@@ -38,7 +38,7 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 ENV PATH="/app/.venv/bin:$PATH"
-EXPOSE 8000
+EXPOSE 8080
 
 # CRITICAL FIX (Cloud Run Port Binding):
 # Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).

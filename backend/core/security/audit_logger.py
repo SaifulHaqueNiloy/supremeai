@@ -1,0 +1,52 @@
+"""Centralized security audit logging with structured context.
+
+বাংলা মন্তব্য: সমস্ত সিকিউরিটি ইভেন্ট (লগইন, টোকেন জেনারেট/রিভোক, আইপি অ্যানোমালি) সেন্ট্রালি ট্র্যাক এবং রিয়েল-টাইমে লগ করে।
+"""
+
+import json
+import uuid
+from datetime import datetime, timezone
+from typing import Any
+
+from loguru import logger
+
+AUDIT_PREFIX = "audit:event:"
+AUDIT_LIST_PREFIX = "audit:recent:"
+MAX_RECENT_EVENTS = 1000
+
+
+async def log_security_event(
+    event_type: str,
+    user_id: str | None,
+    details: dict[str, Any],
+    severity: str = "INFO",
+) -> str:
+    """Log a security event with unique trace ID and persist to Redis log."""
+    from core.cache.redis_manager import redis_manager
+
+    event_id = f"sec-{uuid.uuid4().hex[:12]}"
+    event = {
+        "event_id": event_id,
+        "event_type": event_type,
+        "user_id": user_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "severity": severity,
+        "details": details,
+    }
+
+    # Structured log output
+    logger.bind(event_type=event_type, severity=severity).info(f"🛡️ Security Event: {event_type} | User: {user_id}")
+
+    # Redis persistence
+    if redis_manager and getattr(redis_manager, "client", None):
+        try:
+            payload = json.dumps(event, default=str)
+            pipe = redis_manager.client.pipeline()
+            pipe.setex(f"{AUDIT_PREFIX}{event_id}", 86400 * 30, payload)  # 30 days retention
+            pipe.lpush(AUDIT_LIST_PREFIX, payload)
+            pipe.ltrim(AUDIT_LIST_PREFIX, 0, MAX_RECENT_EVENTS - 1)
+            await pipe.execute()
+        except Exception as exc:
+            logger.warning(f"⚠️ Failed to persist security audit event {event_id}: {exc}")
+
+    return event_id
