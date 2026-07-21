@@ -135,5 +135,7 @@ class TestAICodeValidatorIntegration:
         from core.code_validator import AICodeValidator
 
         validator = AICodeValidator()
-        result = validator.validate_before_use("def run():\n    return some_undefined_name\n")
+        result = validator.validate_before_use(
+            "def run():\n    return some_undefined_name\n"
+        )
         assert result["can_use"] is False

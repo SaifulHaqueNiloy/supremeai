@@ -69,7 +69,11 @@ async def verify_autonomous_agent_token(
                 severity="WARNING",
                 context={
                     "correlation_id": correlation_id,
-                    "token_prefix": (credentials.credentials[:10] if credentials.credentials else "none"),
+                    "token_prefix": (
+                        credentials.credentials[:10]
+                        if credentials.credentials
+                        else "none"
+                    ),
                 },
                 structured_context=ErrorContext(
                     module="api.dependencies",
@@ -150,10 +154,7 @@ async def verify_idempotency(request: Request) -> None:
 
     # বাংলা মন্তব্য: Redis manager import — fail-open কৌশল ব্যবহার করা হলো
     try:
-        from core.cache.redis_manager import (
-            acquire_idempotency_lock,
-            redis_manager,
-        )
+        from core.cache.redis_manager import acquire_idempotency_lock, redis_manager
     except ImportError:
         logger.warning("[Idempotency Dep] Redis import failed — skipping (fail-open)")
         return
