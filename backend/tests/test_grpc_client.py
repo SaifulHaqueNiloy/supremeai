@@ -28,9 +28,7 @@ class TestWorkerGrpcClient:
         mock_response.task_id = "task-123"
 
         with patch("core.grpc_client.grpc.insecure_channel") as mock_channel:
-            with patch(
-                "protos.supreme_engine_pb2_grpc.WorkerServiceStub"
-            ) as mock_stub_class:
+            with patch("protos.supreme_engine_pb2_grpc.WorkerServiceStub") as mock_stub_class:
                 mock_stub = MagicMock()
                 mock_stub.SubmitTask.return_value = mock_response
                 mock_stub_class.return_value = mock_stub
@@ -45,9 +43,7 @@ class TestWorkerGrpcClient:
     def test_submit_task_failure(self):
         """টাস্ক সাবমিট ব্যর্থ হলে None রিটার্ন করে।"""
         with patch("core.grpc_client.grpc.insecure_channel"):
-            with patch(
-                "protos.supreme_engine_pb2_grpc.WorkerServiceStub"
-            ) as mock_stub_class:
+            with patch("protos.supreme_engine_pb2_grpc.WorkerServiceStub") as mock_stub_class:
                 mock_stub = MagicMock()
                 mock_stub.SubmitTask.side_effect = grpc.RpcError("gRPC error")
                 mock_stub_class.return_value = mock_stub
@@ -68,9 +64,7 @@ class TestWorkerGrpcClient:
         mock_response.error_message = ""
 
         with patch("core.grpc_client.grpc.insecure_channel"):
-            with patch(
-                "protos.supreme_engine_pb2_grpc.WorkerServiceStub"
-            ) as mock_stub_class:
+            with patch("protos.supreme_engine_pb2_grpc.WorkerServiceStub") as mock_stub_class:
                 mock_stub = MagicMock()
                 mock_stub.GetTaskStatus.return_value = mock_response
                 mock_stub_class.return_value = mock_stub
@@ -87,9 +81,7 @@ class TestWorkerGrpcClient:
     def test_get_task_status_failure(self):
         """টাস্ক স্ট্যাটাস ব্যর্থ হলে ERROR রিটার্ন করে।"""
         with patch("core.grpc_client.grpc.insecure_channel"):
-            with patch(
-                "protos.supreme_engine_pb2_grpc.WorkerServiceStub"
-            ) as mock_stub_class:
+            with patch("protos.supreme_engine_pb2_grpc.WorkerServiceStub") as mock_stub_class:
                 mock_stub = MagicMock()
                 mock_stub.GetTaskStatus.side_effect = grpc.RpcError("gRPC error")
                 mock_stub_class.return_value = mock_stub
@@ -108,9 +100,7 @@ class TestWorkerGrpcClient:
         mock_response.success = True
 
         with patch("core.grpc_client.grpc.insecure_channel"):
-            with patch(
-                "protos.supreme_engine_pb2_grpc.WorkerServiceStub"
-            ) as mock_stub_class:
+            with patch("protos.supreme_engine_pb2_grpc.WorkerServiceStub") as mock_stub_class:
                 mock_stub = MagicMock()
                 mock_stub.LogAuditEvent.return_value = mock_response
                 mock_stub_class.return_value = mock_stub
@@ -119,17 +109,13 @@ class TestWorkerGrpcClient:
                 client.channel = MagicMock()
                 client.stub = mock_stub
 
-                result = client.log_audit_event(
-                    "user_login", "user-123", "auth", {"ip": "127.0.0.1"}
-                )
+                result = client.log_audit_event("user_login", "user-123", "auth", {"ip": "127.0.0.1"})
                 assert result is True
 
     def test_log_audit_event_failure(self):
         """অডিট ইভেন্ট লগ ব্যর্থ হলে False রিটার্ন করে।"""
         with patch("core.grpc_client.grpc.insecure_channel"):
-            with patch(
-                "protos.supreme_engine_pb2_grpc.WorkerServiceStub"
-            ) as mock_stub_class:
+            with patch("protos.supreme_engine_pb2_grpc.WorkerServiceStub") as mock_stub_class:
                 mock_stub = MagicMock()
                 mock_stub.LogAuditEvent.side_effect = grpc.RpcError("gRPC error")
                 mock_stub_class.return_value = mock_stub
@@ -138,7 +124,5 @@ class TestWorkerGrpcClient:
                 client.channel = MagicMock()
                 client.stub = mock_stub
 
-                result = client.log_audit_event(
-                    "user_login", "user-123", "auth", {"ip": "127.0.0.1"}
-                )
+                result = client.log_audit_event("user_login", "user-123", "auth", {"ip": "127.0.0.1"})
                 assert result is False
