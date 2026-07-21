@@ -70,9 +70,7 @@ class LogBatcherService:
         while self.running:
             try:
                 # Wait for at least one item, up to flush_interval
-                item = await asyncio.wait_for(
-                    self.queue.get(), timeout=self.flush_interval
-                )
+                item = await asyncio.wait_for(self.queue.get(), timeout=self.flush_interval)
                 self.buffer.append(item)
 
                 # Drain queue up to batch_size
