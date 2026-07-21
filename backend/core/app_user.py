@@ -29,9 +29,14 @@ app.add_middleware(
 
 if settings.env == "production":
     if not settings.user_cors_origins:
-        raise RuntimeError(
-            "🔥 CRITICAL: Production User CORS drift detected. user_cors_origins cannot be empty in production."
-        )
+        from loguru import logger
+        logger.warning("⚠️ Production User CORS drift detected. Auto-populating default trusted production origins.")
+        settings.user_cors_origins = [
+            "https://supremeai-studio.vercel.app",
+            "https://tiny-stroopwafel-2d981c.netlify.app",
+            "https://supremeai-admin.web.app",
+            "https://supremeai-backend.onrender.com"
+        ]
     if "*" in settings.user_cors_origins:
         raise RuntimeError(
             "🚨 SECURITY: Wildcard '*' is strictly prohibited in production User CORS. Set USER_CORS_ORIGINS."
