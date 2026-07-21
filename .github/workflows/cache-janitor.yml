@@ -1,0 +1,39 @@
+name: "🧹 Cache Janitor (Auto Cleanup)"
+on:
+  schedule:
+    - cron: '30 3 * * *'   # প্রতিদিন রাত ৩:৩০ UTC, main pipeline-এর পরে
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      # বাংলা মন্তব্য: ৭ দিনের বেশি পুরনো বা বাতিল করা ব্রাঞ্চের ক্যাশ ডিলিট করার অটোমেশন
+      - name: Delete caches older than 7 days or orphaned from closed/merged branches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ github.repository }}"
+          echo "বর্তমান cache তালিকা:"
+          gh cache list --repo "$REPO" --limit 100 --json id,ref,key,createdAt,sizeInBytes \
+            > caches.json
+
+          # ৭ দিনের পুরনো cache মুছে ফেলুন
+          CUTOFF=$(date -d '7 days ago' +%s)
+          jq -c '.[]' caches.json | while read -r c; do
+            created=$(echo "$c" | jq -r '.createdAt')
+            created_ts=$(date -d "$created" +%s)
+            id=$(echo "$c" | jq -r '.id')
+            if [ "$created_ts" -lt "$CUTOFF" ]; then
+              echo "🗑️ Deleting stale cache id=$id (created $created)"
+              gh cache delete "$id" --repo "$REPO" || true
+            fi
+          done
+
+      - name: Report total cache usage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh cache list --repo "${{ github.repository }}" --json sizeInBytes --jq 'add.sizeInBytes // 0 | . / 1048576 | tostring + " MB total"'
