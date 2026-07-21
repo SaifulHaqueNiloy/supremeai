@@ -12,7 +12,9 @@ from core.persistence import pooled_pg
 
 # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
-HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec("sentence_transformers") is not None
+HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
+    "sentence_transformers"
+) is not None
 
 
 def hash_vectorize(text: str, size: int = 384) -> list[float]:
@@ -184,7 +186,9 @@ class CascadeMemoryService:
                 "structure": json.dumps({"error": str(e)}),
             }
 
-    def store_memory(self, file_path: str, content: str, summary: str, structure: str) -> None:
+    def store_memory(
+        self, file_path: str, content: str, summary: str, structure: str
+    ) -> None:
         """Stores or updates a memory entry in the database.
 
         বাংলা মন্তব্য: ডেটাবেসে মেমোরি এন্ট্রি স্টোর বা আপডেট করার কোর মেথড।
@@ -236,9 +240,13 @@ class CascadeMemoryService:
         results = []
         if self._use_pg:
             try:
-                rows = pooled_pg.query_dicts("SELECT file_path, content, summary, structure FROM file_memories")
+                rows = pooled_pg.query_dicts(
+                    "SELECT file_path, content, summary, structure FROM file_memories"
+                )
             except Exception as exc:  # noqa: BLE001
-                logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
+                logger.error(
+                    f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}"
+                )
                 rows = []
             for row in rows:
                 results.append(
@@ -254,7 +262,9 @@ class CascadeMemoryService:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("SELECT file_path, content, summary, structure FROM file_memories")
+            cursor.execute(
+                "SELECT file_path, content, summary, structure FROM file_memories"
+            )
             rows = cursor.fetchall()
             for row in rows:
                 results.append(
@@ -274,14 +284,20 @@ class CascadeMemoryService:
         """
         if self._use_pg:
             try:
-                pooled_pg.execute("DELETE FROM file_memories WHERE file_path = %s", (file_path,))
+                pooled_pg.execute(
+                    "DELETE FROM file_memories WHERE file_path = %s", (file_path,)
+                )
             except Exception as exc:  # noqa: BLE001
-                logger.error(f"CascadeMemoryService.delete_memory: Postgres delete failed: {exc}")
+                logger.error(
+                    f"CascadeMemoryService.delete_memory: Postgres delete failed: {exc}"
+                )
             return
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM file_memories WHERE file_path = ?", (file_path,))
+            cursor.execute(
+                "DELETE FROM file_memories WHERE file_path = ?", (file_path,)
+            )
             conn.commit()
 
     def chunk_and_embed(self, file_path: str, content: str) -> list[dict[str, Any]]:

@@ -10,10 +10,15 @@ from loguru import logger
 
 # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
-HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec("sentence_transformers") is not None
-HAS_CHROMADB = (not LOW_MEMORY_MODE) and importlib.util.find_spec("chromadb") is not None
-HAS_QDRANT = (not LOW_MEMORY_MODE) and importlib.util.find_spec("qdrant_client") is not None
-
+HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
+    "sentence_transformers"
+) is not None
+HAS_CHROMADB = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
+    "chromadb"
+) is not None
+HAS_QDRANT = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
+    "qdrant_client"
+) is not None
 
 
 @dataclass
