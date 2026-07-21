@@ -2,12 +2,19 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
-from tools.media.multilingual_tts import MultilingualTTS
-
 router = APIRouter()
 
-# Initialize TTS engine (can be reused across requests)
-tts_engine = MultilingualTTS()
+_tts_engine = None
+
+
+def get_tts_engine():
+    # বাংলা মন্তব্য: মেমরি ওভারহেড কমাতে MultilingualTTS অলসভাবে (lazy) লোড করা হচ্ছে।
+    global _tts_engine
+    if _tts_engine is None:
+        from tools.media.multilingual_tts import MultilingualTTS
+
+        _tts_engine = MultilingualTTS()
+    return _tts_engine
 
 
 @router.get("/stream_audio")
@@ -22,7 +29,7 @@ async def stream_audio(text: str = "", voice: str | None = None):
     async def audio_stream():
         try:
             # Stream audio bytes from TTS engine (ElevenLabs with edge-tts fallback)
-            async for chunk in tts_engine.synthesize_stream(
+            async for chunk in get_tts_engine().synthesize_stream(
                 text=text.strip(),
                 voice_id=None,  # Use language-based voice for ElevenLabs; voice param for edge-tts fallback handled internally
             ):
