@@ -124,12 +124,18 @@ services:
         value: 'supremeai-admin.onrender.com'
 
   # ২. ফ্রন্টএন্ড (Render 100% Free Static Hosting)
+  # বাংলা মন্তব্য: buildCommand এবং build-time env vars এখানে explicit সেট করা হলো যাতে সঠিক backend URL পাই।
   - type: web
     name: supremeai-studio-client
     env: static
-    buildCommand: "cd apps/studio-client && pnpm install && pnpm run build"
+    buildCommand: "cd apps/studio-client && pnpm install && pnpm run build:user"
     staticPublishPath: "./apps/studio-client/dist-user"
     autoDeploy: false
+    envVars:
+      - key: VITE_API_URL
+        value: https://supremeai-backend.onrender.com
+      - key: VITE_API_BASE
+        value: https://supremeai-backend.onrender.com
     routes:
       - type: rewrite
         source: /*
