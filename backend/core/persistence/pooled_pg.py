@@ -68,12 +68,8 @@ def _get_pool() -> psycopg2.pool.ThreadedConnectionPool | None:
             )
             return None
         try:
-            _pool = psycopg2.pool.ThreadedConnectionPool(
-                _MIN_CONN, _MAX_CONN, dsn, connect_timeout=10
-            )
-            logger.info(
-                f"persistence.pooled_pg: initialized (max={_MAX_CONN} connections)."
-            )
+            _pool = psycopg2.pool.ThreadedConnectionPool(_MIN_CONN, _MAX_CONN, dsn, connect_timeout=10)
+            logger.info(f"persistence.pooled_pg: initialized (max={_MAX_CONN} connections).")
         except Exception as exc:  # noqa: BLE001
             logger.error(f"persistence.pooled_pg: failed to initialize pool: {exc}")
             _pool_unavailable = True
@@ -143,6 +139,11 @@ def query_dicts(sql: str, params: tuple = ()) -> list[dict[str, Any]]:
             return [dict(zip(cols, row, strict=True)) for row in cur.fetchall()]
         finally:
             cur.close()
+
+
+def is_configured() -> bool:
+    # বাংলা মন্তব্য: কানেকশন পুল ইনিশিয়ালাইজ না করে শুধুমাত্র কনফিগারেশন চেক করার জন্য
+    return _resolve_dsn() is not None
 
 
 def is_available() -> bool:
