@@ -139,9 +139,9 @@ class SkillManager:
                     "__builtins__": _SAFE_SKILL_BUILTINS,
                     "BaseSkill": BaseSkill,
                 }
-                exec(
+                exec(  # noqa: S102  # AST-vetted, locked-down namespace above
                     code_content, exec_globals, local_env
-                )  # noqa: S102 — AST-vetted, locked-down namespace above
+                )
 
                 for item in local_env.values():
                     if (
