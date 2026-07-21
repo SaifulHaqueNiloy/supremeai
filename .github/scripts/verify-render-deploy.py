@@ -1,10 +1,11 @@
 # .github/scripts/verify-render-deploy.py
-# বাংলা মন্তব্য: এই স্ক্রিপ্টটি Render এপিআই ব্যবহার করে ডেপ্লয়মেন্টের অবস্থা (status) ট্র্যাক করে এবং লাইভ হওয়া পর্যন্ত অপেক্ষা করে।
-# এটি ৩ মিনিটের নাভল পার্লিং এড়ানো নিশ্চিত করে এবং রেন্ডারের কিউয়িং টাইমআউট সঠিকভাবে হ্যান্ডেল করে।
+# বাংলা মন্তব্য: এই স্ক্রিপ্টটি নির্দিষ্ট Render সার্ভিসের (User/Primary বা Admin/Backup) ডেপ্লয়মেন্ট স্ট্যাটাস ও হেলথ ভেরিফাই করে।
+# এটি সার্ভিস আইডি অনুযায়ী ফিল্টার করে ট্র্যাকিং নিশ্চিত করে যাতে একটি সার্ভিসের সুস্থতা অন্য ব্যর্থ সার্ভিসকে ঢেকে না ফেলে।
 
 import os
 import sys
 import time
+import argparse
 import requests
 from datetime import datetime, timezone, timedelta
 
@@ -19,30 +20,23 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-# Services to monitor
-# বাংলা মন্তব্য: Primary এবং Backup উভয় ব্যাকএন্ড সার্ভিসের ডেপ্লয়মেন্ট স্ট্যাটাস ও হেলথ চেক ট্র্যাক করার জন্য যুক্ত করা হলো।
-SERVICES = [
-    {
-        "name": "Primary backend",
+SERVICES = {
+    "srv-d9d3n58js32c738n79k0": {
+        "name": "User Backend (Primary)",
         "service_id": "srv-d9d3n58js32c738n79k0",
         "url": "https://supremeai-backend.onrender.com",
-        "api_key_env": "RENDER_API_KEY"
     },
-    {
-        "name": "Backup backend",
-        "service_id": "srv-d9fg48bh523c73f63bb0",
+    "srv-d9d3pgvavr4c738a46mg": {
+        "name": "Admin Backend (Backup)",
+        "service_id": "srv-d9d3pgvavr4c738a46mg",
         "url": "https://supremeai-admin.onrender.com",
-        "api_key_env": "RENDER_API_KEY_BACKUP"
     }
-]
+}
 
 POLL_INTERVAL = 30  # seconds
 TIMEOUT_LIMIT = 900  # 15 minutes (900 seconds)
 
 def check_http_health(url, label):
-    """
-    বাংলা মন্তব্য: সার্ভিসের হেলথ চেক এন্ডপয়েন্ট সরাসরি ভেরিফাই করে।
-    """
     health_url = f"{url.rstrip('/')}/api/v1/health"
     print(f"⏳ Verifying {label} HTTP health at {health_url}...")
     try:
@@ -61,7 +55,6 @@ def monitor_service(service):
     name = service["name"]
     service_id = service["service_id"]
     
-    # বাংলা মন্তব্য: উভয় API Key ট্রাই করা হবে যদি একটি ব্যর্থ হয় বা Revoked অবস্থায় থাকে
     primary_key = os.getenv("RENDER_API_KEY")
     backup_key = os.getenv("RENDER_API_KEY_BACKUP")
     candidate_keys = [k for k in [primary_key, backup_key] if k]
@@ -71,9 +64,6 @@ def monitor_service(service):
         return check_http_health(service["url"], name)
 
     headers = None
-    working_key = None
-
-    # ১. গ্রহণযোগ্য API Key খুঁজে বের করা
     for key in candidate_keys:
         test_headers = {
             "Authorization": f"Bearer {key}",
@@ -84,7 +74,6 @@ def monitor_service(service):
             res = requests.get(deploys_url, headers=test_headers, timeout=10)
             if res.status_code == 200:
                 headers = test_headers
-                working_key = key
                 break
         except Exception:
             pass
@@ -95,7 +84,6 @@ def monitor_service(service):
 
     print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {service_id})...")
 
-    # 1. Get the list of deploys
     deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
     try:
         res = requests.get(deploys_url, headers=headers, timeout=15)
@@ -108,12 +96,8 @@ def monitor_service(service):
             print(f"⚠️ No deploys found for {name}. Checking HTTP health directly.")
             return check_http_health(service["url"], name)
 
-        # বাংলা মন্তব্য: Render API-র রেসপন্স লিস্টে প্রতিটি ডেপ্লয়মেন্ট অবজেক্ট "deploy" কী-এর অধীনে র‍্যাপ করা থাকে।
         latest_deploy_item = deploys[0]
-        if isinstance(latest_deploy_item, dict) and "deploy" in latest_deploy_item:
-            latest_deploy = latest_deploy_item["deploy"]
-        else:
-            latest_deploy = latest_deploy_item
+        latest_deploy = latest_deploy_item.get("deploy", latest_deploy_item) if isinstance(latest_deploy_item, dict) else latest_deploy_item
 
         deploy_id = latest_deploy.get("id")
         status = latest_deploy.get("status")
@@ -125,14 +109,14 @@ def monitor_service(service):
             print(f"⚠️ createdAt timestamp is missing. Checking HTTP health directly.")
             return check_http_health(service["url"], name)
 
-        # বাংলা মন্তব্য (জরুরি): এই চেকটি কোনোভাবেই পরিবর্তন বা রিমুভ করা যাবে না!
-        # যদি রেন্ডারে নতুন ডেপ্লয়মেন্ট ট্রিগার ব্যর্থ হয় (যেমন: ভুল API Key বা Service ID), তবে Render-এ নতুন কোনো ডেপ্লয়মেন্ট রেকর্ড তৈরি হয় না।
-        # পূর্বে এখানে পুরনো সার্ভিস চালুর থাকলে ভুয়া Success দেখাত (Anti-Silent Failure)। তাই ৩ মিনিটের মধ্যে নতুন ডেপ্লয় রেকর্ড না পাওয়া গেলে সরাসরি বিল্ড ফেল (return False) করাতে হবে।
+        created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+
+        # বাংলা মন্তব্য (জরুরি): ৩ মিনিটের মধ্যে নতুন ডেপ্লয়মেন্ট রেকর্ড পাওয়া না গেলে সরাসরি Fail করতে হবে (Anti-Silent Failure)।
         if now - created_at > timedelta(minutes=3):
             print(
                 f"❌ No new deploy record found for {name} within 3 minutes of triggering it. "
-                f"The trigger call likely failed silently (invalid API key, wrong service ID, "
-                f"or account mismatch) — latest deploy on file is {now - created_at} old."
+                f"The trigger call likely failed silently — latest deploy on file is {now - created_at} old."
             )
             return False
 
@@ -140,7 +124,6 @@ def monitor_service(service):
         print(f"❌ Error communicating with Render API: {e}")
         return False
 
-    # 3. Poll deploy status
     start_time = time.time()
     deploy_url = f"https://api.render.com/v1/services/{service_id}/deploys/{deploy_id}"
 
@@ -156,17 +139,12 @@ def monitor_service(service):
             res = requests.get(deploy_url, headers=headers, timeout=15)
             if res.status_code == 200:
                 deploy_info = res.json()
-                # বাংলা মন্তব্য: পোলিং রেসপন্স যদি "deploy" কী দ্বারা আবৃত থাকে তবে সেটি আনর‍্যাপ করার জন্য চেক করছি।
-                if isinstance(deploy_info, dict) and "deploy" in deploy_info:
-                    deploy_data = deploy_info["deploy"]
-                else:
-                    deploy_data = deploy_info
+                deploy_data = deploy_info.get("deploy", deploy_info) if isinstance(deploy_info, dict) else deploy_info
                 status = deploy_data.get("status", "").lower()
                 print(f"  Deploy {deploy_id} status: {status} (elapsed: {int(elapsed)}s)")
 
                 if status == "live":
                     print(f"🎉 Deploy {deploy_id} is now LIVE on Render!")
-                    # Perform final HTTP health verification
                     return check_http_health(service["url"], name)
                 elif status in ["update_failed", "build_failed", "canceled"]:
                     print(f"❌ Deploy {deploy_id} failed with status: {status}")
@@ -179,24 +157,40 @@ def monitor_service(service):
         time.sleep(POLL_INTERVAL)
 
 def main():
-    success = False
-    results = {}
+    parser = argparse.ArgumentParser(description="Verify Render Deploy Status")
+    parser.add_argument("--service-id", type=str, help="Specific Render Service ID to verify")
+    parser.add_argument("--name", type=str, help="Custom Service Name label")
+    args = parser.parse_args()
 
-    for service in SERVICES:
-        results[service["name"]] = monitor_service(service)
+    # বাংলা মন্তব্য: যদি সার্ভিস আইডি নির্দিষ্ট করে দেওয়া হয় তবে শুধুমাত্র সেই নির্দিষ্ট ব্যাকএন্ডেরই হেলথ চেক হবে।
+    if args.service_id:
+        svc = SERVICES.get(args.service_id, {
+            "name": args.name or f"Service ({args.service_id})",
+            "service_id": args.service_id,
+            "url": "https://supremeai-backend.onrender.com" if "n58js" in args.service_id else "https://supremeai-admin.onrender.com"
+        })
+        targets = [svc]
+    else:
+        targets = list(SERVICES.values())
+
+    results = {}
+    for svc in targets:
+        results[svc["name"]] = monitor_service(svc)
 
     print("\n================ DEPLOY SUMMARY ================")
+    all_ok = True
     for name, ok in results.items():
         status_text = "✅ SUCCESS / HEALTHY" if ok else "❌ FAILED / UNHEALTHY"
         print(f"- {name}: {status_text}")
-        if ok:
-            success = True
+        if not ok:
+            all_ok = False
 
-    if success:
-        print("\n🎉 Deployment verification passed! At least one backend is healthy and responding.")
+    # বাংলা মন্তব্য (জরুরি): আংশিক ডেপ্লয় ট্র্যাকিং বন্ধ। প্রতিটি উদ্দিষ্ট সার্ভিসকে ১০০% Healthy হতে হবে, নয়তো বিল্ড ফেল করবে।
+    if all_ok:
+        print("\n🎉 Deployment verification PASSED! All targeted backend services are healthy and responding.")
         sys.exit(0)
     else:
-        print("\n❌ Deployment verification FAILED! No backend instances responded successfully.")
+        print("\n❌ Deployment verification FAILED! One or more target services failed deployment verification.")
         sys.exit(1)
 
 if __name__ == "__main__":
