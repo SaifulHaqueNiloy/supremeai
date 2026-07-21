@@ -58,7 +58,6 @@ from pydantic import (
     PrivateAttr,
     SecretStr,
     ValidationInfo,
-    computed_field,
     field_validator,
     model_validator,
 )
@@ -292,30 +291,28 @@ class Settings(BaseSettings):
         return secret_vault.fetch_secret(key)
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
-    @computed_field
+    # বাংলা মন্তব্য: স্টার্টআপ টাইম কমাতে এবং Infisical ভল্ট থেকে একের পর এক সিক্রেট ফেচ করা এড়াতে
+    # `@computed_field` এর জায়গায় অলস (lazy) `@property` ব্যবহার করা হলো। এর ফলে শুধুমাত্র
+    # অন-ডিমান্ড অ্যাক্সেস করলেই সিক্রেট ফেচ হবে এবং গ্লোবাল ক্যাশে জমা থাকবে।
     @property
     def supabase_database_url(self) -> str:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
 
     # বাংলা মন্তব্য: Anti-Hacking এবং OTP রাউটার সিক্রেটসমূহ
-    @computed_field
     @property
     def discord_otp_webhook_url(self) -> SecretStr | None:
         url = self._get_cached_secret("DISCORD_OTP_WEBHOOK_URL")
         return SecretStr(url) if url else None
 
-    @computed_field
     @property
     def resend_api_key(self) -> SecretStr | None:
         key = self._get_cached_secret("RESEND_API_KEY")
         return SecretStr(key) if key else None
 
-    @computed_field
     @property
     def admin_notification_email(self) -> str | None:
         return self._get_cached_secret("ADMIN_NOTIFICATION_EMAIL")
 
-    @computed_field
     @property
     def redis_url(self) -> str:
         url = self._get_cached_secret("REDIS_URL")
@@ -323,62 +320,50 @@ class Settings(BaseSettings):
             return f"redis://{url}"
         return url
 
-    @computed_field
     @property
     def openrouter_api_key(self) -> str:
         return self._get_cached_secret("OPENROUTER_API_KEY")
 
-    @computed_field
     @property
     def hf_api_key(self) -> str:
         return self._get_cached_secret("HF_API_KEY")
 
-    @computed_field
     @property
     def gemini_api_key(self) -> str:
         return self._get_cached_secret("GEMINI_API_KEY")
 
-    @computed_field
     @property
     def openai_api_key(self) -> str:
         return self._get_cached_secret("OPENAI_API_KEY")
 
-    @computed_field
     @property
     def deepseek_api_key(self) -> str:
         return self._get_cached_secret("DEEPSEEK_API_KEY")
 
-    @computed_field
     @property
     def groq_api_key(self) -> str:
         return self._get_cached_secret("GROQ_API_KEY")
 
-    @computed_field
     @property
     def nvidia_api_key(self) -> str:
         return self._get_cached_secret("NVIDIA_API_KEY")
 
-    @computed_field
     @property
     def firecrawl_api_key(self) -> str:
         return self._get_cached_secret("FIRECRAWL_API_KEY")
 
-    @computed_field
     @property
     def discord_bot_token(self) -> str:
         return self._get_cached_secret("DISCORD_BOT_TOKEN")
 
-    @computed_field
     @property
     def github_client_id(self) -> str:
         return self._get_cached_secret("GITHUB_CLIENT_ID")
 
-    @computed_field
     @property
     def github_client_secret(self) -> str:
         return self._get_cached_secret("GITHUB_CLIENT_SECRET")
 
-    @computed_field
     @property
     def ci_webhook_secret(self) -> str:
         return self._get_cached_secret("CI_WEBHOOK_SECRET")
@@ -387,12 +372,10 @@ class Settings(BaseSettings):
     # বাংলা মন্তব্য: আগে database/supabase_client.py সরাসরি os.environ.get() করত।
     # এখন এই দুটো computed field settings-এর Single Source of Truth।
     # supabase_client.py শুধু settings.supabase_url এবং settings.supabase_key ব্যবহার করবে।
-    @computed_field
     @property
     def supabase_url(self) -> str:
         return self._get_cached_secret("SUPABASE_URL")
 
-    @computed_field
     @property
     def supabase_key(self) -> str:
         return self._get_cached_secret("SUPABASE_KEY")
@@ -400,22 +383,18 @@ class Settings(BaseSettings):
     # ── System API Token — settings-এ মাইগ্রেট করা হলো ──────────────────────
     # বাংলা মন্তব্য: আগে auth_middleware.py সরাসরি os.getenv("SUPREMEAI_API_TOKEN") করত।
     # এখন এই computed field settings-এর Single Source of Truth।
-    @computed_field
     @property
     def supremeai_api_token(self) -> str:
         return self._get_cached_secret("SUPREMEAI_API_TOKEN")
 
-    @computed_field
     @property
     def neo4j_uri(self) -> str:
         return self._get_cached_secret("NEO4J_URI") or "bolt://localhost:7687"
 
-    @computed_field
     @property
     def neo4j_user(self) -> str:
         return self._get_cached_secret("NEO4J_USER") or "neo4j"
 
-    @computed_field
     @property
     def neo4j_password(self) -> str:
         return self._get_cached_secret("NEO4J_PASSWORD") or ""
