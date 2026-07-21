@@ -1,5 +1,73 @@
+import React, { useState } from 'react';
 import type { ChatMessage } from '../../types';
 import { UnifiedChatBubble } from '../chat';
+
+// বাংলা মন্তব্য: Markdown রেন্ডার করার জন্য হালকা ফাংশন
+function renderMarkdown(text: string): React.ReactNode[] {
+  const elements: React.ReactNode[] = [];
+  const lines = text.split('\n');
+  let inCodeBlock = false;
+  let codeBuffer: string[] = [];
+  let codeLang = '';
+
+  lines.forEach((line, idx) => {
+    // Code block handling
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        // Close code block
+        const code = codeBuffer.join('\n');
+        elements.push(
+          <pre key={`cb-${idx}`} className="bg-[#0c0d13] border border-slate-700 rounded-lg p-3 my-2 overflow-x-auto text-[11px] font-mono">
+            <code>{code}</code>
+          </pre>
+        );
+        codeBuffer = [];
+        inCodeBlock = false;
+        codeLang = '';
+      } else {
+        inCodeBlock = true;
+        codeLang = line.slice(3).trim();
+      }
+      return;
+    }
+
+    if (inCodeBlock) {
+      codeBuffer.push(line);
+      return;
+    }
+
+    // Bold: **text**
+    const processed = line
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.+?)`/g, '<code class="bg-[#1a1d2e] text-[#bc13fe] px-1 rounded text-[11px] font-mono">$1</code>');
+
+    if (line.trim() === '') {
+      elements.push(<br key={`br-${idx}`} />);
+    } else if (line.startsWith('- ')) {
+      elements.push(
+        <div key={`li-${idx}`} className="flex gap-2 text-xs text-slate-300 ml-2">
+          <span className="text-[#bc13fe]">•</span>
+          <span dangerouslySetInnerHTML={{ __html: processed.slice(2) }} />
+        </div>
+      );
+    } else {
+      elements.push(
+        <div key={`p-${idx}`} className="text-xs text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: processed }} />
+      );
+    }
+  });
+
+  // Unclosed code block
+  if (inCodeBlock && codeBuffer.length > 0) {
+    elements.push(
+      <pre key="cb-unclosed" className="bg-[#0c0d13] border border-slate-700 rounded-lg p-3 my-2 overflow-x-auto text-[11px] font-mono">
+        <code>{codeBuffer.join('\n')}</code>
+      </pre>
+    );
+  }
+
+  return elements;
+}
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -11,6 +79,18 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ messages, input, onInputChange, onSend, loading, onSaveToProject }: ChatPanelProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // clipboard not available
+    }
+  };
+
   return (
     <div className="w-96 flex-shrink-0 bg-[#050608]/90 border-l border-slate-800 flex flex-col">
       <div className="h-10 border-b border-slate-800 flex items-center px-4 justify-between bg-[#0a0c12]">
@@ -22,14 +102,25 @@ export function ChatPanel({ messages, input, onInputChange, onSend, loading, onS
         {messages.map(msg => {
           const isUser = msg.sender === 'User' || msg.sender === 'user';
           return (
-            <UnifiedChatBubble
-              key={msg.id}
-              text={msg.text}
-              sender={isUser ? 'user' : 'system'}
-              timestamp={msg.timestamp}
-              action={msg.action}
-              onSaveToProject={onSaveToProject}
-            />
+            <div key={msg.id} className="group relative">
+              <UnifiedChatBubble
+                text={msg.text}
+                sender={isUser ? 'user' : 'system'}
+                timestamp={msg.timestamp}
+                action={msg.action}
+                onSaveToProject={onSaveToProject}
+              />
+              {/* Copy button on hover */}
+              {!isUser && (
+                <button
+                  onClick={() => handleCopy(msg.text, String(msg.id))}
+                  className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                  title="Copy message"
+                >
+                  {copiedId === String(msg.id) ? 'Copied!' : 'Copy'}
+                </button>
+              )}
+            </div>
           );
         })}
 

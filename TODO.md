@@ -1,25 +1,32 @@
-# TODO — Priority 2 (High)
+# User Dashboard Completion — Lightweight Implementation
 
-## Phase 0: Tests plan + implementation
-- [x] Repo understanding: existing pytest setup + patterns (conftest, examples)
-- [ ] Add unit test files:
-- [x] backend/tests/test_auto_remediation.py
-- [x] backend/tests/test_rollback_monitor.py
-- [x] backend/tests/test_chaos_engine.py
-- [x] backend/tests/test_orchestrator.py
-- [x] backend/tests/test_cloud_sandbox_orchestrator.py
-- [x] backend/tests/test_observability_middleware.py
-- [x] backend/tests/test_token_budget.py
-- [x] backend/tests/test_token_deductor.py
-- [x] backend/tests/test_intent_router.py
-- [x] backend/tests/test_human_behavior.py
-- [x] backend/tests/test_mcp_client.py
-- [x] backend/tests/test_skill_manager.py
-- [x] backend/tests/test_rules_mutator.py
-- [x] backend/tests/test_startup_validator.py
-- [x] backend/tests/test_headless_terminal_agent.py
-- [x] backend/tests/test_performance_guardian.py
-- [x] backend/tests/test_vulnerability_prophet.py
-- [x] backend/tests/test_morphic_adapter.py
-- [x] backend/tests/test_skill_gc.py
-- [ ] Run pytest (backend) and fix any failures/import issues.
+## ✅ Step 1: Complete Bengali i18n Translations
+- [x] Extend `translations.ts` with all user dashboard strings (40+ keys, 4 locales)
+- [x] Add parameterized `t()` function in `useTranslation.ts` with `{name}`/`{date}` support
+- [x] Wire i18n into UserDashboard header (welcome, last login, core status)
+
+## ✅ Step 2: Wire customerStore Real Data
+- [x] HomeFeed: Save/load widget layout from customerStore
+- [ ] Overview stat cards: Show real counts from store
+- [ ] Project list: Show projects from store, add "Create Project"
+- [ ] Quick Actions → proper tab navigation
+
+## ✅ Step 3: Enhanced QuickPresets
+- [ ] Expand from 3 to 9 presets with categories
+- [ ] Bengali labels alongside English
+- [ ] Add preset search/filter
+
+## ✅ Step 4: ChatPanel Polish
+- [ ] Add copy button to chat bubbles
+- [ ] Markdown rendering for AI messages
+- [ ] Bengali "thinking" text
+- [ ] Bengali input placeholder
+
+## ✅ Step 5: CodeEditor Multi-Language
+- [ ] Add language selector dropdown
+- [ ] Multi-language support (JS, Python, HTML, CSS, TS, JSON, SQL)
+
+## ✅ Step 6: Test Fixes & Updates
+- [ ] Run existing tests to verify they pass
+- [ ] Update tests for new features
+
