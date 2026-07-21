@@ -19,9 +19,10 @@ import asyncio  # noqa: E402
 import json  # noqa: E402
 from collections.abc import AsyncGenerator  # noqa: E402
 
+from loguru import logger  # noqa: E402
+
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
 from core.messaging.event_bus import error_event_bus  # noqa: E402
-from loguru import logger  # noqa: E402
 
 # বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।
 # RedisURL এখন settings থেকে আসে, hardcode নয়।
@@ -48,6 +49,7 @@ class SwarmPubSub:
         if self._redis is not None:
             return self._redis
         import redis.asyncio as aioredis  # type: ignore[import-untyped]
+
         from core.config import settings
 
         url = str(settings.redis_url)
@@ -79,7 +81,9 @@ class SwarmPubSub:
 
         try:
             while True:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                message = await pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=1.0
+                )
                 if message is not None:
                     yield message["data"].decode("utf-8")
                 await asyncio.sleep(0.01)
@@ -155,7 +159,9 @@ class SwarmPubSub:
             value = await redis_client.get("swarm:halt:global")
             return value is not None
         except Exception as e:  # noqa: BLE001
-            logger.error(f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}")
+            logger.error(
+                f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}"
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="swarm_pubsub",

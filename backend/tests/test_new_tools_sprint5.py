@@ -41,7 +41,6 @@ class TestSSOIntegrator:
 class TestReferralEngine:
     def test_referral_engine_generates_code(self):
         import database.supabase_client as db_mod
-
         from tools.social.viral_referral_engine import ViralReferralEngine
 
         original = db_mod.db.client
@@ -65,7 +64,6 @@ class TestReferralEngine:
 
     def test_wallet_balance_default(self):
         import database.supabase_client as db_mod
-
         from tools.social.viral_referral_engine import ViralReferralEngine
 
         original = db_mod.db.client

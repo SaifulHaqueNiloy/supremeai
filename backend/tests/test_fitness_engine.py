@@ -1,4 +1,5 @@
 import pytest
+
 from core.evolution.fitness_engine import FitnessEngine
 from core.skills.base import BaseSkill
 
@@ -21,7 +22,9 @@ def temp_fitness_env(tmp_path, monkeypatch):
     with open(dummy_skill_dir / "main.py", "w") as f:
         f.write("class DummySkill:\n    pass\n")
     with open(dummy_skill_dir / "schema.json", "w") as f:
-        f.write('{"metadata": {"name": "DummySkill", "version": "1.0.0", "description": "test"}}')
+        f.write(
+            '{"metadata": {"name": "DummySkill", "version": "1.0.0", "description": "test"}}'
+        )
 
     class MockSkill(BaseSkill):
         def __init__(self):

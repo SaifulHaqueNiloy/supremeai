@@ -5,8 +5,9 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from core.cost_guard import CostGuard
 from fastapi import HTTPException
+
+from core.cost_guard import CostGuard
 
 # -------------------- Fixtures --------------------
 
@@ -71,7 +72,9 @@ class TestCheckBudget:
     async def test_check_budget_within_limit(self, cost_guard_with_db, mock_budget_doc):
         """বাংলা মন্তব্য: Budget limit-এর ভিতরে থাকলে True return হয়।"""
         cost_guard, mock_db = cost_guard_with_db
-        mock_db.collection.return_value.document.return_value.get.return_value = mock_budget_doc
+        mock_db.collection.return_value.document.return_value.get.return_value = (
+            mock_budget_doc
+        )
 
         result = await cost_guard.check_budget("tenant-123", 0.01)
 
@@ -152,7 +155,9 @@ class TestCheckBudget:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_check_budget_with_async_get(self, cost_guard_with_db, mock_budget_doc):
+    async def test_check_budget_with_async_get(
+        self, cost_guard_with_db, mock_budget_doc
+    ):
         """বাংলা মন্তব্য: Async get() method handle করে।"""
         cost_guard, mock_db = cost_guard_with_db
 
@@ -164,12 +169,16 @@ class TestCheckBudget:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_check_budget_with_sync_get(self, cost_guard_with_db, mock_budget_doc):
+    async def test_check_budget_with_sync_get(
+        self, cost_guard_with_db, mock_budget_doc
+    ):
         """বাংলা মন্তব্য: Sync get() method handle করে।"""
         cost_guard, mock_db = cost_guard_with_db
 
         # get() is already sync (MagicMock)
-        mock_db.collection.return_value.document.return_value.get.return_value = mock_budget_doc
+        mock_db.collection.return_value.document.return_value.get.return_value = (
+            mock_budget_doc
+        )
 
         result = await cost_guard.check_budget("tenant-123", 0.01)
         assert result is True
@@ -179,7 +188,9 @@ class TestCheckBudget:
         """বাংলা মন্তব্য: General exception handle করে RuntimeError raise হয়।"""
         cost_guard, mock_db = cost_guard_with_db
 
-        mock_db.collection.return_value.document.return_value.get.side_effect = RuntimeError("DB error")
+        mock_db.collection.return_value.document.return_value.get.side_effect = (
+            RuntimeError("DB error")
+        )
 
         with pytest.raises(RuntimeError) as exc_info:
             await cost_guard.check_budget("tenant-123", 0.01)
@@ -191,7 +202,9 @@ class TestCheckBudget:
         """বাংলা মন্তব্য: HTTPException directly re-raise হয়।"""
         cost_guard, mock_db = cost_guard_with_db
 
-        mock_db.collection.return_value.document.return_value.get.side_effect = HTTPException(status_code=402, detail="Custom error")
+        mock_db.collection.return_value.document.return_value.get.side_effect = (
+            HTTPException(status_code=402, detail="Custom error")
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await cost_guard.check_budget("tenant-123", 0.01)
@@ -287,10 +300,14 @@ class TestCostGuardIntegration:
     """বাংলা মন্তব্য: Integration-style tests for realistic scenarios।"""
 
     @pytest.mark.asyncio
-    async def test_full_budget_check_workflow(self, cost_guard_with_db, mock_budget_doc):
+    async def test_full_budget_check_workflow(
+        self, cost_guard_with_db, mock_budget_doc
+    ):
         """বাংলা মন্তব্য: সম্পূর্ণ budget check workflow।"""
         cost_guard, mock_db = cost_guard_with_db
-        mock_db.collection.return_value.document.return_value.get.return_value = mock_budget_doc
+        mock_db.collection.return_value.document.return_value.get.return_value = (
+            mock_budget_doc
+        )
 
         # Check budget for a small cost
         result = await cost_guard.check_budget("tenant-123", 0.01)

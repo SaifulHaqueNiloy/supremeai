@@ -3,10 +3,11 @@ from __future__ import annotations
 import secrets
 import time
 
-from core.config import settings
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
+
+from core.config import settings
 
 try:
     from jose import JWTError, jwt
@@ -120,7 +121,9 @@ async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
     getattr(settings, "oidc_client_secret", "")
     getattr(settings, "oidc_redirect_uri", "")
     if not payload.state or payload.state not in _oidc_state_store:
-        raise HTTPException(status_code=400, detail="Invalid or expired OIDC state parameter")
+        raise HTTPException(
+            status_code=400, detail="Invalid or expired OIDC state parameter"
+        )
     _oidc_state_store.pop(payload.state, None)
     result = await sso_service.process_oidc_response(
         provider=provider,
@@ -128,7 +131,9 @@ async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
         state=payload.state,
     )
     if result.get("status") != "success":
-        raise HTTPException(status_code=401, detail=result.get("message", "OIDC authentication failed"))
+        raise HTTPException(
+            status_code=401, detail=result.get("message", "OIDC authentication failed")
+        )
     primary_role = (result.get("roles") or ["viewer"])[0]
     token_data = {
         "sub": result.get("user_id", "unknown"),
@@ -175,7 +180,9 @@ async def saml_login(payload: SAMLAssertionRequest):
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
     result = await sso_service.process_sso_response({"SAMLResponse": payload.assertion})
     if result.get("status") != "success":
-        raise HTTPException(status_code=401, detail=result.get("message", "SAML authentication failed"))
+        raise HTTPException(
+            status_code=401, detail=result.get("message", "SAML authentication failed")
+        )
     roles = result.get("roles", ["viewer"])
     primary_role = roles[0] if roles else "viewer"
     token_data = {
