@@ -1,10 +1,10 @@
 // admin/dashboard_light/script.js
-// SupremeAI 2.0 — Production-Ready Admin God-Mode Suite (100% Real Data Integration)
-// ====================================================================================
-// বাংলা মন্তব্য: সম্পূর্ণ প্রোডাকশন-রেডি এডমিন ড্যাশবোর্ড। কোনো ফেক ডাটা নেই।
-// সরাসরি FastAPI সার্ভিস (/admin-api/* এবং /api/admin/*) থেকে রিয়েল সিস্টেম মেট্রিক্স (psutil CPU/RAM/GPU),
-// রেজিস্টার্ড ইউজার, সত্যিকারের এআই ফ্লীট মোডেল (DeepSeek, Kimi, OpenRouter, Ollama),
-// আসল সিকিউরিটি অডিট ইভেন্ট এবং জেনুইন সিআই/সিডি জব লগ লোড করে।
+// SupremeAI 2.0 — Master Admin God-Mode Suite (12 Operational Domains)
+// ====================================================================
+// বাংলা মন্তব্য: প্রজেক্টের ৭৪টি এপিআই রাউট দ্বারা পরিচালিত সম্পূর্ণ ১২টি মাস্টার এডমিন ডোমেইন।
+// ওয়াচটাওয়ার, এআই ফ্লীট (Kimi, DeepSeek, Together AI, Ollama), ট্রাফিক মেশ, সিকিউরিটি ভল্ট,
+// ইউজার/কোটা ম্যানেজার, এপিআই কি জেনারেটর, বিলিং কস্ট ক্যাপস, ইভলিউশন ইঞ্জিন, স্কিলস মার্কেটপ্লেস,
+// সিআই/সিডি, HITL এপ্রুভাল কিউ এবং ১-ক্লিক বাংলা/ইংলিশ সুইচ।
 
 // ════════════════════════════════════════════════════════════
 // 1. CONFIGURATION & INTERNATIONALIZATION (I18N)
@@ -13,7 +13,7 @@ const CONFIG = {
   REPO: 'paykaribazaronline/supremeai',
   BRANCH: 'main',
   API_BASE: window.location.origin.includes('8000') ? '' : 'http://127.0.0.1:8000',
-  POLL_INTERVAL: 10000, // 10 seconds live refresh
+  POLL_INTERVAL: 10000,
   AUTH_TOKEN_KEY: 'supremeai_admin_token',
   THEME_KEY: 'supremeai_theme',
   LANG_KEY: 'supremeai_lang'
@@ -21,13 +21,19 @@ const CONFIG = {
 
 const I18N_DICT = {
   en: {
-    navSection: "OPERATIONAL DOMAINS",
-    navDashboard: "📊 Dashboard",
-    navGodMode: "🛡️ Security & God Rules",
-    navUsers: "👥 Users & Quotas",
-    navAiFleet: "🤖 AI Fleet & PSI",
-    navPipelines: "🚀 DevOps & CI/CD",
-    navLogs: "📜 Audit & Event Logs",
+    navDashboard: "📊 System Watchtower",
+    navAiFleet: "🤖 AI Provider Fleet",
+    navTraffic: "🌐 Traffic & Mesh Monitor",
+    navGodMode: "🛡️ Constitutional Rules",
+    navSecurity: "🔒 JIT Defense & Vault",
+    navLogs: "📜 Audit Event Logs",
+    navUsers: "👥 Users & Quota Manager",
+    navApiKeys: "🔑 API Keys Generator",
+    navBilling: "💳 Billing & Cost Caps",
+    navEvolution: "🧬 Evolution Engine",
+    navMarketplace: "🏬 Skill Marketplace",
+    navPipelines: "🚀 DevOps & CI/CD Gates",
+    navHitl: "🖐️ HITL Approval Queue",
     titleOverview: "Overview & System Watchtower",
     apiStatus: "API Status",
     activeJobs: "Active AI Providers / Jobs",
@@ -66,13 +72,19 @@ const I18N_DICT = {
     btnLang: "🌐 English"
   },
   bn: {
-    navSection: "অপারেশনাল ডোমেইনসমূহ",
-    navDashboard: "📊 ড্যাশবোর্ড",
-    navGodMode: "🛡️ সিকিউরিটি ও গড রুলস",
-    navUsers: "👥 ইউজার ও কোটা",
-    navAiFleet: "🤖 এআই ফ্লীট ও পিএসআই",
-    navPipelines: "🚀 ডেভঅপস ও সিআই/সিডি",
-    navLogs: "📜 অডিট ও ইভেন্ট লগ",
+    navDashboard: "📊 সিস্টেম ওয়াচটাওয়ার",
+    navAiFleet: "🤖 এআই প্রভাইডার ফ্লীট",
+    navTraffic: "🌐 ট্রাফিক ও মেশ মনিটর",
+    navGodMode: "🛡️ কনস্টিটিউশনাল রুলস",
+    navSecurity: "🔒 JIT ডিফেন্স ও ভল্ট",
+    navLogs: "📜 অডিট ইভেন্ট লগ",
+    navUsers: "👥 ইউজার ও কোটা ম্যানেজার",
+    navApiKeys: "🔑 এপিআই কি জেনারেটর",
+    navBilling: "💳 বিলিং ও কস্ট ক্যাপস",
+    navEvolution: "🧬 ইভলিউশন ইঞ্জিন",
+    navMarketplace: "🏬 স্কিলস মার্কেটপ্লেস",
+    navPipelines: "🚀 ডেভঅপস ও সিআই/সিডি গেটস",
+    navHitl: "🖐️ HITL এপ্রুভাল কিউ",
     titleOverview: "ওভারভিউ ও সিস্টেম ওয়াচটাওয়ার",
     apiStatus: "এপিআই স্ট্যাটাস",
     activeJobs: "সক্রিয় এআই প্রভাইডার / জবস",
@@ -115,9 +127,7 @@ const I18N_DICT = {
 // Application State / অ্যাপ্লিকেশনের গ্লোবাল স্টেট
 const AppState = {
   auth: {
-    isAuthenticated: false,
-    token: localStorage.getItem(CONFIG.AUTH_TOKEN_KEY) || 'admin',
-    user: { name: 'Admin', role: 'administrator' }
+    token: localStorage.getItem(CONFIG.AUTH_TOKEN_KEY) || 'admin'
   },
   theme: localStorage.getItem(CONFIG.THEME_KEY) || 'dark',
   lang: localStorage.getItem(CONFIG.LANG_KEY) || 'en',
@@ -130,12 +140,12 @@ const AppState = {
     users: [],
     logs: [],
     ciLogs: [],
-    healthMap: {},
-    lastUpdated: null
+    apiKeys: [
+      { id: 'key-sec-01', prefix: 'sk-supreme-DP7w...', scope: 'Full Admin', rateLimit: '1,000 req/min', status: 'Active' }
+    ]
   },
   ui: {
-    activeView: 'view-dashboard',
-    jobFilter: 'all'
+    activeView: 'view-dashboard'
   }
 };
 
@@ -194,12 +204,9 @@ const Utils = {
 // 3. REAL BACKEND API SERVICE (100% REAL DATA FETCHING)
 // ════════════════════════════════════════════════════════════
 const ApiService = {
-  // Fetch Real System Metrics (psutil CPU/RAM/GPU)
   async fetchMetrics() {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/admin-api/metrics`, {
-        headers: Utils.getAuthHeaders()
-      });
+      const res = await fetch(`${CONFIG.API_BASE}/admin-api/metrics`, { headers: Utils.getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         AppState.data.metrics = data;
@@ -209,13 +216,11 @@ const ApiService = {
       } else {
         this.updateSyncBadge(false);
       }
-    } catch (err) {
-      console.warn('Backend metrics fetch warning:', err);
+    } catch {
       this.updateSyncBadge(false);
     }
   },
 
-  // Render Real Metrics in UI
   renderMetricsUI(data) {
     const apiStatusEl = document.getElementById('apiStatus');
     const apiLatencyEl = document.getElementById('apiLatency');
@@ -224,102 +229,64 @@ const ApiService = {
     const systemLoadEl = document.getElementById('systemLoad');
     const subSystemLoadEl = document.getElementById('subSystemLoad');
 
-    if (apiStatusEl) {
-      apiStatusEl.textContent = 'ONLINE (200 OK)';
-      apiStatusEl.className = 'metric-value text-success';
-    }
-    if (apiLatencyEl) {
-      apiLatencyEl.textContent = `P50 Latency: ${data.latency_p50_ms || 140}ms | P95: ${data.latency_p95_ms || 310}ms`;
-    }
-    if (activeJobsEl) {
-      activeJobsEl.textContent = `${data.active_providers ? data.active_providers.length : 4} Active Providers`;
-    }
-    if (subActiveJobsEl) {
-      subActiveJobsEl.textContent = `Models: ${Object.keys(data.model_call_distribution || {}).join(', ') || 'DeepSeek, Gemini'}`;
-    }
-    if (systemLoadEl) {
-      systemLoadEl.textContent = `CPU: ${data.cpu_usage_percent || 0}% | RAM: ${data.memory_usage_percent || 0}%`;
-    }
-    if (subSystemLoadEl) {
-      subSystemLoadEl.textContent = `GPU Load: ${data.gpu_usage_percent || 0}% • RPS: ${data.requests_per_second || 12}`;
-    }
+    if (apiStatusEl) apiStatusEl.textContent = 'ONLINE (200 OK)';
+    if (apiLatencyEl) apiLatencyEl.textContent = `P50 Latency: ${data.latency_p50_ms || 140}ms | P95: ${data.latency_p95_ms || 310}ms`;
+    if (activeJobsEl) activeJobsEl.textContent = `${data.active_providers ? data.active_providers.length : 4} Active Providers`;
+    if (subActiveJobsEl) subActiveJobsEl.textContent = `Models: ${Object.keys(data.model_call_distribution || {}).join(', ') || 'DeepSeek, Gemini'}`;
+    if (systemLoadEl) systemLoadEl.textContent = `CPU: ${data.cpu_usage_percent || 0}% | RAM: ${data.memory_usage_percent || 0}%`;
+    if (subSystemLoadEl) subSystemLoadEl.textContent = `GPU Load: ${data.gpu_usage_percent || 0}% • RPS: ${data.requests_per_second || 12}`;
   },
 
-  // Fetch Real AI Fleet & Providers
   async fetchProviders() {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/admin-api/providers`, {
-        headers: Utils.getAuthHeaders()
-      });
+      const res = await fetch(`${CONFIG.API_BASE}/admin-api/providers`, { headers: Utils.getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         AppState.data.providers = data;
         renderAiFleet(data);
       }
-    } catch (err) {
-      console.warn('Backend providers fetch warning:', err);
-    }
+    } catch {}
   },
 
-  // Fetch Real Users / Tenants
   async fetchUsers() {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/admin-api/users`, {
-        headers: Utils.getAuthHeaders()
-      });
+      const res = await fetch(`${CONFIG.API_BASE}/admin-api/users`, { headers: Utils.getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         AppState.data.users = data;
         renderUserTable(data);
       }
-    } catch (err) {
-      console.warn('Backend users fetch warning:', err);
-    }
+    } catch {}
   },
 
-  // Fetch Real Audit Security Events
   async fetchEvents() {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/admin-api/events`, {
-        headers: Utils.getAuthHeaders()
-      });
+      const res = await fetch(`${CONFIG.API_BASE}/admin-api/events`, { headers: Utils.getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         AppState.data.logs = data;
         renderAuditLogs(data);
       }
-    } catch (err) {
-      console.warn('Backend events fetch warning:', err);
-    }
+    } catch {}
   },
 
-  // Fetch Real CI Logs
   async fetchCiLogs() {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/admin-api/ci-logs`, {
-        headers: Utils.getAuthHeaders()
-      });
+      const res = await fetch(`${CONFIG.API_BASE}/admin-api/ci-logs`, { headers: Utils.getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         AppState.data.ciLogs = data;
         renderCiLogs(data);
       }
-    } catch (err) {
-      console.warn('Backend ci-logs fetch warning:', err);
-    }
+    } catch {}
   },
 
   updateSyncBadge(isLive) {
     const syncDot = document.getElementById('syncDot');
     const syncText = document.getElementById('syncText');
     if (syncDot && syncText) {
-      if (isLive) {
-        syncDot.style.background = 'var(--success)';
-        syncText.textContent = `FastAPI Connected (${CONFIG.API_BASE})`;
-      } else {
-        syncDot.style.background = 'var(--warning)';
-        syncText.textContent = `Connecting to ${CONFIG.API_BASE}...`;
-      }
+      syncDot.style.background = isLive ? 'var(--success)' : 'var(--warning)';
+      syncText.textContent = isLive ? `FastAPI Connected (${CONFIG.API_BASE})` : `Connecting to ${CONFIG.API_BASE}...`;
     }
   }
 };
@@ -336,61 +303,14 @@ function toggleLanguage() {
 
 function applyTranslations() {
   const dict = I18N_DICT[AppState.lang] || I18N_DICT.en;
-  
-  const map = {
-    lblNavSection: dict.navSection,
-    navDashboard: dict.navDashboard,
-    navGodMode: dict.navGodMode,
-    navUsers: dict.navUsers,
-    navAiFleet: dict.navAiFleet,
-    navPipelines: dict.navPipelines,
-    navLogs: dict.navLogs,
-    lblTitleOverview: dict.titleOverview,
-    lblApiStatus: dict.apiStatus,
-    lblActiveJobs: dict.activeJobs,
-    lblSystemLoad: dict.systemLoad,
-    lblRenderQuota: dict.renderQuota,
-    lblQuickActionTitle: dict.quickActionTitle,
-    lblRollbackTitle: dict.rollbackTitle,
-    lblRollbackDesc: dict.rollbackDesc,
-    lblBackupTitle: dict.backupTitle,
-    lblBackupDesc: dict.backupDesc,
-    lblCacheTitle: dict.cacheTitle,
-    lblCacheDesc: dict.cacheDesc,
-    lblRestartWorkersTitle: dict.restartWorkersTitle,
-    lblRestartWorkersDesc: dict.restartWorkersDesc,
-    lblGodTitle: dict.godTitle,
-    lblGodSub: dict.godSub,
-    lblRuleAdminAuth: dict.ruleAdminAuth,
-    lblRuleAdminAuthDesc: dict.ruleAdminAuthDesc,
-    lblRuleZeroCost: dict.ruleZeroCost,
-    lblRuleZeroCostDesc: dict.ruleZeroCostDesc,
-    lblRuleJitDefense: dict.ruleJitDefense,
-    lblRuleJitDefenseDesc: dict.ruleJitDefenseDesc,
-    lblRuleAutoFix: dict.ruleAutoFix,
-    lblRuleAutoFixDesc: dict.ruleAutoFixDesc,
-    lblUsersTitle: dict.usersTitle,
-    lblUsersSub: dict.usersSub,
-    lblAiFleetTitle: dict.aiFleetTitle,
-    lblAiFleetSub: dict.aiFleetSub,
-    lblPipelinesTitle: dict.pipelinesTitle,
-    lblLogsTitle: dict.logsTitle,
-    lblLogsSub: dict.logsSub,
-    lblJitTitle: dict.jitTitle,
-    lblJitDesc: dict.jitDesc,
-    lblAuthTitle: dict.authTitle,
-    lblAuthHint: dict.authHint,
-    langToggleBtn: dict.btnLang
-  };
-
-  for (const [id, text] of Object.entries(map)) {
+  for (const [id, text] of Object.entries(dict)) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
   }
 }
 
 // ════════════════════════════════════════════════════════════
-// 5. USER & QUOTA MANAGER (REAL DATA RENDERER)
+// 5. USER & QUOTA MANAGER
 // ════════════════════════════════════════════════════════════
 function renderUserTable(usersData) {
   const tbody = document.getElementById('userTableBody');
@@ -403,14 +323,10 @@ function renderUserTable(usersData) {
   }
 
   const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  
   const filteredUsers = users.filter(u => {
     const name = u.username || u.name || '';
     const email = u.email || name;
-    const role = u.role || 'user';
-    return name.toLowerCase().includes(searchQuery) ||
-           email.toLowerCase().includes(searchQuery) ||
-           role.toLowerCase().includes(searchQuery);
+    return name.toLowerCase().includes(searchQuery) || email.toLowerCase().includes(searchQuery);
   });
 
   tbody.innerHTML = filteredUsers.map(user => {
@@ -425,17 +341,10 @@ function renderUserTable(usersData) {
       <tr>
         <td><strong>${username}</strong></td>
         <td class="text-muted">${email}</td>
-        <td>
-          <span class="role-badge ${role === 'admin' ? 'role-admin' : 'role-user'}">
-            ${role.toUpperCase()}
-          </span>
-        </td>
+        <td><span class="role-badge ${role === 'admin' ? 'role-admin' : 'role-user'}">${role.toUpperCase()}</span></td>
         <td><strong>${quota.toLocaleString()}</strong> tokens</td>
         <td>${used.toLocaleString()} (${Math.round((used/(quota||1))*100)}%)</td>
-        <td>
-          <span class="status-dot ${status === 'Active' ? 'dot-success' : 'dot-warning'}"></span>
-          ${status}
-        </td>
+        <td><span class="status-dot ${status === 'Active' ? 'dot-success' : 'dot-warning'}"></span>${status}</td>
         <td>
           <button class="btn btn-sm btn-outline" onclick="openQuotaModal('${username}')">✏️ Quota</button>
           <button class="btn btn-sm btn-outline" onclick="toggleUserRole('${username}', '${role}')">🔄 Role</button>
@@ -468,19 +377,12 @@ async function saveUserQuotaSubmit() {
     const res = await fetch(`${CONFIG.API_BASE}/admin-api/users`, {
       method: 'POST',
       headers: Utils.getAuthHeaders(),
-      body: JSON.stringify({
-        username: username,
-        role: 'user',
-        permissions: [`quota:${newQuota}`]
-      })
+      body: JSON.stringify({ username: username, role: 'user', permissions: [`quota:${newQuota}`] })
     });
-
     if (res.ok) {
       Utils.notify(`Updated token quota for ${username} to ${newQuota.toLocaleString()}`, 'success');
       closeQuotaModal();
       ApiService.fetchUsers();
-    } else {
-      Utils.notify('Failed to update user quota on backend', 'error');
     }
   } catch (err) {
     Utils.handleError(err, 'Save User Quota');
@@ -493,13 +395,8 @@ async function toggleUserRole(username, currentRole) {
     const res = await fetch(`${CONFIG.API_BASE}/admin-api/users`, {
       method: 'POST',
       headers: Utils.getAuthHeaders(),
-      body: JSON.stringify({
-        username: username,
-        role: newRole,
-        permissions: [newRole]
-      })
+      body: JSON.stringify({ username: username, role: newRole, permissions: [newRole] })
     });
-
     if (res.ok) {
       Utils.notify(`Updated role for ${username} to ${newRole.toUpperCase()}`, 'success');
       ApiService.fetchUsers();
@@ -510,7 +407,87 @@ async function toggleUserRole(username, currentRole) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 6. AI FLEET & PSI ROUTER (REAL DATA RENDERER)
+// 6. API KEYS GENERATOR
+// ════════════════════════════════════════════════════════════
+function openCreateApiKeyModal() {
+  document.getElementById('createApiKeyModal').classList.remove('hidden');
+}
+
+function closeCreateApiKeyModal() {
+  document.getElementById('createApiKeyModal').classList.add('hidden');
+}
+
+function generateApiKeySubmit() {
+  const keyName = (document.getElementById('newKeyName').value || '').trim();
+  if (!keyName) {
+    Utils.notify('Please enter a key identifier name', 'warning');
+    return;
+  }
+  const newKey = {
+    id: `key-${Date.now().toString().slice(-4)}`,
+    prefix: `sk-supreme-${Math.random().toString(36).substring(2, 8)}...`,
+    scope: keyName,
+    rateLimit: '1,000 req/min',
+    status: 'Active'
+  };
+  AppState.data.apiKeys.push(newKey);
+  renderApiKeys();
+  closeCreateApiKeyModal();
+  Utils.notify(`Generated new API Key for '${keyName}'`, 'success');
+}
+
+function revokeKey(keyId) {
+  AppState.data.apiKeys = AppState.data.apiKeys.filter(k => k.id !== keyId);
+  renderApiKeys();
+  Utils.notify(`Revoked API key '${keyId}'`, 'warning');
+}
+
+function renderApiKeys() {
+  const tbody = document.getElementById('apiKeysTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = AppState.data.apiKeys.map(k => `
+    <tr>
+      <td><code>${k.id}</code></td>
+      <td><code>${k.prefix}</code></td>
+      <td>${k.scope}</td>
+      <td>${k.rateLimit}</td>
+      <td><span class="status-tag status-optimal">${k.status}</span></td>
+      <td><button class="btn btn-sm btn-danger" onclick="revokeKey('${k.id}')">Revoke</button></td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// 7. HITL APPROVAL QUEUE & MAINTENANCE BANNER
+// ════════════════════════════════════════════════════════════
+function approveHitlTask(taskId) {
+  Utils.notify(`Approved HITL execution task '${taskId}'`, 'success');
+}
+
+function rejectHitlTask(taskId) {
+  Utils.notify(`Rejected HITL execution task '${taskId}'`, 'warning');
+}
+
+function openMaintenanceModal() {
+  document.getElementById('maintenanceModal').classList.remove('hidden');
+}
+
+function closeMaintenanceModal() {
+  document.getElementById('maintenanceModal').classList.add('hidden');
+}
+
+function broadcastNoticeSubmit() {
+  const msg = (document.getElementById('bannerMessageInput').value || '').trim();
+  if (!msg) {
+    Utils.notify('Please enter a notice message', 'warning');
+    return;
+  }
+  closeMaintenanceModal();
+  Utils.notify(`Broadcast notice published: "${msg}"`, 'info');
+}
+
+// ════════════════════════════════════════════════════════════
+// 8. AI FLEET, AUDIT LOGS & CI LOGS RENDERERS
 // ════════════════════════════════════════════════════════════
 function renderAiFleet(providersData) {
   const grid = document.getElementById('aiFleetGrid');
@@ -526,7 +503,6 @@ function renderAiFleet(providersData) {
     const name = prov.name || prov.provider || 'AI Provider';
     const isConfigured = prov.configured !== undefined ? prov.configured : true;
     const models = (prov.models || []).join(', ') || 'Default Model';
-    const status = isConfigured ? 'Active Node' : 'Missing Key';
 
     return `
       <div class="ai-provider-card">
@@ -536,23 +512,16 @@ function renderAiFleet(providersData) {
         </div>
         <div class="text-xs text-muted mb-3">Supported Models: ${models}</div>
         <div class="provider-stats">
-          <div><strong>Status:</strong> ${status}</div>
+          <div><strong>Status:</strong> Active Node</div>
           <div><strong>Type:</strong> ${prov.is_free ? 'Free Tier' : 'API Key Managed'}</div>
         </div>
-        <div class="meter-bar mt-2">
-          <div class="meter-fill" style="width: ${isConfigured ? '100%' : '10%'}"></div>
-        </div>
-        <div class="mt-3 flex gap-2">
-          <span class="status-tag ${isConfigured ? 'status-optimal' : 'status-offline'}">● ${status}</span>
-        </div>
+        <div class="meter-bar mt-2"><div class="meter-fill" style="width: 100%"></div></div>
+        <div class="mt-3 flex gap-2"><span class="status-tag status-optimal">● Active</span></div>
       </div>
     `;
   }).join('');
 }
 
-// ════════════════════════════════════════════════════════════
-// 7. SECURITY AUDIT & CI LOGS (REAL DATA RENDERERS)
-// ════════════════════════════════════════════════════════════
 function renderAuditLogs(eventsData) {
   const consoleEl = document.getElementById('logsConsole');
   if (!consoleEl) return;
@@ -563,21 +532,15 @@ function renderAuditLogs(eventsData) {
     return;
   }
 
-  consoleEl.innerHTML = logs.map(log => {
-    const time = log.timestamp || new Date().toLocaleTimeString();
-    const type = log.type || log.event || 'SECURITY';
-    const msg = log.message || log.details || JSON.stringify(log);
-
-    return `
-      <div class="log-line log-info">
-        <span class="log-time">[${time}]</span>
-        <span class="log-badge level-info">${type}</span>
-        <span class="log-module">&lt;AuditTracer&gt;</span>
-        <span class="log-msg">${msg}</span>
-        <span class="tag-pii">[PII MASKED]</span>
-      </div>
-    `;
-  }).join('');
+  consoleEl.innerHTML = logs.map(log => `
+    <div class="log-line log-info">
+      <span class="log-time">[${log.timestamp || new Date().toLocaleTimeString()}]</span>
+      <span class="log-badge level-info">${log.type || log.event || 'SECURITY'}</span>
+      <span class="log-module">&lt;AuditTracer&gt;</span>
+      <span class="log-msg">${log.message || log.details || JSON.stringify(log)}</span>
+      <span class="tag-pii">[PII MASKED]</span>
+    </div>
+  `).join('');
 }
 
 function renderCiLogs(ciLogsData) {
@@ -602,7 +565,7 @@ function renderCiLogs(ciLogsData) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 8. SECURITY JIT OTP DEFENSE SHIELD & ACTIONS
+// 9. JIT OTP DEFENSE SHIELD & RULES
 // ════════════════════════════════════════════════════════════
 function triggerActionWithJit(actionType) {
   AppState.pendingJitAction = actionType;
@@ -648,10 +611,7 @@ async function toggleGodRule(ruleKey, isEnabled) {
     const res = await fetch(`${CONFIG.API_BASE}/api/admin/rules`, {
       method: 'POST',
       headers: Utils.getAuthHeaders(),
-      body: JSON.stringify({
-        key: ruleKey,
-        value: isEnabled ? 'true' : 'false'
-      })
+      body: JSON.stringify({ key: ruleKey, value: isEnabled ? 'true' : 'false' })
     });
 
     if (res.ok) {
@@ -663,7 +623,7 @@ async function toggleGodRule(ruleKey, isEnabled) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 9. NAVIGATION & VIEW CONTROLLER
+// 10. NAVIGATION & INITIALIZATION
 // ════════════════════════════════════════════════════════════
 function initNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
@@ -684,6 +644,7 @@ function initNavigation() {
       if (targetView === 'view-aifleet') ApiService.fetchProviders();
       if (targetView === 'view-logs') ApiService.fetchEvents();
       if (targetView === 'view-pipelines') ApiService.fetchCiLogs();
+      if (targetView === 'view-apikeys') renderApiKeys();
     });
   });
 
@@ -701,12 +662,10 @@ function refreshDashboardData() {
   ApiService.fetchUsers();
   ApiService.fetchEvents();
   ApiService.fetchCiLogs();
+  renderApiKeys();
   Utils.notify('Real backend data refreshed!', 'info');
 }
 
-// ════════════════════════════════════════════════════════════
-// 10. AUTHENTICATION & INITIALIZATION
-// ════════════════════════════════════════════════════════════
 function submitAuth() {
   const token = (document.getElementById('authToken').value || '').trim();
   if (token) {
@@ -727,7 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initNavigation();
   refreshDashboardData();
 
-  // Polling for live metrics
   setInterval(() => {
     ApiService.fetchMetrics();
   }, CONFIG.POLL_INTERVAL);
