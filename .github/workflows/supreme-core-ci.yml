@@ -270,11 +270,10 @@ jobs:
 
       - name: 🛡️ Safety Guard - File Protection Validation
         id: safety_guard
-        working-directory: backend
         run: |
           echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          # বাংলা মন্তব্য (জরুরি): || true বন্ধ করা হলো যাতে সেফটি গার্ড ফেল করলে সাইলেন্টলি ওভাররাইড না হয় (Anti-Silent Failure)
-          python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1
+          # বাংলা মন্তব্য (জরুরি): প্রজেক্টের রুট থেকে safety_guard.py রান করা হচ্ছে
+          python scripts/safety_guard.py --check-only --report-json > backend/safety-report.json 2>&1
 
           # Parse and summarize
           if [ -f safety-report.json ]; then
