@@ -486,6 +486,30 @@ function broadcastNoticeSubmit() {
   Utils.notify(`Broadcast notice published: "${msg}"`, 'info');
 }
 
+function filterJobs(filter) {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  const activeTab = Array.from(tabs).find(t => t.getAttribute('data-filter') === filter);
+  if (activeTab) activeTab.classList.add('active');
+
+  const jobsGrid = document.getElementById('jobsGrid');
+  if (!jobsGrid) return;
+
+  const jobs = AppState.data.ciLogs || [];
+  if (filter === 'all') {
+    renderCiLogs(jobs);
+  } else {
+    const filtered = jobs.filter(job => {
+      const status = (job.status || job.status || '').toLowerCase();
+      if (filter === 'success') return status === 'success' || status === 'passed';
+      if (filter === 'failure') return status === 'failure' || status === 'failed';
+      if (filter === 'running') return status === 'running' || status === 'pending';
+      return false;
+    });
+    renderCiLogs(filtered);
+  }
+}
+
 // ════════════════════════════════════════════════════════════
 // 8. AI FLEET, AUDIT LOGS & CI LOGS RENDERERS
 // ════════════════════════════════════════════════════════════
@@ -681,12 +705,146 @@ function closeAuthModal() {
   document.getElementById('authModal').classList.add('hidden');
 }
 
+let ws = null;
+let wsConnected = false;
+
+function initWebSocket() {
+  if (!CONFIG.API_BASE.startsWith('http')) return;
+  
+  try {
+    const wsUrl = CONFIG.API_BASE.replace('http', 'ws') + '/ws/admin';
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      wsConnected = true;
+      Utils.notify('WebSocket connected - real-time updates enabled', 'success');
+    };
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'metrics') {
+          ApiService.renderMetricsUI(data.payload);
+        } else if (data.type === 'providers') {
+          renderAiFleet(data.payload);
+        } else if (data.type === 'users') {
+          renderUserTable(data.payload);
+        } else if (data.type === 'logs') {
+          renderAuditLogs(data.payload);
+        } else if (data.type === 'ci') {
+          renderCiLogs(data.payload);
+        }
+      } catch (e) {
+        console.error('WebSocket message parse error:', e);
+      }
+    };
+    
+    ws.onerror = (e) => {
+      console.error('WebSocket error:', e);
+      wsConnected = false;
+    };
+    
+    ws.onclose = () => {
+      wsConnected = false;
+      console.log('WebSocket closed, using polling fallback');
+    };
+  } catch (e) {
+    console.error('WebSocket init error:', e);
+  }
+}
+
+function initAccessibility() {
+  document.querySelectorAll('[tabindex]').forEach(el => {
+    if (el.tabIndex < 0) el.tabIndex = -1;
+  });
+
+  document.querySelectorAll('.nav-item, .tab, .action-card, .btn').forEach(el => {
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', el.textContent.trim().substring(0, 50));
+  });
+
+  document.querySelectorAll('input, button, select, textarea').forEach(el => {
+    if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby')) {
+      el.setAttribute('aria-label', el.id || el.placeholder || el.textContent || 'Form element');
+    }
+  });
+
+  const mainContent = document.querySelector('.main-content');
+  if (mainContent) mainContent.setAttribute('role', 'main');
+
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) sidebar.setAttribute('aria-label', 'Navigation menu');
+
+  const syncDot = document.getElementById('syncDot');
+  if (syncDot) syncDot.setAttribute('aria-hidden', 'true');
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+    }
+  });
+
+  document.querySelectorAll('.nav-item').forEach(navItem => {
+    navItem.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navItem.click();
+      }
+    });
+  });
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tab.click();
+      }
+    });
+  });
+
+  document.querySelectorAll('.action-card').forEach(card => {
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.click();
+      }
+    });
+  });
+}
+
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+      e.preventDefault();
+      refreshDashboardData();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.focus();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+      e.preventDefault();
+      document.querySelectorAll('.view-section:not(.hidden)').forEach(section => {
+        const search = section.querySelector('[role="search"]');
+        if (search) search.focus();
+      });
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyTranslations();
   initNavigation();
+  initAccessibility();
+  initKeyboardShortcuts();
   refreshDashboardData();
 
   setInterval(() => {
-    ApiService.fetchMetrics();
+    if (!wsConnected) ApiService.fetchMetrics();
   }, CONFIG.POLL_INTERVAL);
+  
+  initWebSocket();
 });
