@@ -190,7 +190,7 @@ strict = true
 exclude = ["^backend/tests/.*", "^backend/tools/.*/test_.*"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=core --cov-report=term-missing --cov-report=json:coverage.json --cov-config=.coveragerc --cov-fail-under=25"
+addopts = "--cov=core --cov-report=term-missing --cov-report=json:coverage.json --cov-config=.coveragerc --cov-fail-under=45"
 testpaths = ["tests"]
 norecursedirs = [".venv", "venv", ".git", "build", "dist"]
 # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে এবং ইম্পোর্ট পাথ ভুলত্রুটি এড়াতে pythonpath থেকে ".." বাদ দেওয়া হলো

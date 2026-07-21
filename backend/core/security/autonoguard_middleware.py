@@ -42,6 +42,13 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         method = request.method
 
+        # বাংলা মন্তব্য: public path-এ AutonoGuard এবং JIT OTP চেক এড়ানো হচ্ছে।
+        # sensitive ops চেকের আগেই এটি skip করলে latency উল্লেখযোগ্যভাবে কমে।
+        from core.config import settings as _settings
+
+        if any(path.startswith(p) for p in _settings.supremeai_public_paths):
+            return await call_next(request)
+
         # Check if this is a sensitive operation
         is_sensitive = any(path.startswith(op) for op in SENSITIVE_OPS)
 
@@ -69,9 +76,7 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                 if raw_body:
                     try:
                         payload = json.loads(raw_body)
-                        code_to_scan = payload.get("code") or payload.get(
-                            "generated_code"
-                        )
+                        code_to_scan = payload.get("code") or payload.get("generated_code")
                     except json.JSONDecodeError:
                         pass
             except Exception as exc:  # noqa: BLE001
