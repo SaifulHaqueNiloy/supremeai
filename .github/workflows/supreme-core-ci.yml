@@ -934,6 +934,11 @@ jobs:
             fi
           fi
 
+          if [ "$STATUS" != "201" ] && [ "$STATUS" != "202" ] && [ "$STATUS_B" != "201" ] && [ "$STATUS_B" != "202" ]; then
+            echo "❌ CRITICAL: Both primary and backup prebuilt-image deploys failed to trigger! Failing build."
+            exit 1
+          fi
+
       - name: Trigger Combined Render Deploy (Source Code)
         if: needs.check-render-quota.outputs.use_github_build != 'true'
         run: |

@@ -129,9 +129,13 @@ def monitor_service(service):
         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
 
-        if now - created_at > timedelta(minutes=15):
-            print(f"ℹ️ Latest deploy is older than 15 minutes (created {now - created_at} ago). No recent deploy is active.")
-            return check_http_health(service["url"], name)
+        if now - created_at > timedelta(minutes=3):
+            print(
+                f"❌ No new deploy record found for {name} within 3 minutes of triggering it. "
+                f"The trigger call likely failed silently (invalid API key, wrong service ID, "
+                f"or account mismatch) — latest deploy on file is {now - created_at} old."
+            )
+            return False
 
     except Exception as e:
         print(f"❌ Error communicating with Render API: {e}")
