@@ -45,9 +45,7 @@ class FeedbackLoop:
         logger.debug("Recorded edit event: %s", file_path)
         return event
 
-    def record_suggestion_feedback(
-        self, accepted: bool, context: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    def record_suggestion_feedback(self, accepted: bool, context: dict[str, Any] | None = None) -> dict[str, Any]:
         event = {
             "type": "suggestion_feedback",
             "accepted": accepted,
@@ -62,9 +60,7 @@ class FeedbackLoop:
         logger.debug("Recorded suggestion feedback: accepted=%s", accepted)
         return event
 
-    def record_error_report(
-        self, error: Exception, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    def record_error_report(self, error: Exception, context: dict[str, Any]) -> dict[str, Any]:
         event = {
             "type": "error",
             "message": str(error),
@@ -91,11 +87,7 @@ class FeedbackLoop:
             context = payload.get("context") or {}
             event = self.record_suggestion_feedback(accepted=accepted, context=context)
             if not accepted:
-                error = (
-                    payload.get("error")
-                    or payload.get("message")
-                    or Exception("Suggestion feedback rejected")
-                )
+                error = payload.get("error") or payload.get("message") or Exception("Suggestion feedback rejected")
                 context = dict(context)
                 context.setdefault("payload", payload)
                 self.record_error_report(error=error, context=context)

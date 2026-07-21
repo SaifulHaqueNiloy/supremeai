@@ -37,10 +37,7 @@ class TestSecureCredentialStoreDisable:
 
 
 @pytest.mark.skipif(
-    __import__(
-        "core.security.secure_credential_store", fromlist=["CRYPTO_AVAILABLE"]
-    ).CRYPTO_AVAILABLE
-    is False,
+    __import__("core.security.secure_credential_store", fromlist=["CRYPTO_AVAILABLE"]).CRYPTO_AVAILABLE is False,
     reason="cryptography not installed",
 )
 class TestSecureCredentialStoreEncrypted:

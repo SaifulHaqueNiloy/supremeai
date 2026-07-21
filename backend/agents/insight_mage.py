@@ -91,9 +91,7 @@ class TrendDetector:
     def __init__(self, min_points: int = TREND_MIN_POINTS) -> None:
         self.min_points = min_points
 
-    def analyze(
-        self, values: list[float], timestamps: list[datetime] | None = None
-    ) -> TrendResult:
+    def analyze(self, values: list[float], timestamps: list[datetime] | None = None) -> TrendResult:
         """
         Detect trend direction and confidence from a time series.
 
@@ -136,10 +134,7 @@ class TrendDetector:
             slope = numerator / denominator
 
         # R-squared for confidence
-        ss_res = sum(
-            (values[i] - (slope * x[i] + (y_mean - slope * x_mean))) ** 2
-            for i in range(n)
-        )
+        ss_res = sum((values[i] - (slope * x[i] + (y_mean - slope * x_mean))) ** 2 for i in range(n))
         ss_tot = sum((v - y_mean) ** 2 for v in values)
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
 
@@ -159,11 +154,7 @@ class TrendDetector:
         if values[0] != 0:
             change_percent = ((values[-1] - values[0]) / abs(values[0])) * 100
         else:
-            change_percent = (
-                0.0
-                if values[-1] == 0
-                else float("inf") if values[-1] > 0 else float("-inf")
-            )
+            change_percent = 0.0 if values[-1] == 0 else float("inf") if values[-1] > 0 else float("-inf")
 
         return TrendResult(
             direction=direction,
@@ -221,14 +212,10 @@ class AnomalyDetector:
         iqr_lower = q1 - 1.5 * iqr
         iqr_upper = q3 + 1.5 * iqr
 
-        is_anomaly = (
-            abs(z_score) > self.z_threshold or value < iqr_lower or value > iqr_upper
-        )
+        is_anomaly = abs(z_score) > self.z_threshold or value < iqr_lower or value > iqr_upper
 
         # Severity classification
-        if abs(z_score) > 4.0 or (
-            iqr > 0 and (value < q1 - 3 * iqr or value > q3 + 3 * iqr)
-        ):
+        if abs(z_score) > 4.0 or (iqr > 0 and (value < q1 - 3 * iqr or value > q3 + 3 * iqr)):
             severity = "critical"
         elif abs(z_score) > 3.0:
             severity = "high"
@@ -305,9 +292,7 @@ Keep it concise, business-friendly, and data-driven.
         """
         trends_text = (
             "\n".join(
-                f"- {t.direction.upper()}: {t.change_percent:.1f}% change "
-                f"(confidence: {t.confidence:.0%}, n={t.data_points})"
-                for t in trends
+                f"- {t.direction.upper()}: {t.change_percent:.1f}% change " f"(confidence: {t.confidence:.0%}, n={t.data_points})" for t in trends
             )
             if trends
             else "No significant trends detected."
@@ -315,8 +300,7 @@ Keep it concise, business-friendly, and data-driven.
 
         anomalies_text = (
             "\n".join(
-                f"- 🚨 {a.severity.upper()}: z={a.z_score:.2f}, "
-                f"deviation={a.deviation_percent:.1f}% from expected"
+                f"- 🚨 {a.severity.upper()}: z={a.z_score:.2f}, " f"deviation={a.deviation_percent:.1f}% from expected"
                 for a in anomalies
                 if a.is_anomaly
             )
@@ -422,9 +406,7 @@ class InsightMage:
                         if isinstance(ts, datetime):
                             timestamps.append(ts)
                         elif isinstance(ts, str):
-                            timestamps.append(
-                                datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                            )
+                            timestamps.append(datetime.fromisoformat(ts.replace("Z", "+00:00")))
                     except (ValueError, TypeError):
                         continue
 
@@ -465,9 +447,7 @@ class InsightMage:
         cache_key = self._cache_key(
             tenant_id,
             f"{collection}:{value_field}:trend",
-            hashlib.sha256(
-                json.dumps(filters or {}, sort_keys=True).encode()
-            ).hexdigest()[:8],
+            hashlib.sha256(json.dumps(filters or {}, sort_keys=True).encode()).hexdigest()[:8],
         )
 
         # Check cache
@@ -547,9 +527,7 @@ class InsightMage:
                 idx = len(values) - check_window + i
                 if idx > 0:
                     historical = values[:idx]
-                    results.append(
-                        self.anomaly_detector.detect(values[idx], historical)
-                    )
+                    results.append(self.anomaly_detector.detect(values[idx], historical))
 
         return results
 
