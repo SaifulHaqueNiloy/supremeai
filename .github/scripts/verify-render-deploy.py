@@ -20,12 +20,19 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 # Services to monitor
+# বাংলা মন্তব্য: Primary এবং Backup উভয় ব্যাকএন্ড সার্ভিসের ডেপ্লয়মেন্ট স্ট্যাটাস ও হেলথ চেক ট্র্যাক করার জন্য যুক্ত করা হলো।
 SERVICES = [
     {
         "name": "Primary backend",
         "service_id": "srv-d9d3n58js32c738n79k0",
         "url": "https://supremeai-backend.onrender.com",
         "api_key_env": "RENDER_API_KEY"
+    },
+    {
+        "name": "Backup backend",
+        "service_id": "srv-d9fg48bh523c73f63bb0",
+        "url": "https://supremeai-admin.onrender.com",
+        "api_key_env": "RENDER_API_KEY_BACKUP"
     }
 ]
 
