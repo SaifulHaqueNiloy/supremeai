@@ -131,6 +131,8 @@ class ProductionSecretVault:
                         time.sleep(sleep_time)
                     else:
                         raise exc
+            # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
+            raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment.")
             error_event_bus.emit(
