@@ -54,9 +54,7 @@ def timed(name: str) -> Callable[..., Any]:
 
                 start = time.perf_counter()
                 res = await func(*args, **kwargs)
-                logger.debug(
-                    f"Metrics: Timed {name} took {(time.perf_counter() - start) * 1000:.2f}ms"
-                )
+                logger.debug(f"Metrics: Timed {name} took {(time.perf_counter() - start) * 1000:.2f}ms")
                 return res
 
             return async_wrapper
@@ -68,9 +66,7 @@ def timed(name: str) -> Callable[..., Any]:
 
                 start = time.perf_counter()
                 res = func(*args, **kwargs)
-                logger.debug(
-                    f"Metrics: Timed {name} took {(time.perf_counter() - start) * 1000:.2f}ms"
-                )
+                logger.debug(f"Metrics: Timed {name} took {(time.perf_counter() - start) * 1000:.2f}ms")
                 return res
 
             return sync_wrapper

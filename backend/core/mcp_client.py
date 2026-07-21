@@ -44,11 +44,7 @@ class MCPRegistryClient:
                         tools = response.json().get("tools", [])
                         # Filter by domain tags if present, otherwise collect all
                         for t in tools:
-                            if (
-                                not domain
-                                or domain in t.get("tags", [])
-                                or domain in t.get("name", "")
-                            ):
+                            if not domain or domain in t.get("tags", []) or domain in t.get("name", ""):
                                 all_tools.append(t["name"])
                 except Exception as exc:  # noqa: BLE001
                     logger.warning(f"MCP server {server_url} request failed: {exc}")
