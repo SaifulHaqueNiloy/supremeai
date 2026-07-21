@@ -4,7 +4,7 @@
 """
 
 from api.routers import include_admin_routers
-from core.app import build_app_shell, router_health_check
+from core.app_builder import build_app_shell, router_health_check
 from core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,4 +31,7 @@ app.add_middleware(
 app.add_middleware(AntiHackingContextMiddleware)
 
 include_admin_routers(app)
-router_health_check(app)
+
+# বাংলা মন্তব্য: অ্যাডমিন এপিআইতে ইউজারের মতো ২০টি রাউটার লোড হয় না (কেবল ADMIN_ROUTERS লোড হয়)।
+# তাই এখানে মিনিমাম ৫টি রাউটের উপস্থিতি চেক করা হচ্ছে যাতে প্রসেসটি ক্র্যাশ না করে।
+router_health_check(app, expected_count=5)
