@@ -41,6 +41,7 @@ from core.security.origin_validator import TrustedOriginMiddleware
 from core.startup_validator import StartupValidator
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from loguru import logger
@@ -234,6 +235,12 @@ def build_app_shell(
     fastapi_app.add_middleware(AutonoGuardMiddleware)
     # বাংলা মন্তব্য: AutonoGuard Middleware-কে AuthMiddleware-এর পরে রাখা হয়েছে
     # যাতে user identity প্রথমে স্থাপন হয় এবং তারপর JIT OTP enforce করা যায়।
+
+    # বাংলা মন্তব্য: এতদিন কোনো response compression ছিল না — JSON-heavy API response-গুলো
+    # raw bytes-এ পাঠানো হচ্ছিল। সবার শেষে (outermost হিসেবে) GZipMiddleware যোগ করা হলো
+    # যাতে বাকি সব middleware-এর কাজ শেষ হওয়ার পর চূড়ান্ত response body compress হয় —
+    # bandwidth কমবে এবং client-side load time দ্রুত হবে, বিশেষ করে বড় list/array response-এ।
+    fastapi_app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     fastapi_app.state.limiter = limiter
 
