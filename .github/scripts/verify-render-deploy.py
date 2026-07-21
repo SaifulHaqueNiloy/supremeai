@@ -8,8 +8,12 @@ import time
 import requests
 from datetime import datetime, timezone, timedelta
 
-# Force stdout/stderr to use UTF-8 to prevent UnicodeEncodeError on Windows terminals when printing emojis
-# বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইমোজি প্রিন্ট করার সময় UnicodeEncodeError এড়াতে stdout এবং stderr-কে UTF-8 এ কনফিগার করা হলো।
+try:
+    from dotenv import load_dotenv
+    load_dotenv('.env')
+except Exception:
+    pass
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 if hasattr(sys.stderr, "reconfigure"):
@@ -22,12 +26,6 @@ SERVICES = [
         "service_id": "srv-d9d3n58js32c738n79k0",
         "url": "https://supremeai-backend.onrender.com",
         "api_key_env": "RENDER_API_KEY"
-    },
-    {
-        "name": "Backup backend",
-        "service_id": "srv-d9fg48bh523c73f63bb0",
-        "url": "https://supremeai-admin.onrender.com",
-        "api_key_env": "RENDER_API_KEY_BACKUP"
     }
 ]
 
