@@ -17,7 +17,9 @@ class RecordingAuditLogger:
 def build_service():
     store = ChromaDBStore(":memory:")
     gateway = AsyncMock()
-    gateway.acompletion.return_value = {"text": "Employees may work remotely two days each week."}
+    gateway.acompletion.return_value = {
+        "text": "Employees may work remotely two days each week."
+    }
     audit = RecordingAuditLogger()
     return (
         KnowledgeQAService(vector_store=store, gateway=gateway, audit_logger=audit),
@@ -108,6 +110,8 @@ async def test_rejects_unapproved_role():
     service, _, _, _ = build_service()
 
     with pytest.raises(HTTPException) as exc:
-        await service.answer("Question", {"sub": "user-1", "tenant_id": "acme", "role": "guest"})
+        await service.answer(
+            "Question", {"sub": "user-1", "tenant_id": "acme", "role": "guest"}
+        )
 
     assert exc.value.status_code == 403
