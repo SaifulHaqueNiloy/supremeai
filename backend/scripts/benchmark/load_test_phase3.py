@@ -33,12 +33,7 @@ async def main():
 
     # Pre-configure mock DB if needed
     if db:
-        budget_ref = (
-            db.collection("tenants")
-            .document(tenant_id)
-            .collection("budget")
-            .document("current")
-        )
+        budget_ref = db.collection("tenants").document(tenant_id).collection("budget").document("current")
         await budget_ref.set({"monthly_limit": 100.0, "spent_amount": 0.0})
 
     # Mock LiteLLM so we don't make real API calls
