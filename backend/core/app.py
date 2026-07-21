@@ -20,10 +20,8 @@ from typing import Any
 import sentry_sdk
 from api.middleware import (
     ChaosInjectorMiddleware,
-    IdempotencyMiddleware,
     ResponseStandardizationMiddleware,
     SupremeContextMiddleware,
-    TenantExtractionMiddleware,
 )
 from api.routers import register_all_routers
 from core import lifespan, services
@@ -59,9 +57,7 @@ class InterceptHandler(logging.Handler):
         while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
+        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
 logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
@@ -83,9 +79,9 @@ if settings.sentry_dsn:
 
 def _docs_auth(credentials: HTTPBasicCredentials = Depends(security)) -> str:
     """Authenticate docs access via HTTP Basic."""
-    correct = secrets.compare_digest(
-        credentials.username, settings.docs_username
-    ) and secrets.compare_digest(credentials.password, settings.docs_password)
+    correct = secrets.compare_digest(credentials.username, settings.docs_username) and secrets.compare_digest(
+        credentials.password, settings.docs_password
+    )
     if not correct:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -119,9 +115,7 @@ tags_metadata = [
 def supremeai_dynamic_rate_evaluator(request: Request) -> str:
     """ডাইনামিক rate key: JWT role বা IP fallback অনুযায়ী limiter বাউন্ডারি বাছাই করে।"""
     user = getattr(request.state, "user", None)
-    user_role = (
-        user.get("role", "Standard_User") if isinstance(user, dict) else "Standard_User"
-    )
+    user_role = user.get("role", "Standard_User") if isinstance(user, dict) else "Standard_User"
     client_ip = request.client.host if request.client else "unknown"
     if user_role in {"Admin", "admin"}:
         return f"admin:{client_ip}"
@@ -135,17 +129,13 @@ try:
     from slowapi.errors import RateLimitExceeded as _SlowAPIRateLimitExceeded
     from slowapi.util import get_remote_address as _slowapi_get_remote_address
 
-    if not isinstance(_SlowAPIRateLimitExceeded, type) or not issubclass(
-        _SlowAPIRateLimitExceeded, Exception
-    ):
+    if not isinstance(_SlowAPIRateLimitExceeded, type) or not issubclass(_SlowAPIRateLimitExceeded, Exception):
 
         class RateLimitExceeded(Exception):  # type: ignore[no-redef]
             """Fallback RateLimitExceeded for test environments where slowapi is mocked."""
 
         def _rate_limit_exceeded_handler(request: Any, exc: Any) -> JSONResponse:  # type: ignore[misc]
-            return JSONResponse(
-                status_code=429, content={"detail": "Rate limit exceeded"}
-            )
+            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
         def get_remote_address(request: Any) -> str:  # type: ignore[misc]
             return request.client.host if request.client else "127.0.0.1"
@@ -167,9 +157,7 @@ except Exception:  # noqa: BLE001
     limiter = None
 
 
-def build_app_shell(
-    title: str = "SupremeAI API", docs_url: str | None = "/docs"
-) -> FastAPI:
+def build_app_shell(title: str = "SupremeAI API", docs_url: str | None = "/docs") -> FastAPI:
     """Builds the base FastAPI shell with shared configuration, middleware, and exception handlers.
 
     বাংলা মন্তব্য: কোর FastAPI অ্যাপ সেল যা মিডলওয়্যার এবং এক্সেপশন হ্যান্ডলারগুলো ইনিশিয়ালাইজ করে।
@@ -189,9 +177,7 @@ def build_app_shell(
     )
 
     @fastapi_app.middleware("http")
-    async def basic_auth_for_docs_middleware(
-        request: Request, call_next: Any
-    ) -> JSONResponse:  # noqa: ANN401
+    async def basic_auth_for_docs_middleware(request: Request, call_next: Any) -> JSONResponse:  # noqa: ANN401
         """Protect docs with Basic Auth if enabled."""
         if settings.docs_auth_enabled and not settings.debug:
             path = request.url.path
@@ -206,10 +192,7 @@ def build_app_shell(
                 try:
                     decoded = base64.b64decode(auth[6:]).decode("utf-8")
                     username, password = decoded.split(":", 1)
-                    if (
-                        username != settings.docs_username
-                        or password != settings.docs_password
-                    ):
+                    if username != settings.docs_username or password != settings.docs_password:
                         raise ValueError("Mismatch")
                 except (ValueError, UnicodeDecodeError):
                     return JSONResponse(
@@ -228,11 +211,12 @@ def build_app_shell(
     fastapi_app.add_middleware(HoneypotMiddleware)
 
     fastapi_app.add_middleware(AuthMiddleware)
-    fastapi_app.add_middleware(TenantExtractionMiddleware)
-    fastapi_app.add_middleware(IdempotencyMiddleware)
     fastapi_app.add_middleware(APIKeyAuthMiddleware)
     fastapi_app.add_middleware(ResponseStandardizationMiddleware)
     fastapi_app.add_middleware(AutonoGuardMiddleware)
+    # বাংলা মন্তব্য: TenantExtractionMiddleware এবং IdempotencyMiddleware গ্লোবাল থেকে সরানো হয়েছে।
+    # এগুলো এখন api/dependencies.py-তে FastAPI Depends() হিসেবে সংজ্ঞায়িত এবং
+    # শুধুমাত্র যে রাউটে দরকার সেখানেই চলবে — সব রিকোয়েস্টে নয়।
     # বাংলা মন্তব্য: AutonoGuard Middleware-কে AuthMiddleware-এর পরে রাখা হয়েছে
     # যাতে user identity প্রথমে স্থাপন হয় এবং তারপর JIT OTP enforce করা যায়।
 
@@ -245,9 +229,7 @@ def build_app_shell(
     fastapi_app.state.limiter = limiter
 
     @fastapi_app.exception_handler(HTTPException)
-    async def custom_http_exception_handler(
-        request: Request, exc: HTTPException
-    ) -> JSONResponse:
+    async def custom_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -258,9 +240,7 @@ def build_app_shell(
         )
 
     @fastapi_app.exception_handler(Exception)
-    async def global_exception_handler(
-        request: Request, exc: Exception
-    ) -> JSONResponse:
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         # বাংলা মন্তব্য: এরর ট্র্যাকিং ও ফিঙ্গারপ্রিন্টিং সিস্টেম ইন্টিগ্রেশন।
         failure = await ReliabilityController.register_failure(request, exc)
         logger.error(
@@ -277,9 +257,7 @@ def build_app_shell(
         )
 
     if isinstance(RateLimitExceeded, type) and issubclass(RateLimitExceeded, Exception):
-        fastapi_app.add_exception_handler(
-            RateLimitExceeded, _rate_limit_exceeded_handler
-        )
+        fastapi_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     @fastapi_app.get("/")
     async def root() -> dict[str, Any]:
@@ -315,11 +293,7 @@ def build_app_shell(
             redis_ok = True
 
         api_keys_ok = bool(
-            settings.openrouter_api_key
-            or settings.gemini_api_key
-            or settings.deepseek_api_key
-            or settings.groq_api_key
-            or settings.nvidia_api_key
+            settings.openrouter_api_key or settings.gemini_api_key or settings.deepseek_api_key or settings.groq_api_key or settings.nvidia_api_key
         )
         # বাংলা মন্তব্য: নির্ভরযোগ্যতা এবং স্টার্টআপ ভ্যালিডেশন মেট্রিক্স হেলথ চেকে যুক্ত করা হলো।
         checks = {
@@ -328,11 +302,7 @@ def build_app_shell(
             "reliability_controller": ReliabilityController.health(),
             "startup_validation": StartupValidator.last_status(),
         }
-        all_ok = (
-            redis_ok
-            and api_keys_ok
-            and StartupValidator.last_status().get("success", True)
-        )
+        all_ok = redis_ok and api_keys_ok and StartupValidator.last_status().get("success", True)
         return {
             "status": "ok" if all_ok else "degraded",
             "orchestrator": "online",
@@ -377,13 +347,9 @@ app.add_middleware(
 
 if settings.env == "production":
     if not settings.cors_origins:
-        raise RuntimeError(
-            "🔥 CRITICAL: Production CORS drift detected. cors_origins cannot be empty in production."
-        )
+        raise RuntimeError("🔥 CRITICAL: Production CORS drift detected. cors_origins cannot be empty in production.")
     if "*" in settings.cors_origins:
-        raise RuntimeError(
-            "🚨 SECURITY: Wildcard '*' is strictly prohibited in production CORS mesh. Set CORS_ORIGINS env var."
-        )
+        raise RuntimeError("🚨 SECURITY: Wildcard '*' is strictly prohibited in production CORS mesh. Set CORS_ORIGINS env var.")
 
 app.include_router(admin_router)
 register_all_routers(app)

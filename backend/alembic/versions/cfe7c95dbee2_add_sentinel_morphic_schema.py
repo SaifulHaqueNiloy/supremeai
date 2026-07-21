@@ -50,12 +50,8 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_dynamic_agents_id"), "dynamic_agents", ["id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_dynamic_agents_name"), "dynamic_agents", ["name"], unique=True
-    )
+    op.create_index(op.f("ix_dynamic_agents_id"), "dynamic_agents", ["id"], unique=False)
+    op.create_index(op.f("ix_dynamic_agents_name"), "dynamic_agents", ["name"], unique=True)
     op.create_table(
         "dynamic_capabilities",
         sa.Column("id", utils.uuid_gen.UUIDv7(), nullable=False),
@@ -74,9 +70,7 @@ def upgrade() -> None:
         sa.Column("chain_of_thought", sa.Text(), nullable=True),
         sa.Column("tokens_used", sa.Integer(), nullable=True),
         sa.Column("model_provider", sa.Text(), nullable=True),
-        sa.Column(
-            "raw_response", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("raw_response", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -106,14 +100,10 @@ def upgrade() -> None:
         sa.Column("agent_id", sa.Integer(), nullable=True),
         sa.Column("task_id", sa.String(), nullable=True),
         sa.Column("outcome_summary", sa.Text(), nullable=True),
-        sa.Column(
-            "learned_patterns", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("learned_patterns", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("confidence_score", sa.Float(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["agent_id"], ["dynamic_agents.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["agent_id"], ["dynamic_agents.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###
@@ -298,9 +288,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "user_id", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("user_id", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column(
             "amount_usd",
             sa.NUMERIC(precision=10, scale=6),
@@ -313,9 +301,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "description", sa.VARCHAR(length=500), autoincrement=False, nullable=True
-        ),
+        sa.Column("description", sa.VARCHAR(length=500), autoincrement=False, nullable=True),
         sa.Column(
             "timestamp",
             postgresql.TIMESTAMP(timezone=True),
@@ -544,9 +530,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "agent_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("agent_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column("description", sa.TEXT(), autoincrement=False, nullable=True),
         sa.Column(
             "config_json",
@@ -685,9 +669,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "user_id", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("user_id", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column(
             "balance_usd",
             sa.NUMERIC(precision=10, scale=6),
@@ -820,9 +802,7 @@ def downgrade() -> None:
             nullable=True,
         ),
         sa.Column("approved_by", sa.TEXT(), autoincrement=False, nullable=True),
-        sa.Column(
-            "approved_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
+        sa.Column("approved_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
         sa.Column(
             "usage_count",
             sa.INTEGER(),
@@ -839,9 +819,7 @@ def downgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("skill_id", name=op.f("dynamic_skills_pkey")),
     )
-    op.create_index(
-        op.f("idx_dynamic_skills_status"), "dynamic_skills", ["status"], unique=False
-    )
+    op.create_index(op.f("idx_dynamic_skills_status"), "dynamic_skills", ["status"], unique=False)
     op.create_table(
         "system_config",
         sa.Column("key", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
@@ -859,9 +837,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "category", sa.VARCHAR(length=100), autoincrement=False, nullable=False
-        ),
+        sa.Column("category", sa.VARCHAR(length=100), autoincrement=False, nullable=False),
         sa.Column("id", sa.UUID(), autoincrement=False, nullable=True),
         sa.Column("is_active", sa.BOOLEAN(), autoincrement=False, nullable=True),
         sa.Column("version", sa.INTEGER(), autoincrement=False, nullable=True),
@@ -901,21 +877,15 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=True,
         ),
-        sa.Column(
-            "synced_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
+        sa.Column("synced_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
         sa.CheckConstraint(
             "status = ANY (ARRAY['pending'::text, 'synced'::text, 'failed'::text])",
             name=op.f("offline_sync_logs_status_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("offline_sync_logs_pkey")),
     )
-    op.create_index(
-        op.f("idx_offline_sync_user"), "offline_sync_logs", ["user_id"], unique=False
-    )
-    op.create_index(
-        op.f("idx_offline_sync_status"), "offline_sync_logs", ["status"], unique=False
-    )
+    op.create_index(op.f("idx_offline_sync_user"), "offline_sync_logs", ["user_id"], unique=False)
+    op.create_index(op.f("idx_offline_sync_status"), "offline_sync_logs", ["status"], unique=False)
     op.create_table(
         "skill_fitness",
         sa.Column(
@@ -925,9 +895,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "skill_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("skill_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column(
             "success_count",
             sa.INTEGER(),
@@ -1086,12 +1054,8 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "proposal_id", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
-        sa.Column(
-            "skill_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("proposal_id", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
+        sa.Column("skill_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column("generated_code", sa.TEXT(), autoincrement=False, nullable=False),
         sa.Column(
             "ast_validated",
@@ -1143,9 +1107,7 @@ def downgrade() -> None:
             postgresql_nulls_not_distinct=False,
         ),
     )
-    op.create_index(
-        op.f("idx_proposal_status"), "code_proposals", ["status"], unique=False
-    )
+    op.create_index(op.f("idx_proposal_status"), "code_proposals", ["status"], unique=False)
     op.create_table(
         "audit_logs_2026_06",
         sa.Column("id", sa.BIGINT(), autoincrement=True, nullable=False),
@@ -1177,9 +1139,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=True,
         ),
-        sa.PrimaryKeyConstraint(
-            "id", "timestamp", name=op.f("audit_logs_2026_06_pkey")
-        ),
+        sa.PrimaryKeyConstraint("id", "timestamp", name=op.f("audit_logs_2026_06_pkey")),
     )
     op.create_index(
         op.f("audit_logs_2026_06_user_id_idx"),
@@ -1237,9 +1197,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "skill_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("skill_name", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column("description", sa.TEXT(), autoincrement=False, nullable=True),
         sa.Column("code", sa.TEXT(), autoincrement=False, nullable=False),
         sa.Column(
@@ -1330,9 +1288,7 @@ def downgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("code", name=op.f("referral_codes_pkey")),
     )
-    op.create_index(
-        op.f("idx_referral_codes_status"), "referral_codes", ["status"], unique=False
-    )
+    op.create_index(op.f("idx_referral_codes_status"), "referral_codes", ["status"], unique=False)
     op.create_index(
         op.f("idx_referral_codes_referrer"),
         "referral_codes",
@@ -1430,18 +1386,12 @@ def downgrade() -> None:
         sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
         sa.Column("run_id", sa.BIGINT(), autoincrement=False, nullable=False),
         sa.Column("run_number", sa.INTEGER(), autoincrement=False, nullable=True),
-        sa.Column(
-            "event_name", sa.VARCHAR(length=50), autoincrement=False, nullable=True
-        ),
+        sa.Column("event_name", sa.VARCHAR(length=50), autoincrement=False, nullable=True),
         sa.Column("actor", sa.VARCHAR(length=100), autoincrement=False, nullable=True),
-        sa.Column(
-            "workflow_name", sa.VARCHAR(length=150), autoincrement=False, nullable=True
-        ),
+        sa.Column("workflow_name", sa.VARCHAR(length=150), autoincrement=False, nullable=True),
         sa.Column("status", sa.VARCHAR(length=50), autoincrement=False, nullable=False),
         sa.Column("runtime_seconds", sa.INTEGER(), autoincrement=False, nullable=True),
-        sa.Column(
-            "commit_sha", sa.VARCHAR(length=100), autoincrement=False, nullable=True
-        ),
+        sa.Column("commit_sha", sa.VARCHAR(length=100), autoincrement=False, nullable=True),
         sa.Column("branch", sa.VARCHAR(length=100), autoincrement=False, nullable=True),
         sa.Column(
             "jobs_summary",
@@ -1459,9 +1409,7 @@ def downgrade() -> None:
             postgresql_nulls_not_distinct=False,
         ),
     )
-    op.create_index(
-        op.f("idx_ci_reports_run_id"), "ci_reports", ["run_id"], unique=False
-    )
+    op.create_index(op.f("idx_ci_reports_run_id"), "ci_reports", ["run_id"], unique=False)
     op.create_index(
         op.f("idx_ci_reports_created"),
         "ci_reports",
@@ -1492,12 +1440,8 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "rule_key", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
-        sa.Column(
-            "category", sa.VARCHAR(length=100), autoincrement=False, nullable=False
-        ),
+        sa.Column("rule_key", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
+        sa.Column("category", sa.VARCHAR(length=100), autoincrement=False, nullable=False),
         sa.Column("value", sa.TEXT(), autoincrement=False, nullable=False),
         sa.Column("description", sa.TEXT(), autoincrement=False, nullable=True),
         sa.Column(
@@ -1709,9 +1653,7 @@ def downgrade() -> None:
             nullable=True,
         ),
         sa.Column("resolution", sa.TEXT(), autoincrement=False, nullable=True),
-        sa.Column(
-            "resolved_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
+        sa.Column("resolved_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
         sa.Column(
             "created_at",
             postgresql.TIMESTAMP(),
@@ -1753,9 +1695,7 @@ def downgrade() -> None:
         ),
         sa.Column("method", sa.TEXT(), autoincrement=False, nullable=True),
         sa.Column("idp_session_index", sa.TEXT(), autoincrement=False, nullable=True),
-        sa.Column(
-            "expires_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
+        sa.Column("expires_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
         sa.Column(
             "created_at",
             postgresql.TIMESTAMP(),
@@ -1765,12 +1705,8 @@ def downgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("session_id", name=op.f("sso_sessions_pkey")),
     )
-    op.create_index(
-        op.f("idx_sso_sessions_user"), "sso_sessions", ["user_id"], unique=False
-    )
-    op.create_index(
-        op.f("idx_sso_sessions_tenant"), "sso_sessions", ["tenant_id"], unique=False
-    )
+    op.create_index(op.f("idx_sso_sessions_user"), "sso_sessions", ["user_id"], unique=False)
+    op.create_index(op.f("idx_sso_sessions_tenant"), "sso_sessions", ["tenant_id"], unique=False)
     op.create_table(
         "referral_redemptions",
         sa.Column("id", sa.BIGINT(), autoincrement=True, nullable=False),
@@ -1908,7 +1844,5 @@ def downgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id", "timestamp", name=op.f("audit_logs_pkey")),
     )
-    op.create_index(
-        op.f("idx_audit_logs_user_id"), "audit_logs", ["user_id"], unique=False
-    )
+    op.create_index(op.f("idx_audit_logs_user_id"), "audit_logs", ["user_id"], unique=False)
     # ### end Alembic commands ###
