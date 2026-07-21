@@ -812,7 +812,10 @@ jobs:
           fi
 
       - name: Verify User Backend Deploy Status
-        run: python .github/scripts/verify-render-deploy.py --service-id srv-d9d3n58js32c738n79k0 --name "User Backend"
+        run: |
+          # বাংলা মন্তব্য (জরুরি): এই পদে শুধু User Backend (srv-d9d3n58js32c738n79k0) আইসোলেটেডভাবে ভেরিফাই হবে।
+          # অন্য কোনো ব্যাকএন্ডের হেলথ চেক এখানে মেপে মিথ্যা Success দেওয়া সম্পূর্ণ নিষিদ্ধ।
+          python .github/scripts/verify-render-deploy.py --service-id srv-d9d3n58js32c738n79k0 --name "User Backend"
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
@@ -843,7 +846,9 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
           if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
-            echo "❌ Backup API deploy with prebuilt image returned status: $STATUS"
+            echo "✅ Admin Render deploy triggered via API with prebuilt image (status: $STATUS)!"
+          else
+            echo "❌ Admin API deploy with prebuilt image returned status: $STATUS"
             exit 1
           fi
 
@@ -883,8 +888,10 @@ jobs:
             exit 1
           fi
 
-      - name: Verify Render Deploy Health
-        run: python .github/scripts/verify-render-deploy.py
+      - name: Verify Admin Backend Deploy Status
+        run: |
+          # বাংলা মন্তব্য (জরুরি): এই পদে শুধু Admin Backend (srv-d9d3pgvavr4c738a46mg) আইসোলেটেডভাবে ভেরিফাই হবে।
+          python .github/scripts/verify-render-deploy.py --service-id srv-d9d3pgvavr4c738a46mg --name "Admin Backend"
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
