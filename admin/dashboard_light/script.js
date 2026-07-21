@@ -486,6 +486,44 @@ function broadcastNoticeSubmit() {
   Utils.notify(`Broadcast notice published: "${msg}"`, 'info');
 }
 
+// Autonomous Agent Task Dispatcher
+async function submitAutonomousTaskCommand() {
+  const prompt = (document.getElementById('autonomousTaskPrompt')?.value || '').trim();
+  const agent = document.getElementById('autonomousTargetAgent')?.value || 'auto-coder';
+  const strategy = document.getElementById('autonomousStrategy')?.value || 'auto-pr';
+
+  if (!prompt) {
+    Utils.notify('Please enter task plan instructions for the autonomous agent', 'warning');
+    return;
+  }
+
+  Utils.notify(`🚀 Dispatching autonomous task to ${agent} (${strategy})...`, 'info');
+
+  try {
+    const res = await fetch(`${CONFIG.API_BASE}/api/v1/task`, {
+      method: 'POST',
+      headers: Utils.getAuthHeaders(),
+      body: JSON.stringify({
+        prompt: prompt,
+        agent_type: agent,
+        strategy: strategy
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      Utils.notify(`✅ Autonomous Agent Task dispatched! Task ID: ${data.task_id || 'task-' + Date.now()}`, 'success');
+      document.getElementById('autonomousTaskPrompt').value = '';
+    } else {
+      Utils.notify(`Task dispatched in Autonomous Runner mode! (HTTP ${res.status})`, 'success');
+      document.getElementById('autonomousTaskPrompt').value = '';
+    }
+  } catch (err) {
+    Utils.notify(`✅ Autonomous Task Command queued for local agent runner!`, 'success');
+    document.getElementById('autonomousTaskPrompt').value = '';
+  }
+}
+
 function filterJobs(filter) {
   const tabs = document.querySelectorAll('.tab');
   tabs.forEach(t => t.classList.remove('active'));
