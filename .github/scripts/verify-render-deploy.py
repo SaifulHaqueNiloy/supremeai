@@ -60,18 +60,38 @@ def check_http_health(url, label):
 def monitor_service(service):
     name = service["name"]
     service_id = service["service_id"]
-    api_key = os.getenv(service["api_key_env"])
+    
+    # বাংলা মন্তব্য: উভয় API Key ট্রাই করা হবে যদি একটি ব্যর্থ হয় বা Revoked অবস্থায় থাকে
+    primary_key = os.getenv("RENDER_API_KEY")
+    backup_key = os.getenv("RENDER_API_KEY_BACKUP")
+    candidate_keys = [k for k in [primary_key, backup_key] if k]
 
-    if not api_key:
-        print(f"ℹ️ API key for {name} ({service['api_key_env']}) is not configured. Skipping deploy tracking.")
-        # বাংলা মন্তব্য: যদি কোন এপিআই কি না থাকে, তবে আমরা সরাসরি HTTP হেলথ চেক করতে পারি
-        # কারণ ডেপ্লয়মেন্ট হয়ত অন্য কোনোভাবে ট্রিগার হয়েছে বা এপিআই কি বাদে চালানো হচ্ছে।
+    if not candidate_keys:
+        print(f"ℹ️ No API keys configured in environment. Checking HTTP health directly for {name}.")
         return check_http_health(service["url"], name)
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/json"
-    }
+    headers = None
+    working_key = None
+
+    # ১. গ্রহণযোগ্য API Key খুঁজে বের করা
+    for key in candidate_keys:
+        test_headers = {
+            "Authorization": f"Bearer {key}",
+            "Accept": "application/json"
+        }
+        deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
+        try:
+            res = requests.get(deploys_url, headers=test_headers, timeout=10)
+            if res.status_code == 200:
+                headers = test_headers
+                working_key = key
+                break
+        except Exception:
+            pass
+
+    if not headers:
+        print(f"⚠️ API Key authentication failed or unauthorized for {name}. Checking HTTP health directly.")
+        return check_http_health(service["url"], name)
 
     print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {service_id})...")
 
@@ -81,7 +101,7 @@ def monitor_service(service):
         res = requests.get(deploys_url, headers=headers, timeout=15)
         if res.status_code != 200:
             print(f"❌ Failed to fetch deploys for {name}: HTTP {res.status_code} - {res.text}")
-            return False
+            return check_http_health(service["url"], name)
 
         deploys = res.json()
         if not deploys:
@@ -89,7 +109,6 @@ def monitor_service(service):
             return check_http_health(service["url"], name)
 
         # বাংলা মন্তব্য: Render API-র রেসপন্স লিস্টে প্রতিটি ডেপ্লয়মেন্ট অবজেক্ট "deploy" কী-এর অধীনে র‍্যাপ করা থাকে।
-        # তাই প্রথমে সেটি ডিকশনারি থেকে এক্সট্র্যাক্ট করে নিচ্ছি।
         latest_deploy_item = deploys[0]
         if isinstance(latest_deploy_item, dict) and "deploy" in latest_deploy_item:
             latest_deploy = latest_deploy_item["deploy"]
@@ -107,14 +126,11 @@ def monitor_service(service):
             return check_http_health(service["url"], name)
 
         # 2. Check if this deploy was triggered recently (within the last 15 minutes)
-        # Parse ISO timestamp
-        # বাংলা মন্তব্য: ISO টাইমস্ট্যাম্প পার্স করার সময় safe-replace ব্যবহার করা হচ্ছে যাতে NoneType এরর না হয়।
         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
 
         if now - created_at > timedelta(minutes=15):
             print(f"ℹ️ Latest deploy is older than 15 minutes (created {now - created_at} ago). No recent deploy is active.")
-            # Check if the service is currently healthy
             return check_http_health(service["url"], name)
 
     except Exception as e:
