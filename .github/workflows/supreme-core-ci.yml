@@ -632,6 +632,63 @@ jobs:
           path: apps/studio-client/dist-admin
           retention-days: 1
 
+  check-render-quota:
+    name: 📊 Check Render Build Quota
+    needs: [changes]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      needs.changes.result == 'success' &&
+      (
+        needs.changes.outputs.admin_backend_changed == 'true' ||
+        needs.changes.outputs.customer_backend_changed == 'true'
+      )
+    outputs:
+      use_github_build: ${{ steps.quota.outputs.use_github_build }}
+      minutes_used: ${{ steps.quota.outputs.minutes_used }}
+      pct_used: ${{ steps.quota.outputs.pct_used }}
+      remaining_min: ${{ steps.quota.outputs.remaining_min }}
+      checked_at: ${{ steps.quota.outputs.checked_at }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore minutes cache
+        uses: actions/cache@v4
+        with:
+          path: render_minutes_cache.json
+          key: render-quota-${{ github.run_number }}
+          restore-keys: |
+            render-quota-
+
+      - name: Check Render quota
+        id: quota
+        run: python .github/scripts/check-render-quota.py
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+          PRIMARY_SVC_ID: srv-d9d3n58js32c738n79k0
+          BACKUP_SVC_ID: srv-d9fg48bh523c73f63bb0
+          RENDER_BILLING_DAY: ${{ vars.RENDER_BILLING_DAY }}
+          RENDER_BILLING_DAY_BACKUP: ${{ vars.RENDER_BILLING_DAY_BACKUP }}
+
+      - name: Save minutes cache
+        uses: actions/cache@v4
+        with:
+          path: render_minutes_cache.json
+          key: render-quota-${{ github.run_number }}
+
+      - name: Report quota status
+        run: |
+          echo "### 📊 Render Build Minutes Report" >> $GITHUB_STEP_SUMMARY
+          echo "**Checked at:** ${{ steps.quota.outputs.checked_at }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Minutes Used | ${{ steps.quota.outputs.minutes_used }} / 500 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Remaining | ${{ steps.quota.outputs.remaining_min }} min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Usage % | ${{ steps.quota.outputs.pct_used }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| GitHub Build Mode | ${{ steps.quota.outputs.use_github_build }} |" >> $GITHUB_STEP_SUMMARY
+
   build-backend-image:
     name: 🐳 Build & Push Backend Image
     needs: [backend-core, pre-merge-gate, changes]
@@ -682,7 +739,7 @@ jobs:
 
   deploy-user-backend:
     name: 🚀 Deploy User Backend (Render)
-    needs: [build-backend-image, changes]
+    needs: [build-backend-image, changes, check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     if: |
@@ -693,7 +750,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Trigger User Render Deploy
+      - name: Trigger User Render Deploy (Prebuilt Image)
+        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        run: |
+          IMAGE_URL="ghcr.io/${{ github.repository }}/supremeai-backend:sha-${{ github.sha }}"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
+          PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+            echo "✅ Primary Render deploy triggered via API with prebuilt image (status: $STATUS)!"
+          else
+            echo "❌ Primary API deploy with prebuilt image returned status: $STATUS"
+            exit 1
+          fi
+
+      - name: Trigger User Render Deploy (Source Code)
+        if: needs.check-render-quota.outputs.use_github_build != 'true'
         run: |
           PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
           PRIMARY_SUCCESS=false
@@ -737,7 +813,7 @@ jobs:
 
   deploy-admin-backend:
     name: 🚀 Deploy Admin Backend (Render)
-    needs: [build-backend-image, changes]
+    needs: [build-backend-image, changes, check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     if: |
@@ -748,7 +824,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Trigger Admin Render Deploy
+      - name: Trigger Admin Render Deploy (Prebuilt Image)
+        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        run: |
+          IMAGE_URL="ghcr.io/${{ github.repository }}/supremeai-backend:sha-${{ github.sha }}"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
+          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+            echo "✅ Backup Render deploy triggered via API with prebuilt image (status: $STATUS)!"
+          else
+            echo "❌ Backup API deploy with prebuilt image returned status: $STATUS"
+            exit 1
+          fi
+
+      - name: Trigger Admin Render Deploy (Source Code)
+        if: needs.check-render-quota.outputs.use_github_build != 'true'
         run: |
           BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
           BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
@@ -791,7 +886,7 @@ jobs:
 
   deploy-combined-backend:
     name: 🚀 Deploy Combined Backend (Render)
-    needs: [build-backend-image, changes]
+    needs: [build-backend-image, changes, check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     if: |
@@ -802,7 +897,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Trigger Combined Render Deploy
+      - name: Trigger Combined Render Deploy (Prebuilt Image)
+        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        run: |
+          IMAGE_URL="ghcr.io/${{ github.repository }}/supremeai-backend:sha-${{ github.sha }}"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image to both services: $IMAGE_URL"
+          PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          
+          # Deploy Primary
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+            echo "✅ Primary Render deploy triggered with prebuilt image (status: $STATUS)!"
+          else
+            echo "❌ Primary API deploy with prebuilt image failed (status: $STATUS)"
+            exit 1
+          fi
+
+          # Deploy Backup
+          STATUS_B=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS_B" = "201" ] || [ "$STATUS_B" = "202" ]; then
+            echo "✅ Backup Render deploy triggered with prebuilt image (status: $STATUS_B)!"
+          else
+            echo "❌ Backup API deploy with prebuilt image failed (status: $STATUS_B)"
+            exit 1
+          fi
+
+      - name: Trigger Combined Render Deploy (Source Code)
+        if: needs.check-render-quota.outputs.use_github_build != 'true'
         run: |
           PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
           BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
