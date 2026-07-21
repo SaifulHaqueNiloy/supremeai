@@ -124,6 +124,8 @@ jobs:
             frontend:
               - 'apps/studio-client/**'
               - 'apps/web-chat/**'
+              - 'admin/**'
+              - 'firebase.json'
               - '.github/workflows/**'
             admin:
               - 'apps/studio-client/src/pages/admin/**'
@@ -1226,7 +1228,7 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}'
           projectId: supremeai-a
           channelId: live
-          target: admin-hosting
+          target: admin
 
   deploy-user-vercel:
     name: 🚀 Deploy User Portal (Vercel)
