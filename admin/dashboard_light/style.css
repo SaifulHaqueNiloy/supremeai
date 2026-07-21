@@ -932,3 +932,152 @@ input:checked + .slider:before {
     grid-template-columns: 1fr;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   NEW MODULES: USER TABLE, AI FLEET, AUDIT LOGS & I18N
+   ════════════════════════════════════════════════════════════ */
+
+/* Language Toggle Button */
+.lang-btn {
+  background: rgba(188, 19, 254, 0.15);
+  border: 1px solid var(--accent-secondary);
+  color: var(--text-main);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.lang-btn:hover {
+  background: var(--accent-secondary);
+  color: #fff;
+  box-shadow: 0 0 12px var(--accent-secondary-glow);
+}
+
+.god-tag {
+  background: var(--danger);
+  color: #fff;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  letter-spacing: 1px;
+}
+
+/* Data Table */
+.table-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.data-table th {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+}
+.data-table tr:hover {
+  background: rgba(0, 243, 255, 0.02);
+}
+
+.role-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.role-admin { background: rgba(188, 19, 254, 0.2); color: var(--accent-secondary); border: 1px solid var(--accent-secondary); }
+.role-user { background: rgba(0, 243, 255, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.dot-success { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.dot-warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+
+/* AI Fleet Cards */
+.ai-fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.ai-provider-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+.ai-provider-card:hover {
+  border-color: var(--accent-secondary);
+  box-shadow: 0 4px 20px rgba(188, 19, 254, 0.15);
+}
+.provider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.provider-stats {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+.meter-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+}
+.badge-free { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+
+/* Audit Logs Console */
+.logs-console {
+  background: #05070f;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.log-line {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.log-time { color: var(--text-muted); }
+.log-badge { font-weight: 700; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+.level-info { background: rgba(0, 243, 255, 0.15); color: var(--accent); }
+.level-warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.level-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+.log-module { color: var(--accent-secondary); }
+.log-msg { color: var(--text-main); flex-grow: 1; }
+.tag-pii { background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
