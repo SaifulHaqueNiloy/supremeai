@@ -26,9 +26,9 @@ SERVICES = {
         "service_id": "srv-d9d3n58js32c738n79k0",
         "url": "https://supremeai-backend.onrender.com",
     },
-    "srv-d9d3pgvavr4c738a46mg": {
+    "srv-d9fg48bh523c73f63bb0": {
         "name": "Admin Backend (Backup)",
-        "service_id": "srv-d9d3pgvavr4c738a46mg",
+        "service_id": "srv-d9fg48bh523c73f63bb0",
         "url": "https://supremeai-admin.onrender.com",
     }
 }
