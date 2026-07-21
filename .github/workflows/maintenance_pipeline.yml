@@ -127,7 +127,7 @@ jobs:
       - name: "🩺 Run Health Check"
         working-directory: backend
         run: |
-          poetry run python -m backend.tools.health_checker
+          poetry run python -m tools.health_checker
 
   auto-lint-fix:
     needs: setup
@@ -317,7 +317,7 @@ jobs:
         working-directory: backend
         run: |
           mkdir -p ../docs/autogen
-          poetry run erdantic backend.models -o ../docs/autogen/db_schema.png
+          poetry run erdantic models -o ../docs/autogen/db_schema.png
           echo "✅ Database schema diagram generated at docs/autogen/db_schema.png" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Schema Diagram Artifact
