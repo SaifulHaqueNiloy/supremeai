@@ -105,11 +105,7 @@ def get_firestore_db(
         if use_emulator is None:
             use_emulator = emulator_host is not None
 
-        project_id = (
-            project_id
-            or os.getenv("GCP_PROJECT_ID")
-            or os.getenv("GOOGLE_CLOUD_PROJECT")
-        )
+        project_id = project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
 
         try:
             from google.cloud import firestore
@@ -130,16 +126,12 @@ def get_firestore_db(
             return _FIRESTORE_CLIENT
 
         except ImportError:
-            logger.warning(
-                "⚠️ google-cloud-firestore not installed, using SQLite fallback"
-            )
+            logger.warning("⚠️ google-cloud-firestore not installed, using SQLite fallback")
             _FIRESTORE_CLIENT = _get_sqlite_fallback()
             return _FIRESTORE_CLIENT
 
         except Exception as exc:
-            logger.warning(
-                f"⚠️ Firestore connection failed ({exc}), using SQLite fallback"
-            )
+            logger.warning(f"⚠️ Firestore connection failed ({exc}), using SQLite fallback")
             _FIRESTORE_CLIENT = _get_sqlite_fallback()
             return _FIRESTORE_CLIENT
 
@@ -305,9 +297,7 @@ def query_collection(
                 if op == "==":
                     # JSON extraction for simple equality
                     query += f" AND json_extract(data, '$.{field_name}') = ?"
-                    params.append(
-                        json.dumps(value) if isinstance(value, dict | list) else value
-                    )
+                    params.append(json.dumps(value) if isinstance(value, dict | list) else value)
 
         if order_by:
             direction = "DESC" if order_by.startswith("-") else "ASC"

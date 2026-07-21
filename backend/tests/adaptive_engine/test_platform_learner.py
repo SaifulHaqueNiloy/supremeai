@@ -18,9 +18,7 @@ class TestPlatformLearner:
     @pytest.fixture
     def mock_model_router(self):
         with patch("brain.model_router.ModelRouter") as mock_model_router:
-            mock_model_router.async_route_and_generate = AsyncMock(
-                return_value={"text": "{}"}
-            )
+            mock_model_router.async_route_and_generate = AsyncMock(return_value={"text": "{}"})
             yield mock_model_router
 
     @pytest.fixture
@@ -38,19 +36,11 @@ class TestPlatformLearner:
         assert platform_learner.registry == mock_registry
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_success(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_success(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with successful HTTP request and JSON parsing."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            "<html>Test</html>"
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = "<html>Test</html>"
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -59,16 +49,10 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_http_failure(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_http_failure(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with failed HTTP request."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            404
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 404
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -77,19 +61,11 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_json_parsing_failure(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_json_parsing_failure(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with failed JSON parsing."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            "<html>Test</html>"
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": "Invalid JSON"
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = "<html>Test</html>"
+        mock_model_router.async_route_and_generate.return_value = {"text": "Invalid JSON"}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -98,19 +74,11 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_large_input(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_large_input(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with large input."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            "a" * 15000
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = "a" * 15000
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -119,19 +87,11 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_empty_input(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_empty_input(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with empty input."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            ""
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = ""
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -140,19 +100,11 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_none_input(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_none_input(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with None input."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            None
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = None
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -161,19 +113,11 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_concurrent_calls(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_concurrent_calls(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with concurrent calls."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            "<html>Test</html>"
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = "<html>Test</html>"
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -181,16 +125,10 @@ class TestPlatformLearner:
         assert mock_model_router.async_route_and_generate.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_http_timeout(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_http_timeout(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with HTTP timeout."""
-        mock_async_client.return_value.__aenter__.return_value.get.side_effect = (
-            httpx.TimeoutException("Timeout")
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": '{"display_name": "Test", "category": "hosting"}'
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.side_effect = httpx.TimeoutException("Timeout")
+        mock_model_router.async_route_and_generate.return_value = {"text": '{"display_name": "Test", "category": "hosting"}'}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -199,19 +137,11 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_json_invalid(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_json_invalid(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with invalid JSON."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            "<html>Test</html>"
-        )
-        mock_model_router.async_route_and_generate.return_value = {
-            "text": "Invalid JSON"
-        }
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = "<html>Test</html>"
+        mock_model_router.async_route_and_generate.return_value = {"text": "Invalid JSON"}
         platform_name = "test"
         docs_url = "https://test.com"
         profile = await platform_learner.learn_from_docs(platform_name, docs_url)
@@ -220,16 +150,10 @@ class TestPlatformLearner:
         assert profile.category == "hosting"
 
     @pytest.mark.asyncio
-    async def test_learn_from_docs_model_router_failure(
-        self, platform_learner, mock_model_router, mock_registry, mock_async_client
-    ):
+    async def test_learn_from_docs_model_router_failure(self, platform_learner, mock_model_router, mock_registry, mock_async_client):
         """Test learn_from_docs with model router failure."""
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = (
-            200
-        )
-        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = (
-            "<html>Test</html>"
-        )
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.status_code = 200
+        mock_async_client.return_value.__aenter__.return_value.get.return_value.text = "<html>Test</html>"
         mock_model_router.async_route_and_generate.side_effect = Exception("Test")
         platform_name = "test"
         docs_url = "https://test.com"
