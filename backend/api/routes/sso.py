@@ -14,15 +14,23 @@ except ImportError:
     JWTError = Exception  # type: ignore[misc,assignment]
     jwt = None  # type: ignore[assignment]
 
-try:
-    from tools.sso_integrator import SSOIntegrator
+_sso_instance = None
+_sso_error = None
 
-    sso = SSOIntegrator()
-except Exception as exc:  # noqa: BLE001
-    # বল মনতবয: SSOIntegrator লড বযরথ হল SSO নরবই নষকরয় হয় যত; কন বযরথ হল
-    # ত দশযমন করত warning লগ যকত কর হল
-    logger.warning(f"SSOIntegrator unavailable; SSO features disabled: {exc}")
-    sso = None  # type: ignore[assignment]
+
+def get_sso_service():
+    # বাংলা মন্তব্য: মেমরি ওভারহেড কমাতে SSOIntegrator অলসভাবে (lazy) লোড করা হচ্ছে।
+    global _sso_instance, _sso_error
+    if _sso_instance is None and _sso_error is None:
+        try:
+            from tools.sso_integrator import SSOIntegrator
+
+            _sso_instance = SSOIntegrator()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"SSOIntegrator unavailable; SSO features disabled: {exc}")
+            _sso_error = exc
+    return _sso_instance
+
 
 router = APIRouter(prefix="/auth/sso", tags=["sso"])
 _oidc_state_store: dict[str, float] = {}
@@ -83,14 +91,15 @@ async def oidc_discovery(payload: OIDCDiscoveryRequest):
 
 @router.post("/oidc/{provider}/authorize", response_model=OIDCLoginResponse)
 async def oidc_provider_authorize(provider: str, payload: ProviderSSORequest):
-    if sso is None:
+    sso_service = get_sso_service()
+    if sso_service is None:
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
     client_id = payload.client_id or getattr(settings, "oidc_client_id", "")
     redirect_uri = payload.redirect_uri or getattr(settings, "oidc_redirect_uri", "")
     state = payload.state or secrets.token_urlsafe(16)
     _oidc_state_store[state] = time.time()
     try:
-        auth_url = sso.get_oidc_auth_url(
+        auth_url = sso_service.get_oidc_auth_url(
             provider=provider,
             client_id=client_id,
             redirect_uri=redirect_uri,
@@ -104,7 +113,8 @@ async def oidc_provider_authorize(provider: str, payload: ProviderSSORequest):
 
 @router.post("/oidc/{provider}/callback", response_model=SSOLoginResponse)
 async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
-    if sso is None:
+    sso_service = get_sso_service()
+    if sso_service is None:
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
     getattr(settings, "oidc_client_id", "")
     getattr(settings, "oidc_client_secret", "")
@@ -112,7 +122,7 @@ async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
     if not payload.state or payload.state not in _oidc_state_store:
         raise HTTPException(status_code=400, detail="Invalid or expired OIDC state parameter")
     _oidc_state_store.pop(payload.state, None)
-    result = await sso.process_oidc_response(
+    result = await sso_service.process_oidc_response(
         provider=provider,
         code=payload.code,
         state=payload.state,
@@ -140,11 +150,12 @@ async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
 
 @router.get("/oidc/{provider}/logout")
 async def oidc_logout(provider: str):
-    if sso is None:
+    sso_service = get_sso_service()
+    if sso_service is None:
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
     logout_url = ""
     try:
-        cfg = sso.OIDC_PROVIDERS.get(provider.lower(), {})
+        cfg = sso_service.OIDC_PROVIDERS.get(provider.lower(), {})
         base = cfg.get("end_session_endpoint", "").format(
             domain=getattr(settings, "oidc_domain", ""),
             tenant=getattr(settings, "oidc_tenant", ""),
@@ -159,9 +170,10 @@ async def oidc_logout(provider: str):
 
 @router.post("/saml", response_model=SSOLoginResponse)
 async def saml_login(payload: SAMLAssertionRequest):
-    if sso is None:
+    sso_service = get_sso_service()
+    if sso_service is None:
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
-    result = await sso.process_sso_response({"SAMLResponse": payload.assertion})
+    result = await sso_service.process_sso_response({"SAMLResponse": payload.assertion})
     if result.get("status") != "success":
         raise HTTPException(status_code=401, detail=result.get("message", "SAML authentication failed"))
     roles = result.get("roles", ["viewer"])
@@ -186,9 +198,10 @@ async def saml_login(payload: SAMLAssertionRequest):
 
 @router.get("/metadata")
 async def sso_metadata():
-    if sso is None:
+    sso_service = get_sso_service()
+    if sso_service is None:
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
-    metadata = sso.get_metadata()
+    metadata = sso_service.get_metadata()
     from fastapi.responses import PlainTextResponse
 
     return PlainTextResponse(

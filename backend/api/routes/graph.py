@@ -5,12 +5,21 @@ from core.config import settings
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 
-from tools.graph_service import GraphService
-
 # বাংলা মন্তব্য: ফ্রন্টএন্ডে নলেজ গ্রাফ ডেটা (Nodes & Edges) এবং লার্নিং পাথ এক্সপোজ করার API রাউটার।
 
 router = APIRouter(prefix="/api/v1/graph", tags=["knowledge-graph"])
-graph_service = GraphService()
+
+_graph_service = None
+
+
+def get_graph_service():
+    # বাংলা মন্তব্য: মেমরি ওভারহেড কমাতে GraphService অলসভাবে (lazy) লোড করা হচ্ছে।
+    global _graph_service
+    if _graph_service is None:
+        from tools.graph_service import GraphService
+
+        _graph_service = GraphService()
+    return _graph_service
 
 
 # বাংলা মন্তব্য: কাস্টম অথরাইজেশন ডিপেন্ডেন্সি হেল্পার
@@ -28,7 +37,8 @@ async def get_skill_graph(user=Depends(require_auth_token)):
     """
     try:
         # ড্রাই-রান বা মক মোডের জন্য ডামি ডেটা
-        if graph_service.dry_run:
+        graph_svc = get_graph_service()
+        if graph_svc.dry_run:
             return {
                 "nodes": [
                     {
@@ -58,7 +68,8 @@ async def get_skill_graph(user=Depends(require_auth_token)):
             }
 
         # রিয়েল ডাটাবেস থেকে ফেচ করার লজিক (Cypher Query)
-        async with graph_service.driver.session() as session:
+        graph_svc = get_graph_service()
+        async with graph_svc.driver.session() as session:
             result = await session.run("MATCH (n:Skill) OPTIONAL MATCH (n)-[r]->(m:Skill) RETURN n, r, m LIMIT 100")
             records = await result.data()
 
@@ -108,7 +119,8 @@ async def get_learning_path(
 ):
     """বাংলা মন্তব্য: দুটি স্কিলের মধ্যে অপ্টিমাইজড লার্নিং পাথ বের করবে।"""
     try:
-        path = await graph_service.get_skill_path(start_skill, end_skill)
+        graph_svc = get_graph_service()
+        path = await graph_svc.get_skill_path(start_skill, end_skill)
         if not path:
             raise HTTPException(
                 status_code=404,
