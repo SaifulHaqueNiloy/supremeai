@@ -1,144 +1,264 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- 
+  SupremeAI 2.0 — Ultimate Lightweight Admin God-Mode Dashboard
+  ==============================================================
+  বাংলা মন্তব্য: জিরো-ডিপেন্ডেন্সি, সিঙ্গেল-ফাইল ইউনিভার্সাল এডমিন কন্ট্রোল সেন্টার।
+  লাইভ ব্যাকএন্ড ও ডেমো মোড অটো-ডিটেকশন, JIT OTP সিকিউরিটি, ইউজার কোটা ম্যানেজার,
+  এআই ফ্লীট ট্র্যাকার এবং ১-ক্লিক বাংলা/ইংলিশ ভাষা পরিবর্তন সমর্থিত।
+-->
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Supreme Command Center - Light</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <title>SupremeAI Admin God Center — Lightweight</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-container">
+    <!-- Sidebar Navigation / সাইডবার নেভিগেশন -->
     <aside class="sidebar">
       <div class="logo-area">
         <span class="logo-icon">⚡</span>
-        <div class="logo-text">SUPREME<span>AI</span></div>
+        <div class="logo-text">SUPREME<span>AI</span> <small class="god-tag">GOD</small></div>
       </div>
 
       <nav class="nav-menu">
-        <div class="nav-section">MAIN MENU</div>
-        <a href="#" class="nav-item active" data-target="view-dashboard">📊 Dashboard</a>
-        <a href="#" class="nav-item" data-target="view-pipelines">🚀 CI/CD Pipelines</a>
-        <a href="#" class="nav-item" data-target="view-health">💻 System Health</a>
-        <a href="#" class="nav-item" data-target="view-godmode">🛡️ God Control</a>
+        <div class="nav-section" id="lblNavSection">OPERATIONAL DOMAINS</div>
+        <a href="#" class="nav-item active" data-target="view-dashboard" id="navDashboard">📊 Dashboard</a>
+        <a href="#" class="nav-item" data-target="view-godmode" id="navGodMode">🛡️ Security & God Rules</a>
+        <a href="#" class="nav-item" data-target="view-users" id="navUsers">👥 Users & Quotas</a>
+        <a href="#" class="nav-item" data-target="view-aifleet" id="navAiFleet">🤖 AI Fleet & PSI</a>
+        <a href="#" class="nav-item" data-target="view-pipelines" id="navPipelines">🚀 DevOps & CI/CD</a>
+        <a href="#" class="nav-item" data-target="view-logs" id="navLogs">📜 Audit & Event Logs</a>
       </nav>
 
       <div class="sidebar-bottom">
         <div class="env-badge" id="envBadge">Production Env</div>
         <div class="theme-toggle">
-          <button id="themeToggle" class="theme-btn">🌓 Light Mode</button>
+          <button id="themeToggle" class="theme-btn">🌓 Dark Mode</button>
         </div>
       </div>
     </aside>
 
+    <!-- Main Content Area / প্রধান কনটেন্ট এরিয়া -->
     <main class="main-content">
+      <!-- Topbar Header / টপবার হেডার -->
       <header class="topbar">
         <div class="search-bar">
           <span>🔍</span>
-          <input type="text" placeholder="Search jobs, logs, or metrics..." id="searchInput" />
+          <input type="text" placeholder="Search metrics, users, AI providers or logs..." id="searchInput" />
         </div>
         <div class="topbar-actions">
+          <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🌐 English</button>
           <div class="sync-status">
-            <span class="sync-dot"></span> <span id="syncText">Live Sync</span>
+            <span class="sync-dot" id="syncDot"></span>
+            <span id="syncText">Live Sync</span>
           </div>
-          <button class="btn btn-outline" id="btnRefresh">↻ Refresh</button>
-          <div class="user-badge" id="userBadge" style="display:none;">
-            <span class="user-avatar">👤</span>
-            <span class="user-name" id="userName">Guest</span>
+          <button class="btn btn-outline" id="btnRefresh" onclick="refreshDashboardData()">↻ Refresh</button>
+          <div class="user-badge" id="userBadge">
+            <span class="user-avatar">👑</span>
+            <span class="user-name" id="userName">Admin</span>
           </div>
         </div>
       </header>
 
+      <!-- 1. Overview & Watchtower View / ড্যাশবোর্ড ওভারভিউ -->
       <div id="view-dashboard" class="view-section active">
-        <h2 class="page-title">Overview & Quick Actions</h2>
+        <h2 class="page-title" id="lblTitleOverview">Overview & System Watchtower</h2>
 
         <div class="metrics-grid" id="metricsGrid">
           <div class="metric-card">
-            <div class="metric-title">API Status</div>
-            <div class="metric-value text-success" id="apiStatus">Loading...</div>
+            <div class="metric-title" id="lblApiStatus">API Status</div>
+            <div class="metric-value text-success" id="apiStatus">Checking...</div>
+            <div class="metric-sub" id="apiLatency">Latency: -- ms</div>
           </div>
           <div class="metric-card">
-            <div class="metric-title">Active Jobs</div>
-            <div class="metric-value" id="activeJobs">--</div>
+            <div class="metric-title" id="lblActiveJobs">Active AI Agents / Jobs</div>
+            <div class="metric-value" id="activeJobs">12 Active</div>
+            <div class="metric-sub" id="subActiveJobs">Zero-cost pipeline running</div>
           </div>
           <div class="metric-card">
-            <div class="metric-title">System Load</div>
-            <div class="metric-value" id="systemLoad">--%</div>
+            <div class="metric-title" id="lblSystemLoad">System Load</div>
+            <div class="metric-value" id="systemLoad">14.2%</div>
+            <div class="metric-sub" id="subSystemLoad">Memory: 412 MB / 512 MB</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title" id="lblRenderQuota">Render Free Quota</div>
+            <div class="metric-value text-accent" id="renderQuotaVal">485 / 500 min</div>
+            <div class="metric-sub" id="subRenderQuota">97% used • Auto-fallback ready</div>
           </div>
         </div>
 
-        <h3 class="section-subtitle mt-8">⚡ Quick Action Hub</h3>
+        <h3 class="section-subtitle mt-8" id="lblQuickActionTitle">⚡ 1-Click Operations Hub</h3>
         <div class="quick-actions-grid">
-          <div class="action-card" onclick="triggerAction('rollback')">
+          <div class="action-card" onclick="triggerActionWithJit('rollback')">
             <span class="action-icon">🔄</span>
-            <h4>Force Rollback</h4>
-            <p>Revert to previous stable Cloud Run revision.</p>
+            <h4 id="lblRollbackTitle">Force Alembic Rollback</h4>
+            <p id="lblRollbackDesc">Revert to previous database migration revision.</p>
           </div>
-          <div class="action-card" onclick="triggerAction('backup')">
+          <div class="action-card" onclick="triggerActionWithJit('backup')">
             <span class="action-icon">💾</span>
-            <h4>Trigger Backup</h4>
-            <p>Dump Supabase DB to Cloudflare R2 now.</p>
+            <h4 id="lblBackupTitle">Export DB Snapshot</h4>
+            <p id="lblBackupDesc">Dump full JSON database backup snapshot.</p>
           </div>
-          <div class="action-card" onclick="triggerAction('cache')">
+          <div class="action-card" onclick="triggerActionWithJit('cache')">
             <span class="action-icon">🧹</span>
-            <h4>Clear Redis Cache</h4>
-            <p>Flush in-memory rate limiters & caches.</p>
+            <h4 id="lblCacheTitle">Clear Redis Cache</h4>
+            <p id="lblCacheDesc">Flush rate limiters and memory cache.</p>
+          </div>
+          <div class="action-card" onclick="triggerActionWithJit('restart-workers')">
+            <span class="action-icon">⚙️</span>
+            <h4 id="lblRestartWorkersTitle">Restart Worker Nodes</h4>
+            <p id="lblRestartWorkersDesc">Reload background agents cleanly.</p>
           </div>
         </div>
       </div>
 
-      <div id="view-pipelines" class="view-section hidden">
-        <h2 class="page-title">CI/CD Pipeline Jobs</h2>
-        <div class="filter-tabs">
-          <button class="tab active" data-filter="all">All Jobs</button>
-          <button class="tab" data-filter="success">✅ Passed</button>
-          <button class="tab" data-filter="failure">❌ Failed</button>
-          <button class="tab" data-filter="running">🔄 Running</button>
-        </div>
-
-        <div class="jobs-grid" id="jobsGrid">
-          <div class="loading-spinner">Loading jobs...</div>
-        </div>
-      </div>
-
-      <div id="view-health" class="view-section hidden">
-        <h2 class="page-title">System Health</h2>
-        <div class="health-grid" id="healthGrid">
-          <div class="loading-spinner">Loading health data...</div>
-        </div>
-      </div>
-
+      <!-- 2. Security & God Rules View / সিকিউরিটি ও গড কন্ট্রোল -->
       <div id="view-godmode" class="view-section hidden">
-        <h2 class="page-title text-danger">🛡️ God Control (Constitutional Enforcement)</h2>
-        <p class="text-muted">Manage real-time access rules powered by <code>god.py</code>.</p>
+        <h2 class="page-title text-danger" id="lblGodTitle">🛡️ Constitutional God Rules (god.py)</h2>
+        <p class="text-muted" id="lblGodSub">Enforce zero-cost guardrails, JIT defense, and security enforcement policies.</p>
 
         <div class="god-panel mt-4">
           <div class="rule-row">
             <div>
-              <h4 class="rule-title">Admin Authorized</h4>
-              <p class="rule-desc">Allow critical write actions across the system. Disabling this enforces read-only mode.</p>
+              <h4 class="rule-title" id="lblRuleAdminAuth">Admin Writes Authorized</h4>
+              <p class="rule-desc" id="lblRuleAdminAuthDesc">Allow critical write actions. Disabling enforces read-only mode.</p>
             </div>
             <label class="switch">
-              <input type="checkbox" id="toggleAdminAuth" checked>
+              <input type="checkbox" id="toggleAdminAuth" checked onchange="toggleGodRule('admin_action', this.checked)">
               <span class="slider round"></span>
             </label>
           </div>
           <div class="rule-row mt-4">
             <div>
-              <h4 class="rule-title">AI Auto-Fix Engine</h4>
-              <p class="rule-desc">Allow SupremeAI to automatically commit fixes to the repository.</p>
+              <h4 class="rule-title" id="lblRuleZeroCost">Zero-Cost Infrastructure Lock</h4>
+              <p class="rule-desc" id="lblRuleZeroCostDesc">Strictly block any paid API calls or non-free resources (PSI Protocol).</p>
             </div>
             <label class="switch">
-              <input type="checkbox" id="toggleAutoFix" checked>
+              <input type="checkbox" id="toggleZeroCost" checked onchange="toggleGodRule('zero_cost', this.checked)">
               <span class="slider round"></span>
             </label>
           </div>
+          <div class="rule-row mt-4">
+            <div>
+              <h4 class="rule-title" id="lblRuleJitDefense">JIT OTP Defense Shield</h4>
+              <p class="rule-desc" id="lblRuleJitDefenseDesc">Require on-spot OTP challenge for any sensitive action or IP anomaly.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleJitDefense" checked onchange="toggleGodRule('jit_defense', this.checked)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="rule-row mt-4">
+            <div>
+              <h4 class="rule-title" id="lblRuleAutoFix">AI Self-Healing Engine</h4>
+              <p class="rule-desc" id="lblRuleAutoFixDesc">Allow autonomous regression self-healing and code delta fixes.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleAutoFix" checked onchange="toggleGodRule('auto_heal', this.checked)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. User & Quota Manager View / ইউজার ও কোটা ম্যানেজার -->
+      <div id="view-users" class="view-section hidden">
+        <h2 class="page-title" id="lblUsersTitle">👥 User & Tenant Quota Manager</h2>
+        <p class="text-muted" id="lblUsersSub">Manage system users, elevate roles, and allocate custom token quotas.</p>
+
+        <div class="table-container mt-4">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User / Tenant</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Daily Token Quota</th>
+                <th>Used Tokens</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <!-- Dynamically populated / ডায়নামিকালি লোড হবে -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. AI Fleet & PSI Router View / এআই ফ্লীট ও পিএসআই -->
+      <div id="view-aifleet" class="view-section hidden">
+        <h2 class="page-title" id="lblAiFleetTitle">🤖 AI Fleet & Provider Selection Intelligence (PSI)</h2>
+        <p class="text-muted" id="lblAiFleetSub">Monitor active AI models, fallback states, and zero-cost quota limits.</p>
+
+        <div class="ai-fleet-grid mt-4" id="aiFleetGrid">
+          <!-- Dynamically populated / ডায়নামিকালি লোড হবে -->
+        </div>
+      </div>
+
+      <!-- 5. DevOps & CI/CD View / ডেভঅপস ও সিআই/সিডি -->
+      <div id="view-pipelines" class="view-section hidden">
+        <h2 class="page-title" id="lblPipelinesTitle">🚀 DevOps & CI/CD Pipeline Gates</h2>
+        <div class="filter-tabs">
+          <button class="tab active" data-filter="all" onclick="filterJobs('all')">All Jobs</button>
+          <button class="tab" data-filter="success" onclick="filterJobs('success')">✅ Passed</button>
+          <button class="tab" data-filter="failure" onclick="filterJobs('failure')">❌ Failed</button>
+          <button class="tab" data-filter="running" onclick="filterJobs('running')">🔄 Running</button>
+        </div>
+
+        <div class="jobs-grid mt-4" id="jobsGrid">
+          <div class="loading-spinner">Loading pipeline status...</div>
+        </div>
+      </div>
+
+      <!-- 6. Audit & Event Logs View / অডিট লগ -->
+      <div id="view-logs" class="view-section hidden">
+        <h2 class="page-title" id="lblLogsTitle">📜 Security Audit & Event Log Stream</h2>
+        <p class="text-muted" id="lblLogsSub">Real-time log stream with PII masking and anomaly detection tags.</p>
+
+        <div class="logs-console mt-4" id="logsConsole">
+          <!-- Dynamically populated / ডায়নামিকালি লোড হবে -->
         </div>
       </div>
 
     </main>
   </div>
 
+  <!-- JIT OTP Verification Modal / জেআইটি ওটিপি ভেরিফিকেশন মোডাল -->
+  <div class="modal-overlay hidden" id="jitModal">
+    <div class="auth-window">
+      <div class="auth-header">
+        <h3 id="lblJitTitle">🔒 On-Spot JIT OTP Challenge</h3>
+        <button class="close-btn" onclick="closeJitModal()">×</button>
+      </div>
+      <div class="auth-body">
+        <p class="text-muted text-xs mb-3" id="lblJitDesc">Enter 6-digit OTP sent to admin authentication device to confirm critical action.</p>
+        <input type="text" id="jitOtpInput" placeholder="Enter 6-digit OTP (e.g. 123456)" class="auth-input" maxlength="6" />
+        <button class="btn btn-primary" onclick="verifyJitOtpSubmit()">Verify & Execute</button>
+        <p class="auth-hint">Demo Mode: enter any 6 digits (e.g. 123456)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Quota Modal / কোটা এডিটর মোডাল -->
+  <div class="modal-overlay hidden" id="quotaModal">
+    <div class="auth-window">
+      <div class="auth-header">
+        <h3>Edit User Token Quota</h3>
+        <button class="close-btn" onclick="closeQuotaModal()">×</button>
+      </div>
+      <div class="auth-body">
+        <p class="text-muted text-xs mb-3" id="quotaUserLabel">User: user@example.com</p>
+        <input type="number" id="quotaInput" placeholder="Enter new token quota (e.g. 50000)" class="auth-input" />
+        <button class="btn btn-primary" onclick="saveUserQuotaSubmit()">Save Quota</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal Output Modal / টার্মিনাল লগার মোডাল -->
   <div class="modal-overlay hidden" id="terminalModal">
     <div class="terminal-window">
       <div class="terminal-header">
@@ -153,16 +273,17 @@
     </div>
   </div>
 
+  <!-- Standard Authentication Modal / অথেনটিকেশন মোডাল -->
   <div class="modal-overlay hidden" id="authModal">
     <div class="auth-window">
       <div class="auth-header">
-        <h3>Authentication Required</h3>
+        <h3 id="lblAuthTitle">Authentication Required</h3>
         <button class="close-btn" onclick="closeAuthModal()">×</button>
       </div>
       <div class="auth-body">
         <input type="text" id="authToken" placeholder="Enter admin token" class="auth-input" />
         <button class="btn btn-primary" onclick="submitAuth()">Authenticate</button>
-        <p class="auth-hint">Demo mode: enter any token to continue</p>
+        <p class="auth-hint" id="lblAuthHint">Demo mode: enter any token to continue</p>
       </div>
     </div>
   </div>
