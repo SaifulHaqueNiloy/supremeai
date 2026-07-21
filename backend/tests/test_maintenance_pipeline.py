@@ -76,9 +76,7 @@ class TestMaintenancePipeline:
         pipeline = MaintenancePipeline()
 
         with (
-            patch(
-                "core.maintenance_pipeline.probe_redis", return_value={"status": "up"}
-            ),
+            patch("core.maintenance_pipeline.probe_redis", return_value={"status": "up"}),
             patch(
                 "core.maintenance_pipeline.probe_database",
                 return_value={"status": "up"},
@@ -102,9 +100,7 @@ class TestMaintenancePipeline:
         pipeline = MaintenancePipeline()
 
         with (
-            patch(
-                "core.maintenance_pipeline.probe_redis", return_value={"status": "down"}
-            ),
+            patch("core.maintenance_pipeline.probe_redis", return_value={"status": "down"}),
             patch(
                 "core.maintenance_pipeline.probe_database",
                 return_value={"status": "up"},
@@ -148,9 +144,7 @@ class TestMaintenancePipeline:
         mock_redis.client = MagicMock()
         mock_redis.client.set = AsyncMock()
 
-        with patch("core.maintenance_pipeline.redis_manager", mock_redis), patch(
-            "core.maintenance_pipeline.error_event_bus.emit"
-        ):
+        with patch("core.maintenance_pipeline.redis_manager", mock_redis), patch("core.maintenance_pipeline.error_event_bus.emit"):
             await pipeline.auto_remediate(mock_event)
 
             mock_redis.client.set.assert_called()

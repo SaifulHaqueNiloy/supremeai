@@ -136,9 +136,7 @@ class TestEscrowService:
         assert escrow.status == EscrowStatus.FUNDED
 
         # Condition met
-        escrow = service.update_escrow_status(
-            escrow.escrow_id, EscrowStatus.CONDITION_MET
-        )
+        escrow = service.update_escrow_status(escrow.escrow_id, EscrowStatus.CONDITION_MET)
         assert escrow.status == EscrowStatus.CONDITION_MET
 
         # Release
