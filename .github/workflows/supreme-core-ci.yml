@@ -813,7 +813,7 @@ jobs:
 
       - name: Verify User Backend Deploy Status
         run: |
-          # বাংলা মন্তব্য (জরুরি): এই পদে শুধু User Backend (srv-d9d3n58js32c738n79k0) আইসোলেটেডভাবে ভেরিফাই হবে।
+          # বাংলা মন্তব্য (জরুরি): এই পদে শুধু User Backend (srv-d9d3n58js32c738n79k0) আইসোলেটেডভাবে ভেরিফাই হবে.
           # অন্য কোনো ব্যাকএন্ডের হেলথ চেক এখানে মেপে মিথ্যা Success দেওয়া সম্পূর্ণ নিষিদ্ধ।
           python .github/scripts/verify-render-deploy.py --service-id srv-d9d3n58js32c738n79k0 --name "User Backend"
         env:
@@ -839,7 +839,7 @@ jobs:
         run: |
           IMAGE_URL="ghcr.io/${{ github.repository }}/supremeai-backend:sha-${{ github.sha }}"
           echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
-          BACKUP_SVC_ID="srv-d9d3pgvavr4c738a46mg"
+          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
@@ -890,8 +890,8 @@ jobs:
 
       - name: Verify Admin Backend Deploy Status
         run: |
-          # বাংলা মন্তব্য (জরুরি): এই পদে শুধু Admin Backend (srv-d9d3pgvavr4c738a46mg) আইসোলেটেডভাবে ভেরিফাই হবে।
-          python .github/scripts/verify-render-deploy.py --service-id srv-d9d3pgvavr4c738a46mg --name "Admin Backend"
+          # বাংলা মন্তব্য (জরুরি): এই পদে শুধু Admin Backend (srv-d9fg48bh523c73f63bb0) আইসোলেটেডভাবে ভেরিফাই হবে।
+          python .github/scripts/verify-render-deploy.py --service-id srv-d9fg48bh523c73f63bb0 --name "Admin Backend"
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
