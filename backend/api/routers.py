@@ -116,6 +116,8 @@ _admin_paths = {
 # বাংলা মন্তব্য: অ্যাডমিন এপিআই রাউটারসমূহ
 ADMIN_ROUTERS: list[tuple[str, str]] = [
     ("api.routes.health", "/api/v1"),
+    # বাংলা মন্তব্য: অ্যাডমিন পোর্টালে গ্লোবাল কনফিগারেশন লোড করার জন্য public_config রাউটার যুক্ত করা হলো
+    ("api.routes.public_config", "/api"),
     ("api.routes.simulator_admin", ""),
     ("api.routes.site_actions", ""),
     ("api.routes.llm_gateway", ""),
@@ -135,9 +137,7 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
 
 # USER_ROUTERS is all other routers
 # বাংলা মন্তব্য: ইউজার এপিআই রাউটারসমূহ
-USER_ROUTERS: list[tuple[str, str]] = [
-    r for r in (core_routers + optional_routers) if r[0] not in _admin_paths
-]
+USER_ROUTERS: list[tuple[str, str]] = [r for r in (core_routers + optional_routers) if r[0] not in _admin_paths]
 
 
 def register_all_routers(app: FastAPI) -> None:

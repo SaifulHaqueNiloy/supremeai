@@ -28,46 +28,31 @@ def test_multi_ai_code_generator_no_consensus():
 
 def test_enhanced_confidence_scorer_high():
     scorer = EnhancedConfidenceScorer()
-    result = scorer.score(
-        "clean output", {"ai_reliability": 0.95, "external_score": 1.0}
-    )
+    result = scorer.score("clean output", {"ai_reliability": 0.95, "external_score": 1.0})
     assert result["badge"] == "HIGH_CONFIDENCE"
     assert result["color"] == "green"
 
 
 def test_enhanced_confidence_scorer_low_hallucination():
     scorer = EnhancedConfidenceScorer()
-    result = scorer.score(
-        "see nadim9/supremeai", {"ai_reliability": 0.95, "external_score": 1.0}
-    )
+    result = scorer.score("see nadim9/supremeai", {"ai_reliability": 0.95, "external_score": 1.0})
     assert result["badge"] == "LOW_CONFIDENCE"
     assert result["should_warn"] is True
 
 
 def test_human_review_policy_requires_for_code():
     policy = HumanReviewPolicy()
-    assert (
-        policy.requires_human_review(
-            "python_code", {"overall": 0.95, "ai_reliability": 1.0}
-        )
-        is True
-    )
+    assert policy.requires_human_review("python_code", {"overall": 0.95, "ai_reliability": 1.0}) is True
 
 
 def test_human_review_policy_low_confidence():
     policy = HumanReviewPolicy()
-    assert (
-        policy.requires_human_review("chat", {"overall": 0.6, "ai_reliability": 1.0})
-        is True
-    )
+    assert policy.requires_human_review("chat", {"overall": 0.6, "ai_reliability": 1.0}) is True
 
 
 def test_human_review_policy_skip():
     policy = HumanReviewPolicy()
-    assert (
-        policy.requires_human_review("chat", {"overall": 0.95, "ai_reliability": 1.0})
-        is False
-    )
+    assert policy.requires_human_review("chat", {"overall": 0.95, "ai_reliability": 1.0}) is False
 
 
 def test_output_validator_validate_clean():
