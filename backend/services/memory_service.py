@@ -241,12 +241,14 @@ class CascadeMemoryService:
                 logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
                 rows = []
             for row in rows:
-                results.append({
-                    "file_path": row["file_path"],
-                    "content": row["content"],
-                    "summary": row["summary"],
-                    "structure": row["structure"],
-                })
+                results.append(
+                    {
+                        "file_path": row["file_path"],
+                        "content": row["content"],
+                        "summary": row["summary"],
+                        "structure": row["structure"],
+                    }
+                )
             return results
 
         with sqlite3.connect(self.db_path) as conn:
@@ -255,12 +257,14 @@ class CascadeMemoryService:
             cursor.execute("SELECT file_path, content, summary, structure FROM file_memories")
             rows = cursor.fetchall()
             for row in rows:
-                results.append({
-                    "file_path": row["file_path"],
-                    "content": row["content"],
-                    "summary": row["summary"],
-                    "structure": row["structure"],
-                })
+                results.append(
+                    {
+                        "file_path": row["file_path"],
+                        "content": row["content"],
+                        "summary": row["summary"],
+                        "structure": row["structure"],
+                    }
+                )
         return results
 
     def delete_memory(self, file_path: str) -> None:
