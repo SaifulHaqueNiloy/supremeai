@@ -125,10 +125,9 @@ def monitor_service(service):
             print(f"⚠️ createdAt timestamp is missing. Checking HTTP health directly.")
             return check_http_health(service["url"], name)
 
-        # 2. Check if this deploy was triggered recently (within the last 15 minutes)
-        created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
-
+        # বাংলা মন্তব্য (জরুরি): এই চেকটি কোনোভাবেই পরিবর্তন বা রিমুভ করা যাবে না!
+        # যদি রেন্ডারে নতুন ডেপ্লয়মেন্ট ট্রিগার ব্যর্থ হয় (যেমন: ভুল API Key বা Service ID), তবে Render-এ নতুন কোনো ডেপ্লয়মেন্ট রেকর্ড তৈরি হয় না।
+        # পূর্বে এখানে পুরনো সার্ভিস চালুর থাকলে ভুয়া Success দেখাত (Anti-Silent Failure)। তাই ৩ মিনিটের মধ্যে নতুন ডেপ্লয় রেকর্ড না পাওয়া গেলে সরাসরি বিল্ড ফেল (return False) করাতে হবে।
         if now - created_at > timedelta(minutes=3):
             print(
                 f"❌ No new deploy record found for {name} within 3 minutes of triggering it. "
