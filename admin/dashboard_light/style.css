@@ -933,6 +933,17 @@ input:checked + .slider:before {
   }
 }
 
+.nav-group-header {
+  padding: 12px 18px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 8px;
+}
+
 /* ════════════════════════════════════════════════════════════
    NEW MODULES: USER TABLE, AI FLEET, AUDIT LOGS & I18N
    ════════════════════════════════════════════════════════════ */
