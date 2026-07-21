@@ -35,7 +35,9 @@ class BrowserStealth:
         if not HAS_PLAYWRIGHT:
             raise RuntimeError("playwright not installed")
         self.playwright = await async_playwright().start()
-        browser = await self.playwright.chromium.launch(headless=getattr(settings, "browser_headless", "true").lower() != "false")
+        browser = await self.playwright.chromium.launch(
+            headless=getattr(settings, "browser_headless", "true").lower() != "false"
+        )
         from tools.security_tools.proxy_manager import ProxyManager
 
         proxy_mgr = ProxyManager()
@@ -59,7 +61,9 @@ class BrowserStealth:
             logger.info(f"Playwright stealth browser launching via proxy: {next_proxy}")
 
         self.context = await browser.new_context(**context_kwargs)
-        await self.context.route("**/*.{png,jpg,jpeg,gif,svg,woff,woff2}", lambda route: route.abort())
+        await self.context.route(
+            "**/*.{png,jpg,jpeg,gif,svg,woff,woff2}", lambda route: route.abort()
+        )
         await self.context.add_init_script(
             """
             (() => {
@@ -141,7 +145,8 @@ class BrowserStealth:
     async def safe_screenshot(self, page: Page, path: str | None = None) -> str | None:
         try:
             target = (
-                path or f"data/artifacts/screenshot_{int(time.time())}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}.png"
+                path
+                or f"data/artifacts/screenshot_{int(time.time())}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}.png"
             )
             Path("data/artifacts").mkdir(parents=True, exist_ok=True)
             await page.screenshot(path=target, full_page=True)
