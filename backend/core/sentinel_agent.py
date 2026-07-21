@@ -42,6 +42,7 @@ class SentinelAgent:
         """Validate URL to prevent SSRF attacks - blocks metadata IPs and disallowed schemes."""
         import re
         from urllib.parse import urlparse
+        from core.config import settings
 
         try:
             parsed = urlparse(url)
@@ -52,9 +53,12 @@ class SentinelAgent:
             hostname = parsed.hostname or ""
             if re.match(r"^(169\.254\.169\.|10\.\d+\.|172\.(1[6-9]|2[0-9]|3[01])\.)", hostname):
                 return False
-            # Block localhost access in production
-            if "localhost" in hostname or "127.0.0.1" in hostname:
-                return False
+            # Block localhost access in production unless it targets the backend port 8080
+            # বাংলা মন্তব্য: প্রোডাকশনে লোকালহোস্ট ব্লক করা হচ্ছে, কিন্তু আমাদের নিজস্ব ব্যাকএন্ড পোর্ট ৮০৮০ মনিটর করার জন্য পোলিং এলাও করা হলো।
+            if settings.env in {"production", "staging"}:
+                if "localhost" in hostname or "127.0.0.1" in hostname:
+                    if parsed.port != 8080:
+                        return False
             return True
         except Exception:
             return False

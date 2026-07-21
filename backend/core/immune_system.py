@@ -131,6 +131,12 @@ class ASTSecurityScanner(ast.NodeVisitor):
             raise SecuritySandboxError(f"Sandbox escape pattern blocked: {node.attr}")
         self.generic_visit(node)
 
+    def visit_Name(self, node: ast.Name):
+        # বাংলা মন্তব্য: নিষিদ্ধ ফাংশনের রেফারেন্স অন্য ভ্যারিয়েবলে অ্যাসাইন করা বা পাস করা ব্লক করতে এই চেকটি যোগ করা হলো।
+        if node.id in self.banned_functions:
+            raise SecuritySandboxError(f"Banned function reference detected: {node.id}")
+        self.generic_visit(node)
+
 
 class ImmuneSystemScanner:
     """
