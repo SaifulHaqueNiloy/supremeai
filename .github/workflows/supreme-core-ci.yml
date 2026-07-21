@@ -772,6 +772,42 @@ jobs:
             exit 1
           fi
 
+  deploy-static-render:
+    name: 🌐 Deploy Frontend (Render Static)
+    # বাংলা মন্তব্য: frontend-core, pre-merge-gate, এবং changes-এর ওপর ডিপেন্ডেন্সি রাখা হলো যাতে ফ্রন্টএন্ড সফলভাবে পাস করলেই ডিপ্লয়মেন্ট ট্রিগার হয়।
+    needs: [frontend-core, pre-merge-gate, changes]
+    if: |
+      always() &&
+      needs.frontend-core.result == 'success' &&
+      needs.changes.outputs.frontend == 'true' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Static Site Deploy
+        # বাংলা মন্তব্য: Primary এবং Backup Render অ্যাকাউন্টের static site service deploys ট্রিগার করা হচ্ছে।
+        run: |
+          PRIMARY_SVC_ID="srv-d9d3pgvavr4c738a46mg"
+          BACKUP_SVC_ID="srv-d9ckgn61a83c7398o9u0"
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache":"do_not_clear"}')
+          echo "Primary static deploy status: $STATUS"
+
+          STATUS_B=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache":"do_not_clear"}')
+          echo "Backup static deploy status: $STATUS_B"
+
+          if [ "$STATUS" != "201" ] && [ "$STATUS" != "202" ] && \
+             [ "$STATUS_B" != "201" ] && [ "$STATUS_B" != "202" ]; then
+            echo "❌ Static frontend deploy trigger failed on both accounts"
+            exit 1
+          fi
 
   deploy-backend:
     name: 🚀 Deploy Backend (Cloud Run)
