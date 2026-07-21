@@ -9,10 +9,11 @@
 // ════════════════════════════════════════════════════════════
 // 1. CONFIGURATION & INTERNATIONALIZATION (I18N)
 // ════════════════════════════════════════════════════════════
+const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '8000';
 const CONFIG = {
   REPO: 'paykaribazaronline/supremeai',
   BRANCH: 'main',
-  API_BASE: window.location.origin.includes('8000') ? '' : 'http://127.0.0.1:8000',
+  API_BASE: isLocalHost ? (window.location.origin.includes('8000') ? '' : 'http://127.0.0.1:8000') : 'https://supremeai-backend.onrender.com',
   POLL_INTERVAL: 10000,
   AUTH_TOKEN_KEY: 'supremeai_admin_token',
   THEME_KEY: 'supremeai_theme',
