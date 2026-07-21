@@ -9,9 +9,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for approval_manager_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for approval_manager_router: {traceback.format_exc()}")
     approval_manager_router = None
 
 try:
@@ -23,9 +21,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for admin_dashboard_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for admin_dashboard_router: {traceback.format_exc()}")
     admin_dashboard_router = None
 
 try:
@@ -61,9 +57,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for async_task_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for async_task_router: {traceback.format_exc()}")
     async_task_router = None
 
 try:
@@ -99,9 +93,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for codeflow_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for codeflow_router: {traceback.format_exc()}")
     codeflow_router = None
 
 try:
@@ -113,9 +105,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for feedback_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for feedback_router: {traceback.format_exc()}")
     feedback_router = None
 
 try:
@@ -127,9 +117,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for knowledge_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for knowledge_router: {traceback.format_exc()}")
     knowledge_router = None
 
 try:
@@ -141,9 +129,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for marketplace_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for marketplace_router: {traceback.format_exc()}")
     marketplace_router = None
 
 try:
@@ -192,9 +178,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for site_actions_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for site_actions_router: {traceback.format_exc()}")
     site_actions_router = None
 
 # বাংলা মন্তব্য: LLM Gateway ও System Rules কন্ট্রোলার রাউটার
@@ -207,9 +191,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for llm_gateway_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for llm_gateway_router: {traceback.format_exc()}")
     llm_gateway_router = None
 
 try:
@@ -221,9 +203,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for simulator_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for simulator_router: {traceback.format_exc()}")
     simulator_router = None
 
 try:
@@ -283,9 +263,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for internal_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for internal_router: {traceback.format_exc()}")
     internal_router = None
 
 try:
@@ -333,9 +311,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for tools_ops_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for tools_ops_router: {traceback.format_exc()}")
     tools_ops_router = None
 
 try:
@@ -359,9 +335,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for onboarding_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for onboarding_router: {traceback.format_exc()}")
     onboarding_router = None
 
 try:
@@ -373,9 +347,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for tools_registry_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for tools_registry_router: {traceback.format_exc()}")
     tools_registry_router = None
 
 try:
@@ -387,9 +359,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for preferences_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for preferences_router: {traceback.format_exc()}")
     preferences_router = None
 
 try:
@@ -401,9 +371,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for usage_metrics_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for usage_metrics_router: {traceback.format_exc()}")
     usage_metrics_router = None
 
 try:
@@ -427,9 +395,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for payments_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for payments_router: {traceback.format_exc()}")
     payments_router = None
 
 try:
@@ -441,9 +407,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for markdown_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for markdown_router: {traceback.format_exc()}")
     markdown_router = None
 
 try:
@@ -455,9 +419,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for api_keys_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for api_keys_router: {traceback.format_exc()}")
     api_keys_router = None
 
 try:
@@ -481,9 +443,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for ci_webhooks_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for ci_webhooks_router: {traceback.format_exc()}")
     ci_webhooks_router = None
 
 try:
@@ -495,9 +455,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for websocket_voice_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for websocket_voice_router: {traceback.format_exc()}")
     websocket_voice_router = None
 
 try:
@@ -509,9 +467,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
     from loguru import logger
 
-    logger.warning(
-        f"Router import failed for integrations_router: {traceback.format_exc()}"
-    )
+    logger.warning(f"Router import failed for integrations_router: {traceback.format_exc()}")
     integrations_router = None
 
 try:

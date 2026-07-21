@@ -3,7 +3,8 @@ import json
 import os
 
 api_key = os.environ.get("RENDER_API_KEY", "")
-service_id = "srv-d991umnaqgkc73fk89o0"
+# বাংলা মন্তব্য: প্রাইমারি অ্যাকাউন্টের সঠিক সার্ভিস আইডি সেট করা হলো
+service_id = "srv-d9d3n58js32c738n79k0"
 
 url = f"https://api.render.com/v1/services/{service_id}"
 headers = {

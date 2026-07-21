@@ -41,9 +41,7 @@ class MCPClient:
             return True
         self._terminate()
         try:
-            logger.info(
-                f"Connecting to MCP Server '{self.server_name}' using command: {self.command}"
-            )
+            logger.info(f"Connecting to MCP Server '{self.server_name}' using command: {self.command}")
             self.process = subprocess.Popen(
                 self.command,
                 stdin=subprocess.PIPE,
@@ -55,9 +53,7 @@ class MCPClient:
             deadline = time.time() + self.startup_timeout
             while time.time() < deadline:
                 if self.process.poll() is not None:
-                    raise RuntimeError(
-                        f"MCP server exited with code {self.process.returncode}"
-                    )
+                    raise RuntimeError(f"MCP server exited with code {self.process.returncode}")
                 time.sleep(0.05)
             return True
         except (OSError, RuntimeError) as exc:
@@ -95,9 +91,7 @@ class MCPClient:
             logger.error(f"Error querying MCP tools: {exc}")
             return []
 
-    def call_tool(
-        self, name: str, arguments: dict[str, Any], timeout: int = DEFAULT_TIMEOUT
-    ) -> dict[str, Any]:
+    def call_tool(self, name: str, arguments: dict[str, Any], timeout: int = DEFAULT_TIMEOUT) -> dict[str, Any]:
         if not self.connect():
             return {"error": "Server not connected"}
         request = {

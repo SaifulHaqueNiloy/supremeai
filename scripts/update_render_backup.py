@@ -2,8 +2,9 @@ import urllib.request
 import json
 import os
 
-api_key = os.environ.get("RENDER_API_KEY", "")
-service = "srv-d995glt7vvec73f3jgo0"
+# বাংলা মন্তব্য: ব্যাকআপ অ্যাকাউন্টের API Key এবং সঠিক সার্ভিস আইডি সেট করা হলো
+api_key = os.environ.get("RENDER_API_KEY_BACKUP", "")
+service = "srv-d9e4q5rrjlhs73bnh71g"
 headers = {
     "Authorization": f"Bearer {api_key}",
     "Content-Type": "application/json",
