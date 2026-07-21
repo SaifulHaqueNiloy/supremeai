@@ -23,6 +23,8 @@ import { InteractiveChatTab } from '../admin/InteractiveChatTab';
 // বাংলা মন্তব্য: ব্রাউজার প্রিভিউ ও মোবাইল সিমুলেটর অ্যাক্টিভেট করা হলো
 import { BrowserPreview } from './BrowserPreview';
 import { MobileSimulator } from './MobileSimulator';
+// বাংলা মন্তব্য: i18n হুক ইম্পোর্ট করা হলো
+import { useI18n } from '../../i18n/useI18n';
 import './UserDashboard.css';
 
 export interface UserProfile {
@@ -125,6 +127,8 @@ export function UserDashboard({
 }: UserDashboardProps) {
   // বাংলা মন্তব্য: অ্যাক্টিভ ট্যাব স্টেট ইউনিয়ন টাইপ বাড়ানো হলো
   const [activeTab, setActiveTab] = useState<'overview' | 'feed' | 'presets' | 'chat' | 'browser' | 'mobile'>('overview');
+  // বাংলা মন্তব্য: i18n হুক
+  const { t } = useI18n();
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -145,10 +149,10 @@ export function UserDashboard({
           <div>
             {/* বাংলা মন্তব্য: টেস্টে সহজে ও নির্ভরযোগ্যভাবে সনাক্ত করার জন্য header-title data-testid যোগ করা হলো */}
             <h1 data-testid="header-title" className="text-sm font-bold tracking-widest text-neon-blue uppercase">
-              Welcome back, {user?.username || 'User'}
+              {t('ud_welcome_back', { name: user?.username || 'User' })}
             </h1>
             <p className="text-[10px] text-slate-400 font-mono">
-              Last login: {user?.last_login ? formatDate(user.last_login) : 'Today'}
+              {t('ud_last_login', { date: user?.last_login ? formatDate(user.last_login) : 'Today' })}
             </p>
           </div>
         </div>
