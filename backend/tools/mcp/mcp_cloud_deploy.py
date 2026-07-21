@@ -31,9 +31,7 @@ CHARACTER_LIMIT = 25000
 
 def _get_render_api_key() -> str:
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে RENDER_API_KEY চেক করা হবে
-    return getattr(settings, "render_api_key", "") or os.environ.get(
-        "RENDER_API_KEY", ""
-    )
+    return getattr(settings, "render_api_key", "") or os.environ.get("RENDER_API_KEY", "")
 
 
 def _get_railway_token() -> str:
@@ -43,21 +41,15 @@ def _get_railway_token() -> str:
 
 def _get_oracle_api_key() -> str:
     # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ORACLE_CLOUD_API_KEY চেক করা হবে
-    return getattr(settings, "oracle_cloud_api_key", "") or os.environ.get(
-        "ORACLE_CLOUD_API_KEY", ""
-    )
+    return getattr(settings, "oracle_cloud_api_key", "") or os.environ.get("ORACLE_CLOUD_API_KEY", "")
 
 
 def _get_oracle_region() -> str:
-    region = getattr(settings, "oracle_region", "us-phoenix-1") or getattr(
-        settings, "oracle_region", "us-phoenix-1"
-    )
+    region = getattr(settings, "oracle_region", "us-phoenix-1") or getattr(settings, "oracle_region", "us-phoenix-1")
     if not region:
         return "us-phoenix-1"
     if not re.match(r"^[a-z0-9\-]+$", region):
-        logger.error(
-            f"Invalid ORACLE_REGION format: '{region}'. It should only contain lowercase letters, numbers, and hyphens."
-        )
+        logger.error(f"Invalid ORACLE_REGION format: '{region}'. It should only contain lowercase letters, numbers, and hyphens.")
         return "us-phoenix-1"
     return region
 
@@ -90,9 +82,7 @@ class DeployServiceInput(BaseModel):
         max_length=100,
         pattern=r"^[a-zA-Z0-9\-_]+$",
     )
-    branch: str | None = Field(
-        default="main", description="ডিপ্লয় ব্রাঞ্চ", pattern=r"^[^\s;]+$"
-    )
+    branch: str | None = Field(default="main", description="ডিপ্লয় ব্রাঞ্চ", pattern=r"^[^\s;]+$")
 
 
 class GetLogsInput(BaseModel):
@@ -101,9 +91,7 @@ class GetLogsInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     provider: CloudProvider = Field(..., description="ক্লাউড প্রোভাইডার")
-    service_name: str = Field(
-        ..., description="সার্ভিসের নাম", min_length=1, pattern=r"^[a-zA-Z0-9\-_]+$"
-    )
+    service_name: str = Field(..., description="সার্ভিসের নাম", min_length=1, pattern=r"^[a-zA-Z0-9\-_]+$")
     lines: int = Field(default=100, description="রিট্রিভ করার লাইন সংখ্যা", ge=1, le=1000)
 
 
@@ -253,9 +241,7 @@ async def cloud_get_deployment_logs(params: GetLogsInput) -> str:
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                api_url, headers=headers, params={"lines": params.lines}
-            )
+            response = await client.get(api_url, headers=headers, params={"lines": params.lines})
             response.raise_for_status()
             data = response.json()
 
@@ -338,9 +324,7 @@ async def cloud_list_services() -> str:
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to list services from Railway: {e}")
 
-    return json.dumps(
-        {"services": services, "count": len(services)}, ensure_ascii=False
-    )
+    return json.dumps({"services": services, "count": len(services)}, ensure_ascii=False)
 
 
 if __name__ == "__main__":

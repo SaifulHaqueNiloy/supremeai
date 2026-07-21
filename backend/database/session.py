@@ -10,9 +10,7 @@ from sqlalchemy.pool import StaticPool
 DATABASE_URL = settings.supabase_database_url
 
 if not DATABASE_URL:
-    logger.warning(
-        "SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail."
-    )
+    logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
 
 
 # বাংলা মন্তব্য: কানেকশন স্ট্রিংয়ে postgresql:// বা postgres:// থাকলে তা asyncpg-এর জন্য postgresql+asyncpg:// দিয়ে প্রতিস্থাপন করা হচ্ছে
@@ -64,15 +62,11 @@ if _async_url.startswith("postgresql"):
             },
         }
     )
-    logger.info(
-        f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}"
-    )
+    logger.info(f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}")
 
 engine = create_async_engine(_async_url, **engine_kwargs)
 
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
-)
+AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
 @asynccontextmanager
@@ -81,15 +75,20 @@ async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
 
     বাংলা: FastAPI-এর বাইরে বা ব্যাকগ্রাউন্ড টাস্কে ডাটাবেস সেশন ব্যবহারের জন্য।
     """
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception as e:
-            await session.rollback()
-            logger.error(f"Database transaction rolled back due to error: {e}")
-            raise
-        finally:
-            await session.close()
+    from sqlalchemy.exc import TimeoutError as SATimeoutError
+    from fastapi import HTTPException
+
+    try:
+        async with AsyncSessionLocal() as session:
+            try:
+                yield session
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Database transaction rolled back due to error: {e}")
+                raise
+    except (TimeoutError, SATimeoutError) as e:
+        logger.error(f"Database pool exhausted: {e}")
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable due to high load (DB pool exhausted).")
 
 
 # FastAPI Dependency Injection (with safe rollback)

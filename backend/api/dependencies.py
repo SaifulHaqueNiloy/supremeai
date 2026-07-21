@@ -69,11 +69,7 @@ async def verify_autonomous_agent_token(
                 severity="WARNING",
                 context={
                     "correlation_id": correlation_id,
-                    "token_prefix": (
-                        credentials.credentials[:10]
-                        if credentials.credentials
-                        else "none"
-                    ),
+                    "token_prefix": (credentials.credentials[:10] if credentials.credentials else "none"),
                 },
                 structured_context=ErrorContext(
                     module="api.dependencies",
@@ -117,3 +113,86 @@ def get_tenant_db(
 
     # রিটার্ন করছে আইসোলেটেড ডিবি ক্লায়েন্ট
     return TenantAwareFirestore(tenant_id=tenant_id)
+
+
+def get_current_tenant(
+    user: dict = Depends(get_current_user_token),
+) -> str:
+    """
+    বাংলা মন্তব্য: TenantExtractionMiddleware-এর লজিক এখন Depends() হিসেবে।
+    X-Tenant-ID হেডার বা JWT sub থেকে tenant_id বের করে।
+
+    শুধুমাত্র যে রাউটে tenant context দরকার সেখানে ব্যবহার করুন।
+    উদাহরণ: tenant_id: str = Depends(get_current_tenant)
+    """
+    # JWT sub থেকে tenant_id বের করা (AuthMiddleware ইতিমধ্যে user সেট করেছে)
+    tenant_id = user.get("tenant_id") or user.get("sub", "anonymous")
+    return tenant_id
+
+
+async def verify_idempotency(request: Request) -> None:
+    """
+    বাংলা মন্তব্য: IdempotencyMiddleware-এর লজিক এখন Depends() হিসেবে।
+    Redis-based distributed idempotency — শুধুমাত্র POST mutation routes-এ ব্যবহার করুন।
+
+    উদাহরণ: _: None = Depends(verify_idempotency)
+    """
+    # শুধু POST রিকোয়েস্টে প্রযোজ্য
+    if request.method != "POST":
+        return
+
+    idempotency_key = request.headers.get("Idempotency-Key")
+    if not idempotency_key:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request: 'Idempotency-Key' header is required for mutating operations.",
+        )
+
+    # বাংলা মন্তব্য: Redis manager import — fail-open কৌশল ব্যবহার করা হলো
+    try:
+        from core.cache.redis_manager import (
+            acquire_idempotency_lock,
+            redis_manager,
+        )
+    except ImportError:
+        logger.warning("[Idempotency Dep] Redis import failed — skipping (fail-open)")
+        return
+
+    if redis_manager.client is None:
+        return
+
+    # বাংলা মন্তব্য: ক্যাশে আগের রেসপন্স আছে কিনা চেক করা হচ্ছে
+    import json
+
+    try:
+        cached_key = f"idempotency:response:{idempotency_key}"
+        cached = await redis_manager.client.get(cached_key)
+        if cached:
+            json.loads(cached)
+            # বাংলা মন্তব্য: HTTPException দিয়ে cached response ফেরত দেওয়া সম্ভব নয়
+            # তাই এখানে শুধু duplicate lock চেক করা হয়
+            logger.info(f"[Idempotency Dep] Cache hit for key: {idempotency_key}")
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"[Idempotency Dep] Cache read failed: {e}")
+
+    # বাংলা মন্তব্য: ডুপ্লিকেট রিকোয়েস্ট প্রসেসিং ব্লক করা হচ্ছে
+    acquired = await acquire_idempotency_lock(idempotency_key, 120)
+    if not acquired:
+        raise HTTPException(
+            status_code=409,
+            detail="Conflict: Request is already being processed. Duplicate execution blocked.",
+        )
+
+    # বাংলা মন্তব্য: Lock অ্যাকোয়ার হলে request state-এ key রাখা হচ্ছে
+    # যাতে route handler lock release করতে পারে
+    request.state.idempotency_key = idempotency_key
+
+
+__all__ = [
+    "verify_autonomous_agent_token",
+    "get_fitness_engine",
+    "get_current_user_token",
+    "get_tenant_db",
+    "get_current_tenant",
+    "verify_idempotency",
+]
