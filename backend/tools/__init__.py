@@ -1,44 +1,56 @@
-# বাংলা মন্তব্য: টেস্ট ও মকিং সহজ করার জন্য টুলস নেমস্পেসে বিভিন্ন সাবমডিউল এক্সপোজ এবং sys.modules এ রেজিস্টার করা হলো
+# বাংলা মন্তব্য: স্টার্টআপ ও ইম্পোর্ট টাইম কমাতে LazyModule ডিফাইন করা হলো।
+# এটি `sys.modules` এ সাবমডিউলগুলোর ডামি প্রক্সি হিসেবে কাজ করবে এবং প্রথম অ্যাট্রিবিউট অ্যাক্সেসে
+# আসল সাবমডিউল লোড করবে। ফলে `tools` ইম্পোর্ট করলেও হেভি ডিপেন্ডেন্সিগুলো ব্যাকগ্রাউন্ডে অলস (lazy) থাকবে।
 import sys
+import types
+import importlib
+
+
+class LazyModule(types.ModuleType):
+    def __init__(self, name: str, real_path: str):
+        super().__init__(name)
+        self._real_path = real_path
+        self._module = None
+
+    def _load(self):
+        if self._module is None:
+            self._module = importlib.import_module(self._real_path)
+            self.__dict__.update(self._module.__dict__)
+        return self._module
+
+    def __getattr__(self, item):
+        module = self._load()
+        return getattr(module, item)
+
+    def __dir__(self):
+        module = self._load()
+        return dir(module)
+
 
 # isolated tests বা venv-এ sys.modules['tools'] KeyError এড়াতে সেলফ-ম্যাপিং
 if "tools" not in sys.modules:
     sys.modules["tools"] = sys.modules[__name__]
 
-from tools.ai_agents import browser_agent
-from tools.code import image_to_code, pr_reviewer
-from tools.devops import auto_coverage_improver
-from tools.learning import model_trainer, skill_recommender, style_learner
-from tools.localization import bangla_voice
-from tools.mcp import mcp_cloud_deploy, mcp_github_cicd, mcp_supabase, mcp_workspace
-from tools.media import multilingual_tts
+_SUBMODULE_MAP = {
+    "mcp_cloud_deploy": "tools.mcp.mcp_cloud_deploy",
+    "mcp_github_cicd": "tools.mcp.mcp_github_cicd",
+    "mcp_supabase": "tools.mcp.mcp_supabase",
+    "mcp_workspace": "tools.mcp.mcp_workspace",
+    "bangla_voice": "tools.localization.bangla_voice",
+    "model_trainer": "tools.learning.model_trainer",
+    "pr_reviewer": "tools.code.pr_reviewer",
+    "skill_recommender": "tools.learning.skill_recommender",
+    "browser_agent": "tools.ai_agents.browser_agent",
+    "style_learner": "tools.learning.style_learner",
+    "auto_coverage_improver": "tools.devops.auto_coverage_improver",
+    "image_to_code": "tools.code.image_to_code",
+    "multilingual_tts": "tools.media.multilingual_tts",
+}
 
-sys.modules["tools.mcp_cloud_deploy"] = mcp_cloud_deploy
-sys.modules["tools.mcp_github_cicd"] = mcp_github_cicd
-sys.modules["tools.mcp_supabase"] = mcp_supabase
-sys.modules["tools.mcp_workspace"] = mcp_workspace
-sys.modules["tools.bangla_voice"] = bangla_voice
-sys.modules["tools.model_trainer"] = model_trainer
-sys.modules["tools.pr_reviewer"] = pr_reviewer
-sys.modules["tools.skill_recommender"] = skill_recommender
-sys.modules["tools.browser_agent"] = browser_agent
-sys.modules["tools.style_learner"] = style_learner
-sys.modules["tools.auto_coverage_improver"] = auto_coverage_improver
-sys.modules["tools.image_to_code"] = image_to_code
-sys.modules["tools.multilingual_tts"] = multilingual_tts
+# sys.modules এ প্রক্সি রেজিস্টার করা
+for name, real_path in _SUBMODULE_MAP.items():
+    lazy_mod = LazyModule(f"tools.{name}", real_path)
+    sys.modules[f"tools.{name}"] = lazy_mod
+    setattr(sys.modules[__name__], name, lazy_mod)
 
-__all__ = [
-    "mcp_cloud_deploy",
-    "mcp_github_cicd",
-    "mcp_supabase",
-    "mcp_workspace",
-    "bangla_voice",
-    "model_trainer",
-    "pr_reviewer",
-    "skill_recommender",
-    "browser_agent",
-    "style_learner",
-    "auto_coverage_improver",
-    "image_to_code",
-    "multilingual_tts",
-]
+__all__ = list(_SUBMODULE_MAP.keys())
