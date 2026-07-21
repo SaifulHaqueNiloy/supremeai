@@ -26,12 +26,20 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-try:
-    from core.cache.semantic_cache import VectorSemanticCache
+_semantic_cache = None
 
-    semantic_cache = VectorSemanticCache()
-except ImportError:
-    semantic_cache = None
+
+def get_semantic_cache():
+    # বাংলা মন্তব্য: মেমরি ওভারহেড এবং স্টার্টআপ ওওএম (OOM) এড়াতে VectorSemanticCache অলসভাবে (lazy) লোড করা হচ্ছে।
+    global _semantic_cache
+    if _semantic_cache is None:
+        try:
+            from core.cache.semantic_cache import VectorSemanticCache
+
+            _semantic_cache = VectorSemanticCache()
+        except ImportError:
+            _semantic_cache = False
+    return _semantic_cache if _semantic_cache is not False else None
 
 
 # --- Agentic Security & Context: Task Request Schema ---
@@ -292,8 +300,9 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
 
     # --- True Vector Semantic Caching ---
     raw = None
-    if semantic_cache:
-        cached_text = await semantic_cache.get_cached_inference(prompt=prompt, model_name=task_type)
+    sem_cache = get_semantic_cache()
+    if sem_cache:
+        cached_text = await sem_cache.get_cached_inference(prompt=prompt, model_name=task_type)
         if cached_text:
             raw = {
                 "success": True,
@@ -308,9 +317,9 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
             task_type=task_type,
             max_cost=req.max_cost,
         )
-        if raw.get("success") and semantic_cache:
+        if raw.get("success") and sem_cache:
             with contextlib.suppress(Exception):
-                await semantic_cache.set_cache_inference(prompt=prompt, model_name=task_type, response_text=raw.get("text"))
+                await sem_cache.set_cache_inference(prompt=prompt, model_name=task_type, response_text=raw.get("text"))
 
     # Log to ExperienceDatabase in the background to improve user-perceived latency.
     exp = Experience(
