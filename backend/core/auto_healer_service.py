@@ -84,7 +84,11 @@ class AutoHealerService:
             from core.health.health_probes import probe_database  # noqa: PLC0415
 
             result = await probe_database()
-            db_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
+            db_up = (
+                result.get("status") == "up"
+                if isinstance(result, dict)
+                else bool(result)
+            )
         except Exception as exc:  # noqa: BLE001
             db_up = False
             logger.warning(f"🚑 DB probe raised exception: {exc!r}")
@@ -128,7 +132,11 @@ class AutoHealerService:
             from core.health.health_probes import probe_redis  # noqa: PLC0415
 
             result = await probe_redis()
-            redis_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
+            redis_up = (
+                result.get("status") == "up"
+                if isinstance(result, dict)
+                else bool(result)
+            )
         except Exception as exc:  # noqa: BLE001
             redis_up = False
             logger.warning(f"🚑 Redis probe raised exception: {exc!r}")
@@ -184,7 +192,9 @@ class AutoHealerService:
         return {
             "running": self._running,
             "failure_counts": dict(self.failure_counts),
-            "last_heal_times": {k: time.monotonic() - v for k, v in self._last_heal_time.items()},
+            "last_heal_times": {
+                k: time.monotonic() - v for k, v in self._last_heal_time.items()
+            },
         }
 
 

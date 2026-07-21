@@ -3,8 +3,9 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from core.app import app
 from fastapi.testclient import TestClient
+
+from core.app import app
 
 
 @pytest.fixture

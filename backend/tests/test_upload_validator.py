@@ -5,6 +5,7 @@ Tests for core/upload_validator.py
 from __future__ import annotations
 
 import pytest
+
 from core.upload_validator import MAX_UPLOAD_BYTES, validate_upload
 
 

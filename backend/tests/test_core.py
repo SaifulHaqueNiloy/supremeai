@@ -103,8 +103,9 @@ def test_admin_rules_db_roundtrip():
 
 
 def test_schema_validator_retry_on_validation_fail():
-    from core.schema_validator import SchemaValidator
     from pydantic import BaseModel
+
+    from core.schema_validator import SchemaValidator
 
     validator = SchemaValidator()
 

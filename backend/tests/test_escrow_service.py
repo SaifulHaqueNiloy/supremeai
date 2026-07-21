@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from services.escrow_service import Escrow, EscrowStatus, EscrowService
+from services.escrow_service import Escrow, EscrowService, EscrowStatus
 
 
 class TestEscrowStatus:
@@ -136,7 +136,9 @@ class TestEscrowService:
         assert escrow.status == EscrowStatus.FUNDED
 
         # Condition met
-        escrow = service.update_escrow_status(escrow.escrow_id, EscrowStatus.CONDITION_MET)
+        escrow = service.update_escrow_status(
+            escrow.escrow_id, EscrowStatus.CONDITION_MET
+        )
         assert escrow.status == EscrowStatus.CONDITION_MET
 
         # Release

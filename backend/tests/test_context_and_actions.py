@@ -1,8 +1,9 @@
 import json
 
+from fastapi.testclient import TestClient
+
 from api.routes.task import format_chat_history, format_response
 from core.app import app
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
