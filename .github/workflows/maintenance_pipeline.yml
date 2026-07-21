@@ -343,12 +343,19 @@ jobs:
           cache-dependency-path: '**/pnpm-lock.yaml'
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
-      - name: Download Frontend Build (Allow Fallback)
-        uses: actions/download-artifact@v4
+      - name: Download Frontend Build (from latest supreme-core-ci run)
+        id: download-dist
+        uses: dawidd6/action-download-artifact@v6
         with:
+          workflow: supreme-core-ci.yml
+          branch: main
           name: frontend-dist
           path: apps/studio-client/dist
         continue-on-error: true
+
+      - name: 🩹 Fallback — Build Frontend Locally (if artifact unavailable)
+        if: steps.download-dist.outcome == 'failure'
+        run: pnpm --dir apps/studio-client run build
 
       - uses: ./.github/actions/setup-backend
         with:
@@ -396,7 +403,6 @@ jobs:
         env:
           CI: true
       - name: Create Report Directory & Execute Playwright Simulation
-        continue-on-error: true
         run: |
           mkdir -p playwright-report
           pnpm exec playwright test tests/e2e/accessibility.spec.ts tests/e2e/chat.spec.ts
