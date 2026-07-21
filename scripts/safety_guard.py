@@ -302,13 +302,25 @@ exit $?
 
 if __name__ == "__main__":
     import sys
+    import argparse
 
-    if len(sys.argv) > 1:
-        file_to_check = sys.argv[1]
-        guard = SafetyGuard()
-        result = guard.block_or_approve(file_to_check)
+    parser = argparse.ArgumentParser(description="SupremeAI Safety Guard CLI")
+    parser.add_argument("file", nargs="?", default=None, help="File to check")
+    parser.add_argument("--check-only", action="store_true", help="Only check status without blocking execution")
+    parser.add_argument("--report-json", action="store_true", help="Output safety report in JSON format")
+
+    args = parser.parse_args()
+
+    guard = SafetyGuard()
+    if args.file and not args.file.startswith("--"):
+        result = guard.block_or_approve(args.file)
         print(json.dumps(result, indent=2, ensure_ascii=False))
+        if not result.get("allowed", False):
+            sys.exit(1)
     else:
-        guard = SafetyGuard()
         report = guard.generate_safety_report()
         print(json.dumps(report, indent=2, ensure_ascii=False))
+        # বাংলা মন্তব্য: পেন্ডিং অপ্রুভাল থাকলে এবং --check-only ফ্ল্যাগ না থাকলে exit 1 দেওয়া হবে।
+        if report.get("pending_approvals", 0) > 0 and not args.check_only:
+            sys.exit(1)
+
