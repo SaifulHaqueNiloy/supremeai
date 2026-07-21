@@ -3,8 +3,6 @@ name: Auto-Fix CI Pipeline
 on:
   pull_request:
     branches: [main, develop]
-  push:
-    branches: [main]
   schedule:
     # Run daily cleanup at 2 AM UTC
     - cron: '0 2 * * *'
