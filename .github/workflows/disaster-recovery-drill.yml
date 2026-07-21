@@ -1,0 +1,36 @@
+# .github/workflows/disaster-recovery-drill.yml
+# বাংলা মন্তব্য: এই ওয়ার্কফ্লোটি ত্রৈমাসিক (Quarterly) বা ম্যানুয়ালি ডাটাবেজ ব্যাকআপ থেকে 
+# ডাটা রিস্টোর করার ক্ষমতা সয়ংক্রিয়ভাবে যাচাই করে (Disaster Recovery & Zero Data Loss Policy)।
+
+name: 🛡️ Database Disaster Recovery Drill
+
+on:
+  schedule:
+    - cron: '0 4 1 */3 *' # Quarterly at 04:00 UTC on the 1st of the month
+  workflow_dispatch:
+
+jobs:
+  disaster_recovery_drill:
+    name: 🔄 Disaster Recovery Backup & Restore Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests python-dotenv loguru
+
+      - name: Run Disaster Recovery Drill Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          echo "🚀 Executing Automated Disaster Recovery Restore Verification Drill..."
+          python scripts/disaster_recovery_drill.py --dry-run
