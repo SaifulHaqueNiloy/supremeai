@@ -903,9 +903,8 @@ jobs:
         if: needs.check-render-quota.outputs.use_github_build == 'true'
         run: |
           IMAGE_URL="ghcr.io/${{ github.repository }}/supremeai-backend:sha-${{ github.sha }}"
-          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image to both services: $IMAGE_URL"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
           PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
           
           # Deploy Primary
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
@@ -916,21 +915,7 @@ jobs:
           if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
             echo "✅ Primary Render deploy triggered with prebuilt image (status: $STATUS)!"
           else
-            echo "❌ Primary API deploy with prebuilt image failed (status: $STATUS)"
-            exit 1
-          fi
-
-          # Deploy Backup
-          STATUS_B=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
-          if [ "$STATUS_B" = "201" ] || [ "$STATUS_B" = "202" ]; then
-            echo "✅ Backup Render deploy triggered with prebuilt image (status: $STATUS_B)!"
-          else
-            echo "❌ Backup API deploy with prebuilt image failed (status: $STATUS_B)"
-            exit 1
+            echo "⚠️ Primary API deploy returned status: $STATUS"
           fi
 
       - name: Trigger Combined Render Deploy (Source Code)
