@@ -170,6 +170,10 @@ class ProductionSecretVault:
         """
         env_fallback = os.getenv(secret_id, default)
         if env_fallback is None:
+            if os.getenv("FAIL_CLOSED_SECRETS", "false").lower() == "true":
+                raise RuntimeError(
+                    f"Secret '{secret_id}' not found in Infisical and no env fallback provided! Fail-closed triggered."
+                )
             if self.env in ("test", "testing", "ci", "local"):
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
                 env_fallback = f"mock_{secret_id}"
