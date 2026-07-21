@@ -4,7 +4,7 @@
 """
 
 from api.routers import include_user_routers
-from core.app import build_app_shell, router_health_check
+from core.app_builder import build_app_shell, router_health_check
 from core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

@@ -51,15 +51,7 @@ class ExperienceDatabase:
         # আলাদা করতে পারে না। এই ফ্ল্যাগ দিয়ে health_probes/self_healer বাস্তব degradation
         # ধরতে পারবে, memory silently গায়েব হয়ে যাবে না।
         self.vector_backend_degraded = False
-        if HAS_SENTENCE_TRANSFORMERS:
-            try:
-                from sentence_transformers import SentenceTransformer
-
-                self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
-            except Exception as exc:  # noqa: BLE001
-                import loguru
-
-                loguru.logger.debug(f"SentenceTransformer init failed: {exc}")
+        # বাংলা মন্তব্য: স্টার্টআপে ভারী HuggingFace মডেল লোড এড়াতে encoder অলসভাবে (lazily) লোড করা হবে
         if HAS_CHROMADB:
             try:
                 import chromadb
@@ -118,6 +110,16 @@ class ExperienceDatabase:
             conn.commit()
 
     def _embed(self, text: str) -> list[float] | None:
+        if self.encoder is None and HAS_SENTENCE_TRANSFORMERS:
+            try:
+                # বাংলা মন্তব্য: ওটিপি চেক বা এপিআই স্টার্টআপে অপ্রয়োজনীয় ওভারহেড এড়াতে প্রথম ব্যবহারের সময় মডেলটি লোড করা হচ্ছে।
+                from sentence_transformers import SentenceTransformer
+
+                logger.info("Initializing SentenceTransformer('all-MiniLM-L6-v2') lazily...")
+                self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+            except Exception as exc:
+                logger.error(f"[ExperienceDB] Lazy SentenceTransformer initialization failed: {exc}")
+
         if self.encoder:
             try:
                 return self.encoder.encode(text).tolist()
