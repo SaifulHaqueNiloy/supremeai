@@ -9,10 +9,13 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from middleware.anti_hacking import AntiHackingContextMiddleware
 
 
-def _make_request(ip: str, country: str, ua: str, fingerprint: str, admin_id: str = "admin-1"):
+def _make_request(
+    ip: str, country: str, ua: str, fingerprint: str, admin_id: str = "admin-1"
+):
     req = SimpleNamespace()
     req.headers = {
         "x-forwarded-for": ip,
@@ -66,7 +69,9 @@ def mock_redis():
 
 @pytest.mark.asyncio
 async def test_first_request_no_prior_context_passes_through(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch(
+        "middleware.anti_hacking.send_otp", new=AsyncMock()
+    ) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
         req = _make_request("1.2.3.4", "BD", "chrome", "fp-abc")
         result = await mw.dispatch(req, _call_next)
@@ -76,7 +81,9 @@ async def test_first_request_no_prior_context_passes_through(mock_redis):
 
 @pytest.mark.asyncio
 async def test_full_mismatch_triggers_otp(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch(
+        "middleware.anti_hacking.send_otp", new=AsyncMock()
+    ) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         # Establish trusted context first
@@ -92,7 +99,9 @@ async def test_full_mismatch_triggers_otp(mock_redis):
 
 @pytest.mark.asyncio
 async def test_partial_match_same_subnet_is_caution_not_otp(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch(
+        "middleware.anti_hacking.send_otp", new=AsyncMock()
+    ) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         req1 = _make_request("1.2.3.4", "BD", "chrome-v1", "fp-abc")
@@ -108,7 +117,9 @@ async def test_partial_match_same_subnet_is_caution_not_otp(mock_redis):
 
 @pytest.mark.asyncio
 async def test_partial_match_same_user_agent_is_caution_not_otp(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch(
+        "middleware.anti_hacking.send_otp", new=AsyncMock()
+    ) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         req1 = _make_request("1.2.3.4", "BD", "chrome-v1", "fp-abc")
@@ -123,7 +134,9 @@ async def test_partial_match_same_user_agent_is_caution_not_otp(mock_redis):
 
 @pytest.mark.asyncio
 async def test_otp_cooldown_suppresses_duplicate_sends(mock_redis):
-    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch("middleware.anti_hacking.send_otp", new=AsyncMock()) as mock_send:
+    with patch("middleware.anti_hacking.redis_manager", mock_redis), patch(
+        "middleware.anti_hacking.send_otp", new=AsyncMock()
+    ) as mock_send:
         mw = AntiHackingContextMiddleware(app=None)
 
         req1 = _make_request("1.2.3.4", "BD", "chrome-v1", "fp-abc")
@@ -137,4 +150,6 @@ async def test_otp_cooldown_suppresses_duplicate_sends(mock_redis):
         # Immediate second full mismatch from a third distinct context -> cooldown should suppress resend
         req3 = _make_request("5.5.5.5", "FR", "firefox-v1", "fp-yyy")
         await mw.dispatch(req3, _call_next)
-        assert mock_send.call_count == 1  # unchanged — cooldown suppressed the second send
+        assert (
+            mock_send.call_count == 1
+        )  # unchanged — cooldown suppressed the second send

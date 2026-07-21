@@ -26,17 +26,23 @@ class PubSub:
 
     async def publish(self, channel: str, message: dict):
         async with self._lock:
-            targets = list(self.subscribers.get(channel, ()))  # snapshot — safe iteration
+            targets = list(
+                self.subscribers.get(channel, ())
+            )  # snapshot — safe iteration
 
         if not targets:
-            logger.debug(f"[PubSub] No subscribers for channel '{channel}', message dropped.")
+            logger.debug(
+                f"[PubSub] No subscribers for channel '{channel}', message dropped."
+            )
             return
 
         async def _deliver(q: asyncio.Queue):
             try:
                 await asyncio.wait_for(q.put(message), timeout=2.0)
             except (TimeoutError, asyncio.QueueFull):
-                logger.warning(f"[PubSub] Slow consumer on '{channel}' — message dropped for one subscriber.")
+                logger.warning(
+                    f"[PubSub] Slow consumer on '{channel}' — message dropped for one subscriber."
+                )
 
         await asyncio.gather(*(_deliver(q) for q in targets), return_exceptions=True)
 

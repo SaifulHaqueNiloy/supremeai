@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from adaptive_engine.intent_parser import IntentParser
 from adaptive_engine.platform_learner import PlatformLearner

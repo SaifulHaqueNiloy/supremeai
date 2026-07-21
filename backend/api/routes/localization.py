@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from core.localization.bhasha_bot import BhashaBot
-from core.localization.voice_didi import VoiceDidi
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+
+from core.localization.bhasha_bot import BhashaBot
+from core.localization.voice_didi import VoiceDidi
 
 router = APIRouter(prefix="/localization", tags=["localization"])
 

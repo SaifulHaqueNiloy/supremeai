@@ -1,8 +1,9 @@
 import json
 
 import pytest
-from models.ci_report import CIReportPayload, now_epoch
 from pydantic import ValidationError
+
+from models.ci_report import CIReportPayload, now_epoch
 
 
 def test_now_epoch_returns_int():

@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from database.storage_client import StorageClient
 
 

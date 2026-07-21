@@ -4,6 +4,7 @@ import secrets
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from core.security.auth_middleware import (
     AuthMiddleware,
     _get_bearer_token,
@@ -70,7 +71,7 @@ class TestAuthMiddleware:
         """সঠিক API টোকেন সহ মিডলওয়্যার বংয়েজ করা হচ্ছে।"""
         # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_TOKEN", "test-token")
-        from core.config import settings, secret_vault
+        from core.config import secret_vault, settings
 
         settings._cached_secrets.clear()
         secret_vault.invalidate_cache()
@@ -91,7 +92,7 @@ class TestAuthMiddleware:
         """ভুল API টোকেন রিজেক্স করা হচ্ছে।"""
         # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_TOKEN", "test-token")
-        from core.config import settings, secret_vault
+        from core.config import secret_vault, settings
 
         settings._cached_secrets.clear()
         secret_vault.invalidate_cache()
@@ -114,7 +115,7 @@ class TestAuthMiddleware:
         """API টোকেন এনভ ভ্যারিয়েbl না থাকলে মিডলওয়্যার বংয়েজ করা হচ্ছে।"""
         # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_TOKEN", "test-token")
-        from core.config import settings, secret_vault
+        from core.config import secret_vault, settings
 
         settings._cached_secrets.clear()
         secret_vault.invalidate_cache()
@@ -167,8 +168,9 @@ class TestVerifyAdminSessionFailClosed:
 
     def test_missing_jwt_secret(self):
         """JWT সিক্রেট ছাড়াই রিকোয়েস্ট রিজেক্স করা হচ্ছে।"""
-        from core.config import settings
         from fastapi import HTTPException
+
+        from core.config import settings
 
         mock_request = MagicMock()
         mock_request.headers.get.return_value = "Bearer test-token"

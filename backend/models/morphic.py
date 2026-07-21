@@ -1,4 +1,3 @@
-from models.base import Base
 from sqlalchemy import (
     Boolean,
     Column,
@@ -11,6 +10,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
+
+from models.base import Base
 from utils.uuid_gen import UUIDv7, generate_uuid7
 
 
