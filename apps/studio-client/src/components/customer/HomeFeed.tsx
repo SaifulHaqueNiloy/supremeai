@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { SkeletonLoader } from '../ui/SkeletonLoader';
+import { useCustomerStore } from '../../store/customerStore';
 
 interface Widget {
   id: string;
@@ -7,7 +8,7 @@ interface Widget {
   content: string;
 }
 
-const initialWidgets: Widget[] = [
+const DEFAULT_WIDGETS: Widget[] = [
   { id: '1', title: 'AI Assistant', content: 'Chat with your AI assistant to get help with coding, debugging, and more.' },
   { id: '2', title: 'Code Snippets', content: 'Save and reuse your favorite code snippets.' },
   { id: '3', title: 'Project Stats', content: 'View statistics about your current project.' },
@@ -17,16 +18,29 @@ const initialWidgets: Widget[] = [
 ];
 
 export function HomeFeed() {
-  const [widgets, setWidgets] = useState<Widget[]>(initialWidgets);
-  const [isLoading, setIsLoading] = useState(true);
+  const { widgets: storeWidgets, reorderWidgets } = useCustomerStore();
+  const isLoading = false; // Data is from store, no loading needed
 
+  // Initialize store with defaults if empty
   useEffect(() => {
-    // Simulate data fetch
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    if (!storeWidgets || storeWidgets.length === 0) {
+      reorderWidgets(DEFAULT_WIDGETS.map(w => ({
+        id: w.id,
+        type: 'history' as const,
+        title: w.title,
+        position: { x: 0, y: 0, w: 1, h: 1 },
+        settings: { content: w.content },
+      })));
+    }
   }, []);
+
+  const displayWidgets: Widget[] = (storeWidgets && storeWidgets.length > 0)
+    ? storeWidgets.map(w => ({
+        id: w.id,
+        title: w.title,
+        content: (w.settings?.content as string) || '',
+      }))
+    : DEFAULT_WIDGETS;
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
     e.dataTransfer.setData('text/plain', id);
@@ -41,16 +55,24 @@ export function HomeFeed() {
     const draggedId = e.dataTransfer.getData('text/plain');
     if (draggedId === dropId) return;
 
-    setWidgets(prev => {
-      const draggedIndex = prev.findIndex(w => w.id === draggedId);
-      const dropIndex = prev.findIndex(w => w.id === dropId);
-      if (draggedIndex === -1 || dropIndex === -1) return prev;
+    const prev = storeWidgets && storeWidgets.length > 0
+      ? storeWidgets
+      : DEFAULT_WIDGETS.map(w => ({
+          id: w.id,
+          type: 'history' as const,
+          title: w.title,
+          position: { x: 0, y: 0, w: 1, h: 1 },
+          settings: { content: w.content },
+        }));
 
-      const newWidgets = [...prev];
-      const [draggedWidget] = newWidgets.splice(draggedIndex, 1);
-      newWidgets.splice(dropIndex, 0, draggedWidget);
-      return newWidgets;
-    });
+    const draggedIndex = prev.findIndex(w => w.id === draggedId);
+    const dropIndex = prev.findIndex(w => w.id === dropId);
+    if (draggedIndex === -1 || dropIndex === -1) return;
+
+    const newWidgets = [...prev];
+    const [draggedWidget] = newWidgets.splice(draggedIndex, 1);
+    newWidgets.splice(dropIndex, 0, draggedWidget);
+    reorderWidgets(newWidgets);
   };
 
   return (
@@ -70,7 +92,7 @@ export function HomeFeed() {
                 <SkeletonLoader className="w-3/4" />
               </div>
             ))
-          : widgets.map(widget => (
+          : displayWidgets.map(widget => (
               <div
                 key={widget.id}
                 draggable

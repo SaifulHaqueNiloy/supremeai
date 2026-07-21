@@ -1,105 +1,158 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, Menu, session, shell } from 'electron';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs/promises';
-import { readFileSync } from 'fs';
-
-ipcMain.handle('fs:read', async (event, filePath) => {
-    try {
-        return await fs.readFile(filePath, 'utf-8');
-    } catch (error) {
-        return { error: error.message };
-    }
-});
-
-ipcMain.handle('fs:write', async (event, { filePath, content }) => {
-    try {
-        await fs.writeFile(filePath, content, 'utf-8');
-        return { success: true };
-    } catch (error) {
-        return { error: error.message };
-    }
-});
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const PRELOAD_PATH = path.join(__dirname, 'preload.cjs');
-
-// Load design tokens
-let tokens = {};
-try {
-  const tokenPath = path.join(__dirname, '../../packages/design-tokens/outputs/json/tokens.json');
-  tokens = JSON.parse(readFileSync(tokenPath, 'utf-8'));
-} catch (e) {
-  console.warn("Could not load design tokens. Falling back to defaults.");
-}
-
-function updateTitleBar(win) {
-  if (!win) return;
-  const isDark = nativeTheme.shouldUseDarkColors;
-  // Fallback colors if tokens are missing
-  const bgColor = isDark
-    ? (tokens['color-neutral-900'] || '#0F172A')
-    : (tokens['color-neutral-50'] || '#F8FAFC');
-
-  const symbolColor = tokens['color-brand-500'] || '#6366F1';
-
-  win.setTitleBarOverlay({
-    color: bgColor,
-    symbolColor: symbolColor
-  });
-}
+const IS_DEV = !app.isPackaged;
+const API_BASE = process.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 function createWindow() {
   const isDark = nativeTheme.shouldUseDarkColors;
-  const bgColor = isDark
-    ? (tokens['color-neutral-900'] || '#0F172A')
-    : (tokens['color-neutral-50'] || '#F8FAFC');
-  const symbolColor = tokens['color-brand-500'] || '#6366F1';
-
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1400,
+    height: 900,
+    minWidth: 1200,
+    minHeight: 700,
+    titleBarStyle: 'hiddenInset',
+    backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+    show: false,
     webPreferences: {
-      nodeIntegration: false,
+      preload: PRELOAD_PATH,
       contextIsolation: true,
+      nodeIntegration: false,
       sandbox: true,
-      preload: PRELOAD_PATH
+      webSecurity: true,
     },
-    titleBarStyle: 'hidden', // Modern look
-    titleBarOverlay: {
-      color: bgColor,
-      symbolColor: symbolColor
-    }
   });
 
   nativeTheme.on('updated', () => {
-    updateTitleBar(win);
+    const dark = nativeTheme.shouldUseDarkColors;
+    win.setBackgroundColor(dark ? '#0F172A' : '#F8FAFC');
   });
 
-  // Check if we are in development mode
-  const isDev = !app.isPackaged;
-
-  if (isDev) {
+  if (IS_DEV) {
     win.loadURL('http://127.0.0.1:5173');
-    // win.webContents.openDevTools();
   } else {
-    win.loadFile(path.join(__dirname, 'dist/index.html'));
+    const portal = process.env.VITE_PORTAL_TYPE === 'admin' ? 'dist-admin' : 'dist-user';
+    win.loadFile(path.join(__dirname, portal, 'index.html'));
   }
+
+  win.once('ready-to-show', () => win.show());
+
+  win.on('close', (event) => {
+    if (!app.isQuitting && process.platform === 'darwin') {
+      event.preventDefault();
+      win.hide();
+    }
+  });
+
+  return win;
+}
+
+function setupMenu(win) {
+  const template = [
+    ...(process.platform === 'darwin' ? [{
+      label: app.getName(),
+      submenu: [
+        { label: 'About SupremeAI', role: 'about' },
+        { type: 'separator' },
+        { label: 'Quit', accelerator: 'Cmd+Q', click: () => { app.isQuitting = true; app.quit(); } },
+      ],
+    }] : []),
+    {
+      label: 'File',
+      submenu: [
+        { label: 'New Project', accelerator: 'CmdOrCtrl+N', click: () => win.webContents.send('menu:action', 'new-project') },
+        { label: 'Open Project...', accelerator: 'CmdOrCtrl+O', click: () => win.webContents.send('menu:action', 'open-project') },
+        { type: 'separator' },
+        { label: 'Save', accelerator: 'CmdOrCtrl+S', click: () => win.webContents.send('menu:action', 'save') },
+        { label: 'Save As...', accelerator: 'CmdOrCtrl+Shift+S', click: () => win.webContents.send('menu:action', 'save-as') },
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { label: 'Undo', accelerator: 'CmdOrCtrl+Z', role: 'undo' },
+        { label: 'Redo', accelerator: 'CmdOrCtrl+Y', role: 'redo' },
+        { type: 'separator' },
+        { label: 'Cut', accelerator: 'CmdOrCtrl+X', role: 'cut' },
+        { label: 'Copy', accelerator: 'CmdOrCtrl+C', role: 'copy' },
+        { label: 'Paste', accelerator: 'CmdOrCtrl+V', role: 'paste' },
+        { label: 'Select All', accelerator: 'CmdOrCtrl+A', role: 'selectAll' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { label: 'Reload', accelerator: 'CmdOrCtrl+R', click: () => win.reload() },
+        { label: 'Toggle DevTools', accelerator: process.platform === 'darwin' ? 'Cmd+Option+I' : 'Ctrl+Shift+I', click: () => win.webContents.toggleDevTools() },
+        { type: 'separator' },
+        { label: 'Actual Size', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
+        { label: 'Zoom In', accelerator: 'CmdOrCtrl+Plus', role: 'zoomIn' },
+        { label: 'Zoom Out', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
+        { type: 'separator' },
+        { label: 'Toggle Full Screen', accelerator: process.platform === 'darwin' ? 'Ctrl+Cmd+F' : 'F11', role: 'togglefullscreen' },
+      ],
+    },
+    {
+      label: 'Help',
+      submenu: [
+        { label: 'Documentation', click: () => shell.openExternal('https://docs.supremeai.dev') },
+        { label: 'Report Issue', click: () => shell.openExternal('https://github.com/paykaribazaronline/supremeai/issues') },
+      ],
+    },
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+function setupIPC(win) {
+  ipcMain.handle('window:minimize', () => win.minimize());
+  ipcMain.handle('window:maximize', () => win.isMaximized() ? win.unmaximize() : win.maximize());
+  ipcMain.handle('window:close', () => win.close());
+
+  ipcMain.handle('app:get-info', () => ({
+    name: app.getName(),
+    version: app.getVersion(),
+    platform: process.platform,
+    isDev: IS_DEV,
+  }));
+
+  ipcMain.handle('theme:get-system', () => nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
+  ipcMain.handle('theme:set', (event, theme) => {
+    nativeTheme.themeSource = theme;
+  });
+
+  ipcMain.handle('api:call', async (event, { endpoint, method, body, headers }) => {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+    return { status: response.status, ok: response.ok, data };
+  });
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  const win = createWindow();
+  setupMenu(win);
+  setupIPC(win);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    else win.show();
   });
-});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
 });

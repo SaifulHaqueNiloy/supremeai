@@ -19,6 +19,9 @@
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"cross-env BROWSER=none pnpm run dev\" \"wait-on http://127.0.0.1:5173 && electron .\"",
     "electron:build": "cross-env ELECTRON=true pnpm run build && electron-builder",
+    "electron:build:win": "cross-env ELECTRON=true pnpm run build && electron-builder --win",
+    "electron:build:mac": "cross-env ELECTRON=true pnpm run build && electron-builder --mac",
+    "electron:build:linux": "cross-env ELECTRON=true pnpm run build && electron-builder --linux",
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
@@ -94,27 +97,121 @@
   "build": {
     "appId": "com.supremeai.studio",
     "productName": "SupremeAI Studio",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/**/*.node",
+      "assets/**/*"
+    ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "assets",
+      "output": "release"
     },
     "files": [
       "dist/**/*",
+      "dist-admin/**/*",
       "node_modules/**/*",
       "package.json",
       "preload.cjs",
       "main.js"
     ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "win": {
       "target": [
-        "nsis"
-      ]
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SupremeAI Studio"
+    },
+    "portable": {
+      "artifactName": "SupremeAI-Studio-Portable-${version}.exe"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 430,
+          "y": 220
+        }
+      ],
+      "window": {
+        "width": 600,
+        "height": 400
+      }
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "category": "Development",
+      "desktop": {
+        "Name": "SupremeAI Studio",
+        "Comment": "Multi-cloud AI orchestration platform",
+        "Exec": "SupremeAI Studio",
+        "Icon": "SupremeAI Studio",
+        "Type": "Application",
+        "Categories": "Development;IDE;"
+      }
     },
     "publish": {
-      "provider": "github"
+      "provider": "github",
+      "owner": "paykaribazaronline",
+      "repo": "supremeai"
     }
   }
 }
