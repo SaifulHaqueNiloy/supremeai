@@ -67,7 +67,7 @@ def run_server() -> None:
     else:
         uvicorn_kwargs["reload"] = False
         # বাংলা: UVICORN_WORKERS env var ব্যবহার করা হয়, GUNICORN_WORKERS deprecated
-        workers = int(os.getenv("UVICORN_WORKERS", "4"))
+        workers = int(os.getenv("UVICORN_WORKERS", "1"))
         if workers > 1:
             uvicorn_kwargs["workers"] = workers
 
