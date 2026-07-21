@@ -40,4 +40,8 @@ EXPOSE 8080
 # CRITICAL FIX (Cloud Run Port Binding):
 # Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).
 # The shell form allows Cloud Run to dynamically inject the $PORT environment variable.
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${GUNICORN_WORKERS:-4}"]
+# বাংলা মন্তব্য: আগে এখানে deprecated GUNICORN_WORKERS (ডিফল্ট 4) পড়া হতো — main.py-তে
+# UVICORN_WORKERS=1 ডিফল্ট করে OOM ফিক্স করার চেষ্টা হলেও, প্রোডাকশনে আসল entrypoint এই
+# Dockerfile CMD-ই (main.py-র প্রোগ্রাম্যাটিক uvicorn.run() নয়), তাই সেই ফিক্স কখনো কার্যকর
+# হয়নি — Render free tier-এর 512MB RAM-এ 4টা worker লোড হয়ে OOM crash ঘটাতে পারত।
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${UVICORN_WORKERS:-1}"]
