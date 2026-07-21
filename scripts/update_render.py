@@ -3,12 +3,13 @@ import json
 import os
 
 api_key = os.environ.get("RENDER_API_KEY", "")
-services = ["srv-d991umnaqgkc73fk89o0", "srv-d817sc7aqgkc73aocjlg"]
-headers = {
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-}
+api_key_backup = os.environ.get("RENDER_API_KEY_BACKUP", "")
+
+# বাংলা মন্তব্য: প্রতিটি সার্ভিস আইডিকে তার নিজ নিজ অ্যাকাউন্টের API Key-র সাথে ম্যাপ করে আপডেট করা হচ্ছে
+services = [
+    {"sid": "srv-d9d3n58js32c738n79k0", "key": api_key},
+    {"sid": "srv-d9e4q5rrjlhs73bnh71g", "key": api_key_backup}
+]
 
 data = {
     "serviceDetails": {
@@ -19,7 +20,19 @@ data = {
 }
 json_data = json.dumps(data).encode('utf-8')
 
-for sid in services:
+for service in services:
+    sid = service["sid"]
+    key = service["key"]
+    if not key:
+        print(f"Skipping update for {sid}: API key not set")
+        continue
+
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
     req = urllib.request.Request(f"https://api.render.com/v1/services/{sid}", data=json_data, headers=headers, method="PATCH")
     try:
         with urllib.request.urlopen(req) as response:

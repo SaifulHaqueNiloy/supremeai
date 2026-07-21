@@ -91,12 +91,13 @@ if __name__ == "__main__":
         print("OK Added CHECKOUT_BASE_URL to local .env file")
 
     # 2. Update Render Main (supremeai-backend)
+    # বাংলা মন্তব্য: প্রাইমারি ও ব্যাকআপ অ্যাকাউন্টের সঠিক সার্ভিস আইডি সেট করে আপডেট করা হলো
     if render_key_main:
-        update_render_env(render_key_main, "srv-d991umnaqgkc73fk89o0", "CHECKOUT_BASE_URL", checkout_base_url)
+        update_render_env(render_key_main, "srv-d9d3n58js32c738n79k0", "CHECKOUT_BASE_URL", checkout_base_url)
 
     # 3. Update Render Backup (supremeai-backend)
     if render_key_backup:
-        update_render_env(render_key_backup, "srv-d995glt7vvec73f3jgo0", "CHECKOUT_BASE_URL", checkout_base_url)
+        update_render_env(render_key_backup, "srv-d9e4q5rrjlhs73bnh71g", "CHECKOUT_BASE_URL", checkout_base_url)
 
     # 4. Update GitHub Secrets (requires PyNaCl)
     if github_token:
