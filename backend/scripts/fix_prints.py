@@ -11,11 +11,7 @@ def process_file(filepath: Path):
         return
 
     # Skip files that shouldn't use logger
-    if (
-        "cli.py" in str(filepath)
-        or "scripts" in str(filepath)
-        or "tests" in str(filepath)
-    ):
+    if "cli.py" in str(filepath) or "scripts" in str(filepath) or "tests" in str(filepath):
         return
 
     # Replace basic print( with logger.info(
