@@ -128,6 +128,9 @@ services:
         value: '["https://supremeai-admin.web.app"]'
       - key: SERVICE_ROLE
         value: admin
+      # বাংলা মন্তব্য: অ্যাডমিন সার্ভিসের জন্য প্রয়োজনীয় মিনিমাম রুট চেক ৫ সেট করা হলো
+      - key: MIN_EXPECTED_ROUTES
+        value: 5
       - key: ALLOWED_HOSTS
         value: 'supremeai-admin.onrender.com'
 
