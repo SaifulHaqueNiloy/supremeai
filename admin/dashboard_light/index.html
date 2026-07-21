@@ -350,24 +350,26 @@
         <div class="jobs-grid mt-4" id="jobsGrid"></div>
       </div>
 
-      <!-- 13. HITL Approval Queue View / এইচআইটিএল অনুমোদন কিউ -->
-      <div id="view-hitl" class="view-section hidden">
-        <div class="flex justify-between items-center">
-          <h2 class="page-title">🖐️ Human-in-the-Loop (HITL) Approval Queue</h2>
-          <button class="btn btn-primary" onclick="openMaintenanceModal()">📢 Broadcast Banner</button>
-        </div>
-        <p class="text-muted mb-4">Approve or reject high-privilege AI agent execution requests.</p>
-        <div class="jobs-grid" id="hitlQueueGrid">
-          <div class="action-card">
-            <div class="flex justify-between items-center mb-2">
-              <h4>Database Schema Migration Request</h4>
-              <span class="badge badge-paid">PENDING HITL</span>
+        <!-- Autonomous Agent Plan Executor Console / স্বয়ংশাসিত এজেন্ট টাস্ক লঞ্চার -->
+        <div class="action-card mt-6">
+          <h3 class="text-accent mb-2">🤖 Autonomous Agent Plan Executor</h3>
+          <p class="text-muted text-xs mb-3">Submit architectural plans or implementation prompts to SupremeAI autonomous agents directly on the codebase.</p>
+          <div class="flex flex-col gap-3">
+            <textarea id="autonomousTaskPrompt" rows="3" class="auth-input text-xs" placeholder="Enter plan instructions for the autonomous agents (e.g. Implement new Redis rate limiter on auth routes)..."></textarea>
+            <div class="flex gap-3">
+              <select id="autonomousTargetAgent" class="auth-input text-xs" style="width: 50%;">
+                <option value="auto-coder">⚡ Auto-Coder Agent (Code & Features)</option>
+                <option value="devops">🚀 DevOps Agent (Pipelines & CI/CD)</option>
+                <option value="self-healer">🩺 Self-Healer Agent (Bug Fix & Regression)</option>
+                <option value="security">🔒 Security Hunter (Secret & Vulnerability Audit)</option>
+              </select>
+              <select id="autonomousStrategy" class="auth-input text-xs" style="width: 50%;">
+                <option value="auto-pr">📦 Auto-PR Branch & Pull Request</option>
+                <option value="direct-patch">⚡ Direct Targeted Delta Patch</option>
+                <option value="dry-run">🔍 Proposal Dry-Run</option>
+              </select>
             </div>
-            <p class="text-xs text-muted">Agent requested Alembic downgrade migration. Requires admin confirmation.</p>
-            <div class="mt-3 flex gap-2">
-              <button class="btn btn-sm btn-primary" onclick="approveHitlTask('task-101')">Approve Task</button>
-              <button class="btn btn-sm btn-danger" onclick="rejectHitlTask('task-101')">Reject Task</button>
-            </div>
+            <button class="btn btn-primary" onclick="submitAutonomousTaskCommand()">🚀 Dispatch Autonomous Task Command</button>
           </div>
         </div>
       </div>
