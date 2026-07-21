@@ -229,3 +229,12 @@ refactor_wiz_report.md
 # Database backups
 backend/backup/
 
+# Generated artifacts & logs (Codebase Improvement Plan)
+*.coverage_report.json
+pytest_full_run_results.txt
+*_report.json
+error.txt
+trace.txt
+dist-user/
+apps/studio-client/dist-user/
+backend/requirements.txt
