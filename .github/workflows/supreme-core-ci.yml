@@ -68,6 +68,8 @@ jobs:
       user_needed: ${{ steps.filter.outputs.user == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
       dependencies: ${{ steps.filter.outputs.dependencies == 'true' || steps.detect.outputs.force_dependencies == 'true' || github.run_attempt > 1 }}
       docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
+      admin_backend_changed: ${{ steps.filter.outputs.admin_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
+      customer_backend_changed: ${{ steps.filter.outputs.customer_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
     steps:
       - uses: actions/checkout@v4
       - name: Detect previous failures
@@ -98,6 +100,27 @@ jobs:
               - 'api/**'
               - 'core/**'
               - '.github/workflows/**'
+            admin_backend:
+              - 'backend/api/routes/admin.py'
+              - 'backend/api/routes/admin_dashboard.py'
+              - 'backend/api/routes/admin_librarian.py'
+              - 'backend/api/routes/simulator_admin.py'
+              - 'backend/api/routes/tenant_admin.py'
+              - 'admin/**'
+            customer_backend:
+              - 'backend/**'
+              - '!backend/api/routes/admin.py'
+              - '!backend/api/routes/admin_dashboard.py'
+              - '!backend/api/routes/admin_librarian.py'
+              - '!backend/api/routes/simulator_admin.py'
+              - '!backend/api/routes/tenant_admin.py'
+            shared_backend:
+              - 'backend/core/**'
+              - 'backend/pyproject.toml'
+              - 'backend/poetry.lock'
+              - 'backend/Dockerfile'
+              - '.github/workflows/**'
+              - '.github/actions/**'
             frontend:
               - 'apps/studio-client/**'
               - 'apps/web-chat/**'
@@ -609,9 +632,9 @@ jobs:
           path: apps/studio-client/dist-admin
           retention-days: 1
 
-  deploy-to-render:
-    name: 🌐 Deploy Backend (Render)
-    needs: [backend-core, pre-merge-gate]
+  build-backend-image:
+    name: 🐳 Build & Push Backend Image
+    needs: [backend-core, pre-merge-gate, changes]
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -657,20 +680,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger Render Deploy
+  deploy-user-backend:
+    name: 🚀 Deploy User Backend (Render)
+    needs: [build-backend-image, changes]
+    runs-on: ubuntu-latest
+    environment: production
+    if: |
+      always() &&
+      needs.build-backend-image.result == 'success' &&
+      needs.changes.outputs.customer_backend_changed == 'true' &&
+      needs.changes.outputs.admin_backend_changed == 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger User Render Deploy
         run: |
           PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-          BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
-          BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
-          # বাংলা মন্তব্য: ব্যাকআপ অ্যাকাউন্টের সঠিক সার্ভিস আইডি (supremeai-admin) সেট করা হলো
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
-
           PRIMARY_SUCCESS=false
-          BACKUP_SUCCESS=false
 
-          # বাংলা: Primary hook দিয়ে প্রথমে চেষ্টা করি
           if [ -n "$PRIMARY_HOOK" ]; then
-            echo "Trying primary Render account..."
+            echo "Triggering primary Render account (Customer backend)..."
             if curl -f -s "$PRIMARY_HOOK" > /dev/null; then
               echo "✅ Primary Render deploy triggered successfully!"
               PRIMARY_SUCCESS=true
@@ -679,7 +708,6 @@ jobs:
             fi
           fi
 
-          # বাংলা: Primary hook ফেইল বা খালি হলে API দিয়ে চেষ্টা করি
           if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
             echo "🔄 Using Render API to trigger primary deploy..."
             PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
@@ -696,8 +724,37 @@ jobs:
             fi
           fi
 
+          if [ "$PRIMARY_SUCCESS" = "false" ]; then
+            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded for User backend! Failing build."
+            exit 1
+          fi
 
-          # বাংলা: Backup hook বা Render API দিয়ে backup service deploy করি
+      - name: Verify Render Deploy Health
+        run: python .github/scripts/verify-render-deploy.py
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+
+  deploy-admin-backend:
+    name: 🚀 Deploy Admin Backend (Render)
+    needs: [build-backend-image, changes]
+    runs-on: ubuntu-latest
+    environment: production
+    if: |
+      always() &&
+      needs.build-backend-image.result == 'success' &&
+      needs.changes.outputs.admin_backend_changed == 'true' &&
+      needs.changes.outputs.customer_backend_changed == 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger Admin Render Deploy
+        run: |
+          BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
+          BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
+          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          BACKUP_SUCCESS=false
+
           if [ -n "$BACKUP_HOOK" ]; then
             echo "🔄 Triggering backup via webhook..."
             if curl -f -s "$BACKUP_HOOK" > /dev/null; then
@@ -719,18 +776,97 @@ jobs:
             else
               echo "⚠️ Backup API deploy returned status: $STATUS"
             fi
-          else
-            echo "No backup deploy configured."
           fi
 
-          # বাংলা: কোনোটিই সফল না হলে বা কনফিগার না থাকলে CI ফেইল করাও
+          if [ "$BACKUP_SUCCESS" = "false" ]; then
+            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded for Admin backend! Failing build."
+            exit 1
+          fi
+
+      - name: Verify Render Deploy Health
+        run: python .github/scripts/verify-render-deploy.py
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+
+  deploy-combined-backend:
+    name: 🚀 Deploy Combined Backend (Render)
+    needs: [build-backend-image, changes]
+    runs-on: ubuntu-latest
+    environment: production
+    if: |
+      always() &&
+      needs.build-backend-image.result == 'success' &&
+      needs.changes.outputs.admin_backend_changed == 'true' &&
+      needs.changes.outputs.customer_backend_changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger Combined Render Deploy
+        run: |
+          PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
+          BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
+          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+
+          PRIMARY_SUCCESS=false
+          BACKUP_SUCCESS=false
+
+          if [ -n "$PRIMARY_HOOK" ]; then
+            echo "Trying primary Render account..."
+            if curl -f -s "$PRIMARY_HOOK" > /dev/null; then
+              echo "✅ Primary Render deploy triggered successfully!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary hook failed."
+            fi
+          fi
+
+          if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "🔄 Using Render API to trigger primary deploy..."
+            PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "✅ Primary Render deploy triggered via API (status: $STATUS)!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary API deploy returned status: $STATUS"
+            fi
+          fi
+
+          if [ -n "$BACKUP_HOOK" ]; then
+            echo "🔄 Triggering backup via webhook..."
+            if curl -f -s "$BACKUP_HOOK" > /dev/null; then
+              echo "✅ Backup hook triggered!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Backup hook failed."
+            fi
+          elif [ -n "$BACKUP_API_KEY" ]; then
+            echo "🔄 No backup hook found. Using Render API to trigger backup deploy..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+              -H "Authorization: Bearer $BACKUP_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "✅ Backup Render deploy triggered via API (status: $STATUS)!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Backup API deploy returned status: $STATUS"
+            fi
+          fi
+
           if [ "$PRIMARY_SUCCESS" = "false" ] && [ "$BACKUP_SUCCESS" = "false" ]; then
             echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded! Failing build."
             exit 1
           fi
 
       - name: Verify Render Deploy Health
-        # বাংলা মন্তব্য: naive curl পোলিং এর পরিবর্তে Python স্ক্রিপ্টটি Render API দিয়ে ডেপ্লয়মেন্ট স্ট্যাটাস ট্র্যাক করবে এবং হেলথ ভেরিফাই করবে।
         run: python .github/scripts/verify-render-deploy.py
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
