@@ -655,6 +655,10 @@ class Settings(BaseSettings):
         if env == "test":
             return v
         if env in {"production", "staging"}:
+            # বাংলা মন্তব্য: user_cors_origins এবং admin_cors_origins ফাঁকা (empty) হতে পারে।
+            # তাই cors_origins ছাড়া অন্যগুলো ফাঁকা থাকলে ভ্যালিডেশন স্কিপ করা হচ্ছে।
+            if info.field_name in {"user_cors_origins", "admin_cors_origins"} and not v:
+                return v
             v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
             if not v:
                 raise ValueError(
