@@ -730,48 +730,11 @@ jobs:
           fi
 
       - name: Verify Render Deploy Health
-        # বাংলা মন্তব্য: এতদিন এই job শুধু deploy-trigger call-এর HTTP status (201/202) দেখেই সফল ধরে নিত —
-        # নতুন image আসলে Render-এ বুট হয়ে সুস্থভাবে সার্ভ করছে কিনা তা কখনো verify করা হতো না।
-        # Render free-tier build+boot-এ কয়েক মিনিট লাগতে পারে, তাই কিছুক্ষণ অপেক্ষা করে health endpoint
-        # কয়েকবার poll করা হচ্ছে। কোনো instance সাড়া না দিলে job ফেইল করবে, যাতে "CI green কিন্তু আসল
-        # backend ক্র্যাশড" অবস্থা চুপচাপ পার না হয়ে যায়।
-        run: |
-          check_health() {
-            local url="$1"
-            local label="$2"
-            local attempt=1
-            local max_attempts=10
-            local wait_seconds=20
-            echo "⏳ Verifying $label health at $url ..."
-            while [ $attempt -le $max_attempts ]; do
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url/api/v1/health" || echo "000")
-              if [ "$STATUS" = "200" ]; then
-                echo "✅ $label healthy (attempt $attempt, status $STATUS)"
-                return 0
-              fi
-              echo "  attempt $attempt/$max_attempts: status $STATUS, retrying in ${wait_seconds}s..."
-              sleep $wait_seconds
-              attempt=$((attempt + 1))
-            done
-            echo "❌ $label did not become healthy after $max_attempts attempts"
-            return 1
-          }
-
-          PRIMARY_HEALTHY=false
-          BACKUP_HEALTHY=false
-
-          if check_health "https://supremeai-backend.onrender.com" "Primary backend"; then
-            PRIMARY_HEALTHY=true
-          fi
-
-          if check_health "https://supremeai-admin.onrender.com" "Admin backend"; then
-            BACKUP_HEALTHY=true
-          fi
-
-          if [ "$PRIMARY_HEALTHY" = "false" ] && [ "$BACKUP_HEALTHY" = "false" ]; then
-            echo "❌ CRITICAL: neither backend instance came up healthy after deploy!"
-            exit 1
-          fi
+        # বাংলা মন্তব্য: naive curl পোলিং এর পরিবর্তে Python স্ক্রিপ্টটি Render API দিয়ে ডেপ্লয়মেন্ট স্ট্যাটাস ট্র্যাক করবে এবং হেলথ ভেরিফাই করবে।
+        run: python .github/scripts/verify-render-deploy.py
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
 
   deploy-static-render:
     name: 🌐 Deploy Frontend (Render Static)
