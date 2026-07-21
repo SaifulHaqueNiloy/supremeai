@@ -1091,4 +1091,63 @@ input:checked + .slider:before {
 .level-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
 .log-module { color: var(--accent-secondary); }
 .log-msg { color: var(--text-main); flex-grow: 1; }
-.tag-pii { background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+.tag-pii { background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+
+/* ════════════════════════════════════════════════════════════
+   LIVE ANIMATIONS & HIGH-TECH GLOW AESTHETICS
+   ════════════════════════════════════════════════════════════ */
+
+#bgCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.app-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Shimmering SupremeAI God Logo */
+.logo-text {
+  background: linear-gradient(90deg, #00f3ff, #bc13fe, #00ff9d, #00f3ff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: logoShimmer 8s linear infinite;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+@keyframes logoShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* Card Micro-Interactions & Hover Glow */
+.metric-card, .action-card, .ai-provider-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.metric-card:hover, .action-card:hover, .ai-provider-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(0, 243, 255, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.15), 0 0 15px rgba(188, 19, 254, 0.15);
+}
+
+/* Pulsing Status Rings */
+.sync-dot {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 4px var(--success); }
+  50% { transform: scale(1.25); box-shadow: 0 0 12px var(--success); }
+}
