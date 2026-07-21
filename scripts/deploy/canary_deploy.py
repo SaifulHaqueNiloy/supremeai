@@ -87,20 +87,27 @@ class CanaryDeployer:
             'cpu_usage': 0.8
         })
 
-    def _build_traffic_shift_command(self, percentage: int) -> str:
+    def _build_traffic_shift_command(self, percentage: int) -> List[str]:
         """Build command to set traffic percentage."""
-        # Build command using simple string format to avoid escaping issues
-        cmd = "kubectl patch vs/" + self.service_name + " --type=merge -p='{"
-        cmd += '"spec":{"http":[{"route":[{"destination":{"host":"' + self.service_name + '"},"percent":' + str(percentage) + '}]}}'
-        cmd += "}'"
-        return cmd
+        # বাংলা মন্তব্য: shell=False ব্যবহারের জন্য কমান্ডকে লিস্ট ফরম্যাটে রূপান্তর করা হলো।
+        return [
+            "kubectl",
+            "patch",
+            "vs/" + self.service_name,
+            "--type=merge",
+            "-p={\"spec\":{\"http\":[{\"route\":[{\"destination\":{\"host\":\"" + self.service_name + "\"},\"percent\":" + str(percentage) + "}]}]}}"
+        ]
 
-    def _build_promote_command(self) -> str:
+    def _build_promote_command(self) -> List[str]:
         """Build command to promote canary to full traffic."""
-        cmd = "kubectl patch vs/" + self.service_name + " --type=merge -p='{"
-        cmd += '"spec":{"http":[{"route":[{"destination":{"host":"' + self.service_name + '-canary"}},{"destination":{"host":"' + self.service_name + '-stable"}}}]}}'
-        cmd += "}'"
-        return cmd
+        # বাংলা মন্তব্য: shell=False ব্যবহারের জন্য কমান্ডকে লিস্ট ফরম্যাটে রূপান্তর করা হলো।
+        return [
+            "kubectl",
+            "patch",
+            "vs/" + self.service_name,
+            "--type=merge",
+            "-p={\"spec\":{\"http\":[{\"route\":[{\"destination\":{\"host\":\"" + self.service_name + "-canary\"}},{\"destination\":{\"host\":\"" + self.service_name + "-stable\"}}]}]}}"
+        ]
 
     async def run_health_checks(self, step: int) -> Tuple[int, int]:
         """Run health checks during canary step."""
@@ -174,7 +181,8 @@ class CanaryDeployer:
         try:
             # Set traffic percentage
             cmd = self._build_traffic_shift_command(percentage)
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=60)
+            # বাংলা মন্তব্য: shell=False ব্যবহার করা হলো এবং কমান্ডটি লিস্ট অব আর্গুমেন্ট হিসেবে পাস করা হচ্ছে।
+            proc = subprocess.run(cmd, shell=False, capture_output=True, text=True, timeout=60)
 
             if proc.returncode != 0:
                 step.error_message = proc.stderr
@@ -211,7 +219,8 @@ class CanaryDeployer:
         try:
             # Route all traffic back to stable
             cmd = self._build_traffic_shift_command(0)
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=60)
+            # বাংলা মন্তব্য: shell=False ব্যবহার করা হলো এবং কমান্ডটি লিস্ট অব আর্গুমেন্ট হিসেবে পাস করা হচ্ছে।
+            proc = subprocess.run(cmd, shell=False, capture_output=True, text=True, timeout=60)
 
             if proc.returncode == 0:
                 logger.warning("Canary rollback successful")
@@ -260,9 +269,10 @@ class CanaryDeployer:
 
                     # Promote canary to stable
                     try:
+                        # বাংলা মন্তব্য: shell=False ব্যবহার করা হলো এবং কমান্ডটি লিস্ট অব আর্গুমেন্ট হিসেবে পাস করা হচ্ছে।
                         proc = subprocess.run(
                             self._build_promote_command(),
-                            shell=True,
+                            shell=False,
                             capture_output=True,
                             text=True,
                             timeout=60

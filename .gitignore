@@ -238,3 +238,8 @@ trace.txt
 dist-user/
 apps/studio-client/dist-user/
 backend/requirements.txt
+
+# Docusaurus build artifacts, coverage_new, and archive directories
+apps/docs/.docusaurus/
+backend/coverage_new.json
+archive/
