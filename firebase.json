@@ -49,7 +49,7 @@
     },
     {
       "target": "admin",
-      "public": "apps/studio-client/dist-admin",
+      "public": "admin/dashboard_light",
       "ignore": [
         "firebase.json",
         "**/.*",
