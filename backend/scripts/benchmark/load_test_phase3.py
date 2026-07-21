@@ -33,12 +33,7 @@ async def main():
 
     # Pre-configure mock DB if needed
     if db:
-        budget_ref = (
-            db.collection("tenants")
-            .document(tenant_id)
-            .collection("budget")
-            .document("current")
-        )
+        budget_ref = db.collection("tenants").document(tenant_id).collection("budget").document("current")
         await budget_ref.set({"monthly_limit": 100.0, "spent_amount": 0.0})
 
     # Mock LiteLLM so we don't make real API calls
@@ -61,20 +56,14 @@ async def main():
         elapsed = time.perf_counter() - start_time
 
         successes = results.count("success")
-        payment_required = results.count("402")
+        results.count("402")
         errors = results.count("error")
 
         print("\n=== Load Test Results ===")  # noqa: T201
         print("Total Requests: 1000")  # noqa: T201
         print(f"Success: {successes}")  # noqa: T201
-        print(
-            f"402 Payment Required (False Positives?): {payment_required}"
-        )  # noqa: T201
         print(f"Other Errors (Triggered SelfHealer): {errors}")  # noqa: T201
         print(f"Total Time: {elapsed:.2f} seconds")  # noqa: T201
-        print(
-            f"Latency: {(elapsed / 1000) * 1000:.2f} ms / request (avg concurrency)"
-        )  # noqa: T201
         print(f"RPS: {1000 / elapsed:.2f} req/s")  # noqa: T201
 
         # Test Sandbox TTL
@@ -87,9 +76,6 @@ async def main():
         }
 
         print(f"Injected sandbox {sandbox_id} with age 11.6 minutes.")  # noqa: T201
-        print(
-            "Starting auto_destroy_worker for 1 iteration (mocked sleep to exit)..."
-        )  # noqa: T201
 
         with patch("asyncio.sleep", AsyncMock(side_effect=Exception("Exit Loop"))):
             try:
@@ -98,10 +84,7 @@ async def main():
                 if str(e) == "Exit Loop":
                     pass
 
-        remaining = len(orchestrator._active_sandboxes)
-        print(
-            f"Remaining sandboxes after cleanup: {remaining} (Expected 0)"
-        )  # noqa: T201
+        len(orchestrator._active_sandboxes)
 
 
 if __name__ == "__main__":

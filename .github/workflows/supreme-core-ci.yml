@@ -661,7 +661,8 @@ jobs:
           PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
           BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
           BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
-          BACKUP_SVC_ID="srv-d9cl8eu1a83c739adv70"
+          # বাংলা মন্তব্য: ব্যাকআপ অ্যাকাউন্টের সঠিক সার্ভিস আইডি (supremeai-admin) সেট করা হলো
+          BACKUP_SVC_ID="srv-d9e4q5rrjlhs73bnh71g"
 
           PRIMARY_SUCCESS=false
           BACKUP_SUCCESS=false
