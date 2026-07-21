@@ -92,14 +92,21 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     elif action_type == "backup":
         # বাংলা মন্তব্য: ডাটাবেস টেবিল স্ক্যান করে JSON ব্যাকআপ ফাইল তৈরি করার ব্যাকগ্রাউন্ড টাস্ক
         try:
+            import re
             from database.session import get_db_session
             from sqlalchemy import text
+
+            # বাংলা মন্তব্য: টেবিল নামের বৈধতা যাচাই করতে রেগুলার এক্সপ্রেশন প্যাটার্ন ডিফাইন করা হলো।
+            _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 
             backup_data = {}
             async for session in get_db_session():
                 result = await session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'"))
                 tables = [row[0] for row in result.fetchall()]
                 for table in tables:
+                    if not _VALID_TABLE_PATTERN.match(table):
+                        logger.warning(f"Skipping table '{table}' due to invalid naming pattern.")
+                        continue
                     rows_res = await session.execute(text(f"SELECT * FROM {table}"))
                     columns = rows_res.keys()
                     rows = [dict(zip(columns, row)) for row in rows_res.fetchall()]
