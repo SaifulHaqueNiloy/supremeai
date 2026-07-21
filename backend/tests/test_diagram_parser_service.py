@@ -82,7 +82,11 @@ def test_drawio_parser_xml():
 
 
 def test_drawio_parser_dashed_edge():
-    xml = "<mxfile><mxGraphModel>" '<mxCell id="1" value="A" style="dashed" source="1" target="2" edge="1"/>' "</mxGraphModel></mxfile>"
+    xml = (
+        "<mxfile><mxGraphModel>"
+        '<mxCell id="1" value="A" style="dashed" source="1" target="2" edge="1"/>'
+        "</mxGraphModel></mxfile>"
+    )
     _, edges = DrawIOParser.parse(xml)
     assert edges[0].edge_type == "dashed"
 
@@ -116,7 +120,9 @@ def test_detect_format_fallback_to_image():
 @pytest.mark.anyio
 async def test_parse_mermaid_returns_nodes_edges():
     svc = DiagramParserService()
-    nodes, edges = await svc.parse(content="graph TD\nA[Login]\nB[Validate]\nA-->B\n", filename="d.mmd")
+    nodes, edges = await svc.parse(
+        content="graph TD\nA[Login]\nB[Validate]\nA-->B\n", filename="d.mmd"
+    )
     assert len(nodes) >= 1
     assert any(e.source == "A" and e.target == "B" for e in edges)
 
@@ -157,7 +163,9 @@ async def test_to_infrastructure_success():
         mock_router_cls.return_value = mock_router
         mock_router.route.return_value = {"content": 'resource "aws_instance" "web" {}'}
 
-        result = await svc.to_infrastructure(nodes, edges, provider="aws", iac_tool="terraform")
+        result = await svc.to_infrastructure(
+            nodes, edges, provider="aws", iac_tool="terraform"
+        )
         assert result["status"] == "success"
         assert "terraform" in result["iac_tool"]
         assert "aws" in result["provider"]
