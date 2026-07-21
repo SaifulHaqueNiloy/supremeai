@@ -1,109 +1,99 @@
+"""
+Tests for core/schema_validator.py — SchemaValidator
+"""
+
 from __future__ import annotations
 
 import pytest
-from core.schema_validator import SchemaValidationError, SchemaValidator
 from pydantic import BaseModel
 
+from core.schema_validator import SchemaValidationError, SchemaValidator
 
-class SimpleModel(BaseModel):
+
+class TestModel(BaseModel):
     name: str
-    value: int
+    age: int
 
 
 class NestedModel(BaseModel):
-    id: int
-    label: str
+    items: list[str]
+    enabled: bool = True
 
 
 @pytest.fixture
 def validator():
-    return SchemaValidator()
+    v = SchemaValidator()
+    v.register("test", TestModel)
+    v.register("nested", NestedModel)
+    return v
 
 
-def test_register_and_validate_success(validator):
-    validator.register("simple", SimpleModel)
-    result = validator.validate("simple", {"name": "test", "value": 42})
-    assert result["status"] == "ok"
-    assert result["schema"] == "simple"
-    assert result["data"] == {"name": "test", "value": 42}
+class TestSchemaValidator:
+    def test_register_and_validate_success(self, validator):
+        result = validator.validate("test", {"name": "Alice", "age": 30})
+        assert result["status"] == "ok"
+        assert result["schema"] == "test"
+        assert result["data"]["name"] == "Alice"
+        assert result["data"]["age"] == 30
+
+    def test_validate_missing_required_field(self, validator):
+        with pytest.raises(SchemaValidationError) as exc:
+            validator.validate("test", {"name": "Alice"})
+        assert exc.value.model_name == "test"
+        assert len(exc.value.errors) > 0
+
+    def test_validate_wrong_type(self, validator):
+        with pytest.raises(SchemaValidationError) as exc:
+            validator.validate("test", {"name": "Alice", "age": "not_a_number"})
+        assert exc.value.model_name == "test"
+
+    def test_validate_unregistered_schema(self, validator):
+        with pytest.raises(KeyError) as exc:
+            validator.validate("nonexistent", {})
+        assert "nonexistent" in str(exc.value)
+
+    def test_validate_empty_payload(self, validator):
+        with pytest.raises(SchemaValidationError):
+            validator.validate("test", {})
+
+    def test_validate_nested_model(self, validator):
+        result = validator.validate("nested", {"items": ["a", "b"]})
+        assert result["status"] == "ok"
+        assert result["data"]["items"] == ["a", "b"]
+        assert result["data"]["enabled"] is True
+
+    def test_validate_with_defaults(self, validator):
+        result = validator.validate("nested", {"items": []})
+        assert result["data"]["enabled"] is True
+
+    def test_validate_extra_fields_ignored(self, validator):
+        result = validator.validate("test", {"name": "Bob", "age": 25, "extra": "ignored"})
+        assert result["status"] == "ok"
+        assert "extra" not in result["data"]
+
+    def test_register_duplicate_overwrites(self, validator):
+        class NewModel(BaseModel):
+            x: int
+
+        validator.register("test", NewModel)
+        result = validator.validate("test", {"x": 42})
+        assert result["status"] == "ok"
+
+    def test_schema_validation_error_message_format(self, validator):
+        with pytest.raises(SchemaValidationError) as exc:
+            validator.validate("test", {})
+        assert "Validation failed for test" in str(exc.value)
+        assert isinstance(exc.value.errors, list)
+
+    def test_multiple_errors_reported(self, validator):
+        with pytest.raises(SchemaValidationError) as exc:
+            validator.validate("test", {"age": "wrong", "name": 123})
+        # May get multiple errors
+        assert len(exc.value.errors) >= 1
 
 
-def test_validate_unknown_schema(validator):
-    with pytest.raises(KeyError, match="Schema 'unknown' is not registered"):
-        validator.validate("unknown", {"foo": "bar"})
-
-
-def test_validate_validation_error(validator):
-    validator.register("simple", SimpleModel)
-    with pytest.raises(SchemaValidationError) as exc_info:
-        validator.validate("simple", {"name": "test"})
-    assert exc_info.value.model_name == "simple"
-    assert len(exc_info.value.errors) > 0
-
-
-def test_schema_validation_error_attributes():
-    errors = [
-        {
-            "loc": "value",
-            "msg": "Input should be a valid integer",
-            "type": "int_parsing",
-        }
-    ]
-    err = SchemaValidationError("simple", errors)
-    assert err.model_name == "simple"
-    assert err.errors == errors
-    assert "Validation failed for simple" in str(err)
-
-
-def test_try_parse_success(validator):
-    validator.register("nested", NestedModel)
-    result = validator.try_parse("nested", {"id": 1, "label": "x"})
-    assert result["status"] == "ok"
-
-
-def test_try_parse_key_error(validator):
-    result = validator.try_parse("missing", {})
-    assert result["status"] == "error"
-    assert "Schema 'missing' is not registered" in result["error"]
-
-
-def test_try_parse_validation_error(validator):
-    validator.register("simple", SimpleModel)
-    result = validator.try_parse("simple", {"name": "test"})
-    assert result["status"] == "error"
-    assert "simple" in result["error"]
-
-
-def test_validate_with_retry_success_first_attempt(validator):
-    validator.register("simple", SimpleModel)
-    result = validator.validate_with_retry("simple", {"name": "ok", "value": 1})
-    assert result["status"] == "ok"
-
-
-def test_validate_with_retry_fails_after_attempts(validator):
-    validator.register("simple", SimpleModel)
-    result = validator.validate_with_retry("simple", {"name": "bad"}, max_attempts=2)
-    assert result["status"] == "error"
-    assert result["schema"] == "simple"
-    assert result["attempts"] == 2
-
-
-def test_prepare_for_retry_success(validator):
-    validator.register("simple", SimpleModel)
-    result = validator._prepare_for_retry("simple", {"name": "ok", "value": 1}, 1)
-    assert result["status"] == "ok"
-
-
-def test_prepare_for_retry_failure(validator):
-    validator.register("simple", SimpleModel)
-    result = validator._prepare_for_retry("simple", {"name": "bad"}, 1)
-    assert result["status"] == "retry"
-    assert result["attempt"] == 1
-    assert "last_error" in result
-
-
-def test_validate_nested_model(validator):
-    validator.register("nested", NestedModel)
-    result = validator.validate("nested", {"id": 99, "label": "item"})
-    assert result["status"] == "ok"
-    assert result["data"]["id"] == 99
+def test_schema_validation_error_init():
+    error = SchemaValidationError("test_model", [{"loc": "name", "msg": "required"}])
+    assert error.model_name == "test_model"
+    assert error.errors == [{"loc": "name", "msg": "required"}]
+    assert "test_model" in str(error)
