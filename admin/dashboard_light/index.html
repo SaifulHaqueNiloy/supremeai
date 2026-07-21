@@ -1,83 +1,76 @@
 <!DOCTYPE html>
 <!-- 
-  SupremeAI 2.0 — Master Admin God-Mode Control Suite
-  ===================================================
+  SupremeAI 2.0 — Universal Master Admin God-Mode Control Suite
+  =============================================================
   বাংলা মন্তব্য: প্রজেক্টের ৭৪টি এপিআই রাউট ও কোর সার্ভিস থেকে রিয়েল ডাটা দ্বারা পরিচালিত
-  ১২টি মাস্টার অপারেশনাল ডোমেইন: ওয়াচটাওয়ার, এআই ফ্লীট, ট্রাফিক মেশ, সিকিউরিটি, ইউজার/কোটা,
-  এপিআই কি জেনারেটর, বিলিং, ইভলিউশন ইঞ্জিন, স্কিলস মার্কেটপ্লেস, সিআই/সিডি, HITL কিউ এবং নোটিশ ব্যানার।
+  ১২টি মাস্টার অপারেশনাল ডোমেইন: ওয়াচটাওয়ার, এআই ফ্লীট, ট্রাফিক মেশ, সিকিউরিটি ভল্ট, ইউজার/কোটা,
+  এপিআই কি জেনারেটর, বিলিং কস্ট ক্যাপস, ইভলিউশন ইঞ্জিন, স্কিলস মার্কেটপ্লেস, সিআই/সিডি, HITL কিউ এবং নোটিশ ব্যানার।
 -->
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SupremeAI Admin God Center — Universal Suite</title>
+  <meta name="description" content="Master Admin God-Mode Control Suite for SupremeAI 2.0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar Navigation / সাইডবার কোলাapsible গ্রুপ নেভিগেশন -->
-    <aside class="sidebar">
+  <div class="app-container" role="application" aria-label="SupremeAI Admin Dashboard">
+    <aside class="sidebar" role="navigation" aria-label="Main navigation menu">
       <div class="logo-area">
-        <span class="logo-icon">⚡</span>
+        <span class="logo-icon" aria-hidden="true">⚡</span>
         <div class="logo-text">SUPREME<span>AI</span> <small class="god-tag">GOD</small></div>
       </div>
 
       <nav class="nav-menu">
-        <!-- Group 1: Monitoring & Fleet -->
-        <div class="nav-group-header">📊 MONITORING & FLEET</div>
-        <a href="#" class="nav-item active" data-target="view-dashboard" id="navDashboard">📊 System Watchtower</a>
-        <a href="#" class="nav-item" data-target="view-aifleet" id="navAiFleet">🤖 AI Provider Fleet</a>
-        <a href="#" class="nav-item" data-target="view-traffic" id="navTraffic">🌐 Traffic & Mesh Monitor</a>
+        <div class="nav-group-header" role="separator" aria-orientation="divider">📊 MONITORING & FLEET</div>
+        <a href="#" class="nav-item active" data-target="view-dashboard" id="navDashboard" role="tab" tabindex="0" aria-current="page">📊 System Watchtower</a>
+        <a href="#" class="nav-item" data-target="view-aifleet" id="navAiFleet" role="tab" tabindex="-1">🤖 AI Provider Fleet</a>
+        <a href="#" class="nav-item" data-target="view-traffic" id="navTraffic" role="tab" tabindex="-1">🌐 Traffic & Mesh Monitor</a>
 
-        <!-- Group 2: God Mode & Security -->
-        <div class="nav-group-header">🛡️ GOD MODE & SECURITY</div>
-        <a href="#" class="nav-item" data-target="view-godmode" id="navGodMode">🛡️ Constitutional Rules</a>
-        <a href="#" class="nav-item" data-target="view-security" id="navSecurity">🔒 JIT Defense & Vault</a>
-        <a href="#" class="nav-item" data-target="view-logs" id="navLogs">📜 Audit Event Logs</a>
+        <div class="nav-group-header" role="separator" aria-orientation="divider">🛡️ GOD MODE & SECURITY</div>
+        <a href="#" class="nav-item" data-target="view-godmode" id="navGodMode" role="tab" tabindex="-1">🛡️ Constitutional Rules</a>
+        <a href="#" class="nav-item" data-target="view-security" id="navSecurity" role="tab" tabindex="-1">🔒 JIT Defense & Vault</a>
+        <a href="#" class="nav-item" data-target="view-logs" id="navLogs" role="tab" tabindex="-1">📜 Audit Event Logs</a>
 
-        <!-- Group 3: Users, Tenants & Billing -->
-        <div class="nav-group-header">👥 USERS & BILLING</div>
-        <a href="#" class="nav-item" data-target="view-users" id="navUsers">👥 Users & Quota Manager</a>
-        <a href="#" class="nav-item" data-target="view-apikeys" id="navApiKeys">🔑 API Keys Generator</a>
-        <a href="#" class="nav-item" data-target="view-billing" id="navBilling">💳 Billing & Cost Caps</a>
+        <div class="nav-group-header" role="separator" aria-orientation="divider">👥 USERS & BILLING</div>
+        <a href="#" class="nav-item" data-target="view-users" id="navUsers" role="tab" tabindex="-1">👥 Users & Quota Manager</a>
+        <a href="#" class="nav-item" data-target="view-apikeys" id="navApiKeys" role="tab" tabindex="-1">🔑 API Keys Generator</a>
+        <a href="#" class="nav-item" data-target="view-billing" id="navBilling" role="tab" tabindex="-1">💳 Billing & Cost Caps</a>
 
-        <!-- Group 4: AI Swarm & Evolution -->
-        <div class="nav-group-header">🧬 AI SWARM & EVOLUTION</div>
-        <a href="#" class="nav-item" data-target="view-evolution" id="navEvolution">🧬 Evolution Engine</a>
-        <a href="#" class="nav-item" data-target="view-marketplace" id="navMarketplace">🏬 Skill Marketplace</a>
+        <div class="nav-group-header" role="separator" aria-orientation="divider">🧬 AI SWARM & EVOLUTION</div>
+        <a href="#" class="nav-item" data-target="view-evolution" id="navEvolution" role="tab" tabindex="-1">🧬 Evolution Engine</a>
+        <a href="#" class="nav-item" data-target="view-marketplace" id="navMarketplace" role="tab" tabindex="-1">🏬 Skill Marketplace</a>
 
-        <!-- Group 5: DevOps & Interaction -->
-        <div class="nav-group-header">🛠️ DEVOPS & INTERACTION</div>
-        <a href="#" class="nav-item" data-target="view-pipelines" id="navPipelines">🚀 DevOps & CI/CD Gates</a>
-        <a href="#" class="nav-item" data-target="view-hitl" id="navHitl">🖐️ HITL Approval Queue</a>
+        <div class="nav-group-header" role="separator" aria-orientation="divider">🛠️ DEVOPS & INTERACTION</div>
+        <a href="#" class="nav-item" data-target="view-pipelines" id="navPipelines" role="tab" tabindex="-1">🚀 DevOps & CI/CD Gates</a>
+        <a href="#" class="nav-item" data-target="view-hitl" id="navHitl" role="tab" tabindex="-1">🖐️ HITL Approval Queue</a>
       </nav>
 
       <div class="sidebar-bottom">
-        <div class="env-badge" id="envBadge">Production Env</div>
+        <div class="env-badge" id="envBadge" role="status">Production Env</div>
         <div class="theme-toggle">
-          <button id="themeToggle" class="theme-btn">🌓 Dark Mode</button>
+          <button id="themeToggle" class="theme-btn" role="switch" aria-checked="false">🌓 Dark Mode</button>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content Area / প্রধান কনটেন্ট এরিয়া -->
-    <main class="main-content">
-      <!-- Topbar Header / টপবার হেডার -->
-      <header class="topbar">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input type="text" placeholder="Search metrics, users, AI keys, logs, or features..." id="searchInput" />
+    <main class="main-content" role="main" aria-label="Dashboard content">
+      <header class="topbar" role="banner">
+        <div class="search-bar" role="search">
+          <span aria-hidden="true">🔍</span>
+          <input type="text" placeholder="Search metrics, users, AI keys, logs, or features..." id="searchInput" aria-label="Search dashboard content" />
         </div>
         <div class="topbar-actions">
-          <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🌐 English</button>
-          <div class="sync-status">
-            <span class="sync-dot" id="syncDot"></span>
+          <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()" aria-label="Toggle language between English and Bengali">🌐 English</button>
+          <div class="sync-status" role="status" aria-live="polite">
+            <span class="sync-dot" id="syncDot" aria-hidden="true"></span>
             <span id="syncText">Live Sync</span>
           </div>
-          <button class="btn btn-outline" id="btnRefresh" onclick="refreshDashboardData()">↻ Refresh</button>
-          <div class="user-badge" id="userBadge">
-            <span class="user-avatar">👑</span>
+          <button class="btn btn-outline" id="btnRefresh" onclick="refreshDashboardData()" aria-label="Refresh dashboard data">↻ Refresh</button>
+          <div class="user-badge" id="userBadge" role="status" aria-label="Admin user">
+            <span class="user-avatar" aria-hidden="true">👑</span>
             <span class="user-name" id="userName">Admin</span>
           </div>
         </div>
@@ -285,7 +278,7 @@
         </div>
       </div>
 
-      <!-- 9. Billing & Cost Auditor View / বিলিং ও কস্ট ক্যাপস -->
+      <!-- 9. Billing & Cost Caps View / বিলিং ও কস্ট ক্যাপস -->
       <div id="view-billing" class="view-section hidden">
         <h2 class="page-title">💳 Billing & Cost Caps Auditor</h2>
         <p class="text-muted">Track token burn rate, Stripe subscriptions, and free-tier quota limits.</p>
