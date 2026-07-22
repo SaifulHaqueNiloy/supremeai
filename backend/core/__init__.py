@@ -6,7 +6,7 @@ SupremeAI 2.0 — Core Package.
 এতে স্টার্টআপ টাইম কমে, ইম্পোর্ট সাইকেল এড়ানো যায় এবং টেস্ট আইসোলেশন উন্নত হয়।
 
 Backward Compatibility:
-- পুরানো কোড বা টেস্ট যদি `from core import event_bus` করে, তাহলে `__getattr__` 
+- পুরানো কোড বা টেস্ট যদি `from core import event_bus` করে, তাহলে `__getattr__`
   ডাইনামিকালি সঠিক মডিউল লোড করবে (ব্যাকগ্রাউন্ড কম্প্যাটিবল)।
 - sys.modules-এ রেজিস্ট্রেশন প্রয়োজন নেই — এটি কেবল পুরানো ইম্পোর্ট প্যাটার্ন ভাঙতে পারে।
 """
@@ -52,9 +52,7 @@ def __getattr__(name: str) -> Any:
             return module
         except ImportError as exc:
             # বাংলা মন্তব্য: ইম্পোর্ট ব্যর্থ হলে AttributeError রেইজ করি — ডিবাগিং সহজ হয়
-            raise AttributeError(
-                f"Failed to lazy-import '{name}' from '{module_path}': {exc}"
-            ) from exc
+            raise AttributeError(f"Failed to lazy-import '{name}' from '{module_path}': {exc}") from exc
 
     # বাংলা মন্তব্য: পুরানো sys.modules রেজিস্ট্রেশন চেক — backward compatibility
     if name in sys.modules:

@@ -2,9 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-from fastapi import HTTPException
-
 
 class TestDashboardStream:
     """Tests for dashboard_stream and event generator."""

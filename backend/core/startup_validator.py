@@ -96,8 +96,10 @@ class StartupValidator:
             if warnings:
                 logger.warning(f"⚠️  Startup validation passed with {len(warnings)} warning(s): {'; '.join(warnings)}")
 
-            logger.info(f"✅ Startup validations passed successfully in {cls._validation_results['duration_ms']}ms. "
-                        f"API keys: {len(configured_keys)}, Warnings: {len(warnings)}")
+            logger.info(
+                f"✅ Startup validations passed successfully in {cls._validation_results['duration_ms']}ms. "
+                f"API keys: {len(configured_keys)}, Warnings: {len(warnings)}"
+            )
             cls._last_status = {"validated": True, "success": True, "error": None}
 
         except Exception as exc:
