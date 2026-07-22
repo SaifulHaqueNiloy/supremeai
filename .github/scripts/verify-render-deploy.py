@@ -37,6 +37,8 @@ POLL_INTERVAL = 30  # seconds
 TIMEOUT_LIMIT = 900  # 15 minutes (900 seconds)
 
 def check_http_health(url, label):
+    # বাংলা মন্তব্য: শুধুমাত্র নির্দিষ্ট সার্ভিসের URL চেক হবে।
+    # ভুল সার্ভিসের হেলথ দিয়ে False-positive তৈরি করা সম্পূর্ণ নিষিদ্ধ।
     health_url = f"{url.rstrip('/')}/api/v1/health"
     print(f"⏳ Verifying {label} HTTP health at {health_url}...")
     try:
@@ -45,28 +47,16 @@ def check_http_health(url, label):
             print(f"✅ {label} HTTP check passed! Status: 200 OK")
             return True
         else:
-            print(f"⚠️ {label} HTTP check returned status: {response.status_code}")
+            print(f"❌ {label} HTTP check returned non-200 status: {response.status_code}")
+            return False
     except Exception as e:
-        print(f"⚠️ {label} primary URL check failed: {e}")
-
-    # Fallback to active backend URL if backup URL is unreachable
-    fallback_url = "https://supremeai-backend.onrender.com/api/v1/health"
-    if health_url != fallback_url:
-        print(f"🔄 Checking active backend health fallback at {fallback_url}...")
-        try:
-            res_fb = requests.get(fallback_url, timeout=10)
-            if res_fb.status_code == 200:
-                print(f"✅ {label} (Active Backend Fallback) HTTP check passed! Status: 200 OK")
-                return True
-        except Exception as fb_err:
-            print(f"❌ {label} fallback HTTP check failed: {fb_err}")
-
-    return False
+        print(f"❌ {label} HTTP check failed: {e}")
+        return False
 
 def monitor_service(service):
     name = service["name"]
     service_id = service["service_id"]
-    
+
     primary_key = os.getenv("RENDER_API_KEY")
     backup_key = os.getenv("RENDER_API_KEY_BACKUP")
     candidate_keys = [k for k in [primary_key, backup_key] if k]
@@ -75,45 +65,38 @@ def monitor_service(service):
         print(f"ℹ️ No API keys configured in environment. Checking HTTP health directly for {name}.")
         return check_http_health(service["url"], name)
 
+    # বাংলা মন্তব্য: শুধুমাত্র নির্দিষ্ট service_id-র জন্য সঠিক API key খোঁজা হবে।
+    # ৪০৪ হলে অন্য service-এ remap করা হবে না — এটা False-Positive তৈরি করে।
+    # বরং সরাসরি HTTP health check-এ যাবে।
     headers = None
-    resolved_service_id = service_id
     for key in candidate_keys:
         test_headers = {
             "Authorization": f"Bearer {key}",
             "Accept": "application/json"
         }
-        deploys_url = f"https://api.render.com/v1/services/{resolved_service_id}/deploys"
+        deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
         try:
             res = requests.get(deploys_url, headers=test_headers, timeout=10)
             if res.status_code == 200:
                 headers = test_headers
+                print(f"✅ Authenticated API key found for {name} (service {service_id}).")
                 break
             elif res.status_code == 404:
-                # Discover active web services under this account key
-                svc_res = requests.get("https://api.render.com/v1/services?limit=50", headers=test_headers, timeout=10)
-                if svc_res.status_code == 200:
-                    services_list = svc_res.json()
-                    for item in services_list:
-                        svc_data = item.get("service", item) if isinstance(item, dict) else item
-                        if svc_data.get("type") == "web_service":
-                            alt_id = svc_data.get("id")
-                            if alt_id:
-                                resolved_service_id = alt_id
-                                headers = test_headers
-                                print(f"ℹ️ Mapped service target for {name} -> Active Web Service ID '{resolved_service_id}' ({svc_data.get('name')})")
-                                break
-                    if headers:
-                        break
-        except Exception:
-            pass
+                print(f"⚠️ Service {service_id} returned 404 for this API key. Key does not own this service.")
+                # বাংলা মন্তব্য: ৪০৪ মানে এই API key এই service-টির মালিক নয়।
+                # অন্য service-এ remap করা false-positive তৈরি করবে — তাই skip করা হচ্ছে।
+            elif res.status_code in (401, 403):
+                print(f"⚠️ API key unauthorized (HTTP {res.status_code}) for service {service_id}.")
+        except Exception as e:
+            print(f"⚠️ API connectivity error for {name}: {e}")
 
     if not headers:
-        print(f"⚠️ API Key authentication failed or unauthorized for {name}. Checking HTTP health directly.")
+        print(f"⚠️ No valid API key found for service {service_id} ({name}). Falling back to HTTP health check.")
         return check_http_health(service["url"], name)
 
-    print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {resolved_service_id})...")
+    print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {service_id})...")
 
-    deploys_url = f"https://api.render.com/v1/services/{resolved_service_id}/deploys"
+    deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
     try:
         res = requests.get(deploys_url, headers=headers, timeout=15)
         if res.status_code != 200:
