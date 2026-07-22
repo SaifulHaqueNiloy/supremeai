@@ -149,25 +149,7 @@ class Settings(BaseSettings):
         validation_alias="ALLOWED_HOSTS",
     )
 
-    # বাংলা মন্তব্য: JWT secret — fail-fast on missing
-    jwt_secret: str = Field(
-        default="",
-        validation_alias="SUPREMEAI_JWT_SECRET",
-    )
-
-    # বাংলা মন্তব্য: Encryption key — fail-fast on missing
-    encryption_key: SecretStr = Field(
-        default=SecretStr(""),
-        validation_alias="SUPREMEAI_ENCRYPTION_KEY",
-    )
-
-    # ── Stripe credentials — SecretStr দিয়ে log-safe ────────────────────────
-    stripe_api_key: SecretStr = Field(
-        default=SecretStr(""), validation_alias="STRIPE_API_KEY"
-    )
-    stripe_webhook_secret: SecretStr = Field(
-        default=SecretStr(""), validation_alias="STRIPE_WEBHOOK_SECRET"
-    )
+    # ── Stripe, JWT & Encryption credentials — moved to Infisical-backed lazy properties ──
 
     # ── LLM rate limit thresholds — সব env-driven, hardcode নেই ─────────────
     gemini_rpm_limit: int = Field(default=9, validation_alias="GEMINI_RPM_LIMIT")
@@ -214,9 +196,7 @@ class Settings(BaseSettings):
     admin_emails: list[str] = Field(
         default_factory=list, validation_alias="ADMIN_EMAILS"
     )
-    supremeai_admin_password_hash: str | None = Field(
-        default=None, validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH"
-    )
+
     supremeai_public_paths: list[str] = Field(
         default=[
             "/health",
@@ -472,6 +452,44 @@ class Settings(BaseSettings):
     def neo4j_password(self) -> str:
         return self._get_cached_secret("NEO4J_PASSWORD") or ""
 
+    # ── Admin Password Hash — Infisical-backed lazy property ────────────────
+    # বাংলা মন্তব্য: Infisical ভল্ট অথবা OS Environment Variable থেকে lazy-fetch করা হয়।
+    @property
+    def supremeai_admin_password_hash(self) -> str | None:
+        val = self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH")
+        if not val and "pytest" not in sys.modules and os.getenv("CI") != "true":
+            raise ValueError("supremeai_admin_password_hash must be explicitly set.")
+        return val
+
+    # ── JWT & Encryption Credentials — Infisical-backed ─────────────────────
+    @property
+    def jwt_secret(self) -> str:
+        v = self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+        if not v and self.env == "production":
+            raise ValueError(
+                "🚨 CRITICAL: SUPREMEAI_JWT_SECRET must be explicitly set in all environments. No dummy fallback allowed."
+            )
+        v = v or secrets.token_hex(64)
+        if len(v) < 64 and "pytest" not in sys.modules:
+            raise ValueError("JWT secret must be >= 64 bytes entropy in all environments.")
+        return v
+
+    @property
+    def encryption_key(self) -> SecretStr:
+        val = self._get_cached_secret("SUPREMEAI_ENCRYPTION_KEY")
+        return SecretStr(val) if val else SecretStr("")
+
+    # ── Stripe Credentials — Infisical-backed ────────────────────────────────
+    @property
+    def stripe_api_key(self) -> SecretStr:
+        val = self._get_cached_secret("STRIPE_API_KEY")
+        return SecretStr(val) if val else SecretStr("")
+
+    @property
+    def stripe_webhook_secret(self) -> SecretStr:
+        val = self._get_cached_secret("STRIPE_WEBHOOK_SECRET")
+        return SecretStr(val) if val else SecretStr("")
+
     # ── Validators ───────────────────────────────────────────────────────────
 
     @field_validator("env")
@@ -592,42 +610,7 @@ class Settings(BaseSettings):
                 ]
         return v
 
-    @field_validator("jwt_secret", mode="before")
-    @classmethod
-    def set_jwt_secret(cls, v: str | None, info: ValidationInfo) -> str:
-        env = info.data.get("env", "local")
-        if not v and env == "production":
-            raise ValueError(
-                "🚨 CRITICAL: SUPREMEAI_JWT_SECRET must be explicitly set in all environments. No dummy fallback allowed."
-            )
-        return v or secrets.token_hex(64)  # Pytest/non-production fallback
 
-    @field_validator("jwt_secret", mode="after")
-    @classmethod
-    def validate_jwt_secret_strength(cls, v: str, info: ValidationInfo) -> str:
-        if len(v) < 64 and "pytest" not in sys.modules:
-            raise ValueError(
-                "JWT secret must be >= 64 bytes entropy in all environments."
-            )
-        weak_secrets = {
-            "secret",
-            "password",
-            "123456",
-            "changeme",
-            "admin",
-            "jwt_secret",
-        }
-        if v.lower() in weak_secrets:
-            raise ValueError("JWT secret is in weak secrets dictionary — change it.")
-        return v
-
-    @field_validator("supremeai_admin_password_hash", mode="before")
-    @classmethod
-    def validate_admin_hash(cls, v: str | None, info: ValidationInfo) -> str | None:
-        # বাংলা: CI এনভায়রনমেন্টে থাকলে অথবা pytest চললে পাসওয়ার্ড হ্যাশ রিকয়ারমেন্ট বাইপাস হবে
-        if not v and "pytest" not in sys.modules and os.getenv("CI") != "true":
-            raise ValueError("supremeai_admin_password_hash must be explicitly set.")
-        return v
 
     @field_validator(
         "cors_origins", "user_cors_origins", "admin_cors_origins", mode="before"
