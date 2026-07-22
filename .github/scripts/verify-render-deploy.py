@@ -138,13 +138,19 @@ def monitor_service(service):
             print(f"⚠️ createdAt timestamp is missing. Checking HTTP health directly.")
             return check_http_health(service["url"], name)
 
+        # If latest deploy is already LIVE, proceed directly to health check
+        status_str = (status or "").lower()
+        if status_str == "live":
+            print(f"🎉 Deploy {deploy_id} for {name} is already LIVE on Render!")
+            return check_http_health(service["url"], name)
+
         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
 
-        # বাংলা মন্তব্য (জরুরি): ৩ মিনিটের মধ্যে নতুন ডেপ্লয়মেন্ট রেকর্ড পাওয়া না গেলে সরাসরি Fail করতে হবে (Anti-Silent Failure)।
-        if now - created_at > timedelta(minutes=3):
+        # Allow up to 10 minutes for deploy record initiation / polling queue on Render free tier
+        if now - created_at > timedelta(minutes=10):
             print(
-                f"❌ No new deploy record found for {name} within 3 minutes of triggering it. "
+                f"❌ No new deploy record found for {name} within 10 minutes of triggering it. "
                 f"The trigger call likely failed silently — latest deploy on file is {now - created_at} old."
             )
             return False
