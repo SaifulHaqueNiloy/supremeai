@@ -102,6 +102,48 @@ python scripts/sync_all_platforms_env.py --apply
 
 ---
 
+## 🔐 Render Account Architecture (Primary vs Backup Account Setup)
+
+SupremeAI 2.0-এর CI/CD এবং ভল্ট মেকানিজম **Single-Account Mode** এবং **Multi-Account High Availability (HA) Mode** উভয় আর্কিটেকচারকেই নির্বিঘ্নে সাপোর্ট করে।
+
+### 1. Active Account Credentials (বর্তমান প্রোডাকশন কনফিগারেশন)
+- **Account Workspace Name:** `My Workspace`
+- **Account Owner Email:** `paykaribazaronline@gmail.com`
+- **Team ID:** `tea-d747ms1aae7s73bcasu0`
+- **Active Web Service (Backend):** `supremeai-backend` (Service ID: `srv-d9d3n58js32c738n79k0`)
+- **Active Static Site (Frontend):** `supremeai-studio-client` (Service ID: `srv-d9d3pgvavr4c738a46mg`)
+
+---
+
+### 2. Single-Account vs Multi-Account Backup Behavior Summary
+
+| ফিচার / কনফিগারেশন | Single-Account Mode (বর্তমান অবস্থা) | Multi-Account (HA) Backup Mode |
+| :--- | :--- | :--- |
+| **`RENDER_API_KEY`** | Primary Render API Key | Primary Account API Key |
+| **`RENDER_API_KEY_BACKUP`** | Same as `RENDER_API_KEY` | Secondary (Backup) Account API Key |
+| **Target Web Service** | `srv-d9d3n58js32c738n79k0` | Primary: `srv-d9d3n58js32c738n79k0`, Backup: `srv-d9fg...` |
+| **CI/CD Auto-Fallback** | 404 পেয়ে স্বয়ংক্রিয়ভাবে সক্রিয় ব্যাকএন্ড টার্গেট করে শতভাগ গ্রিন পাস দেয় | দুটি ভিন্ন অ্যাকাউন্টে সমান্তরালভাবে ডেপ্লয় ও হেলথ ভেরিফাই করে |
+
+---
+
+### 3. ভবিষ্যতে আলাদা Backup Render Account সেটআপ করার নির্দেশিকা
+
+যদি ভবিষ্যতে সম্পূর্ণ ভিন্ন একটি Render অ্যাকাউন্টকে ডাবল-রেডানড্যান্সি (Backup Account) হিসেবে যুক্ত করতে চান:
+
+1. **নতুন অ্যাকাউন্টে সার্ভিস তৈরি:**  
+   দ্বিতীয় Render অ্যাকাউন্টে লগইন করে Docker/Python Service হিসেবে `supremeai-admin` নাম দিয়ে Web Service তৈরি করুন।
+2. **Backup API Key জেনারেট:**  
+   নতুন অ্যাকাউন্টের **Account Settings → API Keys** সেকশনে গিয়ে একটি নতুন API Key তৈরি করুন।
+3. **Secrets Update & Platform Sync:**  
+   লোকাল `.env` ফাইলে `RENDER_API_KEY_BACKUP`-এ নতুন কী-টি বসিয়ে সিঙ্ক্রোনাইজার রান করুন:
+   ```bash
+   python scripts/sync_all_platforms_env.py --apply
+   ```
+4. **CI Auto-Detection:**  
+   GitHub Actions workflow (`supreme-core-ci.yml`) এবং `verify-render-deploy.py` স্বয়ংক্রিয়ভাবে আলাদা অ্যাকাউন্ট শনাক্ত করে প্রাইমারি ও ব্যাকআপ উভয় সার্ভারে সমান্তরাল ডেপ্লয়মেন্ট নিশ্চিত করবে।
+
+---
+
 ## 🛠️ Quick Operational Checklist for Render Deployments
 
 1. **যেকোনো নতুন সিক্রেট যোগ করলে:**  
