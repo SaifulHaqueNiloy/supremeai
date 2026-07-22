@@ -32,6 +32,7 @@ API_KEY_RANDOM_BYTES = 32
 
 def create_access_token(data: dict) -> str:
     import uuid
+
     from core.config import settings
 
     to_encode = data.copy()
@@ -56,12 +57,15 @@ BLACKLIST_TTL = 86400  # 24 hours
 async def revoke_token(jti: str, exp: int | None = None) -> None:
     """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।"""
     import time
+
     from core.cache.redis_manager import redis_manager
 
     if redis_manager and getattr(redis_manager, "client", None):
         ttl = max(1, (exp - int(time.time())) if exp else BLACKLIST_TTL)
         try:
-            await redis_manager.client.setex(f"{BLACKLIST_PREFIX}{jti}", min(ttl, BLACKLIST_TTL), "revoked")
+            await redis_manager.client.setex(
+                f"{BLACKLIST_PREFIX}{jti}", min(ttl, BLACKLIST_TTL), "revoked"
+            )
             logger.info(f"✅ JWT Token revoked: {jti}")
         except Exception as e:
             logger.warning(f"⚠️ Failed to revoke token in Redis: {e}")
@@ -95,14 +99,21 @@ def verify_token(token: str) -> dict:
                 else:
                     revoked = loop.run_until_complete(is_token_revoked(jti))
                     if revoked:
-                        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked")
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token has been revoked",
+                        )
             except RuntimeError:
                 pass
         return payload
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired") from None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+        ) from None
     except jwt.PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials") from None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        ) from None
 
 
 def _get_api_key_signing_secret() -> str:
@@ -115,7 +126,9 @@ def _get_api_key_signing_secret() -> str:
 
 
 def generate_api_key(prefix: str = API_KEY_PREFIX) -> str:
-    random_part = secrets.token_urlsafe(API_KEY_RANDOM_BYTES).replace("-", "").replace("_", "")
+    random_part = (
+        secrets.token_urlsafe(API_KEY_RANDOM_BYTES).replace("-", "").replace("_", "")
+    )
     key = f"{prefix}-{random_part}"
     parts = key.split("-", 2)
     return f"{parts[0]}-{parts[1]}-{parts[2][:4]}-{parts[2][4:8]}-{parts[2][8:]}"
@@ -133,7 +146,9 @@ def verify_api_key(plain_key: str, stored_hash: str) -> bool:
     return hmac.compare_digest(expected, stored_hash)
 
 
-def verify_api_key_with_expiry(plain_key: str, stored_hash: str, expires_at: int | None = None) -> bool:
+def verify_api_key_with_expiry(
+    plain_key: str, stored_hash: str, expires_at: int | None = None
+) -> bool:
     """বাংলা মন্তব্য: API Key হ্যাশ ভেরিফাই করে এবং একই সাথে Expiration টাইম চেক করে।"""
     import time
 

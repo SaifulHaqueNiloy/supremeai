@@ -24,7 +24,11 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
             "_is_schema_cache_error",
             "_execute_response_with_retry",
         ):
-            return None if func.__name__.startswith("get_") or func.__name__.startswith("is_") else None
+            return (
+                None
+                if func.__name__.startswith("get_") or func.__name__.startswith("is_")
+                else None
+            )
 
         max_retries = 3
         for attempt in range(max_retries):
@@ -34,10 +38,14 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
                 # Handle schema cache error via existing logic if possible, or just retry
                 if attempt < max_retries - 1:
                     sleep_time = 2**attempt
-                    logger.warning(f"Supabase operation '{func.__name__}' failed: {e}. Retrying in {sleep_time}s...")
+                    logger.warning(
+                        f"Supabase operation '{func.__name__}' failed: {e}. Retrying in {sleep_time}s..."
+                    )
                     time.sleep(sleep_time)
                 else:
-                    logger.warning(f"Supabase operation '{func.__name__}' failed after {max_retries} retries: {e}")
+                    logger.warning(
+                        f"Supabase operation '{func.__name__}' failed after {max_retries} retries: {e}"
+                    )
                     # Return safe fallbacks based on method name prefix
                     if func.__name__.startswith("get_"):
                         return None
@@ -51,7 +59,11 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
 
 def _apply_retries_to_public_methods(cls):
     for attr_name, attr_value in vars(cls).items():
-        if callable(attr_value) and not attr_name.startswith("_") and attr_name not in ("get_bootstrap_statements", "bootstrap_schema"):
+        if (
+            callable(attr_value)
+            and not attr_name.startswith("_")
+            and attr_name not in ("get_bootstrap_statements", "bootstrap_schema")
+        ):
             setattr(cls, attr_name, _supabase_retry_decorator(attr_value))
     return cls
 
@@ -65,7 +77,8 @@ class SupabaseDB:
 
     def __init__(self):
         self.url = settings.supabase_url or self._derive_supabase_url(
-            os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL_POOLER")
+            os.environ.get("SUPABASE_DATABASE_URL")
+            or os.environ.get("SUPABASE_DATABASE_URL_POOLER")
         )
         self.key = settings.supabase_key
         self.client: Client | None = None
@@ -77,7 +90,9 @@ class SupabaseDB:
             except Exception as e:  # noqa: BLE001
                 logger.exception(f"Supabase operation error: {e}")
         else:
-            logger.warning("SUPABASE_URL or SUPABASE_KEY not found. Running in offline/mock mode.")
+            logger.warning(
+                "SUPABASE_URL or SUPABASE_KEY not found. Running in offline/mock mode."
+            )
 
     @staticmethod
     def _derive_supabase_url(database_url: str | None) -> str | None:
@@ -438,7 +453,9 @@ class SupabaseDB:
         db_url = os.getenv("SUPABASE_DATABASE_URL")
         pooler_url = os.getenv("SUPABASE_DATABASE_URL_POOLER")
         if not db_url and not pooler_url:
-            logger.error("SUPABASE_DATABASE_URL or SUPABASE_DATABASE_URL_POOLER is required for schema bootstrap.")
+            logger.error(
+                "SUPABASE_DATABASE_URL or SUPABASE_DATABASE_URL_POOLER is required for schema bootstrap."
+            )
             return
 
         statements = self.get_bootstrap_statements()
@@ -450,7 +467,9 @@ class SupabaseDB:
             tried_urls.append(candidate_url)
             try:
                 if candidate_url.startswith("sqlite"):
-                    logger.info("Skipping psycopg2 bootstrap for SQLite: %s", candidate_url)
+                    logger.info(
+                        "Skipping psycopg2 bootstrap for SQLite: %s", candidate_url
+                    )
                     continue
                 # বাংলা মন্তব্য: connect_timeout=10 দেওয়া হলো যাতে Render/Supabase SSL handshake
                 # অনির্দিষ্টকালের জন্য ব্লক না করে। 10s পরে exception raise হবে।
@@ -465,14 +484,22 @@ class SupabaseDB:
                     conn.close()
                 logger.info(
                     "Supabase schema bootstrap completed using %s.",
-                    ("SUPABASE_DATABASE_URL_POOLER" if candidate_url == pooler_url else "SUPABASE_DATABASE_URL"),
+                    (
+                        "SUPABASE_DATABASE_URL_POOLER"
+                        if candidate_url == pooler_url
+                        else "SUPABASE_DATABASE_URL"
+                    ),
                 )
                 return
             except Exception as e:  # noqa: BLE001
                 logger.exception(f"Supabase operation error: {e}")
                 logger.warning(
                     "Supabase schema bootstrap failed for %s: %s",
-                    ("SUPABASE_DATABASE_URL_POOLER" if candidate_url == pooler_url else "SUPABASE_DATABASE_URL"),
+                    (
+                        "SUPABASE_DATABASE_URL_POOLER"
+                        if candidate_url == pooler_url
+                        else "SUPABASE_DATABASE_URL"
+                    ),
                     e,
                 )
 
@@ -483,7 +510,11 @@ class SupabaseDB:
 
     def _is_schema_cache_error(self, error: Exception) -> bool:
         message = str(error) if error is not None else ""
-        return "Could not find the table" in message or "PGRST205" in message or "schema cache" in message.lower()
+        return (
+            "Could not find the table" in message
+            or "PGRST205" in message
+            or "schema cache" in message.lower()
+        )
 
     def _execute_response_with_retry(self, operation, fallback=None):
         try:
@@ -511,28 +542,43 @@ class SupabaseDB:
 
     # --- System Config ---
     def get_config(self, key: str) -> Any | None:
-        res = self.client.table("system_config").select("value").eq("key", key).execute()
+        res = (
+            self.client.table("system_config").select("value").eq("key", key).execute()
+        )
         if res.data:
             return res.data[0].get("value")
         return None
 
     def set_config(self, key: str, value: Any, category: str = "general"):
-        self.client.table("system_config").upsert({"key": key, "value": value, "category": category}).execute()
+        self.client.table("system_config").upsert(
+            {"key": key, "value": value, "category": category}
+        ).execute()
 
     # --- Feature Flags ---
     def is_feature_enabled(self, feature_name: str, user_id: str | None = None) -> bool:
-        res = self.client.table("feature_flags").select("*").eq("feature_name", feature_name).execute()
+        res = (
+            self.client.table("feature_flags")
+            .select("*")
+            .eq("feature_name", feature_name)
+            .execute()
+        )
         if res.data:
             flag = res.data[0]
             if not flag.get("enabled", False):
                 return False
-            if user_id and flag.get("allowed_users") and user_id in flag["allowed_users"]:
+            if (
+                user_id
+                and flag.get("allowed_users")
+                and user_id in flag["allowed_users"]
+            ):
                 return True
             return True
         return False
 
     # --- GitHub Repos ---
-    def add_github_repo(self, repo_name: str, owner: str, description: str = "", language: str = ""):
+    def add_github_repo(
+        self, repo_name: str, owner: str, description: str = "", language: str = ""
+    ):
         self.client.table("github_repos").upsert(
             {
                 "repo_name": repo_name,
@@ -547,7 +593,13 @@ class SupabaseDB:
         if not self.client:
             return None
         try:
-            res = self.client.table("ai_model_behavior").select("*").eq("model_name", model_name).single().execute()
+            res = (
+                self.client.table("ai_model_behavior")
+                .select("*")
+                .eq("model_name", model_name)
+                .single()
+                .execute()
+            )
             if res.data:
                 return res.data
             return None
@@ -573,7 +625,12 @@ class SupabaseDB:
         if not self.client:
             return None
         try:
-            res = self.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
+            res = (
+                self.client.table("user_preferences")
+                .select("*")
+                .eq("user_id", user_id)
+                .execute()
+            )
             if res.data:
                 return res.data[0]
             return None
@@ -595,7 +652,12 @@ class SupabaseDB:
         if not self.client:
             return []
         try:
-            res = self.client.table("system_config").select("*").eq("category", category).execute()
+            res = (
+                self.client.table("system_config")
+                .select("*")
+                .eq("category", category)
+                .execute()
+            )
             return res.data or []
         except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
@@ -629,7 +691,10 @@ class SupabaseDB:
         if not self.client:
             return []
         rows = self._execute_response_with_retry(
-            lambda: self.client.table("task_history").select("*").eq("success", False).execute(),
+            lambda: self.client.table("task_history")
+            .select("*")
+            .eq("success", False)
+            .execute(),
             fallback=[],
         )
         rows = rows or []
@@ -644,8 +709,12 @@ class SupabaseDB:
                     "last_failed": row.get("created_at"),
                 }
             groups[key]["failures"] += 1
-            groups[key]["last_failed"] = max(groups[key]["last_failed"], row.get("created_at"))
-        return [value for value in groups.values() if value["failures"] >= min_occurrences]
+            groups[key]["last_failed"] = max(
+                groups[key]["last_failed"], row.get("created_at")
+            )
+        return [
+            value for value in groups.values() if value["failures"] >= min_occurrences
+        ]
 
     def insert_skill_proposal(
         self,
@@ -717,7 +786,13 @@ class SupabaseDB:
         if not self.client:
             return []
         try:
-            res = self.client.table("evolution_logs").select("*").order("created_at", desc=True).limit(limit).execute()
+            res = (
+                self.client.table("evolution_logs")
+                .select("*")
+                .order("created_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
             return res.data or []
         except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
@@ -780,7 +855,13 @@ class SupabaseDB:
         if not self.client:
             return []
         try:
-            res = self.client.table("guardrails").select("*").eq("is_active", True).order("priority", desc=False).execute()
+            res = (
+                self.client.table("guardrails")
+                .select("*")
+                .eq("is_active", True)
+                .order("priority", desc=False)
+                .execute()
+            )
             return res.data or []
         except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
@@ -801,7 +882,13 @@ class SupabaseDB:
         if not self.client:
             return []
         try:
-            res = self.client.table("provider_configs").select("*").eq("is_active", True).order("priority", desc=False).execute()
+            res = (
+                self.client.table("provider_configs")
+                .select("*")
+                .eq("is_active", True)
+                .order("priority", desc=False)
+                .execute()
+            )
             return res.data or []
         except Exception as e:  # noqa: BLE001
             logger.exception(f"Supabase operation error: {e}")
@@ -822,7 +909,9 @@ class SupabaseDB:
                     return await loop.run_in_executor(None, func)
 
                 return async_wrapper
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
 
 db = SupabaseDB()

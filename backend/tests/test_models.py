@@ -70,7 +70,9 @@ class TestDynamicAgent:
             session.commit()
 
         with Session(engine) as session:
-            retrieved = session.query(DynamicAgent).filter_by(name="persisted-agent").first()
+            retrieved = (
+                session.query(DynamicAgent).filter_by(name="persisted-agent").first()
+            )
             assert retrieved is not None
             assert retrieved.description == "Will be saved"
             assert retrieved.execution_steps == {"action": "test"}
