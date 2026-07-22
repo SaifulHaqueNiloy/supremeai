@@ -14,6 +14,7 @@ from loguru import logger
 
 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from core.config_cache import config_cache
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 # বাংলা মন্তব্য: ক্যাশ পলিসি — এখন প্রকৃত অর্থে Database-Driven!
 # get_cache_threshold() ConfigCache থেকে value নেয়, যা SystemConfig DB টেবিলে persist করে।
@@ -87,6 +88,16 @@ class SemanticCache:
             return None
         except Exception as e:  # noqa: BLE001
             logger.error(f"⚠️ SemanticCache lookup failed: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="semantic_cache",
+                    error_type="CACHE_LOOKUP_FAILURE",
+                    message=f"SemanticCache lookup failed: {e}",
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="semantic_cache", env="production"),
+                    context={"task_type": task_type, "prompt_preview": prompt[:100] if prompt else ""},
+                )
+            )
             return None
 
     async def set(self, prompt: str, response: str, task_type: str = "general") -> None:
@@ -106,3 +117,13 @@ class SemanticCache:
             )
         except Exception as e:  # noqa: BLE001
             logger.error(f"❌ Failed to save experience pattern: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="semantic_cache",
+                    error_type="CACHE_WRITE_FAILURE",
+                    message=f"Failed to save experience pattern: {e}",
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="semantic_cache", env="production"),
+                    context={"task_type": task_type, "prompt_preview": prompt[:100] if prompt else ""},
+                )
+            )

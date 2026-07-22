@@ -1,15 +1,15 @@
-"""Tests to improve coverage for admin_dashboard routes."""
+"""Tests to improve coverage for admin_dashboard routes (17.6% -> target 60%)."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
 from api.routes.admin_dashboard import (
-    _in_memory_jwt_blacklist,
-    admin_rate_limit,
     require_admin_token,
+    admin_rate_limit,
+    _in_memory_jwt_blacklist,
 )
 
 
@@ -62,7 +62,6 @@ class TestRequireAdminToken:
                 require_admin_token(
                     HTTPAuthorizationCredentials(credentials=token, scheme="Bearer")
                 )
-
             assert exc_info.value.status_code == 401
         finally:
             _in_memory_jwt_blacklist.discard("revoked-token")
@@ -71,11 +70,8 @@ class TestRequireAdminToken:
         """Malformed token should raise 401."""
         with pytest.raises(HTTPException) as exc_info:
             require_admin_token(
-                HTTPAuthorizationCredentials(
-                    credentials="not-a-valid-token", scheme="Bearer"
-                )
+                HTTPAuthorizationCredentials(credentials="not-a-valid-token", scheme="Bearer")
             )
-
         assert exc_info.value.status_code == 401
 
     def test_fallback_api_token_auth(self):
@@ -86,13 +82,10 @@ class TestRequireAdminToken:
         if not expected:
             pytest.skip("supremeai_api_token not configured")
 
-        with patch(
-            "api.routes.admin_dashboard.jwt.decode", side_effect=Exception("bad")
-        ):
+        with patch("api.routes.admin_dashboard.jwt.decode", side_effect=Exception("bad")):
             result = require_admin_token(
                 HTTPAuthorizationCredentials(credentials=expected, scheme="Bearer")
             )
-
         assert result["role"] == "admin"
 
 
@@ -106,10 +99,7 @@ class TestAdminRateLimit:
         request = MagicMock(spec=Request)
         request.client.host = "127.0.0.1"
 
-        with patch(
-            "core.services.redis_queue",
-            new=MagicMock(configured=False),
-        ):
+        with patch("core.services.redis_queue", new=MagicMock(configured=False)):
             with patch("api.routes.admin_dashboard.logger"):
                 admin_rate_limit(request)
 
@@ -123,11 +113,9 @@ class TestAdminRateLimit:
         fake_redis = MagicMock()
         fake_redis.configured = True
         fake_redis.get.return_value = "600"
-        fake_redis.incr.return_value = 601
 
         with patch("core.services.redis_queue", fake_redis):
             with patch("api.routes.admin_dashboard.logger"):
                 with pytest.raises(HTTPException) as exc_info:
                     admin_rate_limit(request)
-
         assert exc_info.value.status_code == 429

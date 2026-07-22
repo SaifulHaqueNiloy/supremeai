@@ -235,21 +235,34 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             if response.status_code == 200 and redis_manager.client is not None:
+                # বাংলা মন্তব্য: স্ট্রিমিং ও নন-স্ট্রিমিং উভয় রেসপন্সের জন্য রোবাস্ট বডি ক্যাপচার
+                body_bytes = b""
                 if hasattr(response, "body_iterator"):
-                    response_body = [
-                        section async for section in response.body_iterator
-                    ]
-                    from starlette.responses import Response
+                    try:
+                        response_body = [
+                            section async for section in response.body_iterator
+                        ]
+                        body_bytes = b"".join(response_body)
+                    except (RuntimeError, StopAsyncIteration) as stream_err:
+                        logger.warning(
+                            f"[Idempotency] Body iterator exhausted or failed: {stream_err}"
+                        )
+                        body_bytes = b"{}"
+                elif hasattr(response, "body"):
+                    body_bytes = response.body if response.body else b"{}"
+                else:
+                    body_bytes = b"{}"
 
-                    body_bytes = b"".join(response_body)
-                    response = Response(
+                # বাংলা মন্তব্য: স্ট্রিমিং রেসপন্সের জন্য পুনরায় Response অবজেক্ট তৈরি
+                if hasattr(response, "body_iterator"):
+                    from starlette.responses import Response as StarletteResponse
+
+                    response = StarletteResponse(
                         content=body_bytes,
                         status_code=response.status_code,
                         headers=dict(response.headers),
                         media_type=response.media_type,
                     )
-                else:
-                    body_bytes = response.body if hasattr(response, "body") else b"{}"
 
                 try:
                     body_str = body_bytes.decode("utf-8")
@@ -259,6 +272,11 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     await cache_response_and_release_lock(
                         idempotency_key, cache_data, IDEMPOTENCY_TTL_SECONDS * 5
                     )
+                except (json.JSONDecodeError, UnicodeDecodeError) as parse_err:
+                    logger.warning(
+                        f"[Idempotency] Response body not JSON-serializable (non-blocking): {parse_err}"
+                    )
+                    await release_idempotency_lock(idempotency_key)
                 except Exception as cache_err:  # noqa: BLE001
                     logger.warning(
                         f"[Idempotency] Response caching failed (non-blocking): {cache_err}"
@@ -272,7 +290,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             await release_idempotency_lock(idempotency_key)
             logger.error(f"Execution failed inside Idempotency block: {str(e)}")
-            raise e
+            raise
 
 
 __all__ = [
