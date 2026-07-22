@@ -50,7 +50,11 @@
     "pnpm": ">=9.0.0"
   },
   "dependencies": {
+    "@types/ioredis": "^5.0.0",
+    "@types/node": "^26.1.1",
     "@webcontainer/api": "^1.6.4",
+    "dotenv": "^17.4.2",
+    "ioredis": "^5.11.1",
     "rollup": "^4.62.2"
   }
 }
