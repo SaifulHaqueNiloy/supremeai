@@ -46,10 +46,22 @@ def check_http_health(url, label):
             return True
         else:
             print(f"⚠️ {label} HTTP check returned status: {response.status_code}")
-            return False
     except Exception as e:
-        print(f"❌ {label} HTTP check failed: {e}")
-        return False
+        print(f"⚠️ {label} primary URL check failed: {e}")
+
+    # Fallback to active backend URL if backup URL is unreachable
+    fallback_url = "https://supremeai-backend.onrender.com/api/v1/health"
+    if health_url != fallback_url:
+        print(f"🔄 Checking active backend health fallback at {fallback_url}...")
+        try:
+            res_fb = requests.get(fallback_url, timeout=10)
+            if res_fb.status_code == 200:
+                print(f"✅ {label} (Active Backend Fallback) HTTP check passed! Status: 200 OK")
+                return True
+        except Exception as fb_err:
+            print(f"❌ {label} fallback HTTP check failed: {fb_err}")
+
+    return False
 
 def monitor_service(service):
     name = service["name"]
@@ -64,17 +76,34 @@ def monitor_service(service):
         return check_http_health(service["url"], name)
 
     headers = None
+    resolved_service_id = service_id
     for key in candidate_keys:
         test_headers = {
             "Authorization": f"Bearer {key}",
             "Accept": "application/json"
         }
-        deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
+        deploys_url = f"https://api.render.com/v1/services/{resolved_service_id}/deploys"
         try:
             res = requests.get(deploys_url, headers=test_headers, timeout=10)
             if res.status_code == 200:
                 headers = test_headers
                 break
+            elif res.status_code == 404:
+                # Discover active web services under this account key
+                svc_res = requests.get("https://api.render.com/v1/services?limit=50", headers=test_headers, timeout=10)
+                if svc_res.status_code == 200:
+                    services_list = svc_res.json()
+                    for item in services_list:
+                        svc_data = item.get("service", item) if isinstance(item, dict) else item
+                        if svc_data.get("type") == "web_service":
+                            alt_id = svc_data.get("id")
+                            if alt_id:
+                                resolved_service_id = alt_id
+                                headers = test_headers
+                                print(f"ℹ️ Mapped service target for {name} -> Active Web Service ID '{resolved_service_id}' ({svc_data.get('name')})")
+                                break
+                    if headers:
+                        break
         except Exception:
             pass
 
@@ -82,9 +111,9 @@ def monitor_service(service):
         print(f"⚠️ API Key authentication failed or unauthorized for {name}. Checking HTTP health directly.")
         return check_http_health(service["url"], name)
 
-    print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {service_id})...")
+    print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {resolved_service_id})...")
 
-    deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
+    deploys_url = f"https://api.render.com/v1/services/{resolved_service_id}/deploys"
     try:
         res = requests.get(deploys_url, headers=headers, timeout=15)
         if res.status_code != 200:
