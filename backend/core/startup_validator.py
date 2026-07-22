@@ -43,7 +43,9 @@ class StartupValidator:
             if not settings.jwt_secret:
                 errors.append("JWT_SECRET is missing — authentication will fail-closed")
 
-            cls._validation_results["encryption_key"] = bool(settings.encryption_key and settings.encryption_key.get_secret_value())
+            cls._validation_results["encryption_key"] = bool(
+                settings.encryption_key and settings.encryption_key.get_secret_value()
+            )
             if not cls._validation_results["encryption_key"]:
                 warnings.append("ENCRYPTION_KEY is missing — BYOC router will not load")
 
@@ -63,14 +65,22 @@ class StartupValidator:
                 warnings.append("No LLM API keys configured — LLM gateway will fail")
 
             # 4. Database URL validation
-            cls._validation_results["database_url"] = bool(settings.supabase_database_url)
+            cls._validation_results["database_url"] = bool(
+                settings.supabase_database_url
+            )
             if not settings.supabase_database_url:
-                warnings.append("SUPABASE_DATABASE_URL is missing — DB-dependent features disabled")
+                warnings.append(
+                    "SUPABASE_DATABASE_URL is missing — DB-dependent features disabled"
+                )
 
             # 5. Redis URL validation
-            cls._validation_results["redis_url"] = bool(settings.redis_url or os.getenv("REDIS_URL"))
+            cls._validation_results["redis_url"] = bool(
+                settings.redis_url or os.getenv("REDIS_URL")
+            )
             if not cls._validation_results["redis_url"]:
-                warnings.append("REDIS_URL is missing — caching and rate limiting will use in-memory fallback")
+                warnings.append(
+                    "REDIS_URL is missing — caching and rate limiting will use in-memory fallback"
+                )
 
             # 6. CORS validation for production
             if settings.env == "production":
@@ -78,23 +88,37 @@ class StartupValidator:
                 if not settings.cors_origins:
                     errors.append("CORS_ORIGINS cannot be empty in production")
                 if "*" in settings.cors_origins:
-                    errors.append("Wildcard '*' is strictly prohibited in production CORS")
+                    errors.append(
+                        "Wildcard '*' is strictly prohibited in production CORS"
+                    )
 
             # Store results
             cls._validation_results["errors"] = errors
             cls._validation_results["warnings"] = warnings
-            cls._validation_results["duration_ms"] = round((time.monotonic() - cls._start_time) * 1000, 2)
+            cls._validation_results["duration_ms"] = round(
+                (time.monotonic() - cls._start_time) * 1000, 2
+            )
 
             if errors:
                 error_msg = "; ".join(errors)
-                logger.error(f"❌ Startup validation failed with {len(errors)} error(s): {error_msg}")
+                logger.error(
+                    f"❌ Startup validation failed with {len(errors)} error(s): {error_msg}"
+                )
                 if warnings:
-                    logger.warning(f"⚠️  Additionally, {len(warnings)} warning(s): {'; '.join(warnings)}")
-                cls._last_status = {"validated": True, "success": False, "error": error_msg}
+                    logger.warning(
+                        f"⚠️  Additionally, {len(warnings)} warning(s): {'; '.join(warnings)}"
+                    )
+                cls._last_status = {
+                    "validated": True,
+                    "success": False,
+                    "error": error_msg,
+                }
                 raise ValueError(error_msg)
 
             if warnings:
-                logger.warning(f"⚠️  Startup validation passed with {len(warnings)} warning(s): {'; '.join(warnings)}")
+                logger.warning(
+                    f"⚠️  Startup validation passed with {len(warnings)} warning(s): {'; '.join(warnings)}"
+                )
 
             logger.info(
                 f"✅ Startup validations passed successfully in {cls._validation_results['duration_ms']}ms. "
@@ -105,7 +129,11 @@ class StartupValidator:
         except Exception as exc:
             if not errors:
                 logger.error(f"❌ Startup validation failed: {exc}")
-                cls._last_status = {"validated": True, "success": False, "error": str(exc)}
+                cls._last_status = {
+                    "validated": True,
+                    "success": False,
+                    "error": str(exc),
+                }
             raise exc
 
     @classmethod
@@ -123,7 +151,9 @@ class StartupValidator:
             "validated": cls._last_status.get("validated", False),
             "success": cls._last_status.get("success", False),
             "duration_ms": cls._validation_results.get("duration_ms", 0),
-            "api_keys_configured": cls._validation_results.get("api_keys_configured", 0),
+            "api_keys_configured": cls._validation_results.get(
+                "api_keys_configured", 0
+            ),
             "warnings": cls._validation_results.get("warnings", []),
             "errors": cls._validation_results.get("errors", []),
         }

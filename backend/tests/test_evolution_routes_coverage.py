@@ -21,10 +21,14 @@ class TestQuarantineSkill:
         fake_fitness = MagicMock()
         fake_fitness.registry = fake_registry
 
-        with patch("api.routes.evolution.get_fitness_engine", return_value=fake_fitness):
+        with patch(
+            "api.routes.evolution.get_fitness_engine", return_value=fake_fitness
+        ):
             with patch("api.routes.evolution.time"):
                 with patch("api.routes.evolution.datetime") as mock_dt:
-                    mock_dt.now.return_value.isoformat.return_value = "2026-01-01T00:00:00"
+                    mock_dt.now.return_value.isoformat.return_value = (
+                        "2026-01-01T00:00:00"
+                    )
                     response = quarantine_skill(payload=payload, admin=mock_admin)
 
         assert response["status"] == "quarantined"
@@ -41,7 +45,9 @@ class TestQuarantineSkill:
         fake_fitness = MagicMock()
         fake_fitness.registry = fake_registry
 
-        with patch("api.routes.evolution.get_fitness_engine", return_value=fake_fitness):
+        with patch(
+            "api.routes.evolution.get_fitness_engine", return_value=fake_fitness
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 quarantine_skill(payload=payload, admin=mock_admin)
 

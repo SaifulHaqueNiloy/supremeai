@@ -109,7 +109,9 @@ class TestJITOTPFlow:
             patch("core.otp_router.settings") as mock_settings,
             patch("httpx.AsyncClient") as mock_client,
         ):
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
             mock_response = MagicMock()
             mock_response.status_code = 204
             mock_client.return_value.__aenter__ = AsyncMock()
@@ -164,7 +166,9 @@ class TestJITOTPFlow:
             ),
             patch("core.otp_router.redis_manager", None),
         ):
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
             # Use set_active_channel to override channel instead of channel_override
             await set_active_channel("admin-123", CHANNEL_TELEGRAM)
             result = await send_otp("admin-123", "123456", {})
@@ -180,12 +184,16 @@ class TestJITOTPFlow:
                 new_callable=AsyncMock,
                 return_value=False,
             ),
-            patch("core.otp_router._send_email", new_callable=AsyncMock, return_value=True),
+            patch(
+                "core.otp_router._send_email", new_callable=AsyncMock, return_value=True
+            ),
             patch("core.otp_router.redis_manager", None),
         ):
             mock_api_key = MagicMock()
             mock_api_key.get_secret_value = MagicMock(return_value="test-key")
-            mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
+            mock_settings.discord_otp_webhook_url = MagicMock(
+                get_secret_value=MagicMock(return_value="https://discord.webhook")
+            )
             mock_settings.resend_api_key = mock_api_key
             mock_settings.admin_notification_email = "admin@example.com"
             result = await send_otp("admin-123", "123456", {})

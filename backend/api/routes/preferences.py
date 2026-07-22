@@ -33,7 +33,12 @@ async def get_preferences(user_id: str = Query(default="default")):
             "custom_shortcuts": {},
         }
     try:
-        res = db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
+        res = (
+            db.client.table("user_preferences")
+            .select("*")
+            .eq("user_id", user_id)
+            .execute()
+        )
         rows = res.data or []
         if rows:
             return rows[0]
@@ -50,7 +55,9 @@ async def get_preferences(user_id: str = Query(default="default")):
 
 
 @router.post("/")
-async def upsert_preferences(user_id: str = Query(default="default"), payload: PreferenceUpdate = ...):
+async def upsert_preferences(
+    user_id: str = Query(default="default"), payload: PreferenceUpdate = ...
+):
     if not db.client:
         # For offline/local mode, still broadcast the theme
         if payload.theme:

@@ -47,7 +47,9 @@ class FakePool:
 
 
 # Ensure `core.app` is reloaded fresh in test runs (avoid cached app state)
-for _mod in [m for m in list(sys.modules) if m == "core.app" or m.startswith("core.app.")]:
+for _mod in [
+    m for m in list(sys.modules) if m == "core.app" or m.startswith("core.app.")
+]:
     del sys.modules[_mod]
 
 from api.routes.api_keys import router
@@ -145,7 +147,9 @@ class TestRateLimiter:
     @pytest.fixture(autouse=True)
     def patch_redis(self):
         fake_redis = FakeRedisClient()
-        with patch("core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis):
+        with patch(
+            "core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis
+        ):
             yield
 
     @pytest.mark.asyncio
