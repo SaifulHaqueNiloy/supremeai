@@ -10,10 +10,12 @@
 // 1. CONFIGURATION & INTERNATIONALIZATION (I18N)
 // ════════════════════════════════════════════════════════════
 const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '8000';
+// বাংলা মন্তব্য: Firebase Hosting (web.app)-এ হোস্ট করা অবস্থায় relative URL ('') ব্যবহার করা হয়,
+// যা firebase.json rewrites-এর মাধ্যমে অনায়াসে Render Admin backend-এ প্রক্সি হয়ে যায়।
 const CONFIG = {
   REPO: 'paykaribazaronline/supremeai',
   BRANCH: 'main',
-  API_BASE: isLocalHost ? (window.location.origin.includes('8000') ? '' : 'http://127.0.0.1:8000') : 'https://supremeai-backend.onrender.com',
+  API_BASE: isLocalHost ? (window.location.origin.includes('8000') ? '' : 'http://127.0.0.1:8000') : (window.location.hostname.includes('web.app') || window.location.hostname.includes('firebaseapp.com') ? '' : 'https://supremeai-admin.onrender.com'),
   POLL_INTERVAL: 10000,
   AUTH_TOKEN_KEY: 'supremeai_admin_token',
   THEME_KEY: 'supremeai_theme',
