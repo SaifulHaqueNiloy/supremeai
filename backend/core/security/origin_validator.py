@@ -51,17 +51,17 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             )
 
         # বাংলা মন্তব্য: হোস্ট হেডার ভ্যালিডেশন
-        host = request.headers.get("Host")
+        host_header = request.headers.get("Host")
         is_allowed = True
-        if host:
+        if host_header:
             allowed_hosts = set(settings.allowed_hosts)
-            is_allowed = host in allowed_hosts or any(
-                host.endswith("." + h) for h in allowed_hosts
+            is_allowed = host_header in allowed_hosts or any(
+                host_header.endswith("." + h) for h in allowed_hosts
             )
 
-        if host and not is_allowed:
+        if host_header and not is_allowed:
             logger.critical(
-                f"🚨 Security Intrusion: Host Header Tampering Detected -> {host}"
+                f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}"
             )
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,

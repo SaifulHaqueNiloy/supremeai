@@ -23,10 +23,14 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from loguru import logger
 
+from api.errors import ErrorResponse, api_error_handler
 from api.middleware import (
     ChaosInjectorMiddleware,
+    IdempotencyMiddleware,
+    RequestIdMiddleware,
     ResponseStandardizationMiddleware,
     SupremeContextMiddleware,
+    TenantExtractionMiddleware,
 )
 from core import lifespan, services
 from core.config import settings
@@ -122,43 +126,56 @@ def supremeai_dynamic_rate_evaluator(request: Request) -> str:
     return f"user:{client_ip}"
 
 
-# slowapi টেস্টে মক করা হলেও RateLimitExceeded যেন সত্যিকারের Exception ক্লাস থাকে
-try:
-    from slowapi import Limiter
-    from slowapi import _rate_limit_exceeded_handler as _slowapi_rate_limit_handler
-    from slowapi.errors import RateLimitExceeded as _SlowAPIRateLimitExceeded
-    from slowapi.util import get_remote_address as _slowapi_get_remote_address
+# বাংলা মন্তব্য: নেটিভ রেডিস স্লাইডিং-উইন্ডো রেট লিমিটার — slowapi প্রতিস্থাপন।
+# জিরো-কস্ট কমপ্লায়েন্স: কোনো পেইড থার্ড-পার্টি গেটওয়ে নয়, সরাসরি Upstash Redis।
+class RateLimitExceeded(Exception):
+    """Rate limit exceeded — ক্লায়েন্টকে 429 রিটার্ন করতে।"""
 
-    if not isinstance(_SlowAPIRateLimitExceeded, type) or not issubclass(
-        _SlowAPIRateLimitExceeded, Exception
-    ):
 
-        class RateLimitExceeded(Exception):  # type: ignore[no-redef]
-            """Fallback RateLimitExceeded for test environments where slowapi is mocked."""
+async def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
-        def _rate_limit_exceeded_handler(request: Any, exc: Any) -> JSONResponse:  # type: ignore[misc]
-            return JSONResponse(
-                status_code=429, content={"detail": "Rate limit exceeded"}
+
+async def check_native_rate_limit(
+    request: Request,
+    max_requests: int = 60,
+    window_seconds: int = 60,
+) -> bool:
+    """বাংলা মন্তব্য: Redis sorted set ব্যবহার করে অ্যাটমিক স্লাইডিং-উইন্ডো রেট লিমিট চেক।
+    Redis ডাউন থাকলে fail-open — রিকোয়েস্ট ব্লক না করে গ্রেসফুলি পার করতে দেয়।
+    """
+    from core.cache.redis_manager import redis_manager
+
+    if not redis_manager.client:
+        logger.warning("Rate limit check skipped — Redis unavailable (fail-open)")
+        return True
+
+    import time
+
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    key = f"ratelimit:{client_ip}"
+    now = time.time()
+    window_start = now - window_seconds
+
+    try:
+        pipe = redis_manager.client.pipeline()
+        pipe.zremrangebyscore(key, 0, window_start)
+        pipe.zcard(key)
+        pipe.expire(key, window_seconds)
+        _, count, _ = await pipe.execute()
+
+        if count >= max_requests:
+            raise RateLimitExceeded(
+                f"Rate limit exceeded for {client_ip}: {count} requests in {window_seconds}s"
             )
 
-        def get_remote_address(request: Any) -> str:  # type: ignore[misc]
-            return request.client.host if request.client else "127.0.0.1"
-
-        limiter = None
-    else:
-        RateLimitExceeded = _SlowAPIRateLimitExceeded  # type: ignore[misc,assignment]
-        _rate_limit_exceeded_handler = _slowapi_rate_limit_handler
-        get_remote_address = _slowapi_get_remote_address
-        limiter = Limiter(key_func=get_remote_address)
-except Exception:  # noqa: BLE001
-
-    class RateLimitExceeded(Exception):  # type: ignore[no-redef]
-        """Fallback RateLimitExceeded for test environments."""
-
-    def _rate_limit_exceeded_handler(request: Any, exc: Any) -> JSONResponse:  # type: ignore[misc]
-        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
-
-    limiter = None
+        await redis_manager.client.zadd(key, {str(now): now})
+        return True
+    except RateLimitExceeded:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Rate limit check failed: {exc} — fail-open")
+        return True
 
 
 def build_app_shell(
@@ -216,6 +233,8 @@ def build_app_shell(
     # বাংলা মন্তব্য: রিকোয়েস্ট ট্রেসিংয়ের সুবিধার্থে কোরিলেশন আইডি জেনারেট করার মিডলওয়্যার যোগ করা হলো।
     fastapi_app.add_middleware(RequestContextMiddleware)
     fastapi_app.add_middleware(SupremeContextMiddleware)
+    fastapi_app.add_middleware(RequestIdMiddleware)
+    fastapi_app.add_middleware(TenantExtractionMiddleware)
     fastapi_app.add_middleware(TrustedOriginMiddleware)
     fastapi_app.add_middleware(ChaosInjectorMiddleware)
     fastapi_app.add_middleware(ObservabilityMiddleware)
@@ -223,45 +242,18 @@ def build_app_shell(
 
     fastapi_app.add_middleware(AuthMiddleware)
     fastapi_app.add_middleware(APIKeyAuthMiddleware)
+    fastapi_app.add_middleware(IdempotencyMiddleware)
     fastapi_app.add_middleware(ResponseStandardizationMiddleware)
     fastapi_app.add_middleware(AutonoGuardMiddleware)
 
     # বাংলা মন্তব্য: সবার শেষে GZipMiddleware যোগ করা হলো bandwidth কমাতে।
     fastapi_app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-    fastapi_app.state.limiter = limiter
 
-    @fastapi_app.exception_handler(HTTPException)
-    async def custom_http_exception_handler(
-        request: Request, exc: HTTPException
-    ) -> JSONResponse:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "title": "Task Execution Failed",
-                "detail": exc.detail,
-                "instance": request.url.path,
-            },
-        )
-
-    @fastapi_app.exception_handler(Exception)
-    async def global_exception_handler(
-        request: Request, exc: Exception
-    ) -> JSONResponse:
-        # বাংলা মন্তব্য: এরর ট্র্যাকিং ও ফিঙ্গারপ্রিন্টিং সিস্টেম ইন্টিগ্রেশন।
-        failure = await ReliabilityController.register_failure(request, exc)
-        logger.error(
-            f"Unhandled Exception on {request.url.path}: {exc} [Correlation ID: {failure.correlation_id}, Fingerprint: {failure.fingerprint}]"
-        )
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "title": "Internal Server Error",
-                "detail": "An unexpected error occurred. This has been logged.",
-                "instance": request.url.path,
-                "correlation_id": failure.correlation_id,
-            },
-        )
+    # বাংলা মন্তব্য: api/errors.py-তে সংজ্ঞায়িত api_error_handler রেজিস্টার করা হলো
+    # যাতে ErrorResponse schema টি globally এনফোর্স করা যায় এবং ডুপ্লিকেট হ্যান্ডলার অপসারণ করা হয়।
+    fastapi_app.add_exception_handler(Exception, api_error_handler)
+    fastapi_app.add_exception_handler(HTTPException, api_error_handler)
 
     if isinstance(RateLimitExceeded, type) and issubclass(RateLimitExceeded, Exception):
         fastapi_app.add_exception_handler(

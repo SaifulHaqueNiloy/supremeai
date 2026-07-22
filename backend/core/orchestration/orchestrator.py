@@ -52,21 +52,50 @@ class Orchestrator:
         # Add budget guardian task
         async def _run_budget_guardian() -> None:
             try:
-                # Still need to add to sys.path safely if running from backend root
-                script_dir = os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), "../../../")
-                )
-                if script_dir not in sys.path:
-                    sys.path.append(script_dir)
+                # বাংলা মন্তব্য: sys.path ম্যানিপুলেশন সম্পূর্ণ নিষিদ্ধ।
+                # importlib.metadata + __import__ দিয়ে ডিরেক্টরি রেজোলভ করা হয়নি
+                # কারণ auto_budget_guardian স্ক্রিপ্টটি একটি CLI টুল, মডিউল নয়।
+                # তাই clean pattern: subprocess দিয়ে execute করা হচ্ছে।
+                import subprocess
+                import sys
 
-                from scripts.orchestrator.auto_budget_guardian import (
-                    run_budget_guardian_check,
+                script_path = os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "../../../scripts/orchestrator/auto_budget_guardian.py",
+                    )
                 )
+                if not os.path.exists(script_path):
+                    logger.warning(
+                        f"[Orchestrator] Budget guardian script not found at {script_path}. Skipping."
+                    )
+                    return
 
-                await asyncio.to_thread(run_budget_guardian_check)
+                result = subprocess.run(
+                    [sys.executable, script_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+                if result.returncode != 0:
+                    logger.error(
+                        f"[Orchestrator] Budget guardian failed (exit={result.returncode}): {result.stderr[:500]}"
+                    )
+                    raise RuntimeError(
+                        f"Budget Guardian exited with code {result.returncode}. "
+                        "Halting orchestrator to prevent financial bleed."
+                    )
+                logger.info(f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}")
+            except subprocess.TimeoutExpired:
+                logger.critical(
+                    "[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed."
+                )
+                raise RuntimeError(
+                    "Budget guardian timed out. Halting orchestrator to prevent financial bleed."
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.critical(
-                    f"🔥 CRITICAL: Budget guardian failed to load or execute! Enforcing Fail-Closed. Error: {exc}"
+                    f"🔥 CRITICAL: Budget guardian failed! Error: {exc}"
                 )
                 raise RuntimeError(
                     "Budget Guardian failure. Halting orchestrator to prevent financial bleed."
