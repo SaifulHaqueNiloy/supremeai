@@ -12,33 +12,61 @@ from core.logging_config import logger
 class TrustedOriginMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
-        self.allowed_origins = set(settings.cors_origins)
+        self._default_origins = {
+            "https://supremeai-admin.web.app",
+            "https://supremeai-backend.onrender.com",
+            "https://supremeai-admin.onrender.com",
+            "https://supremeai-studio-client.onrender.com",
+            "https://supremeai-studio.vercel.app",
+            "https://supremeai-lac.vercel.app",
+        }
+
+    @property
+    def allowed_origins(self) -> set[str]:
+        configured = set(settings.cors_origins) if settings.cors_origins else set()
+        return configured.union(self._default_origins)
 
     async def dispatch(self, request: Request, call_next):
         import os
 
         host = request.headers.get("host", "").split(":")[0]
         env = os.getenv("ENV", "development").lower()
+        origin = request.headers.get("Origin")
+        allowed = self.allowed_origins
+
+        # বাংলা মন্তব্য: OPTIONS preflight রিকোয়েস্ট সরাসরি 200 OK রেসপন্স ও CORS হেডার ফেরত পাঠাবে
+        if request.method == "OPTIONS":
+            if not origin or origin in allowed:
+                headers = {
+                    "Access-Control-Allow-Origin": origin or "*",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-API-Key, Accept, Origin",
+                }
+                return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "ok"}, headers=headers)
 
         # টেস্ট এনভায়রনমেন্ট এবং টেস্টসার্ভার রিকোয়েস্টকে গেটওয়ে পাসের অনুমতি দেওয়া হলো
         if env == "test" or host in ["testserver", "localhost", "127.0.0.1"]:
-            return await call_next(request)
+            response = await call_next(request)
+            if origin:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            return response
 
         # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
-        # এটি নিশ্চিত করে যে Render-এর হেলথ চেক পোলার ALLOWED_HOSTS মিসকনফিগারেশনের
-        # কারণে ব্লক না হয়ে সবসময় 200 OK পায় এবং ডিপ্লয় সফল হয়।
         public_paths = settings.supremeai_public_paths
         if any(
             request.url.path == p or request.url.path.startswith(p)
             for p in public_paths
         ):
-            return await call_next(request)
-
-        # বাংলা মন্তব্য: এপিআই রিকোয়েস্টের Origin এবং Host হেডার রিড করা হচ্ছে।
-        origin = request.headers.get("Origin")
+            response = await call_next(request)
+            if origin and origin in allowed:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            return response
 
         # যদি রিকোয়েস্টে অরিজিন হেডার থাকে (যেমন ব্রাউজার বেসড রিকোয়েস্ট), তবে সেটি হোয়াইটলিস্টে থাকতে হবে
-        if origin and origin not in self.allowed_origins:
+        if origin and origin not in allowed:
             client_ip = request.client.host if request.client else "unknown"
             logger.critical(
                 f"🔥 CSRF ALERT: Unauthorized Origin Access Blocked! Malicious Origin: {origin} from IP: {client_ip}"
@@ -72,14 +100,14 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # জিরো-গ্যাপ CORS হেডার ইনজেকশন (ওয়াইল্ডকার্ড মুক্ত)
-        if origin and origin in self.allowed_origins:
+        if origin and origin in allowed:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = (
-                "GET, POST, PUT, DELETE, OPTIONS"
+                "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
             )
             response.headers["Access-Control-Allow-Headers"] = (
-                "Content-Type, Authorization, X-Requested-With"
+                "Content-Type, Authorization, X-Requested-With, X-API-Key, Accept, Origin"
             )
 
         return response
