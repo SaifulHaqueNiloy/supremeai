@@ -62,17 +62,47 @@
 
 ---
 
+### 🚨 B-05: CI False-Positive Pass — Admin Backend Never Actually Deployed ⚠️ NEW
+- **Symptom:** CI shows `Admin Backend: SUCCESS / HEALTHY` but Render Dashboard shows `supremeai-admin` last deploy was **before** the CI run. New code never reached admin backend.
+- **Root Cause (রুট কজ):** তিনটি চেইনড বাগ একসাথে কাজ করছিল:
+  1. `verify-render-deploy.py`-তে 404 হলে admin service-কে primary service-এ remap করে health check করছিল।
+  2. Admin URL fail হলে `supremeai-backend.onrender.com`-এর health নিয়ে success দেখাচ্ছিল।
+  3. `supreme-core-ci.yml`-এ 404 হলে admin deploy-ও primary service-এ ট্রিগার করছিল।
+- **CI Log প্রমাণ (Commit `782064b882`):**
+  ```
+  🗺️ Mapped service target for Admin Backend (Backup)
+     -> Active Service ID 'srv-d9d3n58js32c738n79k0' (supremeai-backend)
+  ```
+- **Implemented Fix (Commit `5412e0226a`):**
+  - `verify-render-deploy.py`: 404 হলে remap নিষিদ্ধ — শুধু নির্দিষ্ট service URL-এ health check।
+  - `supreme-core-ci.yml`: 404 হলে `exit 1` ও স্পষ্ট error message।
+  - `RENDER_DEPLOY_HOOK_URL_BACKUP` GitHub Secret-এ Render Deploy Hook URL সেট করা হয়েছে।
+
+---
+
+### 🚨 B-06: Firebase Hosting Missing Proxy Rewrites for Admin API Paths
+- **Symptom:** `supremeai-admin.web.app` থেকে `/admin-api/metrics` বা `/api/v1/health` ফেচ করলে `404 Not Found`।
+- **Root Cause:** `firebase.json`-এ শুধু `/api/**` rewrite ছিল, `/admin-api/**` এবং `/api/v1/**` পাথের জন্য proxy rule ছিল না।
+- **Implemented Fix:**
+  ```json
+  { "source": "/admin-api/**", "destination": "https://supremeai-admin.onrender.com/admin-api/**" },
+  { "source": "/api/v1/**",    "destination": "https://supremeai-admin.onrender.com/api/v1/**" }
+  ```
+  `admin/dashboard_light/script.js`-এ `API_BASE` ডায়নামিক করা হয়েছে যাতে `web.app`-এ `''` ব্যবহার হয়।
+
+---
+
 ## 🎨 Part 2: Frontend Critical Error Patterns & Solutions
 
 ### 🚨 F-01: Admin Portal Backend API Host Disconnection
-- **Symptom (লক্ষণ):** `https://supremeai-admin.web.app`-এ প্রবেশ করলে `Failed to fetch backend metrics` অথবা `NetworkError` প্রদর্শিত হওয়া।
-- **Root Cause (রুট কজ):** ফ্রন্টএন্ড ক্লায়েন্টে এনভায়রনমেন্ট ভেরিয়েবল `VITE_BACKEND_URL` মিসিং থাকা বা ভুল পোর্টে পয়েন্ট করা।
-- **Implemented Fix (সমাধান):** ফ্রন্টএন্ডে প্রাইমারি সার্ভিস (`https://supremeai-backend.onrender.com`) এবং ব্যাকআপ সার্ভিস (`https://supremeai-admin.onrender.com`) এর মধ্যে ডায়নামিক এপিআই ফলব্যাক কনফিগার করা হয়েছে।
+- **Symptom (লক্ষণ):** `https://supremeai-admin.web.app`-এ প্রবেশ করলে `Failed to fetch backend metrics` অথবা `NetworkError` প্রদর্শিত হওয়া।
+- **Root Cause (রুট কজ):** ফ্রন্টএন্ড ক্লায়েন্টে এনভায়রনমেন্ট ভেরিয়েবল `VITE_BACKEND_URL` মিসিং থাকা বা ভুল পোর্টে পয়েন্ট করা।
+- **Implemented Fix (সমাধান):** ফ্রন্টএন্ডে প্রাইমারি সার্ভিস (`https://supremeai-backend.onrender.com`) এবং ব্যাকআপ সার্ভিস (`https://supremeai-admin.onrender.com`) এর মধ্যে ডায়নামিক এপিআই ফলব্যাক কনফিগার করা হয়েছে।
 
 ---
 
 ### 🚨 F-02: Multi-Platform Secret Desynchronization
-- **Symptom (লক্ষণ):** ফ্রন্টএন্ড বা ক্লাউড সার্ভিসে এনভায়রনমেন্ট চেঞ্জের পর পুরনো সিক্রেট নিয়ে প্রসেস চলা।
+- **Symptom (লক্ষণ):** ফ্রন্টএন্ড বা ক্লাউড সার্ভিসে এনভায়রনমেন্ট চেঞ্জের পর পুরনো সিক্রেট নিয়ে প্রসেস চলা।
 - **Implemented Fix (সমাধান):** সেন্ট্রালাইজড সিঙ্ক্রোনাইজার রান করা:
   ```bash
   python scripts/sync_all_platforms_env.py --apply
@@ -93,11 +123,17 @@ python .github/scripts/verify-render-deploy.py
 python scripts/sync_all_platforms_env.py --apply
 ```
 
-### 3. API Health Endpoints Direct Ping
+### 3. Manual Admin Backend Deploy via Webhook
+```bash
+curl -X POST "https://api.render.com/deploy/srv-d9fg48bh523c73f63bb0?key=woFdSrErY2Y"
+```
+
+### 4. API Health Endpoints Direct Ping
 - **Primary Backend:** `https://supremeai-backend.onrender.com/api/v1/health`
 - **Admin Backend:** `https://supremeai-admin.onrender.com/api/v1/health`
 - **Admin Portal UI:** `https://supremeai-admin.web.app`
 
 ---
 
-*SupremeAI 2.0 — Production Architecture & Engineering Guide*
+*SupremeAI 2.0 — Production Architecture & Engineering Guide*  
+*Last Updated: 2026-07-23 | Commits: `782064b8`, `5412e022`, `f209ffde`*
