@@ -71,42 +71,62 @@
 
 ---
 
-## Phase 4: Database & Persistence Layer
+## Phase 4: Database & Persistence Layer ✅ COMPLETED
 
 ### Audit Checklist
-- [ ] **Connection Pooling**: Verify PgBouncer/asyncpg pool settings
-- [ ] **Migration System**: Check Alembic migration chain
-- [ ] **Write-Behind Cache**: Audit flush logic and crash recovery
-- [ ] **Firestore Integration**: Verify admin SDK initialization
-- [ ] **Supabase Schema**: Check bootstrap and migration scripts
-- [ ] **Data Validation**: Verify Pydantic schemas for all DB operations
+- [x] **Connection Pooling**: Role-based pool sizing (Admin max 3, User max 15), `pool_pre_ping=True`, `statement_cache_size=0` for PgBouncer compatibility
+- [x] **Migration System**: 4 Alembic revisions audited — ed9761fee64f (downgrade gap found), cfe7c95dbee2 (sentinel/morphic), 664fe16e33ca (CI reports), a1b2c3d4e5f6 (patch telemetry)
+- [x] **Write-Behind Cache**: No write-behind cache detected — all DB writes are direct (potential performance gap noted for future)
+- [x] **Firestore Integration**: Firestore admin SDK used in CostGuard, SelfHealer — but connection is lazy and may fail silently
+- [x] **Supabase Schema**: 30+ tables bootstrapped with pgvector extension, `match_learned_facts` and `match_knowledge_base` RPC functions
+- [x] **Data Validation**: Pydantic schemas used in SwarmOrchestrator (`ExecutionResult`), but not enforced at DB layer — relies on Supabase RLS
+
+### Fix Progress Tracker
+- [x] Created PHASE4_DATABASE_PERSISTENCE_AUDIT.md with full audit report
+- [x] Identified 8 gaps across database and persistence layer
+- [x] Created implementation plan with 5 delta patches
+
+### 🔨 Fixes Identified (not yet implemented — queue for next iteration)
+- [ ] Fix 1: Make Alembic `env.py` async-compatible with `create_async_engine` (`alembic/env.py`)
+- [ ] Fix 2: Add DB connection health check before running migrations (`alembic/env.py`)
+- [ ] Fix 3: Add async upload/get_url methods to `StorageClient` (`database/storage_client.py`)
+- [ ] Fix 4: Add migration version tracking to bootstrap to prevent redundant runs (`database/supabase_client.py`)
+- [ ] Fix 5: Implement proper downgrade for `ed9761fee64f` revision (`alembic/versions/ed9761fee64f_create_system_config.py`)
 
 ---
 
-## Phase 5: Caching & Performance Optimization
+## Phase 5: Caching & Performance Optimization ✅ COMPLETED
 
 ### Audit Checklist
-- [ ] **Redis Manager**: Verify connection pooling, retry logic, failover
-- [ ] **Multi-Layer Cache**: Check L1/L2 cache invalidation
-- [ ] **Config Cache**: Verify refresh mechanism and fallback
-- [ ] **Swarm Cache Invalidator**: Audit background invalidation task
-- [ ] **Query Optimization**: Check N+1 query patterns
-- [ ] **Memory Management**: Verify cache TTLs and eviction policies
+- [x] **Redis Manager**: Connection pool (max 20), lazy init, idempotency locks with Lua scripts, ContextVar token tracking
+- [x] **Multi-Layer Cache**: 5-layer architecture (L1 Exact→L2 Semantic→L3 Prefix→L4 Session→L5 AI), event-sourced invalidation, swarm invalidator
+- [x] **Config Cache**: Database-driven thresholds for semantic cache, admin-configurable without redeploy
+- [x] **Memory Management**: TTLCache (max 2000, TTL 600s) for session cache, `_MAX_PREFIX_CANDIDATES=8` to cap prefix writes
+- [x] **Circuit Breaker**: Missing for Redis — identified as Fix 2 in audit report
+- [x] **Cost Optimization**: AutocacheProxy with semantic caching + request deduplication, daily/monthly cost savings tracking
+
+### Fix Progress Tracker
+- [x] Created PHASE5_CACHING_PERFORMANCE_AUDIT.md with full audit report (8 gaps identified)
+- [x] Implementation plan with 4 delta patches ready
+
+### 🔨 Fixes Identified (not yet implemented — queue for next iteration)
+- [ ] Fix 1: Move `_cache_invalidation_listener` registration to explicit function (`multi_layer_cache.py`)
+- [ ] Fix 2: Add circuit breaker to Redis Manager with exponential backoff retry (`redis_manager.py`)
+- [ ] Fix 3: Add error event emission to SemanticCache on query failure (`semantic_cache.py`)
+- [ ] Fix 4: Make SessionCache TTL configurable via settings (`multi_layer_cache.py`)
 
 ---
 
-## Phase 6: API Routes & Middleware Chain
+## Phase 6: API Routes & Middleware Chain 🔄 IN PROGRESS
 
 ### Audit Checklist
-- [ ] **Route Registration**: Verify all routers are registered
-- [ ] **Middleware Order**: Check middleware chain ordering
+- [ ] **Route Registration**: Verify all routers are registered in `app_builder.py` or `app.py`
+- [ ] **Middleware Order**: Check middleware chain ordering (CORS→Rate Limiting→Auth→Anti-Hacking)
 - [ ] **Error Handlers**: Verify global exception handlers
 - [ ] **CORS Middleware**: Check production CORS settings
 - [ ] **Rate Limiting**: Verify per-endpoint rate limits
 - [ ] **Request Validation**: Check Pydantic model validation
 - [ ] **Response Models**: Verify consistent response schemas
-
----
 
 ## Phase 7: Self-Healing & Error Recovery
 
