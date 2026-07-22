@@ -32,7 +32,7 @@ from core.resilience.circuit_breaker import CircuitBreaker
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-# বাংলা মন্তব্য (জরুরি): এই রুটগুলোতে যেকোনো ডিলিট, কনফিগারেশন চেঞ্জ বা পেমেন্ট অপারেশনে 
+# বাংলা মন্তব্য (জরুরি): এই রুটগুলোতে যেকোনো ডিলিট, কনফিগারেশন চেঞ্জ বা পেমেন্ট অপারেশনে
 # JIT OTP অন-স্পট ভ্যালিডেশন বাধ্য করা হয়েছে (Malware Immunity & JIT Defense Policy)।
 SENSITIVE_OPS = {
     "/api/v1/admin/",

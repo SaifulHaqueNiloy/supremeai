@@ -36,10 +36,12 @@ def create_access_token(data: dict) -> str:
 
     to_encode = data.copy()
     expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({
-        "exp": expire,
-        "jti": to_encode.get("jti") or f"jti-{uuid.uuid4().hex[:16]}",
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "jti": to_encode.get("jti") or f"jti-{uuid.uuid4().hex[:16]}",
+        }
+    )
     user_email = to_encode.get("sub")
     role = "admin" if user_email in settings.admin_emails else "user"
     to_encode.update({"role": role})
@@ -84,6 +86,7 @@ def verify_token(token: str) -> dict:
         if jti:
             # Sync wrapper for sync verify_token callers
             import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
@@ -133,6 +136,7 @@ def verify_api_key(plain_key: str, stored_hash: str) -> bool:
 def verify_api_key_with_expiry(plain_key: str, stored_hash: str, expires_at: int | None = None) -> bool:
     """বাংলা মন্তব্য: API Key হ্যাশ ভেরিফাই করে এবং একই সাথে Expiration টাইম চেক করে।"""
     import time
+
     if expires_at is not None and time.time() > expires_at:
         logger.warning("API key has expired")
         return False
