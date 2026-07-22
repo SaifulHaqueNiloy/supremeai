@@ -11,7 +11,9 @@ from core.config import settings
 DATABASE_URL = settings.supabase_database_url
 
 if not DATABASE_URL:
-    logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
+    logger.warning(
+        "SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail."
+    )
 
 
 # বাংলা মন্তব্য: কানেকশন স্ট্রিংয়ে postgresql:// বা postgres:// থাকলে তা asyncpg-এর জন্য postgresql+asyncpg:// দিয়ে প্রতিস্থাপন করা হচ্ছে
@@ -63,11 +65,15 @@ if _async_url.startswith("postgresql"):
             },
         }
     )
-    logger.info(f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}")
+    logger.info(
+        f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}"
+    )
 
 engine = create_async_engine(_async_url, **engine_kwargs)
 
-AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+)
 
 
 @asynccontextmanager
