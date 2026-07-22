@@ -453,7 +453,9 @@ class Settings(BaseSettings):
         return self._get_cached_secret("NEO4J_PASSWORD") or ""
 
     # ── Admin Password Hash — Infisical-backed lazy property ────────────────
-    # বাংলা মন্তব্য: Infisical ভল্ট অথবা OS Environment Variable থেকে lazy-fetch করা হয়।
+    # বাংলা মন্তব্য: Pydantic Field(validation_alias=...) সরাসরি OS env var থেকে পড়ে, যা Infisical
+    # ভল্টে থাকা সিক্রেট পড়তে পারে না এবং Render ডিপ্লয়মেন্টে Validation Error ঘটিয়ে প্রসেস ক্র্যাশ করায়।
+    # তাই এটি lazy @property এবং _get_cached_secret() এ রূপান্তর করা হলো যাতে অন-ডিমান্ড ভল্ট বা env থেকে ফেচ হয়।
     @property
     def supremeai_admin_password_hash(self) -> str | None:
         val = self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH")
@@ -462,6 +464,8 @@ class Settings(BaseSettings):
         return val
 
     # ── JWT & Encryption Credentials — Infisical-backed ─────────────────────
+    # বাংলা মন্তব্য: JWT সিক্রেট এবং এনক্রিপশন কী ক্লাউড ভল্ট (Infisical/GCP) থেকে ডায়নামিকালি
+    # লোড করার জন্য lazy property প্যাটার্ন প্রয়োগ করা হয়েছে — যাতে ইনফিসিক্যাল সিক্রেট স্টার্টআপ ব্লক না করে।
     @property
     def jwt_secret(self) -> str:
         v = self._get_cached_secret("SUPREMEAI_JWT_SECRET")
@@ -480,6 +484,8 @@ class Settings(BaseSettings):
         return SecretStr(val) if val else SecretStr("")
 
     # ── Stripe Credentials — Infisical-backed ────────────────────────────────
+    # বাংলা মন্তব্য: Stripe এপিআই এবং ওয়েবহুক সিক্রেটসমূহের জন্য Infisical lazy fetching নিশ্চিত করা হলো,
+    # যাতে প্রোডাকশন পেমেন্ট ক্রেডেনশিয়াল ভল্ট থেকে সরাসরি ইন-মেমোরিতে ফেচ হয়।
     @property
     def stripe_api_key(self) -> SecretStr:
         val = self._get_cached_secret("STRIPE_API_KEY")
