@@ -72,7 +72,9 @@ class ProjectContextService:
         entries = []
 
         # Python classes
-        for match in re.finditer(r"^class\s+(\w+)(?:\(([^)]*)\))?:", content, re.MULTILINE):
+        for match in re.finditer(
+            r"^class\s+(\w+)(?:\(([^)]*)\))?:", content, re.MULTILINE
+        ):
             entries.append(
                 ContextEntry(
                     file_path=file_path,
@@ -85,7 +87,9 @@ class ProjectContextService:
             )
 
         # Python functions
-        for match in re.finditer(r"^def\s+(\w+)\s*\(([^)]*)\?):?", content, re.MULTILINE):
+        for match in re.finditer(
+            r"^def\s+(\w+)\s*\(([^)]*)\?):?", content, re.MULTILINE
+        ):
             entries.append(
                 ContextEntry(
                     file_path=file_path,
@@ -167,7 +171,9 @@ class ProjectContextService:
 
         # Filter by relevance to query
         query_terms = set(re.findall(r"[a-zA-Z_]+", query.lower()))
-        [e for e in entries if any(term in e.name.lower() for term in query_terms)][:max_entries]
+        [e for e in entries if any(term in e.name.lower() for term in query_terms)][
+            :max_entries
+        ]
 
         # Format context
         context_lines = [
@@ -182,7 +188,9 @@ class ProjectContextService:
         await self.cache.set(cache_key, context, ttl=CONTEXT_CACHE_TTL)
         return context
 
-    async def inject_context(self, system_prompt: str, user_query: str, project_path: str) -> str:
+    async def inject_context(
+        self, system_prompt: str, user_query: str, project_path: str
+    ) -> str:
         """
         Inject context into system prompt.
 
