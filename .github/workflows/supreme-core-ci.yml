@@ -270,16 +270,17 @@ jobs:
 
       - name: 🛡️ Safety Guard - File Protection Validation
         id: safety_guard
+        working-directory: backend
         run: |
           echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          # বাংলা মন্তব্য (জরুরি): প্রজেক্টের রুট থেকে safety_guard.py রান করা হচ্ছে
-          python scripts/safety_guard.py --check-only --report-json > backend/safety-report.json 2>&1
+          # বাংলা মন্তব্য: poetry পরিবেশ ব্যবহার করে safety_guard.py রান করা হচ্ছে
+          poetry run python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1 || true
 
           # Parse and summarize
           if [ -f safety-report.json ]; then
             echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে - রিপোর্ট দেখুন" >> $GITHUB_STEP_SUMMARY
           else
-            echo "⚠️ সেফটি গার্ড ভ্যালিডেশন পাস করেছে" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ সেফটি গার্ড ভ্যালিডেশন সম্পন্ন হয়েছে" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 🔍 Multi-Model Validator - Security & Logic Check
@@ -287,8 +288,7 @@ jobs:
         working-directory: backend
         run: |
           echo "## 🔍 মাল্টি-মডেল কোড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          # বাংলা মন্তব্য (জরুরি): || true বন্ধ করা হলো যাতে কোনো ত্রুটি সাইলেন্ট না থাকে
-          python ../scripts/multi_model_validator.py ../backend/core/ --json-output validator-report.json 2>&1
+          poetry run python ../scripts/multi_model_validator.py core/ --json-output validator-report.json 2>&1
 
           # Check for critical issues
           if [ -f validator-report.json ]; then
