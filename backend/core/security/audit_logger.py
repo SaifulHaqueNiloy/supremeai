@@ -5,7 +5,7 @@
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from loguru import logger
@@ -29,7 +29,7 @@ async def log_security_event(
         "event_id": event_id,
         "event_type": event_type,
         "user_id": user_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "severity": severity,
         "details": details,
     }

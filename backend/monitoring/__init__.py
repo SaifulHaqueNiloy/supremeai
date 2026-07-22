@@ -5,12 +5,12 @@ Sentry (Free Tier) এবং OpenTelemetry/Loguru দিয়ে সেন্ট�
 """
 
 import os
-import sys
 import time
-from typing import Dict, Any, Optional
+from typing import Any
 from loguru import logger
 
 _sentry_initialized = False
+
 
 def init_observability():
     """
@@ -41,7 +41,8 @@ def init_observability():
     else:
         logger.info("ℹ️ [Observability] Running with Loguru central logging (SENTRY_DSN not configured or already active).")
 
-def track_exception(error: Exception, context: Optional[Dict[str, Any]] = None):
+
+def track_exception(error: Exception, context: dict[str, Any] | None = None):
     """
     বাংলা মন্তব্য: যেকোনো ব্যাকএন্ড এক্সেপশন রিয়েল-টাইমে সেনট্রি বা লগ মডিউলে রেজিস্টার করে।
     """
@@ -49,6 +50,7 @@ def track_exception(error: Exception, context: Optional[Dict[str, Any]] = None):
     if _sentry_initialized:
         try:
             import sentry_sdk
+
             with sentry_sdk.push_scope() as scope:
                 if context:
                     for k, v in context.items():
@@ -57,10 +59,12 @@ def track_exception(error: Exception, context: Optional[Dict[str, Any]] = None):
         except Exception as e:
             logger.warning(f"⚠️ Error forwarding exception to Sentry: {e}")
 
+
 class PerformanceTimer:
     """
     বাংলা মন্তব্য: লেটেন্সি এবং এক্সিকিউশন টাইম মাপার জন্য পারফরম্যান্স টাইমার মডিউল।
     """
+
     def __init__(self, operation_name: str):
         self.operation_name = operation_name
         self.start_time = 0.0
