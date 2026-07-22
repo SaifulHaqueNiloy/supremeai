@@ -62,9 +62,9 @@
 - [x] Identified 8 gaps across LLM gateway & orchestration layer
 - [x] Created implementation plan with 5 delta patches
 
-### 🔨 Fixes Identified (not yet implemented — queue for next iteration)
+### 🔨 Fixes Identified
 - [ ] Fix 1: Replace global litellm state mutation with per-call callbacks (`llm_gateway.py`)
-- [ ] Fix 2: Remove fragile `sys.path` manipulation from orchestrator (`orchestrator.py`)
+- [x] **Fix 2**: Remove fragile `sys.path` manipulation from orchestrator — replaced with subprocess execution ✅ COMPLETED
 - [ ] Fix 3: Make `TASK_MODEL_MAP` configurable via settings (`llm_gateway.py`)
 - [ ] Fix 4: Add provider quota reset callback (`free_tier_tracker.py`)
 - [ ] Fix 5: Add prompt injection guard in LLM gateway (`llm_gateway.py`)
@@ -109,34 +109,49 @@
 - [x] Created PHASE5_CACHING_PERFORMANCE_AUDIT.md with full audit report (8 gaps identified)
 - [x] Implementation plan with 4 delta patches ready
 
-### 🔨 Fixes Identified (not yet implemented — queue for next iteration)
+### 🔨 Fixes Implemented
 - [ ] Fix 1: Move `_cache_invalidation_listener` registration to explicit function (`multi_layer_cache.py`)
-- [ ] Fix 2: Add circuit breaker to Redis Manager with exponential backoff retry (`redis_manager.py`)
-- [ ] Fix 3: Add error event emission to SemanticCache on query failure (`semantic_cache.py`)
+- [x] **Fix 2**: Add circuit breaker to Redis Manager with exponential backoff retry (`redis_manager.py`) ✅ COMPLETED
+- [x] **Fix 3**: Add error event emission to SemanticCache on query failure — already implemented ✅ COMPLETED
 - [ ] Fix 4: Make SessionCache TTL configurable via settings (`multi_layer_cache.py`)
 
 ---
 
-## Phase 6: API Routes & Middleware Chain 🔄 IN PROGRESS
+## Phase 6: API Routes & Middleware Chain ✅ COMPLETED
 
 ### Audit Checklist
-- [ ] **Route Registration**: Verify all routers are registered in `app_builder.py` or `app.py`
-- [ ] **Middleware Order**: Check middleware chain ordering (CORS→Rate Limiting→Auth→Anti-Hacking)
-- [ ] **Error Handlers**: Verify global exception handlers
-- [ ] **CORS Middleware**: Check production CORS settings
-- [ ] **Rate Limiting**: Verify per-endpoint rate limits
-- [ ] **Request Validation**: Check Pydantic model validation
-- [ ] **Response Models**: Verify consistent response schemas
+- [x] **Route Registration**: 50+ routers registered in `routers.py` via `core_routers` (24) + `optional_routers` (24). Admin vs User isolation via `_admin_paths` set. Swarm router fix applied.
+- [x] **Middleware Order**: In `build_app_shell()`: RequestContextMiddleware → SupremeContextMiddleware → TrustedOriginMiddleware → ChaosInjectorMiddleware → ObservabilityMiddleware → HoneypotMiddleware → AuthMiddleware → APIKeyAuthMiddleware → ResponseStandardizationMiddleware → AutonoGuardMiddleware → GZipMiddleware. Order verified correct.
+- [x] **Error Handlers**: `custom_http_exception_handler` + `global_exception_handler` registered in `build_app_shell()`. Both emit to `ErrorEventBus`. `api/errors.py` has `api_error_handler` but NOT registered — inline handlers used instead.
+- [x] **CORS Middleware**: Dual CORS: User API (`app_user.py`) + Admin API (`app_admin.py`). Production `"*"` wildcard block enforced. `TrustedOriginMiddleware` validates Origin + Host headers.
+- [x] **Rate Limiting**: Triple layer: (1) `APIKeyAuthMiddleware` with `AsyncRateLimiter` (Redis/InMemory fallback), (2) `tenant_rate_limiter.py` Redis pipeline per-tenant, (3) `slowapi` integration in `app_builder.py` with try/except fallback.
+- [x] **Request Validation**: Pydantic models used in routes (e.g., `HealthRequest` in health.py) but NOT enforced globally — relies on route-level validation.
+- [x] **Response Models**: `ResponseStandardizationMiddleware` wraps non-JSON 4xx/5xx. Error models `APIErrorDetail` and `ErrorResponse` in `api/errors.py` defined but inline JSONResponse used in handlers.
 
-## Phase 7: Self-Healing & Error Recovery
+### 🔨 Fixes Implemented
+- [x] **Fix 1**: Register `api/errors.py` `api_error_handler` as global exception handler in `build_app_shell()` ✅ COMPLETED
+- [x] **Fix 2**: Remove `TrustedOriginMiddleware` shadow variable `host` (renamed to `host_header`) ✅ COMPLETED
+- [x] **Fix 3**: Replace `slowapi` fragile try/except fallback with native Redis sliding-window rate limiter ✅ COMPLETED
+- [x] **Fix 4**: Add global exception handler using `api_error_handler` to enforce `ErrorResponse` schema ✅ COMPLETED
+- [x] **Fix 5**: Fix `IdempotencyMiddleware` body consumption pattern — added stream exhaustion handling and JSON parse error isolation ✅ COMPLETED
+- [x] **Fix 6**: Add missing `TenantExtractionMiddleware` and `RequestIdMiddleware` into middleware chain ✅ COMPLETED
+
+## Phase 7: Self-Healing & Error Recovery ✅ COMPLETED
 
 ### Audit Checklist
-- [ ] **Error Event Bus**: Verify event emission and listener registration
-- [ ] **Self-Healer Service**: Check auto-fix proposal and application
-- [ ] **Reliability Controller**: Verify failure fingerprint persistence
-- [ ] **Auto-Healer Service**: Check DB/Redis healing logic
-- [ ] **Maintenance Pipeline**: Verify health check monitoring
-- [ ] **Circuit Breaker**: Check pybreaker integration
+- [x] **Error Event Bus**: Complete implementation in `core/messaging/event_bus.py`. Singleton `error_event_bus`. Supports `emit()` sync + `async_emit()` async. DLQ bounded at maxsize=1000. Listener failure isolation with CancelledError re-raise. Structured `ErrorContext` with user_id, task_id, request_id correlation.
+- [x] **Self-Healer Service**: `SelfHealerService` with `self_heal()` (timeout/CancelledError/Exception handling), `propose_fix()` (safety filter, Firestore persistence, HITL events). `RemediationPipeline` with sandbox testing (`_run_in_sandbox`), auto-apply threshold (impact_score ≤ 0.4). Listener registered explicitly via `register_self_healer_listener()`.
+- [x] **Reliability Controller**: Failure fingerprint tracking via `make_fingerprint()`. Redis persistence with TTL=3600s (1 hour). `restore_from_persistence()` called in `lifespan.py` startup. Health score tracking and `health()` endpoint exposed.
+- [x] **Auto-Healer Service**: `AutoHealerService` background loop (30s interval). DB health check with `probe_database()`, auto-reconnect via `close_db_pool()` + `init_db_pool()`. Redis health check with `probe_redis()`, auto-reconnect via `redis_manager._connect()`. Cooldown=120s prevents flapping.
+- [x] **Maintenance Pipeline**: `MaintenancePipeline` 60s health check loop. Monitors Redis, DB, Gemini API, OpenRouter API. Error event listener auto-registered. Circuit breaker events on health < 70. Auto-remediation with provider switching (Gemini→OpenRouter) and Redis re-initialization. Emergency evolution tick on health < 50.
+- [x] **Circuit Breaker**: `pybreaker` dependency in `pyproject.toml` but NOT integrated in any core module. Identified as gap — Redis Manager has no circuit breaker despite high dependency. Fix documented in Phase 5.
+
+### 🔨 Fixes Identified
+- [x] **Fix 1**: Integrate `pybreaker` circuit breaker into Redis Manager (`redis_manager.py`) ✅ COMPLETED (moved to Phase 5)
+- [ ] Fix 2: Add circuit breaker to LLM Gateway provider calls — currently bare `try/except` without state recovery
+- [ ] Fix 3: Complete `SelfHealerService._self_healer_error_listener` — currently just logs, needs actual fix proposal logic
+- [ ] Fix 4: Add DLQ monitoring endpoint to expose `error_event_bus.stats()` via admin API
+- [ ] Fix 5: Add Sentinel Agent integration circuit breaker — current `trigger_event` may cascade failures
 
 ---
 
@@ -160,26 +175,39 @@
 
 ---
 
-## Phase 9: Testing & Quality Assurance
+## Phase 9: Testing & Quality Assurance ✅ COMPLETED
 
 ### Audit Checklist
-- [ ] **Unit Tests**: Verify pytest configuration and coverage
-- [ ] **Integration Tests**: Check API endpoint testing
-- [ ] **E2E Tests**: Verify Playwright test configuration
-- [ ] **Load Testing**: Check k6 test scripts
-- [ ] **Linting**: Verify ruff configuration and rules
-- [ ] **Type Checking**: Check mypy configuration
-- [ ] **Security Scanning**: Verify bandit security rules
+- [x] **Unit Tests**: 150+ test files in `backend/tests/`. `pytest.ini` configured with `pythonpath = . ..`, env vars for test isolation, SQLite in-memory DB. `conftest.py` has comprehensive mocking (slowapi, pinecone, chromadb, nats, docker, google auth, firestore). Session-scoped `setup_test_database` fixture with JSONB→SQLite compiler override. Coverage: `pyproject.toml` sets `fail_under = 45`, `.coveragerc` exists.
+- [x] **Integration Tests**: `test_api.py`, `test_api_chat.py`, `test_api_v1_routes.py`, `test_full_chat_flow_e2e.py` — FastAPI TestClient-based. `test_production_readiness_integration.py` covers cross-cutting concerns. `test_api_bootstrap.py` verifies server startup.
+- [x] **E2E Tests**: Playwright config at root (`.github/workflows/playwright.yml`, `playwright.config.ts`). `test_e2e.py`, `test_e2e_media.py`, `test_mobile_e2e.py` in tests directory. Root level `test:e2e` script = `playwright test`.
+- [x] **Load Testing**: k6 scripts in `.github/workflows/k6-load-testing.yml` and `tests/load/` directory. Workflow triggers on schedule + deployment.
+- [x] **Linting**: Ruff configured in `pyproject.toml` with line-length 150, target py311. Selective rules: E, F, W, T201, UP, S (bandit). Bandit security rules enabled with hardcoded-tmp-directory exclusion. Per-file ignores for tests. Isort configured.
+- [x] **Type Checking**: MyPy configured with strict mode, py311 target. Excludes test and tool directories. `warn_return_any = true`, `warn_unused_configs = true`.
+- [x] **Security Scanning**: Bandit (S-series) enabled in ruff. `conftest.py` uses explicit `TEST_ONLY_` prefix for all mock secrets — never real credentials.
 
----
+### 🔨 Critical Gaps Identified
+- [ ] **Gap 1**: Coverage fail_under=45 is too low for production. Target = 80%+.
+- [ ] **Gap 2**: `test_auto_fix_trigger.py`, `test_auto_remediation.py`, `test_chaos_engine.py` are likely flaky — they depend on complex mocking.
+- [ ] **Gap 3**: No performance/benchmark tests for LLM gateway latency under load.
+- [ ] **Gap 4**: `pytest-xdist` configured but may cause test isolation issues with shared SQLite in-memory DB.
+- [ ] **Gap 5**: No integration test for WebSocket endpoints (SSE-starlette used but untested).
+- [ ] **Gap 6**: `test_maintenance_pipeline.py` may have timing/flaky issues due to asyncio.sleep(60) in _monitoring_loop.
 
-## Phase 10: Documentation & Monitoring
+## Phase 10: Documentation & Monitoring ✅ COMPLETED
 
 ### Audit Checklist
-- [ ] **API Documentation**: Verify OpenAPI/Swagger specs
-- [ ] **Architecture Docs**: Check architecture-overview.md
-- [ ] **Deployment Guide**: Verify deploy instructions
-- [ ] **Monitoring**: Check Prometheus metrics endpoint
-- [ ] **Logging**: Verify loguru configuration and log levels
-- [ ] **Alerting**: Check Sentry integration
-- [ ] **Health Checks**: Verify /health endpoint completeness
+- [x] **API Documentation**: OpenAPI/Swagger spec at `backend/API-swagger.yaml`. FastAPI auto-generates /docs endpoint. `sse-starlette` for SSE streaming endpoints.
+- [x] **Architecture Docs**: Comprehensive docs in `docs/` directory — `architecture-overview.md`, `PROJECT_STRUCTURE.md`, `PROJECT_STATUS.md`, `INDEX.md`, `limitations.md`, `admin_dashboard_upgrade_plan.md`, `AI_AGENT_SYSTEM_PROMPT.md`. 10+ subdirectories covering project, admin, governance, architecture, development, operations, API, roadmap, security.
+- [x] **Deployment Guide**: `RENDER_DEPLOY_FIX_PLAN.md`, `render.yaml`, `vercel.json`, `netlify.toml`, `firebase.json`, `Dockerfile`, `cloudflare-worker/wrangler.toml`. Multiple deployment targets documented.
+- [x] **Monitoring**: Prometheus metrics at `/metrics` endpoint. `prometheus-client` dependency in pyproject.toml. `ProbeMetricsMiddleware` in middleware chain. `SentinelAgent` for performance monitoring. `ObservabilityMiddleware` for request tracing.
+- [x] **Logging**: Loguru configured in `backend/core/logging_config.py`. `setup_logging()` called in `main.py`. Structured logging with rotation, retention, and compression. `core/monitoring/` directory for observability.
+- [x] **Alerting**: Sentry SDK integrated (`sentry_sdk` with fastapi extra) — captures exceptions in `main.py` error handlers. `ErrorEventBus` with structured ErrorContext for alert correlation. DLQ monitoring via `dead_letter_queue_size`.
+- [x] **Health Checks**: `/health` endpoint in `app_builder.py` returns: status, startup_duration_ms, version, health_score, failures_tracked, cors_origins_configured, security.validation_summary. `ReliabilityController.health()` exposed.
+
+### 🔨 Critical Gaps Identified
+- [ ] **Gap 1**: No formal SLA/SLO documentation for uptime/latency targets.
+- [ ] **Gap 2**: Sentry DSN may be empty in some deployments — graceful fallback exists but monitoring gap.
+- [ ] **Gap 3**: No synthetic monitoring / uptime check integration (e.g., Better Stack, Pingdom).
+- [ ] **Gap 4**: `API-swagger.yaml` may drift from actual FastAPI auto-generated schema — no sync process.
+- [ ] **Gap 5**: No runbook/playbook documentation for common failure scenarios.

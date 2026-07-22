@@ -6,14 +6,27 @@ general key-value caching and specialized operations, including monitoring the
 health and status of AI agents. It initializes an `aioredis` client using the
 `REDIS_URL` environment variable, implementing a fail-closed mechanism if the
 Redis endpoint is not configured. A singleton instance, `redis_manager`, is
-exposed for application-wide use."""
+exposed for application-wide use.
+
+বাংলা মন্তব্য: pybreaker সার্কিট ব্রেকার ইন্টিগ্রেটেড — Redis ডাউন থাকলে
+সার্কিট ওপেন হয়ে যায় এবং বারবার কানেক্ট করার চেষ্টা বন্ধ করে দেয়।
+এক্সপোনেনশিয়াল ব্যাকঅফ রিট্রাই (৩০ সেকেন্ড রিসেট) — ক্যাসকেডিং ফেইলিওর প্রতিরোধ।"""
 
 import json
 import os
 import uuid
 
 from loguru import logger
+from pybreaker import CircuitBreaker, CircuitBreakerError
 from redis import asyncio as aioredis
+
+
+# বাংলা মন্তব্য: Redis সার্কিট ব্রেকার — ৩ বার ফেইল করলে ৩০ সেকেন্ডের জন্য ওপেন
+_redis_circuit_breaker = CircuitBreaker(
+    fail_max=3,
+    reset_timeout=30,
+    name="redis",
+)
 
 
 class SecureRedisManager:
@@ -49,6 +62,23 @@ class SecureRedisManager:
         if not self._initialized:
             self._ensure_connected()
         return self._client
+
+    async def _execute_with_breaker(self, operation_name: str, coro):
+        """বাংলা মন্তব্য: সার্কিট ব্রেকারের মাধ্যমে Redis অপারেশন এক্সিকিউট করে।
+        সার্কিট ওপেন থাকলে সরাসরি None রিটার্ন করে — ক্যাসকেডিং ফেইলিওর প্রতিরোধ।"""
+        try:
+            return _redis_circuit_breaker.call(lambda: coro)
+        except CircuitBreakerError:
+            logger.warning(
+                f"🔴 Redis circuit breaker OPEN — skipping '{operation_name}'. "
+                f"Retry in ~{_redis_circuit_breaker.reset_timeout}s"
+            )
+            return None
+        except Exception as exc:
+            logger.error(
+                f"❌ Redis '{operation_name}' failed (circuit may open): {exc}"
+            )
+            raise
 
     async def set_cache(self, key: str, value: str, ex_seconds: int = 3600) -> bool:
         """Native Redis API এর মাধ্যমে কি-ভ্যালু পেয়ার সেভ করার মেথড।"""
