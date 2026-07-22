@@ -78,7 +78,9 @@ class TestDecisionEngine:
         from core.decision_engine import DecisionEngine
 
         engine = DecisionEngine()
-        result = engine.evaluate(action="delete", user_id="user-1", context={"risk": "high"})
+        result = engine.evaluate(
+            action="delete", user_id="user-1", context={"risk": "high"}
+        )
         assert result is not None
 
 
