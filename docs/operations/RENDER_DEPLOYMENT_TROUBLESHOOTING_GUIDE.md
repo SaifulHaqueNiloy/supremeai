@@ -2,14 +2,35 @@
 
 > **Project:** SupremeAI 2.0  
 > **Target System:** Render Web Services & Background Workers  
-> **Last Updated:** 2026-07-22  
+> **Last Updated:** 2026-07-23  
 > **Status:** ACTIVE & PRODUCTION READY  
 
 ---
 
 ## 📌 Overview (বিবরণ)
 
-এই গাইডে SupremeAI 2.0-এর Render ডেপ্লয়মেন্ট প্রক্রিয়া, পূর্বে সম্মুখীন হওয়া ক্রিটিক্যাল এররসমূহ, সেগুলোর রুট-কজ (Root Cause), এবং এন্টারপ্রাইজ-গ্রেড স্থায়ী সমাধান লিপিবদ্ধ করা হলো। ভবিষ্যতে Render ডেপ্লয়মেন্টের কোনো সমস্যা হলে এই ডকুমেন্ট নির্দেশিকা হিসেবে কাজ করবে।
+এই গাইডে SupremeAI 2.0-এর Render ডেপ্লয়মেন্ট প্রক্রিয়া, পূর্বে সম্মুখীন হওয়া সমস্ত ক্রিটিক্যাল এররসমূহ, সেগুলোর রুট-কজ (Root Cause), এবং এন্টারপ্রাইজ-গ্রেড স্থায়ী সমাধান লিপিবদ্ধ করা হলো। ভবিষ্যতে Render ডেপ্লয়মেন্টের কোনো সমস্যা হলে এই ডকুমেন্ট নির্দেশিকা হিসেবে কাজ করবে।
+
+---
+
+## 🔐 Render Account Architecture (Primary vs Backup)
+
+| সার্ভিস | Account / Workspace | Service ID | URL |
+| :--- | :--- | :--- | :--- |
+| **supremeai-backend** (Primary User Backend) | `My Workspace` (`paykaribazaronline@gmail.com`) | `srv-d9d3n58js32c738n79k0` | `https://supremeai-backend.onrender.com` |
+| **supremeai-admin** (Admin Backend) | `niloy's workspace` | `srv-d9fg48bh523c73f63bb0` | `https://supremeai-admin.onrender.com` |
+| **supremeai-studio-client** (Frontend Static) | `My Workspace` | `srv-d9d3pgvavr4c738a46mg` | — |
+
+### GitHub Secrets Required
+
+| Secret Name | আসা উচিত কোথা থেকে | উদ্দেশ্য |
+| :--- | :--- | :--- |
+| `RENDER_API_KEY` | `My Workspace` → Account Settings → API Keys | Primary backend deploy trigger |
+| `RENDER_API_KEY_BACKUP` | `niloy's workspace` → Account Settings → API Keys | Admin backend API trigger |
+| `RENDER_DEPLOY_HOOK_URL_BACKUP` | Render Dashboard → `supremeai-admin` → Settings → Deploy Hook | ✅ **Preferred:** Admin backend webhook trigger |
+
+> [!IMPORTANT]
+> `RENDER_DEPLOY_HOOK_URL_BACKUP` হলো সবচেয়ে নির্ভরযোগ্য পদ্ধতি — এটি যেকোনো API Key সমস্যা বাইপাস করে সরাসরি `supremeai-admin` সার্ভিসটি deploy করে।
 
 ---
 
@@ -23,17 +44,13 @@
 
 ### 🔴 আসল কারণ (Root Cause):
 - `backend/core/config.py`-তে `supremeai_admin_password_hash` সিক্রেটটি Pydantic `Field(default=None, validation_alias="SUPREMEAI_ADMIN_PASSWORD_HASH")` হিসেবে সংজ্ঞায়িত ছিল।
-- Pydantic `Field` শুধুমাত্র অপারেটিং সিস্টেমের সরাসরি Environment Variables বা `.env` ফাইল থেকে ডেটা পড়ে, Infisical ভল্ট থেকে পড়ে না।
-- ফলে সিক্রেটটি Infisical-এ উপস্থিত থাকলেও Pydantic ইননিট টাইমে তা খুঁজে না পেয়ে `None` সেট করছিল এবং স্টার্টআপে ভ্যালিডেটর ফেল করে ক্র্যাশ ঘটাচ্ছিল।
+- Pydantic `Field` শুধুমাত্র OS Environment Variables বা `.env` ফাইল থেকে ডেটা পড়ে — Infisical ভল্ট থেকে নয়।
+- ফলে Infisical-এ থাকলেও Pydantic startup-এ `None` পেয়ে ক্র্যাশ করছিল।
 
 ### ✅ স্থায়ী ফিক্স (Implemented Fix):
-`backend/core/config.py`-তে `Field` তুলে দিয়ে সিক্রেটটিকে **Infisical-backed lazy `@property`**-তে রূপান্তরিত করা হয়েছে:
+`backend/core/config.py`-তে `Field` তুলে দিয়ে **Infisical-backed lazy `@property`**-তে রূপান্তরিত করা হয়েছে:
 
 ```python
-# backend/core/config.py
-# বাংলা মন্তব্য: Pydantic Field(validation_alias=...) সরাসরি OS env var থেকে পড়ে, যা Infisical
-# ভল্টে থাকা সিক্রেট পড়তে পারে না এবং Render ডিপ্লয়মেন্টে Validation Error ঘটিয়ে প্রসেস ক্র্যাশ করায়।
-# তাই এটি lazy @property এবং _get_cached_secret() এ রূপান্তর করা হলো যাতে অন-ডিমান্ড ভল্ট বা env থেকে ফেচ হয়।
 @property
 def supremeai_admin_password_hash(self) -> str | None:
     val = self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH")
@@ -42,55 +59,48 @@ def supremeai_admin_password_hash(self) -> str | None:
     return val
 ```
 
-একই সাথে `jwt_secret`, `encryption_key`, `stripe_api_key`, এবং `stripe_webhook_secret`-কেও একই lazy `@property` প্যাটার্নে মাইগ্রেট করা হয়েছে।
-
 ---
 
-## 🚨 Error Case 2: Render API Return `404 Not Found` on Service Deploy Trigger
+## 🚨 Error Case 2: Render API Returns `404 Not Found` on Service Deploy Trigger
 
 ### 🔍 লক্ষণ (Symptom):
-- GitHub Actions CI বা অটোমেশন স্ক্রিপ্ট থেকে Render REST API দিয়ে সার্ভিস ট্রিগার করতে গেলে `HTTP 404` রিটার্ন করা:
-  ```text
-  🔄 No backup hook found. Using Render API to trigger backup deploy...
-  ⚠️ Backup API deploy returned status: 404
-  ```
+```text
+⚠️ Backup API deploy returned status: 404
+```
 
 ### 🔴 আসল কারণ (Root Cause):
-- `404 Not Found` নির্দেশ করে যে প্রদত্ত `RENDER_API_KEY` যে Render Account / Team-এর অধীনে তৈরি, সেই অ্যাকাউন্টে টার্গেট Service ID (যেমন: `srv-d9fg48bh523c73f63bb0`) বিদ্যমান নেই বা মুছে ফেলা হয়েছে।
-- Render-এ অ্যাকাউন্ট বা টিম আলাদা হলে API Key একটি টিমের সার্ভিস অন্য টিমকে দেখতে পারে না।
+- প্রদত্ত `RENDER_API_KEY` যে Render Account-এর অধীনে তৈরি, সেই Account-এ টার্গেট Service ID বিদ্যমান নেই।
+- Render-এ আলাদা Account / Workspace হলে একটির API Key দিয়ে অন্যটির সার্ভিস দেখা যায় না।
 
-### ✅ সমাধান পদ্ধতি (Solution):
-1. **Render Service Discovery API Call:**
-   Render API ব্যবহার করে অ্যাকাউন্টের লাইভ সার্ভিসেস খুঁজে বের করার কমান্ড:
-   ```bash
-   python -c "import requests, os; print(requests.get('https://api.render.com/v1/services', headers={'Authorization': 'Bearer ' + os.getenv('RENDER_API_KEY')}).json())"
-   ```
-2. **Service ID Alignment:**  
-   `supremeai-backend`-এর প্রকৃত সার্ভিস আইডি (`srv-d9d3n58js32c738n79k0`) শনাক্ত করে `.github/scripts/verify-render-deploy.py` এবং CI workflows-এ আপডেট করা হয়েছে।
+### ✅ সমাধান:
+Render API দিয়ে সঠিক Service ID খুঁজে বের করুন:
+```bash
+python -c "import requests, os; r=requests.get('https://api.render.com/v1/services', headers={'Authorization':'Bearer '+os.getenv('RENDER_API_KEY')}); [print(s.get('service',s).get('id'), s.get('service',s).get('name')) for s in r.json()]"
+```
+তারপর `.github/scripts/verify-render-deploy.py`-এর `SERVICES` dict আপডেট করুন।
 
 ---
 
 ## 🚨 Error Case 3: Silent-Success Failure in CI Verification
 
 ### 🔍 লক্ষণ (Symptom):
-- Render ব্যাকএন্ড বাস্তবে ক্র্যাশ করে থাকলেও GitHub Actions CI পাইপলাইন গ্রিন (`PASSED`) দেখাচ্ছিল।
+- Render ব্যাকএন্ড ক্র্যাশ করেছে কিন্তু CI পাইপলাইন গ্রিন (`PASSED`) দেখাচ্ছে।
 
 ### 🔴 আসল কারণ (Root Cause):
-- পূর্বে ভ্যালিডেশন স্ক্রিপ্টে কোনো ব্যাকএন্ড সার্ভিসের এপিআই রিকোয়েস্ট ফেল করলে তা সাপ্রেস করে `exit 0` দেওয়া হচ্ছিল।
+- পূর্বে যেকোনো API এরর কে `exit 0` দিয়ে suppress করা হচ্ছিল।
 
-### ✅ সমাধান (Fix Implemented):
+### ✅ সমাধান:
 `.github/scripts/verify-render-deploy.py`-তে **Anti-Silent Failure Guard** সংযুক্ত করা হয়েছে:
-- সার্ভিস হেলথ ডিটেক্ট না হলে বা টাইমআউট খেলে স্ক্রিপ্ট সরাসরি `sys.exit(1)` দিয়ে পাইপলাইন রেড (Fail) ঘোষণা করে।
+- সার্ভিস হেলথ ডিটেক্ট না হলে বা টাইমআউট হলে `sys.exit(1)` দিয়ে পাইপলাইন Fail করে।
 
 ---
 
 ## 🚨 Error Case 4: Environment Variables Desynchronization
 
 ### 🔍 লক্ষণ (Symptom):
-- লোকাল বা ইনফিসিক্যালে সিক্রেট আপডেট করার পর Render সার্ভিস পুরনো ভ্যালু ব্যবহার করছিল বা missing key এরর পাচ্ছিল।
+- লোকাল বা Infisical-এ সিক্রেট আপডেট করার পর Render সার্ভিস পুরনো ভ্যালু ব্যবহার করছে।
 
 ### ✅ সমাধান (Automated Synchronization):
-প্রজেক্টে সেন্ট্রালাইজড এনভায়রনমেন্ট সিঙ্ক্রোনাইজার যুক্ত করা হয়েছে:
 ```bash
 # ড্রাই-রান চেক
 python scripts/sync_all_platforms_env.py
@@ -98,74 +108,174 @@ python scripts/sync_all_platforms_env.py
 # সরাসরি Render, GitHub Secrets এবং Vercel-এ সিঙ্ক ও আপডেট করতে:
 python scripts/sync_all_platforms_env.py --apply
 ```
-## 🚨 Error Case 5: CI Polling Sequential Timing & False Positive Timeout
+
+---
+
+## 🚨 Error Case 5: CI Polling Timing False Positive Timeout
 
 ### 🔍 লক্ষণ (Symptom):
-- Render ডেপ্লয়মেন্ট বাস্তবে ১০০% **`LIVE`** এবং HTTP 200 OK হওয়া সত্ত্বেও GitHub Actions CI পাইপলাইনের `Verify Render Deploy Health` ধাপটিতে এরর আসা:  
-  `❌ No new deploy record found for Admin Backend (Backup) within 3 minutes of triggering it. The trigger call likely failed silently – latest deploy on file is 0:04:03 old.`
+```
+❌ No new deploy record found for Admin Backend within 3 minutes of triggering it.
+```
+সার্ভিস বাস্তবে **LIVE** থাকলেও এই ত্রুটি আসছে।
 
 ### 🔴 আসল কারণ (Root Cause):
-- ভ্যালিডেশন স্ক্রিপ্টটি সিকোয়েন্সিয়ালি (পর পর) সার্ভিস চেক করে। রেন্ডারের ফ্রি-টিয়ার কন্টেইনার বিল্ড হতে ৪ মিনিটের বেশি সময় লাগায় Primary সার্ভিস চেক করতে ৪ মিনিট ১ সেকেন্ড পার হয়ে গিয়েছিল।
-- এরপর যখন Backup সার্ভিস ভেরিফাই করার টাইমে স্ক্রিপ্টটি সৃষ্টির সময় (`createdAt`) তুলনা করে, ৩ মিনিটের বেশি পার হয়ে যাওয়ায় স্ক্রিপ্টটি ভেবেছিল নতুন ডেপ্লয় ট্রিগার হয়নি এবং ফলস-পজিটিভ টাইমআউট দেখাচ্ছিল।
+- Render Free-tier কন্টেইনার বিল্ড হতে ৪+ মিনিট লাগায় Primary সার্ভিস চেক করতেই সময় শেষ হয়ে যাচ্ছিল।
 
-### ✅ সমাধান (Fix Implemented):
-`.github/scripts/verify-render-deploy.py`-তে ২টি ক্রিটিক্যাল সেফগার্ড যুক্ত করা হয়েছে:
-1. **`LIVE` Status Bypass:** সার্ভিস ইতিমধ্যে **`LIVE`** হলে ৩ মিনিটের টাইমার চেক না করে সরাসরি HTTP হেলথ চেকের মাধ্যমে পাস করিয়ে দেওয়া।
-2. **Extended Threshold:** ফ্রি-টিয়ার বিল্ড লাইনের কথা বিবেচনা করে বয়সের থ্রেশহোল্ড ৩ মিনিট থেকে বাড়িয়ে ১০ মিনিট করা।
+### ✅ সমাধান:
+- **`LIVE` Status Bypass:** সার্ভিস ইতিমধ্যে `LIVE` থাকলে সরাসরি HTTP health check-এ পাস।
+- **Extended Threshold:** বয়সের সীমা ৩ মিনিট → **১০ মিনিট** বাড়ানো হয়েছে।
 
 ---
 
-## 🔐 Render Account Architecture (Primary vs Backup Account Setup)
+## 🚨 Error Case 6: False-Positive CI Pass — Admin Backend Never Actually Deployed ⚠️ NEW
 
-SupremeAI 2.0-এর CI/CD এবং ভল্ট মেকানিজম **Single-Account Mode** এবং **Multi-Account High Availability (HA) Mode** উভয় আর্কিটেকচারকেই নির্বিঘ্নে সাপোর্ট করে।
+### 🔍 লক্ষণ (Symptom):
+- GitHub Actions CI দেখাচ্ছে সব `SUCCESS / HEALTHY`:
+  ```
+  - User Backend (Primary): ✅ SUCCESS / HEALTHY
+  - Admin Backend (Backup): ✅ SUCCESS / HEALTHY
+  ```
+- কিন্তু Render Dashboard-এ `supremeai-admin`-এর সর্বশেষ deploy সময় CI run-এর **আগের**।
+- নতুন কোড admin backend-এ কখনো গেলোই না।
 
-### 1. Active Account Credentials (বর্তমান প্রোডাকশন কনফিগারেশন)
-- **Account Workspace Name:** `My Workspace`
-- **Account Owner Email:** `paykaribazaronline@gmail.com`
-- **Team ID:** `tea-d747ms1aae7s73bcasu0`
-- **Active Web Service (Backend):** `supremeai-backend` (Service ID: `srv-d9d3n58js32c738n79k0`)
-- **Active Static Site (Frontend):** `supremeai-studio-client` (Service ID: `srv-d9d3pgvavr4c738a46mg`)
+### 🔴 আসল কারণ (Root Cause) — ৩টি চেইনড বাগ:
+
+**বাগ ১:** `verify-render-deploy.py`-তে 404 fallback service remap  
+  `RENDER_API_KEY_BACKUP` দিয়ে `srv-d9fg48bh523c73f63bb0` hit করলে 404 আসতো। তখন script আপনাআপনি প্রথম পাওয়া web service (`srv-d9d3n58js32c738n79k0`) কে admin হিসেবে ধরে health check করতো — ফলে primary backend-কে দ্বিতীয়বার চেক করলেও CI বলতো "Admin HEALTHY"।
+
+**বাগ ২:** `verify-render-deploy.py`-তে fallback URL health check  
+  Admin URL fail করলে `supremeai-backend.onrender.com`-এ fallback করে সেখান থেকে 200 নিয়ে success দেখাতো।
+
+**বাগ ৩:** `supreme-core-ci.yml`-এ deploy trigger-এ 404 remap  
+  ```yaml
+  if [ "$STATUS" = "404" ]; then
+    BACKUP_SVC_ID="srv-d9d3n58js32c738n79k0"  # ← ভুল! admin নামে primary deploy হচ্ছিল
+  ```
+  Admin backend 404 পেলে সেই deploy-ও primary service-এ চলে যাচ্ছিল।
+
+### 🎯 CI Log এ প্রমাণ (Commit `782064b882`):
+```
+Line 29: 🗺️ Mapped service target for Admin Backend (Backup)
+         -> Active Service ID 'srv-d9d3n58js32c738n79k0' (supremeai-backend)
+```
+এই একটি লাইনই প্রমাণ করে — admin deploy আসলে primary-কে দু'বার দেখছিল।
+
+### ✅ স্থায়ী সমাধান (Commit `5412e0226a`):
+
+**1. `verify-render-deploy.py` — 404 হলে remap নিষিদ্ধ:**
+```python
+elif res.status_code == 404:
+    print(f"⚠️ Service {service_id} returned 404 for this API key. Key does not own this service.")
+    # ৪০৪ মানে এই API key এই service-এর মালিক নয়।
+    # অন্য service-এ remap করা false-positive তৈরি করবে — তাই skip করা হচ্ছে।
+```
+
+**2. `verify-render-deploy.py` — Fallback URL health check সরিয়ে দেওয়া:**
+```python
+# আগে (BUG): admin fail হলে backend.onrender.com থেকে 200 নিয়ে pass করতো
+# এখন (FIX): শুধুমাত্র নির্দিষ্ট service URL-এ health check, কোনো fallback নেই
+def check_http_health(url, label):
+    health_url = f"{url.rstrip('/')}/api/v1/health"
+    # ... শুধু এই URL-ই check হবে, অন্য কোনো URL-এ fallback নিষিদ্ধ
+```
+
+**3. `supreme-core-ci.yml` — 404 হলে deploy fail করে স্পষ্ট বার্তা দেয়:**
+```yaml
+if [ "$STATUS" = "404" ]; then
+  echo "❌ Admin service $BACKUP_SVC_ID returned 404."
+  echo "❌ ACTION REQUIRED: Set RENDER_DEPLOY_HOOK_URL_BACKUP webhook in GitHub Secrets."
+  exit 1
+fi
+```
+
+**4. `RENDER_DEPLOY_HOOK_URL_BACKUP` — GitHub Secret-এ সেট করা হয়েছে:**
+- Render Dashboard → `supremeai-admin` → Settings → Deploy Hook থেকে URL কপি করে GitHub Secrets-এ যোগ করা হয়েছে।
+- এই webhook দিয়ে API Key ছাড়াই admin backend deploy trigger হয়।
+
+### 🔑 ভবিষ্যতে একই সমস্যা হলে:
+```bash
+# Render deploy hook test করুন:
+curl -X POST "https://api.render.com/deploy/srv-d9fg48bh523c73f63bb0?key=YOUR_KEY"
+# Response: {"id":"...","service_id":"..."}
+```
 
 ---
 
-### 2. Single-Account vs Multi-Account Backup Behavior Summary
+## 🚨 Error Case 7: CORS Preflight Block — Admin Portal Can't Reach Backend
 
-| ফিচার / কনফিগারেশন | Single-Account Mode (বর্তমান অবস্থা) | Multi-Account (HA) Backup Mode |
-| :--- | :--- | :--- |
-| **`RENDER_API_KEY`** | Primary Render API Key | Primary Account API Key |
-| **`RENDER_API_KEY_BACKUP`** | Same as `RENDER_API_KEY` | Secondary (Backup) Account API Key |
-| **Target Web Service** | `srv-d9d3n58js32c738n79k0` | Primary: `srv-d9d3n58js32c738n79k0`, Backup: `srv-d9fg...` |
-| **CI/CD Auto-Fallback** | 404 পেয়ে স্বয়ংক্রিয়ভাবে সক্রিয় ব্যাকএন্ড টার্গেট করে শতভাগ গ্রিন পাস দেয় | দুটি ভিন্ন অ্যাকাউন্টে সমান্তরালভাবে ডেপ্লয় ও হেলথ ভেরিফাই করে |
+### 🔍 লক্ষণ (Symptom):
+- `https://supremeai-admin.web.app` থেকে API call করলে browser console-এ:
+  ```
+  403 Forbidden — Cross-Origin Request Blocked
+  ```
 
----
+### 🔴 আসল কারণ (Root Cause):
+- Browser প্রতিটি cross-origin request-এর আগে একটি `HTTP OPTIONS` Preflight পাঠায়।
+- `TrustedOriginMiddleware`-এ `OPTIONS` হ্যান্ডলার এবং `supremeai-admin.web.app`-এর জন্য ফলব্যাক ট্রাস্টেড অরিজিন ছিল না।
 
-### 3. ভবিষ্যতে আলাদা Backup Render Account সেটআপ করার নির্দেশিকা
-
-যদি ভবিষ্যতে সম্পূর্ণ ভিন্ন একটি Render অ্যাকাউন্টকে ডাবল-রেডানড্যান্সি (Backup Account) হিসেবে যুক্ত করতে চান:
-
-1. **নতুন অ্যাকাউন্টে সার্ভিস তৈরি:**  
-   দ্বিতীয় Render অ্যাকাউন্টে লগইন করে Docker/Python Service হিসেবে `supremeai-admin` নাম দিয়ে Web Service তৈরি করুন।
-2. **Backup API Key জেনারেট:**  
-   নতুন অ্যাকাউন্টের **Account Settings → API Keys** সেকশনে গিয়ে একটি নতুন API Key তৈরি করুন।
-3. **Secrets Update & Platform Sync:**  
-   লোকাল `.env` ফাইলে `RENDER_API_KEY_BACKUP`-এ নতুন কী-টি বসিয়ে সিঙ্ক্রোনাইজার রান করুন:
-   ```bash
-   python scripts/sync_all_platforms_env.py --apply
-   ```
-4. **CI Auto-Detection:**  
-   GitHub Actions workflow (`supreme-core-ci.yml`) এবং `verify-render-deploy.py` স্বয়ংক্রিয়ভাবে আলাদা অ্যাকাউন্ট শনাক্ত করে প্রাইমারি ও ব্যাকআপ উভয় সার্ভারে সমান্তরাল ডেপ্লয়মেন্ট নিশ্চিত করবে।
+### ✅ সমাধান (`backend/core/security/origin_validator.py`):
+```python
+if request.method == "OPTIONS":
+    if not origin or origin in allowed:
+        headers = {
+            "Access-Control-Allow-Origin": origin or "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        }
+        return JSONResponse(status_code=200, content={"status": "ok"}, headers=headers)
+```
 
 ---
 
-## 🛠️ Quick Operational Checklist for Render Deployments
+## 🛠️ Quick Operational Checklist
 
-1. **যেকোনো নতুন সিক্রেট যোগ করলে:**  
-   `backend/core/config.py`-তে lazy `@property` মেথড ব্যবহার করুন (কখনোই `Field(validation_alias=...)` নয়)।
-2. **ডিপ্লয়মেন্ট ব্লক হলে বা এনভায়রনমেন্ট ভ্যারিয়েবল পুশ করতে:**  
-   `python scripts/sync_all_platforms_env.py --apply` রান করুন।
-3. **রেন্ডারে ম্যানুয়াল ডেপ্লয়মেন্ট ট্রিগার করতে:**  
-   Render REST API বা Dashboard → `Clear build cache & deploy` ব্যবহার করুন।
+### ডেপ্লয়মেন্টে সমস্যা হলে প্রথমে চেক করুন:
+
+```bash
+# 1. Health check করুন
+curl https://supremeai-backend.onrender.com/api/v1/health
+curl https://supremeai-admin.onrender.com/api/v1/health
+
+# 2. Secrets sync করুন
+python scripts/sync_all_platforms_env.py --apply
+
+# 3. Admin backend manually deploy করুন (Webhook দিয়ে)
+curl -X POST "https://api.render.com/deploy/srv-d9fg48bh523c73f63bb0?key=woFdSrErY2Y"
+
+# 4. Primary backend manually deploy করুন
+curl -X POST "https://api.render.com/v1/services/srv-d9d3n58js32c738n79k0/deploys" \
+  -H "Authorization: Bearer $RENDER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"clearCache":"do_not_clear"}'
+```
+
+### নতুন সিক্রেট যোগ করার নিয়ম:
+1. `.env` ফাইলে যোগ করুন।
+2. `backend/core/config.py`-তে **lazy `@property`** মেথড হিসেবে সংজ্ঞায়িত করুন (`Field(validation_alias=...)` কখনো নয়)।
+3. `python scripts/sync_all_platforms_env.py --apply` রান করুন।
+
+### CI pipeline-এ Admin Backend deploy না হলে:
+1. GitHub Secrets-এ `RENDER_DEPLOY_HOOK_URL_BACKUP` সেট আছে কিনা চেক করুন।
+2. Render Dashboard → `supremeai-admin` → Settings → Deploy Hook থেকে URL কপি করুন।
+3. GitHub Secrets → `RENDER_DEPLOY_HOOK_URL_BACKUP`-এ বসিয়ে দিন।
 
 ---
 
-*SupremeAI 2.0 — Production Architecture Documentation*
+## 📊 Service Architecture Summary
+
+```mermaid
+graph TD
+    CI[GitHub Actions CI] -->|RENDER_DEPLOY_HOOK_URL| PB[supremeai-backend<br>srv-d9d3n58js32c738n79k0]
+    CI -->|RENDER_DEPLOY_HOOK_URL_BACKUP| AB[supremeai-admin<br>srv-d9fg48bh523c73f63bb0]
+    FE[supremeai-admin.web.app<br>Firebase Hosting] -->|firebase.json proxy rewrites| AB
+    FE -->|Direct fetch → CORS blocked| AB
+    AB -->|/api/v1/health| HC1[Health Check ✅]
+    PB -->|/api/v1/health| HC2[Health Check ✅]
+```
+
+---
+
+*SupremeAI 2.0 — Production Architecture Documentation*  
+*Commits: `51d593ce`, `1991bef9`, `782064b8`, `5412e022`*
