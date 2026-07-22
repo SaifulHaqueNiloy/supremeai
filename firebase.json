@@ -20,6 +20,8 @@
         "package-lock.json"
       ],
       "rewrites": [
+        { "source": "/admin-api/**", "destination": "https://supremeai-admin.onrender.com/admin-api/**" },
+        { "source": "/api/v1/**", "destination": "https://supremeai-admin.onrender.com/api/v1/**" },
         { "source": "/api/config/public", "destination": "https://supremeai-admin.onrender.com/api/config/public" },
         { "source": "/api/task/stream", "destination": "https://supremeai-admin.onrender.com/api/task/stream" },
         { "source": "/api/preferences/**", "destination": "https://supremeai-admin.onrender.com/api/preferences/**" },
@@ -63,6 +65,8 @@
         "package-lock.json"
       ],
       "rewrites": [
+        { "source": "/admin-api/**", "destination": "https://supremeai-admin.onrender.com/admin-api/**" },
+        { "source": "/api/v1/**", "destination": "https://supremeai-admin.onrender.com/api/v1/**" },
         { "source": "/api/config/public", "destination": "https://supremeai-admin.onrender.com/api/config/public" },
         { "source": "/api/task/stream", "destination": "https://supremeai-admin.onrender.com/api/task/stream" },
         { "source": "/api/preferences/**", "destination": "https://supremeai-admin.onrender.com/api/preferences/**" },
