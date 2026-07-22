@@ -98,7 +98,20 @@ python scripts/sync_all_platforms_env.py
 # সরাসরি Render, GitHub Secrets এবং Vercel-এ সিঙ্ক ও আপডেট করতে:
 python scripts/sync_all_platforms_env.py --apply
 ```
-এটি `.env`-এর ৮৪+ সিক্রেট এক ক্লিকে Render REST API-এর মাধ্যমে লাইভ সার্ভিসে আপডেট ও মার্জ করে।
+## 🚨 Error Case 5: CI Polling Sequential Timing & False Positive Timeout
+
+### 🔍 লক্ষণ (Symptom):
+- Render ডেপ্লয়মেন্ট বাস্তবে ১০০% **`LIVE`** এবং HTTP 200 OK হওয়া সত্ত্বেও GitHub Actions CI পাইপলাইনের `Verify Render Deploy Health` ধাপটিতে এরর আসা:  
+  `❌ No new deploy record found for Admin Backend (Backup) within 3 minutes of triggering it. The trigger call likely failed silently – latest deploy on file is 0:04:03 old.`
+
+### 🔴 আসল কারণ (Root Cause):
+- ভ্যালিডেশন স্ক্রিপ্টটি সিকোয়েন্সিয়ালি (পর পর) সার্ভিস চেক করে। রেন্ডারের ফ্রি-টিয়ার কন্টেইনার বিল্ড হতে ৪ মিনিটের বেশি সময় লাগায় Primary সার্ভিস চেক করতে ৪ মিনিট ১ সেকেন্ড পার হয়ে গিয়েছিল।
+- এরপর যখন Backup সার্ভিস ভেরিফাই করার টাইমে স্ক্রিপ্টটি সৃষ্টির সময় (`createdAt`) তুলনা করে, ৩ মিনিটের বেশি পার হয়ে যাওয়ায় স্ক্রিপ্টটি ভেবেছিল নতুন ডেপ্লয় ট্রিগার হয়নি এবং ফলস-পজিটিভ টাইমআউট দেখাচ্ছিল।
+
+### ✅ সমাধান (Fix Implemented):
+`.github/scripts/verify-render-deploy.py`-তে ২টি ক্রিটিক্যাল সেফগার্ড যুক্ত করা হয়েছে:
+1. **`LIVE` Status Bypass:** সার্ভিস ইতিমধ্যে **`LIVE`** হলে ৩ মিনিটের টাইমার চেক না করে সরাসরি HTTP হেলথ চেকের মাধ্যমে পাস করিয়ে দেওয়া।
+2. **Extended Threshold:** ফ্রি-টিয়ার বিল্ড লাইনের কথা বিবেচনা করে বয়সের থ্রেশহোল্ড ৩ মিনিট থেকে বাড়িয়ে ১০ মিনিট করা।
 
 ---
 
