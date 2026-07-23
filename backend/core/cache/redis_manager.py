@@ -20,7 +20,6 @@ from loguru import logger
 from pybreaker import CircuitBreaker, CircuitBreakerError
 from redis import asyncio as aioredis
 
-
 # বাংলা মন্তব্য: Redis সার্কিট ব্রেকার — ৩ বার ফেইল করলে ৩০ সেকেন্ডের জন্য ওপেন
 _redis_circuit_breaker = CircuitBreaker(
     fail_max=3,

@@ -94,8 +94,13 @@ class SemanticCache:
                     error_type="CACHE_LOOKUP_FAILURE",
                     message=f"SemanticCache lookup failed: {e}",
                     severity="WARNING",
-                    structured_context=ErrorContext(module="semantic_cache", env="production"),
-                    context={"task_type": task_type, "prompt_preview": prompt[:100] if prompt else ""},
+                    structured_context=ErrorContext(
+                        module="semantic_cache", env="production"
+                    ),
+                    context={
+                        "task_type": task_type,
+                        "prompt_preview": prompt[:100] if prompt else "",
+                    },
                 )
             )
             return None
@@ -123,7 +128,12 @@ class SemanticCache:
                     error_type="CACHE_WRITE_FAILURE",
                     message=f"Failed to save experience pattern: {e}",
                     severity="WARNING",
-                    structured_context=ErrorContext(module="semantic_cache", env="production"),
-                    context={"task_type": task_type, "prompt_preview": prompt[:100] if prompt else ""},
+                    structured_context=ErrorContext(
+                        module="semantic_cache", env="production"
+                    ),
+                    context={
+                        "task_type": task_type,
+                        "prompt_preview": prompt[:100] if prompt else "",
+                    },
                 )
             )
