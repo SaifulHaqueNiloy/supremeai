@@ -57,7 +57,10 @@ class TestConnectionManager:
         ws = AsyncMock()
         ws.query_params = {"token": "good-token"}
 
-        with patch("api.routes.websocket_agent.verify_token", return_value={"sub": "test-user", "role": "admin"}):
+        with patch(
+            "api.routes.websocket_agent.verify_token",
+            return_value={"sub": "test-user", "role": "admin"},
+        ):
             result = await manager._authenticate(ws)
 
         assert result == {"sub": "test-user", "role": "admin"}
@@ -71,7 +74,9 @@ class TestConnectionManager:
         ws = AsyncMock()
         ws.query_params = {"token": "bad-token"}
 
-        with patch("api.routes.websocket_agent.verify_token", side_effect=Exception("Invalid")):
+        with patch(
+            "api.routes.websocket_agent.verify_token", side_effect=Exception("Invalid")
+        ):
             result = await manager._authenticate(ws)
 
         assert result is None
@@ -106,12 +111,17 @@ class TestAnalyzeAndSavePreferences:
         from api.routes.websocket_agent import analyze_and_save_preferences
 
         mock_db = MagicMock()
-        mock_db.get_user_preferences.return_value = {"preferences": {"answering_style": "default"}}
+        mock_db.get_user_preferences.return_value = {
+            "preferences": {"answering_style": "default"}
+        }
 
         mock_response = {"text": '{"answering_style": "direct code"}'}
 
         with patch("api.routes.websocket_agent.SupabaseDB", return_value=mock_db):
-            with patch("api.routes.websocket_agent.llm_gateway.acompletion", new=AsyncMock(return_value=mock_response)):
+            with patch(
+                "api.routes.websocket_agent.llm_gateway.acompletion",
+                new=AsyncMock(return_value=mock_response),
+            ):
                 await analyze_and_save_preferences("user-1", "write code for me")
 
         mock_db.upsert_user_preferences.assert_called_once()
@@ -125,7 +135,10 @@ class TestAnalyzeAndSavePreferences:
         mock_db.get_user_preferences.return_value = None
 
         with patch("api.routes.websocket_agent.SupabaseDB", return_value=mock_db):
-            with patch("api.routes.websocket_agent.llm_gateway.acompletion", new=AsyncMock(side_effect=Exception("LLM down"))):
+            with patch(
+                "api.routes.websocket_agent.llm_gateway.acompletion",
+                new=AsyncMock(side_effect=Exception("LLM down")),
+            ):
                 with patch("api.routes.websocket_agent.logger"):
                     await analyze_and_save_preferences("user-1", "write code")
 

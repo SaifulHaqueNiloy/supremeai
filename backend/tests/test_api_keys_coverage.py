@@ -1,6 +1,6 @@
 """Tests to improve coverage for api_keys route (30.9% -> target 60%)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -11,7 +11,7 @@ class TestCreateAPIKey:
 
     def test_create_api_key_success(self):
         """Valid request should create API key."""
-        from api.routes.api_keys import create_api_key, CreateAPIKeyRequest
+        from api.routes.api_keys import CreateAPIKeyRequest, create_api_key
 
         mock_request = MagicMock()
         mock_request.state.user = {"sub": "test-user"}
@@ -21,7 +21,11 @@ class TestCreateAPIKey:
         with patch("api.routes.api_keys.generate_api_key", return_value="sk-test-key"):
             with patch("api.routes.api_keys.hash_api_key", return_value="hashed-key"):
                 with patch("api.routes.api_keys.create_api_key") as mock_create:
-                    mock_create.return_value = {"id": "key-1", "name": "Test Key", "key": "sk-test-key"}
+                    mock_create.return_value = {
+                        "id": "key-1",
+                        "name": "Test Key",
+                        "key": "sk-test-key",
+                    }
                     result = create_api_key(payload, mock_request)
 
         assert result["name"] == "Test Key"
@@ -29,7 +33,7 @@ class TestCreateAPIKey:
 
     def test_create_api_key_unauthorized(self):
         """Unauthenticated request should raise 401."""
-        from api.routes.api_keys import create_api_key, CreateAPIKeyRequest
+        from api.routes.api_keys import CreateAPIKeyRequest, create_api_key
 
         mock_request = MagicMock()
         mock_request.state.user = None
@@ -53,7 +57,9 @@ class TestListAPIKeys:
         mock_request.state.user = {"sub": "test-user"}
 
         with patch("api.routes.api_keys.get_api_keys_by_user") as mock_get:
-            mock_get.return_value = [{"id": "key-1", "name": "Test Key", "masked_key": "sk-test...xyz"}]
+            mock_get.return_value = [
+                {"id": "key-1", "name": "Test Key", "masked_key": "sk-test...xyz"}
+            ]
             result = list_api_keys(mock_request)
 
         assert len(result) == 1

@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from loguru import logger
 
-from api.errors import ErrorResponse, api_error_handler
+from api.errors import api_error_handler
 from api.middleware import (
     ChaosInjectorMiddleware,
     IdempotencyMiddleware,
@@ -132,7 +132,9 @@ class RateLimitExceeded(Exception):
     """Rate limit exceeded — ক্লায়েন্টকে 429 রিটার্ন করতে।"""
 
 
-async def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+async def _rate_limit_exceeded_handler(
+    request: Request, exc: RateLimitExceeded
+) -> JSONResponse:
     return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
 
@@ -248,7 +250,6 @@ def build_app_shell(
 
     # বাংলা মন্তব্য: সবার শেষে GZipMiddleware যোগ করা হলো bandwidth কমাতে।
     fastapi_app.add_middleware(GZipMiddleware, minimum_size=1000)
-
 
     # বাংলা মন্তব্য: api/errors.py-তে সংজ্ঞায়িত api_error_handler রেজিস্টার করা হলো
     # যাতে ErrorResponse schema টি globally এনফোর্স করা যায় এবং ডুপ্লিকেট হ্যান্ডলার অপসারণ করা হয়।
