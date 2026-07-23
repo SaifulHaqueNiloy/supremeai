@@ -475,7 +475,9 @@ class Settings(BaseSettings):
             )
         v = v or secrets.token_hex(64)
         if len(v) < 64 and "pytest" not in sys.modules:
-            raise ValueError("JWT secret must be >= 64 bytes entropy in all environments.")
+            raise ValueError(
+                "JWT secret must be >= 64 bytes entropy in all environments."
+            )
         return v
 
     @property
@@ -615,8 +617,6 @@ class Settings(BaseSettings):
                     "*.onrender.com",
                 ]
         return v
-
-
 
     @field_validator(
         "cors_origins", "user_cors_origins", "admin_cors_origins", mode="before"

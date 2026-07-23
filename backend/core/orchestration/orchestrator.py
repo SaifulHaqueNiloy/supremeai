@@ -9,7 +9,6 @@
 import asyncio
 import logging
 import os
-import sys
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -85,7 +84,9 @@ class Orchestrator:
                         f"Budget Guardian exited with code {result.returncode}. "
                         "Halting orchestrator to prevent financial bleed."
                     )
-                logger.info(f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}")
+                logger.info(
+                    f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}"
+                )
             except subprocess.TimeoutExpired:
                 logger.critical(
                     "[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed."
@@ -94,9 +95,7 @@ class Orchestrator:
                     "Budget guardian timed out. Halting orchestrator to prevent financial bleed."
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.critical(
-                    f"🔥 CRITICAL: Budget guardian failed! Error: {exc}"
-                )
+                logger.critical(f"🔥 CRITICAL: Budget guardian failed! Error: {exc}")
                 raise RuntimeError(
                     "Budget Guardian failure. Halting orchestrator to prevent financial bleed."
                 ) from exc

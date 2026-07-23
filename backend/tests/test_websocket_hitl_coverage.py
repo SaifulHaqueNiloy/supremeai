@@ -1,6 +1,6 @@
 """Tests to improve coverage for websocket_hitl route (18.5% -> target 60%)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -61,8 +61,9 @@ class TestHITLConnectionManager:
     @pytest.mark.asyncio
     async def test_broadcast_handles_disconnect_error(self):
         """broadcast should handle WebSocketDisconnect and remove failed connections."""
-        from api.routes.websocket_hitl import HITLConnectionManager
         from fastapi import WebSocketDisconnect
+
+        from api.routes.websocket_hitl import HITLConnectionManager
 
         mgr = HITLConnectionManager()
         ws1 = AsyncMock()
