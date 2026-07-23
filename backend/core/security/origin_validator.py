@@ -43,7 +43,11 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH",
                     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-API-Key, Accept, Origin",
                 }
-                return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "ok"}, headers=headers)
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={"status": "ok"},
+                    headers=headers,
+                )
 
         # টেস্ট এনভায়রনমেন্ট এবং টেস্টসার্ভার রিকোয়েস্টকে গেটওয়ে পাসের অনুমতি দেওয়া হলো
         if env == "test" or host in ["testserver", "localhost", "127.0.0.1"]:

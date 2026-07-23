@@ -11,15 +11,21 @@ class TestSessionTakeover:
 
     def test_request_takeover_success(self):
         """Valid request should create takeover token."""
-        from api.routes.session_takeover import request_takeover, TakeoverRequest
+        from api.routes.session_takeover import TakeoverRequest, request_takeover
 
         mock_request = MagicMock()
         mock_request.state.user = {"sub": "admin-user", "role": "admin"}
 
         payload = TakeoverRequest(session_id="session-123")
 
-        with patch("api.routes.session_takeover.secrets.token_urlsafe", return_value="takeover-token-xyz"):
-            with patch("api.routes.session_takeover._redis_client", new=AsyncMock(return_value=MagicMock())):
+        with patch(
+            "api.routes.session_takeover.secrets.token_urlsafe",
+            return_value="takeover-token-xyz",
+        ):
+            with patch(
+                "api.routes.session_takeover._redis_client",
+                new=AsyncMock(return_value=MagicMock()),
+            ):
                 result = request_takeover(payload, mock_request)
 
         assert "token" in result
@@ -27,7 +33,7 @@ class TestSessionTakeover:
 
     def test_request_takeover_unauthorized(self):
         """Non-admin should raise 403."""
-        from api.routes.session_takeover import request_takeover, TakeoverRequest
+        from api.routes.session_takeover import TakeoverRequest, request_takeover
 
         mock_request = MagicMock()
         mock_request.state.user = {"sub": "user", "role": "user"}
@@ -41,7 +47,7 @@ class TestSessionTakeover:
 
     def test_request_takeover_no_auth(self):
         """Unauthenticated should raise 401."""
-        from api.routes.session_takeover import request_takeover, TakeoverRequest
+        from api.routes.session_takeover import TakeoverRequest, request_takeover
 
         mock_request = MagicMock()
         mock_request.state.user = None
@@ -60,7 +66,10 @@ class TestSessionTakeover:
         mock_request = MagicMock()
         mock_request.state.user = {"sub": "admin-user", "role": "admin"}
 
-        with patch("api.routes.session_takeover._redis_client", new=AsyncMock(return_value=MagicMock())):
+        with patch(
+            "api.routes.session_takeover._redis_client",
+            new=AsyncMock(return_value=MagicMock()),
+        ):
             result = release_takeover("session-123", mock_request)
 
         assert result["status"] == "released"
@@ -85,9 +94,14 @@ class TestSessionTakeover:
         mock_request.state.user = {"sub": "admin-user", "role": "admin"}
 
         mock_redis = MagicMock()
-        mock_redis.get = AsyncMock(return_value=b'{"admin": "admin-user", "started_at": 1000}')
+        mock_redis.get = AsyncMock(
+            return_value=b'{"admin": "admin-user", "started_at": 1000}'
+        )
 
-        with patch("api.routes.session_takeover._redis_client", new=AsyncMock(return_value=mock_redis)):
+        with patch(
+            "api.routes.session_takeover._redis_client",
+            new=AsyncMock(return_value=mock_redis),
+        ):
             result = get_takeover_status("session-123", mock_request)
 
         assert result["status"] == "active"
@@ -102,7 +116,10 @@ class TestSessionTakeover:
         mock_redis = MagicMock()
         mock_redis.get = AsyncMock(return_value=None)
 
-        with patch("api.routes.session_takeover._redis_client", new=AsyncMock(return_value=mock_redis)):
+        with patch(
+            "api.routes.session_takeover._redis_client",
+            new=AsyncMock(return_value=mock_redis),
+        ):
             result = get_takeover_status("session-123", mock_request)
 
         assert result["status"] == "inactive"
