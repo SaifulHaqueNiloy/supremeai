@@ -166,21 +166,29 @@ class ProviderBudget:
         self._tpm_window.add(token_count=token_count)
         self._rpd_window.add()
 
-    def is_available(self) -> bool:
-        """Return True if this provider can accept a request right now."""
+    def is_available(self, safety_threshold_pct: float = 0.85) -> bool:
+        """
+        Return True if this provider can accept a request right now.
+        বাংলা মন্তব্য: Sliding Window Predictive Velocity Check — হার্ড ৪২৯ এরর আসার আগেই ৮৫% ইউসেজ লেভেলে প্রিম্পটিভ সুইচ করা হয়।
+        """
         if time.time() < self._paused_until:
             return False
-        if self._rpm_window.count >= self.limits["rpm"]:
-            logger.warning(f"[FreeTier] {self.provider} RPM limit reached ({self.limits['rpm']})")
+
+        # 85% predictive limit thresholds
+        rpm_safe_limit = int(self.limits["rpm"] * safety_threshold_pct)
+        tpm_safe_limit = int(self.limits["tpm"] * safety_threshold_pct)
+        rpd_safe_limit = int(self.limits["rpd"] * safety_threshold_pct)
+
+        if self._rpm_window.count >= rpm_safe_limit:
+            logger.warning(f"[FreeTier Predictive] {self.provider} RPM velocity approaching limit ({self._rpm_window.count}/{self.limits['rpm']})")
             return False
-        if self._tpm_window.token_sum >= self.limits["tpm"]:
-            logger.warning(f"[FreeTier] {self.provider} TPM limit reached ({self.limits['tpm']})")
-            return False
-        if self._rpd_window.count >= self.limits["rpd"]:
+        if self._tpm_window.token_sum >= tpm_safe_limit:
             logger.warning(
-                f"[FreeTier] {self.provider} RPD limit reached ({self.limits['rpd']}). "
-                f"Resets in {self._rpd_window.seconds_until_oldest_expires():.0f}s"
+                f"[FreeTier Predictive] {self.provider} TPM velocity approaching limit ({self._tpm_window.token_sum}/{self.limits['tpm']})"
             )
+            return False
+        if self._rpd_window.count >= rpd_safe_limit:
+            logger.warning(f"[FreeTier Predictive] {self.provider} RPD velocity approaching limit ({self._rpd_window.count}/{self.limits['rpd']})")
             return False
         return True
 

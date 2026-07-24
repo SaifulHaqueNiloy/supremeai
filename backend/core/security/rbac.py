@@ -164,9 +164,6 @@ def authorize(
     Returns:
         True if authorized, False otherwise.
     """
-    if context and context.get("bypass_rbac"):
-        return True
-
     return has_permission(user_role, required_permission)
 
 

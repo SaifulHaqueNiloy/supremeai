@@ -226,5 +226,3 @@ class MultiLevelCache:
         self.invalidate_local(key)
         if key:
             await self.redis_cache.delete(key)
-
-

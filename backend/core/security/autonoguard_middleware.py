@@ -58,9 +58,16 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
 
         # Extract admin identity (from JWT/auth middleware)
         user = getattr(request.state, "user", None)
-        admin_id = "unknown"
+        admin_id: str | None = None
         if isinstance(user, dict):
-            admin_id = user.get("sub", "unknown")
+            admin_id = user.get("sub")
+
+        if not admin_id or admin_id == "unknown":
+            logger.warning(f"🚨 Unauthenticated request to sensitive path {path} — denied")
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Authentication required for this operation"},
+            )
 
         # Extract IP for churn detection
         client_ip = request.client.host if request.client else "unknown"

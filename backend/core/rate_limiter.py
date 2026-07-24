@@ -71,9 +71,9 @@ class AsyncRateLimiter:
     async def acquire_tenant(self, tenant_id: str, tier: str = "free") -> bool:
         """Multi-tenant tier-based rate limiting. (Bangla: টেন্যান্ট-ভিত্তিক টিয়ার্ড রেট লিমিট)"""
         tiers = {
-            "free": (60, 60),        # 60 requests per 60 seconds
-            "pro": (600, 60),       # 600 requests per 60 seconds
-            "enterprise": (6000, 60) # 6000 requests per 60 seconds
+            "free": (60, 60),  # 60 requests per 60 seconds
+            "pro": (600, 60),  # 600 requests per 60 seconds
+            "enterprise": (6000, 60),  # 6000 requests per 60 seconds
         }
         limit, window = tiers.get(tier.lower(), tiers["free"])
         key = f"rate_limit:tenant:{tenant_id}:{tier}"
@@ -106,4 +106,3 @@ async def advanced_rate_limit_check(
     """
     effective_limit = int(limit * burst_multiplier)
     return await rate_limiter.acquire(key, limit=effective_limit, window=window)
-

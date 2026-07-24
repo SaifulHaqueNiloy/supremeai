@@ -130,7 +130,6 @@ async def get_db_pool_with_retry(max_retries: int = 3, initial_delay: float = 1.
     raise RuntimeError("Failed to acquire DB pool after retries.")
 
 
-
 async def run_cpu_bound_task_safely(func, *args, **kwargs):
     """সিঙ্ক্রোনাস বা ভারী সিপিইউ টাস্ককে মেইন ইভেন্ট লুপ আটকানো ছাড়া অফলোড করা। (Bangla: Thread offloader)"""
     return await asyncio.to_thread(func, *args, **kwargs)

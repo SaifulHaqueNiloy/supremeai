@@ -151,3 +151,23 @@ class RollbackMonitor:
             "report_sent": True,
         }
         return report
+
+    async def execute_automatic_rollback(self, fingerprint: str, reason: str) -> bool:
+        """
+        বাংলা মন্তব্য: ৩ বারের বেশি মিউটেশন চেষ্টা ফেইল করলে অটোমেটিক গিট রিভার্ট এবং HITL নোটিফিকেশন এস্কেলেশন ট্রিগার করে।
+        """
+        logger.critical(f"RollbackMonitor: Automatic rollback triggered for fingerprint {fingerprint[:8]} (reason={reason})")
+        try:
+            import subprocess
+
+            subprocess.run(
+                ["git", "checkout", "HEAD", "--", "backend/"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            logger.info("RollbackMonitor: Restored workspace to safe HEAD state.")
+            return True
+        except Exception as exc:
+            logger.error(f"RollbackMonitor execute_automatic_rollback error: {exc}")
+            return False

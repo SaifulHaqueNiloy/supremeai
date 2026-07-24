@@ -4,7 +4,6 @@ import asyncio
 import json
 import os
 import re
-import sys
 import time
 import uuid
 
@@ -30,7 +29,7 @@ class HoneypotMiddleware:
             return
 
         env = os.getenv("ENV", "").lower()
-        if env == "test" or ("pytest" in sys.modules and env not in {"production", "prod"}):
+        if env == "test":
             await self.app(scope, receive, send)
             return
 
