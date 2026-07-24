@@ -69,7 +69,6 @@ class TestSecureRedisManagerInitialization:
         assert mgr.client == "mock_client"
 
 
-
 class TestSecureRedisManagerOperations:
     """SecureRedisManager SET/GET/DELETE operations."""
 
