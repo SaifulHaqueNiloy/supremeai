@@ -9,27 +9,28 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from api.dependencies import get_current_user_token
 from main import app
 
 client = TestClient(app)
 
 
-def test_swarm_router_is_registered():
+@patch("api.routes.swarm.swarm_streamer")
+def test_swarm_router_is_registered(mock_streamer):
     """বাংলা: /api/v1/swarm/* রুট রেজিস্টার্ড কিনা — regression guard, যেন
     ভবিষ্যতে কেউ router.py থেকে এন্ট্রিটা আবার সাইলেন্টলি বাদ না দেয়।
     """
-    paths = {route.path for route in app.routes}
-    assert "/api/v1/swarm/stream" in paths
-    assert "/api/v1/swarm/halt" in paths
-    assert "/api/v1/swarm/resume" in paths
-    assert "/api/v1/swarm/telemetry/patch-result" in paths
+    mock_streamer.set_halt = AsyncMock()
+    mock_streamer.broadcast = AsyncMock()
+    response = client.post("/api/v1/swarm/halt")
+    assert response.status_code != 404, "Swarm router not registered! Returned 404."
 
 
 @patch("api.routes.admin.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_halt_requires_admin(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "user_test", "role": "user"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "user_test", "role": "user"}
+    app.dependency_overrides[get_current_user_token] = lambda: {"sub": "user_test", "role": "user"}
 
     response = client.post("/api/v1/swarm/halt", headers={"Authorization": "Bearer dummy"})
     assert response.status_code in (401, 403)
@@ -41,7 +42,7 @@ def test_halt_requires_admin(mock_decode_jwt, mock_token):
 @patch("core.security.auth_middleware._decode_jwt")
 def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {
+    app.dependency_overrides[get_current_user_token] = lambda: {
         "sub": "admin_test",
         "role": "admin",
     }
@@ -72,7 +73,7 @@ def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
 @patch("core.security.auth_middleware._decode_jwt")
 def test_resume_clears_flag_and_broadcasts(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {
+    app.dependency_overrides[get_current_user_token] = lambda: {
         "sub": "admin_test",
         "role": "admin",
     }

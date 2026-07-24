@@ -72,10 +72,16 @@ class LLMGateway:
         self._setup_callbacks()
         self._circuit_breakers: dict[str, CircuitBreaker] = {}
 
-        # বাংলা মন্তব্য: SemanticCache lazy import — cold start এড়াতে
-        from core.cache.semantic_cache import SemanticCache
+        # Performance Optimization: Lazy initialize cache on demand to prevent circular imports
+        self._cache = None
 
-        self.cache = SemanticCache()
+    @property
+    def cache(self):
+        if self._cache is None:
+            from core.cache.semantic_cache import SemanticCache
+
+            self._cache = SemanticCache()
+        return self._cache
 
     def _setup_litellm_globals(self) -> None:
         """

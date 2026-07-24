@@ -1,9 +1,11 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, Menu, session, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, Menu, session, shell, Tray } from 'electron';
 import path from 'path';
 
 const PRELOAD_PATH = path.join(__dirname, 'preload.cjs');
 const IS_DEV = !app.isPackaged;
 const API_BASE = process.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+let tray = null;
 
 function createWindow() {
   const isDark = nativeTheme.shouldUseDarkColors;
@@ -36,7 +38,20 @@ function createWindow() {
     win.loadFile(path.join(__dirname, portal, 'index.html'));
   }
 
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    win.show();
+    if (!IS_DEV) {
+      try {
+        const { autoUpdater } = require('electron-updater');
+        autoUpdater.logger = console;
+        autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+          console.log('[SupremeAI Desktop] Auto-update check skipped/idle:', err.message);
+        });
+      } catch (err) {
+        console.log('[SupremeAI Desktop] electron-updater module standby:', err.message);
+      }
+    }
+  });
 
   win.on('close', (event) => {
     if (!app.isQuitting && process.platform === 'darwin') {
@@ -105,6 +120,27 @@ function setupMenu(win) {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
+function setupTray(win) {
+  try {
+    const iconPath = path.join(__dirname, 'media', 'icon.png');
+    tray = new Tray(iconPath);
+    const contextMenu = Menu.buildFromTemplate([
+      { label: 'Show SupremeAI Studio', click: () => { win.show(); win.focus(); } },
+      { label: 'Hide to System Tray', click: () => win.hide() },
+      { type: 'separator' },
+      { label: 'Quit SupremeAI', click: () => { app.isQuitting = true; app.quit(); } }
+    ]);
+    tray.setToolTip('SupremeAI Autonomous Studio');
+    tray.setContextMenu(contextMenu);
+    tray.on('click', () => {
+      if (win.isVisible()) win.hide();
+      else { win.show(); win.focus(); }
+    });
+  } catch (err) {
+    console.log('[SupremeAI Tray] Tray icon setup deferred:', err.message);
+  }
+}
+
 function setupIPC(win) {
   ipcMain.handle('window:minimize', () => win.minimize());
   ipcMain.handle('window:maximize', () => win.isMaximized() ? win.unmaximize() : win.maximize());
@@ -157,6 +193,7 @@ app.whenReady().then(() => {
   const win = createWindow();
   setupMenu(win);
   setupIPC(win);
+  setupTray(win);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

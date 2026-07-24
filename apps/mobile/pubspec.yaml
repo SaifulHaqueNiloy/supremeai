@@ -45,6 +45,14 @@ dependencies:
   firebase_messaging: ^16.4.1
   flutter_local_notifications: ^19.5.0
   flutter_secure_storage: ^10.3.1
+  # বাংলা মন্তব্য: প্রোডাকশন গ্রেড প্যাকেজসমূহ যোগ করা হলো (ন্যাভিগেশন, অ্যানিমেশন, নেটওয়ার্কিং ও বায়োমেট্রিক সিকিউরিটি)
+  go_router: ^14.8.0
+  flutter_animate: ^4.5.2
+  dio: ^5.8.0
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.17
+  local_auth: ^2.3.0
+  flutter_riverpod: ^2.6.1
   web_socket_channel: ^3.0.3
 
 dev_dependencies:
