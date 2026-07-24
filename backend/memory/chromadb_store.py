@@ -137,6 +137,37 @@ class ChromaDBStore:
             }
         self._save_fallback()
 
+    def add_document_incremental(self, doc_id: str, text: str, metadata: dict[str, Any] = None) -> bool:
+        """Add or update document only if content hash changed (Bangla: ইনক্রিমেন্টাল ইনডেক্সিং).
+
+        Returns:
+            bool: True if indexed/updated, False if skipped due to identical hash.
+        """
+        import hashlib
+        content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        meta = metadata or {}
+        meta["content_hash"] = content_hash
+
+        # Check existing hash in fallback or metadata
+        if self._collection is not None:
+            try:
+                existing = self._collection.get(ids=[doc_id], include=["metadatas"])
+                if existing and existing.get("metadatas") and len(existing["metadatas"]) > 0:
+                    old_hash = existing["metadatas"][0].get("content_hash")
+                    if old_hash == content_hash:
+                        _logger.debug(f"Skipping indexing for unchanged document {doc_id}")
+                        return False
+            except Exception:  # noqa: BLE001
+                pass
+
+        elif doc_id in self._fallback_docs:
+            old_hash = self._fallback_docs[doc_id].get("metadata", {}).get("content_hash")
+            if old_hash == content_hash:
+                return False
+
+        self.add_document(doc_id=doc_id, text=text, metadata=meta)
+        return True
+
     def query(self, query_text: str, n_results: int = 5, where: dict[str, Any] = None) -> list[tuple[str, float, dict[str, Any]]]:
         if self._collection is not None:
             try:
