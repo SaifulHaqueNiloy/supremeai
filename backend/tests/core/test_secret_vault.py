@@ -1,7 +1,6 @@
 """Tests for core.security.secret_vault — ProductionSecretVault."""
 
-import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

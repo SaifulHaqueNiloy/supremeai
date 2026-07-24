@@ -1,10 +1,9 @@
 """Tests for core.security.origin_validator — TrustedOriginMiddleware."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-from fastapi.responses import JSONResponse
-from starlette.types import ASGIApp
+from starlette.responses import JSONResponse
 
 from core.security.origin_validator import TrustedOriginMiddleware
 
@@ -12,116 +11,112 @@ from core.security.origin_validator import TrustedOriginMiddleware
 class TestTrustedOriginMiddleware:
     """Tests for TrustedOriginMiddleware."""
 
+    def _make_request(self, method="GET", path="/api/test", headers=None, origin=None, client_host="127.0.0.1"):
+        """Helper to create a mock request."""
+        request = MagicMock()
+        request.method = method
+        request.url.path = path
+        all_headers = {"host": "localhost"}
+        if origin:
+            all_headers["Origin"] = origin
+        if headers:
+            all_headers.update(headers)
+        request.headers = all_headers
+        request.client = MagicMock()
+        request.client.host = client_host
+        return request
+
+    @pytest.mark.asyncio
     async def test_non_http_scope_passes_through(self):
-        """Non-HTTP scopes (e.g. websocket) pass through."""
+        """Test that middleware handles non-HTTP scopes."""
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        scope = {"type": "websocket"}
-        await middleware.dispatch(
-            MagicMock(url=MagicMock(path="/ws"), headers={}, method="GET"),
-            app,
-        )
+        request = self._make_request()
+        response = await middleware.dispatch(request, app)
+        app.assert_awaited_once()
 
+    @pytest.mark.asyncio
     async def test_options_preflight_allowed_origin(self):
-        """OPTIONS preflight with allowed origin returns 200."""
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "OPTIONS"
-        request.headers = {"Origin": "https://supremeai-admin.web.app", "host": "localhost"}
-        request.url.path = "/api/test"
-
+        request = self._make_request(method="OPTIONS", origin="https://supremeai-admin.web.app")
         response = await middleware.dispatch(request, app)
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_options_preflight_no_origin(self):
-        """OPTIONS without origin is allowed."""
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "OPTIONS"
-        request.headers = {"host": "localhost"}
-        request.url.path = "/api/test"
-
+        request = self._make_request(method="OPTIONS")
         response = await middleware.dispatch(request, app)
         assert response.status_code == 200
 
-    async def test_test_environment_bypasses_check(self, monkeypatch):
-        """Test environment allows all origins."""
-        monkeypatch.setenv("ENV", "test")
+    @pytest.mark.asyncio
+    async def test_test_environment_bypasses_check(self):
+        """Test env bypasses origin check."""
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "GET"
-        request.headers = {"host": "testserver", "Origin": "http://evil.com"}
-        request.url.path = "/api/test"
+        request = self._make_request(origin="http://evil.com")
+        with patch.dict("os.environ", {"ENV": "test"}):
+            response = await middleware.dispatch(request, app)
+            app.assert_awaited_once()
 
-        await middleware.dispatch(request, app)
-
-    async def test_public_path_bypasses_origin_check(self, monkeypatch):
-        """Public paths bypass origin validation."""
-        monkeypatch.setenv("ENV", "production")
+    @pytest.mark.asyncio
+    async def test_public_path_bypasses_origin_check(self):
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "GET"
-        request.headers = {"host": "localhost", "Origin": "http://evil.com"}
-        request.url.path = "/health"
+        request = self._make_request(path="/health", origin="http://evil.com")
 
-        # /health is a public path
         from core.config import settings
 
         old_paths = settings.supremeai_public_paths
         settings.supremeai_public_paths = ["/health"]
         try:
             response = await middleware.dispatch(request, app)
-            # Should not block public paths
-            assert not isinstance(response, JSONResponse) or response.status_code != 403
+            app.assert_awaited_once()
         finally:
             settings.supremeai_public_paths = old_paths
 
-    async def test_blocked_unauthorized_origin(self, monkeypatch):
-        """Unauthorized origin in production returns 403."""
-        monkeypatch.setenv("ENV", "production")
+    @pytest.mark.asyncio
+    async def test_blocked_unauthorized_origin(self):
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "GET"
-        request.headers = {"host": "localhost", "Origin": "http://evil-hacker.com"}
-        request.url.path = "/api/protected"
-        request.client.host = "10.0.0.5"
+        request = self._make_request(path="/api/protected", origin="http://evil-hacker.com", client_host="10.0.0.5")
+        request.headers = {"host": "api.supremeai.com", "Origin": "http://evil-hacker.com"}
 
-        with patch.object(middleware, "allowed_origins", {"https://trusted.com"}):
+        with patch.dict("os.environ", {"ENV": "production"}):
+            with patch("core.security.origin_validator.TrustedOriginMiddleware.allowed_origins", new_callable=PropertyMock) as mock_origins:
+                mock_origins.return_value = {"https://trusted.com"}
+                with patch("core.security.origin_validator.settings") as mock_settings:
+                    mock_settings.supremeai_public_paths = ["/health"]
+                    mock_settings.allowed_hosts = ["api.supremeai.com"]
+                    response = await middleware.dispatch(request, app)
+                    assert isinstance(response, JSONResponse)
+                    assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_allowed_origin_passes(self):
+        app = AsyncMock()
+        middleware = TrustedOriginMiddleware(app)
+        request = self._make_request(origin="https://trusted.com")
+
+        with patch.dict("os.environ", {"ENV": "production"}):
+            with patch("core.security.origin_validator.TrustedOriginMiddleware.allowed_origins", new_callable=PropertyMock) as mock_origins:
+                mock_origins.return_value = {"https://trusted.com"}
+                response = await middleware.dispatch(request, app)
+                app.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_missing_origin_passes(self):
+        app = AsyncMock()
+        middleware = TrustedOriginMiddleware(app)
+        request = self._make_request()
+
+        with patch.dict("os.environ", {"ENV": "production"}):
             response = await middleware.dispatch(request, app)
-            assert response.status_code == 403
+            app.assert_awaited_once()
 
-    async def test_allowed_origin_passes(self, monkeypatch):
-        """Allowed origin passes through."""
-        monkeypatch.setenv("ENV", "production")
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "GET"
-        request.headers = {"host": "localhost", "Origin": "https://trusted.com"}
-        request.url.path = "/api/protected"
-
-        with patch.object(middleware, "allowed_origins", {"https://trusted.com"}):
-            await middleware.dispatch(request, app)
-
-    async def test_missing_origin_passes(self, monkeypatch):
-        """Missing Origin header passes through in production."""
-        monkeypatch.setenv("ENV", "production")
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = MagicMock()
-        request.method = "GET"
-        request.headers = {"host": "localhost"}
-        request.url.path = "/api/protected"
-
-        await middleware.dispatch(request, app)
-
-    async def test_allowed_origins_property(self):
-        """allowed_origins combines configured and defaults."""
+    def test_allowed_origins_property(self):
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
         origins = middleware.allowed_origins
