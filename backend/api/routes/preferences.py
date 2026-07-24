@@ -50,7 +50,7 @@ async def get_preferences(user_id: str = Query(default="default")):
 
 
 @router.post("/")
-async def upsert_preferences(user_id: str = Query(default="default"), payload: PreferenceUpdate = ...):
+async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(default="default")):
     if not db.client:
         # For offline/local mode, still broadcast the theme
         if payload.theme:
