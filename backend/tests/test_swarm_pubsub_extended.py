@@ -50,13 +50,11 @@ async def test_broadcast_publishes_json():
 @pytest.mark.anyio
 async def test_subscribe_yields_messages():
     pubsub = SwarmPubSub()
-    mock_redis = AsyncMock()
-    pubsub.redis = mock_redis
-
+    mock_redis = MagicMock()
     mock_pubsub = AsyncMock()
     mock_redis.pubsub.return_value = mock_pubsub
 
-    messages = [b"msg1", b"msg2"]
+    messages = [{"type": "message", "data": b"msg1"}]
     mock_pubsub.get_message.side_effect = messages + [None]
 
     async def fake_sleep(_):
@@ -65,8 +63,8 @@ async def test_subscribe_yields_messages():
     with patch("asyncio.sleep", fake_sleep):
         with patch.object(pubsub, "_get_redis", return_value=mock_redis):
             gen = pubsub.subscribe()
-            await gen.__anext__()
-            # generator terminated
+            msg = await gen.__anext__()
+            assert msg == "msg1"
 
 
 def test_get_swarm_streamer_returns_singleton():
