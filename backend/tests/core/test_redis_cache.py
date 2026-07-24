@@ -63,15 +63,11 @@ class TestSecureRedisManagerInitialization:
 
     @pytest.mark.asyncio
     async def test_client_property_sync_fallback(self):
-        """client property triggers sync fallback init."""
-        with patch("core.cache.redis_manager.os.getenv", return_value="redis://localhost:6379/0"):
-            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value="redis://localhost:6379/0"):
-                mgr = SecureRedisManager()
-                mgr.url = "redis://localhost:6379/0"
-                mgr._initialized = False
-                mgr._client = None
-                _ = mgr.client
-                assert mgr._initialized is True
+        """client property returns _client directly without sync blocking."""
+        mgr = SecureRedisManager()
+        mgr._client = "mock_client"
+        assert mgr.client == "mock_client"
+
 
 
 class TestSecureRedisManagerOperations:
