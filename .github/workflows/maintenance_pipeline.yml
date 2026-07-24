@@ -185,14 +185,16 @@ jobs:
           key: ${{ needs.setup.outputs.requirements-cache-key }}
       - name: "⚙️ Install Scanner"
         run: pip install pip-audit
-      - name: "📦 Run Vulnerability Scan"
+      - name: "📦 Run Vulnerability Scan (Fast Requirements Audit)"
+        working-directory: backend
         run: |
-          pip-audit --format json > vulnerability-report.json || true
+          poetry export --format requirements.txt --output reqs.txt --without ml,tools
+          pip-audit -r reqs.txt --format json > vulnerability-report.json || true
       - name: "📤 Upload Vulnerability Report"
         uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
-          path: vulnerability-report.json
+          path: backend/vulnerability-report.json
 
   generate-codebase-docs:
     name: 📝 Auto-Generate & Deploy Docs
