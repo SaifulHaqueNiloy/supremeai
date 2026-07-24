@@ -18,6 +18,7 @@ Dependencies:
 - `models.sentinel`: Internal module defining the ORM models (`ApiEndpoint`, `SystemDependency`, `SystemIncident`) used by the agent for data persistence."""
 
 import asyncio
+import shutil
 from datetime import UTC, datetime
 
 import httpx

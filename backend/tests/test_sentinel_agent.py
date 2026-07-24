@@ -93,16 +93,14 @@ class TestSentinelAgent:
 
             await agent.trigger_event("TEST_EVENT", "Test details")
 
-    def test_prevent_duplicate_startup(self):
+    @pytest.mark.asyncio
+    async def test_prevent_duplicate_startup(self):
         """Test that agent prevents duplicate startups."""
         agent = SentinelAgent()
         agent._is_active = True
 
         # Should skip if already active
-        async def run_loop():
-            await agent.run_periodic_loop()
-
-        asyncio.get_event_loop().run_until_complete(run_loop())
+        await agent.run_periodic_loop()
 
         # Should still be active
         assert agent._is_active is True
