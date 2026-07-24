@@ -422,9 +422,11 @@ jobs:
         with:
           path: |
             ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-v2-${{ hashFiles('backend/poetry.lock') }}
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-v3-${{ hashFiles('backend/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-poetry-v2-
+            ${{ runner.os }}-poetry-v3-
 
       - name: 📦 Install Dependencies (Smart Sync)
         working-directory: backend
