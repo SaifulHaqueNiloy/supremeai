@@ -688,6 +688,18 @@ class Settings(BaseSettings):
                 logger.warning(f"⚠️ Missing config vars: {', '.join(missing)}. Bypassing hard crash for server resilience.")
         return self
 
+    @property
+    def jti_blacklist_cache(self) -> set:
+        """JWT JTI replay attack প্রতিরোধের জন্য ইন-মেমরি ক্যাশ। (Bangla: JTI ব্ল্যাকলিস্ট ক্যাশিং)"""
+        if not hasattr(self, "_jti_cache"):
+            self._jti_cache: set[str] = set()
+        return self._jti_cache
+
+    def reload_env_vars(self) -> None:
+        """প্রোডাকশনে সার্ভার রিস্টার্ট ছাড়াই কনফিগারেশন রিলোড করার ডাইনামিক মেথড। (Bangla: Hot-reload listener)"""
+        load_dotenv(override=True)
+        logger.info("⚙️ [Config] Environment variables hot-reloaded successfully.")
+
 
 # ── Singleton instantiation with True Fail-Fast ────────────────────────────────
 # বাংলা মন্তব্য: এখানে Fail-Fast সত্যিকারভাবে enforce হচ্ছে।

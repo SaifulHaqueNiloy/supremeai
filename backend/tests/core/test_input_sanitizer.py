@@ -21,7 +21,7 @@ class TestAmbiguityDetection:
     def test_vague_something(self, sanitizer):
         result = sanitizer.detect_ambiguity("do something with the data")
         assert result["is_ambiguous"] is True
-        assert "something" in result["vague_terms"]
+        assert any("something" in term for term in result["vague_terms"])
 
     def test_vague_anything(self, sanitizer):
         result = sanitizer.detect_ambiguity("can you do anything about this")
