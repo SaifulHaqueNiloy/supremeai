@@ -11,9 +11,13 @@ import pytest
 from core.messaging import nats_messaging
 from core.messaging.nats_messaging import NATSClient
 
-# Ensure nats_messaging.nats is non-None during tests so connect logic runs
+# Ensure nats_messaging.nats is non-None and has an AsyncMock connect during tests
 if nats_messaging.nats is None:
-    nats_messaging.nats = MagicMock()
+    mock_nats_mod = MagicMock()
+    mock_nats_mod.connect = AsyncMock()
+    nats_messaging.nats = mock_nats_mod
+elif not hasattr(nats_messaging.nats, "connect") or not isinstance(nats_messaging.nats.connect, AsyncMock):
+    nats_messaging.nats.connect = AsyncMock()
 
 
 # -------------------- Fixtures --------------------
@@ -80,7 +84,8 @@ class TestConnect:
         mock_kv = AsyncMock()
         mock_js.key_value.return_value = mock_kv
 
-        with patch("nats.connect", return_value=mock_nc) as mock_connect:
+        mock_connect = AsyncMock(return_value=mock_nc)
+        with patch.object(nats_messaging.nats, "connect", mock_connect):
             await nats_client.connect()
 
             mock_connect.assert_called_once_with(servers=["nats://localhost:4222"], token="test_token")
@@ -98,7 +103,8 @@ class TestConnect:
         mock_nc.jetstream = MagicMock(return_value=mock_js)
         mock_js.key_value.return_value = mock_kv
 
-        with patch("nats.connect", return_value=mock_nc) as mock_connect:
+        mock_connect = AsyncMock(return_value=mock_nc)
+        with patch.object(nats_messaging.nats, "connect", mock_connect):
             await client.connect()
 
             # token shouldn't be in kwargs when None
@@ -113,7 +119,8 @@ class TestConnect:
         mock_kv = AsyncMock()
         mock_js.create_key_value.return_value = mock_kv
 
-        with patch("nats.connect", return_value=mock_nc):
+        mock_connect = AsyncMock(return_value=mock_nc)
+        with patch.object(nats_messaging.nats, "connect", mock_connect):
             await nats_client.connect()
 
             mock_js.create_key_value.assert_called_once_with(bucket="WORKER_REGISTRY")
@@ -124,7 +131,7 @@ class TestConnect:
         """বাংলা মন্তব্য: NoServersError handle করে gracefully।"""
         from nats.errors import NoServersError
 
-        with patch("nats.connect", side_effect=NoServersError("No servers available")):
+        with patch.object(nats_messaging.nats, "connect", side_effect=NoServersError("No servers available")):
             await nats_client.connect()
             # Connection fails gracefully, nc remains None
             assert nats_client.nc is None
@@ -134,7 +141,7 @@ class TestConnect:
     @pytest.mark.asyncio
     async def test_connection_general_exception(self, nats_client):
         """বাংলা মন্তব্য: General exception handle করে gracefully।"""
-        with patch("nats.connect", side_effect=RuntimeError("Connection timeout")):
+        with patch.object(nats_messaging.nats, "connect", side_effect=RuntimeError("Connection timeout")):
             await nats_client.connect()
             assert nats_client.nc is None
 
