@@ -23,7 +23,7 @@ Dependencies:
 - `core.observability.telemetry`: Initializes OpenTelemetry for distributed tracing.
 - `core.sentinel_agent`: Manages a background agent responsible for periodic system tasks.
 - `database.db`: Used for bootstrapping and ensuring the integrity of the Supabase database schema.
-- `tools.ai_agents.browser_agent`: Provides functionality to shut down any globally managed browser instances."""
+- `tools.ai_agents.browser_agent`: Provides functionality to shut down any globally managed browser instances."""  # noqa: E501
 
 # backend/core/lifespan.py
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.

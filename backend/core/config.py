@@ -326,7 +326,7 @@ class Settings(BaseSettings):
                 val = secret_vault.fetch_secret(secret_key)
                 if val:
                     self._cached_secrets[secret_key] = val
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: BLE001, S110
                 pass  # Non-critical — some secrets may be optional
         self._secrets_batch_loaded = True
 
@@ -473,7 +473,7 @@ class Settings(BaseSettings):
 
     def _load_or_generate_jwt_secret(self) -> str:
         """Persist JWT secret to file to avoid regeneration across restarts in non-prod."""
-        secret_file = "/etc/secrets/jwt_secret"
+        secret_file = "/etc/secrets/jwt_secret"  # noqa: S105
         try:
             if os.path.exists(secret_file):
                 with open(secret_file) as f:

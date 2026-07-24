@@ -13,7 +13,7 @@ Dependencies:
 - `loguru`: For structured logging of operational events and errors within the module.
 - `redis.asyncio`: The asynchronous Redis client library used for PubSub operations.
 - `core.config`: To retrieve application settings, specifically the Redis connection URL.
-- `core.messaging.event_bus`: For emitting structured error events to the central application event bus."""
+- `core.messaging.event_bus`: For emitting structured error events to the central application event bus."""  # noqa: E501
 
 import asyncio  # noqa: E402
 import json  # noqa: E402

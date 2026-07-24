@@ -270,7 +270,7 @@ class AgentSupervisor:
                             },
                         )
                     )
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: BLE001, S110
                     pass
 
                 # Check max restarts
@@ -292,7 +292,7 @@ class AgentSupervisor:
                                 },
                             )
                         )
-                    except Exception:  # noqa: BLE001
+                    except Exception:  # noqa: BLE001, S110
                         pass
                     break
 
