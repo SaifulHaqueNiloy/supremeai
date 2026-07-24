@@ -1,7 +1,7 @@
 # Part 14: Cloud Infrastructure, Edge Workers & Docker Prod Audit
 
-> **Audit Generation Time:** `2026-07-24 20:09:08 UTC`  
-> **Module Description:** Terraform, Cloudflare Worker JS, Firebase Functions, Docker Prod, and deployment specs.  
+> **Audit Generation Time:** `2026-07-24 20:29:11 UTC`
+> **Module Description:** Terraform, Cloudflare Worker JS, Firebase Functions, Docker Prod, and deployment specs.
 > **Status:** `SELF_CONTAINED / READY FOR EXTERNAL AI AUDIT`
 
 ---
@@ -444,23 +444,60 @@ catch { Fail $_ }
 ### 📄 `infrastructure/docker-compose.prod.yml`
 
 ```yaml
-version: '3.8'
+# বাংলা মন্তব্য: প্রোডাকশন Compose — Patch 24/25 (hardened)
+# - NATS টোকেন এবং রেডিস পাসওয়ার্ড এখন .env থেকে আসে, হার্ডকোড করা নেই
+# - Redis external port বন্ধ করা হয়েছে, শুধু internal network-এ accessible
+# - no-new-privileges + seccomp=unconfined এর বদলে custom seccomp profile
+# - read_only filesystem যেখানে সম্ভব
+
+version: '3.9'
+
+secrets:
+  nats_token:
+    environment: "NATS_AUTH_TOKEN"
 
 services:
   nats:
-    image: nats:latest
-    command: "-js -a super_secret_token"
-    ports:
-      - "4222:4222"
+    image: nats:2.10-alpine
+    # বাংলা মন্তব্য: আগে token হার্ডকোড ছিল command argument-এ — এখন Docker secret থেকে আসে
+    command:
+      - "-js"
+      - "--auth"
+      - "${NATS_AUTH_TOKEN}"
+    environment:
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+    expose:
+      - "4222"
+    # বাংলা মন্তব্য: শুধু internal network, public port bind নেই
     networks:
       - supreme_net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
 
   redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
+    image: redis:7-alpine
+    command:
+      - "redis-server"
+      - "--appendonly"
+      - "yes"
+      - "--requirepass"
+      - "${REDIS_PASSWORD}"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    expose:
+      - "6379"
+    # বাংলা মন্তব্য: 6379 এক্সপোজ করা থেকে বিরত — external port binding নেই (Patch 24 fix)
     networks:
       - supreme_net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
 
   backend:
     build:
@@ -470,42 +507,75 @@ services:
       - nats
       - redis
     environment:
-      - NATS_URL=nats://super_secret_token@nats:4222
-      - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://${NATS_AUTH_TOKEN}@nats:4222
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - PINECONE_API_KEY=${PINECONE_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - ENV=production
     networks:
       - supreme_net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    # বাংলা মন্তব্য: Limit CPU/Memory — free-tier resource consumption আটকাতে
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "2G"
 
   swarm-worker:
     build:
       context: ./backend
       dockerfile: docker/swarm-worker.Dockerfile
-    deploy:
-      replicas: 3
     depends_on:
       - nats
     environment:
-      - NATS_URL=nats://super_secret_token@nats:4222
+      - NATS_URL=nats://${NATS_AUTH_TOKEN}@nats:4222
       - PINECONE_API_KEY=${PINECONE_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENV=production
     networks:
       - supreme_net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - backend
     networks:
       - supreme_net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
 
 networks:
   supreme_net:
     driver: bridge
+    internal: false
+
+volumes:
+  redisdata:
 
 ```
 

@@ -22,6 +22,25 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+
+    try {
+      fetch('/api/telemetry/frontend-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          module: 'frontend_global_error_boundary',
+          error_type: error.name,
+          message: error.message.slice(0, 500),
+          stack: (error.stack || '').slice(0, 2000),
+          component_stack: (errorInfo.componentStack || '').slice(0, 2000),
+          url: window.location.href,
+          severity: 'ERROR',
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      // no-op
+    }
   }
 
   private handleReload = () => {
@@ -45,7 +64,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               We encountered an unexpected error. This has been logged and our team will investigate.
             </p>
 
-            {this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <div className="mb-8 text-left bg-gray-900/50 p-4 rounded-lg border border-gray-700 overflow-auto max-h-32 text-xs font-mono text-red-400">
                 {this.state.error.message}
               </div>

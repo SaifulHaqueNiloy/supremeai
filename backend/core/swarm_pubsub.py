@@ -174,6 +174,20 @@ class SwarmPubSub:
         try:
             redis_client = self._get_redis()
             message = json.dumps({"type": event_type, "data": payload})
+            # বাংলা মন্তব্য: 256KB cap — Free-Tier Redis bandwidth রক্ষার জন্য (Patch 7 fix)
+            max_bytes = 256 * 1024
+            if len(message.encode("utf-8")) > max_bytes:
+                logger.error(f"SwarmPubSub broadcast dropped: payload exceeds {max_bytes} bytes ({event_type})")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="swarm_pubsub",
+                        error_type="PAYLOAD_TOO_LARGE",
+                        message=f"event_type={event_type}, size={len(message)}",
+                        severity="WARNING",
+                        structured_context=ErrorContext(module="auto_fixed"),
+                    )
+                )
+                return
             await redis_client.publish("swarm_stream", message)
         except asyncio.CancelledError:
             raise
@@ -193,29 +207,39 @@ class SwarmPubSub:
     async def buffered_subscribe(self, batch_window_ms: float = 250.0) -> AsyncGenerator[str, None]:
         """
         বাংলা মন্তব্য: এডমিন UI-এর DOM Lag রোধ করার জন্য ২৫০ms উইন্ডোতে টেক্সট/টেলিমেট্রি ব্যাচ করে স্ট্রিম করে।
+        এখন flush প্রতি batch_window_ms পরপরই ঘটবে, নতুন ইভেন্ট আসুক বা না আসুক (Patch 4 fix)।
         """
-        buffer: list[dict] = []
-        last_flush = asyncio.get_event_loop().time()
         window_sec = batch_window_ms / 1000.0
+        buffer: list[dict] = []
+        source = self.subscribe()
 
         try:
-            async for raw_msg in self.subscribe():
+            while True:
+                try:
+                    raw_msg = await asyncio.wait_for(source.__anext__(), timeout=window_sec)
+                except TimeoutError:
+                    if buffer:
+                        yield json.dumps({"type": "batched_delta", "events": buffer})
+                        buffer = []
+                    continue
+                except StopAsyncIteration:
+                    break
+
                 try:
                     data = json.loads(raw_msg)
                     buffer.append(data)
                 except Exception:
                     buffer.append({"type": "raw", "data": raw_msg})
 
-                now = asyncio.get_event_loop().time()
-                if (now - last_flush) >= window_sec and buffer:
-                    batched_payload = json.dumps({"type": "batched_delta", "events": buffer})
-                    yield batched_payload
+                if len(buffer) >= 500:
+                    yield json.dumps({"type": "batched_delta", "events": buffer})
                     buffer = []
-                    last_flush = now
         except asyncio.CancelledError:
             if buffer:
                 yield json.dumps({"type": "batched_delta", "events": buffer})
             raise
+        finally:
+            await source.aclose()
 
 
 # বাংলা মন্তব্য: Lazy singleton — module import করলে কোনো Redis connection হয় না।

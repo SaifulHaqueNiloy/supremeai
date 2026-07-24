@@ -100,6 +100,15 @@ class SupabaseDB:
     @classmethod
     def get_bootstrap_statements(cls) -> list[str]:
         return [
+            "CREATE TABLE IF NOT EXISTS outbox_events ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "target_db TEXT NOT NULL,"
+            "query_text TEXT NOT NULL,"
+            "idempotency_key TEXT UNIQUE,"
+            "created_at TEXT,"
+            "processed_at TIMESTAMP WITH TIME ZONE"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_outbox_events_unprocessed ON outbox_events (id) WHERE processed_at IS NULL;",
             "CREATE TABLE IF NOT EXISTS system_config ("
             "id SERIAL PRIMARY KEY,"
             "key TEXT NOT NULL UNIQUE,"
@@ -522,14 +531,28 @@ class SupabaseDB:
     # --- Feature Flags ---
     def is_feature_enabled(self, feature_name: str, user_id: str | None = None) -> bool:
         res = self.client.table("feature_flags").select("*").eq("feature_name", feature_name).execute()
-        if res.data:
-            flag = res.data[0]
-            if not flag.get("enabled", False):
-                return False
-            if user_id and flag.get("allowed_users") and user_id in flag["allowed_users"]:
-                return True
-            return True
-        return False
+        if not res.data:
+            return False
+
+        flag = res.data[0]
+        if not flag.get("enabled", False):
+            return False
+
+        allowed_users = flag.get("allowed_users")
+        # বাংলা মন্তব্য: allowed_users থাকলে সেটাই এখনpack/real gate —
+        # আগের কোড ভুলবশত সব ক্ষেত্রেই True রিটার্ন করতো (Patch 16 fix)
+        if allowed_users:
+            return bool(user_id and user_id in allowed_users)
+
+        rollout_pct = flag.get("rollout_percentage")
+        if rollout_pct is not None and rollout_pct < 100 and user_id:
+            # বাংলা মন্তব্য: deterministic percentage rollout
+            import hashlib
+
+            bucket = int(hashlib.sha256(f"{feature_name}:{user_id}".encode()).hexdigest(), 16) % 100
+            return bucket < rollout_pct
+
+        return True
 
     # --- GitHub Repos ---
     def add_github_repo(self, repo_name: str, owner: str, description: str = "", language: str = ""):
