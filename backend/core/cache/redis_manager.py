@@ -207,10 +207,12 @@ class MultiLevelCache:
             self.local_cache[key] = val  # Warm up L1 local cache
         return val
 
-    async def set(self, key: str, ttl: int = 3600, value: Any | None = None) -> None:
-        """L1 ও L2 উভয় জায়গায় ক্যাশ সংরক্ষণ করা।"""
+    async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
+        """L1 ও L2 উভয় জায়গায় ক্যাশ সংরক্ষণ করা (None ভ্যালু ক্যাশ এড়িয়ে স্থান সাশ্রয় করা)।"""
+        if value is None:
+            return  # Bangla: None ডাটা ক্যাশে করবেন না, স্পেস বাঁচান
         self.local_cache[key] = value
-        await self.redis_cache.set_cache(key, value, ex_seconds=ttl)
+        await self.redis_cache.set_cache(key, str(value), ex_seconds=ttl)
 
     def invalidate_local(self, key: str | None = None) -> None:
         """L1 ইন-মেমরি ক্যাশ পরিষ্কার করা।"""
@@ -218,4 +220,11 @@ class MultiLevelCache:
             self.local_cache.pop(key, None)
         else:
             self.local_cache.clear()
+
+    async def invalidate(self, key: str | None = None) -> None:
+        """L1 এর সাথে L2 (Redis) ক্যাশেও ইনভ্যালিডেট করা (Stale Cache প্রবলেম রোধে)।"""
+        self.invalidate_local(key)
+        if key:
+            await self.redis_cache.delete(key)
+
 
