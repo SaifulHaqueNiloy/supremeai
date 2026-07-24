@@ -260,8 +260,9 @@ class TestAutonoGuardEngine:
         """Test heal error skips when circuit breaker open."""
         engine = AutonoGuardEngine()
 
-        # Force circuit breaker to open state
-        engine._circuit_breaker._state = "OPEN"
+        from unittest.mock import MagicMock
+        engine._circuit_breaker = MagicMock()
+        engine._circuit_breaker.allow_request.return_value = False
 
         result = await engine.heal_error(
             Exception("test"),

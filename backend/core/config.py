@@ -275,10 +275,63 @@ class Settings(BaseSettings):
     auto_remediation_dry_run: bool = Field(default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN")
 
     _cached_secrets: dict[str, str] = PrivateAttr(default_factory=dict)
+    _secrets_batch_loaded: bool = PrivateAttr(default=False)
+
+    # বাংলা মন্তব্য: ব্যাচ লোডিংয়ের জন্য প্রয়োজনীয় সিক্রেট কীগুলোর তালিকা।
+    # startup-এ একবারে সব সিক্রেট লোড করা হবে, lazy per-property কল এড়াতে।
+    _BATCH_SECRET_KEYS: list[str] = [
+        "SUPABASE_DATABASE_URL_POOLER",
+        "DISCORD_OTP_WEBHOOK_URL",
+        "RESEND_API_KEY",
+        "ADMIN_NOTIFICATION_EMAIL",
+        "REDIS_URL",
+        "OPENROUTER_API_KEY",
+        "HF_API_KEY",
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "GROQ_API_KEY",
+        "NVIDIA_API_KEY",
+        "FIRECRAWL_API_KEY",
+        "DISCORD_BOT_TOKEN",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "CI_WEBHOOK_SECRET",
+        "SUPABASE_URL",
+        "SUPABASE_KEY",
+        "SUPREMEAI_API_TOKEN",
+        "NEO4J_URI",
+        "NEO4J_USER",
+        "NEO4J_PASSWORD",
+        "SUPREMEAI_ADMIN_PASSWORD_HASH",
+        "SUPREMEAI_JWT_SECRET",
+        "SUPREMEAI_ENCRYPTION_KEY",
+        "STRIPE_API_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+    ]
+
+    def _ensure_secrets_loaded(self) -> None:
+        """Batch-load all secrets at once into memory cache.
+
+        বাংলা: startup-এ একবারে সব সিক্রেট লোড করে singleton dict-এ cache করে।
+        এর ফলে প্রতিটি @property-র জন্য আলাদা vault কল হয় না, cold start latency কমে।
+        """
+        if self._secrets_batch_loaded:
+            return
+        for secret_key in self._BATCH_SECRET_KEYS:
+            try:
+                val = secret_vault.fetch_secret(secret_key)
+                if val:
+                    self._cached_secrets[secret_key] = val
+            except Exception:  # noqa: BLE001
+                pass  # Non-critical — some secrets may be optional
+        self._secrets_batch_loaded = True
 
     def _get_cached_secret(self, key: str) -> str:
-        # বাংলা মন্তব্য: lazy cache — secret_vault নিজে থেকেই TTL ক্যাশ হ্যান্ডেল করে, তাই স্থায়ীভাবে মেমোরিতে ক্যাশ করার পরিবর্তে সরাসরি কল করা হচ্ছে।
-        return secret_vault.fetch_secret(key)
+        # বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
+        # প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
+        self._ensure_secrets_loaded()
+        return self._cached_secrets.get(key, "")
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
     # বাংলা মন্তব্য: স্টার্টআপ টাইম কমাতে এবং Infisical ভল্ট থেকে একের পর এক সিক্রেট ফেচ করা এড়াতে

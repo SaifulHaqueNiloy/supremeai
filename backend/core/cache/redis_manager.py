@@ -1,4 +1,8 @@
-"""Manages asynchronous interactions with a Redis cache for the SupremeAI ecosystem."""
+"""Manages asynchronous interactions with a Redis cache for the SupremeAI ecosystem.
+
+বাংলা: SupremeAI-এর জন্য Redis ক্যাশ ব্যবস্থাপনা। পুরোপুরি async,
+event-loop blocking মুক্ত, fail-closed প্যাটার্ন অনুসরণ করে।
+"""
 
 import asyncio
 import json
@@ -19,7 +23,11 @@ class SecureRedisManager:
         self._init_lock = asyncio.Lock()
 
     async def _ensure_connected(self) -> None:
-        """Async-safe Redis connection initialization with locking."""
+        """Async-safe Redis connection initialization with locking.
+
+        বাংলা: async lock ব্যবহার করে শুধুমাত্র একবার Redis কানেকশন ইনিশিয়ালাইজ করে।
+        Synchronous fallback সম্পূর্ণ মুক্ত — event loop ব্লক করে না।
+        """
         if self._initialized:
             return
         async with self._init_lock:
@@ -40,32 +48,36 @@ class SecureRedisManager:
             self._initialized = True
 
     async def get_client_async(self) -> aioredis.Redis | None:
-        """Get Redis client with async-safe initialization."""
+        """Get Redis client with async-safe initialization.
+
+        বাংলা: async-safe Redis ক্লায়েন্ট রিটার্ন করে।
+        সকল মডিউলের উচিত এই মেথড ব্যবহার করা, `.client` প্রপার্টি না।
+        """
         await self._ensure_connected()
         return self._client
 
     @property
     def client(self) -> aioredis.Redis | None:
-        """Sync property accessor — ensures connection initialization.
+        """Sync property accessor — returns existing client without blocking.
 
-        Note: Accessing this property before _ensure_connected() has completed
-        may return None if connection is in progress. Prefer get_client_async().
+        বাংলা: synchronous accessor যা event loop ব্লক না করেই বিদ্যমান ক্লায়েন্ট রিটার্ন করে।
+        যদি ক্লায়েন্ট এখনো ইনিশিয়ালাইজ না হয়, তাহলে None রিটার্ন করে (fail-closed)।
+        সকল কনজিউমার ইতিমধ্যেই ``if redis_manager.client:`` চেক করে, তাই এটি নিরাপদ।
+
+        Note: যদি ক্লায়েন্ট ইনিশিয়ালাইজ না হয়, তাহলে None রিটার্ন হবে।
+        Prefer ``await redis_manager.get_client_async()`` for guaranteed initialization.
         """
-        if not self._initialized and self.url and not self._client:
-            # Sync fallback initialization for startup context
-            try:
-                pool = aioredis.ConnectionPool.from_url(
-                    self.url,
-                    max_connections=20,
-                    socket_keepalive=True,
-                    socket_connect_timeout=5.0,
-                    decode_responses=True,
-                )
-                self._client = aioredis.Redis(connection_pool=pool)
-                self._initialized = True
-            except Exception as exc:
-                logger.error(f"Failed sync initialization of Redis client: {exc}")
+        # বাংলা: কোনো অবস্থাতেই event loop ব্লক করে এমন synchronous init করব না।
+        # _initialized True না হলে None রিটার্ন করি — consumer fail-closed behaviour handle করবে।
         return self._client
+
+    @property
+    def is_connected(self) -> bool:
+        """Check if Redis client is initialized and ready.
+
+        বাংলা: Redis ক্লায়েন্ট ইনিশিয়ালাইজ হয়েছে কিনা চেক করে।
+        """
+        return self._client is not None
 
     async def close(self) -> None:
         if self._client:
@@ -195,10 +207,10 @@ class MultiLevelCache:
             self.local_cache[key] = val  # Warm up L1 local cache
         return val
 
-    async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
+    async def set(self, key: str, ttl: int = 3600, value: Any | None = None) -> None:
         """L1 ও L2 উভয় জায়গায় ক্যাশ সংরক্ষণ করা।"""
         self.local_cache[key] = value
-        await self.redis_cache.set_cache(key, value, ttl=ttl)
+        await self.redis_cache.set_cache(key, value, ex_seconds=ttl)
 
     def invalidate_local(self, key: str | None = None) -> None:
         """L1 ইন-মেমরি ক্যাশ পরিষ্কার করা।"""
@@ -206,3 +218,4 @@ class MultiLevelCache:
             self.local_cache.pop(key, None)
         else:
             self.local_cache.clear()
+
