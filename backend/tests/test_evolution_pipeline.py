@@ -22,7 +22,7 @@ def clean_dynamic_skills(tmp_path):
     loader.skills_dir.mkdir(parents=True, exist_ok=True)
 
     # Mock SkillInstaller constructor to return our temp configured installer
-    with patch("evolution.auto_skill_creator.SkillInstaller", return_value=installer):
+    with patch("core.evolution.auto_skill_creator.SkillInstaller", return_value=installer):
         yield loader, registry, installer
 
 
@@ -67,7 +67,7 @@ async def test_pipeline_success(clean_dynamic_skills, monkeypatch):
     async def mock_acompletion(*args, **kwargs):
         return {"success": True, "text": json.dumps(MOCK_AI_RESPONSE_JSON)}
 
-    with patch("core.llm_gateway.LLMGateway.acompletion", new=mock_acompletion):
+    with patch("core.llm.llm_gateway.llm_gateway.acompletion", new=mock_acompletion):
         creator = AutoSkillCreator()
         result = await creator.generate_and_deploy_skill(user_demand="Analyze reviews sentiment", skill_name="SentimentAnalyzer")
         assert result["success"] is True, result.get("error", "No error info provided")
@@ -92,7 +92,7 @@ async def test_pipeline_validation_mismatch(clean_dynamic_skills, monkeypatch):
     async def mock_acompletion(*args, **kwargs):
         return {"success": True, "text": json.dumps(mismatch_json)}
 
-    with patch("core.llm_gateway.LLMGateway.acompletion", new=mock_acompletion):
+    with patch("core.llm.llm_gateway.llm_gateway.acompletion", new=mock_acompletion):
         creator = AutoSkillCreator()
         result = await creator.generate_and_deploy_skill(user_demand="Analyze reviews sentiment", skill_name="SentimentAnalyzer")
 
@@ -105,7 +105,8 @@ async def test_pipeline_validation_mismatch(clean_dynamic_skills, monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_pipeline_invalid_uss_pydantic(clean_dynamic_skills):
+async def test_pipeline_invalid_uss_pydantic(clean_dynamic_skills, monkeypatch):
+    monkeypatch.setenv("ALLOW_LOCAL_SANDBOX_FALLBACK", "true")
     loader, registry, installer = clean_dynamic_skills
 
     # Invalid semver version format inside metadata
@@ -117,7 +118,7 @@ async def test_pipeline_invalid_uss_pydantic(clean_dynamic_skills):
     async def mock_acompletion(*args, **kwargs):
         return {"success": True, "text": json.dumps(bad_uss_json)}
 
-    with patch("core.llm_gateway.LLMGateway.acompletion", new=mock_acompletion):
+    with patch("core.llm.llm_gateway.llm_gateway.acompletion", new=mock_acompletion):
         creator = AutoSkillCreator()
         result = await creator.generate_and_deploy_skill(user_demand="Analyze reviews sentiment", skill_name="SentimentAnalyzer")
 

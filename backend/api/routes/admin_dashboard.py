@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-import datetime
 import json
 import os
 import secrets
@@ -24,7 +23,7 @@ from tools.billing.cost_auditor import CostAuditor
 security = HTTPBearer()
 
 # বাংলা মন্তব্য: রেডিস বন্ধ থাকলে টোকেন ব্ল্যাকলিস্ট চেকের জন্য ইন-মেমোরি ব্যাকআপ
-_in_memory_jwt_blacklist = set()
+_in_memory_jwt_blacklist: set[str] = set()
 
 
 def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -765,9 +764,6 @@ from pydantic import Field
 with contextlib.suppress(ImportError):
     from google.cloud import firestore
 
-from datetime import datetime  # noqa: F811
-from datetime import UTC
-
 
 class GateOverridePayload(BaseModel):
     target_status: str = Field(..., description="Must be 'UNLOCKED' or 'LOCKED'")
@@ -802,7 +798,7 @@ async def execute_manual_gate_override(payload: GateOverridePayload):
         db = firestore.Client()
         gate_ref = db.collection("deploy_gate").document("status")
 
-        now = datetime.now(UTC)
+        now = utc_now()
         override_context = {
             "status": requested_status,
             "reason": f"👑 [MANUAL OVERRIDE] {payload.reason}",
