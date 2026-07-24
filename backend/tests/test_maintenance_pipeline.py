@@ -125,7 +125,7 @@ class TestMaintenancePipeline:
         mock_event.context = {}
         mock_event.error_type = "test_error"
 
-        with patch("core.maintenance_pipeline.redis_manager") as mock_redis:
+        with patch("core.cache.redis_manager") as mock_redis:
             await pipeline.auto_remediate(mock_event)
 
             # Should have skipped due to cooldown
@@ -144,7 +144,7 @@ class TestMaintenancePipeline:
         mock_redis.client = MagicMock()
         mock_redis.client.set = AsyncMock()
 
-        with patch("core.maintenance_pipeline.redis_manager", mock_redis), patch("core.maintenance_pipeline.error_event_bus.emit"):
+        with patch("core.cache.redis_manager", mock_redis), patch("core.maintenance_pipeline.error_event_bus.emit"):
             await pipeline.auto_remediate(mock_event)
 
             mock_redis.client.set.assert_called()
@@ -162,7 +162,7 @@ class TestMaintenancePipeline:
         mock_redis = MagicMock()
         mock_redis.close = AsyncMock()
 
-        with patch("core.maintenance_pipeline.redis_manager", mock_redis):
+        with patch("core.cache.redis_manager", mock_redis):
             await pipeline.auto_remediate(mock_event)
 
             mock_redis.close.assert_called()
