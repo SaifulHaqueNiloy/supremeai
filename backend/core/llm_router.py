@@ -403,6 +403,51 @@ class TogetherProvider:
             return False
 
 
+class GeminiProvider:
+    """Google Gemini Provider — Free tier (gemini-2.0-flash / 1.5-flash)."""
+
+    name = Provider.GEMINI
+
+    def __init__(self) -> None:
+        self.api_key = getattr(settings, "gemini_api_key", "")
+        self.client = httpx.AsyncClient(
+            base_url="https://generativelanguage.googleapis.com/v1beta",
+            headers={"x-goog-api-key": self.api_key},
+            timeout=httpx.Timeout(60.0, connect=10.0),
+        )
+
+    @timed("llm.gemini.latency")
+    @circuit_breaker(name="gemini", failure_threshold=5, recovery_timeout=60)
+    async def acompletion(
+        self,
+        prompt: str,
+        *,
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+        stream: bool = False,
+        **kwargs: Any,
+    ) -> str | AsyncGenerator[StreamChunk, None]:
+        model = kwargs.get("model", "models/gemini-2.0-flash")
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": temperature,
+                "maxOutputTokens": max_tokens,
+            },
+        }
+
+        resp = await self.client.post(f"/{model}:generateContent", json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+        try:
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError):
+            return ""
+
+    async def health_check(self) -> bool:
+        return bool(self.api_key)
+
+
 class OllamaProvider:
     """Local Ollama — Offline/privacy mode. Optional, completely free."""
 

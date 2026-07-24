@@ -315,7 +315,7 @@ class TestApplyExtendedRules:
         """Test apply injects task classification."""
         engine = UniversalRulesEngine()
 
-        context = {"prompt": "What is Python?"}
+        context = {"prompt": "Search history of AI"}
         result = engine.apply(context)
 
         assert "task_class" in result
@@ -434,6 +434,7 @@ class TestGetRuleById:
     def test_no_agent_rules(self):
         """Test get_rule_by_id returns None when no agent rules loaded."""
         engine = UniversalRulesEngine()
+        engine.agent_rules = []
 
         result = engine.get_rule_by_id("CORE-001")
 
