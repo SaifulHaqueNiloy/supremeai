@@ -77,11 +77,11 @@ def mock_session():
     services.intent_clf = previous_intent
 
 
-def test_task_execute_returns_200(mock_session):
+def test_task_execute_returns_200(mock_session, valid_auth_headers):
     response = client.post(
         "/task/execute",
         json={"task": "write hello world", "task_type": "general"},
-        headers={"Authorization": "Bearer test-token"},
+        headers=valid_auth_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -89,7 +89,7 @@ def test_task_execute_returns_200(mock_session):
     assert "provider" in data
 
 
-def test_task_execute_with_messages(mock_session):
+def test_task_execute_with_messages(mock_session, valid_auth_headers):
     payload = {
         "task": "continue the code",
         "task_type": "general",
@@ -101,22 +101,22 @@ def test_task_execute_with_messages(mock_session):
     response = client.post(
         "/task/execute",
         json=payload,
-        headers={"Authorization": "Bearer test-token"},
+        headers=valid_auth_headers,
     )
     assert response.status_code == 200
     assert response.json()["success"] is True
 
 
-def test_task_execute_with_session_id(mock_session):
+def test_task_execute_with_session_id(mock_session, valid_auth_headers):
     response = client.post(
         "/task/execute",
         json={"task": "test", "task_type": "general", "session_id": "sess-123"},
-        headers={"Authorization": "Bearer test-token"},
+        headers=valid_auth_headers,
     )
     assert response.status_code == 200
 
 
-def test_task_execute_upstream_failure(mock_session):
+def test_task_execute_upstream_failure(mock_session, valid_auth_headers):
     import core.services as services_mod
 
     previous_router = services_mod.model_router
@@ -135,14 +135,14 @@ def test_task_execute_upstream_failure(mock_session):
         response = client.post(
             "/task/execute",
             json={"task": "test", "task_type": "general"},
-            headers={"Authorization": "Bearer test-token"},
+            headers=valid_auth_headers,
         )
         assert response.status_code == 502
     finally:
         services_mod.model_router = previous_router
 
 
-def test_chat_completion_streaming():
+def test_chat_completion_streaming(valid_auth_headers):
     import core.services as services_mod
 
     previous_router = services_mod.model_router
@@ -159,7 +159,7 @@ def test_chat_completion_streaming():
         response = client.post(
             "/api/chat/stream",
             json={"message": "write hello", "sessionId": "s-1"},
-            headers={"Authorization": "Bearer test-token"},
+            headers=valid_auth_headers,
         )
         assert response.status_code == 200
         assert "text/event-stream" in response.headers["content-type"]

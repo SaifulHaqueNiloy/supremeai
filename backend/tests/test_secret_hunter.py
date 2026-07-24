@@ -205,7 +205,7 @@ class TestAISecretAnalyzer:
             return mock_response
 
         with patch(
-            "core.security.secret_hunter.llm_gateway.acomplete",
+            "core.security.secret_hunter.llm_gateway.acompletion",
             side_effect=mock_acomplete,
         ):
             result = AsyncMock()(__wrapped__=lambda self, f, c: analyzer.analyze_finding(finding, c))
@@ -236,7 +236,7 @@ class TestAISecretAnalyzer:
         mock_response.choices[0].message.content = '{"is_true_positive": false, "secret_type": "placeholder", "severity": "low", "confidence": 0.1}'
 
         with patch(
-            "core.security.secret_hunter.llm_gateway.acomplete",
+            "core.security.secret_hunter.llm_gateway.acompletion",
             return_value=mock_response,
         ):
             import asyncio
@@ -259,16 +259,16 @@ class TestSecretHunter:
         assert hunter.gitleaks is not None
         assert hunter.ai_analyzer is not None
 
-    def test_scan_codebase_nonexistent_directory(self):
+    @pytest.mark.asyncio
+    async def test_scan_codebase_nonexistent_directory(self):
         """Test scanning nonexistent directory raises error."""
         hunter = SecretHunter()
 
         with pytest.raises(FileNotFoundError):
-            import asyncio
+            await hunter.scan_codebase("/nonexistent/path")
 
-            asyncio.get_event_loop().run_until_complete(hunter.scan_codebase("/nonexistent/path"))
-
-    def test_scan_codebase_success(self):
+    @pytest.mark.asyncio
+    async def test_scan_codebase_success(self):
         """Test successful codebase scan."""
         hunter = SecretHunter()
 
@@ -290,14 +290,13 @@ class TestSecretHunter:
                     severity="high",
                 )
 
-                import asyncio
-
-                report = asyncio.get_event_loop().run_until_complete(hunter.scan_codebase(tmpdir, use_ai=True, min_severity="low"))
+                report = await hunter.scan_codebase(tmpdir, use_ai=True, min_severity="low")
 
         assert isinstance(report, SecretReport)
         assert report.total_files >= 1
 
-    def test_scan_codebase_without_ai(self):
+    @pytest.mark.asyncio
+    async def test_scan_codebase_without_ai(self):
         """Test codebase scan without AI validation."""
         hunter = SecretHunter()
 
@@ -305,9 +304,7 @@ class TestSecretHunter:
             secret_file = Path(tmpdir) / "config.py"
             secret_file.write_text('api_key = "ghp_test1234567890abcdef"\n', encoding="utf-8")
 
-            import asyncio
-
-            report = asyncio.get_event_loop().run_until_complete(hunter.scan_codebase(tmpdir, use_ai=False, min_severity="low"))
+            report = await hunter.scan_codebase(tmpdir, use_ai=False, min_severity="low")
 
         assert isinstance(report, SecretReport)
 
