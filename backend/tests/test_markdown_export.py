@@ -7,9 +7,9 @@ from core.app import app
 client = TestClient(app)
 
 
-def test_markdown_export_async_flow():
+def test_markdown_export_async_flow(valid_auth_headers):
     # 1. Trigger export job
-    response = client.post("/api/v1/markdown/export", json={"root_dir": ".", "git_diff_only": False})
+    response = client.post("/api/v1/markdown/export", json={"root_dir": ".", "git_diff_only": False}, headers=valid_auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
@@ -18,22 +18,22 @@ def test_markdown_export_async_flow():
 
     # 2. Check status (may need to wait briefly, but we check if endpoint returns status)
     time.sleep(0.5)
-    status_response = client.get(f"/api/v1/markdown/export/{job_id}/status")
+    status_response = client.get(f"/api/v1/markdown/export/{job_id}/status", headers=valid_auth_headers)
     assert status_response.status_code == 200
     status_data = status_response.json()
     assert "status" in status_data
     assert "progress" in status_data
 
 
-def test_markdown_history():
-    response = client.get("/api/v1/markdown/export/history")
+def test_markdown_history(valid_auth_headers):
+    response = client.get("/api/v1/markdown/export/history", headers=valid_auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
     assert "history" in data
 
 
-def test_markdown_compare():
+def test_markdown_compare(valid_auth_headers):
     response = client.post(
         "/api/v1/markdown/compare",
         json={
@@ -41,6 +41,7 @@ def test_markdown_compare():
             "range_a_since": "2026-06-20",
             "range_b_since": "2026-06-21",
         },
+        headers=valid_auth_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -48,8 +49,8 @@ def test_markdown_compare():
     assert "compare_report" in data
 
 
-def test_markdown_share():
-    response = client.post("/api/v1/markdown/share", json={"markdown": "# Test", "target_ai": "claude"})
+def test_markdown_share(valid_auth_headers):
+    response = client.post("/api/v1/markdown/share", json={"markdown": "# Test", "target_ai": "claude"}, headers=valid_auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"

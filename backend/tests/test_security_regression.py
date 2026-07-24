@@ -13,14 +13,12 @@ from core.security.auth_middleware import AuthMiddleware
 @pytest.mark.anyio
 async def test_production_jwt_secret_required():
     """Verify that in production environment, a missing jwt_secret raises a validation error."""
-    with patch.dict(os.environ, {"ENV": "production"}):
+    from pydantic import ValidationError
+    from core.config import Settings
+
+    with patch.dict(os.environ, {"ENV": "production", "SUPREMEAI_JWT_SECRET": ""}):
         with pytest.raises(ValidationError) as excinfo:
-            Settings(
-                jwt_secret=None,
-                supremeai_admin_password_hash="dummy-hash",
-                openrouter_api_key="valid",
-                gemini_api_key="valid",
-            )
+            Settings()
     assert "SUPREMEAI_JWT_SECRET must be explicitly set in all environments" in str(excinfo.value)
 
 

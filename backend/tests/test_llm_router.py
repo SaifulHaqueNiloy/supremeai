@@ -248,6 +248,7 @@ class TestLLMRouter:
             mock_redis_client = MagicMock()
             mock_redis.return_value = mock_redis_client
             mock_redis_client.get = AsyncMock(return_value=None)  # No cache hit
+            mock_redis_client.setex = AsyncMock()
 
             router = LLMRouter()
 
@@ -262,7 +263,8 @@ class TestLLMRouter:
 
             assert isinstance(result, RouteResult)
 
-    def test_route_no_capable_provider(self):
+    @pytest.mark.asyncio
+    async def test_route_no_capable_provider(self):
         """Test route raises error when no provider is capable."""
         with patch("core.llm_router.get_redis_client"), patch("core.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
@@ -271,15 +273,10 @@ class TestLLMRouter:
             for provider in router.providers.values():
                 provider.health_check = AsyncMock(return_value=False)
 
-            async def run_route():
-                from core.exceptions import LLMProviderError
+            from core.exceptions import LLMProviderError
 
-                with pytest.raises(LLMProviderError):
-                    await router.route("test prompt", task_type="chat", stream=False)
-
-            import asyncio
-
-            asyncio.get_event_loop().run_until_complete(run_route())
+            with pytest.raises(LLMProviderError):
+                await router.route("test prompt", task_type="chat", stream=False)
 
     def test_provider_costs_defined(self):
         """Test that provider costs are defined."""
