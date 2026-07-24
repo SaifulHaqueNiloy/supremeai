@@ -51,9 +51,14 @@ import hmac
 import os
 import struct
 import time
+import uuid
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from loguru import logger
+
+# বাংলা মন্তব্য: TOTP ব্রুট-ফোর্স প্রতিরোধে Redis lockout constants
+_TOTP_MAX_ATTEMPTS = 5
+_TOTP_LOCKOUT_SECONDS = 600  # 10 minutes
 
 from api.dependencies import get_current_user_token
 from core import services
@@ -192,7 +197,7 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
 
 
 @router.post("/api/admin/firebase-totp-verify")
-def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
+async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     id_token = payload.id_token
     otp = payload.otp
     is_production = getattr(settings, "env", "local").lower() == "production"
@@ -239,9 +244,45 @@ def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         if not secret_to_use:
             raise HTTPException(status_code=500, detail="TOTP secret not configured on server")
 
-    # বাংলা মন্তব্য: ৭ ডিজিটের কোড ভেরিফিকেশন করা হবে check_totp মেথডের মাধ্যমে
+    # বাংলা মন্তব্য: Redis TOTP lockout — ব্রুট-ফোর্স অ্যাটাক প্রতিরোধ (Patch 3 fix)
+    lockout_key = f"admin:totp:lockout:{uid}"
+    attempt_key = f"admin:totp:attempts:{uid}"
+    _redis = None
+    try:
+        from core.cache.redis_manager import redis_manager
+
+        _redis = redis_manager.client
+    except Exception:  # noqa: BLE001
+        pass
+
+    if _redis:
+        try:
+            if await _redis.get(lockout_key):
+                raise HTTPException(status_code=429, detail="TOTP verification locked. Please wait 10 minutes.")
+        except HTTPException:
+            raise
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Redis lockout check failed — proceeding (fail-open): {e}")
+
     if not check_totp(otp.strip(), secret_to_use):
+        # বাংলা মন্তব্য: ব্যর্থ OTP attempt counter বাড়ানো হচ্ছে, সীমা ছাড়ালে lockout
+        if _redis:
+            try:
+                attempts = await _redis.incr(attempt_key)
+                await _redis.expire(attempt_key, _TOTP_LOCKOUT_SECONDS)
+                if int(attempts) >= _TOTP_MAX_ATTEMPTS:
+                    await _redis.setex(lockout_key, _TOTP_LOCKOUT_SECONDS, "locked")
+                    logger.critical(f"TOTP lockout triggered for uid={uid} after {attempts} failed attempts")
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f"Redis attempt tracking failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid verification code")
+
+    # বাংলা মন্তব্য: সফল OTP-এ attempt counter রিসেট
+    if _redis:
+        try:
+            await _redis.delete(attempt_key)
+        except Exception:  # noqa: BLE001
+            pass
 
     if temp_totp_secret and not totp_secret and db:
         try:
@@ -258,7 +299,16 @@ def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
 
     from jose import jwt
 
-    jwt_payload = {"uid": uid, "role": "admin", "exp": int(time.time()) + 3600 * 24}
+    now = int(time.time())
+    # বাংলা মন্তব্য: jti (JWT ID) + sub + iat যোগ করা হলো — JWT replay attack প্রতিরোধ (Patch 6 fix)
+    jwt_payload = {
+        "sub": uid,
+        "uid": uid,
+        "role": "admin",
+        "exp": now + 3600 * 24,
+        "iat": now,
+        "jti": uuid.uuid4().hex,
+    }
     jwt_secret = settings.jwt_secret
     token = jwt.encode(jwt_payload, jwt_secret, algorithm="HS256")
 
@@ -266,7 +316,7 @@ def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
 
 
 @router.get("/admin/cloud-distribution")
-def cloud_distribution():
+def cloud_distribution(_admin: dict = Depends(get_current_admin)):
     return {
         "distribution": services.parallel_router.get_distribution_stats(),
         "total_requests": sum(p["current_requests"] for p in services.parallel_router.PROVIDERS.values()),
@@ -277,7 +327,7 @@ def cloud_distribution():
 
 
 @router.get("/admin/free-tier-status")
-def free_tier_status():
+def free_tier_status(_admin: dict = Depends(get_current_admin)):
     from core.llm.free_tier_tracker import get_tracker
 
     tracker = get_tracker()
@@ -285,7 +335,7 @@ def free_tier_status():
 
 
 @router.get("/admin/free-tier-status/{provider}")
-def free_tier_provider_status(provider: str):
+def free_tier_provider_status(provider: str, _admin: dict = Depends(get_current_admin)):
     from fastapi import HTTPException
 
     from core.llm.free_tier_tracker import get_tracker
@@ -298,26 +348,36 @@ def free_tier_provider_status(provider: str):
 
 
 @router.post("/admin/free-tier-pause/{provider}")
-def free_tier_pause_provider(provider: str, payload: dict = Body(default={"seconds": 60})):
+def free_tier_pause_provider(
+    provider: str,
+    payload: dict = Body(default={"seconds": 60}),
+    _admin: dict = Depends(get_current_admin),
+):
     from core.llm.free_tier_tracker import get_tracker
 
     seconds = float(payload.get("seconds", 60))
     tracker = get_tracker()
     tracker.mark_rate_limited(provider, pause_seconds=seconds)
+    logger.warning(f"Admin {_admin.get('sub')} paused provider '{provider}' for {seconds}s")
     return {"status": "paused", "provider": provider, "seconds": seconds}
 
 
 @router.post("/admin/free-tier-override/{provider}")
-def free_tier_override_limits(provider: str, payload: dict = Body(...)):
+def free_tier_override_limits(
+    provider: str,
+    payload: dict = Body(...),
+    _admin: dict = Depends(get_current_admin),
+):
     from core.llm.free_tier_tracker import get_tracker
 
     tracker = get_tracker()
     tracker.override_limits(provider, payload)
+    logger.warning(f"Admin {_admin.get('sub')} overrode limits for '{provider}': {payload}")
     return {"status": "updated", "provider": provider, "new_limits": payload}
 
 
 @router.get("/admin/token-budget-stats")
-def token_budget_stats():
+def token_budget_stats(_admin: dict = Depends(get_current_admin)):
     from core.llm.token_budget import get_budget_manager
 
     manager = get_budget_manager()
@@ -325,7 +385,7 @@ def token_budget_stats():
 
 
 @router.get("/gcp/health")
-def gcp_health():
+def gcp_health(_admin: dict = Depends(get_current_admin)):
     return {
         "status": "ok",
         "cloud_run": services.gcp_router.health_check(timeout=3),
@@ -336,12 +396,12 @@ def gcp_health():
 
 
 @router.get("/gcp/verification-queue/stats")
-def gcp_verification_queue_stats():
+def gcp_verification_queue_stats(_admin: dict = Depends(get_current_admin)):
     return services.verification_queue.stats()
 
 
 @router.get("/gcp/pubsub/stats")
-def gcp_pubsub_stats():
+def gcp_pubsub_stats(_admin: dict = Depends(get_current_admin)):
     return services.gcp_pubsub_queue.stats()
 
 
@@ -361,7 +421,7 @@ def post_admin_rules(payload: dict = Body(...), _admin: dict = Depends(get_curre
 
 
 @router.get("/skills")
-def get_skills():
+def get_skills(_admin: dict = Depends(get_current_admin)):
     return {
         "web_scraper": {
             "name": "web_scraper",
@@ -374,30 +434,6 @@ def get_skills():
             "description": "Exports tabular data to CSV using pandas.",
         },
     }
-
-
-def verify_totp_code(user_otp: str, base32_secret: str) -> bool:
-    try:
-        # বাংলা মন্তব্য: বেস-৩২ সিক্রেট কি প্যাডিং ঠিক করা হলো
-        missing_padding = len(base32_secret) % 8
-        if missing_padding:
-            base32_secret += "=" * (8 - missing_padding)
-        key = base64.b32decode(base32_secret.upper())
-        current_time = int(time.time() // 30)
-        # বাংলা মন্তব্য: ওটিপি ড্র্রিফট উইন্ডো হ্যান্ডেল করা হলো অতিরিক্ত ৩টি স্লটের জন্য
-        for drift in [-1, 0, 1]:
-            msg = struct.pack(">Q", current_time + drift)
-            h = hmac.new(key, msg, hashlib.sha1).digest()
-            o = h[19] & 15
-            h_num = struct.unpack(">I", h[o : o + 4])[0] & 0x7FFFFFFF
-            # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি জেনারেট করা হলো
-            code = f"{h_num % 1000000:06d}"
-            # বাংলা মন্তব্য: টাইমিং অ্যাটাক প্রতিরোধে constant-time তুলনা ব্যবহার করা হলো
-            if hmac.compare_digest(code, user_otp):
-                return True
-        return False
-    except Exception:  # noqa: BLE001
-        return False
 
 
 def check_totp(user_otp: str, base32_secret: str) -> bool:
@@ -421,3 +457,8 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
         return False
     except Exception:  # noqa: BLE001
         return False
+
+
+# বাংলা মন্তব্য: verify_totp_code এখন check_totp-এর backward-compatible alias (Patch 5 fix)
+# duplicate function সরানো হয়েছে, কিন্তু tests ও external callers-এর জন্য alias রাখা হয়েছে
+verify_totp_code = check_totp
