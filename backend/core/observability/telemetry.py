@@ -2,6 +2,7 @@ import os
 from contextlib import contextmanager
 from typing import Any
 
+from loguru import logger
 from opentelemetry import trace as otel_trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -10,9 +11,7 @@ from opentelemetry.trace import Span, Status, StatusCode, Tracer
 _tracer: Tracer | None = None
 
 
-def setup_tracing(
-    service_name: str = "supremeai", otlp_endpoint: str | None = None
-) -> None:
+def setup_tracing(service_name: str = "supremeai", otlp_endpoint: str | None = None) -> None:
     global _tracer
     endpoint = otlp_endpoint or os.getenv("OTLP_ENDPOINT", "")
     provider = TracerProvider()
@@ -24,10 +23,16 @@ def setup_tracing(
 
             exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
             provider.add_span_processor(BatchSpanProcessor(exporter))
+            logger.info(f"✅ OTLP tracing exporter initialized for endpoint: {endpoint}")
         except ImportError as exc:
-            from loguru import logger
-
             logger.warning(f"OTLP exporter not available: {exc}")
+            if os.getenv("ENV", "").lower() == "production":
+                logger.critical(
+                    "🔥 PRODUCTION: OTLP endpoint configured but exporter not installed! "
+                    "Tracing is disabled. Install opentelemetry-exporter-otlp-proto-grpc."
+                )
+    else:
+        logger.info("ℹ️ No OTLP endpoint configured — tracing runs in no-op mode.")
     otel_trace.set_tracer_provider(provider)
     _tracer = otel_trace.get_tracer(service_name)
 
@@ -38,9 +43,7 @@ def get_tracer() -> Tracer | None:
 
 
 @contextmanager
-def trace_span(
-    name: str, attributes: dict[str, Any] | None = None, kind: str = "internal"
-):
+def trace_span(name: str, attributes: dict[str, Any] | None = None, kind: str = "internal"):
     tracer = get_tracer()
     if tracer is None:
         yield _NoOpSpan()

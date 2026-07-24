@@ -25,24 +25,12 @@ export class SelfHealingService extends BaseDisposable {
     }
 
     private registerListeners(context: vscode.ExtensionContext) {
-        this.register(
-            vscode.languages.onDidChangeDiagnostics((event) => {
-                this.handleDiagnosticsChange(event.uris);
-            })
-        );
+        // Performance optimization: Automatic diagnostic listening disabled to prevent high CPU/RAM usage while typing.
+        // Self-healing is triggered manually via QuickFix CodeAction or user request.
     }
 
     private handleDiagnosticsChange(uris: readonly vscode.Uri[]) {
-        if (this.isHealing) return; // Prevent loop
-
-        // Debounce logic (2000ms delay)
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-        }
-
-        this.debounceTimer = setTimeout(async () => {
-            await this.processDiagnostics(uris);
-        }, 2000);
+        // Disabled automatic background scanning for zero-lag editing.
     }
 
     private async processDiagnostics(uris: readonly vscode.Uri[]) {
