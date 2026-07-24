@@ -8,7 +8,7 @@ This document serves as the complete, authoritative registry of all **12 GitHub 
 
 | Workflow Name | Trigger(s) | Total Jobs | Purpose & Category |
 |---|---|---|---|
-| 1. [🧠 SupremeAI Core CI](#1--supremeai-core-ci-supreme-core-ciyml) | Push (`main`, `develop`), PR, Daily Cron (`00:00 UTC`), Dispatch | 14 Jobs | Core Quality Gate, Testing, Security, Docker & Deployment |
+| 1. [🧠 SupremeAI Core CI](#1--supremeai-core-ci-supreme-core-ciyml) | Push (`main`, `develop`), PR, Daily Cron (`00:00 UTC`), Dispatch | 21 Jobs (Graph Nodes) | Core Quality Gate, Testing, Security, Docker & Multi-Target Deploy |
 | 2. [🤖 Manual Maintenance & Auto-Fix](#2--manual-maintenance--auto-fix-maintenance_pipelineyml) | Daily Cron (`02:00 UTC`), Dispatch | 15 Jobs | Automated Maintenance, Security Audit, PR Fixes & Docs |
 | 3. [📦 SupremeAI Release Builder](#3--supremeai-release-builder-supreme-release-buildsyml) | Git Tag Push (`v*`), Dispatch | 2 Jobs | Cross-Platform Multi-Target Release Builds (APK, VSIX, EXE) |
 | 4. [📱 SupremeAI Mobile CD (Fastlane)](#4--supremeai-mobile-cd-fastlane-supreme-mobile-cdyml) | Git Tag Push (`v*.*.*`) | 2 Jobs | Automated Mobile Store Deployments (Play Store & TestFlight) |
@@ -29,36 +29,50 @@ This document serves as the complete, authoritative registry of all **12 GitHub 
 - **Triggers:** Push to `main`/`develop`, Pull Requests, Daily Cron (`00:00 UTC`), Manual Dispatch.
 - **Concurrency:** Single active pipeline instance (`cancel-in-progress: true`).
 
-### Jobs Breakdown:
+### Exact Jobs Breakdown (18 Jobs in GitHub Graph):
 
 1. **`changes` (Path Change Detection):**
-   - *Description:* Detects file modifications across `backend`, `frontend`, `docker`, and `docs` using `dorny/paths-filter`. Evaluates past failures to force-run dependent steps if previously failed.
-2. **`pre-merge-gate` (Pre-Merge Quality Gate):**
-   - *Description:* Runs linting checks (Ruff, ESLint), admin authorization guards, and observability timeout rules before executing heavy tests.
-3. **`observability-audit` (Silent Error Audit):**
-   - *Description:* Scans python files to ensure no bare `except:` or swallowed exceptions exist in critical paths.
-4. **`fastapi-smoke-check` (API Smoke Verification):**
-   - *Description:* Boots FastAPI backend in isolated mode and verifies `/health` and OpenAPI schema endpoints.
-5. **`backend-core` (Backend Pytest & Coverage):**
-   - *Description:* Runs unit and integration tests using `pytest -n auto` with coverage analysis (target >= 38%). Utilizes persistent `v3` virtualenv cache.
-6. **`frontend-core` (React/Vite Build & Vitest):**
-   - *Description:* Installs Node dependencies via `pnpm`, executes `vitest` unit tests, and verifies TypeScript compilation.
-7. **`mobile-smoke-test` (Flutter Mobile Verification):**
-   - *Description:* Validates Flutter pub dependencies and performs `flutter analyze` static check on the mobile app.
-8. **`docker-build-push` (GHCR Container Builder):**
-   - *Description:* Builds multi-arch Docker container images for `backend` and pushes to GitHub Container Registry (`ghcr.io`).
-9. **`check-render-quota` (Render Free Tier Quota Guard):**
-   - *Description:* Evaluates Render API limits to decide whether to trigger Render Webhook deploy or fallback to GitHub Cloud Run.
-10. **`deploy-render-user` (Customer Web Service Deploy):**
-    - *Description:* Triggers deployment webhook for the public-facing SupremeAI Customer FastAPI web service on Render.
-11. **`deploy-render-admin` (Admin Control Panel Deploy):**
-    - *Description:* Triggers deployment webhook for the God-Mode Admin Control Panel service on Render.
-12. **`deploy-render-both` (Unified Dual-Deploy):**
-    - *Description:* Deploys both Admin and Customer services when breaking monorepo changes are detected.
-13. **`performance-e2e` (Playwright End-to-End Test):**
-    - *Description:* Launches headless browser subagents to run end-to-end integration tests against live preview deployments.
-14. **`deploy-docs-god-mode` (Documentation Deployment):**
-    - *Description:* Builds and deploys MkDocs documentation to GitHub Pages.
+   - *Description:* Detects file modifications across backend, frontend, docker, and docs using `dorny/paths-filter`.
+2. **`pre-merge-gate` (🚧 Pre-Merge Gate - Iron Curtain):**
+   - *Description:* Runs zero-gap stub data checks, security blind spot scans, Ruff linting, admin router auth checks, and HTTP timeout audit.
+3. **`check-render-quota` (📊 Check Render Build Quota):**
+   - *Description:* Checks Render API limits to determine whether to trigger Render Webhook deploy or use pre-built GitHub Docker image.
+4. **`observability-audit` (🔬 Observability Audit - No Silent Errors):**
+   - *Description:* Scans Python files to ensure no bare `except:` or swallowed exceptions exist in critical paths.
+5. **`production-readiness` (🚀 Production Readiness):**
+   - *Description:* Runs Safety Guard file protection validation, Multi-Model Security/Logic Validator, and Codegraph knowledge base generator.
+6. **`security-audit` (🛡️ CodeQL & Trivy Security Scan):**
+   - *Description:* Performs GitHub CodeQL SAST analysis and parallel Trivy vulnerability scans for Python & Node.js.
+7. **`docker-build` (🐳 Build Base Image):**
+   - *Description:* Builds `backend-ci-base:latest` Docker image and pushes to GitHub Container Registry (`ghcr.io`).
+8. **`frontend-core` (🌐 Frontend Monorepo - Turbo):**
+   - *Description:* Runs Pnpm Turborepo build & lint, Studio Client Vitest, Web Chat Vitest, and VS Code Extension unit tests.
+9. **`flutter-integration-tests` (📱 Flutter Integration Test):**
+   - *Description:* Runs Android & iOS simulator integration tests for mobile app on macOS runner.
+10. **`backend-core` (🐍 Backend - Test):**
+    - *Description:* Executes unit and integration tests using `pytest -n auto` with coverage reporting.
+11. **`deploy-static-render` (🌐 Deploy Frontend - Render Static):**
+    - *Description:* Triggers deploy hook for Vite static frontend client on Render.
+12. **`build-backend-image` (🐳 Build & Push Backend Image):**
+    - *Description:* Builds production `supremeai-backend` Docker image and pushes to GHCR.
+13. **`deploy-backend` (🚀 Deploy Backend - Cloud Run):**
+    - *Description:* Deploy API image to Google Cloud Run (Disabled when Render is active).
+14. **`build-and-release-desktop` (🖥️ Build & Release Desktop App):**
+    - *Description:* Matrix build job executing Tauri builds across macOS, Linux, and Windows for desktop distribution.
+15. **`canary-deploy` (🚀 Canary Deploy Backend - Cloud Run):**
+    - *Description:* Performs canary traffic-splitting deployment on Cloud Run.
+16. **`deploy-user-backend` (🚀 Deploy User Backend - Render):**
+    - *Description:* Triggers isolated deployment for User/Customer API backend service on Render.
+17. **`deploy-admin-backend` (🚀 Deploy Admin Backend - Render):**
+    - *Description:* Triggers isolated deployment for God-Mode Admin API backend service on Render.
+18. **`deploy-combined-backend` (🚀 Deploy Combined Backend - Render):**
+    - *Description:* Deploys combined Admin & User backend when monorepo changes affect both roles.
+19. **`deploy-admin-firebase` (🚀 Deploy Admin Portal - Firebase):**
+    - *Description:* Builds and deploys Admin Studio Client frontend to Firebase Hosting.
+20. **`deploy-user-vercel` (🚀 Deploy User Portal - Vercel):**
+    - *Description:* Builds and deploys User Portal frontend to Vercel.
+21. **`sync-mirror` (📤 Sync to Secondary Repo):**
+    - *Description:* Mirrors latest production commits to secondary/staging repository (`SaifulHaqueNiloy/supremeai`).
 
 ---
 
