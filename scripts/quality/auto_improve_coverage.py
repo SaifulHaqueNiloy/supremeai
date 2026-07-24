@@ -17,8 +17,8 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "backend"))
 
-# বাংলা মন্তব্য: 'backend' ফোল্ডারটিকেও পাইথন পাথে যুক্ত করা হলো যাতে sub-modules (যেমন core, brain) সহজেই ইম্পোর্ট হতে পারে
-from backend.tools.auto_coverage_improver import AutoCoverageImprover
+# বাংলা মন্তব্য:devops অটो কভারেজ ইমপ্রুভার ইম্পোর্ট করা হলো
+from backend.tools.devops.auto_coverage_improver import AutoCoverageImprover
 
 
 def extract_source_directories(coverage_report_path):
