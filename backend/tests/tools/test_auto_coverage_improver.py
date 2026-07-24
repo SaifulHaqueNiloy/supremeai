@@ -10,8 +10,8 @@ from tools.devops.coverage_auditor import CoverageGap
 def improver():
     """Provides an instance of AutoCoverageImprover with mocked dependencies."""
     with (
-        patch("tools.auto_coverage_improver.CoverageAuditor") as MockAuditor,
-        patch("tools.auto_coverage_improver.AutoTestGenerator") as MockGenerator,
+        patch("tools.devops.auto_coverage_improver.CoverageAuditor") as MockAuditor,
+        patch("tools.devops.auto_coverage_improver.AutoTestGenerator") as MockGenerator,
     ):
         improver_instance = AutoCoverageImprover()
         improver_instance.auditor = MockAuditor()

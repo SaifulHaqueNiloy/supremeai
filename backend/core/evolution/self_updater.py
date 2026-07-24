@@ -5,7 +5,6 @@
 
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from loguru import logger
 
@@ -60,9 +59,9 @@ class SelfUpdater:
 
     def apply_multi_file_patch(
         self,
-        patches: Dict[str, str],
-        proposal_id: Optional[str] = None,
-    ) -> Tuple[bool, List[str]]:
+        patches: dict[str, str],
+        proposal_id: str | None = None,
+    ) -> tuple[bool, list[str]]:
         """Applies multi-file patches with automatic rollbacks on failure.
 
         বাংলা: একাধিক ফাইল একসাথে আপডেট করে; কোনো সমস্যা হলে স্বয়ংক্রিয় রোলব্যাক করে।
@@ -71,8 +70,8 @@ class SelfUpdater:
             logger.error("Multi-file patch rejected: updater is not authorized.")
             return False, ["Unauthorized"]
 
-        applied_backups: List[Tuple[Path, Path]] = []
-        applied_files: List[str] = []
+        applied_backups: list[tuple[Path, Path]] = []
+        applied_files: list[str] = []
 
         try:
             for file_path, content in patches.items():

@@ -311,3 +311,19 @@ class CircuitBreaker:
     def mark_failure(self) -> None:
         """Record failed request."""
         self._mark_failure()
+
+
+class DynamicCircuitBreaker(CircuitBreaker):
+    """Dynamic Circuit Breaker that adjusts failure threshold based on load & error rate. (Bangla: ডাইনামিক সার্কিট ব্রেকার)"""
+
+    def adjust_threshold_by_load(self, current_load: float, error_rate: float) -> None:
+        """System load ও error rate মেট্রিক্সের ভিত্তিতে failure threshold সংবেদনশীলভাবে সমন্বয় করা।"""
+        with self._lock:
+            if current_load > 0.8 and error_rate > 0.1:
+                self.failure_threshold = max(2, self.failure_threshold - 1)
+                logger.warning(
+                    f"⚡ [DynamicCircuitBreaker:{self.name}] High system load/error detected. Reduced failure_threshold to {self.failure_threshold}"
+                )
+            elif current_load < 0.3 and error_rate < 0.01:
+                self.failure_threshold = min(10, self.failure_threshold + 1)
+                logger.info(f"🟢 [DynamicCircuitBreaker:{self.name}] Low system load/error. Increased failure_threshold to {self.failure_threshold}")

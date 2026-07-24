@@ -5,7 +5,7 @@
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from backend.p2p.credit_system import credit_system
 
@@ -16,14 +16,14 @@ class P2PResourceBroker:
     """Brokers compute requests between resource providers and consumers."""
 
     def __init__(self):
-        self._active_nodes: Dict[str, Dict[str, Any]] = {}
+        self._active_nodes: dict[str, dict[str, Any]] = {}
 
     def register_node(
         self,
         node_id: str,
         owner_id: str,
-        capabilities: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        capabilities: dict[str, Any],
+    ) -> dict[str, Any]:
         """Register a peer node capable of providing compute resources.
 
         বাংলা: নতুন P2P কম্পিউট প্রোভাইডার নোড রেজিস্টার করে।
@@ -40,7 +40,7 @@ class P2PResourceBroker:
         logger.info(f"P2P Node registered: {node_id} (owner: {owner_id})")
         return node_info
 
-    def find_best_node(self, required_capability: str, min_credits: float = 1.0) -> Optional[Dict[str, Any]]:
+    def find_best_node(self, required_capability: str, min_credits: float = 1.0) -> dict[str, Any] | None:
         """Find an idle node matching the capability requirements.
 
         বাংলা: চাওয়া কম্পিউট ক্ষমতার উপর ভিত্তি করে সেরা উপযুক্ত নোড খুঁজে বের করে।
@@ -54,7 +54,7 @@ class P2PResourceBroker:
                 return node
         return None
 
-    def allocate_task(self, consumer_id: str, required_capability: str, cost: float) -> Dict[str, Any]:
+    def allocate_task(self, consumer_id: str, required_capability: str, cost: float) -> dict[str, Any]:
         """Match and allocate a task to a provider node, deducting credits.
 
         বাংলা: টাস্ক বরাদ্দ করে এবং ক্রেডিট লেজার অ্যাডজাস্ট করে।
