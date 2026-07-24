@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import os
 import time
-from typing import TYPE_CHECKING
 
 from loguru import logger
 
-if TYPE_CHECKING:
-    import redis.asyncio
+from core.cache.redis_manager import redis_manager
 
 
 class InMemoryFallbackLimiter:
@@ -37,13 +35,15 @@ class InMemoryFallbackLimiter:
 
 class AsyncRateLimiter:
     """
-    Async Redis rate limiter using redis.asyncio.
+    Async Redis rate limiter using centralized redis_manager.
     Pipeline reduces network round-trips.
     Includes an in-memory fallback (Pre-Deletion Safety Check).
+
+    বাংলা: কেন্দ্রীয় redis_manager ব্যবহার করে — আলাদা Redis connection তৈরি করে না।
+    Zero-Cost, ফ্রি-টিয়ার Upstash Redis এর সাথে সামঞ্জস্যপূর্ণ।
     """
 
     def __init__(self) -> None:
-        self._redis: redis.asyncio.Redis | None = None
         self._rate_limit_enabled: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {
             "true",
             "1",
@@ -51,24 +51,11 @@ class AsyncRateLimiter:
         }
         self._fallback_limiter = InMemoryFallbackLimiter()
 
-    async def _get_redis(self) -> redis.asyncio.Redis | None:
-        if self._redis is None:
-            import redis.asyncio as aioredis
-
-            # বাংলা মন্তব্ত: settings.redis_url থেকে প্রাথমিক ভ্যালু নেওয়া হচ্ছে — fallback চেইন রক্ষিত
-            from core.config import settings as app_settings
-
-            redis_url = (
-                getattr(app_settings, "redis_url", None) or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL") or "redis://localhost:6379"
-            )
-            self._redis = aioredis.from_url(redis_url, decode_responses=True)
-        return self._redis
-
     async def acquire(self, key: str, limit: int, window: int) -> bool:
         if not self._rate_limit_enabled:
             return True
         try:
-            client = await self._get_redis()
+            client = await redis_manager.get_client_async()
             if client is None:
                 return self._fallback_limiter.is_allowed(key, limit=limit)
             pipe = client.pipeline()
@@ -82,9 +69,8 @@ class AsyncRateLimiter:
             return self._fallback_limiter.is_allowed(key, limit=limit)
 
     async def close(self) -> None:
-        if self._redis:
-            await self._redis.close()
-            self._redis = None
+        # বাংলা মন্তব্য: আলাদা Redis connection নেই — centralized redis_manager বন্ধ করা যাবে না এখান থেকে
+        pass
 
 
 rate_limiter = AsyncRateLimiter()

@@ -194,7 +194,7 @@ class TestMultiLevelCache:
         # Set
         await ml_cache.set("key2", "val2", ttl=600)
         assert ml_cache.local_cache["key2"] == "val2"
-        mock_redis.set_cache.assert_awaited_once_with("key2", "val2", ttl=600)
+        mock_redis.set_cache.assert_awaited_once_with("key2", "val2", ex_seconds=600)
 
         # Invalidate Local
         ml_cache.invalidate_local("key1")
