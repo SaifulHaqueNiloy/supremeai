@@ -9,7 +9,7 @@ This document serves as the complete, authoritative registry of all **12 GitHub 
 | Workflow Name | Trigger(s) | Total Jobs | Purpose & Category |
 |---|---|---|---|
 | 1. [🧠 SupremeAI Core CI](#1--supremeai-core-ci-supreme-core-ciyml) | Push (`main`, `develop`), PR, Daily Cron (`00:00 UTC`), Dispatch | 21 Jobs (Graph Nodes) | Core Quality Gate, Testing, Security, Docker & Multi-Target Deploy |
-| 2. [🤖 Manual Maintenance & Auto-Fix](#2--manual-maintenance--auto-fix-maintenance_pipelineyml) | Daily Cron (`02:00 UTC`), Dispatch | 15 Jobs | Automated Maintenance, Security Audit, PR Fixes & Docs |
+| 2. [🤖 Manual Maintenance & Auto-Fix](#2--manual-maintenance--auto-fix-maintenance_pipelineyml) | Daily Cron (`02:00 UTC`), Dispatch | 17 Jobs | Automated Maintenance, Security Audit, PR Fixes & Docs |
 | 3. [📦 SupremeAI Release Builder](#3--supremeai-release-builder-supreme-release-buildsyml) | Git Tag Push (`v*`), Dispatch | 2 Jobs | Cross-Platform Multi-Target Release Builds (APK, VSIX, EXE) |
 | 4. [📱 SupremeAI Mobile CD (Fastlane)](#4--supremeai-mobile-cd-fastlane-supreme-mobile-cdyml) | Git Tag Push (`v*.*.*`) | 2 Jobs | Automated Mobile Store Deployments (Play Store & TestFlight) |
 | 5. [Auto-Fix CI Pipeline](#5-auto-fix-ci-pipeline-auto-fixyml) | PR (`main`, `develop`), Daily Cron (`02:00 UTC`) | 3 Jobs | Automated Code Formatting, Lint Fixing & Security Auditing |
@@ -81,38 +81,42 @@ This document serves as the complete, authoritative registry of all **12 GitHub 
 - **File Path:** [`.github/workflows/maintenance_pipeline.yml`](file:///.github/workflows/maintenance_pipeline.yml)
 - **Triggers:** Daily Cron (`02:00 UTC`), Manual Workflow Dispatch.
 
-### Jobs Breakdown:
+### Exact Jobs Breakdown (16 Jobs):
 
-1. **`setup` (Pipeline Environment Initializer):**
-   - *Description:* Initializes environment variables, verifies secrets, and prepares requirement cache keys.
-2. **`ci-failure-smart-summary` (AI CI Diagnostic Summary):**
-   - *Description:* Parses logs from recent failed CI runs and generates an AI-powered diagnostic summary using `loguru`.
-3. **`api-health-check` (Route Coverage Audit):**
-   - *Description:* Executes `scripts/generate_api_health_report.py` to compare registered FastAPI endpoints against pytest node IDs.
-4. **`auto-lint-fix` (Automated Code Format PR):**
-   - *Description:* Runs `ruff check --fix` and `black` on backend code and creates an automated Pull Request if changes occur.
-5. **`auto-dependency-upgrade` (Dependency Auto-Updater):**
-   - *Description:* Checks for non-major Poetry & PNPM package upgrades and submits an automated PR.
-6. **`dependency-vulnerability-scan` (Fast Security Audit):**
-   - *Description:* Exports `reqs.txt` via Poetry without heavy ML/tools groups and runs `pip-audit` to detect CVE vulnerabilities in <15s.
-7. **`outdated-dependency-report` (Outdated Package Tracker):**
-   - *Description:* Generates a markdown report listing outdated Python and Node packages.
-8. **`changelog-generator` (Auto Release Notes):**
-   - *Description:* Parses git commit history since last tag and generates/updates `CHANGELOG.md`.
-9. **`cache-purge` (Redis Cache Flushing):**
-   - *Description:* Connects to Upstash Redis instance to clear stale cache keys on demand.
-10. **`ai-db-optimizer` (Database Index Optimizer):**
-    - *Description:* Analyzes PostgreSQL query logs to recommend missing indexes or vacuum operations.
-11. **`generate-codebase-docs` (Doc Auto-Generator):**
-    - *Description:* Runs MkDocs build and pushes refreshed technical documentation to GitHub Pages.
-12. **`generate-modular-audits` (Modular Audit Generator):**
-    - *Description:* Executes `scripts/devops/generate_modular_audits.py` to generate 6 comprehensive markdown audit documents under `docs/autogen/`.
-13. **`generate-db-schema-diagram` (ERD Diagram Generator):**
-    - *Description:* Generates visual database entity-relationship diagrams using `erdantic api.routes.task` and Graphviz.
-14. **`cost-guard-defcon` (Free-Tier Cost Guardrail):**
-    - *Description:* Evaluates cloud resource usage metrics to enforce Zero-Cost operating principles.
-15. **`performance-e2e` (Manual E2E Benchmark):**
-    - *Description:* Runs manual Playwright browser automation tests on demand.
+1. **`gatekeeper` (🚦 Check 24h Gap):**
+   - *Description:* Enforces 24-hour execution gap for scheduled runs to avoid wasted GitHub runner minutes.
+2. **`setup` (Pipeline Initializer & Dependency Cache):**
+   - *Description:* Generates Python requirement cache keys and exports backend dependencies.
+3. **`health-check` (🩺 Run Health Check):**
+   - *Description:* Executes `tools.health_checker` script to verify backend service modules.
+4. **`auto-lint-fix` (💅 Run Auto-Lint & Format Fix):**
+   - *Description:* Runs `ruff check --fix`, `black`, and `isort`, submitting an automated Pull Request with formatting fixes.
+5. **`dependency-vulnerability-scan` (📦 Run Vulnerability Scan):**
+   - *Description:* Exports lightweight `reqs.txt` and runs `pip-audit` to scan Python packages for CVEs in <15s.
+6. **`generate-codebase-docs` (📝 Auto-Generate & Deploy Docs):**
+   - *Description:* Generates OpenAPI specifications, updates `API-swagger.yaml`, and builds Docusaurus site for GitHub Pages.
+7. **`worker-test` (⚡ Cloudflare Worker Test):**
+   - *Description:* Runs Vitest tests for Cloudflare Worker script `scripts/cloudflare_worker.test.mjs`.
+8. **`generate-db-schema` (📊 Generate DB Schema Diagram):**
+   - *Description:* Generates visual ERD database diagrams using `erdantic api.routes.task` and Graphviz.
+9. **`performance-e2e-test` (🧪 Human Simulation & Load Tests):**
+   - *Description:* Boots FastAPI server & Vite preview client, executing Playwright end-to-end accessibility & chat tests.
+10. **`ci-failure-smart-summary` (🧠 Smart CI Failure Summary):**
+    - *Description:* Analyzes logs from failed CI pipeline runs and generates AI-driven diagnostic summaries.
+11. **`outdated-dependency-report` (📦 Outdated Dependency Report):**
+    - *Description:* Checks for outdated Python and Node.js packages and logs a Markdown comparison table.
+12. **`auto-dependency-upgrade` (📦 Auto Dependency Upgrade PR):**
+    - *Description:* Upgrades non-major Poetry & Pnpm packages via AI agent and submits an automated Pull Request.
+13. **`changelog-generator` (📝 Changelog Generator Auto PR):**
+    - *Description:* Parses git commits from past 30 days and generates an updated `CHANGELOG.md` PR.
+14. **`cache-purge` (🗑️ Purge Redis Cache):**
+    - *Description:* Triggers HTTP `FLUSHDB` to Upstash Redis REST API to clear server caches.
+15. **`api-health-check` (Generate API Health Report):**
+    - *Description:* Runs `scripts/generate_api_health_report.py` to compare FastAPI routes against pytest test coverage.
+16. **`cost-guard-defcon` (Run Cost Guard):**
+    - *Description:* Evaluates API token consumption and cloud metrics to enforce Zero-Cost operating policies.
+17. **`ai-db-optimizer` (AI Database Index Optimizer):**
+    - *Description:* Analyzes query execution plans and uploads Playwright/E2E test report artifacts.
 
 ---
 
