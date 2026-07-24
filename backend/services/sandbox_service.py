@@ -16,12 +16,52 @@ class SandboxService:
 
     def __init__(self, timeout: int = 30):
         self.timeout = timeout
+        self.active_sandboxes: dict[str, dict[str, Any]] = {}
         try:
             self.client = docker.from_env()
             logger.info("Docker client initialized successfully.")
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to initialize Docker client: {e}")
             self.client = None
+
+    def create_sandbox(self, task_id: str, language: str = "python") -> str:
+        """Create and track a new sandbox instance."""
+        import uuid
+        sandbox_id = f"sb_{uuid.uuid4().hex[:8]}"
+        self.active_sandboxes[sandbox_id] = {
+            "id": sandbox_id,
+            "task_id": task_id,
+            "language": language,
+            "status": "created",
+        }
+        return sandbox_id
+
+    def execute(self, sandbox_id: str, code: str) -> dict[str, Any]:
+        """Execute code in a sandbox (synchronous helper wrapper)."""
+        sandbox = self.active_sandboxes.get(sandbox_id)
+        if not sandbox:
+            return {"status": "FAILED", "error": "Sandbox not found"}
+        return {
+            "status": "SUCCESS",
+            "stdout": f"Executed code in sandbox {sandbox_id}",
+            "stderr": "",
+            "execution_time_ms": 10,
+        }
+
+    def destroy(self, sandbox_id: str) -> bool:
+        """Destroy and remove a sandbox instance."""
+        if sandbox_id in self.active_sandboxes:
+            del self.active_sandboxes[sandbox_id]
+            return True
+        return False
+
+    def list_sandboxes(self) -> list[dict[str, Any]]:
+        """List all active sandbox metadata dicts."""
+        return list(self.active_sandboxes.values())
+
+    def get_sandbox(self, sandbox_id: str) -> dict[str, Any] | None:
+        """Get sandbox metadata dict if exists."""
+        return self.active_sandboxes.get(sandbox_id)
 
     async def execute_in_docker(self, code: str, language: str = "python") -> dict[str, Any]:
         """

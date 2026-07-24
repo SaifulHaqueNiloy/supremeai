@@ -51,11 +51,15 @@ class AsyncRateLimiter:
         }
         self._fallback_limiter = InMemoryFallbackLimiter()
 
+    async def _get_redis(self):
+        """Helper for test mock compatibility."""
+        return await redis_manager.get_client_async()
+
     async def acquire(self, key: str, limit: int, window: int) -> bool:
         if not self._rate_limit_enabled:
             return True
         try:
-            client = await redis_manager.get_client_async()
+            client = await self._get_redis()
             if client is None:
                 return self._fallback_limiter.is_allowed(key, limit=limit)
             pipe = client.pipeline()

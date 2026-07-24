@@ -178,7 +178,30 @@ class RiderTracker:
         self.cache = get_cache()
         self.rider_key = "rider_registry"
         self.order_key = "order_registry"
+        self.events: dict[str, list[dict[str, Any]]] = {}
         logger.info("RiderTracker initialized")
+
+    def track_event(self, user_id: str, event_type: str, data: dict[str, Any] | None = None) -> None:
+        """Track user or rider activity event."""
+        if user_id not in self.events:
+            self.events[user_id] = []
+        self.events[user_id].append({
+            "type": event_type,
+            "data": data or {},
+            "timestamp": datetime.now(UTC).isoformat(),
+        })
+
+    def get_user_events(self, user_id: str) -> list[dict[str, Any]]:
+        """Get event log for specified user/rider."""
+        return self.events.get(user_id, [])
+
+    def aggregate_metrics(self) -> dict[str, Any]:
+        """Aggregate event metrics across all riders/users."""
+        total_events = sum(len(evs) for evs in self.events.values())
+        return {
+            "total_users": len(self.events),
+            "total_events": total_events,
+        }
 
     async def register_rider(
         self,
