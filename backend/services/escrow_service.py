@@ -48,8 +48,8 @@ class Escrow:
     conditions: list[str]
     status: EscrowStatus
     created_at: datetime
-    expires_at: datetime | None
-    released_at: datetime | None
+    expires_at: datetime | None = None
+    released_at: datetime | None = None
 
 
 class EscrowService:
@@ -57,8 +57,8 @@ class EscrowService:
     Manages escrow transactions with state machine logic.
     """
 
-    def __init__(self) -> None:
-        self.cache = get_cache()
+    def __init__(self, cache: Any = None) -> None:
+        self.cache = cache or get_cache()
         self._escrows: dict[str, Escrow] = {}
         logger.info("EscrowService initialized")
 
@@ -110,7 +110,57 @@ class EscrowService:
         )
 
         self._escrows[escrow_id] = escrow
-        return escrow_id
+        return escrow
+
+    def create_escrow_sync(
+        self,
+        payer_id: str,
+        payee_id: str,
+        amount: float,
+        currency: str = "USD",
+        conditions: list[str] | None = None,
+        expires_in_days: int = 30,
+    ) -> Escrow:
+        escrow_id = f"esc_{secrets.token_hex(8)}"
+        escrow = Escrow(
+            escrow_id=escrow_id,
+            payer_id=payer_id,
+            payee_id=payee_id,
+            amount=amount,
+            currency=currency,
+            conditions=conditions or [],
+            status=EscrowStatus.PENDING,
+            created_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(days=expires_in_days),
+            released_at=None,
+        )
+        self._escrows[escrow_id] = escrow
+        return escrow
+
+    def get_escrow_sync(self, escrow_id: str) -> Escrow | None:
+        return self._escrows.get(escrow_id)
+
+    def update_escrow_status_sync(self, escrow_id: str, status: EscrowStatus) -> Escrow | None:
+        escrow = self._escrows.get(escrow_id)
+        if not escrow:
+            return None
+        updated = Escrow(
+            escrow_id=escrow.escrow_id,
+            payer_id=escrow.payer_id,
+            payee_id=escrow.payee_id,
+            amount=escrow.amount,
+            currency=escrow.currency,
+            conditions=escrow.conditions,
+            status=status,
+            created_at=escrow.created_at,
+            expires_at=escrow.expires_at,
+            released_at=datetime.now(UTC) if status == EscrowStatus.RELEASED else escrow.released_at,
+        )
+        self._escrows[escrow_id] = updated
+        return updated
+
+    def list_active_escrows_sync(self) -> list[Escrow]:
+        return list(self._escrows.values())
 
     async def fund_escrow(self, escrow_id: str, payment_reference: str) -> bool:
         """
