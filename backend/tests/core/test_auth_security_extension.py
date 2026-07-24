@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pydantic import SecretStr
 
 from core.security.auth_middleware import (
     AuthMiddleware,
@@ -15,13 +16,13 @@ from core.security.auth_middleware import (
 class TestDecodeJwtEdgeCases:
     """Edge cases for _decode_jwt function."""
 
-    def test_decode_jwt_missing_secret_returns_none(self, monkeypatch):
+    def test_decode_jwt_missing_secret_returns_none(self):
         """Missing jwt_secret returns None (fail-closed)."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "jwt_secret", "")
-        result = _decode_jwt("some-token")
-        assert result is None
+        with patch.object(settings, "_jwt_secret", SecretStr(""), create=True):
+            result = _decode_jwt("some-token")
+            assert result is None
 
     def test_decode_jwt_invalid_token_returns_none(self):
         """Invalid JWT returns None."""
@@ -111,9 +112,10 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [],
         }
-        await middleware(scope, MagicMock(), send)
-        mock_app.assert_not_called()
-        assert send.await_count >= 1
+        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
+            await middleware(scope, MagicMock(), send)
+            mock_app.assert_not_called()
+            assert send.await_count >= 1
 
     @pytest.mark.anyio
     async def test_middleware_rejects_invalid_token(self):
@@ -126,8 +128,9 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [(b"authorization", b"Bearer invalid-jwt-token")],
         }
-        await middleware(scope, MagicMock(), send)
-        mock_app.assert_not_called()
+        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
+            await middleware(scope, MagicMock(), send)
+            mock_app.assert_not_called()
 
     @pytest.mark.anyio
     async def test_middleware_api_token_mismatch(self):
@@ -140,8 +143,9 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [(b"authorization", b"Bearer wrong-token")],
         }
-        await middleware(scope, MagicMock(), send)
-        mock_app.assert_not_called()
+        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
+            await middleware(scope, MagicMock(), send)
+            mock_app.assert_not_called()
 
 
 class TestVerifyAdminSessionAdvanced:

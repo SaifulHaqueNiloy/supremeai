@@ -144,6 +144,7 @@ class ChromaDBStore:
             bool: True if indexed/updated, False if skipped due to identical hash.
         """
         import hashlib
+
         content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
         meta = metadata or {}
         meta["content_hash"] = content_hash

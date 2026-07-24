@@ -53,28 +53,39 @@ _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
     ],
 }
 
+import time  # বাংলা মন্তব্য: Dynamic TTL cache invalidation
+
 # Pre-compiled regex cache for fast heuristic matching
 _compiled_patterns: list[re.Pattern] = []
+_patterns_loaded_at: float = 0.0
+_PATTERNS_TTL_SECONDS: float = 60.0
+
+
+def invalidate_pattern_cache() -> None:
+    """DB/admin panel থেকে pattern আপডেট হলে caller এটি কল করে সাথে সাথে rebuild করাতে পারবে।"""
+    global _compiled_patterns, _patterns_loaded_at
+    _compiled_patterns, _patterns_loaded_at = [], 0.0
 
 
 def _get_compiled_patterns() -> list[re.Pattern]:
-    global _compiled_patterns  # noqa
-    if not _compiled_patterns:
+    global _compiled_patterns, _patterns_loaded_at
+    now = time.time()
+    if not _compiled_patterns or (now - _patterns_loaded_at) > _PATTERNS_TTL_SECONDS:
         all_patterns = []
         for patterns in _LOCAL_BLOCK_PATTERNS.values():
             all_patterns.extend(patterns)
         # Add custom patterns from settings
         all_patterns.extend(settings.prompt_blocked_patterns)
 
+        rebuilt: list[re.Pattern] = []
         for p in all_patterns:
             try:  # noqa
                 # Escape pattern to prevent regex injection, then compile case-insensitive
-                _compiled_patterns.append(re.compile(re.escape(p), re.IGNORECASE))
+                rebuilt.append(re.compile(re.escape(p), re.IGNORECASE))
             except Exception as e:  # noqa: BLE001
                 # বাংলা মন্তব্য: pattern compile ব্যর্থ হলে তা লগ করা হচ্ছে যাতে সিকিউরিটি রুল কার্যকর না হওয়ার কারণ বোঝা যায়।
-                from core.logger import logger
-
                 logger.error(f"[PromptFirewall] Failed to compile blocked pattern '{p}': {e}")
+        _compiled_patterns, _patterns_loaded_at = rebuilt, now
     return _compiled_patterns
 
 

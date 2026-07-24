@@ -30,9 +30,29 @@ import httpx
 from core.cache import get_redis_client
 from core.config import settings
 from core.exceptions import LLMProviderError, QuotaExceededError
+from core.llm.free_tier_tracker import get_tracker
 from core.logging import get_logger
 from core.metrics import counter, timed
 from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+
+
+class Provider(str, Enum):
+    """Supported AI model providers."""
+
+    MOONSHOT = "moonshot"
+    DEEPSEEK = "deepseek"
+    TOGETHER = "together"
+    OLLAMA = "ollama"
+    GEMINI = "gemini"
+
+
+# বাংলা মন্তব্য: Provider enum -> free_tier_tracker স্ট্রিং-কী ম্যাপিং
+_FREE_TIER_TRACKED: dict[Provider, str] = {
+    Provider.GEMINI: "gemini",
+    Provider.OLLAMA: "ollama",
+    Provider.DEEPSEEK: "deepseek",
+}
+
 
 # Import UniversalRulesEngine for all AI models to follow cine rules
 try:
@@ -505,6 +525,7 @@ class LLMRouter:
             Provider.MOONSHOT: MoonshotProvider(),
             Provider.DEEPSEEK: DeepSeekProvider(),
             Provider.TOGETHER: TogetherProvider(),
+            Provider.GEMINI: GeminiProvider(),
             Provider.OLLAMA: OllamaProvider(),
         }
         self.budget = budget or TokenBudget()
@@ -541,6 +562,11 @@ class LLMRouter:
         if cost_sensitive:
             chain.sort(key=lambda p: PROVIDER_COSTS[p][0] + PROVIDER_COSTS[p][1])
 
+        # বাংলা মন্তব্য: free-tier ট্র্যাকার দিয়ে real RPM/TPM/RPD budget চেক করে
+        # exhausted প্রোভাইডার চেইন থেকে বাদ দেওয়া হচ্ছে
+        tracker = get_tracker()
+        chain = [p for p in chain if _FREE_TIER_TRACKED.get(p) is None or tracker.is_available(_FREE_TIER_TRACKED[p])]
+
         return chain
 
     def _cache_key(self, prompt: str, task_type: str, **kwargs: Any) -> str:
@@ -574,6 +600,10 @@ class LLMRouter:
         estimated_tokens = self._estimate_tokens(prompt) + max_tokens
         if self.rules and not self.rules.check_token_budget(estimated_tokens):
             logger.error(f"❌ Token budget exceeded: {estimated_tokens}")
+            raise QuotaExceededError(
+                message="Rules-engine token budget exceeded",
+                details={"estimated_tokens": estimated_tokens},
+            )
 
         # Normalize Bengali text
         if normalize_bengali and self.normalizer.detect_script(prompt) in (
