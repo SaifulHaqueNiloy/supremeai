@@ -91,10 +91,10 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
 
     try:
         if id_token.startswith("mock-"):
-            if is_production:
+            if is_production or getattr(settings, "env", "local").lower() not in ("local", "test", "testing"):
                 raise HTTPException(
                     status_code=403,
-                    detail="Mock tokens are strictly forbidden in production.",
+                    detail="Mock tokens are strictly forbidden outside of local testing environments.",
                 )
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
@@ -105,7 +105,6 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
             email = decoded_token.get("email", "")
             logger.info(f"Verified Firebase token for email: {email}")
         else:
-            # Always enforce signature verification; offline verification bypass removed
             raise HTTPException(
                 status_code=401,
                 detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
