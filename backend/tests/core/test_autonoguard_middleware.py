@@ -3,8 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import Request
-from starlette.types import ASGIApp
 
 from core.security.autonoguard_middleware import AutonoGuardMiddleware
 
@@ -12,128 +10,129 @@ from core.security.autonoguard_middleware import AutonoGuardMiddleware
 class TestAutonoGuardMiddleware:
     """Tests for AutonoGuardMiddleware."""
 
-    async def test_non_sensitive_path_passes(self, monkeypatch):
-        """Non-sensitive path passes through without checks."""
-        monkeypatch.setenv("ENV", "test")
-        app = AsyncMock(return_value=None)
-        middleware = AutonoGuardMiddleware(app)
-        middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/api/chat"
-        request.method = "GET"
-        request.state.user = {"sub": "admin-1", "role": "admin"}
-        request.client.host = "127.0.0.1"
-
-        await middleware.dispatch(request, app)
-        app.assert_called_once()
-
-    async def test_public_path_skips_check(self, monkeypatch):
-        """Public path skips AutonoGuard check."""
-        monkeypatch.setenv("ENV", "test")
-        app = AsyncMock(return_value=None)
-        middleware = AutonoGuardMiddleware(app)
-        middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/health"
-        request.method = "GET"
-
-        await middleware.dispatch(request, app)
-        app.assert_called_once()
-
-    async def test_sensitive_path_calls_enforce(self):
-        """Sensitive path calls enforce_operation."""
-        app = AsyncMock(return_value=None)
-        middleware = AutonoGuardMiddleware(app)
-        middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/api/admin/users"
-        request.method = "POST"
-        request.state.user = {"sub": "admin-1", "role": "admin"}
-        request.client.host = "127.0.0.1"
-        request.headers = {"X-JIT-OTP": "123456"}
-
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
-            mock_engine.enforce_operation.return_value = (True, None)
-            await middleware.dispatch(request, app)
-            mock_engine.enforce_operation.assert_called_once()
-
-    async def test_sensitive_path_denied_returns_401(self):
-        """Sensitive path denied returns 401."""
+    @pytest.mark.asyncio
+    async def test_non_sensitive_path_passes(self):
         app = AsyncMock()
         middleware = AutonoGuardMiddleware(app)
         middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/api/admin/billing"
-        request.method = "POST"
-        request.state.user = {"sub": "admin-1", "role": "admin"}
-        request.client.host = "10.0.0.5"
+        request = MagicMock()
+        request.url.path = "/api/v1/public"
+        request.method = "GET"
         request.headers = {}
-        request.url = MagicMock()
-        request.url.path = "/api/admin/billing"
+        request.state.user = {"sub": "test-user"}
 
         with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
-            mock_engine.enforce_operation.return_value = (False, "OTP required")
+            mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
             response = await middleware.dispatch(request, app)
-            assert response.status_code == 401
-            app.assert_not_called()
+            app.assert_awaited_once()
 
-    async def test_no_user_in_state(self):
-        """No user in state defaults to 'unknown'."""
-        app = AsyncMock(return_value=None)
+    @pytest.mark.asyncio
+    async def test_public_path_skips_check(self):
+        app = AsyncMock()
         middleware = AutonoGuardMiddleware(app)
         middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/api/admin/settings"
-        request.method = "PUT"
-        del request.state.user
-        request.client.host = "127.0.0.1"
+        request = MagicMock()
+        request.url.path = "/health"
+        request.method = "GET"
         request.headers = {}
+        request.state.user = {"sub": "test-user"}
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
-            mock_engine.enforce_operation.return_value = (True, None)
-            await middleware.dispatch(request, app)
-            _, kwargs = mock_engine.enforce_operation.call_args
-            assert kwargs["admin_id"] == "unknown"
+        response = await middleware.dispatch(request, app)
+        app.assert_awaited_once()
 
+    @pytest.mark.asyncio
+    async def test_sensitive_path_calls_enforce(self):
+        app = AsyncMock()
+        middleware = AutonoGuardMiddleware(app)
+        middleware._initialized = True
+        request = MagicMock()
+        request.url.path = "/api/v1/admin/users"
+        request.method = "POST"
+        request.headers = {"X-JIT-OTP": "123456"}
+        request.state.user = {"sub": "admin-user"}
+        request.body = AsyncMock(return_value=b"{}")
+
+        with patch("core.config.settings.supremeai_public_paths", ["/health"]):
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
+                await middleware.dispatch(request, app)
+                mock_engine.enforce_operation.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_sensitive_path_denied_returns_401(self):
+        app = AsyncMock()
+        middleware = AutonoGuardMiddleware(app)
+        middleware._initialized = True
+        request = MagicMock()
+        request.url.path = "/api/v1/admin/users"
+        request.method = "POST"
+        request.headers = {}
+        request.client.host = "127.0.0.1"
+        request.state.correlation_id = "test-corr-id"
+
+        with patch("core.config.settings.supremeai_public_paths", ["/health"]):
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(return_value=(False, "JIT OTP required"))
+                mock_engine.heal_error = AsyncMock()
+                response = await middleware.dispatch(request, app)
+                assert response.status_code == 401
+                app.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_no_user_in_state(self):
+        app = AsyncMock()
+        middleware = AutonoGuardMiddleware(app)
+        middleware._initialized = True
+        request = MagicMock()
+        request.url.path = "/api/v1/admin/settings"
+        request.method = "GET"
+        request.headers = {}
+        del request.state.user
+
+        with patch("core.config.settings.supremeai_public_paths", ["/health"]):
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
+                await middleware.dispatch(request, app)
+                assert mock_engine.enforce_operation.call_count == 1
+                call_kwargs = mock_engine.enforce_operation.call_args.kwargs
+                assert call_kwargs["admin_id"] == "unknown"
+
+    @pytest.mark.asyncio
     async def test_otp_from_headers(self):
-        """OTP is extracted from X-JIT-OTP header."""
-        app = AsyncMock(return_value=None)
+        app = AsyncMock()
         middleware = AutonoGuardMiddleware(app)
         middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/api/admin/deploy"
+        request = MagicMock()
+        request.url.path = "/api/v1/admin/deploy"
         request.method = "POST"
-        request.state.user = {"sub": "admin-1"}
-        request.client.host = "127.0.0.1"
         request.headers = {"X-JIT-OTP": "654321"}
+        request.state.user = {"sub": "admin-1"}
+        request.body = AsyncMock(return_value=b"{}")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
-            mock_engine.enforce_operation.return_value = (True, None)
-            await middleware.dispatch(request, app)
-            _, kwargs = mock_engine.enforce_operation.call_args
-            assert kwargs["otp_code"] == "654321"
+        with patch("core.config.settings.supremeai_public_paths", ["/health"]):
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
+                await middleware.dispatch(request, app)
+                assert mock_engine.enforce_operation.call_count == 1
+                call_kwargs = mock_engine.enforce_operation.call_args.kwargs
+                assert call_kwargs["otp_code"] == "654321"
 
+    @pytest.mark.asyncio
     async def test_otp_from_x_otp_header(self):
-        """OTP is extracted from X-OTP header fallback."""
-        app = AsyncMock(return_value=None)
+        app = AsyncMock()
         middleware = AutonoGuardMiddleware(app)
         middleware._initialized = True
-
-        request = MagicMock(spec=Request)
-        request.url.path = "/api/admin/config"
+        request = MagicMock()
+        request.url.path = "/api/v1/admin/config"
         request.method = "POST"
-        request.state.user = {"sub": "admin-1"}
-        request.client.host = "127.0.0.1"
         request.headers = {"X-OTP": "111222"}
+        request.state.user = {"sub": "admin-1"}
+        request.body = AsyncMock(return_value=b"{}")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
-            mock_engine.enforce_operation.return_value = (True, None)
-            await middleware.dispatch(request, app)
-            _, kwargs = mock_engine.enforce_operation.call_args
-            assert kwargs["otp_code"] == "111222"
+        with patch("core.config.settings.supremeai_public_paths", ["/health"]):
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
+                await middleware.dispatch(request, app)
+                assert mock_engine.enforce_operation.call_count == 1
+                call_kwargs = mock_engine.enforce_operation.call_args.kwargs
+                assert call_kwargs["otp_code"] == "111222"

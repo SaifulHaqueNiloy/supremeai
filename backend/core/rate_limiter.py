@@ -85,3 +85,27 @@ class AsyncRateLimiter:
         if self._redis:
             await self._redis.close()
             self._redis = None
+
+
+rate_limiter = AsyncRateLimiter()
+
+
+async def advanced_rate_limit_check(
+    key: str,
+    limit: int = 100,
+    window: int = 3600,
+    burst_multiplier: float = 1.5,
+) -> bool:
+    """Advanced rate limiting with burst capability. (Bangla: বার্স্ট ক্যাপাবিলিটি সহ অ্যাডভান্সড রেট লিমিটিং)
+
+    Args:
+        key: The rate limit identifier key (IP or user ID).
+        limit: Base rate limit per window.
+        window: Time window in seconds.
+        burst_multiplier: Multiplier for burst allowance.
+
+    Returns:
+        bool: True if request is allowed, False otherwise.
+    """
+    effective_limit = int(limit * burst_multiplier)
+    return await rate_limiter.acquire(key, limit=effective_limit, window=window)

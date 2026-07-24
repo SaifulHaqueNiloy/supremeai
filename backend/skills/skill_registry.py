@@ -6,7 +6,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("supremeai.skills.registry")
 
@@ -19,9 +19,9 @@ class SkillRegistry:
 
     def __init__(self, manifests_path: Path = MANIFESTS_DIR):
         self.manifests_path = manifests_path
-        self._skills: Dict[str, Dict[str, Any]] = {}
+        self._skills: dict[str, dict[str, Any]] = {}
 
-    def discover_skills(self) -> Dict[str, Dict[str, Any]]:
+    def discover_skills(self) -> dict[str, dict[str, Any]]:
         """Discover all valid skill manifests in the manifests directory.
 
         বাংলা: সব বৈধ স্কিল ম্যানিফেস্ট স্ক্যান ও লোড করে।
@@ -33,7 +33,7 @@ class SkillRegistry:
 
         for manifest_file in self.manifests_path.glob("*.json"):
             try:
-                with open(manifest_file, "r", encoding="utf-8") as f:
+                with open(manifest_file, encoding="utf-8") as f:
                     data = json.load(f)
                     skill_id = data.get("id") or manifest_file.stem
                     self._skills[skill_id] = {
@@ -51,13 +51,13 @@ class SkillRegistry:
 
         return self._skills
 
-    def get_skill(self, skill_id: str) -> Optional[Dict[str, Any]]:
+    def get_skill(self, skill_id: str) -> dict[str, Any] | None:
         """Get skill metadata by ID."""
         if not self._skills:
             self.discover_skills()
         return self._skills.get(skill_id)
 
-    def list_skills(self) -> List[Dict[str, Any]]:
+    def list_skills(self) -> list[dict[str, Any]]:
         """List all discovered skills."""
         if not self._skills:
             self.discover_skills()
