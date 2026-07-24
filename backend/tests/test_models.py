@@ -45,16 +45,13 @@ class TestDynamicAgent:
         assert agent.name == "test-agent"
         assert agent.description == "A test agent"
         assert agent.execution_steps == {"script": "print('hello')"}
-        assert agent.is_active is True
+        assert agent.is_active is None or agent.is_active is True
 
     def test_create_instance_with_defaults(self):
-        agent = DynamicAgent(
-            name="minimal-agent",
-            execution_steps={"step": "do_something()"},
-        )
-        assert agent.name == "minimal-agent"
+        agent = DynamicAgent(name="defaults", execution_steps={})
+        assert agent.name == "defaults"
         assert agent.description is None
-        assert agent.is_active is True
+        assert agent.is_active is None or agent.is_active is True
 
     def test_persist_and_retrieve(self):
         engine = create_engine("sqlite:///:memory:")
@@ -89,8 +86,13 @@ class TestDynamicAgent:
                 session.commit()
 
     def test_is_active_default_true(self):
-        agent = DynamicAgent(name="active-agent", execution_steps={})
-        assert agent.is_active is True
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        with Session(engine) as session:
+            agent = DynamicAgent(name="active-agent", execution_steps={})
+            session.add(agent)
+            session.commit()
+            assert agent.is_active is True
 
     def test_deactivate_agent(self):
         agent = DynamicAgent(name="deactivate-me", execution_steps={}, is_active=False)
