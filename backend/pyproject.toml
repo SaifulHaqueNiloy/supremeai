@@ -67,6 +67,7 @@ nats-py = "^2.9.0"
 uuid6 = "^2025.0.1"
 pybreaker = "^1.4.1"
 cachetools = "^7.1.4"
+erdantic = "^1.2.1"
 
 
 [tool.poetry.group.ml]
