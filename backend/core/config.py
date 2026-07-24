@@ -479,10 +479,18 @@ class Settings(BaseSettings):
                     return f.read().strip()
         except OSError:
             pass
+        # Fallback to local data folder if /etc/secrets is not writable
+        local_secret_file = os.path.join(os.path.dirname(__file__), "..", "data", "jwt_secret")
+        try:
+            if os.path.exists(local_secret_file):
+                with open(local_secret_file) as f:
+                    return f.read().strip()
+        except OSError:
+            pass
         new_secret = secrets.token_hex(64)
         try:
-            os.makedirs(os.path.dirname(secret_file), exist_ok=True)
-            with open(secret_file, "w") as f:
+            os.makedirs(os.path.dirname(local_secret_file), exist_ok=True)
+            with open(local_secret_file, "w") as f:
                 f.write(new_secret)
         except OSError:
             pass

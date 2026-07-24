@@ -70,14 +70,14 @@ class SupabaseDB:
         self.key = settings.supabase_key
         self.client: Client | None = None
 
-        if self.url and self.key:
+        if self.url and self.key and self.url.startswith(("http://", "https://")):
             try:
                 self.client = create_client(self.url, self.key)
                 logger.info("Initialized Supabase Client")
             except Exception as e:  # noqa: BLE001
-                logger.exception(f"Supabase operation error: {e}")
+                logger.warning(f"Supabase Client initialization failed: {e}. Operating in offline mode.")
         else:
-            logger.warning("SUPABASE_URL or SUPABASE_KEY not found. Running in offline/mock mode.")
+            logger.warning("SUPABASE_URL or SUPABASE_KEY invalid/missing. Running in offline/mock mode.")
 
     @staticmethod
     def _derive_supabase_url(database_url: str | None) -> str | None:
