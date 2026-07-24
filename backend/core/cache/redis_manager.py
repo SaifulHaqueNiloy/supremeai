@@ -8,7 +8,6 @@ from loguru import logger
 from redis import asyncio as aioredis
 
 
-
 class SecureRedisManager:
     def __init__(self):
         from core.config import settings
@@ -67,7 +66,7 @@ class SecureRedisManager:
                 logger.error(f"Failed sync initialization of Redis client: {exc}")
         return self._client
 
-    async def close() -> None:
+    async def close(self) -> None:
         if self._client:
             await self._client.aclose()
             self._client = None
@@ -84,6 +83,10 @@ class SecureRedisManager:
             logger.error(f"Redis SET error: {exc}")
             return False
 
+    async def set_cache(self, key: str, value: str, ex_seconds: int | None = None) -> bool:
+        """Alias for set(), supporting ex_seconds parameter."""
+        return await self.set(key, value, ex=ex_seconds)
+
     async def get(self, key: str) -> str | None:
         client = await self.get_client_async()
         if not client:
@@ -93,6 +96,10 @@ class SecureRedisManager:
         except Exception as exc:
             logger.error(f"Redis GET error: {exc}")
             return None
+
+    async def get_cache(self, key: str) -> str | None:
+        """Alias for get()."""
+        return await self.get(key)
 
     async def delete(self, key: str) -> bool:
         client = await self.get_client_async()
@@ -119,3 +126,52 @@ class SecureRedisManager:
 
 
 redis_manager = SecureRedisManager()
+
+
+class IdempotencyUnavailableError(Exception):
+    """Raised when Redis idempotency lock fails or is unavailable."""
+
+    pass
+
+
+class _AcquireIdempotencyLockContext:
+    def __init__(self, key: str, ttl: int = 60, fail_closed: bool = True):
+        self.key = f"idempotency:{key}"
+        self.ttl = ttl
+        self.fail_closed = fail_closed
+        self.acquired = False
+
+    async def __aenter__(self):
+        client = await redis_manager.get_client_async()
+        if client:
+            try:
+                self.acquired = await client.set(self.key, "locked", nx=True, ex=self.ttl)
+            except Exception as exc:
+                logger.error(f"Failed to set idempotency lock in Redis: {exc}")
+                self.acquired = False
+        if not self.acquired and self.fail_closed:
+            raise IdempotencyUnavailableError(f"Idempotency lock unavailable for key: {self.key}")
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.acquired:
+            try:
+                await redis_manager.delete(self.key)
+            except Exception as exc:
+                logger.error(f"Failed to release idempotency lock: {exc}")
+
+    def __await__(self):
+        async def _run():
+            try:
+                async with self as lock:
+                    return True if not self.fail_closed else lock.acquired
+            except IdempotencyUnavailableError:
+                if self.fail_closed:
+                    raise
+                return True
+
+        return _run().__await__()
+
+
+def acquire_idempotency_lock(key: str, ttl: int = 60, fail_closed: bool = True):
+    return _AcquireIdempotencyLockContext(key, ttl=ttl, fail_closed=fail_closed)

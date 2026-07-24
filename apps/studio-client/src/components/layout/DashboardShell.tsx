@@ -5,6 +5,9 @@
 import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
+import { NavRail } from './NavRail';
+import { CommandBar } from './CommandBar';
+import { WorkspaceSkeleton } from '../common/Skeleton';
 
 // Lazy load heavy components for zero-idle cost initial render
 const DynamicActionDock = React.lazy(() => import('../dock/DynamicActionDock'));
@@ -17,9 +20,15 @@ export const DashboardShell: React.FC = () => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-900 text-white">
 
+      {/* Left Navigation Rail */}
+      <NavRail />
+
+      {/* Universal Command Palette (Ctrl+K) */}
+      <CommandBar />
+
       {/* Center: Primary Agent Chat Interface */}
       <main className="flex-grow relative flex flex-col transition-all duration-300">
-        <Suspense fallback={<div className="m-auto animate-pulse">Loading Core...</div>}>
+        <Suspense fallback={<WorkspaceSkeleton />}>
           <ChatInterface />
         </Suspense>
 

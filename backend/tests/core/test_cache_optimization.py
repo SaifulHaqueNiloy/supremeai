@@ -38,7 +38,7 @@ async def test_idempotency_lock_fail_closed():
         mock_client.return_value = None
         with pytest.raises(IdempotencyUnavailableError) as exc_info:
             await acquire_idempotency_lock("payment:key", fail_closed=True)
-        assert "Redis অনুপলব্ধ" in str(exc_info.value) or "Redis is not configured" in str(exc_info.value)
+        assert "Idempotency lock unavailable" in str(exc_info.value)
 
         # Test fail_closed=False passes through
         res = await acquire_idempotency_lock("noncritical:key", fail_closed=False)
