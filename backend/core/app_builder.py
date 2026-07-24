@@ -129,9 +129,7 @@ class RateLimitExceeded(Exception):
     """Rate limit exceeded — ক্লায়েন্টকে 429 রিটার্ন করতে।"""
 
 
-async def _rate_limit_exceeded_handler(
-    request: Request, exc: RateLimitExceeded
-) -> JSONResponse:
+async def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
 

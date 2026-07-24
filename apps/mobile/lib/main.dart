@@ -11,6 +11,8 @@ import 'package:supremeai/screens/dashboard/home_screen.dart';
 import 'package:supremeai/services/localization_service.dart';
 import 'package:supremeai/services/notification_service.dart';
 import 'package:supremeai/screens/dashboard/main_shell.dart';
+import 'package:supremeai/app_router.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -33,13 +35,13 @@ class SupremeAIApp extends StatelessWidget {
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
-          return MaterialApp(
+          return MaterialApp.router(
             title: 'SupremeAI',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: _getThemeMode(settings.settings.themeMode),
-            home: const AuthWrapper(),
+            routerConfig: appRouter,
           );
         },
       ),

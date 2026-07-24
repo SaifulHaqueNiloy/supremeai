@@ -83,10 +83,11 @@ class TestHelpers:
 class TestChannelPreference:
     """Tests for channel preference management."""
 
-    def test_get_active_channel_default(self):
+    @pytest.mark.asyncio
+    async def test_get_active_channel_default(self):
         """Test getting channel defaults to Discord."""
         with patch("core.otp_router.redis_manager", None):
-            result = get_active_channel("admin-123")
+            result = await get_active_channel("admin-123")
 
         assert result == CHANNEL_DISCORD
 
@@ -94,6 +95,7 @@ class TestChannelPreference:
     async def test_get_active_channel_override(self):
         """Test getting channel from Redis override."""
         mock_redis = MagicMock()
+        mock_redis.client = True
         mock_redis.get_cache = AsyncMock(return_value="email")
 
         with patch("core.otp_router.redis_manager", mock_redis):
@@ -105,6 +107,7 @@ class TestChannelPreference:
     async def test_set_active_channel_valid(self):
         """Test setting a valid channel."""
         mock_redis = MagicMock()
+        mock_redis.client = True
         mock_redis.set_cache = AsyncMock()
 
         with patch("core.otp_router.redis_manager", mock_redis):
@@ -149,9 +152,10 @@ class TestDiscordDelivery:
             mock_response = MagicMock()
             mock_response.status_code = 204
 
-            mock_client.return_value.__aenter__ = AsyncMock()
+            client_instance = AsyncMock()
+            client_instance.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
-            mock_client.return_value.post = AsyncMock(return_value=mock_response)
 
             from core.otp_router import _send_discord
 
@@ -171,9 +175,10 @@ class TestDiscordDelivery:
             mock_response = MagicMock()
             mock_response.status_code = 500
 
-            mock_client.return_value.__aenter__ = AsyncMock()
+            client_instance = AsyncMock()
+            client_instance.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
-            mock_client.return_value.post = AsyncMock(return_value=mock_response)
 
             from core.otp_router import _send_discord
 
@@ -214,9 +219,10 @@ class TestEmailDelivery:
             mock_response = MagicMock()
             mock_response.status_code = 200
 
-            mock_client.return_value.__aenter__ = AsyncMock()
+            client_instance = AsyncMock()
+            client_instance.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
-            mock_client.return_value.post = AsyncMock(return_value=mock_response)
 
             from core.otp_router import _send_email
 
@@ -234,6 +240,10 @@ class TestFallback:
     @pytest.mark.asyncio
     async def test_telegram_fallback_to_discord(self):
         """Test Telegram/WA fallback to Discord."""
+        mock_redis = MagicMock()
+        mock_redis.client = True
+        mock_redis.get_cache = AsyncMock(return_value=CHANNEL_TELEGRAM)
+
         with (
             patch("core.otp_router.settings") as mock_settings,
             patch(
@@ -241,11 +251,11 @@ class TestFallback:
                 new_callable=AsyncMock,
                 return_value=True,
             ),
-            patch("core.otp_router.redis_manager", None),
+            patch("core.otp_router.redis_manager", mock_redis),
         ):
             mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
 
-            result = await send_otp("admin-123", "123456", {}, channel_override=CHANNEL_TELEGRAM)
+            result = await send_otp("admin-123", "123456", {})
 
         # Should fallback to Discord
         assert result is True

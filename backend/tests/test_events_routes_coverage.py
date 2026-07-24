@@ -37,7 +37,6 @@ class TestDashboardStream:
         mock_pubsub.subscribe.return_value = mock_queue
 
         with patch("api.routes.events.global_pubsub", mock_pubsub):
-
             generator = dashboard_stream.event_generator(mock_request)
             events = []
             async for event in generator:
@@ -54,9 +53,7 @@ class TestDashboardStream:
         mock_request.is_disconnected = AsyncMock(side_effect=[False, True])
 
         mock_queue = AsyncMock()
-        mock_queue.get = AsyncMock(
-            return_value={"type": "dashboard_update", "payload": {"users": 10}}
-        )
+        mock_queue.get = AsyncMock(return_value={"type": "dashboard_update", "payload": {"users": 10}})
 
         mock_pubsub = MagicMock()
         mock_pubsub.subscribe.return_value = mock_queue

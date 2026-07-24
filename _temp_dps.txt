@@ -1,1 +1,0 @@
-"Dedicated diagram parsing service supporting multiple diagram formats."

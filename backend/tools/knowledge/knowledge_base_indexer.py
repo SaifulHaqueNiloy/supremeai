@@ -379,3 +379,15 @@ class KnowledgeBaseIndexer:
             self.vector_store._save_fallback()
         self._indexed_hashes.clear()
         return self.index_seed_data(seed_dir)
+
+    def index_single_file_ast(self, file_path: str) -> dict[str, Any]:
+        """Extracts AST nodes from a single source file and indexes them into the vector store.
+
+        বাংলা মন্তব্য: ফাইল সেভ হওয়া মাত্রই AST নোডসমূহ পড়ে ভেক্টর ডাটাবেসে আপডেট করে।
+        """
+        docs = self._extract_documents_from_file(file_path)
+        if not docs:
+            return {"indexed": 0, "file": file_path, "status": "skipped_or_empty"}
+
+        self.vector_store.add_documents(docs)
+        return {"indexed": len(docs), "file": file_path, "status": "success"}

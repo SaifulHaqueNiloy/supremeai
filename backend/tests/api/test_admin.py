@@ -3,6 +3,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from api.dependencies import get_current_user_token
+from api.routes.admin import get_current_admin
 from main import app
 
 client = TestClient(app)
@@ -36,8 +38,7 @@ def mock_firestore():
 @patch("core.security.auth_middleware._decode_jwt")
 def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "user_test", "role": "user"}
-    app.dependency_overrides[mock_token] = lambda: {"sub": "user_test", "role": "user"}
-    from api.routes.admin import get_current_admin
+    app.dependency_overrides[get_current_user_token] = lambda: {"sub": "user_test", "role": "user"}
 
     # We must also clear the get_current_admin override if it exists, or just mock it to raise 403
     app.dependency_overrides[get_current_admin] = lambda: (_ for _ in ()).throw(
@@ -56,7 +57,7 @@ def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
 @patch("core.security.auth_middleware._decode_jwt")
 def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_firestore):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {
+    app.dependency_overrides[get_current_user_token] = lambda: {
         "sub": "admin_test",
         "role": "admin",
     }
@@ -73,9 +74,6 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
 
     mock_query.get = mock_get
     mock_firestore.collection.return_value.document.return_value.collection.return_value.where.return_value = mock_query
-
-    # We need to use app.dependency_overrides for proper injection testing
-    from api.routes.admin import get_current_admin
 
     app.dependency_overrides[get_current_admin] = lambda: {
         "sub": "admin_test",
@@ -114,12 +112,10 @@ def test_quick_actions_success(
     mock_config_module.set_main_option = MagicMock(return_value=None)
     sys.modules["alembic.config"] = mock_config_module
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {
+    app.dependency_overrides[get_current_user_token] = lambda: {
         "sub": "admin_test",
         "role": "admin",
     }
-
-    from api.routes.admin import get_current_admin
 
     app.dependency_overrides[get_current_admin] = lambda: {
         "sub": "admin_test",
@@ -173,12 +169,10 @@ def test_quick_actions_success(
 @patch("core.security.auth_middleware._decode_jwt")
 def test_quick_action_unknown_returns_404(mock_decode_jwt, mock_token, mock_god_layer):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[mock_token] = lambda: {
+    app.dependency_overrides[get_current_user_token] = lambda: {
         "sub": "admin_test",
         "role": "admin",
     }
-
-    from api.routes.admin import get_current_admin
 
     app.dependency_overrides[get_current_admin] = lambda: {
         "sub": "admin_test",

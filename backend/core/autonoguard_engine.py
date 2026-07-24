@@ -29,8 +29,8 @@ from core.immune_system import ImmuneSystemScanner
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.otp_router import send_otp
 
-# Standardize on pybreaker to match redis_manager
-from pybreaker import CircuitBreaker
+# Standardize on core.resilience CircuitBreaker
+from core.resilience import CircuitBreaker
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -91,9 +91,9 @@ class AutonoGuardEngine:
     """
 
     _circuit_breaker: CircuitBreaker = CircuitBreaker(
-        fail_max=settings.circuit_breaker_failure_threshold,
-        reset_timeout=float(settings.circuit_breaker_cooldown_period),
         name="autonoguard",
+        failure_threshold=settings.circuit_breaker_failure_threshold,
+        recovery_timeout=float(settings.circuit_breaker_cooldown_period),
     )
     _scanner: ImmuneSystemScanner = ImmuneSystemScanner()
 
