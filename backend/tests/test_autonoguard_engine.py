@@ -261,6 +261,7 @@ class TestAutonoGuardEngine:
         engine = AutonoGuardEngine()
 
         from unittest.mock import MagicMock
+
         engine._circuit_breaker = MagicMock()
         engine._circuit_breaker.allow_request.return_value = False
 

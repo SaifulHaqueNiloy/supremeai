@@ -190,6 +190,33 @@ class SwarmPubSub:
             )
             raise
 
+    async def buffered_subscribe(self, batch_window_ms: float = 250.0) -> AsyncGenerator[str, None]:
+        """
+        বাংলা মন্তব্য: এডমিন UI-এর DOM Lag রোধ করার জন্য ২৫০ms উইন্ডোতে টেক্সট/টেলিমেট্রি ব্যাচ করে স্ট্রিম করে।
+        """
+        buffer: list[dict] = []
+        last_flush = asyncio.get_event_loop().time()
+        window_sec = batch_window_ms / 1000.0
+
+        try:
+            async for raw_msg in self.subscribe():
+                try:
+                    data = json.loads(raw_msg)
+                    buffer.append(data)
+                except Exception:
+                    buffer.append({"type": "raw", "data": raw_msg})
+
+                now = asyncio.get_event_loop().time()
+                if (now - last_flush) >= window_sec and buffer:
+                    batched_payload = json.dumps({"type": "batched_delta", "events": buffer})
+                    yield batched_payload
+                    buffer = []
+                    last_flush = now
+        except asyncio.CancelledError:
+            if buffer:
+                yield json.dumps({"type": "batched_delta", "events": buffer})
+            raise
+
 
 # বাংলা মন্তব্য: Lazy singleton — module import করলে কোনো Redis connection হয় না।
 _swarm_streamer_instance: SwarmPubSub | None = None
