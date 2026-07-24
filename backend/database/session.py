@@ -16,13 +16,15 @@ if not DATABASE_URL:
 
 # বাংলা মন্তব্য: কানেকশন স্ট্রিংয়ে postgresql:// বা postgres:// থাকলে তা asyncpg-এর জন্য postgresql+asyncpg:// দিয়ে প্রতিস্থাপন করা হচ্ছে
 def get_async_url(url: str) -> str:
-    if not url:
+    if not url or not isinstance(url, str):
         return "sqlite+aiosqlite:///:memory:"
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://", 1)
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+asyncpg://", 1)
-    return url
+    if url.startswith(("sqlite://", "sqlite+aiosqlite://", "postgresql+asyncpg://")):
+        return url
+    return "sqlite+aiosqlite:///:memory:"
 
 
 _async_url = get_async_url(DATABASE_URL)
