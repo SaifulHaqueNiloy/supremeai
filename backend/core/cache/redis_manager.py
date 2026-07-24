@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+from typing import Any
 
 from loguru import logger
 from redis import asyncio as aioredis
@@ -175,3 +176,33 @@ class _AcquireIdempotencyLockContext:
 
 def acquire_idempotency_lock(key: str, ttl: int = 60, fail_closed: bool = True):
     return _AcquireIdempotencyLockContext(key, ttl=ttl, fail_closed=fail_closed)
+
+
+class MultiLevelCache:
+    """Multi-Level Cache System — L1 (In-Memory) & L2 (Redis). (Bangla: মাল্টি-লেভেল ক্যাশে সিস্টেম)"""
+
+    def __init__(self, redis_mgr: SecureRedisManager | None = None):
+        self.local_cache: dict[str, Any] = {}
+        self.redis_cache = redis_mgr or redis_manager
+
+    async def get(self, key: str) -> Any:
+        """L1 মেমরি ক্যাশ থেকে চেক করে দ্রুত ডাটা রিটার্ন করে, না থাকলে L2 (Redis) থেকে আনে।"""
+        if key in self.local_cache:
+            return self.local_cache[key]
+
+        val = await self.redis_cache.get_cache(key)
+        if val is not None:
+            self.local_cache[key] = val  # Warm up L1 local cache
+        return val
+
+    async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
+        """L1 ও L2 উভয় জায়গায় ক্যাশ সংরক্ষণ করা।"""
+        self.local_cache[key] = value
+        await self.redis_cache.set_cache(key, value, ttl=ttl)
+
+    def invalidate_local(self, key: str | None = None) -> None:
+        """L1 ইন-মেমরি ক্যাশ পরিষ্কার করা।"""
+        if key:
+            self.local_cache.pop(key, None)
+        else:
+            self.local_cache.clear()

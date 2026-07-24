@@ -113,3 +113,22 @@ async def init_db_pool(dsn: str) -> PgBouncerConnectionPool:
             await pool.connect()
             _db_pool_instance = pool
         return _db_pool_instance
+
+
+async def get_db_pool_with_retry(max_retries: int = 3, initial_delay: float = 1.0) -> PgBouncerConnectionPool:
+    """ডাটাবেস কানেকশন পুল প্রারম্ভে এক্সপোনেনশিয়াল ব্যাক-অফ রিট্রাই। (Bangla: DB Pool Retry)"""
+    for attempt in range(1, max_retries + 1):
+        try:
+            return await get_db_pool()
+        except Exception as e:
+            if attempt == max_retries:
+                logger.error(f"❌ [DB Pool] Max connection retries reached: {e}")
+                raise e
+            delay = initial_delay * (2 ** (attempt - 1))
+            logger.warning(f"⚠️ [DB Pool] Connection attempt {attempt} failed. Retrying in {delay}s...")
+            await asyncio.sleep(delay)
+
+
+async def run_cpu_bound_task_safely(func, *args, **kwargs):
+    """সিঙ্ক্রোনাস বা ভারী সিপিইউ টাস্ককে মেইন ইভেন্ট লুপ আটকানো ছাড়া অফলোড করা। (Bangla: Thread offloader)"""
+    return await asyncio.to_thread(func, *args, **kwargs)
