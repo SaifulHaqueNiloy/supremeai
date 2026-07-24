@@ -617,4 +617,3 @@ jobs:
           name: supremeai-human-test-report
           path: playwright-report/
           retention-days: 7
-

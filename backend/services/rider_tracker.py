@@ -185,11 +185,13 @@ class RiderTracker:
         """Track user or rider activity event."""
         if user_id not in self.events:
             self.events[user_id] = []
-        self.events[user_id].append({
-            "type": event_type,
-            "data": data or {},
-            "timestamp": datetime.now(UTC).isoformat(),
-        })
+        self.events[user_id].append(
+            {
+                "type": event_type,
+                "data": data or {},
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
 
     def get_user_events(self, user_id: str) -> list[dict[str, Any]]:
         """Get event log for specified user/rider."""
