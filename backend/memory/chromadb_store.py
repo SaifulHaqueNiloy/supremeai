@@ -7,15 +7,18 @@ import os
 import uuid
 from typing import Any
 
+from core.utils.lazy_loader import lazy_import
+
 try:
     # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
     if os.getenv("LOW_MEMORY_MODE", "false").lower() == "true":
         raise ImportError("Low memory mode enabled. Skipping ChromaDB.")
-    import chromadb
+    chromadb = lazy_import("chromadb", package_hint="ml")
 
     _CHROMA_AVAILABLE = True
-except ImportError:
+except Exception:
     _CHROMA_AVAILABLE = False
+
 
 _logger = logging.getLogger(__name__)
 

@@ -68,7 +68,8 @@ class TestLogSecurityEvent:
 
     @pytest.mark.asyncio
     async def test_log_event_with_redis_mock(self):
-        mock_pipe = AsyncMock()
+        mock_pipe = MagicMock()
+        mock_pipe.execute = AsyncMock(return_value=True)
         mock_client = MagicMock()
         mock_client.pipeline.return_value = mock_pipe
         mock_redis = MagicMock()
@@ -81,7 +82,7 @@ class TestLogSecurityEvent:
                 details={"key_name": "test-key"},
             )
             assert event_id.startswith("sec-")
-            assert mock_pipe.execute.await_count == 1 or mock_pipe.execute.call_count == 1
+            mock_pipe.execute.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_log_event_redis_failure_graceful(self):
