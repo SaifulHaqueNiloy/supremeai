@@ -1,17 +1,14 @@
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from core.config import settings
-
-DATABASE_URL = settings.supabase_database_url
-
-if not DATABASE_URL:
-    logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
 
 
 # বাংলা মন্তব্য: কানেকশন স্ট্রিংয়ে postgresql:// বা postgres:// থাকলে তা asyncpg-এর জন্য postgresql+asyncpg:// দিয়ে প্রতিস্থাপন করা হচ্ছে
@@ -27,49 +24,108 @@ def get_async_url(url: str) -> str:
     return "sqlite+aiosqlite:///:memory:"
 
 
-_async_url = get_async_url(DATABASE_URL)
+# ── Lazy Engine Initialization ──────────────────────────────────────────────
+# বাংলা মন্তব্য: engine ও AsyncSessionLocal এখন lazily initialize হয় — module import-এ নয়।
+# এতে playwright-এর config.webServer বা অ্যাসিনক্রোনাস বুট সিকোয়েন্সে
+# ডাটাবেস কানেকশন ছাড়াই সার্ভার বুট হতে পারে।
+# প্রথমবার engine/AsyncSessionLocal অ্যাক্সেস করলেই কেবল create_async_engine() কল হবে।
 
-# বাংলা মন্তব্য: MyPy টাইপ ইনফারেন্সের সমস্যা সমাধানের জন্য টাইপ হিসেবে dict[str, Any] ব্যবহার করা হলো
-engine_kwargs: dict[str, Any] = {
-    "echo": False,
-}
-if _async_url.startswith("sqlite"):
-    engine_kwargs["poolclass"] = StaticPool
-    engine_kwargs["connect_args"] = {"check_same_thread": False}
-if _async_url.startswith("postgresql"):
-    # বাংলা মন্তব্য: User ও Admin — দুই আলাদা Render instance একই Supabase PgBouncer পুলে
-    # কানেক্ট করে, তাই SERVICE_ROLE অনুযায়ী pool limit ভাগ করা হচ্ছে যাতে কোনো একটি
-    # instance বাকিটার জন্য কানেকশন শেষ করে না ফেলে (pool exhaustion prevention)।
-    # User: high-traffic client-facing, বেশি concurrency দরকার -> min=2, max=15 (pool_size + max_overflow)
-    # Admin: low-traffic internal panel, সামান্য concurrency যথেষ্ট -> min=1, max=3
-    _role = settings.service_role.lower()
-    if _role == "admin":
-        _pool_size, _max_overflow = 1, 2  # base(1) + overflow(2) = max 3 concurrent
-    else:
-        _pool_size, _max_overflow = 2, 13  # base(2) + overflow(13) = max 15 concurrent
+_engine_instance: AsyncEngine | None = None
+_session_maker_instance: async_sessionmaker[AsyncSession] | None = None
 
-    engine_kwargs.update(
-        {
-            "pool_size": _pool_size,
-            "max_overflow": _max_overflow,
-            "pool_timeout": 30,
-            "pool_recycle": 1800,
-            # বাংলা মন্তব্য: stateless API রুট থেকে কানেকশন যেন দ্রুত রিলিজ হয়, তাই pre_ping দিয়ে
-            # স্টেল কানেকশন এড়ানো হচ্ছে (PgBouncer transaction-mode এ স্টেল হওয়া সাধারণ ঘটনা)।
-            "pool_pre_ping": True,
-            # বাংলা মন্তব্য: PgBouncer এর transaction pool মোডের সাথে সামঞ্জস্যের জন্য statement_cache_size=0 করা হলো
-            "connect_args": {
-                "command_timeout": 30,
-                "server_settings": {"application_name": f"supremeai_2.0_{_role}"},
-                "statement_cache_size": 0,
-            },
-        }
-    )
-    logger.info(f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}")
 
-engine = create_async_engine(_async_url, **engine_kwargs)
+def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
+    """বাংলা: async_url-এর ধরণ (sqlite/postgresql) অনুসারে engine kwargs তৈরি করে।"""
+    engine_kwargs: dict[str, Any] = {"echo": False}
+    if async_url.startswith("sqlite"):
+        engine_kwargs["poolclass"] = StaticPool
+        engine_kwargs["connect_args"] = {"check_same_thread": False}
+    elif async_url.startswith("postgresql"):
+        _role = settings.service_role.lower()
+        if _role == "admin":
+            _pool_size, _max_overflow = 1, 2
+        else:
+            _pool_size, _max_overflow = 2, 13
 
-AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+        engine_kwargs.update(
+            {
+                "pool_size": _pool_size,
+                "max_overflow": _max_overflow,
+                "pool_timeout": 30,
+                "pool_recycle": 1800,
+                "pool_pre_ping": True,
+                "connect_args": {
+                    "command_timeout": 30,
+                    "server_settings": {"application_name": f"supremeai_2.0_{_role}"},
+                    "statement_cache_size": 0,
+                },
+            }
+        )
+        logger.info(f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}")
+    return engine_kwargs
+
+
+def init_engine() -> None:
+    """বাংলা: engine ও AsyncSessionLocal একবার lazily initialize করে।
+
+    import-এর সময় নয় — প্রথমবার engine/AsyncSessionLocal অ্যাক্সেসের সময় কল হয়।
+    Safe to call multiple times — second call is a no-op.
+    """
+    global _engine_instance, _session_maker_instance  # noqa: PLW0603
+    if _engine_instance is not None:
+        return
+
+    DATABASE_URL = settings.supabase_database_url
+    if not DATABASE_URL:
+        logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
+
+    _async_url = get_async_url(DATABASE_URL or "")
+    engine_kwargs = _build_engine_kwargs(_async_url)
+
+    try:
+        _engine_instance = create_async_engine(_async_url, **engine_kwargs)
+        _session_maker_instance = async_sessionmaker(
+            bind=_engine_instance,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+        )
+    except Exception as exc:
+        # বাংলা মন্তব্য: engine creation ব্যর্থ হলে SQLite in-memory fallback
+        logger.error(f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory.")
+        fallback_url = "sqlite+aiosqlite:///:memory:"
+        _engine_instance = create_async_engine(fallback_url, echo=False, poolclass=StaticPool, connect_args={"check_same_thread": False})
+        _session_maker_instance = async_sessionmaker(
+            bind=_engine_instance,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+        )
+
+
+# ── Internal accessor (resolves lazy init for intra-module use) ──────────────
+def _get_session_maker() -> async_sessionmaker[AsyncSession]:
+    """বাংলা: get_db_session_context()-এর ভিতরে AsyncSessionLocal-এর জন্য internal accessor।"""
+    init_engine()
+    # _session_maker_instance guaranteed non-None after init_engine()
+    return _session_maker_instance  # type: ignore[return-value]
+
+
+# ── Module-level __getattr__ for lazy backward-compatible access ─────────────
+# বাংলা মন্তব্য: hundreds of files use `from database.session import engine, AsyncSessionLocal`.
+# __getattr__ ensures those imports still work — engine is initialized on first real access.
+def __getattr__(name: str):
+    if name == "engine":
+        init_engine()
+        return _engine_instance
+    if name == "AsyncSessionLocal":
+        return _get_session_maker()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:  # noqa: PLW3201
+    """বাংলা: dir()-এ engine ও AsyncSessionLocal দেখানোর জন্য।"""
+    return [*list(globals().keys()), "engine", "AsyncSessionLocal"]
 
 
 @asynccontextmanager
@@ -81,8 +137,9 @@ async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
     from fastapi import HTTPException
     from sqlalchemy.exc import TimeoutError as SATimeoutError
 
+    session_maker = _get_session_maker()
     try:
-        async with AsyncSessionLocal() as session:
+        async with session_maker() as session:
             try:
                 yield session
             except Exception as e:

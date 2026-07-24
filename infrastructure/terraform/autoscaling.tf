@@ -291,11 +291,8 @@ resource "google_cloudfunctions2_function" "user_event_processor" {
   # Trigger from Pub/Sub
   event_trigger {
     trigger_region = var.region
-    trigger_location = "google.cloud_provider = "cloud"
-    trigger {
-      event_type = "google.cloud.pubsub.topic.v1.messagePublished"
-      pubsub_topic = google_pubsub_topic.user_events.name
-    }
+    event_type     = "google.cloud.pubsub.topic.v1.messagePublished"
+    pubsub_topic   = google_pubsub_topic.user_events.id
   }
 }
 

@@ -9,7 +9,8 @@ from fastapi import HTTPException
 class TestGetLiveTraffic:
     """Tests for get_live_traffic endpoint."""
 
-    def test_live_traffic_redis_connected(self):
+    @pytest.mark.asyncio
+    async def test_live_traffic_redis_connected(self):
         """Redis connected should return live traffic data."""
         from api.routes.traffic_monitor import get_live_traffic
 
@@ -17,15 +18,20 @@ class TestGetLiveTraffic:
         mock_redis.client = MagicMock()
         mock_redis.client.get.return_value = b"42"
         mock_redis.client.mget.return_value = [b"10", b"200", b"5"]
+        mock_redis.client.lrange.return_value = [
+            b'{"duration": 100, "status": 200}',
+            b'{"duration": 200, "status": 500, "error": "boom"}',
+        ]
 
         with patch("api.routes.traffic_monitor.redis_manager", mock_redis):
-            result = get_live_traffic()
+            result = await get_live_traffic()
 
         assert "requests_per_second" in result
         assert "p95_latency_ms" in result
         assert "error_rate" in result
 
-    def test_live_traffic_redis_not_connected(self):
+    @pytest.mark.asyncio
+    async def test_live_traffic_redis_not_connected(self):
         """Redis not connected should raise 503."""
         from api.routes.traffic_monitor import get_live_traffic
 
@@ -34,7 +40,7 @@ class TestGetLiveTraffic:
 
         with patch("api.routes.traffic_monitor.redis_manager", mock_redis):
             with pytest.raises(HTTPException) as exc_info:
-                get_live_traffic()
+                await get_live_traffic()
 
         assert exc_info.value.status_code == 503
 
@@ -42,7 +48,8 @@ class TestGetLiveTraffic:
 class TestGetTrafficHistory:
     """Tests for get_traffic_history endpoint."""
 
-    def test_traffic_history_returns_data(self):
+    @pytest.mark.asyncio
+    async def test_traffic_history_returns_data(self):
         """Should return traffic history data."""
         from api.routes.traffic_monitor import get_traffic_history
 
@@ -54,12 +61,13 @@ class TestGetTrafficHistory:
         ]
 
         with patch("api.routes.traffic_monitor.redis_manager", mock_redis):
-            result = get_traffic_history()
+            result = await get_traffic_history()
 
         assert "history" in result
         assert len(result["history"]) == 2
 
-    def test_traffic_history_redis_not_connected(self):
+    @pytest.mark.asyncio
+    async def test_traffic_history_redis_not_connected(self):
         """Redis not connected should raise 503."""
         from api.routes.traffic_monitor import get_traffic_history
 
@@ -68,7 +76,7 @@ class TestGetTrafficHistory:
 
         with patch("api.routes.traffic_monitor.redis_manager", mock_redis):
             with pytest.raises(HTTPException) as exc_info:
-                get_traffic_history()
+                await get_traffic_history()
 
         assert exc_info.value.status_code == 503
 
@@ -76,7 +84,8 @@ class TestGetTrafficHistory:
 class TestGetTrafficAlerts:
     """Tests for get_traffic_alerts endpoint."""
 
-    def test_traffic_alerts_returns_data(self):
+    @pytest.mark.asyncio
+    async def test_traffic_alerts_returns_data(self):
         """Should return traffic alerts data."""
         from api.routes.traffic_monitor import get_traffic_alerts
 
@@ -87,12 +96,13 @@ class TestGetTrafficAlerts:
         ]
 
         with patch("api.routes.traffic_monitor.redis_manager", mock_redis):
-            result = get_traffic_alerts()
+            result = await get_traffic_alerts()
 
         assert "alerts" in result
         assert len(result["alerts"]) == 1
 
-    def test_traffic_alerts_redis_not_connected(self):
+    @pytest.mark.asyncio
+    async def test_traffic_alerts_redis_not_connected(self):
         """Redis not connected should raise 503."""
         from api.routes.traffic_monitor import get_traffic_alerts
 
@@ -101,6 +111,6 @@ class TestGetTrafficAlerts:
 
         with patch("api.routes.traffic_monitor.redis_manager", mock_redis):
             with pytest.raises(HTTPException) as exc_info:
-                get_traffic_alerts()
+                await get_traffic_alerts()
 
         assert exc_info.value.status_code == 503
