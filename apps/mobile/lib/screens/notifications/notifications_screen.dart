@@ -84,12 +84,12 @@ class NotificationsScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   notif['subtitle']!,
-                  style: const TextStyle(color: Colors.slate300, fontSize: 12),
+                  style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
                 ),
               ),
               trailing: Text(
                 notif['time']!,
-                style: const TextStyle(color: Colors.slate500, fontSize: 10),
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 10),
               ),
             ),
           );
