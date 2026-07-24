@@ -123,22 +123,33 @@ function setupIPC(win) {
   });
 
   ipcMain.handle('api:call', async (event, { endpoint, method, body, headers }) => {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      method: method || 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = text;
+    if (!endpoint || typeof endpoint !== 'string' || !endpoint.startsWith('/')) {
+      return { status: 400, ok: false, data: { detail: 'Invalid endpoint format' } };
     }
-    return { status: response.status, ok: response.ok, data };
+    try {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: method || 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+      return { status: response.status, ok: response.ok, data };
+    } catch (err) {
+      return {
+        status: 503,
+        ok: false,
+        data: { detail: 'SupremeAI backend unreachable', error: String(err) },
+      };
+    }
   });
 }
 

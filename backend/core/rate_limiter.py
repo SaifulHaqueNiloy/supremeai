@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 from __future__ import annotations
 
 import os
@@ -20,7 +19,7 @@ class InMemoryFallbackLimiter:
         self._hits: dict[str, list[float]] = {}
 
     def _cleanup(self, key: str, now: float) -> None:
-        # বাংলা মন্তব্য: মেমোরি লিক এড়াতে যদি কোনো কী-তে নতুন কোনো হিট না থাকে, তবে ডিকশনারি থেকে কী-টি ডিলিট করা হচ্ছে।
+        # বাংলা মন্তব্য: মেমোরি লিক এড়াতে যদি কোনো কী-তে নতুন কোনো হিট না থাকে, তবে ডিকশনারি থেকে কী-টি ডিলিট করা হচ্ছে।
         if key in self._hits:
             self._hits[key] = [t for t in self._hits[key] if now - t < self.window]
             if not self._hits[key]:
@@ -43,27 +42,24 @@ class AsyncRateLimiter:
     Includes an in-memory fallback (Pre-Deletion Safety Check).
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._redis: redis.asyncio.Redis | None = None
-        self._rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {
+        self._rate_limit_enabled: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {
             "true",
             "1",
             "yes",
         }
         self._fallback_limiter = InMemoryFallbackLimiter()
 
-    async def _get_redis(self):
+    async def _get_redis(self) -> redis.asyncio.Redis | None:
         if self._redis is None:
             import redis.asyncio as aioredis
 
-            # বাংলা মন্তব্য: settings.redis_url থেকে প্রাথমিক ভ্যালু নেওয়া হচ্ছে — fallback চেইন রক্ষিত
+            # বাংলা মন্তব্ত: settings.redis_url থেকে প্রাথমিক ভ্যালু নেওয়া হচ্ছে — fallback চেইন রক্ষিত
             from core.config import settings as app_settings
 
             redis_url = (
-                getattr(app_settings, "redis_url", None)
-                or os.getenv("REDIS_URL")
-                or os.getenv("UPSTASH_REDIS_URL")
-                or "redis://localhost:6379"
+                getattr(app_settings, "redis_url", None) or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL") or "redis://localhost:6379"
             )
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
@@ -73,6 +69,8 @@ class AsyncRateLimiter:
             return True
         try:
             client = await self._get_redis()
+            if client is None:
+                return self._fallback_limiter.is_allowed(key, limit=limit)
             pipe = client.pipeline()
             pipe.incr(key)
             pipe.expire(key, window)
@@ -80,12 +78,10 @@ class AsyncRateLimiter:
             current = results[0]
             return current <= limit
         except Exception as e:  # noqa: BLE001
-            logger.warning(
-                f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode)."
-            )
+            logger.warning(f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode).")
             return self._fallback_limiter.is_allowed(key, limit=limit)
 
-    async def close(self):
+    async def close(self) -> None:
         if self._redis:
             await self._redis.close()
             self._redis = None

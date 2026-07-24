@@ -35,6 +35,7 @@ import httpx  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from core import services  # noqa: E402
+from core.agent_supervisor import agent_supervisor  # noqa: E402
 from core.cache.redis_manager import redis_manager  # noqa: E402
 from core.config import settings  # noqa: E402
 from core.config_cache import config_cache  # noqa: E402
@@ -103,12 +104,8 @@ async def _ensure_api_key_tables() -> None:
                 )
                 """
             )
-            await conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)"
-            )
-            await conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
-            )
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)")
     finally:
         await pool.release(conn)
     logger.info("✅ API key tables ensured")
@@ -160,15 +157,11 @@ async def app_lifespan(app):
     try:
         db_url = settings.supabase_database_url
         if "sqlite" in db_url:
-            logger.info(
-                "💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization."
-            )
+            logger.info("💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization.")
             app.state.db_pool = None
         else:
             await init_db_pool(db_url)
-            logger.info(
-                "⚡ PgBouncer connection pool successfully initialized at startup."
-            )
+            logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
             await _ensure_api_key_tables()
     except Exception as exc:  # noqa: BLE001
         # বাংলা মন্তব্য: P1 Fix — DB fail হলে startup crash করা হবে না।
@@ -189,9 +182,7 @@ async def app_lifespan(app):
         )
         if settings.env == "production":
             # Production-এ Sentry-তে alert পাঠান, কিন্তু crash করবেন না
-            logger.critical(
-                "🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503."
-            )
+            logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
 
     # Config cache initialization
     try:
@@ -199,9 +190,7 @@ async def app_lifespan(app):
         logger.info("✅ System configuration cache successfully initialized.")
     except Exception as exc:  # noqa: BLE001
         # প্রোডাকশনে ডাটাবেজ সাময়িক ডাউন থাকলেও সার্ভার যেন বুট হতে পারে
-        logger.warning(
-            f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}"
-        )
+        logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
         app.state.subsystem_status["config"] = "fallback"
         error_event_bus.emit(
             ErrorEvent(
@@ -242,9 +231,7 @@ async def app_lifespan(app):
             )
         )
         if settings.env == "production":
-            logger.critical(
-                "🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail."
-            )
+            logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
             # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
 
     # CostGuard initialization (for distributed budget tracking)
@@ -293,18 +280,12 @@ async def app_lifespan(app):
         if settings.supabase_database_url:
             # বাংলা: sync call in async context — thread-এ চালানো হচ্ছে blocking এড়াতে।
             # wait_for 30s timeout দেওয়া হলো: psycopg2.connect হ্যাং করলে lifespan ব্লক না হয়।
-            await asyncio.wait_for(
-                asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0
-            )
+            await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
-        logger.warning(
-            "Supabase schema bootstrap timed out after 30s — continuing without full schema init."
-        )
+        logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
     except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap."
-        )
+        logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -319,19 +300,38 @@ async def app_lifespan(app):
     # Start SupremeAI Immune System zero-cost background probing
     maintenance_pipeline.start_monitoring()
 
-    # Start the Sentinel Agent
+    # ── Start background agents via centralized Supervisor ────────────────────
     from core.cache.multi_layer_cache import start_swarm_cache_invalidator
     from core.sentinel_agent import sentinel
 
-    app.state.sentinel_task = asyncio.create_task(sentinel.run_periodic_loop())
-    app.state.swarm_cache_task = asyncio.create_task(start_swarm_cache_invalidator())
+    # Agent 1: Sentinel Agent (periodic endpoint monitoring & dependency audit)
+    await agent_supervisor.start_agent(
+        "sentinel",
+        lambda: sentinel.run_periodic_loop(),
+        health_check_interval=60,
+        max_restarts=10,
+        restart_delay=1.0,
+    )
 
-    # Start System Telemetry Broadcaster
+    # Agent 2: Swarm Cache Invalidator (multi-layer cache maintenance)
+    await agent_supervisor.start_agent(
+        "swarm-cache",
+        start_swarm_cache_invalidator,
+        health_check_interval=60,
+        max_restarts=5,
+        restart_delay=5.0,
+    )
+
+    # Agent 3: System Telemetry Broadcaster
     try:
         from core.telemetry.system_telemetry import run_system_telemetry_loop
 
-        app.state.system_telemetry_task = asyncio.create_task(
-            run_system_telemetry_loop()
+        await agent_supervisor.start_agent(
+            "system-telemetry",
+            run_system_telemetry_loop,
+            health_check_interval=60,
+            max_restarts=5,
+            restart_delay=2.0,
         )
         logger.info("✅ System Telemetry Broadcaster background loop started.")
     except Exception as exc:  # noqa: BLE001
@@ -344,28 +344,22 @@ async def app_lifespan(app):
         if os.getenv("ENABLE_TIER8", "false").lower() == "true":
             from core.tier8.tier8_integration import init_tier8
 
-            # বাংলা মন্তব্য: গ্লোবাল সার্ভিস রেজিস্ট্রিতে Tier-8 এজেন্টস ইন্টিগ্রেট ও স্টার্ট করার জন্য
             await init_tier8(services.registry)
             logger.info("✅ Tier-8 Meta-Self subsystem initialized successfully.")
         else:
-            logger.info(
-                "ℹ️ Tier-8 Meta-Self subsystem disabled via environment variable."
-            )
+            logger.info("ℹ️ Tier-8 Meta-Self subsystem disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
 
-    # বাংলা মন্তব্য: SelfEvolutionAgent শুরু করা — এটা সবচেয়ে গুরুত্বপূর্ণ fix।
-    # আগে এই agent কোনোদিন start হয়নি, সিস্টেম কখনো সত্যিকারের self-evolving ছিল না।
+    # বাংলা মন্তব্য: SelfEvolutionAgent শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
     try:
         if os.getenv("ENABLE_EVOLUTION", "false").lower() == "true":
             from core.evolution.self_evolution_agent import SelfEvolutionAgent
 
-            _evo_agent = SelfEvolutionAgent(interval_seconds=300)  # 5 min cycle
+            _evo_agent = SelfEvolutionAgent(interval_seconds=300)
             await _evo_agent.start()
             app.state.evo_agent = _evo_agent
-            logger.info(
-                "✅ SelfEvolutionAgent background loop started (5-min evolution cycle)."
-            )
+            logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")
         else:
             app.state.evo_agent = None
             logger.info("ℹ️ SelfEvolutionAgent disabled via environment variable.")
@@ -373,56 +367,48 @@ async def app_lifespan(app):
         logger.warning(f"⚠️ SelfEvolutionAgent failed to start: {exc}")
         app.state.evo_agent = None
 
-    # বাংলা মন্তব্য: DailyLearner শুরু করা — প্রতিদিন ArXiv/GitHub scan করে নতুন technique শেখে।
+    # বাংলা মন্তব্য: DailyLearner শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
     try:
         if os.getenv("ENABLE_DAILY_LEARNER", "false").lower() == "true":
             from core.evolution.daily_learner import DailyLearner
 
             _daily_learner = DailyLearner()
 
-            # DailyLearner-এর learn_and_plan() সরাসরি loop নেই, তাই wrapper task তৈরি করতে হবে
             async def _daily_learner_loop() -> None:
-                import asyncio as _asyncio
-
                 while True:
                     try:
-                        await _daily_learner.learn_and_plan(
-                            "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
-                        )
+                        await _daily_learner.learn_and_plan("Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency")
                     except Exception as _exc:  # noqa: BLE001
                         logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
-                    await _asyncio.sleep(86400)  # 24 hours
+                    await asyncio.sleep(86400)
 
-            app.state.daily_learner_task = asyncio.create_task(
-                _daily_learner_loop(), name="daily-learner"
+            await agent_supervisor.start_agent(
+                "daily-learner",
+                lambda: _daily_learner_loop(),
+                health_check_interval=3600,  # Check hourly (runs every 24h)
+                max_restarts=5,
+                restart_delay=60.0,
             )
-            logger.info(
-                "✅ DailyLearner background task started (24h research scan cycle)."
-            )
+            logger.info("✅ DailyLearner background task started (24h research scan cycle).")
         else:
             logger.info("ℹ️ DailyLearner disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
     # বাংলা মন্তব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
-    # আগে auto_healer.py একটি standalone script ছিল, server-এ প্রতিবার চলত না।
     try:
         if os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true":
             from core.auto_healer_service import auto_healer_service
 
             await auto_healer_service.start()
             app.state.auto_healer = auto_healer_service
-            logger.info(
-                "✅ AutoHealerService started (DB/Redis healing active, 30s check interval)."
-            )
+            logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
         else:
             logger.info("ℹ️ AutoHealerService disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
 
     # বাংলা মন্তব্য: SelfHealer error listener এক্সপ্লিসিটলি রেজিস্টার করা হচ্ছে।
-    # এটি নিশ্চিত করে যে error_event_bus-এ ইভেন্ট এমিট হলে self_healer সেটা শুনতে পায়।
-    # আগে এটি মডিউল লেভেলে রেজিস্টার্ড ছিল — এখন এক্সপ্লিসিট কলের মাধ্যমে করা হচ্ছে।
     try:
         from core.health.self_healer import register_self_healer_listener
 
@@ -431,17 +417,17 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ SelfHealer listener registration failed: {exc}")
 
+    # Start the agent health monitor
+    await agent_supervisor.start_monitor(check_interval=30)
+
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 
-    logger.critical(
-        "🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator."
-    )
+    logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
 
     # Shutdown Tier-8 Meta-Self Agents
     try:
         from core.tier8.tier8_integration import shutdown_tier8
 
-        # বাংলা মন্তব্য: Graceful shutdown এর সময় Tier-8 এজেন্টস স্টপ করা হচ্ছে
         await shutdown_tier8()
         logger.info("✅ Tier-8 Meta-Self subsystem shutdown completed.")
     except Exception as exc:  # noqa: BLE001
@@ -465,65 +451,23 @@ async def app_lifespan(app):
             )
         )
 
-    # Background tasks cleanup
-    tasks: list[asyncio.Task] = []  # noqa: F821
+    # Shutdown all background agents via centralized supervisor
+    # বাংলা মন্তব্য: AgentSupervisor graceful shutdown — পূর্বের ম্যানুয়াল task management প্রতিস্থাপন করে।
     try:
-        # বাংলা: SelfEvolutionAgent graceful stop
-        evo_agent = getattr(app.state, "evo_agent", None)
-        if evo_agent is not None:
-            await evo_agent.stop()
-            logger.info("✅ SelfEvolutionAgent stopped.")
-
-        # বাংলা: AutoHealerService graceful stop
-        auto_healer = getattr(app.state, "auto_healer", None)
-        if auto_healer is not None:
-            await auto_healer.stop()
-
-        # বাংলা: DailyLearner task cancel
-        daily_learner_task = getattr(app.state, "daily_learner_task", None)
-        if daily_learner_task and not daily_learner_task.done():
-            daily_learner_task.cancel()
-            tasks.append(daily_learner_task)
-
-        sentinel_task = getattr(app.state, "sentinel_task", None)
-        if sentinel_task and not sentinel_task.done():
-            from core.sentinel_agent import sentinel
-
-            sentinel.running = False
-            sentinel_task.cancel()
-            try:
-                await asyncio.wait_for(sentinel_task, timeout=5.0)
-            except TimeoutError:
-                logger.warning("Sentinel task did not stop gracefully within timeout")
-            except asyncio.CancelledError:
-                pass
-            logger.info("✅ Sentinel Agent shut down successfully.")
-            tasks.append(sentinel_task)
-
-        swarm_cache_task = getattr(app.state, "swarm_cache_task", None)
-        if swarm_cache_task and not swarm_cache_task.done():
-            swarm_cache_task.cancel()
-            tasks.append(swarm_cache_task)
-
-        system_telemetry_task = getattr(app.state, "system_telemetry_task", None)
-        if system_telemetry_task and not system_telemetry_task.done():
-            system_telemetry_task.cancel()
-            tasks.append(system_telemetry_task)
-
-        if tasks:
-            try:
-                await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True), timeout=10.0
-                )
-                logger.info(f"✅ {len(tasks)} background tasks completed/cancelled.")
-            except TimeoutError:
-                logger.warning(
-                    "⚠️ Background tasks did not finish within 10s shutdown window."
-                )
-            except asyncio.CancelledError:
-                pass
+        await agent_supervisor.shutdown_all(timeout=30)
+        logger.info("✅ All background agents shut down via centralized supervisor.")
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Error closing background tasks: {e}")
+        logger.error(f"Error during agent supervisor shutdown: {e}")
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="SHUTDOWN_AGENT_SUPERVISOR_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"phase": "shutdown"},
+            )
+        )
 
     # Flush write-behind batchers (audit_logger, checkpoint_manager) so any
     # buffered-but-not-yet-flushed rows land before we tear down connections.
@@ -546,13 +490,12 @@ async def app_lifespan(app):
             )
         )
 
-    # Database pool cleanup
+    # Database pool cleanup — single close with proper state tracking
     try:
         pool = await get_db_pool()
         if pool:
             await pool.close()
             logger.info("✅ Database connection pool closed successfully.")
-        await asyncio.to_thread(pooled_pg.close_pool)
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error closing DB pool: {e}")
         error_event_bus.emit(
@@ -565,6 +508,13 @@ async def app_lifespan(app):
                 context={"phase": "shutdown"},
             )
         )
+    # Synchronous pgbouncer pool — only close if it was initialized
+    try:
+        if hasattr(pooled_pg, "_pool") and pooled_pg._pool is not None:
+            await asyncio.to_thread(pooled_pg.close_pool)
+            logger.info("✅ Synchronous pgbouncer pool closed successfully.")
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Error closing sync pgbouncer pool: {e}")
 
     # Redis cleanup
     try:

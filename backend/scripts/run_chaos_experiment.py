@@ -26,9 +26,7 @@ error_event_bus.register_listener(event_listener)
 async def run_experiment(target: str, fault: str, duration: int, loops: int):
     logger.info(f"🚀 Starting Chaos Experiment on '{target}' with fault '{fault}'")
 
-    cb = CircuitBreaker(
-        name=target, failure_threshold=3, recovery_timeout=5.0, half_open_after=5.0
-    )
+    cb = CircuitBreaker(name=target, failure_threshold=3, recovery_timeout=5.0, half_open_after=5.0)
 
     for loop in range(1, loops + 1):
         logger.info(f"--- Loop {loop}/{loops} ---")
@@ -38,9 +36,7 @@ async def run_experiment(target: str, fault: str, duration: int, loops: int):
             try:
                 await cb.call(simulated_network_call, False)
                 logger.info(f"Call succeeded. State: {cb.state}")
-            except (
-                Exception
-            ) as e:  # noqa: BLE001 — circuit breaker যেকোনো error তুলতে পারে, সবগুলো log করা দরকার
+            except Exception as e:  # noqa: BLE001 — circuit breaker যেকোনো error তুলতে পারে, সবগুলো log করা দরকার
                 logger.error(f"Unexpected error: {e}")
 
         # 2. Inject Faults to Trip Circuit Breaker
@@ -51,9 +47,7 @@ async def run_experiment(target: str, fault: str, duration: int, loops: int):
             except CircuitBreakerOpenError as e:
                 logger.critical(f"Circuit Breaker is OPEN: {e}")
                 break
-            except (
-                Exception
-            ) as e:  # noqa: BLE001 — fault injection phase-এ injected error সব ধরনের হতে পারে
+            except Exception as e:  # noqa: BLE001 — fault injection phase-এ injected error সব ধরনের হতে পারে
                 logger.warning(f"Call failed (Fault injected): {e}. State: {cb.state}")
 
         # Wait for the recovery timeout
@@ -66,9 +60,7 @@ async def run_experiment(target: str, fault: str, duration: int, loops: int):
             try:
                 await cb.call(simulated_network_call, False)
                 logger.info(f"Recovery call succeeded. State: {cb.state}")
-            except (
-                Exception
-            ) as e:  # noqa: BLE001 — recovery phase-এ half-open বা failed call যেকোনো error তুলতে পারে
+            except Exception as e:  # noqa: BLE001 — recovery phase-এ half-open বা failed call যেকোনো error তুলতে পারে
                 logger.error(f"Recovery call failed: {e}")
 
         logger.info("-" * 20)

@@ -7,6 +7,7 @@
 
 import asyncio
 import logging
+import threading
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -72,6 +73,7 @@ class ErrorEventBus:
 
     def __init__(self) -> None:
         self._listeners: list[Callable[[ErrorEvent], Any]] = []
+        self._lock = threading.Lock()
         # বাংলা মন্তব্য: bounded queue — unbounded growth prevent করা হলো
         self._dlq: asyncio.Queue[DeadLetterQueueItem] = asyncio.Queue(maxsize=1000)
         self._dead_letter_handlers: list[Callable[[DeadLetterQueueItem], Any]] = []
@@ -79,15 +81,20 @@ class ErrorEventBus:
         self._total_dlq_items: int = 0
 
     def register_listener(self, listener: Callable[[ErrorEvent], Any]) -> None:
-        """বাংলা মন্তব্য: Error event listener register করুন।"""
-        self._listeners.append(listener)
-        logger.debug(
-            f"[ErrorEventBus] Registered listener: {getattr(listener, '__name__', str(listener))}"
-        )
+        """বাংলা মন্তব্য: Error event listener register করুন (thread-safe)."""
+        with self._lock:
+            if listener not in self._listeners:
+                self._listeners.append(listener)
+                logger.debug(f"[ErrorEventBus] Registered listener: {getattr(listener, '__name__', str(listener))}")
 
-    def register_dead_letter_handler(
-        self, handler: Callable[[DeadLetterQueueItem], Any]
-    ) -> None:
+    def unregister_listener(self, listener: Callable[[ErrorEvent], Any]) -> None:
+        """বাংলা মন্তব্য: Error event listener unregister করুন (thread-safe)."""
+        with self._lock:
+            if listener in self._listeners:
+                self._listeners.remove(listener)
+                logger.debug(f"[ErrorEventBus] Unregistered listener: {getattr(listener, '__name__', str(listener))}")
+
+    def register_dead_letter_handler(self, handler: Callable[[DeadLetterQueueItem], Any]) -> None:
         """বাংলা মন্তব্য: DLQ handler register করুন — handler failure alert পাঠাতে।"""
         self._dead_letter_handlers.append(handler)
 
@@ -106,9 +113,7 @@ class ErrorEventBus:
         except RuntimeError:
             # বাংলা মন্তব্য: running loop নেই — sync context (tests, scripts)।
             # নতুন loop তৈরি করা হয় না — thread safety issue এড়াতে।
-            logger.debug(
-                f"[ErrorEventBus] No running loop for async dispatch of '{event.error_type}'. Sync log completed."
-            )
+            logger.debug(f"[ErrorEventBus] No running loop for async dispatch of '{event.error_type}'. Sync log completed.")
 
     async def async_emit(self, event: ErrorEvent) -> None:
         """বাংলা মন্তব্য: Async context-এ সরাসরি call করার জন্য।"""
@@ -148,9 +153,7 @@ class ErrorEventBus:
                         f"[ErrorEventBus] DLQ full! Dropping item for handler: '{handler_name}'. DLQ capacity exceeded — check stuck listeners."
                     )
 
-                logger.error(
-                    f"[ErrorEventBus] Handler '{handler_name}' failed for event '{event.error_type}': {result}"
-                )
+                logger.error(f"[ErrorEventBus] Handler '{handler_name}' failed for event '{event.error_type}': {result}")
 
                 for dl_handler in self._dead_letter_handlers:
                     try:
@@ -159,9 +162,7 @@ class ErrorEventBus:
                         # বাংলা মন্তব্য: CancelledError কখনো suppress করা যাবে না
                         raise
                     except Exception as dl_exc:  # noqa: BLE001
-                        logger.error(
-                            f"[ErrorEventBus] Dead letter handler failed: {dl_exc}"
-                        )
+                        logger.error(f"[ErrorEventBus] Dead letter handler failed: {dl_exc}")
 
     async def _safe_invoke(self, handler: Callable, event: ErrorEvent) -> Any:
         """
@@ -174,9 +175,7 @@ class ErrorEventBus:
                 return await result
             return result
         except asyncio.CancelledError:
-            logger.warning(
-                f"[ErrorEventBus] CancelledError in handler '{getattr(handler, '__name__', str(handler))}' — re-raising."
-            )
+            logger.warning(f"[ErrorEventBus] CancelledError in handler '{getattr(handler, '__name__', str(handler))}' — re-raising.")
             raise  # CRITICAL: CancelledError কখনো suppress করা যাবে না
         except Exception as exc:  # noqa: BLE001
             return exc  # exception return করা হচ্ছে, suppress নয়
@@ -196,9 +195,7 @@ class ErrorEventBus:
             }
         )
 
-        log_msg = (
-            f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
-        )
+        log_msg = f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
 
         if event.severity == "CRITICAL":
             logger.critical(log_msg)
@@ -223,9 +220,7 @@ class ErrorEventBus:
             "registered_listeners": len(self._listeners),
         }
 
-    async def process_dead_letter_queue(
-        self, max_items: int = 10
-    ) -> list[DeadLetterQueueItem]:
+    async def process_dead_letter_queue(self, max_items: int = 10) -> list[DeadLetterQueueItem]:
         """
         বাংলা মন্তব্য: DLQ থেকে items process করা।
         max_items bounded — unbounded processing prevent।
@@ -236,9 +231,7 @@ class ErrorEventBus:
                 item = self._dlq.get_nowait()
                 item.retry_count += 1
                 processed.append(item)
-                logger.warning(
-                    f"[ErrorEventBus] DLQ processed: '{item.handler_name}' (retry #{item.retry_count}) | event: {item.event_type}"
-                )
+                logger.warning(f"[ErrorEventBus] DLQ processed: '{item.handler_name}' (retry #{item.retry_count}) | event: {item.event_type}")
             except asyncio.QueueEmpty:
                 break
         return processed

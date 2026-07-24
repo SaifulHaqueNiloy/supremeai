@@ -17,9 +17,7 @@ class ChatPayload(BaseModel):
 
 # ⚡ ১. Fully Async Standard Completion with Multi-Layer Caching
 @router.post("/get_completion")
-async def get_completion(
-    request: Request, payload: ChatPayload, db=Depends(get_tenant_db)
-):
+async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_tenant_db)):
     """Non-blocking Async LLM Completion with 5-Layer Caching"""
     logger.info(f"⚡ Async API Hit: Generating completion for tenant: {db.tenant_id}")
 
@@ -27,9 +25,7 @@ async def get_completion(
     session_id = request.headers.get("X-Session-ID")
 
     # Check multi-layer cache first
-    cached_result = await multi_layer_cache.get(
-        prompt=payload.prompt, model_name=payload.model_name, session_id=session_id
-    )
+    cached_result = await multi_layer_cache.get(prompt=payload.prompt, model_name=payload.model_name, session_id=session_id)
 
     if cached_result:
         logger.info(f"🚀 CACHE HIT: {cached_result['source']}")
@@ -45,12 +41,8 @@ async def get_completion(
     logger.info("❌ CACHE MISS: Generating new response from AI model")
     try:
         # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
-        response = await llm_gateway.acompletion(
-            prompt=payload.prompt, task_type="chat", stream=False
-        )
-        response_text = (
-            response.get("text", "") if isinstance(response, dict) else str(response)
-        )
+        response = await llm_gateway.acompletion(prompt=payload.prompt, task_type="chat", stream=False)
+        response_text = response.get("text", "") if isinstance(response, dict) else str(response)
 
         # Store response in multi-layer cache for future requests
         await multi_layer_cache.set(
@@ -80,9 +72,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
     async def async_generator():
         try:
             # বাংলা মন্তব্য: ইউনিভার্সাল llm_gateway ব্যবহার করে স্ট্রিমিং সম্পন্ন করা হচ্ছে
-            response_stream = await llm_gateway.acompletion(
-                prompt=payload.prompt, task_type="chat", stream=True
-            )
+            response_stream = await llm_gateway.acompletion(prompt=payload.prompt, task_type="chat", stream=True)
 
             async for chunk in response_stream:
                 if chunk:

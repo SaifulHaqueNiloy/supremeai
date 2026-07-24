@@ -4,8 +4,6 @@
   "globalEnv": [
     "NODE_ENV",
     "API_URL",
-    "SUPABASE_URL",
-    "PINECONE_API_KEY",
     "VITE_PORTAL_TYPE",
     "VITE_API_URL"
   ],
@@ -31,6 +29,16 @@
     },
     "@supremeai/design-tokens#build": {
       "outputs": ["outputs/**"]
+    },
+    "deploy:studio": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": []
+    },
+    "deploy:admin": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": []
     }
   }
 }
