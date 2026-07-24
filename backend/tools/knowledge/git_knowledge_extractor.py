@@ -52,9 +52,7 @@ def init_db():
 
 def run_git(args):
     try:
-        return subprocess.check_output(["git"] + args, stderr=subprocess.STDOUT).decode(
-            "utf-8"
-        )  # noqa: S603
+        return subprocess.check_output(["git"] + args, stderr=subprocess.STDOUT).decode("utf-8")  # noqa: S603
     except Exception as e:  # noqa: BLE001
         logger.info(f"Error running git: {e}")  # noqa: T201
         return ""
@@ -64,9 +62,7 @@ def extract_knowledge():
     init_db()
     logger.info("🔍 Analyzing git log for knowledge extraction...")  # noqa: T201
     # Get last 50 commits with diffs
-    logs = run_git(
-        ["log", "-n", "50", "--pretty=format:COMMIT:%H%nSUBJECT:%s%nBODY:%b", "-p"]
-    )
+    logs = run_git(["log", "-n", "50", "--pretty=format:COMMIT:%H%nSUBJECT:%s%nBODY:%b", "-p"])
 
     knowledge_entries = []
     commits = logs.split("COMMIT:")
@@ -100,9 +96,7 @@ def extract_knowledge():
                 body += line + "\n"
 
         if any(kw in subject.lower() for kw in fix_keywords):
-            logger.info(
-                f"  ✨ Found fix pattern in commit {commit_id[:8]}: {subject}"
-            )  # noqa: T201
+            logger.info(f"  ✨ Found fix pattern in commit {commit_id[:8]}: {subject}")  # noqa: T201
             files_changed = re.findall(r"diff --git a/(.*?) b/", diff)
 
             entry = {

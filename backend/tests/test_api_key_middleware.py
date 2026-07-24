@@ -23,9 +23,7 @@ class TestAPIKeyAuthMiddleware:
 
         @app.get("/api/test")
         def test_endpoint(request: Request):
-            return PlainTextResponse(
-                f"user: {getattr(request.state, 'api_key', {}).get('id', 'none')}"
-            )
+            return PlainTextResponse(f"user: {getattr(request.state, 'api_key', {}).get('id', 'none')}")
 
         mock_row = {
             "id": "key-123",

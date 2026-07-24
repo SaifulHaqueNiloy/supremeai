@@ -53,12 +53,13 @@ alembic = "^1.13.0"
 psycopg2-binary = "^2.9.9"
 opentelemetry-api = "^1.25.0"
 opentelemetry-sdk = "^1.25.0"
+opentelemetry-exporter-otlp-proto-grpc = {version = "^1.25.0", optional = true}
 setuptools = "<82.0.0"
 # বাংলা মন্তব্য: গ্রাফ ডাটাবেস এবং মডেল কনটেক্সট প্রোটোকল ব্যবহারের জন্য ডিপেন্ডেন্সি যুক্ত করা হলো
 neo4j = "^5.14.0"
 mcp = ">=0.9.1"
 litellm = "^1.40.0"
-slowapi = "^0.1.9"
+# Note: Native Upstash Redis rate limiter is used in core/app_builder.py (slowapi removed)
 pinecone-client = "^5.0.1"
 # বাংলা মন্তব্য: লঞ্চডার্কলি এজেন্টস কন্ট্রোল এবং অবজারভেবিলিটি প্লাগইন ডিপেন্ডেন্সি যুক্ত করা হলো
 launchdarkly-server-sdk = "^9.8.0"
@@ -94,34 +95,31 @@ optional = true
 [tool.poetry.group.tools.dependencies]
 # ── Optional tools: browser, cloud, analytics (~500 MB) ──
 # Install with: poetry install --with tools
+# Note: networkx, httpx, defusedxml, matplotlib, pdfplumber are in main group — not duplicated here
 
 playwright = "^1.60.0"
 playwright-stealth = "^1.0.0"
 pandas = "^2.2.0"
 openpyxl = "^3.1.0"
-matplotlib = "^3.8.0"
-pdfplumber = "^0.10.0"
 python-pptx = "^0.6.23"
 gtts = "^2.5.1"
 edge-tts = "^6.1.9"
 docker = "^7.0.0"
 celery = "^5.4.0"
 radon = "^6.0.0"
-networkx = "^3.2.0"
 onelogin = "^1.1.0"
 langsmith = "^0.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0.0"
-google-genai = "*"
+google-genai = ">=0.8.0,<1.0.0"
 aiosqlite = "^0.20.0"
 pytest-asyncio = ">=0.23.5"
 anyio = "^4.0.0"
 pytest-cov = "^5.0.0"
 pytest-md = "^0.1.0"
-httpx = "^0.28.1"
-defusedxml = "^0.7.1"
+# Note: httpx and defusedxml are already in main dependencies group
 ruff = "^0.4.0"
 mypy = "^1.10.0"
 black = "^24.0.0"
@@ -131,13 +129,11 @@ pytest-xdist = "^3.6.1"
 pytest-timeout = "^2.2.0"
 pylint = "^3.2.0"
 
-matplotlib = "^3.8.0"
-pdfplumber = "^0.10.0"
 respx = "^0.21.0"
 
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.9.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
@@ -192,5 +188,5 @@ norecursedirs = [".venv", "venv", ".git", "build", "dist"]
 pythonpath = ["."]
 
 [tool.coverage.report]
-fail_under = 45
+fail_under = 60
 # বাংলা মন্তব্য: কভারেজ বেসলাইন ৪৫% এ উন্নীত — CI-তে supreme-core-ci.yml ইতিমধ্যে core-প্যাকেজের জন্য --cov-fail-under=45 এনফোর্স করছে। এখন সব প্যাকেজ (core, api, tools, services, models) কভারেজে থাকায় fail_under সামঞ্জস্যপূর্ণ করা হলো। ধাপে ধাপে ৯০%-এ উন্নীত করা হবে।

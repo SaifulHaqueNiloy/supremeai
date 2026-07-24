@@ -123,13 +123,9 @@ class EmailService:
             )
             return False
 
-    async def send_welcome_email(
-        self, user_email: str, user_name: str = "Developer"
-    ) -> bool:
+    async def send_welcome_email(self, user_email: str, user_name: str = "Developer") -> bool:
         subject = "Welcome to SupremeAI 2.0 🚀"
-        frontend_url = getattr(
-            self._get_settings(), "frontend_url", "https://supremeai.dev"
-        )
+        frontend_url = getattr(self._get_settings(), "frontend_url", "https://supremeai.dev")
         html = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
@@ -155,9 +151,7 @@ class EmailService:
         """
         return await self._send_email(user_email, subject, html)
 
-    async def send_billing_notification(
-        self, user_email: str, amount: float, usage: str
-    ) -> bool:
+    async def send_billing_notification(self, user_email: str, amount: float, usage: str) -> bool:
         subject = "SupremeAI - Upcoming Invoice Notification"
         html = f"""
         <html>
