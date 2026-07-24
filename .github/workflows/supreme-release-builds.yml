@@ -122,7 +122,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: supremeai-studio-windows-exe
-          path: apps/studio-client/dist/*.exe
+          path: apps/studio-client/release/*.exe
           compression-level: 0
           retention-days: 7
 

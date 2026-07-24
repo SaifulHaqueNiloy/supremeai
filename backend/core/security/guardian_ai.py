@@ -429,12 +429,14 @@ class OutputSanitizer:
                     )
                 )
 
+        should_block = any(t.threat_level in {ThreatLevel.CRITICAL, ThreatLevel.HIGH} for t in threats)
         return GuardianResult(
             input_safe=True,
             output_safe=len(threats) == 0,
             threats_detected=threats,
             sanitized_output=sanitized if sanitized != text else None,
-            blocked=len([t for t in threats if t.threat_level == ThreatLevel.CRITICAL]) > 0,
+            blocked=should_block,
+            block_reason="High/critical severity threat in output" if should_block else None,
         )
 
 

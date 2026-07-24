@@ -144,7 +144,6 @@ def test_validate_production_completeness_raises_on_missing_production_keys(mock
     assert s.env == "production"
 
 
-
 @patch.dict(os.environ, {"max_cost_per_task": "abc"}, clear=False)
 def test_invalid_type_cast():
     with pytest.raises(Exception):

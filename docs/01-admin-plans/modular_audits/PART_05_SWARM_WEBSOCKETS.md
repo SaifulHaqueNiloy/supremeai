@@ -1,0 +1,712 @@
+# Part 5: Swarm Real-Time WebSockets & Telemetry Buffer Audit
+
+> **Audit Generation Time:** `2026-07-24 20:09:07 UTC`  
+> **Module Description:** 250ms sliding window ring-buffer streaming, Redis pubsub, and HITL escalation channels.  
+> **Status:** `SELF_CONTAINED / READY FOR EXTERNAL AI AUDIT`
+
+---
+
+## 1. 📁 Target Subsystems & File Inventory
+
+- `backend/core/swarm_pubsub.py` (File, 12014 bytes)
+- `backend/core/admin_routes.py` (File, 19819 bytes)
+
+---
+
+## 2. 🔍 Audit Objectives & Key Checklist
+
+- [ ] **Code Quality & Type Safety:** Check MyPy type hints and Ruff linting rules.
+- [ ] **Security & Resilience:** Check exception handling, circuit breakers, and rate limiters.
+- [ ] **Zero-Cost & Free-Tier Optimization:** Ensure no paid cloud service dependencies.
+- [ ] **Bangla Code Comments:** Verify `// বাংলা মন্তব্য` is present across updated code blocks.
+
+---
+
+## 3. 📦 Complete Subsystem Source Code Dump
+
+Below is the full source code for all target files in this module. Any external AI can audit this single document directly.
+
+### 📄 `backend/core/swarm_pubsub.py`
+
+```py
+from core.messaging.event_bus import ErrorContext
+
+"""This module provides a robust, Redis-backed Publish/Subscribe (PubSub) system, `SwarmPubSub`, designed to facilitate real-time event streaming and communication across the SupremeAI ecosystem. It offers a multi-worker safe mechanism for broadcasting and subscribing to a central "swarm_stream" channel, ensuring scalable and decoupled event propagation, with lazy Redis client initialization and comprehensive error handling integrated with the project's central event bus.
+
+Key Components:
+- `SwarmPubSub`: Manages the Redis PubSub client, handling lazy connection, subscription to the "swarm_stream" channel, and broadcasting messages to all active subscribers.
+- `get_swarm_streamer()`: Returns a singleton instance of the `SwarmPubSub` class, ensuring a single, globally accessible point of control for swarm-wide communication.
+- `swarm_streamer`: The globally accessible singleton instance of `SwarmPubSub`, initialized upon module import.
+
+Dependencies:
+- `asyncio`: For asynchronous programming constructs and managing concurrent operations.
+- `json`: For serializing and deserializing event payloads to and from JSON format.
+- `loguru`: For structured logging of operational events and errors within the module.
+- `redis.asyncio`: The asynchronous Redis client library used for PubSub operations.
+- `core.config`: To retrieve application settings, specifically the Redis connection URL.
+- `core.messaging.event_bus`: For emitting structured error events to the central application event bus."""
+
+import asyncio  # noqa: E402
+import json  # noqa: E402
+from collections.abc import AsyncGenerator  # noqa: E402
+
+from loguru import logger  # noqa: E402
+
+from core.messaging.event_bus import ErrorEvent  # noqa: E402
+from core.messaging.event_bus import error_event_bus  # noqa: E402
+
+# বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।
+# RedisURL এখন settings থেকে আসে, hardcode নয়।
+
+
+class SwarmPubSub:
+    """বাংলা মন্তব্য: Redis PubSub-ভিত্তিক Swarm Event Stream।
+    Redis client lazy init — import করলে কোনো connection attempt নেই।"""
+
+    def __init__(self):
+        self._redis = None
+
+    @property
+    def redis(self):
+        """বাংলা মন্তব্য: Public accessor for lazy-initialized Redis client."""
+        return self._get_redis()
+
+    @redis.setter
+    def redis(self, value):
+        """বাংলা মন্তব্য: Allow tests to inject mock Redis client."""
+        self._redis = value
+
+    def _get_redis(self):
+        if self._redis is not None:
+            return self._redis
+        import redis.asyncio as aioredis  # type: ignore[import-untyped]
+
+        from core.config import settings
+
+        url = str(settings.redis_url)
+        if not url:
+            raise RuntimeError("REDIS_URL is not configured in settings. Fail-Fast!")
+        self._redis = aioredis.from_url(url)
+        return self._redis
+
+    async def subscribe(self) -> AsyncGenerator[str, None]:
+        """বাংলা মন্তব্য: নতুন ক্লায়েন্টের জন্য Redis চ্যানেল সাবস্ক্রাইব করবে (Multi-Worker Safe)।"""
+        try:
+            redis_client = self._get_redis()
+        except RuntimeError as e:
+            logger.error(f"SwarmPubSub: Cannot subscribe, Redis unavailable: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="REDIS_UNAVAILABLE",
+                    message=str(e)[:200],
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            raise
+
+        pubsub = redis_client.pubsub()
+        await pubsub.subscribe("swarm_stream")
+        logger.info("New client subscribed to Redis Swarm Stream.")
+
+        try:
+            while True:
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message is not None:
+                    yield message["data"].decode("utf-8")
+                await asyncio.sleep(0.01)
+        except asyncio.CancelledError:
+            # বাংলা মন্তব্য: CancelledError suppress নিষিদ্ধ — cleanup করে re-raise করতেই হবে।
+            logger.info("Client disconnected from Redis Swarm Stream.")
+            try:
+                await pubsub.unsubscribe("swarm_stream")
+                await pubsub.close()
+            except Exception as cleanup_err:  # noqa: BLE001
+                logger.error(f"SwarmPubSub cleanup error: {cleanup_err}")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="swarm_pubsub",
+                        error_type="CLEANUP_FAILED",
+                        message=str(cleanup_err)[:200],
+                        severity="WARNING",
+                        structured_context=ErrorContext(module="auto_fixed"),
+                    )
+                )
+            raise
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub subscription error: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="SUBSCRIPTION_ERROR",
+                    message=str(e)[:200],
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            raise
+
+    async def set_halt(self, reason: str = "manual_emergency_stop") -> None:
+        """বাংলা মন্তব্য: গ্লোবাল ইমার্জেন্সি-স্টপ ফ্ল্যাগ সেট করে (Redis-backed, multi-worker safe)।
+        মোবাইল অ্যাপের 'Hold to Kill' বাটন থেকে আসা একমাত্র সত্যিকারের হল্ট সিগন্যাল —
+        TTL সহ, যাতে কোনো কারণে clear_halt() না চললেও সিস্টেম চিরস্থায়ীভাবে আটকে না থাকে।
+        """
+        try:
+            redis_client = self._get_redis()
+            await redis_client.set("swarm:halt:global", reason, ex=3600)
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub: failed to set halt flag: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="HALT_FLAG_SET_FAILED",
+                    message=str(e)[:200],
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            raise
+
+    async def clear_halt(self) -> None:
+        """বাংলা মন্তব্য: ইমার্জেন্সি-স্টপ ফ্ল্যাগ ক্লিয়ার করে, সোয়ার্ম আবার এক্সিকিউশন শুরু করতে পারবে।"""
+        try:
+            redis_client = self._get_redis()
+            await redis_client.delete("swarm:halt:global")
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub: failed to clear halt flag: {e}")
+            raise
+
+    async def is_halted(self) -> bool:
+        """বাংলা মন্তব্য: এক্সিকিউশন লুপে চেক করার জন্য — গ্লোবাল হল্ট চালু আছে কিনা।
+        Redis সাময়িকভাবে আনরিচেবল হলে fail-open (halted=False) থাকবে, কারণ একটি
+        flaky Redis-এর কারণে পুরো সিস্টেমের সব টাস্ক আটকে যাওয়া (নতুন outage vector)
+        চাওয়া হয় না — বরং এরর ইভেন্ট এমিট করে অবজার্ভেবিলিটির মাধ্যমে সতর্ক করা হয়।
+        """
+        try:
+            redis_client = self._get_redis()
+            value = await redis_client.get("swarm:halt:global")
+            return value is not None
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="HALT_FLAG_CHECK_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            return False
+
+    async def broadcast(self, event_type: str, payload: dict):
+        """বাংলা মন্তব্য: সকল অ্যাক্টিভ ক্লায়েন্টকে Redis চ্যানেলে ডেটা পুশ করবে।"""
+        try:
+            redis_client = self._get_redis()
+            message = json.dumps({"type": event_type, "data": payload})
+            await redis_client.publish("swarm_stream", message)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"SwarmPubSub broadcast failed: {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="swarm_pubsub",
+                    error_type="BROADCAST_FAILED",
+                    message=str(e)[:200],
+                    severity="ERROR",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+            raise
+
+    async def buffered_subscribe(self, batch_window_ms: float = 250.0) -> AsyncGenerator[str, None]:
+
+        """
+        বাংলা মন্তব্য: এডমিন UI-এর DOM Lag রোধ করার জন্য ২৫০ms উইন্ডোতে টেক্সট/টেলিমেট্রি ব্যাচ করে স্ট্রিম করে।
+        """
+        buffer: list[dict] = []
+        last_flush = asyncio.get_event_loop().time()
+        window_sec = batch_window_ms / 1000.0
+
+        try:
+            async for raw_msg in self.subscribe():
+                try:
+                    data = json.loads(raw_msg)
+                    buffer.append(data)
+                except Exception:
+                    buffer.append({"type": "raw", "data": raw_msg})
+
+                now = asyncio.get_event_loop().time()
+                if (now - last_flush) >= window_sec and buffer:
+                    batched_payload = json.dumps({"type": "batched_delta", "events": buffer})
+                    yield batched_payload
+                    buffer = []
+                    last_flush = now
+        except asyncio.CancelledError:
+            if buffer:
+                yield json.dumps({"type": "batched_delta", "events": buffer})
+            raise
+
+
+# বাংলা মন্তব্য: Lazy singleton — module import করলে কোনো Redis connection হয় না।
+_swarm_streamer_instance: SwarmPubSub | None = None
+
+
+def get_swarm_streamer() -> SwarmPubSub:
+    global _swarm_streamer_instance
+    if _swarm_streamer_instance is None:
+        _swarm_streamer_instance = SwarmPubSub()
+    return _swarm_streamer_instance
+
+
+swarm_streamer = get_swarm_streamer()
+
+
+```
+
+### 📄 `backend/core/admin_routes.py`
+
+```py
+"""This module defines FastAPI routes for the SupremeAI project's administrative interface, providing secure authentication mechanisms, system monitoring, and configuration management. It supports both traditional password-based and Firebase-authenticated admin logins with Time-based One-Time Password (TOTP) verification, alongside endpoints for observing cloud resource distribution, free-tier usage, token budgets, GCP service health, rules engine management, and available AI skills. This centralizes control and visibility for the AI ecosystem's backend operations.
+
+Key Components:
+- `router`: The FastAPI APIRouter instance for admin-specific endpoints.
+- `_hash_password()`: Hashes a given password using bcrypt.
+- `_verify_password()`: Verifies a plain-text password against a bcrypt hash.
+- `_get_admin_credentials()`: Retrieves the admin password hash from environment variables.
+- `admin_login()`: Handles the initial step of traditional admin login, requiring a TOTP code.
+- `admin_verify()`: Completes traditional admin login by verifying password and TOTP, issuing a JWT.
+- `admin_firebase_login()`: Authenticates administrators via Firebase ID tokens, checks roles, and initiates TOTP flow if needed.
+- `admin_firebase_totp_setup()`: Generates a TOTP secret and provisioning URI for Firebase-authenticated admins.
+- `admin_firebase_totp_verify()`: Verifies a TOTP code for Firebase-authenticated admins, finalizing setup or issuing a JWT.
+- `cloud_distribution()`: Provides statistics on the distribution of requests across LLM providers.
+- `free_tier_status()`: Returns the overall status of free-tier usage.
+- `free_tier_provider_status()`: Returns the free-tier status for a specific LLM provider.
+- `free_tier_pause_provider()`: Pauses a free-tier provider for a specified duration.
+- `free_tier_override_limits()`: Overrides the usage limits for a free-tier provider.
+- `token_budget_stats()`: Provides statistics on token budget consumption.
+- `gcp_health()`: Performs health checks for various Google Cloud Platform services.
+- `gcp_verification_queue_stats()`: Returns statistics for the GCP verification queue.
+- `gcp_pubsub_stats()`: Returns statistics for GCP Pub/Sub.
+- `get_admin_rules()`: Retrieves the current rules from the rules engine.
+- `post_admin_rules()`: Updates the rules within the rules engine.
+- `get_skills()`: Lists available AI skills and their descriptions.
+- `verify_totp_code()`: Verifies a Time-based One-Time Password (TOTP) code.
+- `check_totp()`: An alias for `verify_totp_code()`, used for TOTP verification.
+
+Dependencies:
+- `base64`: For Base32 encoding/decoding in TOTP.
+- `hashlib`: For SHA1 hashing in TOTP.
+- `hmac`: For HMAC-SHA1 in TOTP.
+- `os`: For environment variable access and secure random generation.
+- `struct`: For packing/unpacking binary data in TOTP.
+- `time`: For time-related operations in TOTP and JWT expiration.
+- `fastapi`: For defining API routes and handling HTTP requests/responses.
+- `loguru`: For structured logging.
+- `bcrypt`: (Optional) For secure password hashing and verification.
+- `core.services`: For accessing various core services like parallel router, GCP router, queues, and rules engine.
+- `core.config`: For accessing application settings (e.g., `settings.jwt_secret`, `settings.admin_emails`).
+- `core.messaging.events`: For `get_firebase_auth` to interact with Firebase Admin SDK.
+- `core.gcp_firestore`: For `get_firestore_client` to interact with Firestore for admin user management.
+- `models.admin`: For Pydantic models defining admin request payloads.
+- `jose.jwt`: For encoding JSON Web Tokens (JWTs).
+- `google.cloud.firestore`: For Firestore field deletion.
+- `core.llm.free_tier_tracker`: For managing and monitoring LLM free-tier usage.
+- `core.llm.token_budget`: For managing and monitoring LLM token budgets."""
+
+import base64
+import hashlib
+import hmac
+import os
+import struct
+import time
+
+from fastapi import APIRouter, Body, Depends, HTTPException, status
+from loguru import logger
+
+from api.dependencies import get_current_user_token
+from core import services
+from core.config import settings
+from core.gcp_firestore import get_firestore_client
+from core.messaging.events import get_firebase_auth
+from models.admin import (
+    AdminFirebaseLoginRequest,
+    AdminFirebaseTotpSetupRequest,
+    AdminFirebaseTotpVerifyRequest,
+)
+
+router = APIRouter()
+
+
+def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Enforce admin role for sensitive admin routes (e.g. rules engine)."""
+    if payload.get("role") != "admin":
+        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
+        # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের জন্য সঠিক status.HTTP_403_FORBIDDEN অবজেক্ট ব্যবহার করা হলো
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return payload
+
+
+auth = get_firebase_auth()
+
+
+# বাংলা মন্তব্য: শুধুমাত্র স্ট্যান্ডার্ড ২-স্টেপ পাসওয়ার্ড + TOTP ফ্লো এবং ৭-ডিজিট ফায়ারবেস অথেনটিকেশন ফ্লোটি সক্রিয় রাখা হয়েছে।
+
+
+@router.post("/api/admin/firebase-login")
+def admin_firebase_login(payload: AdminFirebaseLoginRequest):
+    id_token = payload.id_token
+    is_production = getattr(settings, "env", "local").lower() == "production"
+
+    try:
+        if id_token.startswith("mock-"):
+            if is_production or getattr(settings, "env", "local").lower() not in ("local", "test", "testing"):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Mock tokens are strictly forbidden outside of local testing environments.",
+                )
+            uid = "mock-admin-uid"
+            email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
+            logger.warning(f"Bypassing verification using mock token mode. Token: {id_token[:20]}...")
+        elif auth:
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+            email = decoded_token.get("email", "")
+            logger.info(f"Verified Firebase token for email: {email}")
+        else:
+            raise HTTPException(
+                status_code=401,
+                detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001
+        logger.exception("Token verification/decoding failed")
+        raise HTTPException(status_code=401, detail="Authentication failed") from e
+
+    db = get_firestore_client()
+    role = "user"
+    totp_secret = None
+
+    if db:
+        try:
+            doc_ref = db.collection("admin_users").document(uid)
+            doc = doc_ref.get()
+            if doc.exists:
+                data = doc.to_dict()
+                role = data.get("role", "user")
+                totp_secret = data.get("totp_secret")
+            elif email.lower() in [e.lower() for e in settings.admin_emails]:
+                role = "admin"
+                doc_ref.set({"email": email, "role": "admin", "created_at": str(time.time())})
+        except Exception as e:  # noqa: BLE001
+            logger.critical(f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}")
+            role = "user"
+    elif email.lower() in [e.lower() for e in settings.admin_emails]:
+        role = "admin"
+    else:
+        role = "user"
+
+    if role != "admin":
+        logger.warning(f"Unauthorized admin access attempt by UID: {uid}, Email: {email}")
+        raise HTTPException(status_code=403, detail="Forbidden: Not authorized as an admin role user")
+
+    if not totp_secret:
+        return {"status": "totp_setup_required", "uid": uid, "email": email}
+
+    return {"status": "totp_required", "uid": uid}
+
+
+@router.post("/api/admin/firebase-totp-setup")
+def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
+    id_token = payload.id_token
+    is_production = getattr(settings, "env", "local").lower() == "production"
+
+    try:
+        if id_token.startswith("mock-"):
+            # বাংলা মন্তব্য: প্রোডাকশনে mock টোকেন দিয়ে TOTP সেটআপ বাইপাস কঠোরভাবে নিষিদ্ধ
+            if is_production:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Mock tokens are strictly forbidden in production.",
+                )
+            uid = "mock-admin-uid"
+            email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
+        elif auth:
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+            email = decoded_token.get("email", "")
+        else:
+            raise HTTPException(
+                status_code=401,
+                detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail=f"Token decoding failed: {str(e)}") from e
+
+    secret = base64.b32encode(os.urandom(10)).decode("utf-8")
+
+    db = get_firestore_client()
+    if db:
+        try:
+            db.collection("admin_users").document(uid).update({"temp_totp_secret": secret})
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Failed to store temp TOTP secret in Firestore: {e}")
+
+    # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি রিকোয়েস্ট করা হলো
+    provisioning_uri = f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
+    return {"secret": secret, "provisioning_uri": provisioning_uri}
+
+
+@router.post("/api/admin/firebase-totp-verify")
+def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
+    id_token = payload.id_token
+    otp = payload.otp
+    is_production = getattr(settings, "env", "local").lower() == "production"
+
+    try:
+        if id_token.startswith("mock-"):
+            # বাংলা মন্তব্য: প্রোডাকশনে mock টোকেন দিয়ে TOTP ভেরিফিকেশন বাইপাস কঠোরভাবে নিষিদ্ধ
+            if is_production:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Mock tokens are strictly forbidden in production.",
+                )
+            uid = "mock-admin-uid"
+        elif auth:
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+        else:
+            raise HTTPException(
+                status_code=401,
+                detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail=f"Token decoding failed: {str(e)}") from e
+
+    db = get_firestore_client()
+    totp_secret = None
+    temp_totp_secret = None
+
+    if db:
+        try:
+            doc = db.collection("admin_users").document(uid).get()
+            if doc.exists:
+                data = doc.to_dict()
+                totp_secret = data.get("totp_secret")
+                temp_totp_secret = data.get("temp_totp_secret")
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Failed to retrieve TOTP secret: {e}")
+
+    secret_to_use = totp_secret or temp_totp_secret
+    if not secret_to_use:
+        secret_to_use = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
+        if not secret_to_use:
+            raise HTTPException(status_code=500, detail="TOTP secret not configured on server")
+
+    # বাংলা মন্তব্য: ৭ ডিজিটের কোড ভেরিফিকেশন করা হবে check_totp মেথডের মাধ্যমে
+    if not check_totp(otp.strip(), secret_to_use):
+        raise HTTPException(status_code=401, detail="Invalid verification code")
+
+    if temp_totp_secret and not totp_secret and db:
+        try:
+            from google.cloud import firestore
+
+            db.collection("admin_users").document(uid).update(
+                {
+                    "totp_secret": temp_totp_secret,
+                    "temp_totp_secret": firestore.DELETE_FIELD,
+                }
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Failed to promote temp TOTP secret: {e}")
+
+    from jose import jwt
+
+    jwt_payload = {"uid": uid, "role": "admin", "exp": int(time.time()) + 3600 * 24}
+    jwt_secret = settings.jwt_secret
+    token = jwt.encode(jwt_payload, jwt_secret, algorithm="HS256")
+
+    return {"status": "success", "token": token}
+
+
+@router.get("/admin/cloud-distribution")
+def cloud_distribution():
+    return {
+        "distribution": services.parallel_router.get_distribution_stats(),
+        "total_requests": sum(p["current_requests"] for p in services.parallel_router.PROVIDERS.values()),
+        "active_providers": sum(1 for p in services.parallel_router.PROVIDERS.values() if p["status"] == "active"),
+        "strategy": "parallel_active_active",
+        "rebalance_interval": "1 hour",
+    }
+
+
+@router.get("/admin/free-tier-status")
+def free_tier_status():
+    from core.llm.free_tier_tracker import get_tracker
+
+    tracker = get_tracker()
+    return tracker.get_status()
+
+
+@router.get("/admin/free-tier-status/{provider}")
+def free_tier_provider_status(provider: str):
+    from fastapi import HTTPException
+
+    from core.llm.free_tier_tracker import get_tracker
+
+    tracker = get_tracker()
+    status = tracker.get_provider_status(provider)
+    if status is None:
+        raise HTTPException(status_code=404, detail=f"Provider '{provider}' not tracked")
+    return status
+
+
+@router.post("/admin/free-tier-pause/{provider}")
+def free_tier_pause_provider(provider: str, payload: dict = Body(default={"seconds": 60})):
+    from core.llm.free_tier_tracker import get_tracker
+
+    seconds = float(payload.get("seconds", 60))
+    tracker = get_tracker()
+    tracker.mark_rate_limited(provider, pause_seconds=seconds)
+    return {"status": "paused", "provider": provider, "seconds": seconds}
+
+
+@router.post("/admin/free-tier-override/{provider}")
+def free_tier_override_limits(provider: str, payload: dict = Body(...)):
+    from core.llm.free_tier_tracker import get_tracker
+
+    tracker = get_tracker()
+    tracker.override_limits(provider, payload)
+    return {"status": "updated", "provider": provider, "new_limits": payload}
+
+
+@router.get("/admin/token-budget-stats")
+def token_budget_stats():
+    from core.llm.token_budget import get_budget_manager
+
+    manager = get_budget_manager()
+    return manager.get_stats()
+
+
+@router.get("/gcp/health")
+def gcp_health():
+    return {
+        "status": "ok",
+        "cloud_run": services.gcp_router.health_check(timeout=3),
+        "firestore_mode": services.verification_queue.provider,
+        "pubsub_mode": services.gcp_pubsub_queue.provider,
+        "cloud_functions": services.cloud_function_client.get_config(),
+    }
+
+
+@router.get("/gcp/verification-queue/stats")
+def gcp_verification_queue_stats():
+    return services.verification_queue.stats()
+
+
+@router.get("/gcp/pubsub/stats")
+def gcp_pubsub_stats():
+    return services.gcp_pubsub_queue.stats()
+
+
+@router.get("/admin/rules")
+def get_admin_rules(_admin: dict = Depends(get_current_admin)):
+    return services.rules_engine.rules
+
+
+@router.post("/admin/rules")
+def post_admin_rules(payload: dict = Body(...), _admin: dict = Depends(get_current_admin)):
+    new_rules = payload.get("rules")
+    if new_rules:
+        success = services.rules_engine.save_rules(new_rules)
+        if success:
+            return {"status": "success"}
+    return {"status": "error", "message": "Failed to save rules"}
+
+
+@router.get("/skills")
+def get_skills():
+    return {
+        "web_scraper": {
+            "name": "web_scraper",
+            "version": "1.0.0",
+            "description": "Scrapes website contents using BeautifulSoup.",
+        },
+        "csv_exporter": {
+            "name": "csv_exporter",
+            "version": "1.0.0",
+            "description": "Exports tabular data to CSV using pandas.",
+        },
+    }
+
+
+def verify_totp_code(user_otp: str, base32_secret: str) -> bool:
+    try:
+        # বাংলা মন্তব্য: বেস-৩২ সিক্রেট কি প্যাডিং ঠিক করা হলো
+        missing_padding = len(base32_secret) % 8
+        if missing_padding:
+            base32_secret += "=" * (8 - missing_padding)
+        key = base64.b32decode(base32_secret.upper())
+        current_time = int(time.time() // 30)
+        # বাংলা মন্তব্য: ওটিপি ড্র্রিফট উইন্ডো হ্যান্ডেল করা হলো অতিরিক্ত ৩টি স্লটের জন্য
+        for drift in [-1, 0, 1]:
+            msg = struct.pack(">Q", current_time + drift)
+            h = hmac.new(key, msg, hashlib.sha1).digest()
+            o = h[19] & 15
+            h_num = struct.unpack(">I", h[o : o + 4])[0] & 0x7FFFFFFF
+            # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি জেনারেট করা হলো
+            code = f"{h_num % 1000000:06d}"
+            # বাংলা মন্তব্য: টাইমিং অ্যাটাক প্রতিরোধে constant-time তুলনা ব্যবহার করা হলো
+            if hmac.compare_digest(code, user_otp):
+                return True
+        return False
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def check_totp(user_otp: str, base32_secret: str) -> bool:
+    try:
+        # বাংলা মন্তব্য: বেস-৩২ সিক্রেট কি প্যাডিং ঠিক করা হলো
+        missing_padding = len(base32_secret) % 8
+        if missing_padding:
+            base32_secret += "=" * (8 - missing_padding)
+        key = base64.b32decode(base32_secret.upper())
+        current_time = int(time.time() // 30)
+        for drift in [-1, 0, 1]:
+            msg = struct.pack(">Q", current_time + drift)
+            h = hmac.new(key, msg, hashlib.sha1).digest()
+            o = h[19] & 15
+            h_num = struct.unpack(">I", h[o : o + 4])[0] & 0x7FFFFFFF
+            # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি জেনারেট করা হলো
+            code = f"{h_num % 1000000:06d}"
+            # বাংলা মন্তব্য: টাইমিং অ্যাটাক প্রতিরোধে constant-time তুলনা ব্যবহার করা হলো
+            if hmac.compare_digest(code, user_otp):
+                return True
+        return False
+    except Exception:  # noqa: BLE001
+        return False
+
+```
+
+
+---
+
+## 4. 🐛 Identified Vulnerabilities & Edge Cases
+
+*Run external AI prompt against Section 3 above to populate.*
+
+---
+
+## 5. 🛠️ Recommended Delta Patches & Actions
+
+*Pending audit execution.*
+
+---
+*Generated automatically by SupremeAI 2.0 Audit Generator Script.*
