@@ -127,6 +127,8 @@ async def get_db_pool_with_retry(max_retries: int = 3, initial_delay: float = 1.
             delay = initial_delay * (2 ** (attempt - 1))
             logger.warning(f"⚠️ [DB Pool] Connection attempt {attempt} failed. Retrying in {delay}s...")
             await asyncio.sleep(delay)
+    raise RuntimeError("Failed to acquire DB pool after retries.")
+
 
 
 async def run_cpu_bound_task_safely(func, *args, **kwargs):
