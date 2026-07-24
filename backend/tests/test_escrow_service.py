@@ -80,7 +80,7 @@ class TestEscrowService:
         assert service.cache is not None
 
     def test_create_escrow(self, service):
-        escrow = service.create_escrow(
+        escrow = service.create_escrow_sync(
             payer_id="payer-1",
             payee_id="payee-1",
             amount=100.0,
@@ -95,50 +95,50 @@ class TestEscrowService:
         assert escrow.escrow_id.startswith("esc_")
 
     def test_create_escrow_generates_unique_id(self, service):
-        escrow1 = service.create_escrow("p1", "p2", 10.0, "USD", [])
-        escrow2 = service.create_escrow("p1", "p2", 10.0, "USD", [])
+        escrow1 = service.create_escrow_sync("p1", "p2", 10.0, "USD", [])
+        escrow2 = service.create_escrow_sync("p1", "p2", 10.0, "USD", [])
         assert escrow1.escrow_id != escrow2.escrow_id
 
     def test_get_escrow_found(self, service):
-        created = service.create_escrow("p1", "p2", 50.0, "USD", ["cond1"])
-        retrieved = service.get_escrow(created.escrow_id)
+        created = service.create_escrow_sync("p1", "p2", 50.0, "USD", ["cond1"])
+        retrieved = service.get_escrow_sync(created.escrow_id)
         assert retrieved is not None
         assert retrieved.escrow_id == created.escrow_id
         assert retrieved.amount == 50.0
 
     def test_get_escrow_not_found(self, service):
-        result = service.get_escrow("nonexistent")
+        result = service.get_escrow_sync("nonexistent")
         assert result is None
 
     def test_update_escrow_status(self, service):
-        created = service.create_escrow("p1", "p2", 100.0, "USD", [])
-        updated = service.update_escrow_status(created.escrow_id, EscrowStatus.FUNDED)
+        created = service.create_escrow_sync("p1", "p2", 100.0, "USD", [])
+        updated = service.update_escrow_status_sync(created.escrow_id, EscrowStatus.FUNDED)
         assert updated is not None
         assert updated.status == EscrowStatus.FUNDED
 
     def test_update_escrow_status_not_found(self, service):
-        result = service.update_escrow_status("nonexistent", EscrowStatus.RELEASED)
+        result = service.update_escrow_status_sync("nonexistent", EscrowStatus.RELEASED)
         assert result is None
 
     def test_list_active_escrows(self, service):
-        service.create_escrow("p1", "p2", 10.0, "USD", [])
-        service.create_escrow("p3", "p4", 20.0, "USD", [])
-        active = service.list_active_escrows()
+        service.create_escrow_sync("p1", "p2", 10.0, "USD", [])
+        service.create_escrow_sync("p3", "p4", 20.0, "USD", [])
+        active = service.list_active_escrows_sync()
         assert len(active) >= 2
 
     def test_escrow_full_lifecycle(self, service):
         # Create
-        escrow = service.create_escrow("payer", "payee", 500.0, "USD", ["approval"])
+        escrow = service.create_escrow_sync("payer", "payee", 500.0, "USD", ["approval"])
         assert escrow.status == EscrowStatus.PENDING
 
         # Fund
-        escrow = service.update_escrow_status(escrow.escrow_id, EscrowStatus.FUNDED)
+        escrow = service.update_escrow_status_sync(escrow.escrow_id, EscrowStatus.FUNDED)
         assert escrow.status == EscrowStatus.FUNDED
 
         # Condition met
-        escrow = service.update_escrow_status(escrow.escrow_id, EscrowStatus.CONDITION_MET)
+        escrow = service.update_escrow_status_sync(escrow.escrow_id, EscrowStatus.CONDITION_MET)
         assert escrow.status == EscrowStatus.CONDITION_MET
 
         # Release
-        escrow = service.update_escrow_status(escrow.escrow_id, EscrowStatus.RELEASED)
+        escrow = service.update_escrow_status_sync(escrow.escrow_id, EscrowStatus.RELEASED)
         assert escrow.status == EscrowStatus.RELEASED
