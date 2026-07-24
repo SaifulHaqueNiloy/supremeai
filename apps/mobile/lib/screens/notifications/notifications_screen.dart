@@ -57,7 +57,7 @@ class NotificationsScreen extends StatelessWidget {
                 backgroundColor: notif['type'] == 'success'
                     ? const Color(0xFF10B981).withOpacity(0.2)
                     : notif['type'] == 'warning'
-                        ? Colors.amber.withOpacity(0.2)
+                        ? Colors.green.withValues(alpha: 0.2)
                         : Colors.cyan.withOpacity(0.2),
                 child: Icon(
                   notif['type'] == 'success'
@@ -84,7 +84,7 @@ class NotificationsScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   notif['subtitle']!,
-                  style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
+                  style: TextStyle(color: Colors.grey[300], fontSize: 12),
                 ),
               ),
               trailing: Text(
