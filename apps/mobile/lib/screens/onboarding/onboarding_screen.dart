@@ -81,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           item['subtitle']!,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: Colors.slate400,
+                            color: Color(0xFF94A3B8),
                             fontSize: 14,
                             height: 1.5,
                           ),
@@ -97,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: List.generate(
@@ -107,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: _currentPage == index ? 20 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: _currentPage == index ? Colors.cyan : Colors.slate800,
+                          color: _currentPage == index ? Colors.cyan : const Color(0xFF1E293B),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
