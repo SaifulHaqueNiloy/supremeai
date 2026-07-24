@@ -196,8 +196,10 @@ coverage/
 apps/_archive_web-chat/
 dist-admin/
 dist-user/
+apps/studio-client/dist-user/
 *.env
 .git_backup/
+
 blackbox_mcp_settings.json
 full_codebase_export.md
 

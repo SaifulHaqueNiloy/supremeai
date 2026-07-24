@@ -359,8 +359,11 @@ class AutonoGuardEngine:
             bypass_verified = await redis_manager.get_cache(bypass_key) if redis_manager and redis_manager.client else None
 
             if not bypass_verified and not otp_code:
-                if await self.request_jit_otp(admin_id, {"ip": ip, "path": path}):
-                    return False, "OTP sent — provide code to continue"
+                # বাংলা মন্তব্য: request_jit_otp() False রিটার্ন করলে তার মানে
+                # "কুলডাউন সক্রিয় — নতুন কোড পাঠানো হয়নি", "OTP লাগবে না" নয়।
+                # তাই উভয় ক্ষেত্রেই (নতুন পাঠানো বা কুলডাউন) OTP আবশ্যক — fail-closed।
+                await self.request_jit_otp(admin_id, {"ip": ip, "path": path})
+                return False, "OTP required — check your device or wait for cooldown to resend"
 
             if otp_code and not bypass_verified:
                 if not await self.verify_jit_otp(admin_id, otp_code):
@@ -369,6 +372,10 @@ class AutonoGuardEngine:
                 # Mark session bypass
                 if redis_manager and redis_manager.client:
                     await redis_manager.set_cache(bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2)
+            elif not bypass_verified:
+                # বাংলা মন্তব্য: bypass_verified False এবং otp_code ও নেই এমন কোনো অবস্থা
+                # এখানে থাকা উচিত নয় — defense-in-depth fail-closed guard।
+                return False, "OTP required — provide code to continue"
 
         # AST Security Scan (if code provided)
         if code_to_scan:
