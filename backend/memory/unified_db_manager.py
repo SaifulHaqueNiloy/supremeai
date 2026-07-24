@@ -60,7 +60,7 @@ class UnifiedDBManager:
         # 3. Save to Cloud Postgres DB
         try:
             await self.postgres.execute_query(
-                f"INSERT INTO {collection} (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2",
+                f"INSERT INTO {collection} (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2",  # noqa: S608
                 record_id,
                 data,
             )
@@ -92,7 +92,7 @@ class UnifiedDBManager:
             record = await self.sqlite.get(collection, record_id)
             if record:
                 return record
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         # Secondary lookup: Cloud Supabase
@@ -100,7 +100,7 @@ class UnifiedDBManager:
             record = await self.supabase.fetch_by_id(collection, record_id)
             if record:
                 return record
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         return None

@@ -70,6 +70,7 @@ class TestOfflineMode:
 
         om = OfflineModeManager()
         import asyncio
+
         asyncio.run(om.execute_task("offline task"))
         assert len(om.sync_queue) == 1
 

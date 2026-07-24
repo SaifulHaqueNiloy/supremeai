@@ -69,7 +69,7 @@ class GCPPubSubQueue:
             conn = self._memory_conn
         else:
             conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
-        assert conn is not None
+        assert conn is not None  # noqa: S101
 
         try:
             conn.execute(

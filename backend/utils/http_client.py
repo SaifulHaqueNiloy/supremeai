@@ -15,9 +15,11 @@ from loguru import logger
 # বাংলা মন্তব্য: Anti-Silent Hanging — প্রতিটি HTTP কলে সর্বোচ্চ ১০ সেকেন্ড টাইমআউট এনফোর্সড
 DEFAULT_TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 
+
 async def safe_fetch(url: str, **kwargs: Any) -> httpx.Response:
     async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
         return await client.get(url, **kwargs)
+
 
 async_client = httpx.AsyncClient(timeout=DEFAULT_TIMEOUT)
 

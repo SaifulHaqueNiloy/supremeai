@@ -179,7 +179,8 @@ class TestGitleaksRunner:
 class TestAISecretAnalyzer:
     """Tests for AISecretAnalyzer class."""
 
-    def test_analyze_finding_success(self):
+    @pytest.mark.asyncio
+    async def test_analyze_finding_success(self):
         """Test successful AI analysis of a finding."""
         analyzer = AISecretAnalyzer()
         finding = SecretFinding(
@@ -208,16 +209,13 @@ class TestAISecretAnalyzer:
             "core.security.secret_hunter.llm_gateway.acompletion",
             side_effect=mock_acomplete,
         ):
-            result = AsyncMock()(__wrapped__=lambda self, f, c: analyzer.analyze_finding(finding, c))
-            # Run async in sync context
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(analyzer.analyze_finding(finding, "code context"))
+            result = await analyzer.analyze_finding(finding, "code context")
 
         assert result.severity == "critical"
         assert result.ai_confidence == 0.95
 
-    def test_analyze_finding_false_positive(self):
+    @pytest.mark.asyncio
+    async def test_analyze_finding_false_positive(self):
         """Test AI analysis marks false positive."""
         analyzer = AISecretAnalyzer()
         finding = SecretFinding(
@@ -239,9 +237,7 @@ class TestAISecretAnalyzer:
             "core.security.secret_hunter.llm_gateway.acompletion",
             return_value=mock_response,
         ):
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(analyzer.analyze_finding(finding, "code context"))
+            result = await analyzer.analyze_finding(finding, "code context")
 
         assert result.severity == "info"
 
