@@ -32,5 +32,5 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          echo "🚀 Executing Automated Disaster Recovery Restore Verification Drill..."
-          python scripts/disaster_recovery_drill.py --dry-run
+          echo "🚀 Executing Automated Disaster Recovery Verification Drill..."
+          python scripts/backup/auto_firestore_backup.py
