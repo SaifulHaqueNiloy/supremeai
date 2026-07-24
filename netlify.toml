@@ -1,9 +1,0 @@
-[build]
-  base = "."
-  command = "VITE_PORTAL_TYPE=user pnpm --dir apps/studio-client run build"
-  publish = "apps/studio-client/dist-user"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200

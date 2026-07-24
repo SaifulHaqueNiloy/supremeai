@@ -10,7 +10,7 @@ import { CodeEdit } from '../types';
 export class CodeEditHandler {
   private context: vscode.ExtensionContext;
   private debounceTimer: NodeJS.Timeout | null = null;
-  private debounceDelay: number = 2000; // 2 seconds
+  private debounceDelay: number = 10000; // 10 seconds (ultra-lightweight typing optimization)
   private lastSentCode: Map<string, string> = new Map();
   private readonly MAX_CACHE_SIZE = 50; // আর্কিটেকচারাল ফিক্স: মেমোরি লিক রোধে ক্যাশের আকার সীমিত করা হলো
 

@@ -20,6 +20,8 @@ src/**
 **/.pnpm-store/**
 test/**
 *.java
+coverage/**
+.turbo/**
 *.vsix
 tsconfig.tsbuildinfo
 jest.config.js

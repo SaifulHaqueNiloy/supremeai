@@ -7,6 +7,7 @@ Dependencies:
 - `sys`: For accessing standard system streams, specifically `sys.stdout` for console logging.
 - `loguru`: The primary external library used for flexible, structured, and production-ready logging."""
 
+import os
 import sys
 
 from loguru import logger
@@ -14,21 +15,36 @@ from loguru import logger
 
 def setup_logging():
     """
-    Configures Loguru for structured logging.
-    In production, this could also push to OpenTelemetry.
+    Configures Loguru for structured logging with JSON serialization in production.
+    Falls back to human-readable format in local development.
     """
     logger.remove()
-    # বাংলা মন্তব্য: pytest চালানোর সময় sys.stdout ক্লোজ হয়ে যাওয়ার কারণে "I/O operation on closed file" এরর হয়। এটি এড়াতে lambda ব্যবহার করে ডাইনামিকালি sys.stdout রিড করা হচ্ছে।  # noqa: E501
-    logger.add(
-        lambda msg: sys.stdout.write(msg),
-        colorize=True,
-        format=(
-            "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
-            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-            "<level>{message}</level>"
-        ),
-        level="INFO",
-    )
+    env = os.getenv("ENV", "local").lower()
+    is_prod = env in ("production", "staging")
+
+    if is_prod:
+        # JSON format for production — easier to parse by log aggregators
+        logger.add(
+            lambda msg: sys.stdout.write(msg),
+            colorize=False,
+            serialize=True,
+            format="{time} | {level} | {message} | {extra}",
+            level="INFO",
+        )
+    else:
+        # Human-readable colorized format for local development
+        logger.add(
+            lambda msg: sys.stdout.write(msg),
+            colorize=True,
+            format=(
+                "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
+                "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+                "<level>{message}</level>"
+            ),
+            level="DEBUG",
+        )
+
+    # File logging — always human-readable for local debugging
     logger.add(
         "logs/supremeai.log",
         rotation="10 MB",

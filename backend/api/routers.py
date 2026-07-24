@@ -68,17 +68,12 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.websocket_voice", ""),
     ("tools.collaborative_editor", "/api/v1"),
     ("tools.image_to_code", ""),
-    ("tools.browser_agent", "/api"),
-    ("tools.voice_coder", "/api"),
     ("tools.style_learner", "/api"),
-    ("tools.diagram_to_architecture", "/api"),
-    ("tools.ai_pair_programmer", "/api"),
     ("api.routes.codeflow", ""),
     ("api.routes.feedback", ""),
     ("tools.media.multilingual_tts", "/api"),
     ("api.routes.voice", "/api/voice"),
     ("tools.comment_thread_ai", "/api"),
-    ("tools.auto_test_generator", "/api"),
     ("api.routes.tenant_admin", "/api"),
     ("api.routes.mobile_bff", ""),
     ("api.routes.billing_api", ""),
@@ -138,9 +133,7 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
 
 # USER_ROUTERS is all other routers
 # বাংলা মন্তব্য: ইউজার এপিআই রাউটারসমূহ
-USER_ROUTERS: list[tuple[str, str]] = [
-    r for r in (core_routers + optional_routers) if r[0] not in _admin_paths
-]
+USER_ROUTERS: list[tuple[str, str]] = [r for r in (core_routers + optional_routers) if r[0] not in _admin_paths]
 
 
 def register_all_routers(app: FastAPI) -> None:
