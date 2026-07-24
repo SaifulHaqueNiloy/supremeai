@@ -13,7 +13,7 @@ def test_defaults():
     assert s.env == "local"
     assert s.debug is True
     assert s.port == 8080
-    assert s.host == "0.0.0.0"
+    assert s.host == "0.0.0.0"  # noqa: S104
     assert s.supremeai_admin_password_hash == "mock_SUPREMEAI_ADMIN_PASSWORD_HASH"
     assert s.ollama_url == ""
     assert s.gcp_project_id == ""
@@ -31,7 +31,7 @@ def test_defaults():
         "env": "production",
         "debug": "false",
         "port": "9000",
-        "host": "0.0.0.0",
+        "host": "0.0.0.0",  # noqa: S104
         "supremeai_admin_password_hash": "mock_hash_value_for_test_pass",
         "openrouter_api_key": "TEST_ONLY_OPENROUTER_API_KEY",
         "hf_api_key": "TEST_ONLY_HF_API_KEY",
@@ -69,7 +69,7 @@ def test_env_override(mock_fetch):
     assert s.env == "production"
     assert s.debug is False
     assert s.port == 9000
-    assert s.host == "0.0.0.0"
+    assert s.host == "0.0.0.0"  # noqa: S104
     assert s.supremeai_admin_password_hash == "mock_hash_value_for_test_pass"
     assert s.openrouter_api_key == "TEST_ONLY_OPENROUTER_API_KEY"
     assert s.hf_api_key == "TEST_ONLY_HF_API_KEY"

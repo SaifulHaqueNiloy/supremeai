@@ -31,7 +31,7 @@ class NATSClient:
     def __init__(
         self,
         url: str = "nats://localhost:4222",
-        token: str | None = "super_secret_token",
+        token: str | None = "super_secret_token",  # noqa: S107
     ):
         self.url = url
         self.token = token

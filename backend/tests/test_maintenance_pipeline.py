@@ -51,7 +51,7 @@ class TestMaintenancePipeline:
         mock_event.structured_context = None
 
         with patch.object(pipeline, "auto_remediate", new_callable=AsyncMock):
-            pipeline._handle_error_event(mock_event)
+            await pipeline._handle_error_event(mock_event)
 
             assert pipeline.health_score < 100
 
@@ -65,7 +65,7 @@ class TestMaintenancePipeline:
         mock_event.severity = "INFO"
         mock_event.module = "test"
 
-        pipeline._handle_error_event(mock_event)
+        await pipeline._handle_error_event(mock_event)
 
         # Score should not have changed
         assert pipeline.health_score == initial_score
@@ -125,7 +125,7 @@ class TestMaintenancePipeline:
         mock_event.context = {}
         mock_event.error_type = "test_error"
 
-        with patch("core.cache.redis_manager") as mock_redis:
+        with patch("core.cache.redis_manager.redis_manager") as mock_redis:
             await pipeline.auto_remediate(mock_event)
 
             # Should have skipped due to cooldown
@@ -144,7 +144,7 @@ class TestMaintenancePipeline:
         mock_redis.client = MagicMock()
         mock_redis.client.set = AsyncMock()
 
-        with patch("core.cache.redis_manager", mock_redis), patch("core.maintenance_pipeline.error_event_bus.emit"):
+        with patch("core.cache.redis_manager.redis_manager", mock_redis), patch("core.maintenance_pipeline.error_event_bus.emit"):
             await pipeline.auto_remediate(mock_event)
 
             mock_redis.client.set.assert_called()
@@ -162,7 +162,7 @@ class TestMaintenancePipeline:
         mock_redis = MagicMock()
         mock_redis.close = AsyncMock()
 
-        with patch("core.cache.redis_manager", mock_redis):
+        with patch("core.cache.redis_manager.redis_manager", mock_redis):
             await pipeline.auto_remediate(mock_event)
 
             mock_redis.close.assert_called()
@@ -172,7 +172,7 @@ class TestMaintenancePipeline:
         """Test regression detection with no latency history."""
         pipeline = MaintenancePipeline()
 
-        with patch("core.maintenance_pipeline.metrics_engine", None):
+        with patch("api.routes.metrics.metrics_engine", None):
             # Should not raise
             await pipeline.detect_performance_regression()
 
@@ -192,7 +192,7 @@ class TestMaintenancePipeline:
             mock_event.structured_context = None
 
             with patch.object(pipeline, "auto_remediate", new_callable=AsyncMock):
-                pipeline._handle_error_event(mock_event)
+                await pipeline._handle_error_event(mock_event)
 
         # Should not go below 0
         assert pipeline.health_score >= 0

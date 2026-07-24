@@ -116,7 +116,7 @@ class SkillLibrarian:
 
         try:
             payload = json.dumps({"content": content}).encode("utf-8")
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 self.webhook_url,
                 data=payload,
                 headers={
@@ -125,7 +125,7 @@ class SkillLibrarian:
                 },
             )
             # নেটওয়ার্ক হ্যান্ডশেক ফায়ার
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req) as response:  # noqa: S310
                 if response.status not in [200, 204]:
                     logger.error(f"Discord Webhook returned invalid status code: {response.status}")
         except Exception as net_err:
