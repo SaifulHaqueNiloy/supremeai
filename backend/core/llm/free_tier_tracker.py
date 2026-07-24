@@ -252,7 +252,17 @@ class FreeTierTracker:
         custom_limits: dict[str, dict[str, int]] | None = None,
     ) -> None:
         env_overrides = getattr(settings, "provider_limits_override", {})
-        limits = {**DEFAULT_LIMITS, **env_overrides, **(custom_limits or {})}
+
+        def _deep_merge_limits(*sources: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
+            # বাংলা মন্তব্য: প্রতিটি provider-এর জন্য rpm/tpm/rpd আলাদাভাবে মার্জ করা হয় —
+            # partial override যেন পুরো dict উড়িয়ে না দেয় (VULN-05 fix)
+            merged: dict[str, dict[str, int]] = {}
+            for src in sources:
+                for provider, plimits in src.items():
+                    merged[provider] = {**merged.get(provider, {}), **plimits}
+            return merged
+
+        limits = _deep_merge_limits(DEFAULT_LIMITS, env_overrides, custom_limits or {})
         self.priority_list = list(FREE_PROVIDER_PRIORITY)
 
         self._budgets: dict[str, ProviderBudget] = {

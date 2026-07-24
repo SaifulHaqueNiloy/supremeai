@@ -26,7 +26,8 @@ async def test_trigger_lora_finetune_runpod(mock_post):
     mock_response.json.return_value = {"id": "runpod-job-123", "status": "IN_QUEUE"}
     mock_post.return_value = mock_response
 
-    with patch("tools.model_trainer.settings") as mock_settings:
+    # বাংলা মন্তব্য: সঠিক module path দিয়ে settings mock করা হচ্ছে (pre-existing bug fix)
+    with patch("tools.learning.model_trainer.settings") as mock_settings:
         mock_settings.runpod_api_key = "test-key"
         mock_settings.runpod_endpoint_id = "unsloth-training"
         trainer = ModelTrainer(provider="runpod")

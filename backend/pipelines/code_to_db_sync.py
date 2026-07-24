@@ -96,12 +96,18 @@ class CodeToDBSync:
     async def flush_outbox_queue(self) -> int:
         """
         Flushes pending Outbox transactions to D1 / Supabase / Redis replicas.
-        বাংলা ব্যাখ্যা: পেন্ডিং আউটবক্স রাইট ট্রানজ্যাকশন আইডেমপোটেন্সি কি নিশ্চিত করে অন্য ডাটাবেসে সিঙ্ক করে।
+        বাংলা মন্তব্য: WriteBehindBatcher নিজেই background thread-এ প্রতি flush_interval-এ
+        self-flush করে, কিন্তু daemon loop থেকে eager flush ট্রিগার করা ও প্রকৃত pending-count
+        রিপোর্ট করার জন্য এখানে সরাসরি batcher.flush() কল করা হচ্ছে (Patch 17 fix)।
         """
-        # Simulated async outbox queue processor for pending items
-        pending_count = 0
-        logger.debug("CodeToDBSync Outbox Worker: Flushed pending outbox queue successfully")
-        return pending_count
+        from database.multi_db_router import outbox_batcher
+
+        flushed = await asyncio.to_thread(outbox_batcher.flush)
+        if flushed:
+            logger.info(f"CodeToDBSync Outbox Worker: Flushed {flushed} pending outbox rows")
+        else:
+            logger.debug("CodeToDBSync Outbox Worker: No pending outbox rows to flush")
+        return flushed
 
     async def start_daemon(self, project_path: str = "./", interval: float = DEFAULT_DAEMON_INTERVAL) -> None:
         """

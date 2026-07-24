@@ -172,11 +172,10 @@ class PromptFirewall:
                     revised_response = await self.gateway.acompletion(prompt=revision_prompt, model=self.cheap_model)
                     return revised_response.get("text", response_text), True
 
-            except (ConnectionError, TimeoutError) as exc:
-                logger.error(f"Network error during constitutional filtering for principle '{principle}': {exc}")
-                continue
-            except ValueError as exc:
-                logger.error(f"Invalid response from LLM during constitutional filtering for principle '{principle}': {exc}")
+            except Exception as exc:  # noqa: BLE001
+                # বাংলা মন্তব্য: httpx/provider-নির্দিষ্ট exception সহ যেকোনো ব্যর্থতায় পরের
+                # principle-এ এগিয়ে যাওয়া হচ্ছে, পুরো pipeline crash করার বদলে।
+                logger.error(f"Constitutional filter error on principle '{principle}': {type(exc).__name__}: {exc}")
                 continue
 
         return response_text, False

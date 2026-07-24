@@ -29,7 +29,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         import os
 
-        host = request.headers.get("host", "").split(":")[0]
+        request.headers.get("host", "").split(":")[0]
         env = os.getenv("ENV", "development").lower()
         origin = request.headers.get("Origin")
         allowed = self.allowed_origins
@@ -49,12 +49,15 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                     headers=headers,
                 )
 
-        # টেস্ট এনভায়রনমেন্ট এবং টেস্টসার্ভার রিকোয়েস্টকে গেটওয়ে পাসের অনুমতি দেওয়া হলো
-        if env == "test" or host in ["testserver", "localhost", "127.0.0.1"]:
+        # বাংলা মন্তব্য: Host header client-controlled — শুধু Host string দেখে বাইপাস করা যাবে না।
+        # টেস্ট বাইপাস এখন কেবল একটি explicit, config-gated flag দিয়ে নিয়ন্ত্রিত হয় (Patch 7 fix)।
+        is_explicit_test_mode = env == "test" and getattr(settings, "allow_test_origin_bypass", False)
+        if is_explicit_test_mode:
             response = await call_next(request)
             if origin:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Credentials"] = "true"
+                if origin in allowed or origin in {"http://testserver", "http://localhost", "http://127.0.0.1"}:
+                    response.headers["Access-Control-Allow-Origin"] = origin
+                    response.headers["Access-Control-Allow-Credentials"] = "true"
             return response
 
         # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।

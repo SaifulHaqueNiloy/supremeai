@@ -79,6 +79,12 @@ def scan_staged_files() -> bool:
         if "test_" in normalized_path or "/tests/" in normalized_path or "/test/" in normalized_path:
             continue
 
+        # বাংলা মন্তব্য: auto-generated audit docs এবং autogen codebase dumps স্কিপ করা হচ্ছে —
+        # এগুলো source code mirror, actual secret নয় (Patch: security_guard allowlist)
+        if "modular_audits/" in normalized_path or "docs/autogen/" in normalized_path:
+            continue
+
+
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
                 for line_no, line in enumerate(fh.readlines(), 1):

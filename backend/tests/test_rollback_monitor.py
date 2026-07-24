@@ -66,8 +66,9 @@ def test_thresholds_breached_triggers_rollback(monkeypatch):
 
     monkeypatch.setattr(services, "redis_queue", redis, raising=False)
 
-    # Make >=10 requests with high error rate
-    m.trigger_rollback = MagicMock(return_value={"success": True, "action": "rolled"})
+    # বাংলা মন্তব্য: gcloud না থাকলে success:False এখন expected outcome (Patch 20 fix)
+    # trigger_rollback ব্যবহার করে mock করা হচ্ছে যাতে external gcloud call না হয়
+    m.trigger_rollback = MagicMock(return_value={"success": False, "action": "rollback_failed"})
 
     for i in range(10):
         is_error = i < 6  # 6 errors => 60% error rate
@@ -75,4 +76,6 @@ def test_thresholds_breached_triggers_rollback(monkeypatch):
 
     assert res["status"] == "rolled_back"
     assert "rollback_response" in res
+    # rollback_response এখন success:False contain করবে gcloud-unavailable হলে
+    assert res["rollback_response"]["action"] == "rollback_failed"
     m.trigger_rollback.assert_called_once_with("svc")
