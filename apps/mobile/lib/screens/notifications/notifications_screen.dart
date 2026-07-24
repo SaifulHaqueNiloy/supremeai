@@ -55,7 +55,7 @@ class NotificationsScreen extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: CircleAvatar(
                 backgroundColor: notif['type'] == 'success'
-                    ? Colors.emerald.withOpacity(0.2)
+                    ? const Color(0xFF10B981).withOpacity(0.2)
                     : notif['type'] == 'warning'
                         ? Colors.amber.withOpacity(0.2)
                         : Colors.cyan.withOpacity(0.2),
@@ -66,7 +66,7 @@ class NotificationsScreen extends StatelessWidget {
                           ? Icons.warning_amber_rounded
                           : Icons.shield_outlined,
                   color: notif['type'] == 'success'
-                      ? Colors.emerald
+                      ? const Color(0xFF10B981)
                       : notif['type'] == 'warning'
                           ? Colors.amber
                           : Colors.cyan,
