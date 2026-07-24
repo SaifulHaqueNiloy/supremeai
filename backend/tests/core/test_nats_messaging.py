@@ -7,11 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Handle missing nats module gracefully
-try:
-    from core.messaging.nats_messaging import NATSClient
-except ModuleNotFoundError:
-    pytest.skip("nats module not installed", allow_module_level=True)
+# Handle missing nats module gracefully by patching core.messaging.nats_messaging.nats
+from core.messaging import nats_messaging
+from core.messaging.nats_messaging import NATSClient
+
+# Ensure nats_messaging.nats is non-None during tests so connect logic runs
+if nats_messaging.nats is None:
+    nats_messaging.nats = MagicMock()
 
 
 # -------------------- Fixtures --------------------
@@ -315,7 +317,7 @@ class TestGetWorker:
     @pytest.mark.asyncio
     async def test_get_worker_not_found(self, nats_client, mock_kv_store):
         """বাংলা মন্তব্য: Worker না থাকলে None return হয়।"""
-        from nats.js.errors import KeyValueError
+        from core.messaging.nats_messaging import KeyValueError
 
         mock_kv_store.get.side_effect = KeyValueError("Key not found")
         nats_client.kv_store = mock_kv_store
