@@ -1,5 +1,7 @@
 """Tests for core.cache.redis_manager — SecureRedisManager & IdempotencyLock."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 from core.cache.redis_manager import (
@@ -23,120 +25,89 @@ def manager():
 class TestSecureRedisManagerInitialization:
     """SecureRedisManager init & connection tests."""
 
-    @pytest.mark.anyio
-    async def test_init_no_url(self, monkeypatch):
-        """No REDIS_URL → _client remains None, _initialized False."""
-        monkeypatch.setenv("REDIS_URL", "")
-        from core.config import settings
+    @pytest.mark.asyncio
+    async def test_init_no_url(self):
+        """No redis_url → _client remains None, _initialized False."""
+        with patch("core.cache.redis_manager.os.getenv", return_value=""):
+            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
+                mgr = SecureRedisManager()
+                assert mgr._client is None
+                assert mgr._initialized is False
 
-        old = settings.redis_url
-        settings.redis_url = ""
-        try:
-            mgr = SecureRedisManager()
-            assert mgr._client is None
-            assert mgr._initialized is False
-        finally:
-            settings.redis_url = old
-
-    @pytest.mark.anyio
-    async def test_ensure_connected_no_url(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_ensure_connected_no_url(self):
         """No URL → _ensure_connected logs critical, _initialized True."""
-        monkeypatch.setenv("REDIS_URL", "")
-        from core.config import settings
+        with patch("core.cache.redis_manager.os.getenv", return_value=""):
+            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
+                mgr = SecureRedisManager()
+                await mgr._ensure_connected()
+                assert mgr._initialized is True
+                assert mgr._client is None
 
-        old = settings.redis_url
-        settings.redis_url = ""
-        try:
-            mgr = SecureRedisManager()
-            await mgr._ensure_connected()
-            assert mgr._initialized is True
-            assert mgr._client is None
-        finally:
-            settings.redis_url = old
-
-    @pytest.mark.anyio
-    async def test_get_client_async_returns_none_when_no_url(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_get_client_async_returns_none_when_no_url(self):
         """get_client_async returns None when no Redis URL configured."""
-        monkeypatch.setenv("REDIS_URL", "")
-        from core.config import settings
+        with patch("core.cache.redis_manager.os.getenv", return_value=""):
+            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
+                mgr = SecureRedisManager()
+                client = await mgr.get_client_async()
+                assert client is None
 
-        old = settings.redis_url
-        settings.redis_url = ""
-        try:
-            mgr = SecureRedisManager()
-            client = await mgr.get_client_async()
-            assert client is None
-        finally:
-            settings.redis_url = old
-
-    @pytest.mark.anyio
-    async def test_init_lock_prevents_race(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_init_lock_prevents_race(self):
         """_init_lock prevents double initialization."""
-        monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
-        from core.config import settings
+        mgr = SecureRedisManager()
+        await mgr._ensure_connected()
+        await mgr._ensure_connected()
+        assert mgr._initialized is True
 
-        old = settings.redis_url
-        settings.redis_url = "redis://localhost:6379/0"
-        try:
-            mgr = SecureRedisManager()
-            await mgr._ensure_connected()
-            await mgr._ensure_connected()
-            assert mgr._initialized is True
-        finally:
-            settings.redis_url = old
-
-    @pytest.mark.anyio
-    async def test_client_property_sync_fallback(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_client_property_sync_fallback(self):
         """client property triggers sync fallback init."""
-        monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
-        from core.config import settings
-
-        old = settings.redis_url
-        settings.redis_url = "redis://localhost:6379/0"
-        try:
-            mgr = SecureRedisManager()
-            mgr._initialized = False
-            mgr._client = None
-            _ = mgr.client
-            assert mgr._initialized is True
-        finally:
-            settings.redis_url = old
+        with patch("core.cache.redis_manager.os.getenv", return_value="redis://localhost:6379/0"):
+            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value="redis://localhost:6379/0"):
+                mgr = SecureRedisManager()
+                mgr.url = "redis://localhost:6379/0"
+                mgr._initialized = False
+                mgr._client = None
+                _ = mgr.client
+                assert mgr._initialized is True
 
 
 class TestSecureRedisManagerOperations:
     """SecureRedisManager SET/GET/DELETE operations."""
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_set_no_client(self, manager):
         result = await manager.set("key", "value")
         assert result is False
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_get_no_client(self, manager):
         result = await manager.get("key")
         assert result is None
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_delete_no_client(self, manager):
         result = await manager.delete("key")
         assert result is False
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_set_cache_alias(self, manager):
         result = await manager.set_cache("k", "v", ex_seconds=60)
         assert result is False
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_get_cache_alias(self, manager):
         result = await manager.get_cache("k")
         assert result is None
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_set_json_no_client(self, manager):
         result = await manager.set_json("k", {"a": 1})
         assert result is False
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_get_json_no_client(self, manager):
         result = await manager.get_json("k")
         assert result is None
@@ -145,7 +116,7 @@ class TestSecureRedisManagerOperations:
 class TestRedisManagerClose:
     """SecureRedisManager.close() behavior."""
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
     async def test_close_without_client(self, manager):
         await manager.close()
         assert manager._client is None
@@ -161,38 +132,22 @@ class TestModuleLevelSingleton:
 class TestIdempotencyLock:
     """_AcquireIdempotencyLockContext & acquire_idempotency_lock."""
 
-    @pytest.mark.anyio
-    async def test_acquire_no_client_fail_closed(self, monkeypatch):
-        monkeypatch.setenv("REDIS_URL", "")
-        from core.config import settings
-
-        old = settings.redis_url
-        settings.redis_url = ""
-        try:
-            redis_manager._initialized = False
-            redis_manager._client = None
-            with pytest.raises(IdempotencyUnavailableError):
-                async with acquire_idempotency_lock("test-key", fail_closed=True):
-                    pass
-        finally:
-            settings.redis_url = old
-
-    @pytest.mark.anyio
-    async def test_acquire_no_client_fail_open(self, monkeypatch):
-        monkeypatch.setenv("REDIS_URL", "")
-        from core.config import settings
-
-        old = settings.redis_url
-        settings.redis_url = ""
-        try:
-            redis_manager._initialized = False
-            redis_manager._client = None
-            async with acquire_idempotency_lock("test-key", fail_closed=False):
+    @pytest.mark.asyncio
+    async def test_acquire_no_client_fail_closed(self):
+        redis_manager._initialized = False
+        redis_manager._client = None
+        with pytest.raises(IdempotencyUnavailableError):
+            async with acquire_idempotency_lock("test-key", fail_closed=True):
                 pass
-        finally:
-            settings.redis_url = old
 
-    @pytest.mark.anyio
+    @pytest.mark.asyncio
+    async def test_acquire_no_client_fail_open(self):
+        redis_manager._initialized = False
+        redis_manager._client = None
+        async with acquire_idempotency_lock("test-key", fail_closed=False):
+            pass
+
+    @pytest.mark.asyncio
     async def test_lock_context_manager(self):
         ctx = _AcquireIdempotencyLockContext("test", ttl=30, fail_closed=False)
         async with ctx as lock:
@@ -203,16 +158,44 @@ class TestIdempotencyLock:
         ctx = _AcquireIdempotencyLockContext("my-key")
         assert ctx.key == "idempotency:my-key"
 
-    @pytest.mark.anyio
-    async def test_lock_acquire_release_exit(self, monkeypatch):
-        monkeypatch.setenv("REDIS_URL", "")
-        from core.config import settings
+    @pytest.mark.asyncio
+    async def test_lock_acquire_release_exit(self):
+        redis_manager._initialized = False
+        redis_manager._client = None
+        ctx = _AcquireIdempotencyLockContext("test", fail_closed=False)
+        async with ctx:
+            pass
 
-        old = settings.redis_url
-        settings.redis_url = ""
-        try:
-            ctx = _AcquireIdempotencyLockContext("test", fail_closed=False)
-            async with ctx:
-                pass
-        finally:
-            settings.redis_url = old
+
+class TestMultiLevelCache:
+    """Tests for MultiLevelCache system."""
+
+    @pytest.mark.asyncio
+    async def test_multilevel_cache_l1_l2(self):
+        from core.cache.redis_manager import MultiLevelCache
+
+        mock_redis = MagicMock()
+        mock_redis.get_cache = AsyncMock(return_value="redis-value")
+        mock_redis.set_cache = AsyncMock()
+
+        ml_cache = MultiLevelCache(redis_mgr=mock_redis)
+
+        # L2 Hit & L1 Warmup
+        val = await ml_cache.get("key1")
+        assert val == "redis-value"
+        assert ml_cache.local_cache["key1"] == "redis-value"
+
+        # L1 Hit
+        mock_redis.get_cache.reset_mock()
+        l1_val = await ml_cache.get("key1")
+        assert l1_val == "redis-value"
+        mock_redis.get_cache.assert_not_called()
+
+        # Set
+        await ml_cache.set("key2", "val2", ttl=600)
+        assert ml_cache.local_cache["key2"] == "val2"
+        mock_redis.set_cache.assert_awaited_once_with("key2", "val2", ttl=600)
+
+        # Invalidate Local
+        ml_cache.invalidate_local("key1")
+        assert "key1" not in ml_cache.local_cache

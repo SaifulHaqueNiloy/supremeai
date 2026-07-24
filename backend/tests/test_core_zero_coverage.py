@@ -131,8 +131,6 @@ class TestLogBatcher:
         assert batcher.queue.qsize() >= 1
 
     def test_batcher_flush(self):
-        import asyncio
-
         from core.observability.log_batcher import LogBatcherService
 
         batcher = LogBatcherService()

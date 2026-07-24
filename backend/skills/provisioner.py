@@ -7,7 +7,7 @@ import asyncio
 import logging
 import shutil
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 from backend.skills.skill_registry import skill_registry
 
@@ -24,7 +24,7 @@ class SkillProvisioner:
         """Check if a system CLI command is available."""
         return shutil.which(command_name) is not None
 
-    async def provision_skill(self, skill_id: str) -> Dict[str, Any]:
+    async def provision_skill(self, skill_id: str) -> dict[str, Any]:
         """Check and provision dependencies for a given skill ID.
 
         বাংলা: প্রদত্ত স্কিলের প্রয়োজনীয় ডিপেনডেন্সি চেক ও ইনস্টল নিশ্চিত করে।

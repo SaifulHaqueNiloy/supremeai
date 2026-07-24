@@ -10,6 +10,8 @@ from typing import Any
 
 from loguru import logger
 
+from core.cache.redis_manager import redis_manager
+
 AUDIT_PREFIX = "audit:event:"
 AUDIT_LIST_PREFIX = "audit:recent:"
 MAX_RECENT_EVENTS = 1000
@@ -22,7 +24,6 @@ async def log_security_event(
     severity: str = "INFO",
 ) -> str:
     """Log a security event with unique trace ID and persist to Redis log."""
-    from core.cache.redis_manager import redis_manager
 
     event_id = f"sec-{uuid.uuid4().hex[:12]}"
     event = {

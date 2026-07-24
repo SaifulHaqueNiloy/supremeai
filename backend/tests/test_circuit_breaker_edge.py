@@ -151,10 +151,8 @@ class TestCircuitBreakerEdgeCases:
         assert m['circuit_breaker_state{name="metrics-closed"}'] == 0
 
     def test_get_metrics_half_open_state(self):
-        cb = CircuitBreaker("metrics-half", recovery_timeout=0.01)
-        cb.mark_failure()
-        time.sleep(0.02)
-        cb.allow_request()
+        cb = CircuitBreaker("metrics-half")
+        cb.state = CircuitBreakerState.HALF_OPEN
         m = cb.get_metrics()
         assert m['circuit_breaker_state{name="metrics-half"}'] == 1
 
