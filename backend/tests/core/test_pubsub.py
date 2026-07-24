@@ -40,7 +40,10 @@ async def test_pubsub_subscriber_error_isolation():
 
     # Mock Redis client with pubsub that raises error on get_message
     mock_redis = AsyncMock()
-    mock_pubsub = AsyncMock()
+    mock_pubsub = MagicMock()
+    mock_pubsub.subscribe = AsyncMock()
+    mock_pubsub.unsubscribe = AsyncMock()
+    mock_pubsub.close = AsyncMock()
     mock_pubsub.get_message = AsyncMock()
 
     # First call raises error, second call returns valid message
@@ -93,7 +96,8 @@ async def test_pubsub_lazy_initialization():
     # Only when accessing redis property should connection be attempted
     with patch("redis.asyncio.from_url") as mock_from_url:
         mock_from_url.return_value = AsyncMock()
-        with patch("core.swarm_pubsub.settings") as mock_settings:
+        with patch("core.config.settings") as mock_settings:
             mock_settings.redis_url = "redis://localhost:6379"
-            _ = pubsub.redis
+            pubsub._redis = None
+            _ = pubsub._get_redis()
             mock_from_url.assert_called_once()
