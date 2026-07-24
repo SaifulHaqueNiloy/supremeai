@@ -41,7 +41,10 @@ def generate_health_report():
             status_text = "Pass" if has_test else "Untested"
             report += f"| `{path}` | `{methods}` | {status_icon} | {status_text} |\n"
 
-    print(report)
+    try:
+        print(report)
+    except UnicodeEncodeError:
+        sys.stdout.buffer.write(report.encode("utf-8"))
 
 if __name__ == "__main__":
     generate_health_report()
