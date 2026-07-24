@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -86,7 +86,7 @@ async def test_dynamic_config_proxy_caches_values(mock_db):
     assert val2 == "TEST_VALUE"
 
     # Force expire cache
-    proxy._expiry = datetime.min
+    proxy._expiry = datetime.min.replace(tzinfo=UTC)
 
     # Now it should fetch the new value
     val3 = await proxy.get("TEST_KEY")

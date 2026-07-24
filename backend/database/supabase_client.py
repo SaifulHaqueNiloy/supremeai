@@ -833,6 +833,10 @@ class SupabaseDB:
     # বাংলা মন্তব্য: 'a' দিয়ে শুরু হওয়া মেথডগুলোকে থ্রেডপুলে রান করানোর জন্য ডায়নামিক এসিঙ্ক প্রক্সি মেথড।
     # এটি ইভেন্ট লুপকে ব্লক হওয়া থেকে বাঁচাবে।
     def __getattr__(self, name: str) -> Any:
+        # বাংলা মন্তব্য: অসীম রিকার্সন এড়াতে প্রাইভেট বা নির্দিষ্ট ফিল্ড সরাসরি বাইপাস
+        if name in ("client", "url", "key") or name.startswith("_"):
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
         if name.startswith("a") and hasattr(self, name[1:]):
             sync_attr = getattr(self, name[1:])
             if callable(sync_attr):

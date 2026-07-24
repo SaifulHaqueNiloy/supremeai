@@ -299,7 +299,7 @@ Respond in JSON format:
                 rule_id=finding.rule_id,
             )
 
-            response = await self.gateway.acomplete(
+            response = await self.gateway.acompletion(
                 model=settings.gemini_model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
