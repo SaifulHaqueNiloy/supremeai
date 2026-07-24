@@ -80,7 +80,7 @@ class SkillIngestor:
             return {"success": False, "detail": "Source domain unauthorized."}
 
         try:
-            with urllib.request.urlopen(zip_url) as response:
+            with urllib.request.urlopen(zip_url) as response:  # noqa: S310
                 zip_data = response.read()
 
             if hashlib.sha256(zip_data).hexdigest() != manifest.checksum:

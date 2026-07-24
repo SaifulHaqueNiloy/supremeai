@@ -103,7 +103,7 @@ class UniformCrossover:
         for key in all_keys:
             if key in parent_a and key in parent_b:
                 # 50% chance from either parent
-                child[key] = copy.deepcopy(parent_a[key] if random.random() < 0.5 else parent_b[key])
+                child[key] = copy.deepcopy(parent_a[key] if random.random() < 0.5 else parent_b[key])  # noqa: S311
             elif key in parent_a:
                 child[key] = copy.deepcopy(parent_a[key])
             else:
@@ -127,7 +127,7 @@ class GaussianMutation:
         mutated = copy.deepcopy(chromosome)
 
         for key, value in mutated.items():
-            if random.random() > mutation_rate:
+            if random.random() > mutation_rate:  # noqa: S311
                 continue
 
             if isinstance(value, int | float):
@@ -143,11 +143,11 @@ class GaussianMutation:
 
             elif isinstance(value, list) and value:
                 # Shuffle or trim list traits
-                if random.random() < 0.5:
+                if random.random() < 0.5:  # noqa: S311
                     random.shuffle(value)
                 else:
                     # Trim to 80-120% of original
-                    target_len = max(1, int(len(value) * random.uniform(0.8, 1.2)))
+                    target_len = max(1, int(len(value) * random.uniform(0.8, 1.2)))  # noqa: S311
                     if len(value) > target_len:
                         value[:] = value[:target_len]
 
@@ -264,7 +264,7 @@ class AgentBreeder:
             # Fallback: pick any other genome
             others = [g for g in genomes if g.id != parent_a.id]
             if others:
-                parent_b = random.choice(others)
+                parent_b = random.choice(others)  # noqa: S311
 
         logger.info(
             f"Selected parents: {parent_a.agent_name} (fit={parent_a.fitness_score:.3f}) "
@@ -283,7 +283,7 @@ class AgentBreeder:
         """
         Perform crossover and mutation to create offspring chromosome.
         """
-        if random.random() > self._config.crossover_rate:
+        if random.random() > self._config.crossover_rate:  # noqa: S311
             # No crossover: clone fittest parent
             fittest = parent_a if parent_a.fitness_score >= parent_b.fitness_score else parent_b
             child_chromosome = copy.deepcopy(fittest.chromosome)
@@ -383,7 +383,7 @@ class AgentBreeder:
         if offspring.fitness_score is None:
             await self.evaluate_offspring(offspring)
 
-        assert offspring.fitness_score is not None
+        assert offspring.fitness_score is not None  # noqa: S101
 
         parent_fitness = max(parent_a.fitness_score, parent_b.fitness_score)
 

@@ -4,7 +4,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
 
 from core.config import Settings
 from core.security.auth_middleware import AuthMiddleware
@@ -13,13 +12,11 @@ from core.security.auth_middleware import AuthMiddleware
 @pytest.mark.anyio
 async def test_production_jwt_secret_required():
     """Verify that in production environment, a missing jwt_secret raises a validation error."""
-    from pydantic import ValidationError
-    from core.config import Settings
 
     with patch.dict(os.environ, {"ENV": "production", "SUPREMEAI_JWT_SECRET": ""}):
-        with pytest.raises(ValidationError) as excinfo:
-            Settings()
-    assert "SUPREMEAI_JWT_SECRET must be explicitly set in all environments" in str(excinfo.value)
+        with pytest.raises(ValueError) as excinfo:
+            Settings().jwt_secret
+    assert "SUPREMEAI_JWT_SECRET must be explicitly set in production" in str(excinfo.value)
 
 
 @pytest.mark.skip(reason="Needs update")

@@ -7,7 +7,7 @@ Key Components:
 - `discover_tools()`: Asynchronously retrieves a list of tool names relevant to a given domain, currently utilizing placeholder logic for demonstration and future expansion.
 
 Dependencies:
-- `loguru`: Used for robust and structured logging of client operations and discovery processes."""
+- `loguru`: Used for robust and structured logging of client operations and discovery processes."""  # noqa: E501
 
 import httpx
 from loguru import logger

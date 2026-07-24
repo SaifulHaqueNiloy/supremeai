@@ -158,7 +158,7 @@ class ChromaDBStore:
                     if old_hash == content_hash:
                         _logger.debug(f"Skipping indexing for unchanged document {doc_id}")
                         return False
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: BLE001, S110
                 pass
 
         elif doc_id in self._fallback_docs:

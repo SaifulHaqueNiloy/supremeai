@@ -18,7 +18,7 @@ Dependencies:
 - `re`: For regular expression operations, particularly in text and math parsing.
 - `httpx`: For making asynchronous HTTP requests to external web search APIs.
 - `sympy`: (Optional) For advanced symbolic mathematical evaluation.
-- `tools.knowledge.local_search_rag`: (Optional) For local RAG-based factual verification."""
+- `tools.knowledge.local_search_rag`: (Optional) For local RAG-based factual verification."""  # noqa: E501
 
 import ast
 import contextlib
