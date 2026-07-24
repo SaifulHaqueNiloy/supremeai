@@ -40,7 +40,7 @@ class QuotaScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Daily Free Executions',
-                        style: TextStyle(color: Colors.slate300, fontSize: 14),
+                        style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
                       ),
                       Text(
                         '342 / 500 Used',
@@ -51,7 +51,7 @@ class QuotaScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
                     value: 0.68,
-                    backgroundColor: Colors.slate800,
+                    backgroundColor: const Color(0xFF1E293B),
                     valueColor: const AlwaysStoppedAnimation<Color>(Colors.cyan),
                     minHeight: 8,
                     borderRadius: BorderRadius.circular(4),
@@ -59,7 +59,7 @@ class QuotaScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text(
                     'Resets in 6h 18m • Zero-Cost Optimization Active',
-                    style: TextStyle(color: Colors.slate500, fontSize: 11),
+                    style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
                   ),
                 ],
               ),
@@ -106,7 +106,7 @@ class QuotaScreen extends StatelessWidget {
                 ),
                 Text(
                   role,
-                  style: const TextStyle(color: Colors.slate400, fontSize: 11),
+                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
                 ),
               ],
             ),
