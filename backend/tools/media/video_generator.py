@@ -96,6 +96,7 @@ class VideoGenerator:
                 # বাংলা মন্তব্য: এপিআই কী না থাকলে টেস্ট ও অফলাইন চালনার জন্য মক/স্টাব রেসপন্স ব্যাক দেওয়া হবে।
                 if output_path:
                     import json
+
                     with open(output_path, "w", encoding="utf-8") as f:
                         json.dump({"prompt": prompt, "duration": duration, "status": "stubbed"}, f)
                 return {
@@ -127,6 +128,7 @@ class VideoGenerator:
                 # বাংলা মন্তব্য: ক্লিং এর জন্য এপিআই কী মিসিং থাকলে স্টাব রেসপন্স ফেরত দেওয়া হবে।
                 if output_path:
                     import json
+
                     with open(output_path, "w", encoding="utf-8") as f:
                         json.dump({"prompt": prompt, "duration": duration, "status": "stubbed"}, f)
                 return {
