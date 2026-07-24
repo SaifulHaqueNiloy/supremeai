@@ -29,10 +29,13 @@
   - Self-Healing DNA #6 ("ত্রুটি সংশোধন, সেলফ-হিলিং এবং রিগ্রেশন টেস্টিং") now fully satisfied
   - **Impact:** True autonomous self-healing with verification feedback loop
 
+- [x] **P2-2: Circuit Breaker — Consistent `opened_at` State Tracking**
+  - File: `backend/core/resilience/circuit_breaker.py`
+  - Enforced `opened_at` timestamp consistency on transition states and recovery attempts.
+
 ## ⏳ Remaining — Phase 1 & 2
 - [ ] P1-2: PgBouncer Pool → `app.state` migration
 - [ ] P2-1: AutonoGuard Middleware — body caching via `request.state`
-- [ ] P2-2: Circuit Breaker — consistent `opened_at` in all state transitions
 - [ ] P2-3: Lifespan — parallel initialization via `asyncio.gather()`
 - [ ] P2-4: Test Coverage — incremental CI enforcement
 - [ ] P3-1 through P3-6: Enhancement tasks
