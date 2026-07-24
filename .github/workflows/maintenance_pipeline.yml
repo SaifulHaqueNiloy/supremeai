@@ -327,7 +327,7 @@ jobs:
           PYTHONPATH: .
         run: |
           mkdir -p ../docs/autogen
-          poetry run python -m erdantic models -o ../docs/autogen/db_schema.png
+          erdantic models -o ../docs/autogen/db_schema.png
           echo "✅ Database schema diagram generated at docs/autogen/db_schema.png" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Schema Diagram Artifact
