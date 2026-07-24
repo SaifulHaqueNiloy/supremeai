@@ -40,12 +40,14 @@ runs:
 
     - name: ⚙️ Install Build Dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
-        pip install --upgrade pip
-        pip install setuptools==68.0.0 wheel
-        pip install openai-whisper==20240930 --no-build-isolation
+        poetry run pip install --upgrade pip setuptools==68.0.0 wheel || true
+        poetry run pip install openai-whisper==20240930 --no-build-isolation || true
 
     - name: 📥 Poetry Install (backend deps)
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: poetry install --no-root --with dev --without ml,tools
+      run: |
+        poetry run pip install setuptools==68.0.0 wheel
+        poetry install --no-root --with dev --without ml,tools
