@@ -321,7 +321,7 @@ jobs:
         working-directory: backend
         run: |
           mkdir -p ../docs/autogen
-          poetry run erdantic models -o ../docs/autogen/db_schema.png
+          poetry run erdantic api.routes.task -o ../docs/autogen/db_schema.png
           echo "✅ Database schema diagram generated at docs/autogen/db_schema.png" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Schema Diagram Artifact
