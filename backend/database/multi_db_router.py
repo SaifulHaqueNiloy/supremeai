@@ -109,10 +109,9 @@ class MultiDBRouter:
             candidates = {name: cfg for name, cfg in self.databases.items() if not self._circuit_breakers.get(name, False)}
 
         if not candidates:
-            # Absolute fallback if all marked unhealthy
-            candidates = self.databases
-
-        if not candidates:
+            # বাংলা মন্তব্য: সব ডাটাবেসের সার্কিট ব্রেকার open থাকা অবস্থায় নির্বিচারে কোনো একটাকে
+            # বেছে নিয়ে নিশ্চিত-ব্যর্থ রিকোয়েস্ট পাঠানো হচ্ছে না — বরং None রিটার্ন করে fail-closed (Patch 15 fix)
+            logger.error("MultiDBRouter: All databases unhealthy — refusing to route (fail-closed)")
             return None
 
         # Select by priority (highest first)
@@ -130,12 +129,16 @@ class MultiDBRouter:
         Returns:
             Routing decision with target database and outbox status.
         """
+        import hashlib
+
         target_db = self._select_database(pattern)
 
         if not target_db:
             return {"error": "No databases configured or all circuit breakers open"}
 
-        cache_key = f"query_route:{pattern.value}:{hash(query)}"
+        # বাংলা মন্তব্য: sha256 hash ব্যবহার করা হলো deterministic cache key-এর জন্য (Patch 18 fix)
+        query_hash = hashlib.sha256(query.encode()).hexdigest()[:16]
+        cache_key = f"query_route:{pattern.value}:{query_hash}"
         cached = await self.cache.get(cache_key)
         if cached and pattern == QueryPattern.READ:
             return cached  # type: ignore

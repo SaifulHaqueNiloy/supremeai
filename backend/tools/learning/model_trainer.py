@@ -71,13 +71,14 @@ class ModelTrainer:
             if not modal_url:
                 modal_url = "https://supremeai--finetune-trigger.modal.run"
 
-            payload = {
+            # বাংলা মন্তব্য: MyPy no-redef এড়াতে modal_payload নামে নতুন variable ব্যবহার করা হলো
+            modal_payload: dict[str, str] = {
                 "job_id": job_id,
                 "dataset_path": dataset_path,
                 "base_model": base_model,
             }
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(modal_url, json=payload, timeout=30.0)
+                resp = await client.post(modal_url, json=modal_payload, timeout=30.0)
                 if resp.status_code not in (200, 201):
                     raise RuntimeError(f"Modal execution failed: {resp.text}")
                 logger.info(f"Modal training job queued: {job_id}")
@@ -119,13 +120,20 @@ class ModelTrainer:
                             }
                         return {"status": status, "job_id": job_id, "raw_status": data}
 
-        return {
-            "status": "completed",
-            "job_id": job_id,
-            "checkpoint_path": f"data/models/{job_id}",
-            "loss": 0.12,
-            "epochs_trained": 3,
-        }
+                # বাংলা মন্তব্য: non-200 response — fabricated "completed" এর বদলে honest "unknown" (Patch 23 fix)
+                logger.warning(f"RunPod status check for {job_id} returned HTTP {resp.status_code}")
+                return {"status": "unknown", "job_id": job_id, "message": "Could not verify job status"}
+
+        if self.provider == "local":
+            # বাংলা মন্তব্য: local training কখনো বাস্তবে চালানো হয়নি (simulation-only) —
+            # তাই "completed"/loss fabricate করা হচ্ছে না।
+            return {
+                "status": "not_implemented",
+                "job_id": job_id,
+                "message": "Local training is simulated only — no real checkpoint was produced. Configure RUNPOD_API_KEY or MODAL credentials for real training.",
+            }
+
+        return {"status": "unknown", "job_id": job_id, "message": "Unable to verify job status for this provider"}
 
     async def learn_from_execution_failure(self, fingerprint: str, trace_stack: str, fix_applied: str) -> bool:
         """
