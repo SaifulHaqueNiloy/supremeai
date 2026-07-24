@@ -69,6 +69,9 @@ pybreaker = "^1.4.1"
 cachetools = "^7.1.4"
 
 
+[tool.poetry.group.ml]
+optional = true
+
 [tool.poetry.group.ml.dependencies]
 # ── ML/AI: torch, OCR, whisper, embeddings (~3 GB) ──
 # Install with: poetry install --with ml
