@@ -2,8 +2,13 @@ import urllib.request
 import json
 import os
 
-api_key = os.environ.get("RENDER_API_KEY", "")
-api_key_backup = os.environ.get("RENDER_API_KEY_BACKUP", "")
+api_key = os.environ.get("RENDER_API_KEY")
+api_key_backup = os.environ.get("RENDER_API_KEY_BACKUP")
+
+# বাংলা মন্তব্য: API Key না পাওয়া গেলে স্ক্রিপ্ট থামিয়ে দিন, অন্ধকারে অকার্যকর রিকোয়েস্ট পাঠাবেন না
+if not api_key or not api_key_backup:
+    raise ValueError("❌ RENDER_API_KEY বা RENDER_API_KEY_BACKUP এনভায়রনমেন্ট ভ্যারিয়েবল সেট করা হয়নি!")
+
 
 # বাংলা মন্তব্য: প্রতিটি সার্ভিস আইডিকে তার নিজ নিজ অ্যাকাউন্টের API Key-র সাথে ম্যাপ করে আপডেট করা হচ্ছে
 services = [

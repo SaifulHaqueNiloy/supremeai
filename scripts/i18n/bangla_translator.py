@@ -20,6 +20,19 @@ logger = logging.getLogger(__name__)
 # Bangla character ranges
 BANGLA_REGEX = re.compile(r'[\u0980-\u09FF]')
 
+
+def load_translations(file_path: str = "data/bangla_translations.json") -> dict[str, str]:
+    """JSON ফাইল থেকে ট্রান্সলেশন ডায়নামিক্যালি লোড করুন। (Bangla: ডায়নামিক ট্রান্সলেশন লোডার)"""
+    path = Path(file_path)
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as exc:
+            logger.warning(f"Failed to load translations from {file_path}: {exc}")
+    return DEFAULT_TRANSLATIONS
+
+
 # Common English to Bangla translations
 DEFAULT_TRANSLATIONS = {
     # UI Elements
