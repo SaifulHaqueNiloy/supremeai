@@ -1,5 +1,8 @@
+// apps/mobile/lib/screens/quota/quota_screen.dart
+// Production Quota Management Screen for SupremeAI Flutter Mobile
+// বাংলা মন্তব্য: টোকেন ইউসেজ ও এআই মডেল কোটা মনিটরিং স্ক্রিন।
+
 import 'package:flutter/material.dart';
-import '../../services/localization_service.dart';
 
 class QuotaScreen extends StatelessWidget {
   const QuotaScreen({super.key});
@@ -7,135 +10,111 @@ class QuotaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF0F172A),
         elevation: 0,
-        title: Text('quota.title'.tr(),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.white)
+        title: const Text(
+          'API Quota & Usage',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPlanCard(context),
-            const SizedBox(height: 32),
-            Text('quota.current_usage'.tr().toUpperCase(),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.white54)
+            // Daily Execution Progress Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.cyan.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Daily Free Executions',
+                        style: TextStyle(color: Colors.slate300, fontSize: 14),
+                      ),
+                      Text(
+                        '342 / 500 Used',
+                        style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: 0.68,
+                    backgroundColor: Colors.slate800,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.cyan),
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Resets in 6h 18m • Zero-Cost Optimization Active',
+                    style: TextStyle(color: Colors.slate500, fontSize: 11),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            _buildUsageProgress(context, 'API Calls', 6500, 10000),
-            const SizedBox(height: 32),
-            _buildQuotaList(context),
+            const SizedBox(height: 24),
+
+            const Text(
+              'Provider Quota Breakdown',
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            _buildProviderTile('DeepSeek-V3', 'Coding & Math', 0.45, Colors.purpleAccent),
+            _buildProviderTile('Kimi K2.5', 'Bangla & Reasoning', 0.30, Colors.cyan),
+            _buildProviderTile('Together AI', 'Auto-Fallback Engine', 0.10, Colors.amber),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPlanCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFFA855F7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('quota.plan'.tr().toUpperCase(),
-            style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 2)
-          ),
-          const SizedBox(height: 8),
-          const Text('Enterprise AI',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(Icons.check_circle_outline, color: Colors.white70, size: 16),
-              const SizedBox(width: 8),
-              const Text('Priority Agent Access', style: TextStyle(color: Colors.white70, fontSize: 13)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUsageProgress(BuildContext context, String label, int current, int total) {
-    double progress = current / total;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              Text('$current / $total', style: const TextStyle(color: Colors.white38, fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFA855F7)),
-              minHeight: 8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuotaList(BuildContext context) {
-    return Column(
-      children: [
-        _buildQuotaItem(context, 'quota.rate_limit'.tr(), '100 req / min', Icons.speed, Colors.orangeAccent),
-        _buildQuotaItem(context, 'quota.max_projects'.tr(), 'Unlimited', Icons.inventory_2_outlined, Colors.greenAccent),
-        _buildQuotaItem(context, 'quota.concurrent_agents'.tr(), '50 Active', Icons.bolt, Colors.blueAccent),
-      ],
-    );
-  }
-
-  Widget _buildQuotaItem(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildProviderTile(String name, String role, double usage, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
+        color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
+          CircleAvatar(
+            backgroundColor: color.withOpacity(0.2),
+            child: Icon(Icons.memory, color: color),
+          ),
           const SizedBox(width: 16),
-          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14))),
-          Text(value, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  role,
+                  style: const TextStyle(color: Colors.slate400, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${(usage * 100).toInt()}%',
+            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

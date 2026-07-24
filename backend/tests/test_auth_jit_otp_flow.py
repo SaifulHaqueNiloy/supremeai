@@ -72,6 +72,7 @@ class TestJITOTPFlow:
     async def test_get_active_channel_override(self):
         """Test getting channel from Redis override."""
         mock_redis = MagicMock()
+        mock_redis.client = True
         mock_redis.get_cache = AsyncMock(return_value="email")
         with patch("core.otp_router.redis_manager", mock_redis):
             result = await get_active_channel("admin-123")
@@ -81,6 +82,7 @@ class TestJITOTPFlow:
     async def test_set_active_channel_valid(self):
         """Test setting a valid channel."""
         mock_redis = MagicMock()
+        mock_redis.client = True
         mock_redis.set_cache = AsyncMock()
         with patch("core.otp_router.redis_manager", mock_redis):
             await set_active_channel("admin-123", CHANNEL_EMAIL, ttl_seconds=7200)
@@ -112,9 +114,12 @@ class TestJITOTPFlow:
             mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
             mock_response = MagicMock()
             mock_response.status_code = 204
-            mock_client.return_value.__aenter__ = AsyncMock()
+
+            client_instance = AsyncMock()
+            client_instance.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
-            mock_client.return_value.post = AsyncMock(return_value=mock_response)
+
             from core.otp_router import _send_discord
 
             result = await _send_discord("admin-123", "123456", {"ip": "127.0.0.1"})
@@ -144,9 +149,12 @@ class TestJITOTPFlow:
             mock_settings.admin_notification_email = "admin@example.com"
             mock_response = MagicMock()
             mock_response.status_code = 200
-            mock_client.return_value.__aenter__ = AsyncMock()
+
+            client_instance = AsyncMock()
+            client_instance.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
-            mock_client.return_value.post = AsyncMock(return_value=mock_response)
+
             from core.otp_router import _send_email
 
             result = await _send_email("admin-123", "123456", {})
@@ -155,6 +163,10 @@ class TestJITOTPFlow:
     @pytest.mark.asyncio
     async def test_telegram_fallback_to_discord(self):
         """Test Telegram/WA fallback to Discord."""
+        mock_redis = MagicMock()
+        mock_redis.client = True
+        mock_redis.get_cache = AsyncMock(return_value=CHANNEL_TELEGRAM)
+
         with (
             patch("core.otp_router.settings") as mock_settings,
             patch(
@@ -162,11 +174,9 @@ class TestJITOTPFlow:
                 new_callable=AsyncMock,
                 return_value=True,
             ),
-            patch("core.otp_router.redis_manager", None),
+            patch("core.otp_router.redis_manager", mock_redis),
         ):
             mock_settings.discord_otp_webhook_url = MagicMock(get_secret_value=MagicMock(return_value="https://discord.webhook"))
-            # Use set_active_channel to override channel instead of channel_override
-            await set_active_channel("admin-123", CHANNEL_TELEGRAM)
             result = await send_otp("admin-123", "123456", {})
         assert result is True
 

@@ -24,6 +24,9 @@ const ArchitectTower = React.lazy(() => import("./pages/user/ArchitectTower").th
 const SkillCatalog = React.lazy(() => import("./pages/user/SkillCatalog").then(m => ({ default: m.SkillCatalog })));
 const SwarmMap = React.lazy(() => import("./components/SwarmMap"));
 const EvolutionForge = React.lazy(() => import("./pages/user/EvolutionForge/EvolutionForge"));
+const BillingPage = React.lazy(() => import("./pages/BillingPage"));
+const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
+const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 
 // Services & Hooks
 import { getAethelResponse } from "./services/chatService";
@@ -205,6 +208,16 @@ const AppContent: React.FC = () => {
                       <SkillCatalog />
                     </ProtectedRoute>
                   } />
+                  <Route path="/billing" element={
+                    <ProtectedRoute>
+                      <BillingPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/workspace/*" element={
                     <DashboardShell
                       theme={theme}
@@ -216,6 +229,9 @@ const AppContent: React.FC = () => {
                   <Route path="/workspace/live" element={
                     <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
                   } />
+
+                  {/* Catch-all 404 Route */}
+                  <Route path="*" element={<ErrorPage code={404} />} />
 
                   {/* Users trying to access admin are redirected */}
                   <Route path="/admin/*" element={<Navigate to="/" replace />} />

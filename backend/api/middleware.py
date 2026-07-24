@@ -36,38 +36,40 @@ class SupremeContextMiddleware(BaseHTTPMiddleware):
         request.state.correlation_id = correlation_id
         start_time = time.time()
 
-        try:
-            response = await call_next(request)
+        # বাংলা মন্তব্য: লগার কনটেক্সটে correlation_id বাইন্ড করা হচ্ছে যাতে সমস্ত সংশ্লিষ্ট লগে এটি দৃশ্যমান হয়
+        with logger.contextualize(correlation_id=correlation_id):
+            try:
+                response = await call_next(request)
 
-            response.headers["X-Correlation-ID"] = correlation_id
-            response.headers["X-Content-Type-Options"] = "nosniff"
-            response.headers["X-Frame-Options"] = "DENY"
+                response.headers["X-Correlation-ID"] = correlation_id
+                response.headers["X-Content-Type-Options"] = "nosniff"
+                response.headers["X-Frame-Options"] = "DENY"
 
-            process_time = time.time() - start_time
-            response.headers["X-Process-Time"] = f"{process_time:.4f}"
+                process_time = time.time() - start_time
+                response.headers["X-Process-Time"] = f"{process_time:.4f}"
 
-            return response
+                return response
 
-        except Exception as exc:
-            error_event_bus.emit(
-                ErrorEvent(
-                    module="GlobalMiddleware",
-                    error_type="REQUEST_FAILURE",
-                    message=str(exc)[:500],
-                    severity="ERROR",
-                    context={
-                        "method": request.method,
-                        "url": str(request.url),
-                        "correlation_id": correlation_id,
-                    },
-                    structured_context=ErrorContext(
-                        module="api.middleware",
-                        request_id=correlation_id,
-                        env=settings.env,
-                    ),
+            except Exception as exc:
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="GlobalMiddleware",
+                        error_type="REQUEST_FAILURE",
+                        message=str(exc)[:500],
+                        severity="ERROR",
+                        context={
+                            "method": request.method,
+                            "url": str(request.url),
+                            "correlation_id": correlation_id,
+                        },
+                        structured_context=ErrorContext(
+                            module="api.middleware",
+                            request_id=correlation_id,
+                            env=settings.env,
+                        ),
+                    )
                 )
-            )
-            raise
+                raise
 
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
