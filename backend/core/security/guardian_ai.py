@@ -320,13 +320,15 @@ Respond ONLY with JSON:
                 confidence=result.get("confidence", 0.5),
             )
 
-        except (json.JSONDecodeError, KeyError, AttributeError) as e:
-            logger.warning(f"AI deep scan failed: {e}")
+        except Exception as e:  # noqa: BLE001
+            # বাংলা মন্তব্য: network/timeout/provider সহ যেকোনো ব্যর্থতায় crash না করে
+            # fail-open করা হচ্ছে (local regex pattern check এখনও কাজ করছে)
+            logger.critical(f"⚠️ AI deep scan unavailable ({type(e).__name__}: {e}) — falling back to local-pattern-only protection")
             return SecurityCheck(
                 passed=True,
                 threat_level=ThreatLevel.SAFE,
                 category=ThreatCategory.PROMPT_INJECTION,
-                details="AI scan failed, allowing with caution",
+                details=f"AI scan unavailable ({type(e).__name__}), local-pattern-only mode",
                 confidence=0.0,
             )
 

@@ -134,9 +134,9 @@ class AuthMiddleware:
 
         path = scope.get("path", "")
 
-        # বাংলা মন্তব্য: public path-এ JWT decode বা DB call না করে সরাসরি skip করা হচ্ছে।
-        # এটি health check, docs, login endpoint-এ অযথা overhead এড়ায় (p99 latency কমে)।
-        if _is_public_path(path) or (is_test_environment() and not settings.supremeai_api_token):
+        # বাংলা মন্তব্য: "api_token unset" এই দুর্বল শর্তের বদলে explicit config flag ব্যবহার —
+        # accidental production ENV misconfiguration-এ আর auth পুরো বাইপাস হবে না (Patch 13 fix)।
+        if _is_public_path(path) or (is_test_environment() and getattr(settings, "allow_test_auth_bypass", False)):
             await self.app(scope, receive, send)
             return
 
