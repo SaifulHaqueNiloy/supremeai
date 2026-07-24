@@ -229,6 +229,8 @@ class CircuitBreaker:
                 # যাতে _should_attempt_recovery() সঠিকভাবে কাজ করে এবং টেস্টে ম্যানিপুলেট করা যায়
                 self.opened_at = time.monotonic()
                 self._recovery_in_progress = False
+            elif self.state == CircuitBreakerState.OPEN and self.opened_at is None:
+                self.opened_at = time.monotonic()
 
     def reset(self) -> None:
         """Manually reset the circuit breaker to CLOSED state.
