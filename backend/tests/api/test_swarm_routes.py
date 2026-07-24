@@ -126,6 +126,5 @@ async def test_telemetry_persists_to_db_not_just_logs():
     fake_session.commit.assert_called_once()
 
 
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

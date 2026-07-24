@@ -27,6 +27,7 @@ class SandboxService:
     def create_sandbox(self, task_id: str, language: str = "python") -> str:
         """Create and track a new sandbox instance."""
         import uuid
+
         sandbox_id = f"sb_{uuid.uuid4().hex[:8]}"
         self.active_sandboxes[sandbox_id] = {
             "id": sandbox_id,
