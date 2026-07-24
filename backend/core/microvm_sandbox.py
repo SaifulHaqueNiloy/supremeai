@@ -15,7 +15,6 @@ import re
 import shutil
 import subprocess
 import tempfile
-import time
 from pathlib import Path
 from typing import Any
 
@@ -122,9 +121,10 @@ class MicroVMSandbox:
 
     @classmethod
     def _generate_vm_id(cls) -> str:
-        """বাংলা মন্তব্য: Validated vm_id generate করা।"""
-        cls._vm_id_counter += 1
-        vm_id = f"supremeai-vm-{int(time.time())}-{cls._vm_id_counter}"
+        """বাংলা মন্তব্য: uuid4 hex ব্যবহার করা হলো — multi-worker-safe (Patch 4 fix)।"""
+        import uuid
+
+        vm_id = f"supremeai-vm-{uuid.uuid4().hex[:20]}"
         return _validate_vm_id(vm_id)
 
     def _check_microvm_available(self) -> str | None:
@@ -135,21 +135,19 @@ class MicroVMSandbox:
             return "gvisor"
         return None
 
-    def _create_microvm_config(self, vm_dir: Path, vm_id: str) -> Path:
+    def _create_microvm_config(self, vm_dir: Path, vm_id: str, rootfs_template: str | None = None) -> Path:
         """
         বাংলা মন্তব্য: Firecracker config তৈরি — pathlib.Path ব্যবহার।
-        string interpolation দিয়ে path build করা সম্পূর্ণ নিষিদ্ধ।
         """
         config = {
             "boot-source": {
-                "kernel_image_path": "/tmp/vmlinux",  # nosec B108 — known fixed path
+                "kernel_image_path": str(vm_dir / "vmlinux"),
                 "boot_args": "console=ttyS0 reboot=k panic=1 pci=off",
             },
             "drives": [
                 {
                     "drive_id": "rootfs",
-                    # বাংলা মন্তব্য: pathlib.Path — string concatenation নয়
-                    "path_on_host": str(vm_dir / "rootfs.ext4"),
+                    "path_on_host": str(Path(rootfs_template) if rootfs_template else (vm_dir / "rootfs.ext4")),
                     "is_root_device": True,
                 }
             ],
@@ -196,7 +194,7 @@ class MicroVMSandbox:
 
         try:
             if vm_runtime == "firecracker":
-                return await self._run_firecracker(vm_dir, vm_id, timeout)
+                return await self._run_firecracker(vm_dir, vm_id, cmd, timeout)
             elif vm_runtime == "gvisor":
                 return await self._run_gvisor(cmd, timeout)
             else:
@@ -222,20 +220,36 @@ class MicroVMSandbox:
             if self.auto_destroy:
                 self._destroy_vm_dir(vm_dir)
 
-    async def _run_firecracker(self, vm_dir: Path, vm_id: str, timeout: int) -> dict[str, Any]:
-        """বাংলা মন্তব্য: Firecracker run — pathlib.Path দিয়ে args build।"""
-        self._create_microvm_config(vm_dir, vm_id)
+    async def _run_firecracker(self, vm_dir: Path, vm_id: str, cmd: str, timeout: int) -> dict[str, Any]:
+        """বাংলা মন্তব্য: cmd (ইউজারের কোড) এখন সঠিকভাবে VM-এর ভেতরে পৌঁছায় (Patch 3 fix)।"""
+        rootfs_template = getattr(settings, "firecracker_rootfs_template", None)
+        if not rootfs_template or not Path(rootfs_template).exists():
+            logger.error(
+                "[MicroVMSandbox] Firecracker rootfs template not configured/found — "
+                "cannot inject code into VM. Refusing to fabricate a false success."
+            )
+            return {
+                "success": False,
+                "error": "Firecracker rootfs template unavailable — code cannot be securely injected into the VM.",
+                "provider": "firecracker",
+            }
+
+        from core.security.resource_guard import ResourceGuard
+
+        payload_path = vm_dir / "payload.py"
+        ResourceGuard.write_text(payload_path, cmd, encoding="utf-8")
+
+        config_path = self._create_microvm_config(vm_dir, vm_id, rootfs_template=rootfs_template)
         api_sock = vm_dir / "api.sock"
 
         try:
             result = subprocess.run(
-                # বাংলা মন্তব্য: list-based args — shell=True নিষিদ্ধ
-                ["firecracker", "--api-sock", str(api_sock)],
+                ["firecracker", "--api-sock", str(api_sock), "--config-file", str(config_path)],
                 capture_output=True,
                 text=True,
                 timeout=timeout,
                 check=False,
-                shell=False,  # explicit — no shell injection
+                shell=False,
             )
             return {
                 "success": result.returncode == 0,
@@ -257,7 +271,6 @@ class MicroVMSandbox:
 
     async def _run_gvisor(self, cmd: str, timeout: int) -> dict[str, Any]:
         """
-        বাংলা মন্তব্য: gVisor run — cmd tempfile-এ write করে execute।
         string interpolation দিয়ে cmd argument inject করা নিষিদ্ধ।
         tempfile sandbox_root-এ তৈরি হয় — /tmp bypass নয়।
         """

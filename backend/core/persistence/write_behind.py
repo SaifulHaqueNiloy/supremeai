@@ -55,6 +55,28 @@ class WriteBehindBatcher:
     def submit(self, sql: str, params: tuple) -> None:
         self._queue.put(_PendingWrite(sql=sql, params=params))
 
+    def enqueue(self, payload: dict) -> None:
+        """multi_db_router.py-স্টাইল dict payload-কে প্রকৃত outbox row হিসেবে গ্রহণ করে।
+
+        বাংলা মন্তব্য: এটাই আসল Transactional Outbox Pattern entry-point —
+        payload-কে outbox_events টেবিলে insert করার SQL-এ রূপান্তর করে
+        submit()-এ পাঠায়, যাতে বিদ্যমান background flush thread এবং
+        idempotency-safe executemany() ব্যবহার হয় (Patch 14 fix)।
+        """
+        sql = (
+            "INSERT INTO outbox_events "
+            "(target_db, query_text, idempotency_key, created_at) "
+            "VALUES (%s, %s, %s, %s) "
+            "ON CONFLICT (idempotency_key) DO NOTHING"
+        )
+        params = (
+            payload.get("target_db"),
+            payload.get("query"),
+            payload.get("idempotency_key"),
+            payload.get("timestamp"),
+        )
+        self.submit(sql, params)
+
     def _drain(self, limit: int) -> list[_PendingWrite]:
         items: list[_PendingWrite] = []
         while len(items) < limit:

@@ -142,12 +142,34 @@ class RollbackMonitor:
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to execute gcloud rollback command: {e}")
 
-        # Fallback response if gcloud tool is not installed or command failed
+        # বাংলা মন্তব্য: rollback আসলে না ঘটলে success:False রিপোর্ট করা হচ্ছে (Patch 20 fix) —
+        # আগে এটা মিথ্যাভাবে True রিপোর্ট করত যা production incident-কে সাইলেন্টলি unresolved রাখত।
+        logger.critical(
+            f"🚨 AUTO-ROLLBACK FAILED for {service_name}: could not execute gcloud rollback "
+            f"(no previous revision found or command error). Service is STILL serving the "
+            f"unhealthy revision — human intervention required immediately."
+        )
+        try:
+            from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="rollback_monitor",
+                    error_type="AUTO_ROLLBACK_FAILED",
+                    message=f"Automatic rollback for {service_name} failed — unhealthy revision still live",
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="rollback_monitor"),
+                    context={"service": service_name},
+                )
+            )
+        except Exception as bus_exc:  # noqa: BLE001
+            logger.error(f"Failed to emit rollback-failure event: {bus_exc}")
+
         report = {
-            "success": True,  # Keep true for test compatibility
+            "success": False,
             "service": service_name,
-            "action": "rolled_back_to_previous_stable_revision_fallback",
-            "reason": "Health metrics threshold breached (gcloud command fallback/simulation)",
+            "action": "rollback_failed",
+            "reason": "gcloud command unavailable or no previous revision found — manual intervention required",
             "report_sent": True,
         }
         return report

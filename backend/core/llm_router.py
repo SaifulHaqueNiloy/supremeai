@@ -560,7 +560,12 @@ class LLMRouter:
 
         # Cost-sensitive: sort by cost - ZERO-108: Zero Cost Policy
         if cost_sensitive:
-            chain.sort(key=lambda p: PROVIDER_COSTS[p][0] + PROVIDER_COSTS[p][1])
+            # বাংলা মন্তব্য: explicit preferred provider থাকলে সেটা প্রথম position-এ pin থাকবে,
+            # শুধু বাকিদের cost অনুযায়ী সর্ট হবে
+            head = [preferred] if preferred and preferred in chain else []
+            rest = [p for p in chain if p not in head]
+            rest.sort(key=lambda p: PROVIDER_COSTS[p][0] + PROVIDER_COSTS[p][1])
+            chain = head + rest
 
         # বাংলা মন্তব্য: free-tier ট্র্যাকার দিয়ে real RPM/TPM/RPD budget চেক করে
         # exhausted প্রোভাইডার চেইন থেকে বাদ দেওয়া হচ্ছে
@@ -689,14 +694,21 @@ class LLMRouter:
                     if not self.rules.check_hallucination_policy(result):
                         logger.warning("Potential hallucination detected in response")
 
-                # Non-stream branch-এ result সবসময় str হবে — mypy-কে type narrow করা হচ্ছে
-                assert isinstance(result, str), "Non-stream acompletion must return str"
+                # Non-stream branch-এ result সবসময় str হবে — explicit exception check
+                if not isinstance(result, str):
+                    raise LLMProviderError(message=f"{provider_name.value} returned non-str for non-stream request")
 
                 latency = (time.perf_counter() - start_time) * 1000
                 tokens = estimated_input + self._estimate_tokens(result)
                 cost = (tokens / 1000) * (PROVIDER_COSTS[provider_name][0] * 0.3 + PROVIDER_COSTS[provider_name][1] * 0.7)
 
                 self.budget.consume(tokens)
+
+                # বাংলা মন্তব্য: Free-tier tracker-কে actual usage ফিডব্যাক দেওয়া —
+                # এটা ছাড়া predictive quota governor কখনোই কাজ করবে না।
+                tracked_key = _FREE_TIER_TRACKED.get(provider_name)
+                if tracked_key:
+                    get_tracker().record(tracked_key, token_count=tokens)
 
                 route_result = RouteResult(
                     provider=provider_name,
@@ -725,12 +737,25 @@ class LLMRouter:
 
             except Exception as exc:
                 last_error = exc
+                is_rate_limited = isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
                 logger.warning(
                     "provider_failed",
                     provider=provider_name.value,
                     error=str(exc),
+                    rate_limited=is_rate_limited,
                     will_fallback=(provider_name != chain[-1]),
                 )
+                # বাংলা মন্তব্য: 429 পেলে tracker-কে জানানো হচ্ছে যাতে পরবর্তী রিকোয়েস্টে
+                # এই provider skip হয় (Predictive Governor সচল রাখতে)
+                tracked_key = _FREE_TIER_TRACKED.get(provider_name)
+                if tracked_key and is_rate_limited:
+                    retry_after = 60.0
+                    if isinstance(exc, httpx.HTTPStatusError):
+                        try:
+                            retry_after = float(exc.response.headers.get("retry-after", 60.0))
+                        except (ValueError, TypeError):
+                            retry_after = 60.0
+                    get_tracker().mark_rate_limited(tracked_key, pause_seconds=retry_after)
                 continue
 
         # All providers failed - SELF-113: Self-Healing

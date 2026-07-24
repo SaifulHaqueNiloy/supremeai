@@ -193,7 +193,17 @@ class AutoHealerService:
 
         if current_depth > 3:
             logger.critical(f"AutoHealer MAX MUTATION DEPTH EXCEEDED for {fingerprint[:12]}. Triggering Automated Git Revert & HITL Alert!")
-            # Trigger HITL Event & Swarm PubSub Emergency Broadcast
+
+            # বাংলা মন্তব্য: আগে এখানে শুধু broadcast হতো, প্রকৃত git revert কখনো ট্রিগার হতো না —
+            # এখন rollback_monitor-এর প্রকৃত revert মেথড কল করা হচ্ছে (Patch 21 fix)
+            revert_success = False
+            try:
+                from core.resilience.rollback_monitor import RollbackMonitor
+
+                revert_success = await RollbackMonitor().execute_automatic_rollback(fingerprint=fingerprint, reason=f"mutation_depth_exceeded: {exc}")
+            except Exception as revert_err:  # noqa: BLE001
+                logger.error(f"AutoHealer: Git revert execution failed: {revert_err}")
+
             try:
                 from core.swarm_pubsub import get_swarm_streamer
 
@@ -202,12 +212,15 @@ class AutoHealerService:
                     {
                         "fingerprint": fingerprint,
                         "error": str(exc),
-                        "action": "git_revert_triggered",
+                        "action": "git_revert_triggered" if revert_success else "git_revert_FAILED",
                         "depth": current_depth,
                     },
                 )
             except Exception as b_err:
                 logger.warning(f"AutoHealer: PubSub broadcast skipped ({b_err})")
+
+            if not revert_success:
+                logger.critical(f"🚨 AutoHealer: Git revert FAILED for {fingerprint[:12]} — codebase may still be in broken state!")
             return False
 
         # Simulate hotfix attempt
