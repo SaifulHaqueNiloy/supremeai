@@ -231,6 +231,9 @@ def main():
     print(f"[REPORT] Threshold: {threshold_minutes:.0f} min ({THRESHOLD_PERCENT}%)")
     print(f"[REPORT] GitHub build mode: {'ACTIVE' if use_github_build else 'inactive'}")
 
+    if pct_used > 80.0:
+        print("🚨 [WARNING] Render Free Tier Build Quota approaching depletion (>80% used)!")
+
     # Save cache
     combined_log.sort(key=lambda x: x["started_at"], reverse=True)
     cache_data = {
