@@ -323,7 +323,7 @@ jobs:
         working-directory: backend
         run: |
           mkdir -p ../docs/autogen
-          poetry run erdantic api.routes.task -o ../docs/autogen/db_schema.png
+          poetry run python -m erdantic models -o ../docs/autogen/db_schema.png
           echo "✅ Database schema diagram generated at docs/autogen/db_schema.png" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Schema Diagram Artifact
@@ -386,6 +386,10 @@ jobs:
         env:
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           SUPREMEAI_API_URL: http://127.0.0.1:8000
+          SUPABASE_URL: "https://mock-health-check.supabase.co"
+          SUPABASE_KEY: "mock_key"
+          DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret"
         run: poetry run uvicorn main:app --port 8000 &
       - name: Get Playwright Version
         id: playwright-version
@@ -415,6 +419,10 @@ jobs:
         env:
           CI: true
           SUPREMEAI_API_URL: http://127.0.0.1:8000
+          SUPABASE_URL: "https://mock-health-check.supabase.co"
+          SUPABASE_KEY: "mock_key"
+          DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret"
       - name: Upload Test Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -563,6 +571,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Generate API Health Report
         working-directory: backend
+        env:
+          SUPABASE_URL: "https://mock-health-check.supabase.co"
+          SUPABASE_KEY: "mock_key"
+          DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret"
+          CI: "true"
         run: poetry run python ../scripts/generate_api_health_report.py >> $GITHUB_STEP_SUMMARY
 
   cost-guard-defcon:

@@ -99,7 +99,8 @@ def test_resume_clears_flag_and_broadcasts(mock_decode_jwt, mock_token):
     app.dependency_overrides = {}
 
 
-def test_telemetry_persists_to_db_not_just_logs():
+@pytest.mark.asyncio
+async def test_telemetry_persists_to_db_not_just_logs():
     """বাংলা: আগে _save_telemetry_to_db() শুধু logger.info() করত। এখন সত্যিই
     session.add()+commit() হয় কিনা যাচাই করা হচ্ছে।
     """
@@ -111,22 +112,19 @@ def test_telemetry_persists_to_db_not_just_logs():
         yield fake_session
 
     with patch("api.routes.swarm.get_db_session", fake_get_db_session):
-        import asyncio
-
-        asyncio.get_event_loop().run_until_complete(
-            _save_telemetry_to_db(
-                {
-                    "error_id": "err-1",
-                    "patch_id": "patch-1",
-                    "file_path": "foo.py",
-                    "status": "ACCEPTED",
-                    "similarity_score": 0.9,
-                }
-            )
+        await _save_telemetry_to_db(
+            {
+                "error_id": "err-1",
+                "patch_id": "patch-1",
+                "file_path": "foo.py",
+                "status": "ACCEPTED",
+                "similarity_score": 0.9,
+            }
         )
 
     fake_session.add.assert_called_once()
     fake_session.commit.assert_called_once()
+
 
 
 if __name__ == "__main__":
