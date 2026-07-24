@@ -18,7 +18,7 @@ Dependencies:
 - `httpx`: For making asynchronous HTTP requests to the external email API.
 - `loguru`: For structured logging of email sending operations, warnings, and errors.
 - `core.messaging.event_bus`: For emitting `ErrorEvent`s when email sending encounters API or network failures.
-- `core.config`: For accessing application-wide settings such as the Resend API URL and the SupremeAI frontend URL."""
+- `core.config`: For accessing application-wide settings such as the Resend API URL and the SupremeAI frontend URL."""  # noqa: E501
 
 import os  # noqa: E402
 

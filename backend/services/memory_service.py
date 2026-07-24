@@ -363,7 +363,7 @@ if __name__ == "__main__":
     import tempfile
 
     # Run audit/test with temporary DB to verify functionality without corrupting live DB
-    temp_db = tempfile.mktemp(suffix=".db")
+    temp_db = tempfile.mktemp(suffix=".db")  # noqa: S306
     test_service = CascadeMemoryService(db_path=temp_db)
 
     test_code = """

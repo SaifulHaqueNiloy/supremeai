@@ -130,7 +130,7 @@ class ModelTrainer:
             return {
                 "status": "not_implemented",
                 "job_id": job_id,
-                "message": "Local training is simulated only — no real checkpoint was produced. Configure RUNPOD_API_KEY or MODAL credentials for real training.",
+                "message": "Local training is simulated only — no real checkpoint was produced. Configure RUNPOD_API_KEY or MODAL credentials for real training.",  # noqa: E501
             }
 
         return {"status": "unknown", "job_id": job_id, "message": "Unable to verify job status for this provider"}

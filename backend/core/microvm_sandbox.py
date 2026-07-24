@@ -325,7 +325,7 @@ class MicroVMSandbox:
         """
         # বাংলা মন্তব্য: _ALLOWED_DOCKER_IMAGES whitelist enforce
         docker_image = _DEFAULT_DOCKER_IMAGE
-        assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101
+        assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101  # noqa: S101
 
         tmp_path: Path | None = None
         try:

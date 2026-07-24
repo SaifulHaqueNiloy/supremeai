@@ -182,14 +182,24 @@ class ProductionSecretVault:
                             context={"secret_id": secret_id},
                         )
                     )
-                except Exception:
-                    pass
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug(f"Failed to emit error event: {exc}")
                 if default is None:
                     raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
                 env_fallback = default
             else:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
-                env_fallback = default if default is not None else f"mock_{secret_id}"
+                if default is not None:
+                    env_fallback = default
+                elif secret_id == "SUPREMEAI_JWT_SECRET":  # noqa: S105
+                    # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
+                    env_fallback = "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+                elif secret_id == "SUPABASE_URL":  # noqa: S105
+                    env_fallback = "https://mock.supabase.co"
+                elif secret_id == "SUPABASE_KEY":  # noqa: S105
+                    env_fallback = "mock-key"
+                else:
+                    env_fallback = f"mock_{secret_id}"
         self._cache[secret_id] = _CacheEntry(env_fallback)
         return env_fallback
 

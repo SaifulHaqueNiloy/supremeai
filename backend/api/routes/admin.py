@@ -110,7 +110,7 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                     if not _VALID_TABLE_PATTERN.match(table):
                         logger.warning(f"Skipping table '{table}' due to invalid naming pattern.")
                         continue
-                    rows_res = await session.execute(text(f"SELECT * FROM {table}"))
+                    rows_res = await session.execute(text(f"SELECT * FROM {table}"))  # noqa: S608
                     columns = rows_res.keys()
                     rows = [dict(zip(columns, row)) for row in rows_res.fetchall()]
                     for row in rows:

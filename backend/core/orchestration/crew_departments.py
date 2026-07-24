@@ -214,10 +214,10 @@ class GuardianAgent(SwarmAgentBase):
 
         # Define specialized sub-agents and their prompts
         sub_agents = {
-            "SecuritySentinel": "You are a Security Sentinel. Analyze the code for security vulnerabilities like injections, auth bypass, and secret leaks. Report only findings or 'SECURITY_OK'.",
-            "CodeQualityArchitect": "You are a Code Quality Architect. Analyze the code for clean code violations, architectural inconsistencies, and performance issues. Report only findings or 'QUALITY_OK'.",
-            "ComplianceAuditor": "You are a Compliance Auditor. Analyze the code for PII exposure or violations of GDPR/CCPA rules. Report only findings or 'COMPLIANCE_OK'.",
-            "DocumentationChecker": "You are a Documentation Checker. Analyze the code for missing or inadequate docstrings and comments for all functions and classes. Report only findings or 'DOCS_OK'.",
+            "SecuritySentinel": "You are a Security Sentinel. Analyze the code for security vulnerabilities like injections, auth bypass, and secret leaks. Report only findings or 'SECURITY_OK'.",  # noqa: E501
+            "CodeQualityArchitect": "You are a Code Quality Architect. Analyze the code for clean code violations, architectural inconsistencies, and performance issues. Report only findings or 'QUALITY_OK'.",  # noqa: E501
+            "ComplianceAuditor": "You are a Compliance Auditor. Analyze the code for PII exposure or violations of GDPR/CCPA rules. Report only findings or 'COMPLIANCE_OK'.",  # noqa: E501
+            "DocumentationChecker": "You are a Documentation Checker. Analyze the code for missing or inadequate docstrings and comments for all functions and classes. Report only findings or 'DOCS_OK'.",  # noqa: E501
         }
 
         user_prompt_template = f"Analyze this code and report any violations based on your specialty:\n```python\n{code_to_analyze}\n```"
