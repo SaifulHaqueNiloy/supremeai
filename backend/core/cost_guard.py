@@ -12,7 +12,7 @@ Dependencies:
 - `typing`: Used for type hints, specifically `Any`.
 - `fastapi`: Utilized for raising `HTTPException` to signal budget-related failures to the API client.
 - `loguru`: Employed for structured logging of budget checks, warnings, and errors.
-- `asyncio`: Used internally within `check_budget` to adapt to both synchronous and asynchronous database client methods."""
+- `asyncio`: Used internally within `check_budget` to adapt to both synchronous and asynchronous database client methods."""  # noqa: E501
 
 from typing import Any  # noqa: E402
 

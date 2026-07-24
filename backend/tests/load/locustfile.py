@@ -43,7 +43,7 @@ class SupremeAILoadTestUser(HttpUser):
     def execute_and_stream_task(self):
         """৮০/১৫/৫ রাউটার, প্লে-রাইট স্যান্ডবক্স এবং এসএসই লং-পোলিং-এর আসল কম্বাইন্ড স্ট্রেস টেস্ট"""
         task_id = f"load-test-task-{uuid.uuid4().hex[:8]}"
-        random_keyword = random.choice(TEST_KEYWORDS)
+        random_keyword = random.choice(TEST_KEYWORDS)  # noqa: S311
 
         # ১. POST /api/task (Playwright Blueprint/Sandbox Trigger)
         payload = {

@@ -256,7 +256,7 @@ class AutonoGuardEngine:
                         fix=fix,
                         metadata={"verified": True, "type": "retry", "module": context.path},
                     )
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: BLE001, S110
                     pass
                 return True
 
@@ -270,7 +270,7 @@ class AutonoGuardEngine:
                     fix=fix,
                     metadata={"verified": True, "type": "optimistic", "module": context.path},
                 )
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: BLE001, S110
                 pass
             return True
 

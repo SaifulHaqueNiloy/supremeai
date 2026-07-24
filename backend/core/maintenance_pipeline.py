@@ -12,7 +12,7 @@ Dependencies:
 - `time`: For timestamping health checks and implementing cooldown periods for remediation.
 - `core.messaging.event_bus`: For registering listeners to and emitting system-wide `ErrorEvent`s.
 - `core.health.health_probes`: Provides specific functions to probe the health of internal and external services (e.g., database, Redis, external APIs).
-- `core.cache.redis_manager`: Utilized within remediation logic to interact with Redis, such as updating configuration or re-initializing connections."""
+- `core.cache.redis_manager`: Utilized within remediation logic to interact with Redis, such as updating configuration or re-initializing connections."""  # noqa: E501
 
 import asyncio  # noqa: E402
 import logging  # noqa: E402
@@ -50,7 +50,7 @@ class MaintenancePipeline:
         logger.info(f"🛡️ Immune System: Background monitoring started (interval={self._monitor_interval}s).")
         while True:
             # Add random jitter (±10%) to prevent thundering herd
-            jitter = random.uniform(0.9, 1.1)
+            jitter = random.uniform(0.9, 1.1)  # noqa: S311
             actual_interval = int(self._monitor_interval * jitter)
             await asyncio.sleep(actual_interval)
             await self.run_health_check()

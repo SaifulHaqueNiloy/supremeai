@@ -43,7 +43,7 @@ Dependencies:
 - `jose.jwt`: For encoding JSON Web Tokens (JWTs).
 - `google.cloud.firestore`: For Firestore field deletion.
 - `core.llm.free_tier_tracker`: For managing and monitoring LLM free-tier usage.
-- `core.llm.token_budget`: For managing and monitoring LLM token budgets."""
+- `core.llm.token_budget`: For managing and monitoring LLM token budgets."""  # noqa: E501
 
 import base64
 import hashlib
@@ -252,7 +252,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         from core.cache.redis_manager import redis_manager
 
         _redis = redis_manager.client
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001, S110
         pass
 
     if _redis:
@@ -281,7 +281,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     if _redis:
         try:
             await _redis.delete(attempt_key)
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001, S110
             pass
 
     if temp_totp_secret and not totp_secret and db:

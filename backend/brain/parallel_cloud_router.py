@@ -182,7 +182,7 @@ class ParallelCloudRouter:
             weights[name] = max(final_weight, 0.1)
             total_weight += weights[name]
 
-        pick = random.uniform(0.0, total_weight)
+        pick = random.uniform(0.0, total_weight)  # noqa: S311
         current = 0.0
 
         for name, weight in weights.items():

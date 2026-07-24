@@ -15,7 +15,7 @@ Dependencies:
 - `json`: For parsing JSON output from Docker commands.
 - `subprocess`: For executing external Docker commands like `docker stats` and `docker kill`.
 - `loguru`: For structured and colored logging throughout the auditing process.
-- `core.messaging.event_bus`: For emitting standardized error and warning events to the system's central event bus."""
+- `core.messaging.event_bus`: For emitting standardized error and warning events to the system's central event bus."""  # noqa: E501
 
 import asyncio  # noqa: E402
 import json  # noqa: E402

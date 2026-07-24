@@ -22,7 +22,7 @@ Dependencies:
 - `re`: Utilized for regular expression operations to extract Python code blocks and URLs from text.
 - `urllib.parse`: For parsing and validating URL structures.
 - `importlib.util`: Employed to dynamically check for the existence of Python modules.
-- `builtins`: Accessed to identify and filter out Python's built-in names during variable definition checks."""
+- `builtins`: Accessed to identify and filter out Python's built-in names during variable definition checks."""  # noqa: E501
 
 import ast
 import os

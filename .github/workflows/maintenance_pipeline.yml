@@ -227,6 +227,7 @@ jobs:
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
+          pip install setuptools==68.0.0 wheel
           poetry export --with dev --without ml,tools --format requirements.txt --output requirements.txt
           pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
           poetry install --no-root
@@ -321,6 +322,9 @@ jobs:
 
       - name: 📊 Generate ERD from Pydantic Models
         working-directory: backend
+        # বাংলা মন্তব্য: PYTHONPATH=. সেট করা হলো যাতে erdantic সহজেই backend/models ইমপোর্ট করতে পারে
+        env:
+          PYTHONPATH: .
         run: |
           mkdir -p ../docs/autogen
           poetry run python -m erdantic models -o ../docs/autogen/db_schema.png
@@ -573,7 +577,9 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Generate API Health Report
         working-directory: backend
+        # বাংলা মন্তব্য: PYTHONPATH=. সেট করা হলো যাতে backend/core এবং অন্যান্য মডিউল সরাসরি ইমপোর্ট করা যায়
         env:
+          PYTHONPATH: .
           SUPABASE_URL: "https://mock-health-check.supabase.co"
           SUPABASE_KEY: "mock_key"
           DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
