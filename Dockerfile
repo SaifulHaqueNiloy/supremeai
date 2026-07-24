@@ -10,10 +10,8 @@ WORKDIR /app
 RUN pip install --no-cache-dir poetry
 RUN poetry config virtualenvs.in-project true
 
-# ক্যাশ লেয়ার: শুধু ডিপেন্ডেন্সি ইন্সটল
+# Cache layer: install only main dependencies (tools group excluded to save space on Render free tier)
 COPY backend/pyproject.toml backend/poetry.lock* ./
-# বাংলা মন্তব্য: Render free tier-এ 'tools' group (playwright, pandas, matplotlib ~500MB) বাদ দেওয়া হয়েছে।
-# শুধু 'main' group install করা হবে — এতে build দ্রুত হবে এবং memory limit exceed হবে না।
 RUN poetry install --no-interaction --no-ansi --no-root --only main
 
 
@@ -26,27 +24,26 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 # Create non-root user appuser
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
-# শুধুমাত্র ভার্চুয়াল এনভায়রনমেন্ট কপি করো (পুরো সোর্স কোড নয়)
+# Copy only virtual environment (not full source code)
 COPY --from=builder /app/.venv /app/.venv
 COPY backend/ .
-# বাংলা মন্তব্য: রুট-লেভেল 'skills' ডিরেক্টরি কপি করা হচ্ছে যাতে
-# core/evolution/auto_skill_creator.py সঠিকভাবে 'skills.installer' ইম্পোর্ট করতে পারে।
+# Copy root-level 'skills' directory for core/evolution/auto_skill_creator.py imports
 COPY skills/ ./skills/
-# বাংলা মন্তব্য: রুট-লেভেলের ask_scribe.py কপি করা হলো যাতে api/routes/knowledge.py সফলভাবে এটি ইম্পোর্ট করতে পারে।
+# Copy ask_scribe.py for api/routes/knowledge.py imports
 COPY ask_scribe.py ./
 
 RUN chown -R appuser:appuser /app
 USER appuser
 
 ENV PATH="/app/.venv/bin:$PATH"
-# বাংলা: EXPOSE port, CMD-এর ${PORT:-8080} default-এর সাথে consistent
+# EXPOSE port consistent with CMD's ${PORT:-8080} default
 EXPOSE 8080
 
-# CRITICAL FIX (Cloud Run Port Binding):
-# Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).
-# The shell form allows Cloud Run to dynamically inject the $PORT environment variable.
-# বাংলা মন্তব্য: আগে এখানে deprecated GUNICORN_WORKERS (ডিফল্ট 4) পড়া হতো — main.py-তে
-# UVICORN_WORKERS=1 ডিফল্ট করে OOM ফিক্স করার চেষ্টা হলেও, প্রোডাকশনে আসল entrypoint এই
-# Dockerfile CMD-ই (main.py-র প্রোগ্রাম্যাটিক uvicorn.run() নয়), তাই সেই ফিক্স কখনো কার্যকর
-# হয়নি — Render free tier-এর 512MB RAM-এ 4টা worker লোড হয়ে OOM crash ঘটাতে পারত।
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${UVICORN_WORKERS:-1}"]
+# Container health check — ensures Render/Cloud Run detects healthy state
+# start-period 40s allows time for Python env to load on first boot
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
+
+# Use main.py entrypoint for role-based boot, signal handling, and UVICORN_WORKERS support
+# Note: Previously GUNICORN_WORKERS=4 default caused OOM on Render free tier (512MB RAM)
+CMD ["sh", "-c", "python main.py"]

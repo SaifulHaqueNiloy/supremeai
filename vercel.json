@@ -8,10 +8,44 @@
     "VITE_PORTAL_TYPE": "user"
   },
   "rewrites": [
-    { "source": "/api/config/public", "destination": "https://supremeai-backend.onrender.com/api/config/public" },
-    { "source": "/api/task/stream", "destination": "https://supremeai-backend.onrender.com/api/task/stream" },
-    { "source": "/api/preferences/:userId/stream", "destination": "https://supremeai-backend.onrender.com/api/preferences/:userId/stream" },
-    { "source": "/api/:path*", "destination": "https://supremeai-backend.onrender.com/api/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/config/public",
+      "destination": "https://supremeai-backend.onrender.com/api/config/public"
+    },
+    {
+      "source": "/api/task/stream",
+      "destination": "https://supremeai-backend.onrender.com/api/task/stream"
+    },
+    {
+      "source": "/api/preferences/:userId/stream",
+      "destination": "https://supremeai-backend.onrender.com/api/preferences/:userId/stream"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://supremeai-backend.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://supremeai-studio-client.onrender.com"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Authorization, Content-Type, X-Request-ID, X-API-Key"
+        }
+      ]
+    }
   ]
 }

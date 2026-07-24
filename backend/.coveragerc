@@ -26,18 +26,14 @@ exclude_lines =
     @abstractmethod
     @abstractproperty
 
-# Only exclude truly untestable modules (CLI entry points, generated code)
+# Only exclude truly untestable modules (CLI entry points, generated code, JSON/db files)
 omit =
     core/constants.py
     core/events.py
-    core/lifespan.py
     core/telemetry.py
-    core/startup_validator.py
     core/container_auditor.py
     core/log_batcher.py
-    core/failure_fingerprint.py
     core/retry_budget.py
-    core/request_context.py
     core/enum_guard.py
     core/cost_guard.py
     core/universal_rules.py
@@ -53,6 +49,7 @@ omit =
     core/ld_client.py
     core/playwright_manager.py
     core/startup_validator.py
+    core/agent_supervisor.py
 
 [html]
 directory = htmlcov

@@ -1,7 +1,13 @@
-name = "supremeai-load-balace"
+name = "supremeai-load-balance"
 main = "src/index.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-01-01"
 
 [triggers]
-# প্রতি ১৪ মিনিটে পিং করার শিডিউল
-crons = ["*/14 * * * *"]
+# প্রতি ১০ মিনিটে একাধিক সার্ভিস পিং করার শিডিউল
+crons = ["*/10 * * * *"]
+
+[vars]
+PRIMARY_URL = "https://supremeai-backend.onrender.com"
+ADMIN_URL = "https://supremeai-admin.onrender.com"
+BACKUP_URL = "https://supremeai-studio-client.onrender.com"
+BACKUP_HEALTH = "https://supremeai-studio-client-qb34.onrender.com/api/v1/health"
