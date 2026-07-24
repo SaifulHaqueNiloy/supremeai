@@ -1,309 +1,759 @@
-# SupremeAI 2.0 — Master Production Readiness Audit Plan
+# SupremeAI 2.0 — Complete Codebase Audit & Production Readiness Plan
 
-> **Generated:** 2025-04-08  
-> **Auditor:** Principal Autonomous AI Architect  
-> **Status:** ✅ All 10 Phases Audited & Documented
-
----
-
-## Executive Summary
-
-SupremeAI 2.0 is a **universal self-learning AI agent monorepo** with a FastAPI backend, multi-provider LLM orchestration, Redis caching, PostgreSQL/Supabase persistence, and multi-platform deployment (Render, Vercel, Firebase, Cloudflare Workers). The codebase demonstrates **exceptional architectural maturity** with 150+ test files, comprehensive security middleware, self-healing infrastructure, and multi-layer caching.
-
-**Overall Production Readiness Score: 78/100** (Strong — needs targeted fixes before GA)
-
-### Strengths
-- ✅ **Zero-cost compliance**: All dependencies are open-source/free-tier
-- ✅ **Self-healing architecture**: ErrorEventBus, ReliabilityController, AutoHealerService, MaintenancePipeline
-- ✅ **Multi-layer security**: JIT OTP, JWT revocation, API key rotation, honeypot, rate limiting, CORS enforcement
-- ✅ **Comprehensive testing**: 150+ test files, Playwright E2E, k6 load testing
-- ✅ **Multi-platform deployment**: Render, Vercel, Firebase, Cloudflare, Docker
-- ✅ **Observability**: Prometheus metrics, Sentry alerting, Loguru structured logging, OpenTelemetry
-
-### Critical Gaps (Must Fix Before Production)
-- ❌ **Coverage too low**: `fail_under=45` — target 80%+
-- ❌ **Circuit breaker not integrated**: `pybreaker` in dependencies but unused
-- ❌ **slowapi dependency**: Fragile try/except fallback — replace with native Redis rate limiter
-- ❌ **Alembic downgrade gap**: `ed9761fee64f` revision has no downgrade
-- ❌ **No WebSocket tests**: SSE-starlette endpoints untested
-- ❌ **No SLA/SLO documentation**: No formal uptime/latency targets
+> **Role:** Principal Autonomous AI Architect
+> **Target:** Full codebase audit → Production-ready delta patches
+> **Core DNA:** Zero Cost, High Scalability, Zero Breakage, Human-in-the-Loop, Malware Immunity, Self-Healing, Failure-Aware
 
 ---
 
-## Phase-by-Phase Audit Summary
+## 🎯 PHASE 0: PRIORITIZED EXECUTION PLAN (Architecture Overview)
 
-### Phase 1: Core Architecture & Startup Lifecycle ✅ COMPLETED
-**Files Modified:** 6  
-**Key Fixes:**
-- Lazy imports in `core/__init__.py` — prevents circular imports at module level
-- Lazy singleton `secret_vault` with `reset_secret_vault()` for test isolation
-- `restore_from_persistence()` in lifespan — reloads failure fingerprints from Redis
-- `StartupValidator` with 6-category checks (app_name, JWT, encryption, LLM keys, DB URL, Redis URL, CORS)
-- `startup_duration_ms` in `/health` endpoint for monitoring
-- Explicit `register_self_healer_listener()` — no more import-time side effects
+### Current Architecture Snapshot
+```
+Backend (FastAPI/Python 3.11)  ├── 40+ API Routers (core + optional)
+                                ├── 12 Middleware Layers (security, auth, observability)
+                                ├── 5+ Background Agents (Sentinel, Swarm, Self-Healer, Evolution, DailyLearner)
+                                ├── Multi-Layer Cache (Redis → In-Memory → ConfigVault)
+                                ├── AutonoGuard Engine (JIT OTP + AST Scan + IP Churn Detection)
+                                ├── Reliability Controller (Failure Fingerprinting + Self-Healing)
+                                ├── Secret Vault (Infisical + env fallback)
+                                ├── Role-Based Apps (User/Admin separation)
+                                └── 7+ Infrastructure Providers (Render, Vercel, Firebase, Cloudflare, GCP)
 
-**Remaining Gaps:** None
-
----
-
-### Phase 2: Security & Authentication Layer ✅ COMPLETED
-**Files Modified:** 7  
-**Key Fixes:**
-- JWT `jti` claim generation + Redis-backed `revoke_token()` + `is_token_revoked()`
-- `verify_api_key_with_expiry()` with expiration timestamp validation
-- Admin email validation + role embedding in JWT claims
-- Atomic Redis pipeline sliding-window tenant rate limiter
-- Production fail-fast CORS check (wildcard `*` blocked)
-- Env-driven anti-hacking TTLs (`SECURITY_CONTEXT_TTL`, `OTP_COOLDOWN_SECONDS`)
-- JIT OTP verification for sensitive ops (payments, tenant-admin, evolution)
-- Structured audit logger with 30-day Redis retention
-
-**Remaining Gaps:** None
-
----
-
-### Phase 3: LLM Gateway & AI Orchestration ✅ COMPLETED
-**Files Audited:** 8  
-**Key Findings:**
-- LLM Gateway: Lazy singleton, secure per-call API key passing, semantic cache, circuit breakers per model
-- Model Router: Provider priority chain (Gemini→Groq→Cloudflare→OpenRouter→Nvidia→HF→Ollama)
-- Swarm Orchestrator: Multi-agent DAG execution, MCP tool discovery, zero-shot synthesis (Morphic Engine)
-- CostGuard: Tier-based limits (free/economy/premium), Redis-backed spend tracking
-
-**🔨 Fixes Queued:**
-1. Replace global litellm state mutation with per-call callbacks
-2. Remove fragile `sys.path` manipulation from orchestrator
-3. Make `TASK_MODEL_MAP` configurable via settings
-4. Add provider quota reset callback
-5. Add prompt injection guard in LLM gateway
-
----
-
-### Phase 4: Database & Persistence Layer ✅ COMPLETED
-**Files Audited:** 6  
-**Key Findings:**
-- Role-based pool sizing (Admin max 3, User max 15), `pool_pre_ping=True`
-- 4 Alembic revisions audited — 1 has downgrade gap
-- No write-behind cache — all DB writes are direct
-- Firestore admin SDK used in CostGuard, SelfHealer — lazy init may fail silently
-- 30+ Supabase tables with pgvector extension
-
-**🔨 Fixes Queued:**
-1. Make Alembic `env.py` async-compatible with `create_async_engine`
-2. Add DB connection health check before running migrations
-3. Add async upload/get_url methods to `StorageClient`
-4. Add migration version tracking to bootstrap
-5. Implement proper downgrade for `ed9761fee64f` revision
-
----
-
-### Phase 5: Caching & Performance Optimization ✅ COMPLETED
-**Files Audited:** 5  
-**Key Findings:**
-- Redis Manager: Connection pool (max 20), lazy init, idempotency locks with Lua scripts
-- 5-layer cache architecture (L1 Exact→L2 Semantic→L3 Prefix→L4 Session→L5 AI)
-- Event-sourced invalidation with swarm invalidator
-- TTLCache (max 2000, TTL 600s) for session cache
-- AutocacheProxy with semantic caching + request deduplication
-
-**🔨 Fixes Queued:**
-1. Move `_cache_invalidation_listener` registration to explicit function
-2. Add circuit breaker to Redis Manager with exponential backoff retry
-3. Add error event emission to SemanticCache on query failure
-4. Make SessionCache TTL configurable via settings
-
----
-
-### Phase 6: API Routes & Middleware Chain ✅ COMPLETED
-**Files Audited:** 15  
-**Key Findings:**
-- 50+ routers registered via `core_routers` (24) + `optional_routers` (24)
-- Middleware chain (11 layers) verified correct order
-- Dual CORS: User API + Admin API with production wildcard block
-- Triple rate limiting: APIKeyAuthMiddleware + tenant_rate_limiter + slowapi
-- Error handlers emit to ErrorEventBus
-
-**🔨 Fixes Queued:**
-1. Register `api/errors.py` `api_error_handler` as global exception handler
-2. Remove `TrustedOriginMiddleware` shadow variable `host`
-3. Replace `slowapi` with native Redis sliding-window rate limiter
-4. Add global response model validation middleware
-5. Fix `IdempotencyMiddleware` body consumption pattern
-6. Add missing `TenantExtractionMiddleware` and `RequestIdMiddleware`
-
----
-
-### Phase 7: Self-Healing & Error Recovery ✅ COMPLETED
-**Files Audited:** 5  
-**Key Findings:**
-- ErrorEventBus: Singleton, sync+async emit, bounded DLQ (maxsize=1000), CancelledError re-raise
-- SelfHealerService: Timeout handling, safety filter, Firestore persistence, HITL events
-- RemediationPipeline: Sandbox testing, auto-apply threshold (impact_score ≤ 0.4)
-- ReliabilityController: Failure fingerprint tracking, Redis persistence (TTL=3600s)
-- AutoHealerService: 30s background loop, DB+Redis auto-reconnect, 120s cooldown
-- MaintenancePipeline: 60s health check, provider switching, emergency evolution tick
-
-**🔨 Fixes Queued:**
-1. Integrate `pybreaker` circuit breaker into Redis Manager
-2. Add circuit breaker to LLM Gateway provider calls
-3. Complete `SelfHealerService._self_healer_error_listener` with actual fix proposal logic
-4. Add DLQ monitoring endpoint exposing `error_event_bus.stats()`
-5. Add Sentinel Agent integration circuit breaker
-
----
-
-### Phase 8: Deployment & CI/CD Pipeline ✅ COMPLETED
-**Files Modified:** 5  
-**Key Fixes:**
-- Dockerfile: Multi-stage build, `EXPOSE 8080` aligned with `$PORT` binding
-- Render Config: Service definitions isolated (User vs Admin), 0 build minutes strategy
-- Vercel Config: Verified for Vite user portal deployment
-- Firebase Config: Secret fallback + `continue-on-error` step
-- Cloudflare Worker: Edge rate-limiting and route bindings verified
-- CI/CD: `supreme-core-ci.yml` fixed with production-readiness `exit 1`
-- Environment Variables: 84+ keys documented and synchronized across 11 platforms
-
-**Remaining Gaps:** None
-
----
-
-### Phase 9: Testing & Quality Assurance ✅ COMPLETED
-**Files Audited:** 150+ test files  
-**Key Findings:**
-- pytest configured with SQLite in-memory DB, comprehensive mocking
-- conftest.py: Mocked slowapi, pinecone, chromadb, nats, docker, google auth, firestore
-- Session-scoped `setup_test_database` fixture with JSONB→SQLite compiler
-- Playwright E2E config at root level
-- k6 load testing in CI/CD pipeline
-- Ruff linting with bandit security rules
-- MyPy strict mode for type checking
-
-**🔨 Critical Gaps:**
-1. Coverage `fail_under=45` — target 80%+
-2. Flaky tests: `test_auto_fix_trigger.py`, `test_auto_remediation.py`, `test_chaos_engine.py`
-3. No performance benchmarks for LLM gateway latency
-4. `pytest-xdist` may cause isolation issues with shared SQLite DB
-5. No WebSocket/SSE endpoint tests
-6. `test_maintenance_pipeline.py` timing issues due to `asyncio.sleep(60)`
-
----
-
-### Phase 10: Documentation & Monitoring ✅ COMPLETED
-**Files Audited:** 20+ docs  
-**Key Findings:**
-- OpenAPI/Swagger spec at `backend/API-swagger.yaml`
-- Comprehensive docs in `docs/` directory (10+ subdirectories)
-- Multiple deployment guides (Render, Vercel, Firebase, Netlify, Cloudflare)
-- Prometheus metrics at `/metrics` endpoint
-- Loguru structured logging with rotation, retention, compression
-- Sentry SDK integrated for error alerting
-- `/health` endpoint returns comprehensive status
-
-**🔨 Critical Gaps:**
-1. No formal SLA/SLO documentation
-2. Sentry DSN may be empty in some deployments
-3. No synthetic monitoring integration
-4. `API-swagger.yaml` may drift from auto-generated schema
-5. No runbook/playbook for common failure scenarios
-
----
-
-## Consolidated Fix Queue (Priority Order)
-
-### 🔴 P0 — Critical (Must Fix Before Production)
-| # | Fix | Phase | File(s) | Impact |
-|---|-----|-------|---------|--------|
-| 1 | Increase coverage `fail_under` to 80% | 9 | `pyproject.toml` | Prevents regression |
-| 2 | Integrate `pybreaker` circuit breaker into Redis Manager | 5, 7 | `redis_manager.py` | Prevents cascade failure |
-| 3 | Replace `slowapi` with native Redis rate limiter | 6 | `app_builder.py` | Zero-cost compliance |
-| 4 | Fix Alembic downgrade gap | 4 | `ed9761fee64f_create_system_config.py` | DB migration safety |
-| 5 | Add WebSocket/SSE integration tests | 9 | `tests/` | Coverage gap |
-
-### 🟡 P1 — High Priority
-| # | Fix | Phase | File(s) | Impact |
-|---|-----|-------|---------|--------|
-| 6 | Register `api_error_handler` as global exception handler | 6 | `app_builder.py` | Consistent error responses |
-| 7 | Remove `TrustedOriginMiddleware` shadow variable | 6 | `origin_validator.py` | Bug fix |
-| 8 | Add circuit breaker to LLM Gateway provider calls | 3, 7 | `llm_gateway.py` | Provider failover safety |
-| 9 | Complete `_self_healer_error_listener` with fix proposal logic | 7 | `self_healer.py` | Actual self-healing |
-| 10 | Add DLQ monitoring endpoint | 7 | `admin/routes/` | Operational visibility |
-
-### 🟢 P2 — Medium Priority
-| # | Fix | Phase | File(s) | Impact |
-|---|-----|-------|---------|--------|
-| 11 | Replace global litellm state mutation with per-call callbacks | 3 | `llm_gateway.py` | Thread safety |
-| 12 | Remove `sys.path` manipulation from orchestrator | 3 | `orchestrator.py` | Import safety |
-| 13 | Make Alembic `env.py` async-compatible | 4 | `alembic/env.py` | Async migration support |
-| 14 | Add missing `TenantExtractionMiddleware` and `RequestIdMiddleware` | 6 | `app_builder.py` | Middleware completeness |
-| 15 | Add SLA/SLO documentation | 10 | `docs/` | Operational clarity |
-
----
-
-## Pro Tips for Implementation
-
-### 1. **Circuit Breaker Integration Pattern**
-```python
-from pybreaker import CircuitBreaker, CircuitBreakerError
-
-redis_breaker = CircuitBreaker(fail_max=3, reset_timeout=30)
-
-async def redis_operation_with_breaker(coro):
-    try:
-        return redis_breaker.call(lambda: await coro)
-    except CircuitBreakerError:
-        logger.warning("Redis circuit breaker open — using fallback")
-        return fallback_result
+Frontend (Monorepo/pnpm)        ├── Studio Client (Vite/React 19)
+                                ├── Admin Dashboard (React)
+                                ├── Admin Dashboard Light
+                                ├── Mobile App
+                                └── Docs Site
 ```
 
-### 2. **Native Redis Rate Limiter (Replace slowapi)**
+### Audit Phases Defined:
+
+| Phase | Focus Area | Scope | Priority |
+|-------|-----------|-------|----------|
+| **1** | **Security & Authentication** | JWT, API Keys, OTP, Secret Vault, CORS, Middleware Chain | 🔴 Critical |
+| **2** | **Infrastructure & Deployment** | Dockerfile, Render/Vercel/Firebase Config, Workers, Port Binding | 🔴 Critical |
+| **3** | **Database & Cache Layer** | Redis, PostgreSQL, Supabase, Connection Pooling, Circuit Breaker | 🔴 Critical |
+| **4** | **API Routes & Error Handling** | Router Registration, Error Responses, Rate Limiting, Idempotency | 🟡 High |
+| **5** | **Self-Healing & Background Agents** | AutonoGuard, ReliabilityController, Sentinel, Swarm, Evolution | 🟡 High |
+| **6** | **Configuration & Secret Management** | Settings Validation, Secret Vault, Environment Fallbacks | 🟡 High |
+| **7** | **Dependencies & Package Management** | Python/Node.js deps, Monorepo configs, ML/tools groups | 🟢 Medium |
+| **8** | **Observability & Monitoring** | OpenTelemetry, Sentry, Health Checks, Logging | 🟢 Medium |
+| **9** | **Testing & Coverage** | Pytest config, Coverage targets, Test infrastructure | 🟢 Medium |
+| **10** | **Frontend & Client Apps** | Studio client, Admin dashboards, Mobile | 🟢 Medium |
+
+---
+
+## PHASE 1: SECURITY & AUTHENTICATION 🔴 Critical
+
+### 1.1 JWT Secret Management
+
+**Current State:** `core/config.py` line ~340 — `jwt_secret` uses `token_hex(64)` fallback in non-prod, but in production raises `ValueError`. `auth_middleware.py` reads `settings.jwt_secret` via lazy property.
+
+**Issues Identified:**
+1. `jwt_secret` property has `secrets.token_hex(64)` fallback — this creates a **new random secret every server restart**, invalidating all existing JWTs
+2. `auth_middleware.py` uses `hmac.compare_digest` for API token — correct but API token should NOT be used as auth bypass
+3. `verify_admin_session_fail_closed()` in `auth_middleware.py` duplicates JWT decode logic
+
+**Fix Plan:**
 ```python
-async def check_rate_limit(redis, key: str, max_requests: int, window_seconds: int) -> bool:
-    """Atomic sliding window using Redis sorted sets."""
+# core/config.py — jwt_secret should persist, not regenerate
+@property
+def jwt_secret(self) -> str:
+    v = self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+    if not v:
+        # Write once, cache forever (file-based fallback for stateless containers)
+        v = self._load_or_generate_jwt_secret()
+    if len(v) < 64:
+        raise ValueError("JWT secret must be >= 64 bytes")
+    return v
+
+def _load_or_generate_jwt_secret(self) -> str:
+    secret_file = "/etc/secrets/jwt_secret"
+    if os.path.exists(secret_file):
+        with open(secret_file) as f:
+            return f.read().strip()
+    # For dev only — production must provide via Infisical
+    new_secret = secrets.token_hex(64)
+    with open(secret_file, "w") as f:
+        f.write(new_secret)
+    return new_secret
+```
+
+### 1.2 CORS Configuration
+
+**Current State:** `core/config.py` — `cors_origins` parsed from JSON string or comma-separated. Production validates `*` is not allowed.
+
+**Issues Identified:**
+1. `user_cors_origins` and `admin_cors_origins` can be empty in production — validated but no enforcement
+2. `cors_origins` default is `[]` — empty list causes CORS failures in production
+3. `validate_cors_origins` removes localhost in production but allows empty result for user/admin origins
+
+**Fix Plan:**
+```python
+@field_validator("cors_origins", mode="after")
+@classmethod
+def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
+    env = str(info.data.get("env", "local") or "local").lower()
+    if env == "test":
+        return v
+    if env in {"production", "staging"}:
+        v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
+        if not v:
+            # Auto-populate from known deployment URLs
+            v = [
+                "https://supremeai-studio-client.onrender.com",
+                "https://supremeai-admin.web.app",
+                "https://supremeai-lac.vercel.app",
+            ]
+            logger.warning(f"Auto-populated CORS origins from deployment targets: {v}")
+    return v
+```
+
+### 1.3 API Key Middleware
+
+**Current State:** `core/security/api_key_middleware.py` — Database-backed API key validation with rate limiting.
+
+**Issues Identified:**
+1. DB query on EVERY request with `x-api-key` header — no Redis cache
+2. `record_api_key_usage` called synchronously (blocks request)
+3. Rate limiter (`AsyncRateLimiter`) uses Redis but no circuit breaker
+4. Connection error returns 503 — should be more graceful
+
+**Fix Plan:**
+```python
+# Add Redis caching for API key lookup
+async def _get_cached_api_key(self, key_hash: str) -> dict | None:
+    cache_key = f"apikey:{key_hash}"
+    cached = await redis_manager.get_cache(cache_key)
+    if cached:
+        return json.loads(cached)
+
+    row = await pool.fetchrow(
+        "SELECT id, key_hash, revoked, rate_limit_rps, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
+        key_hash,
+    )
+    if row:
+        await redis_manager.set_cache(cache_key, json.dumps(dict(row)), ex_seconds=300)
+    return dict(row) if row else None
+```
+
+### 1.4 AutonoGuard Engine
+
+**Current State:** `core/autonoguard_engine.py` — JIT OTP with IP churn detection, AST scanning, self-healing.
+
+**Issues Identified:**
+1. `SENSITIVE_OPS` is a hardcoded set — should be config-driven via `settings`
+2. IP churn detection uses Redis hashes — but `first_seen` stored as hash field creates type confusion
+3. `_circuit_breaker` imported from `core.resilience.circuit_breaker` — but also used in `redis_manager.py` as `pybreaker.CircuitBreaker` — **TWO DIFFERENT CIRCUIT BREAKERS**
+4. OTP cooldown uses `OTP_COOLDOWN_SECONDS` from settings but also has `OTP_COOLDOWN_SECONDS = settings.otp_cooldown_seconds` — duplicate constant
+
+**Fix Plan:**
+```python
+# Standardize on single circuit breaker
+SENSITIVE_OPS = settings.sensitive_ops_paths  # Move to config.py
+
+# Fix IP churn tracking
+async def detect_ip_churn(self, admin_id: str, current_ip: str) -> ChurnDetection:
+    key = f"{_ip_churn_prefix}{admin_id}"
     now = time.time()
-    window_start = now - window_seconds
-    pipe = redis.pipeline()
-    pipe.zremrangebyscore(key, 0, window_start)
-    pipe.zcard(key)
-    pipe.expire(key, window_seconds)
-    _, count, _ = await pipe.execute()
-    if count >= max_requests:
-        return False  # Rate limited
-    await redis.zadd(key, {str(now): now})
-    return True
+
+    # Use sorted set instead of hash for proper IP tracking
+    await redis_manager.client.zadd(key, {current_ip: now})
+    await redis_manager.client.zremrangebyscore(key, 0, now - 3600)  # Keep last 1hr
+    await redis_manager.client.expire(key, 3600)
+
+    # Get unique IPs in last hour
+    ip_count = await redis_manager.client.zcard(key)
+    is_churn = ip_count > 5
+
+    return ChurnDetection(
+        is_churn=is_churn,
+        previous_ips=await redis_manager.client.zrange(key, 0, -1),
+        first_seen=now,
+        churn_count=ip_count,
+    )
 ```
 
-### 3. **Coverage Improvement Strategy**
-- Start with `fail_under=60` (immediate improvement)
-- Add tests for uncovered modules: `core/security/`, `core/messaging/`, `core/health/`
-- Use `pytest --cov-report=html` to visualize gaps
-- Target 80% in 2 weeks with daily CI enforcement
+### 1.5 Security Middleware Chain Order
 
-### 4. **Self-Healer Listener Completion**
+**Current State:** `core/app_builder.py` middleware registration order:
+
 ```python
-async def _self_healer_error_listener(event: ErrorEvent):
-    """Auto-propose fix for known error patterns."""
-    if event.error_type in ("TIMEOUT", "CONNECTION_ERROR"):
-        fix_code = await generate_fix_for_pattern(event.error_type, event.context)
-        if fix_code:
-            pipeline = RemediationPipeline()
-            await pipeline.submit(
-                tenant_id=event.structured_context.user_id or "system",
-                error_pattern=event.error_type,
-                proposed_fix=fix_code,
-                impact_score=0.3,  # Low impact = auto-apply
-                dependency_tree=[]
-            )
+RequestContextMiddleware        # 1
+SupremeContextMiddleware        # 2
+RequestIdMiddleware             # 3
+TenantExtractionMiddleware      # 4
+TrustedOriginMiddleware         # 5
+ChaosInjectorMiddleware         # 6
+ObservabilityMiddleware         # 7
+HoneypotMiddleware              # 8
+AuthMiddleware                  # 9
+APIKeyAuthMiddleware            # 10
+IdempotencyMiddleware           # 11
+ResponseStandardizationMiddleware # 12
+AutonoGuardMiddleware           # 13
+GZipMiddleware                  # 14
+```
+
+**Issues Identified:**
+1. `ChaosInjectorMiddleware` BEFORE auth — allows unauthenticated chaos injection
+2. `HoneypotMiddleware` BEFORE auth — honeypot check on unauthenticated requests is useless
+3. `AutonoGuardMiddleware` AFTER `ResponseStandardizationMiddleware` — OTP responses not standardized
+4. `GZipMiddleware` AFTER everything — should be among the FIRST middleware to decode body early
+
+**Fix Plan:**
+```python
+# Corrected middleware order
+fastapi_app.add_middleware(RequestContextMiddleware)       # 1 - Always first
+fastapi_app.add_middleware(GZipMiddleware, minimum_size=1000)  # 2 - Decode body early
+fastapi_app.add_middleware(RequestIdMiddleware)            # 3
+fastapi_app.add_middleware(TrustedOriginMiddleware)        # 4
+fastapi_app.add_middleware(SupremeContextMiddleware)       # 5
+fastapi_app.add_middleware(TenantExtractionMiddleware)     # 6
+fastapi_app.add_middleware(ObservabilityMiddleware)        # 7
+fastapi_app.add_middleware(AuthMiddleware)                 # 8 - AUTH FIRST
+fastapi_app.add_middleware(APIKeyAuthMiddleware)           # 9
+fastapi_app.add_middleware(AutonoGuardMiddleware)          # 10 - Security BEFORE internals
+fastapi_app.add_middleware(HoneypotMiddleware)             # 11 - Now authenticated
+fastapi_app.add_middleware(ChaosInjectorMiddleware)        # 12 - Now authenticated
+fastapi_app.add_middleware(IdempotencyMiddleware)          # 13
+fastapi_app.add_middleware(ResponseStandardizationMiddleware)  # 14 - Last
+```
+
+### 1.6 Secret Vault Fallback Inconsistency
+
+**Current State:** `core/security/secret_vault.py` — `_fallback_to_env()` has different behaviors per env.
+
+**Issues Identified:**
+1. Test env returns `f"mock_{secret_id}"` — could cause silent failures in integration tests
+2. Production returns empty string `""` — **CRITICAL: empty API keys could crash downstream services**
+3. `FAIL_CLOSED_SECRETS` env var controls fail-closed behavior but default is `false`
+4. No metrics/alerting when secrets fall back to empty string
+
+**Fix Plan:**
+```python
+def _fallback_to_env(self, secret_id: str, default: str | None) -> str:
+    env_fallback = os.getenv(secret_id, default)
+    if env_fallback is None:
+        if self.env in ("production", "staging"):
+            logger.critical(f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert...")
+            # Send alert via error_event_bus
+            try:
+                error_event_bus.emit(ErrorEvent(
+                    module="secret_vault",
+                    error_type="CRITICAL_SECRET_MISSING",
+                    message=f"Secret '{secret_id}' not found in Infisical or env!",
+                    severity="CRITICAL",
+                ))
+            except Exception:
+                pass
+            # In production, for critical secrets, raise error
+            critical_secrets = {"SUPREMEAI_JWT_SECRET", "SUPREMEAI_ADMIN_PASSWORD_HASH",
+                               "REDIS_URL", "SUPABASE_DATABASE_URL_POOLER"}
+            if secret_id in critical_secrets:
+                raise RuntimeError(
+                    f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed."
+                )
+            env_fallback = ""  # Non-critical secrets can be empty
+        else:
+            logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
+            env_fallback = f"mock_{secret_id}"
+    self._cache[secret_id] = _CacheEntry(env_fallback)
+    return env_fallback
 ```
 
 ---
 
-## Conclusion
+## PHASE 2: INFRASTRUCTURE & DEPLOYMENT 🔴 Critical
 
-SupremeAI 2.0 is **architecturally sound** and **feature-complete** for production deployment. The 10-phase audit identified **30+ gaps** across all layers, with **5 critical** and **5 high-priority** fixes required before GA launch. The self-healing infrastructure, multi-layer security, and comprehensive testing framework provide a strong foundation for a production-grade AI platform.
+### 2.1 Dockerfile Worker Count
 
-**Next Steps:**
-1. Execute P0 fixes (circuit breaker, rate limiter, coverage, migration)
-2. Run full test suite with `pytest -x --timeout=60`
-3. Deploy to staging environment for integration validation
-4. Set up synthetic monitoring (Better Stack / Pingdom)
-5. Document SLA/SLO targets and runbook procedures
+**Current State:** `Dockerfile` CMD line:
+```dockerfile
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${UVICORN_WORKERS:-1}"]
+```
+
+**Issues Identified:**
+1. **File already notes** that `GUNICORN_WORKERS` was deprecated but `CIRCUIT_BREAKER_COOLDOWN_PERIOD` uses different ports
+2. `--workers ${UVICORN_WORKERS:-1}` — default 1 worker but Render free tier (512MB RAM) can only handle 1 worker
+3. `main.py` sets `workers = int(os.getenv("UVICORN_WORKERS", "1"))` — but Dockerfile CMD bypasses `main.py` entirely (calls `uvicorn main:app` directly)
+4. **IMPORTANT:** `main.py` does role-based app loading (`if role == "admin": from core.app_admin import app`) but Dockerfile always starts with `main:app` which loads `core.app` (the combined app)
+
+**Critical Fix Required:**
+```dockerfile
+# Change CMD to use main.py's run_server() which handles role-based boot
+CMD ["sh", "-c", "python main.py"]
+```
+This ensures:
+- Role-based app selection (user vs admin)
+- `run_server()` handles port binding, signal handling, and graceful shutdown
+- `UVICORN_WORKERS` env var is properly respected
+
+### 2.2 Render.yaml Configuration
+
+**File needs to be audited:** Let me check if this exists.
+
+<read_file>
+<path>c:/Users/n/supremeai/supremeai_2.0/render.yaml</path>
+</read_file>
+
+### 2.3 Vercel Configuration
+
+**File needs to be audited:** Let me check.
+
+<read_file>
+<path>c:/Users/n/supremeai/supremeai_2.0/vercel.json</path>
+</read_file>
+
+### 2.4 Firebase Configuration
+
+**File needs to be audited:** Let me check.
+
+<read_file>
+<path>c:/Users/n/supremeai/supremeai_2.0/firebase.json</path>
+</read_file>
+
+### 2.5 Cloudflare Worker
+
+**File needs to be audited:** Let me check.
+
+<read_file>
+<path>c:/Users/n/supremeai/supremeai_2.0/cloudflare-worker/wrangler.toml</path>
+</read_file>
+
+### 2.6 Turbo.json (Monorepo Build)
+
+<read_file>
+<path>c:/Users/n/supremeai/supremeai_2.0/turbo.json</path>
+</read_file>
+
+### 2.7 pnpm-workspace.yaml
+
+<read_file>
+<path>c:/Users/n/supremeai/supremeai_2.0/pnpm-workspace.yaml</path>
+</read_file>
+
+---
+
+## PHASE 3: DATABASE & CACHE LAYER 🔴 Critical
+
+### 3.1 Redis Circuit Breaker Conflict
+
+**Current State:**
+- `core/cache/redis_manager.py` uses `pybreaker.CircuitBreaker`
+- `core/autonoguard_engine.py` uses `core.resilience.circuit_breaker.CircuitBreaker`
+- These are **TWO DIFFERENT IMPLEMENTATIONS** with different interfaces
+
+**Issues Identified:**
+1. `redis_manager.py` imports `from pybreaker import CircuitBreaker` — third-party
+2. `autonoguard_engine.py` imports `from core.resilience.circuit_breaker import CircuitBreaker` — custom
+3. Both serve similar purpose but have different APIs (`allow_request()` vs `call()`)
+4. No unified circuit breaker configuration in settings
+
+**Fix Plan:**
+```python
+# Standardize on one circuit breaker implementation
+# Option A: Use pybreaker throughout (battle-tested, fewer bugs)
+# redis_manager.py — Already uses pybreaker ✓
+# autonoguard_engine.py — Need to migrate from custom to pybreaker
+
+# Option B: Use custom implementation throughout (lighter weight)
+# Both should use core.resilience.circuit_breaker
+
+# Recommended: Use pybreaker for both (more robust, tested in production)
+```
+
+### 3.2 DB Pool Connection Leak
+
+**Current State:** `core/lifespan.py` — Multiple connection pools initialized:
+1. `init_db_pool(db_url)` — via `core.pgbouncer_pool`
+2. `pooled_pg.close_pool()` — called separately during shutdown
+3. `get_db_pool()` — used in `api_key_middleware.py`
+
+**Issues Identified:**
+1. `pooled_pg.close_pool()` called AFTER `pool.close()` in shutdown — potential double-close
+2. No connection health check before use in `api_key_middleware.py`
+3. `_ensure_api_key_tables` creates tables every startup — should be idempotent but no migration system
+
+**Fix Plan:**
+```python
+# lifespan.py — Unified shutdown
+try:
+    pool = await get_db_pool()
+    if pool:
+        await pool.close()
+        logger.info("✅ Database connection pool closed successfully.")
+except Exception as e:
+    logger.error(f"Error closing DB pool: {e}")
+
+# pooled_pg is the synchronous wrapper — close only if async pool is null
+if not app.state.db_pool:
+    await asyncio.to_thread(pooled_pg.close_pool())
+```
+
+### 3.3 Redis Manager Initialization Race
+
+**Current State:** `core/cache/redis_manager.py` — `_ensure_connected()` is called lazily on first use.
+
+**Issues Identified:**
+1. Race condition: if two coroutines call `client` property simultaneously, both may trigger `_ensure_connected()`
+2. Connection pool created every time `_ensure_connected()` is called — but it's only called once due to `_initialized` flag
+3. No reconnection logic if Redis connection drops after initialization
+
+**Fix Plan:**
+```python
+async def _ensure_connected(self):
+    if self._initialized:
+        return
+    async with self._init_lock:  # Add asyncio.Lock
+        if self._initialized:  # Double-check
+            return
+        # ... connection logic ...
+        self._initialized = True
+
+async def health_check(self):
+    """Periodic health check with auto-reconnect"""
+    if not self._client:
+        self._initialized = False
+        self._ensure_connected()
+        return
+    try:
+        await self._client.ping()
+    except Exception:
+        logger.warning("Redis health check failed — attempting reconnect")
+        await self.close()
+        self._initialized = False
+        self._ensure_connected()
+```
+
+---
+
+## PHASE 4: API ROUTES & ERROR HANDLING 🟡 High
+
+### 4.1 Router Registration Issues
+
+**Current State:** `api/routers.py` — 40+ routers registered with `core_routers` and `optional_routers`
+
+**Issues Identified:**
+1. `swarm` router was recently added (noted in comment) — suggests routers can be missed
+2. No router versioning strategy — all under `/api/v1` or no prefix
+3. `from api import register_router` — need to verify this function exists
+4. Role-based routing (`USER_ROUTERS` vs `ADMIN_ROUTERS`) uses list comprehension but some routers may overlap
+
+**Fix Plan:**
+```python
+# Add router registration validation
+def validate_routers() -> None:
+    """Ensure no duplicate prefixes and all routers exist"""
+    all_routers = core_routers + optional_routers
+    prefixes = {}
+    for path, prefix in all_routers:
+        if prefix in prefixes:
+            logger.warning(f"Duplicate prefix '{prefix}' for {path} and {prefixes[prefix]}")
+        prefixes[prefix] = path
+```
+
+### 4.2 Error Response Standardization
+
+**Current State:** `api/errors.py` — `ErrorResponse` class registered globally in `app_builder.py`
+
+**Issues Identified:**
+1. Need to verify `ErrorResponse` schema is RFC 7807 compliant
+2. `api_error_handler` catches both `Exception` and `HTTPException` — may cause double-handling
+
+**Fix Plan:**
+```python
+# api/errors.py — Ensure RFC 7807 compliance
+from pydantic import BaseModel
+
+class ErrorResponse(BaseModel):
+    type: str = "about:blank"
+    title: str
+    status: int
+    detail: str
+    instance: str | None = None
+    trace_id: str | None = None
+```
+
+### 4.3 Rate Limiting Architecture
+
+**Current State:** TWO rate limiting mechanisms:
+1. `core/app_builder.py` — Native Redis sliding-window rate limiter (replaces slowapi)
+2. `api_key_middleware.py` — Per-API-key rate limiter using `AsyncRateLimiter`
+
+**Issues Identified:**
+1. Redis-based rate limiter in `app_builder.py` uses `fail-open` when Redis is down — **security risk**
+2. No IP-based rate limiting for unauthenticated requests
+3. Two separate rate limiters may conflict
+
+**Fix Plan:**
+```python
+# app_builder.py — Change fail-open to fail-closed for rate limiting
+async def check_native_rate_limit(request, max_requests=60, window_seconds=60):
+    if not redis_manager.client:
+        # Fail-closed: block request if rate limiter unavailable
+        logger.warning("Rate limit check skipped — Redis unavailable (fail-closed)")
+        return False  # Block request
+
+    # ... rest of implementation ...
+```
+
+---
+
+## PHASE 5: SELF-HEALING & BACKGROUND AGENTS 🟡 High
+
+### 5.1 Background Agent Lifecycle
+
+**Current State:** `core/lifespan.py` starts multiple background agents:
+1. Sentinel Agent (`sentinel.run_periodic_loop()`)
+2. Swarm Cache Invalidator (`start_swarm_cache_invalidator()`)
+3. System Telemetry Broadcaster (`run_system_telemetry_loop()`)
+4. SelfEvolutionAgent (5-min cycle, if enabled)
+5. DailyLearner (24h cycle, if enabled)
+6. AutoHealerService (30s check interval, if enabled)
+7. SelfHealer error listener registration
+
+**Issues Identified:**
+1. No centralized agent health monitoring — each agent manages its own lifecycle
+2. No agent restart mechanism if an agent crashes
+3. `sentinel.running = False` is set during shutdown but `sentinel.run_periodic_loop()` may not check this flag
+4. Task cancellation uses `cancel()` but agents may leak connections if not properly awaited
+5. No grace period for agent shutdown — 10s timeout may not be enough for all agents
+
+**Fix Plan:**
+```python
+# Create centralized Agent Supervisor
+class AgentSupervisor:
+    def __init__(self):
+        self._agents: dict[str, asyncio.Task] = {}
+        self._health: dict[str, dict] = {}
+
+    async def start_agent(self, name: str, coro, health_check_interval: int = 60):
+        """Register and start an agent with health monitoring"""
+        task = asyncio.create_task(self._run_with_monitoring(name, coro, health_check_interval))
+        self._agents[name] = task
+        return task
+
+    async def _run_with_monitoring(self, name: str, coro, interval: int):
+        """Run agent with auto-restart on failure"""
+        while True:
+            try:
+                await coro
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Agent '{name}' failed: {e}. Restarting in 5s...")
+                self._health[name] = {"status": "failed", "last_error": str(e), "restart_count": self._health.get(name, {}).get("restart_count", 0) + 1}
+                await asyncio.sleep(5)  # Backoff before restart
+
+    async def shutdown_all(self, timeout: int = 30):
+        """Gracefully shut down all agents"""
+        for name, task in self._agents.items():
+            task.cancel()
+        await asyncio.wait_for(asyncio.gather(*self._agents.values(), return_exceptions=True), timeout=timeout)
+```
+
+---
+
+## PHASE 6: CONFIGURATION & SECRET MANAGEMENT 🟡 High
+
+### 6.1 Settings Validation Drift
+
+**Current State:** `core/config.py` — Multiple `model_validator` methods:
+1. `validate_docs_auth` — production docs password fallback
+2. `validate_stripe_completeness` — mock mode warning
+3. `validate_production_completeness` — degraded mode warning
+4. `validate_completeness` — general resilience guard
+
+**Issues Identified:**
+1. `validate_completeness` at line 528+ — warns but continues, bypassing previous fail-fast intent
+2. `validate_production_completeness` runs in production but `validate_completeness` runs in ALL envs — duplicate checks
+3. `validate_stripe_completeness` returns `self` without action — validator does nothing
+4. Settings validation has too many model_validators — execution order is `mode="after"` which runs AFTER all field_validators
+
+**Fix Plan:**
+```python
+# Consolidate all 4 model_validators into 1
+@model_validator(mode="after")
+def validate_all(self):
+    if self.env == "test":
+        return self
+
+    issues = []
+
+    # Docs auth
+    if self.env in {"production", "staging"} and self.docs_auth_enabled:
+        pwd = self.docs_password.get_secret_value() if self.docs_password else ""
+        if not pwd:
+            self.docs_password = SecretStr("supreme-admin-2026-prod")
+
+    # Production secrets warning (degraded mode allowed)
+    if self.env == "production":
+        missing = []
+        if not self.openrouter_api_key: missing.append("OPENROUTER_API_KEY")
+        if not self.gemini_api_key: missing.append("GEMINI_API_KEY")
+        if not self.ci_webhook_secret: missing.append("CI_WEBHOOK_SECRET")
+        if missing:
+            logger.warning(f"⚠️ Production missing: {', '.join(missing)}. Degraded mode.")
+
+    # Stripe (non-blocking)
+    if self.env in {"production", "staging"} and not self.stripe_api_key.get_secret_value():
+        logger.warning("⚠️ Stripe API key missing. Billing in mock mode.")
+
+    return self
+```
+
+### 6.2 Property vs Computed Field Inconsistency
+
+**Current State:** `core/config.py` uses `@property` for secrets (lazy) instead of `@computed_field` (eager).
+
+**Issues Identified:**
+1. Comment says "লেজি (lazy) @property ব্যবহার করা হলো" to reduce startup time
+2. But `@property` is NOT serializable by Pydantic — `settings.model_dump()` won't include secrets
+3. `@property` can't be accessed in validators — `field_validator` on `jwt_secret` would fail
+
+**Fix Plan:**
+```python
+# Add serialization support for property-based secrets
+from pydantic import model_serializer
+
+@model_serializer
+def serialize_model(self) -> dict:
+    """Ensure properties are included in serialization"""
+    result = {}
+    for field_name in self.model_fields:
+        result[field_name] = getattr(self, field_name)
+    # Include critical properties
+    result["jwt_secret"] = "***REDACTED***"  # Never serialize secrets
+    result["redis_url"] = "***REDACTED***"
+    return result
+```
+
+---
+
+## PHASE 7: DEPENDENCIES & PACKAGE MANAGEMENT 🟢 Medium
+
+### 7.1 Python Dependency Analysis
+
+**Current State:** `pyproject.toml`:
+- Main deps: 40+ packages (fastapi, uvicorn, httpx, pydantic, sentry-sdk, openai, supabase, etc.)
+- ML group: 10+ packages (torch, transformers, chromadb, qdrant, sentence-transformers, langgraph, crewai)
+- Tools group: 15+ packages (playwright, pandas, matplotlib, docker, celery)
+- Dev group: 15+ packages (pytest, ruff, mypy, black, isort)
+
+**Issues Identified:**
+1. `pydantic = "^2.7.0"` but `pydantic-settings = "^2.2.0"` — version mismatch could occur
+2. `crewai = "^0.80.0"` — pinned too aggressively, may miss security patches
+3. `torch = {version = "^2.0.0", optional = true}` — ML deps are optional but some code may import them directly
+4. `google-genai = "*"` in dev deps — wildcard version is dangerous
+5. `celery = "^5.4.0"` in tools group — but `task_queue_enhanced.py` uses `asyncio,redis,celery,pubsub` priority queue system
+
+### 7.2 Node.js Dependency Analysis
+
+**Current State:** `package.json`:
+- Dev deps: @playwright/test, turbo, typescript, prettier, miniflare, vitest
+- Direct deps: ioredis, @webcontainer/api, rollup, dotenv
+
+**Issues Identified:**
+1. `pnpm@9.0.0` as package manager — but `pnpm-lock.yaml` version should match
+2. `turbo` is dev dep but used in production scripts (`turbo run build`)
+3. `@webcontainer/api` — high memory footprint, may cause OOM on Render free tier
+
+---
+
+## PHASE 8: OBSERVABILITY & MONITORING 🟢 Medium
+
+### 8.1 OpenTelemetry Tracing
+
+**Current State:** `core/lifespan.py` — tracing initialized via `asyncio.to_thread(setup_tracing)`
+
+**Issues Identified:**
+1. Thread-based initialization may not properly setup context propagation
+2. No tracing middleware at ASGI level — only middleware-level
+3. `opentelemetry-api` and `opentelemetry-sdk` in deps but no exporter configured (default is console/nowhere)
+4. No trace sampling configuration per environment
+
+### 8.2 Sentry Integration
+
+**Current State:** `core/app_builder.py` — Sentry initialized with `sentry_sdk.init()`
+
+**Issues Identified:**
+1. `sentry_dsn` is an empty string by default — but `if settings.sentry_dsn:` check passes for empty string
+2. Sentry init will fail silently with empty DSN
+3. `sys.exit(1)` on Sentry init failure in `app_builder.py` — too aggressive for non-critical service
+
+### 8.3 Health Check Endpoint
+
+**Current State:** `core/app_builder.py` — `/health` endpoint returns comprehensive health data
+
+**Issues Identified:**
+1. Redis health check uses `set` + `get` with 5s TTL — Redis connection may be healthy but this pattern wastes operations
+2. `/actuator/health` duplicates `/health` — both should return consistent data or `/actuator/health` should redirect
+3. `router_health_check()` calls `sys.exit(1)` if routes < expected — but this runs DURING app startup, not during lifespan
+
+---
+
+## PHASE 9: TESTING & COVERAGE 🟢 Medium
+
+### 9.1 Test Infrastructure
+
+**Current State:** `pyproject.toml` — pytest configured with coverage for `core`, `api`, `tools`, `services`, `models`
+
+**Issues Identified:**
+1. `fail_under = 45` — very low coverage threshold
+2. `pythonpath = ["."]` — should also include backend directory
+3. No integration tests for Redis/DB fallbacks
+4. No security test suite for AutonoGuard OTP flow
+
+---
+
+## PHASE 10: FRONTEND & CLIENT APPS 🟢 Medium
+
+### 10.1 Studio Client
+
+**Current State:** Monorepo with `apps/studio-client/`
+
+**Issues Identified:**
+1. React 19 with overrides — need to check compatibility
+2. `@webcontainer/api` in main deps — browser-based Node.js sandbox, may conflict with backend sandbox
+3. Vite configuration needs verification
+
+---
+
+## 🔄 EXECUTION ORDER
+
+Based on criticality and dependencies:
+
+```
+Phase 1 (Security) ─────┐
+                         ├──→ Phase 6 (Config) ───→ Phase 5 (Self-Healing)
+Phase 2 (Infrastructure) ┘         │                        │
+                                    │                        │
+Phase 3 (Database/Cache) ──────────┼────────────────────────┘
+                                    │
+Phase 4 (API Routes) ──────────────┘
+                                    │
+Phase 7 (Dependencies) ─────────────┤
+                                    │
+Phase 8 (Observability) ────────────┤
+                                    │
+Phase 9 (Testing) ──────────────────┤
+                                    │
+Phase 10 (Frontend) ────────────────┘
+```
+
+---
+
+## 📋 IMMEDIATE NEXT STEPS
+
+1. **Start Phase 1 Audit** — Create detailed `PHASE1_AUDIT_REPORT.md` with file-by-file analysis
+2. **Fix Critical Security Issues** — JWT secret persistence, CORS auto-population, middleware order
+3. **Fix Dockerfile** — Change CMD to use `python main.py` for role-based boot
+4. **Standardize Circuit Breakers** — Remove duplicate implementation
+5. **Consolidate Settings Validators** — Merge 4 model_validators into 1
+6. **Implement Agent Supervisor** — Centralized agent lifecycle management
+
+---
+
+*This document serves as the Master Audit Plan for SupremeAI 2.0. Each phase will be executed independently with detailed delta patches.*

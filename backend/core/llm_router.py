@@ -137,11 +137,7 @@ class TokenBudget:
     def check(self, estimated_input: int, estimated_output: int) -> bool:
         # Core Philosophy: 80% context window limit
         total = estimated_input + estimated_output
-        return (
-            estimated_input <= self.max_input
-            and estimated_output <= self.max_output
-            and (self.used_today + total) <= self.daily_limit
-        )
+        return estimated_input <= self.max_input and estimated_output <= self.max_output and (self.used_today + total) <= self.daily_limit
 
     def consume(self, tokens: int) -> None:
         self.used_today += tokens
@@ -216,9 +212,7 @@ class MoonshotProvider:
             "max_tokens": max_tokens,
             "temperature": temperature,
             "stream": stream,
-            "response_format": (
-                {"type": "json_object"} if kwargs.get("json_mode", False) else None
-            ),  # AI-098: Structured outputs
+            "response_format": ({"type": "json_object"} if kwargs.get("json_mode", False) else None),  # AI-098: Structured outputs
         }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
@@ -231,12 +225,8 @@ class MoonshotProvider:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(
-        self, payload: dict[str, Any]
-    ) -> AsyncGenerator[StreamChunk, None]:
-        async with self.client.stream(
-            "POST", "/chat/completions", json=payload
-        ) as resp:
+    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):
@@ -290,9 +280,7 @@ class DeepSeekProvider:
             "max_tokens": max_tokens,
             "temperature": temperature,
             "stream": stream,
-            "response_format": (
-                {"type": "json_object"} if kwargs.get("json_mode", False) else None
-            ),
+            "response_format": ({"type": "json_object"} if kwargs.get("json_mode", False) else None),
         }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
@@ -305,12 +293,8 @@ class DeepSeekProvider:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(
-        self, payload: dict[str, Any]
-    ) -> AsyncGenerator[StreamChunk, None]:
-        async with self.client.stream(
-            "POST", "/chat/completions", json=payload
-        ) as resp:
+    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):
@@ -375,12 +359,8 @@ class TogetherProvider:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(
-        self, payload: dict[str, Any]
-    ) -> AsyncGenerator[StreamChunk, None]:
-        async with self.client.stream(
-            "POST", "/chat/completions", json=payload
-        ) as resp:
+    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):
@@ -445,9 +425,7 @@ class OllamaProvider:
         data = resp.json()
         return data.get("response", "")
 
-    async def _stream_completion(
-        self, payload: dict[str, Any]
-    ) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/api/generate", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -555,12 +533,8 @@ class LLMRouter:
             chain = []
 
         # Add fallback chain - শুধু ফ্রি/ওপেন সোর্স প্রথমে আনা হবে
-        for provider in FALLBACK_CHAINS.get(
-            task_type, [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA]
-        ):
-            if provider not in chain and task_type in PROVIDER_CAPABILITIES.get(
-                provider, []
-            ):
+        for provider in FALLBACK_CHAINS.get(task_type, [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA]):
+            if provider not in chain and task_type in PROVIDER_CAPABILITIES.get(provider, []):
                 chain.append(provider)
 
         # Cost-sensitive: sort by cost - ZERO-108: Zero Cost Policy
@@ -594,11 +568,7 @@ class LLMRouter:
         Route prompt to optimal LLM provider with automatic fallback.
         সকল রুলস যাচাই করে এবং মেনে চালায়।
         """
-        task = (
-            TaskType(task_type)
-            if task_type in [t.value for t in TaskType]
-            else TaskType.CHAT
-        )
+        task = TaskType(task_type) if task_type in [t.value for t in TaskType] else TaskType.CHAT
 
         # AGENT-101: Check token budget before processing
         estimated_tokens = self._estimate_tokens(prompt) + max_tokens
@@ -614,9 +584,7 @@ class LLMRouter:
             logger.debug("bengali_normalized", original_length=len(prompt))
 
         # Check cache - AI-094: Semantic Caching
-        cache_key = self._cache_key(
-            prompt, task.value, max_tokens=max_tokens, temperature=temperature
-        )
+        cache_key = self._cache_key(prompt, task.value, max_tokens=max_tokens, temperature=temperature)
         if use_cache and not stream:
             cached_result = await self.cache.get(cache_key)
             if cached_result:
@@ -676,9 +644,7 @@ class LLMRouter:
                 )
 
                 if stream:
-                    return self._stream_with_fallback(
-                        provider, prompt, max_tokens, temperature, chain, **kwargs
-                    )
+                    return self._stream_with_fallback(provider, prompt, max_tokens, temperature, chain, **kwargs)
 
                 result = await provider.acompletion(
                     prompt,
@@ -698,10 +664,7 @@ class LLMRouter:
 
                 latency = (time.perf_counter() - start_time) * 1000
                 tokens = estimated_input + self._estimate_tokens(result)
-                cost = (tokens / 1000) * (
-                    PROVIDER_COSTS[provider_name][0] * 0.3
-                    + PROVIDER_COSTS[provider_name][1] * 0.7
-                )
+                cost = (tokens / 1000) * (PROVIDER_COSTS[provider_name][0] * 0.3 + PROVIDER_COSTS[provider_name][1] * 0.7)
 
                 self.budget.consume(tokens)
 
@@ -801,13 +764,8 @@ class LLMRouter:
                 "used_today": self.budget.used_today,
                 "remaining": self.budget.daily_limit - self.budget.used_today,
             },
-            "provider_costs": {
-                p.value: {"input": c[0], "output": c[1]}
-                for p, c in PROVIDER_COSTS.items()
-            },
-            "rules_enforced": (
-                self.rules.validate_critical_rules() if self.rules else []
-            ),
+            "provider_costs": {p.value: {"input": c[0], "output": c[1]} for p, c in PROVIDER_COSTS.items()},
+            "rules_enforced": (self.rules.validate_critical_rules() if self.rules else []),
         }
 
 
