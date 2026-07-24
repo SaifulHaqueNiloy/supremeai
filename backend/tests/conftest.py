@@ -62,9 +62,12 @@ os.environ["DOCS_PASSWORD"] = "dummy_pass"
 os.environ["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "dummy_admin_hash"
 import sys
 
-import matplotlib
+try:
+    import matplotlib
 
-matplotlib.use("Agg")
+    matplotlib.use("Agg")
+except ImportError:
+    pass
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

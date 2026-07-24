@@ -435,7 +435,7 @@ jobs:
         id: backend_tests
         working-directory: backend
         run: |
-          if [ "${{ needs.changes.outputs.backend }}" == 'true' ] || [ "${{ needs.changes.outputs.shared }}" == 'true' ]; then
+          if [ "${{ needs.changes.outputs.backend }}" = 'true' ] || [ "${{ needs.changes.outputs.shared }}" = 'true' ]; then
             poetry run pytest -n auto --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=80 -q
           else
             echo "Skipping full backend tests, only running smoke tests."
