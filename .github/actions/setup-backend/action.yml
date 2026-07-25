@@ -13,6 +13,10 @@ inputs:
     description: 'Poetry version'
     required: false
     default: 'latest'
+  install-media-deps:
+    description: 'Install ffmpeg for media processing'
+    required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -20,7 +24,10 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y ffmpeg libpq-dev build-essential
+        sudo apt-get install -y libpq-dev build-essential
+        if [ "${{ inputs.install-media-deps }}" = "true" ]; then
+          sudo apt-get install -y ffmpeg
+        fi
 
     - uses: actions/setup-python@v6
       with:
