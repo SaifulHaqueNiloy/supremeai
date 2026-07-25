@@ -261,3 +261,34 @@ disable = [
     "W0749",  # Use of deprecated argument to exec
     "W0750",  # Use of deprecated argument to exec
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "UP",    # pyupgrade
+    "ASYNC", # flake8-async
+    "LOG",   # flake8-logging
+]
+ignore = [
+    "E501",     # Line too long
+    "E402",     # Module level import not at top of file
+    "BLE001",   # Blind exception catch
+    "RUF012",   # ClassVar mutable attribute
+    "RUF001",   # Ambiguous unicode strings
+    "RUF002",   # Ambiguous unicode docstrings
+    "RUF003",   # Ambiguous unicode comments
+    "TRY002",   # Create own exception
+    "TRY004",   # Prefer TypeError
+    "DTZ005",   # Datetime tz
+    "B008",     # Default args call
+    "ASYNC101", # Async blocking call
+    "I001",     # Unsorted imports
+]
+
+
