@@ -162,7 +162,7 @@ class RouteOptimizer:
             if not rider.current_location:
                 continue
 
-            distance = cls.haversine_distance(rider.current_location, target_location)
+            distance = self.haversine_distance(rider.current_location, target_location)
             if distance < min_distance:
                 min_distance = distance
                 nearest = rider

@@ -1,5 +1,6 @@
 """Tests to improve coverage for events route (20.5% -> target 60%)."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
