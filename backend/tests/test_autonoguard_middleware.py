@@ -14,9 +14,10 @@ This module tests:
 from unittest.mock import AsyncMock, patch
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 from fastapi.testclient import TestClient
-from starlette.responses import PlainTextResponse
 
+import core.autonoguard_engine as engine_module
 from core.autonoguard_engine import OperationContext
 from core.security.autonoguard_middleware import AutonoGuardMiddleware
 
@@ -34,18 +35,17 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch.object(engine_module, "autonoguard_engine") as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
             mock_engine.heal_error = AsyncMock()
 
-            middleware = AutonoGuardMiddleware(app)
+            app.add_middleware(AutonoGuardMiddleware, engine=mock_engine)
             client = TestClient(app)
 
             client.get("/api/sensitive/test")
 
             mock_engine.initialize.assert_called_once()
-            assert middleware._initialized is True
 
     def test_bypasses_non_sensitive_path(self):
         """Test that non-sensitive paths bypass security checks."""
@@ -191,15 +191,17 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch.object(engine_module, "autonoguard_engine") as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(False, "OTP required"))
             mock_engine.heal_error = AsyncMock()
 
-            AutonoGuardMiddleware(app)
+            app.add_middleware(AutonoGuardMiddleware, engine=mock_engine)
             client = TestClient(app)
 
-            resp = client.get("/api/sensitive/test")
+            resp = client.get(
+                "/api/sensitive/test", headers={"Authorization": "Bearer test_admin_token", "X-JIT-OTP": "invalid"}
+            )
 
             assert resp.status_code == 401
             assert "OTP" in resp.json().get("detail", "") or "Security" in resp.json().get("title", "")
@@ -212,12 +214,12 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch.object(engine_module, "autonoguard_engine") as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
             # Call should use "unknown" for admin_id
-            AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app, engine=mock_engine)
             client = TestClient(app)
 
             client.get("/api/sensitive/test")
