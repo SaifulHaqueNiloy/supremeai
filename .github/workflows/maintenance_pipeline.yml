@@ -394,7 +394,9 @@ jobs:
           SUPABASE_URL: "https://mock-health-check.supabase.co"
           SUPABASE_KEY: "mock_key"
           DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
-          SUPREMEAI_JWT_SECRET: "mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret"
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           poetry run uvicorn main:app --host 127.0.0.1 --port 8000 &
           npx wait-on http://127.0.0.1:8000/health
@@ -429,7 +431,9 @@ jobs:
           SUPABASE_URL: "https://mock-health-check.supabase.co"
           SUPABASE_KEY: "mock_key"
           DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
-          SUPREMEAI_JWT_SECRET: "mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret_mock_jwt_secret"
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
       - name: Upload Test Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
