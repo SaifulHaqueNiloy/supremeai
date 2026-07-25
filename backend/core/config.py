@@ -394,33 +394,65 @@ class Settings(BaseSettings):
             return f"redis://{url}"
         return url
 
+    def _set_cached_secret(self, key: str, value: Any) -> None:
+        self._ensure_secrets_loaded()
+        self._cached_secrets[key] = str(value) if value is not None else ""
+
     @property
     def openrouter_api_key(self) -> str:
         return self._get_cached_secret("OPENROUTER_API_KEY")
+
+    @openrouter_api_key.setter
+    def openrouter_api_key(self, value: str) -> None:
+        self._set_cached_secret("OPENROUTER_API_KEY", value)
 
     @property
     def hf_api_key(self) -> str:
         return self._get_cached_secret("HF_API_KEY")
 
+    @hf_api_key.setter
+    def hf_api_key(self, value: str) -> None:
+        self._set_cached_secret("HF_API_KEY", value)
+
     @property
     def gemini_api_key(self) -> str:
         return self._get_cached_secret("GEMINI_API_KEY")
+
+    @gemini_api_key.setter
+    def gemini_api_key(self, value: str) -> None:
+        self._set_cached_secret("GEMINI_API_KEY", value)
 
     @property
     def openai_api_key(self) -> str:
         return self._get_cached_secret("OPENAI_API_KEY")
 
+    @openai_api_key.setter
+    def openai_api_key(self, value: str) -> None:
+        self._set_cached_secret("OPENAI_API_KEY", value)
+
     @property
     def deepseek_api_key(self) -> str:
         return self._get_cached_secret("DEEPSEEK_API_KEY")
+
+    @deepseek_api_key.setter
+    def deepseek_api_key(self, value: str) -> None:
+        self._set_cached_secret("DEEPSEEK_API_KEY", value)
 
     @property
     def groq_api_key(self) -> str:
         return self._get_cached_secret("GROQ_API_KEY")
 
+    @groq_api_key.setter
+    def groq_api_key(self, value: str) -> None:
+        self._set_cached_secret("GROQ_API_KEY", value)
+
     @property
     def nvidia_api_key(self) -> str:
         return self._get_cached_secret("NVIDIA_API_KEY")
+
+    @nvidia_api_key.setter
+    def nvidia_api_key(self, value: str) -> None:
+        self._set_cached_secret("NVIDIA_API_KEY", value)
 
     @property
     def firecrawl_api_key(self) -> str:
@@ -825,7 +857,7 @@ class Settings(BaseSettings):
                     "No auto-population or fallback allowed for security reasons."
                 )
             # বাংলা মন্তব্য: প্রোডাকশনে লোকালহোস্ট CORS অরিজিন থেকে সরিয়ে ফেলা হয়
-            if info.field_name in {"user_cors_origins", "admin_cors_origins"}:
+            if info.field_name in {"cors_origins", "user_cors_origins", "admin_cors_origins"}:
                 v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
         return v
 
@@ -865,10 +897,11 @@ class Settings(BaseSettings):
             return "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         return str(value)
 
+    @model_validator(mode="after")
     def validate_production_completeness(self) -> "Settings":
         """Production completeness verification helper for test coverage."""
         if self.env == "production":
-            pass
+            _ = self.jwt_secret
         return self
 
     def reload_env_vars(self) -> None:
