@@ -37,9 +37,7 @@ class PresentationGenerator:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 for i in range(1, num_slides + 1):
                     slides.append(
                         {

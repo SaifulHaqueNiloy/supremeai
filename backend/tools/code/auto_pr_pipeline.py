@@ -55,7 +55,7 @@ class AutoPRPipeline:
 
             # 2. Write file changes and add them to staging
             for file_path, content in files.items():
-                with open(file_path, "w", encoding="utf-8") as f:
+                with open(file_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
                     f.write(content)
                 await self._run_git_command(["add", file_path], cwd=repo)
             logger.info(f"Staged {len(files)} file(s).")

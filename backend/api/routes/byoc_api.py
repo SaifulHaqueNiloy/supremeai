@@ -85,7 +85,7 @@ async def deploy_container(
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config_path = os.path.join(base_dir, "config", "byoc_limits.json")
     try:
-        with open(config_path, encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:  # noqa: ASYNC230
             limits = json.load(f)["limits"]
             user_limits = limits.get(user_tier, limits["free"])
     except Exception:  # noqa: BLE001

@@ -1,3 +1,4 @@
+from loguru import logger
 """
 Sprint G Tests:
 - G.1: MultilingualTTS
@@ -458,9 +459,7 @@ class TestTenantAdminAPI:
                     == TIER_DEFAULTS["pro"]["requests_per_minute"]
                 )
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")  # Redis cache failure OK
+                logger.warning(f"Exception suppressed: {e}")  # Redis cache failure OK
 
     @pytest.mark.anyio
     async def test_delete_tenant(self):
