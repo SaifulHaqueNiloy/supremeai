@@ -98,7 +98,7 @@ class ASTSecurityScanner(ast.NodeVisitor):
         # Block dunder subscript access that can lead to subclass enumeration: "".__class__.__bases__[0].__subclasses__()
         if isinstance(node.value, ast.Attribute) and hasattr(node.value, "attr"):
             # Check for patterns like __class__, __bases__, __subclasses__ in the chain
-            current_node = node.value
+            current_node: ast.expr = node.value
             attr_chain = []
             while isinstance(current_node, ast.Attribute):
                 attr_chain.append(current_node.attr)
@@ -146,7 +146,7 @@ class ASTSecurityScanner(ast.NodeVisitor):
         # Block dangerous attribute access chains
         if hasattr(node, "value") and isinstance(node.value, ast.Attribute):
             # Look for patterns like obj.__class__.__bases__[0].__subclasses__()
-            parent_attr = node.value
+            parent_attr: ast.expr = node.value
             attr_chain = [node.attr]
             depth = 0
             while isinstance(parent_attr, ast.Attribute) and depth < 5:
