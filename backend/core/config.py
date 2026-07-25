@@ -94,10 +94,25 @@ class Settings(BaseSettings):
     allow_test_auth_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_AUTH_BYPASS")
     allow_test_origin_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS")
 
-    # ── অ্যাপ্লিকেশন মেটাডেটা ──────────────────────────────────────────────
     PROJECT_NAME: str = "SupremeAI 2.0"
     API_V1_STR: str = "/api/v1"
     app_name: str = "SupremeAI 2.0"
+
+    # ── LLM Gateway & Streaming Configuration ────────────────────────────────
+    LLM_CONNECT_TIMEOUT: float = Field(default=5.0, validation_alias="LLM_CONNECT_TIMEOUT")
+    LLM_READ_TIMEOUT: float = Field(default=30.0, validation_alias="LLM_READ_TIMEOUT")
+    LLM_WRITE_TIMEOUT: float = Field(default=5.0, validation_alias="LLM_WRITE_TIMEOUT")
+    LLM_POOL_TIMEOUT: float = Field(default=5.0, validation_alias="LLM_POOL_TIMEOUT")
+    LLM_MAX_CONNECTIONS: int = Field(default=100, validation_alias="LLM_MAX_CONNECTIONS")
+    LLM_MAX_KEEPALIVE: int = Field(default=20, validation_alias="LLM_MAX_KEEPALIVE")
+
+    LATENCY_WINDOW_SIZE: int = Field(default=20, validation_alias="LATENCY_WINDOW_SIZE")
+    LATENCY_NORMALIZATION_MS: float = Field(default=1000.0, validation_alias="LATENCY_NORMALIZATION_MS")
+    MIN_PROVIDER_WEIGHT: float = Field(default=0.01, validation_alias="MIN_PROVIDER_WEIGHT")
+    CIRCUIT_FAILURE_THRESHOLD: int = Field(default=5, validation_alias="CIRCUIT_FAILURE_THRESHOLD")
+    CIRCUIT_SUCCESS_RATE_FLOOR: float = Field(default=0.5, validation_alias="CIRCUIT_SUCCESS_RATE_FLOOR")
+    CIRCUIT_COOLDOWN_SECONDS: float = Field(default=30.0, validation_alias="CIRCUIT_COOLDOWN_SECONDS")
+    MAX_ROUTING_ATTEMPTS: int = Field(default=3, validation_alias="MAX_ROUTING_ATTEMPTS")
     docs_auth_enabled: bool = True
     docs_username: str = Field(default="admin", validation_alias="SUPREMEAI_DOCS_USERNAME")
     docs_password: SecretStr = Field(
