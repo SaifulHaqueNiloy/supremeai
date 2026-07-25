@@ -150,7 +150,10 @@ class TestSecretVaultConnections:
         monkeypatch.setenv("INFISICAL_CLIENT_SECRET", "test-secret")
         monkeypatch.setenv("INFISICAL_PROJECT_ID", "test-project")
 
-        with patch("core.security.secret_vault.InfisicalClient", side_effect=ConnectionError("no connection")):
+        with patch(
+            "core.security.secret_vault.InfisicalClient",
+            side_effect=ConnectionError("no connection"),
+        ):
             vault = ProductionSecretVault()
             assert vault.client is None
 
@@ -159,7 +162,10 @@ class TestSecretVaultConnections:
         monkeypatch.setenv("INFISICAL_CLIENT_SECRET", "test-secret")
         monkeypatch.setenv("INFISICAL_PROJECT_ID", "test-project")
 
-        with patch("core.security.secret_vault.InfisicalClient", side_effect=TimeoutError("timeout")):
+        with patch(
+            "core.security.secret_vault.InfisicalClient",
+            side_effect=TimeoutError("timeout"),
+        ):
             vault = ProductionSecretVault()
             assert vault.client is None
 
