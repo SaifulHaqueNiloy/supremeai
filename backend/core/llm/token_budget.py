@@ -161,9 +161,7 @@ class TokenBudgetStats:
             "total_calls": self.total_calls,
             "total_input_tokens": self.total_input_tokens,
             "total_output_tokens": self.total_output_tokens,
-            "avg_input_tokens": (
-                self.total_input_tokens // self.total_calls if self.total_calls else 0
-            ),
+            "avg_input_tokens": (self.total_input_tokens // self.total_calls if self.total_calls else 0),
             "truncated_calls": self.truncated_calls,
             "tokens_saved_by_truncation": self.tokens_saved_by_truncation,
             "tracking_since": self.started_at,

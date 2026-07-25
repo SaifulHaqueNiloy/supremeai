@@ -67,9 +67,7 @@ class SemanticCache:
         self.db = ExperienceDatabase()
         logger.info("SemanticCache initialized using ExperienceDatabase vector backend")
 
-    async def query_similar(
-        self, prompt: str, task_type: str = "general"
-    ) -> CacheEntry | None:
+    async def query_similar(self, prompt: str, task_type: str = "general") -> CacheEntry | None:
         try:
             # বাংলা মন্তব্য: কাজের ধরণের ওপর ভিত্তি করে ডাইনামিক থ্রেশহোল্ড সেট করা হচ্ছে
             threshold = get_cache_threshold(task_type)
@@ -94,9 +92,7 @@ class SemanticCache:
                     error_type="CACHE_LOOKUP_FAILURE",
                     message=f"SemanticCache lookup failed: {e}",
                     severity="WARNING",
-                    structured_context=ErrorContext(
-                        module="semantic_cache", env="production"
-                    ),
+                    structured_context=ErrorContext(module="semantic_cache", env="production"),
                     context={
                         "task_type": task_type,
                         "prompt_preview": prompt[:100] if prompt else "",
@@ -111,15 +107,11 @@ class SemanticCache:
             exp = Experience(
                 request=prompt,
                 generated_code=response if "code" in task_type.lower() else None,
-                action_taken=(
-                    response if "code" not in task_type.lower() else "Code Generated"
-                ),
+                action_taken=(response if "code" not in task_type.lower() else "Code Generated"),
                 result="success",
             )
             self.db.record_experience(exp)
-            logger.info(
-                f"💾 Successfully recorded successful experience pattern for {task_type}"
-            )
+            logger.info(f"💾 Successfully recorded successful experience pattern for {task_type}")
         except Exception as e:  # noqa: BLE001
             logger.error(f"❌ Failed to save experience pattern: {e}")
             error_event_bus.emit(
@@ -128,9 +120,7 @@ class SemanticCache:
                     error_type="CACHE_WRITE_FAILURE",
                     message=f"Failed to save experience pattern: {e}",
                     severity="WARNING",
-                    structured_context=ErrorContext(
-                        module="semantic_cache", env="production"
-                    ),
+                    structured_context=ErrorContext(module="semantic_cache", env="production"),
                     context={
                         "task_type": task_type,
                         "prompt_preview": prompt[:100] if prompt else "",

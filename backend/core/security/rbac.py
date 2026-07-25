@@ -123,9 +123,7 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
     """
     try:
         req_perm_str = (
-            required_permission.value
-            if isinstance(required_permission, Permission)
-            else required_permission.lower()
+            required_permission.value if isinstance(required_permission, Permission) else required_permission.lower()
         )
         role_perms = get_role_permissions(role)
 
@@ -147,9 +145,7 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
 
         return False
     except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}"
-        )
+        logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}")
         return False
 
 
@@ -186,9 +182,17 @@ class PermissionDeniedError(Exception):
 @dataclass
 class UserContext:
     user_id: str
-    role: str
+    role: str = "viewer"
+    roles: list[str] = field(default_factory=list)
     expires_at: str | None = None
     scopes: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        # বাংলা মন্তব্য: যদি roles প্রোভাইড করা থাকে কিন্তু role ডিফল্ট থাকে, তবে প্রথম role কে মূল role হিসেবে সেট করা হবে।
+        if self.roles and self.role == "viewer":
+            object.__setattr__(self, "role", self.roles[0])
+        elif self.role and not self.roles:
+            object.__setattr__(self, "roles", [self.role])
 
 
 # বাংলা মন্তব্য: ক্লাসের মাধ্যমে রোলের পারমিশন চেক করার জন্য RoleBasedAccessControl ক্লাস যোগ করা হলো।

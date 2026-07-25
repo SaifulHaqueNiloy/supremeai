@@ -64,9 +64,7 @@ async def test_autocache_proxy_ttl_and_dynamic_costs():
 
     # Test dynamic cost lookup
     mock_config = MagicMock()
-    mock_config.get.side_effect = lambda k: (
-        0.02 if "input" in k else 0.04 if "output" in k else None
-    )
+    mock_config.get.side_effect = lambda k: (0.02 if "input" in k else 0.04 if "output" in k else None)
 
     with patch("core.config_cache.config_cache", mock_config):
         # Calculation: 10 input * 0.02 + 5 output * 0.04 = 0.20 + 0.20 = 0.40

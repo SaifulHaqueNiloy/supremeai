@@ -31,9 +31,7 @@ if settings.env == "production":
     if not settings.user_cors_origins:
         from loguru import logger
 
-        logger.warning(
-            "⚠️ Production User CORS drift detected. Auto-populating default trusted production origins."
-        )
+        logger.warning("⚠️ Production User CORS drift detected. Auto-populating default trusted production origins.")
         settings.user_cors_origins = [
             "https://supremeai-studio.vercel.app",
             "https://tiny-stroopwafel-2d981c.netlify.app",

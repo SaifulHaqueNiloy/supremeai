@@ -123,13 +123,9 @@ class LLMGateway:
             if os.path.exists(_POLICY_PATH):
                 with open(_POLICY_PATH, encoding="utf-8") as f:
                     return json.load(f)
-            logger.warning(
-                f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config."
-            )
+            logger.warning(f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config.")
         except Exception as exc:  # noqa: BLE001
-            logger.opt(exception=True).error(
-                f"[LLMGateway] Error loading routing policy: {exc}"
-            )
+            logger.opt(exception=True).error(f"[LLMGateway] Error loading routing policy: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
                     module="llm_gateway",
@@ -185,16 +181,10 @@ class LLMGateway:
             model = kwargs.get("model", "unknown")
             try:
                 delta = end_time - start_time
-                duration = (
-                    delta.total_seconds()
-                    if hasattr(delta, "total_seconds")
-                    else float(delta)
-                )
+                duration = delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
             except Exception:  # noqa: BLE001
                 duration = 0.0
-            logger.error(
-                f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s"
-            )
+            logger.error(f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s")
             error_event_bus.emit(
                 ErrorEvent(
                     module="llm_gateway",
@@ -218,19 +208,13 @@ class LLMGateway:
         """বাংলা মন্তব্য: Task type অনুযায়ী fallback chain তৈরি।"""
 
         difficulty = "easy"
-        if any(
-            kw in task_type.lower() for kw in ("reasoning", "math", "code", "coding")
-        ):
+        if any(kw in task_type.lower() for kw in ("reasoning", "math", "code", "coding")):
             difficulty = "hard"
         elif any(kw in task_type.lower() for kw in ("agent", "analysis")):
             difficulty = "medium"
 
-        model_candidates: list[str] = self.routing_policy.get(
-            "complexity_rules", {}
-        ).get(difficulty, [])
-        fallbacks: list[str] = self.routing_policy.get(
-            "fallback_chain", list(_DEFAULT_FALLBACK_MODELS)
-        )
+        model_candidates: list[str] = self.routing_policy.get("complexity_rules", {}).get(difficulty, [])
+        fallbacks: list[str] = self.routing_policy.get("fallback_chain", list(_DEFAULT_FALLBACK_MODELS))
 
         call_chain: list[str] = []
         if model:
@@ -254,9 +238,7 @@ class LLMGateway:
 
         if not call_chain:
             call_chain = list(_DEFAULT_FALLBACK_MODELS)
-            logger.warning(
-                "[LLMGateway] Empty call chain — using default fallback models."
-            )
+            logger.warning("[LLMGateway] Empty call chain — using default fallback models.")
 
         return call_chain
 
@@ -264,12 +246,8 @@ class LLMGateway:
         if current_model not in self._circuit_breakers:
             self._circuit_breakers[current_model] = CircuitBreaker(
                 name=current_model,
-                failure_threshold=getattr(
-                    settings, "circuit_breaker_failure_threshold", 3
-                ),
-                recovery_timeout=getattr(
-                    settings, "circuit_breaker_cooldown_period", 60
-                ),
+                failure_threshold=getattr(settings, "circuit_breaker_failure_threshold", 3),
+                recovery_timeout=getattr(settings, "circuit_breaker_cooldown_period", 60),
             )
         return self._circuit_breakers[current_model]
 
@@ -316,20 +294,14 @@ class LLMGateway:
                     from core.prompt_handler import estimate_tokens
 
                     tokens = estimate_tokens(prompt_text)
-                    estimated_cost = tokens * getattr(
-                        settings, "llm_cost_per_token", 0.00001
-                    )
-                except (
-                    Exception
-                ):  # Safe fallback cost on token estimate failure  # noqa: BLE001
+                    estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
+                except Exception:  # Safe fallback cost on token estimate failure  # noqa: BLE001
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
         # Use performance optimizer to select best model if not specified
         if not model:
-            model = await self.performance_optimizer.optimize_model_selection(
-                task_type, prompt_text
-            )
+            model = await self.performance_optimizer.optimize_model_selection(task_type, prompt_text)
 
         call_chain = self._build_call_chain(model, provider, task_type)
 
@@ -346,18 +318,14 @@ class LLMGateway:
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
-                logger.warning(
-                    f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping..."
-                )
+                logger.warning(f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping...")
                 continue
 
             try:
                 logger.info(f"[LLMGateway] Attempting: {current_model}")
                 # বাংলা মন্তব্য: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ।
                 # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
-                api_key = kwargs.pop("api_key", None) or self._get_api_key_for_model(
-                    current_model
-                )
+                api_key = kwargs.pop("api_key", None) or self._get_api_key_for_model(current_model)
                 response = await litellm.acompletion(
                     model=current_model,
                     messages=messages_payload,
@@ -379,9 +347,7 @@ class LLMGateway:
                 }
             except asyncio.CancelledError:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
-                logger.warning(
-                    f"[LLMGateway] acompletion cancelled during model {current_model}"
-                )
+                logger.warning(f"[LLMGateway] acompletion cancelled during model {current_model}")
                 raise
             except Exception as exc:  # noqa: BLE001
                 last_exception = exc
@@ -392,9 +358,7 @@ class LLMGateway:
                 continue
 
         # বাংলা মন্তব্য: সব fallbacks exhausted — self healer trigger এবং error emit
-        final_exception = last_exception or RuntimeError(
-            "All routing models failed to produce a completion."
-        )
+        final_exception = last_exception or RuntimeError("All routing models failed to produce a completion.")
         if tenant_id:
             db = get_firestore_db()
             if db:
@@ -434,9 +398,7 @@ class LLMGateway:
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
-                logger.warning(
-                    f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping..."
-                )
+                logger.warning(f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping...")
                 continue
 
             try:
@@ -458,16 +420,12 @@ class LLMGateway:
                 return
             except asyncio.CancelledError:
                 # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
-                logger.warning(
-                    f"[LLMGateway] Stream cancelled at model {current_model}"
-                )
+                logger.warning(f"[LLMGateway] Stream cancelled at model {current_model}")
                 raise
             except Exception as exc:  # noqa: BLE001
                 last_exception = exc
                 cb.mark_failure()
-                logger.opt(exception=True).warning(
-                    f"[LLMGateway] Stream model {current_model} failed."
-                )
+                logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
                 continue
 
         raise last_exception or RuntimeError("All streaming fallback options failed.")
@@ -540,18 +498,11 @@ async def stream_llm_response(
     """
     client = get_http_client()
     try:
-        async with client.stream(
-            "POST", provider_url, json=payload, headers=headers
-        ) as response:
+        async with client.stream("POST", provider_url, json=payload, headers=headers) as response:
             response.raise_for_status()
             async for line in response.aiter_lines():
-                if (
-                    hasattr(request, "is_disconnected")
-                    and await request.is_disconnected()
-                ):
-                    logger.info(
-                        "Client disconnected mid-stream, closing upstream connection."
-                    )
+                if hasattr(request, "is_disconnected") and await request.is_disconnected():
+                    logger.info("Client disconnected mid-stream, closing upstream connection.")
                     break
                 if not line or not line.startswith("data:"):
                     continue
@@ -562,9 +513,7 @@ async def stream_llm_response(
                 yield f"data: {data_str}\n\n"
     except httpx.HTTPStatusError as e:
         logger.error(f"Upstream error {e.response.status_code}: {provider_url}")
-        error_payload = json.dumps(
-            {"error": "upstream_error", "status": e.response.status_code}
-        )
+        error_payload = json.dumps({"error": "upstream_error", "status": e.response.status_code})
         yield f"data: {error_payload}\n\n"
     except httpx.TimeoutException:
         logger.error(f"Timeout while streaming from {provider_url}")

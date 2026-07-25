@@ -40,9 +40,7 @@ class CircuitBreakerOpenError(RuntimeError):
     def __init__(self, name: str, state: CircuitBreakerState) -> None:
         self.name = name
         self.state = state
-        super().__init__(
-            f"Circuit breaker '{name}' is {state.value}. Request rejected."
-        )
+        super().__init__(f"Circuit breaker '{name}' is {state.value}. Request rejected.")
 
 
 class CircuitBreaker:
@@ -69,12 +67,8 @@ class CircuitBreaker:
         **kwargs: Any,
     ) -> None:
         self.name = name
-        self.failure_threshold = (
-            failure_threshold or settings.circuit_breaker_failure_threshold
-        )
-        self.recovery_timeout = float(
-            recovery_timeout or settings.circuit_breaker_cooldown_period
-        )
+        self.failure_threshold = failure_threshold or settings.circuit_breaker_failure_threshold
+        self.recovery_timeout = float(recovery_timeout or settings.circuit_breaker_cooldown_period)
 
         self.state: CircuitBreakerState = CircuitBreakerState.CLOSED
         self.failure_count: int = 0
@@ -116,9 +110,7 @@ class CircuitBreaker:
 
             if self.state == CircuitBreakerState.OPEN:
                 if self._should_attempt_recovery():
-                    logger.info(
-                        f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test"
-                    )
+                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
                     self.state = CircuitBreakerState.HALF_OPEN
                     self._recovery_in_progress = True
                     return True
@@ -181,9 +173,7 @@ class CircuitBreaker:
         # Check if request is allowed before executing
         if not self.allow_request():
             err = CircuitBreakerOpenError(self.name, self.state)
-            logger.error(
-                f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}"
-            )
+            logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
             raise err
 
         try:
@@ -191,9 +181,7 @@ class CircuitBreaker:
             self.mark_success()
             return result
         except (ConnectionError, TimeoutError, OSError) as exc:
-            logger.warning(
-                f"Circuit breaker '{self.name}' caught recoverable error: {exc}"
-            )
+            logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
             self.mark_failure()
             raise
         except CircuitBreakerOpenError:
@@ -205,9 +193,7 @@ class CircuitBreaker:
             self.mark_failure()
             raise
 
-    async def acall(
-        self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
-    ) -> T:
+    async def acall(self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any) -> T:
         """Execute an async function with circuit breaker protection.
 
         Implements FAIL-CLOSED strategy: raises CircuitBreakerOpenError when
@@ -224,9 +210,7 @@ class CircuitBreaker:
         # Check if request is allowed before executing
         if not self.allow_request():
             err = CircuitBreakerOpenError(self.name, self.state)
-            logger.error(
-                f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}"
-            )
+            logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
             raise err
 
         try:
@@ -234,9 +218,7 @@ class CircuitBreaker:
             self.mark_success()
             return result
         except (ConnectionError, TimeoutError, OSError) as exc:
-            logger.warning(
-                f"Circuit breaker '{self.name}' caught recoverable error: {exc}"
-            )
+            logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
             self.mark_failure()
             raise
         except CircuitBreakerOpenError:
@@ -260,15 +242,11 @@ class CircuitBreaker:
 
             if self.state == CircuitBreakerState.HALF_OPEN:
                 # After a successful test in HALF_OPEN, close the circuit
-                logger.info(
-                    f"Circuit breaker '{self.name}' closing after successful recovery test"
-                )
+                logger.info(f"Circuit breaker '{self.name}' closing after successful recovery test")
                 self.state = CircuitBreakerState.CLOSED
                 self._recovery_in_progress = False
             elif self.state == CircuitBreakerState.CLOSED:
-                logger.debug(
-                    f"Circuit breaker '{self.name}' recorded success (total: {self.success_count})"
-                )
+                logger.debug(f"Circuit breaker '{self.name}' recorded success (total: {self.success_count})")
 
     def mark_failure(self) -> None:
         """Record a failed call and potentially open the circuit.
@@ -285,18 +263,11 @@ class CircuitBreaker:
 
             if self.state == CircuitBreakerState.HALF_OPEN:
                 # Recovery test failed, reopen the circuit
-                logger.warning(
-                    f"Circuit breaker '{self.name}' reopening after failed recovery test"
-                )
+                logger.warning(f"Circuit breaker '{self.name}' reopening after failed recovery test")
                 self._open_circuit()
-            elif (
-                self.state == CircuitBreakerState.CLOSED
-                and self.failure_count >= self.failure_threshold
-            ):
+            elif self.state == CircuitBreakerState.CLOSED and self.failure_count >= self.failure_threshold:
                 # Threshold exceeded, open the circuit
-                logger.warning(
-                    f"Circuit breaker '{self.name}' opening after {self.failure_count} consecutive failures"
-                )
+                logger.warning(f"Circuit breaker '{self.name}' opening after {self.failure_count} consecutive failures")
                 self._open_circuit()
             elif self.state == CircuitBreakerState.CLOSED:
                 logger.debug(
@@ -330,9 +301,7 @@ class CircuitBreaker:
         self.state = CircuitBreakerState.OPEN
         self.opened_at = time.monotonic()
         self._recovery_in_progress = False
-        logger.info(
-            f"Circuit breaker '{self.name}' is now OPEN - requests will be rejected"
-        )
+        logger.info(f"Circuit breaker '{self.name}' is now OPEN - requests will be rejected")
 
     def force_close(self) -> None:
         """Force the circuit to close (use with caution in emergency situations).

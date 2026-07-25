@@ -221,9 +221,7 @@ class FrameAnalyzer:
                 for i, item in enumerate(data)
             ]
 
-            await self.cache.set(
-                cache_key, [c.__dict__ for c in components], ttl=VIDEO_CACHE_TTL
-            )
+            await self.cache.set(cache_key, [c.__dict__ for c in components], ttl=VIDEO_CACHE_TTL)
             return components
 
         except Exception as e:

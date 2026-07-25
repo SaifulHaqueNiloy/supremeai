@@ -51,9 +51,7 @@ class EmailService:
         """বাংলা মন্তব্য: From email address."""
         return os.getenv("RESEND_FROM_EMAIL", "noreply@supremeai.dev")
 
-    async def _send_email(
-        self, to_email: str = "", subject: str = "", html_body: str = "", **kwargs
-    ) -> bool:
+    async def _send_email(self, to_email: str = "", subject: str = "", html_body: str = "", **kwargs) -> bool:
         to_email = to_email or kwargs.get("to", "") or kwargs.get("to_email", "")
         html_body = html_body or kwargs.get("body", "") or kwargs.get("html_body", "")
         s = self._get_settings()
@@ -81,9 +79,7 @@ class EmailService:
                         "html": html_body,
                     },
                 )
-                if getattr(response, "is_success", False) or getattr(
-                    response, "status_code", 0
-                ) in (200, 201):
+                if getattr(response, "is_success", False) or getattr(response, "status_code", 0) in (200, 201):
                     logger.info(f"Email sent successfully to {to_email}")
                     return True
                 else:
@@ -117,15 +113,11 @@ class EmailService:
             )
             return False
 
-    async def send_welcome_email(
-        self, user_email: str = "", user_name: str = "Developer", **kwargs
-    ) -> Any:
+    async def send_welcome_email(self, user_email: str = "", user_name: str = "Developer", **kwargs) -> Any:
         to_email = user_email or kwargs.get("to_email", "")
         user_name = user_name or kwargs.get("user_name", "Developer")
         subject = "Welcome to SupremeAI 2.0 🚀"
-        frontend_url = getattr(
-            self._get_settings(), "frontend_url", "https://supremeai.dev"
-        )
+        frontend_url = getattr(self._get_settings(), "frontend_url", "https://supremeai.dev")
         html = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
@@ -138,9 +130,7 @@ class EmailService:
         """  # noqa: E501
         return await self._send_email(to_email, subject, html)
 
-    async def send_password_reset(
-        self, user_email: str = "", reset_link: str = "", **kwargs
-    ) -> Any:
+    async def send_password_reset(self, user_email: str = "", reset_link: str = "", **kwargs) -> Any:
         to_email = user_email or kwargs.get("to_email", "")
         reset_link = reset_link or kwargs.get("reset_link", "")
         subject = "Reset Your SupremeAI Password"

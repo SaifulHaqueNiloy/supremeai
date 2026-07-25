@@ -21,9 +21,7 @@ class TestAutonoGuardMiddleware:
         request.headers = {}
         request.state.user = {"sub": "test-user"}
 
-        with patch(
-            "core.security.autonoguard_middleware.autonoguard_engine"
-        ) as mock_engine:
+        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
             await middleware.dispatch(request, app)
             app.assert_awaited_once()
@@ -55,9 +53,7 @@ class TestAutonoGuardMiddleware:
         request.body = AsyncMock(return_value=b"{}")
 
         with patch("core.config.settings.supremeai_public_paths", ["/health"]):
-            with patch(
-                "core.security.autonoguard_middleware.autonoguard_engine"
-            ) as mock_engine:
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
                 mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
                 await middleware.dispatch(request, app)
                 mock_engine.enforce_operation.assert_awaited_once()
@@ -75,12 +71,8 @@ class TestAutonoGuardMiddleware:
         request.state.correlation_id = "test-corr-id"
 
         with patch("core.config.settings.supremeai_public_paths", ["/health"]):
-            with patch(
-                "core.security.autonoguard_middleware.autonoguard_engine"
-            ) as mock_engine:
-                mock_engine.enforce_operation = AsyncMock(
-                    return_value=(False, "JIT OTP required")
-                )
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(return_value=(False, "JIT OTP required"))
                 mock_engine.heal_error = AsyncMock()
                 response = await middleware.dispatch(request, app)
                 assert response.status_code == 401
@@ -100,10 +92,7 @@ class TestAutonoGuardMiddleware:
         with patch("core.config.settings.supremeai_public_paths", ["/health"]):
             response = await middleware.dispatch(request, app)
             assert response.status_code == 401
-            assert (
-                response.body
-                == b'{"detail":"Authentication required for this operation"}'
-            )
+            assert response.body == b'{"detail":"Authentication required for this operation"}'
 
     @pytest.mark.asyncio
     async def test_otp_from_headers(self):
@@ -118,9 +107,7 @@ class TestAutonoGuardMiddleware:
         request.body = AsyncMock(return_value=b"{}")
 
         with patch("core.config.settings.supremeai_public_paths", ["/health"]):
-            with patch(
-                "core.security.autonoguard_middleware.autonoguard_engine"
-            ) as mock_engine:
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
                 mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
                 await middleware.dispatch(request, app)
                 assert mock_engine.enforce_operation.call_count == 1
@@ -140,9 +127,7 @@ class TestAutonoGuardMiddleware:
         request.body = AsyncMock(return_value=b"{}")
 
         with patch("core.config.settings.supremeai_public_paths", ["/health"]):
-            with patch(
-                "core.security.autonoguard_middleware.autonoguard_engine"
-            ) as mock_engine:
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
                 mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
                 await middleware.dispatch(request, app)
                 assert mock_engine.enforce_operation.call_count == 1
