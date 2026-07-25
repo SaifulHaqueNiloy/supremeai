@@ -234,6 +234,14 @@ jobs:
           poetry install --no-root
 
       - name: 📄 Generate API Documentation (OpenAPI)
+        env:
+          PYTHONPATH: backend
+          SUPABASE_URL: "https://mock-health-check.supabase.co"
+          SUPABASE_KEY: "mock_key"
+          DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
           $VENV_PYTHON scripts/generate_openapi.py

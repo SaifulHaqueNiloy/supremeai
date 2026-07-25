@@ -27,6 +27,10 @@ os.environ.setdefault("DOCS_PASSWORD", "dummy")
 os.environ.setdefault("SUPREMEAI_ADMIN_PASSWORD_HASH", "$2b$12$dummyhashdummyhashdummyhashdummyhashdummyhashdummyha")
 os.environ.setdefault("SUPREMEAI_JWT_SECRET", "dummy_jwt_secret_for_openapi_generation_that_is_at_least_64_bytes_long_so_it_passes_validation")
 os.environ.setdefault("OPENROUTER_API_KEY", "dummy")
+os.environ.setdefault("SUPABASE_DATABASE_URL", "postgresql+asyncpg://mock:mock@localhost:5432/mock_db")
+os.environ.setdefault("SUPABASE_DATABASE_URL_POOLER", "postgresql+asyncpg://mock:mock@localhost:5432/mock_db")
+os.environ.setdefault("SUPABASE_URL", "https://mock.supabase.co")
+os.environ.setdefault("SUPABASE_KEY", "mock-key")
 
 
 try:
