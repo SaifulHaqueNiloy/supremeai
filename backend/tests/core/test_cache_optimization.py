@@ -32,7 +32,10 @@ async def test_multi_layer_cache_prefix_batched_lookup():
 @pytest.mark.anyio
 async def test_idempotency_lock_fail_closed():
     # Test Redis unavailable with fail_closed=True raises exception
-    with patch("core.cache.redis_manager.SecureRedisManager.get_client_async", new_callable=AsyncMock) as mock_get_client:
+    with patch(
+        "core.cache.redis_manager.SecureRedisManager.get_client_async",
+        new_callable=AsyncMock,
+    ) as mock_get_client:
         mock_get_client.return_value = None
         with pytest.raises(IdempotencyUnavailableError) as exc_info:
             await acquire_idempotency_lock("payment:key", fail_closed=True)
@@ -61,7 +64,9 @@ async def test_autocache_proxy_ttl_and_dynamic_costs():
 
     # Test dynamic cost lookup
     mock_config = MagicMock()
-    mock_config.get.side_effect = lambda k: (0.02 if "input" in k else 0.04 if "output" in k else None)
+    mock_config.get.side_effect = lambda k: (
+        0.02 if "input" in k else 0.04 if "output" in k else None
+    )
 
     with patch("core.config_cache.config_cache", mock_config):
         # Calculation: 10 input * 0.02 + 5 output * 0.04 = 0.20 + 0.20 = 0.40

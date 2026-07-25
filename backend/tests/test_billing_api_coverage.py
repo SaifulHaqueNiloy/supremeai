@@ -24,7 +24,9 @@ class TestBillingGetBalance:
         mock_session.execute.return_value = mock_result
 
         token_payload = {"sub": "test-user"}
-        result = await get_wallet_balance(session=mock_session, token_payload=token_payload)
+        result = await get_wallet_balance(
+            session=mock_session, token_payload=token_payload
+        )
 
         assert result["user_id"] == "test-user"
         assert result["balance_usd"] == 100.0
@@ -61,7 +63,12 @@ class TestBillingTopUp:
         mock_request.headers.get.return_value = "http://localhost:3000"
         token_payload = {"sub": "test-user"}
 
-        result = await add_funds(amount=50.0, request=mock_request, session=mock_session, token_payload=token_payload)
+        result = await add_funds(
+            amount=50.0,
+            request=mock_request,
+            session=mock_session,
+            token_payload=token_payload,
+        )
 
         assert "checkout_url" in result
         assert result["status"] == "pending"
@@ -76,7 +83,12 @@ class TestBillingTopUp:
         token_payload = {"sub": "test-user"}
 
         with pytest.raises(HTTPException) as exc_info:
-            await add_funds(amount=-10.0, request=mock_request, session=mock_session, token_payload=token_payload)
+            await add_funds(
+                amount=-10.0,
+                request=mock_request,
+                session=mock_session,
+                token_payload=token_payload,
+            )
 
         assert exc_info.value.status_code == 400
 
