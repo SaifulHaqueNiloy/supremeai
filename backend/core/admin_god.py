@@ -40,7 +40,7 @@ try:
 except Exception:  # pragma: no cover - optional fallback  # noqa: BLE001
     bcrypt = None
 
-from .security.rbac import RoleBasedAccessControl, UserContext
+from .security.rbac import PermissionDeniedError, RoleBasedAccessControl, UserContext
 from .universal_rules import UniversalRulesEngine
 
 
@@ -190,11 +190,21 @@ class AdminGodLayer:
                 duration_ms=duration_ms,
             )
 
-    def enforce(self, action: str, user_context: UserContext | str) -> dict[str, Any]:
+    def enforce(self, action: str, user_context: UserContext | str) -> bool:
         role = user_context.role if isinstance(user_context, UserContext) else (user_context or "viewer")
         ctx = user_context if isinstance(user_context, UserContext) else UserContext(user_id="unknown", role=role)
-        result = self.rbac.require(ctx, action)
-        if not result.get("allowed"):
+        try:
+            result = self.rbac.require(ctx, action)
+        except PermissionDeniedError as e:
+            GodModeAuditLog.record(
+                actor=ctx.user_id,
+                action="ENFORCE_DENIED",
+                resource=action,
+                reason=str(e),
+            )
+            raise PermissionError(str(e)) from e
+
+        if isinstance(result, dict) and not result.get("allowed", True):
             GodModeAuditLog.record(
                 actor=ctx.user_id,
                 action="ENFORCE_DENIED",
@@ -208,7 +218,7 @@ class AdminGodLayer:
             resource=action,
             reason="Permission granted",
         )
-        return result
+        return True
 
     def enforce_rules(self, decision_context: dict[str, Any]) -> dict[str, Any]:
         """

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 from core.rate_limiter import AsyncRateLimiter
 from core.security import generate_api_key, hash_api_key, mask_api_key, verify_api_key
 from models.api_key import (
-    create_api_key,
+    create_api_key as db_create_api_key,
     delete_api_key,
     get_all_api_keys,
     get_api_key_by_id,
@@ -22,8 +22,8 @@ from models.api_key import (
     get_api_keys_by_user,
     record_api_key_event,
     record_api_key_usage,
-    revoke_api_key,
-    rotate_api_key,
+    revoke_api_key as db_revoke_api_key,
+    rotate_api_key as db_rotate_api_key,
 )
 
 router = APIRouter(prefix="/api/api-keys", tags=["api-keys"])
@@ -95,7 +95,7 @@ async def create_key(req: CreateAPIKeyRequest, request: Request):
     if requester := _get_api_key_owner(request):
         owner = f"{owner}:api_key:{requester}"
 
-    rec = await create_api_key(
+    rec = await db_create_api_key(
         user_id=owner,
         name=req.name,
         key_hash=key_hash,
@@ -149,7 +149,7 @@ async def revoke_key(key_id: int, request: Request):
     rec = await get_api_key_by_id(key_id)
     if not rec or rec["user_id"] != owner:
         raise HTTPException(status_code=404, detail="API key not found")
-    updated = await revoke_api_key(key_id)
+    updated = await db_revoke_api_key(key_id)
     return {"status": "revoked", "key": updated}
 
 
@@ -182,7 +182,7 @@ async def rotate_key(key_id: int, req: RotateAPIKeyRequest, request: Request):
         raise HTTPException(status_code=400, detail="Old key verification failed")
 
     new_key = generate_api_key()
-    updated = await rotate_api_key(
+    updated = await db_rotate_api_key(
         key_id=key_id,
         new_key_hash=hash_api_key(new_key),
         new_key_masked=mask_api_key(new_key),
@@ -261,5 +261,51 @@ async def bulk_delete(request: Request, req: BulkDeleteRequest):
             results["failed"].append(kid)
             continue
         ok = await delete_api_key(kid)
-        results["deleted"].append(kid) if ok else results["failed"].append(kid)
+        if ok:
+            results["deleted"].append(kid)
+        else:
+            results["failed"].append(kid)
     return results
+
+
+async def create_api_key(
+    payload: CreateAPIKeyRequest | None = None,
+    request: Request | None = None,
+    key_hash: str = "",
+    key_masked: str = "",
+    key_prefix: str = "",
+):
+    if payload is not None and request is not None:
+        return await create_key(payload, request)
+    return await db_create_api_key(
+        user_id="",
+        name=payload.name if payload else "",
+        key_hash=key_hash,
+        key_masked=key_masked,
+        key_prefix=key_prefix,
+    )
+
+
+async def revoke_api_key(key_id: int | str, request: Request | None = None):
+    kid = int(key_id) if isinstance(key_id, (int, str)) and str(key_id).isdigit() else key_id
+    if request is not None and isinstance(kid, int):
+        return await revoke_key(kid, request)
+    return await db_revoke_api_key(kid if isinstance(kid, int) else 0)
+
+
+async def rotate_api_key(
+    key_id: int | str,
+    request: Request | None = None,
+    new_key_masked: str = "",
+    new_key_prefix: str = "",
+):
+    kid = int(key_id) if isinstance(key_id, (int, str)) and str(key_id).isdigit() else key_id
+    if request is not None and isinstance(kid, int):
+        req = RotateAPIKeyRequest(old_key="")
+        return await rotate_key(kid, req, request)
+    return await db_rotate_api_key(
+        key_id=kid if isinstance(kid, int) else 0,
+        new_key_hash="",
+        new_key_masked=new_key_masked,
+        new_key_prefix=new_key_prefix,
+    )
