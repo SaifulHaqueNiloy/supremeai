@@ -1,119 +1,148 @@
 {
-  "color": {
-    "brand": {
-      "primary": {
-        "dark": { "value": "#00f3ff", "type": "color" },
-        "light": { "value": "#0284c7", "type": "color" }
-      },
-      "secondary": {
-        "dark": { "value": "#bc13fe", "type": "color" },
-        "light": { "value": "#4f46e5", "type": "color" }
-      },
-      "success": {
-        "dark": { "value": "#00ff66", "type": "color" },
-        "light": { "value": "#059669", "type": "color" }
-      },
-      "warning": {
-        "dark": { "value": "#f59e0b", "type": "color" },
-        "light": { "value": "#d97706", "type": "color" }
-      },
-      "danger": {
-        "dark": { "value": "#ef4444", "type": "color" },
-        "light": { "value": "#dc2626", "type": "color" }
-      }
+  "version": "2.0.0",
+  "name": "SupremeAI Design System",
+  "description": "Unified design tokens for all SupremeAI platforms",
+
+  "colors": {
+    "background": {
+      "base": "#0a0e1a",
+      "elevated": "#111827",
+      "overlay": "#1a2236",
+      "modal": "#0f172a"
     },
-    "bg": {
-      "void": {
-        "dark": { "value": "#030712", "type": "color" },
-        "light": { "value": "#f0f9ff", "type": "color" }
-      },
-      "surface": {
-        "dark": { "value": "#111827", "type": "color" },
-        "light": { "value": "#ffffff", "type": "color" }
-      },
-      "elevated": {
-        "dark": { "value": "rgba(17, 24, 39, 0.65)", "type": "color" },
-        "light": { "value": "rgba(255, 255, 255, 0.85)", "type": "color" }
-      }
-    },
-    "text": {
-      "primary": {
-        "dark": { "value": "#f3f4f6", "type": "color" },
-        "light": { "value": "#0f172a", "type": "color" }
-      },
-      "secondary": {
-        "dark": { "value": "#94a3b8", "type": "color" },
-        "light": { "value": "#475569", "type": "color" }
-      },
-      "disabled": {
-        "dark": { "value": "#374151", "type": "color" },
-        "light": { "value": "#cbd5e1", "type": "color" }
-      }
+    "surface": {
+      "default": "#111827",
+      "hover": "#1a2236",
+      "active": "#1e293b",
+      "disabled": "#0f172a"
     },
     "border": {
-      "default": {
-        "dark": { "value": "rgba(255, 255, 255, 0.06)", "type": "color" },
-        "light": { "value": "rgba(0, 0, 0, 0.1)", "type": "color" }
-      },
-      "accent": {
-        "dark": { "value": "rgba(0, 243, 255, 0.15)", "type": "color" },
-        "light": { "value": "rgba(2, 132, 199, 0.2)", "type": "color" }
-      }
+      "default": "#1f2937",
+      "hover": "#374151",
+      "focus": "#6366f1",
+      "error": "#ef4444"
+    },
+    "text": {
+      "primary": "#f9fafb",
+      "secondary": "#e5e7eb",
+      "muted": "#9ca3af",
+      "disabled": "#6b7280",
+      "inverse": "#111827"
+    },
+    "accent": {
+      "primary": "#6366f1",
+      "primaryLight": "#818cf8",
+      "primaryDark": "#4f46e5",
+      "secondary": "#a855f7",
+      "tertiary": "#ec4899"
+    },
+    "semantic": {
+      "success": "#22c55e",
+      "successLight": "#86efac",
+      "successBg": "rgba(34,197,94,0.1)",
+      "warning": "#f59e0b",
+      "warningLight": "#fcd34d",
+      "warningBg": "rgba(245,158,11,0.1)",
+      "danger": "#ef4444",
+      "dangerLight": "#fca5a5",
+      "dangerBg": "rgba(239,68,68,0.1)",
+      "info": "#06b6d4",
+      "infoLight": "#67e8f9",
+      "infoBg": "rgba(6,182,212,0.1)"
+    },
+    "gradient": {
+      "primary": "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
+      "success": "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
+      "info": "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)",
+      "warning": "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+      "dark": "linear-gradient(180deg, #0a0e1a 0%, #111827 100%)"
     }
   },
-  "font": {
-    "family": {
-      "display": { "value": "'Outfit', sans-serif", "type": "fontFamilies" },
-      "body": { "value": "'Space Grotesk', sans-serif", "type": "fontFamilies" },
-      "mono": { "value": "'JetBrains Mono', monospace", "type": "fontFamilies" },
-      "bengali": { "value": "'Hind Siliguri', sans-serif", "type": "fontFamilies" }
+
+  "typography": {
+    "fontFamily": {
+      "primary": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "mono": "'JetBrains Mono', 'Fira Code', 'SF Mono', monospace",
+      "bangla": "'Noto Sans Bengali', 'Hind Siliguri', 'Baloo Da 2', sans-serif"
     },
-    "size": {
-      "xs": { "value": "11px", "type": "fontSizes" },
-      "sm": { "value": "13px", "type": "fontSizes" },
-      "base": { "value": "15px", "type": "fontSizes" },
-      "lg": { "value": "18px", "type": "fontSizes" },
-      "xl": { "value": "22px", "type": "fontSizes" },
-      "2xl": { "value": "28px", "type": "fontSizes" },
-      "3xl": { "value": "36px", "type": "fontSizes" }
+    "fontSize": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem",
+      "4xl": "2.25rem",
+      "5xl": "3rem"
     },
-    "weight": {
-      "regular": { "value": "400", "type": "fontWeights" },
-      "medium": { "value": "500", "type": "fontWeights" },
-      "semibold": { "value": "600", "type": "fontWeights" },
-      "bold": { "value": "700", "type": "fontWeights" }
+    "fontWeight": {
+      "normal": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "lineHeight": {
+      "tight": 1.25,
+      "normal": 1.5,
+      "relaxed": 1.75
     }
   },
-  "space": {
-    "1": { "value": "4px", "type": "spacing" },
-    "2": { "value": "8px", "type": "spacing" },
-    "3": { "value": "12px", "type": "spacing" },
-    "4": { "value": "16px", "type": "spacing" },
-    "5": { "value": "20px", "type": "spacing" },
-    "6": { "value": "24px", "type": "spacing" },
-    "8": { "value": "32px", "type": "spacing" },
-    "12": { "value": "48px", "type": "spacing" },
-    "16": { "value": "64px", "type": "spacing" }
+
+  "spacing": {
+    "0": "0",
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "20px",
+    "6": "24px",
+    "8": "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px"
   },
-  "radius": {
-    "sm": { "value": "6px", "type": "borderRadius" },
-    "md": { "value": "10px", "type": "borderRadius" },
-    "lg": { "value": "16px", "type": "borderRadius" },
-    "xl": { "value": "24px", "type": "borderRadius" },
-    "full": { "value": "9999px", "type": "borderRadius" }
+  "borderRadius": {
+    "none": "0",
+    "sm": "6px",
+    "md": "10px",
+    "lg": "14px",
+    "xl": "18px",
+    "2xl": "24px",
+    "full": "9999px"
   },
-  "motion": {
+  "shadow": {
+    "sm": "0 1px 2px rgba(0,0,0,0.3)",
+    "md": "0 4px 12px rgba(0,0,0,0.4)",
+    "lg": "0 8px 32px rgba(0,0,0,0.5)",
+    "glow": "0 0 20px rgba(99,102,241,0.15)",
+    "glowSuccess": "0 0 20px rgba(34,197,94,0.15)",
+    "glowDanger": "0 0 20px rgba(239,68,68,0.15)"
+  },
+  "animation": {
     "duration": {
-      "fast": { "value": "150ms", "type": "time" },
-      "normal": { "value": "300ms", "type": "time" },
-      "slow": { "value": "600ms", "type": "time" }
+      "fast": "150ms",
+      "normal": "300ms",
+      "slow": "500ms"
     },
     "easing": {
-      "standard": { "value": "cubic-bezier(0.4, 0, 0.2, 1)", "type": "other" },
-      "bounce": { "value": "cubic-bezier(0.175, 0.885, 0.32, 1.275)", "type": "other" },
-      "smooth": { "value": "cubic-bezier(0.4, 0, 0.2, 1)", "type": "other" },
-      "decelerate": { "value": "cubic-bezier(0, 0, 0.2, 1)", "type": "other" },
-      "accelerate": { "value": "cubic-bezier(0.4, 0, 1, 1)", "type": "other" }
+      "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "bounce": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+      "smooth": "cubic-bezier(0.25, 0.1, 0.25, 1)"
     }
+  },
+  "breakpoints": {
+    "sm": "640px",
+    "md": "768px",
+    "lg": "1024px",
+    "xl": "1280px",
+    "2xl": "1536px"
+  },
+  "zIndex": {
+    "dropdown": 100,
+    "modal": 200,
+    "tooltip": 300,
+    "toast": 400,
+    "overlay": 500
   }
 }
