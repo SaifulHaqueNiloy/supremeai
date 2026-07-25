@@ -1,6 +1,6 @@
 import re
 import uuid
-from typing import Any
+from typing import ClassVar, Any
 
 import httpx
 from loguru import logger
@@ -12,7 +12,7 @@ class ResourceCatalog:
     """Searches open-source resource catalogs for external tool entries."""
 
     AWESOME_SELFHOSTED_URL = "https://raw.githubusercontent.com/awesome-selfhosted/awesome-selfhosted/master/README.md"
-    AWESOME_PYTHON_URL = (
+    AWESOME_PYTHON_URL: ClassVar[Any] = (
         "https://raw.githubusercontent.com/vinta/awesome-python/master/README.md"
     )
     GITHUB_SEARCH_URL = "https://api.github.com/search/repositories"

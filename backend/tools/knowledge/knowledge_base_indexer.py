@@ -14,7 +14,7 @@ import ast
 import contextlib
 import hashlib
 import os
-from typing import Any
+from typing import ClassVar, Any
 
 from memory.chromadb_store import ChromaDBStore
 
@@ -137,7 +137,7 @@ class KnowledgeBaseIndexer:
         docs.extend(self._extract_seed_data_calls(tree, filename, path, category))
         return docs
 
-    _CALL_FACTORIES = {
+    _CALL_FACTORIES: ClassVar[Any] = {
         "_learning",
         "_pattern",
         "_error_fix",
