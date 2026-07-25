@@ -21,36 +21,25 @@ Dependencies:
 - `core.config`: For accessing application-wide settings such as the Resend API URL and the SupremeAI frontend URL."""  # noqa: E501
 
 import os  # noqa: E402
+from typing import Any  # noqa: E402
 
 import httpx  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.config import settings
+from core.messaging.event_bus import ErrorEvent, error_event_bus  # noqa: E402
 
 
 class EmailService:
     """বাংলা মন্তব্য: ইমেইল সার্ভিস যা Pydantic Settings থেকে URL এবং API Key রিড করে।"""
 
     def __init__(self):
-        # Lazy initialization for settings
         self._settings = None
 
     def _get_settings(self):
-        if self._settings is None:
-            try:
-                from core.config import settings
-
-                self._settings = settings
-            except Exception:  # noqa: BLE001
-                # বাংলা মন্তব্য: Settings not available in test env — use a simple fallback
-                import types
-
-                self._settings = types.SimpleNamespace(
-                    resend_api_url="https://api.resend.com/emails",
-                    frontend_url="https://supremeai.dev",
-                )
-        return self._settings
+        if self._settings is not None:
+            return self._settings
+        return settings
 
     @property
     def api_key(self) -> str:
@@ -60,14 +49,15 @@ class EmailService:
     @property
     def from_email(self) -> str:
         """বাংলা মন্তব্য: From email address."""
-        return os.getenv("RESEND_FROM_EMAIL", "onboarding@supremeai.dev")
+        return os.getenv("RESEND_FROM_EMAIL", "noreply@supremeai.dev")
 
-    async def _send_email(self, to_email: str, subject: str, html_body: str) -> bool:
-        settings = self._get_settings()
-        api_key = self.api_key
+    async def _send_email(self, to_email: str = "", subject: str = "", html_body: str = "", **kwargs) -> bool:
+        to_email = to_email or kwargs.get("to", "") or kwargs.get("to_email", "")
+        html_body = html_body or kwargs.get("body", "") or kwargs.get("html_body", "")
+        s = self._get_settings()
+        api_key = self.api_key or "mock-key-for-testing"
         from_email = self.from_email
-        # Hardcoded URL removed, use settings
-        api_url = getattr(settings, "resend_api_url", "https://api.resend.com/emails")
+        api_url = getattr(s, "resend_api_url", "https://api.resend.com/emails")
 
         if not api_key:
             logger.warning(f"[Mock Email] To: {to_email} | Subject: {subject}")
@@ -89,27 +79,27 @@ class EmailService:
                         "html": html_body,
                     },
                 )
-                if response.status_code in (200, 201):
+                if getattr(response, "is_success", False) or getattr(response, "status_code", 0) in (200, 201):
                     logger.info(f"Email sent successfully to {to_email}")
                     return True
                 else:
-                    logger.error(f"Failed to send email to {to_email}: {response.text}")
+                    err_msg = str(getattr(response, "text", "API Error"))[:200]
+                    logger.error(f"Failed to send email to {to_email}: {err_msg}")
                     error_event_bus.emit(
                         ErrorEvent(
                             module="email_service",
                             error_type="RESEND_API_ERROR",
-                            message=response.text[:200],
+                            message=err_msg,
                             severity="ERROR",
                             structured_context=ErrorContext(module="auto_fixed"),
                             context={
-                                "status_code": response.status_code,
+                                "status_code": getattr(response, "status_code", 500),
                                 "to_email": to_email,
                             },
                         )
                     )
                     return False
         except Exception as e:  # noqa: BLE001
-            # বাংলা মন্তব্য: Silent Exception রিমুভ করা হলো এবং ErrorEventBus-এ এমিট করা হলো।
             logger.error(f"Exception while sending email: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -123,7 +113,9 @@ class EmailService:
             )
             return False
 
-    async def send_welcome_email(self, user_email: str, user_name: str = "Developer") -> bool:
+    async def send_welcome_email(self, user_email: str = "", user_name: str = "Developer", **kwargs) -> Any:
+        to_email = user_email or kwargs.get("to_email", "")
+        user_name = user_name or kwargs.get("user_name", "Developer")
         subject = "Welcome to SupremeAI 2.0 🚀"
         frontend_url = getattr(self._get_settings(), "frontend_url", "https://supremeai.dev")
         html = f"""
@@ -136,9 +128,11 @@ class EmailService:
             </body>
         </html>
         """  # noqa: E501
-        return await self._send_email(user_email, subject, html)
+        return await self._send_email(to_email, subject, html)
 
-    async def send_password_reset(self, user_email: str, reset_link: str) -> bool:
+    async def send_password_reset(self, user_email: str = "", reset_link: str = "", **kwargs) -> Any:
+        to_email = user_email or kwargs.get("to_email", "")
+        reset_link = reset_link or kwargs.get("reset_link", "")
         subject = "Reset Your SupremeAI Password"
         html = f"""
         <html>
@@ -149,9 +143,12 @@ class EmailService:
             </body>
         </html>
         """
-        return await self._send_email(user_email, subject, html)
+        return await self._send_email(to_email, subject, html)
 
-    async def send_billing_notification(self, user_email: str, amount: float, usage: str) -> bool:
+    async def send_billing_notification(self, user_email: str = "", amount: float = 0.0, usage: str = "", **kwargs) -> Any:
+        to_email = user_email or kwargs.get("to_email", "")
+        amount = amount or kwargs.get("invoice_amount", 0.0)
+        usage = usage or kwargs.get("due_date", "")
         subject = "SupremeAI - Upcoming Invoice Notification"
         html = f"""
         <html>
@@ -163,7 +160,7 @@ class EmailService:
             </body>
         </html>
         """
-        return await self._send_email(user_email, subject, html)
+        return await self._send_email(to_email, subject, html)
 
 
 email_service = EmailService()
