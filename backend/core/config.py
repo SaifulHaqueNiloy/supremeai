@@ -88,6 +88,12 @@ class Settings(BaseSettings):
     env: str = Field(default="local", validation_alias="ENV")
     debug: bool = Field(default=True)
 
+    # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে AuthMiddleware-এর JWT ভেরিফিকেশন বাইপাস করার জন্য
+    # CI workflow-এ ALLOW_TEST_AUTH_BYPASS=true সেট করা হয়। Production-এ এটি কখনো true হবে না।
+    # auth_middleware.py:139 এই field চেক করে।
+    allow_test_auth_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_AUTH_BYPASS")
+    allow_test_origin_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS")
+
     # ── অ্যাপ্লিকেশন মেটাডেটা ──────────────────────────────────────────────
     PROJECT_NAME: str = "SupremeAI 2.0"
     API_V1_STR: str = "/api/v1"
