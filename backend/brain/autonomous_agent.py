@@ -42,8 +42,12 @@ class AutonomousAgent:
                 "apply_fix",
                 "verify",
             ]
-        elif any(word in lowered for word in ["build", "create", "implement", "feature"]):
-            plan["summary"] = "Scaffold implementation, implement core, add basic tests."
+        elif any(
+            word in lowered for word in ["build", "create", "implement", "feature"]
+        ):
+            plan["summary"] = (
+                "Scaffold implementation, implement core, add basic tests."
+            )
             plan["steps"] = [
                 "scaffold",
                 "implement",
@@ -61,7 +65,9 @@ class AutonomousAgent:
             plan["steps"] = ["execute", "summarize"]
         return plan
 
-    def execute(self, task_description: str, context: str | None = None) -> dict[str, Any]:
+    def execute(
+        self, task_description: str, context: str | None = None
+    ) -> dict[str, Any]:
         plan = self.plan(task_description)
         results: list[StepResult] = []
 
@@ -80,7 +86,9 @@ class AutonomousAgent:
                     StepResult(
                         name=step,
                         success=False,
-                        error="".join(traceback.format_exception_only(type(exc), exc)).strip(),
+                        error="".join(
+                            traceback.format_exception_only(type(exc), exc)
+                        ).strip(),
                     )
                 )
                 break
@@ -104,7 +112,11 @@ class AutonomousAgent:
             }
         )
         success = all(result.success for result in results)
-        outputs = [result.output for result in results if result.success and result.output is not None]
+        outputs = [
+            result.output
+            for result in results
+            if result.success and result.output is not None
+        ]
         errors = [result.error for result in results if result.error]
 
         # Handle failures with self-healing
@@ -121,7 +133,9 @@ class AutonomousAgent:
                             "task_description": task_description,
                             "context": context,
                             "failed_step": results[-1].name if results else "unknown",
-                            "error": results[-1].error if results and results[-1].error else "unknown",
+                            "error": results[-1].error
+                            if results and results[-1].error
+                            else "unknown",
                             "dependency_tree": ["autonomous_agent", self.name],
                         },
                     )
@@ -137,7 +151,9 @@ class AutonomousAgent:
                             "task_description": task_description,
                             "context": context,
                             "failed_step": results[-1].name if results else "unknown",
-                            "error": results[-1].error if results and results[-1].error else "unknown",
+                            "error": results[-1].error
+                            if results and results[-1].error
+                            else "unknown",
                             "dependency_tree": ["autonomous_agent", self.name],
                         },
                     )
@@ -152,7 +168,9 @@ class AutonomousAgent:
             "errors": errors,
         }
 
-    def _run_step(self, step: str, task_description: str, context: str | None) -> StepResult:
+    def _run_step(
+        self, step: str, task_description: str, context: str | None
+    ) -> StepResult:
         if step == "investigate":
             output = {
                 "message": "Investigation complete.",
@@ -180,14 +198,18 @@ class AutonomousAgent:
                 "suggested_path": "tools/new_feature.py",
             }
         elif step == "implement":
-            output = {"message": "Implementation placeholder: delegate to coding tooling."}
+            output = {
+                "message": "Implementation placeholder: delegate to coding tooling."
+            }
         elif step == "basic_tests":
             output = {
                 "message": "Tests placeholder: add unit tests in tests/ for new feature.",
                 "suggested_path": "tests/test_new_feature.py",
             }
         elif step == "read_inputs":
-            output = {"message": "Inputs review placeholder: gather docs, code, data sources."}
+            output = {
+                "message": "Inputs review placeholder: gather docs, code, data sources."
+            }
         elif step == "analyze":
             output = {
                 "message": "Analysis placeholder: summarize current state and risks.",
@@ -229,7 +251,11 @@ class AutonomousAgent:
             "success": run.get("success", False),
             "completed_steps": run.get("steps", []),
             "failures": failures,
-            "improvements": (["Reduce broad step scope and add explicit verify step."] if failures else []),
+            "improvements": (
+                ["Reduce broad step scope and add explicit verify step."]
+                if failures
+                else []
+            ),
         }
 
     def run(self, task_description: str, context: str | None = None) -> dict[str, Any]:

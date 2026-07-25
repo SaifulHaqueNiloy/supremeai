@@ -36,7 +36,7 @@ def test_check_docker_success(sandbox):
 )
 def test_check_docker_failure(sandbox, exception):
     """ডকার অনুপস্থিত বা ত্রুটিযুক্ত হলে False রিটার্ন করে কিনা তা পরীক্ষা করে।"""
-    with patch("subprocess.run", side_effect=exception) as mock_run:
+    with patch("subprocess.run", side_effect=exception):
         assert sandbox._check_docker() is False
 
 
@@ -75,7 +75,7 @@ def test_execute_command_docker_failure(sandbox):
     with patch(
         "subprocess.run",
         side_effect=subprocess.CalledProcessError(1, "cmd", stderr="command not found"),
-    ) as mock_run:
+    ):
         result = sandbox.execute_command("invalid_command")
 
         assert result["success"] is False
@@ -93,7 +93,9 @@ def test_execute_command_local_fallback_success(sandbox, monkeypatch):
 
     sandbox.docker_available = False
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=0, stdout="local output", stderr="")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="local output", stderr=""
+        )
         result = sandbox.execute_command("echo 'local output'")
 
         assert result["success"] is True
@@ -113,7 +115,7 @@ def test_execute_command_local_fallback_failure(sandbox, monkeypatch):
     with patch(
         "subprocess.run",
         side_effect=subprocess.CalledProcessError(127, "cmd", stderr="not found"),
-    ) as mock_run:
+    ):
         result = sandbox.execute_command("some_bad_command")
 
         assert result["success"] is False
@@ -130,7 +132,7 @@ def test_execute_command_local_fallback_timeout(sandbox, monkeypatch):
     monkeypatch.setattr(settings, "env", "development")
 
     sandbox.docker_available = False
-    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 5)) as mock_run:
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 5)):
         result = sandbox.execute_command("sleep 10")
 
         assert result["success"] is False

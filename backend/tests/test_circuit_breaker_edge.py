@@ -49,27 +49,27 @@ class TestCircuitBreakerEdgeCases:
         assert cb.allow_request() is True
         assert cb._recovery_in_progress is True
 
-    def test_mark_success_closed_no_state_change(self):
+    def testmark_success_closed_no_state_change(self):
         cb = CircuitBreaker("success-closed")
         cb.mark_success()
         assert cb.state == CircuitBreakerState.CLOSED
         assert cb.success_count == 1
 
-    def test_mark_failure_when_already_open(self):
+    def testmark_failure_when_already_open(self):
         cb = CircuitBreaker("already-open", failure_threshold=1)
         cb.mark_failure()
         assert cb.state == CircuitBreakerState.OPEN
         cb.mark_failure()
         assert cb.state == CircuitBreakerState.OPEN
 
-    def test_mark_failure_at_exact_threshold(self):
+    def testmark_failure_at_exact_threshold(self):
         cb = CircuitBreaker("exact-threshold", failure_threshold=3)
         cb.mark_failure()
         cb.mark_failure()
         cb.mark_failure()
         assert cb.state == CircuitBreakerState.OPEN
 
-    def test_mark_failure_below_threshold(self):
+    def testmark_failure_below_threshold(self):
         cb = CircuitBreaker("below-threshold", failure_threshold=5)
         cb.mark_failure()
         cb.mark_failure()
@@ -182,7 +182,7 @@ class TestCircuitBreakerEdgeCases:
         def fail():
             try:
                 for _ in range(10):
-                    cb._mark_failure()
+                    cb.mark_failure()
             except Exception as e:
                 errors.append(e)
 
@@ -202,7 +202,7 @@ class TestCircuitBreakerEdgeCases:
         cb.opened_at = time.monotonic() - 10
         assert cb._should_attempt_recovery() is True
 
-    def test_mark_success_transitions_half_open_to_closed(self):
+    def testmark_success_transitions_half_open_to_closed(self):
         cb = CircuitBreaker("half-to-closed", failure_threshold=1)
         cb.mark_failure()
         cb.state = CircuitBreakerState.HALF_OPEN
@@ -211,7 +211,9 @@ class TestCircuitBreakerEdgeCases:
         assert cb.state == CircuitBreakerState.CLOSED
 
     def test_allow_request_recovery_transition_sets_recovery(self):
-        cb = CircuitBreaker("recovery-transition", failure_threshold=1, recovery_timeout=0.01)
+        cb = CircuitBreaker(
+            "recovery-transition", failure_threshold=1, recovery_timeout=0.01
+        )
         cb.mark_failure()
         time.sleep(0.02)
         assert cb.allow_request() is True
