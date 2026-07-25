@@ -30,11 +30,10 @@ from typing import Any
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
 if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except AttributeError:
-        pass
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
 
 # --- Path Setup ---
 try:
@@ -457,6 +456,15 @@ class GuardianAI:
         """Check and sanitize user input."""
         logger.debug(f"Checking input for user {user_id}")
         return await self.input_sanitizer.sanitize(text)
+
+    async def scan_code(self, code: str) -> dict[str, Any]:
+        """Scan code snippet for security threats and malicious injection."""
+        result = self.output_sanitizer.sanitize(code)
+        return {
+            "is_safe": not result.blocked,
+            "reason": result.block_reason or "Code passed security check",
+            "threats": [t.details for t in result.threats_detected],
+        }
 
     def check_output(self, text: str, user_id: str | None = None) -> GuardianResult:
         """Check and sanitize LLM output."""

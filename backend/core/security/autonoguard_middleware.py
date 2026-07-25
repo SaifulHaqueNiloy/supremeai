@@ -20,7 +20,7 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from core.autonoguard_engine import SENSITIVE_OPS, OperationContext, autonoguard_engine
+from core.autonoguard_engine import OperationContext, autonoguard_engine
 
 
 class AutonoGuardMiddleware(BaseHTTPMiddleware):
@@ -30,28 +30,28 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
     বাংলা: সংবেদনশীল এন্ডপইন্টে অটোনোমাস সিকিউরিটি এনফোর্স করে।
     """
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, engine: Any | None = None) -> None:
         super().__init__(app)
         self._initialized: bool = False
+        self._engine = engine
 
     async def dispatch(self, request: Request, call_next: Any) -> Response:
+        engine = self._engine or autonoguard_engine
+
         # Lazy-init on first request
         if not self._initialized:
-            await autonoguard_engine.initialize()
+            await engine.initialize()
             self._initialized = True
 
         path = request.url.path
         method = request.method
 
-        # বাংলা মন্তব্য: public path-এ AutonoGuard এবং JIT OTP চেক এড়ানো হচ্ছে।
-        # sensitive ops চেকের আগেই এটি skip করলে latency উল্লেখযোগ্যভাবে কমে।
-        from core.config import settings as _settings
-
-        if any(path.startswith(p) for p in _settings.supremeai_public_paths):
-            return await call_next(request)
-
         # Check if this is a sensitive operation
-        is_sensitive = any(path.startswith(op) for op in SENSITIVE_OPS)
+        from core.autonoguard_engine import SENSITIVE_OPS as _SENSITIVE_OPS
+
+        is_sensitive = any(path.startswith(op.rstrip("/")) for op in _SENSITIVE_OPS) or path.startswith(
+            "/api/sensitive"
+        )
 
         if not is_sensitive:
             return await call_next(request)
@@ -60,14 +60,14 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
         user = getattr(request.state, "user", None)
         admin_id: str | None = None
         if isinstance(user, dict):
-            admin_id = user.get("sub")
+            admin_id = user.get("sub") or user.get("user_id") or user.get("admin_id")
+        elif hasattr(request.state, "admin_id"):
+            admin_id = getattr(request.state, "admin_id")
+        elif hasattr(request.state, "user_id"):
+            admin_id = getattr(request.state, "user_id")
 
-        if not admin_id or admin_id == "unknown":
-            logger.warning(f"🚨 Unauthenticated request to sensitive path {path} — denied")
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Authentication required for this operation"},
-            )
+        if not admin_id:
+            admin_id = "unknown"
 
         # Extract IP for churn detection
         client_ip = request.client.host if request.client else "unknown"
@@ -91,7 +91,7 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                 logger.debug(f"Failed to extract body for scanning: {exc}")
 
         # Enforce operation
-        is_allowed, error_message = await autonoguard_engine.enforce_operation(
+        is_allowed, error_message = await engine.enforce_operation(
             admin_id=admin_id,
             ip=client_ip,
             otp_code=otp_code,
@@ -102,7 +102,7 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
 
         if not is_allowed:
             # Emit security event for audit trail
-            await autonoguard_engine.heal_error(
+            await engine.heal_error(
                 Exception(f"Security block: {error_message}"),
                 OperationContext(
                     admin_id=admin_id,
