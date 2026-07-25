@@ -423,10 +423,16 @@ jobs:
       - name: Install Playwright System Dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps
+      - name: 🩹 Ensure Frontend Build Exists
+        run: |
+          if [ ! -d "apps/studio-client/dist" ]; then
+            pnpm --dir apps/studio-client run build
+          fi
+
       - name: Start Frontend Preview Server
         run: |
           cd apps/studio-client && pnpm exec vite preview --port 5173 &
-          sleep 5
+          npx wait-on http://127.0.0.1:5173
         env:
           CI: true
       - name: Create Report Directory & Execute Playwright Simulation
