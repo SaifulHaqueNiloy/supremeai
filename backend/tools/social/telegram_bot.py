@@ -22,6 +22,7 @@ Setup:
 
 import asyncio
 import contextlib
+from typing import ClassVar
 
 # বাংলা মন্তব্য: ওএস মডিউল ইম্পোর্ট করা হলো যাতে os.environ ঠিকমত কাজ করে
 import os
@@ -39,7 +40,7 @@ class TelegramBotHandler:
     Integrates with SupremeOrchestrator for AI responses.
     """
 
-    COMMANDS = {
+    COMMANDS: ClassVar[dict[str, str]] = {
         "/start": "👋 Welcome to *SupremeAI 2.0*!\nSend any message and I'll respond with AI power.",
         "/help": (
             "📖 *Commands:*\n"
@@ -207,9 +208,7 @@ class TelegramBotHandler:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 status_lines.append(f"❌ {name}: unreachable")
         await self.send_message(chat_id, "\n".join(status_lines))
 

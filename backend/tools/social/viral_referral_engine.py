@@ -42,9 +42,7 @@ class ViralReferralEngine:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return {"codes": {}, "wallets": {}}
 
     def _save_local(self, data):
