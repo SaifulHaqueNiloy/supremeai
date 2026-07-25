@@ -1,13 +1,70 @@
 # SupremeAI 2.0 🚀
 **Autonomic CI/CD Command Center & Neural Agentic Workspace**
 
+## 🚀 5-Minute Local Setup
+
+### Prerequisites
+- **Node.js**: >= 20.0.0
+- **pnpm**: >= 9.0.0
+- **Python**: >= 3.10
+- **Google Cloud SDK** (optional, for GCP deployment)
+
+### Quick Start
+
+**1. Clone the repository:**
+```bash
+git clone https://github.com/SaifulHaqueNiloy/supremeai.git
+cd supremeai
+```
+
+**2. Install dependencies:**
+```bash
+# Install frontend dependencies
+pnpm install --frozen-lockfile
+
+# Install backend dependencies (from backend/ directory)
+cd backend
+pip install -r requirements.txt
+cd ..
+```
+
+**3. Configure environment:**
+```bash
+# Copy environment template
+cp backend/.env.example backend/.env
+
+# Edit backend/.env with your API keys
+# Required: GEMINI_API_KEY, OPENAI_API_KEY, FIRESTORE_CREDENTIALS
+```
+
+**4. Run the services:**
+
+```bash
+# Backend (FastAPI)
+cd backend
+uvicorn main:app --reload --port 8000
+# Access API docs at http://localhost:8000/docs
+
+# Frontend (Web Chat)
+cd apps/web-chat
+python -m http.server 3000
+# Access at http://localhost:3000
+
+# Mobile App (Flutter)
+cd apps/mobile
+flutter pub get
+flutter run
+```
+
+For detailed setup instructions, see [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md).
+
+---
+
 ## 🌐 Live Application URLs
 - **Primary Frontend (Netlify):** [https://tiny-stroopwafel-2d981c.netlify.app](https://tiny-stroopwafel-2d981c.netlify.app)
 - **Primary Backend (Render):** [https://supremeai-backend-08zd.onrender.com](https://supremeai-backend-08zd.onrender.com)
 - **Secondary Backend (Render):** [https://supremeai-backend-secondary.onrender.com](https://supremeai-backend-secondary.onrender.com)
 - *Note: Frontend automatically switches backends if one goes to sleep (Zero-Cost HA Strategy).*
-
-SupremeAI is a production-grade, highly scalable ecosystem featuring a Hub-and-Spoke CI/CD pipeline, an AI-powered CodeQL audited backend, and dual real-time client interfaces.
 
 ## 🌟 Core Architecture
 
@@ -30,28 +87,13 @@ SupremeAI is a production-grade, highly scalable ecosystem featuring a Hub-and-S
 - **Matrix Builds:** Automatically builds Android APK, Windows EXE, and VS Code VSIX concurrently.
 - **Security:** Integrated GitHub CodeQL Semantic Security Analysis on every push.
 
-## 🚀 Getting Started
+For detailed architecture documentation, see [docs/SUPREMEAI_MASTER_BLUEPRINT.md](docs/SUPREMEAI_MASTER_BLUEPRINT.md).
 
-**Web Dashboard (Dev Mode):**
-```bash
-cd apps/web-chat
-python -m http.server 3000
-```
-
-**Mobile App (Dev Mode):**
-```bash
-cd apps/mobile
-flutter pub get
-flutter run
-```
+---
 
 ## 📦 Monorepo & Package Management (pnpm Migration)
 
 SupremeAI 2.0 uses **pnpm** as the package manager for the frontend monorepo. The migration was completed to improve install determinism and reduce disk usage across `apps/`, `packages/`, and `tools/`.
-
-### Prerequisites
-- **Node.js**: >= 20.0.0
-- **pnpm**: >= 9.0.0
 
 ### Installation
 ```bash
@@ -88,86 +130,49 @@ The root `package.json` enforces consistent versions across the monorepo:
 - `supreme-core-ci.yml` and `supreme-release-builds.yml` now use `pnpm/action-setup@v3` with Node.js `actions/setup-node@v4` cache set to `pnpm`.
 - Frontend jobs use `pnpm install --frozen-lockfile` and `pnpm turbo run build lint test`.
 
-## 🔒 Security Enhancements & Production Readiness (July 2026)
+---
 
-As part of the SupremeAI 2.0 production readiness audit, the following security and reliability improvements were implemented:
+## 🏛️ Architecture & Philosophy
 
-### 🔐 Electron Security (Desktop Client)
-- **contextIsolation**: Enabled to prevent renderer process from accessing Node.js APIs directly
-- **nodeIntegration**: Disabled in renderer processes to prevent remote code execution vulnerabilities
-- **sandbox**: Enabled for all renderer processes to restrict system access
-- **Preload Script**: A dedicated `preload.js` exposes only safe APIs to the renderer via `contextBridge`
-- **Content Security Policy**: Restrictive CSP to mitigate XSS risks
-- **Build Configuration**: Updated to enforce secure electron-builder settings
+For deep-dive architecture documentation, system design principles, and implementation philosophy, see:
+- **[SUPREMEAI_MASTER_BLUEPRINT.md](docs/SUPREMEAI_MASTER_BLUEPRINT.md)** — Complete system architecture and design decisions
+- **[docs/architecture-overview.md](docs/architecture-overview.md)** — High-level architecture overview
 
-### 🚫 Tenant Rate-Limit Bypass Fix (Critical)
-- **Issue**: Rate limiting could be bypassed by providing fake `X-Forwarded-For` headers
-- **Fix**: Tenant identity is now extracted exclusively from the verified JWT `Authorization` header (sub claim)
-- **Middleware Update**: `RateLimitMiddleware` in `backend/core/rate_limiter.py` now validates token before rate-limiting
-- **Tests**: Added tests to verify bypass attempts are blocked; removed insecure test cases
+---
 
-### 🐘 PgBouncer Connection Pool (High)
-- **Singleton Pattern**: Database connection pool is now a true singleton, initialized at startup
-- **Explicit Initialization**: New `init_db_pool()` function in `backend/core/pgbouncer_pool.py` creates the pool with optimized settings:
-  - `statement_cache_size=0` (prepared statements handled by PgBouncer)
-  - `min_size=5`, `max_size=30`
-  - `command_timeout=30` seconds
-- **Lifecycle Management**: Pool initialization moved to `backend/core/lifespan.py` with PostgreSQL DSN validation to avoid breaking tests (skips initialization in test environments)
-- **Singleton Enforcement**: `get_db_pool()` raises `RuntimeError` if called before initialization
-- **Test Fix**: Updated `test_pgbouncer_pool.py` to mock `asyncpg.Connection` for isolated unit tests
+## 🔒 Security & Phases
 
-### 🐳 Docker & CI/CD Hardening
-- **docker-compose.yml**:
-  - Fail-fast environment variable expansion: `${VAR:?}` to catch missing configs
-  - Added service healthchecks (backend on port 8000)
-  - Explicit `depends_on` with `condition: service_healthy` for frontend services
-- **GitHub Actions (deploy.yml)**:
-  - Deployment job uses `environment: production` for protection rules and secrets
-  - Added validation for required `CI_WEBHOOK_SECRET` in production
+For comprehensive security audits, phase implementations, and compliance reports, see:
+- **[PHASE0_AUDIT_REPORT.md](PHASE0_AUDIT_REPORT.md)** — AutonoGuard Enterprise Hardening (July 2026) ✅ COMPLETED
+- **[BANGLA_SECURITY_AUDIT_REPORT.md](BANGLA_SECURITY_AUDIT_REPORT.md)** — Bengali security audit details
+- **[docs/SECURITY.md](docs/SECURITY.md)** — Security policies and procedures
 
-### 🔐 Admin & Secrets Management
-- **Admin Whitelist**: Unified to `settings.admin_emails` (loaded from environment)
-- **HMAC Comparison**: `ci_webhooks.py` now uses `hmac.compare_digest` for timing-safe secret comparison
-- **Chaos Engineering**: Middleware now requires `LOCAL_CHAOS_MODE=true` AND non-production environment to activate
-- **Cookie Security**: Updated session cookies to be `Secure`, `HttpOnly`, and `SameSite=Strict` in production
-
-### 🧪 Test Suite Fixes
-- **PgBouncer Pool Test**: Fixed `test_singleton_pattern` by mocking `asyncpg.Connection`
-- **Docs Security Test**: Added missing `CI_WEBHOOK_SECRET` environment variable
-- **Removed Impossible Test**: Deleted test that attempted to bypass rate-limit middleware in test environment (where middleware is bypassed entirely)
-
-### ✅ Validation Results
-- **Backend Tests**: 1,368 passed, 7 skipped (full suite)
-- **Linting**: All modified files pass `ruff check`
-- **Type Safety**: MyPy shows no new errors in modified files (pre-existing issues in unrelated modules remain)
-- **Test Coverage**: Maintained >38% overall coverage target
-
-## 🔐 Phase 0: AutonoGuard Enterprise Hardening (July 2026) ✅ COMPLETED
+### Phase 0: AutonoGuard Enterprise Hardening (July 2026) ✅ COMPLETED
 
 The AutonoGuard Engine provides autonomous governance with enterprise-grade security:
 
-### 🔑 JIT OTP Enforcement
+#### 🔑 JIT OTP Enforcement
 - **SHA-256 hash-based OTP storage** (plaintext never stored in Redis)
 - **Masked admin_id in logs** (only 3 visible characters)
 - **Timing-safe comparison** via `secrets.compare_digest`
 - **Free-tier delivery** via Discord webhook or Resend email (3k emails/month)
 
-### 🌐 IP Churn Detection
+#### 🌐 IP Churn Detection
 - **Redis-backed IP tracking** with 1-hour TTL
 - **>5 IPs in 1 hour** triggers OTP re-verification
 - **Malware immunity** detection for automated attack prevention
 
-### 🛡️ Self-Healing Engine
+#### 🛡️ Self-Healing Engine
 - **ErrorRemediation** with Qdrant vector search for fix lookup
 - **Circuit breaker pattern** prevents cascade failures
 - **Structured events** on all code paths (zero silent failures)
 
-### 📊 Availability Protection
+#### 📊 Availability Protection
 - **Fail-Closed rate limiting** with in-memory fallback
 - **Failure fingerprint persistence** survives server restarts
 - **Config cache coalescing** prevents thundering-herd on refresh
 
-### Core Philosophy Compliance
+#### Core Philosophy Compliance
 | Principle | Status |
 |-----------|--------|
 | Zero Cost | ✅ Free-tier services only |
@@ -177,6 +182,8 @@ The AutonoGuard Engine provides autonomous governance with enterprise-grade secu
 | Malware Immunity | ✅ IP Churn + JIT OTP |
 | Self-Healing | ✅ ErrorRemediation integrated |
 | Failure-Aware | ✅ ReliabilityController persistence |
+
+---
 
 ## 💰 Monthly Operating Cost
 
@@ -191,3 +198,5 @@ The AutonoGuard Engine provides autonomous governance with enterprise-grade secu
 ---
 
 *Phase 0 hardening completed by Principal Autonomous AI Architect on 2026-07-20.*
+
+*SupremeAI 2.0 — Production-ready, zero-cost, self-healing AI infrastructure.*

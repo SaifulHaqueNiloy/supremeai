@@ -617,6 +617,45 @@ class Settings(BaseSettings):
                 self.docs_password = SecretStr("supreme-admin-2026-prod")
         return self
 
+    @model_validator(mode="after")
+    def validate_llm_secrets_at_boot(self):
+        """Boot-time LLM secret check — silent failure প্রতিরোধ করে।
+
+        বাংলা: App শুরু হওয়ার সময়ই চেক করে কমপক্ষে একটি LLM API key আছে কিনা।
+        Production-এ সব key মিসিং থাকলে সিস্টেম চুপচাপ ফেইল না করে CRITICAL log দেবে।
+        pytest বা CI-তে এই চেক skip হবে।
+        """
+        if "pytest" in sys.modules or os.getenv("CI") == "true":
+            return self  # Test isolation — boot-time check skip
+
+        if self.env not in {"production", "staging"}:
+            return self  # Local dev-এ optional
+
+        # বাংলা: সব LLM provider key একসাথে চেক করা হচ্ছে (batch-loaded cache ব্যবহার)
+        _LLM_CRITICAL_KEYS = [
+            "GEMINI_API_KEY",
+            "OPENROUTER_API_KEY",
+            "GROQ_API_KEY",
+            "DEEPSEEK_API_KEY",
+            "OPENAI_API_KEY",
+        ]
+        self._ensure_secrets_loaded()
+        available = [k for k in _LLM_CRITICAL_KEYS if self._cached_secrets.get(k)]
+        missing = [k for k in _LLM_CRITICAL_KEYS if not self._cached_secrets.get(k)]
+
+        if not available:
+            # বাংলা: কোনো LLM key নেই — সিস্টেম boot হবে কিন্তু সব AI feature মৃত।
+            # Silent failure রোধ করতে CRITICAL log emit করা হচ্ছে।
+            logger.critical(
+                "🚨 BOOT-TIME ALERT: কোনো LLM API key পাওয়া যায়নি! " f"Missing: {missing}. " "সব AI feature কাজ করবে না। Infisical / env var চেক করুন।"
+            )
+        elif missing:
+            logger.warning(f"⚠️ BOOT-TIME: {len(missing)} LLM key মিসিং ({missing}). " f"Available: {available}. Partial AI functionality only.")
+        else:
+            logger.info(f"✅ BOOT-TIME: সব {len(available)} LLM API key সফলভাবে লোড হয়েছে।")
+
+        return self
+
     @field_validator(
         "idempotency_critical_paths",
         "supremeai_public_paths",

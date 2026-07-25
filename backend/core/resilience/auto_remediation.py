@@ -9,6 +9,9 @@ class AutoRemediation:
     Detects CodeQL/security alerts, generates a secure patch, and delegates the
     application to RemediationPipeline.
 
+    বাংলা: কোডকিউএল/সিকিউরিটি অ্যালার্ট detects করছে, একটি সুরক্ষিত প্যাচ জেনারেট করছে,
+    এবং RemediationPipeline-এ ডিলিগেট করছে।
+
     Note: This module is designed to be mockable for tests.
     """
 
@@ -41,6 +44,29 @@ class AutoRemediation:
         severity: str,
         tenant_id: str = "default_tenant",
     ) -> dict:
+        """Process a security alert and generate an auto-remediation patch.
+
+        Args:
+            file_path: Path to the file with the security issue.
+            line_number: Line number where the issue was detected.
+            issue: Description of the security vulnerability.
+            severity: Severity level (critical, high, medium, low).
+            tenant_id: Tenant identifier for multi-tenant isolation.
+
+        Returns:
+            Dictionary with remediation result containing:
+                - success (bool): Whether patch was generated and submitted.
+                - file (str): Path to the file.
+                - patch_applied (bool): Whether patch was applied.
+                - branch (str): Branch where patch was submitted.
+                - pr_url (str|None): PR URL if created.
+                - message (str): Status message.
+
+        Raises:
+            ValueError: If file_path resolves outside allowed directory (path traversal).
+
+        বাংলা: সিকিউরিটি অ্যালার্ট প্রসেস করছে এবং অটো-রিমেডিয়েশন প্যাচ জেনারেট করছে।
+        """
         logger.info(f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}")
 
         safe_path = self._validate_file_path(file_path)
