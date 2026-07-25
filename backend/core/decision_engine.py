@@ -24,6 +24,10 @@ class DecisionEngine:
         self.langsmith_api_key = os.getenv("LANGSMITH_API_KEY")
         self._min_confidence = float(os.getenv("DECISION_MIN_CONFIDENCE", "0.6"))
 
+        # বাংলা: ডুপ্লিকেট ডিসিশন হিস্টোরি এবং ক্যাশ লিক প্রতিরোধের স্টোরেজ
+        self.decision_history: list[dict[str, Any]] = []
+        self._decision_cache: dict[str, dict[str, Any]] = {}
+
     async def decide(self, context: dict[str, Any]) -> dict[str, Any]:
         """Analyze request context and return a routing decision.
 
@@ -51,34 +55,49 @@ class DecisionEngine:
             - confidence < min_confidence → "review"
             - otherwise → "proceed"
         """
+        # বাংলা: কনটেক্সট থেকে ক্যাশ কী জেনারেট করে ক্যাশ হিট চেক করা
+        context_key = str(sorted((k, str(v)) for k, v in context.items()))
+        if context_key in self._decision_cache:
+            logger.debug("DecisionEngine: Cache hit, returning decision without duplicating history")
+            return self._decision_cache[context_key]
+
         risk_flags = context.get("risk_flags") or []
         error_rate = context.get("recent_error_rate", 0.0)
         sandbox_passed = context.get("sandbox_passed")
 
         if sandbox_passed is False:
             logger.warning("DecisionEngine: sandbox failed, blocking action")
-            return {
+            decision = {
                 "action": "block",
                 "confidence": 1.0,
                 "reason": "sandbox_failed",
                 "trace": None,
             }
+            self.decision_history.append(decision)
+            self._decision_cache[context_key] = decision
+            return decision
 
         if risk_flags:
             logger.info(f"DecisionEngine: risk flags present {risk_flags}, routing to review")
-            return {
+            decision = {
                 "action": "review",
                 "confidence": 0.5,
                 "reason": "risk_flags",
                 "trace": None,
             }
+            self.decision_history.append(decision)
+            self._decision_cache[context_key] = decision
+            return decision
 
         confidence = max(0.0, 1.0 - error_rate)
         action = "proceed" if confidence >= self._min_confidence else "review"
         logger.debug(f"DecisionEngine: action={action} confidence={confidence:.2f}")
-        return {
+        decision = {
             "action": action,
             "confidence": confidence,
             "reason": None,
             "trace": None,
         }
+        self.decision_history.append(decision)
+        self._decision_cache[context_key] = decision
+        return decision
