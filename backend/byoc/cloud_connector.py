@@ -11,11 +11,11 @@ from google.oauth2 import service_account
 from loguru import logger
 
 # Global encryption key management
-# বাংলা মন্তব্য: Fernet এনক্রিপশনের জন্য ৩২ বাইটের কী জেনারেট বা লোড করা হচ্ছে
-_KEY = os.getenv("SUPREMEAI_ENCRYPTION_KEY")
+# বাংলা মন্তব্য: Fernet এনক্রিপশনের জন্য ৩২ বাইটের কী জেনারেট বা লোড করা হচ্ছে। SUPREMEAI_ENCRYPTION_KEY অথবা ENCRYPTION_KEY উভয়টি চেক করা হচ্ছে (Zero Breakage নীতি)।
+_KEY = os.getenv("SUPREMEAI_ENCRYPTION_KEY") or os.getenv("ENCRYPTION_KEY")
 if not _KEY:
     # 🛑 ZERO-GAP: Fast Fail on missing encryption key. Do not generate random fallback key.
-    raise RuntimeError("SUPREMEAI_ENCRYPTION_KEY environment variable is not configured. Fast failing startup.")
+    raise RuntimeError("SUPREMEAI_ENCRYPTION_KEY or ENCRYPTION_KEY environment variable is not configured. Fast failing startup.")
 
 try:
     cipher = Fernet(_KEY.encode())
