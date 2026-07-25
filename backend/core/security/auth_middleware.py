@@ -61,7 +61,7 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
         logger.warning("JWT token has expired")
         return None
     except JWTError as exc:
-        if is_test_environment():
+        if is_test_environment() and token and token.startswith(("test_", "mock_")):
             logger.debug(f"Test environment token fallback for non-JWT token '{token}': {exc}")
             return {"sub": "test_user", "role": "admin"}
         logger.warning(f"JWT token validation failed: {exc}")
