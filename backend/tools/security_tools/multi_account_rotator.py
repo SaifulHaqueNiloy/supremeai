@@ -766,9 +766,11 @@ class MultiAccountRotator:
     ) -> bool:
         """Check if provider/account meets specific requirements"""
         # Check cost requirements
-        if "max_cost_per_token" in requirements:
-            if provider.cost_per_token > requirements["max_cost_per_token"]:
-                return False
+        if (
+            "max_cost_per_token" in requirements
+            and provider.cost_per_token > requirements["max_cost_per_token"]
+        ):
+            return False
 
         # Check model requirements
         if (
@@ -778,9 +780,12 @@ class MultiAccountRotator:
             return False
 
         # Check speed requirements (rough estimate)
-        if "speed_priority" in requirements:
-            if requirements["speed_priority"] > 0.8 and provider.rate_limit_rpm < 30:
-                return False
+        if (
+            "speed_priority" in requirements
+            and requirements["speed_priority"] > 0.8
+            and provider.rate_limit_rpm < 30
+        ):
+            return False
 
         return True
 
