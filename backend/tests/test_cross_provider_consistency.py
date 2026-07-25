@@ -20,10 +20,18 @@ class FakeProvider:
     async def acomplete(self, prompt: str, **kwargs):
         return {"text": self.response_text, "provider": self.name}
 
+    async def acompletion(self, prompt: str, **kwargs):
+        return {"text": self.response_text, "provider": self.name}
+
+    async def health_check(self) -> bool:
+        return True
+
     async def astream(self, prompt: str, **kwargs):
+        text = self.response_text
+
         class Chunker:
             async def __aiter__(self):
-                yield self.response_text
+                yield text
 
         return Chunker()
 
