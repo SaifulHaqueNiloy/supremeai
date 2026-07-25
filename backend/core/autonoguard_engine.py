@@ -114,9 +114,7 @@ class AutonoGuardEngine:
         এটি Malware Immunity (DNA #5) এর অংশ।
         """
         if not redis_manager or not redis_manager.client:
-            return ChurnDetection(
-                is_churn=False, previous_ips=[], first_seen=time.time(), churn_count=0
-            )
+            return ChurnDetection(is_churn=False, previous_ips=[], first_seen=time.time(), churn_count=0)
 
         key = f"{_ip_churn_prefix}{admin_id}"
         now = time.time()
@@ -129,11 +127,7 @@ class AutonoGuardEngine:
             previous_ips = []
             first_seen = now
             for member_bytes, score in raw_entries:
-                ip_val = (
-                    member_bytes.decode()
-                    if isinstance(member_bytes, bytes)
-                    else member_bytes
-                )
+                ip_val = member_bytes.decode() if isinstance(member_bytes, bytes) else member_bytes
                 ts = float(score)
                 previous_ips.append(ip_val)
                 if ts < first_seen:
@@ -172,14 +166,33 @@ class AutonoGuardEngine:
 
         provided_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
 
+        # বাংলা: OTP ব্যর্থতার কাউন্টার ম্যানেজমেন্ট
+        failure_key = f"{_redis_key_prefix}{admin_id}:failures"
+
         if secrets.compare_digest(str(stored_hash), provided_hash):
-            # Delete the OTP hash after successful verification
+            # সফল ভেরিফিকেশন — ব্যর্থতা কাউন্টার রিসেট
             try:
-                await redis_manager.client.delete(key)
+                if redis_manager and redis_manager.client:
+                    await redis_manager.client.delete(key)
+                    await redis_manager.client.delete(failure_key)
             except Exception as exc:  # noqa: BLE001
-                logger.debug(f"Failed to delete OTP hash key: {exc}")
+                logger.debug(f"Failed to delete OTP keys: {exc}")
             logger.info(f"🔓 OTP verified for admin {admin_id}")
             return True
+
+        # বাংলা: ব্যর্থ ভেরিফিকেশন — ব্যর্থতা কাউন্টার ইনক্রিমেন্ট
+        if redis_manager and redis_manager.client:
+            try:
+                current_failures = await redis_manager.get_cache(failure_key)
+                fail_count = (int(current_failures) if current_failures else 0) + 1
+                await redis_manager.set_cache(
+                    failure_key,
+                    str(fail_count),
+                    ex_seconds=OTP_COOLDOWN_SECONDS * 12,  # 1 hour TTL for failure counter
+                )
+                logger.warning(f"🔐 OTP verification failed for {admin_id} (failure #{fail_count})")
+            except Exception as exc:  # noqa: BLE001
+                logger.debug(f"Failed to increment OTP failure counter: {exc}")
 
         return False
 
@@ -190,28 +203,49 @@ class AutonoGuardEngine:
         Redis-এ OTP-এর sha256 হ্যাশ হিসেবে স্টোর করা হয় যাতে verify_jit_otp deterministic থাকে।
         """
         requested_key = f"{_redis_key_prefix}{admin_id}:requested"
-        last_request = (
-            await redis_manager.get_cache(requested_key)
-            if redis_manager and redis_manager.client
-            else None
-        )
+        last_request = await redis_manager.get_cache(requested_key) if redis_manager and redis_manager.client else None
 
         if last_request:
             return False  # Cooldown active
 
-        code = f"{secrets.randbelow(1_000_000):06d}"
+        # বাংলা: OTP এখন ১০ ডিজিটের — শক্তিশালী ব্রুট-ফোর্স প্রোটেকশনের জন্য
+        # ১,০০০,০০০ (৬ ডিজিট) → ১০,০০০,০০০,০০০ (১০ ডিজিট) কম্বিনেশন
+        code = f"{secrets.randbelow(10_000_000_000):010d}"
         code_hash = hashlib.sha256(code.encode()).hexdigest()
 
+        # বাংলা: OTP ব্যর্থতার কাউন্টার চেক — একাধিক ব্যর্থতা = আরও দীর্ঘ কুলডাউন
+        failure_key = f"{_redis_key_prefix}{admin_id}:failures"
+        failures = 0
         if redis_manager and redis_manager.client:
-            await redis_manager.set_cache(
-                requested_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS
-            )
+            try:
+                raw_failures = await redis_manager.get_cache(failure_key)
+                if raw_failures:
+                    failures = int(raw_failures)
+            except (ValueError, TypeError):
+                failures = 0
+
+        # বাংলা: ব্যর্থতা অনুযায়ী প্রগ্রেসিভ কুলডাউন
+        # ৩ ব্যর্থতা = ৫ মিনিট, ৫ ব্যর্থতা = ১৫ মিনিট, ১০+ = ১ ঘন্টা
+        if failures >= 10:
+            effective_cooldown = 3600  # 1 hour
+        elif failures >= 5:
+            effective_cooldown = 900  # 15 minutes
+        elif failures >= 3:
+            effective_cooldown = 300  # 5 minutes
+        else:
+            effective_cooldown = OTP_COOLDOWN_SECONDS
+
+        if redis_manager and redis_manager.client:
+            await redis_manager.set_cache(requested_key, "1", ex_seconds=effective_cooldown)
             # Store only hash for verification
             await redis_manager.set_cache(
                 f"{_redis_key_prefix}{admin_id}",
                 code_hash,
-                ex_seconds=OTP_COOLDOWN_SECONDS * 2,
+                ex_seconds=effective_cooldown * 2,
             )
+
+        if failures > 0:
+            logger.warning(f"🔐 OTP requested for {admin_id} with {failures} prior failures (cooldown: {effective_cooldown}s)")
 
         return await send_otp(admin_id, code, context)
 
@@ -225,9 +259,7 @@ class AutonoGuardEngine:
 
         churn = await self.detect_ip_churn(admin_id, ip)
         if churn.is_churn:
-            logger.warning(
-                f"🚨 IP Churn detected for admin {admin_id} ({churn.churn_count} IPs in 1h)"
-            )
+            logger.warning(f"🚨 IP Churn detected for admin {admin_id} ({churn.churn_count} IPs in 1h)")
             return False
 
         return True
@@ -243,9 +275,7 @@ class AutonoGuardEngine:
 
     # ── Self-Healing Loop ───────────────────────────────────────────────────────
 
-    async def _verify_heal(
-        self, exc: Exception, fix: str, context: OperationContext
-    ) -> bool:
+    async def _verify_heal(self, exc: Exception, fix: str, context: OperationContext) -> bool:
         """Verify that a remediation fix was applied successfully.
 
         বাংলা: remediation fix প্রয়োগের পর verification চালায় — fix সত্যিই কাজ করছে কিনা নিশ্চিত করে।
@@ -270,9 +300,7 @@ class AutonoGuardEngine:
 
             is_retry_based = any(kw in fix_lower for kw in retry_keywords)
             if is_retry_based:
-                logger.info(
-                    f"✅ Self-Heal verification passed (retry-based fix): {fix[:60]}"
-                )
+                logger.info(f"✅ Self-Heal verification passed (retry-based fix): {fix[:60]}")
                 # বাংলা মন্তব্য: retry-based fix verification-এর পর Qdrant-এ store করা হয়
                 # যাতে ভবিষ্যতে একই error এ দ্রুত remediate করা যায়।
                 try:
@@ -348,9 +376,7 @@ class AutonoGuardEngine:
         fix = await error_remediator.lookup_fix(error_sig)
 
         if fix:
-            logger.info(
-                f"🔧 AutonoGuard found remediation for {fingerprint[:16]}: {fix[:80]}"
-            )
+            logger.info(f"🔧 AutonoGuard found remediation for {fingerprint[:16]}: {fix[:80]}")
 
             # বাংলা মন্তব্য: Phase 2 — Verification Loop
             # fix প্রয়োগের পর verification চালানো হয় (Self-Healing DNA #6)
@@ -360,9 +386,7 @@ class AutonoGuardEngine:
                 logger.info(f"✅ Self-heal cycle COMPLETE for {fingerprint[:16]}")
                 return fix
             else:
-                logger.warning(
-                    f"⚠️ Self-heal fix applied but verification failed for {fingerprint[:16]}"
-                )
+                logger.warning(f"⚠️ Self-heal fix applied but verification failed for {fingerprint[:16]}")
                 # Verification failure-এ circuit breaker mark_failure করে না —
                 # কারণ fix নিজে সঠিক ছিল কিন্তু verification mechanism এ সমস্যা।
                 self._circuit_breaker.mark_success()
@@ -393,11 +417,7 @@ class AutonoGuardEngine:
         # JIT OTP check
         if ANTI_HACKING_ENABLED:
             bypass_key = f"{_redis_key_prefix}{admin_id}:bypass"
-            bypass_verified = (
-                await redis_manager.get_cache(bypass_key)
-                if redis_manager and redis_manager.client
-                else None
-            )
+            bypass_verified = await redis_manager.get_cache(bypass_key) if redis_manager and redis_manager.client else None
 
             if not bypass_verified and not otp_code:
                 # বাংলা মন্তব্য: request_jit_otp() False রিটার্ন করলে তার মানে
@@ -415,9 +435,7 @@ class AutonoGuardEngine:
 
                 # Mark session bypass
                 if redis_manager and redis_manager.client:
-                    await redis_manager.set_cache(
-                        bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2
-                    )
+                    await redis_manager.set_cache(bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2)
             elif not bypass_verified:
                 # বাংলা মন্তব্য: bypass_verified False এবং otp_code ও নেই এমন কোনো অবস্থা
                 # এখানে থাকা উচিত নয় — defense-in-depth fail-closed guard।

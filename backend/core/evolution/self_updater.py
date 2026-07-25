@@ -23,9 +23,7 @@ class SelfUpdater:
     def _validate_path(self, file_path: str) -> Path:
         target = Path(file_path).resolve()
         if not str(target).startswith(str(_ALLOWED_BASE_DIR)):
-            raise ValueError(
-                f"Hotfix target '{file_path}' is outside allowed project directory."
-            )
+            raise ValueError(f"Hotfix target '{file_path}' is outside allowed project directory.")
         return target
 
     def apply_hotfix(self, file_path: str, new_content: str) -> bool:
@@ -88,9 +86,7 @@ class SelfUpdater:
                 target.write_text(content, encoding="utf-8")
                 applied_files.append(str(target))
 
-            logger.info(
-                f"Multi-file patch {proposal_id or ''} applied to {len(applied_files)} files."
-            )
+            logger.info(f"Multi-file patch {proposal_id or ''} applied to {len(applied_files)} files.")
             return True, applied_files
 
         except Exception as exc:

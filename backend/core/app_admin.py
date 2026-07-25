@@ -20,17 +20,13 @@ if settings.env == "production":
     if not settings.admin_cors_origins:
         from loguru import logger
 
-        logger.warning(
-            "⚠️ Production Admin CORS drift detected. Auto-populating default trusted admin origins."
-        )
+        logger.warning("⚠️ Production Admin CORS drift detected. Auto-populating default trusted admin origins.")
         settings.admin_cors_origins = [
             "https://supremeai-admin.web.app",
             "https://supremeai-backend.onrender.com",
         ]
     if "*" in settings.admin_cors_origins:
-        raise RuntimeError(
-            "🚨 SECURITY: Wildcard '*' is strictly prohibited in production Admin CORS. Set ADMIN_CORS_ORIGINS."
-        )
+        raise RuntimeError("🚨 SECURITY: Wildcard '*' is strictly prohibited in production Admin CORS. Set ADMIN_CORS_ORIGINS.")
 
 app.add_middleware(
     CORSMiddleware,

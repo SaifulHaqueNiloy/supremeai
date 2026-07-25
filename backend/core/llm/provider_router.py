@@ -17,9 +17,7 @@ from core.config import settings
 class ProviderStats:
     name: str
     base_weight: float
-    latencies: deque = field(
-        default_factory=lambda: deque(maxlen=settings.LATENCY_WINDOW_SIZE)
-    )
+    latencies: deque = field(default_factory=lambda: deque(maxlen=settings.LATENCY_WINDOW_SIZE))
     successes: int = 0
     failures: int = 0
     circuit_open_until: float = 0.0
@@ -55,10 +53,7 @@ class LatencyAwareWeightedRouter:
 
     def __init__(self, providers: dict[str, float] | None = None):
         default_providers = providers or {"openai": 5.0, "anthropic": 3.0, "groq": 2.0}
-        self.stats: dict[str, ProviderStats] = {
-            name: ProviderStats(name=name, base_weight=weight)
-            for name, weight in default_providers.items()
-        }
+        self.stats: dict[str, ProviderStats] = {name: ProviderStats(name=name, base_weight=weight) for name, weight in default_providers.items()}
         self._lock = asyncio.Lock()
 
     def _effective_weight(self, s: ProviderStats) -> float:
@@ -70,11 +65,7 @@ class LatencyAwareWeightedRouter:
 
     async def select_provider(self) -> str:
         async with self._lock:
-            candidates = [
-                (name, self._effective_weight(s))
-                for name, s in self.stats.items()
-                if not s.is_circuit_open()
-            ]
+            candidates = [(name, self._effective_weight(s)) for name, s in self.stats.items() if not s.is_circuit_open()]
             if not candidates:
                 fallback = min(self.stats.values(), key=lambda s: s.circuit_open_until)
                 return fallback.name
@@ -89,10 +80,7 @@ class LatencyAwareWeightedRouter:
             s = self.stats[name]
             s.record(latency_ms, success)
             if not success:
-                if (
-                    s.failures >= settings.CIRCUIT_FAILURE_THRESHOLD
-                    and s.success_rate < settings.CIRCUIT_SUCCESS_RATE_FLOOR
-                ):
+                if s.failures >= settings.CIRCUIT_FAILURE_THRESHOLD and s.success_rate < settings.CIRCUIT_SUCCESS_RATE_FLOOR:
                     s.trip_circuit(settings.CIRCUIT_COOLDOWN_SECONDS)
 
 

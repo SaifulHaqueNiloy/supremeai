@@ -21,17 +21,13 @@ def _info(**data) -> SimpleNamespace:
 # ── parse_cors_origins ─────────────────────────────────────────────────
 def test_parse_cors_origins_local_env_keeps_localhost():
     origins = ["http://127.0.0.1:3000", "https://example.com"]
-    assert (
-        Settings.parse_cors_origins_helper(list(origins), _info(env="local")) == origins
-    )
+    assert Settings.parse_cors_origins_helper(list(origins), _info(env="local")) == origins
 
 
 def test_parse_cors_origins_production_strips_localhost():
     # বাংলা মন্তব্য: _env_context প্রোডাকশন হলে localhost অরিজিন বাদ যাবে
     origins = ["http://127.0.0.1:3000", "http://localhost:5173", "https://example.com"]
-    result = Settings.validate_cors_origins_helper(
-        list(origins), _info(env="production")
-    )
+    result = Settings.validate_cors_origins_helper(list(origins), _info(env="production"))
     assert result == ["https://example.com"]
 
 
@@ -109,9 +105,7 @@ def test_set_jwt_secret_raises_in_production_when_missing():
 
 
 def test_set_jwt_secret_keeps_provided_value():
-    assert (
-        Settings.set_jwt_secret("real-secret", _info(env="production")) == "real-secret"
-    )
+    assert Settings.set_jwt_secret("real-secret", _info(env="production")) == "real-secret"
 
 
 # ── validate_debug_mode ──────────────────────────────────
