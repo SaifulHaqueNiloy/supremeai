@@ -133,6 +133,8 @@ async def test_telemetry_persists_to_db_not_just_logs():
             }
         )
 
+    # Note: _save_telemetry_to_db uses an async for loop to consume get_db_session(),
+    # so once it finishes, session.add() and session.commit() should have been called.
     fake_session.add.assert_called_once()
     fake_session.commit.assert_called_once()
 
