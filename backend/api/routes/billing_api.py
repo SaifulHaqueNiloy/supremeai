@@ -196,10 +196,14 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
             "session_id": stripe_session.id,
             "url": stripe_session.url,
         }
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error in checkout session creation: {e}")
+        # Don't expose internal error details to client
+        raise HTTPException(status_code=400, detail="Payment processing failed. Please try again.")
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Failed to create Stripe checkout session: {e}")
-        # Generic message to client (never expose internals or stack traces)
-        raise HTTPException(status_code=500, detail="Payment processing error. Please contact support.") from e
+        logger.error(f"Unexpected error in checkout session creation: {e}")
+        # Generic message to client (never expose internals)
+        raise HTTPException(status_code=500, detail="Internal server error. Please contact support.") from e
 
 
 # ==========================================
@@ -248,10 +252,7 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
 
                 if not wallet:
                     logger.error(f"Wallet not found for user: {user_id} during top-up.")
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail="User wallet not found",
-                    )
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
 
                 wallet.balance_usd += amount_received
 
@@ -329,19 +330,16 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
         val_id = payload.get("val_id")
 
         if not val_id:
-            raise HTTPException(status_code=400, detail="Missing val_id")
+            raise HTTPException(status_code=400, detail="Transaction validation failed")
 
         verified = await _verify_sslcommerz_transaction(val_id)
         if not verified:
             logger.warning(f"SSLCommerz webhook rejected — val_id {val_id} could not be verified.")
-            raise HTTPException(status_code=400, detail="Transaction could not be verified.")
+            raise HTTPException(status_code=400, detail="Transaction validation failed")
 
         user_id = verified.get("value_a")
         if not user_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Missing user reference in verified transaction.",
-            )
+            raise HTTPException(status_code=400, detail="Transaction validation failed")
 
         amount_bdt = float(verified.get("amount", 0))
         exchange_rate = float(getattr(settings, "bdt_exchange_rate", "0.0085"))
