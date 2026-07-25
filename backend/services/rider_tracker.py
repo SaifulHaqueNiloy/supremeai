@@ -83,7 +83,9 @@ class LocationTracker:
     def _location_key(self, rider_id: str) -> str:
         return f"rider:location:{rider_id}"
 
-    async def update_location(self, rider_id: str, latitude: float, longitude: float) -> Location:
+    async def update_location(
+        self, rider_id: str, latitude: float, longitude: float
+    ) -> Location:
         """Update rider location."""
         location = Location(
             latitude=latitude,
@@ -108,7 +110,9 @@ class LocationTracker:
         return Location(
             latitude=data.get("latitude", 0),
             longitude=data.get("longitude", 0),
-            timestamp=datetime.fromisoformat(data.get("timestamp", datetime.now(UTC).isoformat())),
+            timestamp=datetime.fromisoformat(
+                data.get("timestamp", datetime.now(UTC).isoformat())
+            ),
         )
 
 
@@ -129,7 +133,10 @@ class RouteOptimizer:
         dlat = lat2 - lat1
         dlon = lon2 - lon1
 
-        a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.asin(math.sqrt(a))
 
         return round(RiderTracker.EARTH_RADIUS_KM * c, 2)
@@ -181,7 +188,9 @@ class RiderTracker:
         self.events: dict[str, list[dict[str, Any]]] = {}
         logger.info("RiderTracker initialized")
 
-    def track_event(self, user_id: str, event_type: str, data: dict[str, Any] | None = None) -> None:
+    def track_event(
+        self, user_id: str, event_type: str, data: dict[str, Any] | None = None
+    ) -> None:
         """Track user or rider activity event."""
         if user_id not in self.events:
             self.events[user_id] = []
