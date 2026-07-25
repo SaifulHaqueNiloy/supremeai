@@ -96,7 +96,7 @@ class ASTSecurityScanner(ast.NodeVisitor):
             if node.value.attr in self.banned_attributes:
                 raise SecuritySandboxError(f"Dunder attribute access via subscript blocked: {node.value.attr}")
         # Block dunder subscript access that can lead to subclass enumeration: "".__class__.__bases__[0].__subclasses__()
-        if isinstance(node.value, ast.Attribute) and hasattr(node.value, 'attr'):
+        if isinstance(node.value, ast.Attribute) and hasattr(node.value, "attr"):
             # Check for patterns like __class__, __bases__, __subclasses__ in the chain
             current_node = node.value
             attr_chain = []
@@ -105,7 +105,7 @@ class ASTSecurityScanner(ast.NodeVisitor):
                 current_node = current_node.value
                 if len(attr_chain) > 5:  # Prevent infinite loops
                     break
-            
+
             # Check if the chain contains dangerous patterns
             if "__subclasses__" in attr_chain and "__bases__" in attr_chain and "__class__" in attr_chain:
                 raise SecuritySandboxError("Dangerous dunder method chain detected: potential subclass enumeration attack")
@@ -144,7 +144,7 @@ class ASTSecurityScanner(ast.NodeVisitor):
         if node.attr in self.banned_attributes:
             raise SecuritySandboxError(f"Sandbox escape pattern blocked: {node.attr}")
         # Block dangerous attribute access chains
-        if hasattr(node, 'value') and isinstance(node.value, ast.Attribute):
+        if hasattr(node, "value") and isinstance(node.value, ast.Attribute):
             # Look for patterns like obj.__class__.__bases__[0].__subclasses__()
             parent_attr = node.value
             attr_chain = [node.attr]
@@ -153,11 +153,9 @@ class ASTSecurityScanner(ast.NodeVisitor):
                 attr_chain.append(parent_attr.attr)
                 parent_attr = parent_attr.value
                 depth += 1
-            
+
             # Check if the chain contains dangerous combinations
-            if ("__subclasses__" in attr_chain and 
-                "__bases__" in attr_chain and 
-                "__class__" in attr_chain):
+            if "__subclasses__" in attr_chain and "__bases__" in attr_chain and "__class__" in attr_chain:
                 raise SecuritySandboxError("Dangerous dunder attribute chain detected: potential sandbox escape")
         self.generic_visit(node)
 

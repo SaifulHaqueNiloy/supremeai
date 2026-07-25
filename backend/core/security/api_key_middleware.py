@@ -1,6 +1,6 @@
 """API Key Authentication Middleware.
 
-বাংলা: API কী অথেনটিকেশন মিডলওয়্যার — রেট লিমিটিং, রিভোকেশন চেক, এক্সপায়ারি ভ্যালিডেশন।
+বাংলা: API কী অথেনটিকেশন মিডলওয়্যার — রেট লিমিটিং, রিভোকেশন চেক, এক্সপায়ারি ভ্যালিডেশন।
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.cache.redis_manager import redis_manager
 from core.pgbouncer_pool import get_db_pool
 from core.rate_limiter import AsyncRateLimiter
+from core.resilience.circuit_breaker import CircuitBreaker
 from core.security import API_KEY_PREFIX, hash_api_key, mask_api_key
 from models.api_key import record_api_key_usage
 from utils.environment import is_test_environment
@@ -34,6 +35,8 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.limiter = AsyncRateLimiter()
         self.prefix = API_KEY_PREFIX
+        # Add circuit breaker for database operations
+        self.db_circuit_breaker = CircuitBreaker(name="api_key_db_lookup", failure_threshold=3, recovery_timeout=30)
 
     async def _get_cached_api_key(self, key_hash: str) -> dict | None:
         """Fetch API key row from Redis cache or PostgreSQL with caching."""
@@ -47,24 +50,32 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         except Exception as exc:  # noqa: BLE001
             logger.warning(f"Redis cache read failed for API key: {exc}")
 
-        pool = await get_db_pool()
+        # Use circuit breaker for database operations
         try:
-            row = await pool.fetchrow(
-                "SELECT id, key_hash, revoked, rate_limit_rps, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
-                key_hash,
-            )
-        except ConnectionError as exc:
-            logger.error(f"DB connection failed during API key lookup: {exc}")
-            return None
-        if row:
-            try:
-                import json as _json
+            # Execute database call through circuit breaker
+            row = await self.db_circuit_breaker.acall(self._fetch_api_key_from_db, key_hash)
+            if row:
+                try:
+                    import json as _json
 
-                await redis_manager.set_cache(cache_key, _json.dumps(dict(row)), ex_seconds=300)
-            except Exception as exc:  # noqa: BLE001
-                logger.warning(f"Redis cache write failed for API key: {exc}")
-            return dict(row)
+                    await redis_manager.set_cache(cache_key, _json.dumps(dict(row)), ex_seconds=300)
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(f"Redis cache write failed for API key: {exc}")
+                return dict(row)
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"Database operation failed for API key {mask_api_key(key_hash)}: {exc}")
+            # Return None to indicate failure, but we'll handle it gracefully
+            pass
+
         return None
+
+    async def _fetch_api_key_from_db(self, key_hash: str):
+        """Internal method to fetch API key from database."""
+        pool = await get_db_pool()
+        return await pool.fetchrow(
+            "SELECT id, key_hash, revoked, rate_limit_rps, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
+            key_hash,
+        )
 
     async def dispatch(self, request: Request, call_next: Any) -> JSONResponse:  # noqa: ANN401
         # বাংলা মন্তব্য: public path-এ API key lookup DB call না করে সরাসরি skip করা হচ্ছে।
