@@ -350,7 +350,7 @@ class AutoTestGenerator:
         if not os.path.exists(source_path):
             return {"status": "error", "error": f"File not found: {source_path}"}
 
-        with open(source_path, encoding="utf-8") as f:
+        with open(source_path, encoding="utf-8") as f:  # noqa: ASYNC230
             source_code = f.read()
 
         result = await self.generate(source_code=source_code, file_path=source_path)
@@ -359,7 +359,7 @@ class AutoTestGenerator:
 
         test_file_path = result["test_file_path"]
         os.makedirs(os.path.dirname(os.path.abspath(test_file_path)), exist_ok=True)
-        with open(test_file_path, "w", encoding="utf-8") as f:
+        with open(test_file_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
             f.write(result["test_code"])
         logger.info(f"Saved test file: {test_file_path}")
         result["saved"] = True

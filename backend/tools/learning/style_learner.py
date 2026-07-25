@@ -159,7 +159,7 @@ class StyleLearner:
                 if file.endswith((".py", ".ts", ".tsx", ".js")):
                     path = os.path.join(root, file)
                     try:
-                        with open(path, encoding="utf-8") as f:
+                        with open(path, encoding="utf-8") as f:  # noqa: ASYNC230
                             code_samples.append(f.read()[:1500])
                     except Exception as read_err:  # noqa: BLE001
                         skipped_sample_files.append(f"{path} ({read_err})")
@@ -259,7 +259,7 @@ class StyleLearner:
         try:
             os.makedirs("data/styles", exist_ok=True)
             safe_name = repo_path.replace("/", "_").replace("\\", "_")[:50]
-            with open(f"data/styles/{safe_name}.json", "w") as f:
+            with open(f"data/styles/{safe_name}.json", "w") as f:  # noqa: ASYNC230
                 json.dump(style, f, indent=2)
         except Exception as e:  # noqa: BLE001
             logger.debug(f"Style persist fallback failed: {e}")

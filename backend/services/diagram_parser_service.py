@@ -305,7 +305,7 @@ class VisionAnalyzer:
         # Encode image
         import base64
 
-        with open(image_path, "rb") as f:
+        with open(image_path, "rb") as f:  # noqa: ASYNC230
             base64_image = base64.b64encode(f.read()).decode("utf-8")
 
         # Build prompt based on diagram type

@@ -8,6 +8,8 @@ knowledge from Python `seed_data` modules (
 
 from __future__ import annotations
 
+from loguru import logger
+
 import ast
 import contextlib
 import hashlib
@@ -48,9 +50,7 @@ class KnowledgeBaseIndexer:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return docs
 
         module_hash = hashlib.md5(
@@ -235,9 +235,7 @@ class KnowledgeBaseIndexer:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return None, None
 
         text = "\n".join(text_parts) if text_parts else (doc_name or "")
@@ -349,9 +347,7 @@ class KnowledgeBaseIndexer:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return []
 
     # ------------------------------------------------------------------

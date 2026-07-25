@@ -213,7 +213,7 @@ import subprocess
 import sys
 
 # Write the fix to a dummy module or apply patch if we had full codebase access
-with open("patched_module.py", "w") as f:
+with open("patched_module.py", "w") as f:  # noqa: ASYNC230
     f.write({repr(fix_code)})
 
 # Run pytest

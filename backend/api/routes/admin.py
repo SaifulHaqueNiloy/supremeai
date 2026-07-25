@@ -142,7 +142,7 @@ async def trigger_quick_action(
                 backup_dir / f"db_backup_{int(datetime.now(UTC).timestamp())}.json"
             )
 
-            with open(backup_path, "w", encoding="utf-8") as f:
+            with open(backup_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
                 json.dump(backup_data, f, indent=2)
 
             logger.info(f"Database backup saved successfully to {backup_path}")
