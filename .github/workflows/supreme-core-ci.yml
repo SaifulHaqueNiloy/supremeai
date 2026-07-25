@@ -426,7 +426,6 @@ jobs:
           path: |
             ~/.cache/pypoetry
             ~/.cache/pip
-            backend/.venv
           key: ${{ runner.os }}-poetry-v3-${{ hashFiles('backend/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-v3-
