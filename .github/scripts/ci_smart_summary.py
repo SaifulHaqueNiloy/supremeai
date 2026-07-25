@@ -1,7 +1,14 @@
-#!/usr/bin/env python3
 import os
 import re
-import requests
+import sys
+
+try:
+    import requests
+except ModuleNotFoundError:
+    sys.exit(
+        "❌ এই স্ক্রিপ্ট অবশ্যই 'poetry run python' দিয়ে চালাতে হবে (backend venv প্রয়োজন)। "
+        "সরাসরি 'python script.py' ব্যবহার করবেন না।"
+    )
 
 def extract_errors(log_text):
     """Extract tracebacks and error messages from log text using regex."""

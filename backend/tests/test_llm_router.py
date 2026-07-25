@@ -266,7 +266,12 @@ class TestLLMRouter:
     @pytest.mark.asyncio
     async def test_route_no_capable_provider(self):
         """Test route raises error when no provider is capable."""
-        with patch("core.llm_router.get_redis_client"), patch("core.llm_router._get_rules_engine", return_value=None):
+        with patch("core.llm_router.get_redis_client") as mock_redis, patch("core.llm_router._get_rules_engine", return_value=None):
+            mock_redis_client = MagicMock()
+            mock_redis.return_value = mock_redis_client
+            mock_redis_client.get = AsyncMock(return_value=None)
+            mock_redis_client.setex = AsyncMock()
+
             router = LLMRouter()
 
             # Mock all providers as unhealthy
