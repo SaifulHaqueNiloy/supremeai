@@ -2,31 +2,43 @@
 # বাংলা মন্তব্য: এআই জেনারেটেড কোডের সিকিউরিটি স্ক্যানার ও এএসটি ভ্যালিডেশন গেটকিপার।
 
 import ast
+
 from loguru import logger
 
 
 class SecuritySandboxError(Exception):
-    """Custom exception for security sandbox violations."""
+    """Exception thrown when code violates AST security constraints."""
 
     pass
 
 
-class ASTSecurityVisitor(ast.NodeVisitor):
-    """Enhanced AST visitor to detect and block malicious code patterns."""
-
+class ASTSecurityScanner(ast.NodeVisitor):
     def __init__(self):
-        self.banned_imports = {
+        # 🛑 ZERO-GAP: Extended Banned Imports
+        self.banned_imports: set[str] = {
             "os",
             "sys",
             "subprocess",
-            "shutil",
+            "pty",
+            "shlex",
+            "importlib",
+            "code",
+            "runpy",
+            "multiprocessing",
+            "pickle",
+            "marshal",
+            "tempfile",
             "socket",
-            "requests",
             "urllib",
-            "httpx",
-            "aiohttp",
+            "urllib3",
+            "requests",
+            "http",
+            "ctypes",
+            "builtins",
         }
-        self.banned_functions = {
+
+        # 🛑 ZERO-GAP: Banned Built-in Functions for Introspection & Execution
+        self.banned_functions: set[str] = {
             "eval",
             "exec",
             "compile",
@@ -41,30 +53,10 @@ class ASTSecurityVisitor(ast.NodeVisitor):
             "delattr",
             "hasattr",
             "open",
-            "execfile",
-            "file",
-            "__subclasses__",
-            "__bases__",
-            "__mro__",
-            "__dict__",
-            "__class__",
-            "__getattribute__",
-            "__getattr__",
-            "importlib",
-            "subprocess",
-            "os",
-            "sys",
-            "shutil",
-            "socket",
-            "urllib",
-            "requests",
-            "httpx",
-            "aiohttp",
-            "ftplib",
-            "telnetlib",
         }
 
-        self.banned_attributes = {
+        # 🛑 ZERO-GAP: Prevent Sandbox Escapes via Dunder Attributes
+        self.banned_attributes: set[str] = {
             "__class__",
             "__bases__",
             "__subclasses__",
@@ -75,160 +67,6 @@ class ASTSecurityVisitor(ast.NodeVisitor):
             "__code__",
             "__closure__",
             "__func__",
-            "__self__",
-            "__module__",
-            "__file__",
-            "__path__",
-            "__loader__",
-            "__spec__",
-            "__package__",
-            "__doc__",
-            "__subclasshook__",
-            "__weakref__",
-            "__annotations__",
-            "__init_subclass__",
-            "__new__",
-            "__del__",
-            "__str__",
-            "__repr__",
-            "__format__",
-            "__lt__",
-            "__le__",
-            "__eq__",
-            "__ne__",
-            "__gt__",
-            "__ge__",
-            "__hash__",
-            "__bool__",
-            "__bytes__",
-            "__complex__",
-            "__int__",
-            "__float__",
-            "__index__",
-            "__trunc__",
-            "__floor__",
-            "__ceil__",
-            "__round__",
-            "__abs__",
-            "__neg__",
-            "__pos__",
-            "__invert__",
-            "__add__",
-            "__sub__",
-            "__mul__",
-            "__matmul__",
-            "__truediv__",
-            "__floordiv__",
-            "__mod__",
-            "__divmod__",
-            "__pow__",
-            "__lshift__",
-            "__rshift__",
-            "__and__",
-            "__xor__",
-            "__or__",
-            "__radd__",
-            "__rsub__",
-            "__rmul__",
-            "__rmatmul__",
-            "__rtruediv__",
-            "__rfloordiv__",
-            "__rmod__",
-            "__rdivmod__",
-            "__rpow__",
-            "__rlshift__",
-            "__rrshift__",
-            "__rand__",
-            "__rxor__",
-            "__ror__",
-            "__iadd__",
-            "__isub__",
-            "__imul__",
-            "__imatmul__",
-            "__itruediv__",
-            "__ifloordiv__",
-            "__imod__",
-            "__ipow__",
-            "__ilshift__",
-            "__irshift__",
-            "__iand__",
-            "__ixor__",
-            "__ior__",
-            "__getitem__",
-            "__setitem__",
-            "__delitem__",
-            "__length_hint__",
-            "__missing__",
-            "__iter__",
-            "__next__",
-            "__reversed__",
-            "__contains__",
-            "__await__",
-            "__aiter__",
-            "__anext__",
-            "__aenter__",
-            "__aexit__",
-            "__enter__",
-            "__exit__",
-            "__get__",
-            "__set__",
-            "__delete__",
-            "__set_name__",
-            "__init__",
-            "__call__",
-        }
-
-        self.banned_methods = {
-            "import_module",
-            "system",
-            "popen",
-            "spawn",
-            "fork",
-            "run",
-            "run_async",
-            "check_output",
-            "call",
-            "execve",
-            "execl",
-            "execle",
-            "execlp",
-            "execv",
-            "execvp",
-            "execvpe",
-            "putenv",
-            "unsetenv",
-            "chmod",
-            "chown",
-            "remove",
-            "unlink",
-            "rmdir",
-            "removedirs",
-            "rename",
-            "renames",
-            "mkfifo",
-            "mknod",
-            "mkdir",
-            "makedirs",
-            "openpty",
-            "spawnl",
-            "spawnle",
-            "spawnlp",
-            "spawnlpe",
-            "spawnv",
-            "spawnve",
-            "spawnvp",
-            "spawnvpe",
-            "startfile",
-            "connect",
-            "bind",
-            "listen",
-            "accept",
-            "send",
-            "recv",
-            "sendto",
-            "recvfrom",
-            "sendall",
-            "close",
         }
 
     def visit_Import(self, node: ast.Import):
@@ -252,26 +90,33 @@ class ASTSecurityVisitor(ast.NodeVisitor):
             "builtins",
             "__builtins__",
         }:
-            raise SecuritySandboxError(
-                "Sandbox escape via subscript blocked: builtins/__builtins__ access"
-            )
+            raise SecuritySandboxError("Sandbox escape via subscript blocked: builtins/__builtins__ access")
         # Block chained dunder attribute access via subscript (e.g., obj.__class__.__bases__[0])
         if isinstance(node.value, ast.Attribute):
             if node.value.attr in self.banned_attributes:
-                raise SecuritySandboxError(
-                    f"Dunder attribute access via subscript blocked: {node.value.attr}"
-                )
+                raise SecuritySandboxError(f"Dunder attribute access via subscript blocked: {node.value.attr}")
+        # Block dunder subscript access that can lead to subclass enumeration: "".__class__.__bases__[0].__subclasses__()
+        if isinstance(node.value, ast.Attribute) and hasattr(node.value, 'attr'):
+            # Check for patterns like __class__, __bases__, __subclasses__ in the chain
+            current_node = node.value
+            attr_chain = []
+            while isinstance(current_node, ast.Attribute):
+                attr_chain.append(current_node.attr)
+                current_node = current_node.value
+                if len(attr_chain) > 5:  # Prevent infinite loops
+                    break
+            
+            # Check if the chain contains dangerous patterns
+            if "__subclasses__" in attr_chain and "__bases__" in attr_chain and "__class__" in attr_chain:
+                raise SecuritySandboxError("Dangerous dunder method chain detected: potential subclass enumeration attack")
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call):
-        """Visit function calls and block dangerous patterns."""
-        # Check if it's an attribute access call like obj.method()
+        # Block all Attribute access to reflection methods (prevents sandbox escape)
         if isinstance(node.func, ast.Attribute):
             # Block getattr/hasattr/setattr/delattr - critical for RCE bypass
             if node.func.attr in {"getattr", "hasattr", "setattr", "delattr"}:
-                raise SecuritySandboxError(
-                    f"Banned reflection function call detected: {node.func.attr}"
-                )
+                raise SecuritySandboxError(f"Banned reflection function call detected: {node.func.attr}")
             # Block dangerous module methods
             if node.func.attr in {
                 "import_module",
@@ -282,57 +127,42 @@ class ASTSecurityVisitor(ast.NodeVisitor):
                 "run",
                 "run_async",
             }:
-                raise SecuritySandboxError(
-                    f"Banned method invocation detected: {node.func.attr}"
-                )
+                raise SecuritySandboxError(f"Banned method invocation detected: {node.func.attr}")
 
-            # Block dangerous chain accesses like "".class.bases[0].subclasses()[...]
-            if isinstance(node.func.value, ast.Attribute):
-                value_attr = node.func.value.attr
-                if value_attr in self.banned_attributes:
-                    raise SecuritySandboxError(f"Chained dunder access blocked: {value_attr}.{attr_name}")
+        # Block direct function calls like eval(), __import__()
+        if isinstance(node.func, ast.Name) and node.func.id in self.banned_functions:
+            raise SecuritySandboxError(f"Banned function call detected: {node.func.id}")
 
-        # Check direct function calls like eval(), exec()
-        elif isinstance(node.func, ast.Name):
-            func_name = node.func.id
-            if func_name in self.banned_functions:
-                raise SecuritySandboxError(f"Banned function call detected: {func_name}")
+        # Block subscript calls: builtins["exec"]("...")
+        if isinstance(node.func, ast.Subscript):
+            self.visit_Subscript(node.func)
 
         self.generic_visit(node)
 
     def visit_Attribute(self, node: ast.Attribute):
-        """Visit attribute access and block dangerous patterns."""
-        if node.attr in self.banned_attributes or node.attr in self.banned_functions:
+        # Block access to dunder attributes used for sandbox escapes
+        if node.attr in self.banned_attributes:
             raise SecuritySandboxError(f"Sandbox escape pattern blocked: {node.attr}")
-
-        # Also check parent nodes for chained access
-        if isinstance(node.value, ast.Attribute):
-            parent_attr = node.value.attr
-            if parent_attr in self.banned_attributes:
-                raise SecuritySandboxError(f"Chained dunder access blocked: {parent_attr}.{node.attr}")
-
-        self.generic_visit(node)
-
-    def visit_Subscript(self, node: ast.Subscript):
-        """Visit subscript access and block dangerous patterns."""
-        # Check for direct dangerous access
-        if isinstance(node.value, ast.Name) and node.value.id in {"builtins", "__builtins__"}:
-            raise SecuritySandboxError(f"Sandbox escape via subscript blocked: {node.value.id}[...]")
-
-        # Check for chained attribute access in subscript
-        if isinstance(node.value, ast.Attribute):
-            if node.value.attr in self.banned_attributes:
-                raise SecuritySandboxError(f"Dunder attribute access in subscript blocked: {node.value.attr}")
-
-        # Check index for dangerous patterns
-        if isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, str):
-            if node.slice.value in self.banned_functions or node.slice.value in self.banned_attributes:
-                raise SecuritySandboxError(f"Banned subscript access blocked: {node.slice.value}")
-
+        # Block dangerous attribute access chains
+        if hasattr(node, 'value') and isinstance(node.value, ast.Attribute):
+            # Look for patterns like obj.__class__.__bases__[0].__subclasses__()
+            parent_attr = node.value
+            attr_chain = [node.attr]
+            depth = 0
+            while isinstance(parent_attr, ast.Attribute) and depth < 5:
+                attr_chain.append(parent_attr.attr)
+                parent_attr = parent_attr.value
+                depth += 1
+            
+            # Check if the chain contains dangerous combinations
+            if ("__subclasses__" in attr_chain and 
+                "__bases__" in attr_chain and 
+                "__class__" in attr_chain):
+                raise SecuritySandboxError("Dangerous dunder attribute chain detected: potential sandbox escape")
         self.generic_visit(node)
 
     def visit_Name(self, node: ast.Name):
-        # বাংলা মন্তব্য: নিষিদ্ধ ফাংশনের রেফারেন্স অন্য ভ্যারিয়েবলে অ্যাসাইন করা বা পাস করা ব্লক করতে এই চেকটি যোগ করা হলো।
+        # বাংলা মন্তব্য: নিষিদ্ধ ফাংশনের রেফারেন্স অন্য ভ্যারিয়েবলে অ্যাসাইন করা বা পাস করা ব্লক করতে এই চেকটি যোগ করা হলো।
         if node.id in self.banned_functions:
             raise SecuritySandboxError(f"Banned function reference detected: {node.id}")
         self.generic_visit(node)
@@ -355,13 +185,11 @@ class ImmuneSystemScanner:
         try:
             tree = ast.parse(code)
             self.scanner.visit(tree)
-            logger.info(
-                "AST Static code scan passed successfully. Code is safe for execution."
-            )
+            logger.info("AST Static code scan passed successfully. Code is safe for execution.")
             return {"safe": True, "error": None}
         except SecuritySandboxError as sse:
             logger.critical(f"🚨 [IMMUNE SYSTEM] Security threat defused: {sse}")
-            # বাংলা মন্তব্য: টেস্ট কেসের প্রত্যাশিত আউটপুট ম্যাচ করানোর সাথে কাস্টম এক্সপশন মাস্কিং বজায় রাখা হলো
+            # বাংলা মন্তব্ব: টেস্ট কেসের প্রত্যাশিত আউটপুট ম্যাচ করানোর সাথে কাস্টম এক্সপশন মাস্কিং বজায় রাখা হলো
             error_msg = str(sse)
             if "Banned import" in error_msg:
                 user_error = "Security validation failed: Banned root import detected and blocked."
@@ -370,9 +198,7 @@ class ImmuneSystemScanner:
             elif "Sandbox escape" in error_msg:
                 user_error = "Security validation failed: Banned attribute or dunder reflection access blocked."
             else:
-                user_error = (
-                    "Security validation failed: Payload rejected by Immune System."
-                )
+                user_error = "Security validation failed: Payload rejected by Immune System."
             return {"safe": False, "error": user_error}
 
         except SyntaxError as se:

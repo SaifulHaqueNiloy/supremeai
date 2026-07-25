@@ -1,23 +1,39 @@
-import re
-from urllib.parse import urlparse
-from typing import Any
+"""This module defines the `SentinelAgent`, an autonomous background agent crucial for the SupremeAI project's system observability and self-healing capabilities. It periodically monitors the health and performance of configured API endpoints, audits system dependencies, and provides event-driven hooks to record system incidents, thereby ensuring the overall reliability and stability of the AI ecosystem by proactively identifying and logging potential issues.
+
+Key Components:
+- `SentinelAgent`: The core class implementing an autonomous agent responsible for system health monitoring, dependency auditing, and incident management.
+- `monitor_endpoints()`: Asynchronously polls configured API endpoints, records their latency and status, and logs critical `SystemIncident` entries for failures or high latency.
+- `audit_dependencies()`: Performs periodic auditing of system dependencies, updating their last audit time (currently a placeholder for more complex version checking logic).
+- `trigger_event()`: Provides an event-driven interface to immediately record `SystemIncident` entries based on external triggers or middleware events.
+- `run_periodic_loop()`: The main asynchronous loop that orchestrates the periodic execution of endpoint monitoring and dependency auditing tasks, designed to run as part of the application's lifespan.
+- `sentinel`: A global singleton instance of the `SentinelAgent` for consistent access and management throughout the application.
+
+Dependencies:
+- `asyncio`: For asynchronous programming and managing the agent's periodic execution loop.
+- `datetime`: For handling timestamps, calculating latencies, and managing UTC times.
+- `httpx`: An asynchronous HTTP client used for polling external and internal API endpoints.
+- `loguru`: For structured and flexible logging of agent activities and errors.
+- `sqlalchemy`: For asynchronous ORM interactions with the database, specifically for `ApiEndpoint`, `SystemDependency`, and `SystemIncident` models.
+- `database.session`: Internal module providing the asynchronous database session factory (`AsyncSessionLocal`).
+- `models.sentinel`: Internal module defining the ORM models (`ApiEndpoint`, `SystemDependency`, `SystemIncident`) used by the agent for data persistence."""  # noqa: E501
+
+import asyncio
+import shutil
+from datetime import UTC, datetime
+
 import httpx
 from loguru import logger
-from core.config import settings
+from sqlalchemy import select
+
+from database.session import AsyncSessionLocal
+from models.sentinel import ApiEndpoint, SystemDependency, SystemIncident
 
 
-def _validate_endpoint_url(url: str) -> bool:
+class SentinelAgent:
     """
-    Validate endpoint URL to prevent SSRF attacks.
-
-    Args:
-        url: URL to validate
-
-    Returns:
-        bool: True if URL is safe, False otherwise
+    Sentinel Agent: Background autonomous agent for system observability and self-healing.
+    Runs periodically and is also callable via event-driven hooks.
     """
-    try:
-        parsed = urlparse(url)
 
     def __init__(self):
         self.running = True
@@ -38,9 +54,7 @@ def _validate_endpoint_url(url: str) -> bool:
                 return False
             # Block cloud metadata IPs (AWS, GCP, Azure)
             hostname = parsed.hostname or ""
-            if re.match(
-                r"^(169\.254\.169\.|10\.\d+\.|172\.(1[6-9]|2[0-9]|3[01])\.)", hostname
-            ):
+            if re.match(r"^(169\.254\.169\.|10\.\d+\.|172\.(1[6-9]|2[0-9]|3[01])\.)", hostname):
                 return False
             # Block localhost access in production unless it targets the backend port 8080
             # বাংলা মন্তব্য: প্রোডাকশনে লোকালহোস্ট ব্লক করা হচ্ছে, কিন্তু আমাদের নিজস্ব ব্যাকএন্ড পোর্ট ৮০৮০ মনিটর করার জন্য পোলিং এলাও করা হলো।
@@ -52,34 +66,37 @@ def _validate_endpoint_url(url: str) -> bool:
         except Exception:
             return False
 
-        # Block dangerous host patterns
-        hostname = parsed.hostname or ""
+    async def monitor_endpoints(self):
+        """
+        Polls configured ApiEndpoints and logs SystemIncident if latency is high or status fails.
+        """
+        try:
+            async with AsyncSessionLocal() as session:
+                # Get all endpoints
+                result = await session.execute(select(ApiEndpoint))
+                endpoints = result.scalars().all()
 
-        # Block metadata service IPs
-        if re.match(r"^(169\.254\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)", hostname):
-            return False
+                if not endpoints:
+                    return
 
-        # Block localhost variations in production
-        if settings.env in {"production", "staging"}:
-            if hostname in {"localhost", "127.0.0.1", "::1", "[::1]"}:
-                return False
-            # Only allow approved hosts in production
-            allowed_hosts = getattr(settings, "allowed_external_hosts", set())
-            if hostname not in allowed_hosts and not hostname.endswith(".supremeai.internal"):
-                return False
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    for ep in endpoints:
+                        start_time = datetime.now(UTC)
+                        try:
+                            # Secure URL construction with SSRF protection
+                            if ep.path.startswith("http"):
+                                url = ep.path
+                            else:
+                                url = f"http://127.0.0.1:8080{ep.path}"
 
                             # SSRF protection
                             if not self._validate_endpoint_url(url):
-                                logger.critical(
-                                    f"SSRF Blocked: Attempted access to {url}"
-                                )
+                                logger.critical(f"SSRF Blocked: Attempted access to {url}")
                                 continue
 
                             # Make the request only after SSRF validation
                             resp = await client.request(ep.method, url)
-                            latency = (
-                                datetime.now(UTC) - start_time
-                            ).total_seconds() * 1000
+                            latency = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
                             ep.latency_ms = int(latency)
                             ep.last_check_at = datetime.now(UTC)
@@ -123,9 +140,7 @@ def _validate_endpoint_url(url: str) -> bool:
         import asyncio
         import json
 
-        logger.info(
-            "[SentinelAgent] Running dependency audit via system environment tools..."
-        )
+        logger.info("[SentinelAgent] Running dependency audit via system environment tools...")
 
         # Check if pip-audit is available, fallback to pip list --outdated
         audit_cmd = None
@@ -158,21 +173,14 @@ def _validate_endpoint_url(url: str) -> bool:
                     # Depending on command output structure (dict or list)
                     is_vuln = False
                     if isinstance(vulnerabilities, list):
-                        is_vuln = any(
-                            v.get("name", "").lower() == dep.package_name.lower()
-                            for v in vulnerabilities
-                        )
+                        is_vuln = any(v.get("name", "").lower() == dep.package_name.lower() for v in vulnerabilities)
                     elif isinstance(vulnerabilities, dict):
-                        is_vuln = dep.package_name in vulnerabilities.get(
-                            "dependencies", {}
-                        )
+                        is_vuln = dep.package_name in vulnerabilities.get("dependencies", {})
 
                     if is_vuln:
                         dep.status = "vulnerable"
                         # Trigger immediate remediation alert
-                        logger.error(
-                            f"[SentinelAgent] Flagged security risk: package {dep.package_name} is vulnerable!"
-                        )
+                        logger.error(f"[SentinelAgent] Flagged security risk: package {dep.package_name} is vulnerable!")
                         await self.trigger_event(
                             "SECURITY_RISK",
                             f"Dependency {dep.package_name} failed security scan.",
@@ -196,9 +204,7 @@ def _validate_endpoint_url(url: str) -> bool:
                 )
                 session.add(incident)
                 await session.commit()
-                logger.info(
-                    f"[SentinelAgent] Event-driven incident recorded: {event_type}"
-                )
+                logger.info(f"[SentinelAgent] Event-driven incident recorded: {event_type}")
         except Exception as e:  # noqa: BLE001
             logger.error(f"[SentinelAgent] Error triggering event: {e}")
 
@@ -208,15 +214,11 @@ def _validate_endpoint_url(url: str) -> bool:
         Uses a basic active flag to prevent multiple executions if workers > 1.
         """
         if self._is_active:
-            logger.warning(
-                "[SentinelAgent] Agent already active, skipping duplicate startup."
-            )
+            logger.warning("[SentinelAgent] Agent already active, skipping duplicate startup.")
             return
 
         self._is_active = True
-        logger.info(
-            "[SentinelAgent] Starting Periodic Loop (Heartbeat: 60s, Audit: 12h)..."
-        )
+        logger.info("[SentinelAgent] Starting Periodic Loop (Heartbeat: 60s, Audit: 12h)...")
 
         audit_counter = 0
 
@@ -233,52 +235,10 @@ def _validate_endpoint_url(url: str) -> bool:
                 audit_counter += 1
                 await asyncio.sleep(60)
         except asyncio.CancelledError:
-            logger.info(
-                "[SentinelAgent] Periodic Loop cancelled. Shutting down gracefully."
-            )
+            logger.info("[SentinelAgent] Periodic Loop cancelled. Shutting down gracefully.")
             self._is_active = False
             raise
 
 
-async def execute_endpoint_request(endpoint_config: dict[str, Any]) -> dict[str, Any] | None:
-    """
-    Execute an endpoint request with SSRF protection.
-
-    Args:
-        endpoint_config: Configuration containing path, method, etc.
-
-    Returns:
-        Response data or None if request failed
-    """
-    try:
-        # Construct URL with validation
-        path = endpoint_config.get("path", "")
-        method = endpoint_config.get("method", "GET").upper()
-
-        if path.startswith("http"):
-            url = path
-        else:
-            # Validate path to ensure it's a safe relative path
-            if ".." in path or path.startswith("/") or ":" in path.split("/")[0]:
-                logger.warning(f"Potentially unsafe path blocked: {path}")
-                return None
-            url = f"http://127.0.0.1:8080{path}"
-
-        # Validate URL for SSRF protection
-        if not _validate_endpoint_url(url):
-            logger.critical(f"SSRF blocked: Attempted access to {url}")
-            return None
-
-        timeout = endpoint_config.get("timeout", 30)
-
-        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout)) as client:
-            response = await client.request(method, url, headers=endpoint_config.get("headers", {}), json=endpoint_config.get("json", None))
-
-            return {"status_code": response.status_code, "headers": dict(response.headers), "content": response.text}
-
-    except httpx.RequestError as e:
-        logger.error(f"Request error in endpoint execution: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"Unexpected error in endpoint execution: {e}")
-        return None
+# Global singleton instance
+sentinel = SentinelAgent()
