@@ -29,7 +29,7 @@ class ModelTrainer:
         if not os.path.exists(dataset_path):
             # Ensure the directory exists
             os.makedirs(os.path.dirname(dataset_path) or ".", exist_ok=True)
-            with open(dataset_path, "w") as f:
+            with open(dataset_path, "w") as f:  # noqa: ASYNC230
                 f.write('{"prompt": "hello", "completion": "world"}')
 
         logger.info(

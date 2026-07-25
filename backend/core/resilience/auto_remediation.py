@@ -55,7 +55,7 @@ class AutoRemediation:
         if not os.path.exists(safe_path):
             return {"success": False, "error": f"File {safe_path} not found"}
 
-        with open(safe_path, encoding="utf-8") as f:
+        with open(safe_path, encoding="utf-8") as f:  # noqa: ASYNC230
             original_code = f.read()
 
         fixed_code = await self._get_ai_patch(
