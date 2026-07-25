@@ -26,6 +26,7 @@ import time
 from typing import Any
 
 from loguru import logger
+import asyncio
 
 # ডিফল্ট কনফিগ — DB না থাকলেও অ্যাপ চালু থাকবে
 DEFAULT_CONFIGS: dict[str, Any] = {
@@ -69,15 +70,37 @@ class ConfigCache:
 
     def __init__(self, ttl_seconds: int = 60):
         self._cache: dict[str, Any] = {}
+        self._cache_timestamps: dict[str, float] = {}  # Track cache entry timestamps
         self._ttl = ttl_seconds
         self._last_refresh: float = 0.0
         self._lock = threading.Lock()
         self._loaded = False
         self._refresh_pending = False
+        self.cleanup_task: Any = None
+        self._last_cleanup = 0.0  # Track last cleanup time
 
     def _should_refresh(self) -> bool:
         """TTL expire হয়েছে কিনা চেক করে।"""
         return (time.time() - self._last_refresh) > self._ttl
+
+    def _should_cleanup(self) -> bool:
+        """নির্ধারণ করে যে কখন ক্যাশ ক্লিন আপ করতে হবে"""
+        return (time.time() - self._last_cleanup) > 60  # Check every 60 seconds
+
+    def _cleanup_expired(self):
+        """মেমরি লিক রোধ করতে মেয়াদোত্তীর্ণ ক্যাশ ক্লিন করে দেয়"""
+        current_time = time.time()
+        with self._lock:
+            expired_keys = [
+                key
+                for key, timestamp in self._cache_timestamps.items()
+                if current_time - timestamp > self._ttl * 2  # Clean entries older than 2x TTL
+            ]
+            for key in expired_keys:
+                del self._cache_timestamps[key]
+                self._cache.pop(key, None)
+
+            self._last_cleanup = current_time
 
     async def _load_from_db_async(self) -> dict[str, Any]:
         """একমাত্র DB-load পথ — সবসময় বর্তমান event loop-এই চলে, নতুন থ্রেড/লুপ তৈরি করে না।"""
@@ -102,7 +125,9 @@ class ConfigCache:
         new_cache = await self._load_from_db_async()
         with self._lock:
             self._cache = new_cache
+            self._cache_timestamps = {key: time.time() for key in new_cache}
             self._last_refresh = time.time()
+            self._last_cleanup = time.time()
             self._loaded = True
 
     def refresh_sync_bootstrap(self):
@@ -117,7 +142,9 @@ class ConfigCache:
             new_cache = dict(DEFAULT_CONFIGS)
         with self._lock:
             self._cache = new_cache
+            self._cache_timestamps = {key: time.time() for key in new_cache}
             self._last_refresh = time.time()
+            self._last_cleanup = time.time()
             self._loaded = True
 
     def _schedule_refresh(self) -> None:
@@ -133,6 +160,9 @@ class ConfigCache:
 
             loop = asyncio.get_running_loop()
             loop.create_task(self._coalesced_refresh())
+            # Also start cleanup task if not already running
+            if self.cleanup_task is None or self.cleanup_task.done():
+                self.cleanup_task = asyncio.create_task(self._periodic_cache_cleanup())
         except RuntimeError:
             self._refresh_pending = False
 
@@ -148,9 +178,13 @@ class ConfigCache:
         কনফিগ ভ্যালু রিটার্ন করে।
         - TTL expire হলে auto-refresh করে
         - DB না থাকলে DEFAULT_CONFIGS থেকে নেয়
+        - পিরিয়ডিক ক্লিনআপ চেক করে মেমরি লিক রোধ করে
         """
         if not self._loaded or self._should_refresh():
             self._schedule_refresh()
+
+        if self._should_cleanup():
+            self._cleanup_expired()
 
         with self._lock:
             return self._cache.get(key, default)
@@ -214,11 +248,36 @@ class ConfigCache:
         with self._lock:
             if key:
                 self._cache.pop(key, None)
+                self._cache_timestamps.pop(key, None)
                 logger.debug(f"ConfigCache: Invalidated key '{key}'")
             else:
                 self._cache.clear()
+                self._cache_timestamps.clear()
                 self._loaded = False
                 logger.debug("ConfigCache: Fully invalidated")
+
+    async def _periodic_cache_cleanup(self):
+        """Periodically clean up expired secrets."""
+        while True:
+            try:
+                self._cleanup_expired()
+                await asyncio.sleep(60)  # Check every minute
+            except asyncio.CancelledError:
+                logger.info("Config cache cleanup task cancelled")
+                break
+            except Exception as e:
+                logger.error(f"Error during config cache cleanup: {e}")
+                await asyncio.sleep(60)  # Continue despite error
+
+    def start_cleanup_task(self):
+        """Start the periodic cleanup task."""
+        if self.cleanup_task is None or self.cleanup_task.done():
+            self.cleanup_task = asyncio.create_task(self._periodic_cache_cleanup())
+
+    def stop_cleanup_task(self):
+        """Stop the periodic cleanup task."""
+        if self.cleanup_task and not self.cleanup_task.done():
+            self.cleanup_task.cancel()
 
 
 # Global singleton
