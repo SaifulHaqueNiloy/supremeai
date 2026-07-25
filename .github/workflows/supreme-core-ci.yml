@@ -417,6 +417,11 @@ jobs:
       OPENROUTER_API_KEY: "mock_openrouter_api_key"
       OPENAI_API_KEY: "mock_openai_api_key"
       ANTHROPIC_API_KEY: "mock_anthropic_api_key"
+      # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে AuthMiddleware যেন JWT ভেরিফিকেশন এড়িয়ে যায়
+      # এবং "Bearer test-token" গ্রহণ করে, সেজন্য এই দুটি ফ্ল্যাগ সেট করা হলো।
+      # Production-এ এই ভ্যালু কখনো "true" হওয়া উচিত নয়।
+      ALLOW_TEST_AUTH_BYPASS: "true"
+      ALLOW_TEST_ORIGIN_BYPASS: "true"
     steps:
       - uses: actions/checkout@v4
 
