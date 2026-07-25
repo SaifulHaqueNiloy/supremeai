@@ -100,7 +100,7 @@ def test_docs_disabled_in_production():
 
         # Mock secret fetching to prevent errors for missing production secrets
         import core.security.secret_vault as sv
-        sv.ProductionSecretVault.fetch_secret = lambda self, name: "mock"
+        sv.ProductionSecretVault.fetch_secret = lambda self, name: "secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad" if "JWT" in name else "mock"
 
         import core.app as app_mod
         import core.services as services

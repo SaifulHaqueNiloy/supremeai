@@ -196,6 +196,7 @@ class Settings(BaseSettings):
             "/health",
             "/metrics",
             "/docs",
+            "/redoc",
             "/openapi.json",
             "/api/v1/auth/token",
             "/actuator",
