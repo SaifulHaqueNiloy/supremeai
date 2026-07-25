@@ -97,19 +97,24 @@ class UnifiedDBManager:
             record = await self.sqlite.get(collection, record_id)
             if record:
                 return record
-        except Exception:  # noqa: S110
-            pass
+        except Exception as e:
+            logger.warning(f"[UnifiedDB] SQLite lookup failed for {record_id}, falling back: {e}")
 
         # Secondary lookup: Cloud Supabase
         try:
             record = await self.supabase.fetch_by_id(collection, record_id)
             if record:
                 return record
-        except Exception:  # noqa: S110
-            pass
+        except Exception as e:
+            logger.warning(f"[UnifiedDB] Supabase lookup failed for {record_id}: {e}")
 
         return None
 
 
 # Global singleton instance
 unified_db = UnifiedDBManager()
+
+
+def get_db() -> UnifiedDBManager:
+    """FastAPI Dependency Injection provider for UnifiedDBManager."""
+    return unified_db

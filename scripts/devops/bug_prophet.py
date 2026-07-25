@@ -51,7 +51,7 @@ litellm.retry_strategy = {
     "allowed_exceptions": [Exception]
 }
 
-CACHE_FILE = Path(__file__).parent / ".bug_prophet_cache.json"
+CACHE_FILE = Path(__file__).parent / ".bug_prophet_cache.sqlite"
 TARGET_DIRECTORIES = ["backend/core", "backend/tools"]
 FILE_PATTERN = "*.py"
 EXCLUDE_FILES = {"__init__.py", "bug_prophet.py", "ai_scribe_historian.py"}
@@ -372,17 +372,39 @@ def run_ai_analysis(file_path: Path) -> list[Issue]:
 
 
 # --- Cache & Hash ---
-def load_cache() -> dict:
-    if CACHE_FILE.exists():
-        try:
-            return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {}
+import sqlite3
 
+def _get_db_connection():
+    conn = sqlite3.connect(CACHE_FILE)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT)"
+    )
+    return conn
+
+def load_cache() -> dict:
+    cache = {}
+    try:
+        with _get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT key, value FROM cache")
+            for row in cursor.fetchall():
+                cache[row[0]] = json.loads(row[1])
+    except Exception as e:
+        logging.warning(f"Failed to load cache: {e}")
+    return cache
 
 def save_cache(cache: dict):
-    CACHE_FILE.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+    try:
+        with _get_db_connection() as conn:
+            cursor = conn.cursor()
+            for key, value in cache.items():
+                cursor.execute(
+                    "INSERT OR REPLACE INTO cache (key, value) VALUES (?, ?)",
+                    (key, json.dumps(value))
+                )
+            conn.commit()
+    except Exception as e:
+        logging.warning(f"Failed to save cache: {e}")
 
 
 def get_file_hash(content: str) -> str:
@@ -569,3 +591,100 @@ if __name__ == "__main__":
         files=args.files,
         output=args.output,
     )
+
+# --- Streaming Anomaly Detector ---
+import asyncio
+import math
+from collections import deque
+from backend.core.messaging.event_bus import error_event_bus, ErrorEvent, ErrorContext
+
+class AnomalyDetector:
+    def __init__(self):
+        # Tracking error frequencies per module. (timestamp, error_type)
+        self.history = {}
+        self.window_size_seconds = 60
+        self.baseline_avg = {}
+        self.baseline_std = {}
+
+    def _update_baselines(self):
+        # A lightweight Z-score model update
+        now = datetime.datetime.now(datetime.UTC).timestamp()
+        for module, events in self.history.items():
+            # Keep only events in the window
+            valid_events = [e for e in events if now - e[0] <= self.window_size_seconds]
+            self.history[module] = valid_events
+
+            count = len(valid_events)
+
+            if module not in self.baseline_avg:
+                self.baseline_avg[module] = count
+                self.baseline_std[module] = 1.0 # Default std
+            else:
+                # Exponential moving average
+                alpha = 0.1
+                old_avg = self.baseline_avg[module]
+                self.baseline_avg[module] = (alpha * count) + ((1 - alpha) * old_avg)
+
+                # variance update
+                var = (count - self.baseline_avg[module]) ** 2
+                self.baseline_std[module] = math.sqrt((alpha * var) + ((1 - alpha) * (self.baseline_std[module] ** 2)))
+
+    def process_event(self, event: ErrorEvent):
+        module = event.module
+        if module not in self.history:
+            self.history[module] = []
+
+        now = datetime.datetime.now(datetime.UTC).timestamp()
+        self.history[module].append((now, event.error_type))
+
+        self._update_baselines()
+
+        # Check Z-score
+        current_count = len(self.history[module])
+        avg = self.baseline_avg.get(module, 0)
+        std = self.baseline_std.get(module, 1.0)
+        if std == 0:
+            std = 1.0
+
+        z_score = (current_count - avg) / std
+
+        # If 10x more warnings than baseline (or very high Z-score)
+        if current_count > 10 and current_count > (avg * 10) and z_score > 3.0:
+            logging.critical(f"[BugProphet] PREDICTED OUTAGE in {module}! Z-score: {z_score:.2f}, Count: {current_count}, Avg: {avg:.2f}")
+
+            outage_event = ErrorEvent(
+                module=module,
+                error_type="PREDICTED_OUTAGE",
+                message=f"Anomaly detected! Module '{module}' error rate is {current_count} (baseline {avg:.2f}).",
+                severity="CRITICAL",
+                structured_context=ErrorContext(module=module, env="production")
+            )
+            # Emit directly to bus (ensure we don't infinitely loop by checking error type)
+            if event.error_type != "PREDICTED_OUTAGE":
+                asyncio.create_task(error_event_bus.async_emit(outage_event))
+
+
+async def run_anomaly_detector_loop():
+    """
+    বাংলা মন্তব্য: Background loop that integrates bug_prophet directly with the ErrorEventBus.
+    It predicts outages before they crash the process.
+    """
+    logging.info("🔮 BugProphet Anomaly Detector started.")
+    detector = AnomalyDetector()
+
+    # We register a listener to the error_event_bus
+    def listener(event: ErrorEvent):
+        if event.error_type not in ["PREDICTED_OUTAGE", "SILENT_PATTERN_ESCALATED"]:
+            detector.process_event(event)
+
+    error_event_bus.register_listener("*", listener)
+
+    try:
+        while True:
+            # The loop just keeps the task alive, the listener does the work synchronously
+            # Or we could poll the dead letter queue if we wanted, but listener is real-time.
+            await asyncio.sleep(60)
+            detector._update_baselines()
+    except asyncio.CancelledError:
+        error_event_bus.unregister_listener("*", listener)
+        logging.info("🔮 BugProphet Anomaly Detector shutting down.")

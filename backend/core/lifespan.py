@@ -120,6 +120,12 @@ async def app_lifespan(app):
     Handles high-concurrency initialization and defensive teardowns.
     """
     logger.info("🌐 Core Infrastructure Bootstrapping Active...")
+
+    # Initialize Intelligent Silent Catcher for real-time observability
+    from core.intelligent_silent_catcher import setup_silent_catcher
+
+    setup_silent_catcher()
+
     # বাংলা মন্তব্য: স্টার্টআপ ভ্যালিডেশন এবং নির্ভরযোগ্যতা নিয়ন্ত্রণ প্যানেল বুটস্ট্র্যাপ করা।
     await StartupValidator.validate()
     await ReliabilityController.initialize()
@@ -340,7 +346,6 @@ async def app_lifespan(app):
         restart_delay=5.0,
     )
 
-    # Agent 3: System Telemetry Broadcaster
     try:
         from core.telemetry.system_telemetry import run_system_telemetry_loop
 
@@ -354,6 +359,21 @@ async def app_lifespan(app):
         logger.info("✅ System Telemetry Broadcaster background loop started.")
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
+
+    # Agent 4: Bug Prophet Anomaly Detector
+    try:
+        from scripts.devops.bug_prophet import run_anomaly_detector_loop
+
+        await agent_supervisor.start_agent(
+            "bug-prophet-anomaly-detector",
+            run_anomaly_detector_loop,
+            health_check_interval=60,
+            max_restarts=5,
+            restart_delay=5.0,
+        )
+        logger.info("✅ BugProphet Anomaly Detector started.")
+    except Exception as exc:
+        logger.warning(f"⚠️ BugProphet Anomaly Detector failed to start: {exc}")
 
     import os
 

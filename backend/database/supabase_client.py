@@ -82,7 +82,7 @@ class SupabaseDB:
                 logger.warning(f"Supabase Client initialization failed: {e}. Falling back to Mock Supabase Client.")
                 try:
                     self.client = create_client("https://mock.supabase.co", "mock-key")
-                except Exception:
+                except Exception as e:
                     self.client = None
         else:
             logger.warning("SUPABASE_URL or SUPABASE_KEY invalid/missing. Running in offline/mock mode.")
