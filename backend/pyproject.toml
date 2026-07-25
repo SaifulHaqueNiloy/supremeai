@@ -22,6 +22,11 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 python-dotenv = "^1.0.1"
 requests = "^2.32.3"
+uuid6 = "*"
+boto3 = "*"
+defusedxml = "*"
+beautifulsoup4 = "*"
+posthog = "*"
 aiohttp = "^3.10.10"
 websockets = "^13.1"
 pygithub = "^2.5.0"
