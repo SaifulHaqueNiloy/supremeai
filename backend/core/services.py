@@ -71,14 +71,15 @@ registry = ServiceRegistry()
 # critical dependency is missing, preventing NoneType errors at runtime.
 from adaptive_engine.experience_db import ExperienceDatabase  # noqa: E402
 from adaptive_engine.intent_parser import IntentParser  # noqa: E402
-from admin.god import AdminGodLayer  # noqa: E402
 from brain.model_router import ModelRouter  # noqa: E402
+from brain.parallel_cloud_router import ParallelCloudRouter  # noqa: E402
 from core.intent import IntentClassifier  # noqa: E402
 from core.messaging.upstash_redis_queue import UpstashRedisQueue  # noqa: E402
 
 redis_queue = UpstashRedisQueue()
 admin_god = AdminGodLayer()
 model_router = ModelRouter()
+parallel_router = ParallelCloudRouter()
 intent_clf = IntentClassifier()
 # The 'if model_router' check is kept as a safeguard, though with fail-fast,
 # model_router should always be available if IntentParser is.
