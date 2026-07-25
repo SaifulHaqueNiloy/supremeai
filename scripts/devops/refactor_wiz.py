@@ -50,7 +50,7 @@ litellm.retry_strategy = {
     "allowed_exceptions": [Exception]
 }
 
-CACHE_FILE = Path(__file__).parent / ".refactor_wiz_cache.json"
+CACHE_FILE = Path(__file__).parent / ".refactor_wiz_cache.sqlite"
 TARGET_DIRECTORIES = ["backend/core", "backend/tools"]
 FILE_PATTERN = "*.py"
 EXCLUDE_FILES = {"__init__.py", "refactor_wiz.py", "ai_scribe_historian.py"}
@@ -394,17 +394,39 @@ def generate_ai_plan(file_path: Path, metrics: dict, debts: list[DebtItem]) -> s
 
 
 # --- Cache & Hash ---
-def load_cache() -> dict:
-    if CACHE_FILE.exists():
-        try:
-            return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {}
+import sqlite3
 
+def _get_db_connection():
+    conn = sqlite3.connect(CACHE_FILE)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT)"
+    )
+    return conn
+
+def load_cache() -> dict:
+    cache = {}
+    try:
+        with _get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT key, value FROM cache")
+            for row in cursor.fetchall():
+                cache[row[0]] = json.loads(row[1])
+    except Exception as e:
+        logging.warning(f"Failed to load cache: {e}")
+    return cache
 
 def save_cache(cache: dict):
-    CACHE_FILE.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+    try:
+        with _get_db_connection() as conn:
+            cursor = conn.cursor()
+            for key, value in cache.items():
+                cursor.execute(
+                    "INSERT OR REPLACE INTO cache (key, value) VALUES (?, ?)",
+                    (key, json.dumps(value))
+                )
+            conn.commit()
+    except Exception as e:
+        logging.warning(f"Failed to save cache: {e}")
 
 
 def get_file_hash(content: str) -> str:

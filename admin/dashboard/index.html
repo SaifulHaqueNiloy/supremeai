@@ -1,145 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Supreme Command Center</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupremeAI Admin Dashboard (Deprecated)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .redirect-container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        .warning {
+            color: #d32f2f;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .redirect-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+        .redirect-link:hover {
+            background-color: #1565c0;
+        }
+    </style>
 </head>
 <body>
-
-  <div class="app-container">
-    <aside class="sidebar">
-      <div class="logo-area">
-        <span class="logo-icon">⚡</span>
-        <div class="logo-text">SUPREME<span>AI</span></div>
-      </div>
-
-      <nav class="nav-menu">
-        <div class="nav-section">MAIN MENU</div>
-        <a href="#" class="nav-item active" data-target="view-dashboard">📊 Dashboard</a>
-        <a href="#" class="nav-item" data-target="view-pipelines">🚀 CI/CD Pipelines</a>
-        <a href="#" class="nav-item" data-target="view-health">💻 System Health</a>
-        <a href="#" class="nav-item" data-target="view-godmode">🛡️ God Control</a>
-      </nav>
-
-      <div class="sidebar-bottom">
-        <div class="env-badge">Production Env</div>
-      </div>
-    </aside>
-
-    <main class="main-content">
-
-      <header class="topbar">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input type="text" placeholder="Search jobs, logs, or metrics..." />
-        </div>
-        <div class="topbar-actions">
-          <div class="sync-status">
-            <span class="sync-dot"></span> Live Sync
-          </div>
-          <button class="btn btn-outline" id="btnRefresh">↻ Refresh</button>
-        </div>
-      </header>
-
-      <div id="view-dashboard" class="view-section active">
-        <h2 class="page-title">Overview & Quick Actions</h2>
-
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-title">API Status</div>
-            <div class="metric-value text-success">Healthy</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-title">Token Quota (Redis)</div>
-            <div class="metric-value">87%</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-title">Last Deploy</div>
-            <div class="metric-value">2h ago</div>
-          </div>
-        </div>
-
-        <h3 class="section-subtitle mt-8">⚡ Quick Action Hub</h3>
-        <div class="quick-actions-grid">
-          <div class="action-card" onclick="triggerAction('rollback')">
-            <span class="action-icon">🔄</span>
-            <h4>Force Rollback</h4>
-            <p>Revert to previous stable Cloud Run revision.</p>
-          </div>
-          <div class="action-card" onclick="triggerAction('backup')">
-            <span class="action-icon">💾</span>
-            <h4>Trigger Backup</h4>
-            <p>Dump Supabase DB to Cloudflare R2 now.</p>
-          </div>
-          <div class="action-card" onclick="triggerAction('cache')">
-            <span class="action-icon">🧹</span>
-            <h4>Clear Redis Cache</h4>
-            <p>Flush in-memory rate limiters & caches.</p>
-          </div>
-        </div>
-      </div>
-
-      <div id="view-pipelines" class="view-section hidden">
-        <h2 class="page-title">CI/CD Pipeline Jobs</h2>
-        <div class="filter-tabs">
-          <button class="tab active" data-filter="all">All Jobs</button>
-          <button class="tab" data-filter="success">✅ Passed</button>
-          <button class="tab" data-filter="failure">❌ Failed</button>
-        </div>
-
-        <div class="jobs-grid" id="jobsGrid">
-          </div>
-      </div>
-
-      <div id="view-godmode" class="view-section hidden">
-        <h2 class="page-title text-danger">🛡️ God Control (Constitutional Enforcement)</h2>
-        <p class="text-muted">Manage real-time access rules powered by <code>god.py</code>.</p>
-
-        <div class="god-panel mt-4">
-          <div class="rule-row">
-            <div>
-              <h4 class="rule-title">Admin Authorized</h4>
-              <p class="rule-desc">Allow critical write actions across the system. Disabling this enforces read-only mode.</p>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleAdminAuth" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
-          <div class="rule-row mt-4">
-            <div>
-              <h4 class="rule-title">AI Auto-Fix Engine</h4>
-              <p class="rule-desc">Allow SupremeAI to automatically commit fixes to the repository.</p>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleAutoFix" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
-
-  <div class="modal-overlay hidden" id="terminalModal">
-    <div class="terminal-window">
-      <div class="terminal-header">
-        <div class="terminal-buttons">
-          <span class="t-btn close" onclick="closeTerminal()"></span>
-          <span class="t-btn min"></span>
-          <span class="t-btn max"></span>
-        </div>
-        <div class="terminal-title" id="terminalTitle">job_log.sh</div>
-      </div>
-      <div class="terminal-body" id="terminalBody">
-        </div>
+    <div class="redirect-container">
+        <div class="warning">⚠️ DEPRECATED DASHBOARD</div>
+        <h1>SupremeAI Admin Dashboard</h1>
+        <p>This standalone dashboard is deprecated and no longer maintained.</p>
+        <p>Please use the unified admin dashboard in the Studio Client:</p>
+        <a href="/../apps/studio-client" class="redirect-link">Go to Studio Client Dashboard</a>
+        <p style="margin-top: 2rem; font-size: 0.9em; color: #666;">
+            This dashboard will be removed in the next release.
+            All functionality has been migrated to the React-based Studio Client.
+        </p>
     </div>
-  </div>
 
-  <script src="script.js"></script>
+    <script>
+        // Redirect after 10 seconds
+        setTimeout(() => {
+            window.location.href = '../apps/studio-client';
+        }, 10000);
+    </script>
 </body>
 </html>

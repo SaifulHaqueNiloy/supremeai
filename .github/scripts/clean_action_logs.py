@@ -1,6 +1,8 @@
 import os
 import sys
-import requests
+import json
+import urllib.request
+import urllib.error
 
 def main():
     repo = os.environ.get("GITHUB_REPOSITORY")
@@ -18,12 +20,14 @@ def main():
 
     print(f"Fetching workflow runs for {repo}...")
 
-    resp = requests.get(url, headers=headers, params={"per_page": 1})
-    if not resp.ok:
-        print(f"Failed to fetch runs: {resp.text}")
+    try:
+        req = urllib.request.Request(url + "?per_page=1", headers=headers)
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read())
+    except Exception as e:
+        print(f"Failed to fetch runs: {e}")
         return 1
 
-    data = resp.json()
     total_count = data.get("total_count", 0)
     print(f"Total workflow runs currently: {total_count}")
 
@@ -36,10 +40,14 @@ def main():
     runs = []
     page = 1
     while True:
-        r = requests.get(url, headers=headers, params={"per_page": 100, "page": page})
-        if not r.ok:
+        try:
+            req = urllib.request.Request(url + f"?per_page=100&page={page}", headers=headers)
+            with urllib.request.urlopen(req) as resp:
+                r_data = json.loads(resp.read())
+        except Exception:
             break
-        page_runs = r.json().get("workflow_runs", [])
+
+        page_runs = r_data.get("workflow_runs", [])
         if not page_runs:
             break
         runs.extend(page_runs)
@@ -90,12 +98,13 @@ def main():
     for run in runs_to_delete:
         run_id = run["id"]
         del_url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}"
-        del_resp = requests.delete(del_url, headers=headers)
-        if del_resp.ok:
-            deleted_count += 1
-            print(f"Deleted run {run_id}")
-        else:
-            print(f"Failed to delete run {run_id}: {del_resp.status_code}")
+        req = urllib.request.Request(del_url, headers=headers, method="DELETE")
+        try:
+            with urllib.request.urlopen(req) as del_resp:
+                deleted_count += 1
+                print(f"Deleted run {run_id}")
+        except Exception as e:
+            print(f"Failed to delete run {run_id}: {e}")
 
     print(f"Cleanup finished. Deleted {deleted_count} workflow runs.")
     return 0

@@ -66,11 +66,14 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
         elif hasattr(request.state, "user_id"):
             admin_id = getattr(request.state, "user_id")
 
-        if not admin_id:
-            admin_id = "unknown"
+        if not isinstance(admin_id, str):
+            admin_id = str(admin_id) if admin_id is not None and not hasattr(admin_id, "_mock_name") else "unknown"
 
         # Extract IP for churn detection
-        client_ip = request.client.host if request.client else "unknown"
+        raw_ip = getattr(request.client, "host", "unknown") if request.client else "unknown"
+        client_ip = str(raw_ip) if raw_ip is not None and not hasattr(raw_ip, "_mock_name") else "unknown"
+        corr_id = getattr(request.state, "correlation_id", None)
+        correlation_id = str(corr_id) if corr_id is not None and not hasattr(corr_id, "_mock_name") else None
 
         # Extract OTP code from header (if provided)
         otp_code = request.headers.get("X-JIT-OTP") or request.headers.get("X-OTP")
@@ -110,7 +113,7 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                     path=path,
                     method=method,
                     headers=dict(request.headers),
-                    correlation_id=getattr(request.state, "correlation_id", None),
+                    correlation_id=correlation_id,
                 ),
             )
 

@@ -59,10 +59,12 @@ core_routers: list[tuple[str, str]] = [
     # endpoint, এবং নতুন emergency-stop /halt+/resume) সব HTTP 404 দিত।
     # Kill-switch ও Swarm Health স্ক্রিন কাজ না করার আসল root cause এটিই ছিল।
     ("api.routes.swarm", "/api/v1/swarm"),
+    # Added real-time dashboard WebSocket endpoint for Phase 2.1 of roadmap
+    ("api.routes.realtime_dashboard", ""),
 ]
 
 optional_routers: list[tuple[str, str]] = [
-    # বাংলা মন্তব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
+    # বাংলা মন্তব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
     ("api.routes.knowledge", ""),
     ("api.routes.dock_actions", "/api"),
     ("api.routes.websocket_voice", ""),
