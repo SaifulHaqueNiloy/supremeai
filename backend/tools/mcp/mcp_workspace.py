@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 MCP Server for Dynamic Workspace Isolation in SupremeAI 2.0.
 
