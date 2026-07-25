@@ -147,7 +147,7 @@ class VPNRotator:
         try:
             import asyncio
             from pathlib import Path
-            
+
             cfg_text = await asyncio.to_thread(Path(config_path).read_text, encoding="utf-8")
             cfg = json.loads(cfg_text)
             proxy = cfg.get(use_case) or cfg.get("default")
