@@ -40,10 +40,12 @@ runs:
         plugins: poetry-plugin-export
     - uses: actions/cache@v6
       with:
-        path: ${{ inputs.working-directory }}/.venv
-        key: venv-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles(format('{0}/poetry.lock', inputs.working-directory)) }}
+        path: |
+          ~/.cache/pypoetry
+          ~/.cache/pip
+        key: pycache-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles(format('{0}/poetry.lock', inputs.working-directory)) }}
         restore-keys: |
-          venv-${{ runner.os }}-py${{ inputs.python-version }}-
+          pycache-${{ runner.os }}-py${{ inputs.python-version }}-
 
     - name: ⚙️ Install Build Dependencies
       shell: bash
