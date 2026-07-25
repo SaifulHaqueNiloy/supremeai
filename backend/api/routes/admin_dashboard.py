@@ -19,6 +19,7 @@ from core.config import settings
 from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report
 from tools.billing.cost_auditor import CostAuditor
+from tools.knowledge.codebase_exporter import export_codebase_to_markdown
 
 security = HTTPBearer()
 
@@ -143,7 +144,7 @@ def save_users(users: list[dict[str, Any]]):
 
 
 @router.get("/logs/stream")
-async def logs_stream():
+def logs_stream():
     async def log_generator():
         log_file = "logs/supremeai.log"
         if not os.path.exists(log_file):
@@ -222,9 +223,13 @@ def get_costs():
 
 @router.get("/health-map")
 def get_health_map():
-    gcp_configured = bool(getattr(settings, "gcp_project_id", None))
-    redis_configured = bool(getattr(settings, "upstash_redis_rest_url", None))
-    db_configured = bool(getattr(settings, "supabase_database_url", None))
+    gcp_configured = bool(getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID"))
+    redis_configured = bool(getattr(settings, "upstash_redis_rest_url", None) or settings._get_cached_secret("UPSTASH_REDIS_REST_URL"))
+    db_configured = bool(
+        getattr(settings, "supabase_database_url", None)
+        or settings._get_cached_secret("SUPABASE_DATABASE_URL")
+        or settings._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
+    )
 
     return {
         "gcp": {
@@ -490,11 +495,9 @@ def set_router_override(payload: RouterOverrideRequest):
 
 
 @router.get("/codebase/export")
-def get_codebase_export():
-    from tools.knowledge.codebase_exporter import export_codebase_to_markdown
-
+async def get_codebase_export():
     try:
-        codebase_md = export_codebase_to_markdown("..")
+        codebase_md = await export_codebase_to_markdown("..")
         return {"success": True, "markdown": codebase_md}
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to export codebase: {e}")
@@ -661,8 +664,6 @@ def update_feature_flag(flag_id: str, payload: dict):
 
 @router.get("/data-export")
 def get_full_data_export():
-    from tools.knowledge.codebase_exporter import export_codebase_to_markdown
-
     try:
         codebase_md = export_codebase_to_markdown("..")
         users = load_users()
