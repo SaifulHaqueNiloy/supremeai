@@ -1,11 +1,22 @@
-# backend/core/resilience/__init__.py
-# Resilience exports — CircuitBreaker & retry utilities
-# বাংলা মন্তব্য: রেজিলিয়েন্স মডিউলের রিকমেন্ডেড ক্লাসসমূহ সেন্ট্রালি এক্সপোর্ট করা হলো।
+"""Resilience Package — Consolidated Circuit Breaker & Error Handling (Zero-Hardcode)
 
-from core.resilience.circuit_breaker import (
+বাংলা মন্তব্ব্য: এই প্যাকেজটি সম্পূর্ণ রেজিলিয়েন্স ফাংশনালিটি সরবরাহ করে।
+যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven।
+সেন্ট্রালাইজড সার্কিট ব্রেকার এবং এরর হ্যান্ডলিং নিশ্চিত করে।
+
+Key Components:
+- `CircuitBreaker`: সেন্ট্রালাইজড সার্কিট ব্রেকার ইমপ্লিমেন্টেশন।
+- `circuit_breaker_middleware`: মিডলওয়্যার হিসেবে ব্যবহারের জন্য।
+
+Critical Security Note: এখন একটি সেন্ট্রালাইজড সার্কিট ব্রেকার ইমপ্লিমেন্টেশন হবে
+সম্পূর্ণ অ্যাপ্লিকেশন জুড়ে ডুপ্লিকেট প্রিভেনশন এর জন্য।
+"""
+
+from .circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerOpenError,
     CircuitBreakerState,
 )
 
+# Export the main classes for easy import
 __all__ = ["CircuitBreaker", "CircuitBreakerOpenError", "CircuitBreakerState"]

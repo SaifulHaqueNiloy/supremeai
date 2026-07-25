@@ -10,7 +10,6 @@ from core.swarm_pubsub import SwarmPubSub  # আমাদের মডুলা�
 async def test_pubsub_successful_broadcast():
     """নিশ্চিত করে যে মেসেজ পাবলিশ হলে সকল সাবস্ক্রাইবার সঠিকভাবে ডেটা রিসিভ করে।"""
     pubsub = SwarmPubSub()
-    received_payloads = []
 
     # Mock Redis client
     mock_redis = AsyncMock()
@@ -35,7 +34,6 @@ async def test_pubsub_successful_broadcast():
 async def test_pubsub_subscriber_error_isolation():
     """🛡️ সাইলেন্ট ফেইলর গার্ড: একটি সাবস্ক্রাইবার ক্র্যাশ করলেও যেন অন্য সাবস্ক্রাইবার ডেটা পায় এবং এরর লগে প্রোফাইল হয়।"""
     pubsub = SwarmPubSub()
-    message_received_by_healthy = False
     error_logged = False
 
     # Mock Redis client with pubsub that raises error on get_message
@@ -79,7 +77,9 @@ async def test_pubsub_redis_unavailable_on_subscribe():
     """🛡️ Redis unavailable প্রকাশনা: যখন Redis URL কনফিগার না থাকে, তখন ক্লিয়ার এরর রিজ থাকতে হবে।"""
     pubsub = SwarmPubSub()
 
-    with patch.object(pubsub, "_get_redis", side_effect=RuntimeError("REDIS_URL is not configured")):
+    with patch.object(
+        pubsub, "_get_redis", side_effect=RuntimeError("REDIS_URL is not configured")
+    ):
         with pytest.raises(RuntimeError, match="REDIS_URL"):
             async for _ in pubsub.subscribe():
                 pass

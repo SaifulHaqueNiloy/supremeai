@@ -17,7 +17,7 @@ from loguru import logger
 
 from core.config import settings
 from core.health.self_healer import SelfHealerService, RemediationPipeline
-from core.resilience.circuit_breaker import DynamicCircuitBreaker
+from core.resilience.circuit_breaker import CircuitBreaker
 
 from brain.model_registry import ModelRegistry
 
@@ -65,7 +65,7 @@ class PerformanceOptimizer:
         self.metrics: dict[str, PerformanceMetrics] = {}
         self.failure_history: list[FailureHistoryEntry] = []
         self.model_stats: dict[str, dict[str, float]] = {}
-        self.dynamic_circuit_breakers: dict[str, DynamicCircuitBreaker] = {}
+        self.dynamic_circuit_breakers: dict[str, CircuitBreaker] = {}
         self.model_registry = ModelRegistry()
         self.self_healer = None
         self.reminder_pipeline = None
@@ -85,16 +85,18 @@ class PerformanceOptimizer:
         except ImportError:
             logger.warning("Firestore not available, self-healing features limited")
 
-        logger.info("✅ PerformanceOptimizer initialized with self-healing capabilities")
+        logger.info(
+            "✅ PerformanceOptimizer initialized with self-healing capabilities"
+        )
 
-    def get_circuit_breaker(self, name: str) -> DynamicCircuitBreaker:
+    def get_circuit_breaker(self, name: str) -> CircuitBreaker:
         """Get or create a dynamic circuit breaker for a specific operation.
 
         Args:
              name: The name/identifier for the circuit breaker.
 
          Returns:
-             DynamicCircuitBreaker instance for the specified operation.
+             CircuitBreaker instance for the specified operation.
 
          Raises:
              None. Creates a new circuit breaker if one doesn't exist.
@@ -102,8 +104,10 @@ class PerformanceOptimizer:
          বাংলা: একটি নির্দিষ্ট অপারেশনের জন্য ডাইনামিক সার্কিট ব্রেকার পাওয়া বা তৈরি করে।
         """
         if name not in self.dynamic_circuit_breakers:
-            self.dynamic_circuit_breakers[name] = DynamicCircuitBreaker(
-                name=name, failure_threshold=settings.circuit_breaker_failure_threshold, recovery_timeout=settings.circuit_breaker_cooldown_period
+            self.dynamic_circuit_breakers[name] = CircuitBreaker(
+                name=name,
+                failure_threshold=settings.circuit_breaker_failure_threshold,
+                recovery_timeout=settings.circuit_breaker_cooldown_period,
             )
         return self.dynamic_circuit_breakers[name]
 
@@ -120,7 +124,9 @@ class PerformanceOptimizer:
         # Hard-cap: সীমা ছাড়ালে LRU ইভিকশন
         MAX_METRICS_ENTRIES = 500
         if len(self.metrics) > MAX_METRICS_ENTRIES:
-            sorted_keys = sorted(self.metrics, key=lambda k: self.metrics[k].last_updated)
+            sorted_keys = sorted(
+                self.metrics, key=lambda k: self.metrics[k].last_updated
+            )
             for k in sorted_keys[: len(self.metrics) - MAX_METRICS_ENTRIES]:
                 del self.metrics[k]
 
@@ -131,7 +137,9 @@ class PerformanceOptimizer:
         for m in inactive:
             del self.model_stats[m]
 
-    async def track_performance(self, operation: str, execution_time: float, success: bool = True) -> None:
+    async def track_performance(
+        self, operation: str, execution_time: float, success: bool = True
+    ) -> None:
         """Track performance metrics for an operation.
 
         বাংলা: Race condition এড়াতে asyncio.Lock দিয়ে atomic state update নিশ্চিত করে।
@@ -150,7 +158,9 @@ class PerformanceOptimizer:
                 metrics.error_count += 1
 
             # Calculate moving average for response time
-            total_time = metrics.avg_response_time * (metrics.request_count - 1) + execution_time
+            total_time = (
+                metrics.avg_response_time * (metrics.request_count - 1) + execution_time
+            )
             metrics.avg_response_time = total_time / metrics.request_count
 
             # Update last updated time
@@ -182,9 +192,17 @@ class PerformanceOptimizer:
 
         # Filter models based on task type
         if task_type == "reasoning":
-            suitable_models = [model_id for model_id, model_info in all_models.items() if "reasoning" in model_info.get("strengths", [])]
+            suitable_models = [
+                model_id
+                for model_id, model_info in all_models.items()
+                if "reasoning" in model_info.get("strengths", [])
+            ]
         elif task_type == "coding":
-            suitable_models = [model_id for model_id, model_info in all_models.items() if "coding" in model_info.get("strengths", [])]
+            suitable_models = [
+                model_id
+                for model_id, model_info in all_models.items()
+                if "coding" in model_info.get("strengths", [])
+            ]
         else:
             # Default to general purpose models
             suitable_models = [
@@ -259,7 +277,9 @@ class PerformanceOptimizer:
         }
         return provider_keys.get(provider, "")
 
-    async def handle_failure(self, error_type: str, error_message: str, context: dict[str, Any]) -> None:
+    async def handle_failure(
+        self, error_type: str, error_message: str, context: dict[str, Any]
+    ) -> None:
         """Handle system failures with self-healing capabilities.
 
         Args:
@@ -296,10 +316,14 @@ class PerformanceOptimizer:
         if self.self_healer and self.reminder_pipeline:
             try:
                 # Analyze the error and propose a fix
-                error_signature = self._generate_error_signature(error_type, error_message, context)
+                error_signature = self._generate_error_signature(
+                    error_type, error_message, context
+                )
 
                 # Create a proposed fix based on error pattern
-                proposed_fix = await self._generate_fix_proposal(error_type, error_message, context)
+                proposed_fix = await self._generate_fix_proposal(
+                    error_type, error_message, context
+                )
 
                 # Submit the fix for remediation
                 impact_score = self._calculate_impact_score(error_type)
@@ -312,12 +336,16 @@ class PerformanceOptimizer:
                     dependency_tree=context.get("dependency_tree", ["system"]),
                 )
 
-                logger.info(f"Submitted auto-fix for error '{error_type}', fix ID: {fix_id}")
+                logger.info(
+                    f"Submitted auto-fix for error '{error_type}', fix ID: {fix_id}"
+                )
 
             except Exception as e:
                 logger.error(f"Failed to submit auto-fix: {e}")
 
-    def _generate_error_signature(self, error_type: str, error_message: str, context: dict[str, Any]) -> str:
+    def _generate_error_signature(
+        self, error_type: str, error_message: str, context: dict[str, Any]
+    ) -> str:
         """Generate a unique signature for the error pattern.
 
         Args:
@@ -338,7 +366,9 @@ class PerformanceOptimizer:
         error_json = json.dumps(error_data, sort_keys=True, default=str)
         return hashlib.sha256(error_json.encode()).hexdigest()[:16]
 
-    async def _generate_fix_proposal(self, error_type: str, error_message: str, context: dict[str, Any]) -> str:
+    async def _generate_fix_proposal(
+        self, error_type: str, error_message: str, context: dict[str, Any]
+    ) -> str:
         """Generate a potential fix for the error.
 
         Args:
@@ -361,7 +391,9 @@ class PerformanceOptimizer:
             "CONNECTION_ERROR": "Check network connectivity and service availability",
         }
 
-        proposal = fix_proposals.get(error_type, f"Manual investigation required for: {error_message}")
+        proposal = fix_proposals.get(
+            error_type, f"Manual investigation required for: {error_message}"
+        )
 
         return f"""
 # Auto-generated fix proposal for: {error_type}
@@ -387,7 +419,13 @@ class PerformanceOptimizer:
 
         বাংলা: এররের জন্য ইমপ্যাক্ট স্কোর ক্যালকুলেট করে (০.০ থেকে ১.০ পর্যন্ত)।
         """
-        high_impact_errors = ["LLM_GATEWAY_TIMEOUT", "CONNECTION_ERROR", "INVALID_API_KEY", "DATABASE_CONNECTION_FAILED", "AUTHENTICATION_FAILED"]
+        high_impact_errors = [
+            "LLM_GATEWAY_TIMEOUT",
+            "CONNECTION_ERROR",
+            "INVALID_API_KEY",
+            "DATABASE_CONNECTION_FAILED",
+            "AUTHENTICATION_FAILED",
+        ]
 
         if error_type in high_impact_errors:
             return 0.8
@@ -396,7 +434,9 @@ class PerformanceOptimizer:
         else:
             return 0.3
 
-    async def adaptive_load_balancing(self, task_type: str, workload: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def adaptive_load_balancing(
+        self, task_type: str, workload: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Distribute workload intelligently based on current system capacity.
 
         Args:
@@ -409,7 +449,13 @@ class PerformanceOptimizer:
         বাংলা: বর্তমান সিস্টেম ক্যাপাসিটির উপর ভিত্তি করে বুদ্ধিমানে ওয়ার্কলোড ডিস্ট্রিবিউট করে।
         """
         # Track current system load
-        active_tasks = len([m for m in self.metrics.values() if m.last_updated > datetime.now() - timedelta(seconds=30)])
+        active_tasks = len(
+            [
+                m
+                for m in self.metrics.values()
+                if m.last_updated > datetime.now() - timedelta(seconds=30)
+            ]
+        )
 
         # Adjust processing strategy based on load
         if active_tasks > 10:  # High load
@@ -432,7 +478,9 @@ class PerformanceOptimizer:
 
         return processed_workload
 
-    async def _process_workload_chunk(self, task_type: str, chunk: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _process_workload_chunk(
+        self, task_type: str, chunk: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Process a chunk of workload with appropriate error handling.
 
         Args:
@@ -456,27 +504,46 @@ class PerformanceOptimizer:
 
                 # Instead of calling LLM directly, we'll return a simulated result
                 # This avoids importing llm_gateway which causes circular import
-                result = {"success": True, "text": f"Simulated result for task: {item.get('prompt', 'default prompt')}", "model": model, "cost": 0.0}
+                result = {
+                    "success": True,
+                    "text": f"Simulated result for task: {item.get('prompt', 'default prompt')}",
+                    "model": model,
+                    "cost": 0.0,
+                }
 
                 execution_time = time.time() - start_time
-                await self.track_performance(f"task_{task_type}", execution_time, success=True)
+                await self.track_performance(
+                    f"task_{task_type}", execution_time, success=True
+                )
                 results.append(result)
 
             except Exception as e:
                 execution_time = time.time() - start_time
-                await self.track_performance(f"task_{task_type}", execution_time, success=False)
+                await self.track_performance(
+                    f"task_{task_type}", execution_time, success=False
+                )
 
                 # Handle the failure with self-healing
                 await self.handle_failure(
-                    error_type="TASK_EXECUTION_ERROR", error_message=str(e), context={"task_type": task_type, "item": item, "error": str(e)}
+                    error_type="TASK_EXECUTION_ERROR",
+                    error_message=str(e),
+                    context={"task_type": task_type, "item": item, "error": str(e)},
                 )
 
                 # Return error result
-                results.append({"success": False, "error": str(e), "traceback": traceback.format_exc()})
+                results.append(
+                    {
+                        "success": False,
+                        "error": str(e),
+                        "traceback": traceback.format_exc(),
+                    }
+                )
 
         return results
 
-    async def _execute_task_with_model(self, item: dict[str, Any], model: str) -> dict[str, Any]:
+    async def _execute_task_with_model(
+        self, item: dict[str, Any], model: str
+    ) -> dict[str, Any]:
         """Execute a single task with the specified model.
 
         Args:
@@ -491,7 +558,12 @@ class PerformanceOptimizer:
         # This method will be implemented to work with the LLM gateway
         # but we'll avoid direct import to prevent circular dependencies
         # For now, we return a simulated response
-        return {"success": True, "text": f"Processed with model {model}: {item.get('prompt', 'default')}", "model": model, "cost": 0.0}
+        return {
+            "success": True,
+            "text": f"Processed with model {model}: {item.get('prompt', 'default')}",
+            "model": model,
+            "cost": 0.0,
+        }
 
 
 # Global instance of the performance optimizer

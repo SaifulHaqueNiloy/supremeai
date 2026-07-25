@@ -81,7 +81,9 @@ class SwarmPubSub:
 
         try:
             while True:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                message = await pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=1.0
+                )
                 if message is not None:
                     yield message["data"].decode("utf-8")
                 await asyncio.sleep(0.01)
@@ -157,7 +159,9 @@ class SwarmPubSub:
             value = await redis_client.get("swarm:halt:global")
             return value is not None
         except Exception as e:  # noqa: BLE001
-            logger.error(f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}")
+            logger.error(
+                f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}"
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="swarm_pubsub",
@@ -177,7 +181,9 @@ class SwarmPubSub:
             # বাংলা মন্তব্য: 256KB cap — Free-Tier Redis bandwidth রক্ষার জন্য (Patch 7 fix)
             max_bytes = 256 * 1024
             if len(message.encode("utf-8")) > max_bytes:
-                logger.error(f"SwarmPubSub broadcast dropped: payload exceeds {max_bytes} bytes ({event_type})")
+                logger.error(
+                    f"SwarmPubSub broadcast dropped: payload exceeds {max_bytes} bytes ({event_type})"
+                )
                 error_event_bus.emit(
                     ErrorEvent(
                         module="swarm_pubsub",
@@ -204,7 +210,9 @@ class SwarmPubSub:
             )
             raise
 
-    async def buffered_subscribe(self, batch_window_ms: float = 250.0) -> AsyncGenerator[str, None]:
+    async def buffered_subscribe(
+        self, batch_window_ms: float = 250.0
+    ) -> AsyncGenerator[str, None]:
         """
         বাংলা মন্তব্য: এডমিন UI-এর DOM Lag রোধ করার জন্য ২৫০ms উইন্ডোতে টেক্সট/টেলিমেট্রি ব্যাচ করে স্ট্রিম করে।
         এখন flush প্রতি batch_window_ms পরপরই ঘটবে, নতুন ইভেন্ট আসুক বা না আসুক (Patch 4 fix)।
@@ -216,7 +224,9 @@ class SwarmPubSub:
         try:
             while True:
                 try:
-                    raw_msg = await asyncio.wait_for(source.__anext__(), timeout=window_sec)
+                    raw_msg = await asyncio.wait_for(
+                        source.__anext__(), timeout=window_sec
+                    )
                 except TimeoutError:
                     if buffer:
                         yield json.dumps({"type": "batched_delta", "events": buffer})

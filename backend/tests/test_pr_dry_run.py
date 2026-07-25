@@ -9,7 +9,9 @@ from backend.tools.devops.github_agent import create_autonomous_pr
 @pytest.mark.asyncio
 async def test_dry_run_pr(async_session):
     # Testing create_autonomous_pr in dry-run mode
-    with patch("backend.tools.devops.github_agent.httpx.AsyncClient") as mock_client_cls:
+    with patch(
+        "backend.tools.devops.github_agent.httpx.AsyncClient"
+    ) as mock_client_cls:
         mock_client = AsyncMock()
         mock_client_cls.return_value.__aenter__.return_value = mock_client
 
@@ -45,7 +47,7 @@ async def test_dry_run_pr(async_session):
             "backend.tools.devops.github_agent.get_user_github_token",
             return_value="mock_token",
         ):
-            pr_url = await create_autonomous_pr(
+            await create_autonomous_pr(
                 user_id="test_user",
                 repo_name="test/repo",
                 file_path="test.py",
