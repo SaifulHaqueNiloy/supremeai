@@ -272,7 +272,6 @@ select = [
     "W",     # pycodestyle warnings
     "F",     # Pyflakes
     "UP",    # pyupgrade
-    "LOG",   # flake8-logging
 ]
 ignore = [
     "E501",     # Line too long
