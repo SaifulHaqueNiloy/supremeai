@@ -27,9 +27,9 @@ class TenantRateLimiter:
 
             return redis_manager.client
         except Exception as e:  # noqa: BLE001
-            import logging
+            from loguru import logger
 
-            logging.warning(f"Exception suppressed: {e}")
+            logger.warning(f"Exception suppressed: {e}")
             return None
 
     def _init_billing_tiers(self) -> None:
