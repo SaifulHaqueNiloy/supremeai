@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import ClassVar, Any
 
 
 class BengaliNLP:
     BENGALI_CHARS = re.compile(r"[\u0980-\u09FF]")
-    STOP_WORDS = {
+    STOP_WORDS: ClassVar[set[str]] = {
         "এই",
         "ওই",
         "তার",
