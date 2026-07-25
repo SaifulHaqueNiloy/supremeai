@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, ClassVar
 from urllib.parse import parse_qs, urlparse
 
 import defusedxml.ElementTree as ET
@@ -273,7 +273,7 @@ class SSOIntegrator:
 
     # ── OIDC helpers ───────────────────────────────────────────────
 
-    OIDC_PROVIDERS = {
+    OIDC_PROVIDERS: ClassVar[dict[str, dict[str, str]]] = {
         "okta": {
             "authorization_endpoint": "https://{domain}/oauth2/default/v1/authorize",
             "token_endpoint": "https://{domain}/oauth2/default/v1/token",
