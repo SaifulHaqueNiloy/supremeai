@@ -1,7 +1,10 @@
 import uuid
 
 from sqlalchemy import types
-from uuid6 import uuid7
+try:
+    from uuid6 import uuid7
+except ImportError:
+    from uuid import uuid4 as uuid7
 
 
 class UUIDv7(types.TypeDecorator):
