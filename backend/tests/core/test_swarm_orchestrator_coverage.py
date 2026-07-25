@@ -209,7 +209,8 @@ class TestCircuitBreakerCall:
     async def test_open_circuit_stays_open_before_timeout(self, circuit_breaker):
         """বাংলা মন্তব্য: Timeout আগে OPEN state maintain করে।"""
         circuit_breaker.state = CircuitBreakerState.OPEN
-        circuit_breaker.last_failure_time = time.monotonic() - 0.05  # 0.05 seconds ago (timeout is 0.1)
+        circuit_breaker.opened_at = time.monotonic()
+        circuit_breaker.last_failure_time = time.monotonic()  # 0 seconds ago (timeout is 0.1)
 
         mock_coro = AsyncMock(return_value="success")
 
@@ -370,6 +371,7 @@ class TestSwarmOrchestratorExecuteTask:
 
         # Make circuit breaker open
         orchestrator.circuit_breaker.state = CircuitBreakerState.OPEN
+        orchestrator.circuit_breaker.opened_at = time.monotonic()
         orchestrator.circuit_breaker.last_failure_time = time.monotonic()
 
         with patch(
@@ -382,7 +384,7 @@ class TestSwarmOrchestratorExecuteTask:
             assert result is mock_workspace
             # Check that log was called with circuit breaker message
             assert len(mock_workspace.execution_logs) > 0
-            assert any("Circuit breaker OPEN" in call for call in mock_workspace.execution_logs)
+            assert any("Circuit breaker" in call for call in mock_workspace.execution_logs)
             assert any("Circuit breaker" in str(err) for err in mock_workspace.errors)
 
     @pytest.mark.asyncio

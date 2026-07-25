@@ -164,6 +164,8 @@ class ErrorEventBus:
         """বাংলা মন্তব্য: সব listeners-এ concurrent dispatch। Individual failure isolation।"""
         with self._lock:
             listeners = list(self._listeners.get(event.error_type, []))
+            if "*" in self._listeners:
+                listeners.extend(self._listeners["*"])
 
         results = await asyncio.gather(
             *[self._safe_invoke(handler, event) for handler in listeners],

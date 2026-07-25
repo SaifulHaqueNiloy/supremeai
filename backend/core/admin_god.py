@@ -190,11 +190,13 @@ class AdminGodLayer:
                 duration_ms=duration_ms,
             )
 
-    def enforce(self, action: str, user_context: UserContext | str) -> bool:
+    def enforce(self, action: str, user_context: UserContext | str | None = None) -> dict[str, Any]:
+        if user_context is None:
+            user_context = UserContext(user_id="unknown", role="viewer")
         role = user_context.role if isinstance(user_context, UserContext) else (user_context or "viewer")
         ctx = user_context if isinstance(user_context, UserContext) else UserContext(user_id="unknown", role=role)
         try:
-            result = self.rbac.require(ctx, action)
+            self.rbac.require(ctx, action)
         except PermissionDeniedError as e:
             GodModeAuditLog.record(
                 actor=ctx.user_id,
@@ -202,23 +204,15 @@ class AdminGodLayer:
                 resource=action,
                 reason=str(e),
             )
-            raise PermissionError(str(e)) from e
+            raise
 
-        if isinstance(result, dict) and not result.get("allowed", True):
-            GodModeAuditLog.record(
-                actor=ctx.user_id,
-                action="ENFORCE_DENIED",
-                resource=action,
-                reason=result.get("reason", "Permission denied"),
-            )
-            raise PermissionError(result.get("reason", "Permission denied"))
         GodModeAuditLog.record(
             actor=ctx.user_id,
             action="ENFORCE_ALLOWED",
             resource=action,
-            reason="Permission granted",
+            reason="RBAC permission check passed",
         )
-        return True
+        return {"allowed": True, "role": ctx.role, "action": action}
 
     def enforce_rules(self, decision_context: dict[str, Any]) -> dict[str, Any]:
         """
