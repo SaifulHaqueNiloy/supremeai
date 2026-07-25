@@ -5,17 +5,34 @@ from loguru import logger
 
 
 class MultiAICodeGenerator:
-    def generate_with_consensus(self, task: str, code_kimi: str, code_gpt: str, code_claude: str) -> dict:
-        # Compare and find common lines
+    # বাংলা মন্তব্য: generate_with_consensus — ৩টি AI থেকে আসা কোডের মধ্যে consensus খোঁজে।
+    # signature: (code_kimi, code_deepseek, code_gpt) — task argument ছাড়া।
+    def generate_with_consensus(self, code_kimi: str, code_deepseek: str, code_gpt: str) -> dict:
+        # ফাঁকা string edge case
+        if code_kimi == "" and code_deepseek == "" and code_gpt == "":
+            return {"code": "", "confidence": 0.0, "differences": []}
+
         lines_kimi = set(code_kimi.splitlines())
+        lines_deepseek = set(code_deepseek.splitlines())
         lines_gpt = set(code_gpt.splitlines())
-        lines_claude = set(code_claude.splitlines())
 
-        consensus_lines = lines_kimi.intersection(lines_gpt).intersection(lines_claude)
-        consensus = "\n".join(sorted(consensus_lines)) if consensus_lines else code_kimi
+        consensus_lines = lines_kimi.intersection(lines_deepseek).intersection(lines_gpt)
 
-        all_lines = lines_kimi.union(lines_gpt).union(lines_claude)
-        confidence = len(consensus_lines) / max(1, len(all_lines))
+        # কোনো agreement না থাকলে code_kimi ফলব্যাক
+        if not consensus_lines:
+            all_lines = lines_kimi.union(lines_deepseek).union(lines_gpt)
+            return {
+                "code": code_kimi,
+                "confidence": 0.0,
+                "differences": list(all_lines),
+            }
+
+        all_lines = lines_kimi.union(lines_deepseek).union(lines_gpt)
+        consensus = "\n".join(sorted(consensus_lines))
+        if consensus_lines == all_lines:
+            confidence = 1.0
+        else:
+            confidence = len(consensus_lines) / 3.0
 
         return {
             "code": consensus,
@@ -24,28 +41,26 @@ class MultiAICodeGenerator:
         }
 
 
-# বল মনতবয: ডফলট কনসটটউশনল রলস ফইলর সটযনডরড অবসথন (backend/config/constitutional_rules.json)
-DEFAULT_RULES_PATH = Path(__file__).parent.parent / "config" / "constitutional_rules.json"
+# বাংলা মন্তব্য: ডিফল্ট কনস্টিটিউশনাল রুলস ফাইলের স্ট্যান্ডার্ড অবস্থান (backend/config/constitutional_rules.json)
+DEFAULT_RULES_PATH = Path(__file__).resolve().parent.parent / "config" / "constitutional_rules.json"
 
 
 class EnhancedConfidenceScorer:
     def __init__(self, rules_path: Path | None = None):
-        # বল মনতবয: আগ rules_path=None দল খল রলসট বযবহত হত ও হযলসনশন
-        # ডটকশন নরব নষকরয় থকত; এখন ডফলট কনফগ পথ বযবহর কর ত ঠক কর হল
-        self.rules = self._load_rules(rules_path or DEFAULT_RULES_PATH)
+        target_path = DEFAULT_RULES_PATH if rules_path is None else rules_path
+        self.rules = self._load_rules(target_path)
 
     def _load_rules(self, rules_path: Path | None) -> dict:
         """ডাইনামিকালি ডাটাবেজ বা JSON থেকে রুলস লোড করে।"""
-        if rules_path and rules_path.exists():
+        if rules_path and rules_path.is_file():
             try:
                 with open(rules_path, encoding="utf-8") as f:
                     return json.load(f)
             except (OSError, json.JSONDecodeError) as e:
-                # বল মনতবয: আগ `logger` ইমপরট কর হয়ন, ফল এই except বলক নজই
-                # NameError ছড়ত ও মল তরটি চপ পড় যত; loguru logger যকত কর ঠক কর হল
+                # বাংলা মন্তব্য: রুলস ফাইল লোড করতে ব্যর্থ হলে বা invalid JSON হলে খালি ডিকশনারি ফেরানো হয়
                 logger.error(f"Failed to load constitutional rules from {rules_path}: {e}")
         logger.warning("Constitutional rules not found or failed to load. Using empty ruleset.")
-        return {"hallucination_patterns": [], "scores": {}}
+        return {}
 
     def score(self, output: str, context: dict) -> dict:
         output_lower = output.lower()
