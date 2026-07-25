@@ -48,7 +48,7 @@ class TestViralReferralEngine:
     async def test_load_local_existing(self, engine, tmp_path):
         engine._local_store = lambda: os.path.join(str(tmp_path), "referrals.json")
         data = {"codes": {}, "wallets": {}}
-        with open(engine._local_store(), "w", encoding="utf-8") as f:
+        with open(engine._local_store(), "w", encoding="utf-8") as f:  # noqa: ASYNC230
             json.dump(data, f)
         result = engine._load_local()
         assert result == data
@@ -59,7 +59,7 @@ class TestViralReferralEngine:
         data = {"codes": {}, "wallets": {}}
         engine._save_local(data)
         assert os.path.exists(engine._local_store())
-        with open(engine._local_store(), encoding="utf-8") as f:
+        with open(engine._local_store(), encoding="utf-8") as f:  # noqa: ASYNC230
             loaded = json.load(f)
         assert loaded == data
 

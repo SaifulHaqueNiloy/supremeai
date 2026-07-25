@@ -90,7 +90,7 @@ class RLHFPipeline:
             f"Exporting {len(self.preference_logs)} DPO records to {output_path}"
         )
         try:
-            with open(output_path, "w", encoding="utf-8") as f:
+            with open(output_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
                 for log in self.preference_logs:
                     f.write(json.dumps(log) + "\n")
             return {

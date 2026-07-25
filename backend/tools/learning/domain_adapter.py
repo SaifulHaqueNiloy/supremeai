@@ -84,9 +84,7 @@ class DomainAdapter:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             pass
         for domain, defaults in self.DOMAINS.items():
             self._profiles.setdefault(domain, defaults)

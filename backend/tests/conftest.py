@@ -240,22 +240,16 @@ def configure_litellm():
         t.start()
         t.join(timeout=8)
         if t.is_alive():
-            import logging
-
-            logging.warning("litellm import timed out; skipping configuration")
+            logger.warning("litellm import timed out; skipping configuration")
         elif "error" in result:
-            import logging
-
-            logging.warning(f"Exception suppressed: {result['error']}")
+            logger.warning(f"Exception suppressed: {result['error']}")
         else:
             litellm = result["module"]
             litellm.use_litellm_proxy = False
             litellm.drop_params = True
             litellm.telemetry = False
     except Exception as e:  # noqa: BLE001
-        import logging
-
-        logging.warning(f"Exception suppressed: {e}")
+        logger.warning(f"Exception suppressed: {e}")
     yield
 
 

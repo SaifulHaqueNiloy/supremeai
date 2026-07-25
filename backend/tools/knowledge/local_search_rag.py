@@ -1,3 +1,4 @@
+from loguru import logger
 """Provides a local Retrieval Augmented Generation (RAG) system for AI agents.
 
 This module defines the `LocalSearchRAG` class, which integrates web browsing
@@ -78,9 +79,7 @@ class LocalSearchRAG:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 self._index = {}
 
     def build_search_url(self, query: str) -> str:

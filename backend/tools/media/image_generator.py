@@ -63,7 +63,7 @@ class HFImageGenerator:
                 os.makedirs(
                     os.path.dirname(os.path.abspath(output_path)), exist_ok=True
                 )
-                with open(output_path, "wb") as f:
+                with open(output_path, "wb") as f:  # noqa: ASYNC230
                     f.write(image_data)
 
                 return {
