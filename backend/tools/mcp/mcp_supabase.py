@@ -1,5 +1,4 @@
 from loguru import logger
-#!/usr/bin/env python3
 """
 MCP Server for Supabase/Postgres Database Integration in SupremeAI 2.0.
 
