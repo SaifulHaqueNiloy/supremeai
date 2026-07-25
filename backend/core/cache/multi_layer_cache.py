@@ -80,9 +80,7 @@ class MultiLayerCache:
             try:
                 self._exact_cache = _get_redis_client()
             except RuntimeError as e:
-                logger.warning(
-                    f"Exact cache Redis unavailable: {e}. Using in-memory stub."
-                )
+                logger.warning(f"Exact cache Redis unavailable: {e}. Using in-memory stub.")
                 self._exact_cache = _InMemoryRedisStub()
         return self._exact_cache
 
@@ -91,9 +89,7 @@ class MultiLayerCache:
             try:
                 self._prefix_cache = _get_redis_client()
             except RuntimeError as e:
-                logger.warning(
-                    f"Prefix cache Redis unavailable: {e}. Using in-memory stub."
-                )
+                logger.warning(f"Prefix cache Redis unavailable: {e}. Using in-memory stub.")
                 self._prefix_cache = _InMemoryRedisStub()
         return self._prefix_cache
 
@@ -104,16 +100,12 @@ class MultiLayerCache:
             self._semantic_cache = SemanticCache()
         return self._semantic_cache
 
-    async def get(
-        self, prompt: str, model_name: str, session_id: str | None = None
-    ) -> dict[str, Any] | None:
+    async def get(self, prompt: str, model_name: str, session_id: str | None = None) -> dict[str, Any] | None:
         """বাংলা মন্তব্য: সব ৫টি ক্যাশ লেয়ার ক্রমান্বয়ে চেক করে। None মানে AI model call দরকার।"""
         try:
             # Layer 1: Exact Match Cache (Redis)
             exact_match_cache = self._get_exact_cache()
-            exact_cache_key = (
-                f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
-            )
+            exact_cache_key = f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
             cached_response = await exact_match_cache.get(exact_cache_key)
             if cached_response:
                 logger.info("✅ L1 CACHE HIT: Exact Match")
@@ -166,18 +158,13 @@ class MultiLayerCache:
             words = prompt.split()
             # বাংলা মন্তব্য: O(n) রাউন্ড-ট্রিপ এড়াতে এবং দীর্ঘতম প্রিফিক্সে অগ্রাধিকার দিতে ক্যান্ডিডেট সংখ্যা ক্যাপ করা হলো।
             candidate_lengths = sorted(
-                {
-                    max(1, len(words) - step)
-                    for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))
-                },
+                {max(1, len(words) - step) for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))},
                 reverse=True,
             )
             prefix_keys = []
             for i in candidate_lengths:
                 prefix = " ".join(words[:i])
-                prefix_keys.append(
-                    f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
-                )
+                prefix_keys.append(f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}")
 
             if prefix_keys:
                 # বাংলা মন্তব্য: mget দিয়ে সম্পূর্ণ প্রিফিক্স ক্যান্ডিডেটগুলোর ডাটা একটাই নেটওয়ার্ক রাউন্ড-ট্রিপে আনা হচ্ছে।
@@ -222,15 +209,11 @@ class MultiLayerCache:
         logger.info("❌ ALL CACHE LAYERS MISS - Calling AI Model")
         return None
 
-    async def set(
-        self, prompt: str, response: str, model_name: str, session_id: str | None = None
-    ):
+    async def set(self, prompt: str, response: str, model_name: str, session_id: str | None = None):
         """বাংলা মন্তব্য: সব প্রযোজ্য ক্যাশ লেয়ারে রেসপন্স সংরক্ষণ করে।"""
         try:
             exact_match_cache = self._get_exact_cache()
-            exact_cache_key = (
-                f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
-            )
+            exact_cache_key = f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
             await exact_match_cache.setex(exact_cache_key, 3600, response)
         except asyncio.CancelledError:
             raise
@@ -267,10 +250,7 @@ class MultiLayerCache:
             words = prompt.split()
             # বাংলা মন্তব্য: O(n) রাইট এড়াতে এবং স্টোরেজ অপটিমাইজেশনের জন্য প্রিফিক্স ক্যান্ডিডেট ক্যাপ করা হচ্ছে।
             candidate_lengths = sorted(
-                {
-                    max(1, len(words) - step)
-                    for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))
-                },
+                {max(1, len(words) - step) for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))},
                 reverse=True,
             )
             # pipelined write if pipeline method exists
@@ -303,9 +283,7 @@ class MultiLayerCache:
         if session_id:
             _set_session_cache(session_id, prompt, response)
 
-        logger.info(
-            f"💾 Response cached in all applicable layers for model {model_name}"
-        )
+        logger.info(f"💾 Response cached in all applicable layers for model {model_name}")
 
 
 # Level 4: Session Cache (In-memory TTLCache per worker)
@@ -350,9 +328,7 @@ def _cache_invalidation_listener(event: ErrorEvent) -> None:
             else:
                 # Fallback to clear all if tenant_id is not explicitly provided in the error context
                 _session_cache.clear()
-                logger.info(
-                    f"🧹 Event-Sourced Cache: Invalidated entire session cache due to {event.error_type}."
-                )
+                logger.info(f"🧹 Event-Sourced Cache: Invalidated entire session cache due to {event.error_type}.")
 
 
 error_event_bus.register_listener("*", _cache_invalidation_listener)
@@ -380,9 +356,7 @@ async def start_swarm_cache_invalidator():
 
                     with _session_lock:
                         if tenant_id:
-                            keys_to_delete = [
-                                k for k in _session_cache if tenant_id in str(k)
-                            ]
+                            keys_to_delete = [k for k in _session_cache if tenant_id in str(k)]
                             for k in keys_to_delete:
                                 del _session_cache[k]
                             logger.info(

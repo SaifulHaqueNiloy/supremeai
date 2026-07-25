@@ -22,9 +22,7 @@ def clean_dynamic_skills(tmp_path):
     loader.skills_dir.mkdir(parents=True, exist_ok=True)
 
     # Mock SkillInstaller constructor to return our temp configured installer
-    with patch(
-        "core.evolution.auto_skill_creator.SkillInstaller", return_value=installer
-    ):
+    with patch("core.evolution.auto_skill_creator.SkillInstaller", return_value=installer):
         yield loader, registry, installer
 
 
