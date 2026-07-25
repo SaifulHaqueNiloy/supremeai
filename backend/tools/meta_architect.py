@@ -169,11 +169,12 @@ class MetaArchitect:
             new_code = result.get("text", "") if isinstance(result, dict) else ""
             if not new_code:
                 return {"status": "error", "error": "Model returned empty response."}
+            import asyncio
+            from pathlib import Path
+
             backup_path = target_path + ".bak"
-            with open(backup_path, "w", encoding="utf-8") as f:
-                f.write(original)
-            with open(target_path, "w", encoding="utf-8") as f:
-                f.write(new_code)
+            await asyncio.to_thread(Path(backup_path).write_text, original, encoding="utf-8")
+            await asyncio.to_thread(Path(target_path).write_text, new_code, encoding="utf-8")
             return {
                 "status": "success",
                 "target": target_path,
