@@ -18,7 +18,9 @@ class AutoRemediation:
     def __init__(self, gemini_api_key: str | None = None):
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY", "")
         # Allowed base dir is repo/backend (backend/core/resilience -> ../..)
-        self._ALLOWED_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        self._ALLOWED_BASE_DIR = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "../..")
+        )
 
     def _validate_file_path(self, file_path: str) -> str:
         """Path traversal attack প্রতিরোধ.
@@ -44,30 +46,9 @@ class AutoRemediation:
         severity: str,
         tenant_id: str = "default_tenant",
     ) -> dict:
-        """Process a security alert and generate an auto-remediation patch.
-
-        Args:
-            file_path: Path to the file with the security issue.
-            line_number: Line number where the issue was detected.
-            issue: Description of the security vulnerability.
-            severity: Severity level (critical, high, medium, low).
-            tenant_id: Tenant identifier for multi-tenant isolation.
-
-        Returns:
-            Dictionary with remediation result containing:
-                - success (bool): Whether patch was generated and submitted.
-                - file (str): Path to the file.
-                - patch_applied (bool): Whether patch was applied.
-                - branch (str): Branch where patch was submitted.
-                - pr_url (str|None): PR URL if created.
-                - message (str): Status message.
-
-        Raises:
-            ValueError: If file_path resolves outside allowed directory (path traversal).
-
-        বাংলা: সিকিউরিটি অ্যালার্ট প্রসেস করছে এবং অটো-রিমেডিয়েশন প্যাচ জেনারেট করছে।
-        """
-        logger.info(f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}")
+        logger.info(
+            f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}"
+        )
 
         safe_path = self._validate_file_path(file_path)
 
@@ -77,7 +58,9 @@ class AutoRemediation:
         with open(safe_path, encoding="utf-8") as f:
             original_code = f.read()
 
-        fixed_code = await self._get_ai_patch(safe_path, original_code, line_number, issue)
+        fixed_code = await self._get_ai_patch(
+            safe_path, original_code, line_number, issue
+        )
 
         if not fixed_code:
             return {"success": False, "error": "AI failed to generate a secure patch"}
@@ -103,11 +86,15 @@ class AutoRemediation:
             "message": f"Remediation patch processed by pipeline. ID: {result}",
         }
 
-    async def _get_ai_patch(self, file_path: str, code: str, line_number: int, issue: str) -> str:
+    async def _get_ai_patch(
+        self, file_path: str, code: str, line_number: int, issue: str
+    ) -> str:
         # The actual LLM integration is intentionally dynamic to keep this module testable.
         from core.ld_client import get_ld_ai_components
 
-        ld_ai_client, AICompletionConfigDefault, LDMessage, ModelConfig, Context = get_ld_ai_components()
+        ld_ai_client, AICompletionConfigDefault, LDMessage, ModelConfig, Context = (
+            get_ld_ai_components()
+        )
 
         default_prompt_template = (
             "You are an elite secure coding assistant. Correct the security vulnerability in this file.\n"
@@ -131,7 +118,13 @@ class AutoRemediation:
         }
 
         config = None
-        if ld_ai_client and AICompletionConfigDefault and LDMessage and ModelConfig and context:
+        if (
+            ld_ai_client
+            and AICompletionConfigDefault
+            and LDMessage
+            and ModelConfig
+            and context
+        ):
             try:
                 config = ld_ai_client.completion_config(
                     os.getenv("LAUNCHDARKLY_AI_CONFIG_KEY", "auto-remediation-patch"),
@@ -139,16 +132,28 @@ class AutoRemediation:
                     default=AICompletionConfigDefault(
                         enabled=True,
                         model=ModelConfig(name="gemini/gemini-2.5-pro"),
-                        messages=[LDMessage(role="system", content=default_prompt_template)],
+                        messages=[
+                            LDMessage(role="system", content=default_prompt_template)
+                        ],
                     ),
                     variables=prompt_vars,
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.warning(f"LaunchDarkly config evaluation failed, falling back: {exc}")
+                logger.warning(
+                    f"LaunchDarkly config evaluation failed, falling back: {exc}"
+                )
 
         if config and getattr(config, "enabled", False):
-            model_name = config.model.name if getattr(config, "model", None) else "gemini/gemini-2.5-pro"
-            prompt = config.messages[0].content if getattr(config, "messages", None) else default_prompt_template.format(**prompt_vars)
+            model_name = (
+                config.model.name
+                if getattr(config, "model", None)
+                else "gemini/gemini-2.5-pro"
+            )
+            prompt = (
+                config.messages[0].content
+                if getattr(config, "messages", None)
+                else default_prompt_template.format(**prompt_vars)
+            )
         else:
             model_name = "gemini/gemini-2.5-pro"
             prompt = default_prompt_template.format(**prompt_vars)
@@ -162,7 +167,11 @@ class AutoRemediation:
                 stream=False,
                 model=model_name,
             )
-            raw_text = response.get("text", "") if isinstance(response, dict) else str(response)
+            raw_text = (
+                response.get("text", "")
+                if isinstance(response, dict)
+                else str(response)
+            )
 
             from utils.text_helpers import strip_markdown_code_block
 
