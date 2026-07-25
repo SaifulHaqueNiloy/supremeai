@@ -1,8 +1,9 @@
-"""Enterprise Cloud Secret Vault (Infisical / Doppler).
+"""Enterprise Cloud Secret Vault (Infisical / Doppler) with strict secret handling.
 
 বাংলা: এন্টারপ্রাইজ ক্লাউড সিক্রেট ভল্ট — ইন-মেমরি ক্যাশে TTL-সহ, Fail-Closed।
 Fetches production API keys directly into memory from Infisical.
 Removes the need for monolithic GCP Secret Manager.
+Strict secret handling ensures exceptions are raised for missing secrets.
 """
 
 from __future__ import annotations
@@ -10,10 +11,14 @@ from __future__ import annotations
 import asyncio
 import os
 import time
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+
+if TYPE_CHECKING:
+    from infisical_client import GetSecretOptions
 
 try:
     from infisical_client import (
@@ -44,6 +49,12 @@ class _CacheEntry:
     @property
     def is_expired(self) -> bool:
         return time.monotonic() > self.expires_at
+
+
+class SecretNotFoundError(Exception):
+    """Raised when a secret is not found in any source in production environment."""
+
+    pass
 
 
 class ProductionSecretVault:
@@ -202,6 +213,18 @@ class ProductionSecretVault:
                     env_fallback = f"mock_{secret_id}"
         self._cache[secret_id] = _CacheEntry(env_fallback)
         return env_fallback
+
+    def get_secret(self, secret_id: str, default: str | None = None) -> str:
+        """Get a secret or raise SecretNotFoundError if not found in production.
+
+        বাংলা: সিক্রেট পাওয়া গেল না হলে SecretNotFoundError এরর রেজ করুন।
+        """
+        value = self.fetch_secret(secret_id, default)
+        if value is None and self.env in ("production", "staging"):
+            error_msg = f"🚨 CRITICAL: Secret '{secret_id}' not found in Infisical or environment variables."
+            logger.critical(error_msg)
+            raise SecretNotFoundError(error_msg)
+        return value or default or ""
 
     async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
         """Async wrapper — runs fetch_secret in a thread to avoid blocking the event loop.
