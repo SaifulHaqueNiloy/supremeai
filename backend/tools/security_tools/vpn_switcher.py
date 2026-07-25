@@ -145,8 +145,11 @@ class VPNRotator:
             settings, "premium_proxy_config", "config/premium_proxy.json"
         )
         try:
-            with open(config_path, encoding="utf-8") as fh:
-                cfg = json.load(fh)
+            import asyncio
+            from pathlib import Path
+            
+            cfg_text = await asyncio.to_thread(Path(config_path).read_text, encoding="utf-8")
+            cfg = json.loads(cfg_text)
             proxy = cfg.get(use_case) or cfg.get("default")
             return {"proxy": proxy, "source": "premium", "use_case": use_case}
         except Exception as e:  # noqa: BLE001
@@ -155,7 +158,5 @@ class VPNRotator:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return {"proxy": None, "source": "premium", "reason": "not configured"}
