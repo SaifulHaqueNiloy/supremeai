@@ -35,6 +35,7 @@ async def test_dispatch_passes_when_chaos_disabled(middleware):
 async def test_dispatch_injects_delay_and_drop_when_enabled(monkeypatch):
     os.environ["LOCAL_CHAOS_MODE"] = "true"
     app = type("FakeApp", (), {})()
+    # বাংলা মন্তব্য: monkeypatch target সঠিক module path-এ করা হচ্ছে
     mw = ChaosInjectorMiddleware(app)
 
     sleeps = []
@@ -42,14 +43,15 @@ async def test_dispatch_injects_delay_and_drop_when_enabled(monkeypatch):
     async def fake_sleep(duration):
         sleeps.append(duration)
 
-    monkeypatch.setattr("api.middleware.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("middleware.chaos_injector.asyncio.sleep", fake_sleep)
 
-    values = [0.1, 0.1]
+    # 1st call: roll (0.2 < 0.3 delay zone), 2nd call: random() for delay calculation, 3rd call: post-delay drop check (0.0 < 0.15 drop zone)
+    values = [0.2, 0.5, 0.0]
 
     def fake_random():
-        return values.pop(0)
+        return values.pop(0) if values else 0.0
 
-    monkeypatch.setattr("api.middleware.random.random", fake_random)
+    monkeypatch.setattr("middleware.chaos_injector.random.random", fake_random)
 
     request = Request({"type": "http", "path": "/api/test", "headers": {}})
 
@@ -69,7 +71,8 @@ async def test_dispatch_packet_drop_returns_504(monkeypatch):
     app = type("FakeApp", (), {})()
     mw = ChaosInjectorMiddleware(app)
 
-    monkeypatch.setattr("api.middleware.random.random", lambda: 0.0)
+    # বাংলা মন্তব্য: 0.0 < 0.15 drop threshold — সরাসরি 504 return হবে
+    monkeypatch.setattr("middleware.chaos_injector.random.random", lambda: 0.0)
 
     request = Request({"type": "http", "path": "/api/test", "headers": {}})
 

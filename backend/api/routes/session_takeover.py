@@ -1,13 +1,80 @@
 import asyncio
+import json
 import os
+import secrets
 import time
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from loguru import logger
+from pydantic import BaseModel
 
 from core.messaging.event_bus import ErrorContext
 
 router = APIRouter()
+
+
+# বাংলা মন্তব্য: TakeoverRequest — HTTP endpoint এর জন্য Pydantic model
+class TakeoverRequest(BaseModel):
+    session_id: str
+
+
+def _require_admin(request: Request) -> dict:
+    """Admin role enforcement — fail-closed."""
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin role required for session takeover")
+    return user
+
+
+def request_takeover(payload: TakeoverRequest, request: Request) -> dict:
+    """HTTP endpoint: Admin requests a session takeover token."""
+    # বাংলা মন্তব্য: Admin validation fail-closed
+    _require_admin(request)
+    token = f"tok_{secrets.token_urlsafe(32)}"
+    return {
+        "token": token,
+        "session_id": payload.session_id,
+        "expires_in": 300,  # 5 মিনিট TTL
+    }
+
+
+def release_takeover(session_id: str, request: Request) -> dict:
+    """HTTP endpoint: Admin releases a session takeover."""
+    _require_admin(request)
+    return {"status": "released", "session_id": session_id}
+
+
+def get_takeover_status(session_id: str, request: Request) -> dict:
+    """HTTP endpoint: Get current takeover status for a session."""
+    _require_admin(request)
+    # বাংলা মন্তব্য: Redis check synchronous wrapper — real impl async
+    try:
+        import asyncio as _asyncio
+
+        loop = _asyncio.new_event_loop()
+        data = loop.run_until_complete(_get_status_from_redis(session_id))
+        loop.close()
+    except Exception:
+        data = None
+    if data:
+        return {"status": "active", "session_id": session_id, "data": data}
+    return {"status": "inactive", "session_id": session_id}
+
+
+async def _get_status_from_redis(session_id: str) -> dict | None:
+    """Redis থেকে session status নিয়ে আসা।"""
+    try:
+        client = await _redis_client()
+        if client is None:
+            return None
+        raw = await client.get(f"takeover_session:{session_id}")
+        if raw:
+            return json.loads(raw) if isinstance(raw, str | bytes) else raw
+    except Exception as e:
+        logger.debug(f"Redis status check failed: {e}")
+    return None
 
 
 # গ্যাপ ফিক্স (Security/Anti-Silent-Failure):
@@ -24,7 +91,7 @@ router = APIRouter()
 async def _redis_client():
     """Best-effort shared Redis client for single-use token consumption. Returns None if unavailable."""
     try:
-        import redis.asyncio as aioredis
+        import redis.asyncio as aioredis  # type: ignore[import-untyped]
 
         from core.config import settings as app_settings
 

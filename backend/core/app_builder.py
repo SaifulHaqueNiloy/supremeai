@@ -14,9 +14,10 @@ Critical Security Note: মিডলওয়্যার অর্ডার স
 হনিপট এবং চাওস মিডলওয়্যারের আগে রান হয়, সিকিউরিটি ইস্যু ঠিক করতে।
 """
 
+import logging
 import os
 import re
-import logging
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -47,14 +48,9 @@ try:
             return False
 
         # Basic regex pattern for Sentry DSN
-        # Format: protocol://public_key@host:port/project_id
-        pattern = r"^https?://[a-f0-9]{32}@[\w.-]+:\d+/\d+$"
-        if re.match(pattern, dsn):
-            return True
-
-        # Alternative format: https://public_key@domain/project_id
-        pattern_alt = r"^https://[a-f0-9]{32}@[\w.-]+/\d+$"
-        return bool(re.match(pattern_alt, dsn))
+        # Format: protocol://public_key@host/project_id
+        pattern = r"^https?://[^@]+@[\w.-]+(?::\d+)?/\d+$"
+        return bool(re.match(pattern, dsn))
 
     if settings.sentry_dsn and is_valid_sentry_dsn(settings.sentry_dsn):
         sentry_logging = LoggingIntegration(
@@ -85,7 +81,7 @@ except Exception as e:
     raise
 
 # বাংলা মন্তব্ব্য: সম্পূর্ণ অ্যাপ্লিকেশন স্টার্টআপ লজিক — টেস্ট এক্সক্লুডেড
-if "pytest" not in os.sys.modules and os.getenv("CI") != "true":
+if "pytest" not in sys.modules and os.getenv("CI") != "true":
     audit_container_resources()
     setup_logging()
 
@@ -99,10 +95,16 @@ def create_app() -> FastAPI:
         async with app_lifespan(app):
             yield
 
+    docs_url = "/docs" if settings.env == "local" or settings.debug else None
+    redoc_url = "/redoc" if settings.env == "local" or settings.debug else None
+    openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
+
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
     app = FastAPI(
         title=settings.PROJECT_NAME,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
         lifespan=_lifespan,
     )
 

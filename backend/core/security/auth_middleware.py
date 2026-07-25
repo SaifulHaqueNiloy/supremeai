@@ -73,6 +73,14 @@ def _is_public_path(path: str) -> bool:
 
     বাংলা: পাথটি পাবলিক কিনা চেক করে (কোনো অথের প্রয়োজন নেই)।
     """
+    if getattr(settings, "docs_auth_enabled", True) is False and path in (
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        f"{settings.API_V1_STR}/openapi.json",
+    ):
+        return True
+
     # বাংলা মন্তব্য: '/' দিয়ে শুরু হওয়া সব পাথকে এভয়েড করতে এবং সেগমেন্ট বাউন্ডারি চেক করতে কাস্টম ম্যাচিং লজিক ব্যবহার করা হচ্ছে।
     for prefix in settings.supremeai_public_paths:
         if prefix == "/":

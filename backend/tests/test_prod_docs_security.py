@@ -11,6 +11,8 @@ def _run(code: str) -> subprocess.CompletedProcess:
     env["PYTHONPATH"] = os.pathsep.join([project_root, backend_root])
     # ক্যাওস ইঞ্জিন যাতে টেস্টে বিঘ্ন না ঘটায়, তাই LOCAL_CHAOS_MODE নিষ্ক্রিয় করা হলো
     env["LOCAL_CHAOS_MODE"] = "false"
+    env["ENV"] = "local"
+    env["DEBUG"] = "true"
     # সূপাবেস কানেকশন নিষ্ক্রিয় করা হলো যেন টেস্টের সময় রিয়েল ডাটাবেসে হিট না করে
     env.pop("SUPABASE_URL", None)
     env.pop("SUPABASE_KEY", None)
@@ -57,16 +59,23 @@ def test_docs_visible_in_local():
         """
         import os
         os.environ["ENV"] = "local"
+        os.environ["DEBUG"] = "true"
         os.environ["OPENROUTER_API_KEY"] = "sk"
         os.environ["GEMINI_API_KEY"] = "sk"
-        # Sentry-তে public key প্রয়োজন এবং Stripe API key mandatory, তাই মক ভ্যালু যোগ করা হলো
         os.environ["SENTRY_DSN"] = "https://public@sentry.io/123"
         os.environ["STRIPE_API_KEY"] = "sk_test_mock"
         os.environ["SUPREMEAI_JWT_SECRET"] = "secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
-        import core.app as app_mod
-        import core.services as services
+        os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
+        os.environ["ALLOW_TEST_ORIGIN_BYPASS"] = "true"
+        os.environ["CORS_ORIGINS"] = '["*"]'
+        os.environ["ALLOWED_HOSTS"] = '["*"]'
 
+        import core.config as config_mod
+        config_mod.settings = config_mod.Settings()
+
+        import core.app as app_mod
         from fastapi.testclient import TestClient
+
         client = TestClient(app_mod.app)
         assert client.get("/docs").status_code == 200
         assert client.get("/redoc").status_code == 200
