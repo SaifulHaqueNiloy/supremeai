@@ -85,7 +85,7 @@ class ProjectContextService:
             )
 
         # Python functions
-        for match in re.finditer(r"^def\s+(\w+)\s*\(([^)]*)\?):?", content, re.MULTILINE):
+        for match in re.finditer(r"^def\s+(\w+)\s*\(([^)]*)\):", content, re.MULTILINE):
             entries.append(
                 ContextEntry(
                     file_path=file_path,
@@ -167,17 +167,17 @@ class ProjectContextService:
 
         # Filter by relevance to query
         query_terms = set(re.findall(r"[a-zA-Z_]+", query.lower()))
-        [e for e in entries if any(term in e.name.lower() for term in query_terms)][:max_entries]
+        relevant = [e for e in entries if any(term in e.name.lower() for term in query_terms)][:max_entries]
 
         # Format context
-        context_lines = [
-            f"File: {e.file_path}",
-            f"{e.context_type.value}: {e.name}",
-        ]
-        if e.signature:
-            context_lines.append(f"Signature: {e.signature}")
+        context_lines = []
+        for e in relevant:
+            context_lines.append(f"File: {e.file_path}")
+            context_lines.append(f"{e.context_type.value}: {e.name}")
+            if e.signature:
+                context_lines.append(f"Signature: {e.signature}")
 
-        context = "\n".join(context_lines[:MAX_CONTEXT_SIZE])
+        context = "\n".join(context_lines)[:MAX_CONTEXT_SIZE]
 
         await self.cache.set(cache_key, context, ttl=CONTEXT_CACHE_TTL)
         return context
