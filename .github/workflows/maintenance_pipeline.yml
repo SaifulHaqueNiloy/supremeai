@@ -327,7 +327,7 @@ jobs:
       - name: Install Graphviz + erdantic
         run: |
           sudo apt-get update && sudo apt-get install -y graphviz
-          pip install erdantic
+          poetry run pip install erdantic
 
       - name: 📊 Generate ERD from Pydantic Models
         working-directory: backend
@@ -413,7 +413,7 @@ jobs:
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           poetry run uvicorn main:app --host 127.0.0.1 --port 8000 &
-          npx wait-on http://127.0.0.1:8000/health
+          pnpm exec wait-on http://127.0.0.1:8000/health
       - name: Get Playwright Version
         id: playwright-version
         run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
@@ -438,7 +438,7 @@ jobs:
       - name: Start Frontend Preview Server
         run: |
           cd apps/studio-client && pnpm exec vite preview --port 5173 &
-          npx wait-on http://127.0.0.1:5173
+          pnpm exec wait-on http://127.0.0.1:5173
         env:
           CI: true
       - name: Create Report Directory & Execute Playwright Simulation
@@ -478,9 +478,10 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: 🧠 Run Smart CI Failure Detector
+        working-directory: backend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python .github/scripts/ci_smart_summary.py
+        run: poetry run python ../.github/scripts/ci_smart_summary.py
 
   outdated-dependency-report:
     name: 📦 Outdated Dependency Report
