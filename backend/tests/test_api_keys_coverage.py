@@ -1,9 +1,7 @@
 """Tests to improve coverage for api_keys route.
 
 বাংলা মন্তব্য: এই ফাইলে api_keys.py রাউটের রিয়েল ফাংশন সিগনেচার অনুযায়ী
-টেস্টগুলো লেখা হয়েছে। পূর্ববর্তী ভুল সিগনেচার (create_api_key, list_api_keys,
-revoke_api_key, rotate_api_key) ঠিক করে বাস্তব route handler নামগুলো
-(create_key, list_user_keys, revoke_key, rotate_key) ব্যবহার করা হয়েছে।
+টেস্টগুলো লেখা হয়েছে।
 """
 
 from __future__ import annotations
@@ -27,9 +25,9 @@ def _make_request(user_sub: str | None = "test-user") -> MagicMock:
 class TestCreateAPIKey:
     """Tests for create_key endpoint (POST /api/api-keys/create)."""
 
-    def test_create_api_key_success(self):
+    @pytest.mark.asyncio
+    async def test_create_api_key_success(self):
         """Valid request should create API key."""
-        # বাংলা মন্তব্য: বাস্তব route handler হলো create_key, create_api_key নয়
         from api.routes.api_keys import CreateAPIKeyRequest, create_key
 
         mock_request = _make_request("test-user")
@@ -51,25 +49,22 @@ class TestCreateAPIKey:
             patch("api.routes.api_keys.hash_api_key", return_value="hashed-key"),
             patch("api.routes.api_keys.mask_api_key", return_value="sk-supreme...1234"),
             patch(
-                "api.routes.api_keys.create_api_key",
+                "api.routes.api_keys.db_create_api_key",
                 new=AsyncMock(return_value=fake_rec),
             ),
         ):
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(create_key(payload, mock_request))
+            result = await create_key(payload, mock_request)
 
         assert result["name"] == "Test Key"
         assert "key" in result
         assert "warning" in result
 
-    def test_create_api_key_unauthorized(self):
+    @pytest.mark.asyncio
+    async def test_create_api_key_unauthorized(self):
         """Unauthenticated request should raise 401."""
-        # বাংলা মন্তব্য: user=None হলে _get_current_user 401 রেইজ করবে (টেস্ট env-এ fallback)
         from api.routes.api_keys import CreateAPIKeyRequest, create_key
 
         mock_request = _make_request(user_sub=None)
-        # টেস্ট env-এ fallback "test_owner" রিটার্ন হয়, তাই db call mock করতে হবে
         payload = CreateAPIKeyRequest(user_id="test-user", name="Test Key")
 
         fake_rec = {
@@ -88,23 +83,20 @@ class TestCreateAPIKey:
             patch("api.routes.api_keys.hash_api_key", return_value="hashed"),
             patch("api.routes.api_keys.mask_api_key", return_value="sk-supreme..."),
             patch(
-                "api.routes.api_keys.create_api_key",
+                "api.routes.api_keys.db_create_api_key",
                 new=AsyncMock(return_value=fake_rec),
             ),
         ):
-            import asyncio
-
-            # টেস্ট env-এ user=None হলেও "test_owner" fallback করে, তাই 200 আসবে
-            result = asyncio.get_event_loop().run_until_complete(create_key(payload, mock_request))
+            result = await create_key(payload, mock_request)
             assert result is not None
 
 
 class TestListAPIKeys:
     """Tests for list_user_keys endpoint (GET /api/api-keys/)."""
 
-    def test_list_api_keys_returns_keys(self):
+    @pytest.mark.asyncio
+    async def test_list_api_keys_returns_keys(self):
         """Should return list of API keys for user."""
-        # বাংলা মন্তব্য: বাস্তব route handler হলো list_user_keys, list_api_keys নয়
         from api.routes.api_keys import list_user_keys
 
         mock_request = _make_request("test-user")
@@ -114,23 +106,20 @@ class TestListAPIKeys:
             "api.routes.api_keys.get_api_keys_by_user",
             new=AsyncMock(return_value=fake_keys),
         ):
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(list_user_keys(mock_request))
+            result = await list_user_keys(mock_request)
 
         assert len(result["keys"]) == 1
         assert result["keys"][0]["name"] == "Test Key"
 
-    def test_list_api_keys_empty(self):
+    @pytest.mark.asyncio
+    async def test_list_api_keys_empty(self):
         """User with no keys should return empty list."""
         from api.routes.api_keys import list_user_keys
 
         mock_request = _make_request("new-user")
 
         with patch("api.routes.api_keys.get_api_keys_by_user", new=AsyncMock(return_value=[])):
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(list_user_keys(mock_request))
+            result = await list_user_keys(mock_request)
 
         assert result["keys"] == []
         assert result["total"] == 0
@@ -139,9 +128,9 @@ class TestListAPIKeys:
 class TestRevokeAPIKey:
     """Tests for revoke_key endpoint (POST /api/api-keys/{key_id}/revoke)."""
 
-    def test_revoke_api_key_success(self):
+    @pytest.mark.asyncio
+    async def test_revoke_api_key_success(self):
         """Valid key ID should revoke the key."""
-        # বাংলা মন্তব্য: বাস্তব route handler হলো revoke_key, revoke_api_key নয়
         from api.routes.api_keys import revoke_key
 
         mock_request = _make_request("test-user")
@@ -159,27 +148,24 @@ class TestRevokeAPIKey:
                 new=AsyncMock(return_value=fake_rec),
             ),
             patch(
-                "api.routes.api_keys.revoke_api_key",
+                "api.routes.api_keys.db_revoke_api_key",
                 new=AsyncMock(return_value=fake_revoked),
             ),
         ):
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(revoke_key(1, mock_request))
+            result = await revoke_key(1, mock_request)
 
         assert result["status"] == "revoked"
 
-    def test_revoke_api_key_not_found(self):
+    @pytest.mark.asyncio
+    async def test_revoke_api_key_not_found(self):
         """Non-existent key should raise 404."""
         from api.routes.api_keys import revoke_key
 
         mock_request = _make_request("test-user")
 
         with patch("api.routes.api_keys.get_api_key_by_id", new=AsyncMock(return_value=None)):
-            import asyncio
-
             with pytest.raises(HTTPException) as exc_info:
-                asyncio.get_event_loop().run_until_complete(revoke_key(9999, mock_request))
+                await revoke_key(9999, mock_request)
 
         assert exc_info.value.status_code == 404
 
@@ -187,9 +173,9 @@ class TestRevokeAPIKey:
 class TestRotateAPIKey:
     """Tests for rotate_key endpoint (POST /api/api-keys/{key_id}/rotate)."""
 
-    def test_rotate_api_key_success(self):
+    @pytest.mark.asyncio
+    async def test_rotate_api_key_success(self):
         """Valid key ID should rotate the key."""
-        # বাংলা মন্তব্য: বাস্তব route handler হলো rotate_key, rotate_api_key নয়
         from api.routes.api_keys import RotateAPIKeyRequest, rotate_key
 
         mock_request = _make_request("test-user")
@@ -216,7 +202,7 @@ class TestRotateAPIKey:
             patch("api.routes.api_keys.hash_api_key", return_value="new_hash"),
             patch("api.routes.api_keys.mask_api_key", return_value="sk-new...5678"),
             patch(
-                "api.routes.api_keys.rotate_api_key",
+                "api.routes.api_keys.db_rotate_api_key",
                 new=AsyncMock(return_value=rotated),
             ),
             patch(
@@ -224,14 +210,13 @@ class TestRotateAPIKey:
                 new=AsyncMock(return_value=None),
             ),
         ):
-            import asyncio
-
-            result = asyncio.get_event_loop().run_until_complete(rotate_key(1, req_body, mock_request))
+            result = await rotate_key(1, req_body, mock_request)
 
         assert "new_key" in result
         assert result["status"] == "rotated"
 
-    def test_rotate_api_key_not_found(self):
+    @pytest.mark.asyncio
+    async def test_rotate_api_key_not_found(self):
         """Non-existent key should raise 404."""
         from api.routes.api_keys import RotateAPIKeyRequest, rotate_key
 
@@ -239,9 +224,7 @@ class TestRotateAPIKey:
         req_body = RotateAPIKeyRequest(old_key="sk-supreme-oldkey12345678", grace_period_hours=24)
 
         with patch("api.routes.api_keys.get_api_key_by_id", new=AsyncMock(return_value=None)):
-            import asyncio
-
             with pytest.raises(HTTPException) as exc_info:
-                asyncio.get_event_loop().run_until_complete(rotate_key(9999, req_body, mock_request))
+                await rotate_key(9999, req_body, mock_request)
 
         assert exc_info.value.status_code == 404
