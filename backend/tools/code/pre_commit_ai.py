@@ -2,7 +2,7 @@ import contextlib
 import os
 import re
 import subprocess
-from typing import Any
+from typing import ClassVar, Any
 
 from loguru import logger
 
@@ -23,7 +23,7 @@ class PreCommitAI:
     (Closes Gap #22)
     """
 
-    AUTO_FIX_RULES = {
+    AUTO_FIX_RULES: ClassVar[Any] = {
         "trailing_whitespace": True,
         "end_of_file_newline": True,
         "import_sort": True,

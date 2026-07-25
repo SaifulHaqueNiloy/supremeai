@@ -1,5 +1,5 @@
 import time
-from typing import Any
+from typing import ClassVar, Any
 
 from loguru import logger
 
@@ -18,7 +18,7 @@ class BenchmarkAgent:
     AI providers to measure latency, cost, and output quality.
     """
 
-    BENCHMARK_PROMPTS = [
+    BENCHMARK_PROMPTS: ClassVar[Any] = [
         {
             "category": "coding",
             "prompt": "Write a Python function to calculate the factorial of a number using recursion.",
