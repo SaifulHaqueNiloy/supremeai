@@ -204,7 +204,7 @@ class Settings(BaseSettings):
             "/openapi.json",
             "/api/v1/auth/token",
             "/actuator",
-            "/api/admin/firebase-",
+            "/api/admin/firebase-auth",
             "/api/v1/health",
             "/api/v1/health/",
             "/api/v1/live",
@@ -212,7 +212,7 @@ class Settings(BaseSettings):
             "/api/voice/stream_audio",
             "/api/billing/webhook/stripe",
             "/api/billing/webhook/sslcommerz",
-            "/",
+            "/api/v1/markdown",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )
@@ -618,6 +618,7 @@ class Settings(BaseSettings):
         "admin_emails",
         "idempotency_critical_paths",
         "prompt_blocked_patterns",
+        "supremeai_public_paths",
         mode="before",
         check_fields=False,
     )

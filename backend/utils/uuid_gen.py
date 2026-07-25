@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy import types
+
 try:
     from uuid6 import uuid7
 except ImportError:
