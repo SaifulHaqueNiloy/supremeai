@@ -95,5 +95,14 @@ def rules():
     console.print(table)
 
 
+def parse_args():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="SupremeAI CLI Parser")
+    parser.add_argument("--task", "-t", default="", help="Task prompt")
+    parser.add_argument("--type", "-y", default="general", help="Task type")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     cli_app()

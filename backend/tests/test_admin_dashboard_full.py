@@ -19,7 +19,7 @@ Covers all endpoints and helper functions not yet tested by test_admin_dashboard
 import asyncio
 import json
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -29,6 +29,7 @@ from api.routes.admin_dashboard import (
     RouterOverrideRequest,
     _acquire_env_lock,
     _release_env_lock,
+    get_codebase_export,
     get_costs,
     get_cost_caps,
     get_env_etag,
@@ -206,9 +207,7 @@ class TestGetHealthMap:
         """No services configured → all offline."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "gcp_project_id", None)
-        monkeypatch.setattr(settings, "upstash_redis_rest_url", None)
-        monkeypatch.setattr(settings, "supabase_database_url", None)
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "")
         result = get_health_map()
         assert result["gcp"]["status"] == "offline"
         assert result["railway"]["status"] == "offline"
@@ -218,10 +217,12 @@ class TestGetHealthMap:
         """All services configured → all healthy."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "gcp_project_id", "my-project")
-        monkeypatch.setattr(settings, "gcp_region", "us-east1")
-        monkeypatch.setattr(settings, "upstash_redis_rest_url", "https://redis.upstash.com")
-        monkeypatch.setattr(settings, "supabase_database_url", "postgresql://db")
+        secrets_map = {
+            "GCP_PROJECT_ID": "my-project",
+            "UPSTASH_REDIS_REST_URL": "https://redis.upstash.com",
+            "SUPABASE_DATABASE_URL_POOLER": "postgresql://db",
+        }
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: secrets_map.get(k, ""))
         result = get_health_map()
         assert result["gcp"]["status"] == "healthy"
         assert result["railway"]["status"] == "healthy"
@@ -250,10 +251,7 @@ class TestGetMetrics:
         """All API keys set → all providers active."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "openrouter_api_key", "key1")
-        monkeypatch.setattr(settings, "gemini_api_key", "key2")
-        monkeypatch.setattr(settings, "groq_api_key", "key3")
-        monkeypatch.setattr(settings, "deepseek_api_key", "key4")
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "key1")
         result = get_metrics()
         assert "openrouter" in result["active_providers"]
         assert "gemini" in result["active_providers"]
@@ -265,10 +263,7 @@ class TestGetMetrics:
         """No API keys → falls back to ollama."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "openrouter_api_key", None)
-        monkeypatch.setattr(settings, "gemini_api_key", None)
-        monkeypatch.setattr(settings, "groq_api_key", None)
-        monkeypatch.setattr(settings, "deepseek_api_key", None)
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "")
         result = get_metrics()
         assert result["active_providers"] == ["ollama"]
         assert result["model_call_distribution"] == {"ollama": 100}
@@ -277,12 +272,8 @@ class TestGetMetrics:
         """psutil fails → uses fallback values."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "openrouter_api_key", "key1")
-        monkeypatch.setattr(settings, "gemini_api_key", None)
-        monkeypatch.setattr(settings, "groq_api_key", None)
-        monkeypatch.setattr(settings, "deepseek_api_key", None)
-        with patch("api.routes.admin_dashboard.psutil", create=True) as mock_psutil:
-            mock_psutil.cpu_percent.side_effect = RuntimeError("psutil broken")
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "key1" if k == "OPENROUTER_API_KEY" else "")
+        with patch("psutil.cpu_percent", side_effect=RuntimeError("psutil broken")):
             result = get_metrics()
         assert result["cpu_usage_percent"] == 22.4
         assert result["memory_usage_percent"] == 45.2
@@ -297,10 +288,7 @@ class TestGetProviders:
         """API keys set → providers listed."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "openrouter_api_key", "key1")
-        monkeypatch.setattr(settings, "gemini_api_key", "key2")
-        monkeypatch.setattr(settings, "groq_api_key", None)
-        monkeypatch.setattr(settings, "deepseek_api_key", None)
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "key" if k in {"OPENROUTER_API_KEY", "GEMINI_API_KEY"} else "")
         result = get_providers()
         assert len(result) == 2
         assert result[0]["id"] == "openrouter"
@@ -310,10 +298,7 @@ class TestGetProviders:
         """No API keys → falls back to ollama."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "openrouter_api_key", None)
-        monkeypatch.setattr(settings, "gemini_api_key", None)
-        monkeypatch.setattr(settings, "groq_api_key", None)
-        monkeypatch.setattr(settings, "deepseek_api_key", None)
+        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "")
         result = get_providers()
         assert len(result) == 1
         assert result[0]["id"] == "ollama"
@@ -343,20 +328,22 @@ class TestModelRouter:
 
 
 class TestCodebaseExport:
-    def test_export_success(self):
+    @pytest.mark.asyncio
+    async def test_export_success(self):
         """Export succeeds → returns markdown."""
-        with patch("api.routes.admin_dashboard.export_codebase_to_markdown") as mock_export:
+        with patch("tools.knowledge.codebase_exporter.export_codebase_to_markdown", new_callable=AsyncMock) as mock_export:
             mock_export.return_value = "# Codebase\nSome markdown"
-            result = get_codebase_export()
+            result = await get_codebase_export()
         assert result["success"] is True
         assert "# Codebase" in result["markdown"]
 
-    def test_export_failure(self):
+    @pytest.mark.asyncio
+    async def test_export_failure(self):
         """Export fails → raises HTTPException 500."""
-        with patch("api.routes.admin_dashboard.export_codebase_to_markdown") as mock_export:
+        with patch("tools.knowledge.codebase_exporter.export_codebase_to_markdown", new_callable=AsyncMock) as mock_export:
             mock_export.side_effect = RuntimeError("Export failed")
             with pytest.raises(HTTPException) as exc_info:
-                get_codebase_export()
+                await get_codebase_export()
         assert exc_info.value.status_code == 500
 
 
