@@ -8928,6 +8928,21 @@ anyio = ">=3.6.2,<5"
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
+name = "starlette-context"
+version = "0.3.6"
+description = "Middleware for Starlette that allows you to store and access the context data of a request. Can be used with logging so logs automatically use request headers such as x-request-id or x-correlation-id."
+optional = false
+python-versions = ">=3.8,<4.0"
+groups = ["main"]
+files = [
+    {file = "starlette_context-0.3.6-py3-none-any.whl", hash = "sha256:b14ce373fbb6895a2182a7104b9f63ba20c8db83444005fb9a844dd77ad9895c"},
+    {file = "starlette_context-0.3.6.tar.gz", hash = "sha256:d361a36ba2d4acca3ab680f917b25e281533d725374752d47607a859041958cb"},
+]
+
+[package.dependencies]
+starlette = "*"
+
+[[package]]
 name = "statsmodels"
 version = "0.14.6"
 description = "Statistical computations and models for Python"
@@ -10676,4 +10691,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f1615e9ab8ef70116d3a513c85496918a3a38b754e8b1bfa54795d7e2bb66e12"
+content-hash = "51ef4985ac2b84d9aba0d1ca6d42beab54115869ef3b0bea1e81dc8b41b58a71"
