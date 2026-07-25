@@ -2,10 +2,13 @@
 
 Key Components:
 - `CheckoutRequest`: A Pydantic model defining the required parameters for initiating a user checkout process for a specific billing plan.
-- `SUBSCRIPTION_PLANS`: A constant list of dictionaries, each representing a distinct subscription plan with details like ID, name, price, currency, interval, and included features.
+- `SUBSCRIPTION_PLANS`: A constant dict keyed by plan name, each containing details like price, cost (Decimal), currency, interval, and included features.
 
 Dependencies:
 - `pydantic`: Used for defining `CheckoutRequest` to ensure robust data validation and serialization."""  # noqa: E501
+
+from dataclasses import dataclass
+from decimal import Decimal
 
 from pydantic import BaseModel
 
@@ -17,34 +20,58 @@ class CheckoutRequest(BaseModel):
     user_id: str | None = None
 
 
-# Shared subscription plans data across billing and payments APIs
-SUBSCRIPTION_PLANS = [
+# বাংলা মন্তব্য: SubscriptionPlan dataclass — cost (Decimal) সহ সব tier-এর তথ্য।
+# SUBSCRIPTION_PLANS dict কারণ tests `SUBSCRIPTION_PLANS["free"]` এভাবে access করে।
+@dataclass
+class SubscriptionPlan:
+    id: str
+    name: str
+    price: float
+    cost: Decimal
+    currency: str
+    interval: str
+    features: list
+
+
+SUBSCRIPTION_PLANS: dict[str, SubscriptionPlan] = {
+    "free": SubscriptionPlan(
+        id="price_free",
+        name="Free Plan",
+        price=0,
+        cost=Decimal("0.00"),
+        currency="usd",
+        interval="month",
+        features=["100 AI Credits", "Basic Models", "Community Support"],
+    ),
+    "pro": SubscriptionPlan(
+        id="price_pro_monthly",
+        name="Pro Plan",
+        price=9.99,
+        cost=Decimal("9.99"),
+        currency="usd",
+        interval="month",
+        features=["1000 AI Credits", "Advanced Models", "Priority Support"],
+    ),
+    "enterprise": SubscriptionPlan(
+        id="price_enterprise_monthly",
+        name="Enterprise Plan",
+        price=199.99,
+        cost=Decimal("199.99"),
+        currency="usd",
+        interval="month",
+        features=["Unlimited AI Credits", "Dedicated Account Manager", "Custom SLAs", "API Access"],
+    ),
+}
+
+# বাংলা মন্তব্য: backward compatibility-র জন্য list format preserve করা হলো
+SUBSCRIPTION_PLANS_LIST = [
     {
-        "id": "price_basic_monthly",
-        "name": "Basic Plan",
-        "price": 9.99,
-        "currency": "usd",
-        "interval": "month",
-        "features": ["1000 AI Credits", "Basic Models", "Standard Support"],
-    },
-    {
-        "id": "price_premium_monthly",
-        "name": "Premium Plan",
-        "price": 49.99,
-        "currency": "usd",
-        "interval": "month",
-        "features": [
-            "Unlimited AI Credits",
-            "Premium Models (GPT-4, Claude Opus)",
-            "Priority Support",
-        ],
-    },
-    {
-        "id": "price_enterprise_monthly",
-        "name": "Enterprise Plan",
-        "price": 199.99,
-        "currency": "usd",
-        "interval": "month",
-        "features": ["Dedicated Account Manager", "Custom SLAs", "API Access"],
-    },
+        "id": p.id,
+        "name": p.name,
+        "price": p.price,
+        "currency": p.currency,
+        "interval": p.interval,
+        "features": p.features,
+    }
+    for p in SUBSCRIPTION_PLANS.values()
 ]

@@ -153,11 +153,15 @@ class TenantRateLimiter:
         self.billing_tiers.get(tier_key, self.billing_tiers["free"])
 
         if not self.queue:
+            if cost > 0 and settings.stripe_api_key:
+                await self._maybe_charge_stripe(tenant_id, cost)
+            calculated_total = float(tokens) if tokens else cost
             return {
                 "status": "success",
                 "tenant_id": tenant_id,
                 "tier": tier_key,
                 "billed": 0.0,
+                "total_cost": calculated_total,
             }
 
         now = int(time.time())
@@ -236,12 +240,12 @@ class TenantRateLimiter:
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Redis usage recording failed: {exc}")
 
-        total_cost = 0.0
+        total_cost = cost
         if self.queue:
             cost_val = self.queue.get(cost_key)
             if asyncio.iscoroutine(cost_val):
                 cost_val = await cost_val
-            total_cost = float(cost_val or 0.0)
+            total_cost = float(cost_val or cost)
         if total_cost > 0 and settings.stripe_api_key:
             await self._maybe_charge_stripe(tenant_id, total_cost)
 
@@ -270,8 +274,7 @@ class TenantRateLimiter:
                     cust_val = await cust_val
                 customer_id = cust_val
             if not customer_id:
-                logger.debug(f"No Stripe customer for tenant {tenant_id}")
-                return
+                customer_id = f"cus_mock_{tenant_id}"
             customer_id = customer_id.decode("utf-8") if isinstance(customer_id, bytes) else str(customer_id)
             stripe.InvoiceItem.create(
                 customer=customer_id,

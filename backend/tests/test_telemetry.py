@@ -26,9 +26,13 @@ from core.observability.telemetry import (
     trace_span,
 )
 
+# বাংলা মন্তব্য: সব patch target core.observability.telemetry-তে করা হচ্ছে
+# কারণ setup_tracing, trace_span, get_tracer এই module-এ define করা আছে।
+_TEL = "core.observability.telemetry"
+
 
 def test_setup_tracing_noop():
-    with patch("core.telemetry.otel_trace") as mock_trace:
+    with patch(f"{_TEL}.otel_trace") as mock_trace:
         setup_tracing("test-service")
         assert mock_trace.set_tracer_provider.called
         assert mock_trace.get_tracer.called
@@ -38,8 +42,8 @@ def test_setup_tracing_noop():
 def test_setup_tracing_with_endpoint():
     with (
         patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter") as mock_exporter,
-        patch("core.telemetry.BatchSpanProcessor") as mock_processor,
-        patch("core.telemetry.TracerProvider") as mock_provider_class,
+        patch(f"{_TEL}.BatchSpanProcessor") as mock_processor,
+        patch(f"{_TEL}.TracerProvider") as mock_provider_class,
     ):
         mock_provider = MagicMock()
         mock_provider_class.return_value = mock_provider
@@ -54,7 +58,7 @@ def test_setup_tracing_with_endpoint():
 def test_setup_tracing_without_endpoint_no_exporter():
     with (
         patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter") as mock_exporter,
-        patch("core.telemetry.TracerProvider") as mock_provider_class,
+        patch(f"{_TEL}.TracerProvider") as mock_provider_class,
     ):
         mock_provider = MagicMock()
         mock_provider_class.return_value = mock_provider
@@ -67,7 +71,7 @@ def test_setup_tracing_without_endpoint_no_exporter():
 
 def test_trace_span_no_tracer():
     with (
-        patch("core.telemetry.get_tracer", return_value=None),
+        patch(f"{_TEL}.get_tracer", return_value=None),
         trace_span("test-span") as span,
     ):
         assert isinstance(span, _NoOpSpan)
@@ -79,7 +83,7 @@ def test_trace_span_with_tracer():
 
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-    with patch("core.telemetry.get_tracer", return_value=mock_tracer):
+    with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
         with trace_span("test-span", attributes={"key": "val"}) as span:
             assert isinstance(span, _RealSpan)
             mock_span.set_attribute.assert_called_with("key", "val")
@@ -92,7 +96,7 @@ def test_trace_span_sets_ok_status_on_success():
     mock_span = MagicMock()
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-    with patch("core.telemetry.get_tracer", return_value=mock_tracer):
+    with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
         with trace_span("ok-span"):
             pass
         from opentelemetry.trace import StatusCode
@@ -107,7 +111,7 @@ def test_trace_span_records_exception_on_error():
     mock_span = MagicMock()
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-    with patch("core.telemetry.get_tracer", return_value=mock_tracer):
+    with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
         with pytest.raises(RuntimeError):  # noqa: F821
             with trace_span("error-span"):
                 raise RuntimeError("boom")
@@ -124,7 +128,7 @@ def test_trace_span_unknown_kind_defaults_to_internal():
     mock_span = MagicMock()
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-    with patch("core.telemetry.get_tracer", return_value=mock_tracer):
+    with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
         with trace_span("span", kind="unknown"):
             pass
         from opentelemetry import trace as otel_trace
@@ -138,7 +142,7 @@ def test_trace_span_sets_attributes_multiple():
     mock_span = MagicMock()
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-    with patch("core.telemetry.get_tracer", return_value=mock_tracer):
+    with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
         with trace_span("span", attributes={"a": 1, "b": "two"}):
             pass
         assert mock_span.set_attribute.call_count == 2
@@ -168,8 +172,8 @@ def test_real_span_delegates_record_exception():
 def test_tracer_shared_globally_after_setup():
     with (
         patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter"),
-        patch("core.telemetry.BatchSpanProcessor"),
-        patch("core.telemetry.TracerProvider"),
+        patch(f"{_TEL}.BatchSpanProcessor"),
+        patch(f"{_TEL}.TracerProvider"),
     ):
         setup_tracing("svc-a")
         t1 = get_tracer()
