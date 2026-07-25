@@ -226,6 +226,38 @@ jobs:
           fi
           echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
 
+  ai-scribe-docs:
+    name: "📚 AI Scribe — Auto-Documentation Generation"
+    needs: [changes, pre-merge-gate]
+    if: >
+      needs.pre-merge-gate.result == 'success' &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.dependencies == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: 📚 Run AI Scribe Historian
+        # বাংলা মন্তব্য: এই ধাপটি স্বয়ংক্রিয়ভাবে পাইথন ফাইলগুলির ডকস্ট্রিং এবং ডিরেক্টরি README-গুলো তৈরি/আপডেট করে।
+        # docs/autogen/codebase/ ফাঁকা স্টब들也被 AI Scribe দ্বারা পূরণ করা হবে।
+        run: |
+          cd backend
+          pip install litellm ast python-dotenv
+          python ../scripts/ai_scribe_historian.py --files $(find ../backend/core ../backend/tools -name "*.py" -not -name "__init__.py" 2>/dev/null | head -20)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        continue-on-error: true
+      - name: 📤 Upload Generated Docs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-scribe-generated-docs
+          path: |
+            backend/**/*.py
+          retention-days: 1
+
   observability-audit:
     name: "🔬 Observability Audit (No Silent Errors)"
     needs: [pre-merge-gate]

@@ -119,12 +119,12 @@ class SelfPlanner:
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
             for res in batch_results:
-                if isinstance(res, Exception):
-                    logger.error(f"Task failed with exception: {res}")
-                else:
+                if isinstance(res, tuple):
                     task_id, task_res = res
                     execution_results[task_id] = task_res
                     dag.nodes[task_id]["status"] = "completed"
+                else:
+                    logger.error(f"Task failed with exception: {res}")
 
         # After all batches are complete, log the summary and return.
         # 🛑 ZERO-GAP: Removed recursive self-generating planning logic to avoid OOM loop leaks.
@@ -186,5 +186,7 @@ async def create_plan(request: PlanRequest):
             "tasks": nodes,
         }
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Planner failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # বাংলা: str(e) সরাসরি ইউজারকে দেওয়া সম্পূর্ণ নিষিদ্ধ — API key বা DB string লিক হতে পারে।
+        # Internal error log-এ যাবে, ইউজার শুধু generic message দেখবে।
+        logger.error(f"Planner failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Planning failed due to an internal error. Please try again later.")
