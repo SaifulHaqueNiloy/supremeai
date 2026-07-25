@@ -10,7 +10,6 @@ import os
 from collections.abc import AsyncGenerator
 from typing import Any
 
-import httpx
 from loguru import logger
 
 from core.config import settings
@@ -73,8 +72,24 @@ class LLMGateway:
         self._setup_callbacks()
         self._circuit_breakers: dict[str, CircuitBreaker] = {}
 
+        # বাংলা: Circular import এড়ানোর জন্য performance_optimizer lazy-load করা হবে
+        self._performance_optimizer = None
+
+        # Performance tracking
+        self._request_count = 0
+        self._error_count = 0
+
         # Performance Optimization: Lazy initialize cache on demand to prevent circular imports
         self._cache = None
+
+    @property
+    def performance_optimizer(self):
+        """Circular import guard: performance_enhancer → llm_gateway চক্র ভাঙতে lazy-load।"""
+        if self._performance_optimizer is None:
+            from core.performance_enhancer import get_performance_optimizer  # noqa: PLC0415
+
+            self._performance_optimizer = get_performance_optimizer()
+        return self._performance_optimizer
 
     @property
     def cache(self):
@@ -207,8 +222,8 @@ class LLMGateway:
             if m not in call_chain:
                 call_chain.append(m)
 
-        # বাংলা মন্তব্য: যদি নির্দিষ্ট কোনো প্রোভাইডার (যেমন 'groq') প্রোভাইড করা হয়, তবে কল চেইনের মডেলগুলো রী-অর্ডার করা হবে
-        # যাতে সেই প্রোভাইডারের মডেলগুলো সবার আগে স্থান পায়।
+        # বাংলা মন্তব্য: যদি নির্দিষ্ট কোনো প্রোভাইডার (যেমন 'groq') প্রোভাইড করা হয়, তবে কল চেইনের মডেলগুলো রী-অর্ডার করা হবে
+        # যাতে সেই প্রোভাইডারের মডেলগুলো সবার আগে স্থান পায়।
         if provider:
             provider_models = [m for m in call_chain if m.startswith(f"{provider}/")]
             other_models = [m for m in call_chain if not m.startswith(f"{provider}/")]
@@ -222,11 +237,7 @@ class LLMGateway:
 
     def _get_or_create_circuit_breaker(self, current_model: str) -> CircuitBreaker:
         if current_model not in self._circuit_breakers:
-            self._circuit_breakers[current_model] = CircuitBreaker(
-                name=current_model,
-                failure_threshold=getattr(settings, "circuit_breaker_failure_threshold", 3),
-                recovery_timeout=getattr(settings, "circuit_breaker_cooldown_period", 60),
-            )
+            self._circuit_breakers[current_model] = self.performance_optimizer.get_circuit_breaker(current_model)
         return self._circuit_breakers[current_model]
 
     async def acompletion(
@@ -277,6 +288,10 @@ class LLMGateway:
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
+        # Use performance optimizer to select best model if not specified
+        if not model:
+            model = await self.performance_optimizer.optimize_model_selection(task_type, prompt_text)
+
         call_chain = self._build_call_chain(model, provider, task_type)
 
         if isinstance(prompt, list):
@@ -298,7 +313,7 @@ class LLMGateway:
             try:
                 logger.info(f"[LLMGateway] Attempting: {current_model}")
                 # বাংলা মন্তব্য: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ।
-                # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
+                # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
                 api_key = kwargs.pop("api_key", None) or self._get_api_key_for_model(current_model)
                 response = await litellm.acompletion(
                     model=current_model,
@@ -399,104 +414,24 @@ class LLMGateway:
         raise last_exception or RuntimeError("All streaming fallback options failed.")
 
 
-# ── Lazy Singleton ─────────────────────────────────────────────────────────────
-# বাংলা মন্তব্য: Module-level singleton lazy করা হলো।
-# আগে: `llm_gateway = LLMGateway()` import-এ execute হতো।
-# এটি cold start বাড়াতো এবং pytest isolation ভাঙতো।
-# এখন: প্রথম ব্যবহারের সময় instantiate হবে।
+# ── মডিউল-লেভেল Lazy Singleton এক্সপোর্ট ──────────────────────────────────────
+# বাংলা: প্রতিটি ইমপোর্টকে এক ইনস্ট্যান্স দেওয়া হয় — ঘন ঘন নতুন অবজেক্ট তৈরি হয় না।
 _llm_gateway_instance: "LLMGateway | None" = None
 
 
 def get_llm_gateway() -> "LLMGateway":
-    """বাংলা মন্তব্য: Lazy singleton factory — import সময়ে network call নিষিদ্ধ।"""
+    """LLMGateway lazy singleton factory — circular import-safe।"""
     global _llm_gateway_instance
     if _llm_gateway_instance is None:
         _llm_gateway_instance = LLMGateway()
     return _llm_gateway_instance
 
 
+# Backward-compat alias
 def __getattr__(name: str):
-    """বাংলা মন্তব্য: টেস্ট কালেকশন ফিক্স — পুরানো টেস্ট ফাইলগুলো যদি মডিউল লেভেলের
-    'llm_gateway' ভ্যারিয়েবল খোঁজে, তবে এই ম্যাজিক মেথডটি ডাইনামিকালি আমাদের
-    Lazy Getter ফাংশনটি সাপ্লাই করবে। এতে ২২টি টেস্ট ফাইল ব্রেক করা ছাড়াই সচল হবে।
-    GatewayManager একটি backward-compat alias — LLMGateway এর পুরানো নাম।
-    """
     if name == "llm_gateway":
         return get_llm_gateway()
-    if name == "GatewayManager":
-        return LLMGateway
-    raise AttributeError(f"module {__name__} has no attribute {name}")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-# বাংলা মন্তব্য: Backward-compat alias — পুরানো কোড এবং tests GatewayManager নামে import করে।
-# এই alias না থাকলে 3টি test module collect হবে না।
 GatewayManager = LLMGateway
-
-_client: httpx.AsyncClient | None = None
-
-
-def get_http_client() -> httpx.AsyncClient:
-    """
-    বাংলা মন্তব্য: HTTP Client Connection Pool Singleton.
-    App startup-এ একবার তৈরি করে limits/timeout সেট করে reuse করা হয়।
-    """
-    global _client
-    if _client is None:
-        _client = httpx.AsyncClient(
-            timeout=httpx.Timeout(
-                connect=settings.LLM_CONNECT_TIMEOUT,
-                read=settings.LLM_READ_TIMEOUT,
-                write=settings.LLM_WRITE_TIMEOUT,
-                pool=settings.LLM_POOL_TIMEOUT,
-            ),
-            limits=httpx.Limits(
-                max_connections=settings.LLM_MAX_CONNECTIONS,
-                max_keepalive_connections=settings.LLM_MAX_KEEPALIVE,
-            ),
-        )
-    return _client
-
-
-async def shutdown_http_client() -> None:
-    """বাংলা মন্তব্য: Connection Pool Clean Shutdown."""
-    global _client
-    if _client is not None:
-        await _client.aclose()
-        _client = None
-
-
-async def stream_llm_response(
-    request: Any,
-    provider_url: str,
-    payload: dict[str, Any],
-    headers: dict[str, str],
-) -> AsyncGenerator[str, None]:
-    """
-    Upstream provider থেকে Zero-Memory-Leak SSE streaming response প্রদান করে।
-    request.is_disconnected() চেক করে অকাল ডিসকানেক্টে সকেট রিলিজ নিশ্চিত করে।
-    """
-    client = get_http_client()
-    try:
-        async with client.stream("POST", provider_url, json=payload, headers=headers) as response:
-            response.raise_for_status()
-            async for line in response.aiter_lines():
-                if hasattr(request, "is_disconnected") and await request.is_disconnected():
-                    logger.info("Client disconnected mid-stream, closing upstream connection.")
-                    break
-                if not line or not line.startswith("data:"):
-                    continue
-                data_str = line[len("data:") :].strip()
-                if data_str == "[DONE]":
-                    yield "data: [DONE]\n\n"
-                    break
-                yield f"data: {data_str}\n\n"
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Upstream error {e.response.status_code}: {provider_url}")
-        error_payload = json.dumps({"error": "upstream_error", "status": e.response.status_code})
-        yield f"data: {error_payload}\n\n"
-    except httpx.TimeoutException:
-        logger.error(f"Timeout while streaming from {provider_url}")
-        yield f"data: {json.dumps({'error': 'timeout'})}\n\n"
-    except Exception as exc:  # noqa: BLE001
-        logger.exception(f"Unexpected streaming error: {exc}")
-        yield f"data: {json.dumps({'error': 'internal_stream_error'})}\n\n"
