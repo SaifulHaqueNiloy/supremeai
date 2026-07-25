@@ -78,15 +78,6 @@ def _get_rules_engine() -> UniversalRulesEngine | None:
     return _rules_engine
 
 
-# ── Enums & Constants ───────────────────────────────────────────────────────
-class Provider(str, Enum):
-    MOONSHOT = "moonshot"  # Primary: Kimi K2.5
-    DEEPSEEK = "deepseek"  # Fallback: V3
-    TOGETHER = "together"  # Backup
-    GEMINI = "gemini"  # Google backup
-    OLLAMA = "ollama"  # Local (optional)
-
-
 class TaskType(str, Enum):
     CHAT = "chat"
     CODE = "code"
@@ -921,6 +912,49 @@ class LLMGateway:
             task_type=task_type,
             max_tokens=max_tokens,
             temperature=temperature,
+            **kwargs,
+        )
+        return {
+            "text": result.content,
+            "provider": result.provider.value,
+            "tokens_used": result.tokens_used,
+            "cost_usd": result.cost_usd,
+            "latency_ms": result.latency_ms,
+            "cached": result.cached,
+        }
+
+    async def async_generate(
+        self,
+        prompt: str,
+        task_type: str = "chat",
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+        model_override: str | None = None,
+        use_moe: bool = False,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Async generate helper supporting MoE routing."""
+        preferred = None
+        if use_moe:
+            try:
+                from brain.expert_router import SupremeMoERouter
+
+                chain = SupremeMoERouter.get_model_chain(prompt)
+                if chain:
+                    first_model = chain[0]
+                    if "/" in first_model:
+                        provider_part = first_model.split("/")[0]
+                        if provider_part in [p.value for p in Provider]:
+                            preferred = Provider(provider_part)
+            except Exception as e:
+                logger.warning(f"Could not use MoE router: {e}")
+
+        result = await self._router.route(
+            prompt=prompt,
+            task_type=task_type,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            preferred_provider=preferred.value if preferred else None,
             **kwargs,
         )
         return {

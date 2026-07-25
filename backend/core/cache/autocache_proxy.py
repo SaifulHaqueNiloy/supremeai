@@ -25,11 +25,33 @@ class AutoCacheProxy:
             "user_dashboard": 0,  # Bypass cache / No TTL
         }
 
+    def infer_category_from_prompt(self, prompt: str, default_task: str = "general") -> str:
+        """
+        Infer query category from prompt content for dynamic TTL allocation.
+        """
+        prompt_lower = prompt.lower()
+        if any(w in prompt_lower for w in ["doc", "documentation", "guide", "tutorial", "readme", "manifest"]):
+            return "static_docs"
+        elif any(w in prompt_lower for w in ["skill", "catalog", "tools", "capabilities"]):
+            return "skills_catalog"
+        elif any(w in prompt_lower for w in ["def ", "class ", "function", "code", "import ", "bug", "refactor"]):
+            return "code_gen"
+        elif any(w in prompt_lower for w in ["dashboard", "balance", "profile", "account", "wallet", "realtime"]):
+            return "user_dashboard"
+        return "ai_chat"
+
     def get_ttl_for_category(self, category: str) -> int:
         """
         কুয়েরি ক্যাটাগরি অনুযায়ী TTL (সেকেন্ডে) প্রদান করা।
         """
-        return self.ttl_matrix.get(category, 300)
+        return self.ttl_matrix.get(category, 1800)
+
+    def calculate_dynamic_ttl(self, prompt: str, category: str | None = None) -> int:
+        """
+        Calculate dynamic TTL based on category or prompt content.
+        """
+        cat = category or self.infer_category_from_prompt(prompt)
+        return self.get_ttl_for_category(cat)
 
     async def get_or_compute(self, key: str, category: str, compute_fn: Any, *args, **kwargs) -> Any:
         """

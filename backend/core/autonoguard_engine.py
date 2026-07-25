@@ -44,6 +44,7 @@ SENSITIVE_OPS = {
     "/api/v1/orchestrate/",
     "/api/v1/skills/execute",
     "/api/v1/system/",
+    "/api/sensitive/",
 }
 
 ANTI_HACKING_ENABLED = settings.enforce_anti_hacking
@@ -63,8 +64,9 @@ class OperationContext(BaseModel):
     ip_address: str
     path: str
     method: str
-    headers: dict[str, str]
+    headers: dict[str, str] = {}
     correlation_id: str | None = None
+    code_to_scan: str | None = None
 
 
 class ChurnDetection(BaseModel):
