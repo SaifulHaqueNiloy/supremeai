@@ -59,4 +59,4 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         poetry run pip install setuptools==68.0.0 wheel
-        poetry install --no-root --with dev --without ml,tools
+        poetry install --no-root --with dev
