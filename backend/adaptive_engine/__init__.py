@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 adaptive_engine/__init__.py
 ===========================

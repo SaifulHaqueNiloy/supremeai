@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 MCP Server for GitHub CI/CD Integration in SupremeAI 2.0.
 

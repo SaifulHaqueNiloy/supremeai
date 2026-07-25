@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 core/utils/firestore_helpers.py
 ================================
