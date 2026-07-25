@@ -50,6 +50,7 @@ class TestCreateAPIKey:
             patch("api.routes.api_keys.create_api_key", new=AsyncMock(return_value=fake_rec)),
         ):
             import asyncio
+
             result = asyncio.get_event_loop().run_until_complete(create_key(payload, mock_request))
 
         assert result["name"] == "Test Key"
@@ -74,6 +75,7 @@ class TestCreateAPIKey:
             patch("api.routes.api_keys.create_api_key", new=AsyncMock(return_value=fake_rec)),
         ):
             import asyncio
+
             # টেস্ট env-এ user=None হলেও "test_owner" fallback করে, তাই 200 আসবে
             result = asyncio.get_event_loop().run_until_complete(create_key(payload, mock_request))
             assert result is not None
@@ -92,6 +94,7 @@ class TestListAPIKeys:
 
         with patch("api.routes.api_keys.get_api_keys_by_user", new=AsyncMock(return_value=fake_keys)):
             import asyncio
+
             result = asyncio.get_event_loop().run_until_complete(list_user_keys(mock_request))
 
         assert len(result["keys"]) == 1
@@ -105,6 +108,7 @@ class TestListAPIKeys:
 
         with patch("api.routes.api_keys.get_api_keys_by_user", new=AsyncMock(return_value=[])):
             import asyncio
+
             result = asyncio.get_event_loop().run_until_complete(list_user_keys(mock_request))
 
         assert result["keys"] == []
@@ -128,6 +132,7 @@ class TestRevokeAPIKey:
             patch("api.routes.api_keys.revoke_api_key", new=AsyncMock(return_value=fake_revoked)),
         ):
             import asyncio
+
             result = asyncio.get_event_loop().run_until_complete(revoke_key(1, mock_request))
 
         assert result["status"] == "revoked"
@@ -140,6 +145,7 @@ class TestRevokeAPIKey:
 
         with patch("api.routes.api_keys.get_api_key_by_id", new=AsyncMock(return_value=None)):
             import asyncio
+
             with pytest.raises(HTTPException) as exc_info:
                 asyncio.get_event_loop().run_until_complete(revoke_key(9999, mock_request))
 
@@ -170,6 +176,7 @@ class TestRotateAPIKey:
             patch("api.routes.api_keys.record_api_key_event", new=AsyncMock(return_value=None)),
         ):
             import asyncio
+
             result = asyncio.get_event_loop().run_until_complete(rotate_key(1, req_body, mock_request))
 
         assert "new_key" in result
@@ -184,6 +191,7 @@ class TestRotateAPIKey:
 
         with patch("api.routes.api_keys.get_api_key_by_id", new=AsyncMock(return_value=None)):
             import asyncio
+
             with pytest.raises(HTTPException) as exc_info:
                 asyncio.get_event_loop().run_until_complete(rotate_key(9999, req_body, mock_request))
 
