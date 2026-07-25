@@ -84,9 +84,7 @@ def init_engine() -> None:
 
     DATABASE_URL = settings.supabase_database_url
     if not DATABASE_URL:
-        logger.warning(
-            "SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail."
-        )
+        logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
 
     _async_url = get_async_url(DATABASE_URL or "")
     engine_kwargs = _build_engine_kwargs(_async_url)
@@ -101,9 +99,7 @@ def init_engine() -> None:
         )
     except Exception as exc:
         # বাংলা মন্তব্য: engine creation ব্যর্থ হলে SQLite in-memory fallback
-        logger.error(
-            f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory."
-        )
+        logger.error(f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory.")
         fallback_url = "sqlite+aiosqlite:///:memory:"
         _engine_instance = create_async_engine(
             fallback_url,

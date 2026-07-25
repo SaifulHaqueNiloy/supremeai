@@ -94,9 +94,7 @@ class TestSessionTakeover:
         mock_request.state.user = {"sub": "admin-user", "role": "admin"}
 
         mock_redis = MagicMock()
-        mock_redis.get = AsyncMock(
-            return_value=b'{"admin": "admin-user", "started_at": 1000}'
-        )
+        mock_redis.get = AsyncMock(return_value=b'{"admin": "admin-user", "started_at": 1000}')
 
         with patch(
             "api.routes.session_takeover._redis_client",

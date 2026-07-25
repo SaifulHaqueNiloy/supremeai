@@ -115,9 +115,7 @@ class TaskQueue:
         self._worker_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
-        logger.info(
-            f"[TaskQueue] Initialized with backend={default_backend.value}, max_tracked={max_tracked_tasks}"
-        )
+        logger.info(f"[TaskQueue] Initialized with backend={default_backend.value}, max_tracked={max_tracked_tasks}")
 
     @functools.cached_property
     def _is_celery_available(self) -> bool:
@@ -242,9 +240,7 @@ class TaskQueue:
                 await self._submit_to_asyncio(func, task_id, args, kwargs)
                 selected_backend = QueueBackend.ASYNCIO
 
-            logger.debug(
-                f"[TaskQueue] Task {task_id} submitted via {selected_backend.value}"
-            )
+            logger.debug(f"[TaskQueue] Task {task_id} submitted via {selected_backend.value}")
             return task_id
 
         except asyncio.CancelledError:
@@ -264,9 +260,7 @@ class TaskQueue:
                 self._completion_events[task_id].set()
             raise
 
-    async def get_result(
-        self, task_id: str, timeout: float | None = None
-    ) -> TaskResult:
+    async def get_result(self, task_id: str, timeout: float | None = None) -> TaskResult:
         """
         বাংলা মন্তব্য: Anti-Polling result retrieval।
         আগের ভাঙা কোড: while True: await asyncio.sleep(0.1)
@@ -304,16 +298,12 @@ class TaskQueue:
         if event:
             event.set()
 
-    async def _execute_task(
-        self, func: Callable, task_id: str, args: tuple, kwargs: dict
-    ) -> None:
+    async def _execute_task(self, func: Callable, task_id: str, args: tuple, kwargs: dict) -> None:
         """বাংলা মন্তব্য: Task execution — result storage এবং event notification।"""
         async with self._lock:
             result_obj = self._results.get(task_id)
             if not result_obj:
-                logger.error(
-                    f"[TaskQueue] Task {task_id} result object missing before execution."
-                )
+                logger.error(f"[TaskQueue] Task {task_id} result object missing before execution.")
                 return
 
             result_obj.status = "processing"
@@ -354,9 +344,7 @@ class TaskQueue:
             async with self._lock:
                 await self._mark_complete(task_id)
 
-    async def _submit_to_asyncio(
-        self, func: Callable, task_id: str, args: tuple, kwargs: dict
-    ) -> None:
+    async def _submit_to_asyncio(self, func: Callable, task_id: str, args: tuple, kwargs: dict) -> None:
         """বাংলা মন্তব্য: Local asyncio queue-এ submit এবং worker ensure।"""
         await self.local_queue.put((func, task_id, args, kwargs))
         if self._worker_task is None or self._worker_task.done():
@@ -374,9 +362,7 @@ class TaskQueue:
         while not self._shutdown_event.is_set():
             try:
                 # বাংলা মন্তব্য: timeout দিয়ে wait — shutdown signal check করা যাবে
-                func, task_id, args, kwargs = await asyncio.wait_for(
-                    self.local_queue.get(), timeout=1.0
-                )
+                func, task_id, args, kwargs = await asyncio.wait_for(self.local_queue.get(), timeout=1.0)
                 try:
                     await self._execute_task(func, task_id, args, kwargs)
                 finally:
@@ -387,9 +373,7 @@ class TaskQueue:
                 continue
             except asyncio.CancelledError:
                 # বাংলা মন্তব্য: CancelledError = graceful shutdown signal
-                logger.info(
-                    "[TaskQueue] AsyncIO worker received cancellation. Shutting down."
-                )
+                logger.info("[TaskQueue] AsyncIO worker received cancellation. Shutting down.")
                 raise  # re-raise — কখনো suppress করা যাবে না
             except Exception as exc:  # noqa: BLE001
                 # বাংলা মন্তব্য: worker crash — log করা এবং continue
@@ -451,9 +435,7 @@ class TaskQueue:
             "timestamp": time.time(),
         }
         payload = json.dumps(message_data).encode("utf-8")
-        future = publisher.publish(
-            topic_path, payload, priority=str(priority.value), task_id=task_id
-        )
+        future = publisher.publish(topic_path, payload, priority=str(priority.value), task_id=task_id)
         # বাংলা মন্তব্য: blocking future.result() → thread pool offload
         message_id = await asyncio.to_thread(future.result, 30)
         logger.debug(f"[TaskQueue] Pub/Sub message {message_id} for task {task_id}")
@@ -472,9 +454,7 @@ class TaskQueue:
         from celery import Celery  # lazy import
 
         if TaskQueue._celery_app_instance is None:
-            TaskQueue._celery_app_instance = Celery(
-                "supremeai_tasks", broker=self.redis_url, backend=self.redis_url
-            )
+            TaskQueue._celery_app_instance = Celery("supremeai_tasks", broker=self.redis_url, backend=self.redis_url)
 
         # বাংলা মন্তব্য: Celery send_task — function reference safe
         await asyncio.to_thread(

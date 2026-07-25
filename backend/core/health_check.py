@@ -15,7 +15,6 @@ Critical Security Note: সমস্ত হেল্থ চেক এখন এ�
 import asyncio
 import time
 from enum import Enum
-from typing import Dict, List, Optional
 
 from loguru import logger
 
@@ -39,15 +38,15 @@ class HealthCheckResult:
         self,
         status: HealthStatus,
         message: str,
-        details: Optional[Dict] = None,
-        response_time_ms: Optional[float] = None,
+        details: dict | None = None,
+        response_time_ms: float | None = None,
     ):
         self.status = status
         self.message = message
         self.details = details or {}
         self.response_time_ms = response_time_ms
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert result to dictionary."""
         return {
             "status": self.status.value,
@@ -62,7 +61,7 @@ class ComprehensiveHealthChecker:
     """Comprehensive health checker for the entire system and subsystems."""
 
     def __init__(self):
-        self.checks: List[str] = [
+        self.checks: list[str] = [
             "application",
             "redis",
             "database",
@@ -303,7 +302,7 @@ class ComprehensiveHealthChecker:
                 details={"error": str(e)},
             )
 
-    async def check_all(self) -> Dict:
+    async def check_all(self) -> dict:
         """Perform comprehensive health check of all systems."""
         start_time = time.time()
 
@@ -332,7 +331,7 @@ class ComprehensiveHealthChecker:
         ]
 
         for i, result in enumerate(results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 # Handle exception during check
                 checks[check_names[i]] = HealthCheckResult(
                     status=HealthStatus.UNHEALTHY,
@@ -344,15 +343,9 @@ class ComprehensiveHealthChecker:
                 checks[check_names[i]] = result.to_dict()
 
                 # Update overall status based on individual check
-                if (
-                    result.status == HealthStatus.UNHEALTHY
-                    and overall_status != HealthStatus.UNHEALTHY
-                ):
+                if result.status == HealthStatus.UNHEALTHY and overall_status != HealthStatus.UNHEALTHY:
                     overall_status = HealthStatus.UNHEALTHY
-                elif (
-                    result.status == HealthStatus.DEGRADED
-                    and overall_status == HealthStatus.HEALTHY
-                ):
+                elif result.status == HealthStatus.DEGRADED and overall_status == HealthStatus.HEALTHY:
                     overall_status = HealthStatus.DEGRADED
 
         total_response_time = (time.time() - start_time) * 1000
@@ -364,18 +357,10 @@ class ComprehensiveHealthChecker:
             "checks": checks,
             "summary": {
                 "total_checks": len(checks),
-                "healthy": sum(
-                    1 for check in checks.values() if check["status"] == "healthy"
-                ),
-                "degraded": sum(
-                    1 for check in checks.values() if check["status"] == "degraded"
-                ),
-                "unhealthy": sum(
-                    1 for check in checks.values() if check["status"] == "unhealthy"
-                ),
-                "unknown": sum(
-                    1 for check in checks.values() if check["status"] == "unknown"
-                ),
+                "healthy": sum(1 for check in checks.values() if check["status"] == "healthy"),
+                "degraded": sum(1 for check in checks.values() if check["status"] == "degraded"),
+                "unhealthy": sum(1 for check in checks.values() if check["status"] == "unhealthy"),
+                "unknown": sum(1 for check in checks.values() if check["status"] == "unknown"),
             },
         }
 

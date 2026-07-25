@@ -119,9 +119,7 @@ async def init_db_pool(dsn: str) -> PgBouncerConnectionPool:
         return _db_pool_instance
 
 
-async def get_db_pool_with_retry(
-    max_retries: int = 3, initial_delay: float = 1.0
-) -> PgBouncerConnectionPool:
+async def get_db_pool_with_retry(max_retries: int = 3, initial_delay: float = 1.0) -> PgBouncerConnectionPool:
     """ডাটাবেস কানেকশন পুল প্রারম্ভে এক্সপোনেনশিয়াল ব্যাক-অফ রিট্রাই। (Bangla: DB Pool Retry)"""
     for attempt in range(1, max_retries + 1):
         try:
@@ -131,9 +129,7 @@ async def get_db_pool_with_retry(
                 logger.error(f"❌ [DB Pool] Max connection retries reached: {e}")
                 raise e
             delay = initial_delay * (2 ** (attempt - 1))
-            logger.warning(
-                f"⚠️ [DB Pool] Connection attempt {attempt} failed. Retrying in {delay}s..."
-            )
+            logger.warning(f"⚠️ [DB Pool] Connection attempt {attempt} failed. Retrying in {delay}s...")
             await asyncio.sleep(delay)
     raise RuntimeError("Failed to acquire DB pool after retries.")
 

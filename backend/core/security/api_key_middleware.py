@@ -36,9 +36,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         self.limiter = AsyncRateLimiter()
         self.prefix = API_KEY_PREFIX
         # Add circuit breaker for database operations
-        self.db_circuit_breaker = CircuitBreaker(
-            name="api_key_db_lookup", failure_threshold=3, recovery_timeout=30
-        )
+        self.db_circuit_breaker = CircuitBreaker(name="api_key_db_lookup", failure_threshold=3, recovery_timeout=30)
 
     async def _get_cached_api_key(self, key_hash: str) -> dict | None:
         """Fetch API key row from Redis cache or PostgreSQL with caching."""
@@ -55,23 +53,17 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         # Use circuit breaker for database operations
         try:
             # Execute database call through circuit breaker
-            row = await self.db_circuit_breaker.acall(
-                self._fetch_api_key_from_db, key_hash
-            )
+            row = await self.db_circuit_breaker.acall(self._fetch_api_key_from_db, key_hash)
             if row:
                 try:
                     import json as _json
 
-                    await redis_manager.set_cache(
-                        cache_key, _json.dumps(dict(row)), ex_seconds=300
-                    )
+                    await redis_manager.set_cache(cache_key, _json.dumps(dict(row)), ex_seconds=300)
                 except Exception as exc:  # noqa: BLE001
                     logger.warning(f"Redis cache write failed for API key: {exc}")
                 return dict(row)
         except Exception as exc:  # noqa: BLE001
-            logger.error(
-                f"Database operation failed for API key {mask_api_key(key_hash)}: {exc}"
-            )
+            logger.error(f"Database operation failed for API key {mask_api_key(key_hash)}: {exc}")
             # Return None to indicate failure, but we'll handle it gracefully
             pass
 
@@ -108,20 +100,14 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         key_hash = hash_api_key(api_key_header)
         row = await self._get_cached_api_key(key_hash)
         if row is None:
-            logger.warning(
-                f"Invalid API key attempt or DB unavailable: {mask_api_key(api_key_header)}"
-            )
+            logger.warning(f"Invalid API key attempt or DB unavailable: {mask_api_key(api_key_header)}")
             return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
         if row["revoked"]:
             logger.warning(f"Revoked API key used: {row['id']}")
-            return JSONResponse(
-                status_code=403, content={"detail": "API key has been revoked"}
-            )
+            return JSONResponse(status_code=403, content={"detail": "API key has been revoked"})
         if row["expires_at"] and row["expires_at"] < int(time.time()):
             logger.warning(f"Expired API key used: {row['id']}")
-            return JSONResponse(
-                status_code=403, content={"detail": "API key has expired"}
-            )
+            return JSONResponse(status_code=403, content={"detail": "API key has expired"})
 
         rps = int(row.get("rate_limit_rps") or 6)
         key_prefix = api_key_header[:12]
@@ -130,15 +116,11 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             is_allowed = await self.limiter.acquire(key_prefix, limit=rps, window=60)
         except RuntimeError as exc:
             logger.critical(f"Rate limiter failed: {exc}")
-            return JSONResponse(
-                status_code=503, content={"detail": "Rate limiting service unavailable"}
-            )
+            return JSONResponse(status_code=503, content={"detail": "Rate limiting service unavailable"})
 
         if not is_allowed:
             logger.warning(f"Rate limit hit for API key: {row['id']}")
-            return JSONResponse(
-                status_code=429, content={"detail": "API key rate limit exceeded"}
-            )
+            return JSONResponse(status_code=429, content={"detail": "API key rate limit exceeded"})
 
         request.state.api_key = {
             "id": row["id"],
@@ -155,9 +137,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                 ip_address=str(request.client.host) if request.client else None,
             )
         except Exception:  # noqa: BLE001
-            logger.opt(exception=True).warning(
-                f"Failed to record API key usage for {row['id']}"
-            )
+            logger.opt(exception=True).warning(f"Failed to record API key usage for {row['id']}")
 
         logger.info(f"API key authenticated: {request.state.api_key['masked']}")
         return await call_next(request)

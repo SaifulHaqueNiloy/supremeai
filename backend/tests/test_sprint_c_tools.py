@@ -21,9 +21,7 @@ class TestBrowserAgent:
 
         agent = BrowserAgent()
         with patch("tools.browser_agent.is_safe_url", return_value=True):
-            with patch(
-                "tools.browser_agent.get_global_browser", new_callable=AsyncMock
-            ) as mock_browser:
+            with patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock) as mock_browser:
                 mock_browser.return_value = None
                 with patch("httpx.get") as mock_get:
                     mock_resp = MagicMock()
@@ -42,16 +40,10 @@ class TestBrowserAgent:
 
         agent = BrowserAgent()
         with patch("tools.browser_agent.is_safe_url", return_value=True):
-            with patch(
-                "tools.browser_agent.get_global_browser", new_callable=AsyncMock
-            ) as mock_browser:
+            with patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock) as mock_browser:
                 mock_browser.return_value = None
-                with patch(
-                    "httpx.get", side_effect=httpx.RequestError("Connection refused")
-                ):
-                    result = await agent.navigate_and_interact(
-                        "https://invalid-url.xyz"
-                    )
+                with patch("httpx.get", side_effect=httpx.RequestError("Connection refused")):
+                    result = await agent.navigate_and_interact("https://invalid-url.xyz")
                 assert result["success"] is False
                 assert "error" in result
 
@@ -67,13 +59,9 @@ class TestVoiceCoder:
         coder = VoiceCoder()
         with patch("brain.model_router.ModelRouter") as mock_router_cls:
             mock_router = AsyncMock()
-            mock_router.async_route_and_generate.return_value = {
-                "text": "def hello(): pass"
-            }
+            mock_router.async_route_and_generate.return_value = {"text": "def hello(): pass"}
             mock_router_cls.return_value = mock_router
-            result = await coder._generate_code_from_instruction(
-                "generate a hello function"
-            )
+            result = await coder._generate_code_from_instruction("generate a hello function")
         assert "hello" in result or "def" in result or "#" in result
 
     @pytest.mark.anyio
@@ -81,13 +69,9 @@ class TestVoiceCoder:
         from tools.code.voice_coder import VoiceCoder
 
         coder = VoiceCoder()
-        with patch.object(
-            coder, "_generate_code_from_instruction", new_callable=AsyncMock
-        ) as mock_gen:
+        with patch.object(coder, "_generate_code_from_instruction", new_callable=AsyncMock) as mock_gen:
             mock_gen.return_value = "def hello(): pass"
-            action, code = await coder._classify_and_execute(
-                "generate a hello function"
-            )
+            action, code = await coder._classify_and_execute("generate a hello function")
         assert action == "generate_code"
         assert "def hello" in code
 
@@ -98,9 +82,7 @@ class TestVoiceCoder:
         coder = VoiceCoder()
         with patch.object(coder, "_explain", new_callable=AsyncMock) as mock_exp:
             mock_exp.return_value = "This is a variable"
-            action, result = await coder._classify_and_execute(
-                "explain what is a variable"
-            )
+            action, result = await coder._classify_and_execute("explain what is a variable")
         assert action == "explanation"
 
 

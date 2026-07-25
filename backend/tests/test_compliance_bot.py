@@ -240,9 +240,7 @@ class TestGDPRChecker:
         """Test right to deletion check detects pending requests."""
         mock_doc = MagicMock()
         mock_doc.to_dict.return_value = {"user_id": "user123", "status": "pending"}
-        mock_firestore.collection.return_value.where.return_value.where.return_value.stream.return_value = [
-            mock_doc
-        ]
+        mock_firestore.collection.return_value.where.return_value.where.return_value.stream.return_value = [mock_doc]
 
         result = gdpr_checker.check_right_to_deletion("user123")
 
@@ -379,9 +377,7 @@ class TestConsentManager:
         }
         mock_firestore.collection.return_value.document.return_value.get.return_value = mock_doc
 
-        result = consent_manager.withdraw_consent(
-            "user123", ConsentType.DATA_PROCESSING
-        )
+        result = consent_manager.withdraw_consent("user123", ConsentType.DATA_PROCESSING)
 
         assert result is not None
         assert result.granted is False
@@ -393,9 +389,7 @@ class TestConsentManager:
         mock_doc.exists = False
         mock_firestore.collection.return_value.document.return_value.get.return_value = mock_doc
 
-        result = consent_manager.withdraw_consent(
-            "user123", ConsentType.DATA_PROCESSING
-        )
+        result = consent_manager.withdraw_consent("user123", ConsentType.DATA_PROCESSING)
 
         assert result is None
 
@@ -462,29 +456,17 @@ class TestComplianceBot:
         """Test full compliance check returns a valid report."""
         with (
             patch.object(compliance_bot.gdpr, "check_lawful_basis", return_value=None),
-            patch.object(
-                compliance_bot.gdpr, "check_data_minimization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.gdpr, "check_right_to_deletion", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_data_localization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_content_moderation", return_value=None
-            ),
+            patch.object(compliance_bot.gdpr, "check_data_minimization", return_value=None),
+            patch.object(compliance_bot.gdpr, "check_right_to_deletion", return_value=None),
+            patch.object(compliance_bot.dsa, "check_data_localization", return_value=None),
+            patch.object(compliance_bot.dsa, "check_content_moderation", return_value=None),
             patch.object(
                 compliance_bot.dsa,
                 "check_lawful_interception_readiness",
                 return_value=None,
             ),
-            patch.object(
-                compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None
-            ),
-            patch.object(
-                compliance_bot.consent_mgr, "get_consent_status", return_value={}
-            ),
+            patch.object(compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None),
+            patch.object(compliance_bot.consent_mgr, "get_consent_status", return_value={}),
         ):
             report = compliance_bot.run_compliance_check(
                 user_id="user123",
@@ -511,29 +493,17 @@ class TestComplianceBot:
                     description="No consent",
                 ),
             ),
-            patch.object(
-                compliance_bot.gdpr, "check_data_minimization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.gdpr, "check_right_to_deletion", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_data_localization", return_value=None
-            ),
-            patch.object(
-                compliance_bot.dsa, "check_content_moderation", return_value=None
-            ),
+            patch.object(compliance_bot.gdpr, "check_data_minimization", return_value=None),
+            patch.object(compliance_bot.gdpr, "check_right_to_deletion", return_value=None),
+            patch.object(compliance_bot.dsa, "check_data_localization", return_value=None),
+            patch.object(compliance_bot.dsa, "check_content_moderation", return_value=None),
             patch.object(
                 compliance_bot.dsa,
                 "check_lawful_interception_readiness",
                 return_value=None,
             ),
-            patch.object(
-                compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None
-            ),
-            patch.object(
-                compliance_bot.consent_mgr, "get_consent_status", return_value={}
-            ),
+            patch.object(compliance_bot.dsa, "check_cybersecurity_reporting", return_value=None),
+            patch.object(compliance_bot.consent_mgr, "get_consent_status", return_value={}),
         ):
             report = compliance_bot.run_compliance_check(
                 user_id="user123",
