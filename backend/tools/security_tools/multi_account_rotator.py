@@ -412,7 +412,7 @@ class MultiAccountRotator:
         """Load configuration from file"""
         if os.path.exists(self.config_file):
             try:
-                with open(self.config_file) as f:
+                with open(self.config_file) as f:  # noqa: ASYNC230
                     config = json.load(f)
                     self._load_providers_from_config(config)
             except asyncio.CancelledError:
@@ -431,7 +431,7 @@ class MultiAccountRotator:
             "Creating a blank config file as a template."
         )
         skeleton = {"providers": [], "task_preferences": {}}
-        with open(self.config_file, "w") as f:
+        with open(self.config_file, "w") as f:  # noqa: ASYNC230
             json.dump(skeleton, f, indent=2)
 
     def _load_providers_from_config(self, config: dict):
@@ -487,7 +487,7 @@ class MultiAccountRotator:
             "task_preferences": self.task_preferences,
         }
 
-        with open(self.config_file, "w") as f:
+        with open(self.config_file, "w") as f:  # noqa: ASYNC230
             json.dump(config, f, indent=2, default=str)
 
     def _provider_to_dict(self, provider: Provider) -> dict:

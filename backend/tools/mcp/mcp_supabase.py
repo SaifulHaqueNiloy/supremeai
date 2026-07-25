@@ -1,3 +1,4 @@
+from loguru import logger
 #!/usr/bin/env python3
 """
 MCP Server for Supabase/Postgres Database Integration in SupremeAI 2.0.
@@ -92,9 +93,7 @@ def _get_connection():
 
             loguru.logger.error(f"Tool execution error: {e}")
         except Exception as e:  # noqa: BLE001
-            import logging
-
-            logging.warning(f"Exception suppressed: {e}")
+            logger.warning(f"Exception suppressed: {e}")
         return None
 
 
@@ -224,9 +223,7 @@ async def supabase_execute_sql(params: ExecuteQueryInput) -> str:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 pass
 
 
@@ -306,9 +303,7 @@ async def supabase_create_table(params: CreateTableInput) -> str:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 pass
 
 
@@ -414,9 +409,7 @@ async def supabase_run_migration(params: MigrationInput) -> str:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 pass
 
 
@@ -482,9 +475,7 @@ async def supabase_list_tables() -> str:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 pass
 
 

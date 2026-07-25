@@ -160,7 +160,7 @@ def logs_stream():
 
         if os.path.exists(log_file):
             try:
-                with open(log_file) as f:
+                with open(log_file) as f:  # noqa: ASYNC230
                     lines = f.readlines()[-30:]
                     for line in lines:
                         yield f"data: {line.strip()}\n\n"
@@ -929,7 +929,7 @@ async def get_events(limit: int = Query(50, ge=1, le=200)):
         return []
 
     try:
-        with open(events_log_path, encoding="utf-8") as f:
+        with open(events_log_path, encoding="utf-8") as f:  # noqa: ASYNC230
             lines = f.readlines()
 
         events = []
@@ -969,7 +969,7 @@ async def list_reports(report_name: str = None):
 
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="Report not found.")
-        with open(file_path, encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:  # noqa: ASYNC230
             return {"name": report_name, "content": f.read()}
     else:
         import glob

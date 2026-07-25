@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from loguru import logger
+
 import os
 
 import pytest
@@ -17,9 +19,7 @@ def test_app() -> FastAPI:
     try:
         base_app.include_router(voice_router, prefix="/api/voice")
     except ValueError:
-        import logging
-
-        logging.warning("Router already added in test_voice_stream")
+        logger.warning("Router already added in test_voice_stream")
     return base_app
 
 

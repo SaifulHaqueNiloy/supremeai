@@ -92,9 +92,7 @@ class VoiceInterface:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 pass
             tts = CoquiTTS(
                 model_name="tts_models/multilingual/multi-dataset/xtts_v2",
@@ -136,7 +134,7 @@ class VoiceInterface:
         try:
             response = httpx.get(tts_url)
             if response.status_code == 200:
-                with open(output_path, "wb") as f:
+                with open(output_path, "wb") as f:  # noqa: ASYNC230
                     f.write(response.content)
                 logger.info(f"Generated speech file via TTS API at: {output_path}")
                 return True

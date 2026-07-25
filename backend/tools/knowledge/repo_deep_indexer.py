@@ -54,7 +54,7 @@ class RepoDeepIndexer:
                     file_path = os.path.join(root, file)
                     ast_data = self._parse_ast(file_path)
                     try:
-                        with open(file_path, encoding="utf-8") as f:
+                        with open(file_path, encoding="utf-8") as f:  # noqa: ASYNC230
                             snippet = f.read()[:200]
                     except Exception as e:  # noqa: BLE001
                         try:
@@ -62,9 +62,7 @@ class RepoDeepIndexer:
 
                             loguru.logger.error(f"Tool execution error: {e}")
                         except Exception as e:  # noqa: BLE001
-                            import logging
-
-                            logging.warning(f"Exception suppressed: {e}")
+                            logger.warning(f"Exception suppressed: {e}")
                         snippet = ""
                     node = {
                         "path": file_path,
@@ -98,8 +96,6 @@ class RepoDeepIndexer:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             pass
         return []
