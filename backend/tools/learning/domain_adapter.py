@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any
+from typing import ClassVar, Any
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ class DomainAdapter:
     Closes Gap #28
     """
 
-    DOMAINS = {
+    DOMAINS: ClassVar[Any] = {
         "legal": {
             "system_prompt": (
                 "You are a legal analyst assistant. Analyze documents for risk, compliance, and clarity. "
