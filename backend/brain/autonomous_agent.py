@@ -6,6 +6,8 @@ from typing import Any
 
 from loguru import logger
 
+from core.performance_enhancer import get_performance_optimizer
+
 
 @dataclass
 class StepResult:
@@ -25,6 +27,9 @@ class AutonomousAgent:
             self.skill_creator = AutoSkillCreator()
         except Exception:  # noqa: BLE001
             self.skill_creator = None  # type: ignore
+
+        # Add performance optimizer
+        self.performance_optimizer = get_performance_optimizer()
 
     def plan(self, task_description: str) -> dict[str, Any]:
         lowered = (task_description or "").lower()
@@ -59,6 +64,12 @@ class AutonomousAgent:
     def execute(self, task_description: str, context: str | None = None) -> dict[str, Any]:
         plan = self.plan(task_description)
         results: list[StepResult] = []
+
+        # Track execution performance
+        import time
+
+        start_time = time.time()
+
         for step in plan["steps"]:
             try:
                 step_result = self._run_step(step, task_description, context)
@@ -73,6 +84,9 @@ class AutonomousAgent:
                     )
                 )
                 break
+
+        execution_time = time.time() - start_time
+
         self.history.append(
             {
                 "task": task_description,
@@ -90,8 +104,58 @@ class AutonomousAgent:
             }
         )
         success = all(result.success for result in results)
+
+        # Track performance metrics
+        import asyncio
+
+        # Run the async function in a thread-safe way
+        try:
+            asyncio.get_running_loop()
+            # If we're in an event loop, schedule the coroutine
+            asyncio.ensure_future(self.performance_optimizer.track_performance(f"agent_{self.name}_execution", execution_time, success=success))
+        except RuntimeError:
+            # If no event loop is running, run it directly
+            asyncio.run(self.performance_optimizer.track_performance(f"agent_{self.name}_execution", execution_time, success=success))
+
         outputs = [result.output for result in results if result.success and result.output is not None]
         errors = [result.error for result in results if result.error]
+
+        # Handle failures with self-healing
+        if not success:
+            try:
+                asyncio.get_running_loop()
+                # If we're in an event loop, schedule the coroutine
+                asyncio.ensure_future(
+                    self.performance_optimizer.handle_failure(
+                        error_type="AGENT_EXECUTION_ERROR",
+                        error_message=f"Agent {self.name} failed to complete task: {task_description}",
+                        context={
+                            "agent_name": self.name,
+                            "task_description": task_description,
+                            "context": context,
+                            "failed_step": results[-1].name if results else "unknown",
+                            "error": results[-1].error if results and results[-1].error else "unknown",
+                            "dependency_tree": ["autonomous_agent", self.name],
+                        },
+                    )
+                )
+            except RuntimeError:
+                # If no event loop is running, run it directly
+                asyncio.run(
+                    self.performance_optimizer.handle_failure(
+                        error_type="AGENT_EXECUTION_ERROR",
+                        error_message=f"Agent {self.name} failed to complete task: {task_description}",
+                        context={
+                            "agent_name": self.name,
+                            "task_description": task_description,
+                            "context": context,
+                            "failed_step": results[-1].name if results else "unknown",
+                            "error": results[-1].error if results and results[-1].error else "unknown",
+                            "dependency_tree": ["autonomous_agent", self.name],
+                        },
+                    )
+                )
+
         return {
             "success": success,
             "plan": plan,
