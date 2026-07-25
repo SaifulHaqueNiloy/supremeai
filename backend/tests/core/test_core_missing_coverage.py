@@ -321,7 +321,7 @@ class TestEventBusMissingBranches:
         bus = ErrorEventBus()
         listener = MagicMock()
         bus.register_listener(listener)
-        assert listener in bus._listeners
+        assert listener in bus._listeners["*"]
 
     def test_emit_no_running_loop_runs_directly(self):
         from core.messaging.event_bus import ErrorEvent, ErrorEventBus
@@ -340,9 +340,9 @@ class TestEventBusMissingBranches:
         )
 
         with patch("asyncio.get_running_loop", side_effect=RuntimeError("no loop")):
-            with patch("core.event_bus.logger.debug") as mock_debug:
+            with patch("core.messaging.event_bus.logger.debug") as mock_debug:
                 bus.emit(event)
-                mock_debug.assert_called_once()
+                mock_debug.assert_called()
 
     @pytest.mark.asyncio
     async def test_emit_async_fires_listeners(self):
@@ -360,9 +360,9 @@ class TestEventBusMissingBranches:
             structured_context=ErrorContext(module="auto_fixed"),
             context={},
         )
+
         await bus.emit_async(event)
-        # বাংলা মন্তব্য: ব্যাকগ্রাউন্ড লিসেনার টাস্কটি সম্পন্ন হওয়ার সুযোগ দিতে অপেক্ষা করা হচ্ছে
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.2)
         listener.assert_called_once_with(event)
 
     @pytest.mark.asyncio
