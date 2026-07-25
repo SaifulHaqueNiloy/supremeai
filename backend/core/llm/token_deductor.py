@@ -39,14 +39,22 @@ class TokenDeductor:
                 "byoc_deployment_fee_usd": 0.05,
             }
 
-    async def _acquire_distributed_lock(self, lock_key: str, lock_value: str, ttl: int = 10) -> bool:
+    def _acquire_distributed_lock(
+        self, lock_key: str, lock_value: str, ttl: int = 10
+    ) -> bool:
         """
         Acquires a distributed lock using Upstash Redis SET.
         Raises RuntimeError if Redis unavailable in production (Fail-Closed).
         """
         if not redis_queue.configured:
-            if settings.env in {"production", "staging"}:
-                raise RuntimeError("Redis unavailable in production - cannot guarantee idempotency. Fail-Closed.")
+            # Fail-Closed: Redis unavailable in production means potential double-spending
+            from core.config import settings as _settings
+
+            if _settings.env in {"production", "staging"}:
+                raise RuntimeError(
+                    "Redis unavailable in production/staging - cannot guarantee idempotency. "
+                    "Double-spending risk detected. Fail-Closed."
+                )
             logger.warning("Redis lock not configured - proceeding in test mode only")
             return True
 
@@ -95,7 +103,9 @@ class TokenDeductor:
         # Poll lock acquisition to avoid blocking
         acquired = False
         for _ in range(20):
-            acquired_lock = await asyncio.to_thread(self._acquire_distributed_lock, lock_key, lock_value, 5)
+            acquired_lock = await asyncio.to_thread(
+                self._acquire_distributed_lock, lock_key, lock_value, 5
+            )
             if acquired_lock:
                 acquired = True
                 break
@@ -106,22 +116,37 @@ class TokenDeductor:
             return False
 
             # Calculate rates accurately using Decimal for strict precision (no floating-point loss)
-            rates = self.config.get("token_rates_usd_per_1k", {"input": 0.0015, "output": 0.0020})
+            rates = self.config.get(
+                "token_rates_usd_per_1k", {"input": 0.0015, "output": 0.0020}
+            )
             input_rate = Decimal(str(rates["input"]))
             output_rate = Decimal(str(rates["output"]))
-            cost = (Decimal(input_tokens) / Decimal(1000) * input_rate) + (Decimal(output_tokens) / Decimal(1000) * output_rate)
-            cost = cost.quantize(Decimal("0.000001"))  # 6 decimal places for USD precision
+            cost = (Decimal(input_tokens) / Decimal(1000) * input_rate) + (
+                Decimal(output_tokens) / Decimal(1000) * output_rate
+            )
+            cost = cost.quantize(
+                Decimal("0.000001")
+            )  # 6 decimal places for USD precision
 
-            # Generate unique lock value to prevent lock hijacking
-            lock_value = f"{user_id}_{asyncio.get_event_loop().time()}_{hash(str(cost))}"
-            lock_key = f"token_lock:{user_id}:{lock_value}"
+            # Atomic Transaction Block
+            async with session.begin():
+                # বাংলা কমেন্ট: .with_for_update() ব্যবহার করে ডাটাবেসের নির্দিষ্ট রো-টি লক করা হচ্ছে (Zero-Gap Concurrency)
+                result = await session.execute(
+                    select(UserWallet)
+                    .where(UserWallet.user_id == user_id)
+                    .with_for_update()
+                )
+                wallet = result.scalars().first()
 
             # Acquire distributed lock
             lock_acquired = await self._acquire_distributed_lock(lock_key, lock_value, self.lock_ttl)
 
-            if not lock_acquired:
-                logger.warning(f"Could not acquire token deduction lock for user {user_id}")
-                return False
+                total_available = wallet.balance_usd + wallet.monthly_allowance_usd
+                if total_available < cost:
+                    logger.warning(
+                        f"Insufficient funds for user {user_id}: required {cost}, available {total_available}"
+                    )
+                    return False
 
             try:
                 # Atomic Transaction Block
@@ -147,32 +172,22 @@ class TokenDeductor:
                         wallet.monthly_allowance_usd = Decimal("0.000000")
                         wallet.balance_usd -= remaining
 
-                    # Record in Ledger
-                    tx_id = str(uuid.uuid4())
-                    entry = TransactionLedgerEntry(
-                        transaction_id=tx_id,
-                        user_id=user_id,
-                        amount_usd=-cost,
-                        transaction_type="token_usage",
-                        description=f"Consumed {input_tokens}i/{output_tokens}o tokens on model: {model_name}",
-                    )
-                    session.add(entry)
+        except StaleDataError:
+            logger.critical(
+                f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}"
+            )
+            return False
+        except Exception:  # noqa: BLE001
+            logger.exception(f"Transaction failed for {user_id}")
+            return False
+        finally:
+            await asyncio.to_thread(
+                self._release_distributed_lock, lock_key, lock_value
+            )
 
-                logger.success(f"Deducted ${cost} from user {user_id} for token usage.")
-                return True
-
-            except StaleDataError:
-                logger.critical(f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}")
-                return False
-            except Exception as e:  # noqa: BLE001
-                logger.exception(f"Transaction failed for {user_id}: {str(e)}")
-                return False
-            finally:
-                await self._release_distributed_lock(lock_key, lock_value)
-
-        return False
-
-    async def deduct_byoc_deployment(self, session: AsyncSession, user_id: str, skill_name: str) -> bool:
+    async def deduct_byoc_deployment(
+        self, session: AsyncSession, user_id: str, skill_name: str
+    ) -> bool:
         """
         Deducts credit for spinning up BYOC Cloud Run services.
         """
@@ -181,7 +196,9 @@ class TokenDeductor:
 
         acquired = False
         for _ in range(20):
-            acquired_lock = await asyncio.to_thread(self._acquire_distributed_lock, lock_key, lock_value, 5)
+            acquired_lock = await asyncio.to_thread(
+                self._acquire_distributed_lock, lock_key, lock_value, 5
+            )
             if acquired_lock:
                 acquired = True
                 break
@@ -197,7 +214,11 @@ class TokenDeductor:
 
             async with session.begin():
                 # বাংলা কমেন্ট: .with_for_update() ব্যবহার করে ডাটাবেসের নির্দিষ্ট রো-টি লক করা হচ্ছে (Zero-Gap Concurrency)
-                result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id).with_for_update())
+                result = await session.execute(
+                    select(UserWallet)
+                    .where(UserWallet.user_id == user_id)
+                    .with_for_update()
+                )
                 wallet = result.scalars().first()
 
                 if not wallet:
@@ -228,10 +249,14 @@ class TokenDeductor:
             return True
 
         except StaleDataError:
-            logger.critical(f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}")
+            logger.critical(
+                f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}"
+            )
             return False
         except Exception:  # noqa: BLE001
             logger.exception(f"Transaction failed for {user_id}")
             return False
         finally:
-            await asyncio.to_thread(self._release_distributed_lock, lock_key, lock_value)
+            await asyncio.to_thread(
+                self._release_distributed_lock, lock_key, lock_value
+            )
