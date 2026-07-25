@@ -245,15 +245,46 @@ class ASTSecurityVisitor(ast.NodeVisitor):
                 raise SecuritySandboxError(f"Banned import detected: {node.module}")
         self.generic_visit(node)
 
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        """Block sandbox escape via subscript access: __builtins__['exec'](), builtins['eval'](), and dunder chains."""
+        # Block builtins/__builtins__ subscript access
+        if isinstance(node.value, ast.Name) and node.value.id in {
+            "builtins",
+            "__builtins__",
+        }:
+            raise SecuritySandboxError(
+                "Sandbox escape via subscript blocked: builtins/__builtins__ access"
+            )
+        # Block chained dunder attribute access via subscript (e.g., obj.__class__.__bases__[0])
+        if isinstance(node.value, ast.Attribute):
+            if node.value.attr in self.banned_attributes:
+                raise SecuritySandboxError(
+                    f"Dunder attribute access via subscript blocked: {node.value.attr}"
+                )
+        self.generic_visit(node)
+
     def visit_Call(self, node: ast.Call):
         """Visit function calls and block dangerous patterns."""
         # Check if it's an attribute access call like obj.method()
         if isinstance(node.func, ast.Attribute):
-            attr_name = node.func.attr
-            if attr_name in self.banned_attributes:
-                raise SecuritySandboxError(f"Sandbox escape via attribute access blocked: {attr_name}")
-            if attr_name in self.banned_methods:
-                raise SecuritySandboxError(f"Banned method invocation detected: {attr_name}")
+            # Block getattr/hasattr/setattr/delattr - critical for RCE bypass
+            if node.func.attr in {"getattr", "hasattr", "setattr", "delattr"}:
+                raise SecuritySandboxError(
+                    f"Banned reflection function call detected: {node.func.attr}"
+                )
+            # Block dangerous module methods
+            if node.func.attr in {
+                "import_module",
+                "system",
+                "popen",
+                "spawn",
+                "fork",
+                "run",
+                "run_async",
+            }:
+                raise SecuritySandboxError(
+                    f"Banned method invocation detected: {node.func.attr}"
+                )
 
             # Block dangerous chain accesses like "".class.bases[0].subclasses()[...]
             if isinstance(node.func.value, ast.Attribute):
@@ -324,7 +355,9 @@ class ImmuneSystemScanner:
         try:
             tree = ast.parse(code)
             self.scanner.visit(tree)
-            logger.info("AST Static code scan passed successfully. Code is safe for execution.")
+            logger.info(
+                "AST Static code scan passed successfully. Code is safe for execution."
+            )
             return {"safe": True, "error": None}
         except SecuritySandboxError as sse:
             logger.critical(f"🚨 [IMMUNE SYSTEM] Security threat defused: {sse}")
@@ -337,7 +370,9 @@ class ImmuneSystemScanner:
             elif "Sandbox escape" in error_msg:
                 user_error = "Security validation failed: Banned attribute or dunder reflection access blocked."
             else:
-                user_error = "Security validation failed: Payload rejected by Immune System."
+                user_error = (
+                    "Security validation failed: Payload rejected by Immune System."
+                )
             return {"safe": False, "error": user_error}
 
         except SyntaxError as se:

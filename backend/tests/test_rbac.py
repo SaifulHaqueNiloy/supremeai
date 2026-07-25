@@ -4,14 +4,14 @@ from datetime import UTC
 import pytest
 
 from core.security.rbac import (
-    RoleBasedAccessControl,
-    UserContext,
-    Role,
     Permission,
     PermissionDeniedError,
+    Role,
+    RoleBasedAccessControl,
+    UserContext,
+    authorize,
     get_role_permissions,
     has_permission,
-    authorize,
 )
 
 
