@@ -45,7 +45,9 @@ async def get_all_usage(admin_user: dict = Depends(get_current_admin)):
 
 
 @router.post("/admin/set-quota/{userId}")
-async def admin_set_quota(userId: str, quota: int, admin_user: dict = Depends(get_current_admin)):
+async def admin_set_quota(
+    userId: str, quota: int, admin_user: dict = Depends(get_current_admin)
+):
     profile = await get_or_create_profile(userId)
     profile["installQuota"] = max(1, min(20, quota))
     await _save_profile(userId, profile)
