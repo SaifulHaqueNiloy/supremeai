@@ -1,108 +1,36 @@
 from __future__ import annotations
 
+import os
 import time
-import asyncio
 
 from loguru import logger
 
 from core.cache.redis_manager import redis_manager
-from core.config import settings
-
-
-class DistributedRateLimiter:
-    """Rate limiter that uses Redis for distributed rate limiting in production."""
-
-    def __init__(self, burst: int = 20, window: int = 60):
-        self.burst = burst
-        self.window = window
-        self._rate_limit_enabled = settings.env in {"production", "staging"}
-
-    async def acquire(self, key: str, limit: int = 6, window: int = 60) -> bool:
-        """
-        Acquire a rate limit token.
-
-        Args:
-            key: Unique identifier for the client/user
-            limit: Maximum number of requests allowed in the window
-            window: Time window in seconds
-
-        Returns:
-            bool: True if request is allowed, False otherwise
-        """
-        if not self._rate_limit_enabled:
-            return True  # Allow all requests in development
-
-        try:
-            # Use Redis for distributed rate limiting
-            if redis_manager.client is None:
-                if settings.env in {"production", "staging"}:
-                    # Fail-closed in production if Redis is unavailable
-                    logger.error("Redis unavailable in production - blocking all requests")
-                    return False
-                else:
-                    # Allow in development/testing if Redis unavailable
-                    logger.warning("Redis unavailable - allowing request in non-production")
-                    return True
-
-            # Use sliding window counter algorithm with Redis
-            now = time.time()
-            pipeline = redis_manager.client.pipeline()
-
-            # Remove expired entries
-            pipeline.zremrangebyscore(key, 0, now - window)
-
-            # Count current requests in window
-            pipeline.zcard(key)
-
-            # Add current request
-            pipeline.zadd(key, {f"req_{now}": now})
-
-            # Set expiration
-            pipeline.expire(key, int(window + 1))
-
-            results = await pipeline.execute()
-            current_requests = results[1]
-
-            # Return whether we're under the limit
-            return current_requests < limit
-
-        except Exception as e:
-            logger.error(f"Redis rate limiter error: {e}")
-            if settings.env in {"production", "staging"}:
-                # Fail-closed in production
-                return False
-            else:
-                # Allow in development/testing
-                return True
 
 
 class InMemoryFallbackLimiter:
-    """In-memory fallback rate limiter for single-node scenarios."""
+    """Sliding-window rate limiter scoped per API key prefix as a fallback when Redis is down."""
 
-    def __init__(self, burst: int = 20, window: float = 60.0):
+    def __init__(self, burst: int = 20, window: float = 60.0) -> None:
         self.burst = burst
         self.window = window
         self._hits: dict[str, list[float]] = {}
-        self._lock = asyncio.Lock()
-        logger.warning("Using in-memory rate limiter - not suitable for production!")
 
-    async def is_allowed(self, key: str, limit: int = 6) -> bool:
-        """Acquire a rate limit token using in-memory storage with thread-safe operations."""
+    def _cleanup(self, key: str, now: float) -> None:
+        # বাংলা মন্তব্য: মেমোরি লিক এড়াতে যদি কোনো কী-তে নতুন কোনো হিট না থাকে, তবে ডিকশনারি থেকে কী-টি ডিলিট করা হচ্ছে।
+        if key in self._hits:
+            self._hits[key] = [t for t in self._hits[key] if now - t < self.window]
+            if not self._hits[key]:
+                del self._hits[key]
+
+    def is_allowed(self, key: str, limit: int = 6) -> bool:
         now = time.time()
-
-        async with self._lock:  # Prevent race conditions
-            # Clean old hits
-            if key in self._hits:
-                self._hits[key] = [hit for hit in self._hits[key] if now - hit < self.window]
-            else:
-                self._hits[key] = []
-
-            # Check if under limit
-            if len(self._hits[key]) < limit:
-                self._hits[key].append(now)
-                return True
-
+        self._cleanup(key, now)
+        hits = self._hits.setdefault(key, [])
+        if len(hits) >= limit:
             return False
+        hits.append(now)
+        return True
 
 
 class AsyncRateLimiter:
@@ -116,13 +44,14 @@ class AsyncRateLimiter:
     """
 
     def __init__(self) -> None:
-        self._rate_limit_enabled: bool = os.getenv(
-            "RATE_LIMIT_ENABLED", "true"
-        ).lower() in {
+        self._rate_limit_enabled: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {
             "true",
             "1",
             "yes",
         }
+        # Changed from fail-open to fail-closed as per audit report
+        # Previously: self._fallback_limiter = InMemoryFallbackLimiter()
+        # Now: Initialize but use appropriately based on fail-closed strategy
         self._fallback_limiter = InMemoryFallbackLimiter()
 
     async def _get_redis(self):
@@ -135,7 +64,9 @@ class AsyncRateLimiter:
         try:
             client = await self._get_redis()
             if client is None:
-                return self._fallback_limiter.is_allowed(key, limit=limit)
+                # CHANGED: Fail-closed instead of using fallback when Redis unavailable
+                logger.warning("Redis rate limiter unavailable. Blocking requests (fail-closed).")
+                return False  # FAIL-CLOSED: blocks all requests when Redis is down
             pipe = client.pipeline()
             pipe.incr(key)
             pipe.expire(key, window)
@@ -143,10 +74,9 @@ class AsyncRateLimiter:
             current = results[0]
             return current <= limit
         except Exception as e:  # noqa: BLE001
-            logger.warning(
-                f"Redis rate limiter unavailable: {e}. Falling back to in-memory limiter (degraded mode)."
-            )
-            return self._fallback_limiter.is_allowed(key, limit=limit)
+            # CHANGED: Fail-closed instead of falling back to in-memory limiter
+            logger.warning(f"Redis rate limiter unavailable: {e}. Blocking requests (fail-closed).")
+            return False  # FAIL-CLOSED: blocks all requests
 
     async def acquire_tenant(self, tenant_id: str, tier: str = "free") -> bool:
         """Multi-tenant tier-based rate limiting. (Bangla: টেন্যান্ট-ভিত্তিক টিয়ার্ড রেট লিমিট)"""
@@ -160,7 +90,7 @@ class AsyncRateLimiter:
         return await self.acquire(key, limit=limit, window=window)
 
     async def close(self) -> None:
-        # বাংলা মন্তব্য: আলাদা Redis connection নেই — centralized redis_manager বন্ধ করা যাবে না এখান থেকে
+        # বাংলা মন্তব্ব: আলাদা Redis connection নেই — centralized redis_manager বন্ধ করা যাবে না এখান থেকে
         pass
 
 

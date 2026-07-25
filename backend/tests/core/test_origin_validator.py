@@ -46,9 +46,7 @@ class TestTrustedOriginMiddleware:
     async def test_options_preflight_allowed_origin(self):
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(
-            method="OPTIONS", origin="https://supremeai-admin.web.app"
-        )
+        request = self._make_request(method="OPTIONS", origin="https://supremeai-admin.web.app")
         response = await middleware.dispatch(request, app)
         assert response.status_code == 200
 
