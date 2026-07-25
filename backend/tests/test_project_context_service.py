@@ -4,6 +4,8 @@ Tests for services/project_context_service.py
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from services.project_context_service import ContextType, ProjectContextService
 
 
