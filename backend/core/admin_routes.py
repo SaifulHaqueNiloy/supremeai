@@ -79,7 +79,9 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
     if payload.get("role") != "admin":
         logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
         # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের জন্য সঠিক status.HTTP_403_FORBIDDEN অবজেক্ট ব্যবহার করা হলো
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
     return payload
 
 
@@ -106,8 +108,14 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
                     detail="Mock tokens are strictly forbidden outside of local testing environments.",
                 )
             uid = "mock-admin-uid"
-            email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
-            logger.warning(f"Bypassing verification using mock token mode. Token: {id_token[:20]}...")
+            email = (
+                settings.admin_emails[0]
+                if settings.admin_emails
+                else "admin@example.com"
+            )
+            logger.warning(
+                f"Bypassing verification using mock token mode. Token: {id_token[:20]}..."
+            )
         elif auth:
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
@@ -138,9 +146,13 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
                 totp_secret = data.get("totp_secret")
             elif email.lower() in [e.lower() for e in settings.admin_emails]:
                 role = "admin"
-                doc_ref.set({"email": email, "role": "admin", "created_at": str(time.time())})
+                doc_ref.set(
+                    {"email": email, "role": "admin", "created_at": str(time.time())}
+                )
         except Exception as e:  # noqa: BLE001
-            logger.critical(f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}")
+            logger.critical(
+                f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}"
+            )
             role = "user"
     elif email.lower() in [e.lower() for e in settings.admin_emails]:
         role = "admin"
@@ -148,8 +160,12 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
         role = "user"
 
     if role != "admin":
-        logger.warning(f"Unauthorized admin access attempt by UID: {uid}, Email: {email}")
-        raise HTTPException(status_code=403, detail="Forbidden: Not authorized as an admin role user")
+        logger.warning(
+            f"Unauthorized admin access attempt by UID: {uid}, Email: {email}"
+        )
+        raise HTTPException(
+            status_code=403, detail="Forbidden: Not authorized as an admin role user"
+        )
 
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}
@@ -171,7 +187,11 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
                     detail="Mock tokens are strictly forbidden in production.",
                 )
             uid = "mock-admin-uid"
-            email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
+            email = (
+                settings.admin_emails[0]
+                if settings.admin_emails
+                else "admin@example.com"
+            )
         elif auth:
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
@@ -184,19 +204,25 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     except HTTPException:
         raise
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=401, detail=f"Token decoding failed: {str(e)}") from e
+        raise HTTPException(
+            status_code=401, detail=f"Token decoding failed: {str(e)}"
+        ) from e
 
     secret = base64.b32encode(os.urandom(10)).decode("utf-8")
 
     db = get_firestore_client()
     if db:
         try:
-            db.collection("admin_users").document(uid).update({"temp_totp_secret": secret})
+            db.collection("admin_users").document(uid).update(
+                {"temp_totp_secret": secret}
+            )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to store temp TOTP secret in Firestore: {e}")
 
     # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি রিকোয়েস্ট করা হলো
-    provisioning_uri = f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
+    provisioning_uri = (
+        f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
+    )
     return {"secret": secret, "provisioning_uri": provisioning_uri}
 
 
@@ -226,7 +252,9 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     except HTTPException:
         raise
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=401, detail=f"Token decoding failed: {str(e)}") from e
+        raise HTTPException(
+            status_code=401, detail=f"Token decoding failed: {str(e)}"
+        ) from e
 
     db = get_firestore_client()
     totp_secret = None
@@ -246,7 +274,9 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     if not secret_to_use:
         secret_to_use = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
         if not secret_to_use:
-            raise HTTPException(status_code=500, detail="TOTP secret not configured on server")
+            raise HTTPException(
+                status_code=500, detail="TOTP secret not configured on server"
+            )
 
     # বাংলা মন্তব্য: Redis TOTP lockout — ব্রুট-ফোর্স অ্যাটাক প্রতিরোধ (Patch 3 fix)
     lockout_key = f"admin:totp:lockout:{uid}"
@@ -279,7 +309,9 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                 await _redis.expire(attempt_key, _TOTP_LOCKOUT_SECONDS)
                 if int(attempts) >= _TOTP_MAX_ATTEMPTS:
                     await _redis.setex(lockout_key, _TOTP_LOCKOUT_SECONDS, "locked")
-                    logger.critical(f"TOTP lockout triggered for uid={uid} after {attempts} failed attempts")
+                    logger.critical(
+                        f"TOTP lockout triggered for uid={uid} after {attempts} failed attempts"
+                    )
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Redis attempt tracking failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid verification code")
@@ -326,8 +358,14 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
 def cloud_distribution(_admin: dict = Depends(get_current_admin)):
     return {
         "distribution": services.parallel_router.get_distribution_stats(),
-        "total_requests": sum(p["current_requests"] for p in services.parallel_router.PROVIDERS.values()),
-        "active_providers": sum(1 for p in services.parallel_router.PROVIDERS.values() if p["status"] == "active"),
+        "total_requests": sum(
+            p["current_requests"] for p in services.parallel_router.PROVIDERS.values()
+        ),
+        "active_providers": sum(
+            1
+            for p in services.parallel_router.PROVIDERS.values()
+            if p["status"] == "active"
+        ),
         "strategy": "parallel_active_active",
         "rebalance_interval": "1 hour",
     }
@@ -350,7 +388,9 @@ def free_tier_provider_status(provider: str, _admin: dict = Depends(get_current_
     tracker = get_tracker()
     status = tracker.get_provider_status(provider)
     if status is None:
-        raise HTTPException(status_code=404, detail=f"Provider '{provider}' not tracked")
+        raise HTTPException(
+            status_code=404, detail=f"Provider '{provider}' not tracked"
+        )
     return status
 
 
@@ -365,7 +405,9 @@ def free_tier_pause_provider(
     seconds = float(payload.get("seconds", 60))
     tracker = get_tracker()
     tracker.mark_rate_limited(provider, pause_seconds=seconds)
-    logger.warning(f"Admin {_admin.get('sub')} paused provider '{provider}' for {seconds}s")
+    logger.warning(
+        f"Admin {_admin.get('sub')} paused provider '{provider}' for {seconds}s"
+    )
     return {"status": "paused", "provider": provider, "seconds": seconds}
 
 
@@ -379,7 +421,9 @@ def free_tier_override_limits(
 
     tracker = get_tracker()
     tracker.override_limits(provider, payload)
-    logger.warning(f"Admin {_admin.get('sub')} overrode limits for '{provider}': {payload}")
+    logger.warning(
+        f"Admin {_admin.get('sub')} overrode limits for '{provider}': {payload}"
+    )
     return {"status": "updated", "provider": provider, "new_limits": payload}
 
 
@@ -418,7 +462,9 @@ def get_admin_rules(_admin: dict = Depends(get_current_admin)):
 
 
 @router.post("/admin/rules")
-def post_admin_rules(payload: dict = Body(...), _admin: dict = Depends(get_current_admin)):
+def post_admin_rules(
+    payload: dict = Body(...), _admin: dict = Depends(get_current_admin)
+):
     new_rules = payload.get("rules")
     if new_rules:
         success = services.rules_engine.save_rules(new_rules)

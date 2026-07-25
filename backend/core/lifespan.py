@@ -104,8 +104,12 @@ async def _ensure_api_key_tables() -> None:
                 )
                 """
             )
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)")
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
+            )
     finally:
         await pool.release(conn)
     logger.info("✅ API key tables ensured")
@@ -164,11 +168,15 @@ async def app_lifespan(app):
         _db_url = settings.supabase_database_url
         try:
             if "sqlite" in _db_url:
-                logger.info("💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization.")
+                logger.info(
+                    "💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization."
+                )
                 app.state.db_pool = None
             else:
                 await init_db_pool(_db_url)
-                logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
+                logger.info(
+                    "⚡ PgBouncer connection pool successfully initialized at startup."
+                )
                 await _ensure_api_key_tables()
         except Exception as exc:  # noqa: BLE001
             logger.error(f"❌ Failed to initialize DB Pool: {exc}")
@@ -181,11 +189,16 @@ async def app_lifespan(app):
                     message=str(exc)[:200],
                     severity="CRITICAL" if settings.env == "production" else "WARNING",
                     structured_context=ErrorContext(module="auto_fixed"),
-                    context={"_db_url": _db_url[:50] if _db_url else "", "env": settings.env},
+                    context={
+                        "_db_url": _db_url[:50] if _db_url else "",
+                        "env": settings.env,
+                    },
                 )
             )
             if settings.env == "production":
-                logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
+                logger.critical(
+                    "🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503."
+                )
 
     async def _init_config_cache() -> None:
         """Initialize system configuration cache."""
@@ -193,7 +206,9 @@ async def app_lifespan(app):
             await config_cache.refresh_async()
             logger.info("✅ System configuration cache successfully initialized.")
         except Exception as exc:  # noqa: BLE001
-            logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
+            logger.warning(
+                f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}"
+            )
             app.state.subsystem_status["config"] = "fallback"
             error_event_bus.emit(
                 ErrorEvent(
@@ -240,7 +255,9 @@ async def app_lifespan(app):
             from core.cost_guard import cost_guard
 
             await cost_guard.connect()
-            logger.info("✅ CostGuard Redis connection initialized for budget tracking.")
+            logger.info(
+                "✅ CostGuard Redis connection initialized for budget tracking."
+            )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"CostGuard initialization failed (non-critical): {e}")
             error_event_bus.emit(
@@ -289,12 +306,18 @@ async def app_lifespan(app):
         from database import db as supabase_db
 
         if settings.supabase_database_url:
-            await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
+            await asyncio.wait_for(
+                asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0
+            )
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
-        logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
+        logger.warning(
+            "Supabase schema bootstrap timed out after 30s — continuing without full schema init."
+        )
     except Exception as exc:  # noqa: BLE001
-        logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
+        logger.warning(
+            f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap."
+        )
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -356,7 +379,9 @@ async def app_lifespan(app):
             await init_tier8(services.registry)
             logger.info("✅ Tier-8 Meta-Self subsystem initialized successfully.")
         else:
-            logger.info("ℹ️ Tier-8 Meta-Self subsystem disabled via environment variable.")
+            logger.info(
+                "ℹ️ Tier-8 Meta-Self subsystem disabled via environment variable."
+            )
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
 
@@ -368,7 +393,9 @@ async def app_lifespan(app):
             _evo_agent = SelfEvolutionAgent(interval_seconds=300)
             await _evo_agent.start()
             app.state.evo_agent = _evo_agent
-            logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")
+            logger.info(
+                "✅ SelfEvolutionAgent background loop started (5-min evolution cycle)."
+            )
         else:
             app.state.evo_agent = None
             logger.info("ℹ️ SelfEvolutionAgent disabled via environment variable.")
@@ -386,7 +413,9 @@ async def app_lifespan(app):
             async def _daily_learner_loop() -> None:
                 while True:
                     try:
-                        await _daily_learner.learn_and_plan("Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency")
+                        await _daily_learner.learn_and_plan(
+                            "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
+                        )
                     except Exception as _exc:  # noqa: BLE001
                         logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
                     await asyncio.sleep(86400)
@@ -398,7 +427,9 @@ async def app_lifespan(app):
                 max_restarts=5,
                 restart_delay=60.0,
             )
-            logger.info("✅ DailyLearner background task started (24h research scan cycle).")
+            logger.info(
+                "✅ DailyLearner background task started (24h research scan cycle)."
+            )
         else:
             logger.info("ℹ️ DailyLearner disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
@@ -411,7 +442,9 @@ async def app_lifespan(app):
 
             await auto_healer_service.start()
             app.state.auto_healer = auto_healer_service
-            logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
+            logger.info(
+                "✅ AutoHealerService started (DB/Redis healing active, 30s check interval)."
+            )
         else:
             logger.info("ℹ️ AutoHealerService disabled via environment variable.")
     except Exception as exc:  # noqa: BLE001
@@ -431,7 +464,9 @@ async def app_lifespan(app):
 
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 
-    logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
+    logger.critical(
+        "🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator."
+    )
 
     # Shutdown Tier-8 Meta-Self Agents
     try:

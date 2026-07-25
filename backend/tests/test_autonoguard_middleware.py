@@ -34,7 +34,9 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
             mock_engine.heal_error = AsyncMock()
@@ -42,7 +44,7 @@ class TestAutonoGuardMiddleware:
             middleware = AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.get("/api/sensitive/test")
+            client.get("/api/sensitive/test")
 
             mock_engine.initialize.assert_called_once()
             assert middleware._initialized is True
@@ -55,14 +57,16 @@ class TestAutonoGuardMiddleware:
         def health_endpoint():
             return PlainTextResponse("healthy")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock()
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.get("/api/health")
+            client.get("/api/health")
 
             # Should not call enforce_operation for non-sensitive paths
             # Note: This depends on which paths are in SENSITIVE_OPS
@@ -75,12 +79,14 @@ class TestAutonoGuardMiddleware:
         def test_endpoint(request):
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
-            middleware = AutonoGuardMiddleware(app)
-            client = TestClient(app)
+            AutonoGuardMiddleware(app)
+            TestClient(app)
 
             # The middleware should extract admin_id from request.state.user
 
@@ -92,14 +98,16 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.get("/api/sensitive/test")
+            client.get("/api/sensitive/test")
 
     def test_otp_header_parsing(self):
         """Test OTP code extraction from X-JIT-OTP header."""
@@ -109,14 +117,16 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.post(
+            client.post(
                 "/api/sensitive/test",
                 headers={"X-JIT-OTP": "123456"},
                 json={"code": "print('hello')"},
@@ -130,14 +140,16 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.post(
+            client.post(
                 "/api/sensitive/test",
                 headers={"X-OTP": "654321"},
                 json={"code": "print('hello')"},
@@ -151,14 +163,16 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.post(
+            client.post(
                 "/api/sensitive/test",
                 json={"code": "print('hello')"},
             )
@@ -171,14 +185,16 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.post(
+            client.post(
                 "/api/sensitive/test",
                 json={"generated_code": "print('world')"},
             )
@@ -191,18 +207,24 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
-            mock_engine.enforce_operation = AsyncMock(return_value=(False, "OTP required"))
+            mock_engine.enforce_operation = AsyncMock(
+                return_value=(False, "OTP required")
+            )
             mock_engine.heal_error = AsyncMock()
 
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
             resp = client.get("/api/sensitive/test")
 
             assert resp.status_code == 401
-            assert "OTP" in resp.json().get("detail", "") or "Security" in resp.json().get("title", "")
+            assert "OTP" in resp.json().get(
+                "detail", ""
+            ) or "Security" in resp.json().get("title", "")
 
     def test_fallback_to_unknown_for_missing_user(self):
         """Test fallback to 'unknown' when user identity missing."""
@@ -212,15 +234,17 @@ class TestAutonoGuardMiddleware:
         def test_endpoint():
             return PlainTextResponse("ok")
 
-        with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+        with patch(
+            "core.security.autonoguard_middleware.autonoguard_engine"
+        ) as mock_engine:
             mock_engine.initialize = AsyncMock()
             mock_engine.enforce_operation = AsyncMock(return_value=(True, None))
 
             # Call should use "unknown" for admin_id
-            middleware = AutonoGuardMiddleware(app)
+            AutonoGuardMiddleware(app)
             client = TestClient(app)
 
-            resp = client.get("/api/sensitive/test")
+            client.get("/api/sensitive/test")
 
 
 # --- OperationContext Helper Tests ---

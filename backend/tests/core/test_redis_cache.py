@@ -30,7 +30,9 @@ class TestSecureRedisManagerInitialization:
     async def test_init_no_url(self):
         """No redis_url → _client remains None, _initialized False."""
         with patch("core.cache.redis_manager.os.getenv", return_value=""):
-            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
+            with patch(
+                "core.security.secret_vault.secret_vault.fetch_secret", return_value=""
+            ):
                 mgr = SecureRedisManager()
                 assert mgr._client is None
                 assert mgr._initialized is False
@@ -39,7 +41,9 @@ class TestSecureRedisManagerInitialization:
     async def test_ensure_connected_no_url(self):
         """No URL → _ensure_connected logs critical, _initialized True."""
         with patch("core.cache.redis_manager.os.getenv", return_value=""):
-            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
+            with patch(
+                "core.security.secret_vault.secret_vault.fetch_secret", return_value=""
+            ):
                 mgr = SecureRedisManager()
                 await mgr._ensure_connected()
                 assert mgr._initialized is True
@@ -49,7 +53,9 @@ class TestSecureRedisManagerInitialization:
     async def test_get_client_async_returns_none_when_no_url(self):
         """get_client_async returns None when no Redis URL configured."""
         with patch("core.cache.redis_manager.os.getenv", return_value=""):
-            with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
+            with patch(
+                "core.security.secret_vault.secret_vault.fetch_secret", return_value=""
+            ):
                 mgr = SecureRedisManager()
                 client = await mgr.get_client_async()
                 assert client is None

@@ -44,7 +44,9 @@ class AsyncRateLimiter:
     """
 
     def __init__(self) -> None:
-        self._rate_limit_enabled: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {
+        self._rate_limit_enabled: bool = os.getenv(
+            "RATE_LIMIT_ENABLED", "true"
+        ).lower() in {
             "true",
             "1",
             "yes",
@@ -65,7 +67,9 @@ class AsyncRateLimiter:
             client = await self._get_redis()
             if client is None:
                 # CHANGED: Fail-closed instead of using fallback when Redis unavailable
-                logger.warning("Redis rate limiter unavailable. Blocking requests (fail-closed).")
+                logger.warning(
+                    "Redis rate limiter unavailable. Blocking requests (fail-closed)."
+                )
                 return False  # FAIL-CLOSED: blocks all requests when Redis is down
             pipe = client.pipeline()
             pipe.incr(key)
@@ -75,7 +79,9 @@ class AsyncRateLimiter:
             return current <= limit
         except Exception as e:  # noqa: BLE001
             # CHANGED: Fail-closed instead of falling back to in-memory limiter
-            logger.warning(f"Redis rate limiter unavailable: {e}. Blocking requests (fail-closed).")
+            logger.warning(
+                f"Redis rate limiter unavailable: {e}. Blocking requests (fail-closed)."
+            )
             return False  # FAIL-CLOSED: blocks all requests
 
     async def acquire_tenant(self, tenant_id: str, tier: str = "free") -> bool:

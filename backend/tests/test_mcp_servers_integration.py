@@ -48,7 +48,9 @@ class TestCloudDeployMCP:
         from tools.mcp.mcp_cloud_deploy import CloudProvider, DeployServiceInput
 
         # বৈধ ইনপুট
-        valid_input = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test-service", branch="main")
+        valid_input = DeployServiceInput(
+            provider=CloudProvider.RENDER, service_name="test-service", branch="main"
+        )
         assert valid_input.provider == CloudProvider.RENDER
         assert valid_input.service_name == "test-service"
         assert valid_input.branch == "main"
@@ -64,7 +66,9 @@ class TestCloudDeployMCP:
         """GetLogsInput মডেলের ভ্যালিডেশন টেস্ট।"""
         from tools.mcp.mcp_cloud_deploy import CloudProvider, GetLogsInput
 
-        valid_input = GetLogsInput(provider=CloudProvider.RAILWAY, service_name="my-service", lines=500)
+        valid_input = GetLogsInput(
+            provider=CloudProvider.RAILWAY, service_name="my-service", lines=500
+        )
         assert valid_input.lines == 500
 
     def test_cloud_provider_enum(self):
@@ -169,7 +173,9 @@ class TestWorkspaceMCP:
         """WorkspaceContextInput মডেলের ভ্যালিডেশন টেস্ট।"""
         from tools.mcp.mcp_workspace import WorkspaceContextInput, WorkspaceType
 
-        valid_input = WorkspaceContextInput(project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="tenant-001")
+        valid_input = WorkspaceContextInput(
+            project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="tenant-001"
+        )
         assert valid_input.project_type == WorkspaceType.ECOMMERCE_BACKEND
         assert valid_input.tenant_id == "tenant-001"
 
@@ -203,12 +209,17 @@ class TestMCPServerSync:
             "mcp_workspace",
         ]
         for server in servers:
-            spec = importlib.util.find_spec(f"tools.{server}")
+            spec = importlib.util.find_spec(f"tools.mcp.{server}")
             assert spec is not None, f"tools.{server} module not found"
 
     def test_mcp_servers_have_fastmcp_instance(self):
         """MCP সার্ভারগুলোতে FastMCP ইনস্ট্যান্স আছে কিনা টেস্ট।"""
-        from tools import mcp_cloud_deploy, mcp_github_cicd, mcp_supabase, mcp_workspace
+        from tools.mcp import (
+            mcp_cloud_deploy,
+            mcp_github_cicd,
+            mcp_supabase,
+            mcp_workspace,
+        )
 
         assert hasattr(mcp_cloud_deploy, "mcp")
         assert hasattr(mcp_github_cicd, "mcp")
@@ -217,7 +228,12 @@ class TestMCPServerSync:
 
     def test_mcp_servers_have_tools(self):
         """MCP সার্ভারগুলোতে টুলস আছে কিনা টেস্ট।"""
-        from tools import mcp_cloud_deploy, mcp_github_cicd, mcp_supabase, mcp_workspace
+        from tools.mcp import (
+            mcp_cloud_deploy,
+            mcp_github_cicd,
+            mcp_supabase,
+            mcp_workspace,
+        )
 
         # cloud_deploy_mcp টুলস
         assert hasattr(mcp_cloud_deploy, "cloud_deploy_service")
@@ -302,7 +318,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("RENDER_API_KEY", "")
         import tools.mcp.mcp_cloud_deploy
 
-        importlib.reload(tools.mcp_cloud_deploy)
+        importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
             DeployServiceInput,
@@ -320,7 +336,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("RAILWAY_TOKEN", "")
         import tools.mcp.mcp_cloud_deploy
 
-        importlib.reload(tools.mcp_cloud_deploy)
+        importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
             DeployServiceInput,
@@ -338,7 +354,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("ORACLE_CLOUD_API_KEY", "")
         import tools.mcp.mcp_cloud_deploy
 
-        importlib.reload(tools.mcp_cloud_deploy)
+        importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
             DeployServiceInput,
@@ -362,14 +378,18 @@ class TestCloudDeployMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 401
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Unauthorized", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Unauthorized", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test"
+            )
             result = await cloud_deploy_service(params)
             assert "Invalid API key" in result
 
@@ -385,14 +405,18 @@ class TestCloudDeployMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 404
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Not Found", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test"
+            )
             result = await cloud_deploy_service(params)
             assert "Service not found" in result
 
@@ -408,14 +432,18 @@ class TestCloudDeployMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 429
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Too Many Requests", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Too Many Requests", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test"
+            )
             result = await cloud_deploy_service(params)
             assert "Rate limit exceeded" in result
 
@@ -434,7 +462,9 @@ class TestCloudDeployMCPExtended:
             mock_instance.post = AsyncMock(side_effect=Exception("Network error"))
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test"
+            )
             result = await cloud_deploy_service(params)
             assert "Error" in result
 
@@ -444,7 +474,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("RENDER_API_KEY", "")
         import tools.mcp.mcp_cloud_deploy
 
-        importlib.reload(tools.mcp_cloud_deploy)
+        importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
             GetLogsInput,
@@ -467,7 +497,9 @@ class TestCloudDeployMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -528,7 +560,9 @@ class TestGithubCICDMCPExtended:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "false")
         from tools.mcp.mcp_github_cicd import CreatePRInput, github_create_pull_request
 
-        params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+        params = CreatePRInput(
+            title="Test", body="Test PR", head="feature", base="main"
+        )
         result = await github_create_pull_request(params)
         data = json.loads(result)
         assert data["error"] == "Admin authorization required for PR creation"
@@ -540,10 +574,12 @@ class TestGithubCICDMCPExtended:
         monkeypatch.setenv("GITHUB_TOKEN", "")
         import tools.mcp.mcp_github_cicd
 
-        importlib.reload(tools.mcp_github_cicd)
+        importlib.reload(tools.mcp.mcp_github_cicd)
         from tools.mcp.mcp_github_cicd import CreatePRInput, github_create_pull_request
 
-        params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+        params = CreatePRInput(
+            title="Test", body="Test PR", head="feature", base="main"
+        )
         result = await github_create_pull_request(params)
         data = json.loads(result)
         assert data["error"] == "GITHUB_TOKEN not configured"
@@ -556,14 +592,18 @@ class TestGithubCICDMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 401
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Unauthorized", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Unauthorized", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+            params = CreatePRInput(
+                title="Test", body="Test PR", head="feature", base="main"
+            )
             result = await github_create_pull_request(params)
             assert "Invalid API key" in result
 
@@ -575,14 +615,18 @@ class TestGithubCICDMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 403
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Forbidden", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Forbidden", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+            params = CreatePRInput(
+                title="Test", body="Test PR", head="feature", base="main"
+            )
             result = await github_create_pull_request(params)
             assert "Permission denied" in result
 
@@ -643,7 +687,9 @@ class TestGithubCICDMCPExtended:
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -660,14 +706,16 @@ class TestSupabaseMCPExtended:
     @pytest.mark.asyncio
     async def test_execute_sql_missing_db_url(self, monkeypatch):
         """Execute SQL এ ডাটাবেস URL না থাকলে ব্যর্থ হয়।"""
-        monkeypatch.setattr("tools.mcp_supabase._get_supabase_db_url", lambda: "")
+        monkeypatch.setattr("tools.mcp.mcp_supabase._get_supabase_db_url", lambda: "")
         from tools.mcp.mcp_supabase import (
             ExecuteQueryInput,
             ResponseFormat,
             supabase_execute_sql,
         )
 
-        params = ExecuteQueryInput(query="SELECT 1", response_format=ResponseFormat.JSON)
+        params = ExecuteQueryInput(
+            query="SELECT 1", response_format=ResponseFormat.JSON
+        )
         result = await supabase_execute_sql(params)
         data = json.loads(result)
         assert data["error"] == "SUPABASE_DATABASE_URL not configured"
@@ -682,7 +730,9 @@ class TestSupabaseMCPExtended:
             supabase_execute_sql,
         )
 
-        params = ExecuteQueryInput(query="DROP TABLE users", response_format=ResponseFormat.JSON)
+        params = ExecuteQueryInput(
+            query="DROP TABLE users", response_format=ResponseFormat.JSON
+        )
         result = await supabase_execute_sql(params)
         data = json.loads(result)
         assert "Admin authorization required" in data["error"]
@@ -697,14 +747,18 @@ class TestSupabaseMCPExtended:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = []
             mock_cursor.description = []
             mock_cursor.rowcount = 1
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
-            params = ExecuteQueryInput(query="DROP TABLE users", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="DROP TABLE users", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -718,13 +772,17 @@ class TestSupabaseMCPExtended:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = [(1, "test"), (2, "test2")]
             mock_cursor.description = [("id",), ("name",)]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
-            params = ExecuteQueryInput(query="SELECT * FROM users", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT * FROM users", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["row_count"] == 2
@@ -735,7 +793,9 @@ class TestSupabaseMCPExtended:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "false")
         from tools.mcp.mcp_supabase import CreateTableInput, supabase_create_table
 
-        params = CreateTableInput(table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True)
+        params = CreateTableInput(
+            table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True
+        )
         result = await supabase_create_table(params)
         data = json.loads(result)
         assert data["error"] == "Admin authorization required for table creation"
@@ -746,10 +806,14 @@ class TestSupabaseMCPExtended:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "true")
         from tools.mcp.mcp_supabase import CreateTableInput, supabase_create_table
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
-            mock_conn.return_value = MagicMock(cursor=MagicMock(), commit=MagicMock(), close=MagicMock())
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
+            mock_conn.return_value = MagicMock(
+                cursor=MagicMock(), commit=MagicMock(), close=MagicMock()
+            )
 
-            params = CreateTableInput(table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True)
+            params = CreateTableInput(
+                table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True
+            )
             result = await supabase_create_table(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -757,7 +821,7 @@ class TestSupabaseMCPExtended:
     @pytest.mark.asyncio
     async def test_run_migration_missing_db_url(self, monkeypatch):
         """Run Migration এ ডাটাবেস URL না থাকলে ব্যর্থ হয়।"""
-        monkeypatch.setattr("tools.mcp_supabase._get_supabase_db_url", lambda: "")
+        monkeypatch.setattr("tools.mcp.mcp_supabase._get_supabase_db_url", lambda: "")
         from tools.mcp.mcp_supabase import MigrationInput, supabase_run_migration
 
         params = MigrationInput(
@@ -775,10 +839,12 @@ class TestSupabaseMCPExtended:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "true")
         from tools.mcp.mcp_supabase import MigrationInput, supabase_run_migration
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = [1]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = MigrationInput(
                 migration_name="test",
@@ -807,7 +873,7 @@ class TestSupabaseMCPExtended:
     @pytest.mark.asyncio
     async def test_list_tables_missing_db_url(self, monkeypatch):
         """List Tables এ ডাটাবেস URL না থাকলে ব্যর্থ হয়।"""
-        monkeypatch.setattr("tools.mcp_supabase._get_supabase_db_url", lambda: "")
+        monkeypatch.setattr("tools.mcp.mcp_supabase._get_supabase_db_url", lambda: "")
         from tools.mcp.mcp_supabase import supabase_list_tables
 
         result = await supabase_list_tables()
@@ -819,13 +885,15 @@ class TestSupabaseMCPExtended:
         """List Tables সফল হয়।"""
         from tools.mcp.mcp_supabase import supabase_list_tables
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = [
                 ("users", "BASE TABLE"),
                 ("posts", "BASE TABLE"),
             ]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
             result = await supabase_list_tables()
             data = json.loads(result)
@@ -850,7 +918,9 @@ class TestWorkspaceMCPExtended:
             ScopedFilePathInput()
 
     @pytest.mark.asyncio
-    async def test_workspace_set_context_missing_admin_for_admin_panel(self, monkeypatch):
+    async def test_workspace_set_context_missing_admin_for_admin_panel(
+        self, monkeypatch
+    ):
         """Admin Panel ওয়ার্কস্পেস অথেন্টিকেশন না থাকলে ব্যর্থ হয়।"""
         monkeypatch.setenv("ADMIN_AUTHORIZED", "false")
         from tools.mcp.mcp_workspace import (
@@ -859,7 +929,9 @@ class TestWorkspaceMCPExtended:
             workspace_set_context,
         )
 
-        params = WorkspaceContextInput(project_type=WorkspaceType.ADMIN_PANEL, tenant_id="test")
+        params = WorkspaceContextInput(
+            project_type=WorkspaceType.ADMIN_PANEL, tenant_id="test"
+        )
         result = await workspace_set_context(params)
         data = json.loads(result)
         assert data["error"] == "Admin authorization required for admin panel workspace"
@@ -873,7 +945,9 @@ class TestWorkspaceMCPExtended:
             workspace_set_context,
         )
 
-        params = WorkspaceContextInput(project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="test-tenant")
+        params = WorkspaceContextInput(
+            project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="test-tenant"
+        )
         result = await workspace_set_context(params)
         data = json.loads(result)
         assert data["success"] is True
@@ -1016,7 +1090,9 @@ class TestInputValidation:
         """DeployServiceInput এ হোয়াইটস্পেস স্ট্রিপ হয়।"""
         from tools.mcp.mcp_cloud_deploy import CloudProvider, DeployServiceInput
 
-        params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="  test-service  ")
+        params = DeployServiceInput(
+            provider=CloudProvider.RENDER, service_name="  test-service  "
+        )
         assert params.service_name == "test-service"
 
     def test_deploy_service_input_service_name_pattern(self):
@@ -1024,7 +1100,9 @@ class TestInputValidation:
         from tools.mcp.mcp_cloud_deploy import CloudProvider, DeployServiceInput
 
         with pytest.raises(ValidationError):
-            DeployServiceInput(provider=CloudProvider.RENDER, service_name="invalid name!")
+            DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="invalid name!"
+            )
 
     def test_get_logs_input_lines_default(self):
         """GetLogsInput এ লাইনসের ডিফল্ট মান।"""
@@ -1065,7 +1143,9 @@ class TestInputValidation:
             MigrationInput(migration_name="test", up_sql="", down_sql="DROP TABLE test")
 
         with pytest.raises(ValidationError):
-            MigrationInput(migration_name="test", up_sql="CREATE TABLE test (id INT)", down_sql="")
+            MigrationInput(
+                migration_name="test", up_sql="CREATE TABLE test (id INT)", down_sql=""
+            )
 
     def test_execute_query_input_params_default(self):
         """ExecuteQueryInput এ params ডিফল্ট মান।"""
@@ -1145,7 +1225,9 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test-service")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test-service"
+            )
             result = await cloud_deploy_service(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1173,7 +1255,9 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RAILWAY, service_name="test-service")
+            params = DeployServiceInput(
+                provider=CloudProvider.RAILWAY, service_name="test-service"
+            )
             result = await cloud_deploy_service(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1201,7 +1285,9 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.ORACLE, service_name="test-service")
+            params = DeployServiceInput(
+                provider=CloudProvider.ORACLE, service_name="test-service"
+            )
             result = await cloud_deploy_service(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1225,7 +1311,9 @@ class TestInputValidation:
             mock_instance.get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = GetLogsInput(provider=CloudProvider.RENDER, service_name="test-service", lines=50)
+            params = GetLogsInput(
+                provider=CloudProvider.RENDER, service_name="test-service", lines=50
+            )
             result = await cloud_get_deployment_logs(params)
             data = json.loads(result)
             assert data["provider"] == "render"
@@ -1249,7 +1337,9 @@ class TestInputValidation:
             mock_instance.get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = GetLogsInput(provider=CloudProvider.RAILWAY, service_name="test-service")
+            params = GetLogsInput(
+                provider=CloudProvider.RAILWAY, service_name="test-service"
+            )
             result = await cloud_get_deployment_logs(params)
             data = json.loads(result)
             assert data["provider"] == "railway"
@@ -1273,7 +1363,9 @@ class TestInputValidation:
             mock_instance.get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = GetLogsInput(provider=CloudProvider.ORACLE, service_name="test-service")
+            params = GetLogsInput(
+                provider=CloudProvider.ORACLE, service_name="test-service"
+            )
             result = await cloud_get_deployment_logs(params)
             data = json.loads(result)
             assert data["provider"] == "oracle"
@@ -1288,7 +1380,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = [{"serviceName": "svc1", "status": "active", "url": "https://test.com"}]
+        mock_response.json.return_value = [
+            {"serviceName": "svc1", "status": "active", "url": "https://test.com"}
+        ]
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1309,7 +1403,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = [{"name": "svc1", "status": "active", "url": "https://test.com"}]
+        mock_response.json.return_value = [
+            {"name": "svc1", "status": "active", "url": "https://test.com"}
+        ]
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1362,14 +1458,18 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test"
+            )
             result = await cloud_deploy_service(params)
             assert "Error" in result
 
@@ -1385,14 +1485,18 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 503
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Service Unavailable", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Service Unavailable", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test")
+            params = DeployServiceInput(
+                provider=CloudProvider.RENDER, service_name="test"
+            )
             result = await cloud_deploy_service(params)
             assert "Error" in result
 
@@ -1407,7 +1511,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1438,7 +1544,9 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test PR", body="Test body", head="feature", base="develop")
+            params = CreatePRInput(
+                title="Test PR", body="Test body", head="feature", base="develop"
+            )
             result = await github_create_pull_request(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1452,14 +1560,18 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 404
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Not Found", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+            params = CreatePRInput(
+                title="Test", body="Test PR", head="feature", base="main"
+            )
             result = await github_create_pull_request(params)
             assert "not found" in result.lower()
 
@@ -1487,7 +1599,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1566,7 +1680,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1606,7 +1722,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 404
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=mock_response)
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Not Found", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1625,13 +1743,17 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = [(1, "Alice"), (2, "Bob")]
             mock_cursor.description = [("id",), ("name",)]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
-            params = ExecuteQueryInput(query="SELECT * FROM users", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT * FROM users", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["row_count"] == 2
@@ -1646,11 +1768,13 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = []
             mock_cursor.description = []
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
             params = ExecuteQueryInput(
                 query="SELECT * FROM users WHERE id = 1",
@@ -1668,11 +1792,13 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.rowcount = 1
             mock_cursor.description = None
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = ExecuteQueryInput(
                 query="INSERT INTO users (name) VALUES ('Alice')",
@@ -1691,11 +1817,13 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = [(1,)]
             mock_cursor.description = [("id",)]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
             params = ExecuteQueryInput(
                 query="SELECT * FROM users WHERE id = %s",
@@ -1715,10 +1843,12 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_conn.return_value = None
 
-            params = ExecuteQueryInput(query="SELECT 1", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT 1", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["error"] == "Failed to connect to database"
@@ -1732,12 +1862,16 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.execute.side_effect = Exception("syntax error at line 1")
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
-            params = ExecuteQueryInput(query="SELECT * FROM invalid", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT * FROM invalid", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             assert "SQL syntax error" in result
 
@@ -1750,10 +1884,12 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_conn.return_value = None
 
-            params = ExecuteQueryInput(query="SELECT 1", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT 1", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["error"] == "Failed to connect to database"
@@ -1767,11 +1903,13 @@ class TestInputValidation:
             supabase_execute_sql,
         )
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = []
             mock_cursor.description = []
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
             params = ExecuteQueryInput(
                 query="SELECT * FROM empty_table",
@@ -1791,11 +1929,13 @@ class TestInputValidation:
 
         rows = [(i, f"name{i}") for i in range(150)]
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchall.return_value = rows
             mock_cursor.description = [("id",), ("name",)]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, close=MagicMock()
+            )
 
             params = ExecuteQueryInput(
                 query="SELECT * FROM large_table",
@@ -1810,10 +1950,14 @@ class TestInputValidation:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "true")
         from tools.mcp.mcp_supabase import CreateTableInput, supabase_create_table
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
-            mock_conn.return_value = MagicMock(cursor=MagicMock(), commit=MagicMock(), close=MagicMock())
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
+            mock_conn.return_value = MagicMock(
+                cursor=MagicMock(), commit=MagicMock(), close=MagicMock()
+            )
 
-            params = CreateTableInput(table_name="logs", columns="id SERIAL PRIMARY KEY", if_not_exists=False)
+            params = CreateTableInput(
+                table_name="logs", columns="id SERIAL PRIMARY KEY", if_not_exists=False
+            )
             result = await supabase_create_table(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1822,10 +1966,12 @@ class TestInputValidation:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "true")
         from tools.mcp.mcp_supabase import MigrationInput, supabase_run_migration
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = [1]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = MigrationInput(
                 migration_name="existing_migration",
@@ -1839,10 +1985,12 @@ class TestInputValidation:
         """মাইগ্রেশন সফল হলে DOWN SQL এক্সিকিউট হয় না।"""
         from tools.mcp.mcp_supabase import MigrationInput, supabase_run_migration
 
-        with patch("tools.mcp_supabase._get_connection") as mock_conn:
+        with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = None
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = MigrationInput(
                 migration_name="test",
@@ -1943,7 +2091,9 @@ class TestInputValidation:
 
         try:
             path = _get_workspace_path(WorkspaceType.ECOMMERCE_BACKEND)
-            assert str(path).endswith(abs_path.replace("/", os.sep).replace("\\", os.sep))
+            assert str(path).endswith(
+                abs_path.replace("/", os.sep).replace("\\", os.sep)
+            )
         finally:
             if WORKSPACE_CONFIG_FILE.exists():
                 WORKSPACE_CONFIG_FILE.unlink()

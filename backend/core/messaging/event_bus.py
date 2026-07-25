@@ -9,9 +9,9 @@ import asyncio
 import logging
 import threading
 from collections.abc import Callable
+from collections import defaultdict
 from datetime import UTC, datetime
-from typing import Any
-
+from typing import Any, Dict, List
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("supremeai.event_bus")
@@ -69,32 +69,67 @@ class ErrorEventBus:
     CancelledError সবসময় re-raise হয়।
     Structured logging — severity অনুযায়ী log level।
     Bounded DLQ — maxsize=1000 (অতিরিক্ত item-এ critical alert)।
+    Thread-safe implementation with duplicate listener prevention.
     """
 
     def __init__(self) -> None:
-        self._listeners: list[Callable[[ErrorEvent], Any]] = []
-        self._lock = threading.Lock()
+        self._listeners: Dict[str, List[Callable[[ErrorEvent], Any]]] = defaultdict(
+            list
+        )
+        self._lock = threading.RLock()  # Use RLock for better thread safety
+        self._registered_handlers = (
+            set()
+        )  # Track registered handlers to prevent duplicates
         # বাংলা মন্তব্য: bounded queue — unbounded growth prevent করা হলো
         self._dlq: asyncio.Queue[DeadLetterQueueItem] = asyncio.Queue(maxsize=1000)
-        self._dead_letter_handlers: list[Callable[[DeadLetterQueueItem], Any]] = []
+        self._dead_letter_handlers: List[Callable[[DeadLetterQueueItem], Any]] = []
         self._total_emitted: int = 0
         self._total_dlq_items: int = 0
 
-    def register_listener(self, listener: Callable[[ErrorEvent], Any]) -> None:
-        """বাংলা মন্তব্য: Error event listener register করুন (thread-safe)."""
+    def register_listener(
+        self, event_type: str, listener: Callable[[ErrorEvent], Any]
+    ) -> None:
+        """বাংলা মন্তব্য: Error event listener register করুন (thread-safe)।
+        Duplicate registration এড়ানো হয়।"""
         with self._lock:
-            if listener not in self._listeners:
-                self._listeners.append(listener)
-                logger.debug(f"[ErrorEventBus] Registered listener: {getattr(listener, '__name__', str(listener))}")
+            # Create a unique identifier for the handler to prevent duplicates
+            handler_id = f"{event_type}:{listener.__module__}:{listener.__name__}"
 
-    def unregister_listener(self, listener: Callable[[ErrorEvent], Any]) -> None:
+            if handler_id in self._registered_handlers:
+                logger.debug(
+                    f"[ErrorEventBus] Handler {handler_id} already registered for event {event_type}, skipping duplicate registration"
+                )
+                return
+
+            self._listeners[event_type].append(listener)
+            self._registered_handlers.add(handler_id)
+            logger.debug(
+                f"[ErrorEventBus] Registered listener for event type: {event_type}: {getattr(listener, '__name__', str(listener))}"
+            )
+
+    def unregister_listener(
+        self, event_type: str, listener: Callable[[ErrorEvent], Any]
+    ) -> None:
         """বাংলা মন্তব্য: Error event listener unregister করুন (thread-safe)."""
         with self._lock:
-            if listener in self._listeners:
-                self._listeners.remove(listener)
-                logger.debug(f"[ErrorEventBus] Unregistered listener: {getattr(listener, '__name__', str(listener))}")
+            if event_type in self._listeners:
+                try:
+                    self._listeners[event_type].remove(listener)
+                    handler_id = (
+                        f"{event_type}:{listener.__module__}:{listener.__name__}"
+                    )
+                    self._registered_handlers.discard(handler_id)
+                    logger.debug(
+                        f"[ErrorEventBus] Unregistered listener for event type: {event_type}: {getattr(listener, '__name__', str(listener))}"
+                    )
+                except ValueError:
+                    logger.debug(
+                        f"[ErrorEventBus] Listener not found for event type: {event_type}"
+                    )
 
-    def register_dead_letter_handler(self, handler: Callable[[DeadLetterQueueItem], Any]) -> None:
+    def register_dead_letter_handler(
+        self, handler: Callable[[DeadLetterQueueItem], Any]
+    ) -> None:
         """বাংলা মন্তব্য: DLQ handler register করুন — handler failure alert পাঠাতে।"""
         self._dead_letter_handlers.append(handler)
 
@@ -113,7 +148,9 @@ class ErrorEventBus:
         except RuntimeError:
             # বাংলা মন্তব্য: running loop নেই — sync context (tests, scripts)।
             # নতুন loop তৈরি করা হয় না — thread safety issue এড়াতে।
-            logger.debug(f"[ErrorEventBus] No running loop for async dispatch of '{event.error_type}'. Sync log completed.")
+            logger.debug(
+                f"[ErrorEventBus] No running loop for async dispatch of '{event.error_type}'. Sync log completed."
+            )
 
     async def async_emit(self, event: ErrorEvent) -> None:
         """বাংলা মন্তব্য: Async context-এ সরাসরি call করার জন্য।"""
@@ -126,15 +163,15 @@ class ErrorEventBus:
 
     async def _dispatch_async(self, event: ErrorEvent) -> None:
         """বাংলা মন্তব্য: সব listeners-এ concurrent dispatch। Individual failure isolation।"""
-        if not self._listeners:
-            return
+        with self._lock:
+            listeners = list(self._listeners.get(event.error_type, []))
 
         results = await asyncio.gather(
-            *[self._safe_invoke(handler, event) for handler in self._listeners],
+            *[self._safe_invoke(handler, event) for handler in listeners],
             return_exceptions=True,
         )
 
-        for handler, result in zip(self._listeners, results, strict=False):
+        for handler, result in zip(listeners, results, strict=False):
             if isinstance(result, BaseException):
                 handler_name = getattr(handler, "__name__", str(handler))
                 dlq_item = DeadLetterQueueItem(
@@ -153,7 +190,9 @@ class ErrorEventBus:
                         f"[ErrorEventBus] DLQ full! Dropping item for handler: '{handler_name}'. DLQ capacity exceeded — check stuck listeners."
                     )
 
-                logger.error(f"[ErrorEventBus] Handler '{handler_name}' failed for event '{event.error_type}': {result}")
+                logger.error(
+                    f"[ErrorEventBus] Handler '{handler_name}' failed for event '{event.error_type}': {result}"
+                )
 
                 for dl_handler in self._dead_letter_handlers:
                     try:
@@ -162,7 +201,9 @@ class ErrorEventBus:
                         # বাংলা মন্তব্য: CancelledError কখনো suppress করা যাবে না
                         raise
                     except Exception as dl_exc:  # noqa: BLE001
-                        logger.error(f"[ErrorEventBus] Dead letter handler failed: {dl_exc}")
+                        logger.error(
+                            f"[ErrorEventBus] Dead letter handler failed: {dl_exc}"
+                        )
 
     async def _safe_invoke(self, handler: Callable, event: ErrorEvent) -> Any:
         """
@@ -175,7 +216,9 @@ class ErrorEventBus:
                 return await result
             return result
         except asyncio.CancelledError:
-            logger.warning(f"[ErrorEventBus] CancelledError in handler '{getattr(handler, '__name__', str(handler))}' — re-raising.")
+            logger.warning(
+                f"[ErrorEventBus] CancelledError in handler '{getattr(handler, '__name__', str(handler))}' — re-raising."
+            )
             raise  # CRITICAL: CancelledError কখনো suppress করা যাবে না
         except Exception as exc:  # noqa: BLE001
             return exc  # exception return করা হচ্ছে, suppress নয়
@@ -195,7 +238,9 @@ class ErrorEventBus:
             }
         )
 
-        log_msg = f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
+        log_msg = (
+            f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
+        )
 
         if event.severity == "CRITICAL":
             logger.critical(log_msg)
@@ -220,7 +265,9 @@ class ErrorEventBus:
             "registered_listeners": len(self._listeners),
         }
 
-    async def process_dead_letter_queue(self, max_items: int = 10) -> list[DeadLetterQueueItem]:
+    async def process_dead_letter_queue(
+        self, max_items: int = 10
+    ) -> list[DeadLetterQueueItem]:
         """
         বাংলা মন্তব্য: DLQ থেকে items process করা।
         max_items bounded — unbounded processing prevent।
@@ -231,7 +278,9 @@ class ErrorEventBus:
                 item = self._dlq.get_nowait()
                 item.retry_count += 1
                 processed.append(item)
-                logger.warning(f"[ErrorEventBus] DLQ processed: '{item.handler_name}' (retry #{item.retry_count}) | event: {item.event_type}")
+                logger.warning(
+                    f"[ErrorEventBus] DLQ processed: '{item.handler_name}' (retry #{item.retry_count}) | event: {item.event_type}"
+                )
             except asyncio.QueueEmpty:
                 break
         return processed
@@ -244,16 +293,38 @@ error_event_bus: ErrorEventBus = ErrorEventBus()
 class EventBus:
     """
     বাংলা মন্তব্য: টপিক-ভিত্তিক মেসেজিং ও সাবস্ক্রিপশনের জন্য সাধারণ ইভেন্ট বাস ক্লাস।
+    Thread-safe implementation with duplicate listener prevention.
     """
 
     def __init__(self) -> None:
-        self._listeners: dict[str, list[Callable]] = {}
+        self._listeners: Dict[str, List[Callable]] = defaultdict(list)
+        self._lock = threading.RLock()
+        self._registered_handlers = set()
 
     async def register_listener(self, topic: str, listener: Callable) -> None:
-        self._listeners.setdefault(topic, []).append(listener)
+        """Register a listener for a specific topic with thread safety and duplicate prevention."""
+        with self._lock:
+            # Create a unique identifier for the handler to prevent duplicates
+            handler_id = f"{topic}:{listener.__module__}:{listener.__name__}"
+
+            if handler_id in self._registered_handlers:
+                logger.debug(
+                    f"[EventBus] Handler {handler_id} already registered for topic {topic}, skipping duplicate registration"
+                )
+                return
+
+            self._listeners[topic].append(listener)
+            self._registered_handlers.add(handler_id)
+            logger.debug(
+                f"[EventBus] Registered listener for topic: {topic}: {getattr(listener, '__name__', str(listener))}"
+            )
 
     async def emit(self, topic: str, event: dict[str, Any]) -> None:
-        listeners = self._listeners.get(topic, [])
+        """Emit an event to all listeners of a specific topic."""
+        listeners = []
+        with self._lock:
+            listeners = list(self._listeners.get(topic, []))
+
         for listener in listeners:
             try:
                 res = listener(event)
