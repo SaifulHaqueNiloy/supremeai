@@ -119,9 +119,7 @@ class TestJITOTPFlow:
 
             client_instance = AsyncMock()
             client_instance.post = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(
-                return_value=client_instance
-            )
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
 
             from core.otp_router import _send_discord
@@ -156,9 +154,7 @@ class TestJITOTPFlow:
 
             client_instance = AsyncMock()
             client_instance.post = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(
-                return_value=client_instance
-            )
+            mock_client.return_value.__aenter__ = AsyncMock(return_value=client_instance)
             mock_client.return_value.__aexit__ = AsyncMock()
 
             from core.otp_router import _send_email
@@ -198,9 +194,7 @@ class TestJITOTPFlow:
                 new_callable=AsyncMock,
                 return_value=False,
             ),
-            patch(
-                "core.otp_router._send_email", new_callable=AsyncMock, return_value=True
-            ),
+            patch("core.otp_router._send_email", new_callable=AsyncMock, return_value=True),
             patch("core.otp_router.redis_manager", None),
         ):
             mock_api_key = MagicMock()

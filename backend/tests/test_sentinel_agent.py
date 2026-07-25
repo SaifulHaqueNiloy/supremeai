@@ -73,9 +73,10 @@ class TestSentinelAgent:
         """Test dependency audit when pip-audit unavailable."""
         agent = SentinelAgent()
 
-        with patch("core.sentinel_agent.shutil.which", return_value=None), patch(
-            "core.sentinel_agent.AsyncSessionLocal"
-        ) as mock_session:
+        with (
+            patch("core.sentinel_agent.shutil.which", return_value=None),
+            patch("core.sentinel_agent.AsyncSessionLocal") as mock_session,
+        ):
             mock_session.return_value.__aenter__ = AsyncMock()
             mock_session.return_value.__aexit__ = AsyncMock()
             mock_session.return_value.execute.return_value.scalars.return_value.all.return_value = []

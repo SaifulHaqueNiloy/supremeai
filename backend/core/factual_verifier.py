@@ -118,9 +118,7 @@ class FactualVerifier:
                 "method": "no_matches",
             }
         except Exception as e:  # noqa: BLE001
-            _logger.warning(
-                f"RAG verification failed for claim: {claim[:50]}... error: {e}"
-            )
+            _logger.warning(f"RAG verification failed for claim: {claim[:50]}... error: {e}")
             return {
                 "claim": claim,
                 "is_verified": False,

@@ -23,16 +23,16 @@ class SystemDesignSkill(BaseSkill):
         **kwargs: Any,
     ) -> Any:
         workspace.log(f"{self.name}: Starting system architecture layout analysis...")
-        sys_prompt = "You are a lead system architect. Define file structures, component breakdown, and database schemas."
+        sys_prompt = (
+            "You are a lead system architect. Define file structures, component breakdown, and database schemas."
+        )
         user_prompt = f"Design architecture for task: {workspace.original_prompt}"
 
         messages = [
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        resp = await llm_gateway.acompletion(
-            model=model_name, messages=messages, user_id=user_id
-        )
+        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -53,7 +53,9 @@ class CodeGenerationSkill(BaseSkill):
         **kwargs: Any,
     ) -> Any:
         workspace.log(f"{self.name}: Generating raw code from blueprints...")
-        sys_prompt = "You are an elite Coder Agent. Write the code implementation based on the architecture blueprint provided."
+        sys_prompt = (
+            "You are an elite Coder Agent. Write the code implementation based on the architecture blueprint provided."
+        )
         blueprint = kwargs.get("blueprint", workspace.original_prompt)
         user_prompt = f"Write code for this blueprint:\n{blueprint}"
 
@@ -61,9 +63,7 @@ class CodeGenerationSkill(BaseSkill):
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        resp = await llm_gateway.acompletion(
-            model=model_name, messages=messages, user_id=user_id
-        )
+        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -92,9 +92,7 @@ class StaticAnalysisSkill(BaseSkill):
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        resp = await llm_gateway.acompletion(
-            model=model_name, messages=messages, user_id=user_id
-        )
+        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -123,9 +121,7 @@ class ResearchSkill(BaseSkill):
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        resp = await llm_gateway.acompletion(
-            model=model_name, messages=messages, user_id=user_id
-        )
+        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -154,9 +150,7 @@ class ToolSynthesisSkill(BaseSkill):
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        resp = await llm_gateway.acompletion(
-            model=model_name, messages=messages, user_id=user_id
-        )
+        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 
@@ -185,9 +179,7 @@ class ToolExecutionSkill(BaseSkill):
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        resp = await llm_gateway.acompletion(
-            model=model_name, messages=messages, user_id=user_id
-        )
+        resp = await llm_gateway.acompletion(model=model_name, messages=messages, user_id=user_id)
         return resp.get("choices", [{}])[0].get("message", {}).get("content", "")
 
 

@@ -26,9 +26,7 @@ error_event_bus.register_listener(event_listener)
 async def run_experiment(target: str, fault: str, duration: int, loops: int):
     logger.info(f"🚀 Starting Chaos Experiment on '{target}' with fault '{fault}'")
 
-    cb = CircuitBreaker(
-        name=target, failure_threshold=3, recovery_timeout=5.0, half_open_after=5.0
-    )
+    cb = CircuitBreaker(name=target, failure_threshold=3, recovery_timeout=5.0, half_open_after=5.0)
 
     for loop in range(1, loops + 1):
         logger.info(f"--- Loop {loop}/{loops} ---")

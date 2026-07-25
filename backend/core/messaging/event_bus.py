@@ -11,7 +11,7 @@ import threading
 from collections.abc import Callable
 from collections import defaultdict
 from datetime import UTC, datetime
-from typing import Any, Dict, List
+from typing import Any
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("supremeai.event_bus")
@@ -73,27 +73,36 @@ class ErrorEventBus:
     """
 
     def __init__(self) -> None:
-        self._listeners: Dict[str, List[Callable[[ErrorEvent], Any]]] = defaultdict(
-            list
-        )
+        self._listeners: dict[str, list[Callable[[ErrorEvent], Any]]] = defaultdict(list)
         self._lock = threading.RLock()  # Use RLock for better thread safety
-        self._registered_handlers = (
-            set()
-        )  # Track registered handlers to prevent duplicates
+        self._registered_handlers: set[str] = set()  # Track registered handlers to prevent duplicates
         # বাংলা মন্তব্য: bounded queue — unbounded growth prevent করা হলো
         self._dlq: asyncio.Queue[DeadLetterQueueItem] = asyncio.Queue(maxsize=1000)
-        self._dead_letter_handlers: List[Callable[[DeadLetterQueueItem], Any]] = []
+        self._dead_letter_handlers: list[Callable[[DeadLetterQueueItem], Any]] = []
         self._total_emitted: int = 0
         self._total_dlq_items: int = 0
 
     def register_listener(
-        self, event_type: str, listener: Callable[[ErrorEvent], Any]
+        self,
+        event_type_or_listener: str | Callable[[ErrorEvent], Any] = "*",
+        listener: Callable[[ErrorEvent], Any] | None = None,
     ) -> None:
         """বাংলা মন্তব্য: Error event listener register করুন (thread-safe)।
         Duplicate registration এড়ানো হয়।"""
+        if callable(event_type_or_listener) and listener is None:
+            event_type = "*"
+            actual_listener = event_type_or_listener
+        elif isinstance(event_type_or_listener, str) and listener is not None:
+            event_type = event_type_or_listener
+            actual_listener = listener
+        else:
+            raise TypeError("register_listener requires a listener callable.")
+
         with self._lock:
             # Create a unique identifier for the handler to prevent duplicates
-            handler_id = f"{event_type}:{listener.__module__}:{listener.__name__}"
+            listener_module = getattr(actual_listener, "__module__", "unknown")
+            listener_name = getattr(actual_listener, "__name__", str(actual_listener))
+            handler_id = f"{event_type}:{listener_module}:{listener_name}"
 
             if handler_id in self._registered_handlers:
                 logger.debug(
@@ -101,35 +110,25 @@ class ErrorEventBus:
                 )
                 return
 
-            self._listeners[event_type].append(listener)
+            self._listeners[event_type].append(actual_listener)
             self._registered_handlers.add(handler_id)
-            logger.debug(
-                f"[ErrorEventBus] Registered listener for event type: {event_type}: {getattr(listener, '__name__', str(listener))}"
-            )
+            logger.debug(f"[ErrorEventBus] Registered listener for event type: {event_type}: {listener_name}")
 
-    def unregister_listener(
-        self, event_type: str, listener: Callable[[ErrorEvent], Any]
-    ) -> None:
+    def unregister_listener(self, event_type: str, listener: Callable[[ErrorEvent], Any]) -> None:
         """বাংলা মন্তব্য: Error event listener unregister করুন (thread-safe)."""
         with self._lock:
             if event_type in self._listeners:
                 try:
                     self._listeners[event_type].remove(listener)
-                    handler_id = (
-                        f"{event_type}:{listener.__module__}:{listener.__name__}"
-                    )
+                    handler_id = f"{event_type}:{listener.__module__}:{listener.__name__}"
                     self._registered_handlers.discard(handler_id)
                     logger.debug(
                         f"[ErrorEventBus] Unregistered listener for event type: {event_type}: {getattr(listener, '__name__', str(listener))}"
                     )
                 except ValueError:
-                    logger.debug(
-                        f"[ErrorEventBus] Listener not found for event type: {event_type}"
-                    )
+                    logger.debug(f"[ErrorEventBus] Listener not found for event type: {event_type}")
 
-    def register_dead_letter_handler(
-        self, handler: Callable[[DeadLetterQueueItem], Any]
-    ) -> None:
+    def register_dead_letter_handler(self, handler: Callable[[DeadLetterQueueItem], Any]) -> None:
         """বাংলা মন্তব্য: DLQ handler register করুন — handler failure alert পাঠাতে।"""
         self._dead_letter_handlers.append(handler)
 
@@ -201,9 +200,7 @@ class ErrorEventBus:
                         # বাংলা মন্তব্য: CancelledError কখনো suppress করা যাবে না
                         raise
                     except Exception as dl_exc:  # noqa: BLE001
-                        logger.error(
-                            f"[ErrorEventBus] Dead letter handler failed: {dl_exc}"
-                        )
+                        logger.error(f"[ErrorEventBus] Dead letter handler failed: {dl_exc}")
 
     async def _safe_invoke(self, handler: Callable, event: ErrorEvent) -> Any:
         """
@@ -238,9 +235,7 @@ class ErrorEventBus:
             }
         )
 
-        log_msg = (
-            f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
-        )
+        log_msg = f"[{event.module}] {event.error_type}: {event.message[:500]} | ctx={ctx}"
 
         if event.severity == "CRITICAL":
             logger.critical(log_msg)
@@ -265,9 +260,7 @@ class ErrorEventBus:
             "registered_listeners": len(self._listeners),
         }
 
-    async def process_dead_letter_queue(
-        self, max_items: int = 10
-    ) -> list[DeadLetterQueueItem]:
+    async def process_dead_letter_queue(self, max_items: int = 10) -> list[DeadLetterQueueItem]:
         """
         বাংলা মন্তব্য: DLQ থেকে items process করা।
         max_items bounded — unbounded processing prevent।
@@ -297,9 +290,9 @@ class EventBus:
     """
 
     def __init__(self) -> None:
-        self._listeners: Dict[str, List[Callable]] = defaultdict(list)
+        self._listeners: dict[str, list[Callable]] = defaultdict(list)
         self._lock = threading.RLock()
-        self._registered_handlers = set()
+        self._registered_handlers: set[str] = set()
 
     async def register_listener(self, topic: str, listener: Callable) -> None:
         """Register a listener for a specific topic with thread safety and duplicate prevention."""
