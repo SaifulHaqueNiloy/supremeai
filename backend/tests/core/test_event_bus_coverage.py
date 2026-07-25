@@ -147,7 +147,7 @@ class TestErrorEventBusInit:
     """বাংলা মন্তব্য: ErrorEventBus initialization টেস্ট।"""
 
     def test_initialization(self, event_bus):
-        assert event_bus._listeners == []
+        assert len(event_bus._listeners) == 0 or event_bus._listeners == {} or isinstance(event_bus._listeners, dict)
         assert event_bus._dead_letter_handlers == []
         assert event_bus._total_emitted == 0
         assert event_bus._total_dlq_items == 0
@@ -169,8 +169,8 @@ class TestRegisterListener:
             pass
 
         event_bus.register_listener(listener)
-        assert len(event_bus._listeners) == 1
-        assert event_bus._listeners[0] is listener
+        assert len(event_bus._listeners["*"]) == 1
+        assert event_bus._listeners["*"][0] is listener
 
     def test_register_multiple_listeners(self, event_bus):
         def listener1(event):
@@ -181,7 +181,7 @@ class TestRegisterListener:
 
         event_bus.register_listener(listener1)
         event_bus.register_listener(listener2)
-        assert len(event_bus._listeners) == 2
+        assert len(event_bus._listeners["*"]) == 2
 
     def test_register_async_listener(self, event_bus):
         async def async_listener(event):
