@@ -6,7 +6,9 @@ SupremeAI 2.0 — Inter-Agent Knowledge Persistence Store
 
 import datetime
 from typing import Any
+
 from loguru import logger
+
 from core.gcp_firestore import GCPFirestoreVerificationQueue
 
 
@@ -16,7 +18,12 @@ class AgentKnowledgeStore:
         self.queue = GCPFirestoreVerificationQueue(collection_name=self.collection_name)
 
     def save_agent_knowledge(
-        self, agent_name: str, best_skill: str, workflow_knowledge: str, best_practices: list[str], code_snippet_example: str = ""
+        self,
+        agent_name: str,
+        best_skill: str,
+        workflow_knowledge: str,
+        best_practices: list[str],
+        code_snippet_example: str = "",
     ) -> dict[str, Any]:
         """
         সংযুক্ত AI-এর শেখানো সমস্ত নলেজ ফায়ারবেস ডাটাবেসে সেভ করে।
@@ -34,14 +41,18 @@ class AgentKnowledgeStore:
         if self.queue.mode == "firestore" and self.queue.client:
             try:
                 self.queue.client.collection(self.collection_name).add(record)
-                logger.info(f"✅ Successfully stored AI agent knowledge for '{agent_name}' in Firestore.")
+                logger.info(
+                    f"✅ Successfully stored AI agent knowledge for '{agent_name}' in Firestore."
+                )
             except Exception as e:
                 logger.error(f"Failed to store knowledge in Firestore: {e}")
 
         # Local fallback SQLite / verification queue
         try:
             self.queue.enqueue(task_id=f"agent_knowledge_{agent_name}", payload=record)
-            logger.info(f"✅ Enqueued agent knowledge for '{agent_name}' in local store.")
+            logger.info(
+                f"✅ Enqueued agent knowledge for '{agent_name}' in local store."
+            )
         except Exception as e:
             logger.error(f"Failed to enqueue knowledge locally: {e}")
 

@@ -68,7 +68,9 @@ class CloudStorageManager:
             return public_url
 
         except httpx.HTTPError as http_err:
-            logger.critical(f"🔥 Network Failure during cloud file streaming: {str(http_err)}")
+            logger.critical(
+                f"🔥 Network Failure during cloud file streaming: {str(http_err)}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Storage cluster network timeout.",
