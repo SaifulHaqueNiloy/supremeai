@@ -498,8 +498,11 @@ jobs:
           pnpm install --frozen-lockfile
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📦 Outdated Node.js Dependencies" >> $GITHUB_STEP_SUMMARY
-          pnpm outdated --recursive 2>/dev/null >> $GITHUB_STEP_SUMMARY || \
-            echo "✅ সব Node প্যাকেজ আপ-টু-ডেট!" >> $GITHUB_STEP_SUMMARY
+          if ! pnpm outdated --recursive >> $GITHUB_STEP_SUMMARY 2>&1; then
+            if [ ! -s $GITHUB_STEP_SUMMARY ] || ! grep -q "│" $GITHUB_STEP_SUMMARY; then
+              echo "✅ সব Node প্যাকেজ আপ-টু-ডেট!" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
 
   auto-dependency-upgrade:
     name: "📦 Auto Dependency Upgrade (PR)"
