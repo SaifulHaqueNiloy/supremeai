@@ -20,9 +20,7 @@ from core.security.secure_credential_store import RotatingFernet
 strict_enabled = os.environ.get("STRICT_ENCRYPTION_CHECK") == "true"
 
 if strict_enabled:
-    ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY") or os.environ.get(
-        "SUPREMEAI_ENCRYPTION_KEY"
-    )
+    ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY") or os.environ.get("SUPREMEAI_ENCRYPTION_KEY")
     if not ENCRYPTION_KEY:
         error_event_bus.emit(
             ErrorEvent(
@@ -39,9 +37,7 @@ if strict_enabled:
 else:
     # Normal mode: settings.encryption_key থেকে আসে (computed field via secret_vault)
     ENCRYPTION_KEY = (
-        settings.encryption_key.get_secret_value()
-        if settings.encryption_key
-        else os.environ.get("ENCRYPTION_KEY")
+        settings.encryption_key.get_secret_value() if settings.encryption_key else os.environ.get("ENCRYPTION_KEY")
     )
 
     if not ENCRYPTION_KEY:
@@ -78,9 +74,7 @@ _raw_keys = [
 ]
 
 if not _raw_keys:
-    raise ValueError(
-        "CRITICAL: No encryption keys configured (ENCRYPTION_KEYS). Fail-Fast!"
-    )
+    raise ValueError("CRITICAL: No encryption keys configured (ENCRYPTION_KEYS). Fail-Fast!")
 
 _vault = RotatingFernet(_raw_keys)
 

@@ -97,9 +97,7 @@ class TestCloudSandboxOrchestrator:
                         "_prepare_creation_payload",
                         return_value={"pod": {"imageName": "ubuntu"}},
                     ):
-                        result = await orchestrator.create_sandbox(
-                            spec={"imageName": "ubuntu"}
-                        )
+                        result = await orchestrator.create_sandbox(spec={"imageName": "ubuntu"})
                         assert result is not None
                         assert result["id"] == "pod-12345"
 
@@ -124,9 +122,7 @@ class TestCloudSandboxOrchestrator:
                 new_callable=AsyncMock,
                 return_value=mock_response,
             ):
-                with patch.object(
-                    orchestrator, "_get_endpoint", return_value="/pod-12345/run"
-                ):
+                with patch.object(orchestrator, "_get_endpoint", return_value="/pod-12345/run"):
                     result = await orchestrator.run_command("pod-12345", "echo hello")
                     assert result is not None
                     assert result["exitCode"] == 0
@@ -152,9 +148,7 @@ class TestCloudSandboxOrchestrator:
                 new_callable=AsyncMock,
                 return_value=mock_response,
             ):
-                with patch.object(
-                    orchestrator, "_get_endpoint", return_value="/pod-12345/run"
-                ):
+                with patch.object(orchestrator, "_get_endpoint", return_value="/pod-12345/run"):
                     result = await orchestrator.run_command("pod-12345", "echo hello")
                     assert result is None
 

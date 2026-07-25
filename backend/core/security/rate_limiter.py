@@ -91,9 +91,7 @@ class SlidingWindowRateLimiter:
         if not client:
             # In production, fail-closed: if Redis is unavailable, deny the request
             if settings.env in ["production", "staging"]:
-                logger.warning(
-                    f"Redis unavailable, denying request for {identifier} in {limit_type} rate limiter"
-                )
+                logger.warning(f"Redis unavailable, denying request for {identifier} in {limit_type} rate limiter")
                 return False, 0, 0
             else:
                 # In non-production, allow requests if Redis is down
@@ -111,9 +109,7 @@ class SlidingWindowRateLimiter:
 
             # Execute Lua script atomically
             current_time = int(time.time())
-            request_id = (
-                f"{current_time}_{hash(identifier) % 1000000}"  # Unique request ID
-            )
+            request_id = f"{current_time}_{hash(identifier) % 1000000}"  # Unique request ID
 
             if self.script_sha:
                 # Use EVALSHA for better performance

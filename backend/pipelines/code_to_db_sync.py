@@ -79,14 +79,10 @@ class CodeToDBSync:
 
         # Update state
         await self.cache.set(self._file_hashes_key, current_hashes, ttl=SYNC_CACHE_TTL)
-        await self.cache.set(
-            self._last_sync_key, datetime.now(UTC).isoformat(), ttl=SYNC_CACHE_TTL
-        )
+        await self.cache.set(self._last_sync_key, datetime.now(UTC).isoformat(), ttl=SYNC_CACHE_TTL)
 
         # বাংলা ব্যাখ্যা: প্রোজেক্ট সিঙ্কের পর পরিবর্তিত ফাইল মেটাডেটা আউটবক্স সিঙ্ক রাউটারে রেকর্ড করা হয়।
-        logger.info(
-            f"CodeToDBSync: Indexed {len(current_hashes)} files ({len(changed_files)} changed)"
-        )
+        logger.info(f"CodeToDBSync: Indexed {len(current_hashes)} files ({len(changed_files)} changed)")
 
         return {
             "status": "success",
@@ -108,16 +104,12 @@ class CodeToDBSync:
 
         flushed = await asyncio.to_thread(outbox_batcher.flush)
         if flushed:
-            logger.info(
-                f"CodeToDBSync Outbox Worker: Flushed {flushed} pending outbox rows"
-            )
+            logger.info(f"CodeToDBSync Outbox Worker: Flushed {flushed} pending outbox rows")
         else:
             logger.debug("CodeToDBSync Outbox Worker: No pending outbox rows to flush")
         return flushed
 
-    async def start_daemon(
-        self, project_path: str = "./", interval: float = DEFAULT_DAEMON_INTERVAL
-    ) -> None:
+    async def start_daemon(self, project_path: str = "./", interval: float = DEFAULT_DAEMON_INTERVAL) -> None:
         """
         Start the background sync daemon loop.
         বাংলা ব্যাখ্যা: সিঙ্ক ডেমন চালু করা যা ব্যাকগ্রাউন্ডে নির্দিষ্ট সময় পরপর কোড সিঙ্ক ও আউটবক্স ফ্লাশ সচল রাখে।

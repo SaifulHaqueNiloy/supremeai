@@ -98,9 +98,7 @@ def test_clear_stale_cache_deletes_keys():
         result = cache_cleanup.clear_stale_cache()
 
     assert result == 3
-    mock_client.delete.assert_called_once_with(
-        "temp_cache:a", "temp_cache:b", "temp_cache:c"
-    )
+    mock_client.delete.assert_called_once_with("temp_cache:a", "temp_cache:b", "temp_cache:c")
 
 
 def test_clear_stale_cache_scan_fallback():
