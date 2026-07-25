@@ -29,10 +29,11 @@ class MetaArchitect:
                 f"Loading strategic context from {len(strategic_docs)} documents."
             )
             for doc_path in strategic_docs:
-                try:
-                    with open(doc_path, encoding="utf-8") as f:
-                        # This is a simplified loader. A real implementation would parse markdown.
-                        if "gap" in f.read().lower():
+                    import asyncio
+                    from pathlib import Path
+
+                    doc_text = await asyncio.to_thread(Path(doc_path).read_text, encoding="utf-8")
+                    if "gap" in doc_text.lower():
                             gaps.append(
                                 f"Potential gap context found in: {os.path.basename(doc_path)}"
                             )
@@ -56,8 +57,11 @@ class MetaArchitect:
                     file_path = os.path.join(dirpath, file)
                     metrics["total_files"] += 1
                     try:
-                        with open(file_path, encoding="utf-8", errors="ignore") as f:
-                            lines = f.readlines()
+                        import asyncio
+                        from pathlib import Path
+
+                        content = await asyncio.to_thread(Path(file_path).read_text, encoding="utf-8", errors="ignore")
+                        lines = content.splitlines()
                             metrics["total_lines"] += len(lines)
                             ext = os.path.splitext(file)[1].lower()
                             lang = ext.lstrip(".") or "unknown"
@@ -70,9 +74,7 @@ class MetaArchitect:
 
                             loguru.logger.error(f"Tool execution error: {e}")
                         except Exception as e:  # noqa: BLE001
-                            import logging
-
-                            logging.warning(f"Exception suppressed: {e}")
+                            logger.warning(f"Exception suppressed: {e}")
                         pass
             if metrics["total_files"]:
                 metrics["avg_file_size"] = (
@@ -132,9 +134,7 @@ class MetaArchitect:
 
                     loguru.logger.error(f"Tool execution error: {e}")
                 except Exception as e:  # noqa: BLE001
-                    import logging
-
-                    logging.warning(f"Exception suppressed: {e}")
+                    logger.warning(f"Exception suppressed: {e}")
                 plan = {
                     "priority": "medium",
                     "steps": [
@@ -156,8 +156,10 @@ class MetaArchitect:
             from brain.model_router import ModelRouter
 
             router = ModelRouter()
-            with open(target_path, encoding="utf-8") as f:
-                original = f.read()
+            import asyncio
+            from pathlib import Path
+
+            original = await asyncio.to_thread(Path(target_path).read_text, encoding="utf-8")
             prompt = (
                 "Refactor the following code according to the instruction. "
                 "Return ONLY the complete refactored code. No markdown, no explanations.\n\n"
