@@ -81,6 +81,9 @@ if __name__ == "__main__":
     print(f"Audit completed. Found {silent_count} silent/broad exceptions and {print_count} print statements.")
     print(f"Report saved to {report_path}")
 
-    if issues_found:
-        print("\nFound broad exception handlers, but continuing CI check.")
+    if silent_count > 0 or print_count > 0:
+        print("\n❌ CI GATEKEEPER FAILED: Found print() statements or broad exception handlers. Please fix them before merging.")
+        sys.exit(1)
+    else:
+        print("\n✅ CI GATEKEEPER PASSED: No observability issues found.")
         sys.exit(0)

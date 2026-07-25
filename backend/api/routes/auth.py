@@ -44,9 +44,8 @@ async def optional_current_user(
         return None
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub", "unknown")
-        role = payload.get("role", "viewer")
-        return UserContext(user_id=user_id, role=role)
+        payload.get("sub", "unknown")
+        payload.get("role", "viewer")
     except Exception:
         logger.exception("Unhandled exception")
         return None

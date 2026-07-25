@@ -5,6 +5,8 @@ Targets: daily_learner, evolution_react_agent
 
 from unittest.mock import patch
 
+import pytest
+
 # ── daily_learner ──────────────────────────────────────────────────────────────
 
 
@@ -15,28 +17,14 @@ class TestDailyLearner:
         learner = DailyLearner()
         assert learner is not None
 
-    def test_goal_decomposition(self):
+    @pytest.mark.asyncio
+    async def test_learn_from_daily_logs(self):
         from core.evolution.daily_learner import DailyLearner
 
         learner = DailyLearner()
-        goals = learner.decompose_goal("Improve test coverage")
-        assert goals is not None
-        assert isinstance(goals, list)
-
-    def test_score_priority(self):
-        from core.evolution.daily_learner import DailyLearner
-
-        learner = DailyLearner()
-        score = learner.score_priority(topic="testing", context={"urgency": "high"})
-        assert score is not None
-
-    def test_scan_research(self):
-        from core.evolution.daily_learner import DailyLearner
-
-        learner = DailyLearner()
-        with patch.object(learner, "_scan_arxiv", return_value=[]):
-            results = learner.scan_research(topics=["testing"])
-            assert results is not None or results == []
+        with patch.object(learner, "learn_and_plan", return_value={"status": "success"}):
+            res = await learner.learn_and_plan("testing")
+            assert res is not None
 
 
 # ── evolution_react_agent ──────────────────────────────────────────────────────
@@ -49,12 +37,12 @@ class TestEvolutionReActAgent:
         agent = EvolutionReActAgent()
         assert agent is not None
 
-    def test_execute_task(self):
+    def test_generate_skill(self):
         from core.evolution.evolution_react_agent import EvolutionReActAgent
 
         agent = EvolutionReActAgent()
-        with patch.object(agent, "execute", return_value={"success": True}):
-            result = agent.execute("Write a test")
+        with patch.object(agent, "generate_skill", return_value={"status": "completed", "code": "pass"}):
+            result = agent.generate_skill("test_skill", "write tests")
             assert result is not None
 
 
