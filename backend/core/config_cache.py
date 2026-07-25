@@ -113,7 +113,9 @@ class ConfigCache:
         try:
             new_cache = asyncio.run(self._load_from_db_async())
         except Exception as exc:  # noqa: BLE001
-            logger.warning(f"ConfigCache: DB load failed during sync bootstrap, using defaults: {exc}")
+            logger.warning(
+                f"ConfigCache: DB load failed during sync bootstrap, using defaults: {exc}"
+            )
             new_cache = dict(DEFAULT_CONFIGS)
         with self._lock:
             self._cache = new_cache

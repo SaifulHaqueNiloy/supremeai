@@ -69,7 +69,9 @@ class TestErrorPatternDB:
         db = ErrorPatternDB()
 
         # First log an error pattern
-        db.log_error("hallucinated fact about quantum physics", "hallucination", "verify facts")
+        db.log_error(
+            "hallucinated fact about quantum physics", "hallucination", "verify facts"
+        )
 
         result = db.check_pattern("quantum physics")
 
@@ -80,7 +82,7 @@ class TestErrorPatternDB:
         """Test SQLite table creation."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = os.path.join(tmpdir, "test.db")
-            db = ErrorPatternDB(db_path=db_path)
+            ErrorPatternDB(db_path=db_path)
 
             # Should create the database file
             assert os.path.exists(db_path)

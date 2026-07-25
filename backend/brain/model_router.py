@@ -67,13 +67,19 @@ class ModelRouter:
     def _get_breaker(self, task_type: str):
         # বাংলা মন্তব্ব: প্রতিটি টাস্ক টাইপের জন্য গ্লোবাল রেডিস-ব্যাকড সার্কিট ব্রেকার তৈরি
         if CircuitBreaker is None or redis_queue is None:
-            return self.performance_optimizer.get_circuit_breaker(f"router_task_{task_type}")
+            return self.performance_optimizer.get_circuit_breaker(
+                f"router_task_{task_type}"
+            )
 
         if task_type not in self._breakers:
-            self._breakers[task_type] = self.performance_optimizer.get_circuit_breaker(f"router_task_{task_type}")
+            self._breakers[task_type] = self.performance_optimizer.get_circuit_breaker(
+                f"router_task_{task_type}"
+            )
         return self._breakers[task_type]
 
-    def route_and_generate_with_cot(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
+    def route_and_generate_with_cot(
+        self, prompt: str, task_type: str = "general", max_cost: float = 0.01
+    ) -> dict[str, Any]:
         # বাংলা মন্তব্য: CoT সাপোর্টের জন্য cot_reasoner এর মকিং প্রপার্টিসমূহ রিটার্ন করা হয়েছে
         res = self.route_and_generate(prompt, task_type, max_cost)
 
@@ -85,11 +91,15 @@ class ModelRouter:
             except Exception as exc:  # noqa: BLE001
                 logger.warning(f"CoT reasoner failed (null-safe guard): {exc}")
         type_name = type(reasoning_res).__name__
-        if type_name == "MagicMock" or (hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)):
+        if type_name == "MagicMock" or (
+            hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)
+        ):
             # Fallback mock dict structure
             reasoning_res = {
                 "iterations": 1,
-                "thoughts": [{"type": "thought", "content": "step one", "reasoning_depth": 0}],
+                "thoughts": [
+                    {"type": "thought", "content": "step one", "reasoning_depth": 0}
+                ],
                 "final_answer": "42",
                 "last_output": {},
             }
@@ -111,19 +121,27 @@ class ModelRouter:
             "cot_verification": verification_res,
         }
 
-    def route_and_generate(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
+    def route_and_generate(
+        self, prompt: str, task_type: str = "general", max_cost: float = 0.01
+    ) -> dict[str, Any]:
         # বাংলা মন্তব্য: টেস্টে যদি async_route_and_generate কে mock করা হয়, তবে সেটিকেও সাপোর্ট করার জন্য ডাইনামিক কলিং
         res = None
         async_func = getattr(self, "async_route_and_generate", None)
         if (
             async_func
             and async_func != ModelRouter.async_route_and_generate
-            and (inspect.iscoroutinefunction(async_func) or hasattr(async_func, "assert_called_with") or type(async_func).__name__ == "AsyncMock")
+            and (
+                inspect.iscoroutinefunction(async_func)
+                or hasattr(async_func, "assert_called_with")
+                or type(async_func).__name__ == "AsyncMock"
+            )
         ):
             res = run_async_as_sync(async_func(prompt, task_type, max_cost))
 
         if res is None:
-            res = run_async_as_sync(self.async_route_and_generate(prompt, task_type, max_cost))
+            res = run_async_as_sync(
+                self.async_route_and_generate(prompt, task_type, max_cost)
+            )
 
         if res is None:
             # ✅ FIXED: previously returned the same hardcoded fake "portfolio app" JSON
@@ -140,7 +158,9 @@ class ModelRouter:
             }
         return res
 
-    async def async_route_and_generate(self, prompt: Any, task_type: str = "general", max_cost: float = 0.01, **kwargs) -> dict[str, Any]:
+    async def async_route_and_generate(
+        self, prompt: Any, task_type: str = "general", max_cost: float = 0.01, **kwargs
+    ) -> dict[str, Any]:
         logger.info(f"[ModelRouter] Forwarding task_type='{task_type}' to LLMGateway")
 
         # বাংলা মন্তব্ব: টেস্ট কেসে যদি monkeypatch করা মেথডসমূহ থাকে, তবে ফলব্যাক রান করানো হচ্ছে
@@ -167,7 +187,11 @@ class ModelRouter:
         # চালিয়ে দেওয়া হতো। ✅ FIXED: এখন কনফিগারেশন সমস্যাটা স্পষ্ট error হিসেবে propagate হয়,
         # যাতে self_planner/diagram_to_architecture/image_to_code-সহ কোনো কলারই ভুলবশত এই
         # নির্দিষ্ট hardcoded স্কিমাকে বাস্তব জেনারেশন মনে না করে।
-        if not settings.gemini_api_key and not settings.openrouter_api_key and "pytest" not in sys.modules:
+        if (
+            not settings.gemini_api_key
+            and not settings.openrouter_api_key
+            and "pytest" not in sys.modules
+        ):
             # We don't force fallback just because pytest is running,
             # so that mocked LLMGateway can be hit during testing.
             error_msg = "No LLM provider configured: GEMINI_API_KEY and OPENROUTER_API_KEY are both unset."
@@ -178,7 +202,10 @@ class ModelRouter:
                 error_message=error_msg,
                 context={
                     "task_type": task_type,
-                    "providers_configured": {"gemini": bool(settings.gemini_api_key), "openrouter": bool(settings.openrouter_api_key)},
+                    "providers_configured": {
+                        "gemini": bool(settings.gemini_api_key),
+                        "openrouter": bool(settings.openrouter_api_key),
+                    },
                     "dependency_tree": ["model_router", "llm_gateway"],
                 },
             )
@@ -211,13 +238,17 @@ class ModelRouter:
                 if "messages" in prompt:
                     normalized_prompt = prompt["messages"]
                 else:
-                    normalized_prompt = str(prompt.get("prompt", prompt.get("content", str(prompt))))
+                    normalized_prompt = str(
+                        prompt.get("prompt", prompt.get("content", str(prompt)))
+                    )
             else:
                 normalized_prompt = str(prompt)
 
             breaker = self._get_breaker(task_type)
             if not breaker.allow_request():
-                logger.warning(f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request.")
+                logger.warning(
+                    f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request."
+                )
                 return {
                     "success": False,
                     "text": "{}",
@@ -225,19 +256,29 @@ class ModelRouter:
                 }
 
             if get_tracker is None:
-                logger.warning("[ModelRouter] free_tier_tracker unavailable, using default provider")
+                logger.warning(
+                    "[ModelRouter] free_tier_tracker unavailable, using default provider"
+                )
                 best_provider = "gemini"
             else:
                 tracker = get_tracker()
-                best_provider = tracker.get_best_provider(["gemini", "groq", "openrouter"])
+                best_provider = tracker.get_best_provider(
+                    ["gemini", "groq", "openrouter"]
+                )
 
             if not best_provider:
-                logger.warning("[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock).")
+                logger.warning(
+                    "[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock)."
+                )
                 return {
                     "success": True,
                     "model": "eco_mode_offline",
                     "eco_mode": True,  # Flag to be converted to X-SupremeAI-Status: Eco-Mode header
-                    "text": json.dumps({"response": "System is running in Eco-Mode. Minimal response generated."}),
+                    "text": json.dumps(
+                        {
+                            "response": "System is running in Eco-Mode. Minimal response generated."
+                        }
+                    ),
                     "cost": 0.0,
                 }
 
@@ -283,7 +324,11 @@ class ModelRouter:
             await self.performance_optimizer.handle_failure(
                 error_type="MODEL_ROUTER_ERROR",
                 error_message=str(e),
-                context={"task_type": task_type, "prompt_type": type(prompt).__name__, "dependency_tree": ["model_router"]},
+                context={
+                    "task_type": task_type,
+                    "prompt_type": type(prompt).__name__,
+                    "dependency_tree": ["model_router"],
+                },
             )
             return {"success": False, "text": "{}", "error": str(e)}
 
@@ -293,7 +338,9 @@ class ModelRouter:
             return self._local_rag.semantic_search(query)
         return {"status": "error", "message": "RAG engine not initialized"}
 
-    def route_and_stream(self, prompt: str, task_type: str = "general", *args, **kwargs):
+    def route_and_stream(
+        self, prompt: str, task_type: str = "general", *args, **kwargs
+    ):
         # বাংলা মন্তব্য: স্ট্রিমিং ফলব্যাক মেথড যুক্ত করা হয়েছে
         if hasattr(self, "_stream_ollama") and callable(self._stream_ollama):
             yield from self._stream_ollama(prompt, "qwen")

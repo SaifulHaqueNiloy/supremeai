@@ -32,7 +32,7 @@ class TestAdminGodSecurity:
 
     def test_record_default_ip_address(self):
         """Test default IP address."""
-        session_id = GodModeAuditLog.record(
+        GodModeAuditLog.record(
             actor="test_user",
             action="TEST_ACTION",
             resource="test_resource",
@@ -55,14 +55,20 @@ class TestAdminGodSecurity:
 
     def test_update_default_duration(self):
         """Test update with default duration."""
-        session_id = GodModeAuditLog.record(actor="test_user", action="ACTIVATED", resource="system", reason="test")
+        session_id = GodModeAuditLog.record(
+            actor="test_user", action="ACTIVATED", resource="system", reason="test"
+        )
         GodModeAuditLog.update(session_id, "TERMINATED")
         assert GodModeAuditLog._entries[1]["duration_ms"] == 0.0
 
     def test_get_entries_returns_copy(self):
         """Test get_entries returns a copy."""
-        GodModeAuditLog.record(actor="user1", action="ACTION1", resource="res1", reason="reason1")
-        GodModeAuditLog.record(actor="user2", action="ACTION2", resource="res2", reason="reason2")
+        GodModeAuditLog.record(
+            actor="user1", action="ACTION1", resource="res1", reason="reason1"
+        )
+        GodModeAuditLog.record(
+            actor="user2", action="ACTION2", resource="res2", reason="reason2"
+        )
         entries = GodModeAuditLog.get_entries()
         assert len(entries) == 2
         entries.append({"test": "modified"})
