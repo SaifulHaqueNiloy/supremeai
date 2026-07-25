@@ -44,7 +44,7 @@ class AgentKnowledgeStore:
                 logger.info(
                     f"✅ Successfully stored AI agent knowledge for '{agent_name}' in Firestore."
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to store knowledge in Firestore: {e}")
 
         # Local fallback SQLite / verification queue
@@ -53,7 +53,7 @@ class AgentKnowledgeStore:
             logger.info(
                 f"✅ Enqueued agent knowledge for '{agent_name}' in local store."
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to enqueue knowledge locally: {e}")
 
         return {"status": "success", "agent_name": agent_name, "best_skill": best_skill}

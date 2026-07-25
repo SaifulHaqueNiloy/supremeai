@@ -162,7 +162,7 @@ class ModelTrainer:
                 f"ModelTrainer: Learned fix pattern for fingerprint {fingerprint[:8]}"
             )
             return True
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             logger.error(f"ModelTrainer learn_from_execution_failure failed: {exc}")
             return False
 
