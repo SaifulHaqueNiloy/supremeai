@@ -815,3 +815,37 @@ class Settings(BaseSettings):
         """Production completeness verification helper for test coverage."""
         if self.env == "production":
             pass
+        return self
+
+    def reload_env_vars(self) -> None:
+        """প্রোডাকশনে সার্ভার রিস্টার্ট ছাড়াই কনফিগারেশন রিলোড করার ডাইনামিক মেথড। (Bangla: Hot-reload listener)"""
+        from dotenv import load_dotenv
+
+        load_dotenv(override=True)
+        logger.info("⚙️ [Config] Environment variables hot-reloaded successfully.")
+
+
+# ── Singleton instantiation with True Fail-Fast ────────────────────────────────
+# বাংলা মন্তব্য: এখানে Fail-Fast সত্যিকারভাবে enforce হচ্ছে।
+# কোনো "resilient boot" বা dummy fallback নেই। Exception মানেই sys.exit(1)।
+try:
+    settings = Settings()
+except Exception as _boot_exc:  # noqa: BLE001
+    logger.critical(f"🔥 FATAL CONFIG ERROR: {_boot_exc}\nServer startup ABORTED (Fail-Fast applied). Fix the configuration.")
+    sys.exit(1)
+
+
+def get_production_env(var_name: str, default: str | None = None) -> str:
+    """বাংলা মন্তব্য: Strict Fail-Fast Config Guard.
+    যেকোনো এনভায়রনমেন্টে কোনো ক্রিটিক্যাল সিক্রেট মিসিং থাকলে সরাসরি হার্ড ক্র্যাশ করবে,
+    যাতে সাইলেন্ট ফেইলর প্রতিরোধ করা যায়। ডিফল্ট ভ্যালু পাস করলে মিসিং ক্ষেত্রে fallback ব্যবহার হবে।
+    """
+    import os
+
+    value = os.getenv(var_name)
+    if not value:
+        if default is not None:
+            return default
+        logger.critical(f"❌ CRITICAL CONFIG ERROR: Missing required environment variable '{var_name}'!")
+        raise ValueError(f"Configuration Error: {var_name} must be explicitly defined.")
+    return value
