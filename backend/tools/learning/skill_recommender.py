@@ -228,7 +228,7 @@ class HeuristicScorer:
                 score += semantic_score * 0.2
                 if semantic_score > 0.5:
                     reasons.append("Semantically relevant to your goals")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.debug(f"LLM semantic similarity failed: {e}")
 
         return SkillRecommendation(
@@ -267,7 +267,7 @@ class HeuristicScorer:
             score = float(result.get("content", "0.0"))
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)
             return score
-        except Exception:
+        except Exception:  # noqa: BLE001
             return 0.0
 
     def _get_skill_name(self, skill_id: str) -> str:
