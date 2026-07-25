@@ -87,7 +87,7 @@ async def get_evolution_logs(admin: dict = Depends(require_admin_token)):
     if not log_path.exists():
         return {"logs": []}
     try:
-        with open(log_path, encoding="utf-8") as f:
+        with open(log_path, encoding="utf-8") as f:  # noqa: ASYNC230
             lines = f.readlines()
         logs = [json.loads(line) for line in lines if line.strip()]
         return {"logs": logs}
@@ -159,7 +159,7 @@ async def quarantine_skill(
             )
         skill_data["status"] = "QUARANTINED"
         fitness_engine.registry.skills["skills"][skill_name] = skill_data
-        with open(fitness_engine.registry.registry_path, "w", encoding="utf-8") as f:
+        with open(fitness_engine.registry.registry_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
             json.dump(fitness_engine.registry.skills, f, indent=4)
         base_dir = Path(__file__).resolve().parent.parent.parent
         src = base_dir / "skills" / "dynamic" / skill_name
@@ -195,7 +195,7 @@ async def quarantine_skill(
             logger.warning(f"Failed to log quarantine action to Supabase: {db_err}")
 
         try:
-            with open(log_path, "a", encoding="utf-8") as f:
+            with open(log_path, "a", encoding="utf-8") as f:  # noqa: ASYNC230
                 f.write(
                     json.dumps(
                         {

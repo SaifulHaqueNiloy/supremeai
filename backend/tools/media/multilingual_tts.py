@@ -203,7 +203,7 @@ class MultilingualTTS:
                 res = await client.post(url, headers=headers, json=payload)
             if res.status_code == 200:
                 os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-                with open(out_path, "wb") as f:
+                with open(out_path, "wb") as f:  # noqa: ASYNC230
                     f.write(res.content)
                 logger.info(f"ElevenLabs ✅ lang={lang} path={out_path}")
                 return {
@@ -500,8 +500,6 @@ async def clear_cache():
 
                         loguru.logger.error(f"Tool execution error: {e}")
                     except Exception as e:  # noqa: BLE001
-                        import logging
-
-                        logging.warning(f"Exception suppressed: {e}")
+                        logger.warning(f"Exception suppressed: {e}")
                     pass
     return {"status": "success", "removed_files": removed}

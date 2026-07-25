@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from loguru import logger
+
 import os
 from dataclasses import dataclass
 
@@ -29,9 +31,7 @@ class BanglaVoice:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return False
 
     def _check_tts_available(self) -> bool:
@@ -45,9 +45,7 @@ class BanglaVoice:
 
                 loguru.logger.error(f"Tool execution error: {e}")
             except Exception as e:  # noqa: BLE001
-                import logging
-
-                logging.warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
             return False
 
     def transcribe(self, audio_path: str) -> BanglaVoiceResult:
