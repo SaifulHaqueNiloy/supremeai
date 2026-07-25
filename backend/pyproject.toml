@@ -272,7 +272,6 @@ select = [
     "W",     # pycodestyle warnings
     "F",     # Pyflakes
     "UP",    # pyupgrade
-    "ASYNC", # flake8-async
     "LOG",   # flake8-logging
 ]
 ignore = [
@@ -287,7 +286,6 @@ ignore = [
     "TRY004",   # Prefer TypeError
     "DTZ005",   # Datetime tz
     "B008",     # Default args call
-    "ASYNC101", # Async blocking call
     "I001",     # Unsorted imports
 ]
 
