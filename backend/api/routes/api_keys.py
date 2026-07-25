@@ -309,3 +309,6 @@ async def rotate_api_key(
         new_key_masked=new_key_masked,
         new_key_prefix=new_key_prefix,
     )
+
+
+list_api_keys = list_user_keys
