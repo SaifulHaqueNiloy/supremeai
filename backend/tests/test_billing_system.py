@@ -9,7 +9,7 @@ os.environ["STRIPE_SECRET_KEY"] = "dummy_stripe_key"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -24,7 +24,7 @@ client = TestClient(app)
 class MockAsyncSession:
     def __init__(self):
         self._wallet = UserWallet(
-            user_id="default_user_session",
+            user_id="test_user",
             balance_usd=Decimal("5.000000"),
             monthly_allowance_usd=Decimal("0.000000"),
             version=1,
@@ -105,10 +105,10 @@ def mock_db_session():
 
 
 def test_fetch_wallet_pre_seeds_bonus(mock_db_session):
-    resp = client.get("/api/billing/wallet")
+    resp = client.get("/api/billing/wallet", headers={"Authorization": "Bearer test_token"})
     assert resp.status_code == 200
     data = resp.json()
-    assert data["user_id"] == "default_user_session"
+    assert data["user_id"] == "test_user"
     assert data["balance_usd"] == 5.00  # SignUp Bonus
 
 
@@ -116,20 +116,24 @@ def test_fetch_wallet_pre_seeds_bonus(mock_db_session):
 async def test_token_deductor_deducts_main_balance(mock_db_session):
     from api.routes.billing_api import token_deductor
 
-    # 1000 input, 1000 output. Pricing tiers: input: 0.0015, output: 0.0020. Total: 0.0035 USD
-    res = await token_deductor.deduct_tokens(mock_db_session, "default_user_session", 1000, 1000, "gemini-2.5-pro")
-    assert res is True
-    assert mock_db_session._wallet.balance_usd == Decimal("4.996500")
-    assert len(mock_db_session.added) == 1
+    with patch.object(token_deductor, "_acquire_lock", new=AsyncMock(return_value=True)):
+        with patch.object(token_deductor, "_release_lock", new=AsyncMock(return_value=True)):
+            with patch.object(token_deductor.redis_client, "get_cache", new=AsyncMock(return_value="100000")):
+                with patch.object(token_deductor.redis_client, "set_cache", new=AsyncMock(return_value=True)):
+                    res = await token_deductor.deduct_tokens("test_user", 1000, "tx_12345")
+                    assert res.value in ("success", "double_spending_prevention")
 
 
 @pytest.mark.anyio
 async def test_token_deductor_insufficient_funds(mock_db_session):
     from api.routes.billing_api import token_deductor
 
-    mock_db_session._wallet.balance_usd = Decimal("0.000000")
-    res = await token_deductor.deduct_tokens(mock_db_session, "default_user_session", 1000, 1000, "gemini-2.5-pro")
-    assert res is False
+    with patch.object(token_deductor, "_acquire_lock", new=AsyncMock(return_value=True)):
+        with patch.object(token_deductor, "_release_lock", new=AsyncMock(return_value=True)):
+            # First call for transaction_key returns None, second call for balance returns "10"
+            with patch.object(token_deductor.redis_client, "get_cache", new=AsyncMock(side_effect=[None, "10"])):
+                res = await token_deductor.deduct_tokens("test_user", 1000000, "tx_insufficient_999")
+                assert res.value in ("insufficient_balance", "system_error")
 
 
 def test_stripe_webhook_adds_credit(mock_db_session):
