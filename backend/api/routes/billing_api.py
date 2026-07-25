@@ -9,6 +9,7 @@ import httpx
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from loguru import logger
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm.exc import StaleDataError
@@ -394,3 +395,11 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
         ) from e
+
+
+class TopUpRequest(BaseModel):
+    amount_usd: float
+    payment_method: str = "stripe"
+
+
+get_balance = get_wallet_balance
