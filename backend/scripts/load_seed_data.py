@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Load seed data from cloud storage (GCS/S3) at runtime.
 Replaces static seed_data/ in git.

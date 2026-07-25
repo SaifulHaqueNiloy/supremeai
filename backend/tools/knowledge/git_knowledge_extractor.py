@@ -4,7 +4,6 @@ Analyzes git history to extract error-fix patterns and architecture learnings.
 Fulfills SK-0065 in autonomous_seed_knowledge.json.
 """
 
-#!/usr/bin/env python3
 """
 Git Log Knowledge Extractor
 Analyzes git history to extract error-fix patterns and architecture learnings.
