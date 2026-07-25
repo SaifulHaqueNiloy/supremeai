@@ -14,7 +14,6 @@ Critical Security Note: এখন প্রোডাকশনে ডবল-স�
 
 import time
 from enum import Enum
-from typing import Optional
 
 from loguru import logger
 
@@ -87,9 +86,7 @@ class TokenDeductor:
         # Acquire distributed lock
         lock_acquired = await self._acquire_lock(lock_key, lock_value, lock_timeout)
         if not lock_acquired:
-            logger.warning(
-                f"Could not acquire lock for token deduction for user {user_id}"
-            )
+            logger.warning(f"Could not acquire lock for token deduction for user {user_id}")
             return TokenDeductionResult.DOUBLE_SPENDING_PREVENTION
 
         try:
@@ -97,9 +94,7 @@ class TokenDeductor:
             transaction_key = f"processed_tx:{transaction_id}"
             already_processed = await self.redis_client.get_cache(transaction_key)
             if already_processed:
-                logger.warning(
-                    f"Transaction {transaction_id} already processed for user {user_id}"
-                )
+                logger.warning(f"Transaction {transaction_id} already processed for user {user_id}")
                 return TokenDeductionResult.DOUBLE_SPENDING_PREVENTION
 
             # Get current balance
@@ -112,9 +107,7 @@ class TokenDeductor:
                 try:
                     current_balance = float(current_balance_str)
                 except ValueError:
-                    logger.error(
-                        f"Invalid balance value for user {user_id}: {current_balance_str}"
-                    )
+                    logger.error(f"Invalid balance value for user {user_id}: {current_balance_str}")
                     return TokenDeductionResult.SYSTEM_ERROR
 
             # Calculate deduction amount
@@ -135,9 +128,7 @@ class TokenDeductor:
             await self.redis_client.set_cache(balance_key, str(new_balance))
 
             # Mark transaction as processed to prevent double-spending
-            await self.redis_client.set_cache(
-                transaction_key, "1", ex_seconds=3600
-            )  # Keep for 1 hour
+            await self.redis_client.set_cache(transaction_key, "1", ex_seconds=3600)  # Keep for 1 hour
 
             logger.info(
                 f"Successfully deducted {total_deduction} tokens for user {user_id}. New balance: {new_balance}"
@@ -197,7 +188,7 @@ class TokenDeductor:
             logger.error(f"Error releasing lock {key}: {e}")
             return False
 
-    async def get_balance(self, user_id: str) -> Optional[float]:
+    async def get_balance(self, user_id: str) -> float | None:
         """Get the current token balance for a user."""
         balance_key = f"user_balance:{user_id}"
         balance_str = await self.redis_client.get_cache(balance_key)
@@ -233,12 +224,10 @@ async def deduct_tokens(
     cost_multiplier: float = 1.0,
 ) -> TokenDeductionResult:
     """Convenience function to deduct tokens."""
-    return await token_deducter.deduct_tokens(
-        user_id, tokens_to_deduct, transaction_id, deduce_cost, cost_multiplier
-    )
+    return await token_deducter.deduct_tokens(user_id, tokens_to_deduct, transaction_id, deduce_cost, cost_multiplier)
 
 
-async def get_balance(user_id: str) -> Optional[float]:
+async def get_balance(user_id: str) -> float | None:
     """Convenience function to get balance."""
     return await token_deducter.get_balance(user_id)
 

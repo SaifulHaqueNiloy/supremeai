@@ -21,9 +21,7 @@ class EvolutionReActAgent:
         self.model_router = model_router or ModelRouter()
         self.max_reflexion_turns = 3
 
-    def generate_skill(
-        self, skill_name: str, requirement: str, failure_log: str | None = None
-    ) -> dict[str, Any]:
+    def generate_skill(self, skill_name: str, requirement: str, failure_log: str | None = None) -> dict[str, Any]:
         """
         Runs the ReAct Loop to generate and refine a python skill script.
         """
@@ -31,21 +29,13 @@ class EvolutionReActAgent:
         current_code = ""
         current_error = failure_log or ""
 
-        logger.info(
-            f"🤖 [EvolutionReActAgent] Starting autonomous loop for skill: {skill_name}"
-        )
+        logger.info(f"🤖 [EvolutionReActAgent] Starting autonomous loop for skill: {skill_name}")
 
         for turn in range(1, self.max_reflexion_turns + 1):
-            logger.info(
-                f"🔄 [EvolutionReActAgent] ReAct Loop Turn {turn}/{self.max_reflexion_turns}"
-            )
+            logger.info(f"🔄 [EvolutionReActAgent] ReAct Loop Turn {turn}/{self.max_reflexion_turns}")
 
             # Build prompt with Reasoning History to prevent repeating errors
-            history_str = (
-                "\n".join(reasoning_history)
-                if reasoning_history
-                else "No previous attempts."
-            )
+            history_str = "\n".join(reasoning_history) if reasoning_history else "No previous attempts."
 
             prompt = f"""
 System Prompt:
@@ -75,9 +65,7 @@ Reason through the requirements and any previous failure errors. Then output:
 
             try:
                 # Call LLM router
-                response = self.model_router.route_and_generate(
-                    prompt, task_type=task_type
-                )
+                response = self.model_router.route_and_generate(prompt, task_type=task_type)
                 response_text = response.get("text", "")
 
                 # Parse thought and code
@@ -92,9 +80,7 @@ Reason through the requirements and any previous failure errors. Then output:
                     continue
 
                 current_code = code
-                logger.info(
-                    f"🛠️ Code generated on turn {turn}. Testing code compilation..."
-                )
+                logger.info(f"🛠️ Code generated on turn {turn}. Testing code compilation...")
 
                 # Test compilation
                 test_result = self._test_compile_code(code)

@@ -28,9 +28,7 @@ async def test_skill_manager_blocks_unsafe_code(monkeypatch):
     def _raise(_):
         raise Exception("blocked")
 
-    monkeypatch.setattr(
-        "core.skill_manager.run_sandbox_ast_check", _raise, raising=False
-    )
+    monkeypatch.setattr("core.skill_manager.run_sandbox_ast_check", _raise, raising=False)
 
     with pytest.raises(ValueError):
         await mgr.get_skill("skill_x")
@@ -53,9 +51,7 @@ async def test_skill_manager_loads_safe_code_from_db(monkeypatch):
         AsyncMock(return_value=json.dumps({"rows": [{"code": safe_code}]})),
         raising=False,
     )
-    monkeypatch.setattr(
-        "core.skill_manager.run_sandbox_ast_check", lambda _: True, raising=False
-    )
+    monkeypatch.setattr("core.skill_manager.run_sandbox_ast_check", lambda _: True, raising=False)
 
     skill = await mgr.get_skill("skill_y")
     assert skill is not None
@@ -71,12 +67,8 @@ async def test_skill_manager_db_miss_uses_mcp_discovery_generic_tool(monkeypatch
         AsyncMock(return_value=json.dumps({"rows": []})),
         raising=False,
     )
-    monkeypatch.setattr(
-        "core.skill_manager.run_sandbox_ast_check", lambda _: True, raising=False
-    )
-    monkeypatch.setattr(
-        mgr.mcp_client, "discover_tools", AsyncMock(return_value=["generic_tool"])
-    )
+    monkeypatch.setattr("core.skill_manager.run_sandbox_ast_check", lambda _: True, raising=False)
+    monkeypatch.setattr(mgr.mcp_client, "discover_tools", AsyncMock(return_value=["generic_tool"]))
 
     with pytest.raises(ValueError):
         await mgr.get_skill("unknown_skill")
