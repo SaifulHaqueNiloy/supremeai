@@ -57,9 +57,9 @@ class TestEnhancedConfidenceScorer:
         assert scorer.rules == rules_data
 
     def test_load_rules_missing_path_returns_empty(self):
-        scorer = EnhancedConfidenceScorer()
-        rules = scorer._load_rules(Path("/nonexistent/path/rules.json"))
-        assert rules == {}
+        missing_path = Path("/nonexistent/file_that_does_not_exist_xyz.json")
+        scorer = EnhancedConfidenceScorer(rules_path=missing_path)
+        assert scorer.rules == {}
 
     def test_load_rules_invalid_json(self, tmp_path):
         rules_file = tmp_path / "bad_rules.json"

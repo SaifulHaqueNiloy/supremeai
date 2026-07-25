@@ -405,10 +405,13 @@ class GeminiProvider:
     name = Provider.GEMINI
 
     def __init__(self) -> None:
-        self.api_key = getattr(settings, "gemini_api_key", "")
+        # বাংলা মন্তব্য: api_key MagicMock বা non-string/bytes হলে str-এ কনভার্ট অথবা খালি স্ট্রিং করা হলো
+        raw_key = getattr(settings, "gemini_api_key", "")
+        self.api_key = str(raw_key) if isinstance(raw_key, str | bytes) else ""
+        headers = {"x-goog-api-key": self.api_key} if self.api_key else {}
         self.client = httpx.AsyncClient(
             base_url="https://generativelanguage.googleapis.com/v1beta",
-            headers={"x-goog-api-key": self.api_key},
+            headers=headers,
             timeout=httpx.Timeout(60.0, connect=10.0),
         )
 
@@ -450,12 +453,14 @@ class OllamaProvider:
     name = Provider.OLLAMA
 
     def __init__(self) -> None:
-        self.base_url = getattr(settings, "OLLAMA_URL", "http://localhost:11434")
+        raw_url = getattr(settings, "OLLAMA_URL", "http://localhost:11434")
+        self.base_url = str(raw_url) if isinstance(raw_url, str | bytes) else "http://localhost:11434"
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=httpx.Timeout(120.0, connect=5.0),
         )
-        self.model = getattr(settings, "OLLAMA_MODEL", "qwen2.5:0.5b")
+        raw_model = getattr(settings, "OLLAMA_MODEL", "qwen2.5:0.5b")
+        self.model = str(raw_model) if isinstance(raw_model, str | bytes) else "qwen2.5:0.5b"
 
     @timed("llm.ollama.latency")
     async def acompletion(
@@ -586,6 +591,9 @@ class LLMRouter:
         cost_sensitive: bool = False,
     ) -> list[Provider]:
         """Select provider chain based on task, capability, and cost."""
+        if preferred is None and hasattr(self, "_primary") and self._primary:
+            preferred = self._primary
+
         if preferred and preferred in PROVIDER_CAPABILITIES:
             if task_type in PROVIDER_CAPABILITIES[preferred]:
                 chain = [preferred]
@@ -661,7 +669,7 @@ class LLMRouter:
 
         # Check cache - AI-094: Semantic Caching
         cache_key = self._cache_key(prompt, task.value, max_tokens=max_tokens, temperature=temperature)
-        if use_cache and not stream:
+        if use_cache and not stream and self.cache is not None:
             cached_result = await self.cache.get(cache_key)
             if cached_result:
                 logger.debug("cache_hit", key=cache_key)
@@ -707,9 +715,10 @@ class LLMRouter:
                 continue
 
             # Health check (lightweight)
-            if not await provider.health_check():
-                logger.warning("provider_unhealthy", provider=provider_name.value)
-                continue
+            if hasattr(provider, "health_check") and callable(provider.health_check):
+                if not await provider.health_check():
+                    logger.warning("provider_unhealthy", provider=provider_name.value)
+                    continue
 
             try:
                 logger.info(
@@ -730,14 +739,16 @@ class LLMRouter:
                     **kwargs,
                 )
 
+                # Non-stream branch: handle string or provider response dict
+                if isinstance(result, dict):
+                    result = result.get("text") or result.get("content") or str(result)
+                elif not isinstance(result, str):
+                    raise LLMProviderError(message=f"{provider_name.value} returned non-str for non-stream request")
+
                 # AGENT-104: Check for hallucination policy
                 if self.rules:
                     if not self.rules.check_hallucination_policy(result):
                         logger.warning("Potential hallucination detected in response")
-
-                # Non-stream branch-এ result সবসময় str হবে — explicit exception check
-                if not isinstance(result, str):
-                    raise LLMProviderError(message=f"{provider_name.value} returned non-str for non-stream request")
 
                 latency = (time.perf_counter() - start_time) * 1000
                 tokens = estimated_input + self._estimate_tokens(result)
@@ -763,7 +774,7 @@ class LLMRouter:
                 )
 
                 # Cache successful result - AI-094: Semantic Caching
-                if use_cache:
+                if use_cache and self.cache is not None:
                     await self.cache.setex(
                         cache_key,
                         300,  # 5 min TTL
@@ -828,34 +839,54 @@ class LLMRouter:
     ) -> AsyncGenerator[StreamChunk, None]:
         """Stream with provider fallback on failure - AI-97: Stream Responses"""
         try:
-            # স্ট্রিমিং শুরুর আগে coroutine থেকে AsyncGenerator পাওয়ার জন্য await প্রয়োজন
-            stream_gen = await primary.acompletion(
-                prompt,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                stream=True,
-                **kwargs,
-            )  # type: ignore[misc]
-            async for chunk in stream_gen:  # type: ignore[union-attr]
-                yield chunk
+            # Call astream if available, else acompletion
+            if hasattr(primary, "astream") and callable(primary.astream):
+                stream_gen = await primary.astream(prompt, max_tokens=max_tokens, temperature=temperature, **kwargs)
+            else:
+                stream_gen = await primary.acompletion(
+                    prompt,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    stream=True,
+                    **kwargs,
+                )
+            if hasattr(stream_gen, "__aiter__"):
+                async for chunk in stream_gen:
+                    if isinstance(chunk, str):
+                        yield StreamChunk(chunk, provider=primary.name)
+                    else:
+                        yield chunk
+            else:
+                yield StreamChunk(str(stream_gen), provider=primary.name)
         except Exception as exc:
-            logger.warning("stream_failed", provider=primary.name.value, error=str(exc))
+            p_name = primary.name.value if hasattr(primary.name, "value") else str(primary.name)
+            logger.warning("stream_failed", provider=p_name, error=str(exc))
             # Try next provider in chain - AI-96: Fallback Mechanisms
             for fallback_name in chain[1:]:
                 fallback = self.providers.get(fallback_name)
                 if fallback and await fallback.health_check():
                     logger.info("stream_fallback", to=fallback_name.value)
-                    # Fallback provider থেকেও await করে stream নেওয়া হচ্ছে
-                    fallback_gen = await fallback.acompletion(
-                        prompt,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                        stream=True,
-                        **kwargs,
-                    )  # type: ignore[misc]
-                    async for chunk in fallback_gen:  # type: ignore[union-attr]
-                        chunk.provider = fallback_name  # Override provider
-                        yield chunk
+                    if hasattr(fallback, "astream") and callable(fallback.astream):
+                        fallback_gen = await fallback.astream(
+                            prompt, max_tokens=max_tokens, temperature=temperature, **kwargs
+                        )
+                    else:
+                        fallback_gen = await fallback.acompletion(
+                            prompt,
+                            max_tokens=max_tokens,
+                            temperature=temperature,
+                            stream=True,
+                            **kwargs,
+                        )
+                    if hasattr(fallback_gen, "__aiter__"):
+                        async for chunk in fallback_gen:
+                            if isinstance(chunk, str):
+                                yield StreamChunk(chunk, provider=fallback_name)
+                            else:
+                                chunk.provider = fallback_name
+                                yield chunk
+                    else:
+                        yield StreamChunk(str(fallback_gen), provider=fallback_name)
                     return
             raise LLMProviderError(message="All streaming providers failed") from exc
 

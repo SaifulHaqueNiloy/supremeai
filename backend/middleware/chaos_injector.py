@@ -1,44 +1,56 @@
-import os
-import time
+import asyncio
 import logging
-from collections.abc import Callable
+import os
+import random
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, JSONResponse
+from starlette.responses import JSONResponse, Response
+
+# বাংলা মন্তব্য: ChaosInjectorMiddleware — LOCAL_CHAOS_MODE env var দিয়ে নিয়ন্ত্রিত।
+# Production-এ সম্পূর্ণ নিষ্ক্রিয়। শুধুমাত্র local dev/test-এ random delay ও packet drop inject করে।
 
 logger = logging.getLogger(__name__)
+
+# DROP_THRESHOLD এর নিচে random() হলে packet drop হবে
+_DROP_THRESHOLD = 0.15
+# DELAY_THRESHOLD এর নিচে random() হলে delay inject হবে
+_DELAY_THRESHOLD = 0.3
+_DELAY_MIN = 0.5
+_DELAY_MAX = 3.5
 
 
 class ChaosInjectorMiddleware(BaseHTTPMiddleware):
     """
-    Intelligent Chaos Engineering Fault Injector.
-    Production Safety Switch (ENV != 'production') এবং CHAOS_TEST_MODE=true এনফোর্স করা হয়েছে।
+    Chaos Engineering Middleware — LOCAL_CHAOS_MODE=true হলে random delay ও packet drop inject করে।
+    Production Safety: ENV=production হলে সম্পূর্ণ bypass।
     """
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        env = os.getenv("ENV", "development").lower()
-        chaos_enabled = os.getenv("CHAOS_TEST_MODE", "false").lower() == "true"
+    def __init__(self, app, **kwargs):
+        super().__init__(app, **kwargs)
+        # বাংলা মন্তব্য: LOCAL_CHAOS_MODE env var থেকে chaos_enabled নির্ধারণ করা হয়
+        self.chaos_enabled = os.getenv("LOCAL_CHAOS_MODE", "false").lower() == "true"
 
-        # Production Safety Switch: NEVER allow chaos injection in production!
-        if env == "production" or not chaos_enabled:
+    async def dispatch(self, request: Request, call_next) -> Response:
+        # Production safety switch — সম্পূর্ণ bypass
+        env = os.getenv("ENV", "local").lower()
+        if env == "production" or not self.chaos_enabled:
             return await call_next(request)
 
-        # Apply Chaos Fault Injections
-        fault_type = request.headers.get("X-Chaos-Fault")
-        if fault_type:
-            logger.warning(f"[CHAOS_INJECTION] Injecting fault '{fault_type}' into request '{request.url.path}'")
+        roll = random.random()  # noqa: S311  — intentional non-crypto random for chaos
 
-            if fault_type == "latency":
-                time.sleep(2.0)  # Inject 2s delay
-            elif fault_type == "503_error":
-                return JSONResponse(
-                    status_code=503, content={"detail": "[CHAOS_INJECTION] Simulated 503 Service Unavailable"}
-                )
-            elif fault_type == "db_drop":
-                return JSONResponse(
-                    status_code=500, content={"detail": "[CHAOS_INJECTION] Simulated Database Connection Failure"}
-                )
+        # packet drop — 504 Gateway Timeout
+        if roll < _DROP_THRESHOLD:
+            logger.warning(f"[CHAOS] Packet drop for {request.url.path}")
+            return JSONResponse(status_code=504, content={"detail": "Chaos: packet dropped"})
 
-        response = await call_next(request)
-        response.headers["X-Chaos-Evaluated"] = "true"
-        return response
+        # latency injection — random sleep
+        if roll < _DELAY_THRESHOLD:
+            delay = _DELAY_MIN + random.random() * (_DELAY_MAX - _DELAY_MIN)  # noqa: S311
+            logger.warning(f"[CHAOS] Injecting {delay:.2f}s delay for {request.url.path}")
+            await asyncio.sleep(delay)
+            # packet drop after delay (values[1] < threshold triggers drop)
+            if random.random() < _DROP_THRESHOLD:  # noqa: S311
+                return JSONResponse(status_code=504, content={"detail": "Chaos: packet dropped after delay"})
+
+        return await call_next(request)
