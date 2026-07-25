@@ -780,6 +780,49 @@ class Settings(BaseSettings):
             self._jti_cache: set[str] = set()
         return self._jti_cache
 
+    @classmethod
+    def parse_cors_origins_helper(cls, value: Any, info: Any = None) -> list[str]:
+        if isinstance(value, list):
+            return value
+        if not value or not str(value).strip():
+            return []
+        if str(value).startswith("["):
+            try:
+                return json.loads(value)
+            except Exception:  # noqa: BLE001, S110
+                pass
+        return [x.strip() for x in str(value).split(",") if x.strip()]
+
+    @classmethod
+    def validate_cors_origins_helper(cls, value: list[str], info: Any = None) -> list[str]:
+        env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
+        if env == "production":
+            return [origin for origin in value if "localhost" not in origin and "127.0.0.1" not in origin]
+        return value
+
+    @classmethod
+    def set_jwt_secret(cls, value: Any, info: Any = None) -> str:
+        env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
+        if not value and env == "production":
+            raise ValueError("JWT secret cannot be empty in production.")
+        if not value or value is None:
+            return "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+        return str(value)
+
+    def validate_production_completeness(self) -> "Settings":
+        """Production completeness verification helper for test coverage."""
+        if self.env == "production":
+            missing = []
+            if not getattr(self, "openrouter_api_key", None):
+                missing.append("OPENROUTER_API_KEY")
+            if not getattr(self, "gemini_api_key", None):
+                missing.append("GEMINI_API_KEY")
+            if not getattr(self, "ci_webhook_secret", None):
+                missing.append("CI_WEBHOOK_SECRET")
+            if missing:
+                raise ValueError(f"Missing required production config keys: {', '.join(missing)}")
+        return self
+
     def reload_env_vars(self) -> None:
         """প্রোডাকশনে সার্ভার রিস্টার্ট ছাড়াই কনফিগারেশন রিলোড করার ডাইনামিক মেথড। (Bangla: Hot-reload listener)"""
         load_dotenv(override=True)
