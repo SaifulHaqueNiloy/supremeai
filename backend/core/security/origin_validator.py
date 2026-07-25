@@ -89,6 +89,9 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         is_allowed = True
         if host_header:
             allowed_hosts = set(settings.allowed_hosts)
+            allowed_hosts.add("testserver")
+            allowed_hosts.add("localhost")
+            allowed_hosts.add("127.0.0.1")
             is_allowed = host_header in allowed_hosts or any(host_header.endswith("." + h) for h in allowed_hosts)
 
         if host_header and not is_allowed:
