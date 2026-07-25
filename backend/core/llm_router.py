@@ -8,6 +8,7 @@ Architecture:
     Primary:   Moonshot Kimi K2.5 (complex reasoning, Bengali)
     Fallback:  DeepSeek V3 (code/math, cost-efficient)
     Backup:    Together AI (high availability)
+    HuggingFace: Supreme Hybrid 8B (custom merged model)
     Local:     Ollama (offline/privacy mode — optional)
 
 এই রাউটারটি UniversalRulesEngine ব্যবহার করে সব AI মডেলকে রুলস মানে হতে হবে।
@@ -43,6 +44,7 @@ class Provider(str, Enum):
     TOGETHER = "together"
     OLLAMA = "ollama"
     GEMINI = "gemini"
+    HUGGINGFACE_SPACE = "hf_space"
 
 
 # বাংলা মন্তব্য: Provider enum -> free_tier_tracker স্ট্রিং-কী ম্যাপিং
@@ -50,6 +52,7 @@ _FREE_TIER_TRACKED: dict[Provider, str] = {
     Provider.GEMINI: "gemini",
     Provider.OLLAMA: "ollama",
     Provider.DEEPSEEK: "deepseek",
+    Provider.HUGGINGFACE_SPACE: "huggingface",  # Added for HuggingFace Space
 }
 
 
@@ -106,6 +109,12 @@ PROVIDER_CAPABILITIES: dict[Provider, list[TaskType]] = {
     Provider.TOGETHER: [TaskType.CHAT, TaskType.CODE, TaskType.EMBEDDING],
     Provider.GEMINI: [TaskType.CHAT, TaskType.SUMMARIZE, TaskType.TRANSLATE],
     Provider.OLLAMA: [TaskType.CHAT, TaskType.CODE, TaskType.SUMMARIZE],
+    Provider.HUGGINGFACE_SPACE: [  # Added HuggingFace Space capabilities
+        TaskType.CHAT,
+        TaskType.BENGALI,
+        TaskType.CODE,
+        TaskType.SUMMARIZE,
+    ],
 }
 
 # Cost per 1K tokens (input, output) — USD - Cinem রুলস: Zero Cost Policy
@@ -115,21 +124,23 @@ PROVIDER_COSTS: dict[Provider, tuple[float, float]] = {
     Provider.TOGETHER: (0.003, 0.009),  # Paid - use sparingly
     Provider.GEMINI: (0.0005, 0.0015),  # Google free tier
     Provider.OLLAMA: (0.0, 0.0),  # Completely free (local)
+    Provider.HUGGINGFACE_SPACE: (0.0, 0.0),  # Free HuggingFace Space
 }
 
 # Default fallback chain per task type - AI-96: Fallback Mechanisms
 FALLBACK_CHAINS: dict[TaskType, list[Provider]] = {
     TaskType.CHAT: [
         Provider.MOONSHOT,
+        Provider.HUGGINGFACE_SPACE,  # Added HuggingFace Space as priority provider
         Provider.DEEPSEEK,
         Provider.GEMINI,
         Provider.OLLAMA,
     ],
-    TaskType.CODE: [Provider.DEEPSEEK, Provider.GEMINI, Provider.OLLAMA],
-    TaskType.BENGALI: [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA],
-    TaskType.SUMMARIZE: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.OLLAMA],
-    TaskType.TRANSLATE: [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA],
-    TaskType.CLASSIFY: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.OLLAMA],
+    TaskType.CODE: [Provider.DEEPSEEK, Provider.HUGGINGFACE_SPACE, Provider.GEMINI, Provider.OLLAMA],
+    TaskType.BENGALI: [Provider.MOONSHOT, Provider.HUGGINGFACE_SPACE, Provider.GEMINI, Provider.OLLAMA],
+    TaskType.SUMMARIZE: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.HUGGINGFACE_SPACE, Provider.OLLAMA],
+    TaskType.TRANSLATE: [Provider.MOONSHOT, Provider.GEMINI, Provider.HUGGINGFACE_SPACE, Provider.OLLAMA],
+    TaskType.CLASSIFY: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.HUGGINGFACE_SPACE, Provider.OLLAMA],
     TaskType.EMBEDDING: [Provider.GEMINI, Provider.OLLAMA],  # Prefer free/OSS
 }
 
@@ -515,6 +526,89 @@ class OllamaProvider:
             return False
 
 
+class HuggingFaceSpaceProvider:
+    """HuggingFace Space - Supreme Hybrid 8B model (Bengali/Coder/Math merged)."""
+
+    name = Provider.HUGGINGFACE_SPACE
+
+    def __init__(self) -> None:
+        self.api_url = getattr(settings, "HF_SPACE_URL", "https://supremeai-hf-space.hf.space/v1/chat/completions")
+        self.api_key = getattr(settings, "HF_API_KEY", None)  # Optional API key for private spaces
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        self.client = httpx.AsyncClient(
+            base_url=self.api_url.rsplit("/v1", 1)[0] if "/v1" in self.api_url else self.api_url,
+            headers=headers,
+            timeout=httpx.Timeout(120.0, connect=10.0),  # Longer timeout for HuggingFace Space
+        )
+
+    @timed("llm.hf_space.latency")
+    @circuit_breaker(name="hf_space", failure_threshold=3, recovery_timeout=60)
+    async def acompletion(
+        self,
+        prompt: str,
+        *,
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+        stream: bool = False,
+        **kwargs: Any,
+    ) -> str | AsyncGenerator[StreamChunk, None]:
+        # Prepare messages for chat completion format
+        messages = [{"role": "user", "content": prompt}]
+        if "messages" in kwargs:
+            messages = kwargs["messages"]
+        else:
+            messages = [{"role": "user", "content": prompt}]
+
+        payload = {
+            "model": kwargs.get("model", "supreme-hybrid-8b"),
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "stream": stream,
+        }
+        payload.update(
+            {k: v for k, v in kwargs.items() if k not in ["messages", "max_tokens", "temperature", "stream"]}
+        )
+
+        if stream:
+            return self._stream_completion(payload)
+
+        resp = await self.client.post("/v1/chat/completions", json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+
+    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+        async with self.client.stream("POST", "/v1/chat/completions", json=payload) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if line.startswith("data: "):
+                    chunk = line[6:]
+                    if chunk == "[DONE]":
+                        yield StreamChunk("", is_finished=True, provider=self.name)
+                        break
+                    try:
+                        data = json.loads(chunk)
+                        content = data["choices"][0]["delta"].get("content", "")
+                        yield StreamChunk(content, provider=self.name)
+                    except (json.JSONDecodeError, KeyError):
+                        continue
+
+    async def health_check(self) -> bool:
+        try:
+            # Test with a simple model listing request
+            resp = await self.client.get("/models", timeout=10.0)
+            return resp.status_code == 200
+        except Exception:  # Try health endpoint as alternative
+            try:
+                resp = await self.client.get("/health", timeout=10.0)
+                return resp.status_code == 200
+            except Exception:
+                return False
+
+
 # ── Bengali Text Utilities ────────────────────────────────────────────────────
 class BengaliNormalizer:
     """Normalize Bengali text for consistent LLM processing."""
@@ -573,6 +667,7 @@ class LLMRouter:
             Provider.TOGETHER: TogetherProvider(),
             Provider.GEMINI: GeminiProvider(),
             Provider.OLLAMA: OllamaProvider(),
+            Provider.HUGGINGFACE_SPACE: HuggingFaceSpaceProvider(),  # Added HuggingFace Space provider
         }
         self.budget = budget or TokenBudget()
         self.cache = get_redis_client()

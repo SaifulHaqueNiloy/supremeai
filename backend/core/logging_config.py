@@ -54,7 +54,7 @@ class LoggingConfig:
                 rotation="100 MB",
                 retention="10 days",
                 compression="zip",
-                format=self._json_format,
+                serialize=True,
                 level="INFO",
             )
 
@@ -64,8 +64,7 @@ class LoggingConfig:
         correlation_id = "N/A"
         try:
             correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
-        except Exception:
-            # Context may not be available in all cases
+        except Exception:  # Context may not be available in all cases
             pass
 
         # Create structured log entry
@@ -95,8 +94,7 @@ def inject_correlation_id():
     correlation_id = str(uuid.uuid4())
     try:
         context.set(HeaderKeys.correlation_id, correlation_id)
-    except Exception:
-        # Context may not be initialized in some cases
+    except Exception:  # Context may not be initialized in some cases
         pass
     return correlation_id
 

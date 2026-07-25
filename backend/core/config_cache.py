@@ -149,11 +149,15 @@ class ConfigCache:
         - TTL expire হলে auto-refresh করে
         - DB না থাকলে DEFAULT_CONFIGS থেকে নেয়
         """
-        if not self._loaded or self._should_refresh():
+        if not self._loaded:
+            self.refresh_sync_bootstrap()
+        elif self._should_refresh():
             self._schedule_refresh()
 
         with self._lock:
-            return self._cache.get(key, default)
+            if key in self._cache:
+                return self._cache[key]
+            return default
 
     def get_all(self, category: str | None = None) -> dict[str, Any]:
         """সব কনফিগ (অথবা নির্দিষ্ট category) রিটার্ন করে।"""

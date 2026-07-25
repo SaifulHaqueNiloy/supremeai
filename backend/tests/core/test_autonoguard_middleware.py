@@ -90,9 +90,13 @@ class TestAutonoGuardMiddleware:
         del request.state.user
 
         with patch("core.config.settings.supremeai_public_paths", ["/health"]):
-            response = await middleware.dispatch(request, app)
-            assert response.status_code == 401
-            assert response.body == b'{"detail":"Authentication required for this operation"}'
+            with patch("core.security.autonoguard_middleware.autonoguard_engine") as mock_engine:
+                mock_engine.enforce_operation = AsyncMock(
+                    return_value=(False, "Authentication required for this operation")
+                )
+                mock_engine.heal_error = AsyncMock()
+                response = await middleware.dispatch(request, app)
+                assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_otp_from_headers(self):

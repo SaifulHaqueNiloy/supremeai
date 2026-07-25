@@ -128,6 +128,42 @@ class ErrorRemediation:
         self.circuit_breaker = CircuitBreaker(name="qdrant", failure_threshold=3, recovery_timeout=60.0)
         self._ensure_fallback_file()
 
+        # Listen for escalating errors to trigger RefactorWiz
+        error_event_bus.register_listener("SILENT_PATTERN_ESCALATED", self._trigger_refactor_wiz)
+
+    def _trigger_refactor_wiz(self, event: ErrorEvent):
+        """বাংলা মন্তব্য: Automatically triggers RefactorWiz to generate a patch for escalated silent patterns."""
+        module_name = event.module
+        if not module_name or module_name == "unknown":
+            return
+
+        logger.info(f"🚀 SILENT_PATTERN_ESCALATED for {module_name}. Triggering Auto-Patch via RefactorWiz...")
+
+        # We run this in the background
+        async def _run_wiz():
+            try:
+                # Resolve module to file path if possible
+                file_path = module_name.replace(".", "/") + ".py"
+                if not os.path.exists(file_path):
+                    file_path = "backend/" + file_path
+                if not os.path.exists(file_path):
+                    logger.warning(f"Could not resolve {module_name} to a file for RefactorWiz.")
+                    return
+
+                cmd = ["python", "scripts/devops/refactor_wiz.py", "--files", file_path, "--no-prompt"]
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                )
+                stdout, stderr = await proc.communicate()
+                if proc.returncode == 0:
+                    logger.info(f"✅ RefactorWiz auto-patch completed for {file_path}")
+                else:
+                    logger.error(f"❌ RefactorWiz auto-patch failed for {file_path}:\n{stderr.decode()}")
+            except Exception as e:
+                logger.error(f"Error triggering RefactorWiz: {e}")
+
+        asyncio.create_task(_run_wiz())
+
     # ── Lazy Qdrant initializer ────────────────────────────────────────────────
 
     def _init_qdrant(self) -> None:
@@ -181,6 +217,17 @@ class ErrorRemediation:
                     ),
                 )
                 logger.info(f"✅ Created Qdrant collection '{QDRANT_COLLECTION_NAME}' (size={QDRANT_VECTOR_SIZE})")
+
+            # DLQ Collection
+            if "failed_fixes" not in existing_names:
+                self._qdrant.recreate_collection(
+                    collection_name="failed_fixes",
+                    vectors_config=qdrant_models.VectorParams(
+                        size=QDRANT_VECTOR_SIZE,
+                        distance=QDRANT_DISTANCE or qdrant_models.Distance.COSINE,
+                    ),
+                )
+                logger.info("✅ Created Qdrant collection 'failed_fixes' (DLQ)")
         except UnexpectedResponse as exc:
             logger.warning(f"Qdrant collection check failed (may already exist or service unavailable): {exc}")
 
@@ -227,6 +274,21 @@ class ErrorRemediation:
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Local fallback load failed from {self.fallback_path}: {exc}")
             return None
+
+    async def _load_redis_fallback(self, error_sig: str) -> str | None:
+        """Attempt to fetch a known fix from Redis if Qdrant is unavailable."""
+        try:
+            from core.cache.redis_manager import redis_manager
+
+            if redis_manager and redis_manager.client:
+                cache_key = f"remediation:fix:{hashlib.sha256(error_sig.encode()).hexdigest()}"
+                fix = await redis_manager.client.get(cache_key)
+                if fix:
+                    logger.info("✅ Found remediation in Redis fallback cache.")
+                    return fix.decode("utf-8")
+        except Exception as exc:
+            logger.debug(f"Redis fallback failed: {exc}")
+        return None
 
     # ── Circuit-breaking retry ─────────────────────────────────────────────────
 
@@ -293,6 +355,9 @@ class ErrorRemediation:
                     structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
                 )
             )
+            redis_fix = await self._load_redis_fallback(error_sig)
+            if redis_fix:
+                return redis_fix
             return self._load_local_fallback(error_sig)
 
         embedding = _compute_embedding(error_sig, QDRANT_VECTOR_SIZE)
@@ -322,6 +387,23 @@ class ErrorRemediation:
                 structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
             )
         )
+
+        # ── DLQ Insertion ──
+        try:
+            self._qdrant.upsert(
+                collection_name="failed_fixes",
+                points=[
+                    qdrant_models.PointStruct(
+                        id=abs(hash(error_sig)) % (10**12), vector=embedding, payload={"error_sig": error_sig[:500]}
+                    )
+                ],
+            )
+            logger.debug("Inserted unresolved error signature into DLQ (failed_fixes collection).")
+        except Exception as dlq_exc:
+            logger.warning(f"Failed to insert into DLQ: {dlq_exc}")
+        redis_fix = await self._load_redis_fallback(error_sig)
+        if redis_fix:
+            return redis_fix
         return self._load_local_fallback(error_sig)
 
     async def insert_error_pattern(
