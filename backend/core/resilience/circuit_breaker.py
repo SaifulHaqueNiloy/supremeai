@@ -40,7 +40,9 @@ class CircuitBreakerOpenError(RuntimeError):
     def __init__(self, name: str, state: CircuitBreakerState) -> None:
         self.name = name
         self.state = state
-        super().__init__(f"Circuit breaker '{name}' is {state.value}. Request rejected.")
+        super().__init__(
+            f"Circuit breaker '{name}' is {state.value}. Request rejected."
+        )
 
 
 class CircuitBreaker:
@@ -67,8 +69,12 @@ class CircuitBreaker:
         **kwargs: Any,
     ) -> None:
         self.name = name
-        self.failure_threshold = failure_threshold or settings.circuit_breaker_failure_threshold
-        self.recovery_timeout = float(recovery_timeout or settings.circuit_breaker_cooldown_period)
+        self.failure_threshold = (
+            failure_threshold or settings.circuit_breaker_failure_threshold
+        )
+        self.recovery_timeout = float(
+            recovery_timeout or settings.circuit_breaker_cooldown_period
+        )
 
         self.state: CircuitBreakerState = CircuitBreakerState.CLOSED
         self.failure_count: int = 0
@@ -102,8 +108,57 @@ class CircuitBreaker:
             return True
         return (time.monotonic() - self.opened_at) >= self.recovery_timeout
 
+    def allow_request(self) -> bool:
+        """Check if a request should be allowed to proceed."""
+        with self._lock:
+            if self.state == CircuitBreakerState.CLOSED:
+                return True
+
+            if self.state == CircuitBreakerState.OPEN:
+                if self._should_attempt_recovery():
+                    logger.info(
+                        f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test"
+                    )
+                    self.state = CircuitBreakerState.HALF_OPEN
+                    self._recovery_in_progress = True
+                    return True
+                return False
+
+            if self.state == CircuitBreakerState.HALF_OPEN:
+                if not self._recovery_in_progress:
+                    self._recovery_in_progress = True
+                    return True
+                return False
+
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        """Allow CircuitBreaker instance to be used as a decorator.
+
+        বাংলা: CircuitBreaker ইন্সট্যান্সকে ডেকোরেটর হিসেবে ব্যবহার করতে দেয়।
+        """
+        import inspect
+        import functools
+
+        if inspect.iscoroutinefunction(func):
+
+            @functools.wraps(func)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                return await self.acall(func, *args, **kwargs)
+
+            return async_wrapper
+        else:
+
+            @functools.wraps(func)
+            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+                return self.call(func, *args, **kwargs)
+
+            return sync_wrapper
+
     def call(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """Execute a function with circuit breaker protection (sync or async).
+
+        Implements FAIL-CLOSED strategy: raises CircuitBreakerOpenError when
+        the circuit is OPEN and not ready for recovery, preventing execution
+        of the underlying function.
 
         বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ ফাংশন এক্সিকিউট করে।
         যদি func একটি async function হয়, তাহলে acall() coroutine return করা হয়
@@ -123,39 +178,41 @@ class CircuitBreaker:
 
         kwargs.pop("_correlation_id", None)
 
-        with self._lock:
-            if self.state == CircuitBreakerState.OPEN:
-                if self._should_attempt_recovery():
-                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
-                    self.state = CircuitBreakerState.HALF_OPEN
-                    self._recovery_in_progress = True
-                else:
-                    err = CircuitBreakerOpenError(self.name, self.state)
-                    logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
-                    raise err
-            elif self.state == CircuitBreakerState.HALF_OPEN:
-                if self._recovery_in_progress:
-                    err = CircuitBreakerOpenError(self.name, self.state)
-                    raise err
-                self._recovery_in_progress = True
+        # Check if request is allowed before executing
+        if not self.allow_request():
+            err = CircuitBreakerOpenError(self.name, self.state)
+            logger.error(
+                f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}"
+            )
+            raise err
 
         try:
             result = func(*args, **kwargs)
-            self._mark_success()
+            self.mark_success()
             return result
         except (ConnectionError, TimeoutError, OSError) as exc:
-            logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
-            self._mark_failure()
+            logger.warning(
+                f"Circuit breaker '{self.name}' caught recoverable error: {exc}"
+            )
+            self.mark_failure()
             raise
         except CircuitBreakerOpenError:
             raise
         except Exception as exc:
-            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}")
-            self._mark_failure()
+            logger.opt(exception=True).error(
+                f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}"
+            )
+            self.mark_failure()
             raise
 
-    async def acall(self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any) -> T:
+    async def acall(
+        self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
+    ) -> T:
         """Execute an async function with circuit breaker protection.
+
+        Implements FAIL-CLOSED strategy: raises CircuitBreakerOpenError when
+        the circuit is OPEN and not ready for recovery, preventing execution
+        of the underlying function.
 
         বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ অ্যাসিঙ্ক্রোনাস ফাংশন এক্সিকিউট করে।
 
@@ -164,73 +221,87 @@ class CircuitBreaker:
         """
         kwargs.pop("_correlation_id", None)
 
-        with self._lock:
-            if self.state == CircuitBreakerState.OPEN:
-                if self._should_attempt_recovery():
-                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
-                    self.state = CircuitBreakerState.HALF_OPEN
-                    self._recovery_in_progress = True
-                else:
-                    err = CircuitBreakerOpenError(self.name, self.state)
-                    logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
-                    raise err
-            elif self.state == CircuitBreakerState.HALF_OPEN:
-                if self._recovery_in_progress:
-                    err = CircuitBreakerOpenError(self.name, self.state)
-                    raise err
-                self._recovery_in_progress = True
+        # Check if request is allowed before executing
+        if not self.allow_request():
+            err = CircuitBreakerOpenError(self.name, self.state)
+            logger.error(
+                f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}"
+            )
+            raise err
 
         try:
             result = await func(*args, **kwargs)
-            self._mark_success()
+            self.mark_success()
             return result
         except (ConnectionError, TimeoutError, OSError) as exc:
-            logger.warning(f"Circuit breaker '{self.name}' caught recoverable error: {exc}")
-            self._mark_failure()
+            logger.warning(
+                f"Circuit breaker '{self.name}' caught recoverable error: {exc}"
+            )
+            self.mark_failure()
             raise
         except CircuitBreakerOpenError:
             raise
         except Exception as exc:
-            logger.opt(exception=True).error(f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}")
-            self._mark_failure()
+            logger.opt(exception=True).error(
+                f"Circuit breaker '{self.name}' caught unexpected error type={type(exc).__name__}"
+            )
+            self.mark_failure()
             raise
 
-    def _mark_success(self) -> None:
+    def mark_success(self) -> None:
         """Record a successful call and potentially close the circuit.
 
         বাংলা: সফল কল রেকর্ড করে এবং সম্ভবত সার্কিট বন্ধ করে।
         """
         with self._lock:
             self.success_count += 1
-            self.failure_count = 0
+            self.failure_count = 0  # Reset failure count on success
             self.last_success_time = time.monotonic()
 
             if self.state == CircuitBreakerState.HALF_OPEN:
-                logger.info(f"Circuit breaker '{self.name}' recovered — transitioning to CLOSED")
+                # After a successful test in HALF_OPEN, close the circuit
+                logger.info(
+                    f"Circuit breaker '{self.name}' closing after successful recovery test"
+                )
                 self.state = CircuitBreakerState.CLOSED
-                # বাংলা মন্তব্য: সফলভাবে CLOSED হলে opened_at রিসেট করা হচ্ছে
-                self.opened_at = None
                 self._recovery_in_progress = False
+            elif self.state == CircuitBreakerState.CLOSED:
+                logger.debug(
+                    f"Circuit breaker '{self.name}' recorded success (total: {self.success_count})"
+                )
 
-    def _mark_failure(self) -> None:
+    def mark_failure(self) -> None:
         """Record a failed call and potentially open the circuit.
 
-        বাংলা: ব্যর্থ কল রেকর্ড করে এবং সম্ভবত সার্কিট খোলে।
+        Implements FAIL-CLOSED strategy: when failure threshold is exceeded,
+        the circuit is opened to prevent further damage.
+
+        বাংলা: ব্যর্থ কল রেকর্ড করে এবং সম্ভবত সার্কিট খুলে।
         """
         with self._lock:
             self.failure_count += 1
-            self.success_count = 0
+            self.success_count = 0  # Reset success count on failure
             self.last_failure_time = time.monotonic()
 
-            if self.failure_count >= self.failure_threshold and self.state != CircuitBreakerState.OPEN:
-                logger.warning(f"Circuit breaker '{self.name}' opened after {self.failure_count} consecutive failures")
-                self.state = CircuitBreakerState.OPEN
-                # বাংলা মন্তব্য: সার্কিট খোলার সময় opened_at সেট করা হচ্ছে
-                # যাতে _should_attempt_recovery() সঠিকভাবে কাজ করে এবং টেস্টে ম্যানিপুলেট করা যায়
-                self.opened_at = time.monotonic()
-                self._recovery_in_progress = False
-            elif self.state == CircuitBreakerState.OPEN and self.opened_at is None:
-                self.opened_at = time.monotonic()
+            if self.state == CircuitBreakerState.HALF_OPEN:
+                # Recovery test failed, reopen the circuit
+                logger.warning(
+                    f"Circuit breaker '{self.name}' reopening after failed recovery test"
+                )
+                self._open_circuit()
+            elif (
+                self.state == CircuitBreakerState.CLOSED
+                and self.failure_count >= self.failure_threshold
+            ):
+                # Threshold exceeded, open the circuit
+                logger.warning(
+                    f"Circuit breaker '{self.name}' opening after {self.failure_count} consecutive failures"
+                )
+                self._open_circuit()
+            elif self.state == CircuitBreakerState.CLOSED:
+                logger.debug(
+                    f"Circuit breaker '{self.name}' recorded failure ({self.failure_count}/{self.failure_threshold})"
+                )
 
     def reset(self) -> None:
         """Manually reset the circuit breaker to CLOSED state.
@@ -247,6 +318,66 @@ class CircuitBreaker:
             # বাংলা মন্তব্য: রিসেটে opened_at ক্লিয়ার করা হচ্ছে
             self.opened_at = None
             self._recovery_in_progress = False
+
+    def _open_circuit(self) -> None:
+        """Open the circuit and record the time.
+
+        Implements FAIL-CLOSED strategy: opens the circuit to prevent further
+        requests from passing through when the service is unstable.
+
+        বাংলা: সার্কিট খুলে দেয় এবং সময় রেকর্ড করে।
+        """
+        self.state = CircuitBreakerState.OPEN
+        self.opened_at = time.monotonic()
+        self._recovery_in_progress = False
+        logger.info(
+            f"Circuit breaker '{self.name}' is now OPEN - requests will be rejected"
+        )
+
+    def force_close(self) -> None:
+        """Force the circuit to close (use with caution in emergency situations).
+
+        বাংলা: জোর করে সার্কিট বন্ধ করে দেয় (জরুরি অবস্থায় সাবধানে ব্যবহার করুন)।
+        """
+        with self._lock:
+            logger.warning(f"Circuit breaker '{self.name}' force closed by operator")
+            self.state = CircuitBreakerState.CLOSED
+            self.failure_count = 0
+            self.success_count = 0
+            self.opened_at = None
+            self._recovery_in_progress = False
+
+    def force_open(self) -> None:
+        """Force the circuit to open (use for maintenance or emergency shutdown).
+
+        Implements FAIL-CLOSED strategy: can be used to manually open the circuit
+        when a service needs to be taken offline safely.
+
+        বাংলা: জোর করে সার্কিট খুলে দেয় (রক্ষণাবেক্ষণ বা জরুরি বন্ধের জন্য ব্যবহার করুন)।
+        """
+        with self._lock:
+            logger.warning(f"Circuit breaker '{self.name}' force opened by operator")
+            self._open_circuit()
+
+    def get_state_info(self) -> dict[str, Any]:
+        """Get detailed information about the circuit breaker state.
+
+        বাংলা: সার্কিট ব্রেকারের বর্তমান অবস্থা সম্পর্কে বিস্তারিত তথ্য দেয়।
+        """
+        with self._lock:
+            return {
+                "name": self.name,
+                "state": self.state.value,
+                "failure_count": self.failure_count,
+                "success_count": self.success_count,
+                "failure_threshold": self.failure_threshold,
+                "recovery_timeout": self.recovery_timeout,
+                "last_failure_time": self.last_failure_time,
+                "last_success_time": self.last_success_time,
+                "opened_at": self.opened_at,
+                "is_recovery_in_progress": self._recovery_in_progress,
+                "is_open": self.is_open,
+            }
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current metrics for monitoring.
@@ -265,67 +396,3 @@ class CircuitBreaker:
                 f'circuit_breaker_failures_total{{name="{self.name}"}}': self.failure_count,
                 f'circuit_breaker_successes_total{{name="{self.name}"}}': self.success_count,
             }
-
-    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
-        """Allow CircuitBreaker to be used as a decorator."""
-        import functools
-        import inspect
-
-        if inspect.iscoroutinefunction(func):
-
-            @functools.wraps(func)
-            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-                return await self.acall(func, *args, **kwargs)
-
-            return async_wrapper
-        else:
-
-            @functools.wraps(func)
-            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-                return self.call(func, *args, **kwargs)
-
-            return sync_wrapper
-
-    def allow_request(self) -> bool:
-        """Check if request is allowed through the breaker.
-
-        বাংলা: রিকোয়েস্ট সার্কিট দিয়ে পাস হতে পারবে কিনা চেক করে।
-        """
-        with self._lock:
-            if self.state == CircuitBreakerState.OPEN:
-                if self._should_attempt_recovery():
-                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
-                    self.state = CircuitBreakerState.HALF_OPEN
-                    self._recovery_in_progress = True
-                    return True
-                return False
-            elif self.state == CircuitBreakerState.HALF_OPEN:
-                if self._recovery_in_progress:
-                    return False
-                self._recovery_in_progress = True
-                return True
-            return True
-
-    def mark_success(self) -> None:
-        """Record successful request."""
-        self._mark_success()
-
-    def mark_failure(self) -> None:
-        """Record failed request."""
-        self._mark_failure()
-
-
-class DynamicCircuitBreaker(CircuitBreaker):
-    """Dynamic Circuit Breaker that adjusts failure threshold based on load & error rate. (Bangla: ডাইনামিক সার্কিট ব্রেকার)"""
-
-    def adjust_threshold_by_load(self, current_load: float, error_rate: float) -> None:
-        """System load ও error rate মেট্রিক্সের ভিত্তিতে failure threshold সংবেদনশীলভাবে সমন্বয় করা।"""
-        with self._lock:
-            if current_load > 0.8 and error_rate > 0.1:
-                self.failure_threshold = max(2, self.failure_threshold - 1)
-                logger.warning(
-                    f"⚡ [DynamicCircuitBreaker:{self.name}] High system load/error detected. Reduced failure_threshold to {self.failure_threshold}"
-                )
-            elif current_load < 0.3 and error_rate < 0.01:
-                self.failure_threshold = min(10, self.failure_threshold + 1)
-                logger.info(f"🟢 [DynamicCircuitBreaker:{self.name}] Low system load/error. Increased failure_threshold to {self.failure_threshold}")

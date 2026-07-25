@@ -76,7 +76,9 @@ class ProductionSecretVault:
         if InfisicalClient and (self.token or (self.client_id and self.client_secret)):
             self._init_infisical_client()
         else:
-            logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
+            logger.info(
+                "Infisical missing or no credentials found. Bypassing Cloud Vault."
+            )
 
     def _init_infisical_client(self) -> None:
         """Initialize Infisical client with timeout protection."""
@@ -92,14 +94,20 @@ class ProductionSecretVault:
                         )
                     )
                 )
-                logger.info("Production Secret Vault hooked into Infisical via Machine Identity")
+                logger.info(
+                    "Production Secret Vault hooked into Infisical via Machine Identity"
+                )
             elif self.token:
                 self.client = InfisicalClient(ClientSettings(access_token=self.token))
                 logger.info("Production Secret Vault hooked into Infisical via Token")
         except (ConnectionError, TimeoutError, ValueError) as exc:
-            logger.warning(f"Failed to bind Infisical Client: {exc}. Falling back to raw env.")
+            logger.warning(
+                f"Failed to bind Infisical Client: {exc}. Falling back to raw env."
+            )
         except Exception:  # noqa: BLE001
-            logger.opt(exception=True).warning("Unexpected error initializing Infisical client. Falling back to raw env.")
+            logger.opt(exception=True).warning(
+                "Unexpected error initializing Infisical client. Falling back to raw env."
+            )
 
     def fetch_secret(self, secret_id: str, default: str | None = None) -> str:
         """Fetch a secret from Infisical with TTL-based caching.
@@ -122,7 +130,11 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
         try:
-            env_name = self.env if self.env in ("production", "staging", "development") else "development"
+            env_name = (
+                self.env
+                if self.env in ("production", "staging", "development")
+                else "development"
+            )
             options = GetSecretOptions(
                 environment=env_name,
                 project_id=self.project_id,
@@ -139,14 +151,20 @@ class ProductionSecretVault:
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
                         sleep_time = 2**attempt
-                        logger.warning(f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}")
+                        logger.warning(
+                            f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}"
+                        )
                         time.sleep(sleep_time)
                     else:
                         raise exc
             # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
-            raise RuntimeError("Unexpected end of retry loop without success or exception")
+            raise RuntimeError(
+                "Unexpected end of retry loop without success or exception"
+            )
         except (ConnectionError, TimeoutError) as exc:
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment.")
+            logger.warning(
+                f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -159,7 +177,9 @@ class ProductionSecretVault:
             )
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:  # noqa: BLE001
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Using fallback.")
+            logger.opt(exception=True).warning(
+                f"Unexpected error fetching {secret_id} from Infisical. Using fallback."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -182,7 +202,9 @@ class ProductionSecretVault:
         env_fallback = os.getenv(secret_id, default)
         if env_fallback is None:
             if self.env in ("production", "staging"):
-                logger.critical(f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert...")
+                logger.critical(
+                    f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert..."
+                )
                 try:
                     error_event_bus.emit(
                         ErrorEvent(
@@ -196,10 +218,14 @@ class ProductionSecretVault:
                 except Exception as exc:  # noqa: BLE001
                     logger.debug(f"Failed to emit error event: {exc}")
                 if default is None:
-                    raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
+                    raise RuntimeError(
+                        f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed."
+                    )
                 env_fallback = default
             else:
-                logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
+                logger.warning(
+                    f"Mocking missing secret '{secret_id}' for {self.env} environment."
+                )
                 if default is not None:
                     env_fallback = default
                 elif secret_id == "SUPREMEAI_JWT_SECRET":  # noqa: S105
@@ -226,7 +252,9 @@ class ProductionSecretVault:
             raise SecretNotFoundError(error_msg)
         return value or default or ""
 
-    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
+    async def fetch_secret_async(
+        self, secret_id: str, default: str | None = None
+    ) -> str:
         """Async wrapper — runs fetch_secret in a thread to avoid blocking the event loop.
 
         বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।

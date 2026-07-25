@@ -39,14 +39,16 @@ class TestTrustedOriginMiddleware:
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
         request = self._make_request()
-        response = await middleware.dispatch(request, app)
+        await middleware.dispatch(request, app)
         app.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_options_preflight_allowed_origin(self):
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(method="OPTIONS", origin="https://supremeai-admin.web.app")
+        request = self._make_request(
+            method="OPTIONS", origin="https://supremeai-admin.web.app"
+        )
         response = await middleware.dispatch(request, app)
         assert response.status_code == 200
 
@@ -65,7 +67,7 @@ class TestTrustedOriginMiddleware:
         middleware = TrustedOriginMiddleware(app)
         request = self._make_request(origin="http://evil.com")
         with patch.dict("os.environ", {"ENV": "test"}):
-            response = await middleware.dispatch(request, app)
+            await middleware.dispatch(request, app)
             app.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -79,7 +81,7 @@ class TestTrustedOriginMiddleware:
         old_paths = settings.supremeai_public_paths
         settings.supremeai_public_paths = ["/health"]
         try:
-            response = await middleware.dispatch(request, app)
+            await middleware.dispatch(request, app)
             app.assert_awaited_once()
         finally:
             settings.supremeai_public_paths = old_paths
@@ -123,7 +125,7 @@ class TestTrustedOriginMiddleware:
                 new_callable=PropertyMock,
             ) as mock_origins:
                 mock_origins.return_value = {"https://trusted.com"}
-                response = await middleware.dispatch(request, app)
+                await middleware.dispatch(request, app)
                 app.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -133,7 +135,7 @@ class TestTrustedOriginMiddleware:
         request = self._make_request()
 
         with patch.dict("os.environ", {"ENV": "production"}):
-            response = await middleware.dispatch(request, app)
+            await middleware.dispatch(request, app)
             app.assert_awaited_once()
 
     def test_allowed_origins_property(self):
