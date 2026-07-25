@@ -29,14 +29,15 @@ class MetaArchitect:
                 f"Loading strategic context from {len(strategic_docs)} documents."
             )
             for doc_path in strategic_docs:
+                try:
                     import asyncio
                     from pathlib import Path
 
                     doc_text = await asyncio.to_thread(Path(doc_path).read_text, encoding="utf-8")
                     if "gap" in doc_text.lower():
-                            gaps.append(
-                                f"Potential gap context found in: {os.path.basename(doc_path)}"
-                            )
+                        gaps.append(
+                            f"Potential gap context found in: {os.path.basename(doc_path)}"
+                        )
                 except Exception as e:  # noqa: BLE001
                     logger.warning(f"Could not read strategic doc {doc_path}: {e}")
         metrics = {
@@ -62,12 +63,12 @@ class MetaArchitect:
 
                         content = await asyncio.to_thread(Path(file_path).read_text, encoding="utf-8", errors="ignore")
                         lines = content.splitlines()
-                            metrics["total_lines"] += len(lines)
-                            ext = os.path.splitext(file)[1].lower()
-                            lang = ext.lstrip(".") or "unknown"
-                            metrics["languages"][lang] = metrics["languages"].get(
-                                lang, 0
-                            ) + len(lines)
+                        metrics["total_lines"] += len(lines)
+                        ext = os.path.splitext(file)[1].lower()
+                        lang = ext.lstrip(".") or "unknown"
+                        metrics["languages"][lang] = metrics["languages"].get(
+                            lang, 0
+                        ) + len(lines)
                     except Exception as e:  # noqa: BLE001
                         try:
                             import loguru
