@@ -21,3 +21,12 @@ class AdminFirebaseTotpVerifyRequest(BaseModel):
 
 class AdminEasyLoginRequest(BaseModel):
     code: str = Field(..., description="Easy login authentication code")
+
+
+class UserContext(BaseModel):
+    user_id: str
+    role: str = "viewer"
+    roles: list[str] = Field(default_factory=list)
+    expires_at: str | None = None
+    scopes: tuple[str, ...] | None = None
+
