@@ -25,7 +25,9 @@ class TestRequireAdminToken:
         payload = {"uid": "admin-user", "role": "admin", "jti": "token-123"}
         token = jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
-        result = require_admin_token(HTTPAuthorizationCredentials(credentials=token, scheme="Bearer"))
+        result = require_admin_token(
+            HTTPAuthorizationCredentials(credentials=token, scheme="Bearer")
+        )
         assert result["uid"] == "admin-user"
         assert result["role"] == "admin"
 
@@ -39,7 +41,9 @@ class TestRequireAdminToken:
         token = jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
         with pytest.raises(HTTPException) as exc_info:
-            require_admin_token(HTTPAuthorizationCredentials(credentials=token, scheme="Bearer"))
+            require_admin_token(
+                HTTPAuthorizationCredentials(credentials=token, scheme="Bearer")
+            )
 
         assert exc_info.value.status_code == 401
 
@@ -55,7 +59,9 @@ class TestRequireAdminToken:
         _in_memory_jwt_blacklist.add("revoked-token")
         try:
             with pytest.raises(HTTPException) as exc_info:
-                require_admin_token(HTTPAuthorizationCredentials(credentials=token, scheme="Bearer"))
+                require_admin_token(
+                    HTTPAuthorizationCredentials(credentials=token, scheme="Bearer")
+                )
             assert exc_info.value.status_code == 401
         finally:
             _in_memory_jwt_blacklist.discard("revoked-token")
@@ -63,7 +69,11 @@ class TestRequireAdminToken:
     def test_invalid_token_raises_401(self):
         """Malformed token should raise 401."""
         with pytest.raises(HTTPException) as exc_info:
-            require_admin_token(HTTPAuthorizationCredentials(credentials="not-a-valid-token", scheme="Bearer"))
+            require_admin_token(
+                HTTPAuthorizationCredentials(
+                    credentials="not-a-valid-token", scheme="Bearer"
+                )
+            )
         assert exc_info.value.status_code == 401
 
     def test_fallback_api_token_auth(self):
@@ -74,8 +84,12 @@ class TestRequireAdminToken:
         if not expected:
             pytest.skip("supremeai_api_token not configured")
 
-        with patch("api.routes.admin_dashboard.jwt.decode", side_effect=Exception("bad")):
-            result = require_admin_token(HTTPAuthorizationCredentials(credentials=expected, scheme="Bearer"))
+        with patch(
+            "api.routes.admin_dashboard.jwt.decode", side_effect=Exception("bad")
+        ):
+            result = require_admin_token(
+                HTTPAuthorizationCredentials(credentials=expected, scheme="Bearer")
+            )
         assert result["role"] == "admin"
 
 

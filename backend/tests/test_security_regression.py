@@ -16,7 +16,9 @@ async def test_production_jwt_secret_required():
     with patch.dict(os.environ, {"ENV": "production", "SUPREMEAI_JWT_SECRET": ""}):
         with pytest.raises(ValueError) as excinfo:
             Settings().jwt_secret
-    assert "SUPREMEAI_JWT_SECRET must be explicitly set in production" in str(excinfo.value)
+    assert "SUPREMEAI_JWT_SECRET must be explicitly set in production" in str(
+        excinfo.value
+    )
 
 
 @pytest.mark.skip(reason="Needs update")
@@ -36,7 +38,11 @@ def test_auth_middleware_rejects_invalid_api_token():
     client = TestClient(app)
 
     # Setup expected API token env var and test that an invalid token (like 'test-token') gets 401
-    with patch.dict(os.environ, {"SUPREMEAI_API_TOKEN": "super-secure-production-api-token"}):
-        resp = client.get("/api/task/execute", headers={"Authorization": "Bearer test-token"})
+    with patch.dict(
+        os.environ, {"SUPREMEAI_API_TOKEN": "super-secure-production-api-token"}
+    ):
+        resp = client.get(
+            "/api/task/execute", headers={"Authorization": "Bearer test-token"}
+        )
         assert resp.status_code == 401
         assert resp.json()["detail"] == "Invalid or missing API token."
