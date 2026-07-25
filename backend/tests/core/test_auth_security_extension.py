@@ -112,9 +112,7 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [],
         }
-        with patch(
-            "core.security.auth_middleware.is_test_environment", return_value=False
-        ):
+        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
             await middleware(scope, MagicMock(), send)
             mock_app.assert_not_called()
             assert send.await_count >= 1
@@ -130,9 +128,7 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [(b"authorization", b"Bearer invalid-jwt-token")],
         }
-        with patch(
-            "core.security.auth_middleware.is_test_environment", return_value=False
-        ):
+        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
             await middleware(scope, MagicMock(), send)
             mock_app.assert_not_called()
 
@@ -147,9 +143,7 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [(b"authorization", b"Bearer wrong-token")],
         }
-        with patch(
-            "core.security.auth_middleware.is_test_environment", return_value=False
-        ):
+        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
             await middleware(scope, MagicMock(), send)
             mock_app.assert_not_called()
 

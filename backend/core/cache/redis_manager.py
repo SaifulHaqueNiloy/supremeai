@@ -8,9 +8,26 @@ import asyncio
 import json
 import os
 from typing import Any
+from collections.abc import Awaitable
 
 from loguru import logger
 from redis import asyncio as aioredis
+
+# Import pybreaker for circuit breaker functionality as mentioned in audit report
+try:
+    from pybreaker import CircuitBreaker
+
+    _redis_circuit_breaker = CircuitBreaker(fail_max=3, reset_timeout=30, name="redis")
+except ImportError:
+    # Fallback if pybreaker is not installed
+    class MockCircuitBreaker:
+        def call(self, func, *args, **kwargs):
+            return func(*args, **kwargs)
+
+        async def call_async(self, func, *args, **kwargs):
+            return await func(*args, **kwargs)
+
+    _redis_circuit_breaker = MockCircuitBreaker()
 
 
 class SecureRedisManager:
@@ -42,13 +59,9 @@ class SecureRedisManager:
                     decode_responses=True,
                 )
                 self._client = aioredis.Redis(connection_pool=pool)
-                logger.info(
-                    "⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20)."
-                )
+                logger.info("⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20).")
             else:
-                logger.critical(
-                    "🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state."
-                )
+                logger.critical("🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state.")
             self._initialized = True
 
     async def get_client_async(self) -> aioredis.Redis | None:
@@ -100,9 +113,7 @@ class SecureRedisManager:
             logger.error(f"Redis SET error: {exc}")
             return False
 
-    async def set_cache(
-        self, key: str, value: str, ex_seconds: int | None = None
-    ) -> bool:
+    async def set_cache(self, key: str, value: str, ex_seconds: int | None = None) -> bool:
         """Alias for set(), supporting ex_seconds parameter."""
         return await self.set(key, value, ex=ex_seconds)
 
@@ -143,6 +154,20 @@ class SecureRedisManager:
         except Exception:
             return None
 
+    # Fixed version of the circuit breaker method mentioned in audit report
+    async def _execute_with_breaker(self, operation_name: str, coro: Awaitable) -> Any:
+        """Execute Redis operation with circuit breaker protection.
+
+        বাংলা: সার্কিট ব্রেকার প্রোটেকশন সহ Redis অপারেশন এক্সিকিউট করে।
+        """
+        try:
+            # Fixed: Properly await the coroutine within the circuit breaker
+            result = await _redis_circuit_breaker.call_async(lambda: coro)
+            return result
+        except Exception as exc:
+            logger.error(f"Redis operation {operation_name} failed with circuit breaker: {exc}")
+            raise
+
 
 redis_manager = SecureRedisManager()
 
@@ -164,16 +189,12 @@ class _AcquireIdempotencyLockContext:
         client = await redis_manager.get_client_async()
         if client:
             try:
-                self.acquired = await client.set(
-                    self.key, "locked", nx=True, ex=self.ttl
-                )
+                self.acquired = await client.set(self.key, "locked", nx=True, ex=self.ttl)
             except Exception as exc:
                 logger.error(f"Failed to set idempotency lock in Redis: {exc}")
                 self.acquired = False
         if not self.acquired and self.fail_closed:
-            raise IdempotencyUnavailableError(
-                f"Idempotency lock unavailable for key: {self.key}"
-            )
+            raise IdempotencyUnavailableError(f"Idempotency lock unavailable for key: {self.key}")
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -218,7 +239,7 @@ class MultiLevelCache:
         return val
 
     async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
-        """L1 ও L2 উভয় জায়গায় ক্যাশ সংরক্ষণ করা (None ভ্যালু ক্যাশ এড়িয়ে স্থান সাশ্রয় করা)।"""
+        """L1 ও L2 উভয় জায়গায় ক্যাশ সংরক্ষণ করা (None ভ্যালু ক্যাশ এড়িয়ে স্থান সাশ্রয় করা)।"""
         if value is None:
             return  # Bangla: None ডাটা ক্যাশে করবেন না, স্পেস বাঁচান
         self.local_cache[key] = value

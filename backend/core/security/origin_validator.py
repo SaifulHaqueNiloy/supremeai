@@ -51,9 +51,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
 
         # বাংলা মন্তব্য: Host header client-controlled — শুধু Host string দেখে বাইপাস করা যাবে না।
         # টেস্ট বাইপাস এখন কেবল একটি explicit, config-gated flag দিয়ে নিয়ন্ত্রিত হয় (Patch 7 fix)।
-        is_explicit_test_mode = env == "test" and getattr(
-            settings, "allow_test_origin_bypass", False
-        )
+        is_explicit_test_mode = env == "test" and getattr(settings, "allow_test_origin_bypass", False)
         if is_explicit_test_mode:
             response = await call_next(request)
             if origin:
@@ -68,10 +66,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
 
         # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
         public_paths = settings.supremeai_public_paths
-        if any(
-            request.url.path == p or request.url.path.startswith(p)
-            for p in public_paths
-        ):
+        if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
             response = await call_next(request)
             if origin and origin in allowed:
                 response.headers["Access-Control-Allow-Origin"] = origin
@@ -81,14 +76,10 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         # যদি রিকোয়েস্টে অরিজিন হেডার থাকে (যেমন ব্রাউজার বেসড রিকোয়েস্ট), তবে সেটি হোয়াইটলিস্টে থাকতে হবে
         if origin and origin not in allowed:
             client_ip = request.client.host if request.client else "unknown"
-            logger.critical(
-                f"🔥 CSRF ALERT: Unauthorized Origin Access Blocked! Malicious Origin: {origin} from IP: {client_ip}"
-            )
+            logger.critical(f"🔥 CSRF ALERT: Unauthorized Origin Access Blocked! Malicious Origin: {origin} from IP: {client_ip}")
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                content={
-                    "detail": "Cross-Origin Request Blocked. Device identity unauthorized."
-                },
+                content={"detail": "Cross-Origin Request Blocked. Device identity unauthorized."},
             )
 
         # বাংলা মন্তব্য: হোস্ট হেডার ভ্যালিডেশন
@@ -96,14 +87,10 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         is_allowed = True
         if host_header:
             allowed_hosts = set(settings.allowed_hosts)
-            is_allowed = host_header in allowed_hosts or any(
-                host_header.endswith("." + h) for h in allowed_hosts
-            )
+            is_allowed = host_header in allowed_hosts or any(host_header.endswith("." + h) for h in allowed_hosts)
 
         if host_header and not is_allowed:
-            logger.critical(
-                f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}"
-            )
+            logger.critical(f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}")
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "Host verification failure."},
@@ -116,11 +103,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         if origin and origin in allowed:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = (
-                "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
-            )
-            response.headers["Access-Control-Allow-Headers"] = (
-                "Content-Type, Authorization, X-Requested-With, X-API-Key, Accept, Origin"
-            )
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, X-API-Key, Accept, Origin"
 
         return response
