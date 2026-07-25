@@ -83,6 +83,10 @@ class LLMGateway:
             self._cache = SemanticCache()
         return self._cache
 
+    @cache.setter
+    def cache(self, value):
+        self._cache = value
+
     def _setup_litellm_globals(self) -> None:
         """
         বাংলা মন্তব্য: litellm global settings — শুধু safe non-secret settings।
