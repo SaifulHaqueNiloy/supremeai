@@ -210,6 +210,8 @@ class Settings(BaseSettings):
             "/api/v1/live",
             "/api/v1/ready",
             "/api/voice/stream_audio",
+            "/api/billing/webhook/stripe",
+            "/api/billing/webhook/sslcommerz",
             "/",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
