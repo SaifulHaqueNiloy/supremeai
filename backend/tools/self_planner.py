@@ -56,14 +56,14 @@ class SelfPlanner:
         try:
             plan = json.loads(text)
             if not isinstance(plan, list):
-                raise ValueError("LLM plan response was not a JSON array")
+                err_msg = "LLM plan response was not a JSON array"
+                raise ValueError(err_msg)
         except Exception as e:  # noqa: BLE001
             # ✅ FIXED: no more silent fallback to a hardcoded plan — an unparsable
             # response means planning genuinely failed and must be surfaced as an error.
             logger.error(f"LLM returned non-JSON/invalid plan: {e}")
-            raise RuntimeError(
-                f"Agent planning failed: LLM returned an invalid plan ({e})"
-            ) from e
+            err_msg_rt = f"Agent planning failed: LLM returned an invalid plan ({e})"
+            raise RuntimeError(err_msg_rt) from e
 
         dag = nx.DiGraph()
         for task in plan:
