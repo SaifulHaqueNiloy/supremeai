@@ -93,4 +93,20 @@ Return ONLY a JSON response in the following format (no markdown blocks, no text
         )
 
         self.registry.register_platform(profile)
+
+        # 3. Save knowledge to Firestore via AgentKnowledgeStore
+        try:
+            from tools.learning.agent_knowledge_store import AgentKnowledgeStore
+
+            store = AgentKnowledgeStore()
+            store.save_agent_knowledge(
+                agent_name=platform_name,
+                best_skill=", ".join(data.get("capabilities", [])),
+                workflow_knowledge=json.dumps(data.get("api_endpoints", {})),
+                best_practices=data.get("deploy_methods", []),
+                code_snippet_example=data.get("sdk_code", ""),
+            )
+        except Exception as store_err:  # noqa: BLE001
+            logger.warning(f"Failed to persist platform knowledge: {store_err}")
+
         return profile
