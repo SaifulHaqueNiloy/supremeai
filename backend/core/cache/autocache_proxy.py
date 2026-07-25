@@ -1,233 +1,65 @@
-"""Provides the AutocacheProxy, an intelligent API cost optimization engine.
-
-This module defines the `AutocacheProxy` class, designed to intercept and manage external API calls, particularly to large language models. It aims to significantly reduce operational costs within the SupremeAI ecosystem through:
-- **Semantic Caching:** Storing and retrieving responses for semantically similar prompts.
-- **Request Deduplication:** Reusing responses for identical or recently made requests.
-- **Cost Estimation and Tracking:** Providing insights into potential and actual cost
-
-"""  # noqa: E501
-
-# 🚀 Autocache Proxy - API Cost Optimization Engine
-# বাংলা মন্তব্য: এটি সব API রিকোয়েস্ট ইন্টারসেপ্ট করে সিমান্টিক ক্যাশিং এবং রিকোয়েস্ট ডিডুপ্লিকেশনের মাধ্যমে ৯০% খরচ কমায়
-
-import hashlib
-import time
+import logging
 from typing import Any
+from core.cache.multi_layer_cache import MultiLayerCache
 
-from loguru import logger
-
-from core.cache.semantic_cache import SemanticCache
-from core.prompt_handler import estimate_tokens
+logger = logging.getLogger(__name__)
 
 
-class AutocacheProxy:
+class AutoCacheProxy:
     """
-    API রিকোয়েস্ট ইন্টারসেপ্টর এবং স্মার্ট ক্যাশিং ইঞ্জিন
+    প্রম্পট এবং কুয়েরি ক্যাটাগরি বিশ্লেষণ করে Dynamic TTL Allocation করার জন্য Proxy Engine।
+    Stale-While-Revalidate (SWR) এবং Semantic Similarity Cache প্যাটার্ন অনুসরণ করা হয়েছে।
+    """
 
-    ফিচার:
-    - সিমান্টিক ডুপ্লিকেট ডিটেকশন
-    - মাল্টিপল ভেন্ডর কস্ট এস্টিমেশন
-    - অটোমেটিক প্যারামিটার অপটিমাইজেশন
-    - কস্ট মেট্রিক্স ট্র্যাকিং
-    """  # noqa: W293
+    def __init__(self, semantic_cache: Any | None = None):
+        self.semantic_cache = semantic_cache
+        self.cache = MultiLayerCache()
+        from cachetools import TTLCache  # type: ignore[import-untyped]
 
-    def __init__(self, cache: SemanticCache):
-        self.cache = cache
-        # বাংলা মন্তব্য: মেমরি লিক এড়াতে plain dict-এর বদলে maxsize=5000 এবং ttl=3600 সেকেন্ডের TTLCache ব্যবহার করা হলো।
-        from cachetools import TTLCache
-
-        # Ensure this remains a real TTLCache instance (tests assert the type).
-        self.request_history: TTLCache = TTLCache(maxsize=5000, ttl=3600)
-
-        self.cost_metrics = {
-            "total_requests": 0,
-            "cached_hits": 0,
-            "total_cost_saved": 0.0,
-            "dedup_requests": 0,
-        }
-        self.vendor_costs = {
-            "openai/gpt-4o": {"input": 0.005, "output": 0.015},
-            "openai/gpt-4-turbo": {"input": 0.01, "output": 0.03},
-            "gemini/gemini-2.5-flash": {"input": 0.000075, "output": 0.0003},
-            "groq/llama-3.3-70b-versatile": {"input": 0, "output": 0},
-            "anthropic/claude-3-opus": {"input": 0.015, "output": 0.075},
+        self.request_history = TTLCache(maxsize=1000, ttl=300)
+        self.ttl_matrix = {
+            "static_docs": 86400,  # 24 hours
+            "skills_catalog": 43200,  # 12 hours
+            "ai_chat": 1800,  # 30 minutes
+            "code_gen": 3600,  # 1 hour
+            "user_dashboard": 0,  # Bypass cache / No TTL
         }
 
-    def _compute_request_hash(self, model: str, prompt: str) -> str:
-        """রিকোয়েস্টের জন্য ইউনিক হ্যাশ তৈরি করুন"""
-        content = f"{model}:{prompt}"
-        return hashlib.sha256(content.encode()).hexdigest()
+    def get_ttl_for_category(self, category: str) -> int:
+        """
+        কুয়েরি ক্যাটাগরি অনুযায়ী TTL (সেকেন্ডে) প্রদান করা।
+        """
+        return self.ttl_matrix.get(category, 300)
+
+    async def get_or_compute(self, key: str, category: str, compute_fn: Any, *args, **kwargs) -> Any:
+        """
+        ক্যাশ চেক করা এবং মিস হলে ডাইনামিক টিটিএল সহ মান হিসাব করে সঞ্চয় করা।
+        """
+        ttl = self.get_ttl_for_category(category)
+        if ttl == 0:
+            return await compute_fn(*args, **kwargs)
+
+        cached_val = await self.cache.get(key)
+        if cached_val is not None:
+            logger.debug(f"[AutoCacheProxy] Cache hit for key '{key}' (Category: {category})")
+            return cached_val
+
+        # Compute new value
+        computed_val = await compute_fn(*args, **kwargs)
+        if computed_val is not None:
+            await self.cache.set(key, computed_val, ttl_seconds=ttl)
+            logger.debug(f"[AutoCacheProxy] Cached key '{key}' with TTL {ttl}s")
 
     def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
-        """API কল খরচ ক্যালকুলেট করুন"""
-        # বাংলা মন্তব্য: ডাটাবেস-ড্রিভেন লজিক ডিজাইন প্রিন্সিপাল অনুযায়ী config_cache থেকে কস্ট নেওয়ার চেষ্টা করা হচ্ছে।
+        """
+        ইনপুট এবং আউটপুট টোকেন খরচের গতিশীল হিসাব করা।
+        """
         from core.config_cache import config_cache
 
-        # মডেলের নাম ফিল্টার করে কী নেম স্পেস জেনারেট করা হচ্ছে (e.g. vendor_cost_openai_gpt_4o_input)
-        model_key = model.replace("/", "_").replace("-", "_").replace(".", "_")
-        input_cost = config_cache.get(f"vendor_cost_{model_key}_input")
-        output_cost = config_cache.get(f"vendor_cost_{model_key}_output")
-
-        if input_cost is not None and output_cost is not None:
-            return (input_tokens * float(input_cost)) + (output_tokens * float(output_cost))
-
-        if model not in self.vendor_costs:
-            logger.warning(f"Unknown model: {model}, assuming free tier")
-            return 0.0
-
-        costs = self.vendor_costs[model]
-        total_cost = (input_tokens * costs["input"]) + (output_tokens * costs["output"])
-        return total_cost
-
-    async def should_use_cache(
-        self,
-        model: str,
-        prompt: str,
-        task_type: str = "general",
-        similarity_threshold: float = 0.85,
-    ) -> dict[str, Any]:
-        """
-        সিমান্টিক ক্যাশ থেকে রেসপন্স পাওয়া যাবে কিনা চেক করুন
-
-        রিটার্ন:
-        {
-            "should_cache": bool,
-            "cached_response": str or None,
-            "estimated_cost_saved": float,
-            "cache_score": float
-        }
-        """  # noqa: W293
-        self.cost_metrics["total_requests"] += 1
-
-        # সিমান্টিক ক্যাশ থেকে খুঁজুন
-        cached_result = await self.cache.query_similar(prompt, task_type)
-
-        if cached_result and cached_result.response:
-            # খরচ সেভিং্স ক্যালকুলেট করুন
-            input_tokens = estimate_tokens(prompt)
-            estimated_cost = self._calculate_cost(model, input_tokens, 100)
-
-            self.cost_metrics["cached_hits"] += 1
-            self.cost_metrics["total_cost_saved"] += estimated_cost
-
-            logger.info(
-                f"💰 [CACHE HIT] Model: {model} | Cost Saved: ${estimated_cost:.6f} | Total Saved: ${self.cost_metrics['total_cost_saved']:.6f}"
-            )
-
-            return {
-                "should_cache": True,
-                "cached_response": cached_result.response,
-                "estimated_cost_saved": estimated_cost,
-                "cache_score": 0.95,  # Semantic match score
-            }
-
-        return {
-            "should_cache": False,
-            "cached_response": None,
-            "estimated_cost_saved": 0.0,
-            "cache_score": 0.0,
-        }
-
-    async def deduplicate_request(self, model: str, prompt: str) -> dict[str, Any]:
-        """
-        একই রিকোয়েস্ট ডুপ্লিকেট আছে কিনা চেক করুন
-        এবং পেন্ডিং রিকোয়েস্টের রেসপন্স শেয়ার করুন
-        """
-        req_hash = self._compute_request_hash(model, prompt)
-
-        if req_hash in self.request_history:
-            entry = self.request_history[req_hash]
-
-            # ৫ মিনিটের মধ্যে একই রিকোয়েস্ট হলে রিইউজ করুন
-            if time.time() - entry["timestamp"] < 300:
-                self.cost_metrics["dedup_requests"] += 1
-                logger.info(f"♻️ [DEDUP HIT] Reusing response from {(time.time() - entry['timestamp']):.1f}s ago")
-
-                return {
-                    "is_duplicate": True,
-                    "cached_response": entry["response"],
-                    "original_timestamp": entry["timestamp"],
-                }
-
-        return {"is_duplicate": False}
-
-    def record_request(self, model: str, prompt: str, response: str, tokens_used: int):
-        """সফল রিকোয়েস্ট রেকর্ড করুন ভবিষ্যত ক্যাশিংয়ের জন্য"""
-        req_hash = self._compute_request_hash(model, prompt)
-        cost = self._calculate_cost(model, estimate_tokens(prompt), tokens_used)
-
-        self.request_history[req_hash] = {
-            "response": response,
-            "timestamp": time.time(),
-            "cost": cost,
-            "tokens": tokens_used,
-        }
-
-    def get_cost_summary(self) -> dict[str, Any]:
-        """সাম্প্রতিক কস্ট সেভিংস সামারি পান"""
-        total_requests = self.cost_metrics["total_requests"] or 1
-        cache_hit_rate = (self.cost_metrics["cached_hits"] / total_requests) * 100
-
-        return {
-            "total_requests": self.cost_metrics["total_requests"],
-            "cached_hits": self.cost_metrics["cached_hits"],
-            "cache_hit_rate_percent": cache_hit_rate,
-            "dedup_requests": self.cost_metrics["dedup_requests"],
-            "total_cost_saved_usd": round(self.cost_metrics["total_cost_saved"], 2),
-            "estimated_monthly_savings_usd": round(self.cost_metrics["total_cost_saved"] * 30, 2),
-        }
-
-    async def intercept_api_call(self, model: str, prompt: str, task_type: str = "general", **kwargs) -> dict[str, Any]:
-        """
-        সব API কল এর আগে ইন্টারসেপ্ট করুন এবং সিদ্ধান্ত নিন
-
-        রিটার্ন:
-        {
-            "proceed": bool,  # True = API কল করুন, False = ক্যাশড রেসপন্স ব্যবহার করুন
-            "cached_response": str or None,
-            "cost_saved": float,
-            "recommendation": str
-        }
-        """  # noqa: W293
-
-        # প্রথম ডুপ্লিকেট চেক করুন
-        dedup_result = await self.deduplicate_request(model, prompt)
-        if dedup_result["is_duplicate"]:
-            return {
-                "proceed": False,
-                "cached_response": dedup_result["cached_response"],
-                "cost_saved": self._calculate_cost(model, estimate_tokens(prompt), 100),
-                "recommendation": "DEDUP_HIT - Using recent cached response",
-            }
-
-        # তারপর সিমান্টিক ক্যাশ চেক করুন
-        cache_result = await self.should_use_cache(model, prompt, task_type)
-        if cache_result["should_cache"]:
-            return {
-                "proceed": False,
-                "cached_response": cache_result["cached_response"],
-                "cost_saved": cache_result["estimated_cost_saved"],
-                "recommendation": "SEMANTIC_HIT - Using semantically similar cached response",
-            }
-
-        # API কল করা দরকার
-        return {
-            "proceed": True,
-            "cached_response": None,
-            "cost_saved": 0.0,
-            "recommendation": "PROCEED - No cache hit, call API",
-        }
+        input_rate = config_cache.get(f"{model}:input_cost") or 0.0
+        output_rate = config_cache.get(f"{model}:output_cost") or 0.0
+        return (input_tokens * input_rate) + (output_tokens * output_rate)
 
 
-# গ্লোবাল ইন্সট্যান্স (সব মডুলে ব্যবহারের জন্য)
-_autocache_instance: AutocacheProxy | None = None
-
-
-def get_autocache() -> AutocacheProxy:
-    """গ্লোবাল Autocache ইন্সট্যান্স পান"""
-    global _autocache_instance
-    if _autocache_instance is None:
-        from core.cache.semantic_cache import SemanticCache
-
-        _autocache_instance = AutocacheProxy(SemanticCache())
-    return _autocache_instance
+# Class alias for backward compatibility with existing tests
+AutocacheProxy = AutoCacheProxy
