@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm.exc import StaleDataError
 
+from core.config import settings
 from core.messaging.upstash_redis_queue import UpstashRedisQueue
 from models.transaction_ledger import TransactionLedgerEntry
 from models.wallet import UserWallet
@@ -38,31 +39,23 @@ class TokenDeductor:
                 "byoc_deployment_fee_usd": 0.05,
             }
 
-    def _acquire_distributed_lock(self, lock_key: str, lock_value: str, ttl: int = 10) -> bool:
+    async def _acquire_distributed_lock(self, lock_key: str, lock_value: str, ttl: int = 10) -> bool:
         """
-        Acquires a distributed lock using Upstash Redis SET NX.
+        Acquires a distributed lock using Upstash Redis SET.
         Raises RuntimeError if Redis unavailable in production (Fail-Closed).
         """
-        # বাংলা মন্তব্য: গ্লোবাল রেডিস কী লক সেট করা হচ্ছে ডাবল-স্পেন্ডিং ঠেকাতে।
         if not redis_queue.configured:
-            # Fail-Closed: Redis unavailable in production means potential double-spending
-            from core.config import settings as _settings
-
-            if _settings.env in {"production", "staging"}:
-                raise RuntimeError(
-                    "Redis unavailable in production/staging - cannot guarantee idempotency. " "Double-spending risk detected. Fail-Closed."
-                )
+            if settings.env in {"production", "staging"}:
+                raise RuntimeError("Redis unavailable in production - cannot guarantee idempotency. Fail-Closed.")
             logger.warning("Redis lock not configured - proceeding in test mode only")
             return True
 
         try:
-            # SET lock_key lock_value NX EX ttl
-            return redis_queue.set_nx(lock_key, lock_value, ex=ttl)
-        except Exception as e:  # noqa: BLE001
+            result = await redis_queue.set_nx(lock_key, lock_value, ex=ttl)
+            return result
+        except Exception as e:
             logger.error(f"Failed to acquire distributed lock: {e}")
-            from core.config import settings as _settings
-
-            if _settings.env in {"production", "staging"}:
+            if settings.env in {"production", "staging"}:
                 raise RuntimeError("Redis lock acquisition failed. Fail-Closed.") from e
             return False
 
@@ -112,7 +105,6 @@ class TokenDeductor:
             logger.error(f"Could not acquire distributed lock for user: {user_id}")
             return False
 
-        try:
             # Calculate rates accurately using Decimal for strict precision (no floating-point loss)
             rates = self.config.get("token_rates_usd_per_1k", {"input": 0.0015, "output": 0.0020})
             input_rate = Decimal(str(rates["input"]))
@@ -120,54 +112,65 @@ class TokenDeductor:
             cost = (Decimal(input_tokens) / Decimal(1000) * input_rate) + (Decimal(output_tokens) / Decimal(1000) * output_rate)
             cost = cost.quantize(Decimal("0.000001"))  # 6 decimal places for USD precision
 
-            # Atomic Transaction Block
-            async with session.begin():
-                # বাংলা কমেন্ট: .with_for_update() ব্যবহার করে ডাটাবেসের নির্দিষ্ট রো-টি লক করা হচ্ছে (Zero-Gap Concurrency)
-                result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id).with_for_update())
-                wallet = result.scalars().first()
+            # Generate unique lock value to prevent lock hijacking
+            lock_value = f"{user_id}_{asyncio.get_event_loop().time()}_{hash(str(cost))}"
+            lock_key = f"token_lock:{user_id}:{lock_value}"
 
-                if not wallet:
-                    logger.error(f"Wallet not found for user: {user_id}")
-                    return False
+            # Acquire distributed lock
+            lock_acquired = await self._acquire_distributed_lock(lock_key, lock_value, self.lock_ttl)
 
-                total_available = wallet.balance_usd + wallet.monthly_allowance_usd
-                if total_available < cost:
-                    logger.warning(f"Insufficient funds for user {user_id}: required {cost}, available {total_available}")
-                    return False
+            if not lock_acquired:
+                logger.warning(f"Could not acquire token deduction lock for user {user_id}")
+                return False
 
-                # Deduct from allowance first, then main balance
-                if wallet.monthly_allowance_usd >= cost:
-                    wallet.monthly_allowance_usd -= cost
-                else:
-                    remaining = cost - wallet.monthly_allowance_usd
-                    wallet.monthly_allowance_usd = Decimal("0.000000")
-                    wallet.balance_usd -= remaining
+            try:
+                # Atomic Transaction Block
+                async with session.begin():
+                    # বাংলা কমেন্ট: .with_for_update() ব্যবহার করে ডাটাবেসের নির্দিষ্ট রো-টি লক করা হচ্ছে (Zero-Gap Concurrency)
+                    result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id).with_for_update())
+                    wallet = result.scalars().first()
 
-                # Record in Ledger
-                tx_id = str(uuid.uuid4())
-                entry = TransactionLedgerEntry(
-                    transaction_id=tx_id,
-                    user_id=user_id,
-                    amount_usd=-cost,
-                    transaction_type="token_usage",
-                    description=f"Consumed {input_tokens}i/{output_tokens}o tokens on model: {model_name}",
-                )
-                session.add(entry)
+                    if not wallet:
+                        logger.error(f"Wallet not found for user: {user_id}")
+                        return False
 
-            # session.begin() ব্লকের বাইরে আসার সাথে সাথে এটি অটোমেটিকভাবে কমিট হবে।
-            # যদি অন্য কোনো থ্রেড ইতমধ্যে ব্যালেন্স মডিফাই করে থাকে, তবে SQLAlchemy 'version' কলাম চেক করে StaleDataError থ্রো করবে।
+                    total_available = wallet.balance_usd + wallet.monthly_allowance_usd
+                    if total_available < cost:
+                        logger.warning(f"Insufficient funds for user {user_id}: required {cost}, available {total_available}")
+                        return False
 
-            logger.success(f"Deducted ${cost} from user {user_id} for token usage.")
-            return True
+                    # Deduct from allowance first, then main balance
+                    if wallet.monthly_allowance_usd >= cost:
+                        wallet.monthly_allowance_usd -= cost
+                    else:
+                        remaining = cost - wallet.monthly_allowance_usd
+                        wallet.monthly_allowance_usd = Decimal("0.000000")
+                        wallet.balance_usd -= remaining
 
-        except StaleDataError:
-            logger.critical(f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}")
-            return False
-        except Exception:  # noqa: BLE001
-            logger.exception(f"Transaction failed for {user_id}")
-            return False
-        finally:
-            await asyncio.to_thread(self._release_distributed_lock, lock_key, lock_value)
+                    # Record in Ledger
+                    tx_id = str(uuid.uuid4())
+                    entry = TransactionLedgerEntry(
+                        transaction_id=tx_id,
+                        user_id=user_id,
+                        amount_usd=-cost,
+                        transaction_type="token_usage",
+                        description=f"Consumed {input_tokens}i/{output_tokens}o tokens on model: {model_name}",
+                    )
+                    session.add(entry)
+
+                logger.success(f"Deducted ${cost} from user {user_id} for token usage.")
+                return True
+
+            except StaleDataError:
+                logger.critical(f"Optimistic Concurrency Failure: Wallet modified by another transaction for user {user_id}")
+                return False
+            except Exception as e:  # noqa: BLE001
+                logger.exception(f"Transaction failed for {user_id}: {str(e)}")
+                return False
+            finally:
+                await self._release_distributed_lock(lock_key, lock_value)
+
+        return False
 
     async def deduct_byoc_deployment(self, session: AsyncSession, user_id: str, skill_name: str) -> bool:
         """
