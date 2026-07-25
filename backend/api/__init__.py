@@ -85,6 +85,38 @@ def register_router(
                 ),
             )
             raise
+    except Exception as exc:  # noqa: BLE001
+        # বাংলা মন্তব্য: Optional রাউটার মডিউল-লেভেলে যেকোনো কনফিগারেশন/রানটাইম এরর
+        # (যেমন BYOC-এর মতো ফিচারের জন্য মিসিং এনক্রিপশন কী) ছুঁড়তে পারে। এই catch
+        # নিশ্চিত করে যে "optional=True" এর প্রতিশ্রুতি সত্যিই রাখা হচ্ছে -- একটি ঐচ্ছিক
+        # ইন্টিগ্রেশন misconfigured থাকলে সম্পূর্ণ অ্যাপ ক্র্যাশ করবে না (Self-Healing Engine নীতি)।
+        # অপশনাল নয় এমন রাউটারের জন্য আগের মতোই raise করে fail-fast আচরণ বজায় থাকে।
+        msg = f"Unexpected error loading router {router_module!r}: {exc}"
+        if optional:
+            logger.warning(msg)
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="api_bootstrap",
+                    error_type="ROUTER_LOAD_FAILED",
+                    message=str(exc)[:500],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="api_bootstrap"),
+                    context={"router_module": router_module},
+                ),
+            )
+        else:
+            logger.critical(msg)
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="api_bootstrap",
+                    error_type="ROUTER_LOAD_FAILED",
+                    message=str(exc)[:500],
+                    severity="CRITICAL",
+                    structured_context=ErrorContext(module="api_bootstrap"),
+                    context={"router_module": router_module},
+                ),
+            )
+            raise
 
 
 __all__ = ["register_router"]
