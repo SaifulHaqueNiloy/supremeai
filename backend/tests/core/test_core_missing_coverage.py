@@ -93,10 +93,12 @@ class TestSettingsValidators:
 
         monkeypatch.setattr("core.config.secret_vault.fetch_secret", fake_fetch)
         s = Settings()
+        s._secrets_batch_loaded = False
+        s._BATCH_SECRET_KEYS = ["X"]
         v1 = s._get_cached_secret("X")
         v2 = s._get_cached_secret("X")
         assert v1 == v2 == "secret-for-X"
-        assert len(calls) == 2
+        assert len(calls) == 1
 
     def test_computed_fields_read_from_vault(self, monkeypatch):
         from core.config import Settings
@@ -1037,12 +1039,8 @@ class TestNATSMessagingMissingBranches:
 
     @pytest.mark.asyncio
     async def test_get_worker_returns_none_on_missing(self):
-        try:
-            from nats.js.errors import KeyValueError
+        from core.messaging.nats_messaging import KeyValueError, NATSClient
 
-            from core.messaging.nats_messaging import NATSClient
-        except ImportError:
-            pytest.skip("nats module not installed")
         client = NATSClient()
         client.kv_store = MagicMock()
         client.kv_store.get = AsyncMock(side_effect=KeyValueError("missing"))

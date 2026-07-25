@@ -181,6 +181,7 @@ class TestCircuitBreakerCall:
     async def test_open_circuit_rejects_calls(self, circuit_breaker):
         """বাংলা মন্তব্য: OPEN state-এ calls reject হয়।"""
         circuit_breaker.state = CircuitBreakerState.OPEN
+        circuit_breaker.opened_at = time.monotonic()
         circuit_breaker.last_failure_time = time.time()
 
         mock_coro = AsyncMock(return_value="success")

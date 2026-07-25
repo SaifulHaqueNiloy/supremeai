@@ -1,5 +1,5 @@
 # backend/tests/core/test_pubsub.py
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
