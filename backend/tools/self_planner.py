@@ -57,7 +57,7 @@ class SelfPlanner:
             plan = json.loads(text)
             if not isinstance(plan, list):
                 err_msg = "LLM plan response was not a JSON array"
-                raise ValueError(err_msg)
+                raise TypeError(err_msg)
         except Exception as e:  # noqa: BLE001
             # ✅ FIXED: no more silent fallback to a hardcoded plan — an unparsable
             # response means planning genuinely failed and must be surfaced as an error.
