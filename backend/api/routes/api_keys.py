@@ -287,7 +287,7 @@ async def create_api_key(
 
 
 async def revoke_api_key(key_id: int | str, request: Request | None = None):
-    kid = int(key_id) if isinstance(key_id, (int, str)) and str(key_id).isdigit() else key_id
+    kid = int(key_id) if isinstance(key_id, int | str) and str(key_id).isdigit() else key_id
     if request is not None and isinstance(kid, int):
         return await revoke_key(kid, request)
     return await db_revoke_api_key(kid if isinstance(kid, int) else 0)
@@ -299,7 +299,7 @@ async def rotate_api_key(
     new_key_masked: str = "",
     new_key_prefix: str = "",
 ):
-    kid = int(key_id) if isinstance(key_id, (int, str)) and str(key_id).isdigit() else key_id
+    kid = int(key_id) if isinstance(key_id, int | str) and str(key_id).isdigit() else key_id
     if request is not None and isinstance(kid, int):
         req = RotateAPIKeyRequest(old_key="")
         return await rotate_key(kid, req, request)

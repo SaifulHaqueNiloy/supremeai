@@ -29,4 +29,3 @@ class UserContext(BaseModel):
     roles: list[str] = Field(default_factory=list)
     expires_at: str | None = None
     scopes: tuple[str, ...] | None = None
-

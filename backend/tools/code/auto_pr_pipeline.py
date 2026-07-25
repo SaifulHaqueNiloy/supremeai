@@ -1,143 +1,86 @@
-import asyncio
-import subprocess
-from typing import Any
+import logging
+import os
+from core.cache.redis_manager import get_redis_client
 
-from loguru import logger
-
-from tools.devops.github_agent import GitHubAgent
+logger = logging.getLogger(__name__)
 
 
 class AutoPRPipeline:
     """
-    Automates the entire process of creating a branch, committing changes, pushing, and opening a PR.
-    (Closes Devin Gap #5)
+    অটোমেটেড গিটহাব পিআর পাইপলাইন।
+    এআই জেনারেটেড কোড ফিক্সের জন্য রিমোট রিপোজিটরিতে অটোমেটেড ব্রাঞ্চ ও PR তৈরি করে।
+    মাল্টি-ইনস্ট্যান্স ক্লাউড রানে একই এররের জন্য একাধিক PR তৈরি রোধে Redis Lock ব্যবহার করা হয়েছে।
     """
 
-    def __init__(self):
-        self.github_agent = GitHubAgent()
-        logger.info("Initialized AutoPRPipeline")
+    def __init__(self, repo_name: str = "paykaribazaronline/supremeai"):
+        self.repo_name = repo_name
+        self.redis = get_redis_client()
 
-    async def _run_git_command(self, command: list[str], cwd: str = ".") -> str:
-        """Helper to run git commands safely."""
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "git", *command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            stdout, stderr = await process.communicate()
-
-            if process.returncode != 0:
-                logger.error(f"Git command failed: git {' '.join(command)}")
-                logger.error(stderr.decode())
-                raise RuntimeError(f"Git error: {stderr.decode()}")
-
-            return stdout.decode().strip()
-        except FileNotFoundError:
-            logger.error("Git command not found. Ensure git is installed and in your PATH.")
-            raise
-
-    async def create_pr(self, repo: str, branch: str, title: str, body: str, files: dict[str, str]) -> dict[str, Any]:
+    def acquire_pr_lock(self, error_fingerprint: str, lock_ttl_seconds: int = 3600) -> bool:
         """
-        A more robust pipeline that handles file changes, branching, committing, and PR creation.
+        রেডিস ডিস্ট্রিবিউটেড লক অর্জন করা।
         """
-        original_branch = await self._run_git_command(["rev-parse", "--abbrev-ref", "HEAD"], cwd=repo)
-        logger.info(f"Starting from branch: {original_branch}")
+        lock_key = f"pr_lock:{error_fingerprint}"
+        if not self.redis:
+            logger.warning("[AutoPRPipeline] Redis unavailable, bypassing lock.")
+            return True
 
         try:
-            # 1. Create and checkout a new branch
-            await self._run_git_command(["checkout", "-b", branch], cwd=repo)
-            logger.info(f"Checked out new branch: {branch}")
+            # setnx to ensure atomicity
+            is_locked = self.redis.set(lock_key, "locked", ex=lock_ttl_seconds, nx=True)
+            return bool(is_locked)
+        except Exception as e:
+            logger.error(f"[AutoPRPipeline] Redis lock error: {e}")
+            return True
 
-            # 2. Write file changes and add them to staging
-            for file_path, content in files.items():
-                with open(file_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
-                    f.write(content)
-                await self._run_git_command(["add", file_path], cwd=repo)
-            logger.info(f"Staged {len(files)} file(s).")
+    def create_remediation_pr(
+        self, error_fingerprint: str, file_path: str, patch_code: str, issue_summary: str
+    ) -> str | None:
+        """
+        গিটহাবে এআই-জেনারেটেড ফিক্সের জন্য নতুন ব্রাঞ্চ তৈরি করে পিআর ওপেন করা।
+        """
+        if not self.acquire_pr_lock(error_fingerprint):
+            logger.info(f"[AutoPRPipeline] PR creation skipped for '{error_fingerprint}' - Lock already active.")
+            return None
 
-            # 3. Commit changes
-            commit_message = f"{title}\n\n{body}"
-            await self._run_git_command(["commit", "-m", commit_message], cwd=repo)
-            logger.info("Committed changes.")
-
-            # 4. Push the new branch
-            await self._run_git_command(["push", "-u", "origin", branch], cwd=repo)
-            logger.info(f"Pushed branch '{branch}' to origin.")
-
-            # 5. Create the pull request
-            pr_result = self.github_agent.create_pr(
-                repo_name=repo.split("/")[-2]
-                + "/"
-                + repo.rsplit("/", maxsplit=1)[-1],  # Assumes repo is a path like 'owner/name'
-                title=title,
-                body=body,
-                head_branch=branch,
-                base_branch=original_branch,
-            )
-            logger.info(f"Successfully created PR: {pr_result.get('pr_url')}")
-
-            return {
-                "status": "success",
-                "pr_url": pr_result.get("pr_url"),
-                "branch": branch,
-            }
-
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Auto PR Pipeline failed: {e}")
-            # Cleanup: checkout original branch and delete the new one
-            logger.info("Cleaning up failed PR attempt...")
-            await self._run_git_command(["checkout", original_branch], cwd=repo)
-            await self._run_git_command(["branch", "-D", branch], cwd=repo)
-            return {"status": "error", "error": str(e), "cleaned_up": True}
-
-    async def execute_pipeline(
-        self,
-        repo_path: str,
-        branch_name: str,
-        commit_message: str,
-        pr_title: str,
-        pr_body: str,
-        target_repo: str,
-        base_branch: str | None = "main",
-    ) -> dict[str, Any]:
-        """Runs the full PR pipeline asynchronously."""
-        logger.info(f"Starting Auto PR Pipeline for {repo_path}")
-        original_branch = await self._run_git_command(["rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_path)
+        github_token = os.getenv("GITHUB_TOKEN")
+        if not github_token:
+            logger.warning("[AutoPRPipeline] GITHUB_TOKEN not set. Simulating PR creation.")
+            pr_url = f"https://github.com/{self.repo_name}/pull/mock-{error_fingerprint[:8]}"
+            logger.info(f"[AutoPRPipeline] Simulated PR created: {pr_url}")
+            return pr_url
 
         try:
-            # 1. Checkout new branch
-            await self._run_git_command(["checkout", "-b", branch_name], cwd=repo_path)
-            logger.info(f"Checked out branch: {branch_name}")
+            from github import Github
 
-            # 2. Add all changes (assumes changes are already made)
-            await self._run_git_command(["add", "."], cwd=repo_path)
+            g = Github(github_token)
+            repo = g.get_repo(self.repo_name)
 
-            # 3. Commit
-            await self._run_git_command(["commit", "-m", commit_message], cwd=repo_path)
-            logger.info(f"Committed changes: {commit_message}")
+            branch_name = f"agent/fix-{error_fingerprint[:8]}"
+            main_branch = repo.get_branch("main")
 
-            # 4. Push
-            await self._run_git_command(["push", "-u", "origin", branch_name], cwd=repo_path)
-            logger.info(f"Pushed branch {branch_name} to origin")
+            # Create branch from main
+            repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=main_branch.commit.sha)
 
-            # 5. Create PR via GitHub Agent
-            pr_result = self.github_agent.create_pr(
-                repo_name=target_repo,
-                title=pr_title,
-                body=pr_body,
-                head_branch=branch_name,
-                base_branch=base_branch,
+            # Commit changes
+            contents = repo.get_contents(file_path, ref=branch_name)
+            repo.update_file(
+                path=file_path,
+                message=f"fix(auto-healer): {issue_summary}",
+                content=patch_code,
+                sha=contents.sha,
+                branch=branch_name,
             )
 
-            logger.info(f"PR Created successfully: {pr_result.get('pr_url')}")
-            return {
-                "status": "success",
-                "branch": branch_name,
-                "pr_url": pr_result.get("pr_url"),
-            }
-
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Auto PR Pipeline failed: {str(e)}")
-            # Cleanup failed branch
-            await self._run_git_command(["checkout", original_branch], cwd=repo_path)
-            await self._run_git_command(["branch", "-D", branch_name], cwd=repo_path)
-            return {"status": "error", "error": str(e), "cleaned_up": True}
+            # Create Pull Request
+            pr = repo.create_pull(
+                title=f"🤖 [Auto-Remediation] Fix for {issue_summary}",
+                body=f"This PR was automatically generated by SupremeAI Predictive Self-Healing Mesh.\n\n**Issue Summary:** {issue_summary}\n**Target File:** `{file_path}`",
+                head=branch_name,
+                base="main",
+            )
+            logger.info(f"[AutoPRPipeline] PR successfully opened: {pr.html_url}")
+            return pr.html_url
+        except Exception as e:
+            logger.error(f"[AutoPRPipeline] Failed to create GitHub PR: {e}")
+            return None
