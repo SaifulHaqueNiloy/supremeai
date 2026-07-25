@@ -469,8 +469,9 @@ jobs:
             ${{ runner.os }}-poetry-v3-
 
       - name: 📦 Install Dependencies (Smart Sync)
-        working-directory: backend
         run: |
+          mkdir -p backend
+          cd backend
           poetry install --with dev
 
       - name: 🧪 Run Tests
@@ -486,8 +487,9 @@ jobs:
 
       - name: Add Backend Test Results to GitHub Summary
         if: always()
-        working-directory: backend
         run: |
+          mkdir -p backend
+          cd backend
           python ../.github/scripts/supreme_ci.py generate-report \
             --pytest-json pytest-report.md \
             --coverage-json coverage.json \
