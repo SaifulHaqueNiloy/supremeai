@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Seed the tools_registry table in Supabase with metadata for all 76 backend tools.
 Run: python backend/scripts/seed_tools_registry.py

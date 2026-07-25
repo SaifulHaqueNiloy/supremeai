@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 core/models/shared_workspace.py
 ================================
