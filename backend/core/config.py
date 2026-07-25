@@ -347,8 +347,8 @@ class Settings(BaseSettings):
                 val = secret_vault.fetch_secret(secret_key)
                 if val:
                     self._cached_secrets[secret_key] = val
-            except Exception:  # noqa: BLE001, S110
-                pass  # Non-critical — some secrets may be optional
+            except (ValueError, KeyError, ConnectionError) as _secret_err:
+                logger.debug(f"Secret {secret_key} not available: {_secret_err}")
         self._secrets_batch_loaded = True
 
     def _get_cached_secret(self, key: str) -> str:
@@ -605,9 +605,7 @@ class Settings(BaseSettings):
         if self.env in {"production", "staging"} and self.docs_auth_enabled:
             pwd = self.docs_password.get_secret_value() if self.docs_password else ""
             if not pwd:
-                logger.warning(
-                    f"⚠️ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing — using fallback production password."
-                )
+                logger.warning(f"⚠️ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing — using fallback production password.")
                 self.docs_password = SecretStr("supreme-admin-2026-prod")
 
         # Boot-time LLM secret check — silent failure প্রতিরোধ করে
@@ -628,7 +626,9 @@ class Settings(BaseSettings):
                 # বাংলা: কোনো LLM key নেই — সিস্টেম boot হবে কিন্তু সব AI feature মৃত।
                 # Silent failure রোধ করতে CRITICAL log emit করা হচ্ছে।
                 logger.critical(
-                    "🚨 BOOT-TIME ALERT: কোনো LLM API key পাওয়া যায়নি! " f"Missing: {missing}. " "সব AI feature কাজ করবে না। Infisical / env var চেক করুন।"
+                    "🚨 BOOT-TIME ALERT: কোনো LLM API key পাওয়া যায়নি! "
+                    f"Missing: {missing}. "
+                    "সব AI feature কাজ করবে না। Infisical / env var চেক করুন।"
                 )
             elif missing:
                 logger.warning(f"⚠️ BOOT-TIME: {len(missing)} LLM key মিসিং ({missing}). " f"Available: {available}. Partial AI functionality only.")
@@ -637,22 +637,12 @@ class Settings(BaseSettings):
 
         # Stripe warning (non-blocking)
         if self.env in {"production", "staging"}:
-            stripe_key = (
-                self.stripe_api_key.get_secret_value() if self.stripe_api_key else ""
-            )
-            stripe_webhook = (
-                self.stripe_webhook_secret.get_secret_value()
-                if self.stripe_webhook_secret
-                else ""
-            )
+            stripe_key = self.stripe_api_key.get_secret_value() if self.stripe_api_key else ""
+            stripe_webhook = self.stripe_webhook_secret.get_secret_value() if self.stripe_webhook_secret else ""
             if not stripe_key:
-                logger.warning(
-                    "⚠️ Stripe API key missing in production/staging. Billing features will run in mock mode."
-                )
+                logger.warning("⚠️ Stripe API key missing in production/staging. Billing features will run in mock mode.")
             if not stripe_webhook:
-                logger.warning(
-                    "⚠️ Stripe webhook secret missing in production/staging. Webhook validation disabled."
-                )
+                logger.warning("⚠️ Stripe webhook secret missing in production/staging. Webhook validation disabled.")
 
         # Production completeness / degraded mode allowed
         if self.env == "production":
@@ -695,7 +685,8 @@ class Settings(BaseSettings):
                 import json as _json
 
                 return _json.loads(v)
-            except Exception:  # noqa: BLE001
+            except (json.JSONDecodeError, ValueError) as _parse_err:
+                logger.debug(f"List field parse fallback to comma-split: {_parse_err}")
                 return [p.strip() for p in v.split(",") if p.strip()]
         return v or []
 
@@ -709,8 +700,8 @@ class Settings(BaseSettings):
                 import json as _json
 
                 return _json.loads(v)
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Failed to parse rbac_role_definitions JSON: {e}. Defaulting to empty dictionary.")
+            except (json.JSONDecodeError, ValueError) as _dict_parse_err:
+                logger.error(f"Failed to parse rbac_role_definitions JSON: {_dict_parse_err}. Defaulting to empty dictionary.")
                 return {}
         return v or {}
 
@@ -800,8 +791,8 @@ class Settings(BaseSettings):
         if str(value).startswith("["):
             try:
                 return json.loads(value)
-            except Exception:  # noqa: BLE001, S110
-                pass
+            except (json.JSONDecodeError, ValueError) as _cors_parse_err:
+                logger.debug(f"CORS parse fallback to comma-split: {_cors_parse_err}")
         return [x.strip() for x in str(value).split(",") if x.strip()]
 
     @classmethod
@@ -823,4 +814,4 @@ class Settings(BaseSettings):
     def validate_production_completeness(self) -> "Settings":
         """Production completeness verification helper for test coverage."""
         if self.env == "production":
-            missing = []
+            pass

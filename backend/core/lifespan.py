@@ -123,27 +123,12 @@ async def app_lifespan(app):
     await ReliabilityController.initialize()
     app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
 
-    # OpenTelemetry tracing initialization
-    try:
-        from core.observability.telemetry import setup_tracing
+    # ── Parallelized Startup Phase 1: Independent services ──────────────────
+    # বাংলা মন্তব্য: P2 Fix — startup latency এবং cold start freeze এড়াতে
+    # স্বাধীন সার্ভিসগুলো asyncio.gather() দিয়ে সমান্তরালে চালানো হচ্ছে।
+    # Sequential dependency: HTTP client must be initialized first (others depend on it).
 
-        # বাংলা মন্তব্য: P2 Fix — startup latency এবং cold start freeze এড়াতে tracing initialization thread-এ offload করা হলো।
-        await asyncio.to_thread(setup_tracing)
-        logger.info("✅ OpenTelemetry tracing provider successfully initialized.")
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(f"Failed to initialize tracing provider: {exc}")
-        error_event_bus.emit(
-            ErrorEvent(
-                module="lifespan",
-                error_type="TRACING_INIT_FAILED",
-                message=str(exc)[:200],
-                severity="WARNING",
-                structured_context=ErrorContext(module="auto_fixed"),
-                context={"component": "opentelemetry"},
-            )
-        )
-
-    # Global HTTP client initialization
+    # Global HTTP client initialization (sequential — dependency for others)
     services.global_http_client = httpx.AsyncClient(
         limits=httpx.Limits(max_keepalive_connections=50, max_connections=200),
         timeout=httpx.Timeout(30.0),
@@ -153,107 +138,134 @@ async def app_lifespan(app):
     services.model_router._http_client = services.global_http_client
     logger.info("✅ Global HTTP Connection Pool initialized [Max Cons: 200].")
 
-    # Database pool initialization
-    try:
-        db_url = settings.supabase_database_url
-        if "sqlite" in db_url:
-            logger.info("💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization.")
+    # Parallel Phase: DB pool, Config cache, Redis, Tracing, CostGuard
+    async def _init_tracing() -> None:
+        """Initialize OpenTelemetry tracing in a thread to avoid blocking."""
+        try:
+            from core.observability.telemetry import setup_tracing
+
+            await asyncio.to_thread(setup_tracing)
+            logger.info("✅ OpenTelemetry tracing provider successfully initialized.")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Failed to initialize tracing provider: {exc}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="lifespan",
+                    error_type="TRACING_INIT_FAILED",
+                    message=str(exc)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"component": "opentelemetry"},
+                )
+            )
+
+    async def _init_db_pool() -> None:
+        """Initialize database connection pool and API key tables."""
+        _db_url = settings.supabase_database_url
+        try:
+            if "sqlite" in _db_url:
+                logger.info("💾 SQLite Memory Database Detected for Agent Telemetry. Skipping PostgreSQL asyncpg pool initialization.")
+                app.state.db_pool = None
+            else:
+                await init_db_pool(_db_url)
+                logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
+                await _ensure_api_key_tables()
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"❌ Failed to initialize DB Pool: {exc}")
             app.state.db_pool = None
-        else:
-            await init_db_pool(db_url)
-            logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
-            await _ensure_api_key_tables()
-    except Exception as exc:  # noqa: BLE001
-        # বাংলা মন্তব্য: P1 Fix — DB fail হলে startup crash করা হবে না।
-        # DB-dependent features gracefully disabled হবে।
-        # Health endpoint, SSE stream, config cache সব চলবে DB ছাড়া।
-        logger.error(f"❌ Failed to initialize DB Pool: {exc}")
-        app.state.db_pool = None
-        app.state.subsystem_status["db"] = "down"
-        error_event_bus.emit(
-            ErrorEvent(
-                module="lifespan",
-                error_type="DB_POOL_INIT_FAILED",
-                message=str(exc)[:200],
-                severity="CRITICAL" if settings.env == "production" else "WARNING",
-                structured_context=ErrorContext(module="auto_fixed"),
-                context={"db_url": db_url[:50] if db_url else "", "env": settings.env},
+            app.state.subsystem_status["db"] = "down"
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="lifespan",
+                    error_type="DB_POOL_INIT_FAILED",
+                    message=str(exc)[:200],
+                    severity="CRITICAL" if settings.env == "production" else "WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"_db_url": _db_url[:50] if _db_url else "", "env": settings.env},
+                )
             )
-        )
-        if settings.env == "production":
-            # Production-এ Sentry-তে alert পাঠান, কিন্তু crash করবেন না
-            logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
+            if settings.env == "production":
+                logger.critical("🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503.")
 
-    # Config cache initialization
-    try:
-        await config_cache.refresh_async()
-        logger.info("✅ System configuration cache successfully initialized.")
-    except Exception as exc:  # noqa: BLE001
-        # প্রোডাকশনে ডাটাবেজ সাময়িক ডাউন থাকলেও সার্ভার যেন বুট হতে পারে
-        logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
-        app.state.subsystem_status["config"] = "fallback"
-        error_event_bus.emit(
-            ErrorEvent(
-                module="lifespan",
-                error_type="CONFIG_CACHE_INIT_FAILED",
-                message=str(exc)[:200],
-                severity="WARNING",
-                structured_context=ErrorContext(module="auto_fixed"),
-                context={"fallback": "DEFAULT_CONFIGS"},
+    async def _init_config_cache() -> None:
+        """Initialize system configuration cache."""
+        try:
+            await config_cache.refresh_async()
+            logger.info("✅ System configuration cache successfully initialized.")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
+            app.state.subsystem_status["config"] = "fallback"
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="lifespan",
+                    error_type="CONFIG_CACHE_INIT_FAILED",
+                    message=str(exc)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"fallback": "DEFAULT_CONFIGS"},
+                )
             )
-        )
-        from core.config_cache import DEFAULT_CONFIGS
+            from core.config_cache import DEFAULT_CONFIGS
 
-        config_cache._cache = dict(DEFAULT_CONFIGS)
-        # sys.exit(1) রিমুভ করা হলো যাতে ক্লাউড রান হেলথ চেক পাস করতে পারে
+            config_cache._cache = dict(DEFAULT_CONFIGS)
 
-    # Redis initialization
-    try:
-        # SecureRedisManager is initialized synchronously in __init__.
-        # Just check if the client is connected.
-        if getattr(redis_manager, "client", None):
-            await redis_manager.client.ping()
-            logger.info("✅ Redis connection verified successfully.")
-            # বাংলা মন্তব্য: Redis থেকে ReliabilityController-এর failure fingerprints পুনরুদ্ধার করা হচ্ছে।
-            # এটি নিশ্চিত করে যে পূর্বের ব্যর্থতার ইতিহাস হারিয়ে না যায় (Self-Healing DNA #7)।
-            await ReliabilityController.restore_from_persistence()
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Failed to initialize Redis Manager: {e}")
-        app.state.subsystem_status["redis"] = "down"
-        error_event_bus.emit(
-            ErrorEvent(
-                module="lifespan",
-                error_type="REDIS_INIT_FAILED",
-                message=str(e)[:200],
-                severity="CRITICAL" if settings.env == "production" else "WARNING",
-                structured_context=ErrorContext(module="auto_fixed"),
-                context={"env": settings.env},
+    async def _init_redis() -> None:
+        """Verify Redis connection and restore reliability state."""
+        try:
+            if getattr(redis_manager, "client", None):
+                await redis_manager.client.ping()
+                logger.info("✅ Redis connection verified successfully.")
+                await ReliabilityController.restore_from_persistence()
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Failed to initialize Redis Manager: {e}")
+            app.state.subsystem_status["redis"] = "down"
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="lifespan",
+                    error_type="REDIS_INIT_FAILED",
+                    message=str(e)[:200],
+                    severity="CRITICAL" if settings.env == "production" else "WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"env": settings.env},
+                )
             )
-        )
-        if settings.env == "production":
-            logger.critical("🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail.")
-            # raise e রিমুভ করা হলো যাতে Render/Cloud Run ফেইল না করে
+            if settings.env == "production":
+                logger.critical(
+                    "🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail."
+                )
 
-    # CostGuard initialization (for distributed budget tracking)
-    try:
-        from core.cost_guard import cost_guard
+    async def _init_cost_guard() -> None:
+        """Initialize CostGuard for distributed budget tracking."""
+        try:
+            from core.cost_guard import cost_guard
 
-        await cost_guard.connect()
-        logger.info("✅ CostGuard Redis connection initialized for budget tracking.")
-    except Exception as e:  # noqa: BLE001
-        logger.warning(f"CostGuard initialization failed (non-critical): {e}")
-        error_event_bus.emit(
-            ErrorEvent(
-                module="lifespan",
-                error_type="COST_GUARD_INIT_FAILED",
-                message=str(e)[:200],
-                severity="WARNING",
-                structured_context=ErrorContext(module="auto_fixed"),
-                context={"component": "cost_guard"},
+            await cost_guard.connect()
+            logger.info("✅ CostGuard Redis connection initialized for budget tracking.")
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"CostGuard initialization failed (non-critical): {e}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="lifespan",
+                    error_type="COST_GUARD_INIT_FAILED",
+                    message=str(e)[:200],
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                    context={"component": "cost_guard"},
+                )
             )
-        )
 
-    # Orchestrator initialization
+    # Run all independent initializations in parallel
+    await asyncio.gather(
+        _init_tracing(),
+        _init_db_pool(),
+        _init_config_cache(),
+        _init_redis(),
+        _init_cost_guard(),
+        return_exceptions=True,
+    )
+
+    # ── Sequential Phase 2: Services that depend on Phase 1 ─────────────────
+    # Orchestrator initialization (depends on HTTP client + DB)
     try:
         orch_inst = Orchestrator()
         app.state.orchestrator = orch_inst
@@ -270,16 +282,13 @@ async def app_lifespan(app):
                 context={"component": "orchestrator"},
             )
         )
-        # Ensure orchestrator is set to None on failure to prevent NoneType errors
         app.state.orchestrator = None
 
-    # Supabase schema bootstrap
+    # Supabase schema bootstrap (depends on DB pool)
     try:
         from database import db as supabase_db
 
         if settings.supabase_database_url:
-            # বাংলা: sync call in async context — thread-এ চালানো হচ্ছে blocking এড়াতে।
-            # wait_for 30s timeout দেওয়া হলো: psycopg2.connect হ্যাং করলে lifespan ব্লক না হয়।
             await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
