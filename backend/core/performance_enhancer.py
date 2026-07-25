@@ -24,7 +24,10 @@ from brain.model_registry import ModelRegistry
 
 @dataclass
 class PerformanceMetrics:
-    """Stores performance metrics for system monitoring."""
+    """Stores performance metrics for system monitoring.
+
+    বাংলা: সিস্টেম মনিটরিং জন্য পারফরম্যান্স মেট্রিক্স সংরক্ষণ করে।
+    """
 
     request_count: int = 0
     error_count: int = 0
@@ -35,7 +38,10 @@ class PerformanceMetrics:
 
 @dataclass
 class FailureHistoryEntry:
-    """Represents a past failure for learning purposes."""
+    """Represents a past failure for learning purposes.
+
+    বাংলা: শেখার জন্য অতীতের কোনো একটি ফেইলিউরকে প্রতিনিধিত্ব করে।
+    """
 
     timestamp: datetime
     error_type: str
@@ -46,15 +52,27 @@ class FailureHistoryEntry:
 
 
 class PerformanceOptimizer:
-    """Main performance optimizer class implementing the core philosophy."""
+    """Main performance optimizer class implementing the core philosophy.
+
+    বাংলা: মূল filosophy প্রয়োগকারী প্রধান পারফরম্যান্স অপ্টিমাইজার ক্লাস।
+    """
 
     def __init__(self):
+        """Initialize the performance optimizer with self-healing capabilities.
+
+        বাংলা: সেলফ-হিলিং ক্ষমতার সহ性能 অপ্টিমাইজার ইনিশিয়ালাইজ করে।
+        """
         self.metrics: dict[str, PerformanceMetrics] = {}
         self.failure_history: list[FailureHistoryEntry] = []
+        self.model_stats: dict[str, dict[str, float]] = {}
         self.dynamic_circuit_breakers: dict[str, DynamicCircuitBreaker] = {}
         self.model_registry = ModelRegistry()
         self.self_healer = None
         self.reminder_pipeline = None
+
+        # 🔒 বাংলা: Race Condition Guard — একাধিক async task একসাথে shared state পরিবর্তন করতে পারে।
+        # asyncio.Lock ব্যবহার করে atomic update নিশ্চিত করা হলো।
+        self._state_lock: asyncio.Lock = asyncio.Lock()
 
         # Initialize self-healing components
         try:
@@ -70,39 +88,95 @@ class PerformanceOptimizer:
         logger.info("✅ PerformanceOptimizer initialized with self-healing capabilities")
 
     def get_circuit_breaker(self, name: str) -> DynamicCircuitBreaker:
-        """Get or create a dynamic circuit breaker for a specific operation."""
+        """Get or create a dynamic circuit breaker for a specific operation.
+
+        Args:
+             name: The name/identifier for the circuit breaker.
+
+         Returns:
+             DynamicCircuitBreaker instance for the specified operation.
+
+         Raises:
+             None. Creates a new circuit breaker if one doesn't exist.
+
+         বাংলা: একটি নির্দিষ্ট অপারেশনের জন্য ডাইনামিক সার্কিট ব্রেকার পাওয়া বা তৈরি করে।
+        """
         if name not in self.dynamic_circuit_breakers:
             self.dynamic_circuit_breakers[name] = DynamicCircuitBreaker(
                 name=name, failure_threshold=settings.circuit_breaker_failure_threshold, recovery_timeout=settings.circuit_breaker_cooldown_period
             )
         return self.dynamic_circuit_breakers[name]
 
+    def _prune_expired_metrics(self, max_age_hours: int = 2) -> None:
+        """TTL-ভিত্তিক ক্লিনআপ: ২ ঘণ্টার বেশি পুরোনো মেট্রিক্স এন্ট্রি মুছে ফেলা হয়।
+
+        MAX_METRICS_ENTRIES (500) সীমা ছাড়ালে LRU (সবচেয়ে পুরোনো) এন্ট্রি ইভিক্ট করা হয়।
+        """
+        cutoff = datetime.now() - timedelta(hours=max_age_hours)
+        expired_keys = [k for k, v in self.metrics.items() if v.last_updated < cutoff]
+        for k in expired_keys:
+            del self.metrics[k]
+
+        # Hard-cap: সীমা ছাড়ালে LRU ইভিকশন
+        MAX_METRICS_ENTRIES = 500
+        if len(self.metrics) > MAX_METRICS_ENTRIES:
+            sorted_keys = sorted(self.metrics, key=lambda k: self.metrics[k].last_updated)
+            for k in sorted_keys[: len(self.metrics) - MAX_METRICS_ENTRIES]:
+                del self.metrics[k]
+
+    def _prune_inactive_model_stats(self) -> None:
+        """যেসব মডেল সম্প্রতি metrics-এ সক্রিয় নেই, তাদের model_stats এন্ট্রি মুছে ফেলা হয়।"""
+        active_models = set(self.metrics.keys())
+        inactive = [m for m in list(self.model_stats) if m not in active_models]
+        for m in inactive:
+            del self.model_stats[m]
+
     async def track_performance(self, operation: str, execution_time: float, success: bool = True) -> None:
-        """Track performance metrics for an operation."""
-        if operation not in self.metrics:
-            self.metrics[operation] = PerformanceMetrics()
+        """Track performance metrics for an operation.
 
-        metrics = self.metrics[operation]
-        metrics.request_count += 1
+        বাংলা: Race condition এড়াতে asyncio.Lock দিয়ে atomic state update নিশ্চিত করে।
+        """
+        self._prune_expired_metrics()
+        self._prune_inactive_model_stats()  # 🚀 model_stats মেমোরি ক্লিনআপ
 
-        if not success:
-            metrics.error_count += 1
+        async with self._state_lock:  # 🔒 বাংলা: concurrent update থেকে shared state রক্ষা
+            if operation not in self.metrics:
+                self.metrics[operation] = PerformanceMetrics()
 
-        # Calculate moving average for response time
-        total_time = metrics.avg_response_time * (metrics.request_count - 1) + execution_time
-        metrics.avg_response_time = total_time / metrics.request_count
+            metrics = self.metrics[operation]
+            metrics.request_count += 1
 
-        # Update last updated time
-        metrics.last_updated = datetime.now()
+            if not success:
+                metrics.error_count += 1
 
-        # Log performance warnings
+            # Calculate moving average for response time
+            total_time = metrics.avg_response_time * (metrics.request_count - 1) + execution_time
+            metrics.avg_response_time = total_time / metrics.request_count
+
+            # Update last updated time
+            metrics.last_updated = datetime.now()
+
+        # Log performance warnings (লক-এর বাইরে — I/O operation, lock ধরে রাখা উচিত নয়)
         if metrics.error_count > 0 and metrics.request_count > 0:
             error_rate = metrics.error_count / metrics.request_count
             if error_rate > 0.1:  # More than 10% errors
                 logger.warning(f"⚠️ High error rate for {operation}: {error_rate:.2%}")
 
     async def optimize_model_selection(self, task_type: str, context: str = "") -> str:
-        """Intelligently select the best model based on task type and context."""
+        """Intelligently select the best model based on task type and context.
+
+        Args:
+            task_type: The type of task (reasoning, coding, general, etc.).
+            context: Additional context for model selection.
+
+        Returns:
+            The selected model identifier string.
+
+        Raises:
+            None. Falls back to default model if no optimal model is found.
+
+        বাংলা: টাস্ক টাইপ এবং কনটেক্সটের উপর ভিত্তি করে স্মার্টলি সেরা মডেল সিলেক্ট করে।
+        """
         # Get models by tier and task requirements
         all_models = self.model_registry.MODELS
 
@@ -163,7 +237,16 @@ class PerformanceOptimizer:
             return "gemini/gemini-2.5-flash"
 
     def _get_api_key_for_provider(self, provider: str) -> str:
-        """Get API key for a specific provider from settings."""
+        """Get API key for a specific provider from settings.
+
+        Args:
+            provider: The provider name (anthropic, openai, google, etc.).
+
+        Returns:
+            API key string or empty string if not found.
+
+        বাংলা: নির্দিষ্ট একটি প্রোভাইডারের জন্য সেটিংস থেকে API key পায়।
+        """
         provider_keys = {
             "anthropic": settings.openrouter_api_key,
             "openai": settings.openai_api_key,
@@ -177,7 +260,21 @@ class PerformanceOptimizer:
         return provider_keys.get(provider, "")
 
     async def handle_failure(self, error_type: str, error_message: str, context: dict[str, Any]) -> None:
-        """Handle system failures with self-healing capabilities."""
+        """Handle system failures with self-healing capabilities.
+
+        Args:
+            error_type: The type/category of the error.
+            error_message: Detailed error message or description.
+            context: Dictionary containing error context (tenant_id, dependency_tree, etc.)
+
+        Returns:
+            None
+
+        Raises:
+            None. Failures are logged and submitted for remediation if self-healer is available.
+
+        বাংলা: সেলফ-হিলিং ক্ষমতা দিয়ে সিস্টেম ফেইলিওর হ্যান্ডল করে।
+        """
         # Record failure in history
         # বাংলা: FailureHistoryEntry-এ সকল required field পূরণ করা হলো (mypy fix)
         failure_entry = FailureHistoryEntry(
@@ -221,7 +318,18 @@ class PerformanceOptimizer:
                 logger.error(f"Failed to submit auto-fix: {e}")
 
     def _generate_error_signature(self, error_type: str, error_message: str, context: dict[str, Any]) -> str:
-        """Generate a unique signature for the error pattern."""
+        """Generate a unique signature for the error pattern.
+
+        Args:
+            error_type: Type of the error.
+            error_message: Error message.
+            context: Error context dictionary.
+
+        Returns:
+            SHA-256 hash (first 16 chars) of the error signature.
+
+        বাংলা: এরর প্যাটার্নের জন্য একটি ইউনিক সিগনachar জেনারেট করে।
+        """
         error_data = {
             "type": error_type,
             "message": error_message,
@@ -231,7 +339,18 @@ class PerformanceOptimizer:
         return hashlib.sha256(error_json.encode()).hexdigest()[:16]
 
     async def _generate_fix_proposal(self, error_type: str, error_message: str, context: dict[str, Any]) -> str:
-        """Generate a potential fix for the error."""
+        """Generate a potential fix for the error.
+
+        Args:
+            error_type: Type of the error.
+            error_message: Error message.
+            context: Error context.
+
+        Returns:
+            A string containing the proposed fix and implementation suggestion.
+
+        বাংলা: এররের জন্য একটি সম্ভাব্য ফিক্স প্রপোজাল তৈরি করে।
+        """
         # For demonstration, creating a simple fix proposal
         # In a real system, this would use more sophisticated AI reasoning
         fix_proposals = {
@@ -258,7 +377,16 @@ class PerformanceOptimizer:
 """
 
     def _calculate_impact_score(self, error_type: str) -> float:
-        """Calculate impact score for the error (0.0 to 1.0)."""
+        """Calculate impact score for the error (0.0 to 1.0).
+
+        Args:
+            error_type: The type of error.
+
+        Returns:
+            Float between 0.0 and 1.0 indicating impact severity.
+
+        বাংলা: এররের জন্য ইমপ্যাক্ট স্কোর ক্যালকুলেট করে (০.০ থেকে ১.০ পর্যন্ত)।
+        """
         high_impact_errors = ["LLM_GATEWAY_TIMEOUT", "CONNECTION_ERROR", "INVALID_API_KEY", "DATABASE_CONNECTION_FAILED", "AUTHENTICATION_FAILED"]
 
         if error_type in high_impact_errors:
@@ -269,7 +397,17 @@ class PerformanceOptimizer:
             return 0.3
 
     async def adaptive_load_balancing(self, task_type: str, workload: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Distribute workload intelligently based on current system capacity."""
+        """Distribute workload intelligently based on current system capacity.
+
+        Args:
+            task_type: Type of tasks being distributed.
+            workload: List of work items to process.
+
+        Returns:
+            List of processed results.
+
+        বাংলা: বর্তমান সিস্টেম ক্যাপাসিটির উপর ভিত্তি করে বুদ্ধিমানে ওয়ার্কলোড ডিস্ট্রিবিউট করে।
+        """
         # Track current system load
         active_tasks = len([m for m in self.metrics.values() if m.last_updated > datetime.now() - timedelta(seconds=30)])
 
@@ -295,7 +433,17 @@ class PerformanceOptimizer:
         return processed_workload
 
     async def _process_workload_chunk(self, task_type: str, chunk: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Process a chunk of workload with appropriate error handling."""
+        """Process a chunk of workload with appropriate error handling.
+
+        Args:
+            task_type: Type of tasks in the chunk.
+            chunk: List of work items to process.
+
+        Returns:
+            List of results for the chunk.
+
+        বাংলা: সাম্প্রতিক এরর হ্যান্ডলিং সহ ওয়ার্কলোড চাঙ্ক প্রসেস করে।
+        """
         results = []
 
         for item in chunk:
@@ -329,7 +477,17 @@ class PerformanceOptimizer:
         return results
 
     async def _execute_task_with_model(self, item: dict[str, Any], model: str) -> dict[str, Any]:
-        """Execute a single task with the specified model."""
+        """Execute a single task with the specified model.
+
+        Args:
+            item: Task item to execute.
+            model: Model identifier to use.
+
+        Returns:
+            Result dictionary with success status and output.
+
+        বাংলা: নির্দিষ্ট মডেল দিয়ে একটি単一 টাস্ক এক্সিকিউট করে।
+        """
         # This method will be implemented to work with the LLM gateway
         # but we'll avoid direct import to prevent circular dependencies
         # For now, we return a simulated response
@@ -341,5 +499,11 @@ performance_optimizer = PerformanceOptimizer()
 
 
 def get_performance_optimizer() -> PerformanceOptimizer:
-    """Get the global performance optimizer instance."""
+    """Get the global performance optimizer instance.
+
+    Returns:
+        PerformanceOptimizer: The global instance of the performance optimizer.
+
+    বাংলা: গ্লোবাল পারফরম্যান্স অপ্টিমাইজার ইনস্ট্যান্স রিটার্ন করে।
+    """
     return performance_optimizer
