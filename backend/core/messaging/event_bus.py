@@ -10,9 +10,15 @@ import logging
 import threading
 from collections.abc import Callable
 from collections import defaultdict
+import time
 from datetime import UTC, datetime
 from typing import Any
 from pydantic import BaseModel, Field
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 logger = logging.getLogger("supremeai.event_bus")
 
@@ -31,6 +37,7 @@ class ErrorContext(BaseModel):
     request_id: str | None = None
     # বাংলা মন্তব্য: কোন env-এ ঘটলো — staging vs production আলাদাভাবে alert হবে
     env: str = "unknown"
+    system_state: dict[str, Any] = Field(default_factory=dict)
     extra: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -281,8 +288,54 @@ class ErrorEventBus:
         return processed
 
 
+class IntelligentErrorBus(ErrorEventBus):
+    """
+    বাংলা মন্তব্য: Semantic Error Brain.
+    Contextually enriches errors with system metrics and escalates repeating patterns.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._recent_errors: list[tuple[float, str]] = []
+
+    def _get_current_metrics(self) -> dict[str, Any]:
+        if not psutil:
+            return {}
+        try:
+            return {
+                "cpu_percent": psutil.cpu_percent(),
+                "memory_percent": psutil.virtual_memory().percent,
+            }
+        except Exception:
+            return {}
+
+    def _is_repeating_pattern(self, event: ErrorEvent) -> bool:
+        now = time.time()
+        # Clean up old errors (older than 5 seconds)
+        with self._lock:
+            self._recent_errors = [(t, e) for t, e in self._recent_errors if now - t <= 5.0]
+            pattern_count = sum(1 for _, e in self._recent_errors if e == event.error_type)
+            self._recent_errors.append((now, event.error_type))
+
+        return pattern_count >= 2
+
+    def emit(self, event: ErrorEvent) -> None:
+        event.structured_context.system_state = self._get_current_metrics()
+        if self._is_repeating_pattern(event):
+            event.severity = "CRITICAL"
+            event.error_type = "SILENT_PATTERN_ESCALATED"
+        super().emit(event)
+
+    async def async_emit(self, event: ErrorEvent) -> None:
+        event.structured_context.system_state = self._get_current_metrics()
+        if self._is_repeating_pattern(event):
+            event.severity = "CRITICAL"
+            event.error_type = "SILENT_PATTERN_ESCALATED"
+        await super().async_emit(event)
+
+
 # বাংলা মন্তব্য: Module-level singleton — সিস্টেমে একটিই ErrorEventBus instance থাকবে।
-error_event_bus: ErrorEventBus = ErrorEventBus()
+error_event_bus: ErrorEventBus = IntelligentErrorBus()
 
 
 class EventBus:

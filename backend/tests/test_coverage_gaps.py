@@ -22,5 +22,5 @@ class TestDecisionEngine:
         engine = DecisionEngine()
         with patch("core.decision_engine.logger") as mock_logger:
             result = await engine.decide({"key": "value"})
-            assert result == {"action": "proceed", "confidence": 1.0, "trace": None}
-            mock_logger.debug.assert_called_once_with("Decision engine processing context")
+            assert result == {"action": "proceed", "confidence": 1.0, "reason": None, "trace": None}
+            mock_logger.debug.assert_called_with("DecisionEngine: action=proceed confidence=1.00")
