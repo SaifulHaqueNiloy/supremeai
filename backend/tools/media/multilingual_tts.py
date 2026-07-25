@@ -1,7 +1,7 @@
 import hashlib
 import os
 import time
-from typing import Any
+from typing import ClassVar, Any
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -228,7 +228,7 @@ class MultilingualTTS:
     # ── edge-tts (Microsoft, supports Bengali!) ───────────────────────────────
     async def _edge_tts(self, text: str, out_path: str, lang: str) -> dict[str, Any]:
         # Voice map for edge-tts — Bengali has excellent support
-        EDGE_VOICES = {
+        EDGE_VOICES: ClassVar[Any] = {
             "bn": "bn-BD-NabanitaNeural",  # Bangla Female (Bangladesh)
             "hi": "hi-IN-SwaraNeural",
             "ar": "ar-SA-ZariyahNeural",
@@ -339,7 +339,7 @@ class MultilingualTTS:
             logger.debug("edge-tts not installed. Run: pip install edge-tts")
             return  # Yield nothing
 
-        EDGE_VOICES = {
+        EDGE_VOICES: ClassVar[Any] = {
             "bn": "bn-BD-NabanitaNeural",
             "hi": "hi-IN-SwaraNeural",
             "ar": "ar-SA-ZariyahNeural",
