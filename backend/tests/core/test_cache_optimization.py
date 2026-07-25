@@ -32,10 +32,8 @@ async def test_multi_layer_cache_prefix_batched_lookup():
 @pytest.mark.anyio
 async def test_idempotency_lock_fail_closed():
     # Test Redis unavailable with fail_closed=True raises exception
-    from unittest.mock import PropertyMock
-
-    with patch("core.cache.redis_manager.SecureRedisManager.client", new_callable=PropertyMock) as mock_client:
-        mock_client.return_value = None
+    with patch("core.cache.redis_manager.SecureRedisManager.get_client_async", new_callable=AsyncMock) as mock_get_client:
+        mock_get_client.return_value = None
         with pytest.raises(IdempotencyUnavailableError) as exc_info:
             await acquire_idempotency_lock("payment:key", fail_closed=True)
         assert "Idempotency lock unavailable" in str(exc_info.value)

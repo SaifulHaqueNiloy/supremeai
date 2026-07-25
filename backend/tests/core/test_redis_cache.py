@@ -17,8 +17,9 @@ from core.cache.redis_manager import (
 def manager():
     """Create a fresh SecureRedisManager for each test."""
     m = SecureRedisManager()
+    m.url = ""
     m._client = None
-    m._initialized = False
+    m._initialized = True
     return m
 
 
@@ -129,7 +130,8 @@ class TestIdempotencyLock:
 
     @pytest.mark.asyncio
     async def test_acquire_no_client_fail_closed(self):
-        redis_manager._initialized = False
+        redis_manager.url = ""
+        redis_manager._initialized = True
         redis_manager._client = None
         with pytest.raises(IdempotencyUnavailableError):
             async with acquire_idempotency_lock("test-key", fail_closed=True):
