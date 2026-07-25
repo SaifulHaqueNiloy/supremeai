@@ -10,7 +10,7 @@ import base64
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import ClassVar, Any
 
 from loguru import logger
 from playwright.sync_api import Page
@@ -25,7 +25,7 @@ TRUST_SCORE_THRESHOLD = 0.95
 
 
 class PlaywrightBrowserAgent:
-    COOKIE_STORAGE_BASE = (
+    COOKIE_STORAGE_BASE: ClassVar[Any] = (
         Path(__file__).resolve().parents[1] / ".cache" / "playwright_cookies"
     )
 
