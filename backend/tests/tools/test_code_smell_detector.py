@@ -185,23 +185,24 @@ class TestDetectBroadExceptions:
 
 
 class TestDetectDuplicateFunctions:
-    def test_duplicate_detection_crashes_due_to_body_bug(self, detector):
+    def test_duplicate_detection_handles_identical_functions(self, detector):
         code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    x = 1\n    return x\n"
         tree = ast.parse(code)
-        with pytest.raises(TypeError):
-            detector._detect_duplicate_functions(tree, "test.py")
+        result = detector._detect_duplicate_functions(tree, "test.py")
+        assert len(result) == 1
+        assert result[0]["type"] == "Duplicate Code"
 
-    def test_unique_bodies_also_crashes(self, detector):
-        code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    y = 2\n    return y\n"
+    def test_unique_bodies_no_duplicates(self, detector):
+        code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    y = [1, 2, 3]\n    for i in y:\n        print(i)\n"
         tree = ast.parse(code)
-        with pytest.raises(TypeError):
-            detector._detect_duplicate_functions(tree, "test.py")
+        result = detector._detect_duplicate_functions(tree, "test.py")
+        assert len(result) == 0
 
-    def test_single_function_crashes(self, detector):
+    def test_single_function_no_duplicates(self, detector):
         code = "def foo():\n    x = 1\n    return x\n"
         tree = ast.parse(code)
-        with pytest.raises(TypeError):
-            detector._detect_duplicate_functions(tree, "test.py")
+        result = detector._detect_duplicate_functions(tree, "test.py")
+        assert len(result) == 0
 
     def test_mocked_dump_detects_duplicate(self, detector):
         code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    x = 1\n    return x\n"

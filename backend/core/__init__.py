@@ -240,5 +240,17 @@ def run_complete_system_test():
     print("Complete SupremeAI 2.0 system ready for advanced AI operations.")
 
 
-# Initialize systems if needed
-# Note: This would be handled by the main application
+def __getattr__(name: str):
+    """
+    Dynamically import submodules when accessed as attributes on core.
+    
+    Bengali: core প্যাকেজের সাব-মডিউলগুলো ডায়নামিকালি ইমপোর্ট করার জন্য fallback handler।
+    """
+    import importlib
+    try:
+        mod = importlib.import_module(f"core.{name}")
+        globals()[name] = mod
+        return mod
+    except ImportError as err:
+        raise AttributeError(f"module '{__name__}' has no attribute '{name}'") from err
+
