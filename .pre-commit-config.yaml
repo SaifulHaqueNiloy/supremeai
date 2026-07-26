@@ -110,14 +110,21 @@ repos:
         stages: [pre-commit]
 
   # ══════════════════════════════════════════════════════════════
-  # ৬. SupremeAI Security Guard (Custom Hardcoded Secret Blocker)
+  # ৬. SupremeAI Security Guard & Router Smoke-Test (Local Defense)
   # ══════════════════════════════════════════════════════════════
   - repo: local
     hooks:
-       - id: security-guard
-         name: "🛡️ SupremeAI Security Guard"
-         entry: python3 packages/scripts/security_guard.py
-         language: system
-         pass_filenames: false
-         stages: [commit]
-         exclude: ^backend/tests/
+      - id: security-guard
+        name: "🛡️ SupremeAI Security Guard"
+        entry: python3 packages/scripts/security_guard.py
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        exclude: ^backend/tests/
+      - id: router-smoke-test
+        name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
+        entry: python scripts/ci/validate_router_imports.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
