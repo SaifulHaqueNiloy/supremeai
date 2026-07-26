@@ -18,8 +18,15 @@ import uuid
 from datetime import datetime
 
 from loguru import logger
-from starlette_context import context
-from starlette_context.header_keys import HeaderKeys
+try:
+    from starlette_context import context
+    from starlette_context.header_keys import HeaderKeys
+except ImportError:
+    class DummyContext(dict):
+        def exists(self): return False
+    context = DummyContext()
+    class HeaderKeys:
+        request_id = "X-Request-ID"
 
 from core.config import settings
 

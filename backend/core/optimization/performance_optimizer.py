@@ -27,7 +27,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from loguru import logger
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None  # type: ignore[assignment]
 import gc
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
