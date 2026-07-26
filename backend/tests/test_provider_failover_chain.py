@@ -56,11 +56,12 @@ class TestProviderFailoverChain:
         mock_settings.GEMINI_API_KEY = "test"
         mock_settings.HF_SPACE_URL = "https://mock-hf-space-url"
         monkeypatch.setattr("core.llm_router.settings", mock_settings)
+        monkeypatch.setattr("core.llm_router.get_tracker", lambda: MagicMock(is_available=lambda x: True))
         router = LLMRouter()
         router.providers = {
             Provider.MOONSHOT: FakeProvider("moonshot"),
         }
-        result = await router.route("hello", task_type=TaskType.CHAT)
+        result = await router.route("hello", task_type=TaskType.CHAT, preferred_provider=Provider.MOONSHOT, cost_sensitive=False, use_cache=False)
         assert "moonshot" in result.content.lower() or "moonshot" in result.provider.lower()
 
     @pytest.mark.asyncio
