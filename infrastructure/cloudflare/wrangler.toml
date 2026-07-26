@@ -7,6 +7,9 @@ GCP_CLOUD_RUN_URL = ""
 RAILWAY_URL = ""
 RENDER_URL = ""
 
+[triggers]
+crons = ["*/8 * * * *"]  # Pings every 8 minutes (Zero Cold Start)
+
 [[unsafe.bindings]]
 name = "API_RATE_LIMITER"
 type = "ratelimit"
