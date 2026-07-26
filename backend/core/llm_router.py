@@ -47,6 +47,7 @@ class Provider(str, Enum):
     OLLAMA = "ollama"
     GEMINI = "gemini"
     HUGGINGFACE_SPACE = "hf_space"
+    OPENAI = "openai"  # বাংলা মন্তব্য: OpenAI প্রোভাইডার সাপোর্টের জন্য যোগ করা হয়েছে
 
 
 # বাংলা মন্তব্য: Provider enum -> free_tier_tracker স্ট্রিং-কী ম্যাপিং
@@ -647,14 +648,16 @@ class BengaliNormalizer:
     @classmethod
     def detect_script(cls, text: str) -> str:
         """Detect if text is Bengali, Roman, or mixed."""
+        # বাংলা মন্তব্য: স্পেস বাদ দিয়ে শুধু অক্ষর গণনা করা হচ্ছে যাতে মিক্সড টেক্সট সঠিকভাবে detect হয়।
         bengali_chars = sum(1 for c in text if "\u0980" <= c <= "\u09ff")
-        total_chars = len(text.strip())
-        if total_chars == 0:
+        # শুধু অ-স্পেস অক্ষর গণনা করো (space-insensitive ratio)
+        non_space_chars = sum(1 for c in text if not c.isspace())
+        if non_space_chars == 0:
             return "empty"
-        ratio = bengali_chars / total_chars
+        ratio = bengali_chars / non_space_chars
         if ratio > 0.7:
             return "bengali"
-        elif ratio > 0.3:
+        elif ratio > 0.1:  # ০.১ এর উপরে বাংলা থাকলে mixed
             return "mixed"
         return "roman"
 
