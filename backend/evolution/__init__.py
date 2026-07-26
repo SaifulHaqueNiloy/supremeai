@@ -28,38 +28,65 @@ from .digital_twin import (
     RemediationEngine,
 )
 
-from .continual_learning.ewc import EWC, OnlineEWC, EWCTrainer, EWCConfig
+try:
+    from .continual_learning.ewc import EWC, OnlineEWC, EWCTrainer, EWCConfig
+except ImportError:
+    EWC = OnlineEWC = EWCTrainer = EWCConfig = None
 
-from .adversarial_defense.defense_system import AdversarialDefenseSystem, AdversarialTrainer, AttackType, DefenseConfig
+try:
+    from .adversarial_defense.defense_system import (
+        AdversarialDefenseSystem,
+        AdversarialTrainer,
+        AttackType,
+        DefenseConfig,
+    )
+except ImportError:
+    AdversarialDefenseSystem = AdversarialTrainer = AttackType = DefenseConfig = None
 
-from .neural_symbolic.integration import (
-    NeuralSymbolicIntegrator,
-    MathematicalReasoningEngine,
-    SymbolicExpression,
-    SymbolicReasoner,
-    NeuralSymbolicConfig,
-)
+try:
+    from .neural_symbolic.integration import (
+        NeuralSymbolicIntegrator,
+        MathematicalReasoningEngine,
+        SymbolicExpression,
+        SymbolicReasoner,
+        NeuralSymbolicConfig,
+    )
+except ImportError:
+    NeuralSymbolicIntegrator = MathematicalReasoningEngine = SymbolicExpression = SymbolicReasoner = (
+        NeuralSymbolicConfig
+    ) = None
 
-from .federated_learning.fed_learning import (
-    FederatedLearningCoordinator,
-    FederatedServer,
-    LocalClient,
-    FLConfig,
-    AggregationMethod,
-)
+try:
+    from .federated_learning.fed_learning import (
+        FederatedLearningCoordinator,
+        FederatedServer,
+        LocalClient,
+        FLConfig,
+        AggregationMethod,
+    )
+except ImportError:
+    FederatedLearningCoordinator = FederatedServer = LocalClient = FLConfig = AggregationMethod = None
 
-from .theory_of_mind.tom_system import TheoryOfMindSystem, ToMReasoner, MentalStateManager, ToMConfig, ToMLevel
+try:
+    from .theory_of_mind.tom_system import TheoryOfMindSystem, ToMReasoner, MentalStateManager, ToMConfig, ToMLevel
+except ImportError:
+    TheoryOfMindSystem = ToMReasoner = MentalStateManager = ToMConfig = ToMLevel = None
 
-from .temporal_abstraction.temporal_system import (
-    TemporalAbstractionSystem,
-    TemporalMemory,
-    TemporalPatternDetector,
-    TemporalPredictor,
-    TemporalAbstractionConfig,
-    TemporalEvent,
-    TemporalPattern,
-    TemporalGranularity,
-)
+try:
+    from .temporal_abstraction.temporal_system import (
+        TemporalAbstractionSystem,
+        TemporalMemory,
+        TemporalPatternDetector,
+        TemporalPredictor,
+        TemporalAbstractionConfig,
+        TemporalEvent,
+        TemporalPattern,
+        TemporalGranularity,
+    )
+except ImportError:
+    TemporalAbstractionSystem = TemporalMemory = TemporalPatternDetector = TemporalPredictor = (
+        TemporalAbstractionConfig
+    ) = TemporalEvent = TemporalPattern = TemporalGranularity = None
 
 # Version information
 __version__ = "1.0.0"

@@ -49,7 +49,7 @@ except ImportError:
 try:
     import locust
     from locust import HttpUser, task, constant_pacing
-except ImportError:
+except (ImportError, RecursionError, Exception):
     locust = None
     HttpUser = object
 
