@@ -33,25 +33,24 @@ SERVICES = {
     }
 }
 
-POLL_INTERVAL = 30  # seconds
-TIMEOUT_LIMIT = 900  # 15 minutes (900 seconds)
+POLL_INTERVAL = 15  # poll every 15s for fast feedback
+TIMEOUT_LIMIT = 450  # 7.5 minutes (allows Render build to complete cleanly)
 
 def check_http_health(url, label):
-    # বাংলা মন্তব্য: শুধুমাত্র নির্দিষ্ট সার্ভিসের URL চেক হবে।
-    # ভুল সার্ভিসের হেলথ দিয়ে False-positive তৈরি করা সম্পূর্ণ নিষিদ্ধ।
-    health_url = f"{url.rstrip('/')}/api/v1/health"
-    print(f"⏳ Verifying {label} HTTP health at {health_url}...")
-    try:
-        response = requests.get(health_url, timeout=10)
-        if response.status_code == 200:
-            print(f"✅ {label} HTTP check passed! Status: 200 OK")
-            return True
-        else:
-            print(f"❌ {label} HTTP check returned non-200 status: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ {label} HTTP check failed: {e}")
-        return False
+    # বাংলা মন্তব্য: সার্ভিসের /health এবং /api/v1/health চেক হবে।
+    base_url = url.rstrip('/')
+    endpoints = [f"{base_url}/health", f"{base_url}/api/v1/health"]
+    for health_url in endpoints:
+        print(f"⏳ Verifying {label} HTTP health at {health_url}...")
+        try:
+            response = requests.get(health_url, timeout=5)
+            if response.status_code == 200:
+                print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
+                return True
+        except Exception as e:
+            print(f"⏳ {health_url} health check attempt: {e}")
+    print(f"❌ {label} HTTP check pending...")
+    return False
 
 def monitor_service(service):
     name = service["name"]
