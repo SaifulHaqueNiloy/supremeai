@@ -87,3 +87,36 @@ class TestTaskRouterProcessRequirement:
         result = router.process_requirement("generate an image of a tree")
         assert result["task_type"] == "image_generation"
         assert result["modality"] == "image"
+
+
+class TestSwarmLLMRouter:
+    """বাংলা মন্তব্য: ৫টি কাস্টম HF ৩বি মডেলের রাউটিং এবং কী রোটেশন টেস্টের জন্য টেস্ট ক্লাস।"""
+
+    def test_key_rotator_round_robin(self):
+        from core.llm_router import HFKeyRotator
+
+        test_keys = ["key1", "key2", "key3"]
+        rotator = HFKeyRotator(test_keys)
+        assert rotator.get_key() == "key1"
+        assert rotator.get_key() == "key2"
+        assert rotator.get_key() == "key3"
+        assert rotator.get_key() == "key1"
+
+    def test_task_classification_routing(self):
+        from core.llm_router import HFSwarmRouter
+
+        swarm_router = HFSwarmRouter()
+        assert swarm_router.classify_task("Write a python function to parse JSON") == "coding"
+        assert swarm_router.classify_task("Solve the equation x^2 + 5x + 6 = 0") == "reasoning"
+        assert swarm_router.classify_task("Write a poem and creative story about space") == "creative"
+        assert swarm_router.classify_task("Step by step instructions " + "word " * 160) == "master"
+        assert swarm_router.classify_task("Hello, how are you today?") == "general"
+
+    def test_model_swarm_registry_mapping(self):
+        from core.config import settings
+
+        assert settings.MODEL_SWARM["coding"] == "njelit1/supreme-coder-3b"
+        assert settings.MODEL_SWARM["reasoning"] == "njelitltd/supreme-reasoner-3b"
+        assert settings.MODEL_SWARM["general"] == "ziaulhaq1/supreme-general-3b"
+        assert settings.MODEL_SWARM["creative"] == "njelitltd2/supreme-creative-3b"
+        assert settings.MODEL_SWARM["master"] == "njelitltd3/supreme-master-3b"
