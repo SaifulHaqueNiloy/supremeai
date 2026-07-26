@@ -205,6 +205,46 @@ jobs:
           ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
           echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
 
+      - name: 🤖 Bot Commit Detection
+        id: bot-check
+        # বাংলা মন্তব্য: SupremeAI CI Bot-এর commit detect করা হচ্ছে।
+        # Bot commit এলে router import smoke-test mandatory strict mode-এ চলবে।
+        run: |
+          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
+          echo "Commit author: $COMMIT_AUTHOR"
+          if [[ "$COMMIT_AUTHOR" == *"CI Bot"* || "$COMMIT_AUTHOR" == *"SupremeAI Bot"* || "$COMMIT_AUTHOR" == *"[bot]"* ]]; then
+            echo "is_bot_commit=true" >> $GITHUB_OUTPUT
+            echo "::warning::🤖 BOT COMMIT DETECTED — Router import smoke-test will run in STRICT mode. All routers (including optional) must import cleanly."
+          else
+            echo "is_bot_commit=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔌 Gate 0 — Router Import Smoke-Test
+        if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.docs_only != 'true'
+        # বাংলা মন্তব্য: CRITICAL GATE — Full test suite চালানোর আগে প্রতিটি registered router
+        # individually import করে চেক করা হয়। এই gate-এর লক্ষ্য:
+        # 1. Hallucinated imports (যেমন `from core.auth import ...`) 10 সেকেন্ডে ধরা
+        # 2. CI Bot commit-এ strict mode — optional routers-ও pass করতে হবে
+        # 3. একটি bad route file পুরো test suite cascade crash করার আগেই block করা
+        run: |
+          echo "=== Router Import Smoke-Test ===" >> $GITHUB_STEP_SUMMARY
+
+          # Bot commit হলে strict mode চালানো হবে
+          if [[ "${{ steps.bot-check.outputs.is_bot_commit }}" == "true" ]]; then
+            echo "🤖 Bot commit: running in STRICT mode (all routers must import cleanly)" >> $GITHUB_STEP_SUMMARY
+            python scripts/ci/validate_router_imports.py --strict
+          else
+            python scripts/ci/validate_router_imports.py
+          fi
+
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ পাস: সব core router imports সঠিক" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ FAIL: Router import error detected — fix imports before test suite runs" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
       - name: 🛡️ Gate 3.5 — Admin Router Auth Lint Guard
         if: needs.changes.outputs.docs_only != 'true'
         # বাংলা মন্তব্য: অ্যাডমিন রাউটার বা乞丐-level `Depends(get_current_admin)` enforcement
@@ -212,6 +252,7 @@ jobs:
           echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
           python .github/scripts/verify_admin_auth.py
           echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
+
 
       - name: 📋 Gate 3 — Observability Check (No httpx without timeout)
         if: needs.changes.outputs.docs_only != 'true'
