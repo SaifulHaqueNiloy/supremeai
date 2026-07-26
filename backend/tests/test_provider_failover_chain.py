@@ -61,7 +61,13 @@ class TestProviderFailoverChain:
         router.providers = {
             Provider.MOONSHOT: FakeProvider("moonshot"),
         }
-        result = await router.route("hello", task_type=TaskType.CHAT, preferred_provider=Provider.MOONSHOT, cost_sensitive=False, use_cache=False)
+        result = await router.route(
+            "hello",
+            task_type=TaskType.CHAT,
+            preferred_provider=Provider.MOONSHOT,
+            cost_sensitive=False,
+            use_cache=False,
+        )
         assert "moonshot" in result.content.lower() or "moonshot" in result.provider.lower()
 
     @pytest.mark.asyncio

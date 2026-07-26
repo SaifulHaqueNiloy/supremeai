@@ -14,7 +14,9 @@ from loguru import logger
 # বাংলা মন্তব্য: Fernet এনক্রিপশনের জন্য ৩২ বাইটের কী জেনারেট বা লোড করা হচ্ছে। SUPREMEAI_ENCRYPTION_KEY অথবা ENCRYPTION_KEY উভয়টি চেক করা হচ্ছে (Zero Breakage নীতি)।
 _KEY = os.getenv("SUPREMEAI_ENCRYPTION_KEY") or os.getenv("ENCRYPTION_KEY")
 if not _KEY:
-    logger.warning("⚠️ ENCRYPTION_KEY not set in environment. Deriving temporary test/dev key for module initialization.")
+    logger.warning(
+        "⚠️ ENCRYPTION_KEY not set in environment. Deriving temporary test/dev key for module initialization."
+    )
     _KEY = "DEV_TEST_SUPREMEAI_FALLBACK_ENCRYPTION_KEY_32BYTES="
 
 try:
