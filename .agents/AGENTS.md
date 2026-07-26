@@ -95,7 +95,9 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 
 ## Agent Behavioral Rules
 
-- **Strict Git Push Approval (NON-NEGOTIABLE):** The agent MUST NEVER run `git push` under any circumstances without receiving explicit prior permission/approval from the user for that specific push.
+- **Strict Git Push Rule (NON-NEGOTIABLE):** The AI agent MUST NEVER run `git push` under any circumstances unless the user explicitly sends a prompt that contains the exact word `"push"`. Generic user approvals (e.g. "ok", "do that", "fix it", "yes") DO NOT grant push permission. Without the literal word `"push"` present in the user's message, the AI will NEVER push to GitHub.
+
+- **Commit All Uncommitted Files & Impact Report:** When performing a commit, ALWAYS inspect all uncommitted files (`git status` / `git diff`), stage all uncommitted files, and provide a short, concise summary report explaining how the uncommitted files make the system better and what specific improvements/benefits they bring.
 
 - **Code Comments (Bangla):** Whenever making changes to the codebase, always try to add explanatory comments in **Bangla** so that the rationale behind the changes is easily understood later by the team.
 
