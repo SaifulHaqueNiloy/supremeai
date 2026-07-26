@@ -1,12 +1,14 @@
 # backend/core/llm_gateway.py
-# বাংলা মন্তব্য: সম্পূর্ণ রি-ফ্যাক্টর — os.environ secrets injection সম্পূর্ণ বন্ধ।
+# বাংলা মন্তব্ব: সম্পূর্ণ রি-ফ্যাক্টর — os.environ secrets injection সম্পূর্ণ বন্ধ।
 # litellm per-call api_key passing → secrets process env-এ leak হয় না।
 # litellm global state mutation নিষিদ্ধ।
 # Semantic cache, fallback chain, cost guard সব অক্ষুণ্ণ।
 # CancelledError সবসময় re-raise।
 # import litellm lazy করা হলো — cold start কমাতে।
+import asyncio
 import json
 import os
+import random
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -19,16 +21,17 @@ from core.health.self_healer import SelfHealerService
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.prompt_handler import normalize_prompt
 from core.resilience.circuit_breaker import CircuitBreaker
+from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
 from utils.firestore_helpers import get_firestore_db
 
-# বাংলা মন্তব্য: POLICY_PATH এখন os.path দিয়ে বিল্ড হয় — hardcode নেই
+# বাংলা মন্তব্ব: POLICY_PATH এখন os.path দিয়ে বিল্ড হয় — hardcode নেই
 _POLICY_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "config",
     "routing_policy.json",
 )
 
-# বাংলা মন্তব্য: Provider → settings attribute mapping।
+# বাংলা মন্তব্ব: Provider → settings attribute mapping।
 # এই dict update করলেই নতুন provider add হয় — no code duplication।
 _MODEL_KEY_MAP: dict[str, str] = {
     "groq": "groq_api_key",
@@ -40,9 +43,13 @@ _MODEL_KEY_MAP: dict[str, str] = {
     "hf": "hf_api_key",
     "huggingface": "hf_api_key",
     "nvidia": "nvidia_api_key",
+    "moonshot": "MOONSHOT_API_KEY",
+    "together": "TOGETHER_API_KEY",
+    "ollama": "OLLAMA_API_KEY",
+    "hf_space": "HF_API_KEY",
 }
 
-# বাংলা মন্তব্য: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
+# বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
 _DEFAULT_FALLBACK_MODELS: list[str] = [
     "gemini/gemini-2.5-flash",
     "openrouter/auto",
@@ -59,7 +66,7 @@ TASK_MODEL_MAP: dict[str, str] = {
 
 class LLMGateway:
     """
-    বাংলা মন্তব্য: Multi-provider LLM Gateway।
+    বাংলা মন্তব্ব: Multi-provider LLM Gateway।
     - os.environ secrets injection সম্পূর্ণ নিষিদ্ধ — per-call api_key passing।
     - litellm global state mutation নিষিদ্ধ।
     - Heavy import (litellm) function level-এ lazy load।
@@ -71,7 +78,8 @@ class LLMGateway:
         self.routing_policy = self._load_routing_policy()
         self._setup_litellm_globals()
         self._setup_callbacks()
-        self._circuit_breakers: dict[str, CircuitBreaker] = {}
+        # Use centralized circuit breaker manager instead of local dict
+        self._circuit_breaker_manager = get_shared_circuit_breaker
 
         # বাংলা: Circular import এড়ানোর জন্য performance_optimizer lazy-load করা হবে
         self._performance_optimizer = None
@@ -106,7 +114,7 @@ class LLMGateway:
 
     def _setup_litellm_globals(self) -> None:
         """
-        বাংলা মন্তব্য: litellm global settings — শুধু safe non-secret settings।
+        বাংলা মন্তব্ব: litellm global settings — শুধু safe non-secret settings।
         os.environ-এ secrets inject করা সম্পূর্ণ নিষিদ্ধ।
         API keys আর এখানে set করা হচ্ছে না।
         প্রতিটি acompletion call-এ api_key parameter pass হবে।
@@ -118,7 +126,7 @@ class LLMGateway:
         litellm.use_litellm_proxy = False
 
     def _load_routing_policy(self) -> dict[str, Any]:
-        """বাংলা মন্তব্য: Routing policy JSON load — file not found = safe default।"""
+        """বাংলা মন্তব্ব: Routing policy JSON load — file not found = safe default।"""
         try:
             if os.path.exists(_POLICY_PATH):
                 with open(_POLICY_PATH, encoding="utf-8") as f:
@@ -143,7 +151,7 @@ class LLMGateway:
 
     def _get_api_key_for_model(self, model: str) -> str | None:
         """
-        বাংলা মন্তব্য: Model string থেকে provider identify করে settings থেকে key নেওয়া।
+        বাংলা মন্তব্ব: Model string থেকে provider identify করে settings থেকে key নেওয়া।
         os.environ নয় — settings._get_cached_secret() থেকে।
         """
         if not model:
@@ -156,7 +164,7 @@ class LLMGateway:
         return None
 
     def _setup_callbacks(self) -> None:
-        """বাংলা মন্তব্য: litellm callback — cost এবং error tracking।"""
+        """বাংলা মন্তব্ব: litellm callback — cost এবং error tracking।"""
         import litellm  # lazy import
 
         def success_callback(kwargs, response_obj, start_time, end_time):
@@ -205,7 +213,7 @@ class LLMGateway:
         provider: str | None,
         task_type: str,
     ) -> list[str]:
-        """বাংলা মন্তব্য: Task type অনুযায়ী fallback chain তৈরি।"""
+        """বাংলা মন্তব্ব: Task type অনুযায়ী fallback chain তৈরি।"""
 
         difficulty = "easy"
         if any(kw in task_type.lower() for kw in ("reasoning", "math", "code", "coding")):
@@ -229,7 +237,7 @@ class LLMGateway:
             if m not in call_chain:
                 call_chain.append(m)
 
-        # বাংলা মন্তব্য: যদি নির্দিষ্ট কোনো প্রোভাইডার (যেমন 'groq') প্রোভাইড করা হয়, তবে কল চেইনের মডেলগুলো রী-অর্ডার করা হবে
+        # বাংলা মন্তব্ব: যদি নির্দিষ্ট কোনো প্রোভাইডার (যেমন 'groq') প্রোভাইড করা হয়, তবে কল চেইনের মডেলগুলো রী-অর্ডার করা হবে
         # যাতে সেই প্রোভাইডারের মডেলগুলো সবার আগে স্থান পায়।
         if provider:
             provider_models = [m for m in call_chain if m.startswith(f"{provider}/")]
@@ -243,13 +251,55 @@ class LLMGateway:
         return call_chain
 
     def _get_or_create_circuit_breaker(self, current_model: str) -> CircuitBreaker:
-        if current_model not in self._circuit_breakers:
-            self._circuit_breakers[current_model] = CircuitBreaker(
-                name=current_model,
-                failure_threshold=getattr(settings, "circuit_breaker_failure_threshold", 3),
-                recovery_timeout=getattr(settings, "circuit_breaker_cooldown_period", 60),
-            )
-        return self._circuit_breakers[current_model]
+        # Use the centralized circuit breaker manager
+        return self._circuit_breaker_manager(current_model)
+
+    async def _handle_rate_limit_error(self, current_model: str, exc: httpx.HTTPStatusError) -> bool:
+        """Handle 429 rate limit errors by reading Retry-After header and pausing appropriately."""
+        if exc.response.status_code == 429:
+            logger.warning(f"[LLMGateway] Rate limit hit for {current_model}, reading Retry-After header...")
+
+            # Extract Retry-After header
+            retry_after = exc.response.headers.get("Retry-After")
+            if retry_after:
+                try:
+                    pause_seconds = int(retry_after)
+                except ValueError:
+                    # If Retry-After is in date format, calculate difference
+                    try:
+                        from email.utils import parsedate_to_datetime
+                        import time
+
+                        retry_time = parsedate_to_datetime(retry_after)
+                        pause_seconds = int(retry_time.timestamp() - time.time())
+                        pause_seconds = max(pause_seconds, 1)  # Ensure at least 1 second
+                    except Exception:
+                        # Default fallback if parsing fails
+                        pause_seconds = 60
+            else:
+                # Default pause if no Retry-After header
+                pause_seconds = 60
+
+            logger.info(f"[LLMGateway] Pausing {current_model} for {pause_seconds}s due to rate limit")
+
+            # Update free tier tracker to mark rate limit
+            try:
+                from core.llm.free_tier_tracker import get_tracker
+
+                tracker = get_tracker()
+                # Map model name to provider key for the tracker
+                provider_key = current_model.split("/")[0] if "/" in current_model else current_model
+                tracker.mark_rate_limited(provider_key, pause_seconds=pause_seconds)
+            except Exception as tracker_exc:
+                logger.warning(f"[LLMGateway] Could not update tracker for rate limit: {tracker_exc}")
+
+            # Apply jittered backoff to avoid thundering herd
+            jitter = random.uniform(0.1, 0.3) * pause_seconds  # Add 10-30% jitter
+            backoff_time = pause_seconds + jitter
+            logger.info(f"[LLMGateway] Applying backoff with jitter: {backoff_time:.2f}s for {current_model}")
+            await asyncio.sleep(backoff_time)
+            return True
+        return False
 
     async def acompletion(
         self,
@@ -263,7 +313,7 @@ class LLMGateway:
         tenant_id: str | None = None,
         **kwargs,
     ) -> Any:
-        """বাংলা মন্তব্য: Main async completion interface।"""
+        """বাংলা মন্তব্ব: Main async completion interface।"""
         import asyncio
 
         import litellm  # lazy import
@@ -273,7 +323,7 @@ class LLMGateway:
 
         prompt_text = normalize_prompt(prompt)
 
-        # বাংলা মন্তব্য: Semantic cache check — API call আগে cost-zero response
+        # বাংলা মন্তব্ব: Semantic cache check — API call আগে cost-zero response
         if prompt_text and not stream:
             cached = await self.cache.query_similar(prompt_text, task_type=task_type)
             if cached:
@@ -285,7 +335,7 @@ class LLMGateway:
                     "cached": True,
                 }
 
-        # বাংলা মন্তব্য: Pre-flight cost guard
+        # বাংলা মন্তব্ব: Pre-flight cost guard
         if tenant_id:
             db = get_firestore_db()
             if db:
@@ -323,8 +373,8 @@ class LLMGateway:
 
             try:
                 logger.info(f"[LLMGateway] Attempting: {current_model}")
-                # বাংলা মন্তব্য: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ।
-                # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
+                # বাংলা মন্তব্ব: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ।
+                # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
                 api_key = kwargs.pop("api_key", None) or self._get_api_key_for_model(current_model)
                 response = await litellm.acompletion(
                     model=current_model,
@@ -346,9 +396,62 @@ class LLMGateway:
                     ),
                 }
             except asyncio.CancelledError:
-                # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
+                # বাংলা মন্তব্ব: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] acompletion cancelled during model {current_model}")
                 raise
+            except httpx.HTTPStatusError as exc:
+                # Handle specific HTTP status codes like 429 (rate limit)
+                if exc.response.status_code == 429:
+                    # Try to handle rate limit with backoff and Retry-After header
+                    handled = await self._handle_rate_limit_error(current_model, exc)
+                    if handled:
+                        # Retry the same model after backoff instead of moving to next in chain
+                        logger.info(f"[LLMGateway] Retrying {current_model} after rate limit backoff...")
+                        try:
+                            response = await litellm.acompletion(
+                                model=current_model,
+                                messages=messages_payload,
+                                timeout=timeout,
+                                stream=False,
+                                api_key=api_key or self._get_api_key_for_model(current_model),
+                                **kwargs,
+                            )
+                            cb.mark_success()
+                            return {
+                                "success": True,
+                                "text": response.choices[0].message.content,
+                                "model": current_model,
+                                "cost": (
+                                    response._response_metadata.get("api_cost", 0.0)
+                                    if hasattr(response, "_response_metadata")
+                                    else 0.0
+                                ),
+                            }
+                        except Exception as retry_exc:
+                            logger.warning(f"[LLMGateway] Retry failed for {current_model}: {retry_exc}")
+                            # Continue to next model in chain if retry also fails
+
+                # Handle other HTTP errors (5xx, etc.) with specific backoff
+                elif exc.response.status_code >= 500:
+                    logger.warning(
+                        f"[LLMGateway] Server error {exc.response.status_code} for {current_model}, applying short backoff..."
+                    )
+                    await asyncio.sleep(random.uniform(0.5, 1.5))  # Short backoff for server errors
+
+                # Handle auth errors (401, 403) - don't retry, skip to next model immediately
+                elif exc.response.status_code in (401, 403):
+                    logger.warning(
+                        f"[LLMGateway] Auth error {exc.response.status_code} for {current_model}, skipping to next model..."
+                    )
+                    cb.mark_failure()
+                    continue
+
+                last_exception = exc
+                cb.mark_failure()
+                logger.opt(exception=True).warning(
+                    f"[LLMGateway] Model {current_model} failed with status {exc.response.status_code}. Trying next in chain..."
+                )
+                continue
             except Exception as exc:  # noqa: BLE001
                 last_exception = exc
                 cb.mark_failure()
@@ -357,7 +460,7 @@ class LLMGateway:
                 )
                 continue
 
-        # বাংলা মন্তব্য: সব fallbacks exhausted — self healer trigger এবং error emit
+        # বাংলা মন্তব্ব: সব fallbacks exhausted — self healer trigger এবং error emit
         final_exception = last_exception or RuntimeError("All routing models failed to produce a completion.")
         if tenant_id:
             db = get_firestore_db()
@@ -388,7 +491,7 @@ class LLMGateway:
         call_chain: list[str],
         timeout: float,
     ) -> AsyncGenerator[str, None]:
-        """বাংলা মন্তব্য: Streaming completion — fallback chain সহ।"""
+        """বাংলা মন্তব্ব: Streaming completion — fallback chain সহ।"""
         import asyncio
 
         import litellm  # lazy import
@@ -403,7 +506,7 @@ class LLMGateway:
 
             try:
                 logger.info(f"[LLMGateway] Streaming attempt: {current_model}")
-                # বাংলা মন্তব্য: api_key per-call — os.environ injection নিষিদ্ধ
+                # বাংলা মন্তব্ব: api_key per-call — os.environ injection নিষিদ্ধ
                 api_key = self._get_api_key_for_model(current_model)
                 response_stream = await litellm.acompletion(
                     model=current_model,
@@ -419,9 +522,36 @@ class LLMGateway:
                 cb.mark_success()
                 return
             except asyncio.CancelledError:
-                # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
+                # বাংলা মন্তব্ব: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] Stream cancelled at model {current_model}")
                 raise
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code == 429:
+                    # Handle rate limit in streaming case too
+                    handled = await self._handle_rate_limit_error(current_model, exc)
+                    if handled:
+                        logger.info(f"[LLMGateway] Retrying streaming {current_model} after rate limit backoff...")
+                        try:
+                            api_key = self._get_api_key_for_model(current_model)
+                            response_stream = await litellm.acompletion(
+                                model=current_model,
+                                messages=messages,
+                                timeout=timeout,
+                                stream=True,
+                                api_key=api_key,
+                            )
+                            async for chunk in response_stream:
+                                content = chunk.choices[0].delta.content
+                                if content:
+                                    yield content
+                            cb.mark_success()
+                            return
+                        except Exception as retry_exc:
+                            logger.warning(f"[LLMGateway] Retry failed for streaming {current_model}: {retry_exc}")
+                last_exception = exc
+                cb.mark_failure()
+                logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
+                continue
             except Exception as exc:  # noqa: BLE001
                 last_exception = exc
                 cb.mark_failure()
@@ -459,7 +589,7 @@ _client: httpx.AsyncClient | None = None
 def get_http_client() -> httpx.AsyncClient:
     """
     বাংলা মন্তব্য: HTTP Client Connection Pool Singleton.
-    App startup-এ একবার তৈরি করে limits/timeout সেট করে reuse করা হয়।
+    App startup-এ একবার তৈরি করে limits/timeout সেট করে reuse করা হয়।
     """
     global _client
     if _client is None:
