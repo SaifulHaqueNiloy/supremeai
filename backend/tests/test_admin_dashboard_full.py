@@ -350,8 +350,9 @@ class TestCodebaseExport:
     @pytest.mark.asyncio
     async def test_export_failure(self):
         """Export fails → raises HTTPException 500."""
+        # বাংলা মন্তব্য: admin_dashboard এ সরাসরি import করা হয়েছে, তাই local namespace patch করতে হবে।
         with patch(
-            "tools.knowledge.codebase_exporter.export_codebase_to_markdown",
+            "api.routes.admin_dashboard.export_codebase_to_markdown",
             new_callable=AsyncMock,
         ) as mock_export:
             mock_export.side_effect = RuntimeError("Export failed")
