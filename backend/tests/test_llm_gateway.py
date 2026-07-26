@@ -27,7 +27,7 @@ def disable_semantic_cache(monkeypatch):
 
 def test_load_routing_policy_file_not_found(monkeypatch, tmp_path):
     monkeypatch.setattr(
-        "core.llm_gateway._POLICY_PATH",
+        "core.llm.llm_gateway._POLICY_PATH",
         str(tmp_path / "missing.json"),
     )
     gateway = LLMGateway()
