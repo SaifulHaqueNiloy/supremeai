@@ -753,9 +753,9 @@ class TestLLMGatewayMissingBranches:
         mock_cost_guard.check_budget = AsyncMock()
 
         with (
-            patch("core.llm_gateway.get_firestore_db", return_value=mock_db),
-            patch("core.llm_gateway.SelfHealerService", return_value=mock_healer),
-            patch("core.llm_gateway.CostGuard", return_value=mock_cost_guard),
+            patch("core.llm.llm_gateway.get_firestore_db", return_value=mock_db),
+            patch("core.llm.llm_gateway.SelfHealerService", return_value=mock_healer),
+            patch("core.llm.llm_gateway.CostGuard", return_value=mock_cost_guard),
             patch(
                 "litellm.acompletion",
                 new_callable=AsyncMock,

@@ -237,7 +237,7 @@ def test_smart_semantic_router_defaults():
 
 
 def test_budget_aware_route_no_free_tier():
-    with patch("core.agent_orchestrator._free_tier_available", False):
+    with patch("core.orchestration.agent_orchestrator._free_tier_available", False):
         result = budget_aware_route("some prompt", task_type="general")
     assert result["intent"] == "general"
     assert result["requires_expensive"] is False
@@ -248,8 +248,8 @@ def test_budget_aware_route_no_free_tier():
 def test_budget_aware_route_free_tier_available():
     mock_tracker = MagicMock()
     mock_tracker.get_best_provider.return_value = "groq"
-    with patch("core.agent_orchestrator._free_tier_available", True):
-        with patch("core.agent_orchestrator.get_tracker", return_value=mock_tracker):
+    with patch("core.orchestration.agent_orchestrator._free_tier_available", True):
+        with patch("core.orchestration.agent_orchestrator.get_tracker", return_value=mock_tracker):
             result = budget_aware_route("some prompt", task_type="general")
     assert result["best_provider"] == "groq"
     mock_tracker.get_best_provider.assert_called_once()
@@ -258,7 +258,7 @@ def test_budget_aware_route_free_tier_available():
 def test_budget_aware_route_free_tier_exhausted():
     mock_tracker = MagicMock()
     mock_tracker.get_best_provider.return_value = None
-    with patch("core.agent_orchestrator._free_tier_available", True):
-        with patch("core.agent_orchestrator.get_tracker", return_value=mock_tracker):
+    with patch("core.orchestration.agent_orchestrator._free_tier_available", True):
+        with patch("core.orchestration.agent_orchestrator.get_tracker", return_value=mock_tracker):
             result = budget_aware_route("some prompt", task_type="general")
     assert result["best_provider"] is None

@@ -165,7 +165,21 @@ class TestAdminRoutes:
 
     def test_admin_firebase_login_mock_token_production(self, client):
         """মক টোকেন প্রোডাকশন নিষিদ্ধ."""
-        with patch("core.config.settings.env", "production"):
+        # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট পেতে _get_cached_secret এবং রেট লিমিটার বাইপাস করতে acquire মক করা হচ্ছে।
+        from core.config import settings
+
+        orig_secret = settings._get_cached_secret
+
+        def mock_secret(key):
+            if key == "SUPREMEAI_JWT_SECRET":
+                return "a" * 64
+            return orig_secret(key)
+
+        with (
+            patch("core.config.settings.env", "production"),
+            patch.object(settings, "_get_cached_secret", side_effect=mock_secret),
+            patch("core.rate_limiter.AsyncRateLimiter.acquire", return_value=True),
+        ):
             response = client.post("/api/admin/firebase-login", json={"id_token": "mock-test-token"})
             assert response.status_code == 403
 
