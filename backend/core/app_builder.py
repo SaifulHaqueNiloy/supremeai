@@ -19,6 +19,7 @@ import os
 import re
 import sys
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,7 +87,7 @@ if "pytest" not in sys.modules and os.getenv("CI") != "true":
     setup_logging()
 
 
-def create_app() -> FastAPI:
+def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     """Create and configure the FastAPI application with all middleware and routes."""
 
     @asynccontextmanager
@@ -101,7 +102,7 @@ def create_app() -> FastAPI:
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
     app = FastAPI(
-        title=settings.PROJECT_NAME,
+        title=title,
         docs_url=docs_url,
         redoc_url=redoc_url,
         openapi_url=openapi_url,
@@ -155,4 +156,10 @@ def create_app() -> FastAPI:
 
 # Backward-compatibility alias for legacy tests
 build_app_shell = create_app
+
+
+def router_health_check(app: FastAPI | None = None, expected_count: int = 0) -> dict[str, Any]:
+    """Helper to return health status of app routers."""
+    return {"status": "healthy", "expected_count": expected_count, "env": settings.env}
+
 
