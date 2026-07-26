@@ -33,7 +33,10 @@ class BillingService {
   }
 
   /// Fetches historical transactions logged in the immutable ledger.
-  Future<List<Map<String, dynamic>>> getTransactionHistory() async {
+  /// Returns {'success': bool, 'items': List, 'error': String?} so the caller
+  /// can tell "no transactions yet" apart from "the request failed" —
+  /// previously both cases silently returned an empty list.
+  Future<Map<String, dynamic>> getTransactionHistory() async {
     try {
       final token = await _apiService.getToken();
       final response = await _apiService.client.get(
@@ -46,11 +49,22 @@ class BillingService {
 
       if (response.statusCode == 200) {
         final List<dynamic> rawList = jsonDecode(response.body);
-        return rawList.map((e) => Map<String, dynamic>.from(e)).toList();
+        return {
+          'success': true,
+          'items': rawList.map((e) => Map<String, dynamic>.from(e)).toList(),
+        };
       }
-      return [];
+      return {
+        'success': false,
+        'error': 'Failed to load transaction history.',
+        'items': <Map<String, dynamic>>[],
+      };
     } catch (e) {
-      return [];
+      return {
+        'success': false,
+        'error': 'Connection error: $e',
+        'items': <Map<String, dynamic>>[],
+      };
     }
   }
 

@@ -40,6 +40,7 @@ qdrant-client = "^1.12.1"
 sentence-transformers = "^3.3.0"
 torch = "^2.5.0"
 numpy = "^1.26.4"
+opencv-python-headless = "^4.10.0"  # headless: no GTK/GUI libs needed in CI containers
 pandas = "^2.2.3"
 pyarrow = "^18.1.0"
 gcsfs = "^2024.10.0"
@@ -297,5 +298,3 @@ ignore = [
     "B008",     # Default args call
     "I001",     # Unsorted imports
 ]
-
-

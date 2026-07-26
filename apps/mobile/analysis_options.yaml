@@ -28,5 +28,10 @@ linter:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
+    # বাংলা মন্তব্য: literal empty catch body (যেমন `catch (_) {}`) ধরার জন্য — এটাই সবচেয়ে স্পষ্ট
+    # silent-error সিগন্যাল। এটা `catch(e) { return []; }`-এর মতো "misleading but non-empty" রিটার্ন
+    # ধরবে না (দেখুন billing_service.dart audit) — সেগুলো লিন্ট দিয়ে ধরা যায় না, কোড রিভিউ লাগে।
+    empty_catches: true
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

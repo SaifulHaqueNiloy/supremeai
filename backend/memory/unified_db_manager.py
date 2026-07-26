@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from memory.chromadb_store import ChromaDBStore
@@ -13,6 +14,10 @@ from memory.sqlite_store import SQLiteStore
 from memory.supabase_store import SupabaseStore
 
 logger = logging.getLogger("supremeai.unified_db")
+
+# বাংলা মন্তব্য: collection নামে SQL injection প্রতিরোধ করতে whitelist pattern ব্যবহার করা হচ্ছে —
+# একই প্যাটার্ন admin.py ও db_repository.py-তেও ব্যবহার হয়।
+_VALID_COLLECTION_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 class UnifiedDBManager:
@@ -64,12 +69,18 @@ class UnifiedDBManager:
 
         # 3. Save to Cloud Postgres DB
         try:
+            # বাংলা মন্তব্য: SECURITY FIX — collection f-string-এ সরাসরি ব্যবহার হওয়ায় SQL injection সম্ভব ছিল।
+            # এখন identifier whitelist-এর বিপরীতে যাচাই করে তবেই কুয়েরি তৈরি করা হয়।
+            if not _VALID_COLLECTION_PATTERN.match(collection):
+                raise ValueError(f"Invalid collection name: {collection!r}")
             await self.postgres.execute_query(
-                f"INSERT INTO {collection} (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2",  # noqa: S608
+                f"INSERT INTO {collection} (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2",  # noqa: S608 — collection is whitelist-validated above
                 record_id,
                 data,
             )
             results["postgres"] = True
+        except ValueError:
+            raise
         except Exception as e:
             logger.warning(f"[UnifiedDB] Postgres save skipped: {e}")
 

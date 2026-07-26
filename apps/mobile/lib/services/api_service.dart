@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -105,7 +106,11 @@ class ApiService {
           return List<Map<String, dynamic>>.from(list.map((e) => Map<String, dynamic>.from(e)));
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      // বাংলা মন্তব্য: এখানে empty list রিটার্ন করাই ইচ্ছাকৃত (ai_providers_screen.dart ফলব্যাক default providers দেখায়),
+      // কিন্তু আগে এররটা সম্পূর্ণ silently মুছে যেত — এখন অন্তত debug log-এ দৃশ্যমান থাকবে
+      debugPrint('getConfiguredProviders failed, falling back to defaults: $e');
+    }
     return [];
   }
 

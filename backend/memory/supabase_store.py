@@ -99,6 +99,17 @@ class SupabaseStore(SQLiteMemoryStore):
                 pass
             return None
 
+    def _save_learned_fact_sqlite(self, fact_id: str, fact: dict) -> None:
+        # বাংলা মন্তব্য: SQLite-এ ফ্যাক্ট লেখার একমাত্র জায়গা — Supabase পাথ এবং fallback পাথ উভয়েই এটাই ব্যবহার করে
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO tasks (id, task_description, task_type, success, cost, outcome_text) VALUES (?, ?, ?, ?, ?, ?)",
+            (fact_id, json.dumps(fact), "learned_fact", 1, 0.0, json.dumps(fact)),
+        )
+        conn.commit()
+        self._close_connection(conn)
+
     def save_learned_fact(self, fact: dict) -> None:
         fact_id = fact.get("id")
         if not fact_id:
@@ -122,26 +133,23 @@ class SupabaseStore(SQLiteMemoryStore):
 
                 client.table("learned_facts").upsert(data).execute()
             except Exception as e:
-                try:
-                    from loguru import logger
+                # বাংলা মন্তব্য: CRITICAL FIX — আগে এখানে শুধু লগ করে fact silently হারিয়ে যেত।
+                # এখন ব্যর্থ হলে SQLite-এ fallback write হয়, যাতে কোনো fact অপ্রত্যাশিতভাবে বাদ না যায়।
+                from loguru import logger
 
-                    logger.error(f"Failed to save fact with embedding: {e}")
-                except ImportError:
-                    pass
+                logger.error(f"Failed to save fact to Supabase, falling back to local SQLite: {e}")
+                try:
+                    self._save_learned_fact_sqlite(fact_id, fact)
+                except Exception as fallback_error:
+                    logger.error(f"SQLite fallback also failed — fact '{fact_id}' was NOT persisted: {fallback_error}")
+                    raise
         else:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT OR REPLACE INTO tasks (id, task_description, task_type, success, cost, outcome_text) VALUES (?, ?, ?, ?, ?, ?)",
-                (fact_id, json.dumps(fact), "learned_fact", 1, 0.0, json.dumps(fact)),
-            )
-            conn.commit()
-            self._close_connection(conn)
+            self._save_learned_fact_sqlite(fact_id, fact)
 
     def search_facts(self, query: str) -> list:
         if self._provider == "supabase":
             try:
-                # বাংলা মন্তব্য: সার্চ কুয়েরির জন্য এমবেডিং জেনারেট করে RPC-র সাহায্যে pgvector সেম্যান্টিক সার্চ চেষ্টা করা হচ্ছে।
+                # বাংলা মন্তব্য: সার্চ কুয়েরির জন্য এমবেডিং জেনারেট করে RPC-র সাহায্যে pgvector সেম্যান্টিক সার্চ চেষ্টা করা হচ্ছে।
                 query_embedding = self._generate_embedding(query)
                 if query_embedding:
                     client = self._get_supabase_client()
@@ -166,7 +174,7 @@ class SupabaseStore(SQLiteMemoryStore):
                 except ImportError:
                     pass
 
-            # বাংলা মন্তব্য: রেজিলিয়েন্স ফলব্যাক - ভেক্টর সার্চ কাজ না করলে সাধারণ ilike সাবস্ট্রিং সার্চ চালানো হবে।
+            # বাংলা মন্তব্য: রেজিলিয়েন্স ফলব্যাক - ভেক্টর সার্চ কাজ না করলে সাধারণ ilike সাবস্ট্রিং সার্চ চালানো হবে।
             try:
                 client = self._get_supabase_client()
                 result = client.table("learned_facts").select("content").ilike("content", f"%{query}%").execute()
