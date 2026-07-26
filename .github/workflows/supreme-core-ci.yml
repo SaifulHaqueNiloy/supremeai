@@ -233,12 +233,13 @@ jobs:
         run: |
           echo "=== Router Import Smoke-Test ===" >> $GITHUB_STEP_SUMMARY
 
+          cd backend
           # Bot commit হলে strict mode চালানো হবে
           if [[ "${{ steps.bot-check.outputs.is_bot_commit }}" == "true" ]]; then
             echo "🤖 Bot commit: running in STRICT mode (all routers must import cleanly)" >> $GITHUB_STEP_SUMMARY
-            python scripts/ci/validate_router_imports.py --strict
+            poetry run python ../scripts/ci/validate_router_imports.py --strict
           else
-            python scripts/ci/validate_router_imports.py
+            poetry run python ../scripts/ci/validate_router_imports.py
           fi
 
           EXIT_CODE=$?
@@ -254,7 +255,8 @@ jobs:
         # বাংলা মন্তব্য: অ্যাডমিন রাউটার বা乞丐-level `Depends(get_current_admin)` enforcement
         run: |
           echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
-          python .github/scripts/verify_admin_auth.py
+          cd backend
+          poetry run python ../.github/scripts/verify_admin_auth.py
           echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
 
 
