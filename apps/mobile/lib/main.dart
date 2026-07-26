@@ -1,76 +1,282 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
-import 'package:supremeai/providers/auth_provider.dart';
-import 'package:supremeai/providers/settings_provider.dart';
-import 'package:supremeai/providers/orchestration_provider.dart';
-import 'package:supremeai/providers/dashboard_provider.dart';
-import 'package:supremeai/theme/app_theme.dart';
-import 'package:supremeai/screens/login_screen.dart';
-import 'package:supremeai/screens/dashboard/home_screen.dart';
-import 'package:supremeai/services/localization_service.dart';
-import 'package:supremeai/services/notification_service.dart';
-import 'package:supremeai/screens/dashboard/main_shell.dart';
-import 'package:supremeai/app_router.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await LocalizationService.load('bn');
-  await NotificationService().initialize();
-  runApp(const SupremeAIApp());
+void main() {
+  runApp(const SupremeAIMobileApp());
 }
 
-class SupremeAIApp extends StatelessWidget {
-  const SupremeAIApp({super.key});
+class SupremeAIMobileApp extends StatelessWidget {
+  const SupremeAIMobileApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => OrchestrationProvider()),
-        ChangeNotifierProvider(create: (_) => DashboardProvider()),
-      ],
-      child: Consumer<SettingsProvider>(
-        builder: (context, settings, _) {
-          return MaterialApp.router(
-            title: 'SupremeAI',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: _getThemeMode(settings.settings.themeMode),
-            routerConfig: appRouter,
-          );
-        },
+    return MaterialApp(
+      title: 'SupremeAI Mobile',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late WebSocketChannel _channel;
+  final TextEditingController _textController = TextEditingController();
+  final List<ChatMessage> _messages = <ChatMessage>[];
+  String? _authToken;
+  bool _isLoading = false;
+  bool _isConnected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAuthToken();
+  }
+
+  Future<void> _loadAuthToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _authToken = prefs.getString('authToken');
+    });
+
+    if (_authToken != null) {
+      _connectWebSocket();
+    }
+  }
+
+  Future<void> _connectWebSocket() async {
+    if (_authToken == null) return;
+
+    try {
+      _channel = WebSocketChannel.connect(
+        Uri.parse('ws://localhost:8000/api/ws/chat?token=$_authToken'),
+      );
+
+      _channel.stream.listen(_handleMessage,
+          onError: (error) {
+            setState(() {
+              _isConnected = false;
+            });
+            print('WebSocket error: $error');
+          },
+          onDone: () {
+            setState(() {
+              _isConnected = false;
+            });
+            print('WebSocket connection closed');
+          });
+
+      setState(() {
+        _isConnected = true;
+      });
+    } catch (e) {
+      print('Failed to connect WebSocket: $e');
+      setState(() {
+        _isConnected = false;
+      });
+    }
+  }
+
+  void _handleMessage(dynamic data) {
+    Map<String, dynamic> jsonData = json.decode(data);
+
+    if (jsonData['type'] == 'pong') {
+      // Heartbeat response
+      return;
+    }
+
+    if (jsonData.containsKey('text') || jsonData.containsKey('content')) {
+      String content = jsonData['text'] ?? jsonData['content'] ?? '';
+
+      if (content == '[DONE]') {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _messages.add(ChatMessage(
+          text: content,
+          sender: 'ai',
+        ));
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_textController.text.isEmpty || _isLoading) return;
+
+    String messageText = _textController.text.trim();
+    _textController.clear();
+
+    setState(() {
+      _messages.add(ChatMessage(
+        text: messageText,
+        sender: 'user',
+      ));
+      _isLoading = true;
+    });
+
+    // Send message via WebSocket
+    Map<String, String> message = {
+      'text': messageText,
+      'timestamp': DateTime.now().millisecondsSinceEpoch.toString()
+    };
+
+    _channel.sink.add(jsonEncode(message));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('SupremeAI Mobile'),
+        backgroundColor: Colors.blue[600],
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(_isConnected ? Icons.wifi : Icons.wifi_off),
+            onPressed: () {
+              if (_isConnected) {
+                _channel.sink.close();
+                setState(() {
+                  _isConnected = false;
+                });
+              } else {
+                _connectWebSocket();
+              }
+            },
+          ),
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              if (result == 'logout') {
+                _logout();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Text('Logout'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return _messages[index];
+              },
+            ),
+          ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: LinearProgressIndicator(),
+            ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _textController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => _sendMessage(),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _isLoading ? null : _sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  ThemeMode _getThemeMode(String mode) {
-    switch (mode) {
-      case 'light': return ThemeMode.light;
-      case 'dark': return ThemeMode.dark;
-      default: return ThemeMode.system;
-    }
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('authToken');
+
+    setState(() {
+      _authToken = null;
+      _isConnected = false;
+      _messages.clear();
+    });
+
+    _channel.sink.close();
+  }
+
+  @override
+  void dispose() {
+    _channel.sink.close();
+    _textController.dispose();
+    super.dispose();
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+class ChatMessage extends StatelessWidget {
+  final String text;
+  final String sender;
+
+  const ChatMessage({
+    super.key,
+    required this.text,
+    required this.sender,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 600),
-      switchInCurve: Curves.easeIn,
-      switchOutCurve: Curves.easeOut,
-      child: (auth.status == AuthStatus.authenticated || auth.status == AuthStatus.guest)
-          ? const MainShell(key: ValueKey('MainShell'))
-          : const LoginScreen(key: ValueKey('LoginScreen')),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(right: 10.0),
+            child: CircleAvatar(
+              backgroundColor: sender == 'user' ? Colors.blue[600] : Colors.green[600],
+              child: Text(sender == 'user' ? 'U' : 'AI', style: const TextStyle(color: Colors.white)),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                color: sender == 'user' ? Colors.blue[100] : Colors.green[50],
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Text(
+                text,
+                style: const TextStyle(fontSize: 16.0),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

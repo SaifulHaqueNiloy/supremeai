@@ -634,8 +634,8 @@ class Settings(BaseSettings):
                     parsed = json.loads(v)
                     if isinstance(parsed, list):
                         return [str(x) for x in parsed]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"JSON parsing failed for admin_emails: {e}")
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
 

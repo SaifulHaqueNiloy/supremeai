@@ -10,7 +10,6 @@ import logging
 import threading
 from collections.abc import Callable
 from collections import defaultdict
-import time
 from datetime import UTC, datetime
 from typing import Any
 from pydantic import BaseModel, Field
@@ -296,7 +295,10 @@ class IntelligentErrorBus(ErrorEventBus):
 
     def __init__(self) -> None:
         super().__init__()
-        self._recent_errors: list[tuple[float, str]] = []
+        from collections import deque
+
+        # Sliding window for pattern detection (recent 5 events)
+        self._error_history = deque(maxlen=5)
 
     def _get_current_metrics(self) -> dict[str, Any]:
         if not psutil:
@@ -309,28 +311,26 @@ class IntelligentErrorBus(ErrorEventBus):
         except Exception:
             return {}
 
-    def _is_repeating_pattern(self, event: ErrorEvent) -> bool:
-        now = time.time()
-        # Clean up old errors (older than 5 seconds)
+    def _check_and_escalate_pattern(self, event: ErrorEvent) -> None:
         with self._lock:
-            self._recent_errors = [(t, e) for t, e in self._recent_errors if now - t <= 5.0]
-            pattern_count = sum(1 for _, e in self._recent_errors if e == event.error_type)
-            self._recent_errors.append((now, event.error_type))
-
-        return pattern_count >= 2
+            self._error_history.append(event.error_type)
+            if len(self._error_history) >= 3:
+                last_three = list(self._error_history)[-3:]
+                if len(set(last_three)) == 1:
+                    event.severity = "CRITICAL"
+                    event.error_type = "SILENT_PATTERN_ESCALATED"
+                    logger.critical(
+                        f"🚨 Pattern Detected: {last_three[0]} repeated 3 times consecutively. Escalated to CRITICAL."
+                    )
 
     def emit(self, event: ErrorEvent) -> None:
         event.structured_context.system_state = self._get_current_metrics()
-        if self._is_repeating_pattern(event):
-            event.severity = "CRITICAL"
-            event.error_type = "SILENT_PATTERN_ESCALATED"
+        self._check_and_escalate_pattern(event)
         super().emit(event)
 
     async def async_emit(self, event: ErrorEvent) -> None:
         event.structured_context.system_state = self._get_current_metrics()
-        if self._is_repeating_pattern(event):
-            event.severity = "CRITICAL"
-            event.error_type = "SILENT_PATTERN_ESCALATED"
+        self._check_and_escalate_pattern(event)
         await super().async_emit(event)
 
 

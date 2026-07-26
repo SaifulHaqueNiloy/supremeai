@@ -1,80 +1,81 @@
+# backend/core/intelligent_silent_catcher.py
+# বাংলা মন্তব্য: গ্লোবাল এক্সেপশন ও থ্রেড ক্র্যাশ ক্যাচার। রানটাইমে হওয়া যেকোনো সাইলেন্ট বা আনহ্যান্ডেলড
+# ক্র্যাশ সনাক্ত করে তা Intelligent Error Bus-এ পাঠিয়ে দেওয়া হয়।
+
 import sys
-import logging
 import traceback
+import threading
+from loguru import logger
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
-from core.messaging.event_bus import error_event_bus, ErrorEvent, ErrorContext
 
-logger = logging.getLogger("supremeai.silent_catcher")
+def handle_unhandled_exception(exc_type, exc_value, exc_tb):
+    """Custom sys.excepthook to catch silent/unhandled crashes globally.
 
-
-def intelligent_excepthook(exc_type, exc_value, exc_traceback):
-    """
-    বাংলা মন্তব্য: Runtime hook for catching silent or unhandled exceptions.
-    It guarantees that an ErrorEvent is emitted to the IntelligentErrorBus.
+    বাংলা মন্তব্য: রানটাইমে কোনো আনহ্যান্ডেলড এক্সেপশন বা থ্রেড ক্র্যাশ হলে এটি কল হবে এবং এরর বাসে ইভেন্ট এমিট করবে।
     """
     if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
         return
 
-    # Extract useful information
-    tb_list = traceback.format_exception(exc_type, exc_value, exc_traceback)
-    full_traceback = "".join(tb_list)
+    error_msg = f"UNHANDLED_RUNTIME_EXCEPTION: {exc_value}"
+    tb_str = "".join(traceback.format_tb(exc_tb))
+
+    logger.error(error_msg, traceback=tb_str)
 
     # Try to find the originating module
-    module = "unknown"
-    if exc_traceback:
-        frame = exc_traceback
+    module = "intelligent_silent_catcher"
+    if exc_tb:
+        frame = exc_tb
         while frame.tb_next:
             frame = frame.tb_next
-        module = frame.tb_frame.f_globals.get("__name__", "unknown")
+        module = frame.tb_frame.f_globals.get("__name__", "intelligent_silent_catcher")
 
-    logger.critical(f"[SilentCatcher] Unhandled exception in {module}: {exc_value}")
-
-    # Forcibly emit to the bus
-    event = ErrorEvent(
-        module=module,
-        error_type="SILENT_FAILURE_DETECTED",
-        message=f"Unhandled {exc_type.__name__}: {exc_value}",
-        severity="CRITICAL",
-        context={"traceback": full_traceback},
-        structured_context=ErrorContext(module=module, env="production"),
+    # Emit to Intelligent Error Bus
+    error_event_bus.emit(
+        ErrorEvent(
+            module=module,
+            error_type="SILENT_RUNTIME_CRASH_DETECTED",
+            message=error_msg,
+            severity="CRITICAL",
+            structured_context=ErrorContext(module=module, env="production"),
+            context={"traceback": tb_str, "exception_type": str(exc_type)},
+        )
     )
 
-    # Emit synchronously since we are in a crash state
-    error_event_bus.emit(event)
-
     # Call the original excepthook to preserve default behavior (like printing to stderr)
-    sys.__excepthook__(exc_type, exc_value, exc_traceback)
+    sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+
+def thread_target_wrapper(target):
+    """Wrapper to catch silent thread crashes.
+
+    বাংলা মন্তব্য: থ্রেডের ভেতরের সাইলেন্ট ক্র্যাশ ক্যাচ করার জন্য থ্রেড টার্গেটের চারপাশে একটি ট্রাই-ক্যাচ র্যাপার।
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            return target(*args, **kwargs)
+        except Exception as e:
+            handle_unhandled_exception(type(e), e, e.__traceback__)
+
+    return wrapper
+
+
+original_thread_init = threading.Thread.__init__
+
+
+def patched_thread_init(self, *args, **kwargs):
+    original_thread_init(self, *args, **kwargs)
+    if hasattr(self, "_target") and self._target:
+        self._target = thread_target_wrapper(self._target)
 
 
 def setup_silent_catcher():
+    """Install global hooks to prevent silent failures.
+
+    বাংলা মন্তব্য: গ্লোবাল হুকগুলো সচল করার প্রধান ফাংশন।
     """
-    বাংলা মন্তব্য: Initialize the global exception hook.
-    Must be called early in the application lifecycle.
-    """
-    sys.excepthook = intelligent_excepthook
-
-    # Thread target wrapper to catch silent thread crashes
-    def thread_target_wrapper(target):
-        def wrapper(*args, **kwargs):
-            try:
-                return target(*args, **kwargs)
-            except Exception as e:
-                # If a thread crashes silently, it will now be caught
-                intelligent_excepthook(type(e), e, e.__traceback__)
-
-        return wrapper
-
-    # Patch threading to use the wrapper
-    import threading
-
-    original_thread_init = threading.Thread.__init__
-
-    def patched_thread_init(self, *args, **kwargs):
-        original_thread_init(self, *args, **kwargs)
-        if hasattr(self, "_target") and self._target is not None:
-            self._target = thread_target_wrapper(self._target)
-
+    sys.excepthook = handle_unhandled_exception
     threading.Thread.__init__ = patched_thread_init
-
-    logger.info("[SilentCatcher] Global exception and thread hooks initialized.")
+    logger.info("🛡️ Intelligent Silent Catcher hooks installed.")
