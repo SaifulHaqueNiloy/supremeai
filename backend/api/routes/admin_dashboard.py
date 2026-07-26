@@ -379,8 +379,15 @@ def get_metrics():
     try:
         import psutil
 
-        cpu_usage = psutil.cpu_percent(interval=None) or 15.2
-        memory_usage = psutil.virtual_memory().percent or 40.5
+        # বাংলা মন্তব্য: float() দিয়ে explicit conversion করা হচ্ছে — MagicMock বা None পেলে fallback ব্যবহার হবে।
+        raw_cpu = psutil.cpu_percent(interval=None)
+        cpu_usage = float(raw_cpu) if raw_cpu is not None else 15.2
+        if cpu_usage == 0.0:
+            cpu_usage = 15.2
+        raw_mem = psutil.virtual_memory().percent
+        memory_usage = float(raw_mem) if raw_mem is not None else 40.5
+        if memory_usage == 0.0:
+            memory_usage = 40.5
 
         # GPU Usage estimation: check if we can estimate or fallback to CPU load baseline
         gpu_usage = min(90.0, float(cpu_usage * 0.8 + 10.0))

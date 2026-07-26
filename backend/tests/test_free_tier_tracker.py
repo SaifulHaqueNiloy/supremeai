@@ -303,7 +303,7 @@ async def test_free_tier_tracker_database_loading():
     ]
     with (
         patch("database.supabase_client.db", mock_db),
-        patch("core.free_tier_tracker.FREE_PROVIDER_PRIORITY", ["custom_provider"]),
+        patch("core.llm.free_tier_tracker.FREE_PROVIDER_PRIORITY", ["custom_provider"]),
     ):
         tracker = FreeTierTracker()
         await tracker.load_from_db()
