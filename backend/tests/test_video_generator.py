@@ -2,6 +2,8 @@ import os
 import tempfile
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from tools.media.video_generator import VideoGenerator
 
 
