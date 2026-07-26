@@ -34,6 +34,8 @@ from core.llm.free_tier_tracker import get_tracker
 from core.logging import get_logger
 from core.metrics import counter, timed
 from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
+from core.llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
 
 
 class Provider(str, Enum):
@@ -53,6 +55,8 @@ _FREE_TIER_TRACKED: dict[Provider, str] = {
     Provider.OLLAMA: "ollama",
     Provider.DEEPSEEK: "deepseek",
     Provider.HUGGINGFACE_SPACE: "huggingface",  # Added for HuggingFace Space
+    Provider.MOONSHOT: "moonshot",
+    Provider.TOGETHER: "together",
 }
 
 
@@ -416,7 +420,7 @@ class GeminiProvider:
     name = Provider.GEMINI
 
     def __init__(self) -> None:
-        # বাংলা মন্তব্য: api_key MagicMock বা non-string/bytes হলে str-এ কনভার্ট অথবা খালি স্ট্রিং করা হলো
+        # বাংলা মন্তব্ব: api_key MagicMock বা non-string/bytes হলে str-এ কনভার্ট অথবা খালি স্ট্রিং করা হলো
         raw_key = getattr(settings, "gemini_api_key", "")
         self.api_key = str(raw_key) if isinstance(raw_key, str | bytes) else ""
         headers = {"x-goog-api-key": self.api_key} if self.api_key else {}
@@ -532,7 +536,7 @@ class HuggingFaceSpaceProvider:
     name = Provider.HUGGINGFACE_SPACE
 
     def __init__(self) -> None:
-        # বাংলা মন্তব্য: getattr থেকে আসা value যদি MagicMock বা non-string হয়, তাহলে str() এ convert করা হচ্ছে
+        # বাংলা মন্তব্ব: getattr থেকে আসা value যদি MagicMock বা non-string হয়, তাহলে str() এ convert করা হচ্ছে
         # যাতে httpx.AsyncClient(base_url=...) TypeError না throw করে
         raw_url = getattr(settings, "HF_SPACE_URL", "https://supremeai-hf-space.hf.space/v1/chat/completions")
         self.api_url = str(raw_url) if not isinstance(raw_url, str) else raw_url
@@ -659,7 +663,8 @@ class BengaliNormalizer:
 class LLMRouter:
     """
     Intelligent LLM Router with fallback chains, cost optimization,
-    and Bengali language support.
+    and Bengali language support. Now integrates with the enhanced LLM Gateway
+    for improved resiliency and semantic caching features.
 
     সকল AI মডেলকে Cine-এর মেমরিতে থাকা রুলস মানতে বাধ্য করে।
     """
@@ -677,6 +682,13 @@ class LLMRouter:
         self.cache = get_redis_client()
         self.normalizer = BengaliNormalizer()
         self.rules = _get_rules_engine()  # Cine rules for all AI models
+        self.enhanced_gateway = get_llm_gateway()  # Integrated with enhanced LLM Gateway
+        # Initialize circuit breaker manager for router
+        self._circuit_breaker_manager = get_shared_circuit_breaker
+
+    def _get_or_create_circuit_breaker(self, provider_name: str) -> circuit_breaker:
+        """Get or create a shared circuit breaker for a provider."""
+        return self._circuit_breaker_manager(provider_name)
 
     def _estimate_tokens(self, text: str) -> int:
         """Rough token estimation (1 token ≈ 4 chars for English, 2 for Bengali)."""
@@ -708,14 +720,14 @@ class LLMRouter:
 
         # Cost-sensitive: sort by cost - ZERO-108: Zero Cost Policy
         if cost_sensitive:
-            # বাংলা মন্তব্য: explicit preferred provider থাকলে সেটা প্রথম position-এ pin থাকবে,
+            # বাংলা মন্তব্ব: explicit preferred provider থাকলে সেটা প্রথম position-এ pin থাকবে,
             # শুধু বাকিদের cost অনুযায়ী সর্ট হবে
             head = [preferred] if preferred and preferred in chain else []
             rest = [p for p in chain if p not in head]
             rest.sort(key=lambda p: PROVIDER_COSTS[p][0] + PROVIDER_COSTS[p][1])
             chain = head + rest
 
-        # বাংলা মন্তব্য: free-tier ট্র্যাকার দিয়ে real RPM/TPM/RPD budget চেক করে
+        # বাংলা মন্তব্ব: free-tier ট্র্যাকার দিয়ে real RPM/TPM/RPD budget চেক করে
         # exhausted প্রোভাইডার চেইন থেকে বাদ দেওয়া হচ্ছে
         tracker = get_tracker()
         chain = [p for p in chain if _FREE_TIER_TRACKED.get(p) is None or tracker.is_available(_FREE_TIER_TRACKED[p])]
@@ -813,6 +825,12 @@ class LLMRouter:
             if not provider:
                 continue
 
+            # Circuit breaker check - using shared circuit breaker
+            cb = self._get_or_create_circuit_breaker(provider_name.value)
+            if not cb.allow_request():
+                logger.warning(f"Provider {provider_name.value} circuit breaker OPEN. Skipping...")
+                continue
+
             # Health check (lightweight)
             if hasattr(provider, "health_check") and callable(provider.health_check):
                 if not await provider.health_check():
@@ -857,11 +875,14 @@ class LLMRouter:
 
                 self.budget.consume(tokens)
 
-                # বাংলা মন্তব্য: Free-tier tracker-কে actual usage ফিডব্যাক দেওয়া —
+                # বাংলা মন্তব্ব: Free-tier tracker-কে actual usage ফিডব্যাক দেওয়া —
                 # এটা ছাড়া predictive quota governor কখনোই কাজ করবে না।
                 tracked_key = _FREE_TIER_TRACKED.get(provider_name)
                 if tracked_key:
                     get_tracker().record(tracked_key, token_count=tokens)
+
+                # Mark success on circuit breaker
+                cb.mark_success()
 
                 route_result = RouteResult(
                     provider=provider_name,
@@ -898,7 +919,11 @@ class LLMRouter:
                     rate_limited=is_rate_limited,
                     will_fallback=(provider_name != chain[-1]),
                 )
-                # বাংলা মন্তব্য: 429 পেলে tracker-কে জানানো হচ্ছে যাতে পরবর্তী রিকোয়েস্টে
+
+                # Mark failure on circuit breaker
+                cb.mark_failure()
+
+                # বাংলা মন্তব্ব: 429 পেলে tracker-কে জানানো হচ্ছে যাতে পরবর্তী রিকোয়েস্টে
                 # এই provider skip হয় (Predictive Governor সচল রাখতে)
                 tracked_key = _FREE_TIER_TRACKED.get(provider_name)
                 if tracked_key and is_rate_limited:
@@ -1096,10 +1121,6 @@ class LLMGateway:
             "cached": result.cached,
         }
 
-
-def get_llm_gateway() -> LLMGateway:
-    """Legacy factory function."""
-    return LLMGateway()
 
 
 # ── Convenience Functions ─────────────────────────────────────────────────────
