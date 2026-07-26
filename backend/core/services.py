@@ -130,7 +130,7 @@ def __getattr__(name: str) -> Any:
                     severity="WARNING",
                 )
             )
-        except Exception:  # noqa: BLE001, S110
+        except (ImportError, AttributeError, RuntimeError):  # noqa: BLE001, S110
             pass
 
         from unittest.mock import MagicMock  # noqa: PLC0415

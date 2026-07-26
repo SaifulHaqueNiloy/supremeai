@@ -16,6 +16,7 @@ import inspect
 import time
 from decimal import Decimal
 from enum import Enum
+from typing import Any
 from unittest.mock import MagicMock
 
 from loguru import logger
