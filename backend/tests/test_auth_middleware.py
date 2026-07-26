@@ -69,7 +69,7 @@ class TestAuthMiddleware:
     @pytest.mark.anyio
     async def test_middleware_valid_api_token(self, monkeypatch):
         """সঠিক API টোকেন সহ মিডলওয়্যার বংয়েজ করা হচ্ছে।"""
-        # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
+        # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_TOKEN", "test-token")
         from core.config import secret_vault, settings
 
@@ -90,12 +90,13 @@ class TestAuthMiddleware:
     @pytest.mark.anyio
     async def test_middleware_invalid_api_token(self, monkeypatch):
         """ভুল API টোকেন রিজেক্স করা হচ্ছে।"""
-        # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
+        # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_TOKEN", "test-token")
         from core.config import secret_vault, settings
 
-        settings._cached_secrets.clear()
-        secret_vault.invalidate_cache()
+        # বাংলা মন্তব্য: explicit cache set করা হচ্ছে এবং bypass নিষ্ক্রিয় করা হচ্ছে
+        settings._cached_secrets["SUPREMEAI_API_TOKEN"] = "test-token"
+        secret_vault._cache["SUPREMEAI_API_TOKEN"] = "test-token"
 
         mock_app = AsyncMock()
         middleware = AuthMiddleware(mock_app)
@@ -106,19 +107,22 @@ class TestAuthMiddleware:
             "headers": [(b"authorization", b"Bearer wrong-token")],
         }
         send = AsyncMock()
-        await middleware(scope, MagicMock(), send)
+        # বাংলা মন্তব্য: allow_test_auth_bypass False থাকলে bypass হবে না, middleware block করবে
+        with patch("core.security.auth_middleware.settings.allow_test_auth_bypass", False):
+            await middleware(scope, MagicMock(), send)
         assert mock_app.called is False
         send.assert_called()
 
     @pytest.mark.anyio
     async def test_middleware_no_api_token_env(self, monkeypatch):
         """API টোকেন এনভ ভ্যারিয়েbl না থাকলে মিডলওয়্যার বংয়েজ করা হচ্ছে।"""
-        # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
+        # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_TOKEN", "test-token")
         from core.config import secret_vault, settings
 
-        settings._cached_secrets.clear()
-        secret_vault.invalidate_cache()
+        # বাংলা মন্তব্য: empty token দিয়ে set করা হচ্ছে যাতে API token check fail হয়
+        settings._cached_secrets["SUPREMEAI_API_TOKEN"] = "test-token"
+        secret_vault._cache["SUPREMEAI_API_TOKEN"] = "test-token"
 
         mock_app = AsyncMock()
         middleware = AuthMiddleware(mock_app)
@@ -129,7 +133,9 @@ class TestAuthMiddleware:
             "headers": [],
         }
         send = AsyncMock()
-        await middleware(scope, MagicMock(), send)
+        # বাংলা মন্তব্য: allow_test_auth_bypass False থাকলে missing token 401 return করবে
+        with patch("core.security.auth_middleware.settings.allow_test_auth_bypass", False):
+            await middleware(scope, MagicMock(), send)
         mock_app.assert_not_called()
         send.assert_called()
 
@@ -191,10 +197,10 @@ class TestVerifyAdminSessionFailClosed:
         mock_request = MagicMock()
         mock_request.headers.get.return_value = "Bearer expired-token"
 
-        with patch("core.auth_middleware.settings") as mock_settings:
-            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
+        with patch("core.security.auth_middleware.settings") as mock_settings:
+            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
             mock_settings.jwt_secret = secrets.token_hex(32)
-            with patch("core.auth_middleware.jwt.decode") as mock_decode:
+            with patch("core.security.auth_middleware.jwt.decode") as mock_decode:
                 mock_decode.side_effect = ExpiredSignatureError("Expired")
                 with pytest.raises(HTTPException) as exc_info:
                     import asyncio
@@ -211,10 +217,10 @@ class TestVerifyAdminSessionFailClosed:
         mock_request = MagicMock()
         mock_request.headers.get.return_value = "Bearer invalid-token"
 
-        with patch("core.auth_middleware.settings") as mock_settings:
-            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
+        with patch("core.security.auth_middleware.settings") as mock_settings:
+            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
             mock_settings.jwt_secret = secrets.token_hex(32)
-            with patch("core.auth_middleware.jwt.decode") as mock_decode:
+            with patch("core.security.auth_middleware.jwt.decode") as mock_decode:
                 mock_decode.side_effect = JWTError("Invalid")
                 with pytest.raises(HTTPException) as exc_info:
                     import asyncio
@@ -230,10 +236,10 @@ class TestVerifyAdminSessionFailClosed:
         mock_request = MagicMock()
         mock_request.headers.get.return_value = "Bearer user-token"
 
-        with patch("core.auth_middleware.settings") as mock_settings:
-            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
+        with patch("core.security.auth_middleware.settings") as mock_settings:
+            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
             mock_settings.jwt_secret = secrets.token_hex(32)
-            with patch("core.auth_middleware.jwt.decode") as mock_decode:
+            with patch("core.security.auth_middleware.jwt.decode") as mock_decode:
                 mock_decode.return_value = {"sub": "user-123", "role": "user"}
                 with pytest.raises(HTTPException) as exc_info:
                     import asyncio
@@ -248,10 +254,10 @@ class TestVerifyAdminSessionFailClosed:
         mock_request.client.host = "127.0.0.1"
         mock_request.headers.get.return_value = "Bearer admin-token"
 
-        with patch("core.auth_middleware.settings") as mock_settings:
-            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
+        with patch("core.security.auth_middleware.settings") as mock_settings:
+            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
             mock_settings.jwt_secret = secrets.token_hex(32)
-            with patch("core.auth_middleware.jwt.decode") as mock_decode:
+            with patch("core.security.auth_middleware.jwt.decode") as mock_decode:
                 mock_decode.return_value = {"sub": "admin-123", "role": "master_admin"}
                 import asyncio
 
@@ -264,10 +270,10 @@ class TestVerifyAdminSessionFailClosed:
         mock_request.client.host = "127.0.0.1"
         mock_request.headers.get.return_value = "Bearer admin-token"
 
-        with patch("core.auth_middleware.settings") as mock_settings:
-            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
+        with patch("core.security.auth_middleware.settings") as mock_settings:
+            # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
             mock_settings.jwt_secret = secrets.token_hex(32)
-            with patch("core.auth_middleware.jwt.decode") as mock_decode:
+            with patch("core.security.auth_middleware.jwt.decode") as mock_decode:
                 mock_decode.return_value = {"sub": "admin-123", "role": "admin"}
                 import asyncio
 
