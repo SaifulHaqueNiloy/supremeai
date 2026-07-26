@@ -243,14 +243,14 @@ def run_complete_system_test():
 def __getattr__(name: str):
     """
     Dynamically import submodules when accessed as attributes on core.
-    
+
     Bengali: core প্যাকেজের সাব-মডিউলগুলো ডায়নামিকালি ইমপোর্ট করার জন্য fallback handler।
     """
     import importlib
+
     try:
         mod = importlib.import_module(f"core.{name}")
         globals()[name] = mod
         return mod
     except ImportError as err:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'") from err
-

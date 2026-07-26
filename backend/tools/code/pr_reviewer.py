@@ -132,10 +132,11 @@ class PRReviewer:
                                     "body": item["body"],
                                 }
                             )
-            except Exception:  # noqa: BLE001
-                logger.warning("Failed to parse LLM response in PRReviewer.")
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"ModelRouter call failed in PRReviewer: {e}")
+            except (json.JSONDecodeError, ValueError) as _json_err:  # noqa: BLE001
+                logger.warning(f"Failed to parse LLM response in PRReviewer: {_json_err}")
+        except BaseException as _router_err:  # noqa: BLE001
+            # বাংলা মন্তব্য: ExceptionGroup (Python 3.11+ TaskGroup) সহ সব ধরনের exception gracefully হ্যান্ডেল করা হচ্ছে।
+            logger.warning(f"ModelRouter call failed in PRReviewer: {_router_err}")
 
         return issues
 

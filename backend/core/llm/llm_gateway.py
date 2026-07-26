@@ -96,6 +96,7 @@ class LLMGateway:
     def _router(self):
         if not hasattr(self, "_router_obj") or self._router_obj is None:
             from unittest.mock import MagicMock
+
             self._router_obj = MagicMock()
         return self._router_obj
 

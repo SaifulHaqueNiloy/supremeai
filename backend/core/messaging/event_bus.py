@@ -53,9 +53,7 @@ class ErrorEvent(BaseModel):
     severity: str  # CRITICAL, ERROR, WARNING, INFO
     context: dict[str, Any] = Field(default_factory=dict)
     # বাংলা মন্তব্য: structured context — flat dict-এর পাশাপাশি type-safe correlation
-    structured_context: ErrorContext = Field(
-        default_factory=lambda: ErrorContext(module="default")
-    )
+    structured_context: ErrorContext = Field(default_factory=lambda: ErrorContext(module="default"))
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

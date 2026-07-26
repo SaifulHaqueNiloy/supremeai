@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import inspect
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
