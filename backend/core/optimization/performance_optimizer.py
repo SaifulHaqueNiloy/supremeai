@@ -27,6 +27,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from loguru import logger
+
 try:
     import psutil
 except ImportError:

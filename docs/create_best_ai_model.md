@@ -166,7 +166,7 @@ api = HfApi()
 
 try:
     create_repo(repo_id=REPO_ID, repo_type="model", exist_ok=True)
-    
+
     # অটোমেটিক মডেল কার্ড তৈরি (Create automatic model card README.md)
     readme_content = f"""---
 license: apache-2.0
@@ -365,4 +365,3 @@ SUPREME_ANALYST_MODEL_URL: str = "https://api-inference.huggingface.co/models/su
 | 5 | 🔲 | Merge & Push `Supreme-Ops-1.5B` | `supremeai-ops/supreme-ops-1.5b` |
 | 6 | 🔲 | Merge & Push `Supreme-Analyst-1.5B` | `supremeai-data/supreme-analyst-1.5b` |
 | 7 | 🔲 | Connect 5 Endpoints to `smart_router.py` | SupremeAI FastAPI Backend |
-

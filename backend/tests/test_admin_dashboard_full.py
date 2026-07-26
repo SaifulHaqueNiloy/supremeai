@@ -277,6 +277,7 @@ class TestGetMetrics:
             lambda k: "key1" if k == "OPENROUTER_API_KEY" else "",
         )
         import sys
+
         fake_psutil = MagicMock()
         fake_psutil.cpu_percent.side_effect = RuntimeError("psutil broken")
         with patch.dict(sys.modules, {"psutil": fake_psutil}):
