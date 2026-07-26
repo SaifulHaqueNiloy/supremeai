@@ -14,7 +14,9 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.markdown", "/api/v1"),
     ("api.routes.simulator", ""),
     ("api.routes.site_actions", ""),
-    ("api.routes.llm_gateway", ""),
+    # বাংলা মন্তব্য: llm_gateway ইচ্ছাকৃতভাবে optional_routers-এ সরানো হয়েছে।
+    # এটি দুইবার bad import-এর কারণে পুরো test suite crash করেছে (cv2 এবং core.auth)।
+    # optional রাখলে ভবিষ্যতে একটি broken route file পুরো app object poison করতে পারবে না।
     ("api.routes.browser", ""),
     ("api.routes.stream", ""),
     ("api.routes.media", ""),
@@ -63,6 +65,9 @@ core_routers: list[tuple[str, str]] = [
 ]
 
 optional_routers: list[tuple[str, str]] = [
+    # বাংলা মন্তব্য: llm_gateway এখানে optional — ব্যর্থ হলে warn করে, পুরো app crash করে না।
+    # Systemic fix: core_routers থেকে এখানে সরানো হয়েছে (দেখুন উপরের কমেন্ট)।
+    ("api.routes.llm_gateway", ""),
     # বাংলা মন্তব্ব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
     ("api.routes.knowledge", ""),
     ("api.routes.dock_actions", "/api"),
