@@ -71,7 +71,10 @@ def test_docs_visible_in_local():
         os.environ["ALLOWED_HOSTS"] = '["*"]'
 
         import core.config as config_mod
-        config_mod.settings = config_mod.Settings()
+        new_s = config_mod.Settings()
+        config_mod.settings = new_s
+        import core.app_builder as ab_mod
+        ab_mod.settings = new_s
 
         import core.app as app_mod
         from fastapi.testclient import TestClient
@@ -108,12 +111,19 @@ def test_docs_disabled_in_production():
         os.environ["ADMIN_NOTIFICATION_EMAIL"] = "admin@example.com"
         os.environ["DISCORD_OTP_WEBHOOK_URL"] = "https://discord.com/api/webhooks/mock"
         os.environ["RESEND_API_KEY"] = "re_mock_key"
+        os.environ["DISCORD_BOT_TOKEN"] = "mock_token"
+        os.environ["GITHUB_CLIENT_ID"] = "mock_client_id"
+        os.environ["GITHUB_CLIENT_SECRET"] = "mock_client_secret"
+        os.environ["SUPABASE_URL"] = "https://mock.supabase.co"
+        os.environ["SUPABASE_KEY"] = "mock_key"
+        os.environ["NEO4J_URI"] = "bolt://mock:7687"
+        os.environ["NEO4J_USER"] = "mock_user"
+        os.environ["NEO4J_PASSWORD"] = "mock_password"
         os.environ["docs_auth_enabled"] = "false"
         os.environ["REDIS_URL"] = "redis://mock:6379"
 
-        # Mock secret fetching to prevent errors for missing production secrets
         import core.security.secret_vault as sv
-        sv.ProductionSecretVault.fetch_secret = lambda self, name: "secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad" if "JWT" in name else "mock"
+        sv.SecretVault.get_secret = lambda self, secret_id, default=None: "secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad" if "JWT" in secret_id else (default or "mock_value")
 
         import core.app as app_mod
         import core.services as services
