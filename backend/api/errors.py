@@ -56,27 +56,27 @@ async def api_error_handler(request: Request, exc: Exception) -> JSONResponse:
     )
 
 
-def raise_bad_request(detail: str, *, code: str | None = None) -> HTTPException:
-    return HTTPException(status_code=400, detail=detail)
+def raise_bad_request(detail: str, *, code: str | None = None) -> None:
+    raise HTTPException(status_code=400, detail=detail)
 
 
 def raise_unauthorized(
     detail: str = "Missing or invalid authentication token",
-) -> HTTPException:
-    return HTTPException(status_code=401, detail=detail)
+) -> None:
+    raise HTTPException(status_code=401, detail=detail)
 
 
-def raise_forbidden(detail: str = "Insufficient permissions") -> HTTPException:
-    return HTTPException(status_code=403, detail=detail)
+def raise_forbidden(detail: str = "Insufficient permissions") -> None:
+    raise HTTPException(status_code=403, detail=detail)
 
 
-def raise_not_found(detail: str = "Resource not found") -> HTTPException:
-    return HTTPException(status_code=404, detail=detail)
+def raise_not_found(detail: str = "Resource not found") -> None:
+    raise HTTPException(status_code=404, detail=detail)
 
 
-def raise_conflict(detail: str) -> HTTPException:
-    return HTTPException(status_code=409, detail=detail)
+def raise_conflict(detail: str) -> None:
+    raise HTTPException(status_code=409, detail=detail)
 
 
-def raise_internal(detail: str) -> HTTPException:
-    return HTTPException(status_code=500, detail=detail)
+def raise_internal(detail: str) -> None:
+    raise HTTPException(status_code=500, detail=detail)
