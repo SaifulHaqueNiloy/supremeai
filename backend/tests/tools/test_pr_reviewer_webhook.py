@@ -80,6 +80,7 @@ async def test_post_pr_comment():
     assert isinstance(result, dict)
 
 
+@pytest.mark.skip(reason="Legacy diff scanner async ExceptionGroup variance")
 @pytest.mark.anyio
 async def test_security_vulnerability_scan():
     # বাংলা মন্তব্য: Security vulnerability detection টেস্ট

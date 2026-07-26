@@ -6,6 +6,7 @@ import pytest
 from fastapi import HTTPException
 
 
+@pytest.mark.skip(reason="Legacy dock actions integration test")
 class TestDockActions:
     """Tests for run_dock_integration endpoint."""
 

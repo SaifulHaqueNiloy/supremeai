@@ -56,7 +56,7 @@ from pydantic import SecretStr
 
 def test_webhook_ignored_if_missing_config():
     # Verify webhook behaves gracefully when credentials/key are missing
-    with patch("api.routes.payments.settings.stripe_webhook_secret", new=SecretStr("")):
+    with patch("core.config.settings.STRIPE_WEBHOOK_SECRET", new=SecretStr("")):
         headers = {**auth_headers, "stripe-signature": "invalid-sig"}
         resp = client.post("/payments/webhook", headers=headers, content=b"some-payload")
         assert resp.status_code == 200
