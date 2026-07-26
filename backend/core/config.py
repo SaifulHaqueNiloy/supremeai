@@ -419,13 +419,15 @@ class Settings(BaseSettings):
             return []
         return [key.strip() for key in raw.split(",") if key.strip()]
 
-    # Swarm Model Registry for 5 Hugging Face models
+    # Swarm Model Registry for 7 Hugging Face models
     MODEL_SWARM: dict[str, str] = {
         "coding": "njelit1/supreme-coder-3b",
         "reasoning": "njelitltd/supreme-reasoner-3b",
         "general": "ziaulhaq1/supreme-general-3b",
         "creative": "njelitltd2/supreme-creative-3b",
         "master": "njelitltd3/supreme-master-3b",
+        "vision": "njelltd5/supreme-vision-3b",
+        "draft": "njelltd4/supreme-draft-0.5b",
     }
 
     @property

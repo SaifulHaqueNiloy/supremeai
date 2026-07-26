@@ -1207,7 +1207,7 @@ key_rotator = HFKeyRotator()
 
 
 class HFSwarmRouter:
-    """বাংলা মন্তব্য: কাস্টম ৫টি ৩বি মডেলের মধ্যে টাস্ক অনুযায়ী রিয়েল-টাইম রাউটিং নিশ্চিত করার রাউটার।"""
+    """বাংলা মন্তব্য: কাস্টম ৭টি কাস্টম মডেলের (৩বি + ০.৫বি) মধ্যে টাস্ক অনুযায়ী রিয়েল-টাইম রাউটিং নিশ্চিত করার রাউটার।"""
 
     def __init__(self) -> None:
         self.model_map = getattr(
@@ -1219,6 +1219,8 @@ class HFSwarmRouter:
                 "general": "ziaulhaq1/supreme-general-3b",
                 "creative": "njelitltd2/supreme-creative-3b",
                 "master": "njelitltd3/supreme-master-3b",
+                "vision": "njelltd5/supreme-vision-3b",
+                "draft": "njelltd4/supreme-draft-0.5b",
             },
         )
         self.base_url = "https://api-inference.huggingface.co/models/"
@@ -1226,6 +1228,10 @@ class HFSwarmRouter:
     def classify_task(self, prompt: str) -> str:
         """বাংলা মন্তব্য: প্রম্পট টেক্সটের ভিত্তিতে টাস্ক ক্যাটাগরি ডিটেক্ট করা হয়।"""
         prompt_lower = prompt.lower()
+
+        # Vision / Image Task Detection
+        if any(kw in prompt_lower for kw in ["image", "photo", "picture", "screenshot", "diagram", "ocr"]):
+            return "vision"
 
         # Coding Task Detection
         if any(
@@ -1240,6 +1246,10 @@ class HFSwarmRouter:
         # Creative Task Detection
         if any(kw in prompt_lower for kw in ["story", "poem", "song", "lyrics", "script", "creative", "write a story"]):
             return "creative"
+
+        # Fast Draft Speculative Decoding Detection
+        if any(kw in prompt_lower for kw in ["fast", "draft", "quick answer", "autocomplete"]):
+            return "draft"
 
         # Master Complex Task Detection
         if len(prompt.split()) > 150 or "step by step" in prompt_lower:
