@@ -378,6 +378,7 @@ def get_metrics():
     gpu_usage = 0.0
     try:
         import sys
+
         psutil = sys.modules.get("psutil")
         if psutil is None:
             import psutil
