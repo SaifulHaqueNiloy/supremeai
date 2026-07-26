@@ -3,8 +3,16 @@ import logging
 import os
 from typing import Any
 
-from google import genai
-from google.genai import types
+# বাংলা মন্তব্য: google-genai প্যাকেজ CI-তে ঠিকমতো install না থাকলে graceful fallback
+try:
+    from google import genai
+    from google.genai import types
+
+    _GENAI_AVAILABLE = True
+except ImportError:
+    _GENAI_AVAILABLE = False
+    genai = None  # type: ignore[assignment]
+    types = None  # type: ignore[assignment]
 
 from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
 

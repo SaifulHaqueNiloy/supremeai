@@ -36,13 +36,29 @@ class FakeProvider:
         return Chunker()
 
 
+@pytest.fixture
+def mock_router_settings(monkeypatch):
+    """কোর রাউটার সেটিংস মক করার ফিক্সচার।"""
+    mock_settings = MagicMock()
+    mock_settings.openrouter_api_key = "test"
+    mock_settings.HF_SPACE_URL = "https://mock.hf.space"
+    mock_settings.HF_API_KEY = None
+    mock_settings.MOONSHOT_API_KEY = "mock-key"
+    mock_settings.DEEPSEEK_API_KEY = "mock-key"
+    mock_settings.TOGETHER_API_KEY = "mock-key"
+    mock_settings.gemini_api_key = ""
+    mock_settings.OLLAMA_URL = "http://localhost:11434"
+    mock_settings.OLLAMA_MODEL = "qwen2.5:0.5b"
+    monkeypatch.setattr("core.llm_router.settings", mock_settings)
+    return mock_settings
+
+
 class TestCrossProviderConsistency:
     """Tests for cross-provider consistency."""
 
     @pytest.mark.asyncio
-    async def test_chat_task_returns_text_from_any_provider(self, monkeypatch):
+    async def test_chat_task_returns_text_from_any_provider(self, mock_router_settings):
         """Test any provider returns text for chat task."""
-        monkeypatch.setattr("core.llm_router.settings", MagicMock(openrouter_api_key="test"))
         router = LLMRouter()
         router.providers = {
             Provider.MOONSHOT: FakeProvider("moonshot", "moon response"),
@@ -56,9 +72,8 @@ class TestCrossProviderConsistency:
             assert isinstance(result.content, str)
 
     @pytest.mark.asyncio
-    async def test_bengali_task_prefers_moonshot(self, monkeypatch):
+    async def test_bengali_task_prefers_moonshot(self, mock_router_settings):
         """Test Bengali task routing preference."""
-        monkeypatch.setattr("core.llm_router.settings", MagicMock(openrouter_api_key="test"))
         router = LLMRouter()
         router.providers = {
             Provider.MOONSHOT: FakeProvider("moonshot", "বাংলা রেসপন্স"),
@@ -68,9 +83,8 @@ class TestCrossProviderConsistency:
         assert result.content is not None
 
     @pytest.mark.asyncio
-    async def test_code_task_routes_to_deepseek(self, monkeypatch):
+    async def test_code_task_routes_to_deepseek(self, mock_router_settings):
         """Test code task routes to DeepSeek."""
-        monkeypatch.setattr("core.llm_router.settings", MagicMock(openrouter_api_key="test"))
         router = LLMRouter()
         router.providers = {
             Provider.DEEPSEEK: FakeProvider("deepseek", "code response"),
@@ -80,9 +94,8 @@ class TestCrossProviderConsistency:
         assert result.content is not None
 
     @pytest.mark.asyncio
-    async def test_streaming_consistency_across_providers(self, monkeypatch):
+    async def test_streaming_consistency_across_providers(self, mock_router_settings):
         """Test streaming works consistently."""
-        monkeypatch.setattr("core.llm_router.settings", MagicMock(openrouter_api_key="test"))
         router = LLMRouter()
         router.providers = {
             Provider.MOONSHOT: FakeProvider("moonshot", "stream response"),
@@ -97,14 +110,19 @@ class TestCrossProviderConsistency:
             assert len(chunks) > 0
 
     @pytest.mark.asyncio
-    async def test_error_handling_consistent(self, monkeypatch):
+    async def test_error_handling_consistent(self, mock_router_settings):
         """Test error handling is consistent across providers."""
-        monkeypatch.setattr("core.llm_router.settings", MagicMock(openrouter_api_key="test"))
         router = LLMRouter()
 
         class FailingProvider:
             async def acomplete(self, prompt, **kwargs):
                 raise RuntimeError("provider error")
+
+            async def acompletion(self, prompt, **kwargs):
+                raise RuntimeError("provider error")
+
+            async def health_check(self) -> bool:
+                return True
 
         router.providers = {
             Provider.MOONSHOT: FailingProvider(),

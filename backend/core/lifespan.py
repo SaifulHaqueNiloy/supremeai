@@ -23,12 +23,14 @@ Dependencies:
 - `core.observability.telemetry`: Initializes OpenTelemetry for distributed tracing.
 - `core.sentinel_agent`: Manages a background agent responsible for periodic system tasks.
 - `database.db`: Used for bootstrapping and ensuring the integrity of the Supabase database schema.
-- `tools.ai_agents.browser_agent`: Provides functionality to shut down any globally managed browser instances."""  # noqa: E501
+- `tools.ai_agents.browser_agent`: Provides functionality to shut down any globally managed browser instances.
+- `core.metrics_collector`: Collects system metrics for observability and monitoring."""  # noqa: E501
 
 # backend/core/lifespan.py
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
 # Moving this file will break relative paths, imports, and core app lifespan management.
 import asyncio  # noqa: E402
+import time  # noqa: E402 - Added for metrics collection
 from contextlib import asynccontextmanager  # noqa: E402
 
 import httpx  # noqa: E402
@@ -42,6 +44,7 @@ from core.config_cache import config_cache  # noqa: E402
 from core.maintenance_pipeline import maintenance_pipeline  # noqa: E402
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
 from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.metrics_collector import metrics_collector, record_db_operation  # noqa: E402
 from core.orchestration.orchestrator import Orchestrator  # noqa: E402
 from core.persistence import pooled_pg  # noqa: E402
 from core.persistence.write_behind import (
@@ -56,7 +59,11 @@ from core.startup_validator import StartupValidator  # noqa: E402
 async def _ensure_api_key_tables() -> None:
     """Ensure API key database tables exist."""
     pool = await get_db_pool()
-    # বাংলা মন্তব্য: PgBouncerConnectionPool.acquire() একটি coroutine হওয়ায় সরাসরি async context manager হিসেবে ব্যবহার করা যায় না।
+    # Record the database operation
+    start_time = time.time()
+    success = True
+
+    # বাংলা মন্তব্ব্য: PgBouncerConnectionPool.acquire() একটি coroutine হওয়ায় সরাসরি async context manager হিসেবে ব্যবহার করা যায় না।
     # তাই এটিকে প্রথমে await করে কানেকশনটি তুলে আনা হচ্ছে এবং finally ব্লকে রিলিজ করা হচ্ছে।
     conn = await pool.acquire()
     try:
@@ -71,6 +78,7 @@ async def _ensure_api_key_tables() -> None:
                     key_masked TEXT NOT NULL,
                     key_prefix TEXT NOT NULL,
                     rate_limit_rps INTEGER DEFAULT 6,
+                    rate_limit_window INTEGER DEFAULT 60,
                     revoked BOOLEAN DEFAULT FALSE,
                     expires_at INTEGER,
                     last_used_at INTEGER,
@@ -105,11 +113,18 @@ async def _ensure_api_key_tables() -> None:
                 """
             )
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
+            await conn.execute("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_window INTEGER DEFAULT 60")
             await conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
             )
+    except Exception:
+        success = False
+        raise
     finally:
         await pool.release(conn)
+        duration = time.time() - start_time
+        await record_db_operation("ensure_api_key_tables", duration, success)
+
     logger.info("✅ API key tables ensured")
 
 
@@ -126,14 +141,28 @@ async def app_lifespan(app):
 
     setup_silent_catcher()
 
-    # বাংলা মন্তব্য: স্টার্টআপ ভ্যালিডেশন এবং নির্ভরযোগ্যতা নিয়ন্ত্রণ প্যানেল বুটস্ট্র্যাপ করা।
+    # Record system startup
+    await metrics_collector.set_gauge("system_startup_time", time.time())
+
+    # বাংলা মন্তব্ব্য: স্টার্টআপ ভ্যালিডেশন এবং নির্ভরযোগ্যতা নিয়ন্ত্রণ প্যানেল বুটস্ট্র্যাপ করা।
     await StartupValidator.validate()
     await ReliabilityController.initialize()
     app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
 
+    # Update metrics with subsystem status
+    await metrics_collector.set_gauge(
+        "subsystem_db_status", 1 if app.state.subsystem_status["db"] == "up" else 0, {"subsystem": "db"}
+    )
+    await metrics_collector.set_gauge(
+        "subsystem_redis_status", 1 if app.state.subsystem_status["redis"] == "up" else 0, {"subsystem": "redis"}
+    )
+    await metrics_collector.set_gauge(
+        "subsystem_config_status", 1 if app.state.subsystem_status["config"] == "up" else 0, {"subsystem": "config"}
+    )
+
     # ── Parallelized Startup Phase 1: Independent services ──────────────────
-    # বাংলা মন্তব্য: P2 Fix — startup latency এবং cold start freeze এড়াতে
-    # স্বাধীন সার্ভিসগুলো asyncio.gather() দিয়ে সমান্তরালে চালানো হচ্ছে।
+    # বাংলা মন্তব্ব্য: P2 Fix — startup latency এবং cold start freeze এড়াতে
+    # স্বাধীন সার্ভিসগুলো asyncio.gather() দিয়ে সমান্তরালে চালানো হচ্ছে।
     # Sequential dependency: HTTP client must be initialized first (others depend on it).
 
     # Global HTTP client initialization (sequential — dependency for others)
@@ -168,7 +197,7 @@ async def app_lifespan(app):
             )
 
     async def _init_db_pool() -> None:
-        """Initialize database connection pool and API key tables."""
+        """Initialize database connection pool and API key tables with unified connection management."""
         _db_url = settings.supabase_database_url
         try:
             if "sqlite" in _db_url:
@@ -177,9 +206,30 @@ async def app_lifespan(app):
                 )
                 app.state.db_pool = None
             else:
+                # Initialize connection pool with optimized settings
                 await init_db_pool(_db_url)
+
+                # Verify pool health with a quick test query
+                pool = await get_db_pool()
+                if pool:
+                    try:
+                        conn = await pool.acquire()
+                        try:
+                            # Test connection with a simple query
+                            await conn.fetchval("SELECT 1")
+                            logger.info("✅ Database connection pool health check passed.")
+                        finally:
+                            await pool.release(conn)
+                    except Exception as health_exc:
+                        logger.error(f"❌ Database pool health check failed: {health_exc}")
+                        app.state.subsystem_status["db"] = "degraded"
+                        raise health_exc
+
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()
+
+                # Optimize queries with connection pooling best practices
+                app.state.db_pool = pool
         except Exception as exc:  # noqa: BLE001
             logger.error(f"❌ Failed to initialize DB Pool: {exc}")
             app.state.db_pool = None
@@ -285,8 +335,10 @@ async def app_lifespan(app):
         orch_inst = Orchestrator()
         app.state.orchestrator = orch_inst
         logger.info("⚙️ Orchestrator background tasks initialized successfully.")
+        await metrics_collector.increment_counter("orchestrator_init_success_total")
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize Orchestrator: {e}")
+        await metrics_collector.increment_counter("orchestrator_init_failure_total")
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -389,7 +441,7 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
 
-    # বাংলা মন্তব্য: SelfEvolutionAgent শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
+    # বাংলা মন্তব্ব্য: SelfEvolutionAgent শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
     try:
         if os.getenv("ENABLE_EVOLUTION", "false").lower() == "true":
             from core.evolution.self_evolution_agent import SelfEvolutionAgent
@@ -405,7 +457,7 @@ async def app_lifespan(app):
         logger.warning(f"⚠️ SelfEvolutionAgent failed to start: {exc}")
         app.state.evo_agent = None
 
-    # বাংলা মন্তব্য: DailyLearner শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
+    # বাংলা মন্তব্ব্য: DailyLearner শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
     try:
         if os.getenv("ENABLE_DAILY_LEARNER", "false").lower() == "true":
             from core.evolution.daily_learner import DailyLearner
@@ -435,7 +487,7 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
-    # বাংলা মন্তব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
+    # বাংলা মন্তব্ব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
     try:
         if os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true":
             from core.auto_healer_service import auto_healer_service
@@ -448,7 +500,7 @@ async def app_lifespan(app):
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
 
-    # বাংলা মন্তব্য: SelfHealer error listener এক্সপ্লিসিটলি রেজিস্টার করা হচ্ছে।
+    # বাংলা মন্তব্ব্য: SelfHealer error listener এক্সপ্লিসিটলি রেজিস্টার করা হচ্ছে।
     try:
         from core.health.self_healer import register_self_healer_listener
 
@@ -492,7 +544,7 @@ async def app_lifespan(app):
         )
 
     # Shutdown all background agents via centralized supervisor
-    # বাংলা মন্তব্য: AgentSupervisor graceful shutdown — পূর্বের ম্যানুয়াল task management প্রতিস্থাপন করে।
+    # বাংলা মন্তব্ব্য: AgentSupervisor graceful shutdown — পূর্বের ম্যানুয়াল task management প্রতিস্থাপন করে।
     try:
         await agent_supervisor.shutdown_all(timeout=30)
         logger.info("✅ All background agents shut down via centralized supervisor.")
@@ -610,3 +662,5 @@ async def app_lifespan(app):
         )
 
     logger.info("💀 Serverless runtime environment sequence successfully finalized.")
+    # Record system shutdown
+    await metrics_collector.set_gauge("system_shutdown_time", time.time())

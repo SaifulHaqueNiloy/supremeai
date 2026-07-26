@@ -34,6 +34,9 @@ COPY skills/ ./skills/
 # বাংলা মন্তব্য: রুট-লেভেলের ask_scribe.py কপি করা হলো যাতে api/routes/knowledge.py সফলভাবে এটি ইম্পোর্ট করতে পারে।
 COPY ask_scribe.py ./
 
+# Create secrets directory and grant ownership to non-root appuser
+RUN mkdir -p /etc/secrets && chown -R appuser:appuser /etc/secrets
+
 RUN chown -R appuser:appuser /app
 USER appuser
 
