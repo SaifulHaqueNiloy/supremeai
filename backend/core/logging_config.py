@@ -64,7 +64,7 @@ class LoggingConfig:
         correlation_id = "N/A"
         try:
             correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
-        except Exception:  # Context may not be available in all cases
+        except (AttributeError, LookupError, NameError):  # Context may not be available in all cases
             pass
 
         # Create structured log entry
@@ -94,7 +94,7 @@ def inject_correlation_id():
     correlation_id = str(uuid.uuid4())
     try:
         context.set(HeaderKeys.correlation_id, correlation_id)
-    except Exception:  # Context may not be initialized in some cases
+    except (AttributeError, LookupError, NameError):  # Context may not be initialized in some cases
         pass
     return correlation_id
 

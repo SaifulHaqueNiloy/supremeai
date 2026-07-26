@@ -1,12 +1,19 @@
+import React, { useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { I18nContext } from './I18nContext';
 
 // বাংলা মন্তব্য: I18nContext একে অপর ফাইল থেকে ইম্পোর্ট করা হয়েছে, যাতে react-refresh সতর্কতা দূর হয়
-// useI18n hook একে অপর ফাইলে সরানো হয়েছে (useI18n.ts)
-export const TranslationProvider = ({ locale, children }: { locale: string; children: React.ReactNode }) => {
-  const { t, setLocale } = useTranslation(locale as any || 'en');
+export const TranslationProvider = ({ locale: initialLocale, children }: { locale: string; children: React.ReactNode }) => {
+  const [locale, setLocaleState] = useState(initialLocale || localStorage.getItem('supreme_lang') || 'en');
+  const { t } = useTranslation(locale as any);
+
+  const setLocale = (newLocale: string) => {
+    localStorage.setItem('supreme_lang', newLocale);
+    setLocaleState(newLocale);
+  };
+
   return (
-    <I18nContext.Provider value={{ t: t as any, locale: locale || 'en', setLocale: setLocale as any }}>
+    <I18nContext.Provider value={{ t: t as any, locale, setLocale: setLocale as any }}>
       {children}
     </I18nContext.Provider>
   );

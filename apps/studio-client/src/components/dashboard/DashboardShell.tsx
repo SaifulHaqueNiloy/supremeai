@@ -38,6 +38,7 @@ import { SwarmHealthDashboard } from '../swarm/SwarmHealthDashboard';
 import { LiveSimulator } from './LiveSimulator';
 import { ActionDock } from './ActionDock';
 import { SidebarSettings } from './SidebarSettings';
+import DashboardErrorBoundary from '../DashboardErrorBoundary';
 
 interface NavItem {
   id: DashboardRoute;
@@ -103,35 +104,50 @@ export function DashboardShell(props: DashboardShellProps) {
 
   // বাংলা মন্তব্য: হ্যাশ রাউটের ভিত্তিতে সংশ্লিষ্ট পেজ রেন্ডার করা হয় — লজিক অপরিবর্তিত
   const renderPage = () => {
+    let pageElement;
     switch (route.page) {
       case 'session':
-        return <SessionDetailPage sessionId={route.param || ''} />;
+        pageElement = <SessionDetailPage sessionId={route.param || ''} />;
+        break;
       case 'workspace':
-        return <>{props.workspace}</>;
+        pageElement = <>{props.workspace}</>;
+        break;
       case 'vault':
-        return <VaultPage />;
+        pageElement = <VaultPage />;
+        break;
       case 'automation':
-        return <AutomationQueuePage />;
+        pageElement = <AutomationQueuePage />;
+        break;
       case 'site-actions':
-        return <SiteActionsPage />;
+        pageElement = <SiteActionsPage />;
+        break;
       case 'llm-gateway':
-        return <LlmGatewayPage />;
+        pageElement = <LlmGatewayPage />;
+        break;
       case 'swarm-health':
-        return <SwarmHealthDashboard />;
+        pageElement = <SwarmHealthDashboard />;
+        break;
       case 'knowledge':
-        return <KnowledgePage />;
+        pageElement = <KnowledgePage />;
+        break;
       case 'secrets':
-        return <SecretsPage />;
+        pageElement = <SecretsPage />;
+        break;
       case 'usage':
-        return <UsagePage />;
+        pageElement = <UsagePage />;
+        break;
       case 'settings':
-        return <SettingsPage />;
+        pageElement = <SettingsPage />;
+        break;
       case 'admin':
-        return <div className="p-6 text-text-secondary text-xs">Admin console (use /admin subdomain)</div>;
+        pageElement = <div className="p-6 text-text-secondary text-xs">Admin console (use /admin subdomain)</div>;
+        break;
       case 'sessions':
       default:
-        return <SessionsPage onOpenSession={handleOpenSession} />;
+        pageElement = <SessionsPage onOpenSession={handleOpenSession} />;
+        break;
     }
+    return <DashboardErrorBoundary>{pageElement}</DashboardErrorBoundary>;
   };
 
   const navItems = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS];
