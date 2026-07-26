@@ -63,8 +63,9 @@ class LoggingConfig:
         # Extract correlation ID from context if available
         correlation_id = "N/A"
         try:
-            correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
-        except (AttributeError, LookupError, NameError):  # Context may not be available in all cases
+            if hasattr(context, "exists") and context.exists():
+                correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
+        except Exception:  # noqa: BLE001  # Catch ContextDoesNotExistError and any other context issues
             pass
 
         # Create structured log entry
