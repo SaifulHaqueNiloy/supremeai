@@ -1,9 +1,13 @@
 """LLM Gateway API routes with health monitoring."""
 
+# বাংলা মন্তব্য: REGRESSION FIX — কমিট 985ed35 ভুলভাবে `from core.auth import get_current_user`
+# import করেছিল যা কোডবেসে কখনোই ছিল না। প্রতিটি অন্য রাউটারের মতো
+# `from api.dependencies import get_current_user_token` ব্যবহার করা হচ্ছে।
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from core.auth import get_current_user
+from api.dependencies import get_current_user_token
 from core.llm.llm_gateway import get_llm_gateway
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 from core.llm.free_tier_tracker import get_tracker
@@ -12,7 +16,7 @@ router = APIRouter(prefix="/llm-gateway", tags=["llm-gateway"])
 
 
 @router.get("/health")
-async def llm_gateway_health(current_user=Depends(get_current_user)):
+async def llm_gateway_health(current_user: dict = Depends(get_current_user_token)):
     """Health check for LLM Gateway with circuit breaker and tracker status."""
     gateway = get_llm_gateway()
 
@@ -34,7 +38,7 @@ async def llm_gateway_health(current_user=Depends(get_current_user)):
 
 
 @router.get("/admin/gateway/state")
-async def get_gateway_state(current_user=Depends(get_current_user)):
+async def get_gateway_state(current_user: dict = Depends(get_current_user_token)):
     """Get detailed state information for all gateways."""
     gateway = get_llm_gateway()
 
@@ -58,7 +62,7 @@ async def get_gateway_state(current_user=Depends(get_current_user)):
 
 
 @router.post("/admin/circuit-breaker/reset/{name}")
-async def reset_circuit_breaker(name: str, current_user=Depends(get_current_user)):
+async def reset_circuit_breaker(name: str, current_user: dict = Depends(get_current_user_token)):
     """Reset a specific circuit breaker."""
     cb_manager = get_circuit_breaker_manager()
     success = cb_manager.reset_breaker(name)
@@ -71,7 +75,7 @@ async def reset_circuit_breaker(name: str, current_user=Depends(get_current_user
 
 @router.get("/admin/providers/fallback-chain")
 async def get_fallback_chain(
-    task_type: str = "chat", model: str = None, provider: str = None, current_user=Depends(get_current_user)
+    task_type: str = "chat", model: str = None, provider: str = None, current_user: dict = Depends(get_current_user_token)
 ):
     """Get the current fallback chain for a given task type."""
     gateway = get_llm_gateway()
