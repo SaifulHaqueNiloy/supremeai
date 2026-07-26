@@ -532,8 +532,12 @@ class HuggingFaceSpaceProvider:
     name = Provider.HUGGINGFACE_SPACE
 
     def __init__(self) -> None:
-        self.api_url = getattr(settings, "HF_SPACE_URL", "https://supremeai-hf-space.hf.space/v1/chat/completions")
-        self.api_key = getattr(settings, "HF_API_KEY", None)  # Optional API key for private spaces
+        # বাংলা মন্তব্য: getattr থেকে আসা value যদি MagicMock বা non-string হয়, তাহলে str() এ convert করা হচ্ছে
+        # যাতে httpx.AsyncClient(base_url=...) TypeError না throw করে
+        raw_url = getattr(settings, "HF_SPACE_URL", "https://supremeai-hf-space.hf.space/v1/chat/completions")
+        self.api_url = str(raw_url) if not isinstance(raw_url, str) else raw_url
+        raw_key = getattr(settings, "HF_API_KEY", None)
+        self.api_key = str(raw_key) if raw_key is not None and not isinstance(raw_key, str) else raw_key
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"

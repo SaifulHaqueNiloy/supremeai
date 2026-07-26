@@ -58,11 +58,15 @@ const queryClient = new QueryClient({
 
 const PORTAL_TYPE = import.meta.env.VITE_PORTAL_TYPE || 'user';
 
+import { TranslationProvider } from './i18n/I18nProvider';
+
 export const App: React.FC = () => {
   return (
     <ThemeSyncProvider>
       <ToastProvider>
-        <AppContent />
+        <TranslationProvider locale="en">
+          <AppContent />
+        </TranslationProvider>
       </ToastProvider>
     </ThemeSyncProvider>
   );
