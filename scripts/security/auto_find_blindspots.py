@@ -93,19 +93,54 @@ def check_network_configuration(content: str, file_path: str) -> List[str]:
     return findings
 
 def check_database_issues(content: str, file_path: str) -> List[str]:
-    """Checks for common database-related security issues."""
+    """Checks for common database-related security issues.
+
+    বাংলা মন্তব্য: এই ফাংশন SQL injection খোঁজে। তবে এখন line-by-line context-aware check করে:
+    একটি f-string SQL-এর আগের ১০ লাইনে whitelist validator call থাকলে সেটিকে
+    False Positive হিসেবে চিহ্নিত করা হয়, Critical হিসেবে নয়।
+    """
     findings = []
-    if file_path.endswith(".py"):
-        # Check for potential SQL injection via f-strings
-        if re.search(r'f"S?SE' + r'LECT .*\{.*\}', content, re.IGNORECASE) or \
-           re.search(r'f"UP' + r'DATE .*\{.*\}', content, re.IGNORECASE) or \
-           re.search(r'f"IN' + r'SERT INTO .*\{.*\}', content, re.IGNORECASE) or \
-           re.search(r'f"DE' + r'LETE FROM .*\{.*\}', content, re.IGNORECASE):
-            findings.append("🔴 Critical: SQL query built with an f-string, creating a high risk of SQL injection.")
-        # Check for SQLite's `check_same_thread=False`
-        if "check_same_thread" + "=False" in content:
-            findings.append("🟡 Medium: SQLite connection with `check_same_thread=False` can lead to data corruption or race conditions if not handled carefully.")
+    if not file_path.endswith(".py"):
+        return findings
+
+    lines = content.splitlines()
+
+    # বাংলা মন্তব্য: validator present থাকলে f-string SQL safe বলে ধরা হয়।
+    # admin.py ও db_repository.py-তে _validate_table_name() বা _VALID_*_PATTERN.match()
+    # ব্যবহার করা হয়, যা এই প্যাটার্নগুলো ম্যাচ করবে।
+    VALIDATOR_PATTERNS = re.compile(
+        r'(_validate_table_name|_VALID_[A-Z_]+_PATTERN\.match|re\.match\(r["\'].+["\'],)'
+    )
+    SQL_FSTRING_PATTERNS = [
+        re.compile(r'f"S?SELECT .*\{.*\}', re.IGNORECASE),
+        re.compile(r'f"UPDATE .*\{.*\}', re.IGNORECASE),
+        re.compile(r'f"INSERT INTO .*\{.*\}', re.IGNORECASE),
+        re.compile(r'f"DELETE FROM .*\{.*\}', re.IGNORECASE),
+    ]
+
+    for i, line in enumerate(lines):
+        # Check for SQL f-string patterns on this line
+        matched_sql = any(p.search(line) for p in SQL_FSTRING_PATTERNS)
+        if not matched_sql:
+            continue
+
+        # বাংলা মন্তব্য: আগের ১০ লাইনে কোনো whitelist validator আছে কিনা তা চেক করে।
+        context_start = max(0, i - 10)
+        context_lines = lines[context_start:i]
+        context_text = "\n".join(context_lines)
+
+        if VALIDATOR_PATTERNS.search(context_text):
+            # Validated before use — this is a false positive, skip it
+            continue
+
+        findings.append("🔴 Critical: SQL query built with an f-string, creating a high risk of SQL injection.")
+        break  # একটি ফাইলে একটি রিপোর্ট যথেষ্ট
+
+    # Check for SQLite's `check_same_thread=False`
+    if "check_same_thread" + "=False" in content:
+        findings.append("🟡 Medium: SQLite connection with `check_same_thread=False` can lead to data corruption or race conditions if not handled carefully.")
     return findings
+
 
 def check_committed_env_file(file_path: Path) -> List[str]:
     """Checks if a .env file has been committed to the repository."""

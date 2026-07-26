@@ -1122,7 +1122,6 @@ class LLMGateway:
         }
 
 
-
 # ── Convenience Functions ─────────────────────────────────────────────────────
 async def quick_chat(
     prompt: str,
