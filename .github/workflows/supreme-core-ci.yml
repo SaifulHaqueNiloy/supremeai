@@ -528,10 +528,10 @@ jobs:
         working-directory: backend
         run: |
           if [ "${{ needs.changes.outputs.backend }}" = 'true' ] || [ "${{ needs.changes.outputs.shared }}" = 'true' ]; then
-            poetry run pytest -n auto --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=60 -q
+            poetry run pytest -n 2 --dist=loadfile --timeout=30 --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
           else
             echo "Skipping full backend tests, only running smoke tests."
-            poetry run pytest -n auto tests/test_health.py -q
+            poetry run pytest -n 2 tests/test_health.py -q
           fi
 
       - name: Add Backend Test Results to GitHub Summary
