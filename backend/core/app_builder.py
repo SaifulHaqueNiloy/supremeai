@@ -161,5 +161,3 @@ build_app_shell = create_app
 def router_health_check(app: FastAPI | None = None, expected_count: int = 0) -> dict[str, Any]:
     """Helper to return health status of app routers."""
     return {"status": "healthy", "expected_count": expected_count, "env": settings.env}
-
-

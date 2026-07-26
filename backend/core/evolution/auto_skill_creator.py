@@ -27,7 +27,9 @@ from core.tenant_db import TenantAwareFirestore
 try:
     from skills.installer import SkillInstaller
 except ModuleNotFoundError:
-    logger.warning("⚠️ 'skills.installer' not found; dynamic SkillInstaller functionality will operate in fallback mode.")
+    logger.warning(
+        "⚠️ 'skills.installer' not found; dynamic SkillInstaller functionality will operate in fallback mode."
+    )
     SkillInstaller = None
 
 # বাংলা মন্তব্য: pytests বা isolated settings এ backend/tools কে রুটের tools/ ডিরেক্টরির উপরে অগ্রাধিকার দিতে sys.path.insert ব্যবহার করা হলো
