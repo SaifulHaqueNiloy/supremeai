@@ -1179,3 +1179,94 @@ async def bengali_chat(prompt: str, **kwargs: Any) -> str:
         **kwargs,
     )
     return result.content
+
+
+# ── 5-Model Swarm Router & Round-Robin Key Rotator ───────────────────────────
+import itertools
+import requests
+
+
+class HFKeyRotator:
+    """বাংলা মন্তব্য: Hugging Face API কীগুলোর মাধ্যমে রাউন্ড-রবিন সিস্টেমে রোটেশন নিয়ন্ত্রণকারী হেলপার ক্লাস।"""
+
+    def __init__(self, keys: list[str] | None = None) -> None:
+        key_list = keys if keys is not None else getattr(settings, "hf_api_keys", [])
+        if not key_list:
+            logger.warning("⚠️ No HF_API_KEYS provided! Swarm requests may fallback or fail.")
+            self._cycle = None
+        else:
+            self._cycle = itertools.cycle(key_list)
+
+    def get_key(self) -> str | None:
+        if not self._cycle:
+            return None
+        return next(self._cycle)
+
+
+key_rotator = HFKeyRotator()
+
+
+class HFSwarmRouter:
+    """বাংলা মন্তব্য: কাস্টম ৫টি ৩বি মডেলের মধ্যে টাস্ক অনুযায়ী রিয়েল-টাইম রাউটিং নিশ্চিত করার রাউটার।"""
+
+    def __init__(self) -> None:
+        self.model_map = getattr(
+            settings,
+            "MODEL_SWARM",
+            {
+                "coding": "njelit1/supreme-coder-3b",
+                "reasoning": "njelitltd/supreme-reasoner-3b",
+                "general": "ziaulhaq1/supreme-general-3b",
+                "creative": "njelitltd2/supreme-creative-3b",
+                "master": "njelitltd3/supreme-master-3b",
+            },
+        )
+        self.base_url = "https://api-inference.huggingface.co/models/"
+
+    def classify_task(self, prompt: str) -> str:
+        """বাংলা মন্তব্য: প্রম্পট টেক্সটের ভিত্তিতে টাস্ক ক্যাটাগরি ডিটেক্ট করা হয়।"""
+        prompt_lower = prompt.lower()
+
+        # Coding Task Detection
+        if any(
+            kw in prompt_lower for kw in ["code", "python", "def ", "function", "bug", "sql", "javascript", "class "]
+        ):
+            return "coding"
+
+        # Logic / Reasoning / Math Task Detection
+        if any(kw in prompt_lower for kw in ["solve", "math", "equation", "logic", "calculate", "proof", "reason"]):
+            return "reasoning"
+
+        # Creative Task Detection
+        if any(kw in prompt_lower for kw in ["story", "poem", "song", "lyrics", "script", "creative", "write a story"]):
+            return "creative"
+
+        # Master Complex Task Detection
+        if len(prompt.split()) > 150 or "step by step" in prompt_lower:
+            return "master"
+
+        return "general"
+
+    def route_and_generate(self, prompt: str, parameters: dict[str, Any] | None = None) -> dict[str, Any]:
+        """বাংলা মন্তব্য: ডিটেক্টেড মডেল এবং রোটেশন এপিআই কী ব্যবহার করে ইনফ্যারেন্স সম্পন্ন করে।"""
+        task_type = self.classify_task(prompt)
+        target_model = self.model_map.get(task_type, self.model_map["general"])
+
+        active_key = key_rotator.get_key()
+        headers = {"Authorization": f"Bearer {active_key}" if active_key else "", "Content-Type": "application/json"}
+
+        endpoint = f"{self.base_url}{target_model}"
+        payload = {"inputs": prompt, "parameters": parameters or {"max_new_tokens": 512, "temperature": 0.7}}
+
+        logger.info(f"🔀 [Router] Task: '{task_type}' | Target Model: '{target_model}'")
+
+        try:
+            response = requests.post(endpoint, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            return {"status": "success", "task": task_type, "model": target_model, "output": response.json()}
+        except Exception as e:
+            logger.error(f"❌ Inference error for model {target_model}: {str(e)}")
+            return {"status": "error", "task": task_type, "model": target_model, "error": str(e)}
+
+
+hf_swarm_router = HFSwarmRouter()
