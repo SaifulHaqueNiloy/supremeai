@@ -24,11 +24,11 @@ def mock_agents():
     mock_reflection.reflect_and_persist = AsyncMock()
 
     with (
-        patch("core.swarm_orchestrator.ArchitectureAgent", return_value=mock_architect),
-        patch("core.swarm_orchestrator.CodeGeneratorAgent", return_value=mock_coder),
-        patch("core.swarm_orchestrator.QAAgent", return_value=mock_qa),
-        patch("core.swarm_orchestrator.GuardianAgent", return_value=mock_guardian),
-        patch("core.swarm_orchestrator.ReflectionAgent", return_value=mock_reflection),
+        patch("core.orchestration.swarm_orchestrator.ArchitectureAgent", return_value=mock_architect),
+        patch("core.orchestration.swarm_orchestrator.CodeGeneratorAgent", return_value=mock_coder),
+        patch("core.orchestration.swarm_orchestrator.QAAgent", return_value=mock_qa),
+        patch("core.orchestration.swarm_orchestrator.GuardianAgent", return_value=mock_guardian),
+        patch("core.orchestration.swarm_orchestrator.ReflectionAgent", return_value=mock_reflection),
     ):
         from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 
