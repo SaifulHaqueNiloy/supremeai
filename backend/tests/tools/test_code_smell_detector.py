@@ -193,7 +193,9 @@ class TestDetectDuplicateFunctions:
         assert result[0]["type"] == "Duplicate Code"
 
     def test_unique_bodies_no_duplicates(self, detector):
-        code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    y = [1, 2, 3]\n    for i in y:\n        print(i)\n"
+        code = (
+            "def foo():\n    x = 1\n    return x\n\ndef bar():\n    y = [1, 2, 3]\n    for i in y:\n        print(i)\n"
+        )
         tree = ast.parse(code)
         result = detector._detect_duplicate_functions(tree, "test.py")
         assert len(result) == 0
