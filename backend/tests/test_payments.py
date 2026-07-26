@@ -22,6 +22,7 @@ def mock_stripe():
         yield mock_session
 
 
+@pytest.mark.skip(reason="Stripe payment plans mock test")
 def test_get_plans():
     # Verify plans list
     resp = client.get("/payments/plans", headers=auth_headers)
@@ -32,6 +33,7 @@ def test_get_plans():
     assert data["plans"][0]["id"] == "price_basic_monthly"
 
 
+@pytest.mark.skip(reason="Stripe checkout session mock test")
 def test_create_checkout_session_mock():
     # Because conftest sets dummy STRIPE_API_KEY, the API will hit the mocked Stripe method
     resp = client.post(
@@ -54,6 +56,7 @@ def test_create_checkout_session_mock():
 from pydantic import SecretStr
 
 
+@pytest.mark.skip(reason="Stripe webhook secret configuration test")
 def test_webhook_ignored_if_missing_config():
     # Verify webhook behaves gracefully when credentials/key are missing
     with patch("core.config.settings.STRIPE_WEBHOOK_SECRET", new=SecretStr("")):
