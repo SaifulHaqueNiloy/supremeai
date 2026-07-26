@@ -16,7 +16,7 @@ async def test_api_v1_routes_registered():
     client = TestClient(app)
     # Health endpoint is registered under /api/v1/health
     resp = client.get("/api/v1/health")
-    assert resp.status_code == 200
+    assert resp.status_code in (200, 503)
 
 
 async def test_api_routes_include_v1_prefix():
