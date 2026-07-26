@@ -151,3 +151,8 @@ def create_app() -> FastAPI:
         return {"status": "healthy", "env": settings.env}
 
     return app
+
+
+# Backward-compatibility alias for legacy tests
+build_app_shell = create_app
+
