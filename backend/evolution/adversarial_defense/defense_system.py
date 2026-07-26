@@ -23,7 +23,10 @@ from dataclasses import dataclass
 from enum import Enum
 import time
 from loguru import logger
-import cv2  # For image preprocessing if needed
+
+# বাংলা মন্তব্য: cv2 টপ-লেভেলে import করলে CI-তে `No module named 'cv2'` এরর
+# core/__init__.py → evolution → এই ফাইলের মাধ্যমে পুরো টেস্ট স্যুটকে ক্র্যাশ করায়।
+# তাই এটি lazily শুধুমাত্র apply_robust_preprocessing()-এ import করা হচ্ছে।
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -347,6 +350,10 @@ class AdversarialDefenseSystem:
 
     def apply_robust_preprocessing(self, x: torch.Tensor) -> torch.Tensor:
         """Apply more aggressive preprocessing when adversarial input is detected."""
+        # বাংলা মন্তব্য: cv2 এখানে lazily import করা হচ্ছে — deferred import রাখলে opencv
+        # CI-তে না থাকলেও শুধু এই মেথড ব্যর্থ হবে, পুরো মডিউল import ব্যর্থ হবে না।
+        import cv2  # deferred: keeps this optional dep out of the core import graph
+
         # Multiple preprocessing steps
         x = self.input_sanitizer.clip_input(x)
         x = self.input_sanitizer.gaussian_smoothing(x, kernel_size=5, sigma=1.5)
