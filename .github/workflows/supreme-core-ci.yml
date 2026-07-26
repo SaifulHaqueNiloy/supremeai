@@ -172,8 +172,12 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install minimal gate dependencies
-        run: pip install ruff
+      - name: Install gate and backend dependencies
+        run: |
+          pip install ruff poetry
+          cd backend
+          poetry config virtualenvs.create false
+          poetry install --only main --no-root
 
       - name: 🚫 Gate 1 — Zero-Gap Stub/Placeholder Data Check
         if: needs.changes.outputs.docs_only != 'true'
