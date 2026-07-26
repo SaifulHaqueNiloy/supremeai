@@ -3,6 +3,7 @@ from tools.social.marketplace_agent import MarketplaceAgent
 
 import pytest
 
+
 def test_marketplace_search():
     agent = MarketplaceAgent()
     results = agent.search_marketplaces("pdf", categories=["npm"])
