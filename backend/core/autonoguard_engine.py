@@ -317,8 +317,8 @@ class AutonoGuardEngine:
                             "module": context.path,
                         },
                     )
-                except Exception:  # noqa: BLE001, S110
-                    pass
+                except Exception as db_exc:  # noqa: BLE001, S110
+                    logger.warning(f"Failed to record retry error pattern: {db_exc}")
                 return True
 
             # বাংলা মন্তব্ব্য: non-retry fix (যেমন config change, code patch) — manually
@@ -335,8 +335,8 @@ class AutonoGuardEngine:
                         "module": context.path,
                     },
                 )
-            except Exception:  # noqa: BLE001, S110
-                pass
+            except Exception as db_exc:  # noqa: BLE001, S110
+                logger.warning(f"Failed to record optimistic error pattern: {db_exc}")
             return True
 
         except Exception as verify_exc:  # noqa: BLE001

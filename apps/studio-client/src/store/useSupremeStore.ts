@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
+import { getApiBaseUrl } from '../utils/api';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -169,10 +170,9 @@ const useSupremeStore = create<SupremeStore>()(
       refreshMetrics: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch metrics
-          const response = await fetch('/api/dashboard/metrics');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/metrics`);
           const data = await response.json();
-          set({ metrics: data.metrics, recentActivity: data.activity });
+          set({ metrics: data, recentActivity: [] });
         } catch (err) {
           set({ error: 'Failed to refresh metrics' });
         } finally {
@@ -191,8 +191,7 @@ const useSupremeStore = create<SupremeStore>()(
       fetchUsers: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch users
-          const response = await fetch('/api/users');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/users`);
           const users = await response.json();
           set({ users });
         } catch (err) {
@@ -204,8 +203,7 @@ const useSupremeStore = create<SupremeStore>()(
       fetchRoles: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch roles
-          const response = await fetch('/api/roles');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/roles`);
           const roles = await response.json();
           set({ roles });
         } catch (err) {
@@ -217,8 +215,7 @@ const useSupremeStore = create<SupremeStore>()(
       fetchPermissions: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch permissions
-          const response = await fetch('/api/permissions');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/permissions`);
           const permissions = await response.json();
           set({ permissions });
         } catch (err) {
@@ -233,8 +230,7 @@ const useSupremeStore = create<SupremeStore>()(
       createWorkspace: async (workspaceData) => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to create workspace
-          const response = await fetch('/api/workspaces', {
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/workspaces`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(workspaceData)
@@ -250,8 +246,7 @@ const useSupremeStore = create<SupremeStore>()(
       updateWorkspace: async (workspaceId, data) => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to update workspace
-          const response = await fetch(`/api/workspaces/${workspaceId}`, {
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/workspaces/${workspaceId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -271,8 +266,7 @@ const useSupremeStore = create<SupremeStore>()(
       deleteWorkspace: async (workspaceId) => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to delete workspace
-          await fetch(`/api/workspaces/${workspaceId}`, { method: 'DELETE' });
+          await fetch(`${getApiBaseUrl()}/admin-api/workspaces/${workspaceId}`, { method: 'DELETE' });
           set(state => ({
             workspaces: state.workspaces.filter(ws => ws.id !== workspaceId)
           }));
@@ -285,8 +279,7 @@ const useSupremeStore = create<SupremeStore>()(
       fetchWorkspaces: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch workspaces
-          const response = await fetch('/api/workspaces');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/workspaces`);
           const workspaces = await response.json();
           set({ workspaces });
         } catch (err) {
@@ -304,8 +297,7 @@ const useSupremeStore = create<SupremeStore>()(
       saveSettings: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to save settings
-          await fetch('/api/settings', {
+          await fetch(`${getApiBaseUrl()}/admin-api/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(get().settings)
@@ -319,8 +311,7 @@ const useSupremeStore = create<SupremeStore>()(
       loadSettings: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to load settings
-          const response = await fetch('/api/settings');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/settings`);
           const settings = await response.json();
           set({ settings });
         } catch (err) {
@@ -347,8 +338,7 @@ const useSupremeStore = create<SupremeStore>()(
       fetchSessions: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch sessions
-          const response = await fetch('/api/sessions');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/sessions`);
           const sessions = await response.json();
           set({ sessions });
         } catch (err) {
@@ -378,8 +368,7 @@ const useSupremeStore = create<SupremeStore>()(
       saveFile: async (filePath) => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to save file
-          await fetch(`/api/files/${encodeURIComponent(filePath)}`, {
+          await fetch(`${getApiBaseUrl()}/api/files/${encodeURIComponent(filePath)}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: get().editorContent[filePath] })
@@ -405,8 +394,7 @@ const useSupremeStore = create<SupremeStore>()(
       fetchCustomers: async () => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call to fetch customers
-          const response = await fetch('/api/customers');
+          const response = await fetch(`${getApiBaseUrl()}/admin-api/customers`);
           const customers = await response.json();
           set({ customers });
         } catch (err) {
