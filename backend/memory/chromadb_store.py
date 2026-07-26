@@ -158,8 +158,8 @@ class ChromaDBStore:
                     if old_hash == content_hash:
                         _logger.debug(f"Skipping indexing for unchanged document {doc_id}")
                         return False
-            except Exception:  # noqa: BLE001, S110
-                pass
+            except Exception as e:  # noqa: BLE001, S110
+                _logger.debug(f"Failed to check existing hash in chromadb: {e}")
 
         elif doc_id in self._fallback_docs:
             old_hash = self._fallback_docs[doc_id].get("metadata", {}).get("content_hash")

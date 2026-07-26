@@ -271,14 +271,12 @@ class AgentSupervisor:
                             },
                         )
                     )
-                except Exception:  # noqa: BLE001, S110
-                    pass
+                except Exception as bus_exc:  # noqa: BLE001, S110
+                    logger.warning(f"Failed to emit agent restart event: {bus_exc}")
 
                 # Check max restarts
                 if restart_count >= max_restarts:
-                    logger.critical(
-                        f"🔥 Agent '{name}' exceeded max restarts ({max_restarts}). " f"Giving up permanently."
-                    )
+                    logger.critical(f"🔥 Agent '{name}' exceeded max restarts ({max_restarts}). Giving up permanently.")
                     health.status = "failed_permanent"
                     try:
                         error_event_bus.emit(
@@ -295,8 +293,8 @@ class AgentSupervisor:
                                 },
                             )
                         )
-                    except Exception:  # noqa: BLE001, S110
-                        pass
+                    except Exception as bus_exc:  # noqa: BLE001, S110
+                        logger.warning(f"Failed to emit permanent failure event: {bus_exc}")
                     break
 
                 # Exponential backoff before restart
