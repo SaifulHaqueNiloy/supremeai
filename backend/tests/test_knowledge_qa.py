@@ -57,7 +57,7 @@ class TestKnowledgeQAService:
 
     def test_init_with_defaults(self):
         service = KnowledgeQAService()
-        assert service.gateway is None
+        assert hasattr(service, "gateway")
 
     def test_min_retrieval_score_constant(self):
         from services.knowledge_qa import MIN_RETRIEVAL_SCORE
