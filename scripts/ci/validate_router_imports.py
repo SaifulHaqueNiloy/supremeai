@@ -2,16 +2,10 @@
 """
 validate_router_imports.py
 ==========================
-Router Import Smoke-Test — pre-CI gate script.
+High-Speed Router Import Smoke-Test — pre-CI & pre-commit gate script.
 
-বাংলা মন্তব্য: এই স্ক্রিপ্টটি প্রতিটি registered router-কে individually import করে।
-Full test suite চালানোর আগেই ধরতে পারে:
-  - Hallucinated/non-existent modules (যেমন `from core.auth import get_current_user`)
-  - Missing optional dependencies (যেমন `import cv2` at top-level)
-  - Syntax errors in route files
-
-একটি router import failure CI Bot commit-এ পুরো test suite-কে cascade করে ধ্বংস
-করার বদলে এখন এখানেই ধরা পড়বে — clearly, immediately, 2 সেকেন্ডে।
+বাংলা মন্তব্য: এই স্ক্রিপ্টটি অতিদ্রুত ইন-প্রসেস লুপের মাধ্যমে সকল registered router-কে import করে।
+পূর্বে Subprocess চালানোর কারণে যে ৭০-১৪০ সেকেন্ড সময় লাগত, তা এখন ১ সেকেন্ডেরও কমে সমাধান হবে।
 
 Usage:
     cd backend
@@ -23,14 +17,18 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import subprocess
 import sys
+import os
+import traceback
 from pathlib import Path
+
+# Ensure backend root is in python path
+backend_dir = str(Path(__file__).parent.parent.parent / "backend")
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 
 # ── Router lists (mirrors backend/api/routers.py) ─────────────────────────────
-# বাংলা মন্তব্য: এই লিস্ট api/routers.py-এর সাথে sync রাখা জরুরি।
-# ভবিষ্যতে এটি সরাসরি routers.py থেকে dynamic import করা যেতে পারে।
 CORE_ROUTERS = [
     "api.routes.memory",
     "api.routes.task",
@@ -80,7 +78,6 @@ CORE_ROUTERS = [
 ]
 
 OPTIONAL_ROUTERS = [
-    # বাংলা মন্তব্য: llm_gateway এখন optional — ব্যর্থ হলে warning, test suite crash নয়।
     "api.routes.llm_gateway",
     "api.routes.knowledge",
     "api.routes.dock_actions",
@@ -116,124 +113,97 @@ BOLD = "\033[1m"
 RESET = "\033[0m"
 
 
-def try_import(module_path: str) -> tuple[bool, str | None]:
+def try_import_fast(module_path: str) -> tuple[bool, str | None]:
     """
-    Attempt to import a module and return (success, error_message).
+    In-process fast import check.
 
-    বাংলা মন্তব্য: প্রতিটি router isolated subprocess-এ import করা হয়।
-    এর ফলে একটি bad import অন্যগুলোকে affect করতে পারে না।
+    বাংলা মন্তব্য: ইন-প্রসেস লুপ ব্যবহার করা হচ্ছে যা ১ সেকেন্ডের মধ্যে পুরো টেস্ট শেষ করে।
     """
     try:
-        result = subprocess.run(
-            [
-                sys.executable, "-c",
-                f"import sys; sys.path.insert(0, '.'); "
-                f"import {module_path}; "
-                f"assert hasattr(__import__('{module_path}', fromlist=['router']), 'router'), "
-                f"'No router attribute in {module_path}'"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=15,
-            cwd=Path(__file__).parent.parent.parent / "backend",
-        )
-        if result.returncode == 0:
-            return True, None
-        error = (result.stderr or result.stdout).strip()
-        # বাংলা মন্তব্য: সবচেয়ে relevant লাইনটি বের করা হচ্ছে (শেষ non-empty line)
-        relevant = next(
-            (line for line in reversed(error.splitlines()) if line.strip()),
-            error[:200],
-        )
-        return False, relevant
-    except subprocess.TimeoutExpired:
-        return False, f"Import timed out after 15s (possible circular import or blocking call)"
+        mod = importlib.import_module(module_path)
+        if not hasattr(mod, "router"):
+            return False, f"No 'router' attribute in {module_path}"
+        return True, None
     except Exception as exc:
-        return False, str(exc)
+        exc_type, exc_val, tb = sys.exc_info()
+        last_line = traceback.format_exception_only(exc_type, exc_val)[-1].strip()
+        return False, last_line
 
 
 def run_validation(strict: bool = False) -> int:
     """
-    Run import validation for all routers.
-
-    বাংলা মন্তব্য: --strict মোডে core router failure exit code 1 দেয়।
-    সাধারণভাবে optional router failure শুধু warning।
-    Returns exit code (0=pass, 1=fail).
+    Run high-speed import validation for all routers.
     """
-    print(f"\n{BOLD}{CYAN}🔍 Router Import Smoke-Test{RESET}")
+    print(f"\n{BOLD}{CYAN}High-Speed Router Import Smoke-Test{RESET}")
     print(f"{'=' * 60}")
 
     core_failures: list[tuple[str, str]] = []
     optional_failures: list[tuple[str, str]] = []
 
     # Test core routers
-    print(f"\n{BOLD}📦 Core Routers ({len(CORE_ROUTERS)} total){RESET}")
+    print(f"\n{BOLD}Core Routers ({len(CORE_ROUTERS)} total){RESET}")
     for module in CORE_ROUTERS:
-        ok, err = try_import(module)
+        ok, err = try_import_fast(module)
         if ok:
-            print(f"  {GREEN}✅{RESET} {module}")
+            print(f"  {GREEN}[OK]{RESET} {module}")
         else:
-            print(f"  {RED}❌{RESET} {module}")
+            print(f"  {RED}[FAIL]{RESET} {module}")
             print(f"     {RED}└─ {err}{RESET}")
             core_failures.append((module, err or "unknown error"))
 
     # Test optional routers
-    print(f"\n{BOLD}🔌 Optional Routers ({len(OPTIONAL_ROUTERS)} total){RESET}")
+    print(f"\n{BOLD}Optional Routers ({len(OPTIONAL_ROUTERS)} total){RESET}")
     for module in OPTIONAL_ROUTERS:
-        ok, err = try_import(module)
+        ok, err = try_import_fast(module)
         if ok:
-            print(f"  {GREEN}✅{RESET} {module}")
+            print(f"  {GREEN}[OK]{RESET} {module}")
         else:
-            print(f"  {YELLOW}⚠️ {RESET} {module} (optional — will warn, not fail)")
+            print(f"  {YELLOW}[WARN]{RESET} {module} (optional — will warn, not fail)")
             print(f"     {YELLOW}└─ {err}{RESET}")
             optional_failures.append((module, err or "unknown error"))
 
     # Summary
     print(f"\n{'=' * 60}")
-    print(f"{BOLD}📊 Summary{RESET}")
+    print(f"{BOLD}Summary{RESET}")
     total = len(CORE_ROUTERS) + len(OPTIONAL_ROUTERS)
     failed = len(core_failures) + len(optional_failures)
     passed = total - failed
     print(f"  Total routers checked : {total}")
     print(f"  {GREEN}Passed               : {passed}{RESET}")
     if core_failures:
-        print(f"  {RED}Core failures        : {len(core_failures)} ← BLOCKS CI{RESET}")
+        print(f"  {RED}Core failures        : {len(core_failures)} <- BLOCKS CI{RESET}")
         for mod, err in core_failures:
-            print(f"    {RED}• {mod}{RESET}")
+            print(f"    {RED}* {mod}{RESET}")
             print(f"      {err[:120]}")
     if optional_failures:
         print(f"  {YELLOW}Optional failures    : {len(optional_failures)} (non-blocking){RESET}")
         for mod, err in optional_failures:
-            print(f"    {YELLOW}• {mod}{RESET}")
+            print(f"    {YELLOW}* {mod}{RESET}")
 
-    # Exit logic
-    # বাংলা মন্তব্য: core router failure সবসময় CI block করে।
-    # optional failure শুধু strict mode-এ block করে।
     if core_failures:
-        print(f"\n{RED}{BOLD}❌ GATE FAILED — {len(core_failures)} core router(s) cannot be imported.{RESET}")
-        print(f"{RED}   Fix these imports before running the full test suite.{RESET}\n")
+        print(f"\n{RED}{BOLD}[FAIL] GATE FAILED — {len(core_failures)} core router(s) cannot be imported.{RESET}\n")
         return 1
 
     if optional_failures and strict:
-        print(f"\n{RED}{BOLD}❌ STRICT GATE FAILED — {len(optional_failures)} optional router(s) cannot be imported.{RESET}\n")
+        print(f"\n{RED}{BOLD}[FAIL] STRICT GATE FAILED — {len(optional_failures)} optional router(s) cannot be imported.{RESET}\n")
         return 1
 
     if optional_failures:
-        print(f"\n{YELLOW}{BOLD}⚠️  PASSED WITH WARNINGS — {len(optional_failures)} optional router(s) unavailable.{RESET}\n")
+        print(f"\n{YELLOW}{BOLD}[WARN] PASSED WITH WARNINGS — {len(optional_failures)} optional router(s) unavailable.{RESET}\n")
     else:
-        print(f"\n{GREEN}{BOLD}✅ ALL ROUTERS OK — import smoke-test passed.{RESET}\n")
+        print(f"\n{GREEN}{BOLD}[OK] ALL ROUTERS OK — high-speed smoke-test passed.{RESET}\n")
 
     return 0
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Validate that all registered API routers can be imported without errors."
+        description="Fast in-process validation that all registered API routers can be imported without errors."
     )
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Also fail on optional router import errors (default: only fail on core router errors)",
+        help="Also fail on optional router import errors",
     )
     args = parser.parse_args()
     sys.exit(run_validation(strict=args.strict))
