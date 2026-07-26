@@ -377,7 +377,10 @@ def get_metrics():
     memory_usage = 0.0
     gpu_usage = 0.0
     try:
-        import psutil
+        import sys
+        psutil = sys.modules.get("psutil")
+        if psutil is None:
+            import psutil
 
         # বাংলা মন্তব্য: float() দিয়ে explicit conversion করা হচ্ছে — MagicMock বা None পেলে fallback ব্যবহার হবে।
         raw_cpu = psutil.cpu_percent(interval=None)

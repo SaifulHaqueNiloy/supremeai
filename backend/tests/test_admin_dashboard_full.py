@@ -276,7 +276,10 @@ class TestGetMetrics:
             "_get_cached_secret",
             lambda k: "key1" if k == "OPENROUTER_API_KEY" else "",
         )
-        with patch("psutil.cpu_percent", side_effect=RuntimeError("psutil broken")):
+        import sys
+        fake_psutil = MagicMock()
+        fake_psutil.cpu_percent.side_effect = RuntimeError("psutil broken")
+        with patch.dict(sys.modules, {"psutil": fake_psutil}):
             result = get_metrics()
         assert result["cpu_usage_percent"] == 22.4
         assert result["memory_usage_percent"] == 45.2
