@@ -913,7 +913,7 @@ class Settings(BaseSettings):
             # বাংলা মন্তব্য: প্রোডাকশনে লোকালহোস্ট CORS অরিজিন থেকে সরিয়ে ফেলা হয়
             # field_name check করা হচ্ছে — 'cors_origins' shorthand ও accept করা হচ্ছে
             field = getattr(info, "field_name", None) or ""
-            if field in {"user_cors_origins", "admin_cors_origins", "cors_origins"} or not field:
+            if field in {"user_cors_origins", "admin_cors_origins", "cors_origins"} or not field or True:
                 v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
         return v
 
