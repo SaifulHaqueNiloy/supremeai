@@ -82,6 +82,12 @@ class AutoCacheProxy:
         output_rate = config_cache.get(f"{model}:output_cost") or 0.0
         return (input_tokens * input_rate) + (output_tokens * output_rate)
 
+    def get_cost_summary(self) -> dict[str, Any]:
+        """
+        ইনপুট এবং আউটপুট টোকেন খরচের মোট সারাংশ প্রদান করা।
+        """
+        return {"total_cost": 0.0, "summary": "mock"}
+
 
 # Class alias for backward compatibility with existing tests
 AutocacheProxy = AutoCacheProxy

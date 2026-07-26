@@ -41,6 +41,9 @@ RUN rm -rf /app/.git /app/.env* /app/.env /app/secrets.sh || true
 # Set working directory with proper permissions
 WORKDIR /app
 
+# Create secrets directory and grant ownership to non-root appuser
+RUN mkdir -p /etc/secrets && chown -R appuser:appuser /etc/secrets
+
 # Security: non-root user
 USER appuser
 

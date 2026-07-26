@@ -93,28 +93,11 @@ class VideoGenerator:
 
         if provider == "runway":
             if not self.runway_api_key:
-                # বাংলা মন্তব্য: এপিআই কী না থাকলে টেস্ট ও অফলাইন চালনার জন্য মক/স্টাব রেসপন্স ব্যাক দেওয়া হবে।
-                if output_path:
-                    import json
-
-                    with open(output_path, "w", encoding="utf-8") as f:
-                        json.dump(
-                            {
-                                "prompt": prompt,
-                                "duration": duration,
-                                "status": "stubbed",
-                            },
-                            f,
-                        )
-                return {
-                    "success": True,
-                    "provider": "runway-stub",
-                    "prompt": prompt,
-                    "duration": duration,
-                    "job_id": "stub-job-123",
-                    "video_url": "https://example.com/stub.mp4",
-                    "mock": True,
-                }
+                # বাংলা মন্তব্য: API key না থাকলে stub রিটার্ন করা হতো — এখন স্পষ্ট ValueError raise করা হয়
+                raise ValueError(
+                    "Runway API key required. Set RUNWAY_API_KEY environment variable. "
+                    "Get your key from https://app.runwayml.com"
+                )
             try:
                 return self._call_runway(prompt, duration)
             except Exception as exc:  # noqa: BLE001
@@ -132,28 +115,11 @@ class VideoGenerator:
 
         if provider == "kling":
             if not self.kling_api_key:
-                # বাংলা মন্তব্য: ক্লিং এর জন্য এপিআই কী মিসিং থাকলে স্টাব রেসপন্স ফেরত দেওয়া হবে।
-                if output_path:
-                    import json
-
-                    with open(output_path, "w", encoding="utf-8") as f:
-                        json.dump(
-                            {
-                                "prompt": prompt,
-                                "duration": duration,
-                                "status": "stubbed",
-                            },
-                            f,
-                        )
-                return {
-                    "success": True,
-                    "provider": "kling-stub",
-                    "prompt": prompt,
-                    "duration": duration,
-                    "job_id": "stub-job-456",
-                    "video_url": "https://example.com/stub.mp4",
-                    "mock": True,
-                }
+                # বাংলা মন্তব্য: Kling API key না থাকলে stub রিটার্ন করা হতো — এখন স্পষ্ট ValueError raise করা হয়
+                raise ValueError(
+                    "Kling API key required. Set KLING_API_KEY environment variable. "
+                    "Get your key from https://klingai.ai"
+                )
             try:
                 return self._call_kling(prompt, duration)
             except Exception as exc:  # noqa: BLE001

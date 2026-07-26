@@ -53,8 +53,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.websocket_hitl", ""),
     ("api.routes.syncguard", "/api/v1"),
     ("api.routes.admin_librarian", "/api"),
-    ("api.routes.skills", "/api"),
-    # বাংলা মন্তব্য: এই রাউটারটি আগে এখানে যোগই করা হয়নি — ফলে /api/v1/swarm/*
+    # বাংলা মন্তব্ব্য: এই রাউটারটি আগে এখানে যোগই করা হয়নি — ফলে /api/v1/swarm/*
     # (real-time SSE stream, patch-telemetry persistence, VSCode self-healing
     # endpoint, এবং নতুন emergency-stop /halt+/resume) সব HTTP 404 দিত।
     # Kill-switch ও Swarm Health স্ক্রিন কাজ না করার আসল root cause এটিই ছিল।
@@ -64,7 +63,7 @@ core_routers: list[tuple[str, str]] = [
 ]
 
 optional_routers: list[tuple[str, str]] = [
-    # বাংলা মন্তব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
+    # বাংলা মন্তব্ব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
     ("api.routes.knowledge", ""),
     ("api.routes.dock_actions", "/api"),
     ("api.routes.websocket_voice", ""),
@@ -86,11 +85,13 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.maintenance", "/api/v1"),
     ("api.routes.sandbox_api", ""),
     ("api.routes.pr_review_api", ""),
+    # Added telemetry router for performance monitoring and system health
+    ("api.v1.telemetry", "/api/v1"),
 ]
 
 
 # Identify admin router paths
-# বাংলা মন্তব্য: tools_ops যোগ করা হলো — এটি DevOps/deploy টুলিং (docker-compose/helm
+# বাংলা মন্তব্ব্য: tools_ops যোগ করা হলো — এটি DevOps/deploy টুলিং (docker-compose/helm
 # ফাইল-রাইট সহ) যা আগে ভুলবশত User API-তে এক্সপোজড ছিল (route-leakage)।
 _admin_paths = {
     "api.routes.simulator_admin",
@@ -111,10 +112,10 @@ _admin_paths = {
 }
 
 # ADMIN_ROUTERS includes health and specific admin routes
-# বাংলা মন্তব্য: অ্যাডমিন এপিআই রাউটারসমূহ
+# বাংলা মন্তব্ব্য: অ্যাডমিন এপিআই রাউটারসমূহ
 ADMIN_ROUTERS: list[tuple[str, str]] = [
     ("api.routes.health", "/api/v1"),
-    # বাংলা মন্তব্য: অ্যাডমিন পোর্টালে গ্লোবাল কনফিগারেশন লোড করার জন্য public_config রাউটার যুক্ত করা হলো
+    # বাংলা মন্তব্ব্য: অ্যাডমিন পোর্টালে গ্লোবাল কনফিগারেশন লোড করার জন্য public_config রাউটার যুক্ত করা হলো
     ("api.routes.public_config", "/api"),
     ("api.routes.simulator_admin", ""),
     ("api.routes.site_actions", ""),
@@ -134,18 +135,16 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
 ]
 
 # USER_ROUTERS is all other routers
-# বাংলা মন্তব্য: ইউজার এপিআই রাউটারসমূহ
+# বাংলা মন্তব্ব্য: ইউজার এপিআই রাউটারসমূহ
 USER_ROUTERS: list[tuple[str, str]] = [r for r in (core_routers + optional_routers) if r[0] not in _admin_paths]
 
 
 def register_all_routers(app: FastAPI) -> None:
     """Register all core and optional routers on the FastAPI app."""
     for router_path, prefix in core_routers:
-        register_router(app, router_path, prefix=prefix, optional=False)
-
+        register_router(app, router_path, prefix=prefix)
     for router_path, prefix in optional_routers:
         register_router(app, router_path, prefix=prefix, optional=True)
-
     if settings.encryption_key and settings.encryption_key.get_secret_value():
         register_router(app, "api.routes.byoc_api", "", optional=True)
     else:
