@@ -105,6 +105,7 @@ class TestErrorPatternDB:
         db.log_error("error 2", "validation", "fix 2")
         db.log_error("error 3", "validation", "fix 3")
 
+        strategy = db.get_prevention_strategy("test-model", "test-task")
         assert isinstance(strategy, (dict, str))
 
 
