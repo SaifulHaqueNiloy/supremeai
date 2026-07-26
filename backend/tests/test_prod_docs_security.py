@@ -123,7 +123,7 @@ def test_docs_disabled_in_production():
         os.environ["REDIS_URL"] = "redis://mock:6379"
 
         import core.security.secret_vault as sv
-        sv.SecretVault.get_secret = lambda self, secret_id, default=None: "secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad" if "JWT" in secret_id else (default or "mock_value")
+        sv.ProductionSecretVault.get_secret = lambda self, secret_id, default=None: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad" if "JWT" in secret_id else (default or "mock_value")
 
         import core.app as app_mod
         import core.services as services
