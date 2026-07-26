@@ -354,14 +354,48 @@ SUPREME_ANALYST_MODEL_URL: str = "https://api-inference.huggingface.co/models/su
 
 ---
 
-## Summary Checklist for SupremeAI 5-Model Deployment
+---
 
-| Step | Status | Action Item | Target Account / Repo |
-|------|--------|-------------|------------------------|
-| 1 | ✅ | Tested initial pass-through merge in Colab | Free T4 Colab |
-| 2 | 🔲 | Merge & Push `Supreme-Coder-3B` | `paykaribazaronline/supreme-coder-3b` |
-| 3 | 🔲 | Merge & Push `Supreme-Reasoner-3B` | `supremeai-team/supreme-reasoner-3b` |
-| 4 | 🔲 | Merge & Push `Supreme-Bhasha-1.5B` | `supremeai-bhasha/supreme-bhasha-1.5b` |
-| 5 | 🔲 | Merge & Push `Supreme-Ops-1.5B` | `supremeai-ops/supreme-ops-1.5b` |
-| 6 | 🔲 | Merge & Push `Supreme-Analyst-1.5B` | `supremeai-data/supreme-analyst-1.5b` |
-| 7 | 🔲 | Connect 5 Endpoints to `smart_router.py` | SupremeAI FastAPI Backend |
+## 🚀 Step 7: Phase 2 Expansion — 8-Model Swarm Architecture (Multimodal & Acceleration)
+
+To upgrade SupremeAI 2.0 into a full multimodal powerhouse, 3 additional specialized models will be integrated into the Swarm in Phase 2:
+
+| Model ID | Domain | Base Foundation | Purpose & Capability |
+|----------|--------|-----------------|----------------------|
+| **`supreme-vision-3b`** | Multimodal Vision | `Qwen2-VL-3B-Instruct` | Image understanding, OCR, UI screenshot & architecture diagram parsing |
+| **`supreme-speech-v1`** | Audio & Speech | `whisper-small-bengali` | Real-time Bengali & English Speech-to-Text transcription |
+| **`supreme-draft-0.5b`** | Speculative Acceleration | `Qwen2.5-0.5B` | 0.5B Draft model for Speculative Decoding (2.5x generation speedup) |
+
+### 8-Model Swarm Routing Matrix
+
+```
+                                              [User Request]
+                                                     │
+                                                     ▼
+                                      ┌───────────────────────────────┐
+                                      │   backend/core/llm_router.py  │
+                                      └──────────────┬────────────────┘
+                                                     │
+        ┌─────────────┬─────────────┬────────────────┼────────────────┬─────────────┬─────────────┐
+        │ Coding      │ Reasoning   │ General/Chat   │ Creative       │ Master      │ Vision/Image│ Speech/Audio│ Speculative Draft
+        ▼             ▼             ▼                ▼                ▼             ▼             ▼             ▼
+┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐
+│supreme-coder ││supreme-rsnr  ││supreme-gen   ││supreme-crtv  ││supreme-mstr  ││supreme-vision││supreme-speech││supreme-draft │
+└──────────────┘└──────────────┘└──────────────┘└──────────────┘└──────────────┘└──────────────┘└──────────────┘└──────────────┘
+```
+
+---
+
+## Summary Checklist for SupremeAI 8-Model Deployment
+
+| Step | Status | Action Item | Target Model ID |
+|------|--------|-------------|-----------------|
+| 1 | ✅ | Connect & Verify `njelit1/supreme-coder-3b` | `njelit1/supreme-coder-3b` |
+| 2 | ✅ | Connect & Verify `njelitltd/supreme-reasoner-3b` | `njelitltd/supreme-reasoner-3b` |
+| 3 | ✅ | Connect & Verify `ziaulhaq1/supreme-general-3b` | `ziaulhaq1/supreme-general-3b` |
+| 4 | ✅ | Connect & Verify `njelitltd2/supreme-creative-3b` | `njelitltd2/supreme-creative-3b` |
+| 5 | ✅ | Connect & Verify `njelitltd3/supreme-master-3b` | `njelitltd3/supreme-master-3b` |
+| 6 | 🔲 | Phase 2: Train & Integrate Vision Model | `supreme-vision-3b` |
+| 7 | 🔲 | Phase 2: Integrate Speech-to-Text Model | `supreme-speech-v1` |
+| 8 | 🔲 | Phase 2: Deploy Speculative Draft Model | `supreme-draft-0.5b` |
+
