@@ -560,9 +560,28 @@ async def get_queue_stats() -> dict[str, int]:
 # Alias for backwards compatibility
 EnhancedTaskQueue = TaskQueue
 
-# Celery worker application instance
+# বাংলা মন্তব্য: Celery worker application instance।
+# Celery না থাকলে একটি stub অবজেক্ট দেওয়া হচ্ছে যাতে import fail না করে।
 try:
-    from celery import Celery
-    celery_app = Celery("supremeai", broker=getattr(settings, "REDIS_URL", "redis://localhost:6379/0"))
-except Exception:
-    celery_app = None
+    from celery import Celery as _Celery  # noqa: PLC0415
+
+    celery_app = _Celery(
+        "supremeai",
+        broker=getattr(settings, "REDIS_URL", "redis://localhost:6379/0"),
+    )
+except ImportError as _celery_import_err:
+    logger.warning(f"Celery not installed, running without Celery worker support: {_celery_import_err}")
+
+    class _CeleryStub:
+        """Celery unavailable stub — keeps app importable without Celery installed."""
+
+        name = "supremeai-stub"
+        conf = type("conf", (), {})()
+
+        def task(self, *args, **kwargs):  # type: ignore[override]
+            def decorator(fn):
+                return fn
+
+            return decorator
+
+    celery_app = _CeleryStub()

@@ -1014,6 +1014,33 @@ class LLMRouter:
                     return
             raise LLMProviderError(message="All streaming providers failed") from exc
 
+    async def async_generate(
+        self,
+        prompt: str,
+        task_type: str = "chat",
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+        model_override: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """বাংলা মন্তব্য: LLMRouter-এর convenience wrapper। LLMGatewayWithLearning-এর সাথে সামঞ্জস্যতার জন্য যোগ করা হয়েছে।"""
+        result = await self.route(
+            prompt=prompt,
+            task_type=task_type,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            preferred_provider=model_override,
+            **kwargs,
+        )
+        return {
+            "text": result.content,
+            "provider": result.provider.value,
+            "tokens_used": result.tokens_used,
+            "cost_usd": result.cost_usd,
+            "latency_ms": result.latency_ms,
+            "cached": result.cached,
+        }
+
     async def health_check_all(self) -> dict[str, bool]:
         """Check health of all configured providers."""
         results = {}
