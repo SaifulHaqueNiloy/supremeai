@@ -23,16 +23,18 @@ async def test_morphic_adapter_no_api_key(monkeypatch):
 
 def test_morphic_adapter_sanitizes_code_fences(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "test")
+    import agents.morphic_adapter as ma
 
+    mock_genai = MagicMock()
     mock_client = MagicMock()
     mock_resp = MagicMock()
     mock_resp.text = "```python\ndef execute_tool(payload: dict) -> dict:\n    return {'success': True}\n```"
-
     mock_client.models.generate_content = MagicMock(return_value=mock_resp)
+    mock_genai.Client = MagicMock(return_value=mock_client)
 
-    with patch("agents.morphic_adapter.genai.Client", return_value=mock_client):
-        adapter = MorphicAdapter()
-        res = adapter.adapt_code_to_contract("raw", "desc")
+    monkeypatch.setattr(ma, "genai", mock_genai)
+    adapter = MorphicAdapter()
+    res = adapter.adapt_code_to_contract("raw", "desc")
 
     assert res["success"] is True
     assert "```" not in res["code"]

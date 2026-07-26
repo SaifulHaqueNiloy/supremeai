@@ -7,14 +7,8 @@ from tools.media.video_generator import VideoGenerator
 
 def test_video_generator_stub_fallback():
     generator = VideoGenerator(runway_api_key=None, kling_api_key=None)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        output_path = os.path.join(tmpdir, "output.json")
-        res = generator.generate("A cinematic shot", duration=5, provider="runway", output_path=output_path)
-
-        assert res["success"]
-        assert res["provider"] == "runway-stub"
-        assert res["mock"]
-        assert os.path.exists(output_path)
+    with pytest.raises(ValueError, match="Runway API key required"):
+        generator.generate("A cinematic shot", duration=5, provider="runway")
 
 
 def test_video_generator_runway_success():

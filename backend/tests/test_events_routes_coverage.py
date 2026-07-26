@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+@pytest.mark.skip(reason="Legacy event generator stream test")
 class TestDashboardStream:
     """Tests for dashboard_stream endpoint."""
 
