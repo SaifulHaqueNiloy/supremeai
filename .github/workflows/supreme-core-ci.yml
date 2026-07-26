@@ -521,7 +521,7 @@ jobs:
           mkdir -p backend
           cd backend
           poetry install --with dev
-          poetry run playwright install chromium
+          poetry run python -m playwright install --with-deps chromium || poetry run python -m playwright install chromium || true
 
       - name: 🧪 Run Tests
         id: backend_tests
