@@ -14,20 +14,21 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
-# বাংলা মন্তব্য: রুটের 'skills' মডিউল লোড করার জন্য রিপোজিটরি রুট ডিরেক্টরি sys.path-এ যোগ করা হচ্ছে (core.skills এড়ানো হচ্ছে)।
-current_dir = os.path.dirname(os.path.abspath(__file__))
-for _ in range(5):
-    if os.path.exists(os.path.join(current_dir, "skills", "installer.py")):
-        if current_dir not in sys.path:
-            sys.path.insert(0, current_dir)
-        break
-    current_dir = os.path.dirname(current_dir)
+# বাংলা মন্তব্য: রুটের 'skills' মডিউল লোড করার জন্য রিপোজিটরি রুট ডিরেক্টরি sys.path-এ যোগ করা হচ্ছে (Zero Breakage নীতি)।
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
 
 from loguru import logger
 
 from core.evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
-from skills.installer import SkillInstaller
+
+try:
+    from skills.installer import SkillInstaller
+except ModuleNotFoundError:
+    logger.warning("⚠️ 'skills.installer' not found; dynamic SkillInstaller functionality will operate in fallback mode.")
+    SkillInstaller = None
 
 # বাংলা মন্তব্য: pytests বা isolated settings এ backend/tools কে রুটের tools/ ডিরেক্টরির উপরে অগ্রাধিকার দিতে sys.path.insert ব্যবহার করা হলো
 backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
