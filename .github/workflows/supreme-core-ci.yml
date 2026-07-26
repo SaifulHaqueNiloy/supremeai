@@ -290,6 +290,9 @@ jobs:
         # docs/autogen/codebase/ ফাঁকা স্টब들也被 AI Scribe দ্বারা পূরণ করা হবে।
         run: |
           cd backend
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --only main --no-root
           pip install litellm python-dotenv
           python ../scripts/devops/ai_scribe_historian.py --files $(find ../backend/core ../backend/tools -name "*.py" -not -name "__init__.py" 2>/dev/null | head -20)
         env:
