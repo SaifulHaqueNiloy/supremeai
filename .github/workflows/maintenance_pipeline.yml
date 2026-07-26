@@ -57,6 +57,10 @@ on:
         description: '🧪 Run Performance E2E (Playwright)'
         type: boolean
         default: false
+      run_clean_old_runs:
+        description: '🧹 Clean Old Workflow Runs (Keep 20 Failed, 200 Passed)'
+        type: boolean
+        default: true
 
 # বাংলা মন্তব্য: প্রতিটি টাস্ককে আলাদা জব-এ ভাগ করা হয়েছে স্বচ্ছতা এবং নির্ভরযোগ্যতার জন্য.
 
@@ -638,3 +642,36 @@ jobs:
           SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+
+  clean-old-workflow-runs:
+    name: 🧹 Clean Old Workflow Runs (Keep 20 Failed, 200 Passed)
+    runs-on: ubuntu-latest
+    needs: setup
+    if: |
+      always() &&
+      (github.event_name == 'schedule' || inputs.run_clean_old_runs == true)
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete Old Completed Runs via GitHub API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🧹 Cleaning old PASSED workflow runs (keeping latest 200)..."
+          PASSED_IDS=$(gh api "repos/$REPO/actions/runs?status=success&per_page=100" --paginate --jq '.workflow_runs[200:] | .[] | .id' 2>/dev/null || true)
+          for id in $PASSED_IDS; do
+            echo "Deleting passed run ID: $id"
+            gh api -X DELETE "repos/$REPO/actions/runs/$id" 2>/dev/null || true
+          done
+
+          echo "🧹 Cleaning old FAILED workflow runs (keeping latest 20)..."
+          FAILED_IDS=$(gh api "repos/$REPO/actions/runs?status=failure&per_page=100" --paginate --jq '.workflow_runs[20:] | .[] | .id' 2>/dev/null || true)
+          for id in $FAILED_IDS; do
+            echo "Deleting failed run ID: $id"
+            gh api -X DELETE "repos/$REPO/actions/runs/$id" 2>/dev/null || true
+          done
+
+          echo "✅ Old workflow runs cleanup completed."
+
