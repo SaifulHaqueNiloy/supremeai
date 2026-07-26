@@ -441,6 +441,7 @@ jobs:
 
   backend-core:
     name: 🐍 Backend (Test)
+    timeout-minutes: 10
     needs: [changes, pre-merge-gate, docker-build]
     if: >
       always() &&
