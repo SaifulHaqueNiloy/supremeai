@@ -245,7 +245,7 @@ jobs:
         # docs/autogen/codebase/ ফাঁকা স্টब들也被 AI Scribe দ্বারা পূরণ করা হবে।
         run: |
           cd backend
-          pip install litellm ast python-dotenv
+          pip install litellm python-dotenv
           python ../scripts/ai_scribe_historian.py --files $(find ../backend/core ../backend/tools -name "*.py" -not -name "__init__.py" 2>/dev/null | head -20)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -128,12 +128,7 @@ class Settings(BaseSettings):
     )  # বাংলা: Dockerfile CMD-এর ${PORT:-8080} default-এর সাথে consistent
     host: str = Field(default="0.0.0.0", validation_alias="HOST")  # noqa: S104
 
-    # বাংলা মন্তব্য: CORS origins এখন সম্পূর্ণ env-driven।
-    # Default এ কোনো hardcoded URL নেই।
-    cors_origins: str | list[str] = Field(
-        default_factory=list,
-        validation_alias="CORS_ORIGINS",
-    )
+    # CORS origins property is implemented dynamically below to support validation.
 
     # বাংলা মন্তব্য: রোল-ভিত্তিক CORS সেটিংস এবং সিকিউরিটি টগল
     user_cors_origins: str | list[str] = Field(
@@ -509,7 +504,7 @@ class Settings(BaseSettings):
 
     # ── Admin Password Hash — Infisical-backed lazy property ────────────────
     # বাংলা মন্তব্য: Pydantic Field(validation_alias=...) সরাসরি OS env var থেকে পড়ে, যা Infisical
-    # ভল্টে থাকা সিক্রেট পড়তে পারে না এবং Render ডিপ্লয়মেন্টে Validation Error ঘটিয়ে প্রসেস ক্র্যাশ করায়।
+    # ভল্টে থাকা সিক্রেট পড়তে পারে না এবং Render ডিপ্লয়মেন্টে Validation Error ঘটিয়ে প্রসেস করায়।
     # তাই এটি lazy @property এবং _get_cached_secret() এ রূপান্তর করা হলো যাতে অন-ডিমান্ড ভল্ট বা env থেকে ফেচ হয়।
     @property
     def supremeai_admin_password_hash(self) -> str | None:
@@ -520,31 +515,95 @@ class Settings(BaseSettings):
 
     # ── JWT & Encryption Credentials — Infisical-backed ─────────────────────
     # বাংলা মন্তব্য: JWT সিক্রেট এবং এনক্রিপশন কী ক্লাউড ভল্ট (Infisical/GCP) থেকে ডায়নামিকালি
-    # লোড করার জন্য lazy property প্যাটার্ন প্রয়োগ করা হয়েছে — যাতে ইনফিসিক্যাল সিক্রেট স্টার্টআপ ব্লক না করে।
+    # লোড করার জন্য lazy property প্যাটার্ন প্রয়োগ করা হয়েছে।
     @property
     def jwt_secret(self) -> str:
-        v = self._get_cached_secret("SUPREMEAI_JWT_SECRET")
-        if not v:
-            if self.env == "production":
-                raise ValueError(
-                    "🚨 CRITICAL: SUPREMEAI_JWT_SECRET must be explicitly set in production. No fallback allowed."
-                )
-            # For non-production, use in-memory generated secret (no file persistence)
-            # বাংলা: লোকাল/ডেভ এনভায়রনমেন্টে ফাইলে JWT সিক্রেট না লিখে মেমোরিতে জেনারেট করা হলো
-            v = self._generate_jwt_secret_memory()
-        if len(v) < 64 and "pytest" not in sys.modules:
-            raise ValueError("JWT secret must be >= 64 bytes entropy in all environments.")
-        return v
+        """Get JWT secret with environment-specific handling.
 
-    def _generate_jwt_secret_memory(self) -> str:
-        """Generate JWT secret in-memory only — no file persistence.
-
-        বাংলা: JWT সিক্রেট শুধুমাত্র মেমোরিতে জেনারেট করা হয়, ফাইলে লেখা হয় না।
-        এটি সিকিউরিটি ইমপ্রুভমেন্ট — আগের ফাইল-ভিত্তিক পার্সিস্টেন্স রিমুভ করা হয়েছে।
+        বাংলা মন্তব্য: প্রোডাকশনে SUPREMEAI_JWT_SECRET অবশ্যই নির্দিষ্ট করতে হবে এবং ৬৪ বাইটের বেশি হতে হবে।
+        Non-production এ generated secret কে _jwt_secret_cache-তে cache করা হয় যাতে
+        create_access_token() ও verify_token() একই secret পায় — নাহলে JWSSignatureError হয়।
         """
+        # Return cached value if available (critical for token create/verify consistency)
+        if hasattr(self, "_jwt_secret_cache") and self._jwt_secret_cache:
+            return self._jwt_secret_cache
+
+        # Production: Must be explicitly set
+        if self.env == "production":
+            secret = os.getenv("SUPREMEAI_JWT_SECRET") or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            if not secret or len(secret) < 64:
+                raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
+            self._jwt_secret_cache = secret
+            return secret
+
+        # Development: Try file first, then generate
+        secret_file = "/etc/secrets/jwt_secret"
+        local_file = ".secrets/jwt_secret.key"  # Windows compatibility
+
+        for path in [secret_file, local_file]:
+            if os.path.exists(path):
+                try:
+                    with open(path) as f:
+                        secret = f.read().strip()
+                        if len(secret) >= 32:  # Minimum acceptable length
+                            self._jwt_secret_cache = secret
+                            return secret
+                except OSError:
+                    continue
+
+        # Generate new secret if none found — cache it for consistency
         new_secret = secrets.token_hex(64)
-        logger.info("🔐 JWT secret generated in-memory (no file persistence)")
-        return new_secret
+        self._jwt_secret_cache = new_secret
+        try:
+            # Try to write to local file first (more permissive)
+            os.makedirs(".secrets", exist_ok=True)
+            with open(local_file, "w") as f:
+                f.write(new_secret)
+            return new_secret
+        except OSError:
+            logger.warning("Could not persist JWT secret - using in-memory only")
+            return new_secret
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Get CORS origins with environment-specific defaults and validation.
+
+        বাংলা মন্তব্য: প্রোডাকশনে শুধুমাত্র অনুমোদিত ডোমেইনসমূহ অ্যাক্সেস করতে পারবে।
+        """
+        env_origins = os.getenv("CORS_ORIGINS")
+        origins = (
+            [o.strip() for o in env_origins.split(",") if o.strip()]
+            if env_origins
+            else [
+                "http://localhost:3000",
+                "http://localhost:8000",
+            ]
+        )
+
+        if self.env in ("production", "staging"):
+            # Explicitly define allowed production domains
+            allowed_production_origins = {
+                "https://supremeai.com",
+                "https://app.supremeai.com",
+                "https://admin.supremeai.com",
+            }
+
+            # Validate against allowed origins
+            validated_origins = []
+            for origin in origins:
+                if origin in allowed_production_origins:
+                    validated_origins.append(origin)
+                else:
+                    logger.warning(f"Disallowed CORS origin: {origin}")
+
+            if not validated_origins:
+                raise RuntimeError(
+                    "No valid CORS origins provided. " "Must be one of: " + ", ".join(allowed_production_origins)
+                )
+
+            return validated_origins
+
+        return origins
 
     @property
     def encryption_key(self) -> SecretStr:
@@ -611,7 +670,6 @@ class Settings(BaseSettings):
     # ── Validators ───────────────────────────────────────────────────────────
 
     @field_validator(
-        "cors_origins",
         "user_cors_origins",
         "admin_cors_origins",
         "allowed_hosts",
@@ -827,7 +885,7 @@ class Settings(BaseSettings):
                 ]
         return v
 
-    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="before")
+    @field_validator("user_cors_origins", "admin_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
         # বাংলা: import json এখন ফাইলের শীর্ষে সরাসরি করা হয়েছে, প্রতিটি কলে re-import নেই
@@ -841,7 +899,7 @@ class Settings(BaseSettings):
                 return [o.strip() for o in v.split(",") if o.strip()]
         return v or []
 
-    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="after")
+    @field_validator("user_cors_origins", "admin_cors_origins", mode="after")
     @classmethod
     def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
         # Test-isolation guard:
@@ -850,17 +908,8 @@ class Settings(BaseSettings):
         if env == "test":
             return v
         if env in {"production", "staging"}:
-            # বাংলা মন্তব্য: প্রোডাকশনে CORS_ORIGINS খালি থাকলে fail-fast।
-            # কোনো অটো-পপুলেশন বা ফলব্যাক নেই — এটি সিকিউরিটি রিস্ক।
-            # user_cors_origins এবং admin_cors_origins খালি থাকতে পারে (optional),
-            # কিন্তু প্রধান cors_origins অবশ্যই সেট করতে হবে।
-            if info.field_name == "cors_origins" and not v:
-                raise ValueError(
-                    f"🚨 CRITICAL: CORS_ORIGINS must be explicitly configured in {env} environment. "
-                    "No auto-population or fallback allowed for security reasons."
-                )
             # বাংলা মন্তব্য: প্রোডাকশনে লোকালহোস্ট CORS অরিজিন থেকে সরিয়ে ফেলা হয়
-            if info.field_name in {"cors_origins", "user_cors_origins", "admin_cors_origins"}:
+            if info.field_name in {"user_cors_origins", "admin_cors_origins"}:
                 v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
         return v
 
