@@ -74,7 +74,7 @@ class MigrationInput(BaseModel):
 def _get_connection():
     """PostgreSQL কানেকশন পায়।"""
     supabase_db_url = _get_supabase_db_url()
-    if not supabase_db_url:
+    if not supabase_db_url or supabase_db_url.startswith("sqlite"):
         return None
     try:
         conn = psycopg2.connect(supabase_db_url)
