@@ -113,6 +113,7 @@ pytest-xdist = "^3.6.1"
 respx = "^0.21.1"
 pytest-md = "^0.2.0"
 typeguard = "^4.2"
+playwright = "^1.49.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
