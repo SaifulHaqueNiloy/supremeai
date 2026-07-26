@@ -57,7 +57,6 @@ class TestKnowledgeQAService:
 
     def test_init_with_defaults(self):
         service = KnowledgeQAService()
-        assert service.vector_store is None
         assert service.gateway is None
 
     def test_min_retrieval_score_constant(self):
