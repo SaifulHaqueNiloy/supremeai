@@ -105,6 +105,9 @@ def test_docs_disabled_in_production():
         os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "CwE60g_bA67m-mock-encryption-key-padded-len="
         os.environ["CI_WEBHOOK_SECRET"] = "secure-ci-webhook-secret-for-testing-2026"
         os.environ["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "mock_hash_for_production_test"
+        os.environ["ADMIN_NOTIFICATION_EMAIL"] = "admin@example.com"
+        os.environ["DISCORD_OTP_WEBHOOK_URL"] = "https://discord.com/api/webhooks/mock"
+        os.environ["RESEND_API_KEY"] = "re_mock_key"
         os.environ["docs_auth_enabled"] = "false"
         os.environ["REDIS_URL"] = "redis://mock:6379"
 
