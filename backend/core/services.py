@@ -131,8 +131,8 @@ def __getattr__(name: str) -> Any:
                     structured_context=ErrorContext(module="services_registry"),
                 )
             )
-        except Exception:  # noqa: BLE001, S110
-            pass
+        except Exception as exc:  # noqa: BLE001
+            logging.getLogger(__name__).debug("ErrorEvent emit bypassed: %s", exc)
 
         from unittest.mock import MagicMock  # noqa: PLC0415
 
