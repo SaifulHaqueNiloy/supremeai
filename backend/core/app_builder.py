@@ -128,7 +128,7 @@ def create_app() -> FastAPI:
     # 6. CORS: Cross-origin resource sharing configuration
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins if isinstance(settings.cors_origins, list) else [settings.cors_origins],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -73,7 +73,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         """Internal method to fetch API key from database."""
         pool = await get_db_pool()
         return await pool.fetchrow(
-            "SELECT id, key_hash, revoked, rate_limit_rps, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
+            "SELECT id, key_hash, revoked, rate_limit_rps, rate_limit_window, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
             key_hash,
         )
 
@@ -85,6 +85,12 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         if any(path.startswith(p) for p in _settings.supremeai_public_paths):
             return await call_next(request)
+
+        # IP-based sliding window rate limiter check
+        client_ip = request.client.host if request.client else "unknown"
+        if not await self.limiter.acquire(f"ip:{client_ip}", limit=100, window=60):
+            logger.warning(f"IP rate limit exceeded: {client_ip}")
+            return JSONResponse(status_code=429, content={"detail": "IP rate limit exceeded"})
 
         api_key_header = request.headers.get("x-api-key")
         if not api_key_header or not api_key_header.startswith(self.prefix):
@@ -110,10 +116,11 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             return JSONResponse(status_code=403, content={"detail": "API key has expired"})
 
         rps = int(row.get("rate_limit_rps") or 6)
+        window = int(row.get("rate_limit_window") or 60)
         key_prefix = api_key_header[:12]
 
         try:
-            is_allowed = await self.limiter.acquire(key_prefix, limit=rps, window=60)
+            is_allowed = await self.limiter.acquire(key_prefix, limit=rps, window=window)
         except RuntimeError as exc:
             logger.critical(f"Rate limiter failed: {exc}")
             return JSONResponse(status_code=503, content={"detail": "Rate limiting service unavailable"})
