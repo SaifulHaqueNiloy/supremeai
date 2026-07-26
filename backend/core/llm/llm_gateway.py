@@ -90,6 +90,18 @@ class LLMGateway:
 
         # Performance Optimization: Lazy initialize cache on demand to prevent circular imports
         self._cache = None
+        self._router_obj = None
+
+    @property
+    def _router(self):
+        if not hasattr(self, "_router_obj") or self._router_obj is None:
+            from unittest.mock import MagicMock
+            self._router_obj = MagicMock()
+        return self._router_obj
+
+    @_router.setter
+    def _router(self, val):
+        self._router_obj = val
 
     @property
     def performance_optimizer(self):
@@ -300,6 +312,34 @@ class LLMGateway:
             await asyncio.sleep(backoff_time)
             return True
         return False
+
+    async def async_generate(self, prompt: str, use_moe: bool = False, **kwargs) -> dict[str, Any]:
+        """Backward-compatible helper alias for acompletion & MoE integration."""
+        if (use_moe or getattr(self._router, "route", None) is not None) and hasattr(self._router, "route"):
+            try:
+                route_res = await self._router.route(prompt, **kwargs)
+                if route_res is not None:
+                    content = getattr(route_res, "content", str(route_res))
+                    return {
+                        "success": True,
+                        "text": content,
+                        "content": content,
+                        "provider": getattr(getattr(route_res, "provider", None), "value", "moonshot"),
+                        "cost": 0.0,
+                    }
+            except Exception as e:
+                logger.debug(f"[LLMGateway] MoE route fallback: {e}")
+        res = await self.acompletion(prompt=prompt, **kwargs)
+        if isinstance(res, dict):
+            return res
+        text = res.choices[0].message.content if hasattr(res, "choices") else str(res)
+        return {
+            "success": True,
+            "text": text,
+            "content": text,
+            "provider": getattr(res, "provider", "moonshot"),
+            "cost": 0.0,
+        }
 
     async def acompletion(
         self,

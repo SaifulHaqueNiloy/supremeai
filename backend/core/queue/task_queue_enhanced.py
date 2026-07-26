@@ -559,3 +559,10 @@ async def get_queue_stats() -> dict[str, int]:
 
 # Alias for backwards compatibility
 EnhancedTaskQueue = TaskQueue
+
+# Celery worker application instance
+try:
+    from celery import Celery
+    celery_app = Celery("supremeai", broker=getattr(settings, "REDIS_URL", "redis://localhost:6379/0"))
+except Exception:
+    celery_app = None

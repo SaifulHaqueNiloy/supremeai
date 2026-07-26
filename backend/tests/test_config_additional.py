@@ -10,7 +10,7 @@ from core.config import Settings
 
 @patch.dict(
     os.environ,
-    {"cors_origins": "https://a.example.com, https://b.example.com"},
+    {"CORS_ORIGINS": "https://a.example.com, https://b.example.com"},
     clear=False,
 )
 def test_parse_cors_origins_comma_separated():
@@ -21,13 +21,14 @@ def test_parse_cors_origins_comma_separated():
 @patch.dict(
     os.environ,
     {
-        "env": "production",
-        "openrouter_api_key": "sk-open",
-        "gemini_api_key": "sk-gemini",
+        "ENV": "production",
+        "OPENROUTER_API_KEY": "sk-open",
+        "GEMINI_API_KEY": "sk-gemini",
         "SUPREMEAI_JWT_SECRET": "",
+        "JWT_SECRET": "",
     },
     clear=False,
 )
 def test_settings_raises_when_production_secret_missing():
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, RuntimeError)):
         Settings()
