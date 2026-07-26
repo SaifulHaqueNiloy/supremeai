@@ -412,6 +412,23 @@ class Settings(BaseSettings):
         self._set_cached_secret("HF_API_KEY", value)
 
     @property
+    def hf_api_keys(self) -> list[str]:
+        """বাংলা মন্তব্য: কমা-দ্বারা আলাদা করা HF API কীসমূহ লিস্ট আকারে রিটার্ন করা হয়।"""
+        raw = self.hf_api_key
+        if not raw:
+            return []
+        return [key.strip() for key in raw.split(",") if key.strip()]
+
+    # Swarm Model Registry for 5 Hugging Face models
+    MODEL_SWARM: dict[str, str] = {
+        "coding": "njelit1/supreme-coder-3b",
+        "reasoning": "njelitltd/supreme-reasoner-3b",
+        "general": "ziaulhaq1/supreme-general-3b",
+        "creative": "njelitltd2/supreme-creative-3b",
+        "master": "njelitltd3/supreme-master-3b",
+    }
+
+    @property
     def gemini_api_key(self) -> str:
         return self._get_cached_secret("GEMINI_API_KEY")
 
