@@ -1,6 +1,7 @@
 # FILE_PATH: backend/core/pgbouncer_pool.py
 
 import asyncio
+from contextlib import asynccontextmanager
 import logging
 import os
 
@@ -57,6 +58,15 @@ class PgBouncerConnectionPool:
         """Releases a connection back to the pool."""
         if self._pool:
             await self._pool.release(conn)
+
+    @asynccontextmanager
+    async def connection(self):
+        """Async context manager to safely acquire and release a connection."""
+        conn = await self.acquire()
+        try:
+            yield conn
+        finally:
+            await self.release(conn)
 
     # asyncpg.Pool এর মেথডগুলোকে সরাসরি কল করার জন্য proxy মেথডগুলো যুক্ত করা হলো
     # যাতে কোডবেসে pool.execute() বা pool.fetch() কল করলে কোনো Attribute Error না দেয়।
