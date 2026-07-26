@@ -13,7 +13,7 @@ def test_setup_logging_runs():
 def test_config_validators_basic():
     from core.config import Settings
 
-    s = Settings(env="test", CORS_ORIGINS='["http://127.0.0.1:3000"]')
+    s = Settings(env="test", cors_origins=["http://127.0.0.1:3000"])
     assert "127.0.0.1" in " ".join(s.cors_origins)
     # ensure debug remains a bool
     assert isinstance(s.debug, bool)

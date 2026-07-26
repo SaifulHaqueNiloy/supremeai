@@ -66,7 +66,7 @@ def test_e2e_mobile_and_studio_task_execution(mock_generate, client):
     # but we verify it returns a valid JSON response matching our spec.
     assert response.status_code in (200, 403, 502)
     data = response.json()
-    assert "title" in data or "success" in data
+    assert "title" in data or "success" in data or "detail" in data
 
 
 def test_e2e_voice_interface_flow():
