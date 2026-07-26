@@ -181,7 +181,7 @@ class SymbolicReasoner:
             # If premise and goal have the same structure but different constants
             # This is a very simplified check
             return True  # Placeholder
-        except:
+        except Exception:
             return False
 
     def perform_mathematical_reasoning(self, expression: str, variables: dict[str, float]) -> dict[str, Any]:
@@ -212,7 +212,7 @@ class SymbolicReasoner:
                     try:
                         derivative = expr.differentiate(var)
                         derivatives[var] = str(derivative.parsed_expr)
-                    except:
+                    except Exception:
                         derivatives[var] = "undefined"
 
                 results["derivatives"] = derivatives
@@ -224,7 +224,7 @@ class SymbolicReasoner:
                     try:
                         integral = expr.integrate(var)
                         integrals[var] = str(integral.parsed_expr)
-                    except:
+                    except Exception:
                         integrals[var] = "cannot integrate"
 
                 results["integrals"] = integrals
@@ -467,7 +467,7 @@ class NeuralSymbolicIntegrator:
                     try:
                         evaluated = expr.evaluate({})
                         results["solution"] = {"evaluated": evaluated}
-                    except:
+                    except Exception:
                         results["solution"] = {"parsed": str(expr.parsed_expr)}
 
             # Add neural confidence
@@ -544,7 +544,7 @@ class MathematicalReasoningEngine:
                             "valid": is_valid,
                         }
                     )
-                except:
+                except Exception:
                     results["verification"].append({"solution": str(sol), "error": "Could not verify"})
 
             # Add neural confidence
