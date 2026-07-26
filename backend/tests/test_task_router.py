@@ -109,6 +109,8 @@ class TestSwarmLLMRouter:
         assert swarm_router.classify_task("Write a python function to parse JSON") == "coding"
         assert swarm_router.classify_task("Solve the equation x^2 + 5x + 6 = 0") == "reasoning"
         assert swarm_router.classify_task("Write a poem and creative story about space") == "creative"
+        assert swarm_router.classify_task("Analyze this screenshot image of UI") == "vision"
+        assert swarm_router.classify_task("Give me a fast draft answer") == "draft"
         assert swarm_router.classify_task("Step by step instructions " + "word " * 160) == "master"
         assert swarm_router.classify_task("Hello, how are you today?") == "general"
 
@@ -120,3 +122,5 @@ class TestSwarmLLMRouter:
         assert settings.MODEL_SWARM["general"] == "ziaulhaq1/supreme-general-3b"
         assert settings.MODEL_SWARM["creative"] == "njelitltd2/supreme-creative-3b"
         assert settings.MODEL_SWARM["master"] == "njelitltd3/supreme-master-3b"
+        assert settings.MODEL_SWARM["vision"] == "njelltd5/supreme-vision-3b"
+        assert settings.MODEL_SWARM["draft"] == "njelltd4/supreme-draft-0.5b"
