@@ -22,7 +22,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
-from backend.core.skills.base import BaseSkill
+from core.skills.base import BaseSkill
 
 
 @dataclass(frozen=True)
