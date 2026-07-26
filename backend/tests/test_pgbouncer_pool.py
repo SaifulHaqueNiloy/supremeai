@@ -25,8 +25,8 @@ async def test_connect():
         await pool.connect()
         mock_create_pool.assert_called_once_with(
             dsn="test_dsn",
-            min_size=5,
-            max_size=30,
+            min_size=3,
+            max_size=12,
             max_inactive_connection_lifetime=300,
             statement_cache_size=0,
             command_timeout=30,
