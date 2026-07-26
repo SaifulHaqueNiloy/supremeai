@@ -79,7 +79,8 @@ def test_docs_visible_in_local():
         client = TestClient(app_mod.app)
         assert client.get("/docs").status_code == 200
         assert client.get("/redoc").status_code == 200
-        assert client.get("/openapi.json").status_code == 200
+        openapi_endpoint = app_mod.app.openapi_url or "/openapi.json"
+        assert client.get(openapi_endpoint).status_code == 200
         """
     )
     result = _run(code)
