@@ -32,15 +32,25 @@ class _WalletScreenState extends State<WalletScreen> {
     });
 
     final walletRes = await _billingService.getWalletDetails();
-    final historyList = await _billingService.getTransactionHistory();
+    final historyRes = await _billingService.getTransactionHistory();
 
     setState(() {
       if (walletRes['success'] == true) {
         _wallet = walletRes['wallet'];
       }
-      _history = historyList;
+      _history = List<Map<String, dynamic>>.from(historyRes['items'] ?? const []);
       _isLoading = false;
     });
+
+    // বাংলা মন্তব্য: আগে fetch ব্যর্থ হলেও "no transactions" বলে ভুল বোঝাতো — এখন আসল এরর দেখানো হচ্ছে
+    if (historyRes['success'] != true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(historyRes['error'] ?? 'Failed to load transaction history.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _triggerTopUp(double amount, String gateway) async {
