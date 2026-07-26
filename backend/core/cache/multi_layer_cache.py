@@ -462,7 +462,7 @@ async def start_swarm_cache_invalidator():
                             for k in keys_to_delete:
                                 del _session_cache[k]
                             logger.info(
-                                f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event.type}."
+                                f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event_type}."
                             )
                         else:
                             _session_cache.clear()
