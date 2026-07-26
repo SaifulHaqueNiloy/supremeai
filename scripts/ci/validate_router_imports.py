@@ -22,10 +22,13 @@ import os
 import traceback
 from pathlib import Path
 
-# Ensure backend root is in python path
+# Ensure backend root and repo root are in python path
 backend_dir = str(Path(__file__).parent.parent.parent / "backend")
+repo_root = str(Path(__file__).parent.parent.parent)
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
 
 # Ensure encryption key exists for testing
 if "SUPREMEAI_ENCRYPTION_KEY" not in os.environ and "ENCRYPTION_KEY" not in os.environ:
