@@ -65,8 +65,8 @@ class LoggingConfig:
         try:
             if hasattr(context, "exists") and context.exists():
                 correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
-        except Exception:  # noqa: BLE001  # Catch ContextDoesNotExistError and any other context issues
-            pass
+        except Exception:  # noqa: BLE001
+            correlation_id = "N/A"
 
         # Create structured log entry
         log_entry = {
