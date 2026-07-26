@@ -48,16 +48,20 @@ def test_media_route_generate_upload_url():
 
     from core.app import app
 
-    with TestClient(app) as test_client:
-        payload = {
-            "file_name": "skills_bundle.zip",
-            "file_type": "application/zip",
-            "folder": "test_folder",
-        }
-        # যেহেতু এটি রিকোয়ার্ড ডিপেন্ডেন্সি ছাড়া মক ইউজার ব্যবহার করে, তাই অথরাইজেশন চেক অটোমেটিক পাস হবে।
-        response = test_client.post("/api/v1/media/generate-upload-url", json=payload)
-        assert response.status_code == 200
-        data = response.json()
-        assert "upload_url" in data
-        assert "file_path" in data
-        assert "skills_bundle.zip" in data["file_path"]
+    test_client = TestClient(app)
+    payload = {
+        "file_name": "skills_bundle.zip",
+        "file_type": "application/zip",
+        "folder": "test_folder",
+    }
+    # যেহেতু এটি রিকোয়ার্ড ডিপেন্ডেন্সি ছাড়া মক ইউজার ব্যবহার করে, তাই অথরাইজেশন চেক অটোমেটিক পাস হবে।
+    response = test_client.post(
+        "/api/v1/media/generate-upload-url",
+        json=payload,
+        headers={"Authorization": "Bearer test_token"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "upload_url" in data
+    assert "file_path" in data
+    assert "skills_bundle.zip" in data["file_path"]
