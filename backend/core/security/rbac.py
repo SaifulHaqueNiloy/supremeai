@@ -171,8 +171,8 @@ def authorize(
     return has_permission(user_role, required_permission)
 
 
-class PermissionDeniedError(Exception):
-    """Raised when an RBAC permission check fails in require() — callers must handle this explicitly."""
+class PermissionDeniedError(PermissionError):
+    """Raised when a user attempts an action without sufficient permissions."""
 
     def __init__(self, role: str, action: str) -> None:
         self.role = role
