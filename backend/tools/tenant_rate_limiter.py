@@ -262,20 +262,46 @@ class TenantRateLimiter:
         if amount < 1.0:
             return
         try:
-            import stripe
+            import stripe  # noqa: PLC0415
 
             stripe.api_key = settings.stripe_api_key
             customer_id = None
             if self.queue:
-                import asyncio
+                import asyncio  # noqa: PLC0415
 
                 cust_val = self.queue.get(f"stripe:customer:{tenant_id}")
                 if asyncio.iscoroutine(cust_val):
                     cust_val = await cust_val
                 customer_id = cust_val
+
+            # বাংলা মন্তব্য: আগে customer না পেলে cus_mock_{tenant_id} ব্যবহার হতো।
+            # এখন Stripe থেকে real customer lookup করা হয়, না পেলে create করা হয়।
             if not customer_id:
-                customer_id = f"cus_mock_{tenant_id}"
-            customer_id = customer_id.decode("utf-8") if isinstance(customer_id, bytes) else str(customer_id)
+                # বাংলা মন্তব্য: Stripe Customer list-এ tenant_id দিয়ে existing customer খোঁজা
+                customers = stripe.Customer.list(
+                    metadata={"tenant_id": tenant_id},
+                    limit=1,
+                )
+                if customers.data:
+                    customer_id = customers.data[0].id
+                else:
+                    # বাংলা মন্তব্য: না পেলে নতুন Stripe Customer তৈরি করা হচ্ছে
+                    new_customer = stripe.Customer.create(
+                        metadata={"tenant_id": tenant_id},
+                        description=f"SupremeAI tenant {tenant_id}",
+                    )
+                    customer_id = new_customer.id
+                    logger.info(f"Created Stripe customer {customer_id} for tenant {tenant_id}")
+                    # বাংলা মন্তব্য: নতুন customer ID Redis-এ ক্যাশ করা হচ্ছে ভবিষ্যতের জন্য
+                    if self.queue:
+                        await self.queue.set(
+                            f"stripe:customer:{tenant_id}",
+                            customer_id,
+                            ttl=86400,  # 24 ঘণ্টা cache
+                        )
+            else:
+                customer_id = customer_id.decode("utf-8") if isinstance(customer_id, bytes) else str(customer_id)
+
             stripe.InvoiceItem.create(
                 customer=customer_id,
                 amount=int(amount * 100),

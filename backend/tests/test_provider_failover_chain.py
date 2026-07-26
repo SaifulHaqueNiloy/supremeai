@@ -17,7 +17,7 @@ class FakeProvider:
         self.name = name
         self.fail = fail
 
-    async def acomplete(self, prompt: str, **kwargs):
+    async def acompletion(self, prompt: str, **kwargs):
         if self.fail:
             raise RuntimeError(f"{self.name} failed")
         return {"text": f"{self.name}:{prompt}", "provider": self.name}
@@ -27,11 +27,17 @@ class FakeProvider:
             raise RuntimeError(f"{self.name} failed")
 
         class Chunker:
-            async def __aiter__(self):
-                yield f"{self.name}:chunk1"
-                yield f"{self.name}:chunk2"
+            def __init__(self, provider_name: str):
+                self.provider_name = provider_name
 
-        return Chunker()
+            async def __aiter__(self):
+                yield f"{self.provider_name}:chunk1"
+                yield f"{self.provider_name}:chunk2"
+
+        return Chunker(self.name)
+
+    async def health_check(self) -> bool:
+        return not self.fail
 
 
 class TestProviderFailoverChain:
@@ -48,6 +54,7 @@ class TestProviderFailoverChain:
         mock_settings.DEEPSEEK_API_KEY = "test"
         mock_settings.TOGETHER_API_KEY = "test"
         mock_settings.GEMINI_API_KEY = "test"
+        mock_settings.HF_SPACE_URL = "https://mock-hf-space-url"
         monkeypatch.setattr("core.llm_router.settings", mock_settings)
         router = LLMRouter()
         router.providers = {
@@ -67,6 +74,7 @@ class TestProviderFailoverChain:
         mock_settings.DEEPSEEK_API_KEY = "test"
         mock_settings.TOGETHER_API_KEY = "test"
         mock_settings.GEMINI_API_KEY = "test"
+        mock_settings.HF_SPACE_URL = "https://mock-hf-space-url"
         monkeypatch.setattr("core.llm_router.settings", mock_settings)
         router = LLMRouter()
         router.providers = {
@@ -87,6 +95,7 @@ class TestProviderFailoverChain:
         mock_settings.DEEPSEEK_API_KEY = "test"
         mock_settings.TOGETHER_API_KEY = "test"
         mock_settings.GEMINI_API_KEY = "test"
+        mock_settings.HF_SPACE_URL = "https://mock-hf-space-url"
         monkeypatch.setattr("core.llm_router.settings", mock_settings)
         router = LLMRouter()
         router.providers = {
@@ -107,6 +116,7 @@ class TestProviderFailoverChain:
         mock_settings.DEEPSEEK_API_KEY = "test"
         mock_settings.TOGETHER_API_KEY = "test"
         mock_settings.GEMINI_API_KEY = "test"
+        mock_settings.HF_SPACE_URL = "https://mock-hf-space-url"
         monkeypatch.setattr("core.llm_router.settings", mock_settings)
         router = LLMRouter()
         router.providers = {

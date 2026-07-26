@@ -116,7 +116,7 @@ class TestProductionReadinessSystems:
             cache_instance = MagicMock()
             cache_instance.get_similar.return_value = None
 
-            proxy = AutocacheProxy(cache=cache_instance)
+            proxy = AutocacheProxy(semantic_cache=cache_instance)
 
             # খরচ ট্র্যাকিং কাজ করে নিশ্চিত করুন
             summary = proxy.get_cost_summary()

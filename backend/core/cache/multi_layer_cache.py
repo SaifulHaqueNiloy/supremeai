@@ -15,6 +15,7 @@ import asyncio  # noqa: E402
 import hashlib  # noqa: E402
 import json  # noqa: E402
 import threading  # noqa: E402
+import time  # noqa: E402 - Added for performance metrics
 from typing import Any  # noqa: E402
 
 from cachetools import TTLCache  # noqa: E402
@@ -22,14 +23,15 @@ from loguru import logger  # noqa: E402
 
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
 from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.metrics_collector import metrics_collector, record_cache_access  # noqa: E402
 from core.swarm_pubsub import swarm_streamer  # noqa: E402
 
-# বাংলা মন্তব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
+# বাংলা মন্তব্ব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
 # Redis client এখন lazy function-level এ initialize হবে।
 
 
 def _get_redis_client():
-    """বাংলা মন্তব্য: Lazy Redis client — import time-এ কোনো connection হয় না।"""
+    """বাংলা মন্তব্ব্য: Lazy Redis client — import time-এ কোনো connection হয় না।"""
     try:
         import redis.asyncio as aioredis
 
@@ -44,7 +46,7 @@ def _get_redis_client():
 
 
 class _InMemoryRedisStub:
-    """বাংলা মন্তব্য: Test/dev fallback — production-এ কখনো এটি ব্যবহার হবে না।"""
+    """বাংলা মন্তব্ব্য: Test/dev fallback — production-এ কখনো এটি ব্যবহার হবে না।"""
 
     def __init__(self):
         self._store: dict[str, str] = {}
@@ -56,16 +58,44 @@ class _InMemoryRedisStub:
         self._store[key] = value
 
     async def mget(self, keys: list[str]) -> list[str | None]:
-        # বাংলা মন্তব্য: ব্যাচ রিড সাপোর্ট করার জন্য স্টাব ক্লাসে mget মেথড যোগ করা হলো।
+        # বাংলা মন্তব্ব্য: ব্যাচ রিড সাপোর্ট করার জন্য স্টাব ক্লাসে mget মেথড যোগ করা হলো।
         return [self._store.get(k) for k in keys]
 
+    async def pipeline(self, transaction=False):
+        """Mock pipeline for stub implementation."""
+        return _PipelineStub(self._store)
 
-# বাংলা মন্তব্য: প্রিফিক্স ল্যাটেরাল রাউন্ড-ট্রিপ ক্যাপ করার কনস্ট্যান্ট।
+
+class _PipelineStub:
+    """Mock pipeline for stub implementation."""
+
+    def __init__(self, store):
+        self.store = store
+        self.commands = []
+
+    async def setex(self, key: str, ttl: int, value: str):
+        self.store[key] = value
+        return self
+
+    async def execute(self):
+        results = []
+        for cmd in self.commands:
+            results.append(cmd())
+        return results
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+# বাংলা মন্তব্ব্য: প্রিফিক্স ল্যাটেরাল রাউন্ড-ট্রিপ ক্যাপ করার কনস্ট্যান্ট।
 _MAX_PREFIX_CANDIDATES = 8
 
 
 class MultiLayerCache:
-    """বাংলা মন্তব্য: ৫-লেয়ার অ্যাগ্রেসিভ ক্যাশিং সিস্টেম।
+    """বাংলা মন্তব্ব্য: ৫-লেয়ার অ্যাগ্রেসিভ ক্যাশিং সিস্টেম।
     Redis client গুলো lazy init — import করলে কোনো network call নেই।"""
 
     def __init__(self):
@@ -74,6 +104,8 @@ class MultiLayerCache:
         self._exact_cache = None
         self._prefix_cache = None
         self._semantic_cache = None
+        # Performance metrics
+        self.cache_stats = {"exact_hits": 0, "semantic_hits": 0, "prefix_hits": 0, "session_hits": 0, "misses": 0}
 
     def _get_exact_cache(self):
         if self._exact_cache is None:
@@ -101,7 +133,8 @@ class MultiLayerCache:
         return self._semantic_cache
 
     async def get(self, prompt: str, model_name: str, session_id: str | None = None) -> dict[str, Any] | None:
-        """বাংলা মন্তব্য: সব ৫টি ক্যাশ লেয়ার ক্রমান্বয়ে চেক করে। None মানে AI model call দরকার।"""
+        """বাংলা মন্তব্ব্য: সব ৫টি ক্যাশ লেয়ার ক্রমান্বয়ে চেক করে। None মানে AI model call দরকার।"""
+        start_time = time.time()
         try:
             # Layer 1: Exact Match Cache (Redis)
             exact_match_cache = self._get_exact_cache()
@@ -109,6 +142,11 @@ class MultiLayerCache:
             cached_response = await exact_match_cache.get(exact_cache_key)
             if cached_response:
                 logger.info("✅ L1 CACHE HIT: Exact Match")
+                self.cache_stats["exact_hits"] += 1
+                await record_cache_access(True)  # Record cache hit
+                await metrics_collector.observe_histogram(
+                    "cache_access_duration_seconds", time.time() - start_time, {"layer": "exact", "result": "hit"}
+                )
                 return {
                     "response": cached_response,
                     "source": "L1_EXACT_CACHE",
@@ -118,6 +156,7 @@ class MultiLayerCache:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L1 cache read error: {e}")
+            await record_cache_access(False)  # Record cache miss/error
             error_event_bus.emit(
                 ErrorEvent(
                     module="multi_layer_cache",
@@ -130,18 +169,26 @@ class MultiLayerCache:
 
         try:
             # Layer 2: Semantic Cache
+            semantic_start = time.time()
             semantic_result = await self._get_semantic_cache().query_similar(prompt)
+            semantic_duration = time.time() - semantic_start
             if semantic_result:
                 logger.info("✅ L2 CACHE HIT: Semantic Match")
+                self.cache_stats["semantic_hits"] += 1
+                await record_cache_access(True)  # Record cache hit
+                await metrics_collector.observe_histogram(
+                    "cache_access_duration_seconds", semantic_duration, {"layer": "semantic", "result": "hit"}
+                )
                 return {
                     "response": semantic_result.response,
                     "source": "L2_SEMANTIC_CACHE",
-                    "latency_ms": 5,
+                    "latency_ms": int(semantic_duration * 1000),
                 }
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L2 semantic cache error: {e}")
+            await record_cache_access(False)  # Record cache miss/error
             error_event_bus.emit(
                 ErrorEvent(
                     module="multi_layer_cache",
@@ -154,9 +201,10 @@ class MultiLayerCache:
 
         try:
             # Layer 3: Prefix Cache (Redis) — এখন একটাই batched round-trip
+            prefix_start = time.time()
             prefix_cache = self._get_prefix_cache()
             words = prompt.split()
-            # বাংলা মন্তব্য: O(n) রাউন্ড-ট্রিপ এড়াতে এবং দীর্ঘতম প্রিফিক্সে অগ্রাধিকার দিতে ক্যান্ডিডেট সংখ্যা ক্যাপ করা হলো।
+            # বাংলা মন্তব্ব্য: O(n) রাউন্ড-ট্রিপ এড়াতে এবং দীর্ঘতম প্রিফিক্সে অগ্রাধিকার দিতে ক্যান্ডিডেট সংখ্যা ক্যাপ করা হলো।
             candidate_lengths = sorted(
                 {max(1, len(words) - step) for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))},
                 reverse=True,
@@ -167,20 +215,27 @@ class MultiLayerCache:
                 prefix_keys.append(f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}")
 
             if prefix_keys:
-                # বাংলা মন্তব্য: mget দিয়ে সম্পূর্ণ প্রিফিক্স ক্যান্ডিডেটগুলোর ডাটা একটাই নেটওয়ার্ক রাউন্ড-ট্রিপে আনা হচ্ছে।
+                # বাংলা মন্তব্ব্য: mget দিয়ে সম্পূর্ণ প্রিফিক্স ক্যান্ডিডেটগুলোর ডাটা একটাই নেটওয়ার্ক রাউন্ড-ট্রিপে আনা হচ্ছে।
                 results = await prefix_cache.mget(prefix_keys)
                 for cached_response in results:
                     if cached_response:
                         logger.info("✅ L3 CACHE HIT: Prefix Match")
+                        self.cache_stats["prefix_hits"] += 1
+                        await record_cache_access(True)  # Record cache hit
+                        prefix_duration = time.time() - prefix_start
+                        await metrics_collector.observe_histogram(
+                            "cache_access_duration_seconds", prefix_duration, {"layer": "prefix", "result": "hit"}
+                        )
                         return {
                             "response": cached_response,
                             "source": "L3_PREFIX_CACHE",
-                            "latency_ms": 10,
+                            "latency_ms": int(prefix_duration * 1000),
                         }
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001
             logger.error(f"L3 prefix cache error: {e}")
+            await record_cache_access(False)  # Record cache miss/error
             error_event_bus.emit(
                 ErrorEvent(
                     module="multi_layer_cache",
@@ -193,24 +248,39 @@ class MultiLayerCache:
 
         # Layer 4: Session Cache (In-memory LRU)
         if session_id:
+            session_start = time.time()
             session_response = _get_session_cache(session_id, prompt)
+            session_duration = time.time() - session_start
             if session_response:
                 logger.info("✅ L4 CACHE HIT: Session Match")
                 self.local_cache_hits += 1
+                self.cache_stats["session_hits"] += 1
+                await record_cache_access(True)  # Record cache hit
+                await metrics_collector.observe_histogram(
+                    "cache_access_duration_seconds", session_duration, {"layer": "session", "result": "hit"}
+                )
                 return {
                     "response": session_response,
                     "source": "L4_SESSION_CACHE",
-                    "latency_ms": 0.1,
+                    "latency_ms": int(session_duration * 100),
                 }
             else:
                 self.local_cache_misses += 1
 
         # Layer 5: AI Model Call (fallback)
+        total_duration = time.time() - start_time
+        self.cache_stats["misses"] += 1
+        await record_cache_access(False)  # Record cache miss
+        await metrics_collector.observe_histogram(
+            "cache_access_duration_seconds", total_duration, {"layer": "all", "result": "miss"}
+        )
         logger.info("❌ ALL CACHE LAYERS MISS - Calling AI Model")
         return None
 
     async def set(self, prompt: str, response: str, model_name: str, session_id: str | None = None):
-        """বাংলা মন্তব্য: সব প্রযোজ্য ক্যাশ লেয়ারে রেসপন্স সংরক্ষণ করে।"""
+        """বাংলা মন্তব্ব্য: সব প্রযোজ্য ক্যাশ লেয়ারে রেসপন্স সংরক্ষণ করে।"""
+        cache_set_start = time.time()
+
         try:
             exact_match_cache = self._get_exact_cache()
             exact_cache_key = f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
@@ -230,7 +300,12 @@ class MultiLayerCache:
             )
 
         try:
+            semantic_start = time.time()
             await self._get_semantic_cache().set(prompt, response, task_type="general")
+            semantic_duration = time.time() - semantic_start
+            await metrics_collector.observe_histogram(
+                "cache_write_duration_seconds", semantic_duration, {"layer": "semantic"}
+            )
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001
@@ -246,9 +321,10 @@ class MultiLayerCache:
             )
 
         try:
+            prefix_start = time.time()
             prefix_cache = self._get_prefix_cache()
             words = prompt.split()
-            # বাংলা মন্তব্য: O(n) রাইট এড়াতে এবং স্টোরেজ অপটিমাইজেশনের জন্য প্রিফিক্স ক্যান্ডিডেট ক্যাপ করা হচ্ছে।
+            # বাংলা মন্তব্ব্য: O(n) রাইট এড়াতে এবং স্টোরেজ অপটিমাইজেশনের জন্য প্রিফিক্স ক্যান্ডিডেট ক্যাপ করা হচ্ছে।
             candidate_lengths = sorted(
                 {max(1, len(words) - step) for step in range(0, min(len(words), _MAX_PREFIX_CANDIDATES))},
                 reverse=True,
@@ -266,6 +342,10 @@ class MultiLayerCache:
                     prefix = " ".join(words[:i])
                     prefix_cache_key = f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
                     await prefix_cache.setex(prefix_cache_key, 1800, response)
+            prefix_duration = time.time() - prefix_start
+            await metrics_collector.observe_histogram(
+                "cache_write_duration_seconds", prefix_duration, {"layer": "prefix"}
+            )
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001
@@ -283,7 +363,29 @@ class MultiLayerCache:
         if session_id:
             _set_session_cache(session_id, prompt, response)
 
+        cache_set_duration = time.time() - cache_set_start
+        await metrics_collector.observe_histogram("cache_total_set_duration_seconds", cache_set_duration, {})
         logger.info(f"💾 Response cached in all applicable layers for model {model_name}")
+
+    async def get_cache_statistics(self) -> dict[str, Any]:
+        """Get cache performance statistics."""
+        total_accesses = sum(self.cache_stats.values())
+        hit_rate = 0
+        if total_accesses > 0:
+            hits = total_accesses - self.cache_stats["misses"]
+            hit_rate = hits / total_accesses * 100
+
+        return {
+            "total_accesses": total_accesses,
+            "hit_rate_percentage": hit_rate,
+            "exact_hits": self.cache_stats["exact_hits"],
+            "semantic_hits": self.cache_stats["semantic_hits"],
+            "prefix_hits": self.cache_stats["prefix_hits"],
+            "session_hits": self.cache_stats["session_hits"],
+            "misses": self.cache_stats["misses"],
+            "local_cache_hits": self.local_cache_hits,
+            "local_cache_misses": self.local_cache_misses,
+        }
 
 
 # Level 4: Session Cache (In-memory TTLCache per worker)
@@ -296,7 +398,7 @@ def _session_key(session_id: str, prompt: str) -> str:
 
 
 def _get_session_cache(session_id: str, prompt: str) -> str | None:
-    """বাংলা মন্তব্য: per-worker in-memory session cache — None মানে miss।"""
+    """বাংলা মন্তব্ব্য: per-worker in-memory session cache — None মানে miss।"""
     with _session_lock:
         return _session_cache.get(_session_key(session_id, prompt))
 
@@ -307,8 +409,8 @@ def _set_session_cache(session_id: str, prompt: str, response: str) -> None:
 
 
 def _cache_invalidation_listener(event: ErrorEvent) -> None:
-    """বাংলা মন্তব্য: Event-Sourced Cache Invalidation
-    ErrorEventBus থেকে ইভেন্ট রিসিভ করে ক্যাশ ক্লিয়ার করে।
+    """বাংলা মন্তব্ব্য: Event-Sourced Cache Invalidation
+    ErrorEventBus থেকে ইভেন্ট রিসিভ করে ক্যাশ ক্লিয়ার করে।
     """
     if event.error_type in ["CIRCUIT_OPEN", "LLM_DOWN", "RATE_LIMIT_EXCEEDED"]:
         tenant_id = event.context.get("tenant_id") or (
@@ -335,7 +437,7 @@ error_event_bus.register_listener("*", _cache_invalidation_listener)
 
 
 async def start_swarm_cache_invalidator():
-    """বাংলা মন্তব্য: SwarmPubSub থেকে domain ইভেন্ট শুনে ক্যাশ ক্লিয়ার করা।"""
+    """বাংলা মন্তব্ব্য: SwarmPubSub থেকে domain ইভেন্ট শুনে ক্যাশ ক্লিয়ার করা।"""
     try:
         async for message_str in swarm_streamer.subscribe():
             try:
@@ -360,7 +462,7 @@ async def start_swarm_cache_invalidator():
                             for k in keys_to_delete:
                                 del _session_cache[k]
                             logger.info(
-                                f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event_type}."
+                                f"🧹 Swarm Event Cache Invalidation: Cleared {len(keys_to_delete)} keys for tenant {tenant_id} due to {event.type}."
                             )
                         else:
                             _session_cache.clear()
@@ -368,7 +470,7 @@ async def start_swarm_cache_invalidator():
                                 f"🧹 Swarm Event Cache Invalidation: Cleared entire session cache due to {event_type}."
                             )
             except json.JSONDecodeError as json_err:
-                # বাংলা মন্তব্য: malformed মেসেজ পেলে তা ড্রপ করার সময় সতর্কতা লগ করা হচ্ছে
+                # বাংলা মন্তব্ব্য: malformed মেসেজ পেলে তা ড্রপ করার সময় সতর্কতা লগ করা হচ্ছে
                 logger.warning(
                     f"🧹 Swarm Event Cache Invalidation: Malformed message payload dropped. Error: {json_err}"
                 )
