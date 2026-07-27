@@ -168,7 +168,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for metrics_router: {traceback.format_exc()}")
     metrics_router = None
 
-# বাংলা মন্তব্য: site_actions_registry CRUD রাউটার — অ্যাডমিন ড্যাশবোর্ডের ভিজুয়াল এডিটরের জন্য
+# বাংলা মন্তব্য: site_actions_registry CRUD রাউটার — অ্যাডমিন ড্যাশবোর্ডের ভিজুয়াল এডিটরের জন্য
 try:
     from .site_actions import router as site_actions_router
 
@@ -482,10 +482,22 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for swarm_router: {traceback.format_exc()}")
     swarm_router = None
 
+try:
+    from .internet_monitor import router as internet_monitor_router
+
+    _safe_imports["internet_monitor_router"] = internet_monitor_router
+except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
+    import traceback
+
+    from loguru import logger
+
+    logger.warning(f"Router import failed for internet_monitor_router: {traceback.format_exc()}")
+    internet_monitor_router = None
 
 __all__ = list(_safe_imports.keys()) + [
     "voice_router",
     "websocket_voice_router",
     "integrations_router",
     "swarm_router",
+    "internet_monitor_router",
 ]

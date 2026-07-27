@@ -3,7 +3,7 @@ agents/__init__.py
 ==================
 SupremeAI 2.0 — Agent Package Initialization
 
-বাংলা মন্তব্য: সমস্ত এজেন্ট ক্লাস এবং ইউটিলিটি এই প্যাকেজ থেকে এক্সপোর্ট করা হয়।
+বাংলা মন্তব্য: সমস্ত এজেন্ট ক্লাস এবং ইউটিলিটি এক্সপোর্ট করা হয়।
 নতুন এজেন্ট যোগ করলে এখানে রেজিস্টার করতে হবে।
 """
 
@@ -13,6 +13,7 @@ from agents.churn_prophet import ChurnProphet
 from agents.ephemeral_executor import EphemeralExecutor
 from agents.headless_terminal_agent import HeadlessTerminalAgent
 from agents.insight_mage import InsightMage
+from agents.internet_monitor_agent import InternetMonitorAgent
 from agents.morphic_adapter import MorphicAdapter
 from agents.performance_guardian import PerformanceGuardian
 from agents.sentinel_agent import SentinelAgent
@@ -28,6 +29,7 @@ __all__ = [
     "ExecutionStatus",
     "HeadlessTerminalAgent",
     "InsightMage",
+    "InternetMonitorAgent",
     "MorphicAdapter",
     "PerformanceGuardian",
     "ResourceQuota",
@@ -53,6 +55,7 @@ _AGENT_REGISTRY: dict[str, type] = {
     "ephemeral_executor": EphemeralExecutor,
     "headless_terminal": HeadlessTerminalAgent,
     "insight_mage": InsightMage,
+    "internet_monitor": InternetMonitorAgent,
     "morphic_adapter": MorphicAdapter,
     "performance_guardian": PerformanceGuardian,
     "sentinel": SentinelAgent,
