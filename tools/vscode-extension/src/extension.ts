@@ -27,12 +27,23 @@ import { SupremeWebviewProvider } from './providers/SupremeWebviewProvider';
 import { CrossAiObserverService } from './services/CrossAiObserverService';
 import { SelfHealingService } from './services/SelfHealingService';
 import { BrowserPreviewProvider } from './providers/BrowserPreviewProvider';
+// New imports for enhanced features
+import { DependencyGraphProvider } from './providers/DependencyGraphProvider';
+import { VisualizationHandler } from './handlers/VisualizationHandler';
+import { EnhancedAIService } from './ai/EnhancedAIService';
+import { SecurityScanner } from './security/SecurityScanner';
+import { PerformanceMonitor } from './performance/PerformanceMonitor';
 
 let supremeAIService: SupremeAIService;
 let aiService: AIService;
 let codeGenService: CodeGenerationService;
 let codeReviewService: CodeReviewService;
 let codeFlowHandler: CodeFlowHandler;
+// New service instances
+let visualizationHandler: VisualizationHandler;
+let enhancedAIService: EnhancedAIService;
+let securityScanner: SecurityScanner;
+let performanceMonitor: PerformanceMonitor;
 
 function escapeHtml(value: string): string {
   return String(value).replace(/[&<>"']/g, (c) => {
@@ -134,16 +145,25 @@ export async function activate(context: vscode.ExtensionContext) {
   codeReviewService = new CodeReviewService();
   setCodeReviewService(codeReviewService);
 
+  // Initialize new services
+  enhancedAIService = new EnhancedAIService(supremeAIService);
+  securityScanner = new SecurityScanner(supremeAIService);
+  performanceMonitor = new PerformanceMonitor(supremeAIService);
+
   const editHandler = new CodeEditHandler(context);
   const errHandler = new ErrorHandler(context);
   const fbHandler = new FeedbackHandler(context);
-  codeFlowHandler = new CodeFlowHandler(context);
+  const codeFlowHandler = new CodeFlowHandler(context);
+  // Initialize visualization handler with new services
+  visualizationHandler = new VisualizationHandler(context, supremeAIService);
   setCodeFlowHandler(codeFlowHandler);
 
   editHandler.register();
   errHandler.register();
   fbHandler.register();
   codeFlowHandler.register();
+  // Register visualization handler
+  visualizationHandler.register();
 
   // হেল্পার ফাংশন: বর্তমান প্রজেক্টের কন্টেক্সট (Language/Framework) সংগ্রহ করা
   async function getProjectContext(): Promise<string> {
@@ -177,6 +197,9 @@ export async function activate(context: vscode.ExtensionContext) {
   registerChatProvider(context);
   registerInlineCompletionProvider(context, fbHandler);
 
+  // Register new visualization providers
+  registerVisualizationProviders(context);
+  
   registerCommands(context);
   registerStatusBar(context);
 
@@ -197,6 +220,14 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   console.log('[SupremeAI] Extension fully activated');
+}
+
+function registerVisualizationProviders(context: vscode.ExtensionContext): void {
+  // Register dependency graph provider
+  const dependencyGraphProvider = new DependencyGraphProvider(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(DependencyGraphProvider.viewType, dependencyGraphProvider)
+  );
 }
 
 function registerCommands(context: vscode.ExtensionContext): void {
@@ -313,13 +344,157 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
+  // Add new commands for enhanced features
+  const generateCodeCommand = vscode.commands.registerCommand('supremeai.generateCode', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor selected.');
+      return;
+    }
+    
+    const selection = editor.selection;
+    const text = selection.isEmpty ? editor.document.getText() : editor.document.getText(selection);
+    if (!text.trim()) {
+      vscode.window.showWarningMessage('No code selected.');
+      return;
+    }
+
+    const requirement = await vscode.window.showInputBox({
+      prompt: 'Enter code generation requirements:'
+    });
+    
+    if (!requirement) return;
+
+    vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Generating Code...',
+      cancellable: false
+    }, async () => {
+      try {
+        const generatedCode = await enhancedAIService.generateCode(text, requirement);
+        const panel = vscode.window.createWebviewPanel(
+          'supremeaiGeneratedCode',
+          'Generated Code',
+          vscode.ViewColumn.Two,
+          {}
+        );
+        panel.webview.html = `<html><body><pre style="white-space: pre-wrap; font-family: sans-serif; padding: 15px;">${escapeHtml(generatedCode)}</pre></body></html>`;
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to generate code: ${error}`);
+      }
+    });
+  });
+
+  const suggestRefactoringCommand = vscode.commands.registerCommand('supremeai.suggestRefactoring', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor selected.');
+      return;
+    }
+    const selection = editor.selection;
+    const text = selection.isEmpty ? editor.document.getText() : editor.document.getText(selection);
+    if (!text.trim()) {
+      vscode.window.showWarningMessage('No code selected.');
+      return;
+    }
+
+    vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Analyzing Refactoring Options...',
+      cancellable: false
+    }, async () => {
+      try {
+        const suggestions = await enhancedAIService.suggestRefactoring(text, editor.document.languageId);
+        const panel = vscode.window.createWebviewPanel(
+          'supremeaiRefactoringSuggestions',
+          'Refactoring Suggestions',
+          vscode.ViewColumn.Two,
+          {}
+        );
+        const suggestionsHtml = suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+        panel.webview.html = `<html><body><ul>${suggestionsHtml}</ul></body></html>`;
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to suggest refactoring: ${error}`);
+      }
+    });
+  });
+
+  const performSecurityScanCommand = vscode.commands.registerCommand('supremeai.performSecurityScan', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor selected.');
+      return;
+    }
+
+    vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Performing Security Scan...',
+      cancellable: false
+    }, async () => {
+      try {
+        const issues = await securityScanner.scanFile(editor.document);
+        if (issues.length === 0) {
+          vscode.window.showInformationMessage('No security issues found.');
+        } else {
+          const panel = vscode.window.createWebviewPanel(
+            'supremeaiSecurityIssues',
+            'Security Issues Found',
+            vscode.ViewColumn.Two,
+            {}
+          );
+          const issuesHtml = issues.map(i => `<li><strong>${i.severity.toUpperCase()}:</strong> ${escapeHtml(i.description)}</li>`).join('');
+          panel.webview.html = `<html><body><h3>Security Issues Found:</h3><ul>${issuesHtml}</ul></body></html>`;
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to perform security scan: ${error}`);
+      }
+    });
+  });
+
+  const analyzePerformanceCommand = vscode.commands.registerCommand('supremeai.analyzePerformance', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor selected.');
+      return;
+    }
+    const selection = editor.selection;
+    const text = selection.isEmpty ? editor.document.getText() : editor.document.getText(selection);
+    if (!text.trim()) {
+      vscode.window.showWarningMessage('No code selected.');
+      return;
+    }
+
+    vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Analyzing Performance...',
+      cancellable: false
+    }, async () => {
+      try {
+        const insights = await performanceMonitor.analyzePerformance(text, editor.document.languageId);
+        const panel = vscode.window.createWebviewPanel(
+          'supremeaiPerformanceInsights',
+          'Performance Insights',
+          vscode.ViewColumn.Two,
+          {}
+        );
+        panel.webview.html = `<html><body><pre style="white-space: pre-wrap; font-family: sans-serif; padding: 15px;">${escapeHtml(JSON.stringify(insights, null, 2))}</pre></body></html>`;
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to analyze performance: ${error}`);
+      }
+    });
+  });
+
   context.subscriptions.push(
     forceLearnCommand,
     explainCodeCommand,
     reviewCodeCommand,
     loginAsGuestCommand,
     loginCommand,
-    logoutCommand
+    logoutCommand,
+    generateCodeCommand,
+    suggestRefactoringCommand,
+    performSecurityScanCommand,
+    analyzePerformanceCommand
   );
 }
 
