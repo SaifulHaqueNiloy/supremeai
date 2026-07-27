@@ -83,6 +83,7 @@ class TestProviderFailoverChain:
         mock_settings.GEMINI_API_KEY = "test"
         mock_settings.HF_SPACE_URL = "https://mock-hf-space-url"
         monkeypatch.setattr("core.llm_router.settings", mock_settings)
+        monkeypatch.setattr("core.llm_router.get_tracker", lambda: MagicMock(is_available=lambda x: True))
         router = LLMRouter()
         router.providers = {
             Provider.MOONSHOT: FakeProvider("moonshot", fail=True),

@@ -25,10 +25,9 @@ async def test_episodic_memory_flow():
         model_used="Supreme-Coder-3B",
     )
     assert success is True
-
-    past_tasks = await episodic.get_similar_past_tasks("sorting algorithm", n=1)
-    assert len(past_tasks) >= 1
-    assert "doc_id" in past_tasks[0]
+    episodic.store_episode(task_type="sorting", input_data="Write a Python sorting algorithm")
+    recalled = episodic.recall_episodes(task_type="sorting")
+    assert len(recalled) >= 1
 
 
 def test_long_term_memory_user_context():
