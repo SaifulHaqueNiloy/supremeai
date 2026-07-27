@@ -38,7 +38,7 @@ def test_health_returns_ok():
 def test_task_execute_enforces_admin_block():
     from unittest.mock import patch
 
-    with patch("admin.god.AdminGodLayer.is_admin_action_allowed", return_value=False):
+    with patch("core.services.admin_god.is_admin_action_allowed", return_value=False):
         resp = client.post(
             "/task/execute",
             json={"task": "do anything", "task_type": "general"},

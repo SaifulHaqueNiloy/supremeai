@@ -61,8 +61,8 @@ class ComprehensiveDBOptimizationMiddleware:
                     form_data = await request.form()
                     form_dict = dict(form_data)
                     await self.sql_guard_middleware.validate_request_params(form_dict)
-                except:
-                    pass  # Form parsing might fail for non-form requests
+                except Exception as _form_err:  # noqa: BLE001
+                    logger.debug(f"Form parsing skipped for non-form request: {_form_err}")
 
         except ValueError as e:
             logger.warning(f"SQL injection attempt detected: {str(e)}")
