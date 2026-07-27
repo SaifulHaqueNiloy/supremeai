@@ -501,7 +501,7 @@ async def supabase_explain_query(params: ExplainQueryInput) -> str:
 
         if plan and plan[0]:
             return json.dumps({"query": params.query, "plan": plan[0]}, ensure_ascii=False)
-        return json_error("No execution plan returned.")
+        return json.dumps({"error": "No execution plan returned."}, ensure_ascii=False)
 
     except Exception as e:  # noqa: BLE001
         return _handle_db_error(e)
@@ -565,7 +565,7 @@ async def supabase_describe_table(params: DescribeTableInput) -> str:
         cur.close()
 
         if not columns:
-            return json_error(f"Table '{params.table_name}' not found")
+            return json.dumps({"error": f"Table '{params.table_name}' not found"}, ensure_ascii=False)
 
         return json.dumps(
             {
