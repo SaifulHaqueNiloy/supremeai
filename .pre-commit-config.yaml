@@ -126,6 +126,13 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+      - id: stub-data-check
+        name: "🚫 Gate 1 — Stub & Placeholder Data Blocker"
+        entry: python scripts/find_stub_data.py --path . --fail-on HIGH
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
       - id: router-smoke-test
         name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
         entry: python scripts/ci/validate_router_imports.py
