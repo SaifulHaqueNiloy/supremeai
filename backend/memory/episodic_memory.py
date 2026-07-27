@@ -19,9 +19,17 @@ class EpisodicMemory:
     Supports similarity search to retrieve relevant past solutions.
     """
 
-    def __init__(self, vector_store: Optional[ChromaDBStore] = None, db_path: Optional[str] = None, session_id: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        vector_store: Optional[ChromaDBStore] = None,
+        db_path: Optional[str] = None,
+        session_id: Optional[str] = None,
+        **kwargs,
+    ):
         self.session_id = session_id or "default"
-        self.vector_store = vector_store or ChromaDBStore(collection_name="supremeai_episodic_memory", db_path=db_path or ":memory:")
+        self.vector_store = vector_store or ChromaDBStore(
+            collection_name="supremeai_episodic_memory", db_path=db_path or ":memory:"
+        )
         self._episodes: List[Dict[str, Any]] = []
         self._memory_conn = None
 
