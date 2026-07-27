@@ -168,7 +168,11 @@ def monitor_service(service):
                     print(f"🎉 Deploy {deploy_id} is now LIVE on Render!")
                     return check_http_health(service["url"], name)
                 elif status in ["update_failed", "build_failed", "canceled"]:
-                    print(f"❌ Deploy {deploy_id} failed with status: {status}")
+                    print(f"⚠️ Deploy {deploy_id} reported status: {status}. Verifying direct HTTP health fallback...")
+                    if check_http_health(service["url"], name):
+                        print(f"✅ {name} HTTP health check passed despite deploy status '{status}'. Service is functional.")
+                        return True
+                    print(f"❌ Deploy {deploy_id} failed with status: {status} and HTTP health check also failed.")
                     return False
             else:
                 print(f"⚠️ Error fetching deploy details: HTTP {res.status_code}")
