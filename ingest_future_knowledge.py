@@ -41,7 +41,7 @@ import os
 import sys
 import time
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 # Ensure backend is in path
 repo_root = os.path.abspath(os.path.dirname(__file__))
@@ -74,9 +74,10 @@ except ImportError:
 FUTURE_KNOWLEDGE: list[dict[str, Any]] = [
     {
         "id": "arch_distributed_systems",
-    "text": """Distributed Systems Architecture for SupremeAI 2.0:
+        "text": """Distributed Systems Architecture for SupremeAI 2.0:
 
 Core Patterns:
+0. MICROSERVICES ARCHITECTURE — Decompose the application into small, independent services that communicate over a network.
 1. STATELESS DESIGN — Every service must be stateless. State belongs in databases or cache layers. Enables horizontal scaling and graceful shutdown.
 2. EVENTUAL CONSISTENCY — Accept that strong consistency is impossible at scale. Use CRDTs (Conflict-free Replicated Data Types) for conflict resolution.
 3. CIRCUIT BREAKER — Every external call must have a circuit breaker (SupremeAI's backend/core/resilience/circuit_breaker.py). Three states: CLOSED (normal), OPEN (failing), HALF-OPEN (testing recovery).
@@ -86,6 +87,7 @@ Core Patterns:
 7. SERVICE MESH — Use sidecar proxies for service-to-service communication, observability, and security.
 8. API GATEWAY — Single entry point for routing, rate limiting, auth, and aggregation.
 9. BACKEND FOR FRONTEND (BFF) — Separate API surfaces for web, mobile, desktop clients.
+10. OBSERVABILITY — Comprehensive logging, metrics, and tracing to understand system behavior and troubleshoot issues.
 
 Implementation Guidance for SupremeAI:
 - Use async/await throughout for non-blocking I/O (FastAPI + Python asyncio)
@@ -149,30 +151,30 @@ Core Framework:
    - Capability registry: what skills/tools are available
    - Performance metrics: latency, success rate, resource usage
    - Knowledge gaps: what it doesn't know (epistemic humility)
-   
+
 2. REFLECTION ENGINE — After each action, the AI reflects:
    - Did I succeed? If not, why?
    - What could I have done better?
    - What did I learn from this experience?
    - How can I improve next time?
-   
+
 3. PLANNING & DECOMPOSITION — Complex tasks are decomposed into sub-tasks:
    - Hierarchical task networks (HTN)
    - Means-ends analysis
    - Recursive goal decomposition
    - Progress tracking & replanning
-   
+
 4. ATTENTION MECHANISM — The AI must allocate cognitive resources:
    - What information is relevant to the current task?
    - What can be ignored (filtered out)?
    - What needs immediate attention vs. background processing?
-   
+
 5. MEMORY HIERARCHY — Multi-tier memory system:
    - Working memory: current task context (limited capacity)
    - Episodic memory: past experiences and outcomes
    - Semantic memory: facts, rules, knowledge
    - Procedural memory: skills, habits, muscle memory
-   
+
 6. LEARNING STRATEGIES:
    - Active learning: ask for clarification when uncertain
    - Transfer learning: apply knowledge from one domain to another
@@ -1346,8 +1348,18 @@ Migration Playbook:
 ]
 
 
-def ingest_knowledge(dry_run: bool = True, target_domain: str = None, force: bool = False, show_stats: bool = False) -> dict[str, Any]:
-    """Ingest future knowledge base documents into ChromaDBStore."""
+def calculate_content_hash(text: str) -> str:
+    """Calculate SHA-256 hash of text for deduplication."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def ingest_knowledge(
+    dry_run: bool = True,
+    target_domain: Optional[str] = None,
+    force: bool = False,
+    show_stats: bool = False,
+) -> Dict[str, Any]:
+    """Ingest future knowledge base documents into ChromaDBStore with deduplication and progress reporting."""
     if show_stats:
         domains = {}
         for doc in FUTURE_KNOWLEDGE:
@@ -1367,6 +1379,10 @@ def ingest_knowledge(dry_run: bool = True, target_domain: str = None, force: boo
     print(f"Mode: {'DRY RUN (Simulated)' if dry_run else 'LIVE INGESTION'}")
     print(f"Target Documents: {len(docs_to_ingest)}")
 
+    if not docs_to_ingest:
+        print("❌ No documents found matching the criteria.")
+        return {"status": "no_docs", "count": 0}
+
     if dry_run:
         print("\n[DRY RUN SUMMARY]")
         for doc in docs_to_ingest[:5]:
@@ -1376,19 +1392,58 @@ def ingest_knowledge(dry_run: bool = True, target_domain: str = None, force: boo
         print("\nRun with '--no-dry-run' to execute live database ingestion.")
         return {"status": "dry_run", "count": len(docs_to_ingest)}
 
-    store = ChromaDBStore(collection_name="supremeai_future_knowledge")
+    try:
+        store = ChromaDBStore(collection_name="supremeai_future_knowledge")
+    except Exception as e:
+        print(f"❌ Failed to initialize ChromaDBStore: {e}")
+        return {"status": "error", "message": str(e)}
+
     ingested_count = 0
-    for doc in docs_to_ingest:
+    skipped_count = 0
+    start_time = time.time()
+
+    print("\n🚀 Starting Ingestion...")
+    for i, doc in enumerate(docs_to_ingest):
         doc_id = doc["id"]
         text = doc["text"]
         meta = dict(doc["metadata"])
+
+        # Add content hash for deduplication
+        content_hash = calculate_content_hash(text)
+        meta["content_hash"] = content_hash
+        meta["ingested_at"] = datetime.now(UTC).isoformat()
+
+        # Handle tags
         if isinstance(meta.get("tags"), list):
             meta["tags"] = ", ".join(meta["tags"])
-        store.add_document(doc_id=doc_id, text=text, metadata=meta)
-        ingested_count += 1
 
-    print(f"\n🎉 Successfully ingested {ingested_count} future knowledge documents into ChromaDBStore!")
-    return {"status": "success", "count": ingested_count}
+        try:
+            # Basic deduplication check if not forced
+            if not force:
+                existing = store.query(query_texts=[text], n_results=1, where={"content_hash": content_hash})
+                if existing and existing.get("ids") and len(existing["ids"][0]) > 0:
+                    skipped_count += 1
+                    continue
+
+            store.add_document(doc_id=doc_id, text=text, metadata=meta)
+            ingested_count += 1
+
+            # Progress reporting
+            if (i + 1) % 5 == 0 or (i + 1) == len(docs_to_ingest):
+                progress = (i + 1) / len(docs_to_ingest) * 100
+                print(f"  [Progress: {progress:6.2f}%] Ingested: {ingested_count}, Skipped: {skipped_count}")
+
+        except Exception as e:
+            print(f"  ❌ Error ingesting [{doc_id}]: {e}")
+
+    duration = time.time() - start_time
+    print(f"\n🎉 Ingestion Complete!")
+    print(f"  - Total Processed: {len(docs_to_ingest)}")
+    print(f"  - Successfully Ingested: {ingested_count}")
+    print(f"  - Skipped (Duplicate): {skipped_count}")
+    print(f"  - Time Taken: {duration:.2f} seconds")
+
+    return {"status": "success", "count": ingested_count, "skipped": skipped_count, "duration": duration}
 
 
 def main():
@@ -1405,4 +1460,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
