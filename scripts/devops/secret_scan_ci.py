@@ -32,14 +32,22 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Ensure we can import from project root
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+# Ensure we can import core modules from backend directory
+project_root = Path(__file__).resolve().parent.parent.parent
+backend_dir = project_root / "backend"
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
 try:
     from core.security.secret_hunter import SecretHunter
 except ImportError:
-    print("⚠️  Could not import SecretHunter. Ensure dependencies are installed.")
-    SecretHunter = None
+    try:
+        from backend.core.security.secret_hunter import SecretHunter
+    except ImportError:
+        print("⚠️  Could not import SecretHunter. Ensure dependencies are installed.")
+        SecretHunter = None
 
 
 # ── Constants ──────────────────────────────────────────────────────────────────
