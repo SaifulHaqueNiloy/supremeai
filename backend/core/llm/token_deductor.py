@@ -112,6 +112,10 @@ class TokenDeductor:
 
         if settings.env in ["production", "staging"]:
             # In production, never allow fallback behavior that could lead to double-spending
+            # Check if Redis is configured first
+            if not self.redis_client.configured:
+                logger.critical("Redis not configured in production - blocking token deduction for security")
+                return TokenDeductionResult.SYSTEM_ERROR
             return await self._secure_deduct_tokens(
                 actual_user_id, total_tokens, transaction_id, deduce_cost, cost_multiplier
             )
@@ -183,127 +187,46 @@ class TokenDeductor:
             await self.redis_client.set_cache(balance_key, str(new_balance))
 
             # Mark transaction as processed to prevent double-spending
-            await self.redis_client.set_cache(transaction_key, "1", ex_seconds=3600)  # Keep for 1 hour
+            await self.redis_client.set_cache(transaction_key, "1", ex=3600)  # 1 hour TTL
 
             logger.info(
-                f"Successfully deducted {total_deduction} tokens for user {user_id}. New balance: {new_balance}"
+                f"Successfully deducted {total_deduction} tokens for user {user_id}. " f"New balance: {new_balance}"
             )
             return TokenDeductionResult.SUCCESS
 
         except Exception as e:
-            logger.error(f"Error during token deduction for user {user_id}: {e}")
+            logger.error(f"Unexpected error during token deduction for user {user_id}: {e}")
             return TokenDeductionResult.SYSTEM_ERROR
         finally:
             # Release the lock
             await self._release_lock(lock_key, lock_value)
 
-    def _acquire_distributed_lock(self, key: str, value: str, ttl: int = 10) -> bool:
-        """Lock method alias for compatibility with test assertions."""
-        from core.config import settings
-        from core.llm import token_deductor
-
-        redis_queue = getattr(token_deductor, "redis_queue", None)
-        if settings.env in ["production", "staging"]:
-            if redis_queue is not None and not getattr(redis_queue, "configured", True):
-                raise RuntimeError("Redis lock required in production")
-            if not getattr(self.redis_client, "configured", True):
-                raise RuntimeError("Redis lock required in production")
-        return True
-
-    def _release_distributed_lock(self, key: str, value: str) -> None:
-        """Lock release alias for compatibility with test assertions."""
-        pass
-
-    async def _acquire_lock(self, key: str, value: str, timeout: int) -> bool:
+    async def _acquire_lock(self, lock_key: str, lock_value: str, timeout: int) -> bool:
         """Acquire a distributed lock using Redis."""
-        client = await self.redis_client.get_client_async()
-        if not client:
-            return False
-
-        lua_acquire_script = """
-        if redis.call("GET", KEYS[1]) == ARGV[2] then
-            redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[1])
-            return 1
-        elseif redis.call("GET", KEYS[1]) == false then
-            redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[1])
-            return 1
-        else
-            return 0
-        end
-        """
-
         try:
-            acquired = await client.eval(lua_acquire_script, 1, key, timeout, value)
-            return bool(acquired)
+            # Using SET with NX and EX options for atomic lock acquisition
+            result = await self.redis_client.client.set(lock_key, lock_value, nx=True, ex=timeout)
+            return result is not None
         except Exception as e:
-            logger.error(f"Error acquiring lock {key}: {e}")
+            logger.error(f"Failed to acquire lock {lock_key}: {e}")
+            # In production, if Redis is down, we should not allow operations that require coordination
+            if settings.env in ["production", "staging"]:
+                logger.critical("Redis unavailable in production - blocking operation for safety")
+                return False
             return False
 
-    async def _release_lock(self, key: str, value: str) -> bool:
-        """Release a distributed lock using Redis."""
-        client = await self.redis_client.get_client_async()
-        if not client:
-            return False
-
-        lua_release_script = """
-        if redis.call("GET", KEYS[1]) == ARGV[1] then
-            return redis.call("DEL", KEYS[1])
-        else
-            return 0
-        end
-        """
-
+    async def _release_lock(self, lock_key: str, lock_value: str) -> bool:
+        """Release a distributed lock using Redis with Lua script to ensure atomicity."""
         try:
-            released = await client.eval(lua_release_script, 1, key, value)
-            return bool(released)
+            lua_script = """
+            if redis.call("GET", KEYS[1]) == ARGV[1] then
+                return redis.call("DEL", KEYS[1])
+            else
+                return 0
+            end
+            """
+            result = await self.redis_client.client.eval(lua_script, 1, lock_key, lock_value)
+            return result == 1
         except Exception as e:
-            logger.error(f"Error releasing lock {key}: {e}")
+            logger.error(f"Failed to release lock {lock_key}: {e}")
             return False
-
-    async def get_balance(self, user_id: str) -> float | None:
-        """Get the current token balance for a user."""
-        balance_key = f"user_balance:{user_id}"
-        balance_str = await self.redis_client.get_cache(balance_key)
-        if balance_str is None:
-            return None
-        try:
-            return float(balance_str)
-        except ValueError:
-            logger.error(f"Invalid balance value for user {user_id}: {balance_str}")
-            return None
-
-    async def add_tokens(self, user_id: str, tokens: float) -> bool:
-        """Add tokens to a user's balance."""
-        balance_key = f"user_balance:{user_id}"
-        current_balance = await self.get_balance(user_id)
-        if current_balance is None:
-            current_balance = 0
-
-        new_balance = current_balance + tokens
-        return await self.redis_client.set_cache(balance_key, str(new_balance))
-
-
-# Global instance
-token_deducter = TokenDeductor()
-
-
-# Convenience functions for backward compatibility
-async def deduct_tokens(
-    user_id: str,
-    tokens_to_deduct: int,
-    transaction_id: str,
-    deduce_cost: bool = True,
-    cost_multiplier: float = 1.0,
-) -> TokenDeductionResult:
-    """Convenience function to deduct tokens."""
-    return await token_deducter.deduct_tokens(user_id, tokens_to_deduct, transaction_id, deduce_cost, cost_multiplier)
-
-
-async def get_balance(user_id: str) -> float | None:
-    """Convenience function to get balance."""
-    return await token_deducter.get_balance(user_id)
-
-
-async def add_tokens(user_id: str, tokens: float) -> bool:
-    """Convenience function to add tokens."""
-    return await token_deducter.add_tokens(user_id, tokens)

@@ -41,6 +41,7 @@ class AdoptionPriority(str, Enum):
 @dataclass(frozen=True)
 class Technology:
     """Immutable technology record."""
+
     name: str
     category: str
     description: str
@@ -55,6 +56,7 @@ class Technology:
 @dataclass(frozen=True)
 class RadarReport:
     """Immutable technology radar report."""
+
     technologies: list[Technology]
     total_tracked: int
     adopt_now_count: int
@@ -162,8 +164,15 @@ class TechnologyRadarAgent:
 
     def get_adoption_recommendations(self) -> list[dict[str, Any]]:
         """Get prioritized adoption recommendations."""
-        priority_order = {AdoptionPriority.NOW: 0, AdoptionPriority.EVALUATE: 1, AdoptionPriority.WATCH: 2, AdoptionPriority.HOLD: 3}
-        sorted_techs = sorted(self._technologies, key=lambda t: (priority_order.get(t.adoption_priority, 3), -t.impact_score))
+        priority_order = {
+            AdoptionPriority.NOW: 0,
+            AdoptionPriority.EVALUATE: 1,
+            AdoptionPriority.WATCH: 2,
+            AdoptionPriority.HOLD: 3,
+        }
+        sorted_techs = sorted(
+            self._technologies, key=lambda t: (priority_order.get(t.adoption_priority, 3), -t.impact_score)
+        )
 
         return [
             {

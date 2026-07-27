@@ -39,6 +39,7 @@ class LearningStyle(str, Enum):
 @dataclass(frozen=True)
 class LearningModule:
     """Immutable learning module."""
+
     title: str
     subject: str
     difficulty: DifficultyLevel
@@ -51,6 +52,7 @@ class LearningModule:
 @dataclass(frozen=True)
 class QuizQuestion:
     """Immutable quiz question."""
+
     question: str
     options: list[str]
     correct_answer: int  # Index
@@ -61,6 +63,7 @@ class QuizQuestion:
 @dataclass(frozen=True)
 class LearningPath:
     """Immutable learning path recommendation."""
+
     user_id: str
     goal: str
     modules: list[LearningModule]
@@ -107,6 +110,7 @@ class EducationAgent:
                 max_tokens=1000,
             )
             import json
+
             content = result.get("content", "[]")
             data = json.loads(content) if isinstance(content, str) else content
             questions = [QuizQuestion(**q) for q in data[:num_questions]]
@@ -124,13 +128,16 @@ class EducationAgent:
 
         await self.cache.set(
             cache_key,
-            [{
-                "question": q.question,
-                "options": q.options,
-                "correct_answer": q.correct_answer,
-                "explanation": q.explanation,
-                "difficulty": q.difficulty.value,
-            } for q in questions],
+            [
+                {
+                    "question": q.question,
+                    "options": q.options,
+                    "correct_answer": q.correct_answer,
+                    "explanation": q.explanation,
+                    "difficulty": q.difficulty.value,
+                }
+                for q in questions
+            ],
             ttl=EDUCATION_CACHE_TTL,
         )
 
@@ -159,6 +166,7 @@ class EducationAgent:
                 max_tokens=1500,
             )
             import json
+
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             modules = [LearningModule(**m) for m in data.get("modules", [])]

@@ -24,6 +24,7 @@ ECOMMERCE_CACHE_TTL = 1800  # 30 minutes
 @dataclass(frozen=True)
 class Product:
     """Immutable product record."""
+
     id: str
     name: str
     category: str
@@ -37,6 +38,7 @@ class Product:
 @dataclass(frozen=True)
 class Recommendation:
     """Immutable product recommendation."""
+
     product: Product
     relevance_score: float
     reason: str
@@ -45,6 +47,7 @@ class Recommendation:
 @dataclass(frozen=True)
 class ReviewSummary:
     """Immutable review summary."""
+
     product_id: str
     average_rating: float
     total_reviews: int
@@ -116,16 +119,18 @@ class EcommerceAgent:
 
         recommendations = []
         for score, product in scored:
-            matched_tags = ", ".join(
-                t for t in product.tags if t.lower() in set(p.lower() for p in user_preferences)
+            matched_tags = ", ".join(t for t in product.tags if t.lower() in set(p.lower() for p in user_preferences))
+            reason = (
+                f"Matches your interest in {matched_tags}" if matched_tags else f"Top-rated {product.category} product"
             )
-            reason = f"Matches your interest in {matched_tags}" if matched_tags else f"Top-rated {product.category} product"
 
-            recommendations.append(Recommendation(
-                product=product,
-                relevance_score=round(score, 2),
-                reason=reason,
-            ))
+            recommendations.append(
+                Recommendation(
+                    product=product,
+                    relevance_score=round(score, 2),
+                    reason=reason,
+                )
+            )
 
         return recommendations
 
@@ -154,6 +159,7 @@ class EcommerceAgent:
         try:
             result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=500)
             import json
+
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             pros = data.get("pros", [])
