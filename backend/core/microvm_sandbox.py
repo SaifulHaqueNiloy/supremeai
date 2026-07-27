@@ -23,6 +23,10 @@ from loguru import logger
 from core.config import settings
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
+# AST প্রি-এক্সিকিউশন স্ক্যানার — স্যান্ডবক্স বাইপাস প্রতিরোধ
+# getattr/hasattr/__import__/eval/exec ইত্যাদি বিপজ্জনক প্যাটার্ন স্ক্যান করে
+from core.security.ast_sandbox_scanner import scan_code, validate_code_for_sandbox
+
 # বাংলা মন্তব্য: Sandbox root whitelist — অনুমোদিত directories শুধু এখানে থাকতে পারে।
 # কেউ SANDBOX_ROOT=/etc/cron.d দিলে startup-এই crash হবে।
 _SANDBOX_ROOT_WHITELIST: frozenset[str] = frozenset(
@@ -92,6 +96,21 @@ def _safe_vm_path(sandbox_root: Path, vm_id: str) -> Path:
     return ResourceGuard.verify_path(vm_path)
 
 
+def _ast_validate_code(code: str, context: str = "sandbox") -> tuple[bool, str]:
+    """
+    বাংলা মন্তব্য: AST ব্যবহার করে কোড ভ্যালিডেট করে — getattr/hasattr বাইপাস প্রতিরোধ।
+    
+    This is a centralized validation helper used before any sandbox code execution.
+    Returns (is_safe, reason) tuple.
+    """
+    is_safe, reason = validate_code_for_sandbox(code, strict_mode=True)
+    if not is_safe:
+        logger.critical(f"🚫 [AST-Sandbox] Blocked code in {context}: {reason}")
+    else:
+        logger.debug(f"✅ [AST-Sandbox] Code passed validation in {context}")
+    return is_safe, reason
+
+
 class MicroVMSandbox:
     """
     বাংলা মন্তব্য: Path-Hardened MicroVM Sandbox।
@@ -100,6 +119,7 @@ class MicroVMSandbox:
     - vm_id regex validated
     - Docker image whitelist enforced
     - CancelledError সবসময় re-raise
+    - AST pre-execution validation (getattr/hasattr বাইপাস প্রতিরোধ)
     """
 
     _vm_id_counter: int = 0
@@ -164,6 +184,16 @@ class MicroVMSandbox:
 
     async def execute_async(self, cmd: str, timeout: int = 30, language: str = "python") -> dict[str, Any]:
         """বাংলা মন্তব্য: Secure code execution। Path validation mandatory।"""
+        # 🛡️ AST প্রি-এক্সিকিউশন ভ্যালিডেশন — getattr/hasattr বাইপাস প্রতিরোধ
+        is_safe, reason = _ast_validate_code(cmd, context=f"execute_async/{language}")
+        if not is_safe:
+            logger.critical(f"[MicroVMSandbox] AST validation blocked unsafe code for {language}: {reason}")
+            return {
+                "success": False,
+                "error": f"AST sandbox validation failed: {reason}",
+                "provider": "sandbox_scanner",
+            }
+
         vm_runtime = self._check_microvm_available()
 
         if not vm_runtime:
@@ -224,6 +254,11 @@ class MicroVMSandbox:
 
     async def _run_firecracker(self, vm_dir: Path, vm_id: str, cmd: str, timeout: int) -> dict[str, Any]:
         """বাংলা মন্তব্য: cmd (ইউজারের কোড) এখন সঠিকভাবে VM-এর ভেতরে পৌঁছায় (Patch 3 fix)।"""
+        # 🛡️ AST validation before firecracker execution
+        is_safe, reason = _ast_validate_code(cmd, context="firecracker")
+        if not is_safe:
+            return {"success": False, "error": f"AST validation failed: {reason}", "provider": "firecracker"}
+
         rootfs_template = getattr(settings, "firecracker_rootfs_template", None)
         if not rootfs_template or not Path(rootfs_template).exists():
             logger.error(
@@ -282,6 +317,11 @@ class MicroVMSandbox:
         string interpolation দিয়ে cmd argument inject করা নিষিদ্ধ।
         tempfile sandbox_root-এ তৈরি হয় — /tmp bypass নয়।
         """
+        # 🛡️ AST validation before gVisor execution
+        is_safe, reason = _ast_validate_code(cmd, context="gvisor")
+        if not is_safe:
+            return {"success": False, "error": f"AST validation failed: {reason}", "provider": "gvisor"}
+
         tmp_path: Path | None = None
         try:
             # বাংলা মন্তব্য: tempfile sandbox_root-এ — arbitrary dir নয়
@@ -331,6 +371,11 @@ class MicroVMSandbox:
         বাংলা মন্তব্য: Docker fallback — whitelist image only।
         cmd tempfile-এ write করা হয় — argument injection নয়।
         """
+        # 🛡️ AST validation before Docker execution
+        is_safe, reason = _ast_validate_code(cmd, context="docker-fallback")
+        if not is_safe:
+            return {"success": False, "error": f"AST validation failed: {reason}", "provider": "docker-fallback"}
+
         # বাংলা মন্তব্য: _ALLOWED_DOCKER_IMAGES whitelist enforce
         docker_image = _DEFAULT_DOCKER_IMAGE
         assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101  # noqa: S101
@@ -433,7 +478,13 @@ def get_sandbox() -> MicroVMSandbox:
 
 async def execute_code_securely(code: str, timeout: int = 30, language: str = "python") -> dict[str, Any]:
     """বাংলা মন্তব্য: Public API — sandbox validate করে code execute করে।"""
+    # 🛡️ AST pre-execution validation at the public API level
+    is_safe, reason = _ast_validate_code(code, context=f"execute_code_securely/{language}")
+    if not is_safe:
+        logger.critical(f"[MicroVMSandbox] Public API blocked unsafe code: {reason}")
+        return {
+            "success": False,
+            "error": f"AST sandbox validation failed: {reason}",
+            "provider": "sandbox_scanner",
+        }
     return await get_sandbox().execute_async(code, timeout, language)
-
-
-# বাংলা মন্তব্য: import asyncio উপরে সরানো হয়েছে।

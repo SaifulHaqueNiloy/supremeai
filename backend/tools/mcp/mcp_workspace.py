@@ -295,6 +295,31 @@ async def workspace_get_scoped_path(params: ScopedFilePathInput) -> str:
     )
 
 
+def _get_scoped_path(relative_path: str, project_type: WorkspaceType | None = None) -> Path:
+    """
+    রিলেটিভ পাথ ও প্রোজেক্টের টাইপ অনুযায়ী স্কোপযুক্ত পাথ রিটার্ন করে।
+    """
+    if project_type:
+        workspace_path = _get_workspace_path(project_type)
+    else:
+        session_file = Path(WORKSPACE_SESSION_FILE)
+        if session_file.exists():
+            try:
+                session = json.loads(session_file.read_text(encoding="utf-8"))
+                workspace_path = Path(session.get("workspace_path", "backend"))
+            except (json.JSONDecodeError, OSError):
+                workspace_path = _workspace_root / "backend"
+        else:
+            workspace_path = _workspace_root / "backend"
+
+    ref_path = Path(relative_path)
+    if ref_path.is_absolute() or ".." in ref_path.parts:
+        raise ValueError(f"Path traversal not allowed: {relative_path}")
+
+    scoped = workspace_path / ref_path
+    return scoped
+
+
 @mcp.tool(
     name="workspace_list_projects",
     annotations={
