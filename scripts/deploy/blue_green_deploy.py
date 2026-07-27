@@ -137,19 +137,27 @@ class BlueGreenDeployer:
 
         return result
 
+import shlex
+
     def _build_deploy_command(
         self,
         environment: str,
         image_tag: str,
         config_overrides: Optional[Dict[str, Any]] = None
     ) -> str:
-        """Build deployment command."""
+        """Build deployment command with shell quoting."""
         base_cmd = self.config.get('deploy_script', 'echo "Deploy simulation"')
         config_flag = ""
         if config_overrides:
             config_str = json.dumps(config_overrides)
-            config_flag = f" --config '{config_str}'"
-        return f"{base_cmd} --env {environment} --image {image_tag}{config_flag}"
+            config_flag = f" --config {shlex.quote(config_str)}"
+        return f"{base_cmd} --env {shlex.quote(environment)} --image {shlex.quote(image_tag)}{config_flag}"
+
+    def _build_switch_command(self, environment: str) -> str:
+        """Build traffic switch command with shell quoting."""
+        env_quoted = shlex.quote(environment)
+        patch_payload = json.dumps({"spec": {"selector": {"version": environment}}})
+        return f"kubectl patch svc/app-router -p {shlex.quote(patch_payload)}"
 
     async def run_health_checks(
         self,
@@ -215,9 +223,7 @@ class BlueGreenDeployer:
             logger.error(f"Traffic switch error: {e}")
             return False
 
-    def _build_switch_command(self, environment: str) -> str:
-        """Build traffic switch command."""
-        return f"kubectl patch svc/app-router -p '{{\"spec\":{{\"selector\":{{\"version\":\"{environment}\"}}}}}}'"
+
 
     async def rollback(
         self,

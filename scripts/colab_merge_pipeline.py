@@ -135,8 +135,8 @@ class MergekitPipeline:
             result = subprocess.run(convert_cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 logger.warning(f"ONNX conversion failed: {result.stderr}, trying direct GGUF conversion")
-        except:
-            logger.warning("ONNX conversion failed, proceeding with direct GGUF conversion")
+        except Exception as e:
+            logger.warning(f"ONNX conversion failed ({e}), proceeding with direct GGUF conversion")
 
         # Use llama.cpp for GGUF conversion
         gguf_cmd = [
