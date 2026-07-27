@@ -51,16 +51,16 @@ _MODEL_KEY_MAP: dict[str, str] = {
 
 # বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
 _DEFAULT_FALLBACK_MODELS: list[str] = [
-    "gemini/gemini-2.5-flash",
+    "gemini/gemini-1.5-flash",
     "openrouter/auto",
 ]
 # OpenAI-style Task-to-Model mapping
 TASK_MODEL_MAP: dict[str, str] = {
-    "coding": "deepseek/deepseek-coder",
-    "reasoning": "anthropic/claude-3-5-sonnet",
-    "vision": "google/gemini-2.5-pro",
-    "chat": "gemini/gemini-2.5-flash",
-    "general": "gemini/gemini-2.5-flash",
+    "coding": "groq/llama-3.3-70b-versatile",
+    "reasoning": "openrouter/meta-llama/llama-3.3-70b-instruct",
+    "vision": "gemini/gemini-1.5-flash",
+    "chat": "gemini/gemini-1.5-flash",
+    "general": "gemini/gemini-1.5-flash",
 }
 
 
