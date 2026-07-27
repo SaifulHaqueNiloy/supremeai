@@ -26,10 +26,10 @@ class TenantRateLimiter:
             from core.cache.redis_manager import redis_manager
 
             return redis_manager.client
-        except Exception as e:  # noqa: BLE001
+        except (ImportError, AttributeError, RuntimeError) as e:
             from loguru import logger
 
-            logger.warning(f"Exception suppressed: {e}")
+            logger.warning(f"Failed to resolve redis_manager module: {e}")
             return None
 
     def _init_billing_tiers(self) -> None:

@@ -81,7 +81,7 @@ if REPO_ROOT not in sys.path:
 if os.path.isdir(SCRIPTS_DIR) and SCRIPTS_DIR not in sys.path:
     sys.path.append(SCRIPTS_DIR)
 os.environ.setdefault("OPENROUTER_API_KEY", "mock-key-value")
-os.environ.setdefault("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000")
+os.environ.setdefault("CORS_ORIGINS", '["http://localhost:3000", "http://localhost:8000"]')
 
 # বাংলা মন্তব্য: টেস্ট রান করার সময় রিয়াল ডাটাবেস এড়াতে এবং লক হওয়া রোধ করতে ইন-মেমোরি ডাটাবেস সেট করা হলো
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
