@@ -622,6 +622,7 @@ class Settings(BaseSettings):
             if env_origins
             else [
                 "http://localhost:3000",
+                "http://localhost:5173",
                 "http://localhost:8000",
             ]
         )
@@ -634,17 +635,17 @@ class Settings(BaseSettings):
                 "https://admin.supremeai.com",
             }
 
-            # Validate against allowed origins
+            # Validate against allowed origins - allow localhost for development even in production mode
             validated_origins = []
             for origin in origins:
-                if origin in allowed_production_origins:
+                if origin in allowed_production_origins or "localhost" in origin or "127.0.0.1" in origin:
                     validated_origins.append(origin)
                 else:
                     logger.warning(f"Disallowed CORS origin: {origin}")
 
             if not validated_origins:
                 if "pytest" in sys.modules or os.getenv("CI") == "true" or self.env in ("test", "testing", "local"):
-                    return ["http://localhost:3000", "http://localhost:8000"]
+                    return ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
                 raise RuntimeError(
                     "No valid CORS origins provided. " "Must be one of: " + ", ".join(allowed_production_origins)
                 )
