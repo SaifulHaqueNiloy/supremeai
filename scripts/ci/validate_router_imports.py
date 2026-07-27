@@ -22,6 +22,10 @@ import os
 import traceback
 from pathlib import Path
 
+# বাংলা মন্তব্য: Windows cp1252 টার্মিনালে UnicodeEncodeError ঠেকাতে stdout UTF-8 এ রিকনফিগার করা হচ্ছে
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 # Ensure backend root and repo root are in python path
 backend_dir = str(Path(__file__).parent.parent.parent / "backend")
 repo_root = str(Path(__file__).parent.parent.parent)
@@ -155,7 +159,7 @@ def run_validation(strict: bool = False) -> int:
             print(f"  {GREEN}[OK]{RESET} {module}")
         else:
             print(f"  {RED}[FAIL]{RESET} {module}")
-            print(f"     {RED}└─ {err}{RESET}")
+            print(f"     {RED}+-- {err}{RESET}")
             core_failures.append((module, err or "unknown error"))
 
     # Test optional routers
@@ -165,8 +169,8 @@ def run_validation(strict: bool = False) -> int:
         if ok:
             print(f"  {GREEN}[OK]{RESET} {module}")
         else:
-            print(f"  {YELLOW}[WARN]{RESET} {module} (optional — will warn, not fail)")
-            print(f"     {YELLOW}└─ {err}{RESET}")
+            print(f"  {YELLOW}[WARN]{RESET} {module} (optional -- will warn, not fail)")
+            print(f"     {YELLOW}+-- {err}{RESET}")
             optional_failures.append((module, err or "unknown error"))
 
     # Summary
