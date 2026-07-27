@@ -55,87 +55,44 @@ describe('DashboardShell', () => {
     localStorage.clear();
   });
 
-  it('renders sidebar with all navigation items', () => {
+  // বাংলা মন্তব্য: নতুন সাইডবার এবং তার নেভিগেশন লিঙ্কগুলি রেন্ডার হচ্ছে কি না যাচাই
+  it('renders sidebar with all new navigation items', () => {
     renderShell();
     expect(screen.getByTestId('dashboard-sidebar')).toBeInTheDocument();
-    for (const nav of [
-      'sessions',
-      'workspace',
-      'vault',
-      'automation',
-      'knowledge',
-      'secrets',
-      'usage',
-      'settings',
-      'site-actions',
-      'llm-gateway',
-      'admin',
-    ]) {
+
+    const expectedNavs = ['workspace', 'agent', 'ide', 'skills', 'integrations', 'analytics', 'profile'];
+    for (const nav of expectedNavs) {
       expect(screen.getByTestId(`nav-${nav}`)).toBeInTheDocument();
     }
-    expect(screen.getByTestId('sidebar-server-status')).toHaveTextContent('Online');
   });
 
-  it.skip('renders the Sujon live background in idle state by default', () => {
+  // বাংলা মন্তব্য: কোড এডিটর প্যানেল সঠিকভাবে ফাইলনেম এবং টেমপ্লেট কোড সহ রেন্ডার হচ্ছে কি না যাচাই
+  it('renders the Code Editor panel with header and initial code structure', () => {
     renderShell();
-    const bg = screen.getByTestId('sujon-background');
-    expect(bg).toBeInTheDocument();
-    expect(bg).toHaveAttribute('data-sujon-state', 'idle');
+    expect(screen.getByText('index.tsx')).toBeInTheDocument();
+    expect(screen.getByText(/Hello World!/i)).toBeInTheDocument();
   });
 
-  it.skip('navigates to the Web Authorization Vault page', async () => {
+  // বাংলা মন্তব্য: এআই অ্যাসিস্ট্যান্ট চ্যাট প্যানেল এবং ইনপুট ফিল্ড রেন্ডার হচ্ছে কি না যাচাই
+  it('renders the AI Assistant panel with user messages and input field', () => {
     renderShell();
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('nav-vault'));
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    expect(await screen.findByTestId('vault-connection-status')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /AI Assistant/i })).toBeInTheDocument();
+    expect(screen.getByText('How can I optimize this function?')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ask AI anything...')).toBeInTheDocument();
   });
 
-  it.skip('navigates to the Site Actions registry editor', async () => {
+  // বাংলা মন্তব্য: প্রজেক্ট এবং টাস্কের পরিসংখ্যান স্ট্যাটাস কার্ড রেন্ডার হচ্ছে কি না যাচাই
+  it('renders stats cards showing active projects and completed tasks count', () => {
     renderShell();
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('nav-site-actions'));
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    expect(await screen.findByTestId('sa-save-btn')).toBeInTheDocument();
+    expect(screen.getByText('Active Projects')).toBeInTheDocument();
+    expect(screen.getByText('Tasks Completed')).toBeInTheDocument();
+    expect(screen.getByText('24')).toBeInTheDocument();
+    expect(screen.getByText('142')).toBeInTheDocument();
   });
 
-  it('shows sessions page with composer by default', async () => {
+  // বাংলা মন্তব্য: সার্ভার স্ট্যাটাস অনলাইন/অফলাইন ইন্ডিকেটর সঠিকভাবে প্রদর্শিত হচ্ছে কি না যাচাই
+  it('renders server online status indicator', () => {
     renderShell();
-    expect((await screen.findAllByTestId('session-composer'))[0]).toBeInTheDocument();
-    expect((await screen.findAllByTestId('start-session-btn'))[0]).toBeInTheDocument();
-  });
-
-  it('navigates to workspace page rendering legacy dashboard', async () => {
-    renderShell();
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('nav-workspace'));
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    expect(await screen.findByTestId('legacy-workspace')).toBeInTheDocument();
-  });
-
-  it('navigates to knowledge page', async () => {
-    renderShell();
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('nav-knowledge'));
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    expect(await screen.findByTestId('knowledge-search-input')).toBeInTheDocument();
-  });
-
-  it('starts a new session from the composer', async () => {
-    renderShell();
-    fireEvent.change((await screen.findAllByTestId('session-composer'))[0], {
-      target: { value: 'Build a landing page' },
-    });
-    await act(async () => {
-      fireEvent.click((await screen.findAllByTestId('start-session-btn'))[0]);
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    // বাংলা মন্তব্য: সেশন ডিটেইল পেজ async loadSessions() কল করে — তাই find* ব্যবহার করা হয়
-    const elements = await screen.findAllByText(/Session Cockpit:/i, {}, { timeout: 3000 });
-    expect(elements.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Server Status: Online/i)).toBeInTheDocument();
   });
 });
