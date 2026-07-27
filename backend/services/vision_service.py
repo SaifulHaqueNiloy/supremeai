@@ -15,10 +15,11 @@ class VisionService:
     Processes image inputs, diagrams, screenshots, and visual architectural mockups.
     """
 
-    async def analyze_image(self, image_bytes: bytes, user_query: str = "Analyze this diagram") -> Dict[str, Any]:
+    async def analyze_image(self, image_bytes: bytes, query: str = "Analyze this diagram", user_query: Optional[str] = None) -> Dict[str, Any]:
         """
         Analyze image bytes and extract architectural components or UI code layout.
         """
+        target_query = user_query or query
         try:
             logger.info(f"Vision Service processing image ({len(image_bytes)} bytes) with query: '{user_query}'")
             analysis_summary = "Identified 3-tier microservice backend architecture with Redis cache and PostgreSQL database."
