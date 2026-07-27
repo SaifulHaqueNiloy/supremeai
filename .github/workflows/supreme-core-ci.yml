@@ -189,7 +189,7 @@ jobs:
 
       - name: 🛡️ Gate 1.5 — Security Blind Spot Scan
         if: needs.changes.outputs.docs_only != 'true'
-        continue-on-error: true
+        # বাংলা মন্তব্য: continue-on-error: true সরানো হয়েছে কারণ Critical security risk চুপচাপ পাস হয়ে যাচ্ছিল
         run: |
           echo "=== Security Blind Spot Scan ===" >> $GITHUB_STEP_SUMMARY
           python scripts/security/auto_find_blindspots.py
@@ -438,8 +438,9 @@ jobs:
           file: ./backend/Dockerfile.ci
           push: true
           tags: ghcr.io/${{ github.repository }}/backend-ci-base:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=min
+          # বাংলা মন্তব্য: GHCR registry cache ব্যবহার করা হচ্ছে কারণ GHA cache (10GB limit) Poetry/pnpm cache evict করে দিচ্ছিল
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/backend-ci-base:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/backend-ci-base:buildcache,mode=max
 
   backend-core:
     name: 🐍 Backend (Test)
@@ -834,8 +835,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # বাংলা মন্তব্য: GHCR registry cache ব্যবহার করা হচ্ছে — আলাদা storage quota তাই 10GB GHA limit স্পর্শ করে না
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/supremeai-backend:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/supremeai-backend:buildcache,mode=max
 
   deploy-user-backend:
     name: 🚀 Deploy User Backend (Render)
