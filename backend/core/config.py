@@ -496,7 +496,10 @@ class Settings(BaseSettings):
 
     @property
     def discord_bot_token(self) -> str:
-        return self._get_cached_secret("DISCORD_BOT_TOKEN")
+        try:
+            return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
+        except Exception:  # noqa: BLE001
+            return ""
 
     @property
     def github_client_id(self) -> str:
