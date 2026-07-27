@@ -76,3 +76,7 @@ def install_excepthook():
     sys.excepthook = handle_unhandled_exception
     threading.Thread.__init__ = patched_thread_init
     logger.info("🛡️ Intelligent Silent Catcher hooks installed.")
+
+
+# Alias for backward-compatibility
+setup_silent_catcher = install_excepthook
