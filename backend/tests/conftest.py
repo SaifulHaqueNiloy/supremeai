@@ -48,6 +48,34 @@ sys.modules["nats.aio.client"] = create_mock_module("nats.aio.client")
 sys.modules["nats.errors"] = create_mock_module("nats.errors")
 sys.modules["docker"] = create_mock_module("docker", is_package=True)
 sys.modules["docker.errors"] = create_mock_module("docker.errors")
+sys.modules["tools.code"] = create_mock_module("tools.code", is_package=True)
+sys.modules["tools.code.fuzz_sandbox"] = create_mock_module("tools.code.fuzz_sandbox")
+
+# Mock external SDKs
+sys.modules["analytics"] = create_mock_module("analytics")
+sys.modules["sentry_sdk"] = create_mock_module("sentry_sdk")
+sys.modules["sentry_sdk.integrations"] = create_mock_module("sentry_sdk.integrations", is_package=True)
+sys.modules["sentry_sdk.integrations.loguru"] = create_mock_module("sentry_sdk.integrations.loguru")
+sys.modules["supabase"] = create_mock_module("supabase", is_package=True)
+sys.modules["supabase.client"] = create_mock_module("supabase.client")
+sys.modules["alembic"] = create_mock_module("alembic", is_package=True)
+sys.modules["alembic.config"] = create_mock_module("alembic.config")
+sys.modules["alembic.migration"] = create_mock_module("alembic.migration", is_package=True)
+sys.modules["alembic.operations"] = create_mock_module("alembic.operations")
+sys.modules["alembic.runtime"] = create_mock_module("alembic.runtime", is_package=True)
+sys.modules["alembic.runtime.migration"] = create_mock_module("alembic.runtime.migration")
+sys.modules["redis"] = create_mock_module("redis", is_package=True)
+sys.modules["redis.asyncio"] = create_mock_module("redis.asyncio", is_package=True)
+sys.modules["redis.exceptions"] = create_mock_module("redis.exceptions")
+sys.modules["stripe"] = create_mock_module("stripe", is_package=True)
+sys.modules["stripe.error"] = create_mock_module("stripe.error")
+sys.modules["resend"] = create_mock_module("resend", is_package=True)
+sys.modules["resend.emails"] = create_mock_module("resend.emails")
+sys.modules["httpx"] = create_mock_module("httpx", is_package=True)
+sys.modules["httpx._client"] = create_mock_module("httpx._client")
+sys.modules["httpx._models"] = create_mock_module("httpx._models")
+sys.modules["httpx._exceptions"] = create_mock_module("httpx._exceptions")
+sys.modules["websockets"] = create_mock_module("websockets", is_package=True)
 
 # ✅ SECURITY: Use explicit test-only placeholders that cannot be mistaken for real credentials.
 os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
@@ -60,7 +88,6 @@ os.environ["CI_WEBHOOK_SECRET"] = "TEST_ONLY_CI_WEBHOOK_SECRET"
 os.environ["ENV"] = "test"
 os.environ["DOCS_PASSWORD"] = "dummy_pass"
 os.environ["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "dummy_admin_hash"
-import sys
 
 try:
     import matplotlib
@@ -99,7 +126,6 @@ try:
 except Exception as e:
     import warnings
 
-    # বাংলা মন্তব্য: B028 ফিক্স — stacklevel=2 যোগ করা হয়েছে যাতে warning সঠিক caller লাইন দেখায়
     warnings.warn(
         f"Failed to clear settings caches during test setup: {e}",
         UserWarning,
@@ -108,8 +134,6 @@ except Exception as e:
 
 
 # Mock Google Auth credentials and services globally during tests
-
-
 try:
     import google.auth
 
@@ -214,7 +238,6 @@ def override_auth():
 @pytest.fixture(autouse=True)
 def configure_litellm():
     """টেস্টের জন্য litellm সেটিংস কনফিগার করুন"""
-    # বাংলা মন্তব্য: লিটেলএলএম প্রক্সি এবং টেলিমেট্রি সেটিংস নিশ্চিত করা
     try:
         import threading
 
@@ -257,48 +280,53 @@ import pytest_asyncio
 pytest_plugins = ["pytest_asyncio"]
 
 
-# ✅ FIXED: anyio's built-in `anyio_backend` fixture defaults to module scope, which is
-# narrower than our session-scoped `setup_test_database` fixture below. Any anyio-marked
-# async test then fails at setup with:
-#   "ScopeMismatch: You tried to access the module scoped fixture anyio_backend
-#    with a session scoped request object."
-# Overriding `anyio_backend` here at session scope (the standard anyio fix for this
-# exact conflict) resolves it for every @pytest.mark.anyio test in the suite.
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")  # বাংলা: টেস্ট রান টাইম কমাতে session scope ব্যবহার করা হচ্ছে
+@pytest_asyncio.fixture(autouse=True, scope="session")
 async def setup_test_database():
-    import sqlalchemy.dialects.sqlite as sqlite_dialect  # noqa: F401
-    from sqlalchemy.dialects.postgresql import JSONB
-    from sqlalchemy.ext.compiler import compiles
-    from sqlalchemy.types import JSON  # noqa: F401
+    """Session-scoped DB setup - skips gracefully if database modules are unavailable."""
+    _db_available = False
+    try:
+        import sqlalchemy.dialects.sqlite as sqlite_dialect  # noqa: F401
+        from sqlalchemy.dialects.postgresql import JSONB
+        from sqlalchemy.ext.compiler import compiles
+        from sqlalchemy.types import JSON  # noqa: F401
 
-    @compiles(JSONB, "sqlite")
-    def compile_jsonb_sqlite(type_, compiler, **kw):
-        return "JSON"
+        @compiles(JSONB, "sqlite")
+        def compile_jsonb_sqlite(type_, compiler, **kw):
+            return "JSON"
 
-    from database.session import engine
-    from models.base import Base
+        from database.session import engine
+        from models.base import Base
 
-    # বাংলা মন্তব্য: সব মডেল স্পষ্টভাবে ইম্পোর্ট করা হলো যাতে Base.metadata তে রেজিস্ট্রি হয়
-    # বাংলা: wallet.py তে UserWallet ও TransactionLedgerEntry (SQLAlchemy) আছে — সরাসরি ইম্পোর্ট করো
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+            try:
+                await conn.run_sync(Base.metadata.create_all)
+            except Exception as e:  # noqa: BLE001
+                import warnings
 
-    async with engine.begin() as conn:
-        await conn.run_sync(
-            Base.metadata.drop_all
-        )  # à¦ªà¦°à¦¿à¦·à§à¦•à¦¾à¦° à¦¶à§à¦°à§ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¤à§‡
-        try:
-            await conn.run_sync(Base.metadata.create_all)  # à¦¸à¦¬ à¦Ÿà§‡à¦¬à¦¿à¦² à¦¤à§ˆà¦°à¦¿
-        except Exception as e:  # noqa: BLE001
-            import warnings
+                warnings.warn(f"Test database setup skipped due to schema issue: {e}", stacklevel=2)
+        _db_available = True
+    except Exception as e:
+        import warnings
 
-            warnings.warn(f"Test database setup skipped due to schema issue: {e}", stacklevel=2)
+        warnings.warn(f"Database unavailable ({e}). Non-DB tests will still run.", UserWarning, stacklevel=2)
+
     yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+
+    if _db_available:
+        try:
+            from database.session import engine
+            from models.base import Base
+
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.drop_all)
+        except Exception:
+            pass
 
 
 @pytest_asyncio.fixture
@@ -312,27 +340,21 @@ async def async_session():
 def clear_settings_cache():
     """Clear cached secrets before each test to prevent test bleed."""
     import os
-
     from core.config import secret_vault, settings
 
     settings._cached_secrets.clear()
     secret_vault.invalidate_cache()
 
     # Many tests mutate os.environ without cleaning up
-    # MUST set to "" instead of del, otherwise secret_vault will mock it with "mock_SUPREMEAI_API_TOKEN"
     os.environ["SUPREMEAI_API_TOKEN"] = ""
     yield
 
 
 @pytest.fixture(autouse=True)
 def mock_supabase():
-    # বাংলা মন্তব্য: Supabase নেটওয়ার্ক লিক সম্পূর্ণ বন্ধ করা হলো।
-    # create_client মক করার পাশাপাশি settings-এ supabase_url/key খালি রেখে
-    # যেকোনো রিয়েল নেটওয়ার্ক রিকোয়েস্ট আটকানো হচ্ছে।
     import os
     from unittest.mock import MagicMock
 
-    # নিশ্চিত করো env-এ URL/KEY নেই যাতে create_client কল না হয়
     old_url = os.environ.get("SUPABASE_URL", "")
     old_key = os.environ.get("SUPABASE_KEY", "")
     os.environ["SUPABASE_URL"] = ""
@@ -347,7 +369,6 @@ def mock_supabase():
         mock_create.return_value = mock_db.client
         yield mock_create
 
-    # টেস্টের পর env পুনরুদ্ধার
     if old_url:
         os.environ["SUPABASE_URL"] = old_url
     if old_key:

@@ -3,19 +3,20 @@
 - clear_stale_cache: REDIS_URL unset, no keys, keys found and deleted
 """
 
-import importlib.util
 import os
+import sys
 from unittest.mock import MagicMock, patch
 
-# Load tools/cache_cleanup.py from the project root (no __init__.py in tools/)
-_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-_SPEC = importlib.util.spec_from_file_location(
-    "cache_cleanup", os.path.join(_PROJECT_ROOT, "tools", "cache_cleanup.py")
-)
-cache_cleanup = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(cache_cleanup)
-
 import pytest
+
+# Ensure the project root is on sys.path for coverage tracking
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
+# Normal import so coverage can track tools/cache_cleanup.py
+sys.path.insert(0, os.path.join(_PROJECT_ROOT, ".."))
+import tools.cache_cleanup as cache_cleanup  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +43,7 @@ def test_scan_keys_success():
 
 
 def test_scan_keys_fallback_to_keys():
-    """scan_iter raises → falls back to client.keys."""
+    """scan_iter raises -> falls back to client.keys."""
     client = MagicMock()
     client.scan_iter.side_effect = RuntimeError("scan broke")
     client.keys.return_value = ["fallback_key"]
@@ -52,7 +53,7 @@ def test_scan_keys_fallback_to_keys():
 
 
 def test_scan_keys_both_fail():
-    """Both scan_iter and keys fail → returns empty list."""
+    """Both scan_iter and keys fail -> returns empty list."""
     client = MagicMock()
     client.scan_iter.side_effect = RuntimeError("scan broke")
     client.keys.side_effect = RuntimeError("keys broke")
@@ -64,13 +65,13 @@ def test_scan_keys_both_fail():
 
 
 def test_clear_stale_cache_no_redis_url():
-    """REDIS_URL not set → returns 0 immediately."""
+    """REDIS_URL not set -> returns 0 immediately."""
     os.environ.pop("REDIS_URL", None)
     assert cache_cleanup.clear_stale_cache() == 0
 
 
 def test_clear_stale_cache_no_keys_found():
-    """REDIS_URL set but no keys match → returns 0."""
+    """REDIS_URL set but no keys match -> returns 0."""
     os.environ["REDIS_URL"] = "redis://localhost:6379/0"
     mock_client = MagicMock()
     mock_client.scan_iter.return_value = []
@@ -84,14 +85,10 @@ def test_clear_stale_cache_no_keys_found():
 
 
 def test_clear_stale_cache_deletes_keys():
-    """REDIS_URL set, keys found → deletes and returns count."""
+    """REDIS_URL set, keys found -> deletes and returns count."""
     os.environ["REDIS_URL"] = "redis://localhost:6379/0"
     mock_client = MagicMock()
-    mock_client.scan_iter.return_value = [
-        "temp_cache:a",
-        "temp_cache:b",
-        "temp_cache:c",
-    ]
+    mock_client.scan_iter.return_value = ["temp_cache:a", "temp_cache:b", "temp_cache:c"]
 
     with patch.object(cache_cleanup, "redis") as mock_redis:
         mock_redis.from_url.return_value = mock_client
@@ -102,7 +99,7 @@ def test_clear_stale_cache_deletes_keys():
 
 
 def test_clear_stale_cache_scan_fallback():
-    """scan_iter fails → falls back to keys, still deletes."""
+    """scan_iter fails -> falls back to keys, still deletes."""
     os.environ["REDIS_URL"] = "redis://localhost:6379/0"
     mock_client = MagicMock()
     mock_client.scan_iter.side_effect = RuntimeError("scan broke")

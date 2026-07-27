@@ -245,7 +245,7 @@ class Settings(BaseSettings):
 
     # বাংলা মন্তব্য: জেমিনি মডেল নাম সেন্ট্রালাইজড করা হলো যাতে কোনো ইউটিলিটি স্ক্রিপ্টে হার্ডকোড না থাকে।
     gemini_model_name: str = Field(
-        default="gemini/gemini-2.5-flash",
+        default="gemini/gemini-1.5-flash",
         validation_alias="GEMINI_MODEL_NAME",
     )
 
@@ -550,7 +550,11 @@ class Settings(BaseSettings):
     # তাই এটি lazy @property এবং _get_cached_secret() এ রূপান্তর করা হলো যাতে অন-ডিমান্ড ভল্ট বা env থেকে ফেচ হয়।
     @property
     def supremeai_admin_password_hash(self) -> str | None:
-        val = self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH") or os.getenv("SUPREMEAI_ADMIN_PASSWORD_HASH") or os.getenv("supremeai_admin_password_hash")
+        val = (
+            self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH")
+            or os.getenv("SUPREMEAI_ADMIN_PASSWORD_HASH")
+            or os.getenv("supremeai_admin_password_hash")
+        )
         if not val and "pytest" not in sys.modules and os.getenv("CI") != "true":
             raise ValueError("supremeai_admin_password_hash must be explicitly set.")
         return val
