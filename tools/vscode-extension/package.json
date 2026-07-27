@@ -149,6 +149,41 @@
         "command": "supremeai.openExtensionSettings",
         "title": "Open Settings",
         "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.showDependencyGraph",
+        "title": "Show Dependency Graph",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.showArchitectureMap",
+        "title": "Show Architecture Map",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.showFlowChart",
+        "title": "Show Flow Chart",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.generateCode",
+        "title": "Generate Code",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.suggestRefactoring",
+        "title": "Suggest Refactoring",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.performSecurityScan",
+        "title": "Perform Security Scan",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.analyzePerformance",
+        "title": "Analyze Performance",
+        "category": "SupremeAI"
       }
     ],
     "menus": {
@@ -176,6 +211,16 @@
         {
           "command": "supremeai.analyzeCodeFlow",
           "group": "SupremeAI@3"
+        },
+        {
+          "command": "supremeai.performSecurityScan",
+          "when": "editorHasSelection",
+          "group": "SupremeAI@4"
+        },
+        {
+          "command": "supremeai.analyzePerformance",
+          "when": "editorHasSelection",
+          "group": "SupremeAI@4"
         }
       ],
       "commandPalette": [
@@ -185,6 +230,14 @@
         },
         {
           "command": "supremeai.sendMessageToChat",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "supremeai.performSecurityScan",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "supremeai.analyzePerformance",
           "when": "editorHasSelection"
         }
       ]
@@ -261,6 +314,36 @@
         {
           "id": "supremeaiChat",
           "name": "Chat",
+          "type": "webview",
+          "icon": "media/icon.svg"
+        },
+        {
+          "id": "supremeaiDependencyGraph",
+          "name": "Dependency Graph",
+          "type": "webview",
+          "icon": "media/icon.svg"
+        },
+        {
+          "id": "supremeaiArchitectureMap",
+          "name": "Architecture Map",
+          "type": "webview",
+          "icon": "media/icon.svg"
+        },
+        {
+          "id": "supremeaiFlowChart",
+          "name": "Flow Chart",
+          "type": "webview",
+          "icon": "media/icon.svg"
+        },
+        {
+          "id": "supremeaiSecurityIssues",
+          "name": "Security Issues",
+          "type": "webview",
+          "icon": "media/icon.svg"
+        },
+        {
+          "id": "supremeaiPerformanceInsights",
+          "name": "Performance Insights",
           "type": "webview",
           "icon": "media/icon.svg"
         },
