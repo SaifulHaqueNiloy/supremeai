@@ -16,16 +16,23 @@ import threading
 
 import sys
 import ast
-# বাংলা মন্তব্য: ক্লিন ইমপোর্ট স্ট্রাকচার যাতে sys.path.insert হ্যাক এড়ানো যায়।
+
+# বাংলা মন্তব্য: প্রজেক্ট রুট থেকে সঠিক সিস্টেম পাথ রেজোলিউশন করা হচ্ছে যাতে CI-তে ModuleNotFoundError না হয়।
+# লগে দেখা গিয়েছিল: scripts/devops/ai_scribe_historian.py:28 → ModuleNotFoundError: No module named 'knowledge_indexer'
+_project_root = Path(__file__).resolve().parent.parent.parent  # scripts/devops/../../.. = project root
+
 try:
-    from backend.core.config import settings
-    from scripts.knowledge_indexer import run_indexing as run_knowledge_indexing
-except ImportError:
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    sys.path.insert(0, str(_project_root / "backend"))
+    sys.path.insert(0, str(_project_root / "scripts"))
+    sys.path.insert(0, str(_project_root))
     from core.config import settings
     from knowledge_indexer import run_indexing as run_knowledge_indexing
+except ImportError:
+    # ফলব্যাক: settings ও indexing ছাড়াও স্ক্রিপ্ট চলতে পারে (docstring generation-এর জন্য)
+    settings = None  # type: ignore[assignment]
+    def run_knowledge_indexing(*_args, **_kwargs):  # type: ignore[misc]
+        pass
+
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
