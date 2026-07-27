@@ -114,17 +114,21 @@ repos:
   # ══════════════════════════════════════════════════════════════
   - repo: local
     hooks:
-      - id: security-guard
-        name: "🛡️ SupremeAI Security Guard"
-        entry: python3 packages/scripts/security_guard.py
+      # বাংলা মন্তব্য: SupremeAI-এর নিজস্ব security scanner — commit করার আগে
+      # hardcoded secrets, SQL injection, .env committed চেক করে।
+      # Critical পেলে commit block হবে।
+      - id: supremeai-blindspot-scan
+        name: "🔐 SupremeAI Blind Spot Security Scanner"
+        # বাংলা মন্তব্য: auto_find_blindspots.py নিজেই sys.stdout.reconfigure(utf-8) করে
+        # তাই Windows-এ আলাদা encoding wrapper দরকার নেই
+        entry: python scripts/security/auto_find_blindspots.py
         language: system
         pass_filenames: false
-        stages: [commit]
-        exclude: ^backend/tests/
+        stages: [pre-commit]
+
       - id: router-smoke-test
         name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
         entry: python scripts/ci/validate_router_imports.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
-
