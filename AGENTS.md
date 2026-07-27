@@ -1,0 +1,1 @@
+C:/Users/n/supremeai/supremeai_2.0/.agents/AGENTS.md
