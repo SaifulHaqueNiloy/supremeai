@@ -26,6 +26,7 @@ COLLAB_CACHE_TTL = 300
 @dataclass(frozen=True)
 class AgentCapability:
     """Immutable agent capability record."""
+
     agent_id: str
     agent_name: str
     capabilities: list[str]
@@ -37,6 +38,7 @@ class AgentCapability:
 @dataclass(frozen=True)
 class TaskDecomposition:
     """Immutable task decomposition result."""
+
     original_task: str
     subtasks: list[dict[str, Any]]
     dependencies: list[tuple[str, str]]
@@ -47,6 +49,7 @@ class TaskDecomposition:
 @dataclass(frozen=True)
 class CollaborationTask:
     """Immutable collaborative task."""
+
     task_id: str
     description: str
     assigned_agents: list[str]
@@ -74,8 +77,7 @@ class MultiAgentCollaborationAgent:
     def register_agent_capability(self, capability: AgentCapability) -> None:
         """Register an agent's capabilities for collaboration."""
         self._agents[capability.agent_id] = capability
-        logger.info("Registered agent %s with capabilities: %s",
-                     capability.agent_name, capability.capabilities)
+        logger.info("Registered agent %s with capabilities: %s", capability.agent_name, capability.capabilities)
 
     def unregister_agent(self, agent_id: str) -> None:
         """Remove an agent from the collaboration pool."""
@@ -101,6 +103,7 @@ class MultiAgentCollaborationAgent:
         try:
             result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=1000)
             import json
+
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             decomposition = TaskDecomposition(
@@ -114,19 +117,30 @@ class MultiAgentCollaborationAgent:
             logger.error("Failed to decompose task: %s", e)
             decomposition = TaskDecomposition(
                 original_task=task_description,
-                subtasks=[{"id": "subtask-1", "description": task_description, "required_capability": "general", "estimated_effort": "medium"}],
+                subtasks=[
+                    {
+                        "id": "subtask-1",
+                        "description": task_description,
+                        "required_capability": "general",
+                        "estimated_effort": "medium",
+                    }
+                ],
                 dependencies=[],
                 estimated_complexity="simple",
                 recommended_agents=list(self._agents.keys())[:1] if self._agents else [],
             )
 
-        await self.cache.set(cache_key, {
-            "original_task": decomposition.original_task,
-            "subtasks": decomposition.subtasks,
-            "dependencies": decomposition.dependencies,
-            "estimated_complexity": decomposition.estimated_complexity,
-            "recommended_agents": decomposition.recommended_agents,
-        }, ttl=COLLAB_CACHE_TTL)
+        await self.cache.set(
+            cache_key,
+            {
+                "original_task": decomposition.original_task,
+                "subtasks": decomposition.subtasks,
+                "dependencies": decomposition.dependencies,
+                "estimated_complexity": decomposition.estimated_complexity,
+                "recommended_agents": decomposition.recommended_agents,
+            },
+            ttl=COLLAB_CACHE_TTL,
+        )
 
         return decomposition
 

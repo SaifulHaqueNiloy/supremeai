@@ -570,10 +570,7 @@ async def supabase_describe_table(params: DescribeTableInput) -> str:
         return json.dumps(
             {
                 "table": params.table_name,
-                "columns": [
-                    {"name": c[0], "type": c[1], "nullable": c[2] == "YES", "default": c[3]}
-                    for c in columns
-                ],
+                "columns": [{"name": c[0], "type": c[1], "nullable": c[2] == "YES", "default": c[3]} for c in columns],
                 "indexes": [{"name": i[0], "definition": i[1]} for i in indexes],
             },
             ensure_ascii=False,
@@ -597,4 +594,3 @@ async def supabase_describe_table(params: DescribeTableInput) -> str:
 
 if __name__ == "__main__":
     mcp.run()
-

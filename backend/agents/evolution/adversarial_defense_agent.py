@@ -34,6 +34,7 @@ class AttackType(str, Enum):
 @dataclass(frozen=True)
 class ThreatAssessment:
     """Immutable threat assessment."""
+
     attack_type: AttackType
     severity: str  # low, medium, high, critical
     confidence: float
@@ -45,6 +46,7 @@ class ThreatAssessment:
 @dataclass(frozen=True)
 class DefenseMechanism:
     """Immutable defense mechanism."""
+
     name: str
     description: str
     effectiveness: float
@@ -119,15 +121,19 @@ class AdversarialDefenseAgent:
             for pattern in patterns:
                 match = re.search(pattern, input_text)
                 if match:
-                    severity = "critical" if attack_type in (AttackType.JAILBREAK, AttackType.PROMPT_INJECTION) else "high"
-                    threats.append(ThreatAssessment(
-                        attack_type=attack_type,
-                        severity=severity,
-                        confidence=0.9,
-                        detected_pattern=pattern[:50],
-                        input_preview=input_text[:100],
-                        recommended_action=f"Block and log: detected {attack_type.value}",
-                    ))
+                    severity = (
+                        "critical" if attack_type in (AttackType.JAILBREAK, AttackType.PROMPT_INJECTION) else "high"
+                    )
+                    threats.append(
+                        ThreatAssessment(
+                            attack_type=attack_type,
+                            severity=severity,
+                            confidence=0.9,
+                            detected_pattern=pattern[:50],
+                            input_preview=input_text[:100],
+                            recommended_action=f"Block and log: detected {attack_type.value}",
+                        )
+                    )
                     break
 
         return threats
@@ -138,7 +144,7 @@ class AdversarialDefenseAgent:
         is_safe = len(threats) == 0
 
         # Sanitize: remove control characters
-        sanitized = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F]', '', input_text)
+        sanitized = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F]", "", input_text)
 
         return {
             "is_safe": is_safe,

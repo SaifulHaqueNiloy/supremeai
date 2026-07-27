@@ -36,6 +36,7 @@ class EthicalPrinciple(str, Enum):
 @dataclass(frozen=True)
 class DecisionAssessment:
     """Immutable decision ethics assessment."""
+
     decision_id: str
     principles_checked: list[EthicalPrinciple]
     violations: list[dict[str, Any]]
@@ -47,6 +48,7 @@ class DecisionAssessment:
 @dataclass(frozen=True)
 class EthicsVerdict:
     """Immutable ethics verdict."""
+
     verdict: str  # approved, flagged, rejected
     confidence: float
     explanation: str
@@ -80,6 +82,7 @@ class EthicsMonitorAgent:
         try:
             result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=500)
             import json
+
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             violations = data.get("violations", [])
@@ -94,7 +97,7 @@ class EthicsMonitorAgent:
             violations=violations,
             overall_score=score,
             is_ethical=score >= 0.7,
-            recommendations=data.get("recommendations", []) if 'data' in dir() else [],
+            recommendations=data.get("recommendations", []) if "data" in dir() else [],
         )
         self._assessments.append(assessment)
         return assessment
@@ -106,16 +109,20 @@ class EthicsMonitorAgent:
 
         for attr in protected_attributes:
             if attr in input_data:
-                bias_flags.append({
-                    "attribute": attr,
-                    "concern": f"Decision uses protected attribute: {attr}",
-                    "severity": "high",
-                })
+                bias_flags.append(
+                    {
+                        "attribute": attr,
+                        "concern": f"Decision uses protected attribute: {attr}",
+                        "severity": "high",
+                    }
+                )
 
         return {
             "has_bias_risk": len(bias_flags) > 0,
             "flags": bias_flags,
-            "recommendation": "Review decision logic to ensure no discriminatory outcomes" if bias_flags else "No bias detected",
+            "recommendation": "Review decision logic to ensure no discriminatory outcomes"
+            if bias_flags
+            else "No bias detected",
         }
 
     async def validate_ethical_principle(self, principle: EthicalPrinciple, context: str) -> EthicsVerdict:
@@ -130,6 +137,7 @@ class EthicsMonitorAgent:
         try:
             result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=300)
             import json
+
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             return EthicsVerdict(
