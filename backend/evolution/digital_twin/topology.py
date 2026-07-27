@@ -15,6 +15,7 @@ Bengali:
 """
 
 import asyncio
+import os
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
@@ -477,7 +478,8 @@ async def discover_system_topology() -> dict:
     """
     mapper = get_topology_mapper()
 
-    # Add known services based on the SupremeAI architecture
+    # বাংলা মন্তব্য: সার্ভিসগুলোর হোস্ট ডায়নামিক করা — এনভায়রনমেন্ট ভেরিয়েবল থাকলে সেখান থেকে নেবে, নাহলে localhost ফলব্যাক ব্যবহার করবে।
+    default_host = os.getenv("DEFAULT_SERVICE_HOST", "localhost")
     services = [
         ServiceNode(
             id="api_gateway",
@@ -485,7 +487,7 @@ async def discover_system_topology() -> dict:
             type="api",
             version="1.0.0",
             status="running",
-            host="localhost",
+            host=os.getenv("API_GATEWAY_HOST", default_host),
             port=8000,
             cpu_usage=15.5,
             memory_usage=25.3,
@@ -498,7 +500,7 @@ async def discover_system_topology() -> dict:
             type="api",
             version="1.0.0",
             status="running",
-            host="localhost",
+            host=os.getenv("LLM_ROUTER_HOST", default_host),
             port=8001,
             cpu_usage=22.1,
             memory_usage=30.7,
@@ -511,7 +513,7 @@ async def discover_system_topology() -> dict:
             type="cache",
             version="7.0.0",
             status="running",
-            host="localhost",
+            host=os.getenv("REDIS_HOST", default_host),
             port=6379,
             cpu_usage=8.2,
             memory_usage=45.1,
@@ -524,7 +526,7 @@ async def discover_system_topology() -> dict:
             type="database",
             version="14.0.0",
             status="running",
-            host="localhost",
+            host=os.getenv("DB_HOST", default_host),
             port=5432,
             cpu_usage=18.7,
             memory_usage=65.2,
@@ -537,7 +539,7 @@ async def discover_system_topology() -> dict:
             type="database",
             version="1.0.0",
             status="running",
-            host="localhost",
+            host=os.getenv("QDRANT_HOST", default_host),
             port=6333,
             cpu_usage=12.4,
             memory_usage=38.9,
