@@ -48,8 +48,10 @@ repo_root = os.path.abspath(os.path.dirname(__file__))
 backend_dir = os.path.join(repo_root, "backend")
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
-if repo_root not in sys.path:
-    sys.path.insert(0, repo_root)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 try:
     from memory.chromadb_store import ChromaDBStore
@@ -69,14 +71,9 @@ except ImportError:
 # KNOWLEDGE DOCUMENTS — Maximum Intelligence Knowledge Base
 # ──────────────────────────────────────────────────────────────────────────────
 
-FUTURE_KNOWLEDGE: list[dict[str, Any]] = []
-
-# ══════════════════════════════════════════════════════════════════════════════
-# DOMAIN 1: ADVANCED_ARCHITECTURE — Distributed Systems & Microservices
-# ══════════════════════════════════════════════════════════════════════════════
-
-FUTURE_KNOWLEDGE.append({
-    "id": "arch_distributed_systems",
+FUTURE_KNOWLEDGE: list[dict[str, Any]] = [
+    {
+        "id": "arch_distributed_systems",
     "text": """Distributed Systems Architecture for SupremeAI 2.0:
 
 Core Patterns:
@@ -1024,5 +1021,76 @@ Regulatory Compliance:
    - Consent management: explicit opt-in, withdrawal, record of consent
    - Data Protection Impact Assessment (DPIA) for high-risk processing
    - Data breach notification within 72 hours
-   - Data Processing Agreement (DPA) with all sub-processors
+   - Data Processing Agreement (DPA) with all sub-processors""",
+        "metadata": {
+            "domain": "COMPLIANCE_AND_GOVERNANCE",
+            "subdomain": "SOC2_GDPR",
+            "priority": 9.0,
+            "version": "1.0.0",
+            "category": "governance",
+            "tags": ["compliance", "soc2", "gdpr", "privacy", "audit-trail", "data-protection"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.95,
+        },
+    },
+]
+
+
+def ingest_knowledge(dry_run: bool = True, target_domain: str = None, force: bool = False, show_stats: bool = False) -> dict[str, Any]:
+    """Ingest future knowledge base documents into ChromaDBStore."""
+    if show_stats:
+        domains = {}
+        for doc in FUTURE_KNOWLEDGE:
+            dom = doc["metadata"].get("domain", "UNKNOWN")
+            domains[dom] = domains.get(dom, 0) + 1
+        print("\n📊 Knowledge Base Statistics:")
+        print(f"Total Future Knowledge Documents: {len(FUTURE_KNOWLEDGE)}")
+        for dom, count in sorted(domains.items()):
+            print(f"  - {dom}: {count} documents")
+        return {"total_docs": len(FUTURE_KNOWLEDGE), "domains": domains}
+
+    docs_to_ingest = FUTURE_KNOWLEDGE
+    if target_domain:
+        docs_to_ingest = [d for d in FUTURE_KNOWLEDGE if d["metadata"].get("domain", "").lower() == target_domain.lower()]
+
+    print(f"\n🧠 SupremeAI 2.0 Knowledge Ingestion Engine")
+    print(f"Mode: {'DRY RUN (Simulated)' if dry_run else 'LIVE INGESTION'}")
+    print(f"Target Documents: {len(docs_to_ingest)}")
+
+    if dry_run:
+        print("\n[DRY RUN SUMMARY]")
+        for doc in docs_to_ingest[:5]:
+            print(f"  ✓ Would ingest [{doc['id']}] Domain: {doc['metadata']['domain']}")
+        if len(docs_to_ingest) > 5:
+            print(f"  ... and {len(docs_to_ingest) - 5} more documents.")
+        print("\nRun with '--no-dry-run' to execute live database ingestion.")
+        return {"status": "dry_run", "count": len(docs_to_ingest)}
+
+    store = ChromaDBStore(collection_name="supremeai_future_knowledge")
+    ingested_count = 0
+    for doc in docs_to_ingest:
+        doc_id = doc["id"]
+        text = doc["text"]
+        meta = doc["metadata"]
+        store.add_document(doc_id=doc_id, text=text, metadata=meta)
+        ingested_count += 1
+
+    print(f"\n🎉 Successfully ingested {ingested_count} future knowledge documents into ChromaDBStore!")
+    return {"status": "success", "count": ingested_count}
+
+
+def main():
+    parser = argparse.ArgumentParser(description="SupremeAI 2.0 Future Knowledge Ingestion Engine")
+    parser.add_argument("--no-dry-run", action="store_true", help="Execute live database ingestion")
+    parser.add_argument("--force", action="store_true", help="Force overwrite existing documents")
+    parser.add_argument("--domain", type=str, help="Filter ingestion by specific domain")
+    parser.add_argument("--stats", action="store_true", help="Display knowledge base statistics")
+    args = parser.parse_args()
+
+    dry_run = not args.no_dry_run
+    ingest_knowledge(dry_run=dry_run, target_domain=args.domain, force=args.force, show_stats=args.stats)
+
+
+if __name__ == "__main__":
+    main()
 
