@@ -85,7 +85,6 @@ class ProductionSecretVault:
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
 
-
     def _init_infisical_client(self) -> None:
         """Initialize Infisical client with timeout protection."""
         try:
