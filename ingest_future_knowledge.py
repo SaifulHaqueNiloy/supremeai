@@ -22,14 +22,14 @@ Knowledge Domains (Maximum Intelligence Coverage):
   7.  MULTI_MODAL_INTELLIGENCE — Vision, audio, code, graph, time-series understanding
   8.  COLLABORATIVE_INTELLIGENCE — Multi-agent systems, swarm intelligence, game theory, negotiation
   9.  KNOWLEDGE_REPRESENTATION — Knowledge graphs, ontological reasoning, common sense, causal inference
-  10. OPTIMIZATION_AND_COST — Zero-cost HA, provider routing, cache optimization, memory management
+  10. OPTIMIZATION_AND_COST — Zero-cost HA strategies, provider routing, cache optimization, memory management
   11. COMPLIANCE_AND_GOVERNANCE — SOC 2, GDPR, data sovereignty, audit trails, ethical AI
   12. OBSERVABILITY_AND_DEBUGGING — Distributed tracing, causal debugging, root cause analysis
   13. HUMAN_AI_INTERACTION — Theory of mind, natural language, emotion recognition, adaptive UX
-  14. FUTURE_PROOFING — Emerging tech preparedness, framework migration, protocol evolution
-  15. MATHEMATICAL_FOUNDATIONS — Information theory, optimization theory, game theory, statistical learning
-  16. NEUROSCIENCE_INSPIRED — Spiking neural networks, neuromorphic computing, brain-computer interfaces
+  14. FUTURE_PROOFING — Emerging tech preparedness, framework migration strategies, protocol evolution
 
+Usage:
+    # Install dependencies first if needed:
 Usage:
     python ingest_future_knowledge.py [--no-dry-run]
 
