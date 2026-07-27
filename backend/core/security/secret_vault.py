@@ -73,10 +73,18 @@ class ProductionSecretVault:
         self.client: InfisicalClient | None = None
         self._cache: dict[str, _CacheEntry] = {}
 
+        # বাংলা মন্তব্য: PRE_COMMIT=1 বা TESTING=1 থাকলে Infisical init skip করো।
+        # এটি pre-commit hook hang প্রতিরোধ করে — network call হবে না।
+        _is_precommit = os.getenv("PRE_COMMIT") == "1" or os.getenv("TESTING") == "1"
+        if _is_precommit:
+            logger.debug("PRE_COMMIT/TESTING mode: Skipping Infisical initialization.")
+            return
+
         if InfisicalClient and (self.token or (self.client_id and self.client_secret)):
             self._init_infisical_client()
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
+
 
     def _init_infisical_client(self) -> None:
         """Initialize Infisical client with timeout protection."""

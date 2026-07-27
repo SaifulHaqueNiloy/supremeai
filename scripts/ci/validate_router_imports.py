@@ -26,6 +26,13 @@ from pathlib import Path
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+# বাংলা মন্তব্য: PRE_COMMIT=1 এবং TESTING=1 সেট করা হচ্ছে যাতে Infisical vault
+# network call skip হয় এবং secret_vault দ্রুত env fallback ব্যবহার করে।
+# এটি না করলে pre-commit hook hang হয়ে যায়।
+os.environ.setdefault("PRE_COMMIT", "1")
+os.environ.setdefault("TESTING", "1")
+os.environ.setdefault("ENV", "test")
+
 # Ensure backend root and repo root are in python path
 backend_dir = str(Path(__file__).parent.parent.parent / "backend")
 repo_root = str(Path(__file__).parent.parent.parent)
@@ -122,6 +129,24 @@ YELLOW = "\033[93m"
 CYAN = "\033[96m"
 BOLD = "\033[1m"
 RESET = "\033[0m"
+
+
+import threading
+import time
+
+# বাংলা মন্তব্য: সর্বোচ্চ 90 সেকেন্ড — timeout হলে স্বয়ংক্রিয়ভাবে exit করবে।
+# এটি pre-commit hang প্রতিরোধ করে।
+_MAX_TOTAL_SECONDS = 90
+
+def _watchdog_timer(timeout: int) -> None:
+    """Kill the process if it hangs beyond timeout seconds."""
+    time.sleep(timeout)
+    print(f"\n[TIMEOUT] Router smoke-test exceeded {timeout}s — killing to prevent pre-commit hang.")
+    os._exit(1)  # noqa: SLF001
+
+# Start watchdog in daemon thread
+_wd = threading.Thread(target=_watchdog_timer, args=(_MAX_TOTAL_SECONDS,), daemon=True)
+_wd.start()
 
 
 def try_import_fast(module_path: str) -> tuple[bool, str | None]:
