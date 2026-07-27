@@ -14,9 +14,9 @@
 - [x] Updated `backend/core/security/__init__.py` is_safe_url() to delegate to centralized SSRF module
 - [x] Backward-compatible — all existing callers (`web_scraper.py`, `browser_agent.py`, etc.) continue to work via delegation
 
-## Priority 4: 🟠 TODO/FIXME Management System
-- [ ] Create `scripts/devops/todo_manager.py` - scan, categorize, track TODO/FIXME tags
-- [ ] Add CLI commands for reporting
+## Priority 4: 🟠 TODO/FIXME Management System ✅
+- [x] Create `scripts/devops/todo_manager.py` - scan, categorize, track TODO/FIXME tags
+- [x] Add CLI commands for reporting (CLI, Markdown, JSON formats)
 
 ## Priority 5: 🟡 Structured Logging Implementation
 - [ ] Create `backend/core/logging/` module with correlation ID support
