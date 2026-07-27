@@ -50,9 +50,8 @@ class AsyncRateLimiter:
             "1",
             "yes",
         }
-        # Changed from fail-open to fail-closed as per audit report
-        # Previously: self._fallback_limiter = InMemoryFallbackLimiter()
-        # Now: Initialize but use appropriately based on fail-closed strategy
+
+        # Initialize fallback limiter
         self._fallback_limiter = InMemoryFallbackLimiter()
 
         # Enhanced rate limiting tiers
@@ -70,7 +69,7 @@ class AsyncRateLimiter:
     async def acquire(self, key: str, limit: int = None, window: int = None) -> bool:
         """Redis-based sliding window rate limiting with fail-closed behavior.
 
-        বাংলা মন্তব্য: Redis-ভিত্তিক sliding window রেট লিমিটিং।
+        বাংলা মন্তব্ব্য: Redis-ভিত্তিক sliding window রেট লিমিটিং।
         """
         if not self._rate_limit_enabled:
             return True
@@ -112,119 +111,9 @@ class AsyncRateLimiter:
             return is_allowed
         except Exception as e:  # noqa: BLE001
             if settings.env in ("production", "staging"):
-                logger.critical(f"Rate limiter Redis error: {str(e)}. Blocking request for {key} (fail-closed).")
+                logger.critical(f"Rate limiter failed critically in production: {e}. Blocking request (fail-closed).")
                 return False
-            logger.warning(f"Rate limiter error: {e}. Allowing request for {key} (fail-open in dev).")
-            return True
-
-    async def acquire_tenant(self, tenant_id: str, tier: str = "free") -> bool:
-        """Multi-tenant tier-based rate limiting. (Bangla: টেন্যান্ট-ভিত্তিক টিয়ার্ড রেট লিমিট)"""
-        tier_config = self._tier_limits.get(tier.lower())
-        if not tier_config:
-            tier_config = self._tier_limits["free"]  # Default to free tier
-
-        limit = tier_config["requests"]
-        window = tier_config["window"]
-        key = f"rate_limit:tenant:{tenant_id}:{tier}"
-        return await self.acquire(key, limit=limit, window=window)
-
-    async def acquire_with_burst_control(self, key: str, limit: int, window: int, burst_limit: int = None) -> bool:
-        """Advanced rate limiting with burst control capability."""
-        if burst_limit is None:
-            burst_limit = limit * 2  # Default burst is double the normal limit
-
-        try:
-            client = await self._get_redis()
-            if client is None:
-                logger.warning("Redis unavailable. Blocking requests (fail-closed).")
-                return False
-
-            # Use Lua script for atomic burst control
-            lua_script = """
-            local key = KEYS[1]
-            local window = tonumber(ARGV[1])
-            local limit = tonumber(ARGV[2])
-            local burst_limit = tonumber(ARGV[3])
-            local current_time = tonumber(ARGV[4])
-
-            -- Clean old entries
-            redis.call('ZREMRANGEBYSCORE', key, 0, current_time - window)
-
-            -- Get current count
-            local current_count = redis.call('ZCARD', key)
-
-            -- Check if request exceeds burst limit immediately
-            if current_count >= burst_limit then
-                return 0
-            end
-
-            -- Add current request
-            redis.call('ZADD', key, current_time, current_time .. "_" .. ARGV[5])
-            redis.call('EXPIRE', key, window)
-
-            -- Check if average rate over window is exceeded
-            if current_count >= limit then
-                -- Allow only if we're still within burst capacity
-                return 1
-            end
-
-            return 1
-            """
-
-            request_id = f"{int(time.time())}_{abs(hash(key)) % 1000000}"
-            result = await client.eval(
-                lua_script, 1, f"{key}:burst", window, limit, burst_limit, time.time(), request_id
-            )
-
-            return bool(result)
-        except Exception as e:
-            logger.warning(f"Burst-controlled rate limiter failed: {e}")
-            return False
-
-    async def get_remaining_quota(self, key: str, limit: int, window: int) -> tuple[int, int]:
-        """Get remaining quota and reset time for the given key."""
-        try:
-            client = await self._get_redis()
-            if client is None:
-                return 0, int(time.time()) + window
-
-            current_count = await client.get(key)
-            current_count = int(current_count) if current_count else 0
-            remaining = max(0, limit - current_count)
-
-            # Get TTL to calculate reset time
-            ttl = await client.ttl(key)
-            reset_time = int(time.time()) + (ttl if ttl > 0 else window)
-
-            return remaining, reset_time
-        except Exception as e:
-            logger.warning(f"Failed to get quota info: {e}")
-            return 0, int(time.time()) + window
-
-    async def close(self) -> None:
-        # বাংলা মন্তব্ব: আলাদা Redis connection নেই — centralized redis_manager বন্ধ করা যাবে না এখান থেকে
-        pass
-
-
-rate_limiter = AsyncRateLimiter()
-
-
-async def advanced_rate_limit_check(
-    key: str,
-    limit: int = 100,
-    window: int = 3600,
-    burst_multiplier: float = 1.5,
-) -> bool:
-    """Advanced rate limiting with burst capability. (Bangla: বার্স্ট ক্যাপাবিলিটি সহ অ্যাডভানসড রেট লিমিটিং)
-
-    Args:
-        key: The rate limit identifier key (IP or user ID).
-        limit: Base rate limit per window.
-        window: Time window in seconds.
-        burst_multiplier: Multiplier for burst allowance.
-
-    Returns:
-        bool: True if request is allowed, False otherwise.
-    """
-    effective_limit = int(limit * burst_multiplier)
-    return await rate_limiter.acquire(key, limit=effective_limit, window=window)
+            else:
+                logger.warning(f"Rate limiter failed in non-production: {e}. Allowing request (fail-open).")
+                # Use in-memory fallback for dev/testing
+                return self._fallback_limiter.is_allowed(key, limit)

@@ -403,7 +403,9 @@ async def workspace_read_file(params: ReadFileInput) -> str:
     resolved_path = _get_scoped_path(params.relative_path, params.project_type)
 
     if not resolved_path.exists():
-        return json.dumps({"error": f"File '{params.relative_path}' not found in scoped workspace."}, ensure_ascii=False)
+        return json.dumps(
+            {"error": f"File '{params.relative_path}' not found in scoped workspace."}, ensure_ascii=False
+        )
 
     if not resolved_path.is_file():
         return json.dumps({"error": f"Path '{params.relative_path}' is not a file."}, ensure_ascii=False)
@@ -488,11 +490,12 @@ async def workspace_search_files(params: SearchFilesInput) -> str:
             if f.is_file() and not any(part.startswith(".") for part in f.parts)
         ][:50]
 
-        return json.dumps({"workspace": str(base_dir), "count": len(matched_files), "files": matched_files}, ensure_ascii=False)
+        return json.dumps(
+            {"workspace": str(base_dir), "count": len(matched_files), "files": matched_files}, ensure_ascii=False
+        )
     except Exception as e:  # noqa: BLE001
         return json.dumps({"error": f"Failed to search files: {e}"}, ensure_ascii=False)
 
 
 if __name__ == "__main__":
     mcp.run()
-

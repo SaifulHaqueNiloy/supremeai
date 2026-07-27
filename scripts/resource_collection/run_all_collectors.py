@@ -3,10 +3,11 @@ Unified collector runner for SupremeAI resource collection
 Runs collectors as subprocesses for maximum isolation and reliability
 """
 
-import subprocess
-import sys
-import time
-from datetime import datetime
+import os
+from pathlib import Path
+
+# Bangla comment: প্রোডাকশন কন্টেইনার এবং সিআই/সিডি এনভায়রনমেন্টে সেফ রান করতে ডাইনামিক প্রজেক্ট রুট বের করা হচ্ছে।
+PROJECT_ROOT = str(Path(__file__).resolve().parents[2])
 
 
 def run_collector(script_path: str, description: str) -> bool:
@@ -30,11 +31,12 @@ def run_collector(script_path: str, description: str) -> bool:
         # Run the script as a subprocess
         result = subprocess.run(
             [sys.executable, script_path],
-            cwd="C:/Users/n/supremeai/supremeai_2.0",  # Set working directory to project root
+            cwd=PROJECT_ROOT,  # Dynamic root directory for portability across platforms
             capture_output=True,
             text=True,
             timeout=300  # 5 minute timeout
         )
+
 
         # Print output
         if result.stdout:

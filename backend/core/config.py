@@ -185,8 +185,8 @@ class Settings(BaseSettings):
     # ── Security & Auth Config ──────────────────────────────────────────────
     security_context_ttl: int = Field(default=86400, validation_alias="SECURITY_CONTEXT_TTL")
     security_caution_log_ttl: int = Field(default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL")
-    otp_cooldown_seconds: int = Field(default=300, validation_alias="OTP_COOLDOWN_SECONDS")
     admin_emails: str | list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
+
     allow_test_origin_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS")
     allow_test_auth_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_AUTH_BYPASS")
 
