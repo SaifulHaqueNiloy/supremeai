@@ -1381,7 +1381,9 @@ def ingest_knowledge(dry_run: bool = True, target_domain: str = None, force: boo
     for doc in docs_to_ingest:
         doc_id = doc["id"]
         text = doc["text"]
-        meta = doc["metadata"]
+        meta = dict(doc["metadata"])
+        if isinstance(meta.get("tags"), list):
+            meta["tags"] = ", ".join(meta["tags"])
         store.add_document(doc_id=doc_id, text=text, metadata=meta)
         ingested_count += 1
 
