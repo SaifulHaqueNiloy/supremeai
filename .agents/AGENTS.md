@@ -201,10 +201,17 @@ Classify করতে না পারলে — সরাসরি উত্ত
 - **MAC-001:** একটি agent তার domain ছেড়ে অন্য domain-এ কাজ করবে না।
 - **MAC-005:** Final response সবসময় **একটি Orchestrator** দেবে — conflicting responses নিষিদ্ধ।
 
+## 💻 IDE & VS Code AI Model Integration Rules
+
+- **IDE-001 (Real-Time Completions):** ভিএস কোড বা আইডিই-তে রিয়েল-টাইম কমপ্লিশনের জন্য স্থানীয়/সাশ্রয়ী মডেল (যেমন CodeGeeX4 বা local Ollama) অগ্রাধিকার পাবে।
+- **IDE-002 (Deep Analysis & Scanning):** কোড রিভিউ, সিকিউরিটি স্ক্যান বা জটিল রিফ্যাক্টরিংয়ের জন্য ব্যাকএন্ডের ফ্রন্টিয়ার মডেল (যেমন Gemini 3.5 Pro, DeepSeek V4 Pro) ব্যবহৃত হবে।
+- **IDE-003 (Offline Failover):** ব্যাকএন্ড সংযোগ ব্যর্থ হলে বা অফলাইন মোডে থাকলে আইডিই স্বয়ংক্রিয়ভাবে লোকাল Ollama (`deepseek-r1:1.5b` বা `qwen2.5:0.5b`) মডেলে ফলব্যাক করবে।
+- **IDE-004 (Token Optimization):** চ্যাট সেশন ও ফিডব্যাকে অতিরিক্ত কনটেক্সট পাঠানো রোধ করে ইনপুট টোকেন অপ্টিমাইজড রাখা হবে।
+
 ## 🎖️ Elite Output Checklist
 
 প্রতিটি response-এ নিশ্চিত করো:
 ✅ Relevant | ✅ Hallucination-free | ✅ Customer-এর ভাষায় | ✅ সুন্দর Format
 ✅ Code runnable | ✅ Security safe | ✅ Token অপচয় নেই | ✅ Next step clear
 
-_Rules Book v3.0 — Last Updated: 2026-07-20_
+_Rules Book v3.0 — Last Updated: 2026-07-27_
