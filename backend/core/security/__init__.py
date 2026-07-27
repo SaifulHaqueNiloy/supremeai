@@ -157,16 +157,27 @@ def mask_api_key(key: str) -> str:
 
 
 def is_safe_url(url: str) -> bool:
+    """SSRF prevention — delegates to centralized `core.security.ssrf_protection` module.
+
+    English: Provides DNS-cached, metadata-aware, DNS-rebinding protected validation
+    with comprehensive logging. Falls back to inline check if module unavailable.
+    """
     try:
-        parsed = urlparse(url)
-        hostname = parsed.hostname
-        if not hostname:
+        from core.security.ssrf_protection import is_safe_url as _ssrf_check
+
+        return _ssrf_check(url)
+    except ImportError:
+        # Fallback inline check
+        try:
+            parsed = urlparse(url)
+            hostname = parsed.hostname
+            if not hostname:
+                return False
+            if hostname == "169.254.169.254" or hostname.endswith(".local"):
+                return False
+            ip = socket.gethostbyname(hostname)
+            ip_obj = ipaddress.ip_address(ip)
+            return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local)
+        except (ValueError, socket.gaierror, OSError) as e:
+            logger.warning(f"URL safety check failed for '{url}': {e}")
             return False
-        if hostname == "169.254.169.254" or hostname.endswith(".local"):
-            return False
-        ip = socket.gethostbyname(hostname)
-        ip_obj = ipaddress.ip_address(ip)
-        return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local)
-    except (ValueError, socket.gaierror, OSError) as e:
-        logger.warning(f"URL safety check failed for '{url}': {e}")
-        return False

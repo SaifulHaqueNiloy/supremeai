@@ -9,9 +9,10 @@
 - [x] Integrated into `backend/sandbox/file_isolation_gate.py` with validate_code_for_sandbox
 - [x] Integrated into `backend/core/microvm_sandbox.py` (execute_async, all run methods, execute_code_securely)
 
-## Priority 3: 🟠 SSRF Prevention Centralization
-- [ ] Create `backend/core/security/ssrf_protection.py` centralized module
-- [ ] Refactor `web_scraper.py`, `sentinel_agent.py`, `browser_agent.py` to use centralized module
+## Priority 3: 🟠 SSRF Prevention Centralization ✅
+- [x] Created `backend/core/security/ssrf_protection.py` with complete SSRF protection (DNS cache, metadata blocking, DNS rebinding check, blocklist/allowlist)
+- [x] Updated `backend/core/security/__init__.py` is_safe_url() to delegate to centralized SSRF module
+- [x] Backward-compatible — all existing callers (`web_scraper.py`, `browser_agent.py`, etc.) continue to work via delegation
 
 ## Priority 4: 🟠 TODO/FIXME Management System
 - [ ] Create `scripts/devops/todo_manager.py` - scan, categorize, track TODO/FIXME tags
@@ -29,7 +30,7 @@
 - [ ] Improve `MultiLevelCache` implementation
 
 ## Priority 8: 🔵 Import Optimization ✅
-- [x] Move `import json` inside validators to top-level imports (completed in parse_comma_separated_list, parse_list_fields, parse_dict_fields, parse_cors_origins)
+- [x] Move `import json` inside validators to top-level imports (completed in `parse_comma_separated_list`, `parse_list_fields`, `parse_dict_fields`, `parse_cors_origins`)
 - [ ] Remove unused imports across the codebase
 
 ## Priority 9: 🔵 Bangla Comment English Translation
