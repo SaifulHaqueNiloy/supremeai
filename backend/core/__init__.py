@@ -76,39 +76,62 @@ from .deployment.production_deploy import (
 )
 
 # Import evolution components
-from evolution import (
-    # Digital Twin
-    DigitalTwinWorldModel,
-    get_digital_twin_model,
-    SystemTopologyMapper,
-    ImpactSimulator,
-    RemediationEngine,
-    # Continual Learning
-    EWC,
-    OnlineEWC,
-    EWCTrainer,
-    EWCConfig,
-    # Adversarial Defense
-    AdversarialDefenseSystem,
-    AdversarialTrainer,
-    DefenseConfig,
-    # Neural-Symbolic Integration
-    NeuralSymbolicIntegrator,
-    MathematicalReasoningEngine,
-    NeuralSymbolicConfig,
-    # Federated Learning
-    FederatedLearningCoordinator,
-    FLConfig,
-    AggregationMethod,
-    # Theory of Mind
-    TheoryOfMindSystem,
-    ToMConfig,
-    ToMLevel,
-    # Temporal Abstraction
-    TemporalAbstractionSystem,
-    TemporalAbstractionConfig,
-    TemporalGranularity,
-)
+# বাংলা মন্তব্য: evolution প্যাকেজের কিছু সাব-মডিউল (EWC, adversarial defense,
+# neural-symbolic, federated learning, theory-of-mind) torch দরকার করে। torch এখন
+# আর ডিফল্ট ইনস্টলে নেই (pyproject.toml-এ optional `ml` group-এ সরানো হয়েছে, কারণ
+# এই research/scaffold কোড বাস্তবে কোথাও ব্যবহৃত হয় না -- verify করা হয়েছে গোটা
+# রিপোতে গ্রেপ করে)। কিন্তু `core/__init__.py` প্রায় সব জায়গা থেকে import হয়
+# (`import core` / `from core.X import Y`), তাই আগে torch না থাকলে এই এক লাইনেই
+# পুরো ব্যাকএন্ড (এমনকি health-check টেস্টও) ImportError দিয়ে ক্র্যাশ করত -- এটাই
+# আসল কারণ যে আগের সেশনগুলোতে "poetry install --with dev" ছাড়া pytest কখনো চলত না।
+# try/except দিয়ে গার্ড করে দেওয়া হলো যেন torch অনুপস্থিত থাকলে শুধু এই optional
+# নামগুলো None হয়ে যায়, বাকি পুরো অ্যাপ স্বাভাবিকভাবে import/চলতে পারে।
+try:
+    from evolution import (
+        # Digital Twin
+        DigitalTwinWorldModel,
+        get_digital_twin_model,
+        SystemTopologyMapper,
+        ImpactSimulator,
+        RemediationEngine,
+        # Continual Learning
+        EWC,
+        OnlineEWC,
+        EWCTrainer,
+        EWCConfig,
+        # Adversarial Defense
+        AdversarialDefenseSystem,
+        AdversarialTrainer,
+        DefenseConfig,
+        # Neural-Symbolic Integration
+        NeuralSymbolicIntegrator,
+        MathematicalReasoningEngine,
+        NeuralSymbolicConfig,
+        # Federated Learning
+        FederatedLearningCoordinator,
+        FLConfig,
+        AggregationMethod,
+        # Theory of Mind
+        TheoryOfMindSystem,
+        ToMConfig,
+        ToMLevel,
+        # Temporal Abstraction
+        TemporalAbstractionSystem,
+        TemporalAbstractionConfig,
+        TemporalGranularity,
+    )
+    EVOLUTION_COMPONENTS_AVAILABLE = True
+except ImportError:
+    EVOLUTION_COMPONENTS_AVAILABLE = False
+    (
+        DigitalTwinWorldModel, get_digital_twin_model, SystemTopologyMapper,
+        ImpactSimulator, RemediationEngine, EWC, OnlineEWC, EWCTrainer, EWCConfig,
+        AdversarialDefenseSystem, AdversarialTrainer, DefenseConfig,
+        NeuralSymbolicIntegrator, MathematicalReasoningEngine, NeuralSymbolicConfig,
+        FederatedLearningCoordinator, FLConfig, AggregationMethod,
+        TheoryOfMindSystem, ToMConfig, ToMLevel,
+        TemporalAbstractionSystem, TemporalAbstractionConfig, TemporalGranularity,
+    ) = (None,) * 24
 
 # Version information
 __version__ = "2.0.0"
