@@ -1,0 +1,5 @@
+- [x] Update AI prompt to return JSON formatted code fixes in `ci-auto-fix-v3.py`
+- [x] Implement Pytest log capture in `fix_backend()` inside `ci-auto-fix-v3.py`
+- [x] Implement JSON parsing and file writing to apply AI code changes inside `ci-auto-fix-v3.py`
+- [x] Verify the script execution locally
+- [x] Commit and push the changes
