@@ -1,16 +1,28 @@
-# CI Fix Plan - Progress Tracker
+# ingest_future_knowledge.py — Improvement TODO
 
-## Problem 1: HuggingFaceSpaceProvider TypeError (CRITICAL) ✅
-- [x] Fix `backend/core/llm_router.py` - Add type safety in HuggingFaceSpaceProvider.__init__()
-- [x] Fix `backend/tests/test_cross_provider_consistency.py` - Replace MagicMock with specific attribute patches
+## Phase 1: Fix Critical Bugs
+- [ ] Fix `arch_distributed_systems` — Add missing item 1, fix unquoted lines 8-10
+- [ ] Fix `evolution_meta_learning` — Complete truncated content
 
-## Problem 2: ImportError - google.genai ✅
-- [x] Fix `backend/skills/core_knowledge_qa.py` - Add try/except fallback for google import
-- [x] Fix `backend/skills/core_doc_summarizer.py` - Add try/except fallback for google import
-- [x] `backend/agents/morphic_adapter.py` - Already has proper try/except fallback
+## Phase 2: Add 9 Missing Domains
+- [ ] Add `RESILIENCE_AND_RELIABILITY` — Chaos engineering, state machines, bulkhead patterns
+- [ ] Add `MULTI_MODAL_INTELLIGENCE` — Vision, code, time-series understanding
+- [ ] Add `COLLABORATIVE_INTELLIGENCE` — Multi-agent, swarm intelligence, game theory
+- [ ] Add `KNOWLEDGE_REPRESENTATION` — Knowledge graphs, ontological reasoning, causal inference
+- [ ] Add `OPTIMIZATION_AND_COST` — Zero-cost HA, provider routing, cache optimization
+- [ ] Add `COMPLIANCE_AND_GOVERNANCE` — SOC 2, GDPR, audit trails, ethical AI
+- [ ] Add `OBSERVABILITY_AND_DEBUGGING` — Distributed tracing, causal debugging, RCA
+- [ ] Add `HUMAN_AI_INTERACTION` — Theory of mind, adaptive UX, emotion recognition
+- [ ] Add `FUTURE_PROOFING` — Framework migration, protocol evolution, emerging tech
 
-## Problem 3: Admin Token JWSSignatureError
-- [ ] Fix admin token test - Ensure consistent JWT secret usage
+## Phase 3: Implement Ingestion Logic
+- [ ] Add main execution block with ChromaDBStore initialization
+- [ ] Implement dry-run mode (default)
+- [ ] Implement actual ingestion with progress reporting
+- [ ] Add content-hash deduplication
+- [ ] Add comprehensive error handling
 
-## Verification
-- [ ] Run tests locally to verify fixes
+## Phase 4: Code Quality
+- [ ] Remove unused imports, add proper type hints
+- [ ] Add CLI flags (--force, --domain filter)
+- [ ] Add --stats flag to show knowledge base statistics

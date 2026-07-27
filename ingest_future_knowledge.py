@@ -29,9 +29,7 @@ Knowledge Domains (Maximum Intelligence Coverage):
   14. FUTURE_PROOFING — Emerging tech preparedness, framework migration strategies, protocol evolution
 
 Usage:
-    # Install dependencies first if needed:
-Usage:
-    python ingest_future_knowledge.py [--no-dry-run]
+    python ingest_future_knowledge.py [--no-dry-run] [--force] [--domain DOMAIN] [--stats]
 
 Author: SupremeAI Architecture Team
 Date: 2026
@@ -39,7 +37,6 @@ Date: 2026
 
 import argparse
 import hashlib
-import json
 import os
 import sys
 import time
@@ -80,26 +77,26 @@ FUTURE_KNOWLEDGE: list[dict[str, Any]] = []
 
 FUTURE_KNOWLEDGE.append({
     "id": "arch_distributed_systems",
-    "text": (
-            "2. EVENTUAL CONSISTENCY — Accept that strong consistency is impossible at scale. "
-            "Use CRDTs (Conflict-free Replicated Data Types) for conflict resolution.\n"
-            "3. CIRCUIT BREAKER — Every external call must have a circuit breaker pattern. "
-            "Three states: CLOSED (normal), OPEN (failing), HALF-OPEN (testing recovery).\n"
-            "4. BULKHEAD PATTERN — Isolate resources into pools so a failure in one pool "
-            "doesn't cascade. Example: separate connection pools for each LLM provider.\n"
-            "5. SAGA PATTERN — For distributed transactions, use sagas (choreography or "
-            "orchestration) instead of 2PC.\n"
-            "6. CQRS — Separate read and write models for scalability. Reads use cache/views, "
-            "writes use event sourcing.\n"
-8. SERVICE MESH — Use sidecar proxies for service-to-service communication, observability, and security.
-9. API GATEWAY — Single entry point for routing, rate limiting, auth, and aggregation.
-10. BACKEND FOR FRONTEND (BFF) — Separate API surfaces for web, mobile, desktop clients.
+    "text": """Distributed Systems Architecture for SupremeAI 2.0:
 
-Implementation Guidance:
-- Use async/await throughout for non-blocking I/O
-- Implement retry with exponential backoff and jitter
-- Use health check endpoints for load balancer awareness
-- Implement graceful shutdown with SIGTERM handling""",
+Core Patterns:
+1. STATELESS DESIGN — Every service must be stateless. State belongs in databases or cache layers. Enables horizontal scaling and graceful shutdown.
+2. EVENTUAL CONSISTENCY — Accept that strong consistency is impossible at scale. Use CRDTs (Conflict-free Replicated Data Types) for conflict resolution.
+3. CIRCUIT BREAKER — Every external call must have a circuit breaker (SupremeAI's backend/core/resilience/circuit_breaker.py). Three states: CLOSED (normal), OPEN (failing), HALF-OPEN (testing recovery).
+4. BULKHEAD PATTERN — Isolate resources into pools so a failure in one pool doesn't cascade. Example: separate connection pools for each LLM provider (Gemini, Groq, OpenRouter).
+5. SAGA PATTERN — For distributed transactions, use sagas (choreography or orchestration) instead of 2PC.
+6. CQRS — Separate read and write models for scalability. Reads use cache/views, writes use event sourcing.
+7. SERVICE MESH — Use sidecar proxies for service-to-service communication, observability, and security.
+8. API GATEWAY — Single entry point for routing, rate limiting, auth, and aggregation.
+9. BACKEND FOR FRONTEND (BFF) — Separate API surfaces for web, mobile, desktop clients.
+
+Implementation Guidance for SupremeAI:
+- Use async/await throughout for non-blocking I/O (FastAPI + Python asyncio)
+- Implement retry with exponential backoff and jitter (httpx.AsyncClient with timeout config)
+- Use health check endpoints for load balancer awareness (/health, /ready, /live)
+- Implement graceful shutdown with SIGTERM handling (Uvicorn's lifespan events)
+- Configure connection pools per provider via settings (LLM_MAX_CONNECTIONS, LLM_POOL_TIMEOUT)
+- Use the centralized CircuitBreaker from core/resilience/circuit_breaker.py for all external calls""",
         "metadata": {
             "domain": "ADVANCED_ARCHITECTURE",
             "subdomain": "DISTRIBUTED_SYSTEMS",
@@ -506,4 +503,172 @@ Invalidation Strategies:
    - Prioritize experiences with high learning value
    - Blend old and new experiences for stable learning
 
-6.
+6. NEURAL ARCHITECTURE SEARCH (NAS):
+   - Automatically search for optimal neural network architectures
+   - Use reinforcement learning or evolutionary algorithms for search
+   - Performance prediction to avoid expensive training
+   - Transfer architecture knowledge across tasks
+
+Implementation in SupremeAI:
+- EWC module in backend/evolution/ handles catastrophic forgetting
+- Experience replay buffer stores agent interactions for retraining
+- Curriculum learning schedules training tasks by difficulty
+- Meta-learning loop tracks strategy effectiveness over time""",
+        "metadata": {
+            "domain": "SELF_EVOLUTION",
+            "subdomain": "META_LEARNING",
+            "priority": 10.0,
+            "version": "2.0.0",
+            "category": "ai_evolution",
+            "tags": ["meta-learning", "few-shot", "curriculum-learning", "ewc", "experience-replay", "neural-architecture-search", "continual-learning"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.93,
+        },
+    },
+    {
+        "id": "evolution_self_healing",
+        "text": """Self-Healing Engine Patterns for SupremeAI 2.0 (backend/evolution/):
+
+Core Architecture:
+1. HEALTH MONITOR — Continuous health checks on all subsystems:
+   - Liveness probes (/health/live) detect hung processes
+   - Readiness probes (/health/ready) detect services not accepting traffic
+   - Dependency checks verify upstream services (LLM providers, databases)
+   - Metrics-based anomaly detection (latency spikes, error rate surges)
+
+2. AUTO-REMEDIATION PIPELINE:
+   - Detect → Diagnose → Decide → Act → Verify cycle
+   - Detection: threshold-based + ML anomaly detection
+   - Diagnosis: root cause analysis from dependency graph
+   - Decision: select remediation action from playbook
+   - Action: execute remediation (restart, scale, reroute, degrade)
+   - Verify: confirm remediation succeeded
+
+3. DEGRADED MODE OPERATION:
+   - When non-critical services fail, operate in degraded mode
+   - Gracefully disable features based on dependency health
+   - Inform users of reduced functionality via status endpoint
+   - Automatically restore full functionality when health returns
+
+4. AUTO-ROLLBACK:
+   - Track deployment health metrics after each release
+   - Automatically rollback if error rate increases by >5%
+   - Canary deployments with automatic promotion/rollback
+   - Feature flags for instant disabling of problematic features
+
+5. CIRCUIT BREAKER INTEGRATION:
+   - Every external call wrapped in CircuitBreaker (core/resilience/circuit_breaker.py)
+   - Failed services automatically bypassed after threshold
+   - Half-open probes test recovery at configured intervals
+   - Metrics exported to monitoring system""",
+        "metadata": {
+            "domain": "SELF_EVOLUTION",
+            "subdomain": "SELF_HEALING",
+            "priority": 10.0,
+            "version": "2.0.0",
+            "category": "ai_evolution",
+            "tags": ["self-healing", "health-monitor", "auto-remediation", "degraded-mode", "auto-rollback", "circuit-breaker", "anomaly-detection"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.95,
+        },
+    },
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # DOMAIN 6: RESILIENCE_AND_RELIABILITY — Chaos Engineering & State Machines
+    # ══════════════════════════════════════════════════════════════════════════
+    {
+        "id": "resilience_chaos_engineering",
+        "text": """Chaos Engineering for SupremeAI 2.0:
+
+Core Principles:
+1. CHAOS MONKEY — Randomly terminate instances to test resilience:
+   - Schedule random pod/instance termination during low-traffic hours
+   - Monitor system behavior and recovery time
+   - Document failure modes and blast radius
+   - Build immunity to common failure patterns
+
+2. LATENCY INJECTION — Simulate slow dependencies:
+   - Inject artificial latency in LLM provider calls
+   - Test timeout handling (LLM_CONNECT_TIMEOUT, LLM_READ_TIMEOUT)
+   - Verify circuit breaker transitions (CLOSED -> OPEN -> HALF-OPEN)
+   - Measure degradation time and recovery time
+
+3. RESOURCE EXHAUSTION:
+   - Simulate memory pressure (malloc failure, OOM scenarios)
+   - Simulate CPU starvation (run CPU-intensive background tasks)
+   - Simulate connection pool exhaustion
+   - Verify graceful degradation under resource constraints
+
+4. DEPENDENCY FAILURE:
+   - Simulate database connection loss
+   - Simulate Redis/Upstash outage
+   - Simulate LLM provider API failure
+   - Simulate secret vault (Infisical) unavailability
+
+5. NETWORK PARTITIONING:
+   - Block traffic to specific services
+   - Introduce packet loss or corruption
+   - Test retry logic with exponential backoff and jitter
+   - Verify bulkhead isolation between providers
+
+Resilience Patterns:
+- FAIL-CLOSED: Circuit breaker rejects requests when unhealthy (core/resilience/circuit_breaker.py)
+- FAIL-FAST: Reject early rather than failing after consuming resources
+- DEGRADE GRACEFULLY: Disable features selectively, inform users
+- HEALTH ENDPOINTS: /health, /ready, /live for load balancer awareness""",
+        "metadata": {
+            "domain": "RESILIENCE_AND_RELIABILITY",
+            "subdomain": "CHAOS_ENGINEERING",
+            "priority": 9.5,
+            "version": "1.0.0",
+            "category": "resilience",
+            "tags": ["chaos-engineering", "chaos-monkey", "latency-injection", "resource-exhaustion", "network-partition", "fail-closed", "fail-fast", "degrade-gracefully"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.94,
+        },
+    },
+    {
+        "id": "resilience_bulkhead_isolation",
+        "text": """Bulkhead & Isolation Patterns for SupremeAI 2.0:
+
+Resource Isolation Strategies:
+1. CONNECTION POOL ISOLATION:
+   - Each LLM provider gets its own connection pool
+   - Configured via settings: LLM_MAX_CONNECTIONS, LLM_POOL_TIMEOUT
+   - A failure in one provider's pool doesn't affect others
+   - Monitor pool utilization per provider via metrics
+
+2. TENANT ISOLATION:
+   - Tenant A's heavy load doesn't degrade Tenant B's experience
+   - Rate limiting enforced per tenant (not per user)
+   - Resource quotas per tenant: storage, API calls, tokens
+   - Row-Level Security (RLS) in PostgreSQL/Supabase
+
+3. PROCESS ISOLATION:
+   - Sandboxed execution for untrusted code (backend/sandbox/)
+   - AST-based scanning before execution (AutonoGuard)
+   - Firecracker microVMs for high-security workloads
+   - Docker containers with read-only filesystem
+
+4. STATE ISOLATION:
+   - Stateless services: state in database/cache only
+   - Transaction_id for idempotency across retries
+   - Distributed locking for critical operations (token deduction)
+   - Event sourcing for audit trail and replay""",
+        "metadata": {
+            "domain": "RESILIENCE_AND_RELIABILITY",
+            "subdomain": "BULKHEAD_ISOLATION",
+            "priority": 9.0,
+            "version": "1.0.0",
+            "category": "resilience",
+            "tags": ["bulkhead", "isolation", "connection-pool", "tenant-isolation", "sandbox", "process-isolation", "state-isolation", "firecracker"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.93,
+        },
+    },
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # DOMAIN 7: MULTI_MODAL_INTELLIGENCE — Vision, Code, Time-Series
+    # ══════════════════════════════════════════════════════════════════════════
+    {
+        "id": "multimodal_code_understanding",
