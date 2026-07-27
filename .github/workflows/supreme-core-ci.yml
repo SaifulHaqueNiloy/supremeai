@@ -1418,3 +1418,45 @@ jobs:
           LATENCY_P99_THRESHOLD_MS: "2000" # 2000ms
         run: |
           python .github/scripts/canary-deploy.py
+
+  smart-summary:
+    name: "🧠 Smart Pipeline Summary"
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - pre-merge-gate
+      - ai-scribe-docs
+      - observability-audit
+      - production-readiness
+      - docker-build
+      - backend-core
+      - security-audit
+      - frontend-core
+      - check-render-quota
+      - build-backend-image
+      - deploy-user-backend
+      - deploy-admin-backend
+      - deploy-combined-backend
+      - deploy-backend
+      - flutter-integration-tests
+      - build-and-release-desktop
+      - deploy-admin-firebase
+      - deploy-user-vercel
+      - sync-mirror
+      - canary-deploy
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-backend
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: 🧠 Generate Smart Pipeline Summary (API Key Free)
+        working-directory: backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: poetry run python ../.github/scripts/ci_smart_summary.py
