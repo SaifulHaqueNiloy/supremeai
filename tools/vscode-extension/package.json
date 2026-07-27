@@ -51,7 +51,9 @@
     "Code Generation",
     "Refactoring"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"  // Changed from empty array to only activate when startup is finished
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -297,72 +299,90 @@
           "type": "string",
           "default": "supreme-large",
           "description": "Default AI model to use."
+        },
+        "supremeai.inlineCompletionDebounce": {
+          "type": "number",
+          "default": 800,
+          "minimum": 100,
+          "maximum": 2000,
+          "description": "Debounce delay for inline completions in milliseconds (higher values reduce CPU usage)."
+        },
+        "supremeai.enableAgentDetection": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable AI agent detection on startup (may increase startup time)."
+        },
+        "supremeai.performanceMode": {
+          "type": "string",
+          "enum": ["balanced", "powerful", "efficient"],
+          "default": "balanced",
+          "description": "Performance mode: balanced (default), powerful (more features), or efficient (lower resource usage)."
         }
       }
-    },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "supremeai-sidebar",
-          "title": "SupremeAI",
-          "icon": "media/icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "supremeai-sidebar": [
-        {
-          "id": "supremeaiChat",
-          "name": "Chat",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiDependencyGraph",
-          "name": "Dependency Graph",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiArchitectureMap",
-          "name": "Architecture Map",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiFlowChart",
-          "name": "Flow Chart",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiSecurityIssues",
-          "name": "Security Issues",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiPerformanceInsights",
-          "name": "Performance Insights",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiAdminDashboard",
-          "name": "Admin Dashboard",
-          "when": "supremeai.authenticated && supremeai.isAdmin",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        },
-        {
-          "id": "supremeaiCustomerDashboard",
-          "name": "User Settings",
-          "when": "supremeai.authenticated",
-          "type": "webview",
-          "icon": "media/icon.svg"
-        }
-      ]
     }
+  },
+  "viewsContainers": {
+    "activitybar": [
+      {
+        "id": "supremeai-sidebar",
+        "title": "SupremeAI",
+        "icon": "media/icon.svg"
+      }
+    ]
+  },
+  "views": {
+    "supremeai-sidebar": [
+      {
+        "id": "supremeaiChat",
+        "name": "Chat",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiDependencyGraph",
+        "name": "Dependency Graph",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiArchitectureMap",
+        "name": "Architecture Map",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiFlowChart",
+        "name": "Flow Chart",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiSecurityIssues",
+        "name": "Security Issues",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiPerformanceInsights",
+        "name": "Performance Insights",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiAdminDashboard",
+        "name": "Admin Dashboard",
+        "when": "supremeai.authenticated && supremeai.isAdmin",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      },
+      {
+        "id": "supremeaiCustomerDashboard",
+        "name": "User Settings",
+        "when": "supremeai.authenticated",
+        "type": "webview",
+        "icon": "media/icon.svg"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package-ext",
