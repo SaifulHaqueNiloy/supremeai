@@ -37,7 +37,14 @@ function renderMarkdown(text: string): React.ReactNode[] {
     }
 
     // Bold: **text**
-    const processed = line
+    const escapedLine = line
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    const processed = escapedLine
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/`(.+?)`/g, '<code class="bg-[#1a1d2e] text-[#bc13fe] px-1 rounded text-[11px] font-mono">$1</code>');
 
