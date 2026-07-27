@@ -22,6 +22,8 @@
     "deploy:gcp": "cd infrastructure/terraform && terraform apply",
     "deploy:studio": "firebase deploy --only hosting:studio",
     "deploy:admin": "firebase deploy --only hosting:admin",
+    "desktop:dev": "pnpm --filter supremeai-studio-client electron:dev",
+    "desktop:build": "pnpm --filter supremeai-studio-client electron:build",
     "seed:load": "python backend/scripts/load_seed_data.py"
   },
   "devDependencies": {
