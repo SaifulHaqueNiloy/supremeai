@@ -325,8 +325,12 @@ async def setup_test_database():
 
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.drop_all)
-        except Exception:
-            pass
+        except Exception as e:  # noqa: BLE001
+            # বাংলা মন্তব্য: টেস্ট teardown-এ টেবিল ড্রপ ব্যর্থ হলে
+            # সাইলেন্টলি ইগনোর না করে warning দেওয়া হচ্ছে।
+            # এটি CI Observability Gate-এর নিয়ম মেনে চলে।
+            import warnings
+            warnings.warn(f"Test DB teardown (drop_all) failed: {e}", stacklevel=2)
 
 
 @pytest_asyncio.fixture
