@@ -1,7 +1,39 @@
-# SupremeAI 2.0 🚀
-**Autonomic CI/CD Command Center & Neural Agentic Workspace**
+# SupremeAI 2.0
 
-## 🚀 5-Minute Local Setup
+Welcome to SupremeAI 2.0, an advanced AI-powered platform for autonomous intelligence solutions.
+
+## Features
+
+- **Adaptive Learning Engine**: Continuously learns and improves from interactions
+- **Multi-Agent Collaboration**: Advanced agent interconnection system
+- **Robust Infrastructure**: Cloud-native architecture with auto-scaling capabilities
+- **Comprehensive Monitoring**: Real-time performance and health monitoring
+- **Retry Handler**: Resilient retry mechanism with exponential backoff and jitter
+
+## Retry Handler
+
+The system includes a sophisticated retry handler that provides:
+
+- Exponential backoff with jitter to prevent thundering herd problems
+- Configurable retry parameters
+- Support for both async and sync functions
+- Budget-based retry limiting to prevent system overload
+- Full Bangla localization for all messages and comments
+
+To use the retry handler in your code:
+
+```python
+from backend.core.retry_handler import retry_handler
+
+@retry_handler(max_retries=3, delay=1.0, backoff=2.0)
+async def my_unreliable_function():
+    # Your code here
+    pass
+```
+
+See [RETRY_HANDLER_DOCS.md](backend/core/RETRY_HANDLER_DOCS.md) for detailed documentation.
+
+## Installation
 
 ### Prerequisites
 - **Node.js**: >= 20.0.0
