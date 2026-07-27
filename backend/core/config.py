@@ -343,16 +343,23 @@ class Settings(BaseSettings):
 
         বাংলা: startup-এ একবারে সব সিক্রেট লোড করে singleton dict-এ cache করে।
         এর ফলে প্রতিটি @property-র জন্য আলাদা vault কল হয় না, cold start latency কমে।
+        বাংলা: default="" পাস করা হচ্ছে যাতে ঐচ্ছিক secrets (যেমন ADMIN_NOTIFICATION_EMAIL)
+        production-এ missing থাকলেও server startup crash না করে।
         """
         if self._secrets_batch_loaded:
             return
         for secret_key in self._BATCH_SECRET_KEYS:
             try:
-                val = secret_vault.fetch_secret(secret_key)
+                # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
+                # RuntimeError throw হবে না, বরং empty string return হবে।
+                # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
+                val = secret_vault.fetch_secret(secret_key, default="")
                 if val:
                     self._cached_secrets[secret_key] = val
-            except (ValueError, KeyError, ConnectionError) as _secret_err:
-                logger.debug(f"Secret {secret_key} not available: {_secret_err}")
+            except Exception as _secret_err:  # noqa: BLE001
+                # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
+                # যদি কোনো optional secret missing থাকে, server startup block হবে না।
+                logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
         self._secrets_batch_loaded = True
 
     def _get_cached_secret(self, key: str) -> str:
