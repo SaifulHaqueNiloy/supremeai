@@ -1,0 +1,14 @@
+- `[x]` 1. Move Agent/AI Customization Files
+  - `[x]` Create `.agents/` directory
+  - `[x]` Move `AGENTS.md` -> `.agents/AGENTS.md`
+  - `[x]` Move `100+rules_for_agent.md` -> `.agents/100+rules_for_agent.md`
+  - `[x]` Move `.agent` and `.antigravity` -> `.agents/`
+- `[x]` 2. Move General Documentation
+  - `[x]` Move `TECH_DEBT.md` -> `docs/TECH_DEBT.md`
+- `[x]` 3. Organize Infrastructure & DevOps
+  - `[x]` Move `nginx/` -> `infrastructure/nginx/`
+  - `[x]` Move `docker-compose.yml` -> `infrastructure/docker-compose.yml`
+  - `[x]` Move `docker-compose.prod.yml` -> `infrastructure/docker-compose.prod.yml`
+- `[x]` 4. Clean Up Temporary/Local Folders
+  - `[x]` Add `scratch/` to `.gitignore` and run `git rm -r --cached scratch/`
+- `[x]` 5. Commit and push changes
