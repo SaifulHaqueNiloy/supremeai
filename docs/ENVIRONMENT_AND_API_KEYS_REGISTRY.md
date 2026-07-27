@@ -32,12 +32,19 @@ _Last Updated: 2026-07-27_
 | **`GROQ_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | Groq Ultra-Fast Llama-3 Key |
 | **`NVIDIA_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | NVIDIA NIM Inference Key |
 | **`OPENAI_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | OpenAI GPT-4o Key |
+| **`ANTHROPIC_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | Anthropic Claude 3.5 Key |
+| **`HF_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | HuggingFace Open Models Key |
+| **`FIRECRAWL_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | Firecrawl Web Scraper Key |
+| **`DEVIN_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | Devin Autonomous Coding Agent Key |
+| **`RUNWAY_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | 🟡 Opt | Runway AI Video Gen Key |
+| **`KLING_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | 🟡 Opt | Kling AI Video Gen Key |
+| **`RUNPOD_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | 🟡 Opt | RunPod GPU Training Key |
 | **`STRIPE_API_KEY`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | Stripe Billing Secret Key |
 | **`STRIPE_PUBLISHABLE_KEY`** | ✅ MUST | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ✅ MUST | Stripe Public Client Key |
 | **`STRIPE_WEBHOOK_SECRET`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | Stripe Webhook Signature Secret |
 | **`VITE_API_BASE_URL`** | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | Frontend Base Backend URL |
-| `VITE_SUPABASE_URL` | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | Client-side Supabase URL |
-| `VITE_SUPABASE_ANON_KEY` | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | Client-side Supabase Key |
+| **`VITE_SUPABASE_URL`** | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | Client-side Supabase URL |
+| **`VITE_SUPABASE_ANON_KEY`** | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | Client-side Supabase Key |
 | **`CLOUDFLARE_API_TOKEN`** | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ✅ MUST | Cloudflare Zone Edit Token |
 | **`CLOUDFLARE_ZONE_ID`** | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ✅ MUST | Cloudflare Domain Zone ID |
 | **`FIREBASE_SERVICE_ACCOUNT_JSON`**| ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ✅ MUST | Firebase Admin SDK JSON |
@@ -54,6 +61,6 @@ _Last Updated: 2026-07-27_
 
 ## 💡 Quick Rules Summary
 
-1. **Backend & Admin (Render):** `.env` সিক্রেট ফাইল আপলোড করুন। **MUST** চিহ্নিত সব কী থাকতে হবে।
-2. **Frontend Clients (Vercel / Netlify):** কেবল `VITE_` প্রিফিক্সড ক্লায়েন্ট ভেরিয়েবল সেট করতে হবে।
-3. **CI/CD Automation (GitHub Actions):** `RENDER_API_KEY`, `VERCEL_TOKEN` এবং `CI_WEBHOOK_SECRET` সিক্রেট হিসেবে সেট থাকতে হবে।
+1. **Backend & Admin (Render):** `.env` সিক্রেট ফাইল আপলোড করা সম্পন্ন। Render Backend এবং Render Admin উভয় সার্ভিসে ৬১টি ভেরিয়েবলই লাইভ সিঙ্কড রয়েছে।
+2. **Frontend Clients (Vercel / Netlify):** কেবল `VITE_` প্রিফিক্সড ক্লায়েন্ট ভেরিয়েবল ও কানেক্টেড কীসমূহ Vercel-এ সক্রিয় রয়েছে (৮৭টি কী)।
+3. **CI/CD Automation (GitHub Actions):** `RENDER_API_KEY`, `VERCEL_TOKEN` এবং `CI_WEBHOOK_SECRET` সিক্রেট হিসেবে সেট করা রয়েছে।
