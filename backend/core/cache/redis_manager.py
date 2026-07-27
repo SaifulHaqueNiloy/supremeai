@@ -293,6 +293,41 @@ class MultiLevelCache:
         self._l2_ttl = l2_ttl
         self.redis_cache = redis_mgr or redis_manager
 
+    @property
+    def local_cache(self) -> dict[str, Any]:
+        """Backward-compatibility wrapper mapping local_cache accesses to L1 store."""
+
+        class _LocalCacheDictAdapter(dict):
+            def __init__(adapter_self, outer: MultiLevelCache):
+                adapter_self.outer = outer
+
+            def __getitem__(adapter_self, key: str) -> Any:
+                val = adapter_self.outer._l1_cache.get(key)
+                if val is None:
+                    raise KeyError(key)
+                return val
+
+            def __setitem__(adapter_self, key: str, value: Any) -> None:
+                adapter_self.outer._l1_cache.set(key, value)
+
+            def __delitem__(adapter_self, key: str) -> None:
+                adapter_self.outer._l1_cache.delete(key)
+
+            def __contains__(adapter_self, key: object) -> bool:
+                return adapter_self.outer._l1_cache.get(str(key)) is not None
+
+            def pop(adapter_self, key: str, default: Any = None) -> Any:
+                val = adapter_self.outer._l1_cache.get(key)
+                if val is not None:
+                    adapter_self.outer._l1_cache.delete(key)
+                    return val
+                return default
+
+            def clear(adapter_self) -> None:
+                adapter_self.outer._l1_cache.clear()
+
+        return _LocalCacheDictAdapter(self)
+
     async def get(self, key: str) -> Any:
         """L1 (TTL মেমরি) → L2 (Redis) — ক্রমান্বয়ে চেক (Bangla: Cascade check L1→L2)
 
@@ -323,7 +358,9 @@ class MultiLevelCache:
         l1_ttl = min(effective_ttl, self._l1_cache._default_ttl)
         self._l1_cache.set(key, value, ttl=l1_ttl)
         # L2 — পূর্ণ TTL
-        await self.redis_cache.set_cache(key, str(value) if not isinstance(value, str) else value, ex_seconds=effective_ttl)
+        await self.redis_cache.set_cache(
+            key, str(value) if not isinstance(value, str) else value, ex_seconds=effective_ttl
+        )
 
     def invalidate_local(self, key: str | None = None) -> None:
         """L1 ইন-মেমরি ক্যাশ পরিষ্কার (Bangla: Clear L1 cache)
