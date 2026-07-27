@@ -1453,12 +1453,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-backend
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: 🧠 Generate Smart Pipeline Summary (API Key Free)
-        working-directory: backend
+      - name: 🧠 Generate Smart Pipeline Summary (Zero-Dependency)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_RUN_ID: ${{ github.run_id }}
-        run: poetry run python ../.github/scripts/ci_smart_summary.py
+        run: python3 .github/scripts/ci_smart_summary.py
