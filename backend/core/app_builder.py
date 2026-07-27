@@ -23,18 +23,30 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from loguru import logger
+
+from api.middleware import (
+    RequestIdMiddleware,
+    ResponseStandardizationMiddleware,
+    SupremeContextMiddleware,
+    TenantExtractionMiddleware,
+)
 
 from core.config import settings
 from core.container_auditor import audit_container_resources
+from core.idempotency_middleware import IdempotencyMiddleware
 from core.lifespan import app_lifespan
 from core.logging_config import setup_logging
-
-# from core.metrics.prometheus import PrometheusMiddleware, metrics_endpoint
+from core.observability.observability_middleware import ObservabilityMiddleware
+from core.request_context import RequestContextMiddleware
 from core.security.api_key_middleware import APIKeyAuthMiddleware
 from core.security.auth_middleware import AuthMiddleware
+from core.security.autonoguard_middleware import AutonoGuardMiddleware
 from core.security.honeypot_middleware import HoneypotMiddleware
-# from core.security.chaos_injector import ChaosInjectorMiddleware
+from core.security.origin_validator import TrustedOriginMiddleware
+from middleware.chaos_injector import ChaosInjectorMiddleware
+
 
 # Initialize Sentry if DSN is provided
 try:
@@ -110,23 +122,46 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     )
 
     # বাংলা মন্তব্ব্য: মিডলওয়্যার চেইন — ORDER IS CRITICAL FOR SECURITY
-    # 1. Prometheus metrics collection (must be first to track all requests)
-    # app.add_middleware(PrometheusMiddleware)
+    # 1. RequestContextMiddleware - Always first to establish context
+    app.add_middleware(RequestContextMiddleware)
 
-    # 2. Security: Authentication & Authorization (must come before other security middleware)
-    # This ensures that only authenticated requests proceed to other middleware layers
+    # 2. GZipMiddleware - Early to decode compressed request bodies
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # 3. RequestIdMiddleware - Track requests
+    app.add_middleware(RequestIdMiddleware)
+
+    # 4. TrustedOriginMiddleware - Validate trusted origins before processing
+    app.add_middleware(TrustedOriginMiddleware)
+
+    # 5. SupremeContextMiddleware - Set up application context
+    app.add_middleware(SupremeContextMiddleware)
+
+    # 6. TenantExtractionMiddleware - Extract tenant information
+    app.add_middleware(TenantExtractionMiddleware)
+
+    # 7. ObservabilityMiddleware - Track metrics before security checks
+    app.add_middleware(ObservabilityMiddleware)
+
+    # 8. Authentication - MUST come before other security middleware
     app.add_middleware(AuthMiddleware)
 
-    # 3. Security: API Key validation
+    # 9. API Key validation - After authentication
     app.add_middleware(APIKeyAuthMiddleware)
 
-    # 4. Security: Honeypot (now comes AFTER authentication to only trap unauthorized access)
+    # 10. Security: AutonoGuard - After authentication to protect sensitive operations
+    app.add_middleware(AutonoGuardMiddleware)
+
+    # 11. Security: Honeypot - After authentication to only trap unauthorized access
     app.add_middleware(HoneypotMiddleware)
 
-    # 5. Security: Chaos injection (also comes AFTER authentication for controlled testing)
-    # app.add_middleware(ChaosInjectorMiddleware)
+    # 12. Security: Chaos injection - After authentication for controlled testing
+    app.add_middleware(ChaosInjectorMiddleware)
 
-    # 6. CORS: Cross-origin resource sharing configuration
+    # 13. Idempotency middleware - After authentication to ensure idempotency per user
+    app.add_middleware(IdempotencyMiddleware)
+
+    # 14. CORS: Cross-origin resource sharing configuration - Last in security chain
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -136,6 +171,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         # বাংলা মন্তব্ব্য: প্রোডাকশনে কখনো expose_headers=["Authorization"] না করা
         # কারণ এটি sensitive info লিক করতে পারে
     )
+
+    # 15. Response standardization - Last to standardize all responses
+    app.add_middleware(ResponseStandardizationMiddleware)
 
     # বাংলা মন্তব্ব্য: রাউটার রেজিস্টার করা
     # রাউটার রেজিস্ট্রেশনগুলো এখানে যোগ করুন

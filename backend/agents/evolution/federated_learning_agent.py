@@ -24,6 +24,7 @@ FEDERATED_CACHE_TTL = 3600
 @dataclass(frozen=True)
 class ModelUpdate:
     """Immutable model update from a client."""
+
     client_id: str
     round_number: int
     parameters: dict[str, list[float]]
@@ -35,6 +36,7 @@ class ModelUpdate:
 @dataclass(frozen=True)
 class PrivacyBudget:
     """Immutable privacy budget tracking."""
+
     epsilon: float
     delta: float
     spent_epsilon: float
@@ -45,6 +47,7 @@ class PrivacyBudget:
 @dataclass(frozen=True)
 class FederatedRound:
     """Immutable federated learning round."""
+
     round_number: int
     participants: list[str]
     global_parameters: dict[str, list[float]]
@@ -78,24 +81,27 @@ class FederatedLearningAgent:
     def start_round(self, participants: list[str]) -> int:
         """Start a new federated learning round."""
         self._current_round += 1
-        logger.info("Starting federated round %d with %d participants",
-                     self._current_round, len(participants))
+        logger.info("Starting federated round %d with %d participants", self._current_round, len(participants))
         return self._current_round
 
     def submit_update(self, update: ModelUpdate) -> bool:
         """Submit a model update from a client."""
         if update.round_number != self._current_round:
-            logger.warning("Update round mismatch: got %d, expected %d",
-                           update.round_number, self._current_round)
+            logger.warning("Update round mismatch: got %d, expected %d", update.round_number, self._current_round)
             return False
         self._updates.append(update)
         return True
 
-    def apply_differential_privacy(self, parameters: dict[str, list[float]], epsilon: float = 0.1) -> dict[str, list[float]]:
+    def apply_differential_privacy(
+        self, parameters: dict[str, list[float]], epsilon: float = 0.1
+    ) -> dict[str, list[float]]:
         """Apply differential privacy noise to parameters."""
         if self._privacy_budget.remaining_epsilon < epsilon:
-            logger.warning("Insufficient privacy budget: remaining %.4f, requested %.4f",
-                           self._privacy_budget.remaining_epsilon, epsilon)
+            logger.warning(
+                "Insufficient privacy budget: remaining %.4f, requested %.4f",
+                self._privacy_budget.remaining_epsilon,
+                epsilon,
+            )
             return parameters
 
         noisy_params = {}
@@ -135,9 +141,7 @@ class FederatedLearningAgent:
         # Aggregate metrics
         aggregated_metrics = {}
         for key in round_updates[0].metrics:
-            aggregated_metrics[key] = sum(
-                u.metrics[key] * u.num_samples / total_samples for u in round_updates
-            )
+            aggregated_metrics[key] = sum(u.metrics[key] * u.num_samples / total_samples for u in round_updates)
 
         # Update privacy budget
         self._privacy_budget = PrivacyBudget(

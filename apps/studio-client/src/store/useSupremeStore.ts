@@ -171,9 +171,11 @@ const useSupremeStore = create<SupremeStore>()(
         set({ loading: true, error: null });
         try {
           const response = await fetch(`${getApiBaseUrl()}/admin-api/metrics`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           const data = await response.json();
           set({ metrics: data, recentActivity: [] });
         } catch (err) {
+          console.error("Failed to refresh metrics:", err);
           set({ error: 'Failed to refresh metrics' });
         } finally {
           set({ loading: false });
@@ -192,9 +194,11 @@ const useSupremeStore = create<SupremeStore>()(
         set({ loading: true, error: null });
         try {
           const response = await fetch(`${getApiBaseUrl()}/admin-api/users`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           const users = await response.json();
           set({ users });
         } catch (err) {
+          console.error("Failed to fetch users:", err);
           set({ error: 'Failed to fetch users' });
         } finally {
           set({ loading: false });
@@ -204,9 +208,11 @@ const useSupremeStore = create<SupremeStore>()(
         set({ loading: true, error: null });
         try {
           const response = await fetch(`${getApiBaseUrl()}/admin-api/roles`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           const roles = await response.json();
           set({ roles });
         } catch (err) {
+          console.error("Failed to fetch roles:", err);
           set({ error: 'Failed to fetch roles' });
         } finally {
           set({ loading: false });
@@ -216,9 +222,11 @@ const useSupremeStore = create<SupremeStore>()(
         set({ loading: true, error: null });
         try {
           const response = await fetch(`${getApiBaseUrl()}/admin-api/permissions`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           const permissions = await response.json();
           set({ permissions });
         } catch (err) {
+          console.error("Failed to fetch permissions:", err);
           set({ error: 'Failed to fetch permissions' });
         } finally {
           set({ loading: false });

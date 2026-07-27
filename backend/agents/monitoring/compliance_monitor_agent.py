@@ -43,6 +43,7 @@ class ComplianceSeverity(str, Enum):
 @dataclass(frozen=True)
 class ComplianceRule:
     """Immutable compliance rule definition."""
+
     id: str
     framework: ComplianceFramework
     description: str
@@ -54,6 +55,7 @@ class ComplianceRule:
 @dataclass(frozen=True)
 class ComplianceViolation:
     """Immutable compliance violation record."""
+
     rule_id: str
     framework: ComplianceFramework
     description: str
@@ -67,6 +69,7 @@ class ComplianceViolation:
 @dataclass(frozen=True)
 class ComplianceReport:
     """Immutable compliance audit report."""
+
     framework: ComplianceFramework
     total_rules_checked: int
     violations: list[ComplianceViolation]
@@ -77,75 +80,84 @@ class ComplianceReport:
 
 # Built-in compliance rules
 DEFAULT_RULES: list[tuple[ComplianceFramework, list[dict[str, Any]]]] = [
-    (ComplianceFramework.GDPR, [
-        {
-            "id": "gdpr-001",
-            "description": "Personal data must be encrypted at rest",
-            "severity": ComplianceSeverity.CRITICAL,
-            "pattern": r"(?i)(password|secret|token|api_key|credit_card).*?=[^\\n]*?['\"][^'\"]+['\"]",
-            "remediation": "Encrypt sensitive fields using field-level encryption (AES-256-GCM)",
-        },
-        {
-            "id": "gdpr-002",
-            "description": "Data retention policy must be defined",
-            "severity": ComplianceSeverity.HIGH,
-            "pattern": r"(?i)(retention|ttl|expire|delete_after)",
-            "remediation": "Define data retention policies with auto-expiry for personal data",
-        },
-        {
-            "id": "gdpr-003",
-            "description": "Consent required for data processing",
-            "severity": ComplianceSeverity.HIGH,
-            "pattern": r"(?i)(consent|opt.?in|privacy_policy|data_subject)",
-            "remediation": "Implement consent management with explicit opt-in mechanisms",
-        },
-        {
-            "id": "gdpr-004",
-            "description": "Right to erasure must be supported",
-            "severity": ComplianceSeverity.MEDIUM,
-            "pattern": r"(?i)(delete_user|remove_data|anonymize|erase)",
-            "remediation": "Implement 'right to be forgotten' API endpoint",
-        },
-    ]),
-    (ComplianceFramework.BD_DIGITAL_SECURITY, [
-        {
-            "id": "bd-dsa-001",
-            "description": "User data must be stored within Bangladesh jurisdiction",
-            "severity": ComplianceSeverity.CRITICAL,
-            "pattern": r"(?i)(data_residency|location|bangladesh|bd_region|dhaka)",
-            "remediation": "Ensure data storage in Bangladesh-based servers or regions",
-        },
-        {
-            "id": "bd-dsa-002",
-            "description": "Digital signatures must comply with BD standards",
-            "severity": ComplianceSeverity.HIGH,
-            "pattern": r"(?i)(digital_signature|e.?signature|electronic_signature)",
-            "remediation": "Implement BD-standard compliant digital signatures",
-        },
-        {
-            "id": "bd-dsa-003",
-            "description": "Content filtering and blocking mechanisms required",
-            "severity": ComplianceSeverity.MEDIUM,
-            "pattern": r"(?i)(content_filter|moderate|censor|block_content)",
-            "remediation": "Implement content moderation layer for BD legal requirements",
-        },
-    ]),
-    (ComplianceFramework.HIPAA, [
-        {
-            "id": "hipaa-001",
-            "description": "PHI must be encrypted in transit and at rest",
-            "severity": ComplianceSeverity.CRITICAL,
-            "pattern": r"(?i)(phi|protected_health|medical|patient|health_record)",
-            "remediation": "Encrypt all PHI with AES-256 and enforce TLS 1.3 for transmission",
-        },
-        {
-            "id": "hipaa-002",
-            "description": "Access controls and audit trails required",
-            "severity": ComplianceSeverity.HIGH,
-            "pattern": r"(?i)(audit_log|access_control|rbac|user_role|permission)",
-            "remediation": "Implement comprehensive audit logging and role-based access control",
-        },
-    ]),
+    (
+        ComplianceFramework.GDPR,
+        [
+            {
+                "id": "gdpr-001",
+                "description": "Personal data must be encrypted at rest",
+                "severity": ComplianceSeverity.CRITICAL,
+                "pattern": r"(?i)(password|secret|token|api_key|credit_card).*?=[^\\n]*?['\"][^'\"]+['\"]",
+                "remediation": "Encrypt sensitive fields using field-level encryption (AES-256-GCM)",
+            },
+            {
+                "id": "gdpr-002",
+                "description": "Data retention policy must be defined",
+                "severity": ComplianceSeverity.HIGH,
+                "pattern": r"(?i)(retention|ttl|expire|delete_after)",
+                "remediation": "Define data retention policies with auto-expiry for personal data",
+            },
+            {
+                "id": "gdpr-003",
+                "description": "Consent required for data processing",
+                "severity": ComplianceSeverity.HIGH,
+                "pattern": r"(?i)(consent|opt.?in|privacy_policy|data_subject)",
+                "remediation": "Implement consent management with explicit opt-in mechanisms",
+            },
+            {
+                "id": "gdpr-004",
+                "description": "Right to erasure must be supported",
+                "severity": ComplianceSeverity.MEDIUM,
+                "pattern": r"(?i)(delete_user|remove_data|anonymize|erase)",
+                "remediation": "Implement 'right to be forgotten' API endpoint",
+            },
+        ],
+    ),
+    (
+        ComplianceFramework.BD_DIGITAL_SECURITY,
+        [
+            {
+                "id": "bd-dsa-001",
+                "description": "User data must be stored within Bangladesh jurisdiction",
+                "severity": ComplianceSeverity.CRITICAL,
+                "pattern": r"(?i)(data_residency|location|bangladesh|bd_region|dhaka)",
+                "remediation": "Ensure data storage in Bangladesh-based servers or regions",
+            },
+            {
+                "id": "bd-dsa-002",
+                "description": "Digital signatures must comply with BD standards",
+                "severity": ComplianceSeverity.HIGH,
+                "pattern": r"(?i)(digital_signature|e.?signature|electronic_signature)",
+                "remediation": "Implement BD-standard compliant digital signatures",
+            },
+            {
+                "id": "bd-dsa-003",
+                "description": "Content filtering and blocking mechanisms required",
+                "severity": ComplianceSeverity.MEDIUM,
+                "pattern": r"(?i)(content_filter|moderate|censor|block_content)",
+                "remediation": "Implement content moderation layer for BD legal requirements",
+            },
+        ],
+    ),
+    (
+        ComplianceFramework.HIPAA,
+        [
+            {
+                "id": "hipaa-001",
+                "description": "PHI must be encrypted in transit and at rest",
+                "severity": ComplianceSeverity.CRITICAL,
+                "pattern": r"(?i)(phi|protected_health|medical|patient|health_record)",
+                "remediation": "Encrypt all PHI with AES-256 and enforce TLS 1.3 for transmission",
+            },
+            {
+                "id": "hipaa-002",
+                "description": "Access controls and audit trails required",
+                "severity": ComplianceSeverity.HIGH,
+                "pattern": r"(?i)(audit_log|access_control|rbac|user_role|permission)",
+                "remediation": "Implement comprehensive audit logging and role-based access control",
+            },
+        ],
+    ),
 ]
 
 
@@ -180,16 +192,18 @@ class ComplianceRuleEngine:
             matches = re.findall(rule.pattern, content)
             if not matches:
                 # Rule not satisfied - potential violation
-                violations.append(ComplianceViolation(
-                    rule_id=rule.id,
-                    framework=framework,
-                    description=rule.description,
-                    severity=rule.severity,
-                    location="config/data scan",
-                    content_preview=content[:100] if content else "",
-                    detected_at=datetime.now(UTC),
-                    remediation=rule.remediation,
-                ))
+                violations.append(
+                    ComplianceViolation(
+                        rule_id=rule.id,
+                        framework=framework,
+                        description=rule.description,
+                        severity=rule.severity,
+                        location="config/data scan",
+                        content_preview=content[:100] if content else "",
+                        detected_at=datetime.now(UTC),
+                        remediation=rule.remediation,
+                    )
+                )
         return violations
 
     def list_available_frameworks(self) -> list[ComplianceFramework]:
@@ -240,7 +254,9 @@ class ComplianceMonitorAgent:
             generated_at=datetime.now(UTC),
         )
 
-    async def check_data_handling(self, data_sample: dict[str, Any], framework: ComplianceFramework) -> list[ComplianceViolation]:
+    async def check_data_handling(
+        self, data_sample: dict[str, Any], framework: ComplianceFramework
+    ) -> list[ComplianceViolation]:
         """Check data handling practices for compliance."""
         content = json.dumps(data_sample, default=str)
         return self.engine.check_content(content, framework)
@@ -265,23 +281,30 @@ class ComplianceMonitorAgent:
             generated_at=datetime.now(UTC),
         )
 
-        await self.cache.set(cache_key, {
-            "framework": report.framework.value,
-            "total_rules_checked": report.total_rules_checked,
-            "violations": [{
-                "rule_id": v.rule_id,
-                "framework": v.framework.value,
-                "description": v.description,
-                "severity": v.severity.value,
-                "location": v.location,
-                "content_preview": v.content_preview,
-                "detected_at": v.detected_at.isoformat(),
-                "remediation": v.remediation,
-            } for v in report.violations],
-            "pass_rate": report.pass_rate,
-            "overall_status": report.overall_status,
-            "generated_at": report.generated_at.isoformat(),
-        }, ttl=COMPLIANCE_CACHE_TTL)
+        await self.cache.set(
+            cache_key,
+            {
+                "framework": report.framework.value,
+                "total_rules_checked": report.total_rules_checked,
+                "violations": [
+                    {
+                        "rule_id": v.rule_id,
+                        "framework": v.framework.value,
+                        "description": v.description,
+                        "severity": v.severity.value,
+                        "location": v.location,
+                        "content_preview": v.content_preview,
+                        "detected_at": v.detected_at.isoformat(),
+                        "remediation": v.remediation,
+                    }
+                    for v in report.violations
+                ],
+                "pass_rate": report.pass_rate,
+                "overall_status": report.overall_status,
+                "generated_at": report.generated_at.isoformat(),
+            },
+            ttl=COMPLIANCE_CACHE_TTL,
+        )
 
         return report
 

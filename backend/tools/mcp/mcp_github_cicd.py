@@ -480,4 +480,3 @@ async def github_search_code(params: SearchCodeInput) -> str:
 
 if __name__ == "__main__":
     mcp.run()
-

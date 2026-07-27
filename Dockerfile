@@ -22,18 +22,19 @@ RUN poetry install --no-interaction --no-ansi --no-root --only main
 FROM python:3.11-slim AS runner
 WORKDIR /app
 
-# Install runtime dependencies securely
+# Install runtime dependencies securely (curl added for container HEALTHCHECK)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
+    libpq5 curl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
 # Create non-root user with home directory
 RUN adduser --disabled-password --gecos '' --home /home/appuser appuser
 
-# Copy virtual environment and application code securely
+# Copy virtual environment from builder and application source code from workspace
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
-COPY --from=builder --chown=appuser:appuser /app /app
+COPY --chown=appuser:appuser backend/ /app/
+
 
 # Security hardening: remove sensitive files
 RUN rm -rf /app/.git /app/.env* /app/.env /app/secrets.sh || true

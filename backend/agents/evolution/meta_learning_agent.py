@@ -24,6 +24,7 @@ META_LEARNING_CACHE_TTL = 3600
 @dataclass(frozen=True)
 class LearningOutcome:
     """Immutable learning outcome record."""
+
     task_type: str
     strategy_used: str
     success_rate: float
@@ -35,6 +36,7 @@ class LearningOutcome:
 @dataclass(frozen=True)
 class LearningStrategy:
     """Immutable learning strategy recommendation."""
+
     task_type: str
     recommended_strategy: str
     expected_improvement: float
@@ -60,8 +62,12 @@ class MetaLearningAgent:
     def record_outcome(self, outcome: LearningOutcome) -> None:
         """Record a learning outcome for analysis."""
         self._outcomes.append(outcome)
-        logger.info("Recorded learning outcome: %s with %s (success: %.2f)",
-                     outcome.task_type, outcome.strategy_used, outcome.success_rate)
+        logger.info(
+            "Recorded learning outcome: %s with %s (success: %.2f)",
+            outcome.task_type,
+            outcome.strategy_used,
+            outcome.success_rate,
+        )
 
     async def recommend_strategy(self, task_type: str) -> LearningStrategy:
         """Recommend the best learning strategy for a task type."""
@@ -78,6 +84,7 @@ class MetaLearningAgent:
             try:
                 result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=300)
                 import json
+
                 content = result.get("content", "{}")
                 data = json.loads(content) if isinstance(content, str) else content
                 return LearningStrategy(

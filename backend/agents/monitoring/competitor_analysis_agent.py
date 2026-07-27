@@ -25,6 +25,7 @@ COMPETITOR_CACHE_TTL = 86400  # 24 hours
 @dataclass(frozen=True)
 class CompetitorFeature:
     """Immutable competitor feature record."""
+
     competitor_name: str
     feature_name: str
     description: str
@@ -36,6 +37,7 @@ class CompetitorFeature:
 @dataclass(frozen=True)
 class FeatureGap:
     """Immutable feature gap analysis."""
+
     feature_name: str
     competitor: str
     description: str
@@ -47,6 +49,7 @@ class FeatureGap:
 @dataclass(frozen=True)
 class CompetitorReport:
     """Immutable competitor analysis report."""
+
     competitors_analyzed: list[str]
     new_features: list[CompetitorFeature]
     gaps: list[FeatureGap]
@@ -140,17 +143,27 @@ class CompetitorAnalysisAgent:
 
         for feature in self._tracked_features:
             if feature.feature_name.lower() not in our_set:
-                priority = "critical" if feature.impact_score > 0.8 else "high" if feature.impact_score > 0.6 else "medium" if feature.impact_score > 0.4 else "low"
+                priority = (
+                    "critical"
+                    if feature.impact_score > 0.8
+                    else "high"
+                    if feature.impact_score > 0.6
+                    else "medium"
+                    if feature.impact_score > 0.4
+                    else "low"
+                )
                 effort = "high" if priority == "critical" else "medium" if priority in ("high", "medium") else "low"
 
-                gaps.append(FeatureGap(
-                    feature_name=feature.feature_name,
-                    competitor=feature.competitor_name,
-                    description=feature.description,
-                    priority=priority,
-                    estimated_effort=effort,
-                    recommendation=f"Implement {feature.feature_name} to match {feature.competitor_name} capability",
-                ))
+                gaps.append(
+                    FeatureGap(
+                        feature_name=feature.feature_name,
+                        competitor=feature.competitor_name,
+                        description=feature.description,
+                        priority=priority,
+                        estimated_effort=effort,
+                        recommendation=f"Implement {feature.feature_name} to match {feature.competitor_name} capability",
+                    )
+                )
 
         # Sort by priority
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -158,14 +171,17 @@ class CompetitorAnalysisAgent:
 
         await self.cache.set(
             cache_key,
-            [{
-                "feature_name": g.feature_name,
-                "competitor": g.competitor,
-                "description": g.description,
-                "priority": g.priority,
-                "estimated_effort": g.estimated_effort,
-                "recommendation": g.recommendation,
-            } for g in gaps],
+            [
+                {
+                    "feature_name": g.feature_name,
+                    "competitor": g.competitor,
+                    "description": g.description,
+                    "priority": g.priority,
+                    "estimated_effort": g.estimated_effort,
+                    "recommendation": g.recommendation,
+                }
+                for g in gaps
+            ],
             ttl=COMPETITOR_CACHE_TTL,
         )
 

@@ -99,7 +99,7 @@ def _safe_vm_path(sandbox_root: Path, vm_id: str) -> Path:
 def _ast_validate_code(code: str, context: str = "sandbox") -> tuple[bool, str]:
     """
     বাংলা মন্তব্য: AST ব্যবহার করে কোড ভ্যালিডেট করে — getattr/hasattr বাইপাস প্রতিরোধ।
-    
+
     This is a centralized validation helper used before any sandbox code execution.
     Returns (is_safe, reason) tuple.
     """
