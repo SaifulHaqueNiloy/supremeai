@@ -3,6 +3,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/home_screen.dart'; // Import the new home screen
 
 void main() {
   runApp(const SupremeAIMobileApp());
@@ -19,7 +20,7 @@ class SupremeAIMobileApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const HomePage(),
+      home: const HomePage(), // Keep the original HomePage for now
     );
   }
 }
@@ -165,9 +166,19 @@ class _HomePageState extends State<HomePage> {
             onSelected: (String result) {
               if (result == 'logout') {
                 _logout();
+              } else if (result == 'new_ui') {
+                // Navigate to new UI
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'new_ui',
+                child: Text('Try New UI'),
+              ),
               const PopupMenuItem<String>(
                 value: 'logout',
                 child: Text('Logout'),
