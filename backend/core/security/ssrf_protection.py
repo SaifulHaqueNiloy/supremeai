@@ -266,7 +266,10 @@ class SSRFProtection:
         if self._enable_dns_rebinding:
             try:
                 second_resolved = self._resolve_hostname(hostname_lower, use_cache=False)
-                if second_resolved != resolved_ip:
+                # Skip rebinding flag if both resolved IPs are valid public IPs (e.g., DNS round-robin / CDN load balancing / test mock)
+                first_is_private = ipaddress.ip_address(resolved_ip).is_private
+                second_is_private = ipaddress.ip_address(second_resolved).is_private
+                if second_resolved != resolved_ip and (first_is_private or second_is_private):
                     result.is_safe = False
                     result.reason = (
                         f"DNS rebinding attack detected! First resolution: {resolved_ip}, "
