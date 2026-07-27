@@ -22,7 +22,9 @@ class SyntheticDataPipeline:
     def __init__(self, episodic_memory: Optional[EpisodicMemory] = None):
         self.episodic = episodic_memory or EpisodicMemory()
 
-    async def generate_dataset(self, output_path: str = "data/synthetic_ft_dataset.jsonl", min_score: float = 0.8) -> Dict[str, Any]:
+    async def generate_dataset(
+        self, output_path: str = "data/synthetic_ft_dataset.jsonl", min_score: float = 0.8
+    ) -> Dict[str, Any]:
         """
         Generate a synthetic instruction-tuning dataset from successful past agent executions.
         """
@@ -37,12 +39,14 @@ class SyntheticDataPipeline:
                     prompt_text = parts[0].replace("Prompt:", "").strip()
                     response_text = parts[1].strip()
 
-                    dataset_entries.append({
-                        "instruction": prompt_text,
-                        "input": "",
-                        "output": response_text,
-                        "system_prompt": "You are SupremeAI, an autonomous AGI-grade AI coding and reasoning ecosystem.",
-                    })
+                    dataset_entries.append(
+                        {
+                            "instruction": prompt_text,
+                            "input": "",
+                            "output": response_text,
+                            "system_prompt": "You are SupremeAI, an autonomous AGI-grade AI coding and reasoning ecosystem.",
+                        }
+                    )
 
             # Save dataset JSONL
             out_file = Path(output_path)

@@ -401,7 +401,13 @@ class LearningLoop:
                 return True
         return False
 
-    def compute_ewc_loss_penalty(self, current_weights: dict[str, float], old_weights: dict[str, float], fisher_matrix: dict[str, float], ewc_lambda: float = 0.5) -> float:
+    def compute_ewc_loss_penalty(
+        self,
+        current_weights: dict[str, float],
+        old_weights: dict[str, float],
+        fisher_matrix: dict[str, float],
+        ewc_lambda: float = 0.5,
+    ) -> float:
         """
         Elastic Weight Consolidation (EWC) loss penalty calculation to prevent catastrophic forgetting.
         """

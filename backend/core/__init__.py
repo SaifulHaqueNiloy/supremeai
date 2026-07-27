@@ -120,17 +120,35 @@ try:
         TemporalAbstractionConfig,
         TemporalGranularity,
     )
+
     EVOLUTION_COMPONENTS_AVAILABLE = True
 except ImportError:
     EVOLUTION_COMPONENTS_AVAILABLE = False
     (
-        DigitalTwinWorldModel, get_digital_twin_model, SystemTopologyMapper,
-        ImpactSimulator, RemediationEngine, EWC, OnlineEWC, EWCTrainer, EWCConfig,
-        AdversarialDefenseSystem, AdversarialTrainer, DefenseConfig,
-        NeuralSymbolicIntegrator, MathematicalReasoningEngine, NeuralSymbolicConfig,
-        FederatedLearningCoordinator, FLConfig, AggregationMethod,
-        TheoryOfMindSystem, ToMConfig, ToMLevel,
-        TemporalAbstractionSystem, TemporalAbstractionConfig, TemporalGranularity,
+        DigitalTwinWorldModel,
+        get_digital_twin_model,
+        SystemTopologyMapper,
+        ImpactSimulator,
+        RemediationEngine,
+        EWC,
+        OnlineEWC,
+        EWCTrainer,
+        EWCConfig,
+        AdversarialDefenseSystem,
+        AdversarialTrainer,
+        DefenseConfig,
+        NeuralSymbolicIntegrator,
+        MathematicalReasoningEngine,
+        NeuralSymbolicConfig,
+        FederatedLearningCoordinator,
+        FLConfig,
+        AggregationMethod,
+        TheoryOfMindSystem,
+        ToMConfig,
+        ToMLevel,
+        TemporalAbstractionSystem,
+        TemporalAbstractionConfig,
+        TemporalGranularity,
     ) = (None,) * 24
 
 # Version information
