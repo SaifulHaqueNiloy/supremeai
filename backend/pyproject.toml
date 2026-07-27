@@ -37,8 +37,6 @@ pydantic-extra-types = "*"
 supabase = "^2.11.0"
 firebase-admin = "^6.5.0"
 qdrant-client = "^1.12.1"
-sentence-transformers = "^3.3.0"
-torch = "^2.5.0"
 numpy = "^1.26.4"
 opencv-python-headless = "^4.10.0"  # headless: no GTK/GUI libs needed in CI containers
 pandas = "^2.2.3"
@@ -102,6 +100,27 @@ opentelemetry-sdk = "^1.28.2"
 opentelemetry-api = "^1.28.2"
 opentelemetry-instrumentation-fastapi = "^0.49b1"
 opentelemetry-exporter-otlp-proto-grpc = "^1.28.2"
+
+# বাংলা মন্তব্য: torch/sentence-transformers আগে মূল [tool.poetry.dependencies]-এ ছিল,
+# ফলে CI-এর backend-core জব `poetry install --with dev` চালালেই torch-এর সাথে
+# nvidia-nccl-cu12 *এবং* cu13 দুটো ভিন্ন CUDA স্ট্যাক ডাউনলোড হয়ে যেত -- CPU-only
+# GitHub-hosted রানারে সম্পূর্ণ অপ্রয়োজনীয়, এবং এটাই ডিস্ক ফুরিয়ে দিয়ে
+# `poetry install`/audit-sandbox ফেইল করাচ্ছিল (Zero-Operating-Cost নীতির বিপরীত)।
+# grep দিয়ে যাচাই করা হয়েছে: torch-নির্ভর evolution/* মডিউলগুলো কোথাও import করা হয় না
+# (dead/scaffold code, memory-note অনুযায়ী), আর sentence-transformers-এর ৪টা caller
+# (experience_db.py, memory_service.py, knowledge_extractor.py, error_remediation.py)
+# আগে থেকেই try/except ImportError দিয়ে গ্রেসফুলি ফলব্যাক করে -- তাই এই গ্রুপ বাদ
+# দিলে backend-core-এর কোনো টেস্ট ভাঙে না।
+# পরবর্তী ধাপ (এই sandbox-এ download.pytorch.org অ্যাক্সেস না থাকায় এখানে verify করা
+# যায়নি বলে এখনই যোগ করা হয়নি): কেউ সত্যিকার এই গ্রুপ ইনস্টল করলে যেন GPU wheel না
+# নামে, তার জন্য torch-কে explicit `https://download.pytorch.org/whl/cpu` source-এ
+# পিন করে `poetry lock` রিজেনারেট করা।
+[tool.poetry.group.ml]
+optional = true
+
+[tool.poetry.group.ml.dependencies]
+torch = "^2.5.0"
+sentence-transformers = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
