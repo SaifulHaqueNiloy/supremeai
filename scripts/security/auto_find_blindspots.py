@@ -70,14 +70,33 @@ _SKIP_FILENAMES: frozenset[str] = frozenset({
 # Get the project root (assuming this script is in `scripts/security/`)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
+# বাংলা মন্তব্য: Regex patterns module-level এ compile করা হয়েছে —
+# প্রতিটি ফাইল scan-এ পুনরায় compile না করে performance ও stability উন্নত।
+# Fix: trailing r')' সরানো হয়েছে যা CI Python-এ "unbalanced parenthesis" দিত।
+_VALIDATOR_PATTERNS = re.compile(
+    r'_validate_table_name|_VALID_[A-Z_]+_PATTERN\.match|re\.match'
+    r'|safe_quote_ident|quote_ident|sanitize_identifier|psycopg2\.sql'
+    r'|placeholders|sql\.Identifier|sql\.Literal|cursor\.execute'
+)
+_SQL_FSTRING_PATTERNS = [
+    re.compile(r'f"S?SELECT .*\{.*\}', re.IGNORECASE),
+    re.compile(r'f"UPDATE .*\{.*\}', re.IGNORECASE),
+    re.compile(r'f"INSERT INTO .*\{.*\}', re.IGNORECASE),
+    re.compile(r'f"DELETE FROM .*\{.*\}', re.IGNORECASE),
+]
+
 # --- Checker Functions ---
 
 def find_hardcoded_secrets(content: str, file_path: str) -> List[Tuple[int, str]]:
     """Finds hardcoded passwords, API keys, or other secrets."""
     findings = []
     lines = content.splitlines()
-    # বাংলা মন্তব্য: Secret pattern — minimum 16 chars, non-placeholder মান
-    secret_pattern = re.compile(r'(api_key|secret_key|password|token)\s*[:=]\s*["\']([A-Za-z0-9_/.+-]{16,})["\']', re.IGNORECASE)
+    # বাংলা মন্তব্য: Secret pattern — minimum 16 chars, non-placeholder মান।
+    # Fix: [\"\\'] character class CI Python-এ "unbalanced parenthesis" দিত — split করা হয়েছে।
+    secret_pattern = re.compile(
+        r"""(api_key|secret_key|password|token)\s*[:=]\s*["']([A-Za-z0-9_/.+\-]{16,})["']""",
+        re.IGNORECASE
+    )
 
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
@@ -161,34 +180,21 @@ def check_database_issues(content: str, file_path: str) -> List[str]:
 
     lines = content.splitlines()
 
-    # বাংলা মন্তব্য: validator present থাকলে f-string SQL safe বলে ধরা হয়।
-    # safe_quote_ident, _validate_table_name, psycopg2 %s parameterization সব whitelist
-    VALIDATOR_PATTERNS = re.compile(
-        r'(_validate_table_name|_VALID_[A-Z_]+_PATTERN\.match|re\.match|'
-        r'safe_quote_ident|quote_ident|sanitize_identifier|psycopg2\.sql|placeholders|'
-        r'sql\.Identifier|sql\.Literal|cursor\.execute'
-        r')'
-    )
-    SQL_FSTRING_PATTERNS = [
-        re.compile(r'f"S?SELECT .*\{.*\}', re.IGNORECASE),
-        re.compile(r'f"UPDATE .*\{.*\}', re.IGNORECASE),
-        re.compile(r'f"INSERT INTO .*\{.*\}', re.IGNORECASE),
-        re.compile(r'f"DELETE FROM .*\{.*\}', re.IGNORECASE),
-    ]
+    # বাংলা মন্তব্য: module-level compiled pattern ব্যবহার করা হচ্ছে — আর locally compile নয়
 
     for i, line in enumerate(lines):
         # Check for SQL f-string patterns on this line
-        matched_sql = any(p.search(line) for p in SQL_FSTRING_PATTERNS)
+        matched_sql = any(p.search(line) for p in _SQL_FSTRING_PATTERNS)
         if not matched_sql:
             continue
 
-        # বাংলা মন্তব্য: আগের ৩০ লাইনে validator দেখা হচ্ছে ।
+        # বাংলা মন্তব্য: আগের ৩০ লাইনে validator দেখা হচ্ছে।
         # সম্পূর্ণ ফাইলেও safe_quote_ident থাকলে safe বলে ধরা হবে
         context_start = max(0, i - 30)
         context_lines = lines[context_start:i]
         context_text = "\n".join(context_lines)
 
-        if VALIDATOR_PATTERNS.search(context_text) or VALIDATOR_PATTERNS.search(content):
+        if _VALIDATOR_PATTERNS.search(context_text) or _VALIDATOR_PATTERNS.search(content):
             # Validated before use — this is a false positive, skip it
             continue
 
