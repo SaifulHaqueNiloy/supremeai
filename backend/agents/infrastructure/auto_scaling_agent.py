@@ -1,2 +1,3 @@
-import os
-print("test")
+from loguru import logger
+
+logger.info("AutoScalingAgent initialized")
