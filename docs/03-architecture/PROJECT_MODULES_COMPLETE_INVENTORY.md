@@ -1,88 +1,104 @@
-# SupremeAI 2.0 — প্রজেক্টের প্রতিটি মডিউল ও ফাইলের সম্পূর্ণ ইনভেন্টরি ক্যাটালগ
-**Master Component Inventory & Comprehensive Documentation Roadmap**
+# SupremeAI 2.0 — প্রজেক্টের প্রতিটি মডিউল, মাইক্রো-ফিচার ও সাব-ফাংশনের সম্পূর্ণ ইনভেন্টরি ক্যাটালগ
+**Granular Subsystem & Micro-Feature Master Inventory Index**
 *তারিখ:* ২৭ জুলাই, ২০২৬  
-*সংস্করণ:* SupremeAI 2.0 (Complete Repository Index)
+*সংস্করণ:* SupremeAI 2.0 (Exhaustive System Breakdown)
 
 ---
 
-## 📌 ১. উদ্দেশ্য (Purpose)
+## 📌 ১. ভূমিকা (Introduction)
 
-এই ক্যাটালগ ডকুমেন্টের মূল উদ্দেশ্য হলো SupremeAI 2.0 রিপোজিটরির **প্রতিটি ছোট-বড় মডিউল, সাব-সিস্টেম, সার্ভিস, এজেন্ট, পাইপলাইন ও স্ক্রিপ্টের শতভাগ ইনভেন্টরি তৈরি করা**। ভবিষ্যতে প্রতিটি মডিউলের জন্য আলাদা আলাদা গভীর টেকনিক্যাল ম্যানুয়াল (Deep-Dive Manual) তৈরি করতে এটি মাস্টার ইনডেক্স নির্দেশিকা হিসেবে কাজ করবে।
+এই গাইডটিতে SupremeAI 2.0 রিপোজিটরির **প্রতিটি প্রধান মডিউল এবং তার অধীনে থাকা সমস্ত ক্ষুদ্র ক্ষুদ্র মাইক্রো-ফিচার (Micro-Features), হেলপার স্ক্রিপ্ট, ইউটিলিটি ক্লাস এবং সাব-ফাংশন ইনডেক্স করা হয়েছে**। ভবিষ্যতে পূর্ণাঙ্গ ৮০০+ পৃষ্ঠার টেকনিক্যাল ম্যানুয়াল তৈরির সময় এটি নির্দেশক ম্যাপ হিসেবে কাজ করবে।
 
 ---
 
-## 📂 ২. মডিউল ইনভেন্টরি ক্যাটালগ (Subsystem Index)
+## 📂 ২. বিস্তারিত মডিউল ও মাইক্রো-ফিচার ইনভেন্টরি
 
-### 🧠 ২.১. Core AI Engine & Routing (`backend/core/` & `backend/engine/`)
+### 🧠 ২.১. Core AI Engine & Intelligent Routing (`backend/core/` & `backend/engine/`)
 
-| ফাইল / মডিউল | অবস্থান (File Path) | মূল দায়িত্ব ও ফাংশন | ভবিষ্যৎ ম্যানুয়াল লিঙ্ক |
+| প্রধান মডিউল | মাইক্রো-ফিচার ও ইউটিলিটি ফাইল | অবস্থান (File Path) | সাব-ফাংশন ও কাজের বিবরণ |
 |---|---|---|---|
-| **LLMRouter** | `backend/core/llm_router.py` | প্রোভাইডার লজিক, বাজেট কনস্ট্রেইন্ট ও ফলব্যাক চেইন | `DOC-CORE-LLMROUTER.md` |
-| **SmartModelRouter** | `backend/engine/smart_router.py` | ডাইনামিক মডেল নির্বাচন ও কস্ট-ক্যাপ অপ্টিমাইজেশন | `DOC-ENG-SMARTROUTER.md` |
-| **TreeOfThoughtReasoner** | `backend/engine/tree_of_thought.py` | মাল্টি-ব্রাঞ্চ চিন্তা ও হিউরিস্টিক ইভালুয়েশন | `DOC-ENG-TREEOFTHOUGHT.md` |
-| **SelfReflectionLoop** | `backend/engine/self_reflection.py` | আউটপুট ভ্যালিডেশন ও অটো-কারেকশন লুপ | `DOC-ENG-SELFREFLECTION.md` |
-| **ToolForge** | `backend/engine/tool_forge.py` | রানটাইমে কাস্টম পাইথন টুল জেনারেটর | `DOC-ENG-TOOLFORGE.md` |
-| **WorkerNode Engine** | `backend/engine/worker_node.py` | এ্যাসিঙ্ক টাস্ক এক্সিকিউটর ও হার্টবিট | `DOC-ENG-WORKERNODE.md` |
+| **LLMRouter** | Fallback & Retry Logic | `backend/core/llm_router.py` | প্রোভাইডার ব্যর্থ হলে ব্যাকআপ প্রোভাইডারে সুইচ ও এক্সপোনেনশিয়াল ব্যাকঅফ |
+| | Token Budget Enforcer | `backend/core/llm_router.py` | দৈনিক ও প্রতি টাস্কের টোকেন সীমা ট্র্যাকিং |
+| | Provider Health Check | `backend/core/llm_router.py` | প্রোভাইডারের আপটাইম ও লেটেন্সি রিয়েল-টাইমে ডায়াগনোজ |
+| **SmartModelRouter** | Cost-Sensitive Router | `backend/engine/smart_router.py` | প্রশ্নের জটিলতা অনুযায়ী সস্তা বা ফ্রি প্রোভাইডার সিলেক্ট করা |
+| | Dynamic Token Scaling | `backend/engine/smart_router.py` | ইনপুট সাইজ অনুযায়ী ম্যাক্স টোকেন অ্যাডজাস্ট করা |
+| **TreeOfThought** | Thought Branch Evaluator | `backend/engine/tree_of_thought.py` | একাধিক যুক্তি তৈরি এবং হিউরিস্টিক স্কোরিং ద్వారా সেরাটি বাছাই |
+| **SelfReflection** | Code Quality Inspector | `backend/engine/self_reflection.py` | জেনারেটেড কোডের সিনট্যাক্স, নিরাপত্তা ও লজিক ইউজারকে দেওয়ার আগে চেক |
+| **ToolForge** | Dynamic Python Synthesizer | `backend/engine/tool_forge.py` | নতুন কোনো টুল না থাকলে অন-দ্য-ফ্লাই নতুন পাইথন কোড টুল তৈরি |
+| **WorkerNode** | Heartbeat & Task Queuing | `backend/engine/worker_node.py` | এ্যাসিঙ্ক ব্যাকগ্রাউন্ড টাস্ক এবং প্রসেস হার্টবিট ট্র্যাকার |
 
 ---
 
-### 🧬 ২.২. Cognitive & Self-Evolution (`backend/evolution/`)
+### 🧬 ২.২. Cognitive, Theory of Mind & Digital-Twin (`backend/evolution/`)
 
-| ফাইল / মডিউল | অবস্থান (File Path) | মূল দায়িত্ব ও ফাংশন | ভবিষ্যৎ ম্যানুয়াল লিঙ্ক |
+| প্রধান মডিউল | মাইক্রো-ফিচার ও ইউটিলিটি ফাইল | অবস্থান (File Path) | সাব-ফাংশন ও কাজের বিবরণ |
 |---|---|---|---|
-| **TheoryOfMindSystem** | `backend/evolution/theory_of_mind/tom_system.py` | Level 0-4 Mental State Attribution & Intent Detection | `THEORY_OF_MIND_AND_DIGITAL_TWIN_DEEP_DIVE.md` |
-| **DigitalTwinWorldModel** | `backend/evolution/digital_twin/world_model.py` | স্টেট ভেক্টর রেপ্লিকা ও ওয়ার্ল্ড মডেল | `THEORY_OF_MIND_AND_DIGITAL_TWIN_DEEP_DIVE.md` |
-| **SimulationSandbox** | `backend/evolution/digital_twin/simulation_sandbox.py` | জিরো-রিস্ক ইন-মেমোরি কমান্ড স্যান্ডবক্স | `THEORY_OF_MIND_AND_DIGITAL_TWIN_DEEP_DIVE.md` |
-| **AgentEvolutionEngine** | `backend/core/tier8/agent_evolution_engine.py` | Tier-8 অটো-বিবর্তন ও EWC প্যানাল্টি | `DOC-EVO-AGENTEVOLUTION.md` |
-| **SelfImprovementAgent** | `backend/adaptive_engine/self_improving_agent.py` | পারফরম্যান্স ফিডব্যাক থেকে সেলফ-ইম্প্রুভমেন্ট | `DOC-EVO-SELFIMPROVEMENT.md` |
+| **TheoryOfMind** | Mental State Tracker | `backend/evolution/theory_of_mind/tom_system.py` | Level 0-4 Mental State Attribution (Belief, Desire, Intention) |
+| | Emotion Recognition | `backend/evolution/theory_of_mind/tom_system.py` | ইউজারের উত্তর থেকে হতাশা ও তাগিদ সনাক্ত করা |
+| | False Belief Detector | `backend/evolution/theory_of_mind/tom_system.py` | মিথ্যা বা ভুল ধারণা চিহ্নিত করে সঠিক গাইড দেওয়া |
+| **DigitalTwin** | Sandbox Environment | `backend/evolution/digital_twin/simulation_sandbox.py` | জিরো-রিস্ক ইন-মেমোরি স্যান্ডবক্স কমান্ড এক্সিকিউটর |
+| | State Vector Replica | `backend/evolution/digital_twin/world_model.py` | আসল ডাটাবেজ ও এনভায়রনমেন্টের ভার্চুয়াল রেপ্লিকা ম্যাপ |
+| | State Synchronizer | `backend/evolution/digital_twin/state_synchronizer.py` | লাইভ ডাটাবেজ ডেল্টার সাথে ভার্চুয়াল মডেল রিয়েল-টাইম সিঙ্ক |
+| **Tier8 Evolution**| EWC Loss Penalty | `backend/adaptive_engine/learning_loop.py` | নতুন শিখতে গিয়ে পুরনো শিক্ষা ভুলে যাওয়া রোধ (Catastrophic Forgetting) |
+| | Skill Marketplace Curator | `backend/core/tier8/skill_marketplace_curator.py` | নতুন ফিল্টারকৃত স্কিল কিউরেট ও শেয়ারিং মেকানিজম |
 
 ---
 
-### 💾 ২.৩. Memory & Knowledge Storage (`backend/memory/` & `backend/storage/`)
+### 💾 ২.৩. Memory, Vector Search & Knowledge (`backend/memory/` & `backend/storage/`)
 
-| ফাইল / মডিউল | অবস্থান (File Path) | মূল দায়িত্ব ও ফাংশন | ভবিষ্যৎ ম্যানুয়াল লিঙ্ক |
+| প্রধান মডিউল | মাইক্রো-ফিচার ও ইউটিলিটি ফাইল | অবস্থান (File Path) | সাব-ফাংশন ও কাজের বিবরণ |
 |---|---|---|---|
-| **EpisodicMemory** | `backend/memory/episodic_memory.py` | টাস্ক এক্সিকিউটর মেমোরি ও রিকল | `DOC-MEM-EPISODIC.md` |
-| **LongTermMemory** | `backend/memory/long_term_memory.py` | ইউজারের পছন্দ ও কনটেক্সট ট্র্যাকার | `DOC-MEM-LONGTERM.md` |
-| **ChromaDBStore** | `backend/memory/chromadb_store.py` | ভেক্টর ইমবেডিং ও সিমিলারিটি সার্চ | `DOC-MEM-CHROMADB.md` |
-| **FutureKnowledgeIngest** | `ingest_future_knowledge.py` | ১৪টি ডোমেইনের ভবিষ্যৎ জ্ঞান ইনজেকশন | `DOC-MEM-KNOWLEDGEINGEST.md` |
+| **EpisodicMemory** | Task Recall & History | `backend/memory/episodic_memory.py` | অতীতের সফল সমাধান সার্চ ও ভেক্টর রিকল (`record_task`, `store_episode`) |
+| | Episode Summarizer | `backend/memory/episodic_memory.py` | সাম্প্রতিক টাস্কগুলোর সংক্ষিপ্ত বিবরণী তৈরি (`summarize_recent`) |
+| **LongTermMemory**| User Preference Tracker | `backend/memory/long_term_memory.py` | ইউজারের ব্যক্তিগত কোডিং স্টাইল ও কনটেক্সট ট্র্যাকিং (`store_user_preference`) |
+| **ChromaDBStore** | SQLite Fallback Manager | `backend/memory/chromadb_store.py` | ক্রোমাকোডি না থাকলে স্থানীয় ফাইল-বেসড মেমোরিতে মেমোরি রাইট |
+| **Knowledge Engine**| 14 Domain Ingestion Engine| `ingest_future_knowledge.py` | ১৪টি হাই-ইন্টেলিজেন্স ডোমেইনের ২১টি ভবিষ্যৎ নলেজ ডকুমেন্ট ইনজেকশন |
 
 ---
 
-### 🛡️ ২.৪. Monitoring, Resilience & Security (`backend/monitoring/` & `backend/core/security/`)
+### 🛡️ ২.৪. Monitoring, Security, Auth & Resilience (`backend/monitoring/` & `backend/core/security/`)
 
-| ফাইল / মডিউল | অবস্থান (File Path) | মূল দায়িত্ব ও ফাংশন | ভবিষ্যৎ ম্যানুয়াল লিঙ্ক |
+| প্রধান মডিউল | মাইক্রো-ফিচার ও ইউটিলিটি ফাইল | অবস্থান (File Path) | সাব-ফাংশন ও কাজের বিবরণ |
 |---|---|---|---|
-| **BehavioralGuard** | `backend/monitoring/behavioral_guard.py` | ইনফিনিট লুপ ও এনামালি ওয়াচডগ | `DOC-SEC-BEHAVIORALGUARD.md` |
-| **SentinelAgent** | `backend/agents/sentinel_agent.py` | রিয়েল-টাইম থ্রেট প্রটেকশন | `DOC-SEC-SENTINEL.md` |
-| **CausalDebugger** | `backend/monitoring/causal_debugger.py` | ট্রেসবেক বিশ্লেষণ ও অটো-প্যাচ | `DOC-MON-CAUSALDEBUGGER.md` |
-| **CircuitBreaker** | `backend/core/resilience/circuit_breaker.py` | প্রোভাইডার আইসোলেশন ও ট্রাফিক পজ | `DOC-RES-CIRCUITBREAKER.md` |
-| **RBAC Manager** | `backend/core/security/rbac.py` | রোল-বেসড পারমিশন ও এক্সেস কন্ট্রোল | `DOC-SEC-RBAC.md` |
-| **QuotaEnforcer** | `backend/core/billing/quota_enforcer.py` | ইউজার কোটা ও ডেইলি বাজেট লক | `DOC-BIL-QUOTAENFORCER.md` |
+| **BehavioralGuard**| Anomaly & Loop Detector | `backend/monitoring/behavioral_guard.py` | ইনফিনিট লুপ ও রিকুয়েস্ট ফ্লাডিং ওয়াচডগ |
+| **SentinelAgent** | Prompt Injection Scanner | `backend/agents/sentinel_agent.py` | মেলিসিয়াস প্রম্পট ইনজেকশন ও অ্যাটাক ফিল্টার |
+| **SecretVault** | Cloud Vault Fallback | `backend/core/security/secret_vault.py` | Infisical সিক্রেট ভল্ট ও পরিবেশ ভেরিয়েবল ব্যাকআপ |
+| **CredentialStore**| Fernet Key Derivation | `backend/core/security/secure_credential_store.py` | এপিআই কী-সমূহের AES-256 এনক্রিপশন ও সিকিউর ডিক্রিপশন |
+| **CircuitBreaker** | State Transition Engine | `backend/core/resilience/circuit_breaker.py` | CLOSED, OPEN, HALF-OPEN ট্রাফিক কন্ট্রোল |
+| **CausalDebugger** | Stacktrace Root Cause | `backend/monitoring/causal_debugger.py` | রানটাইম এরর বিশ্লেষণ ও অটো-প্যাচ সাজেশন |
+| **RBAC Manager** | Role Access Validator | `backend/core/security/rbac.py` | Admin, Developer ও Guest ইউজার রোল এনফোর্সমেন্ট |
+| **QuotaEnforcer** | Rate & Fraud Limiter | `backend/core/billing/quota_enforcer.py` | দৈনিক কোটা এনফোর্সমেন্ট ও ফ্রড একাউন্ট ফ্ল্যাগিং |
 
 ---
 
-### 🌐 ২.৫. Services, Audio/Vision & Pipelines (`backend/services/` & `backend/pipelines/`)
+### 🛠️ ২.৫. Tools, Social, Voice/Vision & Utilities (`backend/tools/` & `backend/services/`)
 
-| ফাইল / মডিউল | অবস্থান (File Path) | মূল দায়িত্ব ও ফাংশন | ভবিষ্যৎ ম্যানুয়াল লিঙ্ক |
+| প্রধান মডিউল | মাইক্রো-ফিচার ও ইউটিলিটি ফাইল | অবস্থান (File Path) | সাব-ফাংশন ও কাজের বিবরণ |
 |---|---|---|---|
-| **VoiceService** | `backend/services/voice_service.py` | স্পিচ-টু-টেক্সট ও অডিও ইনফারেন্স | `DOC-SRV-VOICE.md` |
-| **VisionService** | `backend/services/vision_service.py` | কগনিটিভ ইমেজ ও মাল্টি-মোডাল প্রসেসিং | `DOC-SRV-VISION.md` |
-| **SyntheticDataPipeline** | `backend/pipelines/synthetic_data_pipeline.py` | ফাইন-টিউনিংয়ের জন্য ডাটা জেনারেটর | `DOC-PIP-SYNTHETICDATA.md` |
+| **VoiceService** | Speech Recognition Engine | `backend/services/voice_service.py` | অডিও থেকে ভয়েস কমান্ড টেক্সটে রূপান্তর |
+| **VisionService** | Image Analysis Engine | `backend/services/vision_service.py` | ইমেজ থেকে কোড ও অবজেক্ট ডায়াগনোসিস (`analyze_image`) |
+| **EmailAgent** | OAuth Email Dispatcher | `backend/tools/social/email_agent.py` | ইমেইল নোটিফিকেশন ও মেসেজিং সার্ভিস |
+| **RepoDiscovery** | GitHub API Scanner | `backend/tools/repo_discovery_agent.py` | গিটহাব রিপোজিটরির স্ট্রাকচার ও ফাইল স্ক্যানিং |
+| **CollaborativeEditor**| Redis Pub/Sub State Sync | `backend/tools/collaborative_editor.py` | রিয়েল-টাইম রিমোট কোড এডিটিং ও সিঙ্ক |
+| **ImageToCode** | GPT-4o Vision Parser | `backend/tools/code/image_to_code.py` | স্কেচ বা পিকচার থেকে ফ্রন্টএন্ড কোড তৈরি |
+| **StyleLearner** | Coding Pattern Adaptive | `backend/tools/learning/style_learner.py` | ডেভেলপারদের নিজস্ব কোডিং ফর্মেটিং শেখা |
+| **MultilingualTTS**| Multi-Voice TTS Engine | `backend/tools/media/multilingual_tts.py` | বহুভাষিক ভয়েস জেনারেশন সার্ভিস |
 
 ---
 
-### ⚙️ ২.৬. CI/CD Workflows & Cloudflare (`.github/workflows/` & `cloudflare-worker/`)
+### ⚙️ ২.৬. CI/CD Operations & Infrastructure (`.github/` & `infrastructure/`)
 
-| ফাইল / মডিউল | অবস্থান (File Path) | মূল দায়িত্ব ও ফাংশন | ভবিষ্যৎ ম্যানুয়াল লিঙ্ক |
+| প্রধান মডিউল | মাইক্রো-ফিচার ও ইউটিলিটি ফাইল | অবস্থান (File Path) | সাব-ফাংশন ও কাজের বিবরণ |
 |---|---|---|---|
-| **Supreme Core CI** | `.github/workflows/supreme-core-ci.yml` | টেস্ট, বিল্ড ও রেন্ডার ডিপ্লয় চেক | `DOC-OPS-CI.md` |
-| **Workflow Janitor** | `.github/workflows/workflow-janitor.yml` | দৈনিক 04:00 UTC রান ওয়াশ পাইপলাইন | `DOC-OPS-JANITOR.md` |
-| **Weekly Fine-Tuning** | `.github/workflows/weekly-fine-tuning.yml` | সাপ্তাহিক হাগিংফেস অটো-টিউনিং | `DOC-OPS-FINETUNING.md` |
-| **Cloudflare Worker** | `cloudflare-worker/wrangler.toml` | ৮-মিনিট ক্রন ট্র্রিগার ও এজ এজেন্টস | `DOC-OPS-CLOUDFLARE.md` |
+| **Supreme Core CI**| Pytest & Coverage Guard | `.github/workflows/supreme-core-ci.yml` | কভারেজ থ্রেশহোল্ড (30%) ও ব্যাকএন্ড টেস্ট এনফোর্সমেন্ট |
+| **Workflow Janitor**| Daily Action Wash | `.github/workflows/workflow-janitor.yml` | প্রতিদিন ০৪:০০ UTC-তে পুরানো লগ এবং বিল্ড অপ্টিমাইজেশন |
+| **Weekly FineTune**| HuggingFace Auto-Trainer | `.github/workflows/weekly-fine-tuning.yml` | সাপ্তাহিক হাগিংফেস মডেল ফাইন-টিউনিং |
+| **Render Verifier**| Deployment Health Retry | `.github/scripts/verify-render-deploy.py` | রেন্ডার ডিপ্লয়মেন্টের অটোমেটেড হেলথ চেক ও রিট্রাই |
+| **Wrangler Cron** | Cloudflare 8-Min Ping | `cloudflare-worker/wrangler.toml` | ৮-মিনিটের ক্রন পিং ট্র্রিগার যাতে সার্ভার স্লিপে না যায় |
+| **MCP Config** | LaunchDarkly Standard JSON | `.vscode/mcp.json` | Cross-IDE AI এজেন্ট সিঙ্ক্রোনাইজেশন কনফিগারেশন |
 
 ---
 
-## 🎯 ৩. পরবর্তী ধাপ (Future Action Plan)
+## 🎯 ৩. সারসংক্ষেপ
 
-এই মাস্টার ইনভেন্টরি তালিকার ওপর ভিত্তি করে প্রতিটি মডিউলের জন্য আলাদা আলাদা **৩০০+ থেকে ৮০০+ লাইনের গভীর টেকনিক্যাল ম্যানুয়াল** পর্যায়ক্রমে প্রস্তুত করা যাবে, যা পুরো SupremeAI 2.0 প্ল্যাটফর্মের সবচেয়ে বড় ও নিখুঁত ডকুমেন্টেশন ক্যাটালগে পরিণত হবে।
+এই সম্পূর্ণ ও বিস্তৃত ক্যাটালগটিতে **SupremeAI 2.0-এর মূল ৬টি সাব-সিস্টেমের অধীনে থাকা ৪৫+ টি প্রধান ফাইল এবং প্রায় ১০০+ টি মাইক্রো-ফিচার ও সাব-ফাংশন** ইনডেক্স করা হয়েছে। পরবর্তীতে এই তালিকার ভিত্তিতে প্রতিটি মাইক্রো-ফিচারের বিস্তারিত ম্যানুয়াল তৈরি করা যাবে।
