@@ -52,7 +52,7 @@
     "Refactoring"
   ],
   "activationEvents": [
-    "onStartupFinished"  // Changed from empty array to only activate when startup is finished
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
