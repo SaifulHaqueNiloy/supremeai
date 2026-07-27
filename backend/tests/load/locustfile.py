@@ -23,6 +23,7 @@ class SupremeAILoadTestUser(HttpUser):
         # বাংলা মন্তব্য: LOAD_TEST_TOKEN GitHub Secret হিসেবে পাস করতে হবে।
         # হার্ডকোডেড টোকেন নিরাপত্তা ঝুঁকি তৈরি করে তাই env var থেকে লোড করা হচ্ছে।
         import os
+
         self.auth_token = os.environ.get("LOAD_TEST_TOKEN", "")
         self.headers = {
             "Content-Type": "application/json",

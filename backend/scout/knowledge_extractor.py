@@ -8,7 +8,8 @@ try:
     from sentence_transformers import SentenceTransformer
 
     HAS_ST = True
-except ImportError:
+except (ImportError, Exception):
+    # বাংলা মন্তব্য: PyArrow কাস্টম এক্সটেনশন কনফ্লিক্ট (ArrowKeyError) বা ইম্পোর্ট ফেইলিয়র সেফলি হ্যান্ডেল করা হচ্ছে।
     HAS_ST = False
 
 

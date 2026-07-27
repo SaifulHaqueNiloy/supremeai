@@ -215,14 +215,13 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
     payload = await request.body()
     sig_header = request.headers.get("Stripe-Signature")
 
-    # Fail-safe: production-grade security, but never 500 on misconfiguration.
-    # If secrets/signature are missing, ignore webhook and return 200.
+    # Bangla comment: সিক্রেট বা সিগনেচার হেডার মিসিং থাকলে HTTP 400 রিজেক্ট করা হচ্ছে যাতে Stripe ফেইলিয়র সনাক্ত করতে পারে।
     if not STRIPE_WEBHOOK_SECRET or not sig_header:
-        logger.warning("Stripe webhook ignored due to missing secret or signature header.")
-        return {
-            "status": "ignored",
-            "reason": "missing_stripe_webhook_secret_or_signature",
-        }
+        logger.warning("Stripe webhook rejected: Missing webhook secret or signature header.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing Stripe webhook secret or signature header",
+        )
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)

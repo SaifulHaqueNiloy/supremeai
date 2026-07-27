@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 class InternetMonitorService:
     """Service to manage the internet monitoring agent."""
-    
+
     def __init__(self):
         self.agent = internet_monitor_agent
         self.monitoring_task: Optional[asyncio.Task] = None
         self.is_running = False
-        
+
     async def initialize(self):
         """Initialize the service and agent."""
         try:
@@ -29,29 +29,27 @@ class InternetMonitorService:
         except Exception as e:
             logger.error(f"Error initializing Internet Monitor Service: {e}")
             raise
-    
+
     async def start_monitoring(self):
         """Start the continuous monitoring process."""
         if self.is_running:
             logger.warning("Internet monitoring is already running")
             return
-        
+
         try:
-            self.monitoring_task = asyncio.create_task(
-                self.agent.start_monitoring_loop()
-            )
+            self.monitoring_task = asyncio.create_task(self.agent.start_monitoring_loop())
             self.is_running = True
             logger.info("Internet monitoring started successfully")
         except Exception as e:
             logger.error(f"Error starting internet monitoring: {e}")
             raise
-    
+
     async def stop_monitoring(self):
         """Stop the continuous monitoring process."""
         if not self.is_running:
             logger.warning("Internet monitoring is not running")
             return
-        
+
         try:
             if self.monitoring_task:
                 self.monitoring_task.cancel()
@@ -59,30 +57,30 @@ class InternetMonitorService:
                     await self.monitoring_task
                 except asyncio.CancelledError:
                     pass  # Expected when cancelling
-            
+
             self.is_running = False
             logger.info("Internet monitoring stopped successfully")
         except Exception as e:
             logger.error(f"Error stopping internet monitoring: {e}")
             raise
-    
+
     async def get_status(self):
         """Get the current status of the monitoring service."""
         return {
             "is_running": self.is_running,
             "is_initialized": self.agent.session is not None,
             "check_interval": self.agent.check_interval,
-            "name": self.agent.name
+            "name": self.agent.name,
         }
-    
+
     async def get_latest_updates(self):
         """Get the latest updates from the agent."""
         return await self.agent.get_latest_updates()
-    
+
     async def get_update_summary(self):
         """Get the update summary from the agent."""
         return await self.agent.get_update_summary()
-    
+
     async def get_update_history(self):
         """Get the update history from the agent."""
         return await self.agent.get_update_history()

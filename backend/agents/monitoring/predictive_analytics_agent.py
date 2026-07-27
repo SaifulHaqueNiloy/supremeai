@@ -27,6 +27,7 @@ FORECAST_CACHE_TTL = 600  # 10 minutes
 @dataclass(frozen=True)
 class ForecastResult:
     """Immutable forecast result."""
+
     metric: str
     forecast_values: list[float]
     confidence_intervals: list[tuple[float, float]]
@@ -39,6 +40,7 @@ class ForecastResult:
 @dataclass(frozen=True)
 class DemandPrediction:
     """Immutable demand prediction."""
+
     resource: str
     predicted_demand: float
     peak_time: datetime | None
@@ -64,7 +66,7 @@ class TimeSeriesForecaster:
         trend = (values[-1] - values[0]) / n if n > 1 else 0
 
         alpha = 0.3  # Level smoothing
-        beta = 0.1   # Trend smoothing
+        beta = 0.1  # Trend smoothing
 
         forecasted = []
         for i in range(horizon):
