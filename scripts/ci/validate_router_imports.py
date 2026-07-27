@@ -24,7 +24,7 @@ from pathlib import Path
 
 # বাংলা মন্তব্য: Windows cp1252 টার্মিনালে UnicodeEncodeError ঠেকাতে stdout UTF-8 এ রিকনফিগার করা হচ্ছে
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
 
 # বাংলা মন্তব্য: PRE_COMMIT=1 এবং TESTING=1 সেট করা হচ্ছে যাতে Infisical vault
 # network call skip হয় এবং secret_vault দ্রুত env fallback ব্যবহার করে।
@@ -36,10 +36,14 @@ os.environ.setdefault("ENV", "test")
 # Ensure backend root and repo root are in python path
 backend_dir = str(Path(__file__).parent.parent.parent / "backend")
 repo_root = str(Path(__file__).parent.parent.parent)
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
+
+# বাংলা মন্তব্য: backend_dir-কে sys.path-এর প্রথমে (index 0) রাখা অত্যন্ত জরুরী,
+# যাতে repo_root/tools (VS Code extension/firebase functions) এর আগে backend/tools
+# সঠিকভাবে প্যাকেজ হিসেবে ইমপোর্ট হতে পারে এবং ModuleNotFoundError না ঘটে।
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 # Ensure encryption key exists for testing
 if "SUPREMEAI_ENCRYPTION_KEY" not in os.environ and "ENCRYPTION_KEY" not in os.environ:
