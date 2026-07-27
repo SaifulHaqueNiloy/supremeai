@@ -5,6 +5,7 @@ MCP Server for GitHub CI/CD Integration in SupremeAI 2.0.
 CI/CD অপারেশন (Issue, PR, Auto-fix) সরাসরে চ্যাটবক্স থেকে করার ক্ষমতা দেয়।
 """
 
+import base64
 import json
 
 # বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
@@ -323,5 +324,160 @@ async def github_get_ci_status(branch: str = "main") -> str:
         return handle_api_error(e)
 
 
+class GetFileContentsInput(BaseModel):
+    """ফাইল কনটেন্ট পড়ার জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    path: str = Field(..., description="রিপোর মধ্যে ফাইলের পাথ", min_length=1)
+    ref: str = Field(default="main", description="ব্রাঞ্চ/ট্যাগ/কমিট SHA")
+
+
+class SearchCodeInput(BaseModel):
+    """কোড সার্চের জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    query: str = Field(..., description="সার্চ কোয়েরি (GitHub code search সিনট্যাক্স সাপোর্ট করে)", min_length=1)
+    per_page: int = Field(default=10, description="প্রতি পেজে কতগুলো রেজাল্ট", ge=1, le=50)
+
+
+@mcp.tool(
+    name="github_get_file_contents",
+    annotations={
+        "title": "Read File From Repository",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def github_get_file_contents(params: GetFileContentsInput) -> str:
+    """
+    রিপো থেকে একটি ফাইলের কনটেন্ট পড়ে আনে (base64 ডিকোড সহ)।
+
+    Args:
+        params (GetFileContentsInput): path ও ref (ব্রাঞ্চ/ট্যাগ/SHA)
+
+    Returns:
+        str: ডিকোড করা ফাইলের কনটেন্ট অথবা এরর JSON
+    """
+    github_token = get_github_token()
+    if not github_token:
+        return json_error("GITHUB_TOKEN is missing or empty")
+
+    url = f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/contents/{params.path.lstrip('/')}"
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                url,
+                headers={
+                    "Authorization": f"token {github_token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
+                params={"ref": params.ref},
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if isinstance(data, list):
+                return json_error(f"Path '{params.path}' is a directory, not a file.")
+
+            content_b64 = data.get("content", "")
+            encoding = data.get("encoding", "")
+
+            if encoding == "base64" and content_b64:
+                decoded_content = base64.b64decode(content_b64).decode("utf-8", errors="replace")
+            else:
+                decoded_content = content_b64
+
+            return json.dumps(
+                {
+                    "path": data.get("path"),
+                    "sha": data.get("sha"),
+                    "size": data.get("size"),
+                    "encoding": encoding,
+                    "content": decoded_content,
+                },
+                ensure_ascii=False,
+            )
+
+    except httpx.HTTPStatusError as e:
+        return handle_api_error(e, e.response.status_code)
+    except Exception as e:  # noqa: BLE001
+        return handle_api_error(e)
+
+
+@mcp.tool(
+    name="github_search_code",
+    annotations={
+        "title": "Search Code In Repository",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def github_search_code(params: SearchCodeInput) -> str:
+    """
+    GitHub code search এপিআই ব্যবহার করে রিপোর মধ্যে কোড সার্চ করে।
+
+    Args:
+        params (SearchCodeInput): query ও per_page
+
+    Returns:
+        str: সার্চ রেজাল্টের তালিকা (ফাইলের নাম, পাথ, ম্যাচিং স্নিপেট)
+    """
+    github_token = get_github_token()
+    if not github_token:
+        return json_error("GITHUB_TOKEN is missing or empty")
+
+    scoped_query = f"repo:{GITHUB_REPO} {params.query}"
+    url = f"{GITHUB_API_URL}/search/code"
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                url,
+                headers={
+                    "Authorization": f"token {github_token}",
+                    "Accept": "application/vnd.github.v3.text-match+json",
+                },
+                params={"q": scoped_query, "per_page": params.per_page},
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            results = []
+            for item in data.get("items", []):
+                matches = []
+                for match in item.get("text_matches", []):
+                    matches.append(match.get("fragment", ""))
+
+                results.append(
+                    {
+                        "name": item.get("name"),
+                        "path": item.get("path"),
+                        "sha": item.get("sha"),
+                        "html_url": item.get("html_url"),
+                        "matches": matches,
+                    }
+                )
+
+            return json.dumps(
+                {
+                    "total_count": data.get("total_count", 0),
+                    "incomplete_results": data.get("incomplete_results", False),
+                    "items": results,
+                },
+                ensure_ascii=False,
+            )
+
+    except httpx.HTTPStatusError as e:
+        return handle_api_error(e, e.response.status_code)
+    except Exception as e:  # noqa: BLE001
+        return handle_api_error(e)
+
+
 if __name__ == "__main__":
     mcp.run()
+
