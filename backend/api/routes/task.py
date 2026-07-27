@@ -3,7 +3,6 @@
 বাংলা: কাজ এক্সিকিউশন এন্ডপয়েন্ট।
 """
 
-import contextlib
 import datetime
 import json
 import logging
@@ -318,8 +317,10 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
             max_cost=req.max_cost,
         )
         if raw.get("success") and sem_cache:
-            with contextlib.suppress(Exception):
+            try:
                 await sem_cache.set_cache_inference(prompt=prompt, model_name=task_type, response_text=raw.get("text"))
+            except Exception as exc:
+                logger.exception(f"Semantic cache write failed: {exc}")
 
     # Log to ExperienceDatabase in the background to improve user-perceived latency.
     exp = Experience(

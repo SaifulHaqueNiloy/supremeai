@@ -1,4 +1,3 @@
-import contextlib
 from typing import Any
 
 from loguru import logger
@@ -43,13 +42,15 @@ class SupremeOrchestrator:
     def run_autonomous(self, task_description: str, context: str | None = None) -> dict[str, Any]:
         self._maybe_rotate_vpn("general")
         run = self.autonomous_agent.run(task_description=task_description, context=context)
-        with contextlib.suppress(Exception):
+        try:
             self.reasoning_orchestrator.episodic_memory.store_episode(
                 event_type="autonomous_run",
                 context=task_description,
                 outcome="success" if run.get("run", {}).get("success") else "failed",
                 importance=1.0 if run.get("run", {}).get("success") else 0.2,
             )
+        except Exception as exc:
+            logger.exception(f"Failed to store episodic memory: {exc}")
         return run
 
     def route_reasoning(self, task_description: str, context: str | None = None) -> dict[str, Any]:
