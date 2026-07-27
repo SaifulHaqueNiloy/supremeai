@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supreme_ai/widgets/chat_message_widget.dart';
+import 'package:supremeai_mobile/widgets/chat_message_widget.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -138,7 +138,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Simulate AI response
     await Future.delayed(Duration(seconds: 1));
-    
+
     setState(() {
       _messages.add(ChatMessage(
         text: "I received your message: \"$messageText\". This is a simulated response from SupremeAI. In the full implementation, this would connect to the AI backend.",

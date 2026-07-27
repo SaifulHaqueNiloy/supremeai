@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supreme_ai/screens/chat_screen.dart';
-import 'package:supreme_ai/screens/code_editor_screen.dart';
-import 'package:supreme_ai/widgets/ai_assistance_card.dart';
+import 'package:supremeai_mobile/screens/chat_screen.dart';
+import 'package:supremeai_mobile/screens/code_editor_screen.dart';
+import 'package:supremeai_mobile/widgets/ai_assistance_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
