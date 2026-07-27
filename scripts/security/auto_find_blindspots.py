@@ -348,6 +348,11 @@ def main():
 
     if critical_issue_found:
         print("\n🔥 বিল্ড ব্যর্থ হয়েছে কারণ এক বা একাধিক 'Critical' নিরাপত্তা ঝুঁকি পাওয়া গেছে।")
+        # বাংলা মন্তব্য: exact trigger findings প্রিন্ট করা হচ্ছে
+        for path, issues in all_findings.items():
+            for issue in issues:
+                if "🔴 Critical" in issue:
+                    print(f"   [TRIGGER] {path} -> {issue}")
         exit(1)
 
 
