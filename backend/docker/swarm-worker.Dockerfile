@@ -13,8 +13,10 @@ COPY engine/worker_node.py ./engine/
 # Set Python path so imports work correctly
 ENV PYTHONPATH="/app"
 
-# NATS auth token can be passed as an env variable at runtime
-ENV NATS_TOKEN="super_secret_token"
+# NATS_TOKEN এবং NATS_URL রানটাইমে environment variable হিসেবে পাস করতে হবে।
+# বাংলা মন্তব্য: Hardcoded secrets Dockerfile-এ রাখা নিরাপদ নয়।
+# ব্যবহার: docker run -e NATS_TOKEN=$NATS_TOKEN -e NATS_URL=nats://... image
+# অথবা docker-compose.yml-এ environment section-এ পাস করুন।
 ENV NATS_URL="nats://host.docker.internal:4222"
 
 CMD ["python", "engine/worker_node.py"]
