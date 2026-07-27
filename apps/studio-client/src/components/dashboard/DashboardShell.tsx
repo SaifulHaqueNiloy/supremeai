@@ -1,253 +1,126 @@
-// বাংলা মন্তব্য: Devin-স্টাইল ড্যাশবোর্ড শেল — "Living Workspace" রিফ্যাক্টর
-// হ্যাশ-ভিত্তিক রাউটিং অপরিবর্তিত রাখা হয়েছে (কোনো নতুন রুট তৈরি হয়নি, শুধু লেআউট ও মোশন যোগ হয়েছে)।
-// নতুন যোগ হয়েছে: (1) ডান পাশে সবসময়-দৃশ্যমান LiveSimulator, (2) নিচে ড্র্যাগেবল ActionDock,
-// (3) Sessions/Vault/Settings-এর জন্য একটি কোলাপসিবল SidebarSettings হাব।
-import { type ReactNode, useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-  LayoutList,
-  Boxes,
-  BookOpen,
-  KeyRound,
-  BarChart3,
-  Settings,
-  Vault,
-  ListChecks,
-  Table2,
-  Cpu,
-  Shield,
-  Wifi,
-  WifiOff,
-  Activity,
-} from 'lucide-react';
-import { useHashRoute, type DashboardRoute } from './useHashRoute';
-import { SessionsPage } from './SessionsPage';
-import { SessionDetailPage } from './SessionDetailPage';
-import { KnowledgePage } from './KnowledgePage';
-import { SecretsPage } from './SecretsPage';
-import { UsagePage } from './UsagePage';
-import { SettingsPage } from './SettingsPage';
-import { VaultPage } from './VaultPage';
-import { AutomationQueuePage } from './AutomationQueuePage';
-import { SiteActionsPage } from './SiteActionsPage';
-import { LlmGatewayPage } from './LlmGatewayPage';
-import { LiveSujonBackground } from '../LiveSujonBackground';
-import { setSujonState, type SujonState } from '../sujon-utils';
-import { MockSwarmProvider } from '../../providers/MockSwarmProvider';
-import { SwarmHealthDashboard } from '../swarm/SwarmHealthDashboard';
-import { LiveSimulator } from './LiveSimulator';
-import { ActionDock } from './ActionDock';
-import { SidebarSettings } from './SidebarSettings';
-import DashboardErrorBoundary from '../DashboardErrorBoundary';
-
-interface NavItem {
-  id: DashboardRoute;
-  label: string;
-  icon: ReactNode;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { id: 'sessions', label: 'Sessions', icon: <LayoutList size={15} /> },
-  { id: 'workspace', label: 'Workspace', icon: <Boxes size={15} /> },
-  { id: 'vault', label: 'Auth Vault', icon: <Vault size={15} /> },
-  { id: 'automation', label: 'Automation', icon: <ListChecks size={15} /> },
-  { id: 'knowledge', label: 'Knowledge', icon: <BookOpen size={15} /> },
-  { id: 'secrets', label: 'Secrets', icon: <KeyRound size={15} /> },
-  { id: 'usage', label: 'Usage', icon: <BarChart3 size={15} /> },
-  { id: 'settings', label: 'Settings', icon: <Settings size={15} /> },
-];
-
-// বাংলা মন্তব্য: সুপার-অ্যাডমিন কন্ট্রোল লেয়ার — সাইট অ্যাকশন রেজিস্ট্রি ও LLM গেটওয়ে
-const ADMIN_NAV_ITEMS: NavItem[] = [
-  { id: 'site-actions', label: 'Site Actions', icon: <Table2 size={15} /> },
-  { id: 'llm-gateway', label: 'LLM Gateway', icon: <Cpu size={15} /> },
-  { id: 'swarm-health', label: 'Swarm Health', icon: <Activity size={15} /> },
-  { id: 'admin', label: 'Admin Console', icon: <Shield size={15} /> },
-];
+import React from "react";
+import { DashboardLayout } from "./DashboardLayout";
 
 interface DashboardShellProps {
-  theme: 'dark' | 'light';
+  theme: 'light' | 'dark';
   toggleTheme: () => void;
   isServerOnline: boolean;
-  // বাংলা মন্তব্য: লিগ্যাসি SupremeAI ওয়ার্কস্পেস (চ্যাট, প্রিসেট, ব্রাউজার প্রিভিউ ইত্যাদি) Workspace ট্যাবে রেন্ডার হয়
-  workspace: ReactNode;
+  workspace: React.ReactNode;
 }
 
-export function DashboardShell(props: DashboardShellProps) {
-  const [route, navigate] = useHashRoute();
-
-  // বাংলা মন্তব্য: রাউটের ভিত্তিতে Sujon স্টেট সেট করা — টাস্ক এক্সিকিউশন আরম্ভ হলে processing, সেশন শেষে idle
-  useMemo(() => {
-    const sujonState: Record<DashboardRoute, SujonState> = {
-      sessions: 'idle',
-      session: 'processing',
-      workspace: 'idle',
-      vault: 'idle',
-      automation: 'processing',
-      'site-actions': 'idle',
-      'llm-gateway': 'idle',
-      'swarm-health': 'idle',
-      knowledge: 'idle',
-      secrets: 'idle',
-      usage: 'idle',
-      settings: 'idle',
-      admin: 'idle',
-      guardrails: 'idle',
-      'healing-log': 'idle',
-    };
-    setSujonState(sujonState[route.page] || 'idle');
-  }, [route.page]);
-
-  const handleOpenSession = (id: string) => {
-    navigate('session', id);
-  };
-
-  // বাংলা মন্তব্য: হ্যাশ রাউটের ভিত্তিতে সংশ্লিষ্ট পেজ রেন্ডার করা হয় — লজিক অপরিবর্তিত
-  const renderPage = () => {
-    let pageElement;
-    switch (route.page) {
-      case 'session':
-        pageElement = <SessionDetailPage sessionId={route.param || ''} />;
-        break;
-      case 'workspace':
-        pageElement = <>{props.workspace}</>;
-        break;
-      case 'vault':
-        pageElement = <VaultPage />;
-        break;
-      case 'automation':
-        pageElement = <AutomationQueuePage />;
-        break;
-      case 'site-actions':
-        pageElement = <SiteActionsPage />;
-        break;
-      case 'llm-gateway':
-        pageElement = <LlmGatewayPage />;
-        break;
-      case 'swarm-health':
-        pageElement = <SwarmHealthDashboard />;
-        break;
-      case 'knowledge':
-        pageElement = <KnowledgePage />;
-        break;
-      case 'secrets':
-        pageElement = <SecretsPage />;
-        break;
-      case 'usage':
-        pageElement = <UsagePage />;
-        break;
-      case 'settings':
-        pageElement = <SettingsPage />;
-        break;
-      case 'admin':
-        pageElement = <div className="p-6 text-text-secondary text-xs">Admin console (use /admin subdomain)</div>;
-        break;
-      case 'sessions':
-      default:
-        pageElement = <SessionsPage onOpenSession={handleOpenSession} />;
-        break;
-    }
-    return <DashboardErrorBoundary>{pageElement}</DashboardErrorBoundary>;
-  };
-
-  const navItems = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS];
-
+export const DashboardShell: React.FC<DashboardShellProps> = ({ 
+  theme, 
+  toggleTheme, 
+  isServerOnline,
+  workspace 
+}) => {
   return (
-    <MockSwarmProvider>
-      <div className="relative flex h-screen overflow-hidden bg-[var(--supremeai-color-bg-void-light)] text-foreground dark:bg-[var(--supremeai-color-bg-void-dark)]">
-        {/* বাংলা মন্তব্য: Sujon অ্যাম্বিয়েন্ট ব্যাকগ্রাউন্ড — matte ash canvas এর উপর হালকা light-reactive লেয়ার */}
-        <LiveSujonBackground />
-
-        {/* প্রাইমারি নেভিগেশন — অপরিবর্তিত হ্যাশ-রাউট নেভ */}
-        <aside
-          data-testid="dashboard-sidebar"
-          className="relative z-10 flex w-64 shrink-0 flex-col border-r border-[var(--supremeai-color-border-accent-light)] bg-[var(--supremeai-color-bg-elevated-light)] transition-colors dark:border-[var(--supremeai-color-border-accent-dark)] dark:bg-[var(--supremeai-color-bg-elevated-dark)]"
-        >
-          <div className="flex items-center gap-2 border-b border-[var(--supremeai-color-border-accent-light)] px-6 py-4 dark:border-[var(--supremeai-color-border-accent-dark)]">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--supremeai-color-brand-500)]">
-              <span className="text-xs font-bold text-white">SAI</span>
-            </div>
-            <span className="text-xl font-bold tracking-tight">SupremeAI</span>
-          </div>
-
-          <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
-            {navItems.map((item) => {
-              const isActive = route.page === item.id;
-              return (
-                <button
-                  key={item.id}
-                  data-testid={`nav-${item.id}`}
-                  onClick={() => navigate(item.id)}
-                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-[var(--supremeai-color-brand-50)] text-[var(--supremeai-color-brand-600)] dark:bg-[var(--supremeai-color-brand-500)]/10 dark:text-[var(--supremeai-color-brand-500)]'
-                      : 'text-[var(--supremeai-color-neutral-500)] hover:bg-[var(--supremeai-color-neutral-100)] hover:text-foreground dark:hover:bg-[var(--supremeai-color-neutral-900)]'
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
+    <DashboardLayout title="Dashboard">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Code Editor */}
+        <div className="lg:col-span-2">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
+            <div className="bg-gray-800 dark:bg-slate-800 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="ml-4 text-sm font-medium text-gray-200">index.tsx</span>
+              </div>
+              <div className="flex space-x-2">
+                <button className="text-gray-400 hover:text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
                 </button>
-              );
-            })}
-          </nav>
-
-          <div className="space-y-3 border-t border-[var(--supremeai-color-border-accent-light)] px-4 py-4 dark:border-[var(--supremeai-color-border-accent-dark)]">
-            <div data-testid="sidebar-server-status" className="flex items-center gap-2 text-xs">
-              {props.isServerOnline ? (
-                <>
-                  <Wifi size={14} className="text-[var(--supremeai-color-brand-success-light)] dark:text-[var(--supremeai-color-brand-success-dark)]" />
-                  <span className="font-medium text-[var(--supremeai-color-brand-success-light)] dark:text-[var(--supremeai-color-brand-success-dark)]">
-                    Online
-                  </span>
-                </>
-              ) : (
-                <>
-                  <WifiOff size={14} className="text-[var(--supremeai-color-brand-danger-light)] dark:text-[var(--supremeai-color-brand-danger-dark)]" />
-                  <span className="font-medium text-[var(--supremeai-color-brand-danger-light)] dark:text-[var(--supremeai-color-brand-danger-dark)]">
-                    Offline
-                  </span>
-                </>
-              )}
+                <button className="text-gray-400 hover:text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <button
-              onClick={props.toggleTheme}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--supremeai-color-neutral-500)] transition-colors hover:bg-[var(--supremeai-color-neutral-100)] hover:text-foreground dark:hover:bg-[var(--supremeai-color-neutral-900)]"
-            >
-              <Shield size={14} />
-              {props.theme === 'dark' ? 'Dark' : 'Light'} mode
-            </button>
+            <div className="bg-gray-900 dark:bg-slate-900 p-4 font-mono text-sm">
+              <pre className="text-gray-200">{`function App() {
+  return (
+    <div className="app">
+      <h1>Hello World!</h1>
+    </div>
+  );
+}`}</pre>
+            </div>
           </div>
-        </aside>
+        </div>
 
-        {/* Sessions/Vault/Settings কুইক-অ্যাক্সেস হাব — কোলাপসিবল, বিদ্যমান পেজ কম্পোনেন্ট পুনর্ব্যবহার করে */}
-        <SidebarSettings onOpenSession={handleOpenSession} navigate={navigate} />
-
-        {/* মূল কন্টেন্ট এলাকা — Control Hub (কেন্দ্র) + Live Simulator (ডান, সবসময় দৃশ্যমান) */}
-        <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1">
-            <main className="min-w-0 flex-1 overflow-y-auto bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={route.page + (route.param ?? '')}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="h-full"
-                >
-                  {renderPage()}
-                </motion.div>
-              </AnimatePresence>
-            </main>
-
-            {/* বাংলা মন্তব্য: "Magic Window" — মেন্ডেটরি, ফিক্সড-সাইজ, সব রাউটে সবসময় দৃশ্যমান */}
-            <LiveSimulator />
+        {/* Right Column - AI Assistant and Stats */}
+        <div className="space-y-6">
+          {/* AI Assistant Panel */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
+            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-3 border-b border-gray-200 dark:border-slate-800">
+              <h3 className="font-medium text-blue-800 dark:text-blue-200">AI Assistant</h3>
+            </div>
+            <div className="p-4 h-80 overflow-y-auto">
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3 flex-shrink-0">
+                    <span className="text-blue-800 dark:text-blue-400 text-sm font-medium">U</span>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 rounded-lg p-3 max-w-[80%]">
+                    <p className="text-gray-800 dark:text-slate-200">How can I optimize this function?</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3 flex-shrink-0">
+                    <span className="text-green-800 dark:text-green-400 text-sm font-medium">AI</span>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 max-w-[80%]">
+                    <p className="text-gray-800 dark:text-slate-200">I recommend using memoization to optimize this function. Here's how you can implement it:</p>
+                    <pre className="mt-2 bg-gray-800 dark:bg-slate-800 text-gray-200 p-2 rounded text-xs overflow-x-auto">
+                      {`const optimizedFunc = useMemo(() => {
+  return expensiveCalculation(props.data);
+}, [props.data]);`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-gray-200 dark:border-slate-800 p-3 bg-gray-50 dark:bg-slate-900">
+              <div className="flex">
+                <input 
+                  type="text" 
+                  placeholder="Ask AI anything..."
+                  className="flex-1 border border-gray-300 dark:border-slate-700 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-200"
+                />
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 transition">
+                  Send
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Bottom Action-Dock — ড্র্যাগ-অ্যান্ড-ড্রপ, ইউজার-কনফিগারযোগ্য */}
-          <ActionDock />
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/10 rounded-xl p-4 border border-blue-200 dark:border-blue-900/30">
+              <div className="text-blue-800 dark:text-blue-200 font-bold text-2xl">24</div>
+              <div className="text-blue-600 dark:text-blue-400 text-sm">Active Projects</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-900/30">
+              <div className="text-green-800 dark:text-green-200 font-bold text-2xl">142</div>
+              <div className="text-green-600 dark:text-green-400 text-sm">Tasks Completed</div>
+            </div>
+          </div>
+
+          {/* Server Status */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-4">
+            <div className="flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${isServerOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                Server Status: {isServerOnline ? 'Online' : 'Offline'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </MockSwarmProvider>
+    </DashboardLayout>
   );
-}
+};
