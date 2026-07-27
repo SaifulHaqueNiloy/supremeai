@@ -1021,19 +1021,78 @@ Regulatory Compliance:
    - Consent management: explicit opt-in, withdrawal, record of consent
    - Data Protection Impact Assessment (DPIA) for high-risk processing
    - Data breach notification within 72 hours
-   - Data Processing Agreement (DPA) with all sub-processors""",
+   - Data Processing Agreement (DPA) with all sub-processors
+
+3. DATA SOVEREIGNTY:
+   - Data residency: store data in user's region (EU, US, Asia)
+   - Cross-border transfer mechanisms (SCCs, BCRs)
+   - Regional deployment support (Render regions, Supabase regions)
+   - Data classification: public, internal, confidential, restricted
+
+4. AUDIT TRAIL:
+   - Immutable audit log of all system changes
+   - Who, what, when, where, why for every action
+   - Tamper-evident logging (hash chain)
+   - Automated compliance reporting
+
+5. ETHICAL AI:
+   - Bias detection in model outputs
+   - Fairness metrics across demographic groups
+   - Explainability: why did the AI make this decision?
+   - Human oversight for high-impact decisions""",
         "metadata": {
             "domain": "COMPLIANCE_AND_GOVERNANCE",
             "subdomain": "SOC2_GDPR",
-            "priority": 9.0,
+            "priority": 10.0,
             "version": "1.0.0",
-            "category": "governance",
-            "tags": ["compliance", "soc2", "gdpr", "privacy", "audit-trail", "data-protection"],
+            "category": "compliance",
+            "tags": ["soc2", "gdpr", "data-sovereignty", "audit-trail", "ethical-ai", "compliance", "data-protection", "consent-management"],
             "source": "supremeai_future_knowledge_engine",
             "confidence": 0.95,
         },
     },
-]
+    {
+        "id": "compliance_audit_trail",
+        "text": """Audit Trail & Immutable Logging for SupremeAI 2.0:
+
+Audit Architecture:
+1. EVENT LOGGING:
+   - All state-changing operations logged: create, update, delete
+   - Each log entry: timestamp, actor_id, action, resource, old_value, new_value
+   - Correlation ID for tracing across services
+   - Structured JSON format for machine parsing
+
+2. IMMUTABILITY:
+   - Hash chain: each log entry contains hash of previous entry
+   - Logs written to append-only storage (PostgreSQL with INSERT-only permissions)
+   - Periodic hash verification to detect tampering
+   - Backup to separate storage for disaster recovery
+
+3. MONITORING & ALERTING:
+   - Real-time monitoring of audit log for suspicious patterns
+   - Alert on: mass deletions, privilege escalation, unusual access times
+   - Automated compliance report generation
+   - Integration with SIEM systems
+
+4. RETENTION & PURGING:
+   - Configurable retention periods per data classification
+   - Automated purging of expired logs with verification
+   - Secure deletion (overwrite before delete)
+   - Retention certification for compliance""",
+        "metadata": {
+            "domain": "COMPLIANCE_AND_GOVERNANCE",
+            "subdomain": "AUDIT_TRAIL",
+            "priority": 9.5,
+            "version": "1.0.0",
+            "category": "compliance",
+            "tags": ["audit-trail", "immutable-logging", "hash-chain", "event-logging", "retention", "siem", "tamper-evident"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.94,
+        },
+    },
+
+    # ==================================================================
+    # DOMAIN 12: OBSERVABILITY_AND_DEBUGGING — Tracing & Root Cause
 
 
 def ingest_knowledge(dry_run: bool = True, target_domain: str = None, force: bool = False, show_stats: bool = False) -> dict[str, Any]:
