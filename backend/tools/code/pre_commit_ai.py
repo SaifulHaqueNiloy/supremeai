@@ -1,4 +1,3 @@
-import contextlib
 import os
 import re
 import subprocess
@@ -207,9 +206,11 @@ class PreCommitAI:
                         logger.error(f"Security Alert: Path traversal attempt blocked for {fp}")
                         continue
 
-                    with contextlib.suppress(Exception):
+                    try:
                         cmd = shlex.split(f"git add {shlex.quote(fp)}")
                         subprocess.run(cmd, check=True, capture_output=True)
+                    except Exception as exc:
+                        logger.exception(f"git add failed for {fp}: {exc}")
                 logger.info(f"Auto-fixed {fix_report['count']} issue(s).")
                 # The commit was not blocked, files were fixed and re-staged.
                 # Allow the commit to proceed.

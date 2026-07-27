@@ -12,7 +12,6 @@ Key Components:
 
 Dependencies:
 - `ast`: For parsing and safely evaluating mathematical expressions.
-- `contextlib`: For suppressing exceptions during mathematical evaluation.
 - `logging`: For logging operational information and warnings.
 - `operator`: For mapping AST operators to Python functions in safe evaluation.
 - `re`: For regular expression operations, particularly in text and math parsing.
@@ -21,7 +20,6 @@ Dependencies:
 - `tools.knowledge.local_search_rag`: (Optional) For local RAG-based factual verification."""  # noqa: E501
 
 import ast
-import contextlib
 import logging
 import operator
 import re
@@ -224,8 +222,10 @@ class FactualVerifier:
             claimed = sympy.sympify(claimed_result)
             is_correct = sympy.simplify(expr - claimed) == 0
             if not is_correct:
-                with contextlib.suppress(Exception):
+                try:
                     is_correct = abs(expr.evalf() - claimed.evalf()) < 1e-9
+                except Exception as exc:
+                    _logger.exception(f"Numeric verification failed for expression: {exc}")
             result_bool = bool(is_correct)
             return {
                 "is_correct": result_bool,

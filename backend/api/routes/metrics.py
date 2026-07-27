@@ -1,4 +1,3 @@
-import contextlib
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
@@ -185,8 +184,10 @@ def record_request(method: str, path: str, status: int) -> None:
 
 def record_error(error_type: str, endpoint: str) -> None:
     if _PROMETHEUS_AVAILABLE:
-        with contextlib.suppress(Exception):
+        try:
             error_total.labels(error_type=error_type, endpoint=endpoint).inc()
+        except Exception as exc:
+            logger.exception(f"Failed to record error metric: {exc}")
 
 
 def record_request_duration(method: str, path: str, duration: float) -> None:
@@ -208,5 +209,7 @@ def record_request_duration(method: str, path: str, duration: float) -> None:
 
 def record_model_call(provider: str, model: str) -> None:
     if _PROMETHEUS_AVAILABLE:
-        with contextlib.suppress(Exception):
+        try:
             model_calls_total.labels(provider=provider, model=model).inc()
+        except Exception as exc:
+            logger.exception(f"Failed to record model call metric: {exc}")

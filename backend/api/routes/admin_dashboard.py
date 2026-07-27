@@ -182,8 +182,10 @@ def logs_stream():
             raise
         finally:
             if file_obj:
-                with contextlib.suppress(Exception):
+                try:
                     file_obj.close()
+                except Exception as exc:
+                    logger.exception(f"Failed to close log stream file: {exc}")
 
     return StreamingResponse(
         log_generator(),
@@ -335,10 +337,14 @@ def _release_env_lock(lock_path: str = ".env.lock"):
 
     redis_queue = getattr(app_mod, "redis_queue", None)
     if redis_queue and getattr(redis_queue, "configured", False):
-        with contextlib.suppress(Exception):
+        try:
             redis_queue._request("DEL", "lock:env_write")
-    with contextlib.suppress(Exception):
+        except Exception as exc:
+            logger.exception(f"Lock release via redis failed: {exc}")
+    try:
         os.remove(lock_path)
+    except Exception as exc:
+        logger.exception(f"Lock file removal failed for {lock_path}: {exc}")
 
 
 @router.post("/deploy")
