@@ -10,6 +10,28 @@ Welcome to SupremeAI 2.0, an advanced AI-powered platform for autonomous intelli
 - **Comprehensive Monitoring**: Real-time performance and health monitoring
 - **Retry Handler**: Resilient retry mechanism with exponential backoff and jitter
 
+## Mobile App Development
+
+The project includes a Flutter mobile application located at [apps/mobile](apps/mobile/). If you encounter dependency issues when building the APK, please refer to the [APK Build Guide](APK_BUILD_GUIDE.md) which includes:
+
+- Safe dependency update procedures
+- Troubleshooting steps for common build issues
+- Scripts to automatically fix dependency conflicts
+- Recommended dependency versions that are known to work together
+
+To fix common Flutter dependency issues, you can run:
+
+Windows:
+```bash
+powershell -ExecutionPolicy Bypass -File fix_flutter_deps.ps1
+```
+
+Linux/Mac:
+```bash
+chmod +x fix_flutter_deps.sh
+./fix_flutter_deps.sh
+```
+
 ## Retry Handler
 
 The system includes a sophisticated retry handler that provides:
