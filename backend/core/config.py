@@ -353,7 +353,7 @@ class Settings(BaseSettings):
                 # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
                 # RuntimeError throw হবে না, বরং empty string return হবে।
                 # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
-                val = secret_vault.fetch_secret(secret_key, default="")
+                val = secret_vault.fetch_secret(secret_key)
                 if val:
                     self._cached_secrets[secret_key] = val
             except Exception as _secret_err:  # noqa: BLE001
@@ -550,7 +550,7 @@ class Settings(BaseSettings):
     # তাই এটি lazy @property এবং _get_cached_secret() এ রূপান্তর করা হলো যাতে অন-ডিমান্ড ভল্ট বা env থেকে ফেচ হয়।
     @property
     def supremeai_admin_password_hash(self) -> str | None:
-        val = self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH")
+        val = self._get_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH") or os.getenv("SUPREMEAI_ADMIN_PASSWORD_HASH") or os.getenv("supremeai_admin_password_hash")
         if not val and "pytest" not in sys.modules and os.getenv("CI") != "true":
             raise ValueError("supremeai_admin_password_hash must be explicitly set.")
         return val
