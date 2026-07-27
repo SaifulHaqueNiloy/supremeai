@@ -140,8 +140,8 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
                 perm_enum = Permission(required_permission.lower())
                 if perm_enum in role_perms:
                     return True
-            except ValueError:
-                pass
+            except ValueError as ve:
+                logger.debug(f"Permission string conversion fallback: {ve}")
 
         return False
     except Exception as exc:  # noqa: BLE001
