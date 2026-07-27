@@ -38,19 +38,14 @@ repos:
         name: 🐍 Python Syntax Gatekeeper (Check AST)
         description: পাইথন কোডে কোনো সিনট্যাক্স এরর (Syntax Error) থাকলে কমিট ব্লক করে।
 
-  # ══════════════════════════════════════════════════════════════
-  # ২. সিক্রেট স্ক্যানিং (Secret Scanning Gate)
-  # ══════════════════════════════════════════════════════════════
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+  - repo: local
     hooks:
-      - id: detect-secrets
-        exclude: |
-          (?x)^(
-            package\.json|
-            backend/tests/.*|
-            backend/tools/.*/test_.*
-          )$
+      - id: secret-hunter
+        name: 🔍 SecretHunter (AI & Pattern Secret Scanner)
+        entry: python scripts/devops/secret_scan_ci.py --staged
+        language: system
+        pass_filenames: false
+        always_run: true
 
   # ══════════════════════════════════════════════════════════════
   # ৩. Python কোড কোয়ালিটি এবং আনসেফ ফিক্স (Ruff Engine + Unsafe-fixes)
