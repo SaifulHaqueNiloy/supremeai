@@ -53,7 +53,7 @@ class SSOIntegrator:
                     "content_type": "application/xml",
                     "body": metadata,
                 }
-            except Exception as exc:  # noqa: BLE001
+            except (KeyError, ValueError, RuntimeError, TypeError) as exc:
                 logger.error(f"Metadata generation failed: {exc}")
         xml = self._fallback_metadata()
         return {"status": "fallback", "content_type": "application/xml", "body": xml}
@@ -66,7 +66,7 @@ class SSOIntegrator:
                 auth = self._OneLogin_Saml2_Auth(req, old_settings=settings_obj)
                 sso_url = auth.login(return_to=relay_state)
                 return sso_url
-            except Exception as exc:  # noqa: BLE001
+            except (KeyError, ValueError, RuntimeError, TypeError) as exc:
                 logger.error(f"SSO URL generation failed: {exc}")
         return self.saml_settings.get("idp_sso_url", "")
 

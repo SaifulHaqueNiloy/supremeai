@@ -98,11 +98,24 @@ class SelfSovereignRouter:
         logger.info(f"[SelfSovereignRouter] Local inference available: {self.local_available}")
 
     def _check_local_availability(self) -> bool:
-        """Check if Ollama is running locally."""
+        """
+        Check if Ollama is running locally or at configured OLLAMA_URL.
+        বাংলা মন্তব্য: ওলামা সার্ভিস ইউআরএল এনভায়রনমেন্ট ভেরিয়েবল থেকে ডায়নামিকালি রিড করা হচ্ছে।
+        """
         try:
+            import os
             import urllib.request
+            from core.config import settings
 
-            req = urllib.request.Request("http://localhost:11434/api/tags", method="GET")
+            ollama_base = (
+                getattr(settings, "ollama_url", None)
+                or getattr(settings, "OLLAMA_URL", None)
+                or os.getenv("OLLAMA_URL", "http://localhost:11434")
+            )
+            ollama_base = ollama_base.rstrip("/") if ollama_base else "http://localhost:11434"
+            url = f"{ollama_base}/api/tags"
+
+            req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 return resp.status == 200
         except Exception:
