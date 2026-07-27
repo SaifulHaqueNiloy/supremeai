@@ -52,7 +52,7 @@ try:
     from sentence_transformers import SentenceTransformer
 
     _SENTENCE_TRANSFORMER_AVAILABLE = True
-except ImportError:
+except Exception:
     _SENTENCE_TRANSFORMER_AVAILABLE = False
 
 
