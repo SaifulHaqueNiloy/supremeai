@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@types/ioredis": "^5.0.0",
-    "@types/node": "^26.1.1",
+    "@types/node": "^24.12.2",
     "@webcontainer/api": "^1.6.4",
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
