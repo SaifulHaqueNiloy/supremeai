@@ -147,9 +147,44 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     #     logger.error(f"Failed to add metrics endpoint: {e}")
 
     # বাংলা মন্তব্ব্য: হেল্থ চেক এন্ডপয়েন্ট
+    # আগে এটা শুধু হার্ডকোডেড {"status": "healthy"} রিটার্ন করত -- redis বা
+    # API key কিছুই যাচাই করত না, অথচ tests/test_health.py এবং keepalive
+    # ওয়ার্কফ্লো (USER_HEALTH_URL) দুটোই real redis round-trip + api-key
+    # কনফিগারেশন চেক আশা করে। এখন সেটাই বাস্তবায়ন করা হলো।
     @app.get("/health")
     async def health_check():
-        return {"status": "healthy", "env": settings.env}
+        from core.services import redis_queue
+
+        redis_ok = True
+        if redis_queue.configured:
+            try:
+                probe_key = "__health_check_probe__"
+                redis_queue.set(probe_key, "1", ex=30)
+                redis_queue.get(probe_key)
+            except Exception:
+                redis_ok = False
+        # not configured -> treated as not-required, doesn't degrade health
+
+        api_keys_configured = any(
+            [
+                settings.openrouter_api_key,
+                settings.gemini_api_key,
+                settings.deepseek_api_key,
+                settings.groq_api_key,
+                settings.nvidia_api_key,
+                settings.openai_api_key,
+                settings.hf_api_key,
+            ]
+        )
+
+        return {
+            "status": "ok" if redis_ok else "degraded",
+            "env": settings.env,
+            "checks": {
+                "redis": redis_ok,
+                "api_keys_configured": api_keys_configured,
+            },
+        }
 
     return app
 
