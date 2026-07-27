@@ -88,9 +88,9 @@ def sync_render_env(env_dict, apply_changes=False):
                     existing_envs[env_item.get("key")] = env_item.get("value")
 
             merged = existing_envs.copy()
-            clean_local = {k: v for k, v in env_dict.items() if not k.startswith('GITHUB_')}
+            clean_local = {k: v for k, v in env_dict.items() if not k.startswith('GITHUB_') and re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', k)}
             merged.update(clean_local)
-            payload = [{'key': k, 'value': v} for k, v in merged.items() if k and v is not None]
+            payload = [{'key': k, 'value': str(v)} for k, v in merged.items() if k and v is not None and re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', k)]
 
             if not apply_changes:
                 print(f"  [DRY-RUN] Render Service '{svc_name}' ({svc_id}): Would sync {len(payload)} merged env vars.")
