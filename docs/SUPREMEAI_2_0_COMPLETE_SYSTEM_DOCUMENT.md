@@ -1268,11 +1268,11 @@ sequenceDiagram
 
 | HTTP Method | Route Endpoint | Target Controller / Module | Auth Required | Description & Status Codes |
 |---|---|---|---|---|
-| `POST` | `/api/v1/chat` | `backend/api/routers/chat.py` | JWT Token | Primary chat & execution pipeline. Returns HTTP 200 / 401 / 429 / 503 |
-| `POST` | `/api/v1/agent` | `backend/api/routers/agent.py` | JWT Token | Multi-agent task delegation endpoint. Returns HTTP 200 / 400 / 403 |
-| `GET` | `/health/aggregated` | `backend/api/routers/health.py` | Public | Aggregated health check for DB, Redis, LLMs. Returns HTTP 200 / 503 |
-| `GET` | `/api/v1/billing/quota` | `backend/core/billing/quota_enforcer.py` | JWT Token | Tenant quota, daily token usage & budget. Returns HTTP 200 / 401 |
-| `WS` | `/ws/collaborative` | `backend/tools/collaborative_editor.py` | WS Auth | Real-time multi-agent code editing & pub/sub sync |
+| `POST` | `/api/v1/chat` | `backend/api/routes/chat.py` | JWT Token | Primary chat & execution pipeline. Returns HTTP 200 / 401 / 429 / 503 |
+| `POST` | `/api/v1/agent` | `backend/api/routes/agent.py` | JWT Token | Multi-agent task delegation endpoint. Returns HTTP 200 / 400 / 403 |
+| `GET` | `/health/aggregated` | `backend/api/routes/health.py` | Public | Aggregated health check for DB, Redis, LLMs. Returns HTTP 200 / 503 |
+| `GET` | `/api/v1/billing/quota` | `scripts/billing/quota_enforcer.py` | JWT Token | Tenant quota, daily token usage & budget. Returns HTTP 200 / 401 |
+| `WS` | `/ws/{session_id}/{client_id}` | `backend/tools/collaborative_editor.py` | WS Auth | Real-time multi-agent code editing & pub/sub sync |
 
 ---
 
@@ -1286,8 +1286,8 @@ sequenceDiagram
 | `DEEPSEEK_API_KEY` | **YES** | None | Reasoning & code model key (DeepSeek) |
 | `MOONSHOT_API_KEY` | **YES** | None | Long-context model key (Moonshot) |
 | `ENCRYPTION_KEY` | **YES** | Auto-derived | AES-256 Fernet key for credential vault |
-| `LAUNCHDARKLY_API_KEY` | **YES** | Mock | Feature flag & cross-IDE MCP synchronization key |
-| `LAUNCHDARKLY_SDK_KEY` | **YES** | Mock | LaunchDarkly backend SDK integration key |
+| `LAUNCHDARKLY_API_KEY` | OPTIONAL | Mock | Feature flag & cross-IDE MCP synchronization key |
+| `LAUNCHDARKLY_SDK_KEY` | OPTIONAL | Mock | LaunchDarkly backend SDK integration key |
 | `REDIS_URL` | OPTIONAL | `redis://localhost:6379/0` | Cache, pub/sub, & rate limiting store |
 | `POSTGRES_URL` | OPTIONAL | `sqlite:///./fallback.db` | Production relational database URL |
 | `LOW_MEMORY_MODE` | OPTIONAL | `false` | When true, skips heavy sentence-transformers in memory-constrained containers |
@@ -1329,7 +1329,7 @@ poetry run uvicorn main:app --reload --port 8000
 ### Scenario 1: LLM Provider Rate Limit (HTTP 429)
 - **Symptom:** Primary provider returns 429 Too Many Requests.
 - **Auto-Remediation:** Circuit Breaker transitions to `OPEN`. `LLMRouter` automatically routes traffic to secondary provider (e.g. Gemini -> OpenRouter -> Groq).
-- **Manual Action:** Inspect `backend/core/billing/quota_enforcer.py` or increase API key quotas in `.env`.
+- **Manual Action:** Inspect `scripts/billing/quota_enforcer.py` or increase API key quotas in `.env`.
 
 ### Scenario 2: PyArrow / Extension Registration Conflict
 - **Symptom:** Multi-process pytest worker or module import raises `ArrowKeyError`.
@@ -1342,6 +1342,6 @@ poetry run uvicorn main:app --reload --port 8000
 
 ---
 
-**Document Status:** ✅ 100% PERFECT & MASTER SPECIFICATION  
+**Document Status:** ✅ Verified Architecture Specification & Overview Guide  
 **Last Updated:** July 27, 2026  
 **Document Location:** `/docs/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT.md`
