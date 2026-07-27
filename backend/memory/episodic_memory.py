@@ -21,8 +21,35 @@ class EpisodicMemory:
     Supports similarity search to retrieve relevant past solutions.
     """
 
-    def __init__(self, vector_store: Optional[ChromaDBStore] = None):
-        self.vector_store = vector_store or ChromaDBStore(collection_name="supremeai_episodic_memory")
+    def __init__(self, vector_store: Optional[ChromaDBStore] = None, db_path: Optional[str] = None):
+        self.vector_store = vector_store or ChromaDBStore(collection_name="supremeai_episodic_memory", db_path=db_path or ":memory:")
+        self._episodes: List[Dict[str, Any]] = []
+
+    def store_episode(self, task_type: str = "general", input_data: Any = None, output_data: Any = None, success: bool = True, latency_ms: float = 0.0, tags: Optional[List[str]] = None, **kwargs) -> Dict[str, Any]:
+        episode = {
+            "id": f"ep_{len(self._episodes)+1}",
+            "task_type": task_type,
+            "input_data": input_data,
+            "output_data": output_data,
+            "success": success,
+            "latency_ms": latency_ms,
+            "tags": tags or [],
+            "timestamp": time.time(),
+        }
+        self._episodes.append(episode)
+        return episode
+
+    def recall_episodes(self, task_type: Optional[str] = None, limit: int = 10, **kwargs) -> List[Dict[str, Any]]:
+        episodes = self._episodes
+        if task_type:
+            episodes = [e for e in episodes if e.get("task_type") == task_type]
+        return episodes[:limit]
+
+    def summarize_recent(self, limit: int = 5, **kwargs) -> str:
+        recent = self.recall_episodes(limit=limit)
+        if not recent:
+            return "No recent episodes."
+        return f"Recent episodes ({len(recent)}): " + ", ".join(f"{e.get('task_type')}" for e in recent)
 
     async def record_task(
         self,
