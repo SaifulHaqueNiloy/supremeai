@@ -3,10 +3,8 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import time
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from memory.chromadb_store import ChromaDBStore
@@ -25,13 +23,38 @@ class EpisodicMemory:
         self.session_id = session_id or "default"
         self.vector_store = vector_store or ChromaDBStore(collection_name="supremeai_episodic_memory", db_path=db_path or ":memory:")
         self._episodes: List[Dict[str, Any]] = []
+        self._memory_conn = None
 
-    def store_episode(self, task_type: str = "general", input_data: Any = None, output_data: Any = None, success: bool = True, latency_ms: float = 0.0, tags: Optional[List[str]] = None, **kwargs) -> Dict[str, Any]:
+    def store_episode(
+        self,
+        event_type: str = "general",
+        context: Any = "",
+        outcome: Any = "success",
+        importance: float = 1.0,
+        task_type: Optional[str] = None,
+        input_data: Any = None,
+        output_data: Any = None,
+        success: bool = True,
+        latency_ms: float = 0.0,
+        tags: Optional[List[str]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        actual_event = event_type if event_type != "general" or not task_type else task_type
+        actual_context = context if context != "" or input_data is None else input_data
+        actual_outcome = outcome if outcome != "success" or output_data is None else output_data
+
+        ep_id = f"ep_{len(self._episodes) + 1}"
         episode = {
-            "id": f"ep_{len(self._episodes)+1}",
-            "task_type": task_type,
-            "input_data": input_data,
-            "output_data": output_data,
+            "status": "ok",
+            "episode_id": ep_id,
+            "id": ep_id,
+            "event_type": actual_event,
+            "task_type": actual_event,
+            "context": actual_context,
+            "input_data": actual_context,
+            "outcome": actual_outcome,
+            "output_data": actual_outcome,
+            "importance": float(importance),
             "success": success,
             "latency_ms": latency_ms,
             "tags": tags or [],
@@ -40,17 +63,30 @@ class EpisodicMemory:
         self._episodes.append(episode)
         return episode
 
-    def recall_episodes(self, task_type: Optional[str] = None, limit: int = 10, **kwargs) -> List[Dict[str, Any]]:
+    def recall_episodes(
+        self,
+        event_type: Optional[str] = None,
+        task_type: Optional[str] = None,
+        min_importance: Optional[float] = None,
+        limit: int = 10,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        target_event = event_type or task_type
         episodes = self._episodes
-        if task_type:
-            episodes = [e for e in episodes if e.get("task_type") == task_type]
+        if target_event:
+            episodes = [e for e in episodes if e.get("event_type") == target_event]
+        if min_importance is not None:
+            episodes = [e for e in episodes if e.get("importance", 0.0) >= min_importance]
         return episodes[:limit]
 
     def summarize_recent(self, limit: int = 5, **kwargs) -> str:
         recent = self.recall_episodes(limit=limit)
         if not recent:
-            return "No recent episodes."
-        return f"Recent episodes ({len(recent)}): " + ", ".join(f"{e.get('task_type')}" for e in recent)
+            return ""
+        lines = ["Recent episodes:"]
+        for ep in recent:
+            lines.append(f"- [{ep.get('event_type')}] {ep.get('context')} -> {ep.get('outcome')}")
+        return "\n".join(lines)
 
     async def record_task(
         self,
@@ -79,6 +115,7 @@ class EpisodicMemory:
 
             content_text = f"Prompt: {prompt}\nResponse: {response}"
             self.vector_store.add_document(doc_id=f"episode_{task_id}", text=content_text, metadata=meta)
+            self.store_episode(event_type="task.completed", context=prompt, outcome=response, importance=5.0)
             logger.info(f"Recorded episodic memory for task: {task_id}")
             return True
         except Exception as e:

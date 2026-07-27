@@ -1016,3 +1016,13 @@ Regulatory Compliance:
    - Security: encryption at rest (AES-256-GCM) and in transit (TLS 1.3)
    - Availability: uptime monitoring, incident response, disaster recovery
    - Processing integrity: data validation, error handling, audit trails
+   - Confidentiality: access controls, data masking, field-level encryption
+   - Privacy: data classification, retention policies, consent management
+
+2. GDPR COMPLIANCE:
+   - Data subject rights: access, rectification, erasure, portability
+   - Consent management: explicit opt-in, withdrawal, record of consent
+   - Data Protection Impact Assessment (DPIA) for high-risk processing
+   - Data breach notification within 72 hours
+   - Data Processing Agreement (DPA) with all sub-processors
+
