@@ -63,7 +63,7 @@ class SwarmWorkerNode:
         logger.info(f"🟢 Swarm Worker [{self.worker_id}] connected.")
 
         # Start Heartbeat loop
-        asyncio.create_task(self.heartbeat_loop())
+        self._heartbeat_task = asyncio.create_task(self.heartbeat_loop())
 
         # Subscribe to Task queue
         subject = f"TASK.ASSIGN.{self.agent_type}"
