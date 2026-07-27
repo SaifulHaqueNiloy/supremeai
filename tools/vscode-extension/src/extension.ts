@@ -39,11 +39,14 @@ let aiService: AIService;
 let codeGenService: CodeGenerationService;
 let codeReviewService: CodeReviewService;
 let codeFlowHandler: CodeFlowHandler;
-// New service instances
+// New service instances - initialized lazily
 let visualizationHandler: VisualizationHandler;
 let enhancedAIService: EnhancedAIService;
 let securityScanner: SecurityScanner;
 let performanceMonitor: PerformanceMonitor;
+
+// Track initialization status to prevent duplicate initializations
+let isInitialized = false;
 
 function escapeHtml(value: string): string {
   return String(value).replace(/[&<>"']/g, (c) => {
@@ -67,9 +70,12 @@ function escapeHtml(value: string): string {
 export async function activate(context: vscode.ExtensionContext) {
   console.log('[SupremeAI] VS Code Extension activating...');
 
-  // 📡 লোকাল ডিভাইসে অন্য AI এজেন্টদের অবজার্ভ করা শুরু করো
-  CrossAiObserverService.initialize(context);
+  if (isInitialized) {
+    console.log('[SupremeAI] Extension already initialized, skipping duplicate activation');
+    return;
+  }
 
+  // Initialize services lazily and only when needed
   const config = vscode.workspace.getConfiguration('supremeai');
   const backendUrl = config.get<string>('backendUrl', 'https://supremeai-a.web.app');
 
@@ -82,62 +88,9 @@ export async function activate(context: vscode.ExtensionContext) {
   supremeAIService = new SupremeAIService(supremeConfig);
   setSupremeAIService(supremeAIService);
 
-  // 🩺 ইনিশিয়ালাইজ এজেন্ট-ইন-দ্য-লুপ (Self Healing)
-  SelfHealingService.initialize(context, supremeAIService);
-  const { HealingStatusBar } = require('./ui/HealingStatusBar');
-  new HealingStatusBar(context);
-  const { TelemetryTracker } = require('./services/TelemetryTracker');
-  TelemetryTracker.initialize(context);
-
-  // 💡 Register Explain Fix CodeAction
-  const { SupremeAIActionProvider } = require('./providers/SupremeAIActionProvider');
-  context.subscriptions.push(
-      vscode.languages.registerCodeActionsProvider('*', new SupremeAIActionProvider(), {
-          providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
-      })
-  );
-
-  context.subscriptions.push(
-      vscode.commands.registerCommand('supremeai.explainFix', async (uri: vscode.Uri, line: number) => {
-          vscode.window.showInformationMessage(`SupremeAI: Generating explanation for the fix on line ${line}...`);
-          // Here we would open the SupremeAI Sidebar Webview and trigger the chat with the explanation context.
-          vscode.commands.executeCommand('supremeai.sidebar.focus');
-      })
-  );
-
-  const auth = AuthService.getInstance(supremeConfig, context.secrets);
-  await auth.initialize();
-  await auth.loginAsGuest();
-
-  // Register URI handler for OAuth callback
-  AuthHandler.registerAuthCallback(context);
-
+  // Initialize core services only when needed
   aiService = getAIService();
   setAIService(aiService);
-
-  // প্রো-টিপ: ইউজারের প্রাইভেসি নিশ্চিত করতে লোকাল স্ট্যাটিসটিক্স মুছে ফেলা হচ্ছে
-  context.globalState.update('patternsLearned', undefined);
-  context.globalState.update('codeEdits', undefined);
-  context.globalState.update('errorsReported', undefined);
-  context.globalState.update('feedbackGiven', undefined);
-
-  // লার্নিং এর অংশ হিসেবে অন্য এআই এজেন্ট ডিটেক্ট করা এবং রিপোর্ট করা
-  const agents = detectOtherAiAgents();
-  if (agents.length > 0) {
-    supremeAIService.sendCodeAnalysis('env-discovery', `Detected AI Agents in environment: ${agents.join(', ')}`, 'system-meta');
-
-    // প্রতিটি ডিটেক্ট করা এজেন্টকে PROPOSED হিসেবে ব্যাকএন্ডে পাঠানো
-    agents.forEach(agentName => {
-      supremeAIService.registerProposedFeature({
-        id: `ext-agent-${agentName.toLowerCase().replace(/\s+/g, '-')}`,
-        name: agentName,
-        category: 'EXTERNAL_AI_AGENT',
-        provider: 'Detected on Host',
-        status: 'PROPOSED', // অ্যাডমিন পরে এটি ACTIVE করতে পারবেন
-        description: 'This agent was detected running on the user\'s VS Code environment.'
-      });
-    });
-  }
 
   codeGenService = new CodeGenerationService();
   setCodeGenerationService(codeGenService);
@@ -145,92 +98,62 @@ export async function activate(context: vscode.ExtensionContext) {
   codeReviewService = new CodeReviewService();
   setCodeReviewService(codeReviewService);
 
-  // Initialize new services
-  enhancedAIService = new EnhancedAIService(supremeAIService);
-  securityScanner = new SecurityScanner(supremeAIService);
-  performanceMonitor = new PerformanceMonitor(supremeAIService);
+  // Only initialize heavy services when user performs actions
+  // Don't initialize CrossAiObserverService and SelfHealingService at startup to reduce resource usage
 
+  // Initialize authentication
+  const auth = AuthService.getInstance(supremeConfig, context.secrets);
+  await auth.initialize();
+  await auth.loginAsGuest();
+
+  // Register URI handler for OAuth callback
+  AuthHandler.registerAuthCallback(context);
+
+  // Initialize handlers
   const editHandler = new CodeEditHandler(context);
   const errHandler = new ErrorHandler(context);
   const fbHandler = new FeedbackHandler(context);
-  const codeFlowHandler = new CodeFlowHandler(context);
-  // Initialize visualization handler with new services
-  visualizationHandler = new VisualizationHandler(context, supremeAIService);
+  codeFlowHandler = new CodeFlowHandler(context);
   setCodeFlowHandler(codeFlowHandler);
 
   editHandler.register();
   errHandler.register();
   fbHandler.register();
   codeFlowHandler.register();
-  // Register visualization handler
-  visualizationHandler.register();
 
-  // হেল্পার ফাংশন: বর্তমান প্রজেক্টের কন্টেক্সট (Language/Framework) সংগ্রহ করা
-  async function getProjectContext(): Promise<string> {
-    const folders = vscode.workspace.workspaceFolders;
-    if (!folders) return 'No workspace context';
+  // Register only essential providers initially
+  registerChatProvider(context);
+  registerInlineCompletionProvider(context, fbHandler);
+  registerStatusBar(context);
 
-    // ফাইল চেক করে ফ্রেমওয়ার্ক ডিটেক্ট করা
-    const packageJson = await vscode.workspace.findFiles('package.json', null, 1);
-    const buildGradle = await vscode.workspace.findFiles('build.gradle', null, 1);
-
-    let context = 'Context: ';
-    if (packageJson.length) context += 'React/Node.js Project. ';
-    if (buildGradle.length) context += 'Java Spring Boot Project. ';
-
-    const activeEditor = vscode.window.activeTextEditor;
-    if (activeEditor) {
-      context += `Current File: ${activeEditor.document.fileName} (${activeEditor.document.languageId})`;
-    }
-    return context;
-  }
-
-
-  // ইউজারের জন্য শুধুমাত্র চ্যাট ট্যাব রাখা হচ্ছে, বাকিগুলো অ্যাডমিন ড্যাশবোর্ডের জন্য
-  // registerSidebarViews(context); // ড্যাশবোর্ড এবং কোড ফ্লো ভিউ সরানো হলো
-
+  // Register recipe provider
   const recipeProvider = new SupremeWebviewProvider(context.extensionUri);
   context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(SupremeWebviewProvider.viewType, recipeProvider)
   );
-  // registerActivityView(context); // অ্যাক্টিভিটি ভিউ সরানো হলো
-  registerChatProvider(context);
-  registerInlineCompletionProvider(context, fbHandler);
 
-  // Register new visualization providers
-  registerVisualizationProviders(context);
-  
+  // Register commands for additional features (only initialize services when commands are used)
   registerCommands(context);
-  registerStatusBar(context);
 
-  // নতুন কমান্ড: স্ট্যাটাস বার ক্লিক করলে চ্যাট ট্যাব খোলার জন্য
-  context.subscriptions.push(
-    vscode.commands.registerCommand('supremeai.openChat', () => {
-      vscode.commands.executeCommand('workbench.view.extension.supremeaiChat');
-    })
-  );
+  // Show lightweight activation message
+  console.log('[SupremeAI] Extension activated with essential services only');
 
-  vscode.window.showInformationMessage(
-    'SupremeAI Real-Time Learning is active!',
-    'Settings'
-  ).then(selection => {
-    if (selection === 'Settings') {
-      vscode.commands.executeCommand('workbench.action.openSettings', 'supremeai');
-    }
-  });
+  // Only run agent detection if needed (maybe on demand)
+  if (config.get<boolean>('enableAgentDetection', false)) {
+    // Run agent detection after a delay to avoid blocking activation
+    setTimeout(() => {
+      const agents = detectOtherAiAgents();
+      if (agents.length > 0) {
+        supremeAIService.sendCodeAnalysis('env-discovery', `Detected AI Agents in environment: ${agents.join(', ')}`, 'system-meta');
+      }
+    }, 5000); // Delay by 5 seconds to not impact startup
+  }
 
-  console.log('[SupremeAI] Extension fully activated');
-}
-
-function registerVisualizationProviders(context: vscode.ExtensionContext): void {
-  // Register dependency graph provider
-  const dependencyGraphProvider = new DependencyGraphProvider(context.extensionUri);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(DependencyGraphProvider.viewType, dependencyGraphProvider)
-  );
+  isInitialized = true;
 }
 
 function registerCommands(context: vscode.ExtensionContext): void {
+  // Register commands that initialize services only when called
   const forceLearnCommand = vscode.commands.registerCommand('supremeai.forceLearn', async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -344,8 +267,13 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  // Add new commands for enhanced features
+  // Add new commands for enhanced features - initialize services only when needed
   const generateCodeCommand = vscode.commands.registerCommand('supremeai.generateCode', async () => {
+    // Initialize enhanced AI service only when needed
+    if (!enhancedAIService) {
+      enhancedAIService = new EnhancedAIService(supremeAIService);
+    }
+    
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showWarningMessage('No active editor selected.');
@@ -386,6 +314,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   const suggestRefactoringCommand = vscode.commands.registerCommand('supremeai.suggestRefactoring', async () => {
+    // Initialize enhanced AI service only when needed
+    if (!enhancedAIService) {
+      enhancedAIService = new EnhancedAIService(supremeAIService);
+    }
+    
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showWarningMessage('No active editor selected.');
@@ -420,6 +353,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   const performSecurityScanCommand = vscode.commands.registerCommand('supremeai.performSecurityScan', async () => {
+    // Initialize security scanner only when needed
+    if (!securityScanner) {
+      securityScanner = new SecurityScanner(supremeAIService);
+    }
+    
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showWarningMessage('No active editor selected.');
@@ -452,6 +390,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   const analyzePerformanceCommand = vscode.commands.registerCommand('supremeai.analyzePerformance', async () => {
+    // Initialize performance monitor only when needed
+    if (!performanceMonitor) {
+      performanceMonitor = new PerformanceMonitor(supremeAIService);
+    }
+    
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showWarningMessage('No active editor selected.');
@@ -484,6 +427,21 @@ function registerCommands(context: vscode.ExtensionContext): void {
     });
   });
 
+  // Command to show dependency graph - initialize provider when needed
+  const showDependencyGraphCommand = vscode.commands.registerCommand('supremeai.showDependencyGraph', async () => {
+    // Create and show dependency graph view
+    await vscode.commands.executeCommand('supremeaiDependencyGraph.focus');
+  });
+
+  // Register visualization handler only when needed
+  const visualizationCommand = vscode.commands.registerCommand('supremeai.visualizeCode', async () => {
+    if (!visualizationHandler) {
+      visualizationHandler = new VisualizationHandler(context, supremeAIService);
+      visualizationHandler.register();
+    }
+    // Execute visualization command
+  });
+
   context.subscriptions.push(
     forceLearnCommand,
     explainCodeCommand,
@@ -494,17 +452,9 @@ function registerCommands(context: vscode.ExtensionContext): void {
     generateCodeCommand,
     suggestRefactoringCommand,
     performSecurityScanCommand,
-    analyzePerformanceCommand
-  );
-}
-
-function registerSidebarViews(context: vscode.ExtensionContext): void {
-  const dashboardProvider = new SupremeAISidebarProvider(context.extensionUri, 'supremeaiDashboard');
-  const codeFlowProvider = new SupremeAISidebarProvider(context.extensionUri, 'supremeaiCodeFlow');
-
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('supremeaiDashboard', dashboardProvider),
-    vscode.window.registerWebviewViewProvider('supremeaiCodeFlow', codeFlowProvider)
+    analyzePerformanceCommand,
+    showDependencyGraphCommand,
+    visualizationCommand
   );
 }
 
@@ -538,13 +488,6 @@ function registerChatProvider(context: vscode.ExtensionContext): void {
   );
 }
 
-function registerActivityView(context: vscode.ExtensionContext): void {
-  const activityProvider = new SupremeAIActivityProvider();
-  context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('supremeaiActivity', activityProvider)
-  );
-}
-
 function registerStatusBar(context: vscode.ExtensionContext): void {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.text = '$(brain) SupremeAI';
@@ -557,6 +500,14 @@ function registerStatusBar(context: vscode.ExtensionContext): void {
 function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHandler: FeedbackHandler): void {
   let debounceTimeout: NodeJS.Timeout | undefined;
 
+  // Check if real-time learning is enabled before registering the provider
+  const config = vscode.workspace.getConfiguration('supremeai');
+  const enableRealTimeLearning = config.get<boolean>('enableRealTimeLearning', true);
+  if (!enableRealTimeLearning) {
+    console.log('[SupremeAI] Real-time learning disabled, skipping inline completion provider');
+    return;
+  }
+
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(
       document: vscode.TextDocument,
@@ -565,12 +516,9 @@ function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHa
       token: vscode.CancellationToken
     ): Promise<vscode.InlineCompletionList | vscode.InlineCompletionItem[] | undefined> {
 
-      const config = vscode.workspace.getConfiguration('supremeai');
-      const enableRealTimeLearning = config.get<boolean>('enableRealTimeLearning', true);
-      if (!enableRealTimeLearning) {
-        return undefined;
-      }
-
+      // Use a longer debounce to reduce resource usage
+      const debounceDelay = config.get<number>('inlineCompletionDebounce', 800); // Default to 800ms instead of 400ms
+      
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
@@ -578,6 +526,14 @@ function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHa
       return new Promise<vscode.InlineCompletionList | undefined>((resolve) => {
         debounceTimeout = setTimeout(async () => {
           if (token.isCancellationRequested) {
+            resolve(undefined);
+            return;
+          }
+
+          // Check again if real-time learning is enabled
+          const currentConfig = vscode.workspace.getConfiguration('supremeai');
+          const currentEnableRealTimeLearning = currentConfig.get<boolean>('enableRealTimeLearning', true);
+          if (!currentEnableRealTimeLearning) {
             resolve(undefined);
             return;
           }
@@ -631,7 +587,7 @@ function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHa
             console.error('[SupremeAI] Error fetching inline completion:', error);
             resolve(undefined);
           }
-        }, 400); // 400ms debounce
+        }, debounceDelay);
       });
     }
   };
@@ -641,9 +597,12 @@ function registerInlineCompletionProvider(context: vscode.ExtensionContext, fbHa
     provider
   );
   context.subscriptions.push(disposable);
-  console.log('[SupremeAI] InlineCompletionItemProvider registered');
+  console.log('[SupremeAI] InlineCompletionItemProvider registered with optimized debounce');
 }
 
 export function deactivate() {
   console.log('[SupremeAI] VS Code Extension deactivating...');
+  isInitialized = false;
+  // Clear any pending timeouts
+  // Note: We can't access debounceTimeout from here, but the extension lifecycle will clean up resources
 }
