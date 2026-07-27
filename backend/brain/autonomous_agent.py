@@ -112,8 +112,9 @@ class AutonomousAgent:
         if not success:
             try:
                 asyncio.get_running_loop()
-                # If we're in an event loop, schedule the coroutine
-                asyncio.ensure_future(
+                if not hasattr(self, "_background_tasks"):
+                    self._background_tasks = set()
+                task = asyncio.ensure_future(
                     self.performance_optimizer.handle_failure(
                         error_type="AGENT_EXECUTION_ERROR",
                         error_message=f"Agent {self.name} failed to complete task: {task_description}",
@@ -127,6 +128,8 @@ class AutonomousAgent:
                         },
                     )
                 )
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
             except RuntimeError:
                 # If no event loop is running, run it directly
                 asyncio.run(
