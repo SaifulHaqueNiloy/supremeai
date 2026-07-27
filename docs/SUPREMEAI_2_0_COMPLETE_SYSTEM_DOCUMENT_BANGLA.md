@@ -268,7 +268,170 @@ SupremeAI 2.0 ব্যাকএন্ড কোনো একটি নির্
 
 ---
 
+## ২২. বিবর্তন সাব-মডিউলসমূহ — `backend/evolution/` গভীর বিশ্লেষণ
+
+SupremeAI-এর সবচেয়ে অনন্য অংশ হলো `backend/evolution/` ডিরেক্টরি। এখানে ৮টি সম্পূর্ণ আলাদা বুদ্ধিবৃত্তিক গবেষণা মডিউল রয়েছে:
+
+| সাব-মডিউল | ডিরেক্টরি | কাজ ও বিবরণ |
+|---|---|---|
+| **Theory of Mind** | `evolution/theory_of_mind/` | ইউজারের বিশ্বাস (Belief), ইচ্ছা (Desire) ও উদ্দেশ্য (Intent) নির্ণয় করে। Level 0 থেকে Level 4 পর্যন্ত রিকার্সিভ মানসিক অবস্থা ট্র্যাক করে। |
+| **Digital Twin** | `evolution/digital_twin/` | কোনো বিপজ্জনক কমান্ড বা ডাটাবেজ পরিবর্তনের আগে ইন-মেমোরি ভার্চুয়াল সিমুলেশনে পরিণতি পরীক্ষা করে। |
+| **Continual Learning** | `evolution/continual_learning/` | EWC (Elastic Weight Consolidation) Loss ব্যবহার করে পুরানো দক্ষতা ভুলে না গিয়ে নতুন দক্ষতা শেখে। |
+| **Adversarial Defense** | `evolution/adversarial_defense/` | প্রম্পট হ্যাকিং, জেলব্রেক ও বিদ্বেষমূলক আক্রমণ থেকে মডেলকে রক্ষা করে। |
+| **Federated Learning** | `evolution/federated_learning/` | ব্যবহারকারীর কাঁচামাল ডাটা শেয়ার না করেও একাধিক ডিভাইস থেকে ফেডারেটেড ট্রেনিং সম্পন্ন করে। |
+| **Neural Symbolic** | `evolution/neural_symbolic/` | নিউরাল নেটওয়ার্ক এবং সিম্বলিক লজিক একসাথে ব্যবহার করে রিজননিং উন্নত করে। |
+| **Temporal Abstraction** | `evolution/temporal_abstraction/` | সময়ের সাথে সাথে পরিবর্তনশীল প্যাটার্ন ও ঘটনার ক্রম বিশ্লেষণ করে। |
+
+---
+
+## ২৩. স্পেশালাইজড এজেন্ট (`backend/agents/`) — সম্পূর্ণ তালিকা
+
+`backend/agents/` ডিরেক্টরিতে ৭টি বিশেষজ্ঞ এজেন্ট রয়েছে, প্রত্যেকটির আলাদা দায়িত্ব:
+
+| এজেন্ট ফাইল | কাজ ও বিশেষত্ব |
+|---|---|
+| `sentinel_agent.py` | আচরণগত অ্যানোমালি সনাক্তকরণ, ইন্টেন্ট-বেসড সিকিউরিটি গার্ড |
+| `churn_prophet.py` | ব্যবহারকারী চলে যাওয়ার ঝুঁকি পূর্বাভাস দেওয়া (Churn Prediction) |
+| `insight_mage.py` | ডাটা বিশ্লেষণ থেকে অ্যাকশনযোগ্য ব্যবসায়িক অন্তর্দৃষ্টি উৎপাদন |
+| `vulnerability_prophet.py` | কোডের নিরাপত্তা দুর্বলতা ভবিষ্যদ্বাণী করা |
+| `ephemeral_executor.py` | শর্ট-লিভড, একবারের জন্য স্যান্ডবক্সড কোড রান |
+| `headless_terminal_agent.py` | মানব হস্তক্ষেপ ছাড়াই ব্যাকগ্রাউন্ড টার্মিনাল কমান্ড এক্সিকিউশন |
+| `performance_guardian.py` | রিয়েল-টাইম পারফরম্যান্স ডিগ্রেডেশন সনাক্তকরণ ও সতর্কতা |
+
+> **⚠️ গুরুত্বপূর্ণ নোট — ডুয়াল সেন্টিনেল ফাইল:**
+> - `backend/core/sentinel_agent.py` → **লাইভ প্রোডাকশন সিস্টেম মনিটর** (এন্ডপয়েন্ট ওয়াচডগ, ডিপেন্ডেন্সি অডিটর)
+> - `backend/agents/sentinel_agent.py` → **আচরণগত সিকিউরিটি গার্ড** (ইন্টেন্ট অ্যানালাইসিস, অ্যানোমালি ডিটেকশন)
+> দুটি ফাইলই লাইভ। একটি সিস্টেম লেয়ারে, অন্যটি এজেন্ট লেয়ারে কাজ করে।
+
+---
+
+## ২৪. স্যান্ডবক্স ও নিরাপদ কোড এক্সিকিউশন (`backend/sandbox/`)
+
+| ফাইল | কাজ |
+|---|---|
+| `docker_sandbox.py` | প্রতিটি এআই-জেনারেটেড কোড Docker কন্টেইনারে আইসোলেটেড করে রান করে |
+| `file_isolation_gate.py` | কোড এক্সিকিউশনে ফাইল সিস্টেমের অ্যাক্সেস সীমাবদ্ধ করে |
+| `microvm_sandbox.py` (core) | মাইক্রো-ভার্চুয়াল মেশিনে লাইটওয়েট স্যান্ডবক্স কোড রান |
+
+---
+
+## ২৫. P2P রিসোর্স ব্রোকার (`backend/p2p/`)
+
+| ফাইল | কাজ |
+|---|---|
+| `resource_broker.py` | ব্যবহারকারীদের মধ্যে কম্পিউট রিসোর্স শেয়ার করার পিয়ার-টু-পিয়ার মার্কেটপ্লেস |
+| `credit_system.py` | রিসোর্স শেয়ারিংয়ের বিনিময়ে ক্রেডিট ট্র্যাকিং সিস্টেম |
+| `secure_tunnel.py` | P2P সংযোগের জন্য এনক্রিপ্টেড টানেল |
+
+---
+
+## ২৬. BYOC — নিজের ক্লাউড নিজে আনুন (`backend/byoc/`)
+
+BYOC (Bring Your Own Cloud) মডিউল ব্যবহারকারীদের নিজস্ব ক্লাউড ইনফ্রাস্ট্রাকচার (AWS, GCP, Azure) সংযুক্ত করার সুবিধা দেয়:
+
+| ফাইল | কাজ |
+|---|---|
+| `cloud_connector.py` | যেকোনো ক্লাউড প্রোভাইডারের সাথে সংযোগ স্থাপন |
+| `container_orchestrator.py` | ব্যবহারকারীর ক্লাউডে কন্টেইনার অর্কেস্ট্রেশন |
+
+---
+
+## ২৭. ওয়ার্কার ও অ্যাসিঙ্ক্রোনাস টাস্ক (`backend/workers/`)
+
+| ফাইল | কাজ |
+|---|---|
+| `celery_app.py` | Celery দিয়ে ব্যাকগ্রাউন্ড টাস্ক কিউ ও অ্যাসিঙ্ক্রোনাস জব ম্যানেজমেন্ট |
+| `chaos_worker.py` | ইচ্ছাকৃতভাবে র‍্যান্ডম ফেইলিউর ইনজেক্ট করে সিস্টেমের রেজিলিয়েন্স পরীক্ষা (Chaos Engineering) |
+
+---
+
+## ২৮. ফ্রন্টএন্ড স্টুডিও ক্লায়েন্ট — সম্পূর্ণ বিশ্লেষণ (`apps/studio-client/`)
+
+### ২৮.১ টেকনোলজি স্ট্যাক
+- **ফ্রেমওয়ার্ক:** React 18 + TypeScript + Vite + Electron (ডেস্কটপ অ্যাপ)
+- **স্টেট ম্যানেজমেন্ট:** Zustand (হালকা, রিঅ্যাক্টিভ গ্লোবাল স্টেট)
+- **UI:** TailwindCSS + Storybook কম্পোনেন্ট ডিজাইন সিস্টেম
+- **রিয়েল-টাইম:** WebSocket ক্লায়েন্ট (`src/services/websocket.ts`)
+- **ফায়ারবেস:** `src/firebase.ts` (Auth, Firestore DataConnect)
+
+### ২৮.২ `src/` ডিরেক্টরি ম্যাপ
+
+| সাব-ডিরেক্টরি | কাজ |
+|---|---|
+| `src/components/` | পুনর্ব্যবহারযোগ্য UI উপাদান (চ্যাটপ্যানেল, ইনপুট, কার্ড) |
+| `src/pages/` | রাউট-লেভেল পেজ (Login, Dashboard, Chat, Admin) |
+| `src/store/` | Zustand স্টোর (Auth, Chat, Agent, Settings) |
+| `src/services/` | Axios/Fetch API র‍্যাপার ও WebSocket ক্লায়েন্ট |
+| `src/hooks/` | কাস্টম React হুকস (useAuth, useChat, useAgent) |
+| `src/i18n/` | বাংলা, ইংরেজিসহ বহুভাষিক সাপোর্ট |
+| `src/workers/` | ব্যাকগ্রাউন্ড Web Worker (ভারী কম্পিউটেশন অফলোড) |
+| `src/contexts/` | React Context (Theme, Auth, Permission) |
+| `src/utils/` | HTML স্যানিটাইজার, ডেট ফরম্যাটার ইত্যাদি |
+
+---
+
+## ২৯. অ্যাডমিন পোর্টাল — দুটি আলাদা পোর্টাল (`admin/`)
+
+| পোর্টাল | অবস্থান | বৈশিষ্ট্য |
+|---|---|---|
+| **Full Admin Dashboard** | `admin/dashboard/` | React-ভিত্তিক, WebSocket রিয়েল-টাইম মেট্রিক্স, Recharts গ্রাফ, RBAC-সুরক্ষিত |
+| **Admin Dashboard Light** | `admin/dashboard_light/` | একক স্ট্যাটিক HTML ফাইল, জিরো-ডিপেন্ডেন্সি, REST পোলিং (১০ সেকেন্ড), অন-কল DevOps-এর জন্য |
+
+---
+
+## ৩০. CI/CD ওয়ার্কফ্লো সম্পূর্ণ তালিকা (`.github/workflows/`)
+
+প্রজেক্টে মোট **১৩টি YML ওয়ার্কফ্লো ফাইল** এবং **১৫টি এজেন্ট ডেফিনিশন MD ফাইল** রয়েছে:
+
+| ওয়ার্কফ্লো ফাইল | কাজ | ট্রিগার |
+|---|---|---|
+| `supreme-core-ci.yml` | মূল ব্যাকএন্ড CI (টেস্ট, লিন্ট, ডকার বিল্ড) | PR / Push to main |
+| `maintenance_pipeline.yml` | সাপ্তাহিক ডাটাবেজ ক্লিনআপ, ক্যাশ প্রুনিং | প্রতি রবিবার |
+| `weekly-fine-tuning.yml` | HuggingFace-এ কাস্টম মডেল অটো-ফাইন-টিউন | প্রতি রবিবার রাত ০৩:০০ UTC |
+| `auto-fix.yml` | কোড ত্রুটি স্বয়ংক্রিয়ভাবে ঠিক করার পাইপলাইন | নির্ধারিত সময় |
+| `cache-janitor.yml` | পুরানো Docker ও GitHub অ্যাকশনস ক্যাশ পরিষ্কার | নির্ধারিত সময় |
+| `k6-load-testing.yml` | K6 দিয়ে লোড ও স্ট্রেস টেস্টিং | ম্যানুয়াল / সাপ্তাহিক |
+| `disaster-recovery-drill.yml` | ডিজাস্টার রিকভারি সিমুলেশন ড্রিল | মাসিক |
+| `monorepo_ci_cd.yml` | পুরো মনোরেপো বিল্ড অর্কেস্ট্রেশন | Tag Push |
+| `supreme-mobile-cd.yml` | মোবাইল অ্যাপ CD পাইপলাইন | Release Branch |
+| `supreme-release-builds.yml` | প্রোডাকশন রিলিজ বিল্ড | Release Tag |
+| `self-audit-scan.yml` | সিকিউরিটি ও কোড কোয়ালিটি সেলফ-অডিট | সাপ্তাহিক |
+| `sync-from-prod.yml` | প্রোডাকশন ডাটা থেকে স্টেজিং সিঙ্ক | ম্যানুয়াল |
+| `workflow-janitor.yml` | পুরানো ওয়ার্কফ্লো রান পরিষ্কার | নির্ধারিত সময় |
+
+---
+
+## ৩১. ইনফ্রাস্ট্রাকচার ও ক্লাউড ডেপ্লয়মেন্ট (`infrastructure/`)
+
+| কম্পোনেন্ট | ফাইল/ডিরেক্টরি | কাজ |
+|---|---|---|
+| **Terraform IaC** | `infrastructure/terraform/` | ক্লাউড রিসোর্স কোড-হিসেবে ব্যবস্থাপনা |
+| **Docker Compose** | `infrastructure/docker-compose.prod.yml` | প্রোডাকশন মাল্টি-কন্টেইনার অর্কেস্ট্রেশন |
+| **Cloudflare Worker** | `cloudflare-worker/src/`, `infrastructure/cloudflare/` | এজ ক্যাচিং, জিওরাউটিং ও DDoS প্রটেকশন |
+| **Firebase Functions** | `infrastructure/firebase_functions/` | সার্ভারলেস ইভেন্ট-ড্রিভেন ফাংশন |
+| **NGINX কনফিগ** | `infrastructure/nginx/` | রিভার্স প্রক্সি, SSL টার্মিনেশন ও রেট লিমিটিং |
+| **Zero-Cost Setup** | `infrastructure/zero_cost/` | Render + Cloudflare ব্যবহার করে মাসিক $০ খরচে চলার কনফিগ |
+
+---
+
+## ৩২. `scripts/` — অটোমেশন ও ডেভঅপস টুলস সম্পূর্ণ ম্যাপ
+
+`scripts/` ডিরেক্টরিতে ৩৩টি সাব-ডিরেক্টরি এবং ৯৪টি ফাইল রয়েছে। মূল ক্যাটাগরিগুলো:
+
+| ক্যাটাগরি | উদাহরণ ফাইলসমূহ | কাজ |
+|---|---|---|
+| **বিলিং অটোমেশন** | `billing/quota_enforcer.py` | কোটা মনিটরিং, বিল জেনারেশন |
+| **সিকিউরিটি** | `security/safety_guard.py`, `docker_ai_guard.py` | ডকার ইমেজ স্ক্যান, নিরাপত্তা অডিট |
+| **ডকুমেন্টেশন জেনারেশন** | `generate_smart_docs.py`, `auto_generate_architecture_docs.py` | কোডবেস থেকে স্বয়ংক্রিয়ভাবে ডকুমেন্ট তৈরি |
+| **ডেপ্লয়মেন্ট** | `deploy_render.py`, `push_all_render_envs.py` | Render.com-এ স্বয়ংক্রিয় ডেপ্লয় |
+| **মনিটরিং** | `generate_api_health_report.py`, `locustfile.py` | API হেলথ রিপোর্ট ও লোড টেস্টিং |
+| **K6 লোড টেস্টিং** | `k6/` | প্রোডাকশন ট্র্যাফিক সিমুলেশন |
+| **Bots** | `bots/` | টেলিগ্রাম, Discord বট ইন্টিগ্রেশন |
+| **AI উপযোগিতা** | `multi_model_validator.py`, `knowledge_indexer.py` | মাল্টি-মডেল আউটপুট ভ্যালিডেশন |
+| **গিট অটোমেশন** | `git/`, `clean_github_branches.py` | পুরানো ব্রাঞ্চ পরিষ্কার, PR মার্জ অটোমেশন |
+
+---
+
 **নথির স্ট্যাটাস:** ✅ বাংলায় রূপান্তরিত ও পরীক্ষিত মাস্টার গাইড  
 **সর্বশেষ আপডেট:** ২৭ জুলাই, ২০২৬  
 **নথির অবস্থান:** `/docs/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT_BANGLA.md`
-
