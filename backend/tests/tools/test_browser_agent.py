@@ -38,7 +38,7 @@ def agent():
     [
         ("https://google.com", True),
         ("http://example.com", True),
-        ("ftp://test.com", True),
+        ("ftp://test.com", False),
     ],
 )
 @patch("socket.gethostbyname", return_value="8.8.8.8")

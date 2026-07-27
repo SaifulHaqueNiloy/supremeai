@@ -1,0 +1,10 @@
+- [x] Create database table via Alembic migration
+- [x] Implement `backend/models/ci_report.py`
+- [x] Implement `backend/api/routes/ci_webhooks.py`
+- [x] Register webhook routes in `backend/core/app.py`
+- [x] Add `ci_webhook_secret` to `backend/core/config.py`
+- [x] Add backend endpoint `/api/admin/ci-logs` to query recent CI logs
+- [x] Implement frontend services (`ciReportService.ts`) and hook (`useCIReports.ts`)
+- [x] Update frontend UI `CICDVisualizer.tsx` to display dynamic runs and logs
+- [x] Update GitHub Actions `supreme-ci.yml` to use curl reporting instead of git push
+- [x] Verify functionality and create `walkthrough.md`

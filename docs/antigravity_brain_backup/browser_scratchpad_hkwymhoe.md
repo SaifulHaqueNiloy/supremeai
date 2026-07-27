@@ -1,0 +1,2 @@
+Failed to open URL in Antigravity Browser.
+Error: failed to create browser context: failed to connect to browser via CDP: failed to connect to browser via CDP even though the CDP port is responsive: http://127.0.0.1:9222: playwright: Protocol error (Browser.setDownloadBehavior): Browser context management is not supported.
