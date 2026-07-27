@@ -53,7 +53,9 @@ class BehavioralGuard:
         call_count = len(self._action_timestamps[agent_id])
         if call_count > self.ANOMALY_THRESHOLDS["max_tool_calls_per_minute"]:
             self._blocked_agents.add(agent_id)
-            logger.error(f"🚨 Behavioral Guard Alert: Agent '{agent_id}' exceeded tool call limit ({call_count}/min). BLOCKED.")
+            logger.error(
+                f"🚨 Behavioral Guard Alert: Agent '{agent_id}' exceeded tool call limit ({call_count}/min). BLOCKED."
+            )
             return {
                 "allowed": False,
                 "reason": f"Tool call frequency limit exceeded ({call_count}/min).",
@@ -81,7 +83,9 @@ class BehavioralGuard:
         for kw in suspicious_keywords:
             if kw in prompt_or_command.lower():
                 self._blocked_agents.add(agent_id)
-                logger.critical(f"🚨 SECURITY ALARM: Agent '{agent_id}' attempted suspicious action containing '{kw}'. BLOCKED IMMEDIATELY.")
+                logger.critical(
+                    f"🚨 SECURITY ALARM: Agent '{agent_id}' attempted suspicious action containing '{kw}'. BLOCKED IMMEDIATELY."
+                )
                 return {
                     "allowed": False,
                     "reason": f"Security boundary violation detected: '{kw}'.",

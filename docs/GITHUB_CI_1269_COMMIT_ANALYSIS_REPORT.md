@@ -10,7 +10,7 @@
 
 ## 🎯 ১. সারসংক্ষেপ ও কাজের মূল উদ্দেশ্য (Executive Summary)
 
-GitHub Actions CI run #1269-এ পুশ করা commit **`247d4f48b1`**-এর মাধ্যমে Backend CI Build Fail/Disk Outage সমস্যার মূল কারণ চিহ্নিত করে সমাধান করা হয়েছে। 
+GitHub Actions CI run #1269-এ পুশ করা commit **`247d4f48b1`**-এর মাধ্যমে Backend CI Build Fail/Disk Outage সমস্যার মূল কারণ চিহ্নিত করে সমাধান করা হয়েছে।
 
 পূর্বে CI রানারগুলোতে `poetry install --with dev` চালানোর সময় `torch` এবং `sentence-transformers` লাইব্রেরিগুলোর সাথে বিশাল আকারের CUDA Toolkit binaries (`nvidia-nccl-cu12`, `cu13`) স্বয়ংক্রিয়ভাবে ডাউনলোড হতো। এর ফলে GitHub-hosted CPU রানারের মেমোরি ও ডিস্ক স্পেস নিঃশেষ হয়ে `poetry install` ফেইল করছিল। এই কমিটে PyTorch-কে একটি **Optional `[tool.poetry.group.ml]`** ডিপেনডেন্সিতে সরিয়ে নেওয়া হয়েছে এবং সম্পর্কিত Module Import Guard তৈরি করা হয়েছে।
 

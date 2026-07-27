@@ -246,6 +246,7 @@ class SentinelAgent:
     def check_behavioral_anomaly(self, agent_id: str, action: str, prompt: str) -> dict[str, Any]:
         """Check agent action against BehavioralGuard."""
         from monitoring.behavioral_guard import BehavioralGuard
+
         if not hasattr(self, "_behavioral_guard"):
             self._behavioral_guard = BehavioralGuard()
         return self._behavioral_guard.record_action(agent_id, action, prompt)
@@ -261,4 +262,3 @@ def get_sentinel() -> SentinelAgent:
     if _sentinel_instance is None:
         _sentinel_instance = SentinelAgent()
     return _sentinel_instance
-
