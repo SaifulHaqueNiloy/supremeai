@@ -234,49 +234,144 @@ class ErrorRemediation:
     # ── Fallback file management ───────────────────────────────────────────────
 
     def _ensure_fallback_file(self) -> None:
+        """Ensure the fallback file exists with proper structure."""
         try:
+            # Validate paths and create directories if needed
             self.fallback_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Create default fallback file if it doesn't exist
             if not self.fallback_path.exists():
-                with open(self.fallback_path, "w", encoding="utf-8") as f:
-                    json.dump(
-                        {
-                            "default_fix": "Retry with exponential backoff",
-                            "fallbacks": {
-                                "default": "Retry with exponential backoff",
-                                "timeout": "Increase timeout or reduce payload size",
-                                "rate_limit": "Implement exponential backoff with jitter",
-                                "auth_error": "Verify API key and permissions",
-                                "connection_refused": "Check service availability and firewall rules",
+                try:
+                    with open(self.fallback_path, "w", encoding="utf-8") as f:
+                        json.dump(
+                            {
+                                "default_fix": "Retry with exponential backoff",
+                                "fallbacks": {
+                                    "default": "Retry with exponential backoff",
+                                    "timeout": "Increase timeout or reduce payload size",
+                                    "rate_limit": "Implement exponential backoff with jitter",
+                                    "auth_error": "Verify API key and permissions",
+                                    "connection_refused": "Check service availability and firewall rules",
+                                },
                             },
-                        },
-                        f,
-                        indent=2,
+                            f,
+                            indent=2,
+                        )
+                    logger.info(f"Created fallback file at {self.fallback_path}")
+                except Exception as file_write_exc:
+                    logger.error(f"Failed to write fallback file: {file_write_exc}")
+                    error_event_bus.emit(
+                        ErrorEvent(
+                            module="error_remediation",
+                            error_type="FALLBACK_FILE_WRITE_FAILED",
+                            message=f"Failed to write fallback file: {file_write_exc}",
+                            severity="ERROR",
+                            structured_context=ErrorContext(
+                                module="error_remediation",
+                                extra={"file_path": str(self.fallback_path), "exception": str(file_write_exc)[:200]},
+                            ),
+                        )
                     )
-        except OSError as e:
-            logger.warning(f"Failed to create fallback file at {self.fallback_path}: {e}")
+                    return False
+            return True
+
+        except Exception as exc:
+            logger.error(f"Error ensuring fallback file: {exc}")
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="FALLBACK_FILE_SETUP_FAILED",
+                    message=f"Error ensuring fallback file: {exc}",
+                    severity="ERROR",
+                    structured_context=ErrorContext(
+                        module="error_remediation",
+                        extra={"file_path": str(self.fallback_path), "exception": str(exc)[:200]},
+                    ),
+                )
+            )
+            return False
 
     def _load_local_fallback(self, error_sig: str | None = None) -> str | None:
         """Load a fallback fix from the local JSON file.
 
         If `error_sig` is provided, it attempts a keyword-based match against
         the ``fallbacks`` dictionary keys; otherwise returns the default.
+
+        Returns:
+            A remediation suggestion string, or ``None`` if no fix is found.
         """
         try:
-            with open(self.fallback_path, encoding="utf-8") as f:
-                data: dict = json.load(f)
+            # Ensure fallback file exists and is properly structured
+            if not self._ensure_fallback_file():
+                logger.warning("Fallback file not available")
+                return None
+
+            # Load fallback data
+            try:
+                with open(self.fallback_path, encoding="utf-8") as f:
+                    data: dict = json.load(f)
+            except json.JSONDecodeError as je:
+                logger.error(f"Invalid JSON in fallback file: {je}")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="error_remediation",
+                        error_type="INVALID_JSON_FALLBACK",
+                        message=f"Invalid JSON in fallback file: {je}",
+                        severity="ERROR",
+                        structured_context=ErrorContext(
+                            module="error_remediation",
+                            extra={"file_path": str(self.fallback_path), "exception": str(je)[:200]},
+                        ),
+                    )
+                )
+                return data.get("fallbacks", {}).get("default")  # Use default if JSON is invalid
+
             # Try keyword-specific fallback first
             if error_sig:
                 sig_lower = error_sig.lower()
                 for keyword, fix in data.get("fallbacks", {}).items():
                     if keyword in sig_lower:
+                        logger.debug(f"Found keyword match for '{keyword}' in error signature")
                         return fix
-            return data.get("default_fix") or data.get("fallbacks", {}).get("default")
-        except Exception as exc:  # noqa: BLE001
-            logger.debug(f"Local fallback load failed from {self.fallback_path}: {exc}")
+
+            # Return default fallback
+            default_fix = data.get("default_fix") or data.get("fallbacks", {}).get("default")
+            if not default_fix:
+                logger.warning("No default fix found in fallback file")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="error_remediation",
+                        error_type="NO_DEFAULT_FIX",
+                        message="No default fix found in fallback file",
+                        severity="WARNING",
+                        structured_context=ErrorContext(
+                            module="error_remediation", extra={"file_path": str(self.fallback_path)}
+                        ),
+                    )
+                )
+            return default_fix
+
+        except Exception as exc:  # Catch any unexpected errors
+            logger.error(f"Unexpected error loading local fallback: {exc}", exc_info=True)
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="LOCAL_FALLBACK_LOAD_ERROR",
+                    message=f"Unexpected error loading local fallback: {exc}",
+                    severity="ERROR",
+                    structured_context=ErrorContext(
+                        module="error_remediation",
+                        extra={"file_path": str(self.fallback_path), "exception": str(exc)[:200]},
+                    ),
+                )
+            )
             return None
 
     async def _load_redis_fallback(self, error_sig: str) -> str | None:
         """Attempt to fetch a known fix from Redis if Qdrant is unavailable."""
+        if not error_sig:
+            return None
+
         try:
             from core.cache.redis_manager import redis_manager
 
@@ -287,7 +382,18 @@ class ErrorRemediation:
                     logger.info("✅ Found remediation in Redis fallback cache.")
                     return fix.decode("utf-8")
         except Exception as exc:
-            logger.debug(f"Redis fallback failed: {exc}")
+            logger.warning(f"Redis fallback failed: {exc}", exc_info=True)
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="REDIS_FALLBACK_FAILED",
+                    message=f"Redis fallback failed: {exc}",
+                    severity="WARNING",
+                    structured_context=ErrorContext(
+                        module="error_remediation", extra={"error_sig": error_sig[:200], "exception": str(exc)[:200]}
+                    ),
+                )
+            )
         return None
 
     # ── Circuit-breaking retry ─────────────────────────────────────────────────
@@ -330,81 +436,133 @@ class ErrorRemediation:
     async def lookup_fix(self, error_sig: str) -> str | None:
         """Find a remediation fix for a given error signature.
 
-        Strategy:
-        1. If Qdrant is available and circuit breaker is closed → vector search
-        2. Fallback → local JSON file (keyword-matched or default)
-
         Args:
-            error_sig: The error signature string to look up.
+            error_sig: The error signature string (e.g., exception message).
 
         Returns:
-            A remediation suggestion string, or ``None`` if no fix is known.
+            A suggested fix string, or ``None`` if no remediation is found.
         """
-        # Lazy-init Qdrant on first call
-        self._init_qdrant()
-
-        if not self._qdrant or not self.circuit_breaker.allow_request():
-            reason = "Qdrant unavailable" if not self._qdrant else "Circuit breaker open"
-            logger.debug(f"{reason}. Using local fallback.")
+        if not error_sig:
+            logger.warning("Empty error signature provided to lookup_fix")
             error_event_bus.emit(
                 ErrorEvent(
                     module="error_remediation",
-                    error_type="QDRANT_LOOKUP_SKIPPED",
-                    message=reason,
+                    error_type="EMPTY_ERROR_SIGNATURE",
+                    message="Empty error signature provided",
                     severity="WARNING",
+                    structured_context=ErrorContext(module="error_remediation", extra={"error_sig": ""}),
+                )
+            )
+            return None
+
+        # Emit event for monitoring
+        error_event_bus.emit(
+            ErrorEvent(
+                module="error_remediation",
+                error_type="QDRANT_LOOKUP_INITIATED",
+                message="Starting Qdrant remediation lookup",
+                severity="DEBUG",
+                structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
+            )
+        )
+
+        try:
+            # Lazy-init Qdrant on first call
+            self._init_qdrant()
+
+            if not HAS_QDRANT:
+                logger.warning("Qdrant not available — skipping vector search, using fallback only")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="error_remediation",
+                        error_type="QDRANT_NOT_AVAILABLE",
+                        message="Qdrant not available, using fallback",
+                        severity="WARNING",
+                        structured_context=ErrorContext(
+                            module="error_remediation", extra={"error_sig": error_sig[:200]}
+                        ),
+                    )
+                )
+                redis_fix = await self._load_redis_fallback(error_sig)
+                if redis_fix:
+                    return redis_fix
+                return self._load_local_fallback(error_sig)
+
+            embedding = _compute_embedding(error_sig, QDRANT_VECTOR_SIZE)
+
+            async def _search():
+                # বাংলা মন্তব্য: Proper embedding-based search — no more zero vectors!
+                return self._qdrant.search(
+                    collection_name=QDRANT_COLLECTION_NAME,
+                    query_vector=embedding,
+                    limit=1,
+                    score_threshold=0.6,  # Only return high-confidence matches
+                )
+
+            results = await self._backoff_retry(_search)
+
+            if results and results[0].payload:
+                fix: str | None = results[0].payload.get("fix")
+                if fix:
+                    logger.info(f"✅ Found Qdrant remediation (score={results[0].score:.3f})")
+                    return fix
+
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="QDRANT_NO_FIX_FOUND",
+                    message="No remediation found in Qdrant for error signature",
+                    severity="INFO",
                     structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
                 )
             )
+
+            # ── DLQ Insertion ──
+            try:
+                self._qdrant.upsert(
+                    collection_name="failed_fixes",
+                    points=[
+                        qdrant_models.PointStruct(
+                            id=abs(hash(error_sig)) % (10**12), vector=embedding, payload={"error_sig": error_sig[:500]}
+                        )
+                    ],
+                )
+                logger.debug("Inserted unresolved error signature into DLQ (failed_fixes collection).")
+            except Exception as dlq_exc:
+                logger.warning(f"Failed to insert into DLQ: {dlq_exc}")
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="error_remediation",
+                        error_type="DLQ_INSERTION_FAILED",
+                        message=f"Failed to insert into DLQ: {dlq_exc}",
+                        severity="WARNING",
+                        structured_context=ErrorContext(
+                            module="error_remediation",
+                            extra={"error_sig": error_sig[:200], "exception": str(dlq_exc)[:200]},
+                        ),
+                    )
+                )
+
             redis_fix = await self._load_redis_fallback(error_sig)
             if redis_fix:
                 return redis_fix
             return self._load_local_fallback(error_sig)
 
-        embedding = _compute_embedding(error_sig, QDRANT_VECTOR_SIZE)
-
-        async def _search():
-            # বাংলা মন্তব্য: Proper embedding-based search — no more zero vectors!
-            return self._qdrant.search(
-                collection_name=QDRANT_COLLECTION_NAME,
-                query_vector=embedding,
-                limit=1,
-                score_threshold=0.6,  # Only return high-confidence matches
+        except Exception as exc:  # Catch any unexpected errors
+            logger.error(f"Unexpected error in lookup_fix: {exc}", exc_info=True)
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="error_remediation",
+                    error_type="LOOKUP_FIX_UNEXPECTED_ERROR",
+                    message=f"Unexpected error in lookup_fix: {exc}",
+                    severity="ERROR",
+                    structured_context=ErrorContext(
+                        module="error_remediation", extra={"error_sig": error_sig[:200], "exception": str(exc)[:200]}
+                    ),
+                )
             )
-
-        results = await self._backoff_retry(_search)
-        if results and results[0].payload:
-            fix: str | None = results[0].payload.get("fix")
-            if fix:
-                logger.info(f"✅ Found Qdrant remediation (score={results[0].score:.3f})")
-                return fix
-
-        error_event_bus.emit(
-            ErrorEvent(
-                module="error_remediation",
-                error_type="QDRANT_NO_FIX_FOUND",
-                message="No remediation found in Qdrant for error signature",
-                severity="INFO",
-                structured_context=ErrorContext(module="error_remediation", extra={"error_sig": error_sig[:200]}),
-            )
-        )
-
-        # ── DLQ Insertion ──
-        try:
-            self._qdrant.upsert(
-                collection_name="failed_fixes",
-                points=[
-                    qdrant_models.PointStruct(
-                        id=abs(hash(error_sig)) % (10**12), vector=embedding, payload={"error_sig": error_sig[:500]}
-                    )
-                ],
-            )
-            logger.debug("Inserted unresolved error signature into DLQ (failed_fixes collection).")
-        except Exception as dlq_exc:
-            logger.warning(f"Failed to insert into DLQ: {dlq_exc}")
-        redis_fix = await self._load_redis_fallback(error_sig)
-        if redis_fix:
-            return redis_fix
-        return self._load_local_fallback(error_sig)
+            # Fallback to local fallback in case of any unexpected errors
+            return self._load_local_fallback(error_sig)
 
     async def insert_error_pattern(
         self,

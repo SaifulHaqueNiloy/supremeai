@@ -71,11 +71,8 @@ def patched_thread_init(self, *args, **kwargs):
         self._target = thread_target_wrapper(self._target)
 
 
-def setup_silent_catcher():
-    """Install global hooks to prevent silent failures.
-
-    বাংলা মন্তব্য: গ্লোবাল হুকগুলো সচল করার প্রধান ফাংশন।
-    """
+def install_excepthook():
+    """Install the custom exception hook to catch all unhandled exceptions."""
     sys.excepthook = handle_unhandled_exception
     threading.Thread.__init__ = patched_thread_init
     logger.info("🛡️ Intelligent Silent Catcher hooks installed.")

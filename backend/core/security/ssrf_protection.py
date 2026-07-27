@@ -3,7 +3,7 @@ Centralized SSRF (Server-Side Request Forgery) Prevention Module.
 
 বাংলা: সেন্ট্রালাইজড SSRF প্রিভেনশন মডিউল — সকল HTTP রিকোয়েস্টের নিরাপত্তা নিশ্চিত করে।
 This module provides a centralized, configurable SSRF protection system that
-consolidates URL safety checks used across the codebase (web_scraper.py, 
+consolidates URL safety checks used across the codebase (web_scraper.py,
 browser_agent.py, sentinel_agent.py, etc.).
 
 Key Features:
@@ -17,7 +17,7 @@ Key Features:
 
 Usage:
     from core.security.ssrf_protection import SSRFProtection
-    
+
     ssrf = SSRFProtection()
     result = ssrf.validate_url("https://example.com")
     if result.is_safe:
@@ -41,11 +41,13 @@ from loguru import logger
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 # Cloud metadata IPs that should never be accessible
-BLOCKED_METADATA_IPS: frozenset[str] = frozenset({
-    "169.254.169.254",  # AWS/GCP/Azure metadata
-    "169.254.170.2",    # AWS ECS metadata
-    "100.100.100.200",  # Alibaba Cloud metadata
-})
+BLOCKED_METADATA_IPS: frozenset[str] = frozenset(
+    {
+        "169.254.169.254",  # AWS/GCP/Azure metadata
+        "169.254.170.2",  # AWS ECS metadata
+        "100.100.100.200",  # Alibaba Cloud metadata
+    }
+)
 
 # Blocked hostname suffixes (internal TLDs)
 BLOCKED_HOSTNAME_SUFFIXES: tuple[str, ...] = (
@@ -61,15 +63,17 @@ BLOCKED_HOSTNAME_SUFFIXES: tuple[str, ...] = (
 )
 
 # Default blocklist — common dangerous hostnames
-DEFAULT_BLOCKLIST_HOSTNAMES: frozenset[str] = frozenset({
-    "localhost",
-    "127.0.0.1",
-    "0.0.0.0",
-    "::1",
-    "[::1]",
-    "metadata.google.internal",
-    "metadata",
-})
+DEFAULT_BLOCKLIST_HOSTNAMES: frozenset[str] = frozenset(
+    {
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "::1",
+        "[::1]",
+        "metadata.google.internal",
+        "metadata",
+    }
+)
 
 # DNS cache TTL (seconds)
 _DNS_CACHE_TTL: int = int(os.getenv("SSRF_DNS_CACHE_TTL", "300"))
@@ -87,6 +91,7 @@ class SSRFValidationResult:
         validated_url: The original URL that was validated.
         validation_time_ms: Time taken for validation in milliseconds.
     """
+
     is_safe: bool = True
     reason: str = ""
     resolved_ip: str = ""
@@ -174,9 +179,7 @@ class SSRFProtection:
         if custom_blocklist:
             self._blocklist_hostnames.update(custom_blocklist)
         if env_blocklist:
-            self._blocklist_hostnames.update(
-                h.strip().lower() for h in env_blocklist.split(",") if h.strip()
-            )
+            self._blocklist_hostnames.update(h.strip().lower() for h in env_blocklist.split(",") if h.strip())
 
         logger.info(
             f"[SSRFProtection] Initialized. DNS rebinding={enable_dns_rebinding_protection}, "
@@ -277,14 +280,11 @@ class SSRFProtection:
                     )
                     result.validation_time_ms = (time.monotonic() - start_time) * 1000
                     logger.critical(
-                        f"[SSRF] DNS rebinding detected for {hostname}: "
-                        f"{resolved_ip} -> {second_resolved}"
+                        f"[SSRF] DNS rebinding detected for {hostname}: " f"{resolved_ip} -> {second_resolved}"
                     )
                     return result
             except (socket.gaierror, OSError) as e:
-                logger.warning(
-                    f"[SSRF] DNS rebinding check failed for {hostname}: {e}"
-                )
+                logger.warning(f"[SSRF] DNS rebinding check failed for {hostname}: {e}")
 
         # Step 9: All checks passed
         result.is_safe = True

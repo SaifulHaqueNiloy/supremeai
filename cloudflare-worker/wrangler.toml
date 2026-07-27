@@ -3,8 +3,8 @@ main = "src/index.js"
 compatibility_date = "2025-01-01"
 
 [triggers]
-# প্রতি ৮ মিনিটে একাধিক সার্ভিস পিং করার শিডিউল (Render Zero Cold-Start)
-crons = ["*/8 * * * *"]
+# প্রতি ৩ মিনিটে একাধিক সার্ভিস পিং করার শিডিউল (Render Zero Cold-Start নিশ্চিত করতে)
+crons = ["*/3 * * * *"]
 
 [vars]
 PRIMARY_URL = "https://supremeai-backend.onrender.com"

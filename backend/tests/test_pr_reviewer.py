@@ -6,7 +6,9 @@ import pytest
 from tools.code.pr_reviewer import PRReviewer
 
 
-@pytest.mark.skip(reason="Skipped to avoid async event loop and self-evolution agent attribute mismatches in CI pipeline")
+@pytest.mark.skip(
+    reason="Skipped to avoid async event loop and self-evolution agent attribute mismatches in CI pipeline"
+)
 @pytest.mark.anyio
 async def test_static_security_scan_detects_secret():
     reviewer = PRReviewer()
@@ -17,7 +19,9 @@ async def test_static_security_scan_detects_secret():
     assert "AWS API Key" in comments[0]["body"]
 
 
-@pytest.mark.skip(reason="Skipped to avoid async event loop and self-evolution agent attribute mismatches in CI pipeline")
+@pytest.mark.skip(
+    reason="Skipped to avoid async event loop and self-evolution agent attribute mismatches in CI pipeline"
+)
 @pytest.mark.anyio
 @patch("tools.code.pr_reviewer.Github")
 async def test_review_pr_trigger_changes(mock_github):

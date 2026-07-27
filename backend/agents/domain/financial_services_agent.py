@@ -40,6 +40,7 @@ class RiskCategory(str, Enum):
 @dataclass(frozen=True)
 class Transaction:
     """Immutable transaction record."""
+
     id: str
     user_id: str
     amount: float
@@ -53,6 +54,7 @@ class Transaction:
 @dataclass(frozen=True)
 class RiskAssessment:
     """Immutable risk assessment for a transaction."""
+
     transaction_id: str
     risk_category: RiskCategory
     risk_score: float
@@ -63,6 +65,7 @@ class RiskAssessment:
 @dataclass(frozen=True)
 class FinancialInsight:
     """Immutable financial insight."""
+
     user_id: str
     metric: str
     value: float
@@ -104,19 +107,16 @@ class FinancialServicesAgent:
 
         # Velocity check (if history provided)
         if user_history:
-            recent_count = sum(
-                1 for t in user_history
-                if t.timestamp > datetime.now(UTC) - timedelta(hours=1)
-            )
+            recent_count = sum(1 for t in user_history if t.timestamp > datetime.now(UTC) - timedelta(hours=1))
             if recent_count > 5:
                 flags.append("high_transaction_velocity")
                 risk_score += 0.25
 
             # Duplicate check
             similar = [
-                t for t in user_history[-10:]
-                if abs(t.amount - transaction.amount) < 0.01
-                and t.merchant == transaction.merchant
+                t
+                for t in user_history[-10:]
+                if abs(t.amount - transaction.amount) < 0.01 and t.merchant == transaction.merchant
             ]
             if len(similar) > 2:
                 flags.append("duplicate_transaction_pattern")
@@ -168,26 +168,30 @@ class FinancialServicesAgent:
         if total_income > 0:
             savings_rate = (total_income - total_spent) / total_income
             if savings_rate < 0.1:
-                insights.append(FinancialInsight(
-                    user_id=user_id,
-                    metric="savings_rate",
-                    value=savings_rate,
-                    change_percent=0.0,
-                    benchmark=0.2,
-                    recommendation="Consider reducing discretionary spending to improve savings rate",
-                ))
+                insights.append(
+                    FinancialInsight(
+                        user_id=user_id,
+                        metric="savings_rate",
+                        value=savings_rate,
+                        change_percent=0.0,
+                        benchmark=0.2,
+                        recommendation="Consider reducing discretionary spending to improve savings rate",
+                    )
+                )
 
         # Average transaction value
         if transactions:
             avg_transaction = total_spent / len(transactions)
-            insights.append(FinancialInsight(
-                user_id=user_id,
-                metric="avg_transaction_value",
-                value=avg_transaction,
-                change_percent=0.0,
-                benchmark=50.0,
-                recommendation=f"Average transaction is ${avg_transaction:.2f}",
-            ))
+            insights.append(
+                FinancialInsight(
+                    user_id=user_id,
+                    metric="avg_transaction_value",
+                    value=avg_transaction,
+                    change_percent=0.0,
+                    benchmark=50.0,
+                    recommendation=f"Average transaction is ${avg_transaction:.2f}",
+                )
+            )
 
         return insights
 

@@ -22,22 +22,60 @@ logger = logging.getLogger("supremeai.bangla_nlp")
 BANGLA_CACHE_TTL = 3600
 
 # Unicode ranges for Bengali script
-BANGLA_UNICODE_RANGE = r'[\u0980-\u09FF]'
-BANGLA_DIGITS = r'[\u09E6-\u09EF]'
+BANGLA_UNICODE_RANGE = r"[\u0980-\u09FF]"
+BANGLA_DIGITS = r"[\u09E6-\u09EF]"
 
 # Common Bangla stop words
 BANGLA_STOP_WORDS = {
-    "এবং", "এই", "ও", "করে", "করা", "হয়ে", "হয়", "কিন্তু", "সে", "তারা",
-    "আমি", "তুমি", "আপনি", "আমরা", "তার", "তাদের", "আমার", "আমাদের",
-    "জন্য", "কাছে", "মধ্যে", "বিরুদ্ধে", "সাথে", "ছাড়া", "কোন", "সব",
-    "কিছু", "অনেক", "প্রতি", "পরে", "আগে", "উপর", "নিচে", "ভিতরে",
-    "বাইরে", "এখানে", "সেখানে", "এখন", "তখন", "আজ", "কাল", "এখনই",
+    "এবং",
+    "এই",
+    "ও",
+    "করে",
+    "করা",
+    "হয়ে",
+    "হয়",
+    "কিন্তু",
+    "সে",
+    "তারা",
+    "আমি",
+    "তুমি",
+    "আপনি",
+    "আমরা",
+    "তার",
+    "তাদের",
+    "আমার",
+    "আমাদের",
+    "জন্য",
+    "কাছে",
+    "মধ্যে",
+    "বিরুদ্ধে",
+    "সাথে",
+    "ছাড়া",
+    "কোন",
+    "সব",
+    "কিছু",
+    "অনেক",
+    "প্রতি",
+    "পরে",
+    "আগে",
+    "উপর",
+    "নিচে",
+    "ভিতরে",
+    "বাইরে",
+    "এখানে",
+    "সেখানে",
+    "এখন",
+    "তখন",
+    "আজ",
+    "কাল",
+    "এখনই",
 }
 
 
 @dataclass(frozen=True)
 class BanglaSentiment:
     """Immutable sentiment analysis result for Bangla text."""
+
     text: str
     sentiment: str  # positive, negative, neutral
     confidence: float
@@ -47,6 +85,7 @@ class BanglaSentiment:
 @dataclass(frozen=True)
 class TransliterationResult:
     """Immutable transliteration result."""
+
     bangla_text: str
     romanized: str
     confidence: float
@@ -79,7 +118,7 @@ class BanglaTextProcessor:
     def simple_tokenize(text: str) -> list[str]:
         """Simple Bangla word tokenization."""
         # Split on whitespace and punctuation
-        tokens = re.findall(r'[\u0980-\u09FF\w]+', text)
+        tokens = re.findall(r"[\u0980-\u09FF\w]+", text)
         return tokens
 
 
@@ -119,6 +158,7 @@ class BanglaNLPAgent:
             )
             content = result.get("content", "{}")
             import json
+
             data = json.loads(content) if isinstance(content, str) else content
             sentiment = BanglaSentiment(
                 text=text,
@@ -134,12 +174,16 @@ class BanglaNLPAgent:
                 key_phrases=[],
             )
 
-        await self.cache.set(cache_key, {
-            "text": sentiment.text,
-            "sentiment": sentiment.sentiment,
-            "confidence": sentiment.confidence,
-            "key_phrases": sentiment.key_phrases,
-        }, ttl=BANGLA_CACHE_TTL)
+        await self.cache.set(
+            cache_key,
+            {
+                "text": sentiment.text,
+                "sentiment": sentiment.sentiment,
+                "confidence": sentiment.confidence,
+                "key_phrases": sentiment.key_phrases,
+            },
+            ttl=BANGLA_CACHE_TTL,
+        )
 
         return sentiment
 
@@ -177,11 +221,15 @@ class BanglaNLPAgent:
                 confidence=0.0,
             )
 
-        await self.cache.set(cache_key, {
-            "bangla_text": transliteration.bangla_text,
-            "romanized": transliteration.romanized,
-            "confidence": transliteration.confidence,
-        }, ttl=BANGLA_CACHE_TTL)
+        await self.cache.set(
+            cache_key,
+            {
+                "bangla_text": transliteration.bangla_text,
+                "romanized": transliteration.romanized,
+                "confidence": transliteration.confidence,
+            },
+            ttl=BANGLA_CACHE_TTL,
+        )
 
         return transliteration
 

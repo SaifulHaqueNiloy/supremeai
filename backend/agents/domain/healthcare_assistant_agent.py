@@ -44,6 +44,7 @@ class PrivacyLevel(str, Enum):
 @dataclass(frozen=True)
 class HealthRecord:
     """Immutable health record."""
+
     user_id: str
     metric_type: HealthMetricType
     value: float
@@ -56,6 +57,7 @@ class HealthRecord:
 @dataclass(frozen=True)
 class HealthInsight:
     """Immutable health insight."""
+
     metric: str
     current_value: float
     normal_range: tuple[float, float]
@@ -81,11 +83,11 @@ class PHIScanner:
     """
 
     PHI_PATTERNS = {
-        "ssn": r'\b\d{3}-\d{2}-\d{4}\b',
-        "phone": r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b',
-        "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-        "medical_id": r'\b(?:MRN|PATIENT|MEDICAL)[-_]?\d{6,}\b',
-        "date_of_birth": r'\b\d{2}[/-]\d{2}[/-]\d{4}\b',
+        "ssn": r"\b\d{3}-\d{2}-\d{4}\b",
+        "phone": r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b",
+        "email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+        "medical_id": r"\b(?:MRN|PATIENT|MEDICAL)[-_]?\d{6,}\b",
+        "date_of_birth": r"\b\d{2}[/-]\d{2}[/-]\d{4}\b",
     }
 
     @staticmethod
@@ -95,11 +97,13 @@ class PHIScanner:
         for phi_type, pattern in PHIScanner.PHI_PATTERNS.items():
             matches = re.finditer(pattern, text)
             for match in matches:
-                findings.append({
-                    "type": phi_type,
-                    "position": match.start(),
-                    "preview": text[max(0, match.start() - 20):match.end() + 20],
-                })
+                findings.append(
+                    {
+                        "type": phi_type,
+                        "position": match.start(),
+                        "preview": text[max(0, match.start() - 20) : match.end() + 20],
+                    }
+                )
         return findings
 
     @staticmethod
@@ -132,7 +136,9 @@ class HealthcareAssistantAgent:
 
         if value < lower * 0.8 or value > upper * 1.2:
             status = "critical"
-            recommendation = f"Immediate attention needed: {metric.value} is critically outside normal range ({lower}-{upper})"
+            recommendation = (
+                f"Immediate attention needed: {metric.value} is critically outside normal range ({lower}-{upper})"
+            )
         elif value < lower or value > upper:
             status = "attention"
             recommendation = f"Monitor {metric.value}: value ({value}) is outside normal range ({lower}-{upper})"
@@ -162,10 +168,7 @@ class HealthcareAssistantAgent:
 
     async def generate_wellness_tip(self, metrics: list[HealthRecord]) -> str:
         """Generate personalized wellness tip based on health metrics."""
-        context = "\n".join(
-            f"{m.metric_type.value}: {m.value} {m.unit}"
-            for m in metrics[-5:]
-        )
+        context = "\n".join(f"{m.metric_type.value}: {m.value} {m.unit}" for m in metrics[-5:])
 
         prompt = (
             f"Based on these health metrics, provide a brief wellness tip:\n\n{context}\n\n"

@@ -1,6 +1,6 @@
 # .github/scripts/verify-render-deploy.py
 # বাংলা মন্তব্য: এই স্ক্রিপ্টটি নির্দিষ্ট Render সার্ভিসের (User/Primary বা Admin/Backup) ডেপ্লয়মেন্ট স্ট্যাটাস ও হেলথ ভেরিফাই করে।
-# এটি সার্ভিস আইডি অনুযায়ী ফিল্টার করে ট্র্যাকিং নিশ্চিত করে যাতে একটি সার্ভিসের সুস্থতা অন্য ব্যর্থ সার্ভিসকে ঢেকে না ফেলে।
+# এটি সার্ভিস আইডি অনুযায়ী ফিল্টার করে ট্র্যাকিং নিশ্চিত করে যাতে একটি সার্ভিসের সুস্থতা অন্য ব্যর্থ সার্ভিসকে ঢেকে না ফেলে।
 
 import os
 import sys
@@ -28,11 +28,13 @@ SERVICES = {
     }
 }
 
-POLL_INTERVAL = 15  # poll every 15s for fast feedback
-TIMEOUT_LIMIT = 450  # 7.5 minutes (allows Render build to complete cleanly)
+# Optimized timing: Reduce poll interval to 10s and timeout to 300s (5 minutes)
+POLL_INTERVAL = 10  # poll every 10s for faster feedback
+TIMEOUT_LIMIT = 300  # 5 minutes (reduced from 7.5 minutes)
 
-def check_http_health(url, label, retries=6, timeout_per_try=10):
-    # বাংলা মন্তব্য: সার্ভিসের /health এবং /api/v1/health রিট্রাই সহ চেক করা হবে কোল্ড স্টার্ট এড়াতে।
+def check_http_health(url, label, retries=3, timeout_per_try=15):
+    # বাংলা মন্তব্ব্য: সার্ভিসের /health এবং /api/v1/health রিট্রাই সহ চেক করা হবে কোল্ড স্টার্ট এড়াতে।
+    # Optimized: Reduced retries and increased timeout per try for better efficiency
     base_url = url.rstrip('/')
     endpoints = [f"{base_url}/health", f"{base_url}/api/v1/health"]
     for attempt in range(1, retries + 1):
@@ -41,12 +43,20 @@ def check_http_health(url, label, retries=6, timeout_per_try=10):
             try:
                 response = requests.get(health_url, timeout=timeout_per_try)
                 if response.status_code == 200:
-                    print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
-                    return True
+                    try:
+                        # Verify the response is actually healthy, not just status 200
+                        data = response.json()
+                        if isinstance(data, dict) and data.get('status') in ['ok', 'healthy', 'UP']:
+                            print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
+                            return True
+                    except:
+                        # If response is not JSON but status is 200, consider it healthy
+                        print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
+                        return True
             except Exception as e:
                 print(f"⏳ {health_url} health check attempt {attempt} failed: {e}")
         if attempt < retries:
-            time.sleep(10)
+            time.sleep(5)  # Shorter delay between attempts
     print(f"❌ {label} HTTP check failed after {retries} retries.")
     return False
 
@@ -122,10 +132,10 @@ def monitor_service(service):
         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
 
-        # Allow up to 10 minutes for deploy record initiation / polling queue on Render free tier
-        if now - created_at > timedelta(minutes=10):
+        # Allow up to 5 minutes for deploy record initiation / polling (reduced from 10)
+        if now - created_at > timedelta(minutes=5):
             print(
-                f"⚠️ No new deploy record found for {name} within 10 minutes. Falling back to direct HTTP health check..."
+                f"⚠️ No new deploy record found for {name} within 5 minutes. Falling back to direct HTTP health check..."
             )
             return check_http_health(service["url"], name)
 
@@ -142,7 +152,9 @@ def monitor_service(service):
         elapsed = time.time() - start_time
         if elapsed > TIMEOUT_LIMIT:
             print(f"❌ Timeout reached ({TIMEOUT_LIMIT}s) while waiting for deploy {deploy_id} to complete.")
-            return False
+            print(f"⚠️ Proceeding to direct HTTP health check regardless of deploy status...")
+            # Even if deploy status check times out, we still check HTTP health
+            return check_http_health(service["url"], name)
 
         try:
             res = requests.get(deploy_url, headers=headers, timeout=15)

@@ -123,13 +123,17 @@ async def observability_tail_local_logs(params: LocalLogInput) -> str:
     """
     target_log = LOG_DIR / params.log_filename
     if not target_log.exists():
-        return json.dumps({"error": f"Log file '{params.log_filename}' does not exist in logs directory."}, ensure_ascii=False)
+        return json.dumps(
+            {"error": f"Log file '{params.log_filename}' does not exist in logs directory."}, ensure_ascii=False
+        )
 
     try:
         content_lines = target_log.read_text(encoding="utf-8", errors="replace").splitlines()
         tail_lines = content_lines[-params.lines :]
 
-        return json.dumps({"log_file": str(target_log), "total_lines": len(content_lines), "tail": tail_lines}, ensure_ascii=False)
+        return json.dumps(
+            {"log_file": str(target_log), "total_lines": len(content_lines), "tail": tail_lines}, ensure_ascii=False
+        )
     except Exception as e:  # noqa: BLE001
         return json.dumps({"error": f"Failed to read log file: {e}"}, ensure_ascii=False)
 
