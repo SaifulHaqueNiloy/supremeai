@@ -165,9 +165,9 @@ def fast_secret_scan():
         r'(?i)github[_-]?(token|key).*["\'][^"\']+["\']',
         r'(ssh-rsa|ssh-ed25519)\s+[A-Za-z0-9+/]{20,}={0,3}\s+.*',
     ]
-    
+
     # এখানে স্ক্যান লজিক যোগ করুন
-    
+
     return True  # যদি কোনো সিক্রেট পাওয়া না যায়
 
 if __name__ == "__main__":

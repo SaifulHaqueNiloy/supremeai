@@ -344,12 +344,9 @@ def main() -> None:
 
     report = scanner.generate_report(issues)
 
-    print(json.dumps(report, indent=2))
+    # Use proper logging instead of print
+    logger.info(json.dumps(report, indent=2))
 
     # Exit with error code if critical issues found
     if report["by_severity"]["critical"] > 0 or report["by_severity"]["high"] > 0:
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
