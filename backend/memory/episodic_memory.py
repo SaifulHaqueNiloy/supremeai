@@ -1,118 +1,79 @@
+# SupremeAI 2.0 - Episodic Memory Engine
+# বাংলা মন্তব্য: এটি ব্যবহারকারীর সমস্ত অতীত টাস্ক এক্সিকিউশন হিস্ট্রি ও সাফল্য/ব্যর্থতার অভিজ্ঞতা সংরক্ষণ ও ভেক্টর সার্চের জন্য ব্যবহৃত হয়।
+
 from __future__ import annotations
 
-import os
-import sqlite3
-from typing import Any
+import json
+import logging
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-# শেয়ার্ড ইউটিলিটি — টাইমস্ট্যাম্প কেন্দ্রীভূত
-from utils.timestamps import utc_now_iso
+from memory.chromadb_store import ChromaDBStore
+
+logger = logging.getLogger(__name__)
 
 
 class EpisodicMemory:
-    def __init__(
+    """
+    Episodic Memory Engine for SupremeAI 2.0.
+    Stores task execution records, inputs, responses, latency, and success metrics.
+    Supports similarity search to retrieve relevant past solutions.
+    """
+
+    def __init__(self, vector_store: Optional[ChromaDBStore] = None):
+        self.vector_store = vector_store or ChromaDBStore(collection_name="supremeai_episodic_memory")
+
+    async def record_task(
         self,
-        db_path: str | None = None,
-        session_id: str | None = None,
-    ) -> None:
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.db_path = db_path or os.path.join(base_dir, "data", "episodic_memory.db")
-        self.session_id = session_id or "default"
-        if self.db_path != ":memory:":
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        self._memory_conn: sqlite3.Connection | None = None
-        self._init_db()
-
-    def _connect(self) -> sqlite3.Connection:
-        if self.db_path == ":memory:":
-            if self._memory_conn is None:
-                self._memory_conn = sqlite3.connect(self.db_path, check_same_thread=False)
-            return self._memory_conn
-        return sqlite3.connect(self.db_path, check_same_thread=False)
-
-    def _init_db(self) -> None:
-        conn = self._connect()
-        is_memory = self.db_path == ":memory:"
+        task_id: str,
+        prompt: str,
+        response: str,
+        success: bool = True,
+        latency_ms: float = 0.0,
+        model_used: str = "default",
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        """
+        Record a task execution event into episodic memory.
+        """
         try:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS episodes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    session_id TEXT NOT NULL,
-                    event_type TEXT NOT NULL,
-                    context TEXT NOT NULL,
-                    outcome TEXT,
-                    importance REAL DEFAULT 1.0,
-                    created_at TEXT NOT NULL
+            meta = {
+                "task_id": task_id,
+                "success": str(success).lower(),
+                "latency_ms": float(latency_ms),
+                "model_used": model_used,
+                "timestamp": time.time(),
+                "category": "episodic_memory",
+            }
+            if metadata:
+                meta.update(metadata)
+
+            content_text = f"Prompt: {prompt}\nResponse: {response}"
+            self.vector_store.add_document(doc_id=f"episode_{task_id}", text=content_text, metadata=meta)
+            logger.info(f"Recorded episodic memory for task: {task_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to record episodic memory: {e}")
+            return False
+
+    async def get_similar_past_tasks(self, query: str, n: int = 3) -> List[Dict[str, Any]]:
+        """
+        Retrieve top-N similar past task execution records for cognitive reflection.
+        """
+        try:
+            results = self.vector_store.query(query_text=query, n_results=n)
+            past_tasks = []
+            for doc_id, score, doc_data in results:
+                past_tasks.append(
+                    {
+                        "doc_id": doc_id,
+                        "similarity_score": score,
+                        "content": doc_data.get("text", ""),
+                        "metadata": doc_data.get("metadata", {}),
+                    }
                 )
-                """
-            )
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_episodes_session ON episodes(session_id, event_type)")
-            conn.commit()
-        finally:
-            if not is_memory:
-                conn.close()
-
-    def _with_connection(self, func):
-        conn = self._connect()
-        is_memory = self.db_path == ":memory:"
-        try:
-            return func(conn)
-        finally:
-            if not is_memory:
-                conn.close()
-
-    def store_episode(
-        self,
-        event_type: str,
-        context: str,
-        outcome: str | None = None,
-        importance: float = 1.0,
-    ) -> dict[str, Any]:
-        now = self._now()
-
-        def _insert(conn: sqlite3.Connection) -> dict[str, Any]:
-            cursor = conn.execute(
-                """
-                INSERT INTO episodes (session_id, event_type, context, outcome, importance, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (self.session_id, event_type, context, outcome, importance, now),
-            )
-            conn.commit()
-            return {"status": "ok", "episode_id": cursor.lastrowid}
-
-        return self._with_connection(_insert)
-
-    def recall_episodes(
-        self,
-        event_type: str | None = None,
-        min_importance: float = 0.0,
-        limit: int = 20,
-    ) -> list[dict[str, Any]]:
-        def _query(conn: sqlite3.Connection) -> list[dict[str, Any]]:
-            conn.row_factory = sqlite3.Row
-            query = "SELECT * FROM episodes WHERE session_id = ? AND importance >= ?"
-            params: list[Any] = [self.session_id, min_importance]
-            if event_type:
-                query += " AND event_type = ?"
-                params.append(event_type)
-            query += " ORDER BY importance DESC, created_at DESC LIMIT ?"
-            params.append(limit)
-            rows = conn.execute(query, params).fetchall()
-            return [dict(row) for row in rows]
-
-        return self._with_connection(_query)
-
-    def summarize_recent(self, limit: int = 5) -> str:
-        episodes = self.recall_episodes(limit=limit)
-        if not episodes:
-            return ""
-        lines = ["Recent episodes:"]
-        for ep in episodes:
-            lines.append(f"- [{ep['event_type']}] {ep['context']}")
-        return "\n".join(lines)
-
-    @staticmethod
-    def _now() -> str:
-        # রিফ্যাক্টর: শেয়ার্ড টাইমস্ট্যাম্প ইউটিলিটি ব্যবহার
-        return utc_now_iso()
+            return past_tasks
+        except Exception as e:
+            logger.error(f"Failed to query episodic memory: {e}")
+            return []
