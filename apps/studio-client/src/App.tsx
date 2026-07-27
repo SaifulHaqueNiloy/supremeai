@@ -222,6 +222,14 @@ const AppContent: React.FC = () => {
                       <ProfilePage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/workspace" element={
+                    <DashboardShell
+                      theme={theme}
+                      toggleTheme={toggleTheme}
+                      isServerOnline={isServerOnline}
+                      workspace={legacyWorkspace}
+                    />
+                  } />
                   <Route path="/workspace/*" element={
                     <DashboardShell
                       theme={theme}
