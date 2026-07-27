@@ -74,7 +74,17 @@ class SilentErrorDetector(ast.NodeVisitor):
                 for stmt in node.body
             )
             if is_silent:
-                self.violations.append(f"{self.filepath}:{node.lineno} - Silent exception handler (`except Exception: pass`)")
+                # বাংলা মন্তব্য: tests/ ডিরেক্টরিতে silent exception handler অনুমোদিত।
+                # কারণ: pytest fixtures এবং conftest teardown-এ `except Exception: pass`
+                # একটি স্বীকৃত প্যাটার্ন — DB cleanup failure টেস্ট রান বন্ধ করবে না।
+                normalized_path = self.filepath.replace('\\', '/')
+                is_test_file = (
+                    '/tests/' in normalized_path or
+                    normalized_path.endswith('conftest.py') or
+                    '/test_' in normalized_path
+                )
+                if not is_test_file:
+                    self.violations.append(f"{self.filepath}:{node.lineno} - Silent exception handler (`except Exception: pass`)")
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call):
