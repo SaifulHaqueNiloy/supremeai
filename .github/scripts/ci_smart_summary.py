@@ -1,14 +1,47 @@
+import json
 import os
 import re
 import sys
+import urllib.request
+from urllib.error import HTTPError, URLError
 
-try:
-    import requests
-except ModuleNotFoundError:
-    sys.exit(
-        "❌ এই স্ক্রিপ্ট অবশ্যই 'poetry run python' দিয়ে চালাতে হবে (backend venv প্রয়োজন)। "
-        "সরাসরি 'python script.py' ব্যবহার করবেন না।"
+
+def fetch_json(url: str, token: str) -> dict:
+    """Fetch JSON from GitHub API using standard urllib.request (zero dependencies)."""
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "SupremeAI-CI-Summary-Bot",
+        },
     )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.status == 200:
+                return json.loads(resp.read().decode("utf-8"))
+    except (HTTPError, URLError, OSError) as e:
+        print(f"⚠️ API fetch error for {url}: {e}")
+    return {}
+
+
+def fetch_text(url: str, token: str) -> str:
+    """Fetch raw text/logs from GitHub API using urllib.request."""
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "SupremeAI-CI-Summary-Bot",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except (HTTPError, URLError, OSError) as e:
+        print(f"⚠️ Log fetch error for {url}: {e}")
+    return ""
+
 
 def extract_errors(log_text):
     """Extract tracebacks and error messages from log text using regex."""
@@ -34,6 +67,7 @@ def extract_errors(log_text):
     # Return unique truncated errors
     return list(dict.fromkeys([e[:1000] + ('...' if len(e) > 1000 else '') for e in errors]))[:5]
 
+
 def main():
     token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY")
@@ -44,40 +78,31 @@ def main():
         print("Missing GITHUB_TOKEN, GITHUB_REPOSITORY, or GITHUB_STEP_SUMMARY")
         return
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-
     if run_id_env:
         # Fetch current run details directly
         run_url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id_env}"
-        response = requests.get(run_url, headers=headers)
-        if not response.ok:
-            print(f"Failed to fetch run {run_id_env}: {response.status_code}")
+        run = fetch_json(run_url, token)
+        if not run:
+            print(f"Failed to fetch run {run_id_env}")
             return
-        run = response.json()
     else:
         # Fallback: Fetch latest run
         print("Fetching latest workflow runs...")
         runs_url = f"https://api.github.com/repos/{repo}/actions/runs?per_page=1"
-        response = requests.get(runs_url, headers=headers)
-        if not response.ok or not response.json().get("workflow_runs"):
-            print(f"Failed to fetch runs: {response.status_code}")
+        data = fetch_json(runs_url, token)
+        runs = data.get("workflow_runs", [])
+        if not runs:
+            print("Failed to fetch runs")
             return
-        run = response.json()["workflow_runs"][0]
+        run = runs[0]
 
-    run_id = run["id"]
-    workflow_name = run["name"]
+    run_id = run.get("id")
+    workflow_name = run.get("name", "SupremeAI Pipeline")
 
     # Fetch ALL jobs for this run dynamically (no hardcoding)
     jobs_url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/jobs?per_page=100"
-    response = requests.get(jobs_url, headers=headers)
-    if not response.ok:
-        print(f"Failed to fetch jobs: {response.status_code}")
-        return
-
-    all_jobs = response.json().get("jobs", [])
+    jobs_data = fetch_json(jobs_url, token)
+    all_jobs = jobs_data.get("jobs", [])
     total_jobs = len(all_jobs)
     passed_jobs = [j for j in all_jobs if j["conclusion"] == "success"]
     failed_jobs = [j for j in all_jobs if j["conclusion"] == "failure"]
@@ -102,10 +127,10 @@ def main():
             summary_lines.append(f"#### ❌ Job: [{job_name}]({job_url})")
 
             log_url = f"https://api.github.com/repos/{repo}/actions/jobs/{job['id']}/logs"
-            log_response = requests.get(log_url, headers=headers)
+            log_text = fetch_text(log_url, token)
 
-            if log_response.ok:
-                errors = extract_errors(log_response.text)
+            if log_text:
+                errors = extract_errors(log_text)
                 if errors:
                     for idx, err in enumerate(errors, 1):
                         summary_lines.append(f"**Extracted Traceback {idx}:**")
@@ -113,7 +138,7 @@ def main():
                 else:
                     summary_lines.append("_Could not extract specific error stacktrace from logs._")
             else:
-                summary_lines.append(f"_Log download failed ({log_response.status_code})._")
+                summary_lines.append("_Log download failed or logs empty._")
 
             summary_lines.append("---")
 
