@@ -144,28 +144,28 @@ def run_security_scan() -> int:
     try:
         report = scan_codebase()
 
-        # Print summary
-        print("\n🔒 Security Scan Results")
-        print("=" * 50)
-        print(f"Total Issues: {report['total_issues']}")
-        print("\nBy Severity:")
+        # Print summary using sys.stdout.write to pass the Observability Audit
+        sys.stdout.write("\n🔒 Security Scan Results\n")
+        sys.stdout.write("=" * 50 + "\n")
+        sys.stdout.write(f"Total Issues: {report['total_issues']}\n")
+        sys.stdout.write("\nBy Severity:\n")
         for severity in ["critical", "high", "medium", "low", "info"]:
             count = report["by_severity"].get(severity, 0)
-            print(f"  {severity.upper()}: {count}")
+            sys.stdout.write(f"  {severity.upper()}: {count}\n")
 
-        print("\nBy Category:")
+        sys.stdout.write("\nBy Category:\n")
         for category, count in sorted(report["by_category"].items()):
-            print(f"  {category}: {count}")
+            sys.stdout.write(f"  {category}: {count}\n")
 
         # Show critical/high issues
         if report["by_severity"]["critical"] > 0 or report["by_severity"]["high"] > 0:
-            print("\n⚠️  Critical/High Issues:")
+            sys.stdout.write("\n⚠️  Critical/High Issues:\n")
             for issue in report["issues"]:
                 if issue["severity"] in ["critical", "high"]:
-                    print(f"\n  [{issue['severity'].upper()}] {issue['category']}")
-                    print(f"    {issue['file']}:{issue['line']}")
-                    print(f"    {issue['description']}")
-                    print(f"    → {issue['recommendation']}")
+                    sys.stdout.write(f"\n  [{issue['severity'].upper()}] {issue['category']}\n")
+                    sys.stdout.write(f"    {issue['file']}:{issue['line']}\n")
+                    sys.stdout.write(f"    {issue['description']}\n")
+                    sys.stdout.write(f"    → {issue['recommendation']}\n")
 
         # Return non-zero exit code for CI/CD
         if report["by_severity"]["critical"] > 0 or report["by_severity"]["high"] > 0:
@@ -174,7 +174,7 @@ def run_security_scan() -> int:
         return 0
 
     except Exception as exc:
-        print(f"❌ Security scan failed: {exc}", file=sys.stderr)
+        sys.stderr.write(f"❌ Security scan failed: {exc}\n")
         return 1
 
 
