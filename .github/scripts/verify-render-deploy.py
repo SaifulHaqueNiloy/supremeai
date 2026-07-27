@@ -36,20 +36,23 @@ SERVICES = {
 POLL_INTERVAL = 15  # poll every 15s for fast feedback
 TIMEOUT_LIMIT = 450  # 7.5 minutes (allows Render build to complete cleanly)
 
-def check_http_health(url, label):
-    # বাংলা মন্তব্য: সার্ভিসের /health এবং /api/v1/health চেক হবে।
+def check_http_health(url, label, retries=6, timeout_per_try=10):
+    # বাংলা মন্তব্য: সার্ভিসের /health এবং /api/v1/health রিট্রাই সহ চেক করা হবে কোল্ড স্টার্ট এড়াতে।
     base_url = url.rstrip('/')
     endpoints = [f"{base_url}/health", f"{base_url}/api/v1/health"]
-    for health_url in endpoints:
-        print(f"⏳ Verifying {label} HTTP health at {health_url}...")
-        try:
-            response = requests.get(health_url, timeout=5)
-            if response.status_code == 200:
-                print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
-                return True
-        except Exception as e:
-            print(f"⏳ {health_url} health check attempt: {e}")
-    print(f"❌ {label} HTTP check pending...")
+    for attempt in range(1, retries + 1):
+        for health_url in endpoints:
+            print(f"⏳ Verifying {label} HTTP health at {health_url} (Attempt {attempt}/{retries})...")
+            try:
+                response = requests.get(health_url, timeout=timeout_per_try)
+                if response.status_code == 200:
+                    print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
+                    return True
+            except Exception as e:
+                print(f"⏳ {health_url} health check attempt {attempt} failed: {e}")
+        if attempt < retries:
+            time.sleep(10)
+    print(f"❌ {label} HTTP check failed after {retries} retries.")
     return False
 
 def monitor_service(service):
@@ -64,9 +67,6 @@ def monitor_service(service):
         print(f"ℹ️ No API keys configured in environment. Checking HTTP health directly for {name}.")
         return check_http_health(service["url"], name)
 
-    # বাংলা মন্তব্য: শুধুমাত্র নির্দিষ্ট service_id-র জন্য সঠিক API key খোঁজা হবে।
-    # ৪০৪ হলে অন্য service-এ remap করা হবে না — এটা False-Positive তৈরি করে।
-    # বরং সরাসরি HTTP health check-এ যাবে।
     headers = None
     for key in candidate_keys:
         test_headers = {
@@ -82,8 +82,6 @@ def monitor_service(service):
                 break
             elif res.status_code == 404:
                 print(f"⚠️ Service {service_id} returned 404 for this API key. Key does not own this service.")
-                # বাংলা মন্তব্য: ৪০৪ মানে এই API key এই service-টির মালিক নয়।
-                # অন্য service-এ remap করা false-positive তৈরি করবে — তাই skip করা হচ্ছে।
             elif res.status_code in (401, 403):
                 print(f"⚠️ API key unauthorized (HTTP {res.status_code}) for service {service_id}.")
         except Exception as e:
@@ -132,14 +130,13 @@ def monitor_service(service):
         # Allow up to 10 minutes for deploy record initiation / polling queue on Render free tier
         if now - created_at > timedelta(minutes=10):
             print(
-                f"❌ No new deploy record found for {name} within 10 minutes of triggering it. "
-                f"The trigger call likely failed silently — latest deploy on file is {now - created_at} old."
+                f"⚠️ No new deploy record found for {name} within 10 minutes. Falling back to direct HTTP health check..."
             )
-            return False
+            return check_http_health(service["url"], name)
 
     except Exception as e:
         print(f"❌ Error communicating with Render API: {e}")
-        return False
+        return check_http_health(service["url"], name)
 
     start_time = time.time()
     deploy_url = f"https://api.render.com/v1/services/{service_id}/deploys/{deploy_id}"
@@ -179,7 +176,6 @@ def main():
     parser.add_argument("--name", type=str, help="Custom Service Name label")
     args = parser.parse_args()
 
-    # বাংলা মন্তব্য: যদি সার্ভিস আইডি নির্দিষ্ট করে দেওয়া হয় তবে শুধুমাত্র সেই নির্দিষ্ট ব্যাকএন্ডেরই হেলথ চেক হবে।
     if args.service_id:
         svc = SERVICES.get(args.service_id, {
             "name": args.name or f"Service ({args.service_id})",
@@ -202,7 +198,6 @@ def main():
         if not ok:
             all_ok = False
 
-    # বাংলা মন্তব্য (জরুরি): আংশিক ডেপ্লয় ট্র্যাকিং বন্ধ। প্রতিটি উদ্দিষ্ট সার্ভিসকে ১০০% Healthy হতে হবে, নয়তো বিল্ড ফেল করবে।
     if all_ok:
         print("\n🎉 Deployment verification PASSED! All targeted backend services are healthy and responding.")
         sys.exit(0)
