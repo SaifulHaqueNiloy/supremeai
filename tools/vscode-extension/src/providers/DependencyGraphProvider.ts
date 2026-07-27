@@ -1,27 +1,29 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 export class DependencyGraphProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'supremeai.dependencyGraph';
-  
+
   private _view?: vscode.WebviewView;
-  
+
   constructor(private readonly _extensionUri: vscode.Uri) {}
-  
+
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ) {
     this._view = webviewView;
-    
+
     webviewView.webview.options = {
       enableScripts: true,
-      retainContextWhenHidden: true,
+      // Note: retainContextWhenHidden is not a standard option in WebviewOptions
+      // We'll remove this property as it's causing compilation errors
       localResourceRoots: [this._extensionUri]
     };
-    
+
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-    
+
     webviewView.webview.onDidReceiveMessage(data => {
       switch (data.type) {
         case 'dependencyRequest':
@@ -31,7 +33,7 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
       }
     });
   }
-  
+
   private handleDependencyRequest() {
     // ডিপেন্ডেন্সি বিশ্লেষণ লজিক
     if (this._view) {
@@ -43,7 +45,7 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
       });
     }
   }
-  
+
   private generateDependencyData(): any {
     // ডিপেন্ডেন্সি ডেটা জেনারেট করার লজিক
     // এটি প্রকৃত ডিপেন্ডেন্সি বিশ্লেষণ করবে
@@ -62,10 +64,12 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
       ]
     };
   }
-  
+
   private _getHtmlForWebview(webview: vscode.Webview) {
-    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'd3.v7.min.js'));
-    
+    // Correct way to reference local files for webview
+    // We no longer try to load an external CSS file
+    // Instead we use CSS variables for VSCode theming
+
     // ডিপেন্ডেন্সি গ্রাফ HTML তৈরি
     return `
       <!DOCTYPE html>
@@ -74,16 +78,17 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dependency Graph</title>
+        <!-- Removed external stylesheet reference -->
         <style>
-          body { 
-            margin: 0; 
+          body {
+            margin: 0;
             padding: 10px;
-            overflow: hidden; 
+            overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           }
-          #graph-container { 
-            width: 100%; 
-            height: calc(100vh - 40px); 
+          #graph-container {
+            width: 100%;
+            height: calc(100vh - 40px);
           }
           .node {
             stroke: #fff;
@@ -124,8 +129,9 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
           <button id="zoom-out">Zoom Out</button>
         </div>
         <div id="graph-container"></div>
-        
-        <script src="${scriptUri}"></script>
+
+        <!-- Note: We'll need to provide D3.js locally or use CDN -->
+        <script src="https://d3js.org/d3.v7.min.js"></script>
         <script>
           // D3.js ব্যবহার করে ডিপেন্ডেন্সি গ্রাফ তৈরি
           const container = d3.select("#graph-container");
@@ -168,7 +174,7 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
               updateGraph(message.data);
             }
           });
-          
+
           function updateGraph(data) {
             // Clear previous graph
             g.selectAll("*").remove();
@@ -209,7 +215,7 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
             // Update simulation
             simulation.nodes(data.nodes);
             simulation.force("link").links(data.links);
-            
+
             // Update positions on each tick
             simulation.on("tick", () => {
               link
@@ -238,18 +244,18 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
               d.fx = d.x;
               d.fy = d.y;
             }
-            
+
             function dragged(event, d) {
               d.fx = event.x;
               d.fy = event.y;
             }
-            
+
             function dragended(event, d) {
               if (!event.active) simulation.alphaTarget(0);
               d.fx = null;
               d.fy = null;
             }
-            
+
             return d3.drag()
               .on("start", dragstarted)
               .on("drag", dragged)
