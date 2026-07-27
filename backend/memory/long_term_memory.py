@@ -122,3 +122,18 @@ class LongTermMemory:
         if self._facts:
             parts.append("Facts: " + "; ".join(item["content"] for item in self._facts))
         return "\n".join(parts) if parts else "No memory available."
+
+    def store_user_preference(self, user_id: str, key: str, value: Any) -> dict[str, Any]:
+        """Store a personalized user preference in long-term memory."""
+        pref_fact = f"User Preference [{user_id}] {key}: {value}"
+        return self.remember_fact(content=pref_fact, category=f"user_pref_{user_id}", importance=0.9, source="user_setting")
+
+    def get_context_for_user(self, user_id: str) -> str:
+        """Retrieve personalized facts and preferences for a specific user context."""
+        user_facts = self.recall_facts(category=f"user_pref_{user_id}")
+        general_facts = self.recall_facts(category="general")
+        all_facts = user_facts + general_facts
+        if not all_facts:
+            return f"User context for {user_id}: Default settings."
+        return f"User context for {user_id}:\n" + "\n".join(f"- {f['content']}" for f in all_facts)
+
