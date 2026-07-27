@@ -327,5 +327,147 @@ async def workspace_list_projects() -> str:
     return json.dumps({"projects": projects, "current_session": current_session}, ensure_ascii=False)
 
 
+class ReadFileInput(BaseModel):
+    """স্কোপড ফাইল পড়ার জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    relative_path: str = Field(..., description="ওয়ার্কস্পেসের মধ্যে রিলেটিভ ফাইল পাথ", min_length=1)
+    project_type: WorkspaceType | None = Field(default=None, description="প্রোজেক্টের ধরন")
+
+
+class WriteFileInput(BaseModel):
+    """স্কোপড ফাইলে লেখার জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    relative_path: str = Field(..., description="ওয়ার্কস্পেসের মধ্যে রিলেটিভ ফাইল পাথ", min_length=1)
+    content: str = Field(..., description="ফাইলে লেখার কন্টেন্ট")
+    project_type: WorkspaceType | None = Field(default=None, description="প্রোজেক্টের ধরন")
+
+
+class SearchFilesInput(BaseModel):
+    """ওয়ার্কস্পেস ফাইলের নাম/প্যাটার্ন খোঁজার জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    pattern: str = Field(..., description="খোঁজার ফাইল প্যাটার্ন (যেমন *.py, *.ts)", min_length=1)
+    project_type: WorkspaceType | None = Field(default=None, description="প্রোজেক্টের ধরন")
+
+
+@mcp.tool(
+    name="workspace_read_file",
+    annotations={
+        "title": "Read File From Scoped Workspace",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def workspace_read_file(params: ReadFileInput) -> str:
+    """
+    আইসোলেটেড ওয়ার্কস্পেসের থেকে একটি ফাইলে থাকা কন্টেন্ট পড়ে আনে।
+
+    Args:
+        params (ReadFileInput): relative_path ও project_type
+
+    Returns:
+        str: ফাইল কন্টেন্ট বা এরর JSON
+    """
+    resolved_path = _get_scoped_path(params.relative_path, params.project_type)
+
+    if not resolved_path.exists():
+        return json.dumps({"error": f"File '{params.relative_path}' not found in scoped workspace."}, ensure_ascii=False)
+
+    if not resolved_path.is_file():
+        return json.dumps({"error": f"Path '{params.relative_path}' is not a file."}, ensure_ascii=False)
+
+    try:
+        content = resolved_path.read_text(encoding="utf-8", errors="replace")
+        if len(content) > CHARACTER_LIMIT:
+            content = content[:CHARACTER_LIMIT] + f"\n... [Truncated: Content exceeds {CHARACTER_LIMIT} chars]"
+
+        return json.dumps({"path": str(resolved_path), "content": content}, ensure_ascii=False)
+    except Exception as e:  # noqa: BLE001
+        return json.dumps({"error": f"Failed to read file: {e}"}, ensure_ascii=False)
+
+
+@mcp.tool(
+    name="workspace_write_file",
+    annotations={
+        "title": "Write File To Scoped Workspace",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def workspace_write_file(params: WriteFileInput) -> str:
+    """
+    আইসোলেটেড ওয়ার্কস্পেসে একটি ফাইল তৈরি করে বা ওভাররাইট করে।
+
+    Args:
+        params (WriteFileInput): relative_path, content ও project_type
+
+    Returns:
+        str: সাকসেস বা এরর JSON
+    """
+    resolved_path = _get_scoped_path(params.relative_path, params.project_type)
+
+    try:
+        resolved_path.parent.mkdir(parents=True, exist_ok=True)
+        resolved_path.write_text(params.content, encoding="utf-8")
+        return json.dumps(
+            {"success": True, "path": str(resolved_path), "message": "File saved successfully."},
+            ensure_ascii=False,
+        )
+    except Exception as e:  # noqa: BLE001
+        return json.dumps({"error": f"Failed to write file: {e}"}, ensure_ascii=False)
+
+
+@mcp.tool(
+    name="workspace_search_files",
+    annotations={
+        "title": "Search Files By Pattern In Workspace",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def workspace_search_files(params: SearchFilesInput) -> str:
+    """
+    ওয়ার্কস্পেসের মধ্যে নির্দিষ্ট প্যাটার্নে ফাইল অনুসন্ধান করে।
+
+    Args:
+        params (SearchFilesInput): pattern ও project_type
+
+    Returns:
+        str: ম্যাচিং ফাইল লিস্টের JSON
+    """
+    ws_type = params.project_type
+    if not ws_type:
+        config = _load_workspace_config()
+        current_session = config.get("current_session", {})
+        ws_type = current_session.get("project_type", WorkspaceType.ECOMMERCE_BACKEND)
+
+    base_dir = _get_workspace_path(ws_type)
+    if not base_dir.exists():
+        return json.dumps({"error": f"Workspace directory '{base_dir}' does not exist."}, ensure_ascii=False)
+
+    try:
+        matched_files = [
+            str(f.relative_to(base_dir))
+            for f in base_dir.rglob(params.pattern)
+            if f.is_file() and not any(part.startswith(".") for part in f.parts)
+        ][:50]
+
+        return json.dumps({"workspace": str(base_dir), "count": len(matched_files), "files": matched_files}, ensure_ascii=False)
+    except Exception as e:  # noqa: BLE001
+        return json.dumps({"error": f"Failed to search files: {e}"}, ensure_ascii=False)
+
+
 if __name__ == "__main__":
     mcp.run()
+
