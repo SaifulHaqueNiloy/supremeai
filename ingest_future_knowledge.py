@@ -537,7 +537,7 @@ Core Architecture:
    - Metrics-based anomaly detection (latency spikes, error rate surges)
 
 2. AUTO-REMEDIATION PIPELINE:
-   - Detect → Diagnose → Decide → Act → Verify cycle
+   - Detect -> Diagnose -> Decide -> Act -> Verify cycle
    - Detection: threshold-based + ML anomaly detection
    - Diagnosis: root cause analysis from dependency graph
    - Decision: select remediation action from playbook
@@ -573,9 +573,9 @@ Core Architecture:
         },
     },
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ==================================================================
     # DOMAIN 6: RESILIENCE_AND_RELIABILITY — Chaos Engineering & State Machines
-    # ══════════════════════════════════════════════════════════════════════════
+    # ==================================================================
     {
         "id": "resilience_chaos_engineering",
         "text": """Chaos Engineering for SupremeAI 2.0:
@@ -609,20 +609,14 @@ Core Principles:
    - Block traffic to specific services
    - Introduce packet loss or corruption
    - Test retry logic with exponential backoff and jitter
-   - Verify bulkhead isolation between providers
-
-Resilience Patterns:
-- FAIL-CLOSED: Circuit breaker rejects requests when unhealthy (core/resilience/circuit_breaker.py)
-- FAIL-FAST: Reject early rather than failing after consuming resources
-- DEGRADE GRACEFULLY: Disable features selectively, inform users
-- HEALTH ENDPOINTS: /health, /ready, /live for load balancer awareness""",
+   - Verify bulkhead isolation between providers""",
         "metadata": {
             "domain": "RESILIENCE_AND_RELIABILITY",
             "subdomain": "CHAOS_ENGINEERING",
             "priority": 9.5,
             "version": "1.0.0",
             "category": "resilience",
-            "tags": ["chaos-engineering", "chaos-monkey", "latency-injection", "resource-exhaustion", "network-partition", "fail-closed", "fail-fast", "degrade-gracefully"],
+            "tags": ["chaos-engineering", "chaos-monkey", "latency-injection", "resource-exhaustion", "network-partition", "fail-closed", "fail-fast"],
             "source": "supremeai_future_knowledge_engine",
             "confidence": 0.94,
         },
@@ -661,14 +655,364 @@ Resource Isolation Strategies:
             "priority": 9.0,
             "version": "1.0.0",
             "category": "resilience",
-            "tags": ["bulkhead", "isolation", "connection-pool", "tenant-isolation", "sandbox", "process-isolation", "state-isolation", "firecracker"],
+            "tags": ["bulkhead", "isolation", "connection-pool", "tenant-isolation", "sandbox", "process-isolation", "state-isolation"],
             "source": "supremeai_future_knowledge_engine",
             "confidence": 0.93,
         },
     },
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ==================================================================
     # DOMAIN 7: MULTI_MODAL_INTELLIGENCE — Vision, Code, Time-Series
-    # ══════════════════════════════════════════════════════════════════════════
+    # ==================================================================
     {
         "id": "multimodal_code_understanding",
+        "text": """Code Intelligence & Understanding for SupremeAI 2.0:
+
+Code Analysis Pipeline:
+1. AST-BASED ANALYSIS:
+   - Parse source code into Abstract Syntax Trees
+   - Extract function signatures, class hierarchies, dependencies
+   - Identify patterns: error handling, logging, security vulnerabilities
+   - Used by AutonoGuard for malware immunity scanning
+
+2. STATIC ANALYSIS:
+   - Detect potential bugs before execution
+   - Type checking (mypy.ini is configured for the project)
+   - Linting (ruff, flake8)
+   - Security scanning (bandit, safety)
+
+3. CODE EMBEDDING:
+   - Vector embeddings of code structure for semantic search
+   - Memory service (backend/services/memory_service.py) stores code vectors
+   - RAG pipeline for code-related Q&A
+   - Cross-file dependency mapping
+
+4. CODE GENERATION PATTERNS:
+   - Generate code with proper error handling, logging, and type hints
+   - Follow project conventions (Bangla comments, logging patterns)
+   - Respect existing architecture patterns (config-driven, fail-fast)
+   - Automatic test generation for new code
+
+5. REPO-LEVEL UNDERSTANDING:
+   - Map codebase structure (services, tools, skills, memory, config)
+   - Understand inter-module dependencies
+   - Track refactoring impact across files
+   - Generate documentation from code structure""",
+        "metadata": {
+            "domain": "MULTI_MODAL_INTELLIGENCE",
+            "subdomain": "CODE_INTELLIGENCE",
+            "priority": 9.5,
+            "version": "1.0.0",
+            "category": "multimodal",
+            "tags": ["code-intelligence", "ast-analysis", "static-analysis", "code-embedding", "code-generation", "repo-understanding", "autonoguard"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.94,
+        },
+    },
+    {
+        "id": "multimodal_time_series",
+        "text": """Time-Series & Anomaly Detection for SupremeAI 2.0:
+
+Monitoring & Detection Framework:
+1. METRICS COLLECTION:
+   - Track latency percentiles (p50, p95, p99) for all LLM providers
+   - Monitor error rates and failure patterns
+   - Track resource utilization (CPU, memory, connections)
+   - Log rate, cost, and token usage per provider
+
+2. ANOMALY DETECTION:
+   - Statistical methods: z-score, moving average deviation
+   - ML-based: isolation forests for multi-dimensional anomalies
+   - Seasonality-aware: detect anomalies relative to historical patterns
+   - Correlation-based: detect cascading failures across services
+
+3. ALERTING & AUTOMATION:
+   - Threshold-based alerts for critical metrics
+   - Anomaly score escalation (info -> warning -> critical)
+   - Auto-remediation triggers for known failure patterns
+   - Integration with health check endpoints (/health/aggregated)
+
+4. PREDICTIVE ANALYTICS:
+   - Predict resource exhaustion before it happens (trend analysis)
+   - Forecast cost usage based on current trajectory
+   - Predict LLM provider latency based on time-of-day patterns
+   - Auto-scale recommendations""",
+        "metadata": {
+            "domain": "MULTI_MODAL_INTELLIGENCE",
+            "subdomain": "TIME_SERIES",
+            "priority": 8.5,
+            "version": "1.0.0",
+            "category": "multimodal",
+            "tags": ["time-series", "monitoring", "anomaly-detection", "metrics", "alerting", "predictive-analytics", "latency-tracking"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.90,
+        },
+    },
+
+    # ==================================================================
+    # DOMAIN 8: COLLABORATIVE_INTELLIGENCE — Multi-Agent & Swarm
+    # ==================================================================
+    {
+        "id": "collab_multi_agent",
+        "text": """Multi-Agent Collaboration Patterns for SupremeAI 2.0:
+
+Agent Architecture:
+1. SPECIALIZED AGENTS:
+   - Reasoning agent: complex problem decomposition (backend/agents/)
+   - Coding agent: code generation and analysis (backend/skills/)
+   - Security agent: prompt injection detection, code scanning
+   - Memory agent: knowledge retrieval and storage management
+   - Orchestrator agent: task decomposition and agent coordination
+
+2. COMMUNICATION PROTOCOL:
+   - Agents communicate via structured messages with schema validation
+   - Each message has: agent_id, task_id, message_type, payload, timestamp
+   - Event bus (backend/core/messaging/event_bus.py) for async messaging
+   - Correlation IDs for tracing multi-agent workflows
+
+3. TASK DELEGATION:
+   - Orchestrator decomposes complex tasks into sub-tasks
+   - Sub-tasks are assigned to specialized agents
+   - Progress tracking with status updates
+   - Re-assignment on agent failure (circuit breaker integration)
+
+4. CONSENSUS MECHANISMS:
+   - Voting: multiple agents propose solutions, majority wins
+   - Weighted voting: agents vote proportional to confidence
+   - Hierarchical: orchestrator has final decision authority
+   - Swarm: agents collaborate on solution without central control""",
+        "metadata": {
+            "domain": "COLLABORATIVE_INTELLIGENCE",
+            "subdomain": "MULTI_AGENT",
+            "priority": 9.5,
+            "version": "1.0.0",
+            "category": "collaboration",
+            "tags": ["multi-agent", "specialized-agents", "task-delegation", "consensus", "orchestrator", "agent-communication", "event-bus"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.92,
+        },
+    },
+    {
+        "id": "collab_swarm_intelligence",
+        "text": """Swarm Intelligence & Game Theory for SupremeAI 2.0:
+
+Swarm Patterns:
+1. DECENTRALIZED COORDINATION:
+   - Agents operate without central orchestrator
+   - Emergent behavior from local decision rules
+   - Information sharing via shared state (vector database)
+   - Self-organization around task priorities
+
+2. RESOURCE ALLOCATION GAMES:
+   - LLM providers bid for tasks based on cost + latency
+   - Agents negotiate for shared resources (memory, compute)
+   - Nash equilibrium: stable allocation where no agent benefits from changing
+   - Pareto optimal: allocation where no agent can be made better off without making another worse off
+
+3. COOPERATIVE TASK EXECUTION:
+   - Agents share intermediate results
+   - Parallel execution of independent sub-tasks
+   - Result aggregation and conflict resolution
+   - Collective learning from shared experience
+
+4. COMPETITION & COOPERATION BALANCE:
+   - Healthy competition for resource efficiency
+   - Cooperation for complex problem-solving
+   - Reputation system: agents rated on reliability and quality
+   - Defection detection: identify and isolate non-cooperative agents""",
+        "metadata": {
+            "domain": "COLLABORATIVE_INTELLIGENCE",
+            "subdomain": "SWARM_INTELLIGENCE",
+            "priority": 9.0,
+            "version": "1.0.0",
+            "category": "collaboration",
+            "tags": ["swarm-intelligence", "decentralized", "game-theory", "resource-allocation", "nash-equilibrium", "cooperative-execution", "reputation-system"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.88,
+        },
+    },
+
+    # ==================================================================
+    # DOMAIN 9: KNOWLEDGE_REPRESENTATION — Graphs & Causal Inference
+    # ==================================================================
+    {
+        "id": "knowledge_graphs",
+        "text": """Knowledge Graph Architecture for SupremeAI 2.0:
+
+Graph Construction:
+1. ENTITY EXTRACTION:
+   - Extract entities from ChromaDB knowledge documents
+   - Identify relationships between entities (depends_on, implements, extends)
+   - Store in Neo4j graph database (configured via settings.neo4j_uri)
+   - Maintain entity types with hierarchical classification
+
+2. RELATIONSHIP INFERENCE:
+   - Co-occurrence: entities appearing together in documents
+   - Dependency: module A imports module B
+   - Hierarchical: parent-child relationships between concepts
+   - Causal: action A causes outcome B (from experience replay data)
+
+3. SEMANTIC REASONING:
+   - SPARQL-like queries on knowledge graph
+   - Path analysis: find shortest path between concepts
+   - Subgraph matching: find patterns similar to known solutions
+   - Ontological classification: categorize entities by type
+
+4. KNOWLEDGE EVOLUTION:
+   - Versioned knowledge with timestamps
+   - Confidence scoring per relationship
+   - Automatic pruning of low-confidence/outdated relationships
+   - Merge duplicate entities based on semantic similarity""",
+        "metadata": {
+            "domain": "KNOWLEDGE_REPRESENTATION",
+            "subdomain": "KNOWLEDGE_GRAPHS",
+            "priority": 9.5,
+            "version": "1.0.0",
+            "category": "knowledge",
+            "tags": ["knowledge-graph", "entity-extraction", "relationship-inference", "neo4j", "semantic-reasoning", "ontology", "knowledge-evolution"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.92,
+        },
+    },
+    {
+        "id": "knowledge_causal_inference",
+        "text": """Causal Inference for Failure Analysis in SupremeAI 2.0:
+
+Causal Reasoning Framework:
+1. CAUSAL GRAPH CONSTRUCTION:
+   - Map dependencies between services (LLM -> Router -> Circuit Breaker -> Memory -> DB)
+   - Build causal graph from deployment topology
+   - Learn causal relationships from historical failure data
+   - Update graph as architecture evolves
+
+2. ROOT CAUSE ANALYSIS:
+   - Given symptom (e.g., high latency), trace back through causal graph
+   - Use do-calculus: what if we had used provider B instead of A?
+   - Counterfactual: would this failure have happened if we had more resources?
+   - Intervention: if we increase pool size, does latency decrease?
+
+3. FAILURE PREDICTION:
+   - Detect early warning signs from metrics
+   - Predict cascading failures before they spread
+   - Recommend preventive actions based on causal model
+   - Confidence-weighted predictions with uncertainty quantification
+
+4. DECISION OPTIMIZATION:
+   - Use causal model to simulate intervention outcomes
+   - Optimize remediation strategy selection
+   - Balance cost of intervention vs. cost of failure
+   - Learn from outcomes to improve causal model""",
+        "metadata": {
+            "domain": "KNOWLEDGE_REPRESENTATION",
+            "subdomain": "CAUSAL_INFERENCE",
+            "priority": 9.5,
+            "version": "1.0.0",
+            "category": "knowledge",
+            "tags": ["causal-inference", "root-cause-analysis", "causal-graph", "do-calculus", "counterfactual", "failure-prediction", "decision-optimization"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.89,
+        },
+    },
+
+    # ==================================================================
+    # DOMAIN 10: OPTIMIZATION_AND_COST — Zero-Cost HA & Provider Routing
+    # ==================================================================
+    {
+        "id": "optimization_zero_cost_ha",
+        "text": """Zero-Cost High Availability Strategy for SupremeAI 2.0:
+
+Core Strategy:
+1. FREE TIER LEVERAGING:
+   - Render.com free tier: web services + cron jobs + PostgreSQL
+   - Upstash Redis: 30MB free tier for caching and pub/sub
+   - Supabase: free tier PostgreSQL with Row-Level Security
+   - ChromaDB: local file-based vector store (backend/data/chromadb_store/)
+   - Cloudflare: free CDN, Workers, D1 database
+
+2. STATELESS DESIGN FOR FREE TIER:
+   - All services are stateless -- can restart at any time
+   - State persisted in free-tier databases (Supabase, Upstash Redis)
+   - ChromaDB fallback to local file storage (backend/memory/chromadb_store.py)
+   - Session data stored in Redis (not local memory)
+
+3. COLD START HANDLING:
+   - Render free tier spins down after inactivity
+   - Implement health check ping every 5 minutes to prevent spin-down
+   - Use cron-job.org free tier for scheduled pings
+   - Graceful startup with cache warming
+   - Lazy initialization: load only what's needed for each request
+
+4. RESOURCE QUOTAS:
+   - Track usage per free tier quota
+   - Graceful degradation when approaching limits
+   - Automatic fallback between providers
+   - Cost-aware routing decisions""",
+        "metadata": {
+            "domain": "OPTIMIZATION_AND_COST",
+            "subdomain": "ZERO_COST_HA",
+            "priority": 10.0,
+            "version": "1.0.0",
+            "category": "optimization",
+            "tags": ["zero-cost", "free-tier", "ha-strategy", "cold-start", "render", "upstash", "supabase", "chromadb-fallback"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.97,
+        },
+    },
+    {
+        "id": "optimization_provider_routing",
+        "text": """Intelligent LLM Provider Routing for SupremeAI 2.0:
+
+Routing Strategy:
+1. PROVIDER DIVERSITY:
+   - Multiple LLM providers configured: Gemini, Groq, OpenRouter, HuggingFace, NVIDIA
+   - Each provider has different cost, latency, and reliability profiles
+   - Provider failover: if one fails, automatically route to next
+   - Circuit breaker per provider to detect failures
+
+2. COST-OPTIMAL ROUTING:
+   - Track cost per token per provider
+   - Prefer free/cheaper providers for simple tasks
+   - Use expensive providers only for complex reasoning
+   - Daily cost budget enforcement (MAX_COST_PER_TASK)
+
+3. LATENCY-BASED ROUTING:
+   - Track historical latency per provider (LATENCY_WINDOW_SIZE)
+   - Route to fastest provider for time-sensitive requests
+   - Balance load across providers to avoid rate limits
+   - Weighted selection based on latency score
+
+4. FALLBACK CHAIN:
+   - Primary -> Secondary -> Tertiary provider chain
+   - Circuit breaker transitions: CLOSED -> OPEN -> HALF-OPEN
+   - Exponential backoff between fallback attempts
+   - Degraded mode: if all providers fail, return cached response
+
+5. RATE LIMIT AWARENESS:
+   - Track RPM, TPM, RPD limits per provider (settings level)
+   - Pre-emptively route away from providers near limits
+   - Distributed rate limiting via Redis
+   - Queue requests when all providers at capacity""",
+        "metadata": {
+            "domain": "OPTIMIZATION_AND_COST",
+            "subdomain": "PROVIDER_ROUTING",
+            "priority": 10.0,
+            "version": "1.0.0",
+            "category": "optimization",
+            "tags": ["provider-routing", "cost-optimization", "latency-routing", "fallback-chain", "rate-limit", "load-balancing", "circuit-breaker"],
+            "source": "supremeai_future_knowledge_engine",
+            "confidence": 0.96,
+        },
+    },
+
+    # ==================================================================
+    # DOMAIN 11: COMPLIANCE_AND_GOVERNANCE — SOC 2, GDPR, Ethical AI
+    # ==================================================================
+    {
+        "id": "compliance_soc2_gdpr",
+        "text": """Compliance & Governance Framework for SupremeAI 2.0:
+
+Regulatory Compliance:
+1. SOC 2 COMPLIANCE:
+   - Security: encryption at rest (AES-256-GCM) and in transit (TLS 1.3)
+   - Availability: uptime monitoring, incident response, disaster recovery
+   - Processing integrity: data validation, error handling, audit trails
