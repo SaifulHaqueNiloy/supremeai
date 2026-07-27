@@ -362,7 +362,7 @@ async def github_get_file_contents(params: GetFileContentsInput) -> str:
     Returns:
         str: ডিকোড করা ফাইলের কনটেন্ট অথবা এরর JSON
     """
-    github_token = get_github_token()
+    github_token = _get_github_token()
     if not github_token:
         return json_error("GITHUB_TOKEN is missing or empty")
 
@@ -428,7 +428,7 @@ async def github_search_code(params: SearchCodeInput) -> str:
     Returns:
         str: সার্চ রেজাল্টের তালিকা (ফাইলের নাম, পাথ, ম্যাচিং স্নিপেট)
     """
-    github_token = get_github_token()
+    github_token = _get_github_token()
     if not github_token:
         return json_error("GITHUB_TOKEN is missing or empty")
 
