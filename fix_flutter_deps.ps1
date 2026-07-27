@@ -31,10 +31,10 @@ Write-Host "`n3. Running pub upgrade with safer options..." -ForegroundColor Cya
 flutter pub upgrade --major-versions
 if ($LASTEXITCODE -ne 0) {
     Write-Host "⚠️  Major version upgrade failed, trying selective upgrades..." -ForegroundColor Yellow
-    
+
     # Get the pubspec.yaml content
     $pubspec = Get-Content pubspec.yaml -Raw
-    
+
     # Define known good versions
     $replacements = @{
         "firebase_core: \^[^`n]+" = "firebase_core: ^4.11.0";
@@ -47,17 +47,17 @@ if ($LASTEXITCODE -ne 0) {
         "flutter_svg: \^[^`n]+" = "flutter_svg: ^2.0.7";
         "cached_network_image: \^[^`n]+" = "cached_network_image: ^3.3.0";
     }
-    
+
     # Perform replacements
     foreach ($pattern in $replacements.GetEnumerator()) {
         $pubspec = $pubspec -replace $pattern.Key, $pattern.Value
     }
-    
+
     # Write updated pubspec
     $pubspec | Out-File -FilePath pubspec.yaml -Encoding UTF8
-    
+
     Write-Host "✏️  Updated pubspec.yaml with known good versions" -ForegroundColor Green
-    
+
     # Try getting dependencies again
     flutter pub get
     if ($LASTEXITCODE -ne 0) {
