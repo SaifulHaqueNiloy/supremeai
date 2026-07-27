@@ -1,0 +1,36 @@
+# SupremeAI 2.0 - Comprehensive Improvement Plan
+
+## Priority 1: 🔴 Secret Vault Empty String Fix ✅
+- [x] Fix `backend/core/config.py` - `_get_cached_secret` now logs warning when key not in cache
+- [x] Add proper empty string vs "not found" distinction with warning logging
+
+## Priority 2: 🔴 AST Sandbox getattr/hasattr Bypass Prevention 🔄
+- [x] Add AST scanner for getattr/hasattr patterns in sandbox code execution (`backend/core/security/ast_sandbox_scanner.py`)
+- [ ] Update `backend/sandbox/file_isolation_gate.py` with pre-execution AST validation
+- [ ] Update `backend/core/microvm_sandbox.py` with AST sanitization
+
+## Priority 3: 🟠 SSRF Prevention Centralization
+- [ ] Create `backend/core/security/ssrf_protection.py` centralized module
+- [ ] Refactor `web_scraper.py`, `sentinel_agent.py`, `browser_agent.py` to use centralized module
+
+## Priority 4: 🟠 TODO/FIXME Management System
+- [ ] Create `scripts/devops/todo_manager.py` - scan, categorize, track TODO/FIXME tags
+- [ ] Add CLI commands for reporting
+
+## Priority 5: 🟡 Structured Logging Implementation
+- [ ] Create `backend/core/logging/` module with correlation ID support
+- [ ] Add structured logging to middleware and key modules
+
+## Priority 6: 🟡 Magic Numbers Elimination
+- [ ] Scan and parameterize hardcoded values into `backend/core/config.py`
+
+## Priority 7: 🟡 Cache Optimization
+- [ ] Add TTL-based expiry for L1 local cache in `redis_manager.py`
+- [ ] Improve `MultiLevelCache` implementation
+
+## Priority 8: 🔵 Import Optimization ✅
+- [x] Move `import json` inside validators to top-level imports (completed in `parse_comma_separated_list`, `parse_list_fields`, `parse_dict_fields`, `parse_cors_origins`)
+- [ ] Remove unused imports across the codebase
+
+## Priority 9: 🔵 Bangla Comment English Translation
+- [ ] Add English translations alongside existing Bangla comments in key files
