@@ -132,3 +132,18 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
+
+  # ══════════════════════════════════════════════════════════════
+  # ৭. Free-Tier Size Guard (Render / GitHub / Vercel / Firebase)
+  # ══════════════════════════════════════════════════════════════
+  - repo: local
+    hooks:
+      # বাংলা মন্তব্য: প্রতিটি commit-এর আগে free-tier পরিবেশের সাইজ লিমিট চেক করে।
+      # 80% → warning, 95% → commit block
+      # Covered: Render(500MB), GitHub Actions(8GB), Vercel(100MB), Firebase(1GB)
+      - id: free-tier-size-guard
+        name: "📏 Free-Tier Size Guard (Render/GitHub/Vercel/Firebase)"
+        entry: python scripts/ci/check_free_tier_limits.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
