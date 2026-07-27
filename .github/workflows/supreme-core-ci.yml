@@ -46,7 +46,7 @@ on:
 # ==============================================================================
 # বাংলা মন্তব্য: যেকোনো ব্রাঞ্চেই নতুন পুশ আসলে পুরানো রানিং জবগুলো যেন বাতিল হয়ে যায়, সেজন্য ref-এর পরিবর্তে শুধু workflow-ভিত্তিক concurrency group সেট করা হলো।
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 env:
