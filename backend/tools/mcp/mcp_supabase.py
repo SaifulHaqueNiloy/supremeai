@@ -449,5 +449,152 @@ async def supabase_list_tables() -> str:
                 pass
 
 
+class ExplainQueryInput(BaseModel):
+    """SQL কোয়েরি পারফরম্যান্স বিশ্লেষণের জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    query: str = Field(..., description="বিশ্লেষণ করার জন্য SQL EXPLAIN কোয়েরি", min_length=5)
+    analyze: bool = Field(default=False, description="সত্যিই এক্সিকিউট করে নিখুঁত টাইম পরিমাপ করবে কি না (ANALYZE)")
+
+
+class DescribeTableInput(BaseModel):
+    """টেবিল স্কিমা ও ইনডেক্স বিস্তারিত দেখার জন্য ইনপুট।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    table_name: str = Field(..., description="যে টেবিলের কলাম ও ইনডেক্স স্ট্রাকচার দেখা হবে", min_length=1)
+
+
+@mcp.tool(
+    name="supabase_explain_query",
+    annotations={
+        "title": "Explain SQL Query Performance Plan",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def supabase_explain_query(params: ExplainQueryInput) -> str:
+    """
+    SQL কোয়েরি চালালে ডাটাবেস কীভাবে রান করবে (Execution Plan) তা বিশ্লেষণ করে দেখায়।
+
+    Args:
+        params (ExplainQueryInput): query ও analyze ফ্ল্যাগ
+
+    Returns:
+        str: JSON ফরম্যাটে EXPLAIN রেজাল্ট
+    """
+    conn = None
+    try:
+        conn = _get_connection()
+        if not conn:
+            return json.dumps({"error": "Failed to connect to database"}, ensure_ascii=False)
+
+        explain_sql = f"EXPLAIN {'(ANALYZE, FORMAT JSON)' if params.analyze else '(FORMAT JSON)'} {params.query}"
+
+        cur = conn.cursor()
+        cur.execute(explain_sql)
+        plan = cur.fetchone()
+        cur.close()
+
+        if plan and plan[0]:
+            return json.dumps({"query": params.query, "plan": plan[0]}, ensure_ascii=False)
+        return json_error("No execution plan returned.")
+
+    except Exception as e:  # noqa: BLE001
+        return _handle_db_error(e)
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception as e:  # noqa: BLE001
+                try:
+                    import loguru
+
+                    loguru.logger.error(f"Tool execution error: {e}")
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(f"Exception suppressed: {e}")
+                pass
+
+
+@mcp.tool(
+    name="supabase_describe_table",
+    annotations={
+        "title": "Describe Database Table Schema & Indexes",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def supabase_describe_table(params: DescribeTableInput) -> str:
+    """
+    নির্দিষ্ট টেবিলের সকল কলাম, ডাটা টাইপ, প্রাইমারি কি এবং ইনডেক্সের তালিকা দেখায়।
+
+    Args:
+        params (DescribeTableInput): টেবিলের নাম
+
+    Returns:
+        str: কলাম তালিকা ও ইনডেক্স তথ্য
+    """
+    conn = None
+    try:
+        conn = _get_connection()
+        if not conn:
+            return json.dumps({"error": "Failed to connect to database"}, ensure_ascii=False)
+
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns
+            WHERE table_name = %s
+            ORDER BY ordinal_position
+            """,
+            (params.table_name,),
+        )
+        columns = cur.fetchall()
+
+        cur.execute(
+            "SELECT indexname, indexdef FROM pg_indexes WHERE tablename = %s",
+            (params.table_name,),
+        )
+        indexes = cur.fetchall()
+        cur.close()
+
+        if not columns:
+            return json_error(f"Table '{params.table_name}' not found")
+
+        return json.dumps(
+            {
+                "table": params.table_name,
+                "columns": [
+                    {"name": c[0], "type": c[1], "nullable": c[2] == "YES", "default": c[3]}
+                    for c in columns
+                ],
+                "indexes": [{"name": i[0], "definition": i[1]} for i in indexes],
+            },
+            ensure_ascii=False,
+        )
+
+    except Exception as e:  # noqa: BLE001
+        return _handle_db_error(e)
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception as e:  # noqa: BLE001
+                try:
+                    import loguru
+
+                    loguru.logger.error(f"Tool execution error: {e}")
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(f"Exception suppressed: {e}")
+                pass
+
+
 if __name__ == "__main__":
     mcp.run()
+
