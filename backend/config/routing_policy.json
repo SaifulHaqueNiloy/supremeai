@@ -5,20 +5,16 @@
       "groq/llama-3.3-70b-versatile"
     ],
     "medium": [
-      "deepseek/deepseek-chat",
-      "gemini/gemini-1.5-flash"
+      "gemini/gemini-1.5-flash",
+      "groq/llama-3.3-70b-versatile"
     ],
     "hard": [
-      "deepseek/deepseek-chat",
-      "gemini/gemini-3.5-flash",
-      "gemini/gemini-1.5-pro",
-      "openai/gpt-4o-mini"
+      "groq/llama-3.3-70b-versatile",
+      "gemini/gemini-1.5-flash"
     ]
   },
   "fallback_chain": [
-    "deepseek/deepseek-chat",
-    "groq/llama-3.3-70b-versatile",
-    "gemini/gemini-3.5-flash",
-    "openai/gpt-4o-mini"
+    "gemini/gemini-1.5-flash",
+    "groq/llama-3.3-70b-versatile"
   ]
 }
