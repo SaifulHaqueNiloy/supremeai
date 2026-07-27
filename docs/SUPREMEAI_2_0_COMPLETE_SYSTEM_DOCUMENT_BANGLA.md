@@ -221,6 +221,54 @@ poetry run uvicorn main:app --reload --port 8000
 
 ---
 
+## ২১. এক্সটার্নাল এআই মডেল, এপিআই কী ও HuggingFace কাস্টম মডেল কানেক্টিভিটি
+
+### ২১.১ সিস্টেমের বাইরের এআই মডেলগুলোর সাথে ব্যাকএন্ডের সংযোগ মেকানিজম
+
+SupremeAI 2.0 ব্যাকএন্ড কোনো একটি নির্দিষ্ট ভাষা মডেলের ওপর নির্ভরশীল নয়। এটি **Multi-Provider Unified Orchestration Architecture** নীতিতে নির্মিত। নিচে কীভাবে বিভিন্ন প্রোভাইডার ও কাস্টম মডেল কানেক্ট হয় তা ব্যাখ্যা করা হলো:
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                   SupremeAI 2.0 Core Backend                             │
+│     (LLMRouter / SmartModelRouter / BYOC Router / Fine-Tuner)            │
+└───────┬──────────────┬──────────────┬──────────────┬──────────────┬──────┘
+        │              │              │              │              │
+┌───────▼──────┐┌──────▼──────┐┌──────▼──────┐┌──────▼──────┐┌──────▼──────┐
+│Google Gemini ││ OpenRouter   ││  Groq Cloud  ││ DeepSeek/   ││ HuggingFace │
+│(GEMINI_KEY)  ││(OPENROUTER)  ││ (GROQ_KEY)   ││ Moonshot    ││ Custom Model│
+└──────────────┘└──────────────┘└──────────────┘└─────────────┘└─────────────┘
+```
+
+---
+
+### ২১.২ এআই প্রোভাইডার ও এপিআই কী ম্যাপিং টেবিল
+
+| প্রোভাইডার | পরিবেশ ভেরিয়েবল (`.env`) | কানেক্টিভিটি কোড মডিউল | ব্যবহৃত মডেলসমূহ | কাজ ও বৈশিষ্ট্য |
+|---|---|---|---|---|
+| **Google Gemini** | `GEMINI_API_KEY` | `backend/core/llm_router.py` | `gemini-1.5-pro`, `gemini-1.5-flash` | প্রাথমিক ফাস্ট অ্যান্ড রিজননিং মডেল |
+| **OpenRouter** | `OPENROUTER_API_KEY` | `backend/core/llm_router.py` | Claude 3.5 Sonnet, GPT-4o, Llama 3 | ব্যাকআপ মাল্টি-মডেল ইউনিভার্সাল গেটওয়ে |
+| **Groq Cloud** | `GROQ_API_KEY` | `backend/core/llm_router.py` | `llama-3.3-70b-versatile`, `mixtral-8x7b` | আল্ট্রা-লো লেটেন্সি লার্জ স্কেল ইনফারেন্স |
+| **DeepSeek** | `DEEPSEEK_API_KEY` | `backend/core/llm_router.py` | `deepseek-coder`, `deepseek-v3` | জটিল কোডিং ও গাণিতিক রিজননিং |
+| **Moonshot AI** | `MOONSHOT_API_KEY` | `backend/core/llm_router.py` | `moonshot-v1-128k` | বিশাল কনটেক্সট উইন্ডো প্রসেসিং |
+| **Ollama Local** | `OLLAMA_URL` | `backend/core/llm_router.py` | `qwen2.5:0.5b`, `deepseek-r1:1.5b` | পিসিতে লোকাল জিরো-কস্ট ব্যাকআপ মডেল |
+| **HuggingFace** | `HF_SPACE_URL` / `HUGGINGFACE_HUB_TOKEN` | `backend/core/llm_router.py` | কাস্টম ফাইন-টিউনড SupremeAI মডেল | কাস্টম ট্রেইনড এআই ইনফারেন্স |
+
+---
+
+### ২১.৩ কাস্টম ফাইন-টিউনড মডেল পাইপলাইন (HuggingFace Auto-Tuning Pipeline)
+
+আমাদের নিজস্ব তৈরি করা কাস্টম মডেল কীভাবে নিয়মিত বিবর্তিত (Evolve) ও আপডেট হয়:
+
+1. **সিন্থেটিক ডাটা জেনারেশন (`backend/pipelines/synthetic_data_pipeline.py`):**
+   - দৈনিক সফল কাজের অভিজ্ঞতা (`EpisodicMemory`) থেকে উচ্চমানের কোডিং ডাটাসেট জেনারেট করে।
+2. **সাপ্তাহিক অটো-ফাইন-টিউনিং (`.github/workflows/weekly-fine-tuning.yml`):**
+   - প্রতি রবিবার রাত ০৩:০০ UTC-তে গিটহাব অ্যাকশনস স্বয়ংক্রিয়ভাবে নতুন ডাটা দিয়ে **HuggingFace Hub**-এ আমাদের কাস্টম মডেল ফাইন-টিউন ও পুশ করে।
+3. **অন-দ্য-ফ্লাই ইনফারেন্স:**
+   - ব্যাকএন্ডের `LLMRouter` তখন সরাসরি HuggingFace API/Space এর মাধ্যমে আমাদের নিজস্ব বিবর্তিত এআই মডেল ব্যবহার করে উত্তর তৈরি করে!
+
+---
+
 **নথির স্ট্যাটাস:** ✅ বাংলায় রূপান্তরিত ও পরীক্ষিত মাস্টার গাইড  
 **সর্বশেষ আপডেট:** ২৭ জুলাই, ২০২৬  
 **নথির অবস্থান:** `/docs/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT_BANGLA.md`
+
