@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, List, Any
 import logging
 
-from core.security.auth_middleware import get_current_active_admin
+from api.routes.admin import get_current_admin
 from agents.internet_monitor_agent import (
     internet_monitor_agent,
     initialize_internet_monitor,
@@ -28,7 +28,7 @@ async def startup_event():
 
 
 @router.get("/updates", summary="Get Latest Internet Updates")
-async def get_latest_updates(current_user=Depends(get_current_active_admin)):
+async def get_latest_updates(current_user=Depends(get_current_admin)):
     """
     Retrieve the latest updates from internet monitoring sources.
     
@@ -60,7 +60,7 @@ async def get_latest_updates(current_user=Depends(get_current_active_admin)):
 
 
 @router.get("/summary", summary="Get Update Summary")
-async def get_updates_summary(current_user=Depends(get_current_active_admin)):
+async def get_updates_summary(current_user=Depends(get_current_admin)):
     """
     Get a categorized summary of internet updates.
     
@@ -78,7 +78,7 @@ async def get_updates_summary(current_user=Depends(get_current_active_admin)):
 
 
 @router.get("/history", summary="Get Update History")
-async def get_updates_history(current_user=Depends(get_current_active_admin)):
+async def get_updates_history(current_user=Depends(get_current_admin)):
     """
     Get historical updates from the monitoring system.
     
@@ -97,7 +97,7 @@ async def get_updates_history(current_user=Depends(get_current_active_admin)):
 
 
 @router.post("/start-monitoring", summary="Start Monitoring Process")
-async def start_monitoring_process(current_user=Depends(get_current_active_admin)):
+async def start_monitoring_process(current_user=Depends(get_current_admin)):
     """
     Start the continuous internet monitoring process.
     
@@ -119,7 +119,7 @@ async def start_monitoring_process(current_user=Depends(get_current_active_admin
 
 
 @router.get("/capabilities", summary="Get System Capabilities")
-async def get_system_capabilities(current_user=Depends(get_current_active_admin)):
+async def get_system_capabilities(current_user=Depends(get_current_admin)):
     """
     Get current system capabilities and feature inventory.
     
@@ -137,7 +137,7 @@ async def get_system_capabilities(current_user=Depends(get_current_active_admin)
 
 
 @router.get("/status", summary="Get Monitor Status")
-async def get_monitor_status(current_user=Depends(get_current_active_admin)):
+async def get_monitor_status(current_user=Depends(get_current_admin)):
     """
     Get the current status of the internet monitoring system.
     
