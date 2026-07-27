@@ -4,10 +4,10 @@
 - [x] Fix `backend/core/config.py` - `_get_cached_secret` now logs warning when key not in cache
 - [x] Add proper empty string vs "not found" distinction with warning logging
 
-## Priority 2: 🔴 AST Sandbox getattr/hasattr Bypass Prevention 🔄
-- [x] Add AST scanner for getattr/hasattr patterns in sandbox code execution (`backend/core/security/ast_sandbox_scanner.py`)
-- [ ] Update `backend/sandbox/file_isolation_gate.py` with pre-execution AST validation
-- [ ] Update `backend/core/microvm_sandbox.py` with AST sanitization
+## Priority 2: 🔴 AST Sandbox getattr/hasattr Bypass Prevention ✅
+- [x] Created `backend/core/security/ast_sandbox_scanner.py` with full AST sandbox scanner
+- [x] Integrated into `backend/sandbox/file_isolation_gate.py` with validate_code_for_sandbox
+- [x] Integrated into `backend/core/microvm_sandbox.py` (execute_async, all run methods, execute_code_securely)
 
 ## Priority 3: 🟠 SSRF Prevention Centralization
 - [ ] Create `backend/core/security/ssrf_protection.py` centralized module
@@ -29,7 +29,7 @@
 - [ ] Improve `MultiLevelCache` implementation
 
 ## Priority 8: 🔵 Import Optimization ✅
-- [x] Move `import json` inside validators to top-level imports (completed in `parse_comma_separated_list`, `parse_list_fields`, `parse_dict_fields`, `parse_cors_origins`)
+- [x] Move `import json` inside validators to top-level imports (completed in parse_comma_separated_list, parse_list_fields, parse_dict_fields, parse_cors_origins)
 - [ ] Remove unused imports across the codebase
 
 ## Priority 9: 🔵 Bangla Comment English Translation
