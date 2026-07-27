@@ -183,7 +183,7 @@ async def websocket_voice_endpoint(
     except Exception as e:  # noqa: BLE001
         logger.info(f"❌ [WS Voice Engine Error]: {e}")  # noqa: T201
         manager.disconnect(websocket)
-        import contextlib
-
-        with contextlib.suppress(Exception):
+        try:
             await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+        except Exception as exc:
+            logger.exception(f"WebSocket close failed after error: {exc}")

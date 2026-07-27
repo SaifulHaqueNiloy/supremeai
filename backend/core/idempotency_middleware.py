@@ -2,7 +2,6 @@ from __future__ import annotations
 
 # বাংলা মন্তব্য: নন-ব্লকিং অপারেশনের জন্য asyncio এবং redis.asyncio ইম্পোর্ট করা হলো
 import base64
-import contextlib
 import json
 
 from fastapi.responses import JSONResponse
@@ -176,6 +175,8 @@ class IdempotencyMiddleware:
         except (
             Exception
         ):  # বাংলা মন্তব্য: কোনো কারণে রিকোয়েস্ট ফেইল হলে কী-টি মুছে ফেলা হবে, যাতে ক্লায়েন্ট আবার চেষ্টা করতে পারে
-            with contextlib.suppress(Exception):
+            try:
                 await redis.delete(redis_key)
+            except Exception as exc:
+                logger.exception(f"Failed to delete idempotency key {redis_key}: {exc}")
             raise
