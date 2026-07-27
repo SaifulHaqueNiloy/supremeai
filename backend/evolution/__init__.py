@@ -149,6 +149,13 @@ def get_evolution_pipeline():
     Returns:
         A tuple of all major evolution system components
     """
+    if EWC is None:
+        raise RuntimeError(
+            "evolution pipeline needs the optional 'ml' poetry group (torch, "
+            "sentence-transformers) which is not installed -- run "
+            "`poetry install --with ml` in backend/ first."
+        )
+
     # Initialize all systems with default configs
     digital_twin = get_digital_twin_model()
 
