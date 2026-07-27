@@ -52,13 +52,15 @@ class BehaviorTracker:
         """
         self.window_size = timedelta(hours=window_size_hours)
         self.events: list[BehaviorEvent] = []
-        self.user_profiles: dict[str, dict[str, Any]] = defaultdict(lambda: {
-            "ip_addresses": defaultdict(int),
-            "actions": defaultdict(int),
-            "last_seen": 0.0,
-            "first_seen": time.time(),
-            "total_events": 0,
-        })
+        self.user_profiles: dict[str, dict[str, Any]] = defaultdict(
+            lambda: {
+                "ip_addresses": defaultdict(int),
+                "actions": defaultdict(int),
+                "last_seen": 0.0,
+                "first_seen": time.time(),
+                "total_events": 0,
+            }
+        )
 
     def record_event(self, event: BehaviorEvent) -> None:
         """Record a behavior event.
@@ -203,8 +205,7 @@ class AnomalyDetector:
         """
         cutoff = time.time() - window_seconds
         action_count = sum(
-            1 for e in self.tracker.events
-            if e.user_id == user_id and e.action == action and e.timestamp > cutoff
+            1 for e in self.tracker.events if e.user_id == user_id and e.action == action and e.timestamp > cutoff
         )
 
         # Threshold: more than 10 actions in 1 minute
