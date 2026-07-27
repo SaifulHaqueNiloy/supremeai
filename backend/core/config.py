@@ -356,9 +356,19 @@ class Settings(BaseSettings):
         self._secrets_batch_loaded = True
 
     def _get_cached_secret(self, key: str) -> str:
-        # বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
-        # প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
+        """Get cached secret with explicit empty vs not-found handling.
+
+        English: Returns the cached secret value. Logs a warning if the requested
+        secret key was never loaded into cache (not found in vault or env).
+        Returns empty string as fallback to avoid crashes, but the caller should
+        check for empty strings where critical.
+
+        বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
+        প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
+        """
         self._ensure_secrets_loaded()
+        if key not in self._cached_secrets:
+            logger.warning(f"Secret '{key}' not found in cache after batch load - returning empty string")
         return self._cached_secrets.get(key, "")
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
@@ -369,10 +379,13 @@ class Settings(BaseSettings):
     def supabase_database_url(self) -> str:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
 
-    # বাংলা মন্তব্য: Anti-Hacking এবং OTP রাউটার সিক্রেটসমূহ
+    # বাংলা মন্তব্য: Anti-Hacking এবং OTP রাউটার সিক্রেটসমূহ (ঐচ্ছিক — মিসিং থাকলে সার্ভার ক্র্যাশ করবে না)
     @property
     def discord_otp_webhook_url(self) -> SecretStr | None:
-        url = self._get_cached_secret("DISCORD_OTP_WEBHOOK_URL")
+        try:
+            url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
+        except Exception:  # noqa: BLE001
+            url = ""
         return SecretStr(url) if url else None
 
     @property
@@ -708,8 +721,6 @@ class Settings(BaseSettings):
                 return []
             if "[" in v and "]" in v:
                 try:
-                    import json
-
                     parsed = json.loads(v)
                     if isinstance(parsed, list):
                         return [str(x) for x in parsed]
@@ -846,9 +857,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             v = v.strip()
             try:
-                import json as _json
-
-                return _json.loads(v)
+                return json.loads(v)
             except (json.JSONDecodeError, ValueError) as _parse_err:
                 logger.debug(f"List field parse fallback to comma-split: {_parse_err}")
                 return [p.strip() for p in v.split(",") if p.strip()]
@@ -861,9 +870,7 @@ class Settings(BaseSettings):
             return {}
         if isinstance(v, str):
             try:
-                import json as _json
-
-                return _json.loads(v)
+                return json.loads(v)
             except (json.JSONDecodeError, ValueError) as _dict_parse_err:
                 logger.error(
                     f"Failed to parse rbac_role_definitions JSON: {_dict_parse_err}. Defaulting to empty dictionary."
