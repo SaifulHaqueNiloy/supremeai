@@ -19,6 +19,8 @@ def setup_litellm():
     litellm.telemetry = False
     yield
     return
+
+
 def test_load_routing_policy_handles_invalid_json(monkeypatch, tmp_path):
     # বাংলা মন্তব্য: ভাঙা JSON হলে ডিফল্ট পলিসি ফেরত আসবে (except শাখা কভার করে)
     bad = tmp_path / "routing_policy.json"

@@ -242,8 +242,6 @@ def override_auth():
         warnings.warn(f"override_auth fixture skipped: {e}", stacklevel=2)
         yield
         return
-
-
 @pytest.fixture(autouse=True)
 def configure_litellm():
     """টেস্টের জন্য litellm সেটিংস কনফিগার করুন"""
@@ -276,8 +274,6 @@ def configure_litellm():
         logger.warning(f"Exception suppressed: {e}")
     yield
     return
-
-
 @pytest.fixture
 def mock_production_env(monkeypatch):
     monkeypatch.setenv("ENV", "production")
@@ -363,8 +359,6 @@ def clear_settings_cache():
     os.environ["SUPREMEAI_API_TOKEN"] = ""
     yield
     return
-
-
 @pytest.fixture(autouse=True)
 def mock_supabase():
     import os

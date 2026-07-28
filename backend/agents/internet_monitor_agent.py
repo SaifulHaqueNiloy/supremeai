@@ -24,7 +24,6 @@ from core.cache.redis_manager import redis_manager
 from core.health_check import health_checker
 
 
-
 logger = logging.getLogger(__name__)
 
 
