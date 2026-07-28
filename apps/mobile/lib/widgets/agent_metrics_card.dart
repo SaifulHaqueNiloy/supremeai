@@ -14,6 +14,12 @@ class AgentMetricsCard extends StatelessWidget {
         final metrics = provider.activeAgentMetrics;
         final executionTier = metrics['execution_tier'] ?? 'Idle';
         final isZeroCost = executionTier.contains('Layer 2');
+        final extractedNodes = (metrics['data'] is Map) ? (metrics['data'] as Map).length : 0;
+        final latencyMs = metrics['latency_ms'] ?? '0';
+        final agentStatus = metrics['status'] ?? 'idle';
+        final activeTasks = metrics['active_tasks'] ?? 0;
+        final cpuUsage = metrics['cpu_usage'] ?? '0%';
+        final memoryUsage = metrics['memory_usage'] ?? '0%';
 
         return Card(
           elevation: 4,
@@ -55,10 +61,20 @@ class AgentMetricsCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildStatNode("Extracted Nodes", "${(metrics['data'] is Map) ? (metrics['data'] as Map).length : 0}"),
-                    _buildStatNode("Latency Guard", "${metrics['latency_ms'] ?? '0'} ms"),
+                    _buildStatNode("Extracted Nodes", "$extractedNodes"),
+                    _buildStatNode("Latency Guard", "${latencyMs}ms"),
                   ],
-                )
+                ),
+                SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildStatNode("Active Tasks", "$activeTasks"),
+                    _buildStatNode("CPU", "$cpuUsage"),
+                  ],
+                ),
+                SizedBox(height: 12),
+                _buildProgressBar("Memory Usage", double.tryParse(memoryUsage.replaceAll('%', '')) ?? 0.0),
               ],
             ),
           ),
@@ -74,6 +90,29 @@ class AgentMetricsCard extends StatelessWidget {
         Text(label, style: TextStyle(color: Colors.white60, fontSize: 12)),
         SizedBox(height: 4),
         Text(value, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildProgressBar(String label, double value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: TextStyle(color: Colors.white60, fontSize: 12)),
+            Text('$value%', style: TextStyle(color: Colors.white, fontSize: 12)),
+          ],
+        ),
+        SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: value / 100,
+          backgroundColor: Colors.grey[800],
+          valueColor: AlwaysStoppedAnimation<Color>(
+            value > 80 ? Colors.red : value > 60 ? Colors.orange : Colors.green,
+          ),
+        ),
       ],
     );
   }

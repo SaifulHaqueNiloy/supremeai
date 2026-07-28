@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('./services/chatService', () => ({
@@ -32,7 +32,7 @@ class MockResizeObserver {
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
-global.ResizeObserver = MockResizeObserver as any;
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock the EvolutionForgeWidget subcomponent to simplify App tests
 vi.mock('./App', async (importOriginal) => {
@@ -84,7 +84,7 @@ class MockEventSource {
   }
 }
 
-global.EventSource = MockEventSource as any;
+global.EventSource = MockEventSource as unknown as typeof EventSource;
 
 vi.mock('./hooks/useServerStream', () => ({
   useServerStream: () => ({ streamStatus: 'connected' }),

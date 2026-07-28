@@ -40,10 +40,12 @@ primeDeviceFingerprint(); // বাংলা মন্তব্য: অ্যা
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: (failureCount, error: any) => {
-        const msg = error?.message || '';
+      retry: (failureCount, error: unknown) => {
+        const err = error as Record<string, unknown>;
+        const msg = (err.message as string) || '';
+        const status = err.status as number | undefined;
         if (
-          error?.status === 401 || error?.status === 403 || error?.status === 429 ||
+          status === 401 || status === 403 || status === 429 ||
           msg.includes('401') || msg.includes('403') || msg.includes('429') ||
           msg.includes('Rate limit') || msg.includes('Unauthorized')
         ) return false;
@@ -74,7 +76,6 @@ export const App: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { isServerOnline, deployGate } = useStore();
-  const { streamStatus } = useServerStream();
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -101,10 +102,11 @@ const AppContent: React.FC = () => {
         role: msg.sender === 'User' ? 'user' : 'assistant',
         content: msg.text,
       }));
-      const responseText = await getAethelResponse(chatInput, history as any);
+      const responseText = await getAethelResponse(chatInput, history as ChatMessage[]);
       setChatMessages(prev => prev.map(msg => msg.id === responseId ? { ...msg, text: responseText } : msg));
-    } catch (error: any) {
-      setChatMessages(prev => prev.map(msg => msg.id === responseId ? { ...msg, text: `AI backend error: ${error?.message || 'Unable to fetch response.'}` } : msg));
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unable to fetch response.';
+      setChatMessages(prev => prev.map(msg => msg.id === responseId ? { ...msg, text: `AI backend error: ${errMsg}` } : msg));
     }
   };
 
