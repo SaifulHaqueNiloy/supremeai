@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, X, DollarSign, Database, GitBranch, Sparkles, RefreshCw, Layout } from 'lucide-react';
+import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, X, DollarSign, Database, GitBranch, Sparkles, RefreshCw, Layout, Users, TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpRight, ArrowDownRight, GitPullRequest, Zap, Cloud, Lock } from 'lucide-react';
 import ReactFlow, { Background, Controls, useNodesState, useEdgesState } from 'reactflow';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'reactflow/dist/style.css';
@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
   const setDeploymentModal = useDashboardStore((s) => s.setDeploymentModal);
   const updateSystemStatus = useDashboardStore((s) => s.updateSystemStatus);
 
-  // বাংলা মন্তব্য: স্টোর থেকে ড্যাশবোর্ড মোড ও টগল ফাংশন নিয়ে আসা হলো
+  // বাংলা মন্তব্য: স্টোর থেকে ড্যাশবোর্ড মোড ও টগল ফাংশন নিয়ে আসা হলো
   const dashboardMode = useDashboardStore((s) => s.dashboardMode);
   const toggleDashboardMode = useDashboardStore((s) => s.toggleDashboardMode);
 
@@ -164,211 +164,435 @@ const Dashboard: React.FC = () => {
 
       {isSimple ? (
         // ==========================================
-        // 🌟 SIMPLE MODE (User-Friendly Cockpit View)
+        // 🌟 GORGEOUS SIMPLE MODE (User-Friendly Cockpit View)
         // ==========================================
-        <div className="w-full h-screen bg-slate-50 text-slate-800 relative overflow-y-auto font-sans p-6 transition-colors duration-500">
-
-          {/* Header */}
-          <div className="flex justify-between items-center border-b border-slate-200 pb-5 mb-6">
-            <div>
+        <div className="w-full h-screen bg-gradient-to-br from-gray-50 to-slate-100 text-slate-800 relative overflow-y-auto font-sans p-6 transition-colors duration-500">
+          
+          {/* Header with beautiful gradient */}
+          <div className="flex justify-between items-center border-b border-slate-200 pb-5 mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-1">
+            <div className="bg-white rounded-xl p-5 w-full">
               <div className="flex items-center gap-2">
-                <Sparkles className="text-indigo-600 animate-spin" size={20} />
-                <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Executive Command Bridge</h1>
+                <Sparkles className="text-indigo-600 animate-pulse" size={24} />
+                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Executive Command Bridge</h1>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm text-slate-500 mt-2">
                 সিস্টেমের গতিবিধি পর্যবেক্ষণ ও সাধারণ ইউজারদের জন্য সহজ ড্যাশবোর্ড ইন্টারফেস।
               </p>
             </div>
-
-            {/* Mode Switcher */}
-            <button
-              onClick={toggleDashboardMode}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-xl transition-all shadow-sm"
-            >
-              <Layout size={14} />
-              Switch to Developer Mode
-            </button>
           </div>
 
-          {/* KPI Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Beautiful Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
             {/* System Health Card */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">System Health</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-emerald-100 rounded-xl">
+                  <CheckCircle size={24} className="text-emerald-600" />
+                </div>
+                <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
               </div>
-              <p className="text-base font-bold text-slate-850">সিস্টেম গ্রিন</p>
-              <p className="text-[11px] text-slate-400 mt-1">সব প্রধান সার্ভিস সচল আছে।</p>
-            </div>
+              <h3 className="text-lg font-bold text-slate-800">System Health</h3>
+              <p className="text-2xl font-extrabold text-emerald-600 mt-2">
+                {health?.gcp?.status === 'healthy' ? 'Excellent' : health?.gcp?.status === 'degraded' ? 'Degraded' : 'Critical'}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">All systems operational</p>
+              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full" 
+                  style={{ 
+                    width: `${health?.gcp?.status === 'healthy' ? '98' : health?.gcp?.status === 'degraded' ? '60' : '30'}%`,
+                    backgroundColor: health?.gcp?.status === 'healthy' ? '#10b981' : health?.gcp?.status === 'degraded' ? '#f59e0b' : '#ef4444'
+                  }}
+                ></div>
+              </div>
+            </motion.div>
 
             {/* Threat Card */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Security</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-amber-100 rounded-xl">
+                  <Shield size={24} className="text-amber-600" />
+                </div>
+                <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
               </div>
-              <p className="text-base font-bold text-slate-850">অনলাইন থ্রেট নাই</p>
-              <p className="text-[11px] text-slate-400 mt-1">ফায়ারওয়াল সক্রিয় এবং নিরাপদ।</p>
-            </div>
+              <h3 className="text-lg font-bold text-slate-800">Security Status</h3>
+              <p className="text-2xl font-extrabold text-emerald-600 mt-2">
+                {threats && threats.total_findings > 0 ? 'At Risk' : 'Secure'}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                {threats && threats.total_findings > 0 ? `${threats.total_findings} threats detected` : 'No active threats'}
+              </p>
+              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full" 
+                  style={{ 
+                    width: `${threats && threats.total_findings > 0 ? Math.min(threats.total_findings * 10, 100) : 0}%`,
+                    backgroundColor: threats && threats.total_findings > 0 ? '#f59e0b' : '#10b981'
+                  }}
+                ></div>
+              </div>
+            </motion.div>
 
             {/* AI Skills Card */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">AI Skills</span>
-                <span className="text-xs font-mono font-bold text-indigo-600">4 Active</span>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-indigo-100 rounded-xl">
+                  <Users size={24} className="text-indigo-600" />
+                </div>
+                <span className="text-sm font-mono font-bold text-indigo-600">
+                  {metrics ? metrics.active_agents : 0} Active
+                </span>
               </div>
-              <p className="text-base font-bold text-slate-850">৪টি পাইপলাইন সচল</p>
-              <p className="text-[11px] text-slate-400 mt-1">এজেন্টরা নতুন টাস্ক প্রসেস করতে প্রস্তুত।</p>
-            </div>
+              <h3 className="text-lg font-bold text-slate-800">AI Agents</h3>
+              <p className="text-2xl font-extrabold text-indigo-600 mt-2">
+                {metrics && metrics.active_agents > 0 ? 'Operational' : 'Inactive'}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                {metrics ? metrics.active_agents : 0} agents processing tasks
+              </p>
+              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-indigo-500 rounded-full" 
+                  style={{ width: `${metrics ? Math.min(metrics.active_agents * 10, 100) : 0}%` }}
+                ></div>
+              </div>
+            </motion.div>
 
             {/* Cost Efficiency Card */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Cost Per Hour</span>
-                <span className="text-xs font-mono font-bold text-emerald-600">${metrics ? metrics.cost_per_hour : '0.00'}/h</span>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-emerald-100 rounded-xl">
+                  <DollarSign size={24} className="text-emerald-600" />
+                </div>
+                <span className="text-sm font-mono font-bold text-emerald-600">
+                  ${metrics ? metrics.cost_per_hour.toFixed(2) : '0.00'}/h
+                </span>
               </div>
-              <p className="text-base font-bold text-slate-850">স্বল্প খরচে চলমান</p>
-              <p className="text-[11px] text-slate-400 mt-1">ফ্রি-টিয়ার ক্লাউড অপ্টিমাইজেশন সক্রিয়।</p>
-            </div>
+              <h3 className="text-lg font-bold text-slate-800">Cost Efficiency</h3>
+              <p className="text-2xl font-extrabold text-emerald-600 mt-2">
+                {metrics && metrics.cost_per_hour < 0.5 ? 'Efficient' : metrics && metrics.cost_per_hour < 1.0 ? 'Moderate' : 'High Cost'}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                Under budget allocation
+              </p>
+              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full" 
+                  style={{ 
+                    width: `${metrics ? Math.min(metrics.cost_per_hour * 50, 100) : 25}%`,
+                    backgroundColor: metrics && metrics.cost_per_hour < 0.5 ? '#10b981' : metrics && metrics.cost_per_hour < 1.0 ? '#f59e0b' : '#ef4444'
+                  }}
+                ></div>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Split Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+          {/* Main Content Area */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
             {/* Activity Feed */}
-            <div className="lg:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-              <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Sparkles size={16} className="text-indigo-500" />
-                সিস্টেম আপডেট ও কার্যক্রম (Real-time Events)
-              </h2>
-              <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Activity size={20} className="text-indigo-500" />
+                  System Activity Feed
+                </h2>
+                <button className="text-xs text-indigo-600 font-semibold hover:underline transition-colors">
+                  View All
+                </button>
+              </div>
+              
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {events && events.length > 0 ? (
                   events.map((evt, idx) => {
                     const isError = evt.level?.toLowerCase() === 'error' || evt.level?.toLowerCase() === 'critical';
                     const isWarn = evt.level?.toLowerCase() === 'warning' || evt.level?.toLowerCase() === 'warn';
-                    const iconColor = isError ? 'text-rose-600 bg-rose-50' : (isWarn ? 'text-amber-600 bg-amber-50' : 'text-[#00f3ff] bg-[#00f3ff]/10');
+                    const iconColor = isError ? 'text-rose-600 bg-rose-50' : (isWarn ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50');
                     const iconStr = isError ? '🚨' : (isWarn ? '⚠️' : 'ℹ️');
+                    const bgColor = isError ? 'bg-rose-50 border-rose-100' : (isWarn ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100');
 
                     return (
-                      <div key={idx} className="flex items-start gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <span className={`p-2 rounded-lg ${iconColor} text-xs font-mono`}>{iconStr}</span>
+                      <motion.div 
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className={`flex items-start gap-4 p-4 rounded-xl border ${bgColor} hover:bg-white transition-colors`}
+                      >
+                        <span className={`p-3 rounded-xl ${iconColor} text-sm font-mono`}>{iconStr}</span>
                         <div className="flex-1">
                           <div className="flex justify-between items-center">
-                            <p className="text-xs font-bold text-slate-800">{evt.source || 'SYSTEM'}</p>
-                            <span className="text-[9px] text-slate-400 font-mono">{evt.timestamp}</span>
+                            <p className="text-sm font-bold text-slate-800">{evt.source || 'SYSTEM'}</p>
+                            <span className="text-xs text-slate-400 font-mono">{evt.timestamp}</span>
                           </div>
-                          <p className="text-[11px] text-slate-600 mt-0.5">{evt.message}</p>
+                          <p className="text-sm text-slate-600 mt-1">{evt.message}</p>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })
                 ) : (
-                  <p className="text-xs text-slate-400 font-mono text-center py-8">কোনো ইভেন্ট রেকর্ড পাওয়া যায়নি।</p>
+                  <div className="text-center py-12">
+                    <Activity size={48} className="mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-400 font-medium">No recent activity</p>
+                    <p className="text-xs text-slate-400 mt-1">Events will appear here in real-time</p>
+                  </div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Smart Actions Center */}
-            <div className="lg:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900 mb-2">Smart Actions Center</h2>
-                <p className="text-[11px] text-slate-400 mb-6">জটিল ব্যাকএন্ড কমান্ড সরাসরি ওয়ান-ক্লিকে রান করুন।</p>
-
-                <div className="flex flex-col gap-3">
+            {/* Quick Actions & Performance */}
+            <div className="space-y-8">
+              
+              {/* Quick Actions */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
+              >
+                <h2 className="text-lg font-bold text-slate-900 mb-6">Quick Actions</h2>
+                
+                <div className="space-y-4">
                   <button
                     onClick={runSmartOptimization}
                     disabled={isOptimizing}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 hover:bg-indigo-50/50 text-left transition-colors"
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-indigo-100 hover:bg-indigo-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-800">সিস্টেম অপ্টিমাইজ করুন</span>
-                      <span className="text-[9px] text-slate-400 mt-0.5">ক্লিন মেমোরি ও প্রসেস রিসেট</span>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                        <Zap size={18} className="text-indigo-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-800">System Optimization</span>
+                        <span className="block text-xs text-slate-500">Clean memory and reset processes</span>
+                      </div>
                     </div>
                     {isOptimizing ? (
-                      <RefreshCw size={14} className="text-indigo-600 animate-spin" />
+                      <RefreshCw size={18} className="text-indigo-600 animate-spin" />
                     ) : (
-                      <span className="text-xs text-indigo-600 font-bold">রানিং করুন →</span>
+                      <ArrowUpRight size={18} className="text-indigo-600" />
                     )}
                   </button>
 
-                  <button className="w-full flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-colors">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-800">রিপোর্ট ডাউনলোড করুন</span>
-                      <span className="text-[9px] text-slate-400 mt-0.5">আজকের পারফরম্যান্স পিডিএফ ফাইল</span>
+                  <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                        <HardDrive size={18} className="text-slate-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-800">Generate Report</span>
+                        <span className="block text-xs text-slate-500">Download performance PDF</span>
+                      </div>
                     </div>
-                    <span className="text-xs text-slate-400">ডাউনলোড →</span>
+                    <ArrowUpRight size={18} className="text-slate-400" />
+                  </button>
+
+                  <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                        <Server size={18} className="text-slate-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-800">Restart Services</span>
+                        <span className="block text-xs text-slate-500">Gracefully restart core services</span>
+                      </div>
+                    </div>
+                    <ArrowUpRight size={18} className="text-slate-400" />
+                  </button>
+
+                  <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                        <Lock size={18} className="text-slate-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-800">Security Scan</span>
+                        <span className="block text-xs text-slate-500">Run comprehensive threat detection</span>
+                      </div>
+                    </div>
+                    <ArrowUpRight size={18} className="text-slate-400" />
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
-              {optimizeStatus && (
-                <div className="mt-4 p-3 bg-indigo-50 text-indigo-700 rounded-xl text-center text-xs font-medium font-mono animate-pulse">
-                  {optimizeStatus}
+              {/* Performance Stats */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+                className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg"
+              >
+                <h2 className="text-lg font-bold mb-4">Performance Overview</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">CPU Usage</span>
+                      <span className="text-sm font-bold">
+                        {metrics ? Math.round(metrics.cpu_percent) : 0}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-white rounded-full" 
+                        style={{ width: `${metrics ? Math.min(metrics.cpu_percent, 100) : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">Memory Usage</span>
+                      <span className="text-sm font-bold">
+                        {metrics ? Math.round(metrics.memory_percent) : 0}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-white rounded-full" 
+                        style={{ width: `${metrics ? Math.min(metrics.memory_percent, 100) : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">Network</span>
+                      <span className="text-sm font-bold">
+                        {metrics ? metrics.requests_per_second : 0}/sec
+                      </span>
+                    </div>
+                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-300 rounded-full" 
+                        style={{ width: `${Math.min((metrics ? metrics.requests_per_second : 0) / 100 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-              )}
+              </motion.div>
             </div>
           </div>
 
-          {/* Reports Section */}
-          <div className="mt-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <HardDrive size={16} className="text-indigo-500" />
-              দৈনিক স্ট্যান্ডআপ ও সিস্টেম রিপোর্টস (Daily Reports)
-            </h2>
+          {/* Detailed Reports Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <TrendingUp size={20} className="text-indigo-500" />
+                System Reports & Analytics
+              </h2>
+              <button className="text-xs text-indigo-600 font-semibold hover:underline transition-colors">
+                Export Data
+              </button>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Report List */}
-              <div className="md:col-span-1 border-r border-slate-150 pr-4 flex flex-col gap-2">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono mb-2">Available Reports</span>
-                {reportsData && reportsData.reports && reportsData.reports.length > 0 ? (
-                  reportsData.reports.map((report: string) => (
-                    <button
-                      key={report}
-                      onClick={() => setSelectedReportName(report)}
-                      className={`text-left px-3 py-2 rounded-lg text-xs font-mono transition-colors ${
-                        selectedReportName === report
-                          ? 'bg-indigo-50 text-indigo-700 font-bold border-l-2 border-indigo-600'
-                          : 'hover:bg-slate-50 text-slate-600'
-                      }`}
-                    >
-                      📄 {report}
-                    </button>
-                  ))
-                ) : (
-                  <p className="text-xs text-slate-400 font-mono">কোনো রিপোর্ট পাওয়া যায়নি।</p>
-                )}
+              <div className="md:col-span-1 border-r border-slate-200 pr-6">
+                <h3 className="text-sm font-bold text-slate-700 mb-4">Available Reports</h3>
+                <div className="space-y-2">
+                  {reportsData && reportsData.reports && reportsData.reports.length > 0 ? (
+                    reportsData.reports.map((report: string) => (
+                      <button
+                        key={report}
+                        onClick={() => setSelectedReportName(report)}
+                        className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                          selectedReportName === report
+                            ? 'bg-indigo-100 text-indigo-700 font-bold border-l-4 border-indigo-600 shadow-sm'
+                            : 'hover:bg-slate-50 text-slate-600 border-l-4 border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <TrendingUp size={14} className="text-indigo-500" />
+                          {report}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400">No reports available</p>
+                  )}
+                </div>
               </div>
 
               {/* Report Viewer */}
-              <div className="md:col-span-3 pl-2">
+              <div className="md:col-span-3 pl-6">
                 {selectedReportName ? (
                   activeReport && activeReport.content ? (
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 max-h-[300px] overflow-y-auto">
-                      <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
-                        <span className="text-xs font-bold text-slate-800">{activeReport.name}</span>
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 max-h-[400px] overflow-y-auto">
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-3 mb-4">
+                        <span className="text-base font-bold text-slate-800">{activeReport.name}</span>
                         <button
                           onClick={() => setSelectedReportName(undefined)}
-                          className="text-[10px] text-slate-400 hover:text-slate-600 font-bold"
+                          className="text-sm text-slate-400 hover:text-slate-600 font-bold transition-colors"
                         >
-                          বন্ধ করুন ×
+                          Close ×
                         </button>
                       </div>
-                      <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      <pre className="text-sm font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
                         {activeReport.content}
                       </pre>
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 font-mono animate-pulse">রিপোর্ট লোড হচ্ছে...</p>
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-center">
+                        <Clock size={48} className="mx-auto text-slate-300 mb-4 animate-spin" />
+                        <p className="text-slate-400 font-medium">Loading report...</p>
+                      </div>
+                    </div>
                   )
                 ) : (
-                  <div className="h-full flex items-center justify-center border border-dashed border-slate-200 rounded-2xl p-8 text-center">
-                    <p className="text-xs text-slate-400 font-mono">বাম পাশের তালিকা থেকে একটি রিপোর্ট নির্বাচন করুন।</p>
+                  <div className="h-64 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl">
+                    <div className="text-center">
+                      <TrendingUp size={48} className="mx-auto text-slate-300 mb-4" />
+                      <p className="text-slate-400 font-medium">Select a report to view details</p>
+                      <p className="text-sm text-slate-400 mt-1">Reports will display analytics and insights</p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
+          </motion.div>
 
-          </div>
+          {/* Mode Switcher Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleDashboardMode}
+            className="fixed bottom-6 right-6 flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all z-50"
+          >
+            <Layout size={20} />
+            <span>Switch to Developer Mode</span>
+          </motion.button>
 
         </div>
       ) : (
@@ -382,13 +606,15 @@ const Dashboard: React.FC = () => {
 
           {/* --- Mode Switcher (Advanced View) --- */}
           <div className="absolute top-6 right-6 z-[100] flex gap-3">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={toggleDashboardMode}
               className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-mono font-bold tracking-widest text-[#00f3ff] sci-fi-glass hover:bg-[#00f3ff]/20 transition-all border border-[#00f3ff]/30"
             >
               <Layout size={12} />
               SIMPLE MODE
-            </button>
+            </motion.button>
           </div>
 
           {/* --- Main Flow Canvas --- */}
@@ -430,7 +656,9 @@ const Dashboard: React.FC = () => {
               <div className="flex flex-col items-center gap-2">
                 <div className="relative w-16 h-16 flex items-center justify-center rounded-full border-4 border-[#09101f] border-t-[#00f3ff] border-l-[#00f3ff] shadow-[0_0_15px_rgba(0,243,255,0.3)] animate-[spin_4s_linear_infinite]">
                   <div className="absolute w-full h-full rounded-full animate-[spin_4s_linear_infinite_reverse] flex items-center justify-center">
-                    <span className="text-[10px] font-mono font-bold text-[#00f3ff]">{metrics ? `${metrics.requests_per_second} RPS` : '--'}</span>
+                    <span className="text-[10px] font-mono font-bold text-[#00f3ff]">
+                      {metrics ? `${metrics.requests_per_second} RPS` : '--'}
+                    </span>
                   </div>
                 </div>
                 <span className="text-[9px] font-mono text-cyan-500 tracking-widest uppercase">CPU Usage</span>
@@ -440,7 +668,9 @@ const Dashboard: React.FC = () => {
               <div className="flex flex-col items-center gap-2">
                 <div className="relative w-16 h-16 flex items-center justify-center rounded-full border-4 border-[#09101f] border-t-[#00ff66] border-r-[#00ff66] shadow-[0_0_15px_rgba(0,255,102,0.3)] animate-[spin_6s_linear_infinite_reverse]">
                   <div className="absolute w-full h-full rounded-full animate-[spin_6s_linear_infinite] flex items-center justify-center">
-                    <span className="text-[10px] font-mono font-bold text-[#00ff66]">{metrics ? `$${metrics.cost_per_hour}/h` : '$--/h'}</span>
+                    <span className="text-[10px] font-mono font-bold text-[#00ff66]">
+                      {metrics ? `$${metrics.cost_per_hour.toFixed(2)}/h` : '$--/h'}
+                    </span>
                   </div>
                 </div>
                 <span className="text-[9px] font-mono text-emerald-500 tracking-widest uppercase">Memory</span>
@@ -457,14 +687,16 @@ const Dashboard: React.FC = () => {
               { id: 'Threats', icon: <Shield size={20} />, color: 'hover:text-[#ff0055]', activeColor: 'text-[#ff0055]' },
               { id: 'GitHub', icon: <GitBranch size={20} />, color: 'hover:text-slate-300', activeColor: 'text-slate-300' },
             ].map((item) => (
-              <button
+              <motion.button
                 key={item.id}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setActivePanel(item.id)}
                 className={`p-2 rounded-xl transition-all ${activePanel === item.id ? `bg-[#00f3ff]/20 shadow-[inset_0_0_10px_rgba(0,243,255,0.5)] ${item.activeColor}` : `text-slate-400 ${item.color}`}`}
                 title={item.id}
               >
                 {item.icon}
-              </button>
+              </motion.button>
             ))}
           </div>
 
