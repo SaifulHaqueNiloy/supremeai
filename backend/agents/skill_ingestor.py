@@ -13,9 +13,9 @@ from typing import Any
 
 # রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
 from .morphic_adapter import MorphicAdapter  # Using relative import from same directory
-from ..sandbox.docker_sandbox import DockerSandbox
-from ..schemas.skill_index import SkillIndexManager
-from ..schemas.skill_manifest import SkillManifest, SkillStatus
+from sandbox.docker_sandbox import DockerSandbox
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 
 logger = logging.getLogger("supremeai.skill_ingestor")
