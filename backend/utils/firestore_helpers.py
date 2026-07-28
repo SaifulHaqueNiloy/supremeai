@@ -12,7 +12,7 @@ from typing import Any
 
 from loguru import logger
 
-from utils.environment import is_test_environment
+from .environment import is_test_environment  # Fixed import path - using relative import
 
 # Firestore SDK প্রাপ্যতা যাচাই — একবারই চেক হয়, বারবার try/except লাগে না
 try:
