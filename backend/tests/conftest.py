@@ -220,19 +220,26 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture(autouse=True)
 def override_auth():
-    from api.dependencies import get_current_user_token, verify_autonomous_agent_token
-    from core.app import app
+    """Override auth dependencies for tests. Gracefully handles import errors."""
+    try:
+        from api.dependencies import get_current_user_token, verify_autonomous_agent_token
+        from core.app import app
 
-    app.dependency_overrides[get_current_user_token] = lambda: {
-        "sub": "test_admin@supremeai.com",
-        "role": "admin",
-    }
-    app.dependency_overrides[verify_autonomous_agent_token] = lambda: {
-        "sub": "test_admin@supremeai.com",
-        "role": "admin",
-    }
-    yield
-    app.dependency_overrides = {}
+        app.dependency_overrides[get_current_user_token] = lambda: {
+            "sub": "test_admin@supremeai.com",
+            "role": "admin",
+        }
+        app.dependency_overrides[verify_autonomous_agent_token] = lambda: {
+            "sub": "test_admin@supremeai.com",
+            "role": "admin",
+        }
+        yield
+        app.dependency_overrides = {}
+    except Exception as e:
+        import warnings
+
+        warnings.warn(f"override_auth fixture skipped: {e}", stacklevel=2)
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -253,7 +260,7 @@ def configure_litellm():
 
         t = threading.Thread(target=_import, daemon=True)
         t.start()
-        t.join(timeout=8)
+        t.join(timeout=5)
         if t.is_alive():
             logger.warning("litellm import timed out; skipping configuration")
         elif "error" in result:

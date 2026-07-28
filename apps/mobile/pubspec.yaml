@@ -30,12 +30,14 @@ flutter:
   uses-material-design: true
 
   # বাংলা মন্তব্য: অ্যাপে ব্যবহৃত i18n লোনালাইজেশন ফাইলগুলো বান্ডিল করার জন্য assets-এ যুক্ত করা হলো।
-  # অনুপস্থিত ডিরেক্টরি এবং ফন্টস (যা রেপোতে নেই) সাময়িকভাবে কমেন্ট করা হলো যাতে বিল্ড সাকসেসফুল হয়।
+  # Added all required asset directories to prevent build failures
   assets:
     - assets/i18n/
-    # - assets/images/
-    # - assets/icons/
-    # - assets/data/
+    - assets/images/
+    - assets/icons/
+    - assets/data/
+    - assets/icon/
+    - assets/fonts/
 
   # fonts:
   #   - family: Inter
