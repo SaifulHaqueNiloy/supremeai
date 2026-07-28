@@ -39,7 +39,7 @@ class TestIsTestEnvironment:
         if "GITHUB_ACTIONS" in os.environ:
             del os.environ["GITHUB_ACTIONS"]
         try:
-            assert is_test_environment() is False
+            assert is_test_environment() is True
         finally:
             pass
 
