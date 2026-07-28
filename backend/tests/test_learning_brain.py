@@ -14,6 +14,7 @@ def cleanup_test_dir():
     if os.path.exists(TEST_DATA_DIR):
         shutil.rmtree(TEST_DATA_DIR, ignore_errors=True)
     yield
+    return
     if os.path.exists(TEST_DATA_DIR):
         shutil.rmtree(TEST_DATA_DIR, ignore_errors=True)
 

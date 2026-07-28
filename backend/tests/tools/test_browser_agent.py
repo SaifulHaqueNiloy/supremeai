@@ -16,6 +16,7 @@ def reset_global_state():
     pm._global_browser = None
     pm._playwright_runner = None
     yield
+    return
     pm._global_browser = None
     pm._playwright_runner = None
 

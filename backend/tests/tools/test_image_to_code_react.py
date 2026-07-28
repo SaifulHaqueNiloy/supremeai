@@ -14,8 +14,7 @@ def mock_image_to_code():
         return_value="dummy_base64",
     ):
         yield
-
-
+        return
 @pytest.mark.anyio
 @pytest.mark.anyio
 async def test_figma_to_react(mock_image_to_code):

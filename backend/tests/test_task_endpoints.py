@@ -72,6 +72,7 @@ def mock_session():
 
     yield
 
+    return
     services.admin_god = previous_admin
     services_mod.model_router = previous_router
     services.intent_clf = previous_intent
