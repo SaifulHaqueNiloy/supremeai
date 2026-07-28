@@ -32,6 +32,13 @@ def main():
         set_output("should_run", "true")
         return 0
 
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "SupremeAI-Workflow",
+    } # বাংলা মন্তব্য: এপিআই রিকোয়েস্টের জন্য হেডার্স ডিকশনারি ডিফাইন করা হলো
+
     url = f"https://api.github.com/repos/{repo}/actions/runs"
     query = urllib.parse.urlencode({"per_page": 20})
     full_url = f"{url}?{query}"
