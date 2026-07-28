@@ -8,11 +8,11 @@ interface DashboardShellProps {
   workspace: React.ReactNode;
 }
 
-export const DashboardShell: React.FC<DashboardShellProps> = ({ 
-  theme, 
-  toggleTheme, 
+export const DashboardShell: React.FC<DashboardShellProps> = ({
+  theme,
+  toggleTheme,
   isServerOnline,
-  workspace 
+  workspace
 }) => {
   return (
     <DashboardLayout title="Dashboard">
@@ -86,8 +86,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             </div>
             <div className="border-t border-gray-200 dark:border-slate-800 p-3 bg-gray-50 dark:bg-slate-900">
               <div className="flex">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Ask AI anything..."
                   className="flex-1 border border-gray-300 dark:border-slate-700 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-200"
                 />
@@ -121,6 +121,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           </div>
         </div>
       </div>
+      {/* বাংলা মন্তব্য: লেগ্যাসি ওয়ার্কস্পেস উপাদানগুলো ঠিকমতো রেন্ডার করার জন্য workspace প্রপ যোগ করা হলো */}
+      {workspace}
     </DashboardLayout>
   );
 };

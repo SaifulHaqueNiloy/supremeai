@@ -4,7 +4,7 @@ import { useAdminStore } from '../store/adminStore';
 
 // Mock getApiBaseUrl
 vi.mock('../utils/api', () => ({
-  getApiBaseUrl: () => 'http://localhost:8000'
+  getApiBaseUrl: () => 'https://supremeai-backend.onrender.com'
 }));
 
 // Mock useAdminStore
@@ -33,7 +33,7 @@ describe('apiClient', () => {
 
     const result = await apiClient.get('/test');
 
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/test', expect.objectContaining({
+    expect(global.fetch).toHaveBeenCalledWith('https://supremeai-backend.onrender.com/test', expect.objectContaining({
       credentials: 'include',
       headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
       method: 'GET'
