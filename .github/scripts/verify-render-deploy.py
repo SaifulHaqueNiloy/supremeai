@@ -2,11 +2,13 @@
 # বাংলা মন্তব্য: এই স্ক্রিপ্টটি নির্দিষ্ট Render সার্ভিসের (User/Primary বা Admin/Backup) ডেপ্লয়মেন্ট স্ট্যাটাস ও হেলথ ভেরিফাই করে।
 # এটি সার্ভিস আইডি অনুযায়ী ফিল্টার করে ট্র্যাকিং নিশ্চিত করে যাতে একটি সার্ভিসের সুস্থতা অন্য ব্যর্থ সার্ভিসকে ঢেকে না ফেলে।
 
+import json
 import os
 import sys
 import time
+import urllib.parse
+import urllib.request
 import argparse
-import requests
 from datetime import datetime, timezone, timedelta
 
 try:
@@ -32,6 +34,23 @@ SERVICES = {
 POLL_INTERVAL = 10  # poll every 10s for faster feedback
 TIMEOUT_LIMIT = 300  # 5 minutes (reduced from 7.5 minutes)
 
+class _UrllibResponse:
+    def __init__(self, resp):
+        self._resp = resp
+        self.status_code = resp.status
+        self.ok = 200 <= resp.status < 300
+        self.text = resp.read().decode("utf-8")
+
+    def json(self):
+        return json.loads(self.text)
+
+
+def _http_get(url, headers=None, timeout=15):
+    req = urllib.request.Request(url, headers=headers or {}, method="GET")
+    resp = urllib.request.urlopen(req, timeout=timeout)
+    return _UrllibResponse(resp)
+
+
 def check_http_health(url, label, retries=3, timeout_per_try=15):
     # বাংলা মন্তব্ব্য: সার্ভিসের /health এবং /api/v1/health রিট্রাই সহ চেক করা হবে কোল্ড স্টার্ট এড়াতে।
     # Optimized: Reduced retries and increased timeout per try for better efficiency
@@ -41,7 +60,7 @@ def check_http_health(url, label, retries=3, timeout_per_try=15):
         for health_url in endpoints:
             print(f"⏳ Verifying {label} HTTP health at {health_url} (Attempt {attempt}/{retries})...")
             try:
-                response = requests.get(health_url, timeout=timeout_per_try)
+                response = _http_get(health_url, timeout=timeout_per_try)
                 if response.status_code == 200:
                     try:
                         # Verify the response is actually healthy, not just status 200
@@ -80,7 +99,7 @@ def monitor_service(service):
         }
         deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
         try:
-            res = requests.get(deploys_url, headers=test_headers, timeout=10)
+            res = _http_get(deploys_url, headers=test_headers, timeout=10)
             if res.status_code == 200:
                 headers = test_headers
                 print(f"✅ Authenticated API key found for {name} (service {service_id}).")
@@ -100,7 +119,7 @@ def monitor_service(service):
 
     deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
     try:
-        res = requests.get(deploys_url, headers=headers, timeout=15)
+        res = _http_get(deploys_url, headers=headers, timeout=15)
         if res.status_code != 200:
             print(f"❌ Failed to fetch deploys for {name}: HTTP {res.status_code} - {res.text}")
             return check_http_health(service["url"], name)
@@ -157,7 +176,7 @@ def monitor_service(service):
             return check_http_health(service["url"], name)
 
         try:
-            res = requests.get(deploy_url, headers=headers, timeout=15)
+            res = _http_get(deploy_url, headers=headers, timeout=15)
             if res.status_code == 200:
                 deploy_info = res.json()
                 deploy_data = deploy_info.get("deploy", deploy_info) if isinstance(deploy_info, dict) else deploy_info

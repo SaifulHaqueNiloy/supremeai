@@ -100,11 +100,11 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
     const username = user?.username || 'Guest User';
     const email = user?.email || 'N/A';
     const isLoggedIn = !!user;
-    
+
     // Get additional usage stats
     const config = vscode.workspace.getConfiguration('supremeai');
     const backendUrl = config.get<string>('backendUrl', 'https://supremeai-a.web.app');
-    
+
     // Get workspace info
     const workspaceInfo = {
       workspaceFolders: vscode.workspace.workspaceFolders?.length || 0,
@@ -133,11 +133,11 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
   }
 
   private getHTMLContent(
-    stats: any, 
-    username: string, 
-    email: string, 
-    isLoggedIn: boolean, 
-    backendUrl: string, 
+    stats: any,
+    username: string,
+    email: string,
+    isLoggedIn: boolean,
+    backendUrl: string,
     workspaceInfo: any
   ): string {
     return `<!DOCTYPE html>
@@ -370,7 +370,7 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
     const vscode = acquireVsCodeApi();
     const abortController = new AbortController();
     window.addEventListener("unload", () => abortController.abort());
-    
+
     document.getElementById('chatBtn').addEventListener('click', () => {
       vscode.postMessage({ type: 'newChat' }, { signal: abortController.signal });
     });
