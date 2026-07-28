@@ -26,7 +26,6 @@ from ..cache.redis_manager import redis_manager
 from ..config import settings
 
 
-
 # Dummy handle for test monkeypatching compatibility
 redis_queue = redis_manager
 

@@ -1,7 +1,7 @@
 """Enterprise Cloud Secret Vault (Infisical / Doppler) with strict secret handling.
 
 বাংলা: এন্টারপ্রাইজ ক্লাউড সিক্রেট ভল্ট — ইন-মেমরি ক্যাশে TTL-সহ, Fail-Closed।
-Fetches production API keys directly into memory from Infisical. 
+Fetches production API keys directly into memory from Infisical.
 Removes the need for monolithic GCP Secret Manager.
 Strict secret handling ensures exceptions are raised for missing secrets.
 """

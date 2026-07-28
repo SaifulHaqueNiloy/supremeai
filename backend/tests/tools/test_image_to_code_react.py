@@ -15,6 +15,8 @@ def mock_image_to_code():
     ):
         yield
         return
+
+
 @pytest.mark.anyio
 @pytest.mark.anyio
 async def test_figma_to_react(mock_image_to_code):

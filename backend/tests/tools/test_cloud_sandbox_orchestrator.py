@@ -13,6 +13,8 @@ def mock_env_runpod():
     with patch.dict(os.environ, {"RUNPOD_API_KEY": "test-key"}, clear=True):
         yield
         return
+
+
 def _mock_response(json_data, status_code=200):
     mock_resp = MagicMock()
     mock_resp.status_code = status_code
