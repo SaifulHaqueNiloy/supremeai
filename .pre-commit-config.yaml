@@ -131,7 +131,8 @@ repos:
       - id: router-smoke-test
         name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
         # বাংলা মন্তব্য: PRE_COMMIT=1 script-এ সেট হয়, timeout=60s দেওয়া আছে।
-        entry: python scripts/ci/validate_router_imports.py
+        # dependencies-এর জন্য poetry -C backend run দিয়ে চালানো হচ্ছে।
+        entry: poetry -C backend run python ../scripts/ci/validate_router_imports.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
