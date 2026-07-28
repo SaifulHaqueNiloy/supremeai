@@ -293,7 +293,7 @@ jobs:
         if: always() && needs.changes.outputs.trivial_change != 'true'
         run: |
           echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
-          echo "Outcome: **${ steps.obs_audit.outcome }**" >> $GITHUB_STEP_SUMMARY
+          echo "Outcome: **${{ steps.obs_audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
           echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
 
       # 🛡️ CodeQL & Trivy Security Scan (Merged)
