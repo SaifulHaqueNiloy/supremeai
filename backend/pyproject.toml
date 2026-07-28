@@ -114,7 +114,7 @@ torch = "^2.5.0"
 sentence-transformers = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
-# বাংলা মন্তব্য: সিআই পাইপলাইনে ফরম্যাটিং ও লিন্টিংয়ের জন্য dev গ্রুপে black, isort এবং ruff যোগ করা হলো
+# বাংলা মন্তব্য: সিআই পাইপলাইনে ফরম্যাটিং ও লিন্টিংয়ের জন্য dev গ্রুপে black, isort এবং ruff যোগ করা হলো
 black = "^24.4.2"
 isort = "^5.13.2"
 ruff = "^0.4.8"
@@ -174,7 +174,7 @@ filterwarnings = [
     "ignore::UserWarning",
 ]
 asyncio_mode = "auto"
-# Removed asyncio_default_fixture_loop_scope as it's not supported in current pytest-asyncio version
+asyncio_default_scope = "function"
 
 [tool.mypy]
 python_version = "3.11"
