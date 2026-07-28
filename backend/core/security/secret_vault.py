@@ -1,7 +1,7 @@
 """Enterprise Cloud Secret Vault (Infisical / Doppler) with strict secret handling.
 
 বাংলা: এন্টারপ্রাইজ ক্লাউড সিক্রেট ভল্ট — ইন-মেমরি ক্যাশে TTL-সহ, Fail-Closed।
-Fetches production API keys directly into memory from Infisical. 
+Fetches production API keys directly into memory from Infisical.
 Removes the need for monolithic GCP Secret Manager.
 Strict secret handling ensures exceptions are raised for missing secrets.
 """
@@ -15,8 +15,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-# Fixed import path - using relative import
-from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 if TYPE_CHECKING:
     from infisical_client import GetSecretOptions
@@ -153,7 +152,7 @@ class ProductionSecretVault:
                         time.sleep(sleep_time)
                     else:
                         raise exc
-            # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
+            # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment.")
@@ -241,7 +240,7 @@ class ProductionSecretVault:
     async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
         """Async wrapper — runs fetch_secret in a thread to avoid blocking the event loop.
 
-        বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।
+        বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।
         """
         return await asyncio.to_thread(self.fetch_secret, secret_id, default)
 
@@ -264,8 +263,8 @@ _vault_initialized: bool = False
 def get_secret_vault() -> ProductionSecretVault:
     """Get or create the global secret vault singleton.
 
-    বাংলা মন্তব্য: লেজি সিঙ্গেলটন — প্রথম ব্যবহারের সময় ইনিশিয়ালাইজ হয়।
-    ইম্পোর্ট টাইমে নয়, তাই settings লোড হওয়ার আগে vault তৈরি হয় না।
+    বাংলা মন্তব্য: লেজি সিঙ্গেলটন — প্রথম ব্যবহারের সময় ইনিশিয়ালাইজ হয়।
+    ইম্পোর্ট টাইমে নয়, তাই settings লোড হওয়ার আগে vault তৈরি হয় না।
     """
     global _secret_vault_instance, _vault_initialized  # noqa: PLW0603
     if not _vault_initialized:
@@ -284,7 +283,7 @@ def reset_secret_vault() -> None:
 # বাংলা মন্তব্য: Module-level instantiation সরানো হলো — এখন লেজি।
 # পুরানো কোড যদি `from core.security.secret_vault import secret_vault` করে,
 # তাহলে এটি এখনও কাজ করবে কারণ __getattr__ ডাইনামিকালি get_secret_vault() কল করবে।
-# কিন্তু সরাসরি `secret_vault` ভ্যারিয়েবল আর module level-এ নেই।
+# কিন্তু সরাসরি `secret_vault` ভ্যারিয়েবল আর module level-এ নেই।
 # Backward compatibility-র জন্য __getattr__ হ্যান্ডলার যোগ করা হলো।
 def __getattr__(name: str):
     """বাংলা মন্তব্য: Backward-compatible lazy access — পুরানো import প্যাটার্ন ভাঙে না।"""
