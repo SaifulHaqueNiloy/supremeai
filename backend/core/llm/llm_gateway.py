@@ -22,7 +22,7 @@ from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus  # F
 from ..prompt_handler import normalize_prompt  # Fixed import path - using relative import
 from ..resilience.circuit_breaker import CircuitBreaker  # Fixed import path - using relative import
 from ..resilience.circuit_breaker_manager import get_shared_circuit_breaker  # Fixed import path - using relative import
-from ...utils.firestore_helpers import get_firestore_db  # Fixed import path - using relative import
+from utils.firestore_helpers import get_firestore_db
 
 # বাংলা মন্তব্ব: POLICY_PATH এখন os.path দিয়ে বিল্ড হয় — hardcode নেই
 _POLICY_PATH = os.path.join(
