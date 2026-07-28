@@ -8,8 +8,7 @@ import asyncio
 import logging
 from typing import Optional
 
-# Fixed import path - using absolute import from backend
-from backend.agents.internet_monitor_agent import internet_monitor_agent
+from agents.internet_monitor_agent import internet_monitor_agent
 
 logger = logging.getLogger(__name__)
 

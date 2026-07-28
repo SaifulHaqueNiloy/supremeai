@@ -6,7 +6,7 @@ from typing import Any
 
 from loguru import logger
 
-from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
 class SelfHealerService:
@@ -268,7 +268,7 @@ _listener_registered: bool = False
 
 def register_self_healer_listener() -> None:
     """বাংলা মন্তব্য: Self-healer error listener এক্সপ্লিসিটলি রেজিস্টার করে।
-    এটি lifespan-এ বা app startup-এ কল করতে হবে — মডিউল ইম্পোর্টে নয়।
+    এটি lifespan-এ বা app startup-এ কল করতে হবে — মডিউল ইম্পোর্টে নয়।
     """
     global _listener_registered  # noqa: PLW0603
     if not _listener_registered:

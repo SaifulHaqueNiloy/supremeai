@@ -27,15 +27,15 @@ from typing import Any, Protocol
 import httpx
 
 # Internal core imports
-from .cache import get_redis_client
-from .config import settings
-from .exceptions import LLMProviderError, QuotaExceededError
-from .llm.free_tier_tracker import get_tracker
-from .logging import get_logger
-from .metrics import counter, timed
-from .resilience.circuit_breaker import CircuitBreaker as circuit_breaker
-from .resilience.circuit_breaker_manager import get_shared_circuit_breaker
-from .llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
+from core.cache import get_redis_client
+from core.config import settings
+from core.exceptions import LLMProviderError, QuotaExceededError
+from core.llm.free_tier_tracker import get_tracker
+from core.logging import get_logger
+from core.metrics import counter, timed
+from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
+from core.llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
 
 
 class Provider(str, Enum):
@@ -648,7 +648,7 @@ class BengaliNormalizer:
     @classmethod
     def detect_script(cls, text: str) -> str:
         """Detect if text is Bengali, Roman, or mixed."""
-        # বাংলা মন্তব্ব: স্পেস বাদ দিয়ে শুধু অক্ষর গণনা করা হচ্ছে যাতে মিক্সড টেক্সট সঠিকভাবে detect হয়।
+        # বাংলা মন্তব্য: স্পেস বাদ দিয়ে শুধু অক্ষর গণনা করা হচ্ছে যাতে মিক্সড টেক্সট সঠিকভাবে detect হয়।
         bengali_chars = sum(1 for c in text if "\u0980" <= c <= "\u09ff")
         # শুধু অ-স্পেস অক্ষর গণনা করো (space-insensitive ratio)
         non_space_chars = sum(1 for c in text if not c.isspace())
@@ -1187,7 +1187,7 @@ import requests
 
 
 class HFKeyRotator:
-    """বাংলা মন্তব্য: Hugging Face API কীগুলোর মাধ্যমে রাউন্ড-রবিন সিস্টেমে রোটেশন নিয়ন্ত্রণকারী হেলপার ক্লাস।"""
+    """বাংলা মন্তব্য: Hugging Face API কীগুলোর মাধ্যমে রাউন্ড-রবিন সিস্টেমে রোটেশন নিয়ন্ত্রণকারী হেলপার ক্লাস।"""
 
     def __init__(self, keys: list[str] | None = None) -> None:
         key_list = keys if keys is not None else getattr(settings, "hf_api_keys", [])
@@ -1207,7 +1207,7 @@ key_rotator = HFKeyRotator()
 
 
 class HFSwarmRouter:
-    """বাংলা মন্তব্য: কাস্টম ৭টি কাস্টম মডেলের (৩বি + ০.৫বি) মধ্যে টাস্ক অনুযায়ী রিয়েল-টাইম রাউটিং নিশ্চিত করার রাউটার।"""
+    """বাংলা মন্তব্য: কাস্টম ৭টি কাস্টম মডেলের (৩বি + ০.৫বি) মধ্যে টাস্ক অনুযায়ী রিয়েল-টাইম রাউটিং নিশ্চিত করার রাউটার।"""
 
     def __init__(self) -> None:
         self.model_map = getattr(
