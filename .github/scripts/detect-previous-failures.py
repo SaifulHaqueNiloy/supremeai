@@ -2,9 +2,9 @@
 import json
 import os
 import sys
+import urllib.parse
+import urllib.request
 from typing import Dict, List
-
-import requests
 
 
 REPO = os.environ.get("GITHUB_REPOSITORY")
@@ -37,10 +37,19 @@ SKIPPED_CONCLUSIONS = {"skipped", "neutral"}
 
 def api_get(path: str, params: Dict = None) -> Dict:
     url = f"https://api.github.com/repos/{REPO}{path}"
-    resp = requests.get(url, headers=HEADERS, params=params)
-    if resp.status_code >= 400:
-        raise SystemExit(f"GitHub API request failed: {resp.status_code} {resp.text}")
-    return resp.json()
+    if params:
+        url += "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers=HEADERS, method="GET")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            body = resp.read().decode("utf-8")
+            status = resp.status
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        status = e.code
+    if status >= 400:
+        raise SystemExit(f"GitHub API request failed: {status} {body}")
+    return json.loads(body)
 
 
 def get_recent_workflow_runs() -> List[Dict]:
