@@ -15,6 +15,7 @@ from core.security.secret_vault import (
 def reset_vault():
     reset_secret_vault()
     yield
+    return
     reset_secret_vault()
 
 

@@ -10,8 +10,7 @@ from tools.ai_agents.game_dev_agent import GameDevAgent
 @pytest.fixture
 def mock_game_dev():
     yield
-
-
+    return
 @pytest.mark.anyio
 @pytest.mark.anyio
 async def test_generate_unity_script(mock_game_dev):
