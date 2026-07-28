@@ -7,9 +7,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
-from ..schemas.skill_index import SkillIndexManager
-from ..schemas.skill_manifest import SkillManifest, SkillStatus
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 
 logger = logging.getLogger("supremeai.librarian")

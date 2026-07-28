@@ -21,9 +21,8 @@ from typing import Any
 
 from loguru import logger
 
-# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
-from ..core.cache import get_cache
-from ..core.llm_router import LLMRouter
+from core.cache import get_cache
+from core.llm_router import LLMRouter
 
 
 # ── Constants ────────────────────────────────────────────────────────────────
