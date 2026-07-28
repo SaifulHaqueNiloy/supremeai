@@ -222,24 +222,31 @@ const AppContent: React.FC = () => {
                       <ProfilePage />
                     </ProtectedRoute>
                   } />
+                  {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
                   <Route path="/workspace" element={
-                    <DashboardShell
-                      theme={theme}
-                      toggleTheme={toggleTheme}
-                      isServerOnline={isServerOnline}
-                      workspace={legacyWorkspace}
-                    />
+                    <ProtectedRoute>
+                      <DashboardShell
+                        theme={theme}
+                        toggleTheme={toggleTheme}
+                        isServerOnline={isServerOnline}
+                        workspace={legacyWorkspace}
+                      />
+                    </ProtectedRoute>
                   } />
                   <Route path="/workspace/*" element={
-                    <DashboardShell
-                      theme={theme}
-                      toggleTheme={toggleTheme}
-                      isServerOnline={isServerOnline}
-                      workspace={legacyWorkspace}
-                    />
+                    <ProtectedRoute>
+                      <DashboardShell
+                        theme={theme}
+                        toggleTheme={toggleTheme}
+                        isServerOnline={isServerOnline}
+                        workspace={legacyWorkspace}
+                      />
+                    </ProtectedRoute>
                   } />
                   <Route path="/workspace/live" element={
-                    <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
+                    <ProtectedRoute>
+                      <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
+                    </ProtectedRoute>
                   } />
 
                   {/* Catch-all 404 Route */}
