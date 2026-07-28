@@ -12,7 +12,11 @@ import {
   Sparkles,
   // বাংলা মন্তব্য: নতুন ম্যাপিং ট্যাবের জন্য আইকন
   Globe,
-  Smartphone
+  Smartphone,
+  BarChart3,
+  Users,
+  Shield,
+  Server
 } from 'lucide-react';
 import { HomeFeed } from './HomeFeed';
 import { QuickPresets } from './QuickPresets';
@@ -125,8 +129,8 @@ export function UserDashboard({
   onSaveToProject,
   onPreview
 }: UserDashboardProps) {
-  // বাংলা মন্তব্য: অ্যাক্টিভ ট্যাব স্টেট ইউনিয়ন টাইপ বাড়ানো হলো
-  const [activeTab, setActiveTab] = useState<'overview' | 'feed' | 'presets' | 'chat' | 'browser' | 'mobile'>('overview');
+  // বাংলা মন্তব্য: অ্যাক্টিভ ট্যাব স্টেট ইউনিয়ন টাইপ বাড়ানো হলো
+  const [activeTab, setActiveTab] = useState<'overview' | 'feed' | 'presets' | 'chat' | 'browser' | 'mobile' | 'analytics' | 'team' | 'security'>('overview');
   // বাংলা মন্তব্য: i18n হুক
   const { t } = useI18n();
 
@@ -174,15 +178,15 @@ export function UserDashboard({
       </header>
 
       <div className="flex gap-2 px-6 mb-4 flex-wrap">
-        {/* বাংলা মন্তব্য: টেস্টে নির্দিষ্ট ট্যাবে ক্লিক করার জন্য tab-* ডায়নামিক data-testid দেওয়া হলো */}
-        {(['overview', 'feed', 'presets', 'chat', 'browser', 'mobile'] as const).map((tab) => (
+        {/* বাংলা মন্তব্য: টেস্টে নির্দিষ্ট ট্যাবে ক্লিক করার জন্য tab-* ডায়নামিক data-testid দেওয়া হলো */}
+        {(['overview', 'feed', 'presets', 'chat', 'browser', 'mobile', 'analytics', 'team', 'security'] as const).map((tab) => (
           <button
             key={tab}
             data-testid={`tab-${tab}`}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-xs font-bold tracking-wider rounded-lg transition-all ${
               activeTab === tab
-                ? 'bg-accent-primary/20 text-neon-blue border border-border-accent'
+                ? 'bg-accent-primary/20 text-neon-blue border border-border-accent shadow-[0_0_15px_rgba(0,243,255,0.1)]'
                 : 'text-text-secondary hover:text-foreground border border-transparent hover:border-border-accent'
             }`}
           >
@@ -192,72 +196,97 @@ export function UserDashboard({
             {tab === 'chat' && <><MessageSquare size={10} className="inline mr-1" /> Chat</>}
             {tab === 'browser' && <><Globe size={10} className="inline mr-1" /> Browser Preview</>}
             {tab === 'mobile' && <><Smartphone size={10} className="inline mr-1" /> Mobile Simulator</>}
+            {tab === 'analytics' && <><BarChart3 size={10} className="inline mr-1" /> Analytics</>}
+            {tab === 'team' && <><Users size={10} className="inline mr-1" /> Team</>}
+            {tab === 'security' && <><Shield size={10} className="inline mr-1" /> Security</>}
           </button>
         ))}
       </div>
 
       {activeTab === 'overview' && (
         <div className="px-6">
-          <div className="dashboard-grid mb-6">
-            <div className="stat-card">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between mb-3">
-                <FolderOpen size={16} className="text-neon-blue" />
-                <span className="badge badge-cyan">Active</span>
+                <div className="p-3 bg-indigo-500/20 rounded-lg">
+                  <FolderOpen size={20} className="text-indigo-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-indigo-400">{projects.length} Active</span>
               </div>
-              <p className="text-2xl font-bold text-white font-['Space_Grotesk']">{projects.length}</p>
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">Projects</p>
+              <p className="text-2xl font-bold text-white mb-1">{projects.length}</p>
+              <p className="text-xs text-slate-400 font-mono uppercase tracking-widest">Projects</p>
+              <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(projects.length * 10, 100)}%` }}></div>
+              </div>
             </div>
 
-            <div className="stat-card">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between mb-3">
-                <MessageSquare size={16} className="text-neon-purple" />
-                <span className="badge badge-purple">Live</span>
+                <div className="p-3 bg-emerald-500/20 rounded-lg">
+                  <MessageSquare size={20} className="text-emerald-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-emerald-400">Live</span>
               </div>
-              <p className="text-2xl font-bold text-white font-['Space_Grotesk']">{chatHistory.length + customerMessages.length}</p>
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">Messages</p>
+              <p className="text-2xl font-bold text-white mb-1">{chatHistory.length + customerMessages.length}</p>
+              <p className="text-xs text-slate-400 font-mono uppercase tracking-widest">Messages</p>
+              <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: '75%' }}></div>
+              </div>
             </div>
 
-            <div className="stat-card">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between mb-3">
-                <Zap size={16} className="text-yellow-400" />
-                <span className="badge badge-green">Ready</span>
+                <div className="p-3 bg-amber-500/20 rounded-lg">
+                  <Zap size={20} className="text-amber-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-amber-400">Ready</span>
               </div>
-              <p className="text-2xl font-bold text-white font-['Space_Grotesk']">{widgets.length}</p>
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">Widgets</p>
+              <p className="text-2xl font-bold text-white mb-1">{widgets.length}</p>
+              <p className="text-xs text-slate-400 font-mono uppercase tracking-widest">Widgets</p>
+              <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(widgets.length * 20, 100)}%` }}></div>
+              </div>
             </div>
 
-            <div className="stat-card">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between mb-3">
-                <TrendingUp size={16} className="text-emerald-400" />
-                <span className="badge badge-green">Optimal</span>
+                <div className="p-3 bg-purple-500/20 rounded-lg">
+                  <TrendingUp size={20} className="text-purple-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-purple-400">Optimal</span>
               </div>
-              <p className="text-2xl font-bold text-white font-['Space_Grotesk']">98%</p>
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">Performance</p>
+              <p className="text-2xl font-bold text-white mb-1">98%</p>
+              <p className="text-xs text-slate-400 font-mono uppercase tracking-widest">Performance</p>
+              <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-purple-500 rounded-full" style={{ width: '98%' }}></div>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 dashboard-section">
-              <div className="section-header">
-                <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase">Your Projects</h2>
-                <button className="text-[10px] text-text-secondary hover:text-neon-blue font-mono transition-colors">
-                  View All <ChevronRight size={10} />
+            <div className="lg:col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
+                <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase flex items-center gap-2">
+                  <FolderOpen size={12} /> Your Projects
+                </h2>
+                <button className="text-[10px] text-slate-400 hover:text-neon-blue font-mono transition-colors flex items-center gap-1">
+                  View All <ChevronRight size={8} />
                 </button>
               </div>
 
               {projects.length > 0 ? (
                 projects.map((project) => (
-                  <div key={project.id} className="project-item">
+                  <div key={project.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-800/50 border border-slate-700 mb-3 last:mb-0 hover:bg-slate-700/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-accent-primary/10 flex items-center justify-center text-neon-blue">
-                        <FolderOpen size={14} />
+                      <div className="w-10 h-10 rounded-lg bg-accent-primary/10 flex items-center justify-center text-neon-blue">
+                        <FolderOpen size={16} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-white">{project.name}</p>
+                        <p className="text-sm font-bold text-white">{project.name}</p>
                         <p className="text-[10px] text-slate-400 font-mono">{formatDate(project.updated_at)}</p>
                       </div>
                     </div>
-                    <span className="badge badge-cyan">{project.settings.default_model}</span>
+                    <span className="text-[10px] px-2 py-1 rounded bg-slate-700 text-slate-300 font-mono">{project.settings.default_model}</span>
                   </div>
                 ))
               ) : (
@@ -267,44 +296,82 @@ export function UserDashboard({
               )}
             </div>
 
-            <div className="dashboard-section flex flex-col">
-              <div className="section-header">
-                <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase">Quick Actions</h2>
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg flex flex-col">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
+                <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase flex items-center gap-2">
+                  <Zap size={12} /> Quick Actions
+                </h2>
               </div>
-              <div className="flex flex-col gap-2">
-                <button className="quick-action-btn" onClick={() => setActiveTab('chat')}>
-                  <MessageSquare size={14} className="text-neon-blue" />
-                  <span>New Chat Session</span>
+              <div className="flex flex-col gap-3 flex-1">
+                <button
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 hover:bg-slate-700/50 text-left transition-all group"
+                  onClick={() => setActiveTab('chat')}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/20 transition-colors">
+                      <MessageSquare size={16} className="text-indigo-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-white">New Chat Session</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400" />
                 </button>
-                <button className="quick-action-btn" onClick={() => setActiveTab('presets')}>
-                  <Play size={14} className="text-neon-purple" />
-                  <span>Launch Preset</span>
+                <button
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 hover:bg-slate-700/50 text-left transition-all group"
+                  onClick={() => setActiveTab('presets')}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
+                      <Play size={16} className="text-purple-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-white">Launch Preset</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400" />
                 </button>
-                <button className="quick-action-btn" onClick={() => setActiveTab('feed')}>
-                  <Sparkles size={14} className="text-yellow-400" />
-                  <span>Home Feed</span>
+                <button
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 hover:bg-slate-700/50 text-left transition-all group"
+                  onClick={() => setActiveTab('feed')}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors">
+                      <Sparkles size={16} className="text-amber-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-white">Home Feed</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400" />
                 </button>
-                <button className="quick-action-btn">
-                  <Settings2 size={14} className="text-slate-400" />
-                  <span>Project Settings</span>
+                <button className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 hover:bg-slate-700/50 text-left transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-slate-700/20 rounded-lg group-hover:bg-slate-600/20 transition-colors">
+                      <Settings2 size={16} className="text-slate-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-white">Project Settings</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400" />
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 dashboard-section">
-            <div className="section-header">
-              <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase">
-                <Activity size={12} className="inline mr-2" />
-                Recent Activity
+          <div className="mt-6 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
+              <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase flex items-center gap-2">
+                <Activity size={12} /> Recent Activity
               </h2>
               <span className="text-[10px] text-slate-400 font-mono">Last 24 hours</span>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               {recentChats.length > 0 ? (
                 recentChats.map((msg: ChatMessage, idx: number) => (
-                  <div key={idx} className="flex items-center gap-3 p-2.5 rounded-lg bg-input-bg border border-border-accent text-[10px] font-mono">
-                    <Clock size={10} className="text-text-secondary" />
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700 text-[10px] font-mono">
+                    <Clock size={12} className="text-slate-400" />
                     <span className="text-slate-400">{msg.sender === 'User' ? 'You' : 'AI'}:</span>
                     <span className="text-foreground flex-1 truncate">
                       {msg.text}
@@ -352,7 +419,7 @@ export function UserDashboard({
 
       {activeTab === 'browser' && (
         <div className="px-6 w-full">
-          {/* বাংলা মন্তব্য: ব্রাউজার প্রিভিউ ট্যাব রেন্ডার করা হলো যেখানে কোড এডিটর এর এইচটিএমএল আউটপুট দেখা যাবে */}
+          {/* বাংলা মন্তব্লা মন্তব্য: ব্রাউজার প্রিভিউ ট্যাব রেন্ডার করা হলো যেখানে কোড এডিটর এর এইচটিএমএল আউটপুট দেখা যাবে */}
           <BrowserPreview html={code} />
         </div>
       )}
@@ -361,6 +428,127 @@ export function UserDashboard({
         <div className="px-6 w-full">
           {/* বাংলা মন্তব্য: মোবাইল সিমুলেটর ট্যাব রেন্ডার করা হলো যেখানে কোড এডিটর এর এইচটিএমএল বিভিন্ন ডিভাইসে রেসপনসিভ টেস্ট করা যাবে */}
           <MobileSimulator html={code} />
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
+        <div className="px-6">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg mb-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <BarChart3 className="text-neon-blue" /> Analytics Overview
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <h3 className="text-sm font-bold text-slate-300 mb-2">Active Users</h3>
+                <p className="text-2xl font-bold text-emerald-400">1,248</p>
+                <p className="text-xs text-slate-400 mt-1">↑ 12% from last week</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <h3 className="text-sm font-bold text-slate-300 mb-2">Tasks Completed</h3>
+                <p className="text-2xl font-bold text-amber-400">3,562</p>
+                <p className="text-xs text-slate-400 mt-1">↑ 8% from last week</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <h3 className="text-sm font-bold text-slate-300 mb-2">System Uptime</h3>
+                <p className="text-2xl font-bold text-indigo-400">99.98%</p>
+                <p className="text-xs text-slate-400 mt-1">↓ 0.02% from last week</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'team' && (
+        <div className="px-6">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Users className="text-neon-blue" /> Team Members
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <span className="text-indigo-400 font-bold">JD</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white">John Doe</h3>
+                    <p className="text-xs text-slate-400">Developer</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">Active</span>
+                </div>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                    <span className="text-purple-400 font-bold">AS</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white">Alice Smith</h3>
+                    <p className="text-xs text-slate-400">Designer</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-xs px-2 py-1 bg-amber-500/20 text-amber-400 rounded">Away</span>
+                </div>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                    <span className="text-cyan-400 font-bold">MR</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white">Mike Roberts</h3>
+                    <p className="text-xs text-slate-400">Manager</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-xs px-2 py-1 bg-slate-600/20 text-slate-400 rounded">Offline</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'security' && (
+        <div className="px-6">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Shield className="text-neon-blue" /> Security Status
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-white">Firewall Status</h3>
+                  <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">Active</span>
+                </div>
+                <p className="text-sm text-slate-400">All ports secured, no threats detected</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-white">SSL Certificate</h3>
+                  <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">Valid</span>
+                </div>
+                <p className="text-sm text-slate-400">Expires in 89 days</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-white">Last Security Scan</h3>
+                  <span className="text-xs px-2 py-1 bg-amber-500/20 text-amber-400 rounded">Recent</span>
+                </div>
+                <p className="text-sm text-slate-400">Completed 2 hours ago</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-white">Active Sessions</h3>
+                  <span className="text-xs px-2 py-1 bg-slate-600/20 text-slate-400 rounded">2</span>
+                </div>
+                <p className="text-sm text-slate-400">Current user sessions</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
