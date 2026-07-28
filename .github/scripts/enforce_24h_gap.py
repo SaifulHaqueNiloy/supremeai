@@ -2,9 +2,11 @@
 # বাংলা মন্তব্য: এই স্ক্রিপ্টটি শিডিউলড রানের ক্ষেত্রে ২৪ ঘণ্টার গ্যাপ চেক করে।
 # পুরনো ফোর্স ক্যানসেল লজিক (sys.exit(1) / gh run cancel) সরিয়ে
 # গ্রেসফুল স্কিপিং লজিক বসানো হয়েছে — should_run আউটপুটের মাধ্যমে gatekeeper জবকে সিগন্যাল দেওয়া হয়।
+import json
 import os
 import sys
-import requests
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone, timedelta
 
 def set_output(name, value):
@@ -31,18 +33,23 @@ def main():
         return 0
 
     url = f"https://api.github.com/repos/{repo}/actions/runs"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
+    query = urllib.parse.urlencode({"per_page": 20})
+    full_url = f"{url}?{query}"
+    req = urllib.request.Request(full_url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            body = resp.read().decode("utf-8")
+            status = resp.status
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        status = e.code
 
-    resp = requests.get(url, headers=headers, params={"per_page": 20})
-    if not resp.ok:
-        print(f"Failed to fetch runs: {resp.text}")
+    if not (200 <= status < 300):
+        print(f"Failed to fetch runs: {body}")
         set_output("should_run", "true")
         return 0
 
-    runs = resp.json().get("workflow_runs", [])
+    runs = json.loads(body).get("workflow_runs", [])
     now = datetime.now(timezone.utc)
 
     for run in runs:
