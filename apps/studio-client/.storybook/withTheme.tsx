@@ -1,7 +1,7 @@
 import React from 'react';
 import '../src/index.css';
 
-const ThemeWrapper = ({ theme, Story }: any) => {
+const ThemeWrapper = ({ theme, Story }: { theme: string; Story: React.FC }) => {
   React.useEffect(() => {
     document.body.classList.remove('light', 'dark');
     document.body.classList.add(theme);
@@ -14,7 +14,8 @@ const ThemeWrapper = ({ theme, Story }: any) => {
   );
 };
 
-export const withTheme = (Story: any, context: any) => {
+interface StoryContext { globals: { theme: string } }
+export const withTheme = (Story: React.FC, context: StoryContext) => {
   const theme = context.globals.theme || 'light';
 
   return <ThemeWrapper theme={theme} Story={Story} />;
