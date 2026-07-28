@@ -453,13 +453,18 @@ if __name__ == "__main__":
         else:
             result = {{"error": "No entry point found (expected execute_tool, main, or run)"}}
 
-        print(json.dumps({{"success": True, "result": result}}, default=str))
+        # Using logger instead of print for structured output
+        logger.info("Execution completed", success=True, result=result)
+        print(json.dumps({{"success": True, "result": result}}, default=str))  # Keep for external consumption
     except Exception as e:
-        print(json.dumps({{
+        error_details = {{
             "success": False,
             "error": str(e),
             "traceback": traceback.format_exc()
-        }}))
+        }}
+        # Using logger instead of print for structured error reporting
+        logger.error("Execution failed", error=str(e), traceback=traceback.format_exc())
+        print(json.dumps(error_details))
         sys.exit(1)
 """
         return wrapper
