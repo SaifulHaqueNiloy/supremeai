@@ -618,16 +618,16 @@ jobs:
         if: ${{ always() && hashFiles('trivy-python.sarif') != '' }}
         with:
           sarif_file: 'trivy-python.sarif'
-category: 'trivy-python'
+          category: 'trivy-python'
 
-       - name: Upload Trivy Node.js SARIF
+      - name: Upload Trivy Node.js SARIF
         uses: github/codeql-action/upload-sarif@v4
         if: ${{ always() && hashFiles('trivy-nodejs.sarif') != '' }}
         with:
           sarif_file: 'trivy-nodejs.sarif'
-category: 'trivy-nodejs'
+          category: 'trivy-nodejs'
 
-       - name: 📊 Add Security Audit Results to GitHub Summary
+      - name: 📊 Add Security Audit Results to GitHub Summary
         if: always()
         run: |
           echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
