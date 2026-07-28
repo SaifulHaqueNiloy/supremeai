@@ -1,13 +1,15 @@
 """Analyze coverage.json and identify high-priority files needing tests."""
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 with open("coverage.json") as f:
     data = json.load(f)
 
 files = data["files"]
 
-# High-priority targets from TEST_COVERAGE_IMPROVEMENT_PLAN.md
 targets = [
     "api/routes/__init__.py",
     "core/evolution/daily_learner.py",
@@ -42,21 +44,22 @@ targets = [
 ]
 
 if __name__ == "__main__":
-    print("=" * 80)
-    print("HIGH-PRIORITY TARGET COVERAGE STATUS")
-    print("=" * 80)
+    logging.basicConfig(level=logging.INFO)
+    logger.info("=" * 80)
+    logger.info("HIGH-PRIORITY TARGET COVERAGE STATUS")
+    logger.info("=" * 80)
     for t in targets:
         if t in files:
             s = files[t]["summary"]
             status = "LOW" if s["percent_covered"] < 50 else "MEDIUM" if s["percent_covered"] < 80 else "GOOD"
-            print(f"  {status:6s} | {s['percent_covered']:5.1f}% | {s['num_statements']:5d} stmts | {t}")
+            logger.info(f"  {status:6s} | {s['percent_covered']:5.1f}% | {s['num_statements']:5d} stmts | {t}")
         else:
-            print(f"  MISS  |  N/A  |  N/A  | {t}")
+            logger.info(f"  MISS  |  N/A  |  N/A  | {t}")
 
-    print()
-    print("=" * 80)
-    print("ALL FILES WITH < 30% COVERAGE (> 10 statements)")
-    print("=" * 80)
+    logger.info("")
+    logger.info("=" * 80)
+    logger.info("ALL FILES WITH < 30% COVERAGE (> 10 statements)")
+    logger.info("=" * 80)
     low_files = []
     for name, info in files.items():
         s = info["summary"]
@@ -64,6 +67,6 @@ if __name__ == "__main__":
             low_files.append((name, s["percent_covered"], s["num_statements"]))
 
     for name, pct, stmts in sorted(low_files, key=lambda x: x[1]):
-        print(f"  {pct:5.1f}% | {stmts:5d} stmts | {name}")
+        logger.info(f"  {pct:5.1f}% | {stmts:5d} stmts | {name}")
 
-    print(f"\nTotal low-coverage files: {len(low_files)}")
+    logger.info(f"\nTotal low-coverage files: {len(low_files)}")
