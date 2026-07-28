@@ -7,10 +7,9 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
-from ..schemas.skill_index import SkillIndexManager
-from ..schemas.skill_manifest import SkillManifest, SkillStatus
-
+# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. schemas ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 logger = logging.getLogger("supremeai.librarian")
 

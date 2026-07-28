@@ -567,8 +567,8 @@ class Settings(BaseSettings):
         """Get JWT secret with environment-specific handling.
 
         বাংলা মন্তব্য: প্রোডাকশনে SUPREMEAI_JWT_SECRET অবশ্যই নির্দিষ্ট করতে হবে এবং ৬৪ বাইটের বেশি হতে হবে।
-        Non-production এ generated secret কে _jwt_secret_cache-তে cache করা হয় যাতে
-        create_access_token() ও verify_token() একই secret পায় — নাহলে JWSSignatureError হয়।
+        Non-production এ generated secret কে _jwt_secret_cache-তে cache করা হয় যাতে
+        create_access_token() ও verify_token() একই secret পায় — নাহলে JWSSignatureError হয়।
         """
         # Return cached value if available (critical for token create/verify consistency)
         if hasattr(self, "_jwt_secret_cache") and self._jwt_secret_cache:
@@ -997,16 +997,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_completeness(self) -> "Settings":
         """Production completeness verification helper for test coverage."""
-        # বাংলা মন্তব্য: প্রোডাকশন এনভায়রনমেন্টের জন্য অতিরিক্ত কনফিগারেশন ভ্যালিডেশন
         if self.env == "production":
             _ = self.jwt_secret
-            
-            # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
-            if not self.user_cors_origins and not self.admin_cors_origins:
-                logger.warning("⚠️ Production CORS origins not explicitly configured. Using defaults for security.")
-                
-        # বাংলা মন্তব্য: কনফিগারেশন লোড হওয়ার পর লগ মেসেজ দেখানো
-        logger.info(f"✅ Configuration loaded successfully for environment: {self.env}")
         return self
 
     def reload_env_vars(self) -> None:

@@ -33,10 +33,9 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
-# Fixed imports to use relative paths
-from ..core.cache import get_cache
-from ..core.llm_router import LLMRouter
-from ..core.tenant_db import TenantAwareFirestore
+from core.cache import get_cache
+from core.llm_router import LLMRouter
+from core.tenant_db import TenantAwareFirestore
 
 logger = logging.getLogger("supremeai.churn_prophet")
 
