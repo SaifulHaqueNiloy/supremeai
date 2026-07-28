@@ -12,8 +12,8 @@ Implements accessibility features to meet WCAG 2.1 AA standards:
 - ARIA attributes
 
 Bengali:
-ডаб্লিউসি এজি ২.১ এএ অ্যাকসেসিবিলিটি মডিউল
-ডব্লিউসি এজি ২.১ এএ স্ট্যান্ডার্ড মেটানোর জন্য অ্যাকসেসিবিলিটি বৈশিষ্ট্য বাস্তবায়ন:
+ডাব্লিউসি এজি ২.১ এএ অ্যাকসেসিবিলিটি মডিউল
+ডাব্লিউসি এজি ২.১ এএ স্ট্যান্ডার্ড মেটানোর জন্য অ্যাকসেসিবিলিটি বৈশিষ্ট্য বাস্তবায়ন:
 - রঙের কনট্রাস্ট চেকিং
 - কীবোর্ড নেভিগেশন সাপোর্ট
 - স্ক্রিন রিডার কম্প্যাটিবিলিটি
@@ -107,7 +107,11 @@ class ColorContrastChecker:
         hex_color = hex_color.lstrip("#")
         if len(hex_color) == 3:
             hex_color = "".join([c * 2 for c in hex_color])
-        return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+        # জেনারেটর এক্সপ্রেশন টিউপল টাইপ সঠিকভাবে হ্যান্ডেল করার জন্য ৩-টুপল আকারে রিটার্ন করা হচ্ছে
+        rgb_list = [int(hex_color[i : i + 2], 16) for i in (0, 2, 4)]
+        return (rgb_list[0], rgb_list[1], rgb_list[2])
+
+
 
     @staticmethod
     def rgb_to_relative_luminance(r: int, g: int, b: int) -> float:
@@ -550,7 +554,7 @@ def check_url_accessibility(url: str) -> dict:
 
 def demo_accessibility_check():
     """Demonstrate accessibility checking features."""
-    print("Initializing Accessibility Compliance Engine...")
+    logger.info("Initializing Accessibility Compliance Engine...")
 
     # Sample HTML with accessibility issues
     sample_html = """
@@ -570,19 +574,18 @@ def demo_accessibility_check():
     engine = AccessibilityComplianceEngine()
     report = engine.check_page_accessibility(sample_html)
 
-    print("Accessibility Report:")
-    print(f"  Total Issues Found: {report['total_issues']}")
-    print(f"  Compliance Level: {report['summary']['compliance_level']}")
-    print(f"  Score: {engine.get_accessibility_score([]):.1f}/100")
+    logger.info("Accessibility Report:", total_issues=report["total_issues"])
+    logger.info(f"Compliance Level: {report['summary']['compliance_level']}")
+    logger.info(f"Score: {engine.get_accessibility_score([]):.1f}/100")
 
-    print("\nIssues by Severity:")
+    logger.info("Issues by Severity:")
     for severity, issues in report["by_severity"].items():
         if issues:
-            print(f"  {severity.title()}: {len(issues)} issues")
+            logger.info(f"{severity.title()}: {len(issues)} issues")
 
-    print("\nRecommendations:")
+    logger.info("Recommendations:")
     for rec in report["recommendations"]:
-        print(f"  - {rec}")
+        logger.info(f"- {rec}")
 
 
 if __name__ == "__main__":
