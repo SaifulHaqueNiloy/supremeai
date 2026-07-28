@@ -11,18 +11,18 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
-from agents.morphic_adapter import MorphicAdapter
+# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
+from .morphic_adapter import MorphicAdapter  # Using relative import from same directory
+from ..sandbox.docker_sandbox import DockerSandbox
+from ..schemas.skill_index import SkillIndexManager
+from ..schemas.skill_manifest import SkillManifest, SkillStatus
 
-from sandbox.docker_sandbox import DockerSandbox
-from schemas.skill_index import SkillIndexManager
-from schemas.skill_manifest import SkillManifest, SkillStatus
 
 logger = logging.getLogger("supremeai.skill_ingestor")
 
 
 class SkillIngestor:
-    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
+    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
     def __init__(self, base_skills_dir: str = "skills"):
         self.base_dir = Path(base_skills_dir)
         self.staging_dir = self.base_dir / "staging"
