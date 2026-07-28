@@ -90,8 +90,8 @@ vi.mock('./hooks/useServerStream', () => ({
   useServerStream: () => ({ streamStatus: 'connected' }),
 }));
 
-// Mock InteractiveChatTab to simplify chat tab tests and avoid zustand/API dependency issues in JSDOM
-vi.mock('../admin/InteractiveChatTab', () => ({
+// Mock InteractiveChatTab to simplify chat tab tests
+vi.mock('./components/admin/InteractiveChatTab', () => ({
   InteractiveChatTab: () => (
     <div>
       <div data-testid="chat-header">Chat</div>
@@ -101,8 +101,20 @@ vi.mock('../admin/InteractiveChatTab', () => ({
   ),
 }));
 
+vi.mock('./services/adminTokenStore', () => ({
+  adminTokenStore: {
+    getDecodedToken: vi.fn().mockReturnValue(null),
+    isAuthenticated: vi.fn().mockReturnValue(false),
+  },
+}));
+
+// Mock getApiBaseUrl used by InteractiveChatTab and other components
+vi.mock('./utils/api', () => ({
+  getApiBaseUrl: vi.fn().mockReturnValue('http://127.0.0.1:8000'),
+}));
+
 // Mock useDashboardStore used by InteractiveChatTab
-vi.mock('../../store/dashboardStore', () => ({
+vi.mock('./store/dashboardStore', () => ({
   useDashboardStore: () => ({
     dashboardMode: 'simple',
     chatTabTerminalOpen: false,
