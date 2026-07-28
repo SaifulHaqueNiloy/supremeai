@@ -22,8 +22,41 @@ def _run(code: str) -> subprocess.CompletedProcess:
         """
         import sys
         from unittest.mock import MagicMock
-        import google.auth
-        google.auth.default = lambda *args, **kwargs: (MagicMock(), "dummy-project")
+
+        # Mock google.auth if not installed
+        try:
+            import google.auth
+            google.auth.default = lambda *args, **kwargs: (MagicMock(), "dummy-project")
+        except ImportError:
+            sys.modules['google.auth'] = MagicMock()
+
+        # Mock opentelemetry if not installed
+        try:
+            import opentelemetry
+        except ImportError:
+            sys.modules['opentelemetry'] = MagicMock()
+            sys.modules['opentelemetry.trace'] = MagicMock()
+            sys.modules['opentelemetry.sdk'] = MagicMock()
+            sys.modules['opentelemetry.sdk.trace'] = MagicMock()
+            sys.modules['opentelemetry.sdk.trace.export'] = MagicMock()
+            sys.modules['opentelemetry.exporter'] = MagicMock()
+            sys.modules['opentelemetry.exporter.otlp'] = MagicMock()
+            sys.modules['opentelemetry.exporter.otlp.proto'] = MagicMock()
+            sys.modules['opentelemetry.exporter.otlp.proto.grpc'] = MagicMock()
+            sys.modules['opentelemetry.exporter.otlp.proto.grpc.trace_exporter'] = MagicMock()
+            sys.modules['opentelemetry.proto'] = MagicMock()
+            sys.modules['opentelemetry.proto.collector'] = MagicMock()
+            sys.modules['opentelemetry.proto.collector.trace'] = MagicMock()
+            sys.modules['opentelemetry.proto.collector.trace.v1'] = MagicMock()
+            sys.modules['opentelemetry.sdk.environment_variables'] = MagicMock()
+            sys.modules['opentelemetry._logs'] = MagicMock()
+            sys.modules['opentelemetry.sdk._logs'] = MagicMock()
+            sys.modules['opentelemetry.sdk._logs.export'] = MagicMock()
+            sys.modules['opentelemetry.metrics'] = MagicMock()
+            sys.modules['opentelemetry.sdk.metrics'] = MagicMock()
+            sys.modules['opentelemetry.sdk.metrics.export'] = MagicMock()
+            sys.modules['opentelemetry.resource'] = MagicMock()
+            sys.modules['opentelemetry.trace.export'] = MagicMock()
 
         # Patch clients to prevent network calls
         try:

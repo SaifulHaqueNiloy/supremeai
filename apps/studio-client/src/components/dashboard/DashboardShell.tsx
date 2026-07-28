@@ -50,6 +50,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 }`}</pre>
             </div>
           </div>
+          {workspace}
         </div>
 
         {/* Right Column - AI Assistant and Stats */}

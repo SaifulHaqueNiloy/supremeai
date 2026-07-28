@@ -1,28 +1,35 @@
-# ingest_future_knowledge.py — Improvement TODO
+# Test Fix TODO.md
 
-## Phase 1: Fix Critical Bugs
-- [x] Fix `arch_distributed_systems` — Add missing item 1, fix unquoted lines 8-10
-- [x] Fix `evolution_meta_learning` — Complete truncated content
+## Step 1: Fix AuthMiddleware blocking test requests (highest impact)
+- [x] Set `ALLOW_TEST_AUTH_BYPASS=true` in conftest.py's `isolate_env` fixture
+- [x] Update `override_auth` fixture to also mock at middleware level via monkeypatch
+- [x] Ensure `settings.allow_test_auth_bypass` is properly set before app creation
 
-## Phase 2: Add 9 Missing Domains
-- [x] Add `RESILIENCE_AND_RELIABILITY` — Chaos engineering, state machines, bulkhead patterns
-- [x] Add `MULTI_MODAL_INTELLIGENCE` — Vision, code, time-series understanding
-- [x] Add `COLLABORATIVE_INTELLIGENCE` — Multi-agent, swarm intelligence, game theory
-- [x] Add `KNOWLEDGE_REPRESENTATION` — Knowledge graphs, ontological reasoning, causal inference
-- [x] Add `OPTIMIZATION_AND_COST` — Zero-cost HA, provider routing, cache optimization
-- [x] Add `COMPLIANCE_AND_GOVERNANCE` — SOC 2, GDPR, audit trails, ethical AI
-- [x] Add `OBSERVABILITY_AND_DEBUGGING` — Distributed tracing, causal debugging, RCA
-- [x] Add `HUMAN_AI_INTERACTION` — Theory of mind, adaptive UX, emotion recognition
-- [x] Add `FUTURE_PROOFING` — Framework migration, protocol evolution, emerging tech
+## Step 2: Fix test_config_cache.py failures
+- [ ] Fix `test_config_cache_get_fallback` - mock `database.session.AsyncSessionLocal` at module level
+- [ ] Fix `test_config_cache_set_and_invalidate` - ensure proper mock cleanup
 
-## Phase 3: Implement Ingestion Logic
-- [x] Add main execution block with ChromaDBStore initialization
-- [x] Implement dry-run mode (default)
-- [x] Implement actual ingestion with progress reporting
-- [x] Add content-hash deduplication
-- [x] Add comprehensive error handling
+## Step 3: Fix test_health.py tests
+- [ ] Rewrite tests to use monkeypatch without module reload
+- [ ] Remove `@pytest.mark.skip` decorators
+- [ ] Use direct mock patching of `core.services.redis_queue`
 
-## Phase 4: Code Quality
-- [ ] Remove unused imports, add proper type hints
-- [x] Add CLI flags (--force, --domain filter)
-- [x] Add --stats flag to show knowledge base statistics
+## Step 4: Fix test_celery_app.py AttributeError
+- [ ] Fix mock target path in test
+
+## Step 5: Fix test_code_validator.py async function test
+- [ ] Fix test code to avoid referencing undefined variables
+
+## Step 6: Fix RBAC and other assertion failures
+- [ ] Fix test_rbac.py parametrize test
+- [ ] Fix test_provider_failover_chain.py assertions
+- [ ] Fix other assertion-based failures
+
+## Step 7: Fix telemetry test failures
+- [ ] Update mock structure for opentelemetry
+
+## Step 8: Run tests and verify fixes
+- [ ] Run `pytest tests/test_api.py -x --tb=short` to verify auth fix
+- [ ] Run targeted test files to verify individual fixes
+- [ ] Run full test suite
+
