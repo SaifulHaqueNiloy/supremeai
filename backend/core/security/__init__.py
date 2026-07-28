@@ -23,14 +23,15 @@ import jwt
 from fastapi import HTTPException, status
 from loguru import logger
 
-from core.security.enhanced_ast_scanner import SecurityScanner, SecurityIssue
-from core.security.behavioral_analyzer import BehavioralAnalyzer, AnomalyAlert, get_analyzer
+# Fixed import path - using relative import instead of absolute
+from .enhanced_ast_scanner import SecurityScanner, SecurityIssue
+from .behavioral_analyzer import BehavioralAnalyzer, AnomalyAlert, get_analyzer
 
 # Version info
 __version__ = "2.0.0"
 
 # Export main classes and functions
-# বাংলা মন্তব্য: পুরানো টোকেন ও API key ভ্যালিডেশন ফাংশন এবং নতুন সিকিউরিটি স্ক্যানার মডিউল উভয়ই একসাথে রফতানি করা হলো।
+# বাংলা মন্তব্য: পুরানো টোকেন ও API key ভ্যালিডেশন ফাংশন এবং নতুন সিকিউরিটি স্ক্যানার মডিউল উভয়ই একসাথে রফতানি করা হলো।
 __all__ = [
     # Scanner
     "SecurityScanner",
@@ -178,7 +179,7 @@ def run_security_scan() -> int:
 
 
 # ── RESTORED TOKEN & API KEY FUNCTIONS ────────────────────────────────────────
-# বাংলা মন্তব্য: নিচের ফাংশনগুলো পূর্বে ভুলক্রমে মুছে ফেলা হয়েছিল যা এখন পুনরুদ্ধার করা হয়েছে।
+# বাংলা মন্তব্য: নিচের ফাংশনগুলো পূর্বে ভুলক্রমে মুছে ফেলা হয়েছিল যা এখন পুনরুদ্ধার করা হয়েছে।
 
 
 def _get_jwt_secret() -> str:
@@ -224,7 +225,7 @@ BLACKLIST_TTL = 86400  # 24 hours
 
 
 async def revoke_token(jti: str, exp: int | None = None) -> None:
-    """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।"""
+    """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।"""
     import time
 
     from core.cache.redis_manager import redis_manager
@@ -239,11 +240,11 @@ async def revoke_token(jti: str, exp: int | None = None) -> None:
 
 
 async def is_token_revoked(jti: str) -> bool:
-    """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।"""
+    """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।"""
     from core.cache.redis_manager import redis_manager
 
     if not redis_manager or not getattr(redis_manager, "client", None):
-        return False  # Redis ডাউন থাকলে গ্রেসফুলি সার্ভিস বজায় থাকে
+        return False  # Redis ডাউন থাকলে গ্রেসফুলি সার্ভিস বজায় থাকে
     try:
         return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
     except Exception:

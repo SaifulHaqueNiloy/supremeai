@@ -206,6 +206,7 @@ full_codebase_export.md
 # ============================================
 # EXPLICIT SENSITIVE HOTFIX IGNORES
 # ============================================
+render.env
 .env*
 *.log
 firebase-debug.log
@@ -230,6 +231,9 @@ refactor_wiz_report.md
 
 # Database backups
 backend/backup/
+
+# Backup files
+*.backup
 
 # Generated artifacts & logs (Codebase Improvement Plan)
 *.coverage_report.json
