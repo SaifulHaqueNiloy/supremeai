@@ -21,11 +21,8 @@ from unittest.mock import MagicMock
 
 from loguru import logger
 
-# রিলেটিভ ইম্পোর্ট পাথ ঠিক করা হলো
-from ..cache.redis_manager import redis_manager
-from ..config import settings
-
-
+from core.cache.redis_manager import redis_manager
+from core.config import settings
 
 # Dummy handle for test monkeypatching compatibility
 redis_queue = redis_manager
