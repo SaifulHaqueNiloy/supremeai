@@ -96,7 +96,9 @@ class ConfigManager:
 
     def __init__(self, config_path: str = "./config"):
         self.config_path = Path(config_path)
-        self.environments = {}
+        # বিভিন্ন পরিবেশের কনফিগারেশনের জন্য ডিকশনারি টাইপ অ্যানোটেশন সহ
+        self.environments: dict[str, Any] = {}
+
         self.load_configs()
 
     def load_configs(self):
@@ -664,29 +666,29 @@ class MonitoringIntegrator:
 # Example usage and testing
 async def demo_production_deployment():
     """Demonstrate production deployment system."""
-    print("Initializing Production Deployment System...")
+    logger.info("Initializing Production Deployment System...")
 
     deployment_system = ProductionDeploymentSystem()
 
-    print("\nDeploying to staging environment...")
+    logger.info("Deploying to staging environment...")
     staging_result = await deployment_system.deploy_new_version(
         environment=DeploymentEnvironment.STAGING, version_tag="v1.2.3-staging"
     )
 
-    print(f"Staging deployment result: {staging_result.status.value}")
+    logger.info(f"Staging deployment result: {staging_result.status.value}")
 
-    print("\nDeploying to production environment...")
+    logger.info("Deploying to production environment...")
     prod_result = await deployment_system.deploy_new_version(
         environment=DeploymentEnvironment.PRODUCTION, version_tag="v1.2.3"
     )
 
-    print(f"Production deployment result: {prod_result.status.value}")
+    logger.info(f"Production deployment result: {prod_result.status.value}")
 
-    print("\nChecking production environment status...")
+    logger.info("Checking production environment status...")
     prod_status = deployment_system.get_environment_status(DeploymentEnvironment.PRODUCTION)
-    print(f"Production status: {prod_status}")
+    logger.info(f"Production status: {prod_status}")
 
-    print("\nDeployment system demo completed!")
+    logger.info("Deployment system demo completed!")
 
 
 if __name__ == "__main__":
