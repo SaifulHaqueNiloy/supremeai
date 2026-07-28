@@ -10,8 +10,7 @@ from tools.ai_agents.legal_agent import LegalAgent
 @pytest.fixture
 def mock_legal():
     yield
-
-
+    return
 @pytest.mark.anyio
 @pytest.mark.anyio
 async def test_generate_contract(mock_legal):

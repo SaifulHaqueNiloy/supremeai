@@ -234,14 +234,14 @@ def override_auth():
             "role": "admin",
         }
         yield
+        return
         app.dependency_overrides = {}
     except Exception as e:
         import warnings
 
         warnings.warn(f"override_auth fixture skipped: {e}", stacklevel=2)
         yield
-
-
+        return
 @pytest.fixture(autouse=True)
 def configure_litellm():
     """টেস্টের জন্য litellm সেটিংস কনফিগার করুন"""
@@ -273,8 +273,7 @@ def configure_litellm():
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Exception suppressed: {e}")
     yield
-
-
+    return
 @pytest.fixture
 def mock_production_env(monkeypatch):
     monkeypatch.setenv("ENV", "production")
@@ -325,6 +324,7 @@ async def setup_test_database():
 
     yield
 
+    return
     if _db_available:
         try:
             from database.session import engine
@@ -358,8 +358,7 @@ def clear_settings_cache():
     # Many tests mutate os.environ without cleaning up
     os.environ["SUPREMEAI_API_TOKEN"] = ""
     yield
-
-
+    return
 @pytest.fixture(autouse=True)
 def mock_supabase():
     import os
