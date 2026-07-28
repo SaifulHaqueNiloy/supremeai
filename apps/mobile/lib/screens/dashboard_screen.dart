@@ -26,7 +26,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
 
-    // 🔥 safe প্র্যাকটিস: ফ্রেম রেন্ডারিং শেষ হওয়ার পর প্রোভাইডার থেকে ডেটা রিড করা হবে
+    // 🔥 safe প্র্যাকটিস: ফ্রেম রেন্ডারিং শেষ হওয়ার পর প্রোভাইডার থেকে ডেটা রিড করা হবে
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         context.read<DashboardProvider>().syncDashboard();
@@ -168,6 +168,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 icon: Icons.cleaning_services,
                                 onTap: () => provider.executeQuickAction('cache'),
                               ),
+                              ActionHubCard(
+                                title: 'Deploy',
+                                subtitle: 'Cloud Deployment',
+                                icon: Icons.cloud_upload,
+                                onTap: () => provider.executeQuickAction('deploy'),
+                              ),
+                              ActionHubCard(
+                                title: 'Monitor',
+                                subtitle: 'System Health',
+                                icon: Icons.monitor_heart,
+                                onTap: () => provider.executeQuickAction('monitor'),
+                              ),
                             ],
                           ),
                         ],
@@ -190,17 +202,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             itemBuilder: (context, index) {
                               final job = provider.jobs[index];
                               final isSuccess = job.status == 'success';
+                              final isRunning = job.status == 'running';
+                              final isPending = job.status == 'pending';
 
                               return ListTile(
                                 tileColor: DesignTokens.colorBgElevatedDark,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: DesignTokens.colorBorderAccentDark)),
-                                leading: Icon(
-                                  isSuccess ? Icons.check_circle : Icons.error,
-                                  color: isSuccess ? DesignTokens.colorSuccessDark : DesignTokens.colorDangerDark,
+                                leading: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: isSuccess ? DesignTokens.colorSuccessDark.withOpacity(0.2) :
+                                           isRunning ? DesignTokens.colorWarningDark.withOpacity(0.2) :
+                                           isPending ? DesignTokens.colorInfoDark.withOpacity(0.2) :
+                                           DesignTokens.colorDangerDark.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    isSuccess ? Icons.check_circle : 
+                                    isRunning ? Icons.hourglass_empty : 
+                                    isPending ? Icons.access_time : 
+                                    Icons.error,
+                                    color: isSuccess ? DesignTokens.colorSuccessDark :
+                                          isRunning ? DesignTokens.colorWarningDark :
+                                          isPending ? DesignTokens.colorInfoDark :
+                                          DesignTokens.colorDangerDark,
+                                    size: 20,
+                                  ),
                                 ),
                                 title: Text(job.name, style: const TextStyle(color: DesignTokens.colorTextPrimaryDark, fontSize: 14)),
                                 subtitle: Text('Status: ${job.status.toUpperCase()}', style: const TextStyle(color: DesignTokens.colorTextSecondaryDark, fontSize: 12)),
-                                trailing: const Icon(Icons.chevron_right, color: DesignTokens.colorTextSecondaryDark),
+                                trailing: isRunning ? 
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent)),
+                                  ) : 
+                                  const Icon(Icons.chevron_right, color: DesignTokens.colorTextSecondaryDark),
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -215,10 +253,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
+                    
+                    // System Health Section
+                    const SizedBox(height: 24),
+                    FadeInSlide(
+                      delay: const Duration(milliseconds: 600),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SupremeHeader(title: '📊 System Health'),
+                          const SizedBox(height: 12),
+                          SupremeCard(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                _buildHealthMetric('CPU Usage', '24%', 24, Colors.green),
+                                const SizedBox(height: 12),
+                                _buildHealthMetric('Memory Usage', '45%', 45, Colors.amber),
+                                const SizedBox(height: 12),
+                                _buildHealthMetric('Disk Usage', '62%', 62, Colors.orange),
+                                const SizedBox(height: 12),
+                                _buildHealthMetric('Network', '12Mbps', 12, Colors.blue),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildHealthMetric(String title, String value, int percentage, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(color: DesignTokens.colorTextSecondaryDark, fontSize: 12)),
+            Text(value, style: const TextStyle(color: DesignTokens.colorTextPrimaryDark, fontSize: 14, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: percentage / 100,
+          backgroundColor: DesignTokens.colorBgElevatedDark,
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+        ),
+      ],
     );
   }
 
