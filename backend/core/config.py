@@ -1000,11 +1000,11 @@ class Settings(BaseSettings):
         # বাংলা মন্তব্য: প্রোডাকশন এনভায়রনমেন্টের জন্য অতিরিক্ত কনফিগারেশন ভ্যালিডেশন
         if self.env == "production":
             _ = self.jwt_secret
-            
+
             # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
             if not self.user_cors_origins and not self.admin_cors_origins:
                 logger.warning("⚠️ Production CORS origins not explicitly configured. Using defaults for security.")
-                
+
         # বাংলা মন্তব্য: কনফিগারেশন লোড হওয়ার পর লগ মেসেজ দেখানো
         logger.info(f"✅ Configuration loaded successfully for environment: {self.env}")
         return self

@@ -30,6 +30,8 @@ def mock_env_runpod():
     with patch.dict(os.environ, {"RUNPOD_API_KEY": "test-runpod-key"}, clear=True):
         yield
         return
+
+
 @pytest.fixture
 def mock_env_modal():
     with patch.dict(
@@ -39,6 +41,8 @@ def mock_env_modal():
     ):
         yield
         return
+
+
 def _mock_response(json_data, status_code=200):
     """সাহায়ক ফাংশন: Mock HTTP response তৈরি করতে।"""
     mock_resp = MagicMock()

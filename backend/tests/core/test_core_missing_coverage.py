@@ -25,6 +25,8 @@ def _isolate_test_env(monkeypatch):
     monkeypatch.delenv("SUPREMEAI_ENCRYPTION_KEY", raising=False)
     yield
     return
+
+
 # ========================== config.py ==========================
 
 
