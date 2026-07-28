@@ -23,13 +23,30 @@ _project_root = Path(__file__).resolve().parent.parent.parent  # scripts/devops/
 
 try:
     sys.path.insert(0, str(_project_root / "backend"))
+    from core.config import settings
+except ImportError:
+    settings = None
+
+# বাংলা মন্তব্য: যদি settings ইম্পোর্ট করা না যায় বা None হয়, তবে সরাসরি env vars থেকে fallback করা হবে।
+if settings is None:
+    class FallbackSettings:
+        @property
+        def gemini_api_key(self) -> str:
+            # বাংলা মন্তব্য: সরাসরি পরিবেশ ভেরিয়েবল থেকে Gemini API কী পড়া হচ্ছে।
+            return os.environ.get("GEMINI_API_KEY", "")
+
+        @property
+        def gemini_model_name(self) -> str:
+            # বাংলা মন্তব্য: সরাসরি পরিবেশ ভেরিয়েবল থেকে Gemini মডেলের নাম পড়া হচ্ছে, না থাকলে ডিফল্ট মডেল ব্যবহার হবে।
+            return os.environ.get("GEMINI_MODEL_NAME", "gemini/gemini-1.5-flash")
+    settings = FallbackSettings()  # type: ignore[assignment]
+
+try:
     sys.path.insert(0, str(_project_root / "scripts"))
     sys.path.insert(0, str(_project_root))
-    from core.config import settings
     from knowledge_indexer import run_indexing as run_knowledge_indexing
 except ImportError:
-    # ফলব্যাক: settings ও indexing ছাড়াও স্ক্রিপ্ট চলতে পারে (docstring generation-এর জন্য)
-    settings = None  # type: ignore[assignment]
+    # বাংলা মন্তব্য: knowledge_indexer বা chromadb লাইব্রেরি না থাকলে ইনডেক্সিং এড়ানো হবে।
     def run_knowledge_indexing(*_args, **_kwargs):  # type: ignore[misc]
         pass
 
