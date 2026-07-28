@@ -48,8 +48,14 @@ sys.modules["nats.aio.client"] = create_mock_module("nats.aio.client")
 sys.modules["nats.errors"] = create_mock_module("nats.errors")
 sys.modules["docker"] = create_mock_module("docker", is_package=True)
 sys.modules["docker.errors"] = create_mock_module("docker.errors")
-sys.modules["tools.code"] = create_mock_module("tools.code", is_package=True)
-sys.modules["tools.code.fuzz_sandbox"] = create_mock_module("tools.code.fuzz_sandbox")
+sys.modules["typer"] = create_mock_module("typer", is_package=True)
+sys.modules["rich"] = create_mock_module("rich", is_package=True)
+sys.modules["rich.console"] = create_mock_module("rich.console")
+sys.modules["rich.table"] = create_mock_module("rich.table")
+sys.modules["rich.panel"] = create_mock_module("rich.panel")
+sys.modules["rich.prompt"] = create_mock_module("rich.prompt")
+sys.modules["tools.code.image_to_code_react"] = create_mock_module("tools.code.image_to_code_react")
+sys.modules["tools.cache_cleanup"] = create_mock_module("tools.cache_cleanup")
 
 # Mock external SDKs
 sys.modules["analytics"] = create_mock_module("analytics")
@@ -71,11 +77,61 @@ sys.modules["stripe"] = create_mock_module("stripe", is_package=True)
 sys.modules["stripe.error"] = create_mock_module("stripe.error")
 sys.modules["resend"] = create_mock_module("resend", is_package=True)
 sys.modules["resend.emails"] = create_mock_module("resend.emails")
-sys.modules["httpx"] = create_mock_module("httpx", is_package=True)
-sys.modules["httpx._client"] = create_mock_module("httpx._client")
-sys.modules["httpx._models"] = create_mock_module("httpx._models")
-sys.modules["httpx._exceptions"] = create_mock_module("httpx._exceptions")
 sys.modules["websockets"] = create_mock_module("websockets", is_package=True)
+sys.modules["litellm"] = create_mock_module("litellm", is_package=True)
+sys.modules["opentelemetry"] = create_mock_module("opentelemetry", is_package=True)
+sys.modules["opentelemetry.sdk"] = create_mock_module("opentelemetry.sdk", is_package=True)
+sys.modules["opentelemetry.sdk.trace"] = create_mock_module("opentelemetry.sdk.trace", is_package=True)
+sys.modules["opentelemetry.instrumentation"] = create_mock_module("opentelemetry.instrumentation", is_package=True)
+sys.modules["opentelemetry.instrumentation.fastapi"] = create_mock_module("opentelemetry.instrumentation.fastapi")
+sys.modules["opentelemetry.exporter"] = create_mock_module("opentelemetry.exporter", is_package=True)
+sys.modules["opentelemetry.exporter.otlp"] = create_mock_module("opentelemetry.exporter.otlp", is_package=True)
+sys.modules["opentelemetry.exporter.otlp.proto"] = create_mock_module("opentelemetry.exporter.otlp.proto", is_package=True)
+sys.modules["opentelemetry.exporter.otlp.proto.grpc"] = create_mock_module("opentelemetry.exporter.otlp.proto.grpc")
+sys.modules["asyncpg"] = create_mock_module("asyncpg", is_package=True)
+sys.modules["tenacity"] = create_mock_module("tenacity", is_package=True)
+sys.modules["posthog"] = create_mock_module("posthog", is_package=True)
+sys.modules["pandas"] = create_mock_module("pandas", is_package=True)
+sys.modules["neo4j"] = create_mock_module("neo4j", is_package=True)
+sys.modules["mcp"] = create_mock_module("mcp", is_package=True)
+sys.modules["grpc"] = create_mock_module("grpc", is_package=True)
+sys.modules["google"] = create_mock_module("google", is_package=True)
+sys.modules["google.auth"] = create_mock_module("google.auth", is_package=True)
+sys.modules["google.cloud"] = create_mock_module("google.cloud", is_package=True)
+sys.modules["google.cloud.firestore"] = create_mock_module("google.cloud.firestore", is_package=True)
+sys.modules["google.cloud.secretmanager"] = create_mock_module("google.cloud.secretmanager", is_package=True)
+sys.modules["google_auth_httplib2"] = create_mock_module("google_auth_httplib2", is_package=True)
+sys.modules["google_auth_oauthlib"] = create_mock_module("google_auth_oauthlib", is_package=True)
+sys.modules["google.cloud.storage"] = create_mock_module("google.cloud.storage", is_package=True)
+sys.modules["mcp.server.fastmcp"] = create_mock_module("mcp.server.fastmcp")
+sys.modules["tools.code.image_to_code_react"] = create_mock_module("tools.code.image_to_code_react")
+sys.modules["tools.code.code_smell_detector"] = create_mock_module("tools.code.code_smell_detector")
+sys.modules["opentelemetry.sdk.trace.export"] = create_mock_module("opentelemetry.sdk.trace.export")
+sys.modules["opentelemetry.exporter.otlp.proto.grpc.trace_exporter"] = create_mock_module("opentelemetry.exporter.otlp.proto.grpc.trace_exporter")
+sys.modules["opentelemetry.proto"] = create_mock_module("opentelemetry.proto", is_package=True)
+sys.modules["opentelemetry.proto.collector"] = create_mock_module("opentelemetry.proto.collector", is_package=True)
+sys.modules["opentelemetry.proto.collector.trace"] = create_mock_module("opentelemetry.proto.collector.trace", is_package=True)
+sys.modules["opentelemetry.proto.collector.trace.v1"] = create_mock_module("opentelemetry.proto.collector.trace.v1")
+sys.modules["opentelemetry.sdk.environment_variables"] = create_mock_module("opentelemetry.sdk.environment_variables")
+sys.modules["opentelemetry._logs"] = create_mock_module("opentelemetry._logs", is_package=True)
+sys.modules["opentelemetry.sdk._logs"] = create_mock_module("opentelemetry.sdk._logs", is_package=True)
+sys.modules["opentelemetry.sdk._logs.export"] = create_mock_module("opentelemetry.sdk._logs.export")
+sys.modules["opentelemetry.metrics"] = create_mock_module("opentelemetry.metrics", is_package=True)
+sys.modules["opentelemetry.sdk.metrics"] = create_mock_module("opentelemetry.sdk.metrics", is_package=True)
+sys.modules["opentelemetry.sdk.metrics.export"] = create_mock_module("opentelemetry.sdk.metrics.export")
+sys.modules["opentelemetry.resource"] = create_mock_module("opentelemetry.resource", is_package=True)
+sys.modules["opentelemetry.trace"] = create_mock_module("opentelemetry.trace", is_package=True)
+sys.modules["opentelemetry.sdk.trace"] = create_mock_module("opentelemetry.sdk.trace", is_package=True)
+sys.modules["opentelemetry.trace.export"] = create_mock_module("opentelemetry.trace.export")
+sys.modules["asyncpg.connection"] = create_mock_module("asyncpg.connection")
+sys.modules["asyncpg.pool"] = create_mock_module("asyncpg.pool")
+sys.modules["mcp.server"] = create_mock_module("mcp.server", is_package=True)
+sys.modules["mcp.server.stdio"] = create_mock_module("mcp.server.stdio")
+sys.modules["google.oauth2"] = create_mock_module("google.oauth2", is_package=True)
+sys.modules["google.oauth2.credentials"] = create_mock_module("google.oauth2.credentials")
+sys.modules["google.oauth2.service_account"] = create_mock_module("google.oauth2.service_account")
+sys.modules["firebase_admin"] = create_mock_module("firebase_admin", is_package=True)
+sys.modules["tools.code.code_smell_detector"] = create_mock_module("tools.code.code_smell_detector")
 
 # ✅ SECURITY: Use explicit test-only placeholders that cannot be mistaken for real credentials.
 os.environ["SUPREMEAI_ENCRYPTION_KEY"] = "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD"
@@ -186,6 +242,11 @@ _TEST_ENV_DEFAULTS = {
     "AUTOFIX_AUTHORIZED": "false",
     "EXPERIENCE_DB_PATH": f"data/test_experience_{os.getpid()}.db",
     "LITELLM_DISABLE_ASYNC_CLIENT_CLEANUP": "True",
+    # বাংলা মন্তব্য: AuthMiddleware-কে টেস্টে বাইপাস করতে ALLOW_TEST_AUTH_BYPASS=true
+    # auth_middleware.py: _is_public_path(path) or (is_test_environment() and allow_bypass)
+    # এই শর্তটি True হলে AuthMiddleware কোনো টোকেন ভেরিফিকেশন ছাড়াই request pass করে দেয়
+    "ALLOW_TEST_AUTH_BYPASS": "true",
+    "ALLOW_TEST_ORIGIN_BYPASS": "true",
 }
 
 
@@ -209,7 +270,11 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch):
             pass
         try:
             if hasattr(core.config.settings, key.lower()):
-                setattr(core.config.settings, key.lower(), value)
+                # বাংলা মন্তব্য: boolean env vars (যেমন ALLOW_TEST_AUTH_BYPASS) সঠিক টাইপে সেট করা
+                if isinstance(getattr(core.config.settings, key.lower(), None), bool):
+                    setattr(core.config.settings, key.lower(), str(value).lower() == "true")
+                else:
+                    setattr(core.config.settings, key.lower(), value)
             elif hasattr(core.config.settings, key):
                 setattr(core.config.settings, key, value)
             elif getattr(core.config.settings.model_config, "extra", "ignore") == "allow":

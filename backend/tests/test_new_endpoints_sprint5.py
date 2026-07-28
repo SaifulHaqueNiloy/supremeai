@@ -97,12 +97,12 @@ class TestOnboardingFlow:
 
 class TestSmellCheck:
     def test_smell_check_requires_path(self):
-        resp = client.post("/tools/smell-check", json={})
+        resp = client.post("/tools/smell-check", json={}, headers={"Authorization": "Bearer mock-token"})
         assert resp.status_code == 422
 
     def test_smell_check_invalid_path(self):
         from unittest.mock import patch
 
         with patch("os.path.exists", return_value=False):
-            resp = client.post("/tools/smell-check", json={"path": "/nonexistent/path"})
+            resp = client.post("/tools/smell-check", json={"path": "/nonexistent/path"}, headers={"Authorization": "Bearer mock-token"})
             assert resp.status_code == 404
