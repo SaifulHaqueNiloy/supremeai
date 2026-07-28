@@ -386,7 +386,6 @@ jobs:
       - name: 📊 Codegraph - Knowledge Base Generation
         id: codegraph
         working-directory: backend
-        continue-on-error: true
         run: |
           echo "## 📊 নলেজ গ্রাফ জেনারেশন" >> $GITHUB_STEP_SUMMARY
           python ../scripts/codegraph_integration.py --full --output-dir ../docs/codebase/knowledge_graph 2>&1 || true
@@ -607,7 +606,6 @@ jobs:
           category: "/language:python,javascript"
 
       - name: 🔍 Parallel Security Scan
-        continue-on-error: true
         run: |
           wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.deb
           sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
@@ -620,18 +618,16 @@ jobs:
         if: ${{ always() && hashFiles('trivy-python.sarif') != '' }}
         with:
           sarif_file: 'trivy-python.sarif'
-          category: 'trivy-python'
-        continue-on-error: true
+category: 'trivy-python'
 
-      - name: Upload Trivy Node.js SARIF
+       - name: Upload Trivy Node.js SARIF
         uses: github/codeql-action/upload-sarif@v4
         if: ${{ always() && hashFiles('trivy-nodejs.sarif') != '' }}
         with:
           sarif_file: 'trivy-nodejs.sarif'
-          category: 'trivy-nodejs'
-        continue-on-error: true
+category: 'trivy-nodejs'
 
-      - name: 📊 Add Security Audit Results to GitHub Summary
+       - name: 📊 Add Security Audit Results to GitHub Summary
         if: always()
         run: |
           echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
@@ -700,7 +696,6 @@ jobs:
 
       - name: Add Studio Client Test Results to GitHub Summary
         if: always()
-        continue-on-error: true
         run: python .github/scripts/supreme_ci.py generate-report --vitest-json apps/studio-client/vitest-report.json --label "Studio Client"
 
       - name: Run Web Chat Vitest with JSON Report
