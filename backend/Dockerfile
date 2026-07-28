@@ -3,45 +3,66 @@ FROM python:3.11-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    build-essential libpq-dev curl && rm -rf /var/lib/apt/lists/*
+# Install minimal build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
 WORKDIR /app
 RUN pip install --no-cache-dir poetry
 RUN poetry config virtualenvs.in-project true
 
-# ক্যাশ লেয়ার: শুধু ডিপেন্ডেন্সি ইন্সটল
+# Cache layer: install only main dependencies (tools group excluded to save space on Render free tier)
 COPY backend/pyproject.toml backend/poetry.lock* ./
-# বাংলা মন্তব্য: Render free tier-এ 'tools' group (~500MB) বাদ দেওয়া হয়েছে — শুধু main dependencies।
-# chromadb, qdrant-client, sentence-transformers এখন main group-এ আছে, তাই এটাই install করবে।
 RUN poetry install --no-interaction --no-ansi --no-root --only main
+
 
 # Stage 2: Runner
 FROM python:3.11-slim AS runner
 WORKDIR /app
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    libpq5 && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user appuser
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Install runtime dependencies securely (curl added for container HEALTHCHECK)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
-# শুধুমাত্র ভার্চুয়াল এনভায়রনমেন্ট কপি করো (পুরো সোর্স কোড নয়)
-COPY --from=builder /app/.venv /app/.venv
-COPY backend/ .
-# বাংলা মন্তব্য: রুট-লেভেল 'skills' ডিরেক্টরি কপি করা হচ্ছে যাতে
-# core/evolution/auto_skill_creator.py সঠিকভাবে 'skills.installer' ইম্পোর্ট করতে পারে।
-COPY skills/ ./skills/
+# Create non-root user with home directory
+RUN adduser --disabled-password --gecos '' --home /home/appuser appuser
+
+# Copy virtual environment from builder and application source code from workspace
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+COPY --chown=appuser:appuser backend/ /app/
+
+
+# Security hardening: remove sensitive files
+RUN rm -rf /app/.git /app/.env* /app/.env /app/secrets.sh || true
+
+# Set working directory with proper permissions
+WORKDIR /app
 
 # Create secrets directory and grant ownership to non-root appuser
 RUN mkdir -p /etc/secrets && chown -R appuser:appuser /etc/secrets
 
-RUN chown -R appuser:appuser /app
+# Security: non-root user
 USER appuser
 
-ENV PATH="/app/.venv/bin:$PATH"
+# Environment variables
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Security: read-only filesystem where possible
+RUN chmod -R go-w /app/.venv
+
+# Expose port
 EXPOSE 8080
 
-# CRITICAL FIX (Cloud Run Port Binding):
-# Always use shell form for CMD (e.g., `CMD uvicorn ...`) instead of JSON array (`CMD ["uvicorn", ...]`).
-# The shell form allows Cloud Run to dynamically inject the $PORT environment variable.
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Health check with security considerations
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -sf http://localhost:${PORT:-8080}/health || exit 1
+
+# Security: Run application with proper user privileges
+CMD ["sh", "-c", "exec python main.py"]
