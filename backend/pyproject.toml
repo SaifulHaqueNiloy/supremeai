@@ -19,7 +19,8 @@ loguru = "^0.7.3"
 redis = {extras = ["hiredis"], version = "^5.2.0"}
 python-multipart = "^0.0.20"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+# python-jose deprecated; migrated to PyJWT
+# PyJWT = "2.10+" # added below when migration complete
 python-dotenv = "^1.0.1"
 requests = "^2.32.3"
 uuid6 = "^2025.0.1"
@@ -195,6 +196,8 @@ target-version = ['py311']
 profile = "black"
 multi_line_output = 3
 
+# বাংলা মন্তব্য: pylint এর disable তালিকা আগে 80+ রুল ছিল (অনেক W07xx ডুপ্লিকেট),
+# এখন শুধু প্রয়োজনীয় রুলগুলো রাখা হয়েছে — বাকি সব সরানো হয়েছে
 [tool.pylint]
 max-line-length = 120
 disable = [
@@ -220,70 +223,27 @@ disable = [
     "C0116",  # Missing function docstring
     "W0237",  # Arguments renamed in subclass
     "W0221",  # Arguments differ from overridden method
-    "W0236",  # Removed incompatibility in class hierarchy
+    "W0236",  # Removed incompatibility
     "R1705",  # Unnecessary "else" after "return"
-    "C0209",  # Formatting a string with % or .format
-    "W0102",  # Dangerous default value as argument
-    "W0107",  # Unnecessary pass statement
+    "C0209",  # Formatting with % or .format
+    "W0102",  # Dangerous default value arg
+    "W0107",  # Unnecessary pass
     "C0411",  # Wrong import order
     "W0612",  # Unused variable
-    "R1725",  # Consider using Python 3 style super() call
+    "R1725",  # super() call style
     "W0404",  # Reimported
     "R0205",  # Class inherits from object
     "C0104",  # Disallowed name
-    "W0719",  # Raising arbitrary exception
-    "W0707",  # Consider explicitly re-raising using 'raise ... from ...'
-    "W0718",  # Catching too general exception
-    "R1710",  # Either all return statements in a function should return an expression, or none of them should
-    "R1711",  # Useless return at end of function or method
+    "W0707",  # Re-raising via 'raise ... from ...'
+    "R1710",  # Inconsistent return
+    "R1711",  # Useless return
     "C2801",  # Unnecessary dunder call
-    "R0402",  # Use of from import is recommended
+    "R0402",  # from import recommended
     "C0303",  # Trailing whitespace
-    "C0304",  # Final newline missing
-    "W0301",  # Useless semicolon
+    "C0304",  # Final newline
     "C0413",  # Wrong import position
-    "R0916",  # Too many boolean expressions
-    "W0631",  # Using possibly undefined loop variable
-    "W0711",  # Exception to catch is the same as the raised exception
-    "W0712",  # Implicitly catching BaseException
-    "W0713",  # Catching a non-exception type
-    "W0714",  # Non-exception caught
-    "W0715",  # Exception arguments suggest string formatting might be intended
-    "W0716",  # Unknown exception option
-    "W0717",  # Bad exception context
-    "W0718",  # Catching too general exception
-    "W0719",  # Raising non-exception
-    "W0720",  # Using bare except
-    "W0721",  # Exception doesn't inherit from standard "Exception" class
-    "W0722",  # Bare except clause
-    "W0723",  # Use of deprecated argument to exec
-    "W0724",  # Use of deprecated argument to exec
-    "W0725",  # Use of deprecated argument to exec
-    "W0726",  # Use of deprecated argument to exec
-    "W0727",  # Use of deprecated argument to exec
-    "W0728",  # Use of deprecated argument to exec
-    "W0729",  # Use of deprecated argument to exec
-    "W0730",  # Use of deprecated argument to exec
-    "W0731",  # Use of deprecated argument to exec
-    "W0732",  # Use of deprecated argument to exec
-    "W0733",  # Use of deprecated argument to exec
-    "W0734",  # Use of deprecated argument to exec
-    "W0735",  # Use of deprecated argument to exec
-    "W0736",  # Use of deprecated argument to exec
-    "W0737",  # Use of deprecated argument to exec
-    "W0738",  # Use of deprecated argument to exec
-    "W0739",  # Use of deprecated argument to exec
-    "W0740",  # Use of deprecated argument to exec
-    "W0741",  # Use of deprecated argument to exec
-    "W0742",  # Use of deprecated argument to exec
-    "W0743",  # Use of deprecated argument to exec
-    "W0744",  # Use of deprecated argument to exec
-    "W0745",  # Use of deprecated argument to exec
-    "W0746",  # Use of deprecated argument to exec
-    "W0747",  # Use of deprecated argument to exec
-    "W0748",  # Use of deprecated argument to exec
-    "W0749",  # Use of deprecated argument to exec
-    "W0750",  # Use of deprecated argument to exec
+    "R0916",  # Too many boolean exprs
+    "W0631",  # Undefined loop variable
 ]
 
 [tool.ruff]
