@@ -28,9 +28,11 @@ def _init_fts_db(conn: sqlite3.Connection) -> None:
 
 
 def _upsert_fts(conn: sqlite3.Connection, doc_id: str, title: str, content: str, source: str) -> None:
+    # SQLite FTS5 ভার্চুয়াল টেবিলে সরাসরি UPSERT (ON CONFLICT) সাপোর্ট করে না।
+    # তাই প্রথমে ডুপ্লিকেট rowid থাকলে তা ডিলেট করে নতুন করে ইনসার্ট করা হচ্ছে।
+    conn.execute("DELETE FROM knowledge_fts WHERE rowid = ?", [doc_id])
     conn.execute(
-        "INSERT INTO knowledge_fts(rowid, title, content, source) VALUES (?, ?, ?, ?) "
-        "ON CONFLICT(rowid) DO UPDATE SET title=excluded.title, content=excluded.content, source=excluded.source",
+        "INSERT INTO knowledge_fts(rowid, title, content, source) VALUES (?, ?, ?, ?)",
         [doc_id, title, content, source],
     )
 
