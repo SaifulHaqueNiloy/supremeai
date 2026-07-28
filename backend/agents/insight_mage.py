@@ -32,9 +32,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, TypeVar
 
-from core.cache import get_cache
-from core.llm_router import LLMRouter
-from core.tenant_db import TenantAwareFirestore
+from ..core.cache import get_cache  # Fixed import path - using relative import
+# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
+from ..core.llm_router import LLMRouter
+from ..core.tenant_db import TenantAwareFirestore
+
 
 logger = logging.getLogger("supremeai.insight_mage")
 

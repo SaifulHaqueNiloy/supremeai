@@ -20,7 +20,9 @@ from typing import Any
 
 from loguru import logger
 
-from core.cache import get_cache
+# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
+from ..core.cache import get_cache
+
 
 # ── Constants ────────────────────────────────────────────────────────────────
 HEARTBEAT_TTL = 60  # 1 minute

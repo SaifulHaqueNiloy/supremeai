@@ -2,8 +2,8 @@
 
 import threading
 
-from core.config import settings
-from core.resilience.circuit_breaker import CircuitBreaker
+from ..config import settings
+from .circuit_breaker import CircuitBreaker  # Fixed import path - using relative import
 
 
 class CircuitBreakerManager:
