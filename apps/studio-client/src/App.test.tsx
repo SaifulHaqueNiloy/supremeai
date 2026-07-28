@@ -86,6 +86,32 @@ class MockEventSource {
 
 global.EventSource = MockEventSource as any;
 
+vi.mock('./hooks/useServerStream', () => ({
+  useServerStream: () => ({ streamStatus: 'connected' }),
+}));
+
+// Mock InteractiveChatTab to simplify chat tab tests and avoid zustand/API dependency issues in JSDOM
+vi.mock('../admin/InteractiveChatTab', () => ({
+  InteractiveChatTab: () => (
+    <div>
+      <div data-testid="chat-header">Chat</div>
+      <input data-testid="chat-input" />
+      <button data-testid="chat-submit">Send</button>
+    </div>
+  ),
+}));
+
+// Mock useDashboardStore used by InteractiveChatTab
+vi.mock('../../store/dashboardStore', () => ({
+  useDashboardStore: () => ({
+    dashboardMode: 'simple',
+    chatTabTerminalOpen: false,
+    chatTabBrowserOpen: false,
+    toggleTerminal: vi.fn(),
+    toggleBrowser: vi.fn(),
+  }),
+}));
+
 describe('App component', () => {
   afterEach(() => {
     vi.restoreAllMocks();
