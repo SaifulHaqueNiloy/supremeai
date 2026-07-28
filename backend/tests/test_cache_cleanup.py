@@ -24,6 +24,7 @@ def reset_redis_url():
     """Ensure REDIS_URL is not leaking between tests."""
     old = os.environ.pop("REDIS_URL", None)
     yield
+    return
     if old is not None:
         os.environ["REDIS_URL"] = old
     else:
