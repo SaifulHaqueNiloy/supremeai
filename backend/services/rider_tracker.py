@@ -132,7 +132,8 @@ class RouteOptimizer:
         a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
         c = 2 * math.asin(math.sqrt(a))
 
-        return round(RiderTracker.EARTH_RADIUS_KM * c, 2)
+        # EARTH_RADIUS_KM ধ্রুবকটি RouteOptimizer ক্লাসে ডিফাইন করা আছে, RiderTracker ক্লাসে নয়।
+        return round(RouteOptimizer.EARTH_RADIUS_KM * c, 2)
 
     @classmethod
     def estimate_eta(cls, distance_km: float, avg_speed_kmh: float = 30.0) -> int:
