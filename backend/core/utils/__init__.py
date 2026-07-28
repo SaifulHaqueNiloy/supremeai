@@ -1,1 +1,3 @@
-from .lazy_loader import lazy_import  # Fixed import path - using relative import
+from core.utils.lazy_loader import lazy_import
+
+__all__ = ["lazy_import"]

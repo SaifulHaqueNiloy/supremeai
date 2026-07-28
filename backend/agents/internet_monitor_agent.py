@@ -14,17 +14,14 @@ import xml.etree.ElementTree as ET
 import aiohttp
 from fastapi import HTTPException
 
-# Fixed imports to use relative paths
-from ..core.config import settings
-from ..core.messaging.event_bus import EventBus
-from ..core.llm.token_deductor import TokenDeductor
-from ..core.cache.redis_manager import redis_manager
+from core.config import settings
+from core.messaging.event_bus import EventBus
+from core.llm.token_deductor import TokenDeductor
+from core.cache.redis_manager import redis_manager
 
 # Remove the problematic import and use alternative
 # from core.security.auth_middleware import get_current_active_user
-# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
-from ..core.health_check import health_checker
-
+from core.health_check import health_checker
 
 
 logger = logging.getLogger(__name__)

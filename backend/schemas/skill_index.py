@@ -6,8 +6,7 @@ import json
 import os
 from pathlib import Path
 
-from .skill_manifest import SkillManifest
-
+from schemas.skill_manifest import SkillManifest
 
 VERIFIED_MCP_SOURCES = [
     "https://github.com/modelcontextprotocol/servers",

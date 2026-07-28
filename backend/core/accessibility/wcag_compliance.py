@@ -111,6 +111,8 @@ class ColorContrastChecker:
         rgb_list = [int(hex_color[i : i + 2], 16) for i in (0, 2, 4)]
         return (rgb_list[0], rgb_list[1], rgb_list[2])
 
+
+
     @staticmethod
     def rgb_to_relative_luminance(r: int, g: int, b: int) -> float:
         """Calculate relative luminance of a color."""

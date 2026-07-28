@@ -18,9 +18,8 @@ from enum import Enum
 
 from loguru import logger
 
-# Fixed import path - using relative import
-from .cache.redis_manager import redis_manager
-from .config import settings
+from core.cache.redis_manager import redis_manager
+from core.config import settings
 
 
 class HealthStatus(str, Enum):

@@ -7,16 +7,17 @@ import tarfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
-from ..core.utils.time_utils import utc_now
-from ..schemas.skill_index import SkillIndexManager
-from ..schemas.skill_manifest import SkillManifest, SkillStatus
+from core.utils.time_utils import utc_now
+
+# বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের সাথে সামঞ্জস্যপূর্ণ রাখতে backend. ইম্পোর্ট রুট সরিয়ে দেওয়া হয়েছে
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 logger = logging.getLogger("supremeai.skill_gc")
 
 
 class SkillGarbageCollector:
-    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
+    # বাংলা মন্তব্য: ডকার এনভায়রনমেন্ট অনুযায়ী ডিফল্ট পাথ "backend/skills" থেকে "skills" করা হলো
     def __init__(self, base_skills_dir: str = "skills"):
         self.base_dir = Path(base_skills_dir)
         self.approved_dir = self.base_dir / "approved"
@@ -32,14 +33,14 @@ class SkillGarbageCollector:
         ]
 
     def run_daily_cleanup(self, usage_threshold: int = 5, days_threshold: int = 30) -> list[str]:
-        """কম ব্যবহৃত স্কিলগুলো আইডেন্টিফাই করে এবং গ্রেস পিরিয়ড ও আর্কাইভ এনফোর্স করে।"""
+        """কম ব্যবহৃত স্কিলগুলো আইডেন্টিফাই করে এবং গ্রেস পিরিয়ড ও আর্কাইভ এনফোর্স করে।"""
         index = self.index_manager.load_index()
         now = datetime.utcnow()
         cutoff_date = now - timedelta(days=days_threshold)
         purged_skills = []
 
         for skill_id, meta in list(index.items()):
-            # সিস্টেম রিকোয়ার্ড বা পিনড স্কিল স্কিপ করা হচ্ছে
+            # সিস্টেম রিকোয়ার্ড বা পিনড স্কিল স্কিপ করা হচ্ছে
             if skill_id in self.SYSTEM_CRITICAL_SKILLS or meta.get("is_pinned", False):
                 continue
 
@@ -73,7 +74,7 @@ class SkillGarbageCollector:
                     )
 
                 elif manifest.status == SkillStatus.DEPRECATED_PENDING:
-                    # 📦 ধাপ ২: গ্রেস পিরিয়ড পার হলে নিরাপদ রিকভারেবল আর্কাইভ তৈরি
+                    # 📦 ধাপ ২: গ্রেস পিরিয়ড পার হলে নিরাপদ রিকভারেবল আর্কাইভ তৈরি
                     self._create_recoverable_archive(skill_id)
 
                     # 🧹 ফাইল সিস্টেম এবং ইনডেক্স থেকে ক্লিনআপ
