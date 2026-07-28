@@ -22,8 +22,8 @@ from typing import Any
 
 from loguru import logger
 
-from core.cache import get_cache
-from core.llm_router import LLMRouter
+from ..core.cache import get_cache  # Fixed import path - using relative import
+from ..core.llm_router import LLMRouter  # Fixed import path - using relative import
 
 # ── Constants ────────────────────────────────────────────────────────────────
 COMMAND_TIMEOUT = 30  # seconds

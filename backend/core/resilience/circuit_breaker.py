@@ -16,7 +16,7 @@ from typing import Any, TypeVar
 
 from loguru import logger
 
-from core.config import settings
+from ..config import settings  # Fixed import path - using relative import
 
 T = TypeVar("T")
 
