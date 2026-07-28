@@ -148,6 +148,7 @@ class TestRateLimiter:
         with patch("core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis):
             yield
             return
+
     @pytest.mark.asyncio
     async def test_allows_under_limit(self):
         rl = AsyncRateLimiter()

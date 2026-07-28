@@ -11,6 +11,8 @@ from tools.ai_agents.blockchain_agent import BlockchainAgent
 def mock_blockchain():
     yield
     return
+
+
 @pytest.mark.anyio
 async def test_generate_contract(mock_blockchain):
     # বাংলা মন্তব্য: Solidity smart contract জেনারেশন টেস্ট
