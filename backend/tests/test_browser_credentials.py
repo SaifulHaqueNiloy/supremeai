@@ -23,6 +23,7 @@ def reset_globals():
     browser_mod.TASKS.clear()
     browser_mod.FINDINGS.clear()
     yield
+    return
     os.environ.pop("SUPREMEAI_API_TOKEN", None)
 
 

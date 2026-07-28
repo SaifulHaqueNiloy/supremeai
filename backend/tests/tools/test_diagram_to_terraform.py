@@ -14,8 +14,7 @@ def mock_diagram_converter():
         return_value="fake_base64",
     ):
         yield
-
-
+        return
 @pytest.mark.anyio
 async def test_to_terraform(mock_diagram_converter):
     # বাংলা মন্তব্য: Cloud architecture diagram থেকে Terraform HCL জেনারেশন টেস্ট
