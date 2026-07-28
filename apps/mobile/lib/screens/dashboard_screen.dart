@@ -219,9 +219,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Icon(
-                                    isSuccess ? Icons.check_circle : 
-                                    isRunning ? Icons.hourglass_empty : 
-                                    isPending ? Icons.access_time : 
+                                    isSuccess ? Icons.check_circle :
+                                    isRunning ? Icons.hourglass_empty :
+                                    isPending ? Icons.access_time :
                                     Icons.error,
                                     color: isSuccess ? DesignTokens.colorSuccessDark :
                                           isRunning ? DesignTokens.colorWarningDark :
@@ -232,12 +232,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 title: Text(job.name, style: const TextStyle(color: DesignTokens.colorTextPrimaryDark, fontSize: 14)),
                                 subtitle: Text('Status: ${job.status.toUpperCase()}', style: const TextStyle(color: DesignTokens.colorTextSecondaryDark, fontSize: 12)),
-                                trailing: isRunning ? 
+                                trailing: isRunning ?
                                   const SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent)),
-                                  ) : 
+                                  ) :
                                   const Icon(Icons.chevron_right, color: DesignTokens.colorTextSecondaryDark),
                                 onTap: () {
                                   Navigator.push(
@@ -253,7 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
-                    
+
                     // System Health Section
                     const SizedBox(height: 24),
                     FadeInSlide(
