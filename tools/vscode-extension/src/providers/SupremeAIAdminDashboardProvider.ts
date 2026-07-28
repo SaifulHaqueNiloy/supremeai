@@ -101,7 +101,7 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
     const model = config.get<string>('aiModel') || 'openrouter/anthropic/claude-3.5-sonnet';
     const enableRealTimeLearning = config.get<boolean>('enableRealTimeLearning', true);
     const autoReportErrors = config.get<boolean>('autoReportErrors', true);
-    
+
     // Get additional system metrics
     const systemInfo = {
       extensionVersion: vscode.extensions.getExtension('supremeai.supremeai')?.packageJSON.version || 'unknown',
@@ -131,11 +131,11 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
   }
 
   private getHTMLContent(
-    stats: any, 
-    systemInfo: any, 
-    apiProvider: string, 
-    model: string, 
-    enableRealTimeLearning: boolean, 
+    stats: any,
+    systemInfo: any,
+    apiProvider: string,
+    model: string,
+    enableRealTimeLearning: boolean,
     autoReportErrors: boolean
   ): string {
     return `<!DOCTYPE html>
@@ -351,7 +351,7 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
     const vscode = acquireVsCodeApi();
     const abortController = new AbortController();
     window.addEventListener("unload", () => abortController.abort());
-    
+
     document.getElementById('analyzeBtn').addEventListener('click', () => {
       vscode.postMessage({ type: 'analyzeCodeFlow' }, { signal: abortController.signal });
     });
