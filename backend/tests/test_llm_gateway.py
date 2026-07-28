@@ -13,6 +13,8 @@ def setup_litellm():
     litellm.telemetry = False
     yield
     return
+
+
 @pytest.fixture(autouse=True)
 def disable_semantic_cache(monkeypatch):
     from unittest.mock import AsyncMock
@@ -23,6 +25,8 @@ def disable_semantic_cache(monkeypatch):
     )
     yield
     return
+
+
 def test_load_routing_policy_file_not_found(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "core.llm.llm_gateway._POLICY_PATH",
