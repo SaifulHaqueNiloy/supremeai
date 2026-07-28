@@ -321,7 +321,7 @@ def main(dry_run: bool = False, force: bool = False, workers: int = 4, files: li
     """
     if not settings.gemini_api_key:
         logging.error("FATAL: GEMINI_API_KEY is not set in backend settings.")
-        return
+        sys.exit(1)
 
     if dry_run:
         logging.warning("Running in DRY-RUN mode. No files will be modified.")
