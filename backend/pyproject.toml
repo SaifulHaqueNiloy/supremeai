@@ -19,6 +19,7 @@ loguru = "^0.7.3"
 redis = {extras = ["hiredis"], version = "^5.2.0"}
 python-multipart = "^0.0.20"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 # python-jose deprecated; migrated to PyJWT
 # PyJWT = "2.10+" # added below when migration complete
 python-dotenv = "^1.0.1"
@@ -173,7 +174,7 @@ filterwarnings = [
     "ignore::UserWarning",
 ]
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+# Removed asyncio_default_fixture_loop_scope as it's not supported in current pytest-asyncio version
 
 [tool.mypy]
 python_version = "3.11"

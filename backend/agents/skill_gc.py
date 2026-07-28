@@ -7,10 +7,9 @@ import tarfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# রিলেটিভ ইম্পোর্ট ব্যবহার করে টাইপ চেকিং এবং পাথ রেজোলিউশন ঠিক করা হলো
-from ..core.utils.time_utils import utc_now
-from ..schemas.skill_index import SkillIndexManager
-from ..schemas.skill_manifest import SkillManifest, SkillStatus
+from core.utils.time_utils import utc_now
+from schemas.skill_index import SkillIndexManager
+from schemas.skill_manifest import SkillManifest, SkillStatus
 
 logger = logging.getLogger("supremeai.skill_gc")
 
