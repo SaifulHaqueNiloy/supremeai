@@ -70,6 +70,7 @@ jobs:
       docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
       admin_backend_changed: ${{ steps.filter.outputs.admin_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
       customer_backend_changed: ${{ steps.filter.outputs.customer_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
+      trivial_change: ${{ steps.gate-logic.outputs.trivial_change }}
     steps:
       - uses: actions/checkout@v4
       - name: Detect previous failures
@@ -145,6 +146,19 @@ jobs:
               - '**.md'
               - 'docs/**'
 
+      - name: Compute Trivial Change
+        id: gate-logic
+        run: |
+          BACKEND="${{ steps.filter.outputs.backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}"
+          FRONTEND="${{ steps.filter.outputs.frontend == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}"
+          DEPS="${{ steps.filter.outputs.dependencies == 'true' || steps.detect.outputs.force_dependencies == 'true' || github.run_attempt > 1 }}"
+          DOCS_ONLY="${{ steps.filter.outputs.docs_only == 'true' }}"
+          if [[ "$BACKEND" == 'false' && "$FRONTEND" == 'false' && "$DEPS" == 'false' && "$DOCS_ONLY" == 'true' ]]; then
+            echo "trivial_change=true" >> $GITHUB_OUTPUT
+          else
+            echo "trivial_change=false" >> $GITHUB_OUTPUT
+          fi
+
   # ==============================================================================
   # PRE-MERGE GATE: Iron Curtain — যেকোনো কোড মার্জের আগে বাধ্যতামূলক চেক
   # এই job fail হলে অন্য কোনো job চলবে না।
@@ -153,18 +167,9 @@ jobs:
     name: 🚧 Pre-Merge Gate (Iron Curtain)
     needs: changes
     runs-on: ubuntu-latest
-    outputs:
-      trivial_change: ${{ steps.gate-logic.outputs.trivial_change }}
+    permissions:
+      actions: write
     steps:
-      - name: Set Trivial Change Output
-        id: gate-logic
-        run: |
-          if [[ "${{ needs.changes.outputs.backend }}" == 'false' && "${{ needs.changes.outputs.frontend }}" == 'false' && "${{ needs.changes.outputs.dependencies }}" == 'false' && "${{ needs.changes.outputs.docs_only }}" == 'true' ]]; then
-            echo "trivial_change=true" >> $GITHUB_OUTPUT
-          else
-            echo "trivial_change=false" >> $GITHUB_OUTPUT
-          fi
-
       - uses: actions/checkout@v4
       - name: Set up Python
         if: needs.changes.outputs.docs_only != 'true'
@@ -274,11 +279,18 @@ jobs:
           fi
           echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
 
+      - name: 🚨 Force Cancel Workflow on Failure
+        if: failure()
+        run: |
+          gh run cancel ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   ai-scribe-docs:
     name: "📚 AI Scribe — Auto-Documentation Generation"
-    needs: [changes, pre-merge-gate]
+    needs: [changes]
     if: >
-      needs.pre-merge-gate.result == 'success' &&
+      
       (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.dependencies == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
@@ -310,8 +322,8 @@ jobs:
 
   observability-audit:
     name: "🔬 Observability Audit (No Silent Errors)"
-    needs: [pre-merge-gate]
-    if: needs.pre-merge-gate.outputs.trivial_change != 'true'
+    needs: [changes]
+    if: needs.changes.outputs.trivial_change != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -336,9 +348,9 @@ jobs:
 
   production-readiness:
     name: 🚀 Production Readiness (Safety Guard, Multi-Model Validator, Codegraph)
-    needs: [changes, pre-merge-gate]
+    needs: [changes]
     if: >
-      (needs.pre-merge-gate.outputs.trivial_change != 'true' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
+      (needs.changes.outputs.trivial_change != 'true' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
     runs-on: ubuntu-latest
     steps:
@@ -413,8 +425,8 @@ jobs:
 
   docker-build:
     name: 🐳 Build Base Image
-    needs: [changes, pre-merge-gate]
-    if: needs.pre-merge-gate.result == 'success' && needs.changes.outputs.docker_build == 'true'
+    needs: [changes]
+    if:  needs.changes.outputs.docker_build == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -443,10 +455,9 @@ jobs:
   backend-core:
     name: 🐍 Backend (Test)
     timeout-minutes: 10
-    needs: [changes, pre-merge-gate, docker-build]
+    needs: [changes, docker-build]
     if: >
       always() &&
-      (needs.pre-merge-gate.result == 'success') &&
       (needs.docker-build.result == 'success' || needs.docker-build.result == 'skipped') &&
       (needs.changes.outputs.backend == 'true' || needs.changes.outputs.docker_build == 'true' || github.event_name == 'workflow_dispatch' || github.run_attempt > 1)
     runs-on: ubuntu-latest
@@ -584,9 +595,9 @@ jobs:
   security-audit:
     name: 🛡️ CodeQL & Trivy Security Scan
     runs-on: ubuntu-latest
-    needs: [changes, pre-merge-gate]
+    needs: [changes]
     if: >
-      (needs.pre-merge-gate.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
+      (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
     permissions:
       security-events: write
@@ -644,11 +655,11 @@ jobs:
   frontend-core:
     name: 🌐 Frontend Monorepo (Turbo)
     runs-on: ubuntu-latest
-    needs: [changes, pre-merge-gate]
+    needs: [changes]
     if: >
       !failure() && !cancelled() &&
       (
-        (needs.pre-merge-gate.outputs.trivial_change != 'true' && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
+        (needs.changes.outputs.trivial_change != 'true' && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
         (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_frontend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
       )
     steps:
@@ -786,7 +797,7 @@ jobs:
 
   build-backend-image:
     name: 🐳 Build & Push Backend Image
-    needs: [backend-core, pre-merge-gate, changes]
+    needs: [backend-core, changes]
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -1285,13 +1296,12 @@ jobs:
 
   deploy-admin-firebase:
     name: 🚀 Deploy Admin Portal (Firebase)
-    needs: [pre-merge-gate, changes]
+    needs: [changes]
     # Trigger if frontend files changed
     if: |
       always() &&
       needs.changes.outputs.frontend == 'true' &&
-      github.ref == 'refs/heads/main' &&
-      needs.pre-merge-gate.result == 'success'
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -1323,13 +1333,12 @@ jobs:
 
   deploy-user-vercel:
     name: 🚀 Deploy User Portal (Vercel)
-    needs: [pre-merge-gate, changes]
+    needs: [changes]
     # Trigger if frontend files changed
     if: |
       always() &&
       needs.changes.outputs.frontend == 'true' &&
-      github.ref == 'refs/heads/main' &&
-      needs.pre-merge-gate.result == 'success'
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -1421,7 +1430,6 @@ jobs:
     if: always()
     needs:
       - changes
-      - pre-merge-gate
       - ai-scribe-docs
       - observability-audit
       - production-readiness
