@@ -43,7 +43,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger("health_check")
 
 TIMEOUT = float(os.getenv("HEALTH_CHECK_TIMEOUT", "5"))
-API_URL = os.getenv("BACKEND_URL", os.getenv("API_URL", "http://localhost:8000")) + "/api/v1/health"
+API_URL = os.getenv("BACKEND_URL", os.getenv("API_URL", "https://supremeai-backend.onrender.com")) + "/api/v1/health"
 
 
 def _mask(value: str, visible: int = 3) -> str:
@@ -114,7 +114,7 @@ async def check_redis() -> tuple[bool, str]:
 
         from core.config import settings
 
-        redis_url = getattr(settings, "redis_url", None) or os.getenv("REDIS_URL", "redis://localhost:6379")
+        redis_url = getattr(settings, "redis_url", None) or os.getenv("REDIS_URL", "redis://dummy-redis-server:6379")
         client: Redis = Redis.from_url(redis_url, socket_timeout=TIMEOUT)
         try:
             await client.ping()

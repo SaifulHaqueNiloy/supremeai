@@ -16,7 +16,7 @@ export const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') {
     const url = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL;
     if (!url && import.meta.env.PROD) throw new Error("API URL missing in production");
-    return url || 'http://localhost:8000';
+    return url || RENDER_BACKENDS[0];
   }
 
   const cached = sessionStorage.getItem('supremeai_active_backend');
@@ -40,7 +40,7 @@ export const getWebSocketBaseUrl = (): string => {
   if (typeof window === 'undefined') {
     const url = import.meta.env.VITE_WS_BASE_URL;
     if (!url && import.meta.env.PROD) throw new Error("WS URL missing in production");
-    return url || 'ws://localhost:8000';
+    return url || RENDER_BACKENDS[0].replace(/^http/, 'ws');
   }
 
   if (import.meta.env.VITE_WS_BASE_URL) {
