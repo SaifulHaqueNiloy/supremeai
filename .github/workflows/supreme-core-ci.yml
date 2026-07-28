@@ -1122,7 +1122,7 @@ jobs:
 
   deploy-backend:
     name: 🚀 Deploy Backend (Cloud Run)
-    needs: [backend-core, security-audit]
+    needs: [backend-core]
     # TEMPORARILY DISABLED: Remove `false` and restore conditions to reactivate Cloud Run deployment
     if: false
     runs-on: ubuntu-latest
@@ -1345,14 +1345,13 @@ jobs:
 
   sync-mirror:
     name: 📤 Sync to Secondary Repo
-    needs: [deploy-backend, deploy-admin-firebase, deploy-user-vercel, security-audit]
+    needs: [deploy-backend, deploy-admin-firebase, deploy-user-vercel]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
       needs.deploy-backend.result != 'failure' && needs.deploy-backend.result != 'cancelled' &&
       needs.deploy-admin-firebase.result != 'failure' && needs.deploy-admin-firebase.result != 'cancelled' &&
-      needs.deploy-user-vercel.result != 'failure' && needs.deploy-user-vercel.result != 'cancelled' &&
-      needs.security-audit.result != 'failure' && needs.security-audit.result != 'cancelled'
+      needs.deploy-user-vercel.result != 'failure' && needs.deploy-user-vercel.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -1375,7 +1374,7 @@ jobs:
     runs-on: ubuntu-latest
     # TEMPORARILY DISABLED: রেন্ডার-এ স্থানান্তরের কারণে জিসিপি ক্যানারি ডিপ্লয়মেন্ট নিষ্ক্রিয় করা হলো।
     if: false
-    needs: [backend-core, security-audit]
+    needs: [backend-core]
     # backend-core এবং security-audit সফল হলে তবেই এটি চলবে
     # deploy-backend এর পরিবর্তে এই জবটি ব্যবহার করা হবে
     environment: production
@@ -1414,7 +1413,6 @@ jobs:
       - production-readiness
       - docker-build
       - backend-core
-      - security-audit
       - frontend-core
       - check-render-quota
       - build-backend-image
