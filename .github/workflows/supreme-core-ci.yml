@@ -169,6 +169,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: write
+      security-events: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -279,6 +281,68 @@ jobs:
           fi
           echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
 
+
+      # 🔬 Observability Audit (No Silent Errors)
+      - name: 🔬 Run Observability Audit Script
+        if: needs.changes.outputs.trivial_change != 'true'
+        id: obs_audit
+        run: |
+          python scripts/audit_observability.py
+
+      - name: Audit Summary
+        if: always() && needs.changes.outputs.trivial_change != 'true'
+        run: |
+          echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
+          echo "Outcome: **${ steps.obs_audit.outcome }**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
+
+      # 🛡️ CodeQL & Trivy Security Scan (Merged)
+      - name: Initialize CodeQL
+        if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        uses: github/codeql-action/init@v4
+        with:
+          languages: 'python, javascript'
+
+      - name: Perform CodeQL Analysis
+        if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:python,javascript"
+
+      - name: 🔍 Parallel Security Scan
+        if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.deb
+          sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
+          trivy fs --format sarif --output trivy-python.sarif --severity CRITICAL,HIGH backend &
+          trivy fs --format sarif --output trivy-nodejs.sarif --severity CRITICAL,HIGH . &
+          wait
+
+      - name: Upload Trivy Python SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && ((needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-python.sarif') != ''
+        with:
+          sarif_file: 'trivy-python.sarif'
+          category: 'trivy-python'
+
+      - name: Upload Trivy Node.js SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && ((needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-nodejs.sarif') != ''
+        with:
+          sarif_file: 'trivy-nodejs.sarif'
+          category: 'trivy-nodejs'
+
+      - name: 📊 Add Security Audit Results to GitHub Summary
+        if: always() && ((needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true')))
+        run: |
+          echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### CodeQL Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "✅ CodeQL SARIF report uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Trivy Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Python dependencies scanned (backend/)" >> $GITHUB_STEP_SUMMARY
+
       - name: 🚨 Force Cancel Workflow on Failure
         if: failure()
         run: |
@@ -320,31 +384,6 @@ jobs:
             backend/**/*.py
           retention-days: 1
 
-  observability-audit:
-    name: "🔬 Observability Audit (No Silent Errors)"
-    needs: [changes]
-    if: needs.changes.outputs.trivial_change != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: 🔬 Run Observability Audit Script
-        id: audit
-        run: |
-          # এই স্ক্রিপ্টটি সাইলেন্ট exception (`except:`, `except Exception:`) খুঁজে বের করে।
-          # কোনো সমস্যা পেলে এটি non-zero exit code দিয়ে ফেইল করবে।
-          python scripts/audit_observability.py
-
-      - name: Audit Summary
-        if: always()
-        run: |
-          echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
-          echo "Outcome: **${{ steps.audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
-          echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
 
   production-readiness:
     name: 🚀 Production Readiness (Safety Guard, Multi-Model Validator, Codegraph)
@@ -592,65 +631,6 @@ jobs:
         run: |
           echo "Pushed image with digest: ${{ steps.build-and-push.outputs.digest }}"
 
-  security-audit:
-    name: 🛡️ CodeQL & Trivy Security Scan
-    runs-on: ubuntu-latest
-    needs: [changes]
-    if: >
-      (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: 'python, javascript'
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:python,javascript"
-
-      - name: 🔍 Parallel Security Scan
-        run: |
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.deb
-          sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
-          trivy fs --format sarif --output trivy-python.sarif --severity CRITICAL,HIGH backend &
-          trivy fs --format sarif --output trivy-nodejs.sarif --severity CRITICAL,HIGH . &
-          wait
-
-      - name: Upload Trivy Python SARIF
-        uses: github/codeql-action/upload-sarif@v4
-        if: ${{ always() && hashFiles('trivy-python.sarif') != '' }}
-        with:
-          sarif_file: 'trivy-python.sarif'
-          category: 'trivy-python'
-
-      - name: Upload Trivy Node.js SARIF
-        uses: github/codeql-action/upload-sarif@v4
-        if: ${{ always() && hashFiles('trivy-nodejs.sarif') != '' }}
-        with:
-          sarif_file: 'trivy-nodejs.sarif'
-          category: 'trivy-nodejs'
-
-      - name: 📊 Add Security Audit Results to GitHub Summary
-        if: always()
-        run: |
-          echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### CodeQL Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "✅ CodeQL SARIF report uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Trivy Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Python dependencies scanned (backend/)" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Node.js dependencies scanned (apps/, tools/)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**View full results in the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning)**" >> $GITHUB_STEP_SUMMARY
 
   frontend-core:
     name: 🌐 Frontend Monorepo (Turbo)
@@ -1431,7 +1411,6 @@ jobs:
     needs:
       - changes
       - ai-scribe-docs
-      - observability-audit
       - production-readiness
       - docker-build
       - backend-core
