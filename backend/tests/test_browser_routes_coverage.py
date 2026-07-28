@@ -34,6 +34,7 @@ def reset_browser_state():
     browser_mod.TASKS = {}
     browser_mod.FINDINGS = []
     yield
+    return
 
 
 class TestBrowserStatus:
