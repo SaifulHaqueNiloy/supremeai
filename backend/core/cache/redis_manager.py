@@ -32,7 +32,7 @@ except ImportError:
 
 class SecureRedisManager:
     def __init__(self):
-        from ..config import settings  # Fixed import path
+        from core.config import settings
 
         self.url = settings.redis_url or os.getenv("REDIS_URL")
         self._client = None

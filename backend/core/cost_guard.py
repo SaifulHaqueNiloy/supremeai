@@ -1,4 +1,4 @@
-from .messaging.event_bus import ErrorContext  # Fixed import path - using relative import
+from core.messaging.event_bus import ErrorContext
 
 """This module, `cost_guard.py`, provides a robust mechanism for managing and enforcing budget constraints within the SupremeAI ecosystem. It features the `CostGuard` class, which offers methods for pre-flight budget checks against a database for individual tenants and a tier-based validation system designed to support multi-tier fallback strategies for AI task routing. A global singleton instance ensures easy access and backward compatibility for other modules like `task_router.py`.
 
@@ -23,7 +23,7 @@ from loguru import logger  # noqa: E402
 class CostGuard:
     def __init__(self, db: Any = None):
         self._db = db
-        # টাস্ক রাউটারের বাজেট ট্র্যাকিংয়ের জন্য ডিফল্ট টিয়ার থ্রেশহোল্ড
+        # টাস্ক রাউটারের বাজেট ট্র্যাকিংয়ের জন্য ডিফল্ট টিয়ার থ্রেশহোল্ড
         self.tier_limits = {
             "free": 0.0,
             "economy": 0.02,  # প্রতি টাস্কে সর্বোচ্চ খরচ ২ সেন্ট
@@ -181,5 +181,5 @@ class CostGuard:
 # CRITICAL FIX (Import Error & Backward Compatibility):
 # গ্লোবাল সিঙ্গেলটন অবজেক্ট (Singleton Instance) তৈরি করা হলো।
 # এটি করার কারণে task_router.py এখন সরাসরি `from core.cost_guard import cost_guard` ইম্পোর্ট করতে পারবে।
-# পাশাপাশি __init__ এ db=None রাখায় পুরনো কোডগুলো (যারা db পাঠাতো) ক্র্যাশ করবে না।
+# পাশাপাশি __init__ এ db=None রাখায় পুরনো কোডগুলো (যারা db পাঠাতো) ক্র্যাশ করবে না।
 cost_guard = CostGuard()
