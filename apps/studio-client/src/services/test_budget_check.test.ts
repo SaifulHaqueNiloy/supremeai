@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from './apiClient';
 
 vi.mock('../utils/api', () => ({
-  getApiBaseUrl: () => 'http://localhost:8000'
+  getApiBaseUrl: () => 'https://supremeai-backend.onrender.com'
 }));
 
 describe('Budget Check & Cost Guard (402) Tests', () => {

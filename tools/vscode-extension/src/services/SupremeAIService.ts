@@ -285,7 +285,11 @@ export class SupremeAIService {
     if (provider === 'ollama') {
       try {
         console.log('[SupremeAI] Fallback to Ollama local...');
-        const response = await fetch('http://localhost:11434/api/chat', {
+        const ollamaUrl = config.get<string>('ollamaUrl') || '';
+        if (!ollamaUrl || ollamaUrl.includes('localhost') || ollamaUrl.includes('127.0.0.1')) {
+          throw new Error('Localhost/127.0.0.1 endpoints are disabled for security reasons.');
+        }
+        const response = await fetch(`${ollamaUrl}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -91,12 +91,25 @@ vi.mock('./hooks/useServerStream', () => ({
 }));
 
 // Mock InteractiveChatTab to simplify chat tab tests
+// বাংলা মন্তব্য: চ্যাট ট্যাবের মেসেজ এবং ইনপুট অ্যাকশনগুলো যাতে টেস্ট করতে সুবিধা হয়, সে জন্য mock প্রপস ওয়্যার আপ করা হলো
 vi.mock('./components/admin/InteractiveChatTab', () => ({
-  InteractiveChatTab: () => (
+  InteractiveChatTab: ({ messages, input, onInputChange, onSend }: any) => (
     <div>
       <div data-testid="chat-header">Chat</div>
-      <input data-testid="chat-input" />
-      <button data-testid="chat-submit">Send</button>
+      <div data-testid="chat-messages">
+        {messages?.map((msg: any) => (
+          <div key={msg.id}>
+            <span>{msg.sender}</span>
+            <span>{msg.text}</span>
+          </div>
+        ))}
+      </div>
+      <input
+        data-testid="chat-input"
+        value={input || ''}
+        onChange={(e) => onInputChange?.(e.target.value)}
+      />
+      <button data-testid="chat-submit" onClick={onSend}>Send</button>
     </div>
   ),
 }));
@@ -110,7 +123,7 @@ vi.mock('./services/adminTokenStore', () => ({
 
 // Mock getApiBaseUrl used by InteractiveChatTab and other components
 vi.mock('./utils/api', () => ({
-  getApiBaseUrl: vi.fn().mockReturnValue('http://127.0.0.1:8000'),
+  getApiBaseUrl: vi.fn().mockReturnValue('https://supremeai-backend.onrender.com'),
 }));
 
 // Mock useDashboardStore used by InteractiveChatTab
