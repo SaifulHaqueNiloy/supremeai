@@ -14,9 +14,13 @@ _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-# Normal import so coverage can track tools/cache_cleanup.py
-sys.path.insert(0, os.path.join(_PROJECT_ROOT, ".."))
-import tools.cache_cleanup as cache_cleanup  # noqa: E402
+import importlib.util
+
+_cache_cleanup_path = os.path.abspath(os.path.join(_PROJECT_ROOT, "..", "tools", "cache_cleanup.py"))
+_spec = importlib.util.spec_from_file_location("cache_cleanup", _cache_cleanup_path)
+cache_cleanup = importlib.util.module_from_spec(_spec)
+sys.modules["tools.cache_cleanup"] = cache_cleanup
+_spec.loader.exec_module(cache_cleanup)
 
 
 @pytest.fixture(autouse=True)

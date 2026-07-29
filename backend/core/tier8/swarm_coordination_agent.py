@@ -18,6 +18,8 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, ClassVar
 
+from loguru import logger
+
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
 from core.base import BaseSkill
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
