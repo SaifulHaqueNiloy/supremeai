@@ -7,6 +7,7 @@ Unit tests for Phase 1 Intelligence Features:
 """
 
 import pytest
+
 from memory.episodic_memory import EpisodicMemory
 from memory.long_term_memory import LongTermMemory
 from monitoring.behavioral_guard import BehavioralGuard

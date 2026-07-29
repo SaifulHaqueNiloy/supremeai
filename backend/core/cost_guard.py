@@ -1,4 +1,6 @@
-from .messaging.event_bus import ErrorContext  # Fixed import path - using relative import
+from .messaging.event_bus import (
+    ErrorContext,  # Fixed import path - using relative import
+)
 
 """This module, `cost_guard.py`, provides a robust mechanism for managing and enforcing budget constraints within the SupremeAI ecosystem. It features the `CostGuard` class, which offers methods for pre-flight budget checks against a database for individual tenants and a tier-based validation system designed to support multi-tier fallback strategies for AI task routing. A global singleton instance ensures easy access and backward compatibility for other modules like `task_router.py`.
 

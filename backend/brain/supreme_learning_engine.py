@@ -13,13 +13,14 @@ Goal: Start at 30% self-sufficiency, grow to 80%+ over time.
 Memory: Starts at ~500MB, grows to ~2-5GB as it learns.
 """
 
-import json
 import hashlib
+import json
 import sqlite3
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+
 from loguru import logger
 
 
@@ -136,8 +137,8 @@ class SupremeLearningEngine:
     def _load_mini_models(self):
         """Load tiny specialized models lazily if transformers/torch installed."""
         try:
-            from transformers import pipeline
             import torch
+            from transformers import pipeline
 
             model_configs = {
                 "intent_classifier": {

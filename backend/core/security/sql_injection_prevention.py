@@ -19,7 +19,6 @@ Key Components:
 from __future__ import annotations
 
 import ast
-import os
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -27,7 +26,6 @@ from pathlib import Path
 from typing import Any
 
 from loguru import logger
-
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -318,10 +316,10 @@ class ParameterizedQueryBuilder:
 
         # LIMIT / OFFSET
         if limit is not None:
-            query += f" LIMIT ?"
+            query += " LIMIT ?"
             params.append(InputSanitizer.sanitize_numeric(limit, 100))
         if offset is not None:
-            query += f" OFFSET ?"
+            query += " OFFSET ?"
             params.append(InputSanitizer.sanitize_numeric(offset, 0))
 
         return query, params

@@ -1,7 +1,7 @@
 import os
 import re
 import subprocess
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 from loguru import logger
 

@@ -36,7 +36,6 @@ from core.cache import get_cache
 from core.llm_router import LLMRouter
 from core.tenant_db import TenantAwareFirestore
 
-
 logger = logging.getLogger("supremeai.insight_mage")
 
 T = TypeVar("T", bound="InsightMage")

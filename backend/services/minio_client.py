@@ -15,7 +15,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +27,7 @@ from core.cache import get_cache
 URL_CACHE_TTL = 3600  # 1 hour
 
 
-class StorageTier(str, Enum):
+class StorageTier(StrEnum):
     HOT = "hot"  # Frequently accessed
     WARM = "warm"  # Occasionally accessed
     COLD = "cold"  # Archive
