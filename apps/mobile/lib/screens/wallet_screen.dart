@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/billing_service.dart';
 import '../services/payment_gateway_bridge.dart';
 import '../widgets/usage_chart.dart';

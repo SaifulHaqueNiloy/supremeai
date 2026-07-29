@@ -56,9 +56,9 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
               end: Alignment.bottomRight,
               stops: const [0.0, 0.5, 1.0],
               colors: [
-                SupremeColors.bgCard.withOpacity(0.3),
-                SupremeColors.brandPrimary.withOpacity(0.1),
-                SupremeColors.bgCard.withOpacity(0.3),
+                SupremeColors.bgCard.withValues(alpha: 0.3),
+                SupremeColors.brandPrimary.withValues(alpha: 0.1),
+                SupremeColors.bgCard.withValues(alpha: 0.3),
               ],
               transform: _SlidingGradientTransform(slidePercent: _animation.value),
             ),
