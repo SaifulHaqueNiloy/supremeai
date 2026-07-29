@@ -46,13 +46,13 @@ class _MainShellState extends State<MainShell> {
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(), // Disable swipe to change tab
-        children: [
-          const HomeScreen(),
+        children: const [
+          HomeScreen(),
           // Placeholder for missing screens, using Center text for now until they are integrated
-          const Center(child: Text('Analytics', style: TextStyle(color: Colors.white))),
-          const Center(child: Text('Chat', style: TextStyle(color: Colors.white))),
-          const Center(child: Text('API Keys', style: TextStyle(color: Colors.white))),
-          const SettingsScreen(),
+          Center(child: Text('Analytics', style: TextStyle(color: Colors.white))),
+          Center(child: Text('Chat', style: TextStyle(color: Colors.white))),
+          Center(child: Text('API Keys', style: TextStyle(color: Colors.white))),
+          SettingsScreen(),
         ],
       ),
       bottomNavigationBar: SupremeBottomNav(

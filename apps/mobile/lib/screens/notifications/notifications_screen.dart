@@ -55,10 +55,10 @@ class NotificationsScreen extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: CircleAvatar(
                 backgroundColor: notif['type'] == 'success'
-                    ? const Color(0xFF10B981).withOpacity(0.2)
+                    ? const Color(0xFF10B981).withValues(alpha: 0.2)
                     : notif['type'] == 'warning'
                         ? Colors.green.withValues(alpha: 0.2)
-                        : Colors.cyan.withOpacity(0.2),
+                        : Colors.cyan.withValues(alpha: 0.2),
                 child: Icon(
                   notif['type'] == 'success'
                       ? Icons.check_circle_outline
