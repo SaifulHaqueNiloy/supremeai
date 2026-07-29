@@ -6,14 +6,13 @@ Manages access controls, decision-making oversight, and policy enforcement.
 import asyncio
 import json
 import logging
-from typing import Any
+import secrets
 from dataclasses import dataclass
 from datetime import datetime
-import secrets
+from typing import Any
 
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
-
+from core.llm.token_deductor import TokenDeductor
 
 logger = logging.getLogger(__name__)
 
@@ -333,9 +332,11 @@ class GovernanceAgent:
                 "has_privileges": has_privileges,
                 "rate_limit_info": rate_limit_result,
                 "policy_compliant": has_privileges and rate_limit_result["within_limit"],
-                "next_action": "proceed"
-                if (has_privileges and rate_limit_result["within_limit"] and not requires_approval)
-                else "review",
+                "next_action": (
+                    "proceed"
+                    if (has_privileges and rate_limit_result["within_limit"] and not requires_approval)
+                    else "review"
+                ),
             }
 
             # Log policy enforcement
@@ -456,9 +457,11 @@ class GovernanceAgent:
                         decision_data=decision_data["decision_data"],
                         approval_required=decision_data["approval_required"],
                         approved_by=decision_data["approved_by"],
-                        approval_timestamp=datetime.fromisoformat(decision_data["approval_timestamp"])
-                        if decision_data["approval_timestamp"]
-                        else None,
+                        approval_timestamp=(
+                            datetime.fromisoformat(decision_data["approval_timestamp"])
+                            if decision_data["approval_timestamp"]
+                            else None
+                        ),
                         status=decision_data["status"],
                         timestamp=datetime.fromisoformat(decision_data["timestamp"]),
                     )

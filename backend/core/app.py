@@ -1,10 +1,13 @@
 from __future__ import annotations
+
+import logging
+
 from fastapi import HTTPException
-from core.app_builder import create_app
+
 from api.routers import register_all_routers
 from core.admin_routes import router as admin_router
+from core.app_builder import create_app
 from core.health_check import health_checker
-import logging
 
 logger = logging.getLogger(__name__)
 app = create_app()

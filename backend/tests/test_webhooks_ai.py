@@ -1,5 +1,5 @@
-from fastapi.testclient import TestClient
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from api.routes.webhooks_ai import router as webhooks_router
 

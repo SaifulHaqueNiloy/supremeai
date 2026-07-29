@@ -16,10 +16,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any
+
 from loguru import logger
 
+from .simulator import SimulationResult, get_impact_simulator
 from .topology import get_topology_mapper
-from .simulator import get_impact_simulator, SimulationResult
 
 try:
     from core.monitoring.health_checker import HealthChecker

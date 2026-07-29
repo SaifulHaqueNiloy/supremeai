@@ -19,7 +19,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, cast
 
 from loguru import logger
@@ -39,7 +39,7 @@ def _get_skill_name(skill_id: str) -> str:
     return skill_id.replace("_", " ").title()
 
 
-class RecommendationStrategy(str, Enum):
+class RecommendationStrategy(StrEnum):
     COLLABORATIVE_USER = "collaborative_user"
     COLLABORATIVE_ITEM = "collaborative_item"
     HEURISTIC = "heuristic"

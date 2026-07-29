@@ -13,7 +13,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -23,7 +23,7 @@ logger = logging.getLogger("supremeai.compliance_monitor")
 COMPLIANCE_CACHE_TTL = 3600  # 1 hour
 
 
-class ComplianceFramework(str, Enum):
+class ComplianceFramework(StrEnum):
     GDPR = "gdpr"
     BD_DIGITAL_SECURITY = "bd_digital_security"
     HIPAA = "hipaa"
@@ -32,7 +32,7 @@ class ComplianceFramework(str, Enum):
     CUSTOM = "custom"
 
 
-class ComplianceSeverity(str, Enum):
+class ComplianceSeverity(StrEnum):
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
