@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
@@ -29,7 +29,7 @@ ROUTING_CACHE_TTL = 300
 outbox_batcher = WriteBehindBatcher(name="multi_db_outbox", max_batch_size=50, flush_interval=2.0)
 
 
-class DatabaseType(str, Enum):
+class DatabaseType(StrEnum):
     POSTGRES = "postgres"
     D1 = "d1"
     MYSQL = "mysql"
@@ -39,7 +39,7 @@ class DatabaseType(str, Enum):
     REDIS = "redis"
 
 
-class QueryPattern(str, Enum):
+class QueryPattern(StrEnum):
     READ = "read"
     WRITE = "write"
     ANALYTICS = "analytics"

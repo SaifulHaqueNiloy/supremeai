@@ -231,7 +231,13 @@ class SwarmCoordinationAgent(BaseSkill):
         coros = [self._dispatch_to_agent(task, agent) for agent in selected]
         results = await asyncio.gather(*coros, return_exceptions=True)
 
-        valid_results = [r for r in results if isinstance(r, dict) and "error" not in r]
+        valid_results = []
+        for idx, result in enumerate(results):
+            if isinstance(result, BaseException):
+                logger.error(f"Swarm agent dispatch failed for agent {idx}: {result}")
+                continue
+            if isinstance(result, dict) and "error" not in result:
+                valid_results.append(result)
 
         for result in valid_results:
             task = task.with_result(result)

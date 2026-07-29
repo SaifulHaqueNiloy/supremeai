@@ -15,20 +15,19 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
 
 from core.cache import get_cache
 
-
 # ── Constants ────────────────────────────────────────────────────────────────
 HEARTBEAT_TTL = 60  # 1 minute
 ALERT_CACHE_TTL = 3600
 
 
-class AlertSeverity(str, Enum):
+class AlertSeverity(StrEnum):
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"

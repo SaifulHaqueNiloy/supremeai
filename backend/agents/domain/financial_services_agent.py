@@ -11,7 +11,7 @@ import hashlib
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -22,7 +22,7 @@ logger = logging.getLogger("supremeai.financial_services")
 FINANCIAL_CACHE_TTL = 300  # 5 minutes
 
 
-class TransactionType(str, Enum):
+class TransactionType(StrEnum):
     CREDIT = "credit"
     DEBIT = "debit"
     REFUND = "refund"
@@ -30,7 +30,7 @@ class TransactionType(str, Enum):
     TRANSFER = "transfer"
 
 
-class RiskCategory(str, Enum):
+class RiskCategory(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"

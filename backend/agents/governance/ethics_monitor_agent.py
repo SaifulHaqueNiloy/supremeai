@@ -11,7 +11,7 @@ import hashlib
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -22,7 +22,7 @@ logger = logging.getLogger("supremeai.ethics_monitor")
 ETHICS_CACHE_TTL = 3600
 
 
-class EthicalPrinciple(str, Enum):
+class EthicalPrinciple(StrEnum):
     FAIRNESS = "fairness"
     TRANSPARENCY = "transparency"
     ACCOUNTABILITY = "accountability"
@@ -120,9 +120,9 @@ class EthicsMonitorAgent:
         return {
             "has_bias_risk": len(bias_flags) > 0,
             "flags": bias_flags,
-            "recommendation": "Review decision logic to ensure no discriminatory outcomes"
-            if bias_flags
-            else "No bias detected",
+            "recommendation": (
+                "Review decision logic to ensure no discriminatory outcomes" if bias_flags else "No bias detected"
+            ),
         }
 
     async def validate_ethical_principle(self, principle: EthicalPrinciple, context: str) -> EthicsVerdict:

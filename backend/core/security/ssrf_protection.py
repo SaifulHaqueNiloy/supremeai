@@ -37,7 +37,6 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-
 # ── Constants ──────────────────────────────────────────────────────────────────
 # Cloud metadata IPs that should never be accessible
 BLOCKED_METADATA_IPS: frozenset[str] = frozenset(
