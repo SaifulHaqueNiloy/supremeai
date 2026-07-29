@@ -108,7 +108,8 @@ class TokenDeductor:
                 return True
             except RuntimeError:
                 raise
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Token deduction legacy path failed: {e}")
                 return False
 
         if settings.env in ["production", "staging"]:

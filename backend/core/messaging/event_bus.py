@@ -309,7 +309,7 @@ class IntelligentErrorBus(ErrorEventBus):
                 "cpu_percent": psutil.cpu_percent(),
                 "memory_percent": psutil.virtual_memory().percent,
             }
-        except Exception:
+        except (psutil.Error, OSError):
             return {}
 
     def _check_and_escalate_pattern(self, event: ErrorEvent) -> None:
