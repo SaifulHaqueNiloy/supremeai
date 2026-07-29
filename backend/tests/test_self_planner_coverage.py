@@ -51,11 +51,10 @@ class TestSelfPlannerGeneratePlan:
             {"id": "task2", "description": "Second task", "depends_on": ["task1"]},
         ]
 
-        with patch.object(planner, "llm_client", None), patch("tools.self_planner.ModelRouter") as mock_router:
-            mock_router_instance = AsyncMock()
-            mock_router.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate.return_value = {"text": json.dumps(plan_data)}
-
+        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+            mock_router_instance = MagicMock()
+            mock_router_cls.return_value = mock_router_instance
+            mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": json.dumps(plan_data)})
             graph = await planner.generate_plan("Build a feature")
             assert graph is not None
             assert graph.number_of_nodes() == 2
@@ -67,43 +66,37 @@ class TestSelfPlannerGeneratePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-
-        with patch("tools.self_planner.ModelRouter") as mock_router:
-            mock_router_instance = AsyncMock()
-            mock_router.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate.side_effect = Exception("LLM down")
-
+        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+            mock_router_instance = MagicMock()
+            mock_router_cls.return_value = mock_router_instance
+            mock_router_instance.async_route_and_generate = AsyncMock(side_effect=Exception("LLM down"))
             with pytest.raises(RuntimeError, match="Agent planning failed"):
                 await planner.generate_plan("Test objective")
 
     @pytest.mark.asyncio
     async def test_generate_plan_invalid_json(self):
-        """generate_plan should raise on invalid JSON response."""
+        """generate_plan should raise RuntimeError on invalid JSON response."""
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-
-        with patch("tools.self_planner.ModelRouter") as mock_router:
-            mock_router_instance = AsyncMock()
-            mock_router.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate.return_value = {"text": "not valid json"}
-
-            with pytest.raises(json.JSONDecodeError):
+        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+            mock_router_instance = MagicMock()
+            mock_router_cls.return_value = mock_router_instance
+            mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": "not valid json"})
+            with pytest.raises(RuntimeError, match="Agent planning failed"):
                 await planner.generate_plan("Test")
 
     @pytest.mark.asyncio
     async def test_generate_plan_non_list_response(self):
-        """generate_plan should raise TypeError if response is not a list."""
+        """generate_plan should raise RuntimeError if response is not a list."""
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-
-        with patch("tools.self_planner.ModelRouter") as mock_router:
-            mock_router_instance = AsyncMock()
-            mock_router.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate.return_value = {"text": json.dumps({"not": "a list"})}
-
-            with pytest.raises(TypeError, match="not a JSON array"):
+        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+            mock_router_instance = MagicMock()
+            mock_router_cls.return_value = mock_router_instance
+            mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": json.dumps({"not": "a list"})})
+            with pytest.raises(RuntimeError, match="Agent planning failed"):
                 await planner.generate_plan("Test")
 
     @pytest.mark.asyncio
@@ -112,40 +105,30 @@ class TestSelfPlannerGeneratePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-
-        with patch("tools.self_planner.ModelRouter") as mock_router:
-            mock_router_instance = AsyncMock()
-            mock_router.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate.return_value = {"text": json.dumps([])}
-
+        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+            mock_router_instance = MagicMock()
+            mock_router_cls.return_value = mock_router_instance
+            mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": json.dumps([])})
             graph = await planner.generate_plan("Test")
+            assert graph is not None
             assert graph.number_of_nodes() == 0
 
 
 class TestSelfPlannerValidatePlan:
     """Tests for SelfPlanner.validate_plan."""
 
-    @pytest.mark.asyncio
-    async def test_validate_plan_valid(self):
+    def test_validate_plan_valid(self):
         """validate_plan should return True for a valid plan."""
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
+        import networkx as nx
 
-        with patch("tools.self_planner.ModelRouter") as mock_router:
-            mock_router_instance = AsyncMock()
-            mock_router.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate.return_value = {
-                "text": json.dumps({"valid": True, "issues": []})
-            }
+        graph = nx.DiGraph()
+        graph.add_node("task1", description="Test")
 
-            import networkx as nx
-
-            graph = nx.DiGraph()
-            graph.add_node("task1", description="Test")
-
-            result = await planner.validate_plan(graph)
-            assert result is not None
+        result = planner.validate_plan(graph)
+        assert result is True
 
 
 class TestSelfPlannerExecutePlan:

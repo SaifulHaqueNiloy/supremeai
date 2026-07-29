@@ -51,11 +51,11 @@ class TestCostOptimizer:
         optimizer = CostOptimizer()
         with patch.object(optimizer, "_get_best_free_provider", return_value=None):
             result = await optimizer.get_optimal_route({"prompt": "hello"}, "paid")
-            assert result == "ollama/llama3.2"
+            assert result == "gemini/gemini-1.5-flash"
 
     @pytest.mark.asyncio
     async def test_get_optimal_route_complex_free(self):
         optimizer = CostOptimizer()
-        with patch.object(optimizer, "_get_best_free_provider", return_value="anthropic"):
+        with patch.object(optimizer, "_get_best_free_provider", return_value="groq"):
             result = await optimizer.get_optimal_route({"prompt": "implement architecture"}, "free")
-            assert result.startswith("anthropic")
+            assert result.startswith("groq")

@@ -184,8 +184,7 @@ class TestProcessSSOResponse:
 class TestValidateToken:
     """Tests for validate_token."""
 
-    @pytest.mark.asyncio
-    async def test_validate_token_jose_available(self):
+    def test_validate_token_jose_available(self):
         """validate_token should decode JWT when jose is available."""
         from tools.sso_integrator import SSOIntegrator
 
@@ -194,11 +193,10 @@ class TestValidateToken:
 
         with patch("tools.sso_integrator.jose_jwt") as mock_jwt:
             mock_jwt.decode.return_value = {"sub": "user1", "email": "test@example.com"}
-            result = await integrator.validate_token("valid-token", "secret")
+            result = integrator.validate_token("valid-token", "secret")
             assert result is not None
 
-    @pytest.mark.asyncio
-    async def test_validate_token_jose_not_available(self):
+    def test_validate_token_jose_not_available(self):
         """validate_token should return error when jose is not available."""
         from tools.sso_integrator import SSOIntegrator
 
@@ -206,7 +204,7 @@ class TestValidateToken:
         integrator.onelogin = False
 
         with patch("tools.sso_integrator.jose_jwt", None):
-            result = await integrator.validate_token("test-token", "secret")
+            result = integrator.validate_token("test-token", "secret")
             assert "error" in result
 
 

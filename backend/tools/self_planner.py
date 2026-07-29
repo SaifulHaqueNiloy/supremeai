@@ -155,6 +155,19 @@ class SelfPlanner:
         self.active_tasks.clear()
         logger.info("SelfPlanner cleanup finalized.")
 
+    def validate_plan(self, graph: Any) -> bool:
+        """Backward-compatible alias for basic validation."""
+        try:
+            import networkx as nx
+
+            return nx.is_directed_acyclic_graph(graph)
+        except Exception:
+            return False
+
+    async def execute_plan(self, graph: Any) -> list[dict[str, Any]]:
+        """Backward-compatible alias for parallel_agent_executor."""
+        return await self.parallel_agent_executor(graph)
+
 
 planner = SelfPlanner()
 
