@@ -49,31 +49,6 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                     headers=headers,
                 )
 
-        # বাংলা মন্তব্য: Host header client-controlled — শুধু Host string দেখে বাইপাস করা যাবে না।
-        # টেস্ট বাইপাস এখন কেবল একটি explicit, config-gated flag দিয়ে নিয়ন্ত্রিত হয় (Patch 7 fix)।
-        is_explicit_test_mode = env == "test" and getattr(settings, "allow_test_origin_bypass", False)
-        if is_explicit_test_mode:
-            response = await call_next(request)
-            if origin:
-                if origin in allowed or origin in {
-                    "http://testserver",
-                    "http://localhost",
-                    "http://127.0.0.1",
-                }:
-                    response.headers["Access-Control-Allow-Origin"] = origin
-                    response.headers["Access-Control-Allow-Credentials"] = "true"
-            return response
-
-        # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
-        public_paths = settings.supremeai_public_paths
-        if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
-            response = await call_next(request)
-            if origin and origin in allowed:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Credentials"] = "true"
-            return response
-
-        # যদি রিকোয়েস্টে অরিজিন হেডার থাকে (যেমন ব্রাউজার বেসড রিকোয়েস্ট), তবে সেটি হোয়াইটলিস্টে থাকতে হবে
         if origin and origin not in allowed:
             client_ip = request.client.host if request.client else "unknown"
             logger.critical(
@@ -83,6 +58,15 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "Cross-Origin Request Blocked. Device identity unauthorized."},
             )
+
+        # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
+        public_paths = settings.supremeai_public_paths
+        if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
+            response = await call_next(request)
+            if origin and origin in allowed:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            return response
 
         # বাংলা মন্তব্য: হোস্ট হেডার ভ্যালিডেশন
         host_header = request.headers.get("Host")

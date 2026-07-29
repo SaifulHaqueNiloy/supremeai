@@ -47,9 +47,9 @@ from core.messaging.event_bus import error_event_bus  # noqa: E402
 from core.metrics_collector import metrics_collector, record_db_operation  # noqa: E402
 from core.orchestration.orchestrator import Orchestrator  # noqa: E402
 from core.persistence import pooled_pg  # noqa: E402
-from core.persistence.write_behind import (
+from core.persistence.write_behind import (  # noqa: E402
     flush_all as flush_write_behind_batchers,
-)  # noqa: E402
+)
 from core.pgbouncer_pool import get_db_pool  # noqa: E402
 from core.pgbouncer_pool import init_db_pool  # noqa: E402
 from core.reliability_controller import ReliabilityController  # noqa: E402
@@ -68,8 +68,7 @@ async def _ensure_api_key_tables() -> None:
     conn = await pool.acquire()
     try:
         async with conn.transaction():
-            await conn.execute(
-                """
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS api_keys (
                     id SERIAL PRIMARY KEY,
                     user_id TEXT NOT NULL,
@@ -85,10 +84,8 @@ async def _ensure_api_key_tables() -> None:
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL
                 )
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS api_key_usage (
                     id SERIAL PRIMARY KEY,
                     api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
@@ -98,10 +95,8 @@ async def _ensure_api_key_tables() -> None:
                     ip_address TEXT,
                     created_at INTEGER NOT NULL
                 )
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS api_key_events (
                     id SERIAL PRIMARY KEY,
                     api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
@@ -110,8 +105,7 @@ async def _ensure_api_key_tables() -> None:
                     ip_address TEXT,
                     created_at INTEGER NOT NULL
                 )
-                """
-            )
+                """)
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
             await conn.execute("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_window INTEGER DEFAULT 60")
             await conn.execute(
@@ -320,7 +314,7 @@ async def app_lifespan(app):
             )
 
     # Run all independent initializations in parallel
-    await asyncio.gather(
+    init_results = await asyncio.gather(
         _init_tracing(),
         _init_db_pool(),
         _init_config_cache(),
@@ -328,6 +322,10 @@ async def app_lifespan(app):
         _init_cost_guard(),
         return_exceptions=True,
     )
+
+    for idx, result in enumerate(init_results):
+        if isinstance(result, BaseException):
+            logger.error(f"Startup initialization failed for component {idx}: {result}")
 
     # ── Sequential Phase 2: Services that depend on Phase 1 ─────────────────
     # Orchestrator initialization (depends on HTTP client + DB)

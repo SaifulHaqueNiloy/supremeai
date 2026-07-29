@@ -6,6 +6,7 @@ and maps it to optimized primary and fallback model chains.
 """
 
 from enum import Enum
+
 from loguru import logger
 
 

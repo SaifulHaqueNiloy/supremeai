@@ -27,7 +27,6 @@ from typing import Any
 
 from loguru import logger
 
-
 # ── Constants ──────────────────────────────────────────────────────────────────
 
 # Suspicious patterns that indicate potential SQL injection

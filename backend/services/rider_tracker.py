@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
@@ -27,7 +27,7 @@ LOCATION_TTL = 3600  # 1 hour
 TRACKING_CACHE_TTL = 1800
 
 
-class RiderStatus(str, Enum):
+class RiderStatus(StrEnum):
     AVAILABLE = "available"
     ASSIGNED = "assigned"
     PICKING_UP = "picking_up"

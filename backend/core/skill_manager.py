@@ -133,9 +133,7 @@ class SkillManager:
                     "__builtins__": _SAFE_SKILL_BUILTINS,
                     "BaseSkill": BaseSkill,
                 }
-                exec(  # noqa: S102  # AST-vetted, locked-down namespace above
-                    code_content, exec_globals, local_env
-                )
+                exec(code_content, exec_globals, local_env)  # noqa: S102  # AST-vetted, locked-down namespace above
 
                 for item in local_env.values():
                     if isinstance(item, type) and issubclass(item, BaseSkill) and item != BaseSkill:

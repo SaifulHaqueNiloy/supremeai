@@ -10,32 +10,32 @@ Bengali:
 টপোলজি ম্যাপিং, ইম্প্যাক্ট সিমুলেশন এবং রিমেডিয়েশন ক্ষমতা একীকরণ করে
 """
 
-from .topology import (
-    SystemTopologyMapper,
-    ServiceNode,
-    DataFlowEdge,
-    ResourceUtilization,
-    get_topology_mapper,
-    discover_system_topology,
+from loguru import logger
+
+from .remediation_engine import (
+    RemediationAction,
+    RemediationEngine,
+    RemediationExecution,
+    RemediationPlan,
+    RemediationStatus,
+    get_remediation_engine,
 )
 from .simulator import (
-    ImpactSimulator,
-    SimulationType,
-    SimulationResult,
     FailureScenario,
+    ImpactSimulator,
+    SimulationResult,
+    SimulationType,
     TrafficScenario,
     get_impact_simulator,
 )
-from .remediation_engine import (
-    RemediationEngine,
-    RemediationAction,
-    RemediationStatus,
-    RemediationPlan,
-    RemediationExecution,
-    get_remediation_engine,
+from .topology import (
+    DataFlowEdge,
+    ResourceUtilization,
+    ServiceNode,
+    SystemTopologyMapper,
+    discover_system_topology,
+    get_topology_mapper,
 )
-from loguru import logger
-
 
 # Version information
 __version__ = "1.0.0"
@@ -191,7 +191,7 @@ class DigitalTwinWorldModel:
 
     async def _create_adaptive_remediation_plan(self, service_id: str, analysis: dict):
         """Create an adaptive remediation plan based on analysis."""
-        from .remediation_engine import RemediationPlan, RemediationAction
+        from .remediation_engine import RemediationAction, RemediationPlan
 
         issue_description = (
             f"Adaptive remediation for {service_id} based on risk assessment: {analysis['risk_assessment']}"
@@ -237,9 +237,11 @@ class DigitalTwinWorldModel:
             "remediation_engine_status": remediation_stats,
             "simulator_status": {
                 "recent_simulations": len(self.impact_simulator.simulation_history),
-                "last_simulation": self.impact_simulator.simulation_history[-1].timestamp
-                if self.impact_simulator.simulation_history
-                else None,
+                "last_simulation": (
+                    self.impact_simulator.simulation_history[-1].timestamp
+                    if self.impact_simulator.simulation_history
+                    else None
+                ),
             },
             "health_summary": self._generate_health_summary(topology, remediation_stats),
         }

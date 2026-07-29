@@ -18,13 +18,13 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class WorkspaceRole(str, Enum):
+class WorkspaceRole(StrEnum):
     """RBAC roles within a workspace."""
 
     OWNER = "owner"
@@ -34,7 +34,7 @@ class WorkspaceRole(str, Enum):
     COMMENTER = "commenter"
 
 
-class WorkspaceStatus(str, Enum):
+class WorkspaceStatus(StrEnum):
     """Lifecycle status of a workspace."""
 
     ACTIVE = "active"
@@ -43,7 +43,7 @@ class WorkspaceStatus(str, Enum):
     PENDING_DELETION = "pending_deletion"
 
 
-class Permission(str, Enum):
+class Permission(StrEnum):
     """Granular permissions for workspace resources."""
 
     READ = "read"

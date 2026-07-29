@@ -21,16 +21,14 @@ def _ensure_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     try:
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS feedback_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_type TEXT NOT NULL,
                 payload TEXT NOT NULL,
                 created_at REAL NOT NULL
             )
-            """
-        )
+            """)
         conn.commit()
     finally:
         conn.close()

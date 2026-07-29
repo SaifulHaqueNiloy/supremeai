@@ -129,10 +129,7 @@ class PerformanceAwareRouter:
 
         # Log alternatives for debugging
         if len(healthy_providers) > 1:
-            alternatives = [
-                f"{p['name']}({s:.3f})"
-                for p, s in healthy_providers[1:4]  # Top 3 alternatives
-            ]
+            alternatives = [f"{p['name']}({s:.3f})" for p, s in healthy_providers[1:4]]  # Top 3 alternatives
             logger.debug(f"🔄 Alternatives: {', '.join(alternatives)}")
 
         return {

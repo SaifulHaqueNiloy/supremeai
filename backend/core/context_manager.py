@@ -5,14 +5,16 @@ Advanced context management with semantic search, session memory,
 and long-term learning capabilities.
 """
 
+import hashlib
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import json
-import hashlib
+
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
-from core.config import settings
+
 from core.cache import get_redis_client
+from core.config import settings
 from core.logging import get_logger
 
 
@@ -40,8 +42,8 @@ class ContextManager:
         # Initialize Qdrant client for vector storage
         try:
             self.vector_client = QdrantClient(url=settings.QDRANT_URL or "localhost", port=settings.QDRANT_PORT or 6333)
-        except Exception:
-            # Fallback to in-memory if Qdrant not available
+        except Exception as e:
+            self.logger.warning(f"Qdrant client initialization failed: {e}")
             self.vector_client = None
             self.logger.warning("Qdrant not available, falling back to Redis-only context management")
 
@@ -164,11 +166,11 @@ class ContextManager:
                 query_vector=embedding,
                 limit=1,
                 score_threshold=0.7,  # Minimum similarity threshold
-                query_filter=models.Filter(
-                    must=[models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id))]
-                )
-                if user_id
-                else None,
+                query_filter=(
+                    models.Filter(must=[models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id))])
+                    if user_id
+                    else None
+                ),
             )
 
             if search_results:

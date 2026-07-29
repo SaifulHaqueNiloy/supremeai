@@ -23,9 +23,10 @@ import jwt
 from fastapi import HTTPException, status
 from loguru import logger
 
+from .behavioral_analyzer import AnomalyAlert, BehavioralAnalyzer, get_analyzer
+
 # Fixed import path - using relative import instead of absolute
-from .enhanced_ast_scanner import SecurityScanner, SecurityIssue
-from .behavioral_analyzer import BehavioralAnalyzer, AnomalyAlert, get_analyzer
+from .enhanced_ast_scanner import SecurityIssue, SecurityScanner
 
 # Version info
 __version__ = "2.0.0"
@@ -247,7 +248,8 @@ async def is_token_revoked(jti: str) -> bool:
         return False  # Redis ডাউন থাকলে গ্রেসফুলি সার্ভিস বজায় থাকে
     try:
         return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to check token revocation status: {e}")
         return False
 
 

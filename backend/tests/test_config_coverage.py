@@ -1,8 +1,11 @@
 # Tests updated for refactored config
 from __future__ import annotations
+
 import os
 from unittest.mock import patch
+
 import pytest
+
 from core.config import Settings
 from core.security.secret_vault import secret_vault
 

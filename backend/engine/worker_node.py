@@ -21,7 +21,7 @@ class SwarmWorkerNode:
         self.agent_type = agent_type
         self.nats = NATSClient(
             url=os.getenv("NATS_URL", "nats://localhost:4222"),
-            token=os.getenv("NATS_TOKEN", "super_secret_token"),
+            token=os.getenv("NATS_TOKEN"),
         )
         self.is_running = True
 

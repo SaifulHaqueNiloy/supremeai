@@ -10,7 +10,6 @@ from typing import Any
 from schemas.skill_index import SkillIndexManager
 from schemas.skill_manifest import SkillManifest, SkillStatus
 
-
 logger = logging.getLogger("supremeai.librarian")
 
 

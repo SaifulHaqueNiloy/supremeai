@@ -8,10 +8,11 @@
 import asyncio
 import logging
 import threading
-from collections.abc import Callable
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 try:
@@ -308,7 +309,7 @@ class IntelligentErrorBus(ErrorEventBus):
                 "cpu_percent": psutil.cpu_percent(),
                 "memory_percent": psutil.virtual_memory().percent,
             }
-        except Exception:
+        except (psutil.Error, OSError):
             return {}
 
     def _check_and_escalate_pattern(self, event: ErrorEvent) -> None:

@@ -21,15 +21,15 @@ Bengali:
 # Import all evolution components
 from .digital_twin import (
     DigitalTwinWorldModel,
-    get_digital_twin_model,
-    initialize_digital_twin,
-    SystemTopologyMapper,
     ImpactSimulator,
     RemediationEngine,
+    SystemTopologyMapper,
+    get_digital_twin_model,
+    initialize_digital_twin,
 )
 
 try:
-    from .continual_learning.ewc import EWC, OnlineEWC, EWCTrainer, EWCConfig
+    from .continual_learning.ewc import EWC, EWCConfig, EWCTrainer, OnlineEWC
 except ImportError:
     EWC = OnlineEWC = EWCTrainer = EWCConfig = None
 
@@ -45,11 +45,11 @@ except ImportError:
 
 try:
     from .neural_symbolic.integration import (
-        NeuralSymbolicIntegrator,
         MathematicalReasoningEngine,
+        NeuralSymbolicConfig,
+        NeuralSymbolicIntegrator,
         SymbolicExpression,
         SymbolicReasoner,
-        NeuralSymbolicConfig,
     )
 except ImportError:
     NeuralSymbolicIntegrator = MathematicalReasoningEngine = SymbolicExpression = SymbolicReasoner = (
@@ -58,30 +58,36 @@ except ImportError:
 
 try:
     from .federated_learning.fed_learning import (
+        AggregationMethod,
         FederatedLearningCoordinator,
         FederatedServer,
-        LocalClient,
         FLConfig,
-        AggregationMethod,
+        LocalClient,
     )
 except ImportError:
     FederatedLearningCoordinator = FederatedServer = LocalClient = FLConfig = AggregationMethod = None
 
 try:
-    from .theory_of_mind.tom_system import TheoryOfMindSystem, ToMReasoner, MentalStateManager, ToMConfig, ToMLevel
+    from .theory_of_mind.tom_system import (
+        MentalStateManager,
+        TheoryOfMindSystem,
+        ToMConfig,
+        ToMLevel,
+        ToMReasoner,
+    )
 except ImportError:
     TheoryOfMindSystem = ToMReasoner = MentalStateManager = ToMConfig = ToMLevel = None
 
 try:
     from .temporal_abstraction.temporal_system import (
+        TemporalAbstractionConfig,
         TemporalAbstractionSystem,
+        TemporalEvent,
+        TemporalGranularity,
         TemporalMemory,
+        TemporalPattern,
         TemporalPatternDetector,
         TemporalPredictor,
-        TemporalAbstractionConfig,
-        TemporalEvent,
-        TemporalPattern,
-        TemporalGranularity,
     )
 except ImportError:
     TemporalAbstractionSystem = TemporalMemory = TemporalPatternDetector = TemporalPredictor = (

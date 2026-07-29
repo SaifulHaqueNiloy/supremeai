@@ -25,7 +25,6 @@ from loguru import logger
 from ..cache.redis_manager import redis_manager
 from ..config import settings
 
-
 # Dummy handle for test monkeypatching compatibility
 redis_queue = redis_manager
 
@@ -109,7 +108,8 @@ class TokenDeductor:
                 return True
             except RuntimeError:
                 raise
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Token deduction legacy path failed: {e}")
                 return False
 
         if settings.env in ["production", "staging"]:

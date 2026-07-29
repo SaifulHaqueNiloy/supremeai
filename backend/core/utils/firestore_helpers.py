@@ -49,8 +49,7 @@ def _get_sqlite_fallback() -> sqlite3.Connection:
 
 def _init_sqlite_schema(conn: sqlite3.Connection) -> None:
     """Initialize SQLite fallback schema."""
-    conn.executescript(
-        """
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS firestore_documents (
             collection TEXT NOT NULL,
             doc_id TEXT NOT NULL,
@@ -66,8 +65,7 @@ def _init_sqlite_schema(conn: sqlite3.Connection) -> None:
             name TEXT PRIMARY KEY,
             created_at TEXT NOT NULL
         );
-    """
-    )
+    """)
     conn.commit()
 
 

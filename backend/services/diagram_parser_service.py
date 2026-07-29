@@ -18,7 +18,7 @@ import json
 import os
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +35,7 @@ MAX_DIAGRAM_SIZE = 10 * 1024 * 1024  # 10MB
 router = APIRouter(prefix="/diagram-parser", tags=["diagram-parser"])
 
 
-class DiagramType(str, Enum):
+class DiagramType(StrEnum):
     IMAGE = "image"
     MERMAID = "mermaid"
     PLANTUML = "plantuml"

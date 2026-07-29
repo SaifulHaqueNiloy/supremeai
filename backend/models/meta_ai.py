@@ -26,7 +26,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from models.base import Base
 
 
-class AgentStatus(str, enum.Enum):
+class AgentStatus(enum.StrEnum):
     """Agent lifecycle status."""
 
     ACTIVE = "active"
@@ -36,7 +36,7 @@ class AgentStatus(str, enum.Enum):
     UNDER_REVIEW = "under_review"
 
 
-class MetricType(str, enum.Enum):
+class MetricType(enum.StrEnum):
     """Types of performance metrics tracked."""
 
     RESPONSE_TIME_MS = "response_time_ms"
@@ -47,7 +47,7 @@ class MetricType(str, enum.Enum):
     USER_SATISFACTION = "user_satisfaction"
 
 
-class SuggestionAction(str, enum.Enum):
+class SuggestionAction(enum.StrEnum):
     """Possible actions suggested by PerformanceOracle."""
 
     RETRAIN = "retrain"

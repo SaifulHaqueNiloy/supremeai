@@ -34,7 +34,8 @@ Dependencies:
 - `pydantic.computed_field`: For fields whose values are computed dynamically.
 - `pydantic.field_validator`: Decorator for field-specific validation logic.
 - `pydantic.model_validator`: Decorator for model-level validation logic.
-- `core.security.secret_vault`: An internal module responsible for fetching secrets from a secure vault (e.g., GCP Secret Manager)."""
+- `core.security.secret_vault`: An internal module responsible for fetching secrets from a secure vault (e.g., GCP Secret Manager).
+"""
 
 # backend/core/config.py
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
