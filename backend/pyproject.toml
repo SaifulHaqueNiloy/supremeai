@@ -172,6 +172,7 @@ filterwarnings = [
     "error",
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
+    "ignore::PendingDeprecationWarning",
 ]
 asyncio_mode = "auto"
 
