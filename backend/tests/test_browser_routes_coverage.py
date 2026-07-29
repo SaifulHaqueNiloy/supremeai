@@ -7,7 +7,7 @@ Target: 100% line coverage.
 
 import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -101,7 +101,6 @@ class TestCredentials:
         """save_credential and get_credentials should work together."""
         from api.routes.browser import (
             CredentialRequest,
-            get_credentials,
             save_credential,
         )
 
@@ -206,9 +205,9 @@ class TestUrlPermissions:
         """delete_url should remove a URL permission."""
         from api.routes.browser import (
             URL_PERMISSIONS,
+            UrlPermissionRequest,
             add_allowed_url,
             delete_url,
-            UrlPermissionRequest,
         )
 
         req = UrlPermissionRequest(urlPattern="https://test.com/*")
@@ -232,8 +231,9 @@ class TestUrlPermissions:
 
     def test_url_request_decision_not_found(self):
         """decision should raise 404 for unknown request."""
-        from api.routes.browser import DecisionRequest, decision
         from fastapi import HTTPException
+
+        from api.routes.browser import DecisionRequest, decision
 
         with pytest.raises(HTTPException) as exc:
             decision("nonexistent", DecisionRequest(approved=False))

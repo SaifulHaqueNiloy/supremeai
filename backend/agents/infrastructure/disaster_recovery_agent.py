@@ -4,24 +4,19 @@ Handles automated backup and recovery procedures to ensure system resilience.
 """
 
 import asyncio
+import hashlib
 import json
 import logging
-import shutil
 import os
-from pathlib import Path
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
-from datetime import datetime, timedelta
 import zipfile
-import hashlib
-from urllib.parse import urlparse
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
+from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.llm.token_deductor import TokenDeductor
-from core.cache.redis_manager import redis_manager
-from core.database.session import get_db_session
-from core.storage.cloud_storage import CloudStorageClient
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +31,7 @@ class BackupResult:
     location: str
     status: str  # success, failed, partial
     verification_hash: str
-    components_backed_up: List[str]
+    components_backed_up: list[str]
     duration_seconds: float
 
 
@@ -48,7 +43,7 @@ class RecoveryResult:
     timestamp: datetime
     backup_id: str
     status: str  # success, failed, partial
-    recovered_components: List[str]
+    recovered_components: list[str]
     duration_seconds: float
     notes: str
 
@@ -147,7 +142,7 @@ class DisasterRecoveryAgent:
             logger.error(f"Error initializing recovery plans: {e}")
 
     async def create_backup(
-        self, backup_type: str = "full", components: Optional[List[str]] = None, location_override: Optional[str] = None
+        self, backup_type: str = "full", components: list[str] | None = None, location_override: str | None = None
     ) -> BackupResult:
         """
         Create a system backup.
@@ -234,7 +229,7 @@ class DisasterRecoveryAgent:
             return backup_result
 
     async def restore_from_backup(
-        self, backup_id: str, recovery_plan: str = "full_restoration", components: Optional[List[str]] = None
+        self, backup_id: str, recovery_plan: str = "full_restoration", components: list[str] | None = None
     ) -> RecoveryResult:
         """
         Restore system from a backup using a specific recovery plan.
@@ -327,7 +322,7 @@ class DisasterRecoveryAgent:
             await self._store_recovery_result(recovery_result)
             return recovery_result
 
-    async def _create_backup_archive(self, archive_path: str, components: List[str]) -> int:
+    async def _create_backup_archive(self, archive_path: str, components: list[str]) -> int:
         """Create a backup archive for specified components."""
         try:
             os.makedirs(os.path.dirname(archive_path), exist_ok=True)
@@ -480,7 +475,7 @@ class DisasterRecoveryAgent:
         except Exception as e:
             logger.error(f"Error storing recovery result: {e}")
 
-    async def _get_backup_info(self, backup_id: str) -> Optional[Dict[str, Any]]:
+    async def _get_backup_info(self, backup_id: str) -> dict[str, Any] | None:
         """Get information about a specific backup."""
         try:
             existing_backups = await redis_manager.get(self.backup_history_key)
@@ -497,7 +492,7 @@ class DisasterRecoveryAgent:
             logger.error(f"Error getting backup info: {e}")
             return None
 
-    async def _get_recovery_plans(self) -> Dict[str, Any]:
+    async def _get_recovery_plans(self) -> dict[str, Any]:
         """Get current recovery plans."""
         try:
             plans_json = await redis_manager.get(self.recovery_plan_key)
@@ -509,7 +504,7 @@ class DisasterRecoveryAgent:
             logger.error(f"Error getting recovery plans: {e}")
             return self.default_recovery_plans
 
-    async def _update_system_state(self, state_updates: Dict[str, Any]):
+    async def _update_system_state(self, state_updates: dict[str, Any]):
         """Update system state with recovery-related information."""
         try:
             # Get current state
@@ -531,7 +526,7 @@ class DisasterRecoveryAgent:
         except Exception as e:
             logger.error(f"Error updating system state: {e}")
 
-    async def get_backup_schedule_recommendations(self) -> Dict[str, Any]:
+    async def get_backup_schedule_recommendations(self) -> dict[str, Any]:
         """
         Generate recommendations for backup scheduling based on system usage.
 
@@ -578,7 +573,7 @@ class DisasterRecoveryAgent:
                 "offsite_replication": True,
             }
 
-    async def verify_backup_integrity(self, backup_id: str) -> Dict[str, Any]:
+    async def verify_backup_integrity(self, backup_id: str) -> dict[str, Any]:
         """
         Verify the integrity of a backup.
 

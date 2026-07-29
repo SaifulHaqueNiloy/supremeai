@@ -10,7 +10,8 @@ Dependencies:
 - `loguru`: For robust and structured logging of client initialization status, warnings, and errors.
 - `ldclient`: The core LaunchDarkly Python SDK, used for general feature flagging and configuration management.
 - `ldai`: The LaunchDarkly AI SDK, providing specific functionalities for AI model management, experimentation, and completion configurations.
-- `ldobserve`: The LaunchDarkly Observability SDK, used for integrating telemetry and monitoring into the LaunchDarkly client."""  # noqa: E501
+- `ldobserve`: The LaunchDarkly Observability SDK, used for integrating telemetry and monitoring into the LaunchDarkly client.
+"""  # noqa: E501
 
 # Central LaunchDarkly Client Initialization
 # বাংলা মন্তব্য: লঞ্চডার্কলি এজেন্টস কন্ট্রোল এবং ওপেনটেলিমেট্রি মনিটরিং কনফিগার করার জন্য সেন্ট্রাল ক্লায়েন্ট ফাইল

@@ -127,8 +127,8 @@ class CircuitBreaker:
 
         বাংলা: CircuitBreaker ইন্সট্যান্সকে ডেকোরেটর হিসেবে ব্যবহার করতে দেয়।
         """
-        import inspect
         import functools
+        import inspect
 
         if inspect.iscoroutinefunction(func):
 

@@ -5,7 +5,7 @@ import functools
 import random
 import time
 from collections.abc import Callable
-from typing import Any, Type, Awaitable
+from typing import Any
 
 from loguru import logger
 

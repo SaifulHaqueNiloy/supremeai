@@ -3,19 +3,16 @@ Accessibility Agent for SupremeAI 2.0
 Ensures system accessibility for users with disabilities and compliance with accessibility standards.
 """
 
-import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any
+import re
 from dataclasses import dataclass
 from datetime import datetime
-import re
 from html.parser import HTMLParser
+from typing import Any
 
-from core.config import settings
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
-
+from core.llm.token_deductor import TokenDeductor
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +26,8 @@ class AccessibilityIssue:
     category: str  # visual, auditory, motor, cognitive
     description: str
     wcag_level: str  # A, AA, AAA
-    suggestions: List[str]
-    affected_elements: List[str]
+    suggestions: list[str]
+    affected_elements: list[str]
     timestamp: datetime
 
 
@@ -39,10 +36,10 @@ class AccessibilityReport:
     """Data class to hold accessibility assessment results."""
 
     content_analyzed: str
-    issues_found: List[AccessibilityIssue]
+    issues_found: list[AccessibilityIssue]
     overall_score: float  # 0.0 to 1.0
     compliance_level: str  # A, AA, AAA, not_compliant
-    recommendations: List[str]
+    recommendations: list[str]
     timestamp: datetime
 
 
@@ -65,7 +62,7 @@ class HTMLAccessibilityParser(HTMLParser):
         if self.tag_stack:
             self.tag_stack.pop()
 
-    def _check_tag_accessibility(self, tag: str, attrs: Dict[str, str]) -> List[Dict[str, Any]]:
+    def _check_tag_accessibility(self, tag: str, attrs: dict[str, str]) -> list[dict[str, Any]]:
         """Check a specific tag for accessibility issues."""
         issues = []
 
@@ -102,7 +99,6 @@ class HTMLAccessibilityParser(HTMLParser):
         if tag in ["input", "textarea", "select"] and "type" not in attrs or attrs.get("type") != "hidden":
             if "aria-label" not in attrs and "aria-labelledby" not in attrs:
                 # Check if previous element is a label
-                has_label = False
                 if "id" in attrs:
                     # Would need to check for associated label - simplified for now
                     pass
@@ -270,7 +266,7 @@ class AccessibilityAgent:
                 timestamp=datetime.utcnow(),
             )
 
-    async def _analyze_text_accessibility(self, text: str) -> List[AccessibilityIssue]:
+    async def _analyze_text_accessibility(self, text: str) -> list[AccessibilityIssue]:
         """Analyze text content for accessibility issues."""
         issues = []
 
@@ -328,7 +324,7 @@ class AccessibilityAgent:
 
         return issues
 
-    def _calculate_accessibility_score(self, issues: List[AccessibilityIssue]) -> float:
+    def _calculate_accessibility_score(self, issues: list[AccessibilityIssue]) -> float:
         """Calculate overall accessibility score based on issues found."""
         if not issues:
             return 1.0  # Perfect score if no issues
@@ -358,7 +354,7 @@ class AccessibilityAgent:
         else:
             return "not_compliant"
 
-    async def _generate_recommendations(self, issues: List[AccessibilityIssue]) -> List[str]:
+    async def _generate_recommendations(self, issues: list[AccessibilityIssue]) -> list[str]:
         """Generate recommendations based on identified issues."""
         recommendations = set()  # Use set to avoid duplicates
 
@@ -392,7 +388,7 @@ class AccessibilityAgent:
 
         return list(recommendations)
 
-    async def check_interface_accessibility(self, interface_elements: List[Dict[str, Any]]) -> List[AccessibilityIssue]:
+    async def check_interface_accessibility(self, interface_elements: list[dict[str, Any]]) -> list[AccessibilityIssue]:
         """
         Check interface elements for accessibility issues.
 
@@ -459,7 +455,7 @@ class AccessibilityAgent:
 
         return issues
 
-    async def generate_accessibility_plan(self, target_score: float = 0.9) -> Dict[str, Any]:
+    async def generate_accessibility_plan(self, target_score: float = 0.9) -> dict[str, Any]:
         """
         Generate an accessibility improvement plan.
 
@@ -622,7 +618,7 @@ class AccessibilityAgent:
         except Exception as e:
             logger.error(f"Error storing accessibility report: {e}")
 
-    async def get_recent_reports(self, limit: int = 10) -> List[AccessibilityReport]:
+    async def get_recent_reports(self, limit: int = 10) -> list[AccessibilityReport]:
         """Retrieve recent accessibility reports."""
         try:
             reports_data = await redis_manager.get(self.accessibility_reports_key)

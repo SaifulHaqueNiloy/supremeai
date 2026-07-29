@@ -1,7 +1,6 @@
-from tools.social.marketplace_agent import MarketplaceAgent
-
-
 import pytest
+
+from tools.social.marketplace_agent import MarketplaceAgent
 
 
 def test_marketplace_search():

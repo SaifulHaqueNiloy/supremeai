@@ -10,7 +10,7 @@ import base64
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 from loguru import logger
 from playwright.sync_api import Page

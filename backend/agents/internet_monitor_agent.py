@@ -5,24 +5,20 @@ Monitors GitHub trending repos, AI world updates, and system capabilities to kee
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-import re
-import xml.etree.ElementTree as ET
+from datetime import datetime
+from typing import Any
 
 import aiohttp
-from fastapi import HTTPException
 
-from core.config import settings
-from core.messaging.event_bus import EventBus
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.config import settings
 
 # Remove the problematic import and use alternative
 # from core.security.auth_middleware import get_current_active_user
 from core.health_check import health_checker
-
+from core.llm.token_deductor import TokenDeductor
+from core.messaging.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +40,7 @@ class InternetMonitorAgent:
 
     def __init__(self):
         self.name = "Internet Monitor Agent"
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.event_bus = EventBus()
         self.token_deductor = TokenDeductor()
         self.check_interval = getattr(settings, "internet_monitor_interval", 3600)  # Default 1 hour
@@ -105,7 +101,7 @@ class InternetMonitorAgent:
         except Exception as e:
             logger.error(f"Error discovering system capabilities: {e}")
 
-    async def get_system_capabilities(self) -> Dict:
+    async def get_system_capabilities(self) -> dict:
         """Get current system capabilities."""
         try:
             data = await redis_manager.get(self.system_capabilities_key)
@@ -116,7 +112,7 @@ class InternetMonitorAgent:
 
         return {"features": [], "missing_features": [], "update_status": {}}
 
-    async def monitor_github_trending(self) -> List[UpdateInfo]:
+    async def monitor_github_trending(self) -> list[UpdateInfo]:
         """Monitor GitHub trending repositories."""
         updates = []
 
@@ -168,7 +164,7 @@ class InternetMonitorAgent:
 
         return updates
 
-    async def monitor_ai_world_updates(self) -> List[UpdateInfo]:
+    async def monitor_ai_world_updates(self) -> list[UpdateInfo]:
         """Monitor AI world updates from various sources."""
         updates = []
 
@@ -225,7 +221,7 @@ class InternetMonitorAgent:
 
         return updates
 
-    async def compare_system_vs_updates(self) -> List[UpdateInfo]:
+    async def compare_system_vs_updates(self) -> list[UpdateInfo]:
         """Compare system capabilities against new updates to identify missing features."""
         updates = []
 
@@ -291,7 +287,7 @@ class InternetMonitorAgent:
 
         return updates
 
-    async def monitor_system_health_and_gaps(self) -> List[UpdateInfo]:
+    async def monitor_system_health_and_gaps(self) -> list[UpdateInfo]:
         """Monitor system health and identify capability gaps."""
         updates = []
 
@@ -335,7 +331,7 @@ class InternetMonitorAgent:
 
         return updates
 
-    async def get_latest_updates(self) -> List[UpdateInfo]:
+    async def get_latest_updates(self) -> list[UpdateInfo]:
         """Get the latest updates from all monitored sources."""
         all_updates = []
 
@@ -375,7 +371,7 @@ class InternetMonitorAgent:
 
         return all_updates
 
-    async def get_update_summary(self) -> Dict[str, Any]:
+    async def get_update_summary(self) -> dict[str, Any]:
         """Get a summary of updates organized by category."""
         updates = await self.get_latest_updates()
 
@@ -440,7 +436,7 @@ class InternetMonitorAgent:
                 # Wait before retrying
                 await asyncio.sleep(300)  # 5 minutes before retrying
 
-    async def get_update_history(self) -> List[Dict]:
+    async def get_update_history(self) -> list[dict]:
         """Get historical updates from Redis."""
         try:
             data = await redis_manager.get(self.update_history_key)

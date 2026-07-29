@@ -23,9 +23,10 @@ import jwt
 from fastapi import HTTPException, status
 from loguru import logger
 
+from .behavioral_analyzer import AnomalyAlert, BehavioralAnalyzer, get_analyzer
+
 # Fixed import path - using relative import instead of absolute
-from .enhanced_ast_scanner import SecurityScanner, SecurityIssue
-from .behavioral_analyzer import BehavioralAnalyzer, AnomalyAlert, get_analyzer
+from .enhanced_ast_scanner import SecurityIssue, SecurityScanner
 
 # Version info
 __version__ = "2.0.0"

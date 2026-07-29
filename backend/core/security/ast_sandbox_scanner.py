@@ -24,8 +24,6 @@ Usage:
 import ast
 import re
 from dataclasses import dataclass, field
-from typing import Any
-
 
 # ── Constants: Blocked patterns ────────────────────────────────────────────────
 # Functions that are always blocked in sandbox execution

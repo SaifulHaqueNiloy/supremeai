@@ -15,14 +15,27 @@ from typing import Any
 import httpx
 from loguru import logger
 
+from utils.firestore_helpers import get_firestore_db
+
 from ..config import settings  # Fixed import path - using relative import
 from ..cost_guard import CostGuard  # Fixed import path - using relative import
-from ..health.self_healer import SelfHealerService  # Fixed import path - using relative import
-from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus  # Fixed import path - using relative import
-from ..prompt_handler import normalize_prompt  # Fixed import path - using relative import
-from ..resilience.circuit_breaker import CircuitBreaker  # Fixed import path - using relative import
-from ..resilience.circuit_breaker_manager import get_shared_circuit_breaker  # Fixed import path - using relative import
-from utils.firestore_helpers import get_firestore_db
+from ..health.self_healer import (
+    SelfHealerService,  # Fixed import path - using relative import
+)
+from ..messaging.event_bus import (  # Fixed import path - using relative import
+    ErrorContext,
+    ErrorEvent,
+    error_event_bus,
+)
+from ..prompt_handler import (
+    normalize_prompt,  # Fixed import path - using relative import
+)
+from ..resilience.circuit_breaker import (
+    CircuitBreaker,  # Fixed import path - using relative import
+)
+from ..resilience.circuit_breaker_manager import (
+    get_shared_circuit_breaker,  # Fixed import path - using relative import
+)
 
 # বাংলা মন্তব্ব: POLICY_PATH এখন os.path দিয়ে বিল্ড হয় — hardcode নেই
 _POLICY_PATH = os.path.join(
@@ -108,7 +121,9 @@ class LLMGateway:
     def performance_optimizer(self):
         """Circular import guard: performance_enhancer → llm_gateway চক্র ভাঙতে lazy-load।"""
         if self._performance_optimizer is None:
-            from core.performance_enhancer import get_performance_optimizer  # noqa: PLC0415
+            from core.performance_enhancer import (  # noqa: PLC0415
+                get_performance_optimizer,
+            )
 
             self._performance_optimizer = get_performance_optimizer()
         return self._performance_optimizer
@@ -280,8 +295,8 @@ class LLMGateway:
                 except ValueError:
                     # If Retry-After is in date format, calculate difference
                     try:
-                        from email.utils import parsedate_to_datetime
                         import time
+                        from email.utils import parsedate_to_datetime
 
                         retry_time = parsedate_to_datetime(retry_after)
                         pause_seconds = int(retry_time.timestamp() - time.time())
