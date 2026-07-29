@@ -133,7 +133,9 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
-source = ["."]
+# বাংলা: core/ ফোল্ডারেই coverage মাপা হয় — CI এর সাথে consistent।
+# পুরো backend/ স্ক্যান করলে pytest অনেক ধীর হয়ে যায়।
+source = ["core"]
 omit = [
     "*/tests/*",
     "*/venv/*",
@@ -141,6 +143,7 @@ omit = [
     ".venv/*",
     "*/__pycache__/*",
     "*/migrations/*",
+    "*/alembic/*",
 ]
 
 [tool.coverage.report]
@@ -155,7 +158,7 @@ exclude_lines = [
 [tool.pytest.ini_options]
 # বাংলা মন্তব্ব্য: টেস্ট কভারেজ থ্রেশহোল্ড 75% এ বাড়ানো হয়েছে সিকিউরিটি এবং কোয়ালিটি বাড়াতে
 minversion = "6.0"
-addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=. --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=core --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
