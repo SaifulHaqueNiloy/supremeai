@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/orchestration_provider.dart';
 
 class AgentMetricsCard extends StatelessWidget {
-  const AgentMetricsCard({Key? key}) : super(key: key);
+  const AgentMetricsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,31 +33,31 @@ class AgentMetricsCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       "Active Agent State",
                       style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isZeroCost ? Colors.greenAccent.shade400 : Colors.orangeAccent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         isZeroCost ? "ZERO COST" : "API ACTIVE",
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
+                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
                   executionTier,
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 16),
-                Divider(color: Colors.white24),
-                SizedBox(height: 8),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white24),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -65,7 +65,7 @@ class AgentMetricsCard extends StatelessWidget {
                     _buildStatNode("Latency Guard", "${latencyMs}ms"),
                   ],
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -73,7 +73,7 @@ class AgentMetricsCard extends StatelessWidget {
                     _buildStatNode("CPU", "$cpuUsage"),
                   ],
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 _buildProgressBar("Memory Usage", double.tryParse(memoryUsage.replaceAll('%', '')) ?? 0.0),
               ],
             ),
@@ -87,9 +87,9 @@ class AgentMetricsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white60, fontSize: 12)),
-        SizedBox(height: 4),
-        Text(value, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -101,11 +101,11 @@ class AgentMetricsCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(color: Colors.white60, fontSize: 12)),
-            Text('$value%', style: TextStyle(color: Colors.white, fontSize: 12)),
+            Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+            Text('$value%', style: const TextStyle(color: Colors.white, fontSize: 12)),
           ],
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         LinearProgressIndicator(
           value: value / 100,
           backgroundColor: Colors.grey[800],
