@@ -142,7 +142,7 @@ class AuthMiddleware:
 
         path = scope.get("path", "")
 
-        if _is_public_path(path):
+        if _is_public_path(path) or (is_test_environment() and settings.allow_test_auth_bypass):
             await self.app(scope, receive, send)
             return
 
