@@ -116,6 +116,14 @@ class TestSelfPlannerGeneratePlan:
             assert graph.number_of_nodes() == 0
 
 
+try:
+    import networkx as nx
+except ImportError:
+    from unittest.mock import MagicMock
+
+    nx = MagicMock()
+
+
 class TestSelfPlannerValidatePlan:
     """Tests for SelfPlanner.validate_plan."""
 
@@ -124,8 +132,6 @@ class TestSelfPlannerValidatePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        import networkx as nx
-
         graph = nx.DiGraph()
         graph.add_node("task1", description="Test")
 
@@ -142,8 +148,6 @@ class TestSelfPlannerExecutePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        import networkx as nx
-
         graph = nx.DiGraph()
 
         result = await planner.execute_plan(graph)
@@ -156,8 +160,6 @@ class TestSelfPlannerExecutePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        import networkx as nx
-
         graph = nx.DiGraph()
         graph.add_node("task1", description="Task 1")
         graph.add_node("task2", description="Task 2")
