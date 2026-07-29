@@ -44,19 +44,19 @@ class SupremeThemeExtension extends ThemeExtension<SupremeThemeExtension> {
   }
 
   // Define light theme values using AppColors (Design Tokens)
-  static final light = SupremeThemeExtension(
+  static const light = SupremeThemeExtension(
     actionPrimaryBg: AppColors.semanticColorActionPrimaryBg,
     actionPrimaryText: AppColors.semanticColorActionPrimaryText,
     brandPrimary: AppColors.colorBrand500,
-    brandSuccess: const Color(0xFF10B981), // Mock value if not in tokens
+    brandSuccess: Color(0xFF10B981), // Mock value if not in tokens
   );
 
   // Define dark theme values
-  static final dark = SupremeThemeExtension(
+  static const dark = SupremeThemeExtension(
     actionPrimaryBg: AppColors.semanticColorActionPrimaryBg,
     actionPrimaryText: AppColors.semanticColorActionPrimaryText,
     brandPrimary: AppColors.colorBrand500,
-    brandSuccess: const Color(0xFF10B981),
+    brandSuccess: Color(0xFF10B981),
   );
 }
 
@@ -69,7 +69,7 @@ class AppTheme {
         brightness: Brightness.light,
         surface: AppColors.colorNeutral0,
       ),
-      extensions: [SupremeThemeExtension.light],
+      extensions: const [SupremeThemeExtension.light],
     );
   }
 
@@ -81,7 +81,7 @@ class AppTheme {
         brightness: Brightness.dark,
         surface: AppColors.colorNeutral900,
       ),
-      extensions: [SupremeThemeExtension.dark],
+      extensions: const [SupremeThemeExtension.dark],
     );
   }
 }

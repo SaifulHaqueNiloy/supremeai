@@ -4,13 +4,13 @@ import 'package:supremeai_mobile/screens/code_editor_screen.dart';
 import 'package:supremeai_mobile/widgets/ai_assistance_card.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF2563EB),
+        backgroundColor: const Color(0xFF2563EB),
         foregroundColor: Colors.white,
         title: const Text('SupremeAI'),
         centerTitle: true,
@@ -62,10 +62,10 @@ class HomeScreen extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(16.0),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Welcome Back!',
                     style: TextStyle(
                       color: Colors.white,
@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'How can SupremeAI assist you today?',
                     style: TextStyle(
@@ -104,7 +104,7 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ChatScreen()),
+                        MaterialPageRoute(builder: (context) => const ChatScreen()),
                       );
                     },
                   ),
@@ -118,7 +118,7 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ChatScreen()),
+                        MaterialPageRoute(builder: (context) => const ChatScreen()),
                       );
                     },
                   ),
@@ -136,7 +136,7 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => CodeEditorScreen()),
+                        MaterialPageRoute(builder: (context) => const CodeEditorScreen()),
                       );
                     },
                   ),
@@ -150,7 +150,7 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ChatScreen()),
+                        MaterialPageRoute(builder: (context) => const ChatScreen()),
                       );
                     },
                   ),
@@ -171,7 +171,7 @@ class HomeScreen extends StatelessWidget {
               context,
               title: 'Code Review Request',
               subtitle: 'Completed 2 hours ago',
-              trailing: Icon(Icons.check_circle, color: Colors.green),
+              trailing: const Icon(Icons.check_circle, color: Colors.green),
             ),
             const SizedBox(height: 12),
             _buildRecentActivityCard(
@@ -179,7 +179,7 @@ class HomeScreen extends StatelessWidget {
               title: 'Bug Detection',
               subtitle: 'In progress',
               trailing: Container(
-                padding: EdgeInsets.all(4),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Colors.orange.shade100,
                   borderRadius: BorderRadius.circular(12),
@@ -216,17 +216,17 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
         currentIndex: 0,
-        selectedItemColor: Color(0xFF2563EB),
+        selectedItemColor: const Color(0xFF2563EB),
         onTap: (index) {
           if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ChatScreen()),
+              MaterialPageRoute(builder: (context) => const ChatScreen()),
             );
           } else if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CodeEditorScreen()),
+              MaterialPageRoute(builder: (context) => const CodeEditorScreen()),
             );
           }
         },
@@ -250,10 +250,10 @@ class HomeScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFDBEAFE),
+            color: const Color(0xFFDBEAFE),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(Icons.history, color: Color(0xFF2563EB)),
+          child: const Icon(Icons.history, color: Color(0xFF2563EB)),
         ),
         title: Text(
           title,

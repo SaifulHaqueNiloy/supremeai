@@ -3,7 +3,6 @@
 // This script identifies safe dependency updates while maintaining compatibility
 
 import 'dart:io';
-import 'dart:convert';
 
 Future<void> main() async {
   print('🔍 Analyzing Flutter dependencies for SupremeAI Mobile app...');

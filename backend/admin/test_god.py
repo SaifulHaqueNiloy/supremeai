@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from admin.god import AdminGodLayer
+from .god import AdminGodLayer
 
 
 @pytest.fixture
@@ -278,3 +278,4 @@ class TestAdminGodLayer:
         admin_god_layer = AdminGodLayer()
         admin_god_layer.set_rule("a" * 1000, "test_value")
         assert admin_god_layer.get_rule("a" * 1000) == "test_value"  # noqa: S101
+
