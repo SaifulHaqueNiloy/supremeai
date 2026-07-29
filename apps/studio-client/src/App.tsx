@@ -235,16 +235,7 @@ const AppContent: React.FC = () => {
                       />
                     </ProtectedRoute>
                   } />
-                  <Route path="/workspace/*" element={
-                    <ProtectedRoute>
-                      <DashboardShell
-                        theme={theme}
-                        toggleTheme={toggleTheme}
-                        isServerOnline={isServerOnline}
-                        workspace={legacyWorkspace}
-                      />
-                    </ProtectedRoute>
-                  } />
+                  {/* Removed duplicate route to avoid duplicate rendering */}
                   <Route path="/workspace/live" element={
                     <ProtectedRoute>
                       <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
