@@ -29,8 +29,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         import os
 
-        request.headers.get("host", "").split(":")[0]
-        env = os.getenv("ENV", "development").lower()
+        _env = os.getenv("ENV", "development").lower()
         origin = request.headers.get("Origin")
         allowed = self.allowed_origins
 
