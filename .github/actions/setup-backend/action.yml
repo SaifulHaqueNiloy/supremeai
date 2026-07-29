@@ -51,7 +51,6 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        cd ${{ inputs.working-directory }}
         poetry run pip install --upgrade pip setuptools==68.0.0 wheel || true
         poetry run pip install openai-whisper==20240930 --no-build-isolation || true
 
@@ -59,6 +58,5 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        cd ${{ inputs.working-directory }}
         poetry run pip install setuptools==68.0.0 wheel
         poetry install --no-root --with dev
