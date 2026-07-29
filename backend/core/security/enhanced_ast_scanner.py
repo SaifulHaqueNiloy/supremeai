@@ -229,7 +229,7 @@ class SecurityScanner:
             List of security issues found
         """
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 code = f.read()
 
             if not code.strip():

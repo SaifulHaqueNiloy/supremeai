@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class SmartModelRouter:
 
         return "general"
 
-    async def route(self, prompt: str) -> Dict[str, Any]:
+    async def route(self, prompt: str) -> dict[str, Any]:
         """
         Route prompt to the most optimal specialized model.
         """
