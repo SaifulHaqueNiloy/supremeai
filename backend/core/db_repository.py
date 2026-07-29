@@ -1,3 +1,4 @@
+import inspect
 import logging
 import re
 from typing import Any
@@ -43,18 +44,22 @@ class SmartDataRepository:
             # Firebase Client check and fetch
             if hasattr(self.firebase, "collection"):
                 doc_ref = self.firebase.collection(collection).document(doc_id)
-                import inspect
-                try:
-                    res = doc_ref.get()
-                    doc = await res if inspect.isawaitable(res) else res
-                except TypeError:
+                if inspect.iscoroutinefunction(doc_ref.get):
                     doc = await doc_ref.get()
+                else:
+                    res = doc_ref.get()
+                    if inspect.isawaitable(res):
+                        doc = await res
+                    else:
+                        doc = res
 
                 if not doc.exists:
                     return None
                 return doc.to_dict()
             else:
                 raise PrimaryDatabaseDownException("Firebase client not initialized or missing collection method")
+        except PrimaryDatabaseDownException:
+            raise
         except Exception as e:  # noqa: BLE001
             logging.warning(f"⚠️ Firebase unreachable ({str(e)}). Retrying...")
             raise PrimaryDatabaseDownException(str(e)) from e
