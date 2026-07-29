@@ -3,17 +3,14 @@ Explainability Agent for SupremeAI 2.0
 Provides clear explanations for AI decisions to enhance transparency and trust.
 """
 
-import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
 
-from core.config import settings
 from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
-from core.models import Message
 
 
 logger = logging.getLogger(__name__)
@@ -26,8 +23,8 @@ class ExplanationResult:
     original_decision: str
     explanation: str
     confidence: float
-    reasoning_steps: List[str]
-    factors_considered: List[str]
+    reasoning_steps: list[str]
+    factors_considered: list[str]
     timestamp: datetime
 
 
@@ -41,7 +38,7 @@ class ExplainabilityAgent:
         self.max_history_items = 100
 
     async def explain_decision(
-        self, decision: str, context: str = "", model_response: Optional[Dict] = None
+        self, decision: str, context: str = "", model_response: dict | None = None
     ) -> ExplanationResult:
         """
         Provide a clear explanation for an AI decision.
@@ -92,7 +89,7 @@ class ExplainabilityAgent:
                 timestamp=datetime.utcnow(),
             )
 
-    def _prepare_explanation_prompt(self, decision: str, context: str, model_response: Optional[Dict]) -> str:
+    def _prepare_explanation_prompt(self, decision: str, context: str, model_response: dict | None) -> str:
         """Prepare the prompt for generating explanation."""
         prompt_parts = [
             "You are an AI explainability expert. Provide a clear, concise explanation for the following AI decision.",
@@ -146,7 +143,7 @@ class ExplainabilityAgent:
                 }
             )
 
-    async def _parse_explanation(self, explanation_text: str) -> Dict[str, Any]:
+    async def _parse_explanation(self, explanation_text: str) -> dict[str, Any]:
         """Parse the explanation text into structured data."""
         try:
             # Try to extract JSON from the response
@@ -207,7 +204,7 @@ class ExplainabilityAgent:
         except Exception as e:
             logger.error(f"Error storing explanation history: {e}")
 
-    async def get_explanation_history(self, limit: int = 10) -> List[ExplanationResult]:
+    async def get_explanation_history(self, limit: int = 10) -> list[ExplanationResult]:
         """Retrieve recent explanations from history."""
         try:
             history = await redis_manager.get(self.explanation_history_key)
