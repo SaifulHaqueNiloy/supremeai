@@ -155,8 +155,8 @@ exclude_lines = [
 [tool.pytest.ini_options]
 # বাংলা মন্তব্ব্য: টেস্ট কভারেজ থ্রেশহোল্ড 75% এ বাড়ানো হয়েছে সিকিউরিটি এবং কোয়ালিটি বাড়াতে
 minversion = "6.0"
-addopts = "-ra -q --strict-markers --strict-config --cov=. --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
-testpaths = ["tests", "backend/tests"]
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=. --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
+testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
