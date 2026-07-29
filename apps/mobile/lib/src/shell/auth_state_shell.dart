@@ -14,12 +14,12 @@ class AuthStateShell extends StatelessWidget {
   final Widget dashboardScreen;
 
   const AuthStateShell({
-    Key? key,
+    super.key,
     required this.authStatus,
     required this.splashScreen,
     required this.loginScreen,
     required this.dashboardScreen,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

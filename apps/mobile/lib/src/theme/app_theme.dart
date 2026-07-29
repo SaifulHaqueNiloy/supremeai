@@ -44,7 +44,7 @@ class SupremeThemeExtension extends ThemeExtension<SupremeThemeExtension> {
   }
 
   // Define light theme values using AppColors (Design Tokens)
-  static final light = SupremeThemeExtension(
+  static const light = SupremeThemeExtension(
     actionPrimaryBg: AppColors.semanticColorActionPrimaryBg,
     actionPrimaryText: AppColors.semanticColorActionPrimaryText,
     brandPrimary: AppColors.colorBrand500,
@@ -52,7 +52,7 @@ class SupremeThemeExtension extends ThemeExtension<SupremeThemeExtension> {
   );
 
   // Define dark theme values
-  static final dark = SupremeThemeExtension(
+  static const dark = SupremeThemeExtension(
     actionPrimaryBg: AppColors.semanticColorActionPrimaryBg,
     actionPrimaryText: AppColors.semanticColorActionPrimaryText,
     brandPrimary: AppColors.colorBrand500,

@@ -4,7 +4,7 @@ import '../../theme/tokens.dart'; // Adjust path to your generated DesignTokens
 class HoldToKillButton extends StatefulWidget {
   final VoidCallback onTrigger;
 
-  const HoldToKillButton({Key? key, required this.onTrigger}) : super(key: key);
+  const HoldToKillButton({super.key, required this.onTrigger});
 
   @override
   State<HoldToKillButton> createState() => _HoldToKillButtonState();
