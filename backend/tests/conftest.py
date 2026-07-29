@@ -93,6 +93,23 @@ sys.modules["tenacity"] = create_mock_module("tenacity", is_package=True)
 sys.modules["posthog"] = create_mock_module("posthog", is_package=True)
 sys.modules["pandas"] = create_mock_module("pandas", is_package=True)
 sys.modules["neo4j"] = create_mock_module("neo4j", is_package=True)
+# Mock mcp with a FastMCP whose `tool` decorator passes the original function through
+class _MockFastMCP:
+    def __init__(self, *args, **kwargs):
+        self.run = MagicMock()
+
+    def tool(self, *args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
+    def __call__(self, *args, **kwargs):
+        return _MockFastMCP()
+
+
+_mcp_fastmcp = create_mock_module("mcp.server.fastmcp")
+_mcp_fastmcp.FastMCP = _MockFastMCP
+sys.modules["mcp.server.fastmcp"] = _mcp_fastmcp
 sys.modules["mcp"] = create_mock_module("mcp", is_package=True)
 sys.modules["grpc"] = create_mock_module("grpc", is_package=True)
 sys.modules["google"] = create_mock_module("google", is_package=True)
@@ -103,7 +120,7 @@ sys.modules["google.cloud.secretmanager"] = create_mock_module("google.cloud.sec
 sys.modules["google_auth_httplib2"] = create_mock_module("google_auth_httplib2", is_package=True)
 sys.modules["google_auth_oauthlib"] = create_mock_module("google_auth_oauthlib", is_package=True)
 sys.modules["google.cloud.storage"] = create_mock_module("google.cloud.storage", is_package=True)
-sys.modules["mcp.server.fastmcp"] = create_mock_module("mcp.server.fastmcp")
+
 sys.modules["tools.code.image_to_code_react"] = create_mock_module("tools.code.image_to_code_react")
 sys.modules["tools.code.code_smell_detector"] = create_mock_module("tools.code.code_smell_detector")
 sys.modules["opentelemetry.sdk.trace.export"] = create_mock_module("opentelemetry.sdk.trace.export")
@@ -125,8 +142,8 @@ sys.modules["opentelemetry.sdk.trace"] = create_mock_module("opentelemetry.sdk.t
 sys.modules["opentelemetry.trace.export"] = create_mock_module("opentelemetry.trace.export")
 sys.modules["asyncpg.connection"] = create_mock_module("asyncpg.connection")
 sys.modules["asyncpg.pool"] = create_mock_module("asyncpg.pool")
-sys.modules["mcp.server"] = create_mock_module("mcp.server", is_package=True)
-sys.modules["mcp.server.stdio"] = create_mock_module("mcp.server.stdio")
+sys.modules["mcp.server"] = _mcp_fastmcp
+sys.modules["mcp.server.stdio"] = _mcp_fastmcp
 sys.modules["google.oauth2"] = create_mock_module("google.oauth2", is_package=True)
 sys.modules["google.oauth2.credentials"] = create_mock_module("google.oauth2.credentials")
 sys.modules["google.oauth2.service_account"] = create_mock_module("google.oauth2.service_account")
