@@ -66,6 +66,7 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .security.secret_vault import secret_vault
+from utils.environment import is_test_environment
 
 # বাংলা মন্তব্য: pytest environment-এ .env load করা হয় না — test isolation নিশ্চিত।
 if "pytest" not in sys.modules:
@@ -201,6 +202,7 @@ class Settings(BaseSettings):
             "/api/v1/auth/token",
             "/actuator",
             "/api/admin/firebase-auth",
+            "/api/admin/firebase-login",
             "/api/v1/health",
             "/api/v1/health/",
             "/api/v1/live",
@@ -376,7 +378,10 @@ class Settings(BaseSettings):
         """
         self._ensure_secrets_loaded()
         if key not in self._cached_secrets:
-            logger.warning(f"Secret '{key}' not found in cache after batch load - returning empty string")
+            if is_test_environment():
+                logger.debug(f"Secret '{key}' not found in cache after batch load - returning empty string")
+            else:
+                logger.warning(f"Secret '{key}' not found in cache after batch load - returning empty string")
         return self._cached_secrets.get(key, "")
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
