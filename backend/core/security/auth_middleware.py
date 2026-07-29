@@ -15,6 +15,7 @@ from jose.exceptions import ExpiredSignatureError
 from loguru import logger
 
 from core.config import settings
+from utils.environment import is_test_environment
 
 ASGIScope = dict[str, Any]
 ASGISend = Callable[[dict[str, Any]], Awaitable[None]]
@@ -148,10 +149,10 @@ class AuthMiddleware:
         headers: Headers = scope.get("headers", [])
         token = _get_bearer_token(headers)
 
-        is_test_auth_bypassed = (
-            getattr(settings, "allow_test_auth_bypass", False)
-            or os.getenv("ALLOW_TEST_AUTH_BYPASS", "").lower() in ("true", "1")
-        )
+        allow_bypass = getattr(settings, "allow_test_auth_bypass", False)
+        if not isinstance(allow_bypass, bool):
+            allow_bypass = False
+        is_test_auth_bypassed = allow_bypass and is_test_environment()
 
         if not token:
             if is_test_auth_bypassed:

@@ -1,6 +1,4 @@
 import logging
-from typing import Dict, Any
-from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +12,7 @@ class AutonomousProviderRouter:
 
     def __init__(self):
         # আমরা শুধু একদম ফ্রি এবং ভার্চুয়াল ক্লাউড রিসোর্স ট্র্যাক করছি
-        self.provider_token_usage: Dict[str, float] = {
+        self.provider_token_usage: dict[str, float] = {
             "moonshot": 0.0,
             "gemini": 0.0,
             "groq": 0.0,
