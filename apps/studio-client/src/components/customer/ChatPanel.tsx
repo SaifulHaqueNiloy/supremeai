@@ -3,6 +3,18 @@ import type { ChatMessage } from '../../types';
 import { UnifiedChatBubble } from '../chat';
 
 // বাংলা মন্তব্য: Markdown রেন্ডার করার জন্য হালকা ফাংশন
+function sanitizeHtml(html: string): string {
+  const allowedTags = /^(strong|code|br)$/;
+  return html.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g, (match, tag) => {
+    const lowerTag = tag.toLowerCase();
+    if (allowedTags.test(lowerTag)) {
+      const isClosing = match.startsWith('</');
+      return isClosing ? `</${lowerTag}>` : `<${lowerTag}>`;
+    }
+    return '';
+  });
+}
+
 function renderMarkdown(text: string): React.ReactNode[] {
   const elements: React.ReactNode[] = [];
   const lines = text.split('\n');
@@ -54,12 +66,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
       elements.push(
         <div key={`li-${idx}`} className="flex gap-2 text-xs text-slate-300 ml-2">
           <span className="text-[#bc13fe]">•</span>
-          <span dangerouslySetInnerHTML={{ __html: processed.slice(2) }} />
+          <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(processed.slice(2)) }} />
         </div>
       );
     } else {
       elements.push(
-        <div key={`p-${idx}`} className="text-xs text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: processed }} />
+        <div key={`p-${idx}`} className="text-xs text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(processed) }} />
       );
     }
   });

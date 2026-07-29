@@ -42,8 +42,8 @@ class ContextManager:
         # Initialize Qdrant client for vector storage
         try:
             self.vector_client = QdrantClient(url=settings.QDRANT_URL or "localhost", port=settings.QDRANT_PORT or 6333)
-        except Exception:
-            # Fallback to in-memory if Qdrant not available
+        except Exception as e:
+            self.logger.warning(f"Qdrant client initialization failed: {e}")
             self.vector_client = None
             self.logger.warning("Qdrant not available, falling back to Redis-only context management")
 

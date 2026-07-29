@@ -106,6 +106,8 @@ class SelfSovereignRouter:
         try:
             import os
             import urllib.request
+            import urllib.error
+            import socket
 
             from core.config import settings
 
@@ -120,7 +122,7 @@ class SelfSovereignRouter:
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 return resp.status == 200
-        except Exception:
+        except (urllib.error.URLError, socket.timeout, ValueError, OSError):
             return False
 
     def route(self, prompt: str, task_type: str = "general", force_tier: str | None = None) -> dict[str, Any]:
