@@ -31,14 +31,14 @@ class SupremeCard extends StatelessWidget {
         boxShadow: glow
             ? [
                 BoxShadow(
-                  color: DesignTokens.colorBrandPrimaryDark.withOpacity(0.4),
+                  color: DesignTokens.colorBrandPrimaryDark.withValues(alpha: 0.4),
                   blurRadius: 15,
                   spreadRadius: 2,
                 )
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 )
