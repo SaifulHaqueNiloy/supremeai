@@ -73,6 +73,28 @@ def _run(code: str) -> subprocess.CompletedProcess:
 
         # Patch Supabase client to prevent database network calls
         sys.modules['database.supabase_client'] = MagicMock()
+
+        # Mock other missing external modules
+        for _mod in ['asyncpg', 'asyncpg.connection', 'asyncpg.pool', 'litellm',
+                      'tenacity', 'posthog', 'pandas', 'neo4j', 'mcp', 'mcp.server',
+                      'mcp.server.stdio', 'mcp.server.fastmcp', 'grpc',
+                      'redis', 'redis.asyncio', 'redis.exceptions', 'stripe',
+                      'stripe.error', 'resend', 'resend.emails', 'analytics',
+                      'sentry_sdk', 'sentry_sdk.integrations', 'sentry_sdk.integrations.loguru',
+                      'supabase', 'supabase.client', 'alembic', 'alembic.config',
+                      'alembic.migration', 'alembic.operations', 'alembic.runtime',
+                      'alembic.runtime.migration', 'slowapi', 'slowapi.util',
+                      'slowapi.errors', 'chromadb', 'chromadb.config', 'chromadb.utils',
+                      'chromadb.utils.embedding_functions', 'cachetools',
+                      'nats', 'nats.aio', 'nats.aio.client', 'nats.errors',
+                      'docker', 'docker.errors', 'typer', 'rich', 'rich.console',
+                      'rich.table', 'rich.panel', 'rich.prompt',
+                      'google_auth_httplib2', 'google_auth_oauthlib',
+                      'google.cloud.storage', 'google.oauth2', 'google.oauth2.credentials',
+                      'google.oauth2.service_account', 'firebase_admin',
+                      'tools.code.image_to_code_react', 'tools.cache_cleanup',
+                      'tools.code.code_smell_detector']:
+            sys.modules[_mod] = MagicMock()
         """
     )
     full_code = gcp_mock_code + "\n" + code
