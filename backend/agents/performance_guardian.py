@@ -16,7 +16,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
@@ -24,13 +24,12 @@ from loguru import logger
 from core.cache import get_cache
 from core.llm_router import LLMRouter
 
-
 # ── Constants ────────────────────────────────────────────────────────────────
 METRIC_CACHE_TTL = 300  # 5 minutes
 ANOMALY_THRESHOLD = 2.0  # Standard deviations
 
 
-class MetricSeverity(str, Enum):
+class MetricSeverity(StrEnum):
     CRITICAL = "critical"
     WARNING = "warning"
     INFO = "info"

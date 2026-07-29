@@ -136,9 +136,7 @@ def execute_ultimate_fuzz_test():
     syntax_error_count = 0
 
     logger.info("\n" + "=" * 80)  # noqa: T201
-    logger.info(  # noqa: T201
-        f"| {'ATTACK VECTOR CATEGORY':<35} | {'STATUS':<12} | {'ENGINE VERDICT':<23} |"
-    )
+    logger.info(f"| {'ATTACK VECTOR CATEGORY':<35} | {'STATUS':<12} | {'ENGINE VERDICT':<23} |")  # noqa: T201
     logger.info("=" * 80)  # noqa: T201
 
     for idx, (code, category) in enumerate(payloads, 1):

@@ -11,7 +11,7 @@ import hashlib
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 
 from core.cache import get_cache
 from core.llm_router import LLMRouter
@@ -21,14 +21,14 @@ logger = logging.getLogger("supremeai.education")
 EDUCATION_CACHE_TTL = 3600  # 1 hour
 
 
-class DifficultyLevel(str, Enum):
+class DifficultyLevel(StrEnum):
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
     EXPERT = "expert"
 
 
-class LearningStyle(str, Enum):
+class LearningStyle(StrEnum):
     VISUAL = "visual"
     AUDITORY = "auditory"
     READING = "reading"

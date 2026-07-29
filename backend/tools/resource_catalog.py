@@ -1,6 +1,6 @@
 import re
 import uuid
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 import httpx
 from loguru import logger

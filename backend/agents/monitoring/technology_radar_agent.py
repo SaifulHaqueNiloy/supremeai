@@ -11,7 +11,7 @@ import hashlib
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -22,7 +22,7 @@ logger = logging.getLogger("supremeai.tech_radar")
 RADAR_CACHE_TTL = 43200  # 12 hours
 
 
-class TechMaturity(str, Enum):
+class TechMaturity(StrEnum):
     EMERGING = "emerging"
     ADOPTING = "adopting"
     MAINSTREAM = "mainstream"
@@ -30,7 +30,7 @@ class TechMaturity(str, Enum):
     OBSOLETE = "obsolete"
 
 
-class AdoptionPriority(str, Enum):
+class AdoptionPriority(StrEnum):
     NOW = "adopt_now"
     EVALUATE = "evaluate"
     WATCH = "watch"

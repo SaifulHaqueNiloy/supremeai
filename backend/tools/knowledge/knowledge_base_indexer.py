@@ -8,13 +8,13 @@ knowledge from Python `seed_data` modules (
 
 from __future__ import annotations
 
-from loguru import logger
-
 import ast
 import contextlib
 import hashlib
 import os
-from typing import ClassVar, Any
+from typing import Any, ClassVar
+
+from loguru import logger
 
 from memory.chromadb_store import ChromaDBStore
 

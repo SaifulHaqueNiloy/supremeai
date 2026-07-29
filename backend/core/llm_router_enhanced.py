@@ -10,17 +10,16 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass
-from enum import Enum
-
+from enum import Enum, StrEnum
 
 # Internal core imports
 from core.cache import get_redis_client
+from core.llm.llm_gateway import get_llm_gateway
 from core.logging import get_logger
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
-from core.llm.llm_gateway import get_llm_gateway
 
 
-class Provider(str, Enum):
+class Provider(StrEnum):
     """Supported AI model providers."""
 
     MOONSHOT = "moonshot"

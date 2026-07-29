@@ -4,7 +4,14 @@ import os
 import secrets
 import time
 
-from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from loguru import logger
 from pydantic import BaseModel
 

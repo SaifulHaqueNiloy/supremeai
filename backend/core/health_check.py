@@ -14,7 +14,7 @@ Critical Security Note: সমস্ত হেল্থ চেক এখন এ�
 
 import asyncio
 import time
-from enum import Enum
+from enum import StrEnum
 
 from loguru import logger
 
@@ -23,7 +23,7 @@ from .cache.redis_manager import redis_manager
 from .config import settings
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     """Health status enumeration."""
 
     HEALTHY = "healthy"
@@ -178,9 +178,9 @@ class ComprehensiveHealthChecker:
                 "gemini_api": bool(settings.gemini_api_key),
                 "openrouter_api": bool(settings.openrouter_api_key),
                 "redis_configured": bool(settings.redis_url),
-                "stripe_configured": bool(settings.stripe_api_key.get_secret_value())
-                if settings.stripe_api_key
-                else False,
+                "stripe_configured": (
+                    bool(settings.stripe_api_key.get_secret_value()) if settings.stripe_api_key else False
+                ),
             }
 
             all_healthy = all(checks.values())

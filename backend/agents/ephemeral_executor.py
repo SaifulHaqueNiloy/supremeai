@@ -26,7 +26,7 @@ import re
 import shutil
 import time
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +37,7 @@ if False:  # type-check only
     pass
 
 
-class ExecutionStatus(str, Enum):
+class ExecutionStatus(StrEnum):
     """Standardized execution status codes."""
 
     PENDING = "pending"

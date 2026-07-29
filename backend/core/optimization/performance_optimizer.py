@@ -22,10 +22,11 @@ Bengali:
 import asyncio
 import time
 import tracemalloc
-from typing import Any
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+
 from loguru import logger
 
 try:
@@ -33,8 +34,8 @@ try:
 except ImportError:
     psutil = None  # type: ignore[assignment]
 import gc
-from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 
 
 class OptimizationLevel(Enum):
@@ -559,7 +560,12 @@ class PerformanceOptimizer:
             # Process batch concurrently
             batch_results = await asyncio.gather(*[processor(item) for item in batch], return_exceptions=True)
 
-            results.extend(batch_results)
+            for idx, result in enumerate(batch_results):
+                if isinstance(result, BaseException):
+                    logger.warning(f"Batch processor failed for item {idx}: {result}")
+                    results.append(None)
+                else:
+                    results.append(result)
 
         return results
 

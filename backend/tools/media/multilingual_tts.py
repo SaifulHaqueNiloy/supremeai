@@ -1,7 +1,7 @@
 import hashlib
 import os
 import time
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 import httpx
 from fastapi import APIRouter, HTTPException

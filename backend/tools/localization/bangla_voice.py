@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from loguru import logger
-
 import os
 from dataclasses import dataclass
+
+from loguru import logger
 
 
 @dataclass

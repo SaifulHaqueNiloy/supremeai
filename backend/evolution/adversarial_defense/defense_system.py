@@ -15,19 +15,20 @@ Bengali:
 অ্যাডভারসেরিয়াল এটাক থেকে রক্ষার জন্য একাধিক স্তরের প্রতিরোধ ব্যবস্থা
 """
 
-import numpy as np
-import torch
-import torch.nn as nn
-from typing import Any
-from dataclasses import dataclass
-from enum import Enum
 import time
-from loguru import logger
 
 # বাংলা মন্তব্য: cv2 টপ-লেভেলে import করলে CI-তে `No module named 'cv2'` এরর
 # core/__init__.py → evolution → এই ফাইলের মাধ্যমে পুরো টেস্ট স্যুটকে ক্র্যাশ করায়।
 # তাই এটি lazily শুধুমাত্র apply_robust_preprocessing()-এ import করা হচ্ছে।
 import warnings
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
+
+import numpy as np
+import torch
+import torch.nn as nn
+from loguru import logger
 
 warnings.filterwarnings("ignore")
 

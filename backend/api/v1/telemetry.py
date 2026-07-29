@@ -8,9 +8,9 @@ collecting metrics, and exposing health information.
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from core.metrics_collector import metrics_collector
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.config import settings
+from core.metrics_collector import metrics_collector
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
 
@@ -96,15 +96,19 @@ async def get_detailed_status():
         "subsystems": {
             "database": "operational" if health_data["database_performance"]["avg_query_time"] < 1.0 else "degraded",
             "cache": "operational" if health_data["cache_performance"]["hit_rate_percentage"] > 50 else "degraded",
-            "api": "operational"
-            if health_data["total_errors"] / max(1, health_data["total_requests"]) < 0.05
-            else "degraded",
+            "api": (
+                "operational"
+                if health_data["total_errors"] / max(1, health_data["total_requests"]) < 0.05
+                else "degraded"
+            ),
         },
         "metrics": {
             "request_rate_per_minute": health_data["total_requests"] / max(1, health_data["uptime_minutes"]),
-            "error_rate_percentage": (health_data["total_errors"] / max(1, health_data["total_requests"])) * 100
-            if health_data["total_requests"] > 0
-            else 0,
+            "error_rate_percentage": (
+                (health_data["total_errors"] / max(1, health_data["total_requests"])) * 100
+                if health_data["total_requests"] > 0
+                else 0
+            ),
             "cache_hit_rate_percentage": health_data["cache_performance"]["hit_rate_percentage"],
             "avg_db_query_time_seconds": health_data["database_performance"]["avg_query_time"],
         },

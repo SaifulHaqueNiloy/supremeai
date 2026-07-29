@@ -56,12 +56,16 @@ jobs:
             safety-report.json
 
       - name: Auto-commit fixes
-        run: |
-          git config user.name "SupremeAI Bot"
-          git config user.email "bot@supremeai.dev"
-          git add backend
-          git commit -m "🤖 Auto-fix: CI linting fixes" || exit 0
-          git push
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🤖 Auto-fix: CI linting fixes"
+          title: "🤖 Auto-fix: CI linting fixes"
+          branch: "chore/auto-fix-${{ github.run_id }}"
+          labels: "maintenance, automated"
+          body: |
+            Automated CI linting fixes from the Auto-Fix CI Pipeline.
+            This PR was created because `main` is a protected branch.
 
   vulnerability-scan:
     needs: auto-fix

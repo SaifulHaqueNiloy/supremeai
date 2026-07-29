@@ -17,7 +17,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from urllib.parse import quote_plus
 
@@ -42,7 +42,7 @@ IMPACT_WEIGHTS = {
 }
 
 
-class GoalStatus(str, Enum):
+class GoalStatus(StrEnum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -50,7 +50,7 @@ class GoalStatus(str, Enum):
     BLOCKED = "blocked"
 
 
-class LearningPriority(str, Enum):
+class LearningPriority(StrEnum):
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"

@@ -25,7 +25,6 @@ import ast
 import re
 from dataclasses import dataclass, field
 
-
 # ── Constants: Blocked patterns ────────────────────────────────────────────────
 # Functions that are always blocked in sandbox execution
 BLOCKED_BUILTIN_FUNCTIONS: frozenset[str] = frozenset(
