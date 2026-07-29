@@ -7,7 +7,7 @@ SSO ইন্টিগ্রেটর মডিউলের সকল ফাং�
 
 import os
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

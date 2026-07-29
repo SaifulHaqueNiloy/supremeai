@@ -7,25 +7,15 @@ cost optimization, and Bengali language optimization.
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
 import json
 import time
-from collections.abc import AsyncGenerator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Protocol, Dict, List
 
-import httpx
 
 # Internal core imports
 from core.cache import get_redis_client
-from core.config import settings
-from core.exceptions import LLMProviderError, QuotaExceededError
-from core.llm.free_tier_tracker import get_tracker
 from core.logging import get_logger
-from core.metrics import counter, timed
-from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
 from core.llm.llm_gateway import get_llm_gateway
 
@@ -85,8 +75,8 @@ class EnhancedLLMRouter:
 
     def __init__(self):
         self.redis_client = get_redis_client()
-        self.performance_tracker: Dict[Provider, ModelPerformanceStats] = {}
-        self.task_provider_map: Dict[TaskCategory, List[Provider]] = {
+        self.performance_tracker: dict[Provider, ModelPerformanceStats] = {}
+        self.task_provider_map: dict[TaskCategory, list[Provider]] = {
             TaskCategory.BENGALI: [Provider.BHASHA, Provider.MOONSHOT, Provider.GEMINI],
             TaskCategory.CODE: [Provider.DEEPSEEK, Provider.TOGETHER, Provider.GEMINI],
             TaskCategory.ANALYSIS: [Provider.MOONSHOT, Provider.TOGETHER, Provider.GEMINI],

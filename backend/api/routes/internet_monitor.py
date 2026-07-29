@@ -5,7 +5,6 @@ API endpoints for the Internet Monitor Agent that tracks updates and system capa
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, List, Any
 import logging
 
 from api.routes.admin import get_current_admin

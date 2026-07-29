@@ -202,7 +202,7 @@ addopts =
     --tb=short
     --maxfail=5
 asyncio_mode = auto
-asyncio_default_fixture_loop_scope = function
+asyncio_default_scope = function
 
 markers =
     integration: marks tests as integration tests

@@ -18,9 +18,9 @@ from core.resilience.circuit_breaker import (
 
 
 @pytest.fixture(autouse=True)
-def mock_llm_gateway():
+async def mock_llm_gateway():
     """Mock the LLM gateway to prevent real network calls."""
-    # বাংলা মন্তব্য: রিমোট এবং লোকাল উভয় ধরনের মকিং একসাথে করা হল যাতে টেস্টগুলো নেটওয়ার্ক কল ছাড়াই কাজ করে।
+    # বাংলা মন্তব্য: রিমোট এবং লোকাল উভয় ধরনের মকিং একসাথে করা হল যাতে টেস্টগুলো নেটওয়ার্ক কল ছাড়াই কাজ করে।
     with patch("core.llm.llm_gateway.get_llm_gateway", new_callable=MagicMock) as mock_gateway_factory:
         mock_gateway = AsyncMock()
         mock_gateway.acompletion = AsyncMock(

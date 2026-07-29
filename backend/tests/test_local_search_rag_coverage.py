@@ -8,7 +8,6 @@ Target: 100% line coverage.
 import json
 import os
 import sys
-import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -55,7 +54,7 @@ class TestLocalSearchRAGInit:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
         ):
@@ -69,7 +68,7 @@ class TestLocalSearchRAGInit:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
             patch("tools.knowledge.local_search_rag.chromadb") as mock_chromadb,
@@ -84,7 +83,7 @@ class TestLocalSearchRAGInit:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
             patch("tools.knowledge.local_search_rag.chromadb", None),
@@ -98,7 +97,7 @@ class TestLocalSearchRAGInit:
 
         test_index = {"key1": ["result1", "result2"]}
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=True),
             patch.object(Path, "read_text", return_value=json.dumps(test_index)),
@@ -111,7 +110,7 @@ class TestLocalSearchRAGInit:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=True),
             patch.object(Path, "read_text", return_value="not valid json"),
@@ -150,7 +149,7 @@ class TestLocalSearchRAGSearch:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
         ):
@@ -169,7 +168,7 @@ class TestLocalSearchRAGStore:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
             patch.object(Path, "write_text"),
@@ -189,7 +188,7 @@ class TestLocalSearchRAGSummarize:
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         with (
-            patch("tools.knowledge.local_search_rag.BrowserAgent") as mock_browser,
+            patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
         ):

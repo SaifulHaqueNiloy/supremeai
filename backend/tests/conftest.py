@@ -86,13 +86,17 @@ sys.modules["opentelemetry.instrumentation"] = create_mock_module("opentelemetry
 sys.modules["opentelemetry.instrumentation.fastapi"] = create_mock_module("opentelemetry.instrumentation.fastapi")
 sys.modules["opentelemetry.exporter"] = create_mock_module("opentelemetry.exporter", is_package=True)
 sys.modules["opentelemetry.exporter.otlp"] = create_mock_module("opentelemetry.exporter.otlp", is_package=True)
-sys.modules["opentelemetry.exporter.otlp.proto"] = create_mock_module("opentelemetry.exporter.otlp.proto", is_package=True)
+sys.modules["opentelemetry.exporter.otlp.proto"] = create_mock_module(
+    "opentelemetry.exporter.otlp.proto", is_package=True
+)
 sys.modules["opentelemetry.exporter.otlp.proto.grpc"] = create_mock_module("opentelemetry.exporter.otlp.proto.grpc")
 sys.modules["asyncpg"] = create_mock_module("asyncpg", is_package=True)
 sys.modules["tenacity"] = create_mock_module("tenacity", is_package=True)
 sys.modules["posthog"] = create_mock_module("posthog", is_package=True)
 sys.modules["pandas"] = create_mock_module("pandas", is_package=True)
 sys.modules["neo4j"] = create_mock_module("neo4j", is_package=True)
+
+
 # Mock mcp with a FastMCP whose `tool` decorator passes the original function through
 class _MockFastMCP:
     def __init__(self, *args, **kwargs):
@@ -101,6 +105,7 @@ class _MockFastMCP:
     def tool(self, *args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
 
     def __call__(self, *args, **kwargs):
@@ -124,10 +129,14 @@ sys.modules["google.cloud.storage"] = create_mock_module("google.cloud.storage",
 sys.modules["tools.code.image_to_code_react"] = create_mock_module("tools.code.image_to_code_react")
 sys.modules["tools.code.code_smell_detector"] = create_mock_module("tools.code.code_smell_detector")
 sys.modules["opentelemetry.sdk.trace.export"] = create_mock_module("opentelemetry.sdk.trace.export")
-sys.modules["opentelemetry.exporter.otlp.proto.grpc.trace_exporter"] = create_mock_module("opentelemetry.exporter.otlp.proto.grpc.trace_exporter")
+sys.modules["opentelemetry.exporter.otlp.proto.grpc.trace_exporter"] = create_mock_module(
+    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"
+)
 sys.modules["opentelemetry.proto"] = create_mock_module("opentelemetry.proto", is_package=True)
 sys.modules["opentelemetry.proto.collector"] = create_mock_module("opentelemetry.proto.collector", is_package=True)
-sys.modules["opentelemetry.proto.collector.trace"] = create_mock_module("opentelemetry.proto.collector.trace", is_package=True)
+sys.modules["opentelemetry.proto.collector.trace"] = create_mock_module(
+    "opentelemetry.proto.collector.trace", is_package=True
+)
 sys.modules["opentelemetry.proto.collector.trace.v1"] = create_mock_module("opentelemetry.proto.collector.trace.v1")
 sys.modules["opentelemetry.sdk.environment_variables"] = create_mock_module("opentelemetry.sdk.environment_variables")
 sys.modules["opentelemetry._logs"] = create_mock_module("opentelemetry._logs", is_package=True)
