@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supremeai_mobile/screens/home_screen.dart'; // Import the new home screen
 
@@ -170,7 +169,7 @@ class _HomePageState extends State<HomePage> {
                 // Navigate to new UI
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               }
             },

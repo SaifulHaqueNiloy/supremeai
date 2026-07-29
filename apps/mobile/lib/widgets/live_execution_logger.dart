@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/orchestration_provider.dart';
 
 class LiveExecutionLogger extends StatelessWidget {
-  const LiveExecutionLogger({Key? key}) : super(key: key);
+  const LiveExecutionLogger({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,14 +13,14 @@ class LiveExecutionLogger extends StatelessWidget {
         final logs = provider.activeAgentMetrics['steps_log'] as List<dynamic>? ?? [];
 
         if (logs.isEmpty) {
-          return Center(
+          return const Center(
             child: Text("No automation tasks currently running.", style: TextStyle(color: Colors.grey)),
           );
         }
 
         return ListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: logs.length,
           itemBuilder: (context, index) {
             final log = logs[index];
@@ -33,7 +33,7 @@ class LiveExecutionLogger extends StatelessWidget {
               ),
               title: Text(
                 "${log['action'].toString().toUpperCase()} -> ${log['selector'] ?? ''}",
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
               subtitle: Text("Delay: ${log['simulated_delay'] ?? '0'}ms"),
               trailing: Text(

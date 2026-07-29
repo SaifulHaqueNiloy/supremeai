@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supremeai_mobile/widgets/chat_message_widget.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  const ChatScreen({super.key});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -17,7 +17,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF2563EB),
+        backgroundColor: const Color(0xFF2563EB),
         foregroundColor: Colors.white,
         title: const Text('AI Assistant'),
         centerTitle: true,
@@ -51,16 +51,16 @@ class _ChatScreenState extends State<ChatScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           spreadRadius: 1,
                           blurRadius: 5,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
-                        SizedBox(width: 16),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: TextField(
                             controller: _textController,
@@ -73,7 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.send, color: Color(0xFF2563EB)),
+                          icon: const Icon(Icons.send, color: Color(0xFF2563EB)),
                           onPressed: _isLoading ? null : _sendMessage,
                         ),
                       ],
@@ -89,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -98,7 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
             size: 80,
             color: Color(0xFFCBD5E1),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             'Start a conversation with SupremeAI',
             style: TextStyle(
@@ -107,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Ask about code, get suggestions, or find solutions',
             style: TextStyle(
@@ -137,7 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     // Simulate AI response
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
 
     setState(() {
       _messages.add(ChatMessage(

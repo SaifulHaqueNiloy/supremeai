@@ -14,7 +14,7 @@ import 'hold_to_kill_button.dart';
 class SwarmHealthScreen extends StatefulWidget {
   final String baseUrl;
 
-  const SwarmHealthScreen({Key? key, this.baseUrl = ApiClient.baseUrl}) : super(key: key);
+  const SwarmHealthScreen({super.key, this.baseUrl = ApiClient.baseUrl});
 
   @override
   State<SwarmHealthScreen> createState() => _SwarmHealthScreenState();
@@ -154,7 +154,7 @@ class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
   Widget _buildMetricCard(String title, String value, String unit) {
     return SupremeCard(
       child: Padding(
-        padding: EdgeInsets.all(DesignTokens.space4),
+        padding: const EdgeInsets.all(DesignTokens.space4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -234,7 +234,7 @@ class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(DesignTokens.space4),
+          padding: const EdgeInsets.all(DesignTokens.space4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -256,7 +256,7 @@ class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
                   _buildMetricCard('Circuit', _circuitState, ''),
                 ],
               ),
-              SizedBox(height: DesignTokens.space6),
+              const SizedBox(height: DesignTokens.space6),
 
               Text(
                 'LIVE EXECUTION FEED',
@@ -266,7 +266,7 @@ class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
                   letterSpacing: 1.2,
                 ),
               ),
-              SizedBox(height: DesignTokens.space2),
+              const SizedBox(height: DesignTokens.space2),
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -282,7 +282,7 @@ class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
                           ),
                         )
                       : ListView.builder(
-                          padding: EdgeInsets.all(DesignTokens.space3),
+                          padding: const EdgeInsets.all(DesignTokens.space3),
                           itemCount: _logs.length,
                           itemBuilder: (context, index) {
                             final log = _logs[index];
@@ -319,7 +319,7 @@ class _SwarmHealthScreenState extends State<SwarmHealthScreen> {
                         ),
                 ),
               ),
-              SizedBox(height: DesignTokens.space6),
+              const SizedBox(height: DesignTokens.space6),
 
               HoldToKillButton(
                 onTrigger: _triggerCircuitBreaker,

@@ -30,7 +30,7 @@ class QuotaScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.cyan.withOpacity(0.3)),
+                border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +92,7 @@ class QuotaScreen extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: color.withOpacity(0.2),
+            backgroundColor: color.withValues(alpha: 0.2),
             child: Icon(Icons.memory, color: color),
           ),
           const SizedBox(width: 16),

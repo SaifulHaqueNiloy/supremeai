@@ -52,10 +52,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: DesignTokens.colorBrandPrimaryDark.withOpacity(0.1 + (_pulseController.value * 0.1)),
+                    color: DesignTokens.colorBrandPrimaryDark.withValues(alpha: 0.1 + (_pulseController.value * 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: DesignTokens.colorBrandPrimaryDark.withOpacity(0.2),
+                        color: DesignTokens.colorBrandPrimaryDark.withValues(alpha: 0.2),
                         blurRadius: 100,
                         spreadRadius: 50,
                       )
@@ -76,10 +76,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: DesignTokens.colorBrandSecondaryDark.withOpacity(0.1 + ((1 - _pulseController.value) * 0.1)),
+                    color: DesignTokens.colorBrandSecondaryDark.withValues(alpha: 0.1 + ((1 - _pulseController.value) * 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: DesignTokens.colorBrandSecondaryDark.withOpacity(0.2),
+                        color: DesignTokens.colorBrandSecondaryDark.withValues(alpha: 0.2),
                         blurRadius: 100,
                         spreadRadius: 50,
                       )
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                           )
                         ],
@@ -171,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: DesignTokens.colorBrandPrimaryDark.withOpacity(0.4),
+                                  color: DesignTokens.colorBrandPrimaryDark.withValues(alpha: 0.4),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 )
@@ -203,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             onPressed: _handleGoogleLogin,
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 56),
-                              side: BorderSide(color: DesignTokens.colorBorderAccentDark),
+                              side: const BorderSide(color: DesignTokens.colorBorderAccentDark),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -230,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 const SizedBox(height: 4),
                                 Text(
                                   '(${'onboarding.rate_limiting_desc'.tr()})',
-                                  style: TextStyle(fontSize: 12, color: DesignTokens.colorTextSecondaryDark.withOpacity(0.6)),
+                                  style: TextStyle(fontSize: 12, color: DesignTokens.colorTextSecondaryDark.withValues(alpha: 0.6)),
                                 ),
                               ],
                             ),
@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           const SizedBox(height: 16),
                           Text(
                             'Build Version: 1.0.1+fix',
-                            style: TextStyle(fontSize: 10, color: DesignTokens.colorTextSecondaryDark.withOpacity(0.4)),
+                            style: TextStyle(fontSize: 10, color: DesignTokens.colorTextSecondaryDark.withValues(alpha: 0.4)),
                           ),
                         ],
                       ),
@@ -262,12 +262,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: DesignTokens.colorBgVoidDark.withOpacity(0.5),
+        color: DesignTokens.colorBgVoidDark.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: DesignTokens.colorBorderAccentDark),
         boxShadow: [
           BoxShadow(
-            color: DesignTokens.colorBrandPrimaryDark.withOpacity(0.05),
+            color: DesignTokens.colorBrandPrimaryDark.withValues(alpha: 0.05),
             blurRadius: 10,
             spreadRadius: 1,
           )
@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: DesignTokens.colorTextSecondaryDark),
-          prefixIcon: Icon(icon, color: DesignTokens.colorBrandPrimaryDark.withOpacity(0.7)),
+          prefixIcon: Icon(icon, color: DesignTokens.colorBrandPrimaryDark.withValues(alpha: 0.7)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
