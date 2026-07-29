@@ -560,7 +560,12 @@ class PerformanceOptimizer:
             # Process batch concurrently
             batch_results = await asyncio.gather(*[processor(item) for item in batch], return_exceptions=True)
 
-            results.extend(batch_results)
+            for idx, result in enumerate(batch_results):
+                if isinstance(result, BaseException):
+                    logger.warning(f"Batch processor failed for item {idx}: {result}")
+                    results.append(None)
+                else:
+                    results.append(result)
 
         return results
 
