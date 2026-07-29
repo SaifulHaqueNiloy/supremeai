@@ -107,64 +107,63 @@ def test_quick_actions_success(
     import sys
     from unittest.mock import MagicMock
 
-    mock_command_module = MagicMock()
     mock_downgrade = MagicMock(return_value=None)
-    mock_command_module.downgrade = mock_downgrade
-    sys.modules["alembic.command"] = mock_command_module
-    mock_config_module = MagicMock()
-    mock_config_module.set_main_option = MagicMock(return_value=None)
-    sys.modules["alembic.config"] = mock_config_module
-    mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
-    app.dependency_overrides[get_current_user_token] = lambda: {
-        "sub": "admin_test",
-        "role": "admin",
-    }
+    mock_config = MagicMock()
+    mock_config.set_main_option = MagicMock(return_value=None)
 
-    app.dependency_overrides[get_current_admin] = lambda: {
-        "sub": "admin_test",
-        "role": "admin",
-    }
+    with patch("alembic.command.downgrade", mock_downgrade):
+        with patch("alembic.config.Config", return_value=mock_config):
+            mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
+            app.dependency_overrides[get_current_user_token] = lambda: {
+                "sub": "admin_test",
+                "role": "admin",
+            }
 
-    # Redis mock
-    mock_redis_client = AsyncMock()
-    mock_redis_client.keys = AsyncMock(return_value=["cache:test_key"])
-    mock_redis_client.delete = AsyncMock(return_value=1)
-    mock_redis_manager.client = mock_redis_client
+            app.dependency_overrides[get_current_admin] = lambda: {
+                "sub": "admin_test",
+                "role": "admin",
+            }
 
-    # DB session mock for backup
-    mock_session = AsyncMock()
-    mock_session.execute = AsyncMock()
+            # Redis mock
+            mock_redis_client = AsyncMock()
+            mock_redis_client.keys = AsyncMock(return_value=["cache:test_key"])
+            mock_redis_client.delete = AsyncMock(return_value=1)
+            mock_redis_manager.client = mock_redis_client
 
-    mock_result_tables = MagicMock()
-    mock_result_tables.fetchall.return_value = [("test_table",)]
+            # DB session mock for backup
+            mock_session = AsyncMock()
+            mock_session.execute = AsyncMock()
 
-    mock_result_rows = MagicMock()
-    mock_result_rows.keys.return_value = ["id"]
-    mock_result_rows.fetchall.return_value = [("row_id",)]
+            mock_result_tables = MagicMock()
+            mock_result_tables.fetchall.return_value = [("test_table",)]
 
-    mock_session.execute.side_effect = [mock_result_tables, mock_result_rows]
+            mock_result_rows = MagicMock()
+            mock_result_rows.keys.return_value = ["id"]
+            mock_result_rows.fetchall.return_value = [("row_id",)]
 
-    async def mock_generator():
-        yield mock_session
+            mock_session.execute.side_effect = [mock_result_tables, mock_result_rows]
 
-    mock_db_session.return_value = mock_generator()
+            async def mock_generator():
+                yield mock_session
 
-    # Test cache action
-    response = client.post("/api/admin/actions/cache", headers={"Authorization": "Bearer dummy"})
-    assert response.status_code == 200
-    assert "Deleted 6 keys" in response.json()["message"]
+            mock_db_session.return_value = mock_generator()
 
-    # Test backup action
-    response = client.post("/api/admin/actions/backup", headers={"Authorization": "Bearer dummy"})
-    assert response.status_code == 200
-    assert "backup" in response.json()["message"]
+            # Test cache action
+            response = client.post("/api/admin/actions/cache", headers={"Authorization": "Bearer dummy"})
+            assert response.status_code == 200
+            assert "Deleted 6 keys" in response.json()["message"]
 
-    # Test rollback action
-    response = client.post("/api/admin/actions/rollback", headers={"Authorization": "Bearer dummy"})
-    assert response.status_code == 200
-    mock_downgrade.assert_called_once()
+            # Test backup action
+            response = client.post("/api/admin/actions/backup", headers={"Authorization": "Bearer dummy"})
+            assert response.status_code == 200
+            assert "backup" in response.json()["message"]
 
-    app.dependency_overrides = {}
+            # Test rollback action
+            response = client.post("/api/admin/actions/rollback", headers={"Authorization": "Bearer dummy"})
+            assert response.status_code == 200
+            mock_downgrade.assert_called_once()
+
+            app.dependency_overrides = {}
 
 
 @patch("api.routes.admin.god_layer")
