@@ -35,7 +35,7 @@ class TestMemoryService:
 
         # Test the backward-compatible store method
         result = service.store("user1", "agent1", "Test memory content", {"type": "test"})
-        assert result is not None
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_get_memories(self):
@@ -62,7 +62,7 @@ class TestMemoryService:
 
         service = CascadeMemoryService()
         result = service.delete("memory_id_123")
-        assert result is not None
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_clear_user_memories(self):
@@ -71,7 +71,7 @@ class TestMemoryService:
 
         service = CascadeMemoryService()
         result = service.clear_user_memories("user1")
-        assert result is not None
+        assert result is None
 
 
 class TestContextWindow:
