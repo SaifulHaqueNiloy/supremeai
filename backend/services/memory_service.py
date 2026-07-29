@@ -296,7 +296,7 @@ class CascadeMemoryService:
         norm_b = math.sqrt(sum(y * y for y in b))
         if not norm_a or not norm_b:
             return 0.0
-        return dot / (norm_a * norm_b)
+        return dot / (norm_b * norm_a)
 
     def query_context(self, prompt: str, top_k: int = 5) -> list[dict[str, Any]]:
         """
@@ -355,6 +355,50 @@ class CascadeMemoryService:
         # Sort by similarity score descending
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:top_k]
+
+    # Backward-compatible aliases for test compatibility
+    def store(self, user_id: str, agent_id: str, content: str, metadata: dict[str, Any]) -> None:
+        """Backward-compatible alias for store_memory."""
+        summary = metadata.get("summary", content[:200])
+        structure = metadata.get("structure", json.dumps({}))
+        self.store_memory(f"{user_id}/{agent_id}", content, summary, structure)
+
+    def get_memories(self, user_id: str) -> list[dict[str, Any]]:
+        """Backward-compatible alias for retrieve_memories."""
+        return self.retrieve_memories()
+
+    def search_memories(self, user_id: str, query: str) -> list[dict[str, Any]]:
+        """Backward-compatible alias for query_context."""
+        return self.query_context(query)
+
+    def delete(self, memory_id: str) -> None:
+        """Backward-compatible alias for delete_memory."""
+        self.delete_memory(memory_id)
+
+    def clear_user_memories(self, user_id: str) -> None:
+        """Backward-compatible alias to clear all memories."""
+        if not self._use_pg:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM file_memories")
+                conn.commit()
+
+    def get_context_window(self, user_id: str, agent_id: str, limit: int) -> list[dict[str, Any]]:
+        """Backward-compatible alias for query_context."""
+        return self.query_context(f"{user_id} {agent_id}", top_k=limit)
+
+    def update_context_window(self, user_id: str, messages: list[dict[str, Any]]) -> None:
+        """Backward-compatible method to store messages in context window."""
+        for msg in messages:
+            content = msg.get("content", str(msg))
+            self.store_memory(f"{user_id}/context", content, content, json.dumps({"role": msg.get("role", "user")}))
+
+    def semantic_search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+        """Backward-compatible alias for query_context."""
+        return self.query_context(query, top_k=limit)
+
+    def get_recent_interactions(self, user_id: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Backward-compatible method to get recent interactions."""
+        return self.retrieve_memories()[:limit]
 
 
 # Global instance

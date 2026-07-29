@@ -248,12 +248,24 @@ class ProductionSecretVault:
     def invalidate_cache(self, secret_id: str | None = None) -> None:
         """Invalidate cache for a specific secret or clear all.
 
-        বাংলা: নির্দিষ্ট সিক্রেট বা পুরো ক্যাশে ইনভ্যালিডেট।
+        বাংলা মন্তব্য: নির্দিষ্ট সিক্রেট বা পুরো ক্যাশে ইনভ্যালিডেট।
         """
         if secret_id:
             self._cache.pop(secret_id, None)
         else:
             self._cache.clear()
+
+    def set_secret(self, key: str, value: str) -> None:
+        """Store a secret in the in-memory cache."""
+        self._cache[key] = _CacheEntry(value)
+
+    def delete_secret(self, key: str) -> None:
+        """Remove a secret from the in-memory cache."""
+        self._cache.pop(key, None)
+
+    def list_secrets(self) -> list[str]:
+        """Return all cached secret keys."""
+        return list(self._cache.keys())
 
 
 # Global Vault Singleton Instance
