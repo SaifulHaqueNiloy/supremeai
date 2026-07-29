@@ -7,7 +7,9 @@ export default defineConfig({
   base: process.env.ELECTRON === 'true' ? './' : '/', // Use './' for Electron, '/' for Web to fix client-side routing and MIME issues
   plugins: [
     react({ jsxRuntime: 'automatic' }),
-    tailwindcss()
+    tailwindcss({
+      config: './tailwind.config.js',
+    })
   ],
   esbuild: {
     jsx: 'automatic',
