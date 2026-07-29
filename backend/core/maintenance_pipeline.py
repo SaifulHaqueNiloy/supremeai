@@ -195,9 +195,9 @@ class MaintenancePipeline:
             try:
                 import asyncio as _asyncio  # noqa: PLC0415
 
-                from core.evolution.self_evolution_agent import (
+                from core.evolution.self_evolution_agent import (  # noqa: PLC0415
                     SelfEvolutionAgent,
-                )  # noqa: PLC0415
+                )
 
                 # শুধু tick() চালাই, পুরো loop নয় — non-blocking
                 _evo = SelfEvolutionAgent.__new__(SelfEvolutionAgent)

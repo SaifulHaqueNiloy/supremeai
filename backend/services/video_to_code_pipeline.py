@@ -20,7 +20,7 @@ import os
 import re
 import subprocess
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +34,7 @@ from core.upload_validator import validate_upload
 router = APIRouter(prefix="/video-to-code", tags=["video-to-code"])
 
 
-class VideoFormat(str, Enum):
+class VideoFormat(StrEnum):
     MP4 = "mp4"
     WEBM = "webm"
     MOV = "mov"

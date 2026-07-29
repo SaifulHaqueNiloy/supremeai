@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from ..messaging.event_bus import ErrorContext  # Fixed import path - using relative import
+from ..messaging.event_bus import (
+    ErrorContext,  # Fixed import path - using relative import
+)
 
 """
 free_tier_tracker.py
@@ -24,8 +26,12 @@ from typing import Any  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from ..config import settings  # Fixed import path - using relative import
-from ..messaging.event_bus import ErrorEvent  # Fixed import path - using relative import
-from ..messaging.event_bus import error_event_bus  # Fixed import path - using relative import
+from ..messaging.event_bus import (
+    ErrorEvent,  # Fixed import path - using relative import
+)
+from ..messaging.event_bus import (
+    error_event_bus,  # Fixed import path - using relative import
+)
 
 # ---------------------------------------------------------------------------
 # Free-tier limit configuration for each provider

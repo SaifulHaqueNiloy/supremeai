@@ -29,9 +29,7 @@ class UserWallet(Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    __mapper_args__ = {
-        "version_id_col": version  # SQLAlchemy অটোমেটিকভাবে ভার্সন ট্র্যাকিং এবং রেস-কন্ডিশন ব্লক করবে
-    }
+    __mapper_args__ = {"version_id_col": version}  # SQLAlchemy অটোমেটিকভাবে ভার্সন ট্র্যাকিং এবং রেস-কন্ডিশন ব্লক করবে
 
 
 class TransactionLedgerEntry(Base):

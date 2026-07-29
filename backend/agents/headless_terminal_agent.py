@@ -17,7 +17,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
@@ -31,7 +31,7 @@ MAX_OUTPUT_SIZE = 10000  # characters
 SAFETY_CHECK_CACHE_TTL = 300
 
 
-class CommandSafety(str, Enum):
+class CommandSafety(StrEnum):
     SAFE = "safe"
     REVIEW_REQUIRED = "review_required"
     BLOCKED = "blocked"
