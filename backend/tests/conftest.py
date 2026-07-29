@@ -53,9 +53,7 @@ sys.modules["rich"] = create_mock_module("rich", is_package=True)
 sys.modules["rich.console"] = create_mock_module("rich.console")
 sys.modules["rich.table"] = create_mock_module("rich.table")
 sys.modules["rich.panel"] = create_mock_module("rich.panel")
-sys.modules["rich.prompt"] = create_mock_module("rich.prompt")
 sys.modules["tools.code.image_to_code_react"] = create_mock_module("tools.code.image_to_code_react")
-sys.modules["tools.cache_cleanup"] = create_mock_module("tools.cache_cleanup")
 
 # Mock external SDKs
 sys.modules["analytics"] = create_mock_module("analytics")
