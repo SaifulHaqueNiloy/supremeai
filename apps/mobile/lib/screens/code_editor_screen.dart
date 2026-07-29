@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CodeEditorScreen extends StatefulWidget {
-  const CodeEditorScreen({Key? key}) : super(key: key);
+  const CodeEditorScreen({super.key});
 
   @override
   _CodeEditorScreenState createState() => _CodeEditorScreenState();
@@ -11,7 +11,7 @@ class CodeEditorScreen extends StatefulWidget {
 class _CodeEditorScreenState extends State<CodeEditorScreen> {
   final TextEditingController _codeController = TextEditingController();
   String _selectedLanguage = 'Dart';
-  bool _isEditing = false;
+  final bool _isEditing = false;
 
   @override
   void initState() {
@@ -33,18 +33,18 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF2563EB),
+        backgroundColor: const Color(0xFF2563EB),
         foregroundColor: Colors.white,
         title: const Text('Code Editor'),
         centerTitle: true,
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.copy),
+            icon: const Icon(Icons.copy),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: _codeController.text));
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Code copied to clipboard')),
+                const SnackBar(content: Text('Code copied to clipboard')),
               );
             },
           ),
@@ -87,11 +87,11 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
       body: Column(
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Color(0xFF0F172A),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: const Color(0xFF0F172A),
             child: Row(
               children: [
-                Text(
+                const Text(
                   'main.dart',
                   style: TextStyle(
                     color: Colors.white,
@@ -99,11 +99,11 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Spacer(),
+                const Spacer(),
                 DropdownButton<String>(
                   value: _selectedLanguage,
                   underline: Container(),
-                  dropdownColor: Color(0xFF1E293B),
+                  dropdownColor: const Color(0xFF1E293B),
                   iconEnabledColor: Colors.white,
                   items: <String>['Dart', 'JavaScript', 'Python', 'Java', 'C++']
                       .map<DropdownMenuItem<String>>((String value) {
@@ -111,7 +111,7 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
                       value: value,
                       child: Text(
                         value,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     );
                   }).toList(),
@@ -126,7 +126,7 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
           ),
           Expanded(
             child: Container(
-              color: Color(0xFF1E293B),
+              color: const Color(0xFF1E293B),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -135,12 +135,12 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
                     maxLines: null,
                     expands: true,
                     keyboardType: TextInputType.multiline,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -158,21 +158,21 @@ class _CodeEditorScreenState extends State<CodeEditorScreen> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('Run Code'),
-                content: Text('In the full implementation, this would run the code in a secure sandbox.'),
+                title: const Text('Run Code'),
+                content: const Text('In the full implementation, this would run the code in a secure sandbox.'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text('OK'),
+                    child: const Text('OK'),
                   ),
                 ],
               );
             },
           );
         },
-        label: Text('Run'),
-        icon: Icon(Icons.play_arrow),
-        backgroundColor: Color(0xFF10B981),
+        label: const Text('Run'),
+        icon: const Icon(Icons.play_arrow),
+        backgroundColor: const Color(0xFF10B981),
       ),
     );
   }
