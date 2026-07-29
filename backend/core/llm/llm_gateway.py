@@ -301,7 +301,7 @@ class LLMGateway:
                         retry_time = parsedate_to_datetime(retry_after)
                         pause_seconds = int(retry_time.timestamp() - time.time())
                         pause_seconds = max(pause_seconds, 1)  # Ensure at least 1 second
-                    except Exception:
+                    except (ValueError, TypeError):
                         # Default fallback if parsing fails
                         pause_seconds = 60
             else:

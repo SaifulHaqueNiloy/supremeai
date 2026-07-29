@@ -46,13 +46,12 @@ _SENTENCE_TRANSFORMER_AVAILABLE = False
 _SENTENCE_TRANSFORMER_MODEL = None
 
 try:
-    # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
     if os.getenv("LOW_MEMORY_MODE", "false").lower() == "true":
         raise ImportError("Low memory mode enabled. Skipping sentence-transformers.")
     from sentence_transformers import SentenceTransformer
 
     _SENTENCE_TRANSFORMER_AVAILABLE = True
-except Exception:
+except ImportError:
     _SENTENCE_TRANSFORMER_AVAILABLE = False
 
 

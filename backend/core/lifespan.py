@@ -314,7 +314,7 @@ async def app_lifespan(app):
             )
 
     # Run all independent initializations in parallel
-    await asyncio.gather(
+    init_results = await asyncio.gather(
         _init_tracing(),
         _init_db_pool(),
         _init_config_cache(),
@@ -322,6 +322,10 @@ async def app_lifespan(app):
         _init_cost_guard(),
         return_exceptions=True,
     )
+
+    for idx, result in enumerate(init_results):
+        if isinstance(result, BaseException):
+            logger.error(f"Startup initialization failed for component {idx}: {result}")
 
     # ── Sequential Phase 2: Services that depend on Phase 1 ─────────────────
     # Orchestrator initialization (depends on HTTP client + DB)
