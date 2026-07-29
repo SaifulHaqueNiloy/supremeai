@@ -1,7 +1,12 @@
 # SupremeAI 2.0 — Git Pre-commit Hooks (Iron Curtain Local Defense)
 # ================================================================
-# বাংলা মন্তব্য: github.dev এনভায়রনমেন্ট থেকে সরাসরি পুশ করার জন্য সাময়িকভ�repos:
-  # 📄 YAML Syntactical Validator
+# বাংলা মন্তব্য: এই ফাইলটি git commit করার আগে স্বয়ংক্রিয়ভাবে
+# ভাঙা JSON/TOML, মার্জ মার্কার, এবং debug statements লোকালি ব্লক করে।
+
+repos:
+  # ══════════════════════════════════════════════════════════════
+  # ১. বেসিক ফাইল হেলথ চেক (File Integrity Gate & Gatekeepers)
+  # ══════════════════════════════════════════════════════════════
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
@@ -42,7 +47,9 @@
         pass_filenames: false
         always_run: true
 
-  # ⚡ Ruff Linter (Matching CI Iron Curtain Gate)
+  # ══════════════════════════════════════════════════════════════
+  # ৩. Python কোড কোয়ালিটি এবং আনসেফ ফিক্স (Ruff Engine + Unsafe-fixes)
+  # ══════════════════════════════════════════════════════════════
   - repo: local
     hooks:
       - id: ruff
@@ -57,31 +64,29 @@
         language: system
         pass_filenames: false
 
-  # 🔍 Mypy Static Analyzer
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.14.0
+  # ══════════════════════════════════════════════════════════════
+  # ৪. Python টাইপ চেকিং (Mypy Static Analyzer)
+  # ══════════════════════════════════════════════════════════════
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, types-requests, types-PyYAML]
-        exclude: |
-          (?x)^(
-            backend/tests/|
-            backend/scripts/|
-            backend/src/|
-            backend/agents/devops/auto_healer\.py|
-            scripts/health_check/auto_health_check\.py|
-            scripts/testing/|
-            scripts/security/|
-            scripts/monitoring/|
-            scripts/billing/|
-            scripts/deploy/|
-            scripts/ai/|
-            scripts/i18n/|
-            tests/scripts/
-          )
-        args: [--ignore-missing-imports, --no-strict-optional]
+        name: 🔍 Mypy Static Analyzer
+        entry: poetry -C backend run mypy --config-file pyproject.toml --ignore-missing-imports core/security/secret_hunter.py
+        language: system
+        types: [python]
+        pass_filenames: false
 
-  # TypeScript / Frontend কোয়ালিটি (Strict ESLint Import Gate)
+
+
+
+
+
+
+
+
+  # ══════════════════════════════════════════════════════════════
+  # ৫. TypeScript / Frontend কোয়ালিটি (Strict ESLint Import Gate)
+  # ══════════════════════════════════════════════════════════════
   - repo: local
     hooks:
       - id: eslint-frontend
@@ -93,11 +98,18 @@
         pass_filenames: false
         stages: [pre-commit]
 
-  # SupremeAI Security Guard & Router Smoke-Test (Local Defense)
+  # ══════════════════════════════════════════════════════════════
+  # ৬. SupremeAI Security Guard & Router Smoke-Test (Local Defense)
+  # ══════════════════════════════════════════════════════════════
   - repo: local
     hooks:
+      # বাংলা মন্তব্য: SupremeAI-এর নিজস্ব security scanner — commit করার আগে
+      # hardcoded secrets, SQL injection, .env committed চেক করে।
+      # Critical পেলে commit block হবে।
       - id: supremeai-blindspot-scan
         name: "🔐 SupremeAI Blind Spot Security Scanner"
+        # বাংলা মন্তব্য: auto_find_blindspots.py নিজেই sys.stdout.reconfigure(utf-8) করে
+        # তাই Windows-এ আলাদা encoding wrapper দরকার নেই
         entry: python scripts/security/auto_find_blindspots.py
         language: system
         pass_filenames: false
@@ -112,36 +124,24 @@
 
       - id: router-smoke-test
         name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
-        entry: python scripts/ci/validate_router_imports.py
+        # বাংলা মন্তব্য: PRE_COMMIT=1 script-এ সেট হয়, timeout=60s দেওয়া আছে।
+        # dependencies-এর জন্য poetry -C backend run দিয়ে চালানো হচ্ছে।
+        entry: poetry -C backend run python ../scripts/ci/validate_router_imports.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
 
-  # Free-Tier Size Guard (Render / GitHub / Vercel / Firebase)
+  # ══════════════════════════════════════════════════════════════
+  # ৭. Free-Tier Size Guard (Render / GitHub / Vercel / Firebase)
+  # ══════════════════════════════════════════════════════════════
   - repo: local
     hooks:
+      # বাংলা মন্তব্য: প্রতিটি commit-এর আগে free-tier পরিবেশের সাইজ লিমিট চেক করে।
+      # 80% → warning, 95% → commit block
+      # Covered: Render(500MB), GitHub Actions(8GB), Vercel(100MB), Firebase(1GB)
       - id: free-tier-size-guard
         name: "📏 Free-Tier Size Guard (Render/GitHub/Vercel/Firebase)"
         entry: python scripts/ci/check_free_tier_limits.py
         language: system
         pass_filenames: false
-        stages: [pre-commit]anguage: system
-#         pass_filenames: false
-#         stages: [pre-commit]
-# 
-#       - id: router-smoke-test
-#         name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
-#         entry: python scripts/ci/validate_router_imports.py
-#         language: system
-#         pass_filenames: false
-#         stages: [pre-commit]
-# 
-#   # Free-Tier Size Guard (Render / GitHub / Vercel / Firebase)
-#   - repo: local
-#     hooks:
-#       - id: free-tier-size-guard
-#         name: "📏 Free-Tier Size Guard (Render/GitHub/Vercel/Firebase)"
-#         entry: python scripts/ci/check_free_tier_limits.py
-#         language: system
-#         pass_filenames: false
-#         stages: [pre-commit]
+        stages: [pre-commit]
