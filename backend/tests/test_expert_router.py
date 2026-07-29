@@ -1,5 +1,6 @@
 import pytest
-from brain.expert_router import SupremeMoERouter, ExpertType
+
+from brain.expert_router import ExpertType, SupremeMoERouter
 from core.llm_router import get_llm_gateway
 
 

@@ -5,7 +5,7 @@ Target: 100% line coverage.
 রাইডার ট্র্যাকিং মডিউলের সকল ফাংশন ও শাখা কভার করা হয়েছে।
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -176,7 +176,12 @@ class TestRouteOptimizer:
     async def test_find_nearest_rider(self):
         """find_nearest_rider should return the closest available rider."""
         with patch.dict("sys.modules", {"core.cache": MagicMock()}):
-            from services.rider_tracker import Location, Rider, RiderStatus, RouteOptimizer
+            from services.rider_tracker import (
+                Location,
+                Rider,
+                RiderStatus,
+                RouteOptimizer,
+            )
 
             now = datetime.now(UTC)
             loc_target = Location(latitude=23.8, longitude=90.4, timestamp=now)
@@ -209,7 +214,12 @@ class TestRouteOptimizer:
     async def test_find_nearest_rider_none_available(self):
         """find_nearest_rider should return None when no riders available."""
         with patch.dict("sys.modules", {"core.cache": MagicMock()}):
-            from services.rider_tracker import Location, Rider, RiderStatus, RouteOptimizer
+            from services.rider_tracker import (
+                Location,
+                Rider,
+                RiderStatus,
+                RouteOptimizer,
+            )
 
             now = datetime.now(UTC)
             loc_target = Location(23.8, 90.4, now)

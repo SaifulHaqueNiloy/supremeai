@@ -3,18 +3,15 @@ Bias Detection Agent for SupremeAI 2.0
 Identifies and mitigates algorithmic biases in AI decisions and outputs.
 """
 
-import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+import re
 from dataclasses import dataclass
 from datetime import datetime
-import re
+from typing import Any
 
-from core.config import settings
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
-
+from core.llm.token_deductor import TokenDeductor
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +21,10 @@ class BiasDetectionResult:
     """Data class to hold bias detection results."""
 
     content_analyzed: str
-    bias_types_detected: List[str]
+    bias_types_detected: list[str]
     severity_score: float  # 0.0 to 1.0
-    affected_groups: List[str]
-    suggested_mitigations: List[str]
+    affected_groups: list[str]
+    suggested_mitigations: list[str]
     confidence: float
     timestamp: datetime
 
@@ -104,7 +101,7 @@ class BiasDetectionAgent:
         }
 
     async def detect_bias(
-        self, content: str, context: str = "", sensitive_topics: Optional[List[str]] = None
+        self, content: str, context: str = "", sensitive_topics: list[str] | None = None
     ) -> BiasDetectionResult:
         """
         Detect potential biases in the given content.
@@ -186,20 +183,20 @@ class BiasDetectionAgent:
                 timestamp=datetime.utcnow(),
             )
 
-    async def _analyze_with_llm(self, content: str, context: str) -> Dict[str, Any]:
+    async def _analyze_with_llm(self, content: str, context: str) -> dict[str, Any]:
         """Use LLM for deeper bias analysis."""
         try:
             prompt = f"""
             Analyze the following content for potential biases. Consider the context provided.
-            
+
             Content: {content}
-            
+
             Context: {context}
-            
+
             Identify specific types of bias that might be present (gender, racial, age, socioeconomic, geographic, ability).
             Also identify which groups might be affected by these biases.
             Rate the severity on a scale of 0 to 1.
-            
+
             Respond in the following JSON format:
             {{
               "bias_types": ["type1", "type2"],
@@ -265,7 +262,7 @@ class BiasDetectionAgent:
         except Exception as e:
             logger.error(f"Error storing bias detection result: {e}")
 
-    async def get_bias_history(self, limit: int = 10) -> List[BiasDetectionResult]:
+    async def get_bias_history(self, limit: int = 10) -> list[BiasDetectionResult]:
         """Retrieve recent bias detection results from history."""
         try:
             history = await redis_manager.get(self.bias_detection_key)
@@ -294,7 +291,7 @@ class BiasDetectionAgent:
             logger.error(f"Error retrieving bias detection history: {e}")
             return []
 
-    async def assess_mitigation_effectiveness(self, original_content: str, mitigated_content: str) -> Dict[str, Any]:
+    async def assess_mitigation_effectiveness(self, original_content: str, mitigated_content: str) -> dict[str, Any]:
         """
         Assess how effective the mitigation was by comparing before/after.
 

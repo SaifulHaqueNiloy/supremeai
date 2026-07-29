@@ -6,6 +6,7 @@ Goal: 70-80% local inference, 15-20% managed, 5-10% frontier.
 """
 
 from typing import Any
+
 from loguru import logger
 
 from core.llm_router import LLMRouter
@@ -105,6 +106,7 @@ class SelfSovereignRouter:
         try:
             import os
             import urllib.request
+
             from core.config import settings
 
             ollama_base = (

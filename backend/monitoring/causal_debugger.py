@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class CausalDebugger:
     Parses tracebacks, isolates the breaking module/line, and formulates automated remediation steps.
     """
 
-    def analyze_exception(self, exc: Exception, context_info: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def analyze_exception(self, exc: Exception, context_info: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Analyze an exception object and extract causal insights.
         """

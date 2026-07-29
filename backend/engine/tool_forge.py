@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class ToolForge:
     """
 
     def __init__(self):
-        self._synthesized_tools: Dict[str, Dict[str, Any]] = {}
+        self._synthesized_tools: dict[str, dict[str, Any]] = {}
 
     async def synthesize_tool(self, tool_name: str, task_description: str, code_snippet: str) -> bool:
         """
@@ -40,6 +40,6 @@ class ToolForge:
             logger.error(f"Failed to synthesize tool '{tool_name}': {e}")
             return False
 
-    def get_tool(self, tool_name: str) -> Optional[Dict[str, Any]]:
+    def get_tool(self, tool_name: str) -> dict[str, Any] | None:
         """Retrieve a synthesized tool specification."""
         return self._synthesized_tools.get(tool_name)

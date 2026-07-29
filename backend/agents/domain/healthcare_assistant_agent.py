@@ -12,7 +12,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -23,7 +23,7 @@ logger = logging.getLogger("supremeai.healthcare_assistant")
 HEALTHCARE_CACHE_TTL = 600  # 10 minutes
 
 
-class HealthMetricType(str, Enum):
+class HealthMetricType(StrEnum):
     HEART_RATE = "heart_rate"
     BLOOD_PRESSURE = "blood_pressure"
     BLOOD_SUGAR = "blood_sugar"
@@ -34,7 +34,7 @@ class HealthMetricType(str, Enum):
     OXYGEN_SATURATION = "oxygen_saturation"
 
 
-class PrivacyLevel(str, Enum):
+class PrivacyLevel(StrEnum):
     PUBLIC = "public"
     INTERNAL = "internal"
     RESTRICTED = "restricted"

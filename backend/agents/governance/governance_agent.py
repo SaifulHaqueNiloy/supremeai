@@ -6,17 +6,13 @@ Manages access controls, decision-making oversight, and policy enforcement.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-import hashlib
 import secrets
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
-from core.config import settings
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
-from core.security.auth_middleware import get_current_active_user
-
+from core.llm.token_deductor import TokenDeductor
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +37,10 @@ class DecisionRecord:
     decision_id: str
     user_id: str
     decision_type: str
-    decision_data: Dict[str, Any]
+    decision_data: dict[str, Any]
     approval_required: bool
-    approved_by: Optional[str]
-    approval_timestamp: Optional[datetime]
+    approved_by: str | None
+    approval_timestamp: datetime | None
     status: str  # pending, approved, rejected, executed
     timestamp: datetime
 
@@ -185,7 +181,7 @@ class GovernanceAgent:
             )
 
     async def record_decision(
-        self, user_id: str, decision_type: str, decision_data: Dict[str, Any], requires_approval: bool = True
+        self, user_id: str, decision_type: str, decision_data: dict[str, Any], requires_approval: bool = True
     ) -> DecisionRecord:
         """
         Record a decision for governance oversight.
@@ -295,7 +291,7 @@ class GovernanceAgent:
             logger.error(f"Error approving decision: {e}")
             return False
 
-    async def enforce_policy(self, user_id: str, action: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def enforce_policy(self, user_id: str, action: str, context: dict[str, Any] = None) -> dict[str, Any]:
         """
         Enforce governance policies for an action.
 
@@ -336,9 +332,11 @@ class GovernanceAgent:
                 "has_privileges": has_privileges,
                 "rate_limit_info": rate_limit_result,
                 "policy_compliant": has_privileges and rate_limit_result["within_limit"],
-                "next_action": "proceed"
-                if (has_privileges and rate_limit_result["within_limit"] and not requires_approval)
-                else "review",
+                "next_action": (
+                    "proceed"
+                    if (has_privileges and rate_limit_result["within_limit"] and not requires_approval)
+                    else "review"
+                ),
             }
 
             # Log policy enforcement
@@ -363,7 +361,7 @@ class GovernanceAgent:
         except Exception:
             return "user"
 
-    async def _get_user_permissions(self, user_id: str) -> List[str]:
+    async def _get_user_permissions(self, user_id: str) -> list[str]:
         """Get the permissions of a user."""
         try:
             # In a real implementation, this would fetch from the auth system
@@ -372,7 +370,7 @@ class GovernanceAgent:
         except Exception:
             return []
 
-    async def _check_rate_limit(self, user_id: str, action: str) -> Dict[str, Any]:
+    async def _check_rate_limit(self, user_id: str, action: str) -> dict[str, Any]:
         """Check if user is within rate limits for an action."""
         try:
             risk_level = self.action_risk_levels.get(action, "medium_risk")
@@ -442,7 +440,7 @@ class GovernanceAgent:
         except Exception as e:
             logger.error(f"Error storing decision: {e}")
 
-    async def _get_decision(self, decision_id: str) -> Optional[DecisionRecord]:
+    async def _get_decision(self, decision_id: str) -> DecisionRecord | None:
         """Get a decision record from Redis."""
         try:
             existing_decisions = await redis_manager.get(self.decision_records_key)
@@ -459,9 +457,11 @@ class GovernanceAgent:
                         decision_data=decision_data["decision_data"],
                         approval_required=decision_data["approval_required"],
                         approved_by=decision_data["approved_by"],
-                        approval_timestamp=datetime.fromisoformat(decision_data["approval_timestamp"])
-                        if decision_data["approval_timestamp"]
-                        else None,
+                        approval_timestamp=(
+                            datetime.fromisoformat(decision_data["approval_timestamp"])
+                            if decision_data["approval_timestamp"]
+                            else None
+                        ),
                         status=decision_data["status"],
                         timestamp=datetime.fromisoformat(decision_data["timestamp"]),
                     )
@@ -489,7 +489,7 @@ class GovernanceAgent:
         except Exception as e:
             logger.error(f"Error logging access attempt: {e}")
 
-    async def _log_governance_event(self, event_type: str, data: Dict[str, Any]):
+    async def _log_governance_event(self, event_type: str, data: dict[str, Any]):
         """Log a governance event."""
         try:
             log_entry = {"type": event_type, "data": data, "timestamp": datetime.utcnow().isoformat()}
@@ -498,7 +498,7 @@ class GovernanceAgent:
         except Exception as e:
             logger.error(f"Error logging governance event: {e}")
 
-    async def _add_to_audit_log(self, entry: Dict[str, Any]):
+    async def _add_to_audit_log(self, entry: dict[str, Any]):
         """Add an entry to the audit log."""
         try:
             # Get existing audit log
@@ -523,7 +523,7 @@ class GovernanceAgent:
         except Exception as e:
             logger.error(f"Error adding to audit log: {e}")
 
-    async def _get_policies(self) -> Dict[str, Any]:
+    async def _get_policies(self) -> dict[str, Any]:
         """Get current governance policies."""
         try:
             policies_json = await redis_manager.get(self.policy_key)

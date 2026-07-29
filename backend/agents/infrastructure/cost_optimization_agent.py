@@ -6,16 +6,13 @@ Manages advanced cost optimization and budget adherence across the system.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import math
+from typing import Any
 
-from core.config import settings
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +57,7 @@ class BudgetAlert:
     threshold_percentage: float
     severity: str  # info, warning, critical
     timestamp: datetime
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class CostOptimizationAgent:
@@ -244,7 +241,7 @@ class CostOptimizationAgent:
                 cost_per_request=0.0,
             )
 
-    async def identify_optimization_opportunities(self) -> List[OptimizationOpportunity]:
+    async def identify_optimization_opportunities(self) -> list[OptimizationOpportunity]:
         """Identify cost optimization opportunities."""
         try:
             opportunities = []
@@ -300,7 +297,7 @@ class CostOptimizationAgent:
             logger.error(f"Error identifying optimization opportunities: {e}")
             return []
 
-    async def generate_cost_forecast(self, days_ahead: int = 30) -> Dict[str, Any]:
+    async def generate_cost_forecast(self, days_ahead: int = 30) -> dict[str, Any]:
         """
         Generate cost forecast for the specified number of days.
 
@@ -349,9 +346,9 @@ class CostOptimizationAgent:
                 "total_forecast": round(total_forecast, 2),
                 "daily_forecast": forecasted_costs,
                 "confidence": 0.7,  # Basic confidence for simple model
-                "trend": "increasing"
-                if avg_daily_cost > daily_totals[-7 if len(daily_totals) >= 7 else 0]
-                else "stable",
+                "trend": (
+                    "increasing" if avg_daily_cost > daily_totals[-7 if len(daily_totals) >= 7 else 0] else "stable"
+                ),
             }
 
             # Store forecast in Redis
@@ -366,7 +363,7 @@ class CostOptimizationAgent:
             logger.error(f"Error generating cost forecast: {e}")
             return {"status": "error", "message": str(e), "forecast": {}, "confidence": 0.0}
 
-    async def optimize_resource_allocation(self) -> Dict[str, Any]:
+    async def optimize_resource_allocation(self) -> dict[str, Any]:
         """Optimize resource allocation based on cost analysis."""
         try:
             # Identify the highest cost categories
@@ -448,7 +445,7 @@ class CostOptimizationAgent:
             logger.error(f"Error optimizing resource allocation: {e}")
             return {"status": "error", "message": str(e), "recommendations": []}
 
-    async def _get_usage_metrics(self) -> Dict[str, float]:
+    async def _get_usage_metrics(self) -> dict[str, float]:
         """Get current usage metrics (simulated for demo purposes)."""
         try:
             # In a real implementation, this would connect to monitoring systems
@@ -510,7 +507,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error storing cost metric: {e}")
 
-    async def _store_optimization_opportunities(self, opportunities: List[OptimizationOpportunity]):
+    async def _store_optimization_opportunities(self, opportunities: list[OptimizationOpportunity]):
         """Store optimization opportunities in Redis."""
         try:
             opportunities_data = []
@@ -551,7 +548,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error storing optimization opportunities: {e}")
 
-    async def _check_budget_alerts(self, current_metric: CostMetric, budget_config: Dict[str, Any]):
+    async def _check_budget_alerts(self, current_metric: CostMetric, budget_config: dict[str, Any]):
         """Check if current costs trigger any budget alerts."""
         try:
             alerts = []
@@ -600,7 +597,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error checking budget alerts: {e}")
 
-    async def _store_budget_alerts(self, alerts: List[BudgetAlert]):
+    async def _store_budget_alerts(self, alerts: list[BudgetAlert]):
         """Store budget alerts in Redis."""
         try:
             alerts_data = []
@@ -642,7 +639,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error storing budget alerts: {e}")
 
-    async def _get_recent_cost_metrics(self, limit: int = 30) -> List[CostMetric]:
+    async def _get_recent_cost_metrics(self, limit: int = 30) -> list[CostMetric]:
         """Get recent cost metrics from Redis."""
         try:
             metrics_data = await redis_manager.get(self.cost_metrics_key)
@@ -672,7 +669,7 @@ class CostOptimizationAgent:
             logger.error(f"Error getting recent cost metrics: {e}")
             return []
 
-    async def _get_budget_config(self) -> Dict[str, Any]:
+    async def _get_budget_config(self) -> dict[str, Any]:
         """Get current budget configuration."""
         try:
             config_json = await redis_manager.get(self.budget_config_key)
@@ -684,7 +681,7 @@ class CostOptimizationAgent:
             logger.error(f"Error getting budget config: {e}")
             return self.default_budget_config
 
-    async def get_cost_optimization_report(self) -> Dict[str, Any]:
+    async def get_cost_optimization_report(self) -> dict[str, Any]:
         """
         Generate a comprehensive cost optimization report.
 
@@ -731,9 +728,11 @@ class CostOptimizationAgent:
                 "optimization_opportunities": {
                     "count": len(opportunities),
                     "top_3_potential_savings": round(
-                        sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)
-                        if opportunities
-                        else 0,
+                        (
+                            sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)
+                            if opportunities
+                            else 0
+                        ),
                         2,
                     ),
                     "categories_covered": list(set(opp.category for opp in opportunities)),

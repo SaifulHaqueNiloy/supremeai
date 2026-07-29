@@ -22,10 +22,11 @@ Bengali:
 import asyncio
 import time
 import tracemalloc
-from typing import Any
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+
 from loguru import logger
 
 try:
@@ -33,8 +34,8 @@ try:
 except ImportError:
     psutil = None  # type: ignore[assignment]
 import gc
-from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 
 
 class OptimizationLevel(Enum):

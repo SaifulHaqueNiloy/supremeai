@@ -12,8 +12,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from core.rate_limiter import AsyncRateLimiter
 from core.security import generate_api_key, hash_api_key, mask_api_key, verify_api_key
+from models.api_key import create_api_key as db_create_api_key
 from models.api_key import (
-    create_api_key as db_create_api_key,
     delete_api_key,
     get_all_api_keys,
     get_api_key_by_id,
@@ -22,9 +22,9 @@ from models.api_key import (
     get_api_keys_by_user,
     record_api_key_event,
     record_api_key_usage,
-    revoke_api_key as db_revoke_api_key,
-    rotate_api_key as db_rotate_api_key,
 )
+from models.api_key import revoke_api_key as db_revoke_api_key
+from models.api_key import rotate_api_key as db_rotate_api_key
 
 router = APIRouter(prefix="/api/api-keys", tags=["api-keys"])
 limiter = AsyncRateLimiter()

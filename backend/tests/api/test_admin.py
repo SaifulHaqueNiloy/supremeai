@@ -104,7 +104,6 @@ def test_quick_actions_success(
     mock_god_layer,
 ):
     """বাংলা: নতুন রিয়েল কুইক অ্যাকশন (cache/backup/rollback) সফলভাবে সম্পন্ন হচ্ছে কিনা যাচাই করে।"""
-    import sys
     from unittest.mock import MagicMock
 
     mock_downgrade = MagicMock(return_value=None)

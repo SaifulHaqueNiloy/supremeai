@@ -1,4 +1,3 @@
-import pytest
 from utils.text_helpers import strip_markdown_code_block
 
 
