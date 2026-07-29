@@ -15,7 +15,6 @@ from jose.exceptions import ExpiredSignatureError
 from loguru import logger
 
 from core.config import settings
-from utils.environment import is_test_environment
 
 ASGIScope = dict[str, Any]
 ASGISend = Callable[[dict[str, Any]], Awaitable[None]]
@@ -61,9 +60,6 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
         logger.warning("JWT token has expired")
         return None
     except JWTError as exc:
-        if is_test_environment() and token and token.startswith(("test_", "test-", "mock_", "mock-")):
-            logger.debug(f"Test environment token fallback for non-JWT token '{token}': {exc}")
-            return {"sub": "test_user", "role": "admin"}
         logger.warning(f"JWT token validation failed: {exc}")
         return None
 
@@ -145,10 +141,7 @@ class AuthMiddleware:
 
         path = scope.get("path", "")
 
-        # বাংলা মন্তব্য: "api_token unset" এই দুর্বল শর্তের বদলে explicit config flag ব্যবহার —
-        # accidental production ENV misconfiguration-এ আর auth পুরো বাইপাস হবে না (Patch 13 fix)।
-        allow_bypass = getattr(settings, "allow_test_auth_bypass", False)
-        if _is_public_path(path) or (is_test_environment() and allow_bypass is True):
+        if _is_public_path(path):
             await self.app(scope, receive, send)
             return
 

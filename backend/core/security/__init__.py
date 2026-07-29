@@ -248,7 +248,8 @@ async def is_token_revoked(jti: str) -> bool:
         return False  # Redis ডাউন থাকলে গ্রেসফুলি সার্ভিস বজায় থাকে
     try:
         return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to check token revocation status: {e}")
         return False
 
 

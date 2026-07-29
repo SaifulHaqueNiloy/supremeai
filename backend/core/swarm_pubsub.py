@@ -228,7 +228,7 @@ class SwarmPubSub:
                 try:
                     data = json.loads(raw_msg)
                     buffer.append(data)
-                except Exception:
+                except json.JSONDecodeError:
                     buffer.append({"type": "raw", "data": raw_msg})
 
                 if len(buffer) >= 500:

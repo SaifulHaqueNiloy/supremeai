@@ -151,7 +151,7 @@ class SecureRedisManager:
             return None
         try:
             return json.loads(val)
-        except Exception:
+        except json.JSONDecodeError:
             return None
 
     # REMOVED: _execute_with_breaker method due to critical bug and unused status
