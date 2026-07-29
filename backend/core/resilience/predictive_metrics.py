@@ -1,8 +1,8 @@
 # Standard imports
-import time
-import math
-from collections import deque
 import logging
+import math
+import time
+from collections import deque
 
 logger = logging.getLogger(__name__)
 

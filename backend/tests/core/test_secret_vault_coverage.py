@@ -7,9 +7,6 @@ Target: 100% line coverage.
 
 import os
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _PROJECT_ROOT not in sys.path:

@@ -5,9 +5,10 @@ Handles outgoing alerts with inline approval buttons and incoming callbacks.
 """
 
 from typing import Any
+
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
 from loguru import logger
+from pydantic import BaseModel
 
 from core.config import settings
 

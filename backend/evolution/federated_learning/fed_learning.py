@@ -20,17 +20,18 @@ Bengali:
 ব্যক্তিগত ডেটা অবদান রক্ষা করে।
 """
 
+import hashlib
+import json
+import secrets
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-from typing import Any
-from dataclasses import dataclass
-from enum import Enum
-import hashlib
-import json
 from loguru import logger
-import secrets
 
 
 class AggregationMethod(Enum):
@@ -646,7 +647,7 @@ def demo_federated_learning():
         client_targets = dummy_labels[start_idx:end_idx]
 
         # Create a simple data loader for demo
-        from torch.utils.data import TensorDataset, DataLoader
+        from torch.utils.data import DataLoader, TensorDataset
 
         dataset = TensorDataset(client_data, client_targets)
         loader = DataLoader(dataset, batch_size=10, shuffle=True)

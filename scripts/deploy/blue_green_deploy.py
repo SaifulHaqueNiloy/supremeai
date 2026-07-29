@@ -7,6 +7,7 @@ Priority: 🟡 Medium
 
 import json
 import logging
+import shlex
 import subprocess
 import time
 import os
@@ -136,8 +137,6 @@ class BlueGreenDeployer:
             logger.error(f"Deployment error: {e}")
 
         return result
-
-import shlex
 
     def _build_deploy_command(
         self,

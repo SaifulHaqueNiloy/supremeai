@@ -8,7 +8,7 @@ Target: 100% line coverage.
 import json
 import os
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -107,9 +107,6 @@ class TestGoalDecomposer:
         """decompose should return cached results when available."""
         from core.evolution.daily_learner import (
             GoalDecomposer,
-            GoalStatus,
-            LearningPriority,
-            SubGoal,
         )
 
         mock_cache = AsyncMock()

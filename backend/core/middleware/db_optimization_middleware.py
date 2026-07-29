@@ -2,17 +2,21 @@
 
 import asyncio
 import time
-from typing import Callable, Dict, Any
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.query_optimizer import query_optimizer, setup_query_profiling, DatabaseOptimizationMiddleware
+from core.database.query_optimizer import (
+    DatabaseOptimizationMiddleware,
+    query_optimizer,
+    setup_query_profiling,
+)
+from core.logging_config import logger
 from core.memory.memory_manager import memory_manager, track_memory_usage
 from core.security.secret_scanner import secret_scanner
 from core.security.sql_injection_guard import sql_injection_middleware
-from core.documentation.api_docs_generator import docs_generator
-from core.logging_config import logger
 
 
 class ComprehensiveDBOptimizationMiddleware:
@@ -130,9 +134,8 @@ async def initialize_db_optimizations(engine):
 def _register_common_eager_load_strategies():
     """Register common eager loading strategies to prevent N+1 queries."""
     from models.agent_session import AgentSession
-    from models.handoff_event import HandoffEvent
-    from models.patch_telemetry import PatchTelemetry
     from models.execution_policy import ExecutionPolicy
+    from models.patch_telemetry import PatchTelemetry
 
     # Register relationships that are commonly accessed together
     query_optimizer.register_eager_load_strategy(AgentSession, ["handoff_events"], strategy="selectinload")
@@ -142,7 +145,7 @@ def _register_common_eager_load_strategies():
     query_optimizer.register_eager_load_strategy(ExecutionPolicy, [], strategy="selectinload")
 
 
-def get_optimization_stats() -> Dict[str, Any]:
+def get_optimization_stats() -> dict[str, Any]:
     """Get comprehensive optimization statistics."""
     return {
         "query_optimizer": {
@@ -158,7 +161,6 @@ def get_optimization_stats() -> Dict[str, Any]:
 
 def run_comprehensive_security_scan():
     """Run a comprehensive security scan of the codebase."""
-    import asyncio
 
     async def scan():
         # Run secret scanning
@@ -173,7 +175,7 @@ def run_comprehensive_security_scan():
     try:
         loop = asyncio.get_running_loop()
         # If we're already in an event loop, schedule the task
-        task = loop.create_task(scan())
+        loop.create_task(scan())
         # We can't await here since we don't know if called from sync context
     except RuntimeError:
         # No event loop running, run it normally
@@ -225,13 +227,11 @@ async def optimize_session_queries(session: AsyncSession):
 # Example of how to integrate the middleware in a FastAPI app
 def integrate_with_fastapi_app(app, engine):
     """Integrate all optimizations with a FastAPI application."""
-    from fastapi.middleware.base import BaseHTTPMiddleware
 
     # Add the comprehensive middleware
     app.add_middleware(ComprehensiveDBOptimizationMiddleware)
 
     # Initialize all optimizations
-    import asyncio
 
     try:
         # Try to run in current event loop if available

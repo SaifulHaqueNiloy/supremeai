@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from loguru import logger
-
 import os
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from loguru import logger
 
 from core.app import app as base_app
 

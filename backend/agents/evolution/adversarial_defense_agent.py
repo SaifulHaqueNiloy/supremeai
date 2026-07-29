@@ -12,7 +12,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -22,7 +22,7 @@ logger = logging.getLogger("supremeai.adversarial_defense")
 DEFENSE_CACHE_TTL = 600
 
 
-class AttackType(str, Enum):
+class AttackType(StrEnum):
     PROMPT_INJECTION = "prompt_injection"
     JAILBREAK = "jailbreak"
     DATA_POISONING = "data_poisoning"

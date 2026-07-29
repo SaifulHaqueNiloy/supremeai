@@ -15,8 +15,7 @@ from __future__ import annotations
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from enum import Enum
-
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
@@ -28,7 +27,7 @@ ESCROW_TTL = 30 * 24 * 3600  # 30 days
 RELEASE_TIMEOUT = 7 * 24 * 3600  # 7 days for manual release
 
 
-class EscrowStatus(str, Enum):
+class EscrowStatus(StrEnum):
     PENDING = "pending"
     FUNDED = "funded"
     CONDITION_MET = "condition_met"

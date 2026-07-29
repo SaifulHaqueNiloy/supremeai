@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +16,11 @@ class VisionService:
     """
 
     async def analyze_image(
-        self, image_bytes: bytes, query: str = "Analyze this diagram", user_query: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, image_bytes: bytes, query: str = "Analyze this diagram", user_query: str | None = None
+    ) -> dict[str, Any]:
         """
         Analyze image bytes and extract architectural components or UI code layout.
         """
-        target_query = user_query or query
         try:
             logger.info(f"Vision Service processing image ({len(image_bytes)} bytes) with query: '{user_query}'")
             analysis_summary = (
