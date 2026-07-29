@@ -155,7 +155,7 @@ def scan_codebase(hunter: SecretHunter, path: str | None = None) -> bool:
     # Run the scan
     import asyncio
 
-    report = asyncio.run(hunter.scan_codebase(target, use_ai=True, min_severity=CI_FAIL_SEVERITY))
+    report = asyncio.run(hunter.scan_codebase(target, use_ai=False, min_severity=CI_FAIL_SEVERITY))
 
     # Print summary
     findings = report.findings
