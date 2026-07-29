@@ -245,7 +245,13 @@ class GitleaksRunner:
                 # Skip common non-source directories
                 if any(part.startswith(".") for part in file_path.parts):
                     continue
-                if "node_modules" in str(file_path) or "__pycache__" in str(file_path) or "tests" in file_path.parts or file_path.name.startswith("test_") or "tmp_" in str(file_path):
+                if (
+                    "node_modules" in str(file_path)
+                    or "__pycache__" in str(file_path)
+                    or "tests" in file_path.parts
+                    or file_path.name.startswith("test_")
+                    or "tmp_" in str(file_path)
+                ):
                     continue
 
                 total_files += 1

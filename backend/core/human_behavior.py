@@ -56,9 +56,7 @@ class HumanBehaviorSimulators:
             start_x = random.uniform(0, 100)  # noqa: S311
             start_y = random.uniform(0, 100)  # noqa: S311
 
-            path = cls._generate_bezier_points(
-                (start_x, start_y), (target_x, target_y), steps=random.randint(15, 30)
-            )  # noqa: S311
+            path = cls._generate_bezier_points((start_x, start_y), (target_x, target_y), steps=random.randint(15, 30))  # noqa: S311
 
             for x, y in path:
                 await page.mouse.move(x, y)
