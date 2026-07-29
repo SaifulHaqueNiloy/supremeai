@@ -133,8 +133,8 @@ class LoadingCard extends StatelessWidget {
             const SizedBox(height: 12),
             ...List.generate(
               lines,
-              (index) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+              (index) => const Padding(
+                padding: EdgeInsets.only(bottom: 8),
                 child: ShimmerLoading(width: double.infinity, height: 14),
               ),
             ),
