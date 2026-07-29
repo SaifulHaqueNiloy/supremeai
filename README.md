@@ -132,6 +132,16 @@ This entire platform is engineered to run on free-tier services.
 | Upstash Redis | $0 (Free tier, 10k requests/day) |
 | **Total** | **$0/month** |
 
+## ⚙️ Development Config (Pre-commit Hooks)
+
+### English:
+To facilitate direct pushes from environments like `github.dev`, the pre-commit hooks in this repository have been temporarily commented out/neutralized in `.pre-commit-config.yaml`.
+- To re-enable pre-commit checks, uncomment the `repos:` block inside `.pre-commit-config.yaml` and run `pre-commit install`.
+
+### বাংলা:
+`github.dev` এনভায়রনমেন্ট থেকে সরাসরি পুশ করার সুবিধার্থে এই রিপোজিটরির pre-commit hooks সাময়িকভাবে `.pre-commit-config.yaml` ফাইলে কমেন্ট আউট (নিষ্ক্রিয়) করে রাখা হয়েছে।
+- পুনরায় pre-commit সচল করতে চাইলে `.pre-commit-config.yaml` ফাইলের `repos:` কমেন্ট অংশটি আনকমেন্ট করুন এবং `pre-commit install` রান করুন।
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read `CONTRIBUTING.md` for details on our code of conduct and the process for submitting pull requests.
