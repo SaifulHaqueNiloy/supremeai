@@ -2,7 +2,7 @@
 Coverage tests for tools/self_planner.py.
 Target: 100% line coverage.
 
-সেলফ-প্ল্যানার মডিউলের সকল ফাংশন ও ব্রাঞ্চ কভার করা হয়েছে।
+সেলফ-প্ল্যানার মডিউলের সকল ফাংশন ও ব্রাঞ্চ কভার করা হয়েছে।
 """
 
 import json
@@ -51,7 +51,7 @@ class TestSelfPlannerGeneratePlan:
             {"id": "task2", "description": "Second task", "depends_on": ["task1"]},
         ]
 
-        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+        with patch("tools.self_planner.ModelRouter") as mock_router_cls:
             mock_router_instance = MagicMock()
             mock_router_cls.return_value = mock_router_instance
             mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": json.dumps(plan_data)})
@@ -66,7 +66,7 @@ class TestSelfPlannerGeneratePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+        with patch("tools.self_planner.ModelRouter") as mock_router_cls:
             mock_router_instance = MagicMock()
             mock_router_cls.return_value = mock_router_instance
             mock_router_instance.async_route_and_generate = AsyncMock(side_effect=Exception("LLM down"))
@@ -79,7 +79,7 @@ class TestSelfPlannerGeneratePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+        with patch("tools.self_planner.ModelRouter") as mock_router_cls:
             mock_router_instance = MagicMock()
             mock_router_cls.return_value = mock_router_instance
             mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": "not valid json"})
@@ -92,10 +92,12 @@ class TestSelfPlannerGeneratePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+        with patch("tools.self_planner.ModelRouter") as mock_router_cls:
             mock_router_instance = MagicMock()
             mock_router_cls.return_value = mock_router_instance
-            mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": json.dumps({"not": "a list"})})
+            mock_router_instance.async_route_and_generate = AsyncMock(
+                return_value={"text": json.dumps({"not": "a list"})}
+            )
             with pytest.raises(RuntimeError, match="Agent planning failed"):
                 await planner.generate_plan("Test")
 
@@ -105,7 +107,7 @@ class TestSelfPlannerGeneratePlan:
         from tools.self_planner import SelfPlanner
 
         planner = SelfPlanner()
-        with patch("brain.model_router.ModelRouter") as mock_router_cls:
+        with patch("tools.self_planner.ModelRouter") as mock_router_cls:
             mock_router_instance = MagicMock()
             mock_router_cls.return_value = mock_router_instance
             mock_router_instance.async_route_and_generate = AsyncMock(return_value={"text": json.dumps([])})
@@ -145,7 +147,8 @@ class TestSelfPlannerExecutePlan:
         graph = nx.DiGraph()
 
         result = await planner.execute_plan(graph)
-        assert result == []
+        # Since execute_plan is now an alias for parallel_agent_executor, it should return a dict
+        assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_execute_plan_with_tasks(self):
@@ -161,4 +164,5 @@ class TestSelfPlannerExecutePlan:
         graph.add_edge("task1", "task2")
 
         result = await planner.execute_plan(graph)
-        assert isinstance(result, list)
+        # Since execute_plan is now an alias for parallel_agent_executor, it should return a dict
+        assert isinstance(result, dict)
