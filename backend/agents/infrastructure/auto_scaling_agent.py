@@ -6,15 +6,15 @@ Dynamically adjusts resources based on demand to optimize performance and costs.
 import asyncio
 import json
 import logging
-from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
+
 import psutil  # This may need to be installed separately
 
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
-
 
 logger = logging.getLogger(__name__)
 

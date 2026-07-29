@@ -2,7 +2,6 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from starlette.testclient import TestClient

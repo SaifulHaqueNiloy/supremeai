@@ -30,49 +30,47 @@ Bengali:
 রোডম্যাপের অংশ হিসেবে সব কোর কম্পোনেন্টের প্রধান একীকরণ প্যাকেজ
 """
 
+from .accessibility.wcag_compliance import (
+    AccessibilityComplianceEngine,
+    AccessibilityIssue,
+    ColorContrastChecker,
+    HTMLAccessibilityChecker,
+    WCAGGuideline,
+    WCAGLevel,
+    WCAGPrinciple,
+)
+from .deployment.production_deploy import (
+    ConfigManager,
+    DeploymentConfig,
+    DeploymentEnvironment,
+    DeploymentManager,
+    DeploymentStatus,
+    HealthChecker,
+    ImageBuilder,
+    ProductionDeploymentSystem,
+)
+
 # Import all core components
 from .optimization.performance_optimizer import (
+    AsyncLRUCache,
+    LRUCache,
+    OptimizationLevel,
     PerformanceOptimizer,
     get_performance_optimizer,
     performance_monitor,
-    LRUCache,
-    AsyncLRUCache,
-    OptimizationLevel,
 )
-
-from .accessibility.wcag_compliance import (
-    AccessibilityComplianceEngine,
-    HTMLAccessibilityChecker,
-    ColorContrastChecker,
-    AccessibilityIssue,
-    WCAGPrinciple,
-    WCAGGuideline,
-    WCAGLevel,
-)
-
 from .testing.qa_suite import (
+    ChaosEngineer,
+    IntegrationTestRunner,
+    PerformanceTester,
     QASuite,
-    TestSuite,
+    SecurityTester,
     TestCase,
     TestCategory,
     TestPriority,
     TestResult,
+    TestSuite,
     UnitTestGenerator,
-    IntegrationTestRunner,
-    SecurityTester,
-    PerformanceTester,
-    ChaosEngineer,
-)
-
-from .deployment.production_deploy import (
-    ProductionDeploymentSystem,
-    DeploymentManager,
-    ConfigManager,
-    ImageBuilder,
-    HealthChecker,
-    DeploymentConfig,
-    DeploymentEnvironment,
-    DeploymentStatus,
 )
 
 # Import evolution components
@@ -87,38 +85,31 @@ from .deployment.production_deploy import (
 # try/except দিয়ে গার্ড করে দেওয়া হলো যেন torch অনুপস্থিত থাকলে শুধু এই optional
 # নামগুলো None হয়ে যায়, বাকি পুরো অ্যাপ স্বাভাবিকভাবে import/চলতে পারে।
 try:
-    from evolution import (
-        # Digital Twin
-        DigitalTwinWorldModel,
-        get_digital_twin_model,
-        SystemTopologyMapper,
-        ImpactSimulator,
-        RemediationEngine,
-        # Continual Learning
+    from evolution import (  # Digital Twin; Continual Learning; Adversarial Defense; Neural-Symbolic Integration; Federated Learning; Theory of Mind; Temporal Abstraction
         EWC,
-        OnlineEWC,
-        EWCTrainer,
-        EWCConfig,
-        # Adversarial Defense
         AdversarialDefenseSystem,
         AdversarialTrainer,
+        AggregationMethod,
         DefenseConfig,
-        # Neural-Symbolic Integration
-        NeuralSymbolicIntegrator,
-        MathematicalReasoningEngine,
-        NeuralSymbolicConfig,
-        # Federated Learning
+        DigitalTwinWorldModel,
+        EWCConfig,
+        EWCTrainer,
         FederatedLearningCoordinator,
         FLConfig,
-        AggregationMethod,
-        # Theory of Mind
+        ImpactSimulator,
+        MathematicalReasoningEngine,
+        NeuralSymbolicConfig,
+        NeuralSymbolicIntegrator,
+        OnlineEWC,
+        RemediationEngine,
+        SystemTopologyMapper,
+        TemporalAbstractionConfig,
+        TemporalAbstractionSystem,
+        TemporalGranularity,
         TheoryOfMindSystem,
         ToMConfig,
         ToMLevel,
-        # Temporal Abstraction
-        TemporalAbstractionSystem,
-        TemporalAbstractionConfig,
-        TemporalGranularity,
+        get_digital_twin_model,
     )
 
     EVOLUTION_COMPONENTS_AVAILABLE = True

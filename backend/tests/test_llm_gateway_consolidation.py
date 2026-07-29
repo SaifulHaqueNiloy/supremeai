@@ -3,13 +3,14 @@ Tests for LLM Gateway consolidation improvements.
 These tests verify the enhancements made to unify multiple gateways.
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
 
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from core.llm_router import LLMRouter
-from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 from core.resilience.circuit_breaker import CircuitBreaker
+from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 
 
 @pytest.fixture
@@ -149,8 +150,9 @@ async def test_circuit_breaker_state_sharing():
 @pytest.mark.asyncio
 async def test_gateway_health_endpoint_simulation():
     """Test the health endpoint functionality."""
-    from core.api.routes.llm_gateway import router
     from fastapi.testclient import TestClient
+
+    from core.api.routes.llm_gateway import router
     from main import app  # Assuming main.py contains the FastAPI app
 
     # Add the router to the main app for testing

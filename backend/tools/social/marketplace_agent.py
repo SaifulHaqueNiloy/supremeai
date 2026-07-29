@@ -139,8 +139,8 @@ class MarketplaceAgent:
                 }
 
         # বাংলা মন্তব্য: sandbox=False হলে সরাসরি real install attempt
-        import subprocess  # noqa: PLC0415
         import shlex  # noqa: PLC0415
+        import subprocess  # noqa: PLC0415
 
         try:
             result = subprocess.run(  # noqa: S603

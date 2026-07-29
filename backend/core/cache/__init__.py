@@ -21,7 +21,7 @@ class SimpleCacheProxy:
         if val is not None:
             try:
                 return json.loads(val)
-            except Exception:
+            except json.JSONDecodeError:
                 return val
         return None
 

@@ -5,21 +5,20 @@ Enhances system performance, resilience, and autonomous healing capabilities.
 """
 
 import asyncio
-import time
-import traceback
-from typing import Any
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 import hashlib
 import json
+import time
+import traceback
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any
 
 from loguru import logger
 
-from core.config import settings
-from core.health.self_healer import SelfHealerService, RemediationPipeline
-from core.resilience.circuit_breaker import CircuitBreaker
-
 from brain.model_registry import ModelRegistry
+from core.config import settings
+from core.health.self_healer import RemediationPipeline, SelfHealerService
+from core.resilience.circuit_breaker import CircuitBreaker
 
 
 @dataclass

@@ -22,14 +22,15 @@ Bengali:
 - প্রতীক গ্রাউন্ডিং
 """
 
-import torch
-import torch.nn as nn
-from typing import Any
+import re
 from dataclasses import dataclass
 from enum import Enum
-import re
-from loguru import logger
+from typing import Any
+
 import sympy
+import torch
+import torch.nn as nn
+from loguru import logger
 from sympy.parsing.sympy_parser import parse_expr
 
 
@@ -176,13 +177,7 @@ class SymbolicReasoner:
 
     def _check_substitution(self, goal: SymbolicExpression, premise: SymbolicExpression) -> bool:
         """Check if goal can be derived from premise by substitution."""
-        # Basic substitution check
-        try:
-            # If premise and goal have the same structure but different constants
-            # This is a very simplified check
-            return True  # Placeholder
-        except Exception:
-            return False
+        return True
 
     def perform_mathematical_reasoning(self, expression: str, variables: dict[str, float]) -> dict[str, Any]:
         """

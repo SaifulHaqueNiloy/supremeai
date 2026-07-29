@@ -31,9 +31,9 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any
-from collections.abc import AsyncGenerator
 
 from loguru import logger
 

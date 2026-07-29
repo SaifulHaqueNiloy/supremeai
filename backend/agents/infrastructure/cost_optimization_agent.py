@@ -6,14 +6,13 @@ Manages advanced cost optimization and budget adherence across the system.
 import asyncio
 import json
 import logging
-from typing import Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any
 
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
-
 
 logger = logging.getLogger(__name__)
 
@@ -347,9 +346,9 @@ class CostOptimizationAgent:
                 "total_forecast": round(total_forecast, 2),
                 "daily_forecast": forecasted_costs,
                 "confidence": 0.7,  # Basic confidence for simple model
-                "trend": "increasing"
-                if avg_daily_cost > daily_totals[-7 if len(daily_totals) >= 7 else 0]
-                else "stable",
+                "trend": (
+                    "increasing" if avg_daily_cost > daily_totals[-7 if len(daily_totals) >= 7 else 0] else "stable"
+                ),
             }
 
             # Store forecast in Redis
@@ -729,9 +728,11 @@ class CostOptimizationAgent:
                 "optimization_opportunities": {
                     "count": len(opportunities),
                     "top_3_potential_savings": round(
-                        sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)
-                        if opportunities
-                        else 0,
+                        (
+                            sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)
+                            if opportunities
+                            else 0
+                        ),
                         2,
                     ),
                     "categories_covered": list(set(opp.category for opp in opportunities)),

@@ -30,7 +30,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
@@ -41,7 +41,7 @@ logger = logging.getLogger("supremeai.churn_prophet")
 
 
 # ── Enums & Constants ───────────────────────────────────────────────────────
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     """Churn risk severity levels."""
 
     LOW = "low"
@@ -50,7 +50,7 @@ class RiskLevel(str, Enum):
     CRITICAL = "critical"
 
 
-class UserSegment(str, Enum):
+class UserSegment(StrEnum):
     """Automatic user segments."""
 
     POWER_USER = "power_user"

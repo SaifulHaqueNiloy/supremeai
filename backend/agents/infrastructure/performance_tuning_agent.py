@@ -6,16 +6,16 @@ Continuously optimizes system performance based on metrics and usage patterns.
 import asyncio
 import json
 import logging
-from typing import Any
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any
+
 import psutil
-from collections import deque
 
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
-
 
 logger = logging.getLogger(__name__)
 

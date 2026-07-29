@@ -8,7 +8,6 @@ from pathlib import Path
 
 from .skill_manifest import SkillManifest
 
-
 VERIFIED_MCP_SOURCES = [
     "https://github.com/modelcontextprotocol/servers",
     "https://github.com/paykaribazaronline/supreme-verified-skills",

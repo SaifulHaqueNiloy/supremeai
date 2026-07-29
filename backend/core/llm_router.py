@@ -21,7 +21,7 @@ import json
 import time
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Protocol
 
 import httpx
@@ -31,14 +31,14 @@ from .cache import get_redis_client
 from .config import settings
 from .exceptions import LLMProviderError, QuotaExceededError
 from .llm.free_tier_tracker import get_tracker
+from .llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
 from .logging import get_logger
 from .metrics import counter, timed
 from .resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from .resilience.circuit_breaker_manager import get_shared_circuit_breaker
-from .llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
 
 
-class Provider(str, Enum):
+class Provider(StrEnum):
     """Supported AI model providers."""
 
     MOONSHOT = "moonshot"
@@ -86,7 +86,7 @@ def _get_rules_engine() -> UniversalRulesEngine | None:
     return _rules_engine
 
 
-class TaskType(str, Enum):
+class TaskType(StrEnum):
     CHAT = "chat"
     CODE = "code"
     BENGALI = "bengali"
@@ -1183,6 +1183,7 @@ async def bengali_chat(prompt: str, **kwargs: Any) -> str:
 
 # ── 5-Model Swarm Router & Round-Robin Key Rotator ───────────────────────────
 import itertools
+
 import requests
 
 

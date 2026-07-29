@@ -5,21 +5,20 @@ Monitors GitHub trending repos, AI world updates, and system capabilities to kee
 import asyncio
 import json
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-from dataclasses import dataclass
 
 import aiohttp
 
-from core.config import settings
-from core.messaging.event_bus import EventBus
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.config import settings
 
 # Remove the problematic import and use alternative
 # from core.security.auth_middleware import get_current_active_user
 from core.health_check import health_checker
-
+from core.llm.token_deductor import TokenDeductor
+from core.messaging.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
 

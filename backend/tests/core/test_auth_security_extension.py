@@ -112,10 +112,9 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [],
         }
-        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
-            await middleware(scope, MagicMock(), send)
-            mock_app.assert_not_called()
-            assert send.await_count >= 1
+        await middleware(scope, MagicMock(), send)
+        mock_app.assert_not_called()
+        assert send.await_count >= 1
 
     @pytest.mark.anyio
     async def test_middleware_rejects_invalid_token(self):
@@ -128,9 +127,8 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [(b"authorization", b"Bearer invalid-jwt-token")],
         }
-        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
-            await middleware(scope, MagicMock(), send)
-            mock_app.assert_not_called()
+        await middleware(scope, MagicMock(), send)
+        mock_app.assert_not_called()
 
     @pytest.mark.anyio
     async def test_middleware_api_token_mismatch(self):
@@ -143,9 +141,8 @@ class TestAuthMiddlewareAdvanced:
             "path": "/api/protected",
             "headers": [(b"authorization", b"Bearer wrong-token")],
         }
-        with patch("core.security.auth_middleware.is_test_environment", return_value=False):
-            await middleware(scope, MagicMock(), send)
-            mock_app.assert_not_called()
+        await middleware(scope, MagicMock(), send)
+        mock_app.assert_not_called()
 
 
 class TestVerifyAdminSessionAdvanced:
