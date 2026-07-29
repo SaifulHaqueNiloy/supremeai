@@ -122,16 +122,16 @@ class TestLocalSearchRAGInit:
 class TestLocalSearchRAGSearch:
     """Tests for LocalSearchRAG.search method."""
 
-    @pytest.mark.asyncio
-    async def test_search_with_browser(self):
+    def test_search_with_browser(self):
         """search should use BrowserAgent for web search."""
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
         mock_browser = MagicMock()
-        mock_browser_instance = AsyncMock()
-        mock_browser_instance.search.return_value = [
-            {"title": "Result 1", "url": "https://example.com/1", "snippet": "Snippet 1"}
-        ]
+        mock_browser_instance = MagicMock()
+        mock_browser_instance.fetch_page.return_value = {
+            "success": True,
+            "content": "Result 1\nhttps://example.com/1\nSnippet 1\nResult 2\nhttps://example.com/2\nSnippet 2",
+        }
         mock_browser.return_value = mock_browser_instance
 
         with (
@@ -140,11 +140,11 @@ class TestLocalSearchRAGSearch:
             patch.object(Path, "exists", return_value=False),
         ):
             rag = LocalSearchRAG()
-            result = await rag.search("test query")
-            assert len(result) > 0
+            result = rag.search("test query")
+            assert result["status"] == "ok"
+            assert len(result.get("results", [])) > 0
 
-    @pytest.mark.asyncio
-    async def test_search_with_local_index(self):
+    def test_search_with_local_index(self):
         """search should return results from local index."""
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
@@ -155,8 +155,9 @@ class TestLocalSearchRAGSearch:
         ):
             rag = LocalSearchRAG()
             rag._index = {"test": ["cached_result"]}
-            result = await rag.search("test")
-            assert len(result) >= 0
+            result = rag.search("test")
+            assert isinstance(result, dict)
+            assert result.get("status") == "ok"
 
 
 class TestLocalSearchRAGStore:
@@ -174,7 +175,7 @@ class TestLocalSearchRAGStore:
             patch.object(Path, "write_text"),
         ):
             rag = LocalSearchRAG()
-            await rag.store("test_key", "test_content")
+            await rag._store_search("test_key", {"test_key": ["test_key", "test_content"]})
             assert "test_key" in rag._index
             assert "test_content" in rag._index["test_key"]
 
@@ -193,5 +194,6 @@ class TestLocalSearchRAGSummarize:
             patch.object(Path, "exists", return_value=False),
         ):
             rag = LocalSearchRAG()
-            result = await rag.summarize("https://example.com", "Full content here")
-            assert result is not None
+            result = rag.summarize("https://example.com", "Full content here")
+            assert isinstance(result, dict)
+            assert result.get("status") == "ok"
