@@ -249,7 +249,38 @@ class SSOIntegrator:
   <SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="{acs_url}" index="1"/>
   </SPSSODescriptor>
-</EntityDescriptor>"""
+        </EntityDescriptor>"""
+
+    def validate_token(self, token: str, secret: str) -> dict[str, Any]:
+        """Backward-compatible JWT validation."""
+        if not _JOSE_AVAILABLE or jose_jwt is None:
+            return {"error": "jose not available"}
+        try:
+            payload = jose_jwt.decode(token, secret, algorithms=["HS256"])
+            return payload
+        except Exception as exc:  # noqa: BLE001
+            return {"error": str(exc)}
+
+    def parse_saml_response(self, saml_xml: str) -> dict[str, Any]:
+        """Backward-compatible SAML response parsing."""
+        try:
+            root = ET.fromstring(saml_xml)
+            user_id = root.findtext(
+                ".//{urn:oasis:names:tc:SAML:2.0:assertion}Subject/{urn:oasis:names:tc:SAML:2.0:assertion}NameID",
+                default="",
+            )
+            email_el = root.find(
+                ".//{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement//{urn:oasis:names:tc:SAML:2.0:assertion}Attribute[@Name='email']/{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue"
+            )
+            email = email_el.text if email_el is not None else ""
+            return {
+                "status": "success",
+                "user_id": user_id,
+                "email": email,
+                "method": "xml_fallback",
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {"status": "error", "message": str(exc)}
 
     # ── OIDC helpers ───────────────────────────────────────────────
 

@@ -75,6 +75,7 @@ def _run(code: str) -> subprocess.CompletedProcess:
         sys.modules['database.supabase_client'] = MagicMock()
 
         # Mock other missing external modules
+        import importlib.machinery
         for _mod in ['asyncpg', 'asyncpg.connection', 'asyncpg.pool', 'litellm',
                       'tenacity', 'posthog', 'pandas', 'neo4j', 'mcp', 'mcp.server',
                       'mcp.server.stdio', 'mcp.server.fastmcp', 'grpc',
@@ -94,7 +95,11 @@ def _run(code: str) -> subprocess.CompletedProcess:
                       'google.oauth2.service_account', 'firebase_admin',
                       'tools.code.image_to_code_react', 'tools.cache_cleanup',
                       'tools.code.code_smell_detector']:
-            sys.modules[_mod] = MagicMock()
+            _m = MagicMock()
+            _m.__spec__ = importlib.machinery.ModuleSpec(name=_mod, loader=MagicMock())
+            if _mod in ('chromadb',):
+                _m.__path__ = []
+            sys.modules[_mod] = _m
         """
     )
     full_code = gcp_mock_code + "\n" + code
@@ -139,6 +144,7 @@ def test_docs_visible_in_local():
         assert client.get("/redoc").status_code == 200
         openapi_endpoint = app_mod.app.openapi_url or "/openapi.json"
         assert client.get(openapi_endpoint).status_code == 200
+        assert client.get("/api/v1/openapi.json").status_code == 200
         """
     )
     result = _run(code)
