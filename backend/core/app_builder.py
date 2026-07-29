@@ -206,7 +206,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 probe_key = "__health_check_probe__"
                 redis_queue.set(probe_key, "1", ex=30)
                 redis_queue.get(probe_key)
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Redis health check failed: {e}")
                 redis_ok = False
         # not configured -> treated as not-required, doesn't degrade health
 

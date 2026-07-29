@@ -15,9 +15,10 @@ import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+
 from loguru import logger
 
-from .topology import get_topology_mapper, SystemTopologyMapper
+from .topology import SystemTopologyMapper, get_topology_mapper
 
 
 class SimulationType(Enum):

@@ -15,7 +15,8 @@ Dependencies:
 - `loguru`: For structured and flexible logging of agent activities and errors.
 - `sqlalchemy`: For asynchronous ORM interactions with the database, specifically for `ApiEndpoint`, `SystemDependency`, and `SystemIncident` models.
 - `database.session`: Internal module providing the asynchronous database session factory (`AsyncSessionLocal`).
-- `models.sentinel`: Internal module defining the ORM models (`ApiEndpoint`, `SystemDependency`, `SystemIncident`) used by the agent for data persistence."""  # noqa: E501
+- `models.sentinel`: Internal module defining the ORM models (`ApiEndpoint`, `SystemDependency`, `SystemIncident`) used by the agent for data persistence.
+"""  # noqa: E501
 
 import asyncio
 import shutil
@@ -63,7 +64,7 @@ class SentinelAgent:
                     if parsed.port != 8080:
                         return False
             return True
-        except Exception:
+        except (ValueError, TypeError):
             return False
 
     async def monitor_endpoints(self):

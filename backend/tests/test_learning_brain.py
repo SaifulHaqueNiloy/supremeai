@@ -1,6 +1,7 @@
-import pytest
 import os
 import shutil
+
+import pytest
 
 from brain.smart_router import get_self_sovereign_router
 from brain.supreme_learning_engine import SupremeLearningEngine

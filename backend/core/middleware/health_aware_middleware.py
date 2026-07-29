@@ -120,7 +120,8 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
             if redis_manager and redis_manager.client:
                 try:
                     await redis_manager.client.ping()
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Redis health check failed: {e}")
                     redis_connected = False
             else:
                 redis_connected = False

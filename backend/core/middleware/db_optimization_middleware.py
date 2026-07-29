@@ -1,17 +1,22 @@
 """Database Optimization Middleware integrating all Phase 3 improvements."""
 
+import asyncio
 import time
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.query_optimizer import query_optimizer, setup_query_profiling, DatabaseOptimizationMiddleware
+from core.database.query_optimizer import (
+    DatabaseOptimizationMiddleware,
+    query_optimizer,
+    setup_query_profiling,
+)
+from core.logging_config import logger
 from core.memory.memory_manager import memory_manager, track_memory_usage
 from core.security.secret_scanner import secret_scanner
 from core.security.sql_injection_guard import sql_injection_middleware
-from core.logging_config import logger
 
 
 class ComprehensiveDBOptimizationMiddleware:
@@ -129,8 +134,8 @@ async def initialize_db_optimizations(engine):
 def _register_common_eager_load_strategies():
     """Register common eager loading strategies to prevent N+1 queries."""
     from models.agent_session import AgentSession
-    from models.patch_telemetry import PatchTelemetry
     from models.execution_policy import ExecutionPolicy
+    from models.patch_telemetry import PatchTelemetry
 
     # Register relationships that are commonly accessed together
     query_optimizer.register_eager_load_strategy(AgentSession, ["handoff_events"], strategy="selectinload")

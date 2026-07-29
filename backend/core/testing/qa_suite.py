@@ -26,20 +26,21 @@ Bengali:
 """
 
 import asyncio
-from typing import Any
-from dataclasses import dataclass
-from enum import Enum
-import time
 import random
+import time
+from dataclasses import dataclass
 from datetime import datetime
-from loguru import logger
+from enum import Enum
+from typing import Any
+
 import aiohttp
+from loguru import logger
 
 try:
     from selenium import webdriver
     from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.support.ui import WebDriverWait
 except ImportError:
     webdriver = None
     By = None
@@ -48,7 +49,7 @@ except ImportError:
 
 try:
     import locust
-    from locust import HttpUser, task, constant_pacing
+    from locust import HttpUser, constant_pacing, task
 except (ImportError, RecursionError, Exception):
     locust = None
     HttpUser = object
@@ -538,9 +539,11 @@ class PerformanceTester:
             "successful_requests": len(successful_requests),
             "failed_requests": len(failed_requests),
             "success_rate": len(successful_requests) / len(results) if results else 0,
-            "avg_response_time": sum(r["response_time"] for r in successful_requests) / len(successful_requests)
-            if successful_requests
-            else 0,
+            "avg_response_time": (
+                sum(r["response_time"] for r in successful_requests) / len(successful_requests)
+                if successful_requests
+                else 0
+            ),
             "requests_per_second": len(results) / duration if duration > 0 else 0,
         }
 
