@@ -6,14 +6,12 @@ Continuously optimizes system performance based on metrics and usage patterns.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import psutil
-import time
 from collections import deque
 
-from core.config import settings
 from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
 from core.monitoring.metrics_collector import MetricsCollector
@@ -58,8 +56,8 @@ class PerformanceTuningResult:
 
     optimization_id: str
     timestamp: datetime
-    applied_optimizations: List[str]
-    performance_improvement: Dict[str, float]  # Before/after metrics
+    applied_optimizations: list[str]
+    performance_improvement: dict[str, float]  # Before/after metrics
     status: str  # success, partial, failed
     notes: str
 
@@ -269,7 +267,7 @@ class PerformanceTuningAgent:
                 queue_depth=2,
             )
 
-    async def analyze_performance_trends(self) -> List[OptimizationRecommendation]:
+    async def analyze_performance_trends(self) -> list[OptimizationRecommendation]:
         """Analyze performance metrics to identify optimization opportunities."""
         try:
             recommendations = []
@@ -373,7 +371,7 @@ class PerformanceTuningAgent:
             return []
 
     async def apply_optimization(
-        self, optimization_name: str, parameters: Dict[str, Any] = None
+        self, optimization_name: str, parameters: dict[str, Any] = None
     ) -> PerformanceTuningResult:
         """
         Apply a specific performance optimization.
@@ -433,7 +431,7 @@ class PerformanceTuningAgent:
                 notes=f"Error applying optimization: {str(e)}",
             )
 
-    async def _execute_optimization(self, optimization_name: str, parameters: Dict[str, Any]) -> bool:
+    async def _execute_optimization(self, optimization_name: str, parameters: dict[str, Any]) -> bool:
         """Execute a specific optimization technique."""
         try:
             if optimization_name not in self.available_optimizations:
@@ -462,7 +460,7 @@ class PerformanceTuningAgent:
 
     def _calculate_performance_improvement(
         self, before: PerformanceMetric, after: PerformanceMetric
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate performance improvement between two states."""
         try:
             improvement = {
@@ -502,7 +500,7 @@ class PerformanceTuningAgent:
             logger.error(f"Error calculating performance improvement: {e}")
             return {"overall_score": 0.0}
 
-    async def get_optimization_recommendations(self, limit: int = 10) -> List[OptimizationRecommendation]:
+    async def get_optimization_recommendations(self, limit: int = 10) -> list[OptimizationRecommendation]:
         """Get recent optimization recommendations."""
         try:
             recommendations_data = await redis_manager.get(self.tuning_recommendations_key)
@@ -529,7 +527,7 @@ class PerformanceTuningAgent:
             logger.error(f"Error retrieving optimization recommendations: {e}")
             return []
 
-    async def _store_recommendations(self, recommendations: List[OptimizationRecommendation]):
+    async def _store_recommendations(self, recommendations: list[OptimizationRecommendation]):
         """Store optimization recommendations in Redis."""
         try:
             recommendations_data = []
@@ -603,7 +601,7 @@ class PerformanceTuningAgent:
         except Exception as e:
             logger.error(f"Error storing optimization result: {e}")
 
-    async def get_performance_summary(self, hours: int = 24) -> Dict[str, Any]:
+    async def get_performance_summary(self, hours: int = 24) -> dict[str, Any]:
         """
         Get a summary of performance metrics over the specified time period.
 
@@ -681,7 +679,7 @@ class PerformanceTuningAgent:
         while True:
             try:
                 # Collect current metrics
-                current_metrics = await self.collect_performance_metrics()
+                await self.collect_performance_metrics()
 
                 # Analyze for optimization opportunities
                 recommendations = await self.analyze_performance_trends()

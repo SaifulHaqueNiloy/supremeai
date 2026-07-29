@@ -7,18 +7,61 @@ import types
 
 
 class LazyModule(types.ModuleType):
+    """লেজি মডিউল প্রক্সি — শুধুমাত্র প্রথম অ্যাট্রিবিউট অ্যাক্সেসে আসল মডিউল লোড করে।
+
+    বাংলা মন্তব্য: `inspect.getmodule()` বা `hasattr(module, '__file__')`-এর মতো
+    ইন্টার্নাল পাইথন অপারেশন যাতে অপ্রয়োজনীয় লেজি লোডিং ট্রিগার না করে,
+    সেজন্য `__file__`, `__name__`, `__package__`, `__path__`, `__loader__`,
+    `__spec__`, `__cached__` — এই অ্যাট্রিবিউটগুলোর জন্য সরাসরি ফলব্যাক মান
+    রিটার্ন করা হয়, প্রকৃত ইম্পোর্ট না করেই।
+    """
+
+    # বাংলা মন্তব্য: যে অ্যাট্রিবিউটগুলো লেজি লোডিং ট্রিগার করবে না
+    _NO_LOAD_ATTRS = frozenset(
+        {
+            "__file__",
+            "__name__",
+            "__package__",
+            "__path__",
+            "__loader__",
+            "__spec__",
+            "__cached__",
+        }
+    )
+
     def __init__(self, name: str, real_path: str):
         super().__init__(name)
         self._real_path = real_path
         self._module = None
 
     def _load(self):
+        """প্রথম কলেই আসল মডিউল ইম্পোর্ট করে এবং নিজের __dict__-এ মিশিয়ে দেয়।"""
         if self._module is None:
             self._module = importlib.import_module(self._real_path)
             self.__dict__.update(self._module.__dict__)
         return self._module
 
     def __getattr__(self, item):
+        # বাংলা মন্তব্য: inspect.getmodule()-এর মতো ইন্টার্নাল অপারেশন
+        # লেজি লোডিং ট্রিগার করা থেকে বিরত রাখা
+        if item in self._NO_LOAD_ATTRS:
+            # __file__ চেক করলে None রিটার্ন করলে inspect.getmodule() সেটিকে
+            # "লোড না হওয়া মডিউল" হিসেবে বিবেচনা করবে এবং ModuleNotFoundError
+            # এড়িয়ে যাবে।
+            if item == "__file__":
+                return None
+            if item == "__name__":
+                return self.__name__
+            if item == "__package__":
+                return None
+            if item == "__path__":
+                return []
+            if item == "__loader__":
+                return None
+            if item == "__spec__":
+                return None
+            if item == "__cached__":
+                return None
         module = self._load()
         return getattr(module, item)
 
@@ -30,6 +73,14 @@ class LazyModule(types.ModuleType):
 # isolated tests বা venv-এ sys.modules['tools'] KeyError এড়াতে সেলফ-ম্যাপিং
 if "tools" not in sys.modules:
     sys.modules["tools"] = sys.modules[__name__]
+
+# Ensure the directory containing this package (i.e., the parent of this file) is on sys.path
+import os
+
+_pkg_dir = os.path.dirname(__file__)
+_parent_dir = os.path.dirname(_pkg_dir)
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
 
 _SUBMODULE_MAP = {
     "mcp_cloud_deploy": "tools.mcp.mcp_cloud_deploy",

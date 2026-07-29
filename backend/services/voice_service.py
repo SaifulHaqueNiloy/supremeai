@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class VoiceService:
     def __init__(self, tts_provider: str = "auto"):
         self.tts_provider = tts_provider
 
-    async def speech_to_text(self, audio_bytes: bytes, filename: str = "input.wav") -> Dict[str, Any]:
+    async def speech_to_text(self, audio_bytes: bytes, filename: str = "input.wav") -> dict[str, Any]:
         """
         Transcribe raw audio bytes to text string.
         """
@@ -35,7 +35,7 @@ class VoiceService:
             logger.error(f"STT Transcription failed: {e}")
             return {"status": "error", "transcript": "", "error": str(e)}
 
-    async def text_to_speech(self, text: str, lang: str = "bn") -> Dict[str, Any]:
+    async def text_to_speech(self, text: str, lang: str = "bn") -> dict[str, Any]:
         """
         Synthesize text into audio bytes (TTS response).
         """

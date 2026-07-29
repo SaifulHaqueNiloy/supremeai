@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +24,16 @@ class BehavioralGuard:
     }
 
     def __init__(self):
-        self._action_timestamps: Dict[str, list[float]] = defaultdict(list)
-        self._prompt_history: Dict[str, list[str]] = defaultdict(list)
-        self._error_counts: Dict[str, list[float]] = defaultdict(list)
+        self._action_timestamps: dict[str, list[float]] = defaultdict(list)
+        self._prompt_history: dict[str, list[str]] = defaultdict(list)
+        self._error_counts: dict[str, list[float]] = defaultdict(list)
         self._blocked_agents: set[str] = set()
 
     def is_agent_blocked(self, agent_id: str) -> bool:
         """Check if an agent is currently blocked due to anomalous behavior."""
         return agent_id in self._blocked_agents
 
-    def record_action(self, agent_id: str, action_type: str, prompt_or_command: str) -> Dict[str, Any]:
+    def record_action(self, agent_id: str, action_type: str, prompt_or_command: str) -> dict[str, Any]:
         """
         Record and analyze an agent action for behavioral anomalies.
         Returns evaluation dict with success status and potential anomaly alerts.
