@@ -103,13 +103,16 @@ try:
     from qdrant_client.http.exceptions import UnexpectedResponse
 
     HAS_QDRANT = True
-except ImportError:
+except (ImportError, TypeError, Exception):
+    QdrantClient = None  # type: ignore
+    qdrant_models = None  # type: ignore
+    UnexpectedResponse = Exception  # type: ignore
     HAS_QDRANT = False
 
 # Qdrant default collection configuration
 QDRANT_COLLECTION_NAME = "error_patterns"
 QDRANT_VECTOR_SIZE = 384
-QDRANT_DISTANCE = qdrant_models.Distance.COSINE if HAS_QDRANT else None
+QDRANT_DISTANCE = qdrant_models.Distance.COSINE if (HAS_QDRANT and qdrant_models) else None
 
 
 class ErrorRemediation:
