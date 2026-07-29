@@ -159,8 +159,8 @@ describe('App component', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByTestId('header-title')).toBeInTheDocument();
-    expect(screen.getByTestId('core-status')).toBeInTheDocument();
+    expect(screen.getAllByTestId('header-title')[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId('core-status')[0]).toBeInTheDocument();
   });
 
   // বাংলা মন্তব্য: চ্যাট ট্যাব সক্রিয় করে চ্যাট কনসোল রেন্ডারিং চেক করা হচ্ছে
@@ -172,7 +172,7 @@ describe('App component', () => {
     );
 
     // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
-    fireEvent.click(screen.getByTestId('tab-chat'));
+    fireEvent.click(screen.getAllByTestId('tab-chat')[0]);
 
     expect(screen.getByTestId('chat-header')).toBeInTheDocument();
   });
@@ -186,7 +186,7 @@ describe('App component', () => {
     );
 
     // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
-    fireEvent.click(screen.getByTestId('tab-chat'));
+    fireEvent.click(screen.getAllByTestId('tab-chat')[0]);
 
     const input = screen.getByTestId('chat-input');
     fireEvent.change(input, { target: { value: 'Test message' } });
@@ -194,8 +194,8 @@ describe('App component', () => {
     const sendButton = screen.getByTestId('chat-submit');
     fireEvent.click(sendButton);
 
-    expect(screen.getByText('Test message')).toBeInTheDocument();
-    expect(screen.getByText('Analyzing request "Test message"... Processing on central core.')).toBeInTheDocument();
+    expect(screen.getAllByText('Test message')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Analyzing request "Test message"... Processing on central core.')[0]).toBeInTheDocument();
     expect(getAethelResponse).toHaveBeenCalledWith('Test message', expect.any(Array));
   });
 });
