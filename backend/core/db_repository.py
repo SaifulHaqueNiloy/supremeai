@@ -43,13 +43,12 @@ class SmartDataRepository:
             # Firebase Client check and fetch
             if hasattr(self.firebase, "collection"):
                 doc_ref = self.firebase.collection(collection).document(doc_id)
-                # Check if it has async get or normal get
                 import inspect
-
-                if inspect.iscoroutinefunction(doc_ref.get):
+                try:
+                    res = doc_ref.get()
+                    doc = await res if inspect.isawaitable(res) else res
+                except TypeError:
                     doc = await doc_ref.get()
-                else:
-                    doc = doc_ref.get()
 
                 if not doc.exists:
                     return None
