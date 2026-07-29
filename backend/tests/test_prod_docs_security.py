@@ -18,8 +18,7 @@ def _run(code: str) -> subprocess.CompletedProcess:
     env.pop("SUPABASE_KEY", None)
     env.pop("SUPABASE_SECRET_KEY", None)
 
-    gcp_mock_code = textwrap.dedent(
-        """
+    gcp_mock_code = textwrap.dedent("""
         import sys
         from unittest.mock import MagicMock
 
@@ -95,8 +94,7 @@ def _run(code: str) -> subprocess.CompletedProcess:
                       'tools.code.image_to_code_react', 'tools.cache_cleanup',
                       'tools.code.code_smell_detector']:
             sys.modules[_mod] = MagicMock()
-        """
-    )
+        """)
     full_code = gcp_mock_code + "\n" + code
 
     return subprocess.run(
@@ -110,8 +108,7 @@ def _run(code: str) -> subprocess.CompletedProcess:
 
 
 def test_docs_visible_in_local():
-    code = textwrap.dedent(
-        """
+    code = textwrap.dedent("""
         import os
         os.environ["ENV"] = "local"
         os.environ["DEBUG"] = "true"
@@ -139,15 +136,13 @@ def test_docs_visible_in_local():
         assert client.get("/redoc").status_code == 200
         openapi_endpoint = app_mod.app.openapi_url or "/openapi.json"
         assert client.get(openapi_endpoint).status_code == 200
-        """
-    )
+        """)
     result = _run(code)
     assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_docs_disabled_in_production():
-    code = textwrap.dedent(
-        """
+    code = textwrap.dedent("""
         import os
         os.environ["ENV"] = "production"
         os.environ["DEBUG"] = "false"
@@ -188,7 +183,6 @@ def test_docs_disabled_in_production():
         assert client.get("/docs").status_code == 404
         assert client.get("/redoc").status_code == 404
         assert client.get("/openapi.json").status_code == 404
-        """
-    )
+        """)
     result = _run(code)
     assert result.returncode == 0, result.stdout + result.stderr

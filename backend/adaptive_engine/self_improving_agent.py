@@ -5,14 +5,11 @@ Agent that continuously improves system performance based on feedback
 and experience learning.
 """
 
-import asyncio
 import json
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
-import random
-from core.adaptive_engine.learning_loop import LearningInsight, ExperienceDatabase
-from core.config import settings
+
+from core.adaptive_engine.learning_loop import ExperienceDatabase
 from core.cache import get_redis_client
 from core.logging import get_logger
 
@@ -35,7 +32,7 @@ class SelfImprovingAgent:
         self.experience_db = experience_db
         self.redis_client = get_redis_client()
         self.feedback_analyzer = FeedbackAnalyzer()
-        self.performance_history: List[ImprovementMetric] = []
+        self.performance_history: list[ImprovementMetric] = []
         self.improvement_strategies = []
         self.logger = get_logger(__name__)
 
@@ -76,7 +73,7 @@ class SelfImprovingAgent:
             self.logger.error(f"Error processing feedback: {e}")
             return False
 
-    async def apply_improvement(self, feedback_analysis: Dict, experience: Dict):
+    async def apply_improvement(self, feedback_analysis: dict, experience: dict):
         """Apply system improvements based on feedback analysis."""
         if feedback_analysis.get("sentiment") == "negative" or (
             experience.get("rating") and experience["rating"] < 3.0
@@ -94,29 +91,29 @@ class SelfImprovingAgent:
         # Apply proactive improvements based on patterns
         await self.apply_proactive_improvements()
 
-    def identify_improvement_areas(self, experience: Dict) -> List[str]:
+    def identify_improvement_areas(self, experience: dict) -> list[str]:
         """Identify specific areas that need improvement."""
         areas = []
 
         # Check for common issues
         if "error" in (experience.get("response") or "").lower():
             areas.append("error_handling")
-        if len((experience.get("response") or "")) < 50 and "error" not in (experience.get("response") or "").lower():
+        if len(experience.get("response") or "") < 50 and "error" not in (experience.get("response") or "").lower():
             areas.append("response_completeness")
         if (experience.get("feedback") or "").lower().find("slow") != -1:
             areas.append("performance")
         if (experience.get("feedback") or "").lower().find("irrelevant") != -1:
             areas.append("relevance")
         if (experience.get("feedback") or "").lower().find("understand") == -1 and len(
-            (experience.get("request") or "")
+            experience.get("request") or ""
         ) > 50:
             areas.append("comprehension")
 
         return areas if areas else ["general_improvement"]
 
     async def generate_improvement_suggestions(
-        self, experience: Dict, areas: List[str], feedback_analysis: Dict
-    ) -> List[Dict]:
+        self, experience: dict, areas: list[str], feedback_analysis: dict
+    ) -> list[dict]:
         """Generate improvement suggestions based on experience and identified areas."""
         suggestions = []
 
@@ -172,7 +169,7 @@ class SelfImprovingAgent:
 
         return suggestions
 
-    async def implement_suggestion(self, suggestion: Dict):
+    async def implement_suggestion(self, suggestion: dict):
         """Implement a specific improvement suggestion."""
         suggestion_type = suggestion.get("type")
         implementation = suggestion.get("implementation", {})
@@ -186,7 +183,7 @@ class SelfImprovingAgent:
         elif suggestion_type == "context_management":
             await self.improve_context_utilization(implementation)
 
-    async def adjust_model_selection_logic(self, implementation: Dict):
+    async def adjust_model_selection_logic(self, implementation: dict):
         """Adjust model selection based on improvement needs."""
         # Store adjustment in Redis for persistence
         key = "model_selection_adjustments"
@@ -203,7 +200,7 @@ class SelfImprovingAgent:
 
         self.redis_client.setex(key, 86400, json.dumps(adjustments))
 
-    async def optimize_prompts(self, implementation: Dict):
+    async def optimize_prompts(self, implementation: dict):
         """Optimize prompts based on improvement needs."""
         # Store prompt optimizations in Redis
         key = "prompt_optimizations"
@@ -220,7 +217,7 @@ class SelfImprovingAgent:
 
         self.redis_client.setex(key, 86400, json.dumps(optimizations))
 
-    async def adjust_caching_strategy(self, implementation: Dict):
+    async def adjust_caching_strategy(self, implementation: dict):
         """Adjust caching strategy based on improvement needs."""
         # Store caching adjustments in Redis
         key = "caching_adjustments"
@@ -236,7 +233,7 @@ class SelfImprovingAgent:
 
         self.redis_client.setex(key, 86400, json.dumps(adjustments))
 
-    async def improve_context_utilization(self, implementation: Dict):
+    async def improve_context_utilization(self, implementation: dict):
         """Improve context utilization based on improvement needs."""
         # Store context improvements in Redis
         key = "context_improvements"
@@ -252,7 +249,7 @@ class SelfImprovingAgent:
 
         self.redis_client.setex(key, 86400, json.dumps(improvements))
 
-    async def update_performance_metrics(self, experience: Dict, feedback_analysis: Dict):
+    async def update_performance_metrics(self, experience: dict, feedback_analysis: dict):
         """Update system performance metrics based on experience."""
         # Calculate metrics from experience
         accuracy = feedback_analysis.get("accuracy_score", 0.5)
@@ -292,7 +289,7 @@ class SelfImprovingAgent:
                 # Trigger system-wide improvement process
                 await self.trigger_system_wide_improvement()
 
-    def get_recent_experiences(self, count: int) -> List[Dict]:
+    def get_recent_experiences(self, count: int) -> list[dict]:
         """Get recent experiences from experience database."""
         # This would typically query the experience database
         # For now, return empty list - would be implemented based on the actual experience_db structure
@@ -351,7 +348,7 @@ class FeedbackAnalyzer:
         self.neutral_keywords = ["okay", "fine", "average", "decent", "acceptable"]
         self.logger = get_logger(__name__)
 
-    async def analyze(self, feedback: str, rating: float = None) -> Dict:
+    async def analyze(self, feedback: str, rating: float = None) -> dict:
         """Analyze user feedback for sentiment and improvement opportunities."""
         feedback_lower = feedback.lower() if feedback else ""
 

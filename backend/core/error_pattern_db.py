@@ -76,8 +76,7 @@ class ErrorPatternDB:
     def _init_sqlite(self):
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS errors (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 output TEXT,
@@ -85,10 +84,8 @@ class ErrorPatternDB:
                 correction TEXT,
                 timestamp TEXT
             )
-        """
-        )
-        cursor.execute(
-            """
+        """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS ai_mistakes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 model_name TEXT,
@@ -100,8 +97,7 @@ class ErrorPatternDB:
                 prevention_strategy TEXT,
                 timestamp TEXT
             )
-        """
-        )
+        """)
         conn.commit()
         conn.close()
 

@@ -8,7 +8,6 @@ Uses statistical methods (ARIMA-like, exponential smoothing) without external ML
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import math
 from dataclasses import dataclass

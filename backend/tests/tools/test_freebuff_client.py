@@ -2,7 +2,6 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from backend.tools.freebuff_client import FreebuffClient
 
 

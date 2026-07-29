@@ -1,5 +1,6 @@
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 from tools.social.viral_referral_engine import ViralReferralEngine
 
 
@@ -60,7 +61,6 @@ class TestViralReferralEngine:
     def test_fraud_detection_threshold(self):
         with patch("tools.social.viral_referral_engine.db") as mock_db:
             mock_db.client = None
-            history = [{"referrer_id": "u1", "ip_address": "1.2.3.4"}]
             result = self.engine._is_fraudulent("u1", "new-u", {"ip_address": "1.2.3.4"})
             assert result is False
 

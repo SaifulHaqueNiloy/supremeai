@@ -34,8 +34,7 @@ def init_db():
     """Initializes the SQLite database and table."""
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS git_fixes (
                 id TEXT PRIMARY KEY,
                 commit_hash TEXT,
@@ -44,8 +43,7 @@ def init_db():
                 files_changed TEXT,
                 timestamp INTEGER
             )
-        """
-        )
+        """)
         conn.commit()
 
 
@@ -123,9 +121,7 @@ def extract_knowledge():
                 knowledge_entries,
             )
             conn.commit()
-        logger.info(  # noqa: T201
-            f"✅ Extracted and stored {len(knowledge_entries)} entries into {DB_PATH}"
-        )
+        logger.info(f"✅ Extracted and stored {len(knowledge_entries)} entries into {DB_PATH}")  # noqa: T201
 
 
 if __name__ == "__main__":

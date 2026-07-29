@@ -1,9 +1,14 @@
-import pytest
-import pandas as pd
 from datetime import datetime
 
-from brain.causal.interventions import InterventionTracker, Intervention, InterventionType
+import pandas as pd
+import pytest
+
 from brain.causal.discovery import CausalDiscoveryEngine
+from brain.causal.interventions import (
+    Intervention,
+    InterventionTracker,
+    InterventionType,
+)
 from brain.causal.root_cause import RootCauseAnalyzer
 
 

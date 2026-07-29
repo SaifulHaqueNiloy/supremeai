@@ -20,9 +20,10 @@ Bengali:
 - অন্যের বিশ্বের সম্পর্কে কী বিশ্বাস করে এবং নিজের সম্পর্কে কী বিশ্বাস করে তা যৌক্তিক ভাবে চিন্তা করতে পারে
 """
 
-from typing import Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+
 import numpy as np
 import torch
 import torch.nn as nn

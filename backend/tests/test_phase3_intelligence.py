@@ -7,6 +7,7 @@ Unit tests for Phase 3 Intelligence Features:
 """
 
 import pytest
+
 from adaptive_engine.learning_loop import LearningLoop
 from pipelines.synthetic_data_pipeline import SyntheticDataPipeline
 from services.vision_service import VisionService

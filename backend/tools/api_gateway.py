@@ -1,3 +1,4 @@
+import os
 from typing import Any
 
 import httpx
@@ -6,7 +7,6 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
 
-import os
 from core.config import settings
 from core.rate_limiter import AsyncRateLimiter
 from core.security.auth_middleware import AuthMiddleware

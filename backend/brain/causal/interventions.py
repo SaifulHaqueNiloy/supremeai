@@ -6,8 +6,8 @@ Logs system/agent interventions (deployments, config changes, scaling) to serve 
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 from enum import Enum
+from typing import Any
 
 
 class InterventionType(Enum):

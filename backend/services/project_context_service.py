@@ -17,7 +17,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from loguru import logger
@@ -30,7 +30,7 @@ MAX_FILE_SIZE = 100 * 1024  # 100KB
 MAX_CONTEXT_SIZE = 50000  # Characters
 
 
-class ContextType(str, Enum):
+class ContextType(StrEnum):
     CLASS = "class"
     FUNCTION = "function"
     ROUTE = "route"

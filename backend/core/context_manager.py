@@ -5,16 +5,16 @@ Advanced context management with semantic search, session memory,
 and long-term learning capabilities.
 """
 
-from typing import Dict, List, Optional
+import hashlib
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import json
-import asyncio
-import hashlib
+
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
-from core.config import settings
+
 from core.cache import get_redis_client
+from core.config import settings
 from core.logging import get_logger
 
 
@@ -24,12 +24,12 @@ class ConversationContext:
 
     session_id: str
     user_id: str
-    conversation_history: List[Dict]
-    user_preferences: Dict
-    short_term_memory: Dict
-    long_term_memory: Dict
+    conversation_history: list[dict]
+    user_preferences: dict
+    short_term_memory: dict
+    long_term_memory: dict
     last_accessed: datetime
-    context_embedding: Optional[List[float]] = None
+    context_embedding: list[float] | None = None
     relevance_score: float = 1.0  # How relevant this context is to current query
 
 
@@ -107,7 +107,7 @@ class ContextManager:
             self.logger.error(f"Error storing context: {e}")
             return False
 
-    async def retrieve_context(self, session_id: str, user_id: str = None) -> Optional[ConversationContext]:
+    async def retrieve_context(self, session_id: str, user_id: str = None) -> ConversationContext | None:
         """Retrieve conversation context from Redis or vector database."""
         # First try Redis for quick access
         redis_key = f"context:{session_id}"
@@ -138,7 +138,7 @@ class ContextManager:
 
         return None
 
-    async def search_context_by_similarity(self, query: str, user_id: str = None) -> Optional[ConversationContext]:
+    async def search_context_by_similarity(self, query: str, user_id: str = None) -> ConversationContext | None:
         """Search for similar conversation contexts using semantic similarity."""
         if not self.vector_client:
             return None
@@ -166,11 +166,11 @@ class ContextManager:
                 query_vector=embedding,
                 limit=1,
                 score_threshold=0.7,  # Minimum similarity threshold
-                query_filter=models.Filter(
-                    must=[models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id))]
-                )
-                if user_id
-                else None,
+                query_filter=(
+                    models.Filter(must=[models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id))])
+                    if user_id
+                    else None
+                ),
             )
 
             if search_results:
@@ -185,7 +185,7 @@ class ContextManager:
 
         return None
 
-    def summarize_conversation(self, history: List[Dict]) -> str:
+    def summarize_conversation(self, history: list[dict]) -> str:
         """Create a summary of the conversation for vector storage."""
         summary_parts = []
         for msg in history[-5:]:  # Last 5 messages for brevity

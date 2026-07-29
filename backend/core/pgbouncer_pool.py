@@ -1,9 +1,9 @@
 # FILE_PATH: backend/core/pgbouncer_pool.py
 
 import asyncio
-from contextlib import asynccontextmanager
 import logging
 import os
+from contextlib import asynccontextmanager
 
 import asyncpg
 from asyncpg.connection import Connection  # Corrected import

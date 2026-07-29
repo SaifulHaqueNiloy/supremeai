@@ -6,17 +6,15 @@ Dynamically adjusts resources based on demand to optimize performance and costs.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import time
+from datetime import datetime
+from typing import Any
+
 import psutil  # This may need to be installed separately
 
-from core.config import settings
-from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
+from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +23,8 @@ logger = logging.getLogger(__name__)
 class ScalingRecommendation:
     """Data class to hold scaling recommendations."""
 
-    current_resources: Dict[str, float]
-    recommended_resources: Dict[str, float]
+    current_resources: dict[str, float]
+    recommended_resources: dict[str, float]
     reason: str
     confidence: float
     timestamp: datetime
@@ -310,7 +308,7 @@ class AutoScalingAgent:
             logger.error(f"Error executing scaling action: {e}")
             return False
 
-    def _determine_scaling_direction(self, metrics: ResourceMetrics, policies: Dict) -> int:
+    def _determine_scaling_direction(self, metrics: ResourceMetrics, policies: dict) -> int:
         """
         Determine scaling direction.
         Returns: 1 for scale up, -1 for scale down, 0 for no change.
@@ -336,8 +334,8 @@ class AutoScalingAgent:
             return 0
 
     def _calculate_resource_adjustment(
-        self, current_resources: Dict[str, float], metrics: ResourceMetrics, direction: int, policies: Dict
-    ) -> Dict[str, float]:
+        self, current_resources: dict[str, float], metrics: ResourceMetrics, direction: int, policies: dict
+    ) -> dict[str, float]:
         """Calculate the recommended resource adjustment."""
         recommended = current_resources.copy()
 
@@ -370,7 +368,7 @@ class AutoScalingAgent:
 
         return recommended
 
-    async def _get_current_resource_allocation(self) -> Dict[str, float]:
+    async def _get_current_resource_allocation(self) -> dict[str, float]:
         """Get current resource allocation (simulated)."""
         try:
             # This would typically query the infrastructure provider
@@ -380,7 +378,7 @@ class AutoScalingAgent:
             logger.error(f"Error getting current resource allocation: {e}")
             return {"instances": 1, "cpu_cores": 1.0, "memory_gb": 2.0, "disk_gb": 10.0}
 
-    async def _perform_scaling(self, target_resources: Dict[str, float]) -> bool:
+    async def _perform_scaling(self, target_resources: dict[str, float]) -> bool:
         """Perform the actual scaling operation (simulated)."""
         try:
             # This would typically call cloud provider APIs to adjust resources
@@ -403,7 +401,7 @@ class AutoScalingAgent:
             logger.error(f"Error performing scaling: {e}")
             return False
 
-    def _estimate_cost_impact(self, current: Dict[str, float], recommended: Dict[str, float]) -> float:
+    def _estimate_cost_impact(self, current: dict[str, float], recommended: dict[str, float]) -> float:
         """Estimate the cost impact of scaling action."""
         try:
             # Simplified cost estimation
@@ -440,7 +438,7 @@ class AutoScalingAgent:
         except Exception:
             return 0.7  # Default confidence
 
-    async def _get_last_scaling_time(self) -> Optional[datetime]:
+    async def _get_last_scaling_time(self) -> datetime | None:
         """Get the time of the last scaling action."""
         try:
             last_time_str = await redis_manager.get("autoscaling:last_scale_time")
@@ -485,7 +483,7 @@ class AutoScalingAgent:
         except Exception as e:
             logger.error(f"Error recording scaling action: {e}")
 
-    async def _get_policies(self) -> Dict[str, Any]:
+    async def _get_policies(self) -> dict[str, Any]:
         """Get current auto-scaling policies."""
         try:
             policies_json = await redis_manager.get(self.scaling_policies_key)

@@ -25,9 +25,10 @@ Bengali:
 
 from dataclasses import dataclass
 from enum import Enum
-from loguru import logger
-from bs4 import BeautifulSoup
+
 import requests
+from bs4 import BeautifulSoup
+from loguru import logger
 
 
 class WCAGPrinciple(Enum):

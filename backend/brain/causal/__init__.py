@@ -3,8 +3,12 @@
 Causal Reasoning Engine Package
 """
 
-from brain.causal.interventions import InterventionTracker, Intervention, InterventionType
 from brain.causal.discovery import CausalDiscoveryEngine
+from brain.causal.interventions import (
+    Intervention,
+    InterventionTracker,
+    InterventionType,
+)
 from brain.causal.root_cause import RootCauseAnalyzer
 
 __all__ = [

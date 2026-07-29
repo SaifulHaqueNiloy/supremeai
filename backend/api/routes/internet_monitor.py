@@ -4,18 +4,18 @@ Internet Monitor API Routes
 API endpoints for the Internet Monitor Agent that tracks updates and system capabilities.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, List, Any
 import logging
 
-from api.routes.admin import get_current_admin
 from agents.internet_monitor_agent import (
-    internet_monitor_agent,
-    initialize_internet_monitor,
     get_internet_updates,
-    get_update_summary,
     get_update_history,
+    get_update_summary,
+    initialize_internet_monitor,
+    internet_monitor_agent,
 )
+from fastapi import APIRouter, Depends, HTTPException
+
+from api.routes.admin import get_current_admin
 
 router = APIRouter(prefix="/internet-monitor", tags=["Internet Monitor"])
 logger = logging.getLogger(__name__)

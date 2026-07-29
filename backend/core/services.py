@@ -119,8 +119,11 @@ def __getattr__(name: str) -> Any:
             f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!"
         )
         try:
-            from core.messaging.event_bus import ErrorContext, ErrorEvent  # noqa: PLC0415
-            from core.messaging.event_bus import error_event_bus
+            from core.messaging.event_bus import (  # noqa: PLC0415
+                ErrorContext,
+                ErrorEvent,
+                error_event_bus,
+            )
 
             error_event_bus.emit(
                 ErrorEvent(

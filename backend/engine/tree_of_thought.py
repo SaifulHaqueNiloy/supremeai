@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class ThoughtNode:
     content: str
     score: float
     depth: int
-    parent_id: Optional[str] = None
+    parent_id: str | None = None
 
 
 class TreeOfThoughtReasoner:
@@ -29,7 +29,7 @@ class TreeOfThoughtReasoner:
         self.max_depth = max_depth
         self.num_branches = num_branches
 
-    async def reason(self, problem_statement: str) -> Dict[str, Any]:
+    async def reason(self, problem_statement: str) -> dict[str, Any]:
         """
         Generate multiple reasoning paths and evaluate the best reasoning chain.
         """
@@ -55,7 +55,7 @@ class TreeOfThoughtReasoner:
         logger.info(f"Tree-of-Thought best path selected with score: {best_node.score:.2f}")
         return result
 
-    def _generate_initial_thoughts(self, problem: str) -> List[ThoughtNode]:
+    def _generate_initial_thoughts(self, problem: str) -> list[ThoughtNode]:
         """Generate 3 distinct reasoning perspectives for a problem."""
         return [
             ThoughtNode(
@@ -78,7 +78,7 @@ class TreeOfThoughtReasoner:
             ),
         ]
 
-    def _score_thoughts(self, nodes: List[ThoughtNode]) -> List[ThoughtNode]:
+    def _score_thoughts(self, nodes: list[ThoughtNode]) -> list[ThoughtNode]:
         """Evaluate and rank thought nodes based on clarity, safety, and performance metrics."""
         for node in nodes:
             # Add dynamic evaluation heuristics

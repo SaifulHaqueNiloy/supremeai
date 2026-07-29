@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from memory.episodic_memory import EpisodicMemory
 
@@ -19,12 +19,12 @@ class SyntheticDataPipeline:
     Extracts successful execution patterns from EpisodicMemory and exports fine-tuning JSONL datasets.
     """
 
-    def __init__(self, episodic_memory: Optional[EpisodicMemory] = None):
+    def __init__(self, episodic_memory: EpisodicMemory | None = None):
         self.episodic = episodic_memory or EpisodicMemory()
 
     async def generate_dataset(
         self, output_path: str = "data/synthetic_ft_dataset.jsonl", min_score: float = 0.8
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a synthetic instruction-tuning dataset from successful past agent executions.
         """

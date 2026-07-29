@@ -32,12 +32,10 @@ import ipaddress
 import os
 import socket
 import time
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 from urllib.parse import urlparse
 
 from loguru import logger
-
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 # Cloud metadata IPs that should never be accessible

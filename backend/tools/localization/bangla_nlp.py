@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 
 class BengaliNLP:

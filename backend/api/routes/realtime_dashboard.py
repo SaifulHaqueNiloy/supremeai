@@ -18,8 +18,8 @@ import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from loguru import logger
 
-from core.swarm_pubsub import get_swarm_streamer
 from core.security import verify_token
+from core.swarm_pubsub import get_swarm_streamer
 
 router = APIRouter(prefix="/ws", tags=["Real-time Dashboard"])
 
