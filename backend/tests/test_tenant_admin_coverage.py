@@ -59,7 +59,7 @@ class TestGetDB:
         """_get_db should return db client when available."""
         from api.routes.tenant_admin import _get_db
 
-        with patch("api.routes.tenant_admin.db") as mock_db:
+        with patch("database.supabase_client.db") as mock_db:
             mock_db.client = MagicMock()
             result = _get_db()
             assert result is not None
@@ -68,16 +68,16 @@ class TestGetDB:
         """_get_db should return None when db has no client."""
         from api.routes.tenant_admin import _get_db
 
-        with patch("api.routes.tenant_admin.db") as mock_db:
+        with patch("database.supabase_client.db") as mock_db:
             mock_db.client = None
             result = _get_db()
             assert result is None
 
     def test_get_db_exception(self):
-        """_get_db should return None on exception."""
+        """_get_db should return None when db module import fails."""
         from api.routes.tenant_admin import _get_db
 
-        with patch("api.routes.tenant_admin.db", side_effect=Exception("DB error")):
+        with patch.dict("sys.modules", {"database.supabase_client": None}):
             result = _get_db()
             assert result is None
 
@@ -206,7 +206,7 @@ class TestGetTenantUsage:
         from api.routes.tenant_admin import _get_tenant_usage
 
         with (
-            patch("api.routes.tenant_admin.app_mod") as mock_app,
+            patch("core.services") as mock_app,
             patch("api.routes.tenant_admin._get_db") as mock_get_db,
         ):
             mock_queue = MagicMock()
@@ -225,7 +225,7 @@ class TestGetTenantUsage:
         from api.routes.tenant_admin import _get_tenant_usage
 
         with (
-            patch("api.routes.tenant_admin.app_mod") as mock_app,
+            patch("core.services") as mock_app,
             patch("api.routes.tenant_admin._get_db", return_value=None),
         ):
             mock_app.redis_queue = None
