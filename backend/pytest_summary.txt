@@ -1,9 +1,0 @@
-........................................................F
-================================== FAILURES ===================================
-E   RuntimeError: There is no current event loop in thread 'MainThread'.
-C:\Python314\Lib\asyncio\events.py:715: RuntimeError: There is no current event loop in thread 'MainThread'.
-=========================== short test summary info ===========================
-FAILED tests/api/test_swarm_routes.py::test_telemetry_persists_to_db_not_just_logs
-!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
-1 failed, 56 passed, 1 skipped, 4 warnings in 13.97s
-[32m2026-07-25 04:25:09[0m | [34m[1mDEBUG   [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1737[0m - [34m[1mUsing proactor: IocpProactor[0m
