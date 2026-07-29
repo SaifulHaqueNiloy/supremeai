@@ -36,7 +36,7 @@ def load_clean_env():
     return env_dict
 
 def sync_github_secrets(env_dict, apply_changes=False):
-    print("\n📦 [1/3] Syncing secrets to GitHub Actions Repository...")
+    print("\n📦 [1/4] Syncing secrets to GitHub Actions Repository...")
     if not apply_changes:
         print(f"  [DRY-RUN] Would update {len(env_dict)} secrets via STDIN piping.")
         return
@@ -57,10 +57,34 @@ def sync_github_secrets(env_dict, apply_changes=False):
             success += 1
         else:
             failed += 1
-    print(f"✅ GitHub Secrets Sync Complete: {success} updated, {failed} skipped/failed.")
+    print(f"✅ GitHub Actions Secrets Sync Complete: {success} updated, {failed} skipped/failed.")
+
+def sync_github_codespaces_secrets(env_dict, apply_changes=False):
+    print("\n💻 [2/4] Syncing secrets to GitHub Codespaces...")
+    if not apply_changes:
+        print(f"  [DRY-RUN] Would update {len(env_dict)} Codespaces secrets via STDIN piping.")
+        return
+
+    env = os.environ.copy()
+    env.pop('GITHUB_TOKEN', None)
+    
+    success = 0
+    failed = 0
+    for k, v in env_dict.items():
+        if not v or k.startswith('GITHUB_'):
+            continue
+        p = subprocess.run(
+            ['gh', 'secret', 'set', k, '--app', 'codespaces', '--repo', 'paykaribazaronline/supremeai'],
+            input=v, text=True, capture_output=True, env=env
+        )
+        if p.returncode == 0:
+            success += 1
+        else:
+            failed += 1
+    print(f"✅ GitHub Codespaces Secrets Sync Complete: {success} updated, {failed} skipped/failed.")
 
 def sync_render_env(env_dict, apply_changes=False):
-    print("\n☁️ [2/3] Syncing environment variables to Render Web Services (Safe Merge)...")
+    print("\n☁️ [3/4] Syncing environment variables to Render Web Services (Safe Merge)...")
     render_key = env_dict.get('RENDER_API_KEY')
     if not render_key:
         print("⚠️ Skipping Render sync: RENDER_API_KEY missing.")
@@ -105,7 +129,7 @@ def sync_render_env(env_dict, apply_changes=False):
         print(f"❌ Render Sync Exception: {e}")
 
 def sync_vercel_env(env_dict, apply_changes=False):
-    print("\n🔺 [3/3] Syncing environment variables to Vercel Project...")
+    print("\n🔺 [4/4] Syncing environment variables to Vercel Project...")
     vercel_token = env_dict.get('VERCEL_TOKEN')
     if not vercel_token:
         print("⚠️ Skipping Vercel sync: VERCEL_TOKEN missing.")
@@ -149,6 +173,7 @@ def main():
     print(f"🔑 Loaded {len(env_dict)} total keys from .env")
 
     sync_github_secrets(env_dict, apply_changes=apply_changes)
+    sync_github_codespaces_secrets(env_dict, apply_changes=apply_changes)
     sync_render_env(env_dict, apply_changes=apply_changes)
     sync_vercel_env(env_dict, apply_changes=apply_changes)
 
