@@ -64,7 +64,7 @@ class SentinelAgent:
                     if parsed.port != 8080:
                         return False
             return True
-        except Exception:
+        except (ValueError, TypeError):
             return False
 
     async def monitor_endpoints(self):
