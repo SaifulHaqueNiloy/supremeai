@@ -55,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [
                         CircleAvatar(
                           radius: 48,
-                          backgroundColor: Colors.cyan.withOpacity(0.15),
+                          backgroundColor: Colors.cyan.withValues(alpha: 0.15),
                           child: Icon(
                             index == 0
                                 ? Icons.bolt
