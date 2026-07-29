@@ -111,7 +111,7 @@ class GitleaksRunner:
             "severity": "critical",
         },
         "aws-secret-key": {
-            "regex": r"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])",
+            "regex": r"(?i)(?:aws_secret_access_key|aws_secret_key|secret_access_key|aws_secret)\s*[:=]\s*['\"]?([A-Za-z0-9/+=]{40})['\"]?",
             "type": "AWS Secret Key",
             "severity": "critical",
         },
@@ -245,7 +245,7 @@ class GitleaksRunner:
                 # Skip common non-source directories
                 if any(part.startswith(".") for part in file_path.parts):
                     continue
-                if "node_modules" in str(file_path) or "__pycache__" in str(file_path):
+                if "node_modules" in str(file_path) or "__pycache__" in str(file_path) or "tests" in file_path.parts or file_path.name.startswith("test_") or "tmp_" in str(file_path):
                     continue
 
                 total_files += 1
@@ -374,7 +374,10 @@ class SecretHunter:
                     except OSError:
                         context = finding.matched_text
 
-                    finding = await self.ai_analyzer.analyze_finding(finding, context)
+                    try:
+                        finding = await self.ai_analyzer.analyze_finding(finding, context)
+                    except Exception as e:
+                        logger.warning(f"AI secret analysis skipped due to network/API timeout: {e}")
                     if finding.severity != "info":  # Not a false positive
                         validated_findings.append(finding)
                 else:
