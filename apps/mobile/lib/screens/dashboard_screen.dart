@@ -83,29 +83,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 🤖 Live Agent Metrics Section
-                    FadeInSlide(
-                      delay: const Duration(milliseconds: 100),
+                    const FadeInSlide(
+                      delay: Duration(milliseconds: 100),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SupremeHeader(title: '🤖 Live Agent Metrics', gradient: true),
-                          const SizedBox(height: 12),
-                          const AgentMetricsCard(),
+                          SupremeHeader(title: '🤖 Live Agent Metrics', gradient: true),
+                          SizedBox(height: 12),
+                          AgentMetricsCard(),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
 
-                    FadeInSlide(
-                      delay: const Duration(milliseconds: 200),
+                    const FadeInSlide(
+                      delay: Duration(milliseconds: 200),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SupremeHeader(title: '📜 Execution Logs'),
-                          const SizedBox(height: 8),
+                          SupremeHeader(title: '📜 Execution Logs'),
+                          SizedBox(height: 8),
                           SupremeCard(
-                            padding: const EdgeInsets.all(0),
-                            child: const LiveExecutionLogger(),
+                            padding: EdgeInsets.all(0),
+                            child: LiveExecutionLogger(),
                           ),
                         ],
                       ),
@@ -126,7 +126,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               title: const Text('Admin Authorized', style: TextStyle(color: DesignTokens.colorDangerDark, fontWeight: FontWeight.bold)),
                               subtitle: const Text('Allow critical write actions globally.', style: TextStyle(color: DesignTokens.colorTextSecondaryDark, fontSize: 12)),
                               value: provider.isAdminAuthorized,
-                              activeColor: Colors.redAccent, // বাংলা মন্তব্য: Flutter ৩.২৯.০ সংস্করণে activeThumbColor সাপোর্ট করে না, তাই activeColor ব্যবহার করা হলো।
+                              activeThumbColor: Colors.redAccent, // বাংলা মন্তব্য: Flutter ৩.২৯.০ সংস্করণে activeThumbColor সাপোর্ট করে না, তাই activeColor ব্যবহার করা হলো।
                               onChanged: (bool value) {
                                 provider.toggleGodMode(value);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -207,7 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                               return ListTile(
                                 tileColor: DesignTokens.colorBgElevatedDark,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: DesignTokens.colorBorderAccentDark)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: DesignTokens.colorBorderAccentDark)),
                                 leading: Container(
                                   width: 32,
                                   height: 32,
@@ -309,24 +309,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildShimmerLoading() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+    return const SingleChildScrollView(
+      padding: EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ShimmerLoading(width: 150, height: 24),
-          const SizedBox(height: 12),
-          const ShimmerLoading(width: double.infinity, height: 120),
-          const SizedBox(height: 24),
+          ShimmerLoading(width: 150, height: 24),
+          SizedBox(height: 12),
+          ShimmerLoading(width: double.infinity, height: 120),
+          SizedBox(height: 24),
 
-          const ShimmerLoading(width: 150, height: 24),
-          const SizedBox(height: 12),
-          const ShimmerLoading(width: double.infinity, height: 200),
-          const SizedBox(height: 24),
+          ShimmerLoading(width: 150, height: 24),
+          SizedBox(height: 12),
+          ShimmerLoading(width: double.infinity, height: 200),
+          SizedBox(height: 24),
 
-          const ShimmerLoading(width: 150, height: 24),
-          const SizedBox(height: 12),
-          const ShimmerLoading(width: double.infinity, height: 80),
+          ShimmerLoading(width: 150, height: 24),
+          SizedBox(height: 12),
+          ShimmerLoading(width: double.infinity, height: 80),
         ],
       ),
     );

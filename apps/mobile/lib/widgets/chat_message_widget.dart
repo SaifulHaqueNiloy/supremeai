@@ -6,11 +6,11 @@ class ChatMessage extends StatelessWidget {
   final bool isMe;
 
   const ChatMessage({
-    Key? key,
+    super.key,
     required this.text,
     required this.sender,
     required this.isMe,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,41 +22,41 @@ class ChatMessage extends StatelessWidget {
           if (!isMe) ...[
             CircleAvatar(
               radius: 18,
-              backgroundColor: Color(0xFF2563EB),
+              backgroundColor: const Color(0xFF2563EB),
               child: Text(
                 sender[0],
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: isMe ? Color(0xFF2563EB) : Color(0xFFF1F5F9),
+                color: isMe ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  topRight: Radius.circular(18),
-                  bottomLeft: !isMe ? Radius.circular(4) : Radius.circular(18),
-                  bottomRight: isMe ? Radius.circular(4) : Radius.circular(18),
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: !isMe ? const Radius.circular(4) : const Radius.circular(18),
+                  bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(18),
                 ),
               ),
               child: Text(
                 text,
                 style: TextStyle(
-                  color: isMe ? Colors.white : Color(0xFF334155),
+                  color: isMe ? Colors.white : const Color(0xFF334155),
                   fontSize: 16,
                 ),
               ),
             ),
           ),
           if (isMe) ...[
-            SizedBox(width: 8),
-            CircleAvatar(
+            const SizedBox(width: 8),
+            const CircleAvatar(
               radius: 18,
               backgroundColor: Color(0xFF10B981),
               child: Text(
