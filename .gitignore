@@ -249,3 +249,11 @@ backend/requirements.txt
 apps/docs/.docusaurus/
 backend/coverage_new.json
 archive/
+
+# Temporary test logs & scratch files
+*.txt
+*.ini
+*.bak
+backend/tmp_test_learning_data/
+New folder/
+
