@@ -88,6 +88,14 @@ class ErrorEventBus:
         self._dead_letter_handlers: list[Callable[[DeadLetterQueueItem], Any]] = []
         self._total_emitted: int = 0
         self._total_dlq_items: int = 0
+        self._pending_tasks: set[asyncio.Task] = set()
+
+    def _cleanup_task(self, task: asyncio.Task) -> None:
+        self._pending_tasks.discard(task)
+
+    def _track_task(self, task: asyncio.Task) -> None:
+        self._pending_tasks.add(task)
+        task.add_done_callback(self._cleanup_task)
 
     def register_listener(
         self,
@@ -150,7 +158,8 @@ class ErrorEventBus:
 
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(self._dispatch_async(event))
+            task = loop.create_task(self._dispatch_async(event))
+            self._track_task(task)
         except RuntimeError:
             # বাংলা মন্তব্য: running loop নেই — sync context (tests, scripts)।
             # নতুন loop তৈরি করা হয় না — thread safety issue এড়াতে।
