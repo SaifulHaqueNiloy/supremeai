@@ -1,117 +1,131 @@
 # SupremeAI 2.0 — Git Pre-commit Hooks (Iron Curtain Local Defense)
 # ================================================================
-# বাংলা মন্তব্য: github.dev এনভায়রনমেন্ট থেকে সরাসরি পুশ করার জন্য সাময়িকভাবে 
-# pre-commit hooks নিষ্ক্রিয় (neutralized) করা হলো। পরবর্তীতে সক্রিয় করতে নিচের কমেন্টগুলো সরিয়ে নিন।
+# বাংলা মন্তব্য: github.dev এনভায়রনমেন্ট থেকে সরাসরি পুশ করার জন্য সাময়িকভ�repos:
+  # 📄 YAML Syntactical Validator
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+        name: 📄 YAML Syntactical Validator
+        args: [--allow-multiple-documents]
+        exclude: ^docs/.*\.yml$
+      - id: check-json
+        name: 🧱 JSON Gatekeeper (Validates Structural JSON)
+        description: ভাঙা বা ম্যালফর্মড JSON ফাইলের কমিট ব্লক করে।
+      - id: check-toml
+        name: ⚙️ TOML Gatekeeper (Validates Structural TOML)
+        description: pyproject.toml বা কনফিগ TOML ফাইলের সিনট্যাক্স লক করে।
+      - id: check-merge-conflict
+        name: ⚔️ Merge Conflict Shield
+        description: কোডের ভেতর ভুল করে '<<<<<<< HEAD' মার্কার থাকলে কমিট ড্রপ করায়।
+      - id: debug-statements
+        name: 🕵️‍♂️ Debug Tracer Blocker
+        description: পাইথন কোডে pdb.set_trace(), breakpoint() কল লোকালি আটকায়।
+      - id: end-of-file-fixer
+        name: 🏁 End of File Enforcer
+      - id: trailing-whitespace
+        name: 🧹 Trailing Whitespace Remover
+        args: [--markdown-linebreak-ext=md]
+      - id: detect-private-key
+        name: 🔑 SSH/SSL Private Key Blocker
+        exclude: ^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
+      - id: check-ast
+        name: 🐍 Python Syntax Gatekeeper (Check AST)
+        description: পাইথন কোডে কোনো সিনট্যাক্স এরর (Syntax Error) থাকলে কমিট ব্লক করে।
 
-repos: []
+  - repo: local
+    hooks:
+      - id: secret-hunter
+        name: 🔍 SecretHunter (AI & Pattern Secret Scanner)
+        entry: python scripts/devops/secret_scan_ci.py --staged
+        language: system
+        pass_filenames: false
+        always_run: true
 
-# repos:
-#   # 📄 YAML Syntactical Validator
-#   - repo: https://github.com/pre-commit/pre-commit-hooks
-#     rev: v4.6.0
-#     hooks:
-#       - id: check-yaml
-#         name: 📄 YAML Syntactical Validator
-#         args: [--allow-multiple-documents]
-#         exclude: ^docs/.*\.yml$
-#       - id: check-json
-#         name: 🧱 JSON Gatekeeper (Validates Structural JSON)
-#         description: ভাঙা বা ম্যালফর্মড JSON ফাইলের কমিট ব্লক করে।
-#       - id: check-toml
-#         name: ⚙️ TOML Gatekeeper (Validates Structural TOML)
-#         description: pyproject.toml বা কনфিগ TOML ফাইলের সিনট্যাক্স লক করে।
-#       - id: check-merge-conflict
-#         name: ⚔️ Merge Conflict Shield
-#         description: কোডের ভেতর ভুল করে '<<<<<<< HEAD' মার্কার থাকলে কমিট ড্রপ করায়।
-#       - id: debug-statements
-#         name: 🕵️‍♂️ Debug Tracer Blocker
-#         description: পাইথন কোডে pdb.set_trace(), breakpoint() কল লোকালি আটকায়।
-#       - id: end-of-file-fixer
-#         name: 🏁 End of File Enforcer
-#       - id: trailing-whitespace
-#         name: 🧹 Trailing Whitespace Remover
-#         args: [--markdown-linebreak-ext=md]
-#       - id: detect-private-key
-#         name: 🔑 SSH/SSL Private Key Blocker
-#         exclude: ^backend/tests/(byoc/test_cloud_connector\.py|test_byoc_endpoints\.py)$
-#       - id: check-ast
-#         name: 🐍 Python Syntax Gatekeeper (Check AST)
-#         description: পাইথন কোডে কোনো সিনট্যাক্স এরর (Syntax Error) থাকলে কমিট ব্লক করে।
-# 
-#   - repo: local
-#     hooks:
-#       - id: secret-hunter
-#         name: 🔍 SecretHunter (AI & Pattern Secret Scanner)
-#         entry: python scripts/devops/secret_scan_ci.py --staged
-#         language: system
-#         pass_filenames: false
-#         always_run: true
-# 
-#   # ⚡ Ruff Linter (Matching CI Iron Curtain Gate)
-#   - repo: local
-#     hooks:
-#       - id: ruff
-#         name: ⚡ Ruff Linter (Matching CI Iron Curtain Gate)
-#         entry: python -m ruff check backend --config=backend/pyproject.toml --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
-#         language: system
-#         pass_filenames: false
-#         types_or: [python, pyi]
-#       - id: ruff-format
-#         name: 🎨 Ruff Formatter (PEP 8 Enforcer)
-#         entry: python -m ruff format backend --config=backend/pyproject.toml
-#         language: system
-#         pass_filenames: false
-# 
-#   # 🔍 Mypy Static Analyzer
-#   - repo: https://github.com/pre-commit/mirrors-mypy
-#     rev: v1.14.0
-#     hooks:
-#       - id: mypy
-#         additional_dependencies: [pydantic, types-requests, types-PyYAML]
-#         exclude: |
-#           (?x)^(
-#             backend/tests/|
-#             backend/scripts/|
-#             backend/src/|
-#             backend/agents/devops/auto_healer\.py|
-#             scripts/health_check/auto_health_check\.py|
-#             scripts/testing/|
-#             scripts/security/|
-#             scripts/monitoring/|
-#             scripts/billing/|
-#             scripts/deploy/|
-#             scripts/ai/|
-#             scripts/i18n/|
-#             tests/scripts/
-#           )
-#         args: [--ignore-missing-imports, --no-strict-optional]
-# 
-#   # TypeScript / Frontend কোয়ালিটি (Strict ESLint Import Gate)
-#   - repo: local
-#     hooks:
-#       - id: eslint-frontend
-#         name: "🔍 ESLint Frontend Check (Strict Import Guard)"
-#         description: "TypeScript/TSX ফাইলে ESLint রান করে import order ও type error ধরে।"
-#         entry: pnpm -C apps/studio-client exec eslint --max-warnings=9999 src/ --ext .ts,.tsx
-#         language: system
-#         files: ^apps/studio-client/src/.*\.(ts|tsx)$
-#         pass_filenames: false
-#         stages: [pre-commit]
-# 
-#   # SupremeAI Security Guard & Router Smoke-Test (Local Defense)
-#   - repo: local
-#     hooks:
-#       - id: supremeai-blindspot-scan
-#         name: "🔐 SupremeAI Blind Spot Security Scanner"
-#         entry: python scripts/security/auto_find_blindspots.py
-#         language: system
-#         pass_filenames: false
-#         stages: [pre-commit]
-# 
-#       - id: stub-data-check
-#         name: "🚫 Gate 1 — Stub & Placeholder Data Blocker"
-#         entry: python scripts/find_stub_data.py --path . --fail-on HIGH
-#         language: system
+  # ⚡ Ruff Linter (Matching CI Iron Curtain Gate)
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ⚡ Ruff Linter (Matching CI Iron Curtain Gate)
+        entry: python -m ruff check backend --config=backend/pyproject.toml --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+        language: system
+        pass_filenames: false
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: 🎨 Ruff Formatter (PEP 8 Enforcer)
+        entry: python -m ruff format backend --config=backend/pyproject.toml
+        language: system
+        pass_filenames: false
+
+  # 🔍 Mypy Static Analyzer
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [pydantic, types-requests, types-PyYAML]
+        exclude: |
+          (?x)^(
+            backend/tests/|
+            backend/scripts/|
+            backend/src/|
+            backend/agents/devops/auto_healer\.py|
+            scripts/health_check/auto_health_check\.py|
+            scripts/testing/|
+            scripts/security/|
+            scripts/monitoring/|
+            scripts/billing/|
+            scripts/deploy/|
+            scripts/ai/|
+            scripts/i18n/|
+            tests/scripts/
+          )
+        args: [--ignore-missing-imports, --no-strict-optional]
+
+  # TypeScript / Frontend কোয়ালিটি (Strict ESLint Import Gate)
+  - repo: local
+    hooks:
+      - id: eslint-frontend
+        name: "🔍 ESLint Frontend Check (Strict Import Guard)"
+        description: "TypeScript/TSX ফাইলে ESLint রান করে import order ও type error ধরে।"
+        entry: pnpm -C apps/studio-client exec eslint --max-warnings=9999 src/ --ext .ts,.tsx
+        language: system
+        files: ^apps/studio-client/src/.*\.(ts|tsx)$
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # SupremeAI Security Guard & Router Smoke-Test (Local Defense)
+  - repo: local
+    hooks:
+      - id: supremeai-blindspot-scan
+        name: "🔐 SupremeAI Blind Spot Security Scanner"
+        entry: python scripts/security/auto_find_blindspots.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: stub-data-check
+        name: "🚫 Gate 1 — Stub & Placeholder Data Blocker"
+        entry: python scripts/find_stub_data.py --path . --fail-on HIGH
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: router-smoke-test
+        name: "🔌 Router Import Smoke-Test (Gate 0 Local)"
+        entry: python scripts/ci/validate_router_imports.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # Free-Tier Size Guard (Render / GitHub / Vercel / Firebase)
+  - repo: local
+    hooks:
+      - id: free-tier-size-guard
+        name: "📏 Free-Tier Size Guard (Render/GitHub/Vercel/Firebase)"
+        entry: python scripts/ci/check_free_tier_limits.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]anguage: system
 #         pass_filenames: false
 #         stages: [pre-commit]
 # 
