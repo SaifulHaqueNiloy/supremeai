@@ -6,7 +6,6 @@ Service to manage the lifecycle of the internet monitoring agent.
 
 import asyncio
 import logging
-from typing import Optional
 
 # Fixed import path - using absolute import from backend
 from backend.agents.internet_monitor_agent import internet_monitor_agent
@@ -19,7 +18,7 @@ class InternetMonitorService:
 
     def __init__(self):
         self.agent = internet_monitor_agent
-        self.monitoring_task: Optional[asyncio.Task] = None
+        self.monitoring_task: asyncio.Task | None = None
         self.is_running = False
 
     async def initialize(self):

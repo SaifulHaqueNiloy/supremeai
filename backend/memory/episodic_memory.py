@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from memory.chromadb_store import ChromaDBStore
 
@@ -21,16 +21,16 @@ class EpisodicMemory:
 
     def __init__(
         self,
-        vector_store: Optional[ChromaDBStore] = None,
-        db_path: Optional[str] = None,
-        session_id: Optional[str] = None,
+        vector_store: ChromaDBStore | None = None,
+        db_path: str | None = None,
+        session_id: str | None = None,
         **kwargs,
     ):
         self.session_id = session_id or "default"
         self.vector_store = vector_store or ChromaDBStore(
             collection_name="supremeai_episodic_memory", db_path=db_path or ":memory:"
         )
-        self._episodes: List[Dict[str, Any]] = []
+        self._episodes: list[dict[str, Any]] = []
         self._memory_conn = None
 
     def store_episode(
@@ -39,14 +39,14 @@ class EpisodicMemory:
         context: Any = "",
         outcome: Any = "success",
         importance: float = 1.0,
-        task_type: Optional[str] = None,
+        task_type: str | None = None,
         input_data: Any = None,
         output_data: Any = None,
         success: bool = True,
         latency_ms: float = 0.0,
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         actual_event = event_type if event_type != "general" or not task_type else task_type
         actual_context = context if context != "" or input_data is None else input_data
         actual_outcome = outcome if outcome != "success" or output_data is None else output_data
@@ -73,12 +73,12 @@ class EpisodicMemory:
 
     def recall_episodes(
         self,
-        event_type: Optional[str] = None,
-        task_type: Optional[str] = None,
-        min_importance: Optional[float] = None,
+        event_type: str | None = None,
+        task_type: str | None = None,
+        min_importance: float | None = None,
         limit: int = 10,
         **kwargs,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         target_event = event_type or task_type
         episodes = self._episodes
         if target_event:
@@ -104,7 +104,7 @@ class EpisodicMemory:
         success: bool = True,
         latency_ms: float = 0.0,
         model_used: str = "default",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> bool:
         """
         Record a task execution event into episodic memory.
@@ -130,7 +130,7 @@ class EpisodicMemory:
             logger.error(f"Failed to record episodic memory: {e}")
             return False
 
-    async def get_similar_past_tasks(self, query: str, n: int = 3) -> List[Dict[str, Any]]:
+    async def get_similar_past_tasks(self, query: str, n: int = 3) -> list[dict[str, Any]]:
         """
         Retrieve top-N similar past task execution records for cognitive reflection.
         """

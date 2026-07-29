@@ -104,5 +104,7 @@ class TestSmellCheck:
         from unittest.mock import patch
 
         with patch("os.path.exists", return_value=False):
-            resp = client.post("/tools/smell-check", json={"path": "/nonexistent/path"}, headers={"Authorization": "Bearer mock-token"})
+            resp = client.post(
+                "/tools/smell-check", json={"path": "/nonexistent/path"}, headers={"Authorization": "Bearer mock-token"}
+            )
             assert resp.status_code == 404

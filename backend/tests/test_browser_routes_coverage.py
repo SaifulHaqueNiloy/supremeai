@@ -7,7 +7,7 @@ Target: 100% line coverage.
 
 import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -101,7 +101,6 @@ class TestCredentials:
         """save_credential and get_credentials should work together."""
         from api.routes.browser import (
             CredentialRequest,
-            get_credentials,
             save_credential,
         )
 
