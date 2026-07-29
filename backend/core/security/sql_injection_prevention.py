@@ -19,7 +19,6 @@ Key Components:
 from __future__ import annotations
 
 import ast
-import os
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -221,7 +220,7 @@ class InputSanitizer:
             Sanitized numeric value
         """
         try:
-            if isinstance(value, (int, float)):
+            if isinstance(value, int | float):
                 return value
             return float(value)
         except (ValueError, TypeError):
@@ -241,7 +240,7 @@ class InputSanitizer:
             return value
         if isinstance(value, str):
             return value.lower() in ("true", "1", "yes", "on")
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return value != 0
         return False
 
@@ -298,7 +297,7 @@ class ParameterizedQueryBuilder:
             conditions = []
             for col, val in where.items():
                 col_safe = InputSanitizer.sanitize_identifier(col)
-                if isinstance(val, (list, tuple)):
+                if isinstance(val, list | tuple):
                     # IN clause
                     placeholders = ", ".join(["?" for _ in val])
                     conditions.append(f"{col_safe} IN ({placeholders})")
@@ -318,10 +317,10 @@ class ParameterizedQueryBuilder:
 
         # LIMIT / OFFSET
         if limit is not None:
-            query += f" LIMIT ?"
+            query += " LIMIT ?"
             params.append(InputSanitizer.sanitize_numeric(limit, 100))
         if offset is not None:
-            query += f" OFFSET ?"
+            query += " OFFSET ?"
             params.append(InputSanitizer.sanitize_numeric(offset, 0))
 
         return query, params

@@ -6,12 +6,10 @@ Manages advanced cost optimization and budget adherence across the system.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import math
 
-from core.config import settings
 from core.llm.token_deductor import TokenDeductor
 from core.cache.redis_manager import redis_manager
 from core.monitoring.metrics_collector import MetricsCollector
@@ -60,7 +58,7 @@ class BudgetAlert:
     threshold_percentage: float
     severity: str  # info, warning, critical
     timestamp: datetime
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class CostOptimizationAgent:
@@ -244,7 +242,7 @@ class CostOptimizationAgent:
                 cost_per_request=0.0,
             )
 
-    async def identify_optimization_opportunities(self) -> List[OptimizationOpportunity]:
+    async def identify_optimization_opportunities(self) -> list[OptimizationOpportunity]:
         """Identify cost optimization opportunities."""
         try:
             opportunities = []
@@ -300,7 +298,7 @@ class CostOptimizationAgent:
             logger.error(f"Error identifying optimization opportunities: {e}")
             return []
 
-    async def generate_cost_forecast(self, days_ahead: int = 30) -> Dict[str, Any]:
+    async def generate_cost_forecast(self, days_ahead: int = 30) -> dict[str, Any]:
         """
         Generate cost forecast for the specified number of days.
 
@@ -366,7 +364,7 @@ class CostOptimizationAgent:
             logger.error(f"Error generating cost forecast: {e}")
             return {"status": "error", "message": str(e), "forecast": {}, "confidence": 0.0}
 
-    async def optimize_resource_allocation(self) -> Dict[str, Any]:
+    async def optimize_resource_allocation(self) -> dict[str, Any]:
         """Optimize resource allocation based on cost analysis."""
         try:
             # Identify the highest cost categories
@@ -448,7 +446,7 @@ class CostOptimizationAgent:
             logger.error(f"Error optimizing resource allocation: {e}")
             return {"status": "error", "message": str(e), "recommendations": []}
 
-    async def _get_usage_metrics(self) -> Dict[str, float]:
+    async def _get_usage_metrics(self) -> dict[str, float]:
         """Get current usage metrics (simulated for demo purposes)."""
         try:
             # In a real implementation, this would connect to monitoring systems
@@ -510,7 +508,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error storing cost metric: {e}")
 
-    async def _store_optimization_opportunities(self, opportunities: List[OptimizationOpportunity]):
+    async def _store_optimization_opportunities(self, opportunities: list[OptimizationOpportunity]):
         """Store optimization opportunities in Redis."""
         try:
             opportunities_data = []
@@ -551,7 +549,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error storing optimization opportunities: {e}")
 
-    async def _check_budget_alerts(self, current_metric: CostMetric, budget_config: Dict[str, Any]):
+    async def _check_budget_alerts(self, current_metric: CostMetric, budget_config: dict[str, Any]):
         """Check if current costs trigger any budget alerts."""
         try:
             alerts = []
@@ -600,7 +598,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error checking budget alerts: {e}")
 
-    async def _store_budget_alerts(self, alerts: List[BudgetAlert]):
+    async def _store_budget_alerts(self, alerts: list[BudgetAlert]):
         """Store budget alerts in Redis."""
         try:
             alerts_data = []
@@ -642,7 +640,7 @@ class CostOptimizationAgent:
         except Exception as e:
             logger.error(f"Error storing budget alerts: {e}")
 
-    async def _get_recent_cost_metrics(self, limit: int = 30) -> List[CostMetric]:
+    async def _get_recent_cost_metrics(self, limit: int = 30) -> list[CostMetric]:
         """Get recent cost metrics from Redis."""
         try:
             metrics_data = await redis_manager.get(self.cost_metrics_key)
@@ -672,7 +670,7 @@ class CostOptimizationAgent:
             logger.error(f"Error getting recent cost metrics: {e}")
             return []
 
-    async def _get_budget_config(self) -> Dict[str, Any]:
+    async def _get_budget_config(self) -> dict[str, Any]:
         """Get current budget configuration."""
         try:
             config_json = await redis_manager.get(self.budget_config_key)
@@ -684,7 +682,7 @@ class CostOptimizationAgent:
             logger.error(f"Error getting budget config: {e}")
             return self.default_budget_config
 
-    async def get_cost_optimization_report(self) -> Dict[str, Any]:
+    async def get_cost_optimization_report(self) -> dict[str, Any]:
         """
         Generate a comprehensive cost optimization report.
 

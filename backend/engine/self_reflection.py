@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class SelfReflectionLoop:
         execution_output: str,
         is_success: bool = True,
         error_details: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform cognitive reflection on an execution result.
         """

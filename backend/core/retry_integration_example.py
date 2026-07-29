@@ -59,7 +59,7 @@ def file_operation(file_path: str, content: str) -> bool:
     import random
 
     if random.random() < 0.5:  # 50% chance of failure
-        raise IOError(f"ফাইল অপারেশন ব্যর্থ: {file_path}")
+        raise OSError(f"ফাইল অপারেশন ব্যর্থ: {file_path}")
 
     # In real scenario, we would actually write to file
     logger.info(f"ফাইল সফলভাবে লেখা হয়েছে: {file_path}")

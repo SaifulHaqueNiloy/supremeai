@@ -10,7 +10,7 @@ from sandbox.docker_sandbox import DockerSandbox  # আপনার এক্স
 
 # AST প্রি-এক্সিকিউশন স্ক্যানার — স্যান্ডবক্স বাইপাস প্রতিরোধ
 # getattr/hasattr/__import__/eval/exec ইত্যাদি বিপজ্জনক প্যাটার্ন স্ক্যান করে
-from core.security.ast_sandbox_scanner import scan_code, validate_code_for_sandbox
+from core.security.ast_sandbox_scanner import validate_code_for_sandbox
 
 logger = logging.getLogger("supremeai.sandbox.file_gate")
 

@@ -7,7 +7,7 @@ Target: 100% line coverage.
 
 import os
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -23,7 +23,7 @@ class TestMemoryService:
         """MemoryService should initialize."""
         from services.memory_service import MemoryService
 
-        with patch("services.memory_service.get_db_session") as mock_session:
+        with patch("services.memory_service.get_db_session"):
             service = MemoryService()
             assert service is not None
 
@@ -33,7 +33,7 @@ class TestMemoryService:
         from services.memory_service import MemoryService
 
         with (
-            patch("services.memory_service.get_db_session") as mock_session,
+            patch("services.memory_service.get_db_session"),
             patch("services.memory_service.MemoryService._get_session") as mock_get,
         ):
             mock_db = AsyncMock()
