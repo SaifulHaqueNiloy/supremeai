@@ -21,7 +21,7 @@ def test_parse_cors_origins_comma_separated():
 @patch.dict(
     os.environ,
     {
-        "ENV": "production",
+        "env": "production",
         "OPENROUTER_API_KEY": "sk-open",
         "GEMINI_API_KEY": "sk-gemini",
         "SUPREMEAI_JWT_SECRET": "",
@@ -30,5 +30,6 @@ def test_parse_cors_origins_comma_separated():
     clear=False,
 )
 def test_settings_raises_when_production_secret_missing():
-    with pytest.raises((ValueError, RuntimeError)):
-        Settings()
+    with patch("core.config.secret_vault.fetch_secret", return_value=""):
+        with pytest.raises((ValueError, RuntimeError)):
+            Settings()

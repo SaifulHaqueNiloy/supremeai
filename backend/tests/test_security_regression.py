@@ -13,9 +13,10 @@ from core.security.auth_middleware import AuthMiddleware
 async def test_production_jwt_secret_required():
     """Verify that in production environment, a missing jwt_secret raises a RuntimeError."""
 
-    with patch.dict(os.environ, {"ENV": "production", "SUPREMEAI_JWT_SECRET": ""}):
-        with pytest.raises(RuntimeError) as excinfo:
-            Settings().jwt_secret
+    with patch.dict(os.environ, {"env": "production", "SUPREMEAI_JWT_SECRET": ""}):
+        with patch("core.config.secret_vault.fetch_secret", return_value=""):
+            with pytest.raises(RuntimeError) as excinfo:
+                Settings().jwt_secret
     assert "Production JWT secret must be set and >= 64 bytes" in str(excinfo.value)
 
 

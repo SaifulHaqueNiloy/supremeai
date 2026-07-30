@@ -3,6 +3,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer
+from sqlalchemy import JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -41,6 +42,6 @@ class ExecutionLog(Base):
 
     log_type: Mapped[LogType] = mapped_column(Enum(LogType, name="log_type_enum", create_type=True), nullable=False)
 
-    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    payload: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict)
     exit_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
