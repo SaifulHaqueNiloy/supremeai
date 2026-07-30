@@ -402,52 +402,10 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")
-async def setup_test_database():
-    """Session-scoped DB setup - skips gracefully if database modules are unavailable."""
-    _db_available = False
-    try:
-        import sqlalchemy.dialects.sqlite as sqlite_dialect  # noqa: F401
-        from sqlalchemy.dialects.postgresql import JSONB
-        from sqlalchemy.ext.compiler import compiles
-        from sqlalchemy.types import JSON  # noqa: F401
-
-        @compiles(JSONB, "sqlite")
-        def compile_jsonb_sqlite(type_, compiler, **kw):
-            return "JSON"
-
-        from database.session import engine
-        from models.base import Base
-
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            try:
-                await conn.run_sync(Base.metadata.create_all)
-            except Exception as e:  # noqa: BLE001
-                import warnings
-
-                warnings.warn(f"Test database setup skipped due to schema issue: {e}", stacklevel=2)
-        _db_available = True
-    except Exception as e:
-        import warnings
-
-        warnings.warn(f"Database unavailable ({e}). Non-DB tests will still run.", UserWarning, stacklevel=2)
-
+@pytest.fixture(scope="session")
+def setup_test_database():
+    """Session-scoped DB setup placeholder - actual setup handled per-test when needed."""
     yield
-
-    return
-    if _db_available:
-        try:
-            from database.session import engine
-            from models.base import Base
-
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.drop_all)
-        except Exception:  # noqa: BLE001
-            # বাংলা মন্তব্য: teardown-এ DB drop_all failure non-critical,
-            # তাই silently ignore করা হচ্ছে। audit_observability.py-তে
-            # tests/ ডিরেক্টরি exempt করা হয়েছে।
-            pass
 
 
 @pytest_asyncio.fixture
