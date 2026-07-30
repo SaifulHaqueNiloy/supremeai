@@ -18,7 +18,6 @@ async def test_production_jwt_secret_required():
         {"ENV": "production", "ALLOW_TEST_AUTH_BYPASS": "false", "SUPREMEAI_JWT_SECRET": "", "JWT_SECRET": ""},
     ):
         with patch("core.config.secret_vault.fetch_secret", return_value=""):
-            Settings._cached_secrets.clear()
             with pytest.raises(RuntimeError) as excinfo:
                 Settings()
     assert "Production JWT secret must be set and >= 64 bytes" in str(excinfo.value)
