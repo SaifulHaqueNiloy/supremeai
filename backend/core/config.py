@@ -575,7 +575,11 @@ class Settings(BaseSettings):
         """
         # Production: Must be explicitly set
         if self.env == "production":
-            secret = os.getenv("SUPREMEAI_JWT_SECRET") or os.getenv("JWT_SECRET") or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            secret = (
+                os.getenv("SUPREMEAI_JWT_SECRET")
+                or os.getenv("JWT_SECRET")
+                or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            )
             if not secret or len(secret) < 64:
                 raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
             self._jwt_secret_cache = secret
