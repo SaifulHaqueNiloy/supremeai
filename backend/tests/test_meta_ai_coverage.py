@@ -41,7 +41,11 @@ class TestRequireAdmin:
         mock_credentials = MagicMock()
         mock_credentials.credentials = "user_token"
 
-        with patch("api.routes.meta_ai.jwt.decode") as mock_decode:
+        with (
+            patch("api.routes.meta_ai.jwt.decode") as mock_decode,
+            patch("api.routes.meta_ai.settings") as mock_settings,
+        ):
+            mock_settings.jwt_secret = "secret"
             mock_decode.return_value = {"role": "user", "uid": "user1"}
             with pytest.raises(HTTPException) as exc:
                 _require_admin(mock_credentials)

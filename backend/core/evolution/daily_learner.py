@@ -201,10 +201,11 @@ class GoalDecomposer:
                     priority=LearningPriority.HIGH,
                 )
             )
+            # বাংলা মন্তব্য: কোড-সম্পর্কিত সাবগোল সাবলীলভাবে চেনার জন্য ডিসক্রিপশনে 'code' কীওয়ার্ড বজায় রাখা হলো।
             sub_goals.append(
                 SubGoal(
                     id="sg_3",
-                    description="Implement core logic with tests",
+                    description="Implement core code logic with tests",
                     dependencies=["sg_2"],
                     estimated_effort=60,
                     status=GoalStatus.PENDING,

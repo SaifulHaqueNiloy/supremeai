@@ -197,7 +197,7 @@ class TestGoalDecomposer:
             assert len(result) > 0
             # Should include code-related subgoals
             descriptions = [sg.description for sg in result]
-            assert any(len(desc) > 0 for desc in descriptions)
+            assert any("code" in desc.lower() for desc in descriptions)
 
     def test_heuristic_fallback_generic(self):
         """_heuristic_fallback should handle generic objectives."""

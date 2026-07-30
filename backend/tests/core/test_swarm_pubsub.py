@@ -16,7 +16,7 @@ from core.swarm_pubsub import SwarmPubSub
 @pytest.fixture
 def swarm_pubsub():
     """SwarmPubSub ইনস্ট্যান্স ফেরত দেয়।"""
-    with patch("redis.asyncio.from_url", return_value=AsyncMock()):
+    with patch("core.swarm_pubsub.aioredis.from_url", return_value=AsyncMock()):
         pubsub = SwarmPubSub()
         return pubsub
 
@@ -50,12 +50,13 @@ class TestSwarmPubSubInit:
     def test_creates_redis_connection(self):
         """বাংলা মন্তব্য: Redis connection create হয়।"""
         mock_redis = AsyncMock()
-        with patch("redis.asyncio.from_url", return_value=mock_redis) as mock_from_url:
+        with patch("core.swarm_pubsub.aioredis.from_url", return_value=mock_redis) as mock_from_url:
             with patch("core.config.settings") as mock_settings:
                 mock_settings.redis_url = "redis://localhost"
                 pubsub = SwarmPubSub()
                 r = pubsub.redis
                 assert r is not None
+                mock_from_url.assert_called_once_with("redis://localhost")
 
 
 # -------------------- Tests: subscribe --------------------

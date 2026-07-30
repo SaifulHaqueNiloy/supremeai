@@ -93,7 +93,7 @@ async def test_pubsub_lazy_initialization():
 
     # Only when accessing redis property should connection be attempted
     mock_redis = AsyncMock()
-    with patch("redis.asyncio.from_url", return_value=mock_redis) as mock_from_url:
+    with patch("core.swarm_pubsub.aioredis.from_url", return_value=mock_redis) as mock_from_url:
         with patch("core.config.settings") as mock_settings:
             mock_settings.redis_url = "redis://localhost:6379"
             pubsub._redis = None
