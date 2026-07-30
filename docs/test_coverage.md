@@ -168,7 +168,7 @@ async def test_agent_initialization(agent):
 async def test_coordinate_task_success(agent):
     """টাস্ক কোঅর্ডিনেশন সফল হওয়ার দৃশ্যপট পরীক্ষা।"""
     mock_task = {"id": "task_123", "action": "deploy_agent", "payload": {"nodes": 3}}
-    
+
     # অভ্যন্তরীণ সাপোর্ট মেথড বা ডিপেন্ডেন্সি মক করা
     with patch.object(agent, "_distribute_subtasks", AsyncMock(return_value={"status": "completed"})):
         if hasattr(agent, "coordinate_task"):
@@ -181,7 +181,7 @@ async def test_coordinate_task_success(agent):
 async def test_coordinate_task_failure_fallback(agent):
     """টাস্ক ফেল করলে ফলব্যাক লজিক কাজ করছে কিনা পরীক্ষা।"""
     invalid_task = {"id": "invalid_task"}
-    
+
     with patch.object(agent, "_distribute_subtasks", AsyncMock(side_effect=ValueError("Execution Error"))):
         if hasattr(agent, "coordinate_task"):
             with pytest.raises(Exception):
@@ -201,7 +201,7 @@ async def test_swarm_heartbeat_and_health_check(agent):
 async def test_broadcast_message(agent):
     """নোডগুলোর মধ্যে মেসেজ ব্রডকাস্ট লজিক পরীক্ষা।"""
     message = {"event": "SWARM_KILL_SWITCH", "reason": "emergency"}
-    
+
     if hasattr(agent, "broadcast"):
         with patch.object(agent, "broadcast", AsyncMock(return_value=True)):
             response = await agent.broadcast(message)
@@ -405,7 +405,7 @@ pytest --cov=core/tier8/skill_marketplace_curator tests/test_skill_marketplace_c
 
 ```
 
-পরের জিরো-কভারেজ ফাইল **`agent_evolution_engine.py`** (১৭৮ মিসিং লাইন)-এর জন্য টেস্ট 
+পরের জিরো-কভারেজ ফাইল **`agent_evolution_engine.py`** (১৭৮ মিসিং লাইন)-এর জন্য টেস্ট
 
 পরবর্তী জিরো-কভারেজ ফাইল **`core/tier8/agent_evolution_engine.py`** (১৭৮ মিসিং লাইন)-এর জন্য Pytest ইউনিট টেস্ট নিচে দেওয়া হলো।
 
@@ -511,7 +511,7 @@ pytest --cov=core/tier8/agent_evolution_engine tests/test_agent_evolution_engine
 
 ```
 
-পরের জিরো-কভারেজ ফাইল **`core/utils/firestore_helpers.py`** (১৭৬ মিসিং লাইন)-এর জন্য টেস্ট 
+পরের জিরো-কভারেজ ফাইল **`core/utils/firestore_helpers.py`** (১৭৬ মিসিং লাইন)-এর জন্য টেস্ট
 
 পরবর্তী জিরো-কভারেজ ফাইল **`core/utils/firestore_helpers.py`** (১৭৬ মিসিং লাইন)-এর জন্য Pytest ইউনিট টেস্ট নিচে দেওয়া হলো।
 
@@ -631,7 +631,7 @@ pytest --cov=core/utils/firestore_helpers tests/test_firestore_helpers.py
 
 ```
 
-পরবর্তী জিরো-কভারেজ ফাইল **`core/type_sync_bus.py`** (১২২ মিসিং লাইন)-এর জন্য টেস্ট 
+পরবর্তী জিরো-কভারেজ ফাইল **`core/type_sync_bus.py`** (১২২ মিসিং লাইন)-এর জন্য টেস্ট
 
 পরবর্তী জিরো-কভারেজ ফাইল **`core/type_sync_bus.py`** (১২২ মিসিং লাইন)-এর জন্য Pytest ইউনিট টেস্ট নিচে দেওয়া হলো।
 
@@ -939,12 +939,12 @@ def mock_external_dependencies():
 def swarm_orchestrator():
     """SwarmOrchestrator-এর একটি মক ইনস্ট্যান্স তৈরি করার ফিক্সচার।"""
     from core.orchestration.swarm_orchestrator import SwarmOrchestrator
-    
+
     # Mock Workspace
     mock_workspace = MagicMock()
     mock_workspace.task_id = "test_task"
     mock_workspace.metadata = {}
-    
+
     instance = SwarmOrchestrator(
         task_id="test_task",
         original_prompt="Test prompt",
@@ -953,12 +953,12 @@ def swarm_orchestrator():
         metadata={},
         workspace=mock_workspace
     )
-    
+
     # Mock private methods that are called by __init__
     instance._initialize_state = AsyncMock()
     instance._initialize_tools = AsyncMock()
     instance._initialize_agent_pool = AsyncMock()
-    
+
     return instance
 
 
@@ -986,14 +986,14 @@ async def test_initialize_success(swarm_orchestrator):
          patch("core.orchestration.swarm_orchestrator.RedisClient", MagicMock()),\
          patch("core.orchestration.swarm_orchestrator.mcp_manager", MagicMock()),\
          patch("core.orchestration.swarm_orchestrator.SwarmBus", MagicMock()):
-        
+
         mock_manager = MagicMock()
         mock_manager.register_agents.return_value = True
         mock_manager.available_agent_types = ["DEFAULT", "DEVELOPER", "RESEARCHER"]
         mock_get_manager.return_value = mock_manager
-        
+
         result = await swarm_orchestrator.initialize()
-        
+
         assert result is True
         assert swarm_orchestrator.initialized is True
         assert len(swarm_orchestrator.tool_names) == 0  # No tools from MCP
@@ -1014,11 +1014,11 @@ async def test_initialize_failure(swarm_orchestrator):
          patch("core.orchestration.swarm_orchestrator.RedisClient", MagicMock()),\
          patch("core.orchestration.swarm_orchestrator.mcp_manager", MagicMock()),\
          patch("core.orchestration.swarm_orchestrator.SwarmBus", MagicMock()):
-        
+
         mock_init_state.side_effect = Exception("Initialization failed")
-        
+
         result = await swarm_orchestrator.initialize()
-        
+
         assert result is False
 
 
@@ -1043,7 +1043,7 @@ async def test_execute_ orchestration_flow_success(swarm_orchestrator):
          patch("core.orchestration.swarm_orchestrator.RedisClient", MagicMock()),\
          patch("core.orchestration.swarm_orchestrator.mcp_manager", MagicMock()),\
          patch("core.orchestration.swarm_orchestrator.SwarmBus", MagicMock()):
-        
+
         mock_init_state.return_value = True
         mock_init_tools.return_value = True
         mock_init_pool.return_value = True
@@ -1051,9 +1051,9 @@ async def test_execute_ orchestration_flow_success(swarm_orchestrator):
         mock_task_analysis.return_value = {"category": "general", "priority": "medium", "is_complex": False}
         mock_agent_workflow.return_value = True
         mock_finalization.return_value = True
-        
+
         result = await swarm_orchestrator.execute_orchestration_flow()
-        
+
         assert result is True
         assert swarm_orchestrator.initialized is True
         mock_gen_task_details.assert_called_once()
@@ -1082,7 +1082,7 @@ async def test_execute_orchestration_flow_failure(swarm_orchestrator):
          patch("core.orchestration.swarm_orchestrator.RedisClient", MagicMock()),
          patch("core.orchestration.swarm_orchestrator.mcp_manager", MagicMock()),
          patch("core.orchestration.swarm_orchestrator.SwarmBus", MagicMock()):
-        
+
         mock_init_state.return_value = True
         mock_init_tools.return_value = True
         mock_init_pool.return_value = True
@@ -1090,9 +1090,9 @@ async def test_execute_orchestration_flow_failure(swarm_orchestrator):
         mock_task_analysis.return_value = {"category": "general", "priority": "medium", "is_complex": False}
         mock_agent_workflow.return_value = True
         mock_finalization.return_value = True
-        
+
         result = await swarm_orchestrator.execute_orchestration_flow()
-        
+
         import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -1115,11 +1115,11 @@ def mock_external_dependencies():
 def swarm_orchestrator():
     """SwarmOrchestrator-এর একটি মক ইনস্ট্যান্স তৈরি করার ফিক্সচার।"""
     from core.orchestration.swarm_orchestrator import SwarmOrchestrator
-    
+
     mock_workspace = MagicMock()
     mock_workspace.task_id = "test_task"
     mock_workspace.metadata = {}
-    
+
     instance = SwarmOrchestrator(
         task_id="test_task",
         original_prompt="Test prompt",
@@ -1128,11 +1128,11 @@ def swarm_orchestrator():
         metadata={},
         workspace=mock_workspace
     )
-    
+
     instance._initialize_state = AsyncMock()
     instance._initialize_tools = AsyncMock()
     instance._initialize_agent_pool = AsyncMock()
-    
+
     return instance
 
 
@@ -1190,7 +1190,7 @@ def test_check_image_alt_tags(wcag_checker):
     if hasattr(wcag_checker, "check_alt_tags"):
         issues_alt = wcag_checker.check_alt_tags(mock_html_with_alt)
         issues_no_alt = wcag_checker.check_alt_tags(mock_html_no_alt)
-        
+
         assert len(issues_alt) == 0
         assert len(issues_no_alt) > 0
 

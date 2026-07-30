@@ -573,17 +573,17 @@ class Settings(BaseSettings):
         Non-production এ generated secret কে _jwt_secret_cache-তে cache করা হয় যাতে
         create_access_token() ও verify_token() একই secret পায় — নাহলে JWSSignatureError হয়।
         """
-        # Return cached value if available (critical for token create/verify consistency)
-        if hasattr(self, "_jwt_secret_cache") and self._jwt_secret_cache:
-            return self._jwt_secret_cache
-
         # Production: Must be explicitly set
         if self.env == "production":
-            secret = os.getenv("SUPREMEAI_JWT_SECRET") or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            secret = os.getenv("SUPREMEAI_JWT_SECRET") or os.getenv("JWT_SECRET") or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
             if not secret or len(secret) < 64:
                 raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
             self._jwt_secret_cache = secret
             return secret
+
+        # Return cached value if available (critical for token create/verify consistency)
+        if hasattr(self, "_jwt_secret_cache") and self._jwt_secret_cache:
+            return self._jwt_secret_cache
 
         # Development: Try file first, then generate
         secret_file = "/etc/secrets/jwt_secret"

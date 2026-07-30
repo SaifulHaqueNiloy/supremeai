@@ -35,11 +35,16 @@ async def async_session():
 
 
 @pytest.fixture(autouse=True)
-def disable_honeypot(monkeypatch):
+def disable_honeypot(request, monkeypatch):
+    if os.environ.get("ENABLE_HONEYPOT_TEST") == "true" or "test_honeypot_middleware" in getattr(request.node, "nodeid", ""):
+        yield
+        return
+
     async def mock_bypass(self, scope, receive, send):
         await self.app(scope, receive, send)
 
     monkeypatch.setattr("core.security.honeypot_middleware.HoneypotMiddleware.__call__", mock_bypass)
+    yield
 
 
 @pytest.fixture(autouse=True)
