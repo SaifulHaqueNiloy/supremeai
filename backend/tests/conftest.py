@@ -36,7 +36,9 @@ async def async_session():
 
 @pytest.fixture(autouse=True)
 def disable_honeypot(request, monkeypatch):
-    if os.environ.get("ENABLE_HONEYPOT_TEST") == "true" or "test_honeypot_middleware" in getattr(request.node, "nodeid", ""):
+    if os.environ.get("ENABLE_HONEYPOT_TEST") == "true" or "test_honeypot_middleware" in getattr(
+        request.node, "nodeid", ""
+    ):
         yield
         return
 
@@ -52,7 +54,6 @@ def disable_chaos_injector():
     os.environ["ENABLE_CHAOS_INJECTOR"] = "false"
     os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
     yield
-
 
 
 # বাংলা মন্তব্য: টেস্টে Supabase নেটওয়ার্ক রিকোয়েস্ট আটকাতে module import এর আগেই

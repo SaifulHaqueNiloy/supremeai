@@ -21,7 +21,6 @@ from tools.ai_agents.browser_agent import BrowserAgent
 chromadb = None
 
 
-
 class SearchResult:
     def __init__(self, title: str, url: str, snippet: str, content: str):
         self.title = title

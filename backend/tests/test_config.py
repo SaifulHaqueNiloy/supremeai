@@ -69,6 +69,7 @@ def test_defaults(mock_fetch):
 )
 def test_env_override(mock_fetch):
     from core.config import settings
+
     settings._cached_secrets.clear()
     Settings._cached_secrets.clear()
     Settings._secrets_batch_loaded = False
