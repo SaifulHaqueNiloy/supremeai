@@ -147,9 +147,9 @@ def save_credential(cred: CredentialRequest):
 
 
 @router.delete("/credentials/{id}")
-def delete_credential(id: str):
+def delete_credential(credential_id: str):
     global CREDENTIALS
-    CREDENTIALS = [c for c in CREDENTIALS if c.get("id") != id]
+    CREDENTIALS = [c for c in CREDENTIALS if c.get("id") != credential_id]
     return {"success": True}
 
 
@@ -220,9 +220,9 @@ def allow_all_urls(userId: str = "default"):
 
 
 @router.delete("/urls/{id}")
-def delete_url(id: str):
+def delete_url(url_id: str):
     global URL_PERMISSIONS
-    URL_PERMISSIONS = [u for u in URL_PERMISSIONS if u.get("id") != id]
+    URL_PERMISSIONS = [u for u in URL_PERMISSIONS if u.get("id") != url_id]
     return {"success": True}
 
 
