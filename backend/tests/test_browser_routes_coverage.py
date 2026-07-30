@@ -116,12 +116,12 @@ class TestCredentials:
 
     def test_delete_credential(self):
         """delete_credential should remove credential."""
-        from api.routes.browser import CREDENTIALS, delete_credential
+        import api.routes.browser as browser_mod
 
-        CREDENTIALS.append({"id": "cred_1", "serviceName": "test"})
-        result = delete_credential("cred_1")
+        browser_mod.CREDENTIALS.append({"id": "cred_1", "serviceName": "test"})
+        result = browser_mod.delete_credential("cred_1")
         assert result["success"] is True
-        assert len(CREDENTIALS) == 0
+        assert len(browser_mod.CREDENTIALS) == 0
 
 
 class TestPausedState:
@@ -203,18 +203,13 @@ class TestUrlPermissions:
 
     def test_delete_url(self):
         """delete_url should remove a URL permission."""
-        from api.routes.browser import (
-            URL_PERMISSIONS,
-            UrlPermissionRequest,
-            add_allowed_url,
-            delete_url,
-        )
+        import api.routes.browser as browser_mod
 
-        req = UrlPermissionRequest(urlPattern="https://test.com/*")
-        add_allowed_url(req)
-        perm_id = URL_PERMISSIONS[0]["id"]
-        delete_url(perm_id)
-        assert len(URL_PERMISSIONS) == 0
+        req = browser_mod.UrlPermissionRequest(urlPattern="https://test.com/*")
+        browser_mod.add_allowed_url(req)
+        perm_id = browser_mod.URL_PERMISSIONS[0]["id"]
+        browser_mod.delete_url(perm_id)
+        assert len(browser_mod.URL_PERMISSIONS) == 0
 
     def test_url_request_decision(self):
         """decision should update request status."""

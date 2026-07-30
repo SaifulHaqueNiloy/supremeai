@@ -22,7 +22,7 @@ class FakeFirebaseDocRef:
         self.should_error = should_error
         self.exists = exists
 
-    async def get(self):
+    def get(self):
         if self.should_error:
             raise RuntimeError("firebase down")
         return FakeDoc(self.exists, {"id": self.doc_id, "value": "primary"})

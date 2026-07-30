@@ -86,7 +86,7 @@ class TestLocalSearchRAGInit:
             patch("tools.knowledge.local_search_rag.BrowserAgent"),
             patch("pathlib.Path.mkdir"),
             patch.object(Path, "exists", return_value=False),
-            patch("tools.knowledge.local_search_rag.chromadb", None),
+            patch.dict("sys.modules", {"chromadb": None}),
         ):
             rag = LocalSearchRAG()
             assert rag.chroma_client is None
@@ -163,8 +163,7 @@ class TestLocalSearchRAGSearch:
 class TestLocalSearchRAGStore:
     """Tests for LocalSearchRAG.store method."""
 
-    @pytest.mark.asyncio
-    async def test_store_and_retrieve(self):
+    def test_store_and_retrieve(self):
         """store should save content and make it retrievable."""
         from tools.knowledge.local_search_rag import LocalSearchRAG
 
@@ -175,7 +174,7 @@ class TestLocalSearchRAGStore:
             patch.object(Path, "write_text"),
         ):
             rag = LocalSearchRAG()
-            await rag._store_search("test_key", {"test_key": ["test_key", "test_content"]})
+            rag._store_search("test_key", {"test_key": ["test_key", "test_content"]})
             assert "test_key" in rag._index
             assert "test_content" in rag._index["test_key"]
 

@@ -92,10 +92,10 @@ async def test_pubsub_lazy_initialization():
     assert pubsub._redis is None
 
     # Only when accessing redis property should connection be attempted
-    with patch("redis.asyncio.from_url") as mock_from_url:
-        mock_from_url.return_value = AsyncMock()
+    mock_redis = AsyncMock()
+    with patch("redis.asyncio.from_url", return_value=mock_redis) as mock_from_url:
         with patch("core.config.settings") as mock_settings:
             mock_settings.redis_url = "redis://localhost:6379"
             pubsub._redis = None
             _ = pubsub._get_redis()
-            mock_from_url.assert_called_once()
+            assert pubsub._redis is mock_redis

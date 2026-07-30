@@ -103,6 +103,7 @@ class TestGetMetadata:
         from tools.sso_integrator import SSOIntegrator
 
         integrator = SSOIntegrator.__new__(SSOIntegrator)
+        integrator.saml_settings = {}
         integrator.onelogin = False
 
         result = integrator.get_metadata()
@@ -113,6 +114,7 @@ class TestGetMetadata:
         from tools.sso_integrator import SSOIntegrator
 
         integrator = SSOIntegrator.__new__(SSOIntegrator)
+        integrator.saml_settings = {}
         integrator.onelogin = True
         integrator._build_settings = MagicMock(side_effect=KeyError("test"))
 
