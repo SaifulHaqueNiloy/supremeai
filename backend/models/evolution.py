@@ -1,6 +1,7 @@
 # Self-Evolution Engine models tracking autonomous code updates
 # বাংলা মন্তব্য: এআই কর্তৃক জেনারেটেড নতুন স্কিল, স্বয়ংক্রিয় প্রপোজাল ট্র্যাকিং এবং ফিটনেস স্কোরিং মডেল।
 
+from sqlalchemy import JSON
 import uuid
 from datetime import UTC, datetime
 
@@ -50,7 +51,7 @@ class CodeProposal(Base):
     )  # proposed, approved, rejected, applied
 
     # Pro Tip: JSONB is highly optimized for PostgreSQL query matching.
-    metadata_json: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
