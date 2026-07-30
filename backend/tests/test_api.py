@@ -38,13 +38,14 @@ def test_health_returns_ok():
 def test_task_execute_enforces_admin_block():
     from unittest.mock import patch
 
-    with patch("core.services.admin_god.is_admin_action_allowed", return_value=False):
-        resp = client.post(
-            "/task/execute",
-            json={"task": "do anything", "task_type": "general"},
-            headers=auth_headers,
-        )
-        assert resp.status_code == 403
+    with patch("admin.god.AdminGodLayer.is_admin_action_allowed", return_value=False):
+        with patch.dict(os.environ, {"ALLOW_TEST_AUTH_BYPASS": "false"}):
+            resp = client.post(
+                "/task/execute",
+                json={"task": "do anything", "task_type": "general"},
+                headers=auth_headers,
+            )
+            assert resp.status_code == 403
 
 
 def test_task_execute_allowed_and_success():

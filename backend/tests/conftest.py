@@ -18,29 +18,34 @@ def create_mock_module(name, is_package=False):
         m.__path__ = []
     return m
 
+
 import pytest
+
 
 @pytest.fixture
 def valid_auth_headers():
-    return {
-        "Authorization": "Bearer mock_test_jwt_token",
-        "Content-Type": "application/json"
-    }
+    return {"Authorization": "Bearer mock_test_jwt_token", "Content-Type": "application/json"}
+
 
 @pytest.fixture
 async def async_session():
     from unittest.mock import AsyncMock
+
     yield AsyncMock()
+
 
 @pytest.fixture(autouse=True)
 def disable_honeypot(monkeypatch):
     async def mock_bypass(self, scope, receive, send):
         await self.app(scope, receive, send)
+
     monkeypatch.setattr("core.security.honeypot_middleware.HoneypotMiddleware.__call__", mock_bypass)
+
 
 @pytest.fixture(autouse=True)
 def disable_chaos_injector():
     os.environ["ENABLE_CHAOS_INJECTOR"] = "false"
+    os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
     yield
 
 

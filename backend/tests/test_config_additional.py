@@ -18,18 +18,19 @@ def test_parse_cors_origins_comma_separated():
     assert settings.cors_origins == ["https://a.example.com", "https://b.example.com"]
 
 
-@patch.dict(
-    os.environ,
-    {
-        "env": "production",
-        "OPENROUTER_API_KEY": "sk-open",
-        "GEMINI_API_KEY": "sk-gemini",
-        "SUPREMEAI_JWT_SECRET": "",
-        "JWT_SECRET": "",
-    },
-    clear=False,
-)
 def test_settings_raises_when_production_secret_missing():
-    with patch("core.config.secret_vault.fetch_secret", return_value=""):
-        with pytest.raises((ValueError, RuntimeError)):
-            Settings()
+    with patch.dict(
+        os.environ,
+        {
+            "env": "production",
+            "ALLOW_TEST_AUTH_BYPASS": "false",
+            "OPENROUTER_API_KEY": "sk-open",
+            "GEMINI_API_KEY": "sk-gemini",
+            "SUPREMEAI_JWT_SECRET": "",
+            "JWT_SECRET": "",
+        },
+        clear=True,
+    ):
+        with patch("core.config.secret_vault.fetch_secret", return_value=""):
+            with pytest.raises((ValueError, RuntimeError)):
+                Settings()
