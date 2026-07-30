@@ -1,6 +1,5 @@
 """SQLAlchemy models for Layer 4: Localization & UX.
 
-from sqlalchemy import JSON
 BhashaBot translation cache and VoiceDidi voice processing records.
 """
 
@@ -11,7 +10,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Float, Integer, String, Text
+from sqlalchemy import DateTime, Float, Integer, String, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 

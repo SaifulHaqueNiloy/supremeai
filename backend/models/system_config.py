@@ -1,5 +1,4 @@
 """
-from sqlalchemy import JSON
 system_config.py — Database-Driven Configuration Model
 =======================================================
 SupremeAI 2.0-এর জন্য centralized key-value config টেবিল।
@@ -13,7 +12,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, String, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
