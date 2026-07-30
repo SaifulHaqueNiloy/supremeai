@@ -32,6 +32,7 @@ class TestSecureRedisManagerInitialization:
         with patch("core.cache.redis_manager.os.getenv", return_value=""):
             with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
                 mgr = SecureRedisManager()
+                mgr.url = ""
                 assert mgr._client is None
                 assert mgr._initialized is False
 
@@ -41,6 +42,7 @@ class TestSecureRedisManagerInitialization:
         with patch("core.cache.redis_manager.os.getenv", return_value=""):
             with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
                 mgr = SecureRedisManager()
+                mgr.url = ""
                 await mgr._ensure_connected()
                 assert mgr._initialized is True
                 assert mgr._client is None
@@ -51,6 +53,7 @@ class TestSecureRedisManagerInitialization:
         with patch("core.cache.redis_manager.os.getenv", return_value=""):
             with patch("core.security.secret_vault.secret_vault.fetch_secret", return_value=""):
                 mgr = SecureRedisManager()
+                mgr.url = ""
                 client = await mgr.get_client_async()
                 assert client is None
 
