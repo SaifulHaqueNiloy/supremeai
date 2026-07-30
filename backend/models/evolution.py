@@ -1,11 +1,10 @@
 # Self-Evolution Engine models tracking autonomous code updates
 # বাংলা মন্তব্য: এআই কর্তৃক জেনারেটেড নতুন স্কিল, স্বয়ংক্রিয় প্রপোজাল ট্র্যাকিং এবং ফিটনেস স্কোরিং মডেল।
 
-from sqlalchemy import JSON
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
