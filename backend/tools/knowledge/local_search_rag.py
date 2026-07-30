@@ -54,16 +54,18 @@ class LocalSearchRAG:
 
         self.chroma_client = None
         self.collection = None
-        
+
         # Initialize ChromaDB by trying to import and checking if it's mocked
         # Use a try/except with a direct import to handle mocking properly
         import sys
-        if 'tools.knowledge.local_search_rag' in sys.modules:
+
+        if "tools.knowledge.local_search_rag" in sys.modules:
             # Get the module and check if chromadb attribute has been mocked
-            local_module = sys.modules['tools.knowledge.local_search_rag']
+            local_module = sys.modules["tools.knowledge.local_search_rag"]
             # If chromadb has been set to None by a mock, respect that
-            if hasattr(local_module, 'chromadb') and local_module.chromadb is None:
+            if hasattr(local_module, "chromadb") and local_module.chromadb is None:
                 import loguru
+
                 loguru.logger.warning(
                     "chromadb package not installed. LocalSearchRAG will run with local TF-IDF fallback index."
                 )
@@ -73,11 +75,13 @@ class LocalSearchRAG:
                 # Try to import chromadb normally
                 try:
                     import chromadb
+
                     chroma_dir = self.storage_dir / "chroma"
                     self.chroma_client = chromadb.PersistentClient(path=str(chroma_dir))
                     self.collection = self.chroma_client.get_or_create_collection(name="local_rag_collection")
                 except ImportError:
                     import loguru
+
                     loguru.logger.warning(
                         "chromadb package not installed. LocalSearchRAG will run with local TF-IDF fallback index."
                     )
@@ -85,6 +89,7 @@ class LocalSearchRAG:
                     self.collection = None
                 except Exception as e:  # noqa: BLE001
                     import loguru
+
                     loguru.logger.warning(
                         f"ChromaDB initialization failed: {e}. LocalSearchRAG will run with local TF-IDF fallback index."
                     )
@@ -94,11 +99,13 @@ class LocalSearchRAG:
             # Normal import flow when not under test
             try:
                 import chromadb
+
                 chroma_dir = self.storage_dir / "chroma"
                 self.chroma_client = chromadb.PersistentClient(path=str(chroma_dir))
                 self.collection = self.chroma_client.get_or_create_collection(name="local_rag_collection")
             except ImportError:
                 import loguru
+
                 loguru.logger.warning(
                     "chromadb package not installed. LocalSearchRAG will run with local TF-IDF fallback index."
                 )
@@ -106,6 +113,7 @@ class LocalSearchRAG:
                 self.collection = None
             except Exception as e:  # noqa: BLE001
                 import loguru
+
                 loguru.logger.warning(
                     f"ChromaDB initialization failed: {e}. LocalSearchRAG will run with local TF-IDF fallback index."
                 )
