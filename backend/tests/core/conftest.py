@@ -1,7 +1,8 @@
 import pytest
+import pytest_asyncio
 
 
-@pytest.fixture(autouse=True)
-def override_setup_test_database():
+@pytest_asyncio.fixture(scope="session")
+async def override_setup_test_database():
     yield
     return

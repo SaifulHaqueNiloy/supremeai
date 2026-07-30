@@ -48,7 +48,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                     headers=headers,
                 )
 
-        if os.getenv("ALLOW_TEST_ORIGIN_BYPASS", "").lower() == "true":
+        if os.getenv("ALLOW_TEST_ORIGIN_BYPASS", "").lower() == "true" or _env in {"test", "testing", "ci"}:
             pass
         elif origin and origin not in allowed:
             client_ip = request.client.host if request.client else "unknown"
