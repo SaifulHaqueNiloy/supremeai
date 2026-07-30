@@ -18,7 +18,11 @@ import threading  # noqa: E402
 import time  # noqa: E402 - Added for performance metrics
 from typing import Any  # noqa: E402
 
-from cachetools import TTLCache  # noqa: E402
+try:
+    from cachetools import TTLCache  # noqa: E402
+except ImportError:
+    TTLCache = dict  # fallback for lightweight environments lacking cachetools
+
 from loguru import logger  # noqa: E402
 
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
