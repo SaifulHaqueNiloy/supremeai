@@ -81,7 +81,8 @@ class GCPFirestoreVerificationQueue:
         assert conn is not None  # noqa: S101
 
         try:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS verification_queue (
                     queue_id TEXT PRIMARY KEY,
                     task_id TEXT NOT NULL,
@@ -93,7 +94,8 @@ class GCPFirestoreVerificationQueue:
                     updated_at TEXT NOT NULL,
                     verified_at TEXT
                 )
-                """)
+                """
+            )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_verification_status ON verification_queue(status, priority)")
             conn.commit()
         finally:

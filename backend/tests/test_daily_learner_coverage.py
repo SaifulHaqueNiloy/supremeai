@@ -105,9 +105,7 @@ class TestGoalDecomposer:
     @pytest.mark.asyncio
     async def test_decompose_cached(self):
         """decompose should return cached results when available."""
-        from core.evolution.daily_learner import (
-            GoalDecomposer,
-        )
+        from core.evolution.daily_learner import GoalDecomposer
 
         mock_cache = AsyncMock()
         sg_data = [

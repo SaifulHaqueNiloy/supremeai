@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from backend.tools.security_tools.multi_account_rotator import (
     Account,
     MultiAccountRotator,
@@ -11,7 +12,6 @@ from backend.tools.security_tools.multi_account_rotator import (
     ProviderStatus,
     TaskType,
 )
-
 from core.utils.time_utils import utc_now
 
 

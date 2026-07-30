@@ -99,10 +99,7 @@ class TestCredentials:
 
     def test_save_and_get_credential(self):
         """save_credential and get_credentials should work together."""
-        from api.routes.browser import (
-            CredentialRequest,
-            save_credential,
-        )
+        from api.routes.browser import CredentialRequest, save_credential
 
         with (
             patch("api.routes.browser.credential_store.encrypt") as mock_encrypt,
@@ -192,10 +189,7 @@ class TestUrlPermissions:
 
     def test_allow_all_urls(self):
         """allow_all_urls should add a wildcard permission."""
-        from api.routes.browser import (
-            URL_PERMISSIONS,
-            allow_all_urls,
-        )
+        from api.routes.browser import URL_PERMISSIONS, allow_all_urls
 
         result = allow_all_urls(userId="default")
         assert result["urlPattern"] == "*"
@@ -218,11 +212,7 @@ class TestUrlPermissions:
 
     def test_url_request_decision(self):
         """decision should update request status."""
-        from api.routes.browser import (
-            PERMISSION_REQUESTS,
-            DecisionRequest,
-            decision,
-        )
+        from api.routes.browser import PERMISSION_REQUESTS, DecisionRequest, decision
 
         PERMISSION_REQUESTS.append({"id": "req_1", "status": "PENDING"})
         result = decision("req_1", DecisionRequest(approved=True))

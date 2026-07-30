@@ -88,8 +88,9 @@ class TestSecretVault:
 
     def test_fetch_async(self):
         """fetch_async should return secret asynchronously."""
-        from core.security.secret_vault import get_secret_vault
         import asyncio
+
+        from core.security.secret_vault import get_secret_vault
 
         vault = get_secret_vault()
         vault.set_secret("TEST_KEY", "async_value")
