@@ -68,7 +68,9 @@ def test_defaults(mock_fetch):
     side_effect=lambda k, default="": os.environ.get(k) or os.environ.get(k.lower()) or default,
 )
 def test_env_override(mock_fetch):
-    Settings._cached_secrets = {}
+    from core.config import settings
+    settings._cached_secrets.clear()
+    Settings._cached_secrets.clear()
     Settings._secrets_batch_loaded = False
     s = Settings()
     assert s.PROJECT_NAME == "TestApp"
@@ -77,9 +79,9 @@ def test_env_override(mock_fetch):
     assert s.port == 9000
     assert s.host == "0.0.0.0"  # noqa: S104
     assert s.supremeai_admin_password_hash in (
-        "mock_hash_value_for_test_pass", 
+        "mock_hash_value_for_test_pass",
         "dummy_admin_hash",
-        "$2b$12$mockhashmockhashmockhashmockhashmockhash"
+        "$2b$12$mockhashmockhashmockhashmockhashmockhash",
     )
     assert s.openrouter_api_key == "TEST_ONLY_OPENROUTER_API_KEY"
     assert s.hf_api_key == "TEST_ONLY_HF_API_KEY"

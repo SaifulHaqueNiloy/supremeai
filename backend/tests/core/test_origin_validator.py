@@ -98,7 +98,7 @@ class TestTrustedOriginMiddleware:
             "Origin": "http://evil-hacker.com",
         }
 
-        with patch.dict("os.environ", {"ENV": "production"}):
+        with patch.dict("os.environ", {"ENV": "production", "ALLOW_TEST_ORIGIN_BYPASS": "false"}):
             with patch(
                 "core.security.origin_validator.TrustedOriginMiddleware.allowed_origins",
                 new_callable=PropertyMock,

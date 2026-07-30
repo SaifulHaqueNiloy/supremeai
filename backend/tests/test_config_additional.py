@@ -22,7 +22,7 @@ def test_settings_raises_when_production_secret_missing():
     with patch.dict(
         os.environ,
         {
-            "env": "production",
+            "ENV": "production",
             "ALLOW_TEST_AUTH_BYPASS": "false",
             "OPENROUTER_API_KEY": "sk-open",
             "GEMINI_API_KEY": "sk-gemini",
@@ -32,5 +32,6 @@ def test_settings_raises_when_production_secret_missing():
         clear=True,
     ):
         with patch("core.config.secret_vault.fetch_secret", return_value=""):
+            Settings._cached_secrets.clear()
             with pytest.raises((ValueError, RuntimeError)):
                 Settings()
