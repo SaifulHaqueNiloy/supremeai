@@ -16,6 +16,8 @@ except ImportError:
 
 
 class SSOIntegrator:
+    saml_settings: dict[str, Any] = {}
+
     def __init__(self, saml_settings: dict[str, Any] | None = None):
         self.saml_settings = saml_settings or {}
         self.onelogin = self._load_onelogin()
