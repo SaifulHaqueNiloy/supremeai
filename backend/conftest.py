@@ -1,9 +1,10 @@
 # backend/conftest.py
 # Test configuration and fixtures for SupremeAI backend
-import os
-import pytest
-from unittest.mock import patch, MagicMock
 import asyncio
+import os
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture(autouse=True)

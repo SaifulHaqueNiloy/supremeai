@@ -90,7 +90,8 @@ class SupremeLearningEngine:
     def _init_db(self):
         """Initialize SQLite database for patterns."""
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS patterns (
                 pattern_id TEXT PRIMARY KEY,
                 query_signature TEXT,
@@ -106,13 +107,18 @@ class SupremeLearningEngine:
                 domain TEXT,
                 complexity TEXT
             )
-        """)
-        conn.execute("""
+        """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_signature ON patterns(query_signature)
-        """)
-        conn.execute("""
+        """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_domain ON patterns(domain)
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
