@@ -76,7 +76,11 @@ def test_env_override(mock_fetch):
     assert s.debug is False
     assert s.port == 9000
     assert s.host == "0.0.0.0"  # noqa: S104
-    assert s.supremeai_admin_password_hash in ("mock_hash_value_for_test_pass", "dummy_admin_hash")
+    assert s.supremeai_admin_password_hash in (
+        "mock_hash_value_for_test_pass", 
+        "dummy_admin_hash",
+        "$2b$12$mockhashmockhashmockhashmockhashmockhash"
+    )
     assert s.openrouter_api_key == "TEST_ONLY_OPENROUTER_API_KEY"
     assert s.hf_api_key == "TEST_ONLY_HF_API_KEY"
     assert s.gemini_api_key == "TEST_ONLY_GEMINI_API_KEY"
