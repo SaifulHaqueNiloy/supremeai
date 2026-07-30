@@ -2,7 +2,7 @@
 Coverage tests for tools/knowledge/local_search_rag.py.
 Target: 100% line coverage.
 
-লোকাল সার্চ RAG মডিউলের সকল ফাংশন ও শাখা কভার করা হয়েছে।
+লোকাল সার্চ RAG মডিউলের সকল ফাংশন ও শাখা কভার করা হয়েছে।
 """
 
 import json
