@@ -15,6 +15,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+try:
+    import chromadb
+except ImportError:
+    chromadb = None
+
 from tools.ai_agents.browser_agent import BrowserAgent
 
 
@@ -193,13 +198,23 @@ class LocalSearchRAG:
         results: list[SearchResult] = []
         lines = [line.strip() for line in page_text.splitlines() if line.strip()]
         i = 0
-        while i < len(lines) - 2 and len(results) < self.max_pages:
+        while i + 2 < len(lines) and len(results) < self.max_pages:
             title = lines[i]
-            snippet = lines[i + 1]
-            url = lines[i + 2]
-            if (url.startswith("http://") or url.startswith("https://")) and " " not in url.strip():
+            url = lines[i + 1]
+            snippet = lines[i + 2]
+            if (url.startswith("http://") or url.startswith("https://")) and " " not in url:
                 results.append(SearchResult(title=title, url=url, snippet=snippet, content=""))
                 i += 3
             else:
                 i += 1
         return results
+
+    def summarize(self, url: str, content: str) -> dict[str, Any]:
+        """Returns a summarized payload of the web page content."""
+        snippet = content[:200] if content else ""
+        return {
+            "status": "ok",
+            "url": url,
+            "summary": snippet,
+            "content": content,
+        }

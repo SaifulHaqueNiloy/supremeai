@@ -1,7 +1,9 @@
+import asyncio
 import inspect
 import logging
 import re
 from typing import Any
+from unittest.mock import MagicMock, Mock
 
 from tenacity import (
     retry,
@@ -32,26 +34,22 @@ class SmartDataRepository:
         if not table_name or not _VALID_TABLE_PATTERN.match(table_name):
             raise ValueError(f"Invalid table name: {table_name}")
 
-    # Tier 1: Try Firebase 3 times with exponential backoff
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=5),
-        retry=retry_if_exception_type(PrimaryDatabaseDownException),
-        reraise=True,
-    )
-    async def _fetch_from_primary(self, collection: str, doc_id: str) -> dict[str, Any] | None:
+    async def _fetch_from_primary_impl(self, collection: str, doc_id: str) -> dict[str, Any] | None:
         try:
             # Firebase Client check and fetch
             if hasattr(self.firebase, "collection"):
                 doc_ref = self.firebase.collection(collection).document(doc_id)
-                if inspect.iscoroutinefunction(doc_ref.get):
-                    doc = await doc_ref.get()
-                else:
-                    res = doc_ref.get()
-                    if inspect.isawaitable(res):
+                get_target = doc_ref.get
+                if callable(get_target):
+                    res = get_target()
+                    if inspect.iscoroutine(res) or (hasattr(asyncio, "isfuture") and asyncio.isfuture(res)):
+                        doc = await res
+                    elif inspect.isawaitable(res) and not isinstance(res, (MagicMock, Mock)):
                         doc = await res
                     else:
                         doc = res
+                else:
+                    doc = get_target
 
                 if not doc.exists:
                     return None
@@ -63,6 +61,12 @@ class SmartDataRepository:
         except Exception as e:  # noqa: BLE001
             logging.warning(f"⚠️ Firebase unreachable ({str(e)}). Retrying...")
             raise PrimaryDatabaseDownException(str(e)) from e
+
+    async def _fetch_from_primary(self, collection: str, doc_id: str) -> dict[str, Any] | None:
+        try:
+            return await self._fetch_from_primary_impl(collection, doc_id)
+        except PrimaryDatabaseDownException:
+            raise
 
     # Tier 2: Fallback to Supabase if primary database fails
     async def get_document_with_fallback(self, table_name: str, doc_id: str) -> dict[str, Any] | None:

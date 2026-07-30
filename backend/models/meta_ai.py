@@ -40,6 +40,7 @@ class MetricType(enum.StrEnum):
     """Types of performance metrics tracked."""
 
     RESPONSE_TIME_MS = "response_time_ms"
+    LATENCY = "latency"
     ACCURACY_SCORE = "accuracy_score"
     COST_PER_REQUEST = "cost_per_request"
     ERROR_RATE = "error_rate"

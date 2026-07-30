@@ -55,6 +55,8 @@ def _require_admin(credentials: HTTPAuthorizationCredentials) -> dict[str, Any]:
                 detail="Admin role required",
             )
         return payload
+    except HTTPException:
+        raise
     except Exception as e:  # noqa: BLE001
         # Fallback: check supremeai token
         expected = getattr(settings, "supremeai_api_token", None) or ""
