@@ -106,14 +106,29 @@ class _MockFastMCP:
 
         return decorator
 
+    def list_tools(self, *args, **kwargs):
+        def decorator(func):
+            return func
+
+        return decorator
+
+    def call_tool(self, *args, **kwargs):
+        def decorator(func):
+            return func
+
+        return decorator
+
     def __call__(self, *args, **kwargs):
         return _MockFastMCP()
 
 
-_mcp_fastmcp = create_mock_module("mcp.server.fastmcp")
-_mcp_fastmcp.FastMCP = _MockFastMCP
-sys.modules["mcp.server.fastmcp"] = _mcp_fastmcp
-sys.modules["mcp"] = create_mock_module("mcp", is_package=True)
+_mcp_server = create_mock_module("mcp.server", is_package=True)
+_mcp_server.FastMCP = _MockFastMCP
+_mcp_server.Server = _MockFastMCP
+sys.modules["mcp.server"] = _mcp_server
+sys.modules["mcp.server.fastmcp"] = _mcp_server
+sys.modules["mcp.server.stdio"] = _mcp_server
+sys.modules["mcp.server.session"] = create_mock_module("mcp.server.session")
 sys.modules["grpc"] = create_mock_module("grpc", is_package=True)
 sys.modules["google"] = create_mock_module("google", is_package=True)
 sys.modules["google.auth"] = create_mock_module("google.auth", is_package=True)
@@ -149,8 +164,8 @@ sys.modules["opentelemetry.sdk.trace"] = create_mock_module("opentelemetry.sdk.t
 sys.modules["opentelemetry.trace.export"] = create_mock_module("opentelemetry.trace.export")
 sys.modules["asyncpg.connection"] = create_mock_module("asyncpg.connection")
 sys.modules["asyncpg.pool"] = create_mock_module("asyncpg.pool")
-sys.modules["mcp.server"] = _mcp_fastmcp
-sys.modules["mcp.server.stdio"] = _mcp_fastmcp
+sys.modules["mcp.server"] = _mcp_server
+sys.modules["mcp.server.stdio"] = _mcp_server
 sys.modules["google.oauth2"] = create_mock_module("google.oauth2", is_package=True)
 sys.modules["google.oauth2.credentials"] = create_mock_module("google.oauth2.credentials")
 sys.modules["google.oauth2.service_account"] = create_mock_module("google.oauth2.service_account")

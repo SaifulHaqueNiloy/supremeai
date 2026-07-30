@@ -5,6 +5,7 @@ try:
     from skills.installer import SkillInstaller
     from skills.registry import SkillRegistry
     from skills.schema import UniversalSkillSchema
+
     HAS_USS_SKILLS = True
 except (ImportError, ModuleNotFoundError):
     HAS_USS_SKILLS = False
