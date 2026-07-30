@@ -32,8 +32,10 @@ class TestTrustedOriginMiddleware:
         app.add_middleware(TrustedOriginMiddleware)
         client = TestClient(app)
 
-        # Mock ENV=test
-        with patch("os.getenv", return_value="test"):
+        # Mock ENV=test - patch at module level since middleware imports os locally
+        with patch(
+            "core.security.origin_validator.os.getenv", side_effect=lambda k, d=None: "test" if k == "ENV" else d
+        ):
             resp = client.get("/api/test")
 
         assert resp.status_code == 200
@@ -49,8 +51,10 @@ class TestTrustedOriginMiddleware:
         app.add_middleware(TrustedOriginMiddleware)
         client = TestClient(app)
 
-        with patch("os.getenv", return_value="development"):
-            # testserver is used by FastAPI's TestClient
+        # testserver is used by FastAPI's TestClient
+        with patch(
+            "core.security.origin_validator.os.getenv", side_effect=lambda k, d=None: "development" if k == "ENV" else d
+        ):
             resp = client.get("/api/test")
 
         assert resp.status_code == 200
@@ -85,7 +89,10 @@ class TestTrustedOriginMiddleware:
 
         with (
             patch("core.security.origin_validator.settings") as mock_settings,
-            patch("os.getenv", return_value="production"),
+            patch(
+                "core.security.origin_validator.os.getenv",
+                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
+            ),
         ):
             mock_settings.cors_origins = ["https://trusted.example.com"]
             mock_settings.supremeai_public_paths = []
@@ -114,7 +121,10 @@ class TestTrustedOriginMiddleware:
 
         with (
             patch("core.security.origin_validator.settings") as mock_settings,
-            patch("os.getenv", return_value="production"),
+            patch(
+                "core.security.origin_validator.os.getenv",
+                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
+            ),
         ):
             mock_settings.cors_origins = ["https://trusted.example.com"]
             mock_settings.supremeai_public_paths = []
@@ -143,7 +153,10 @@ class TestTrustedOriginMiddleware:
 
         with (
             patch("core.security.origin_validator.settings") as mock_settings,
-            patch("os.getenv", return_value="production"),
+            patch(
+                "core.security.origin_validator.os.getenv",
+                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
+            ),
         ):
             mock_settings.cors_origins = ["https://trusted.example.com"]
             mock_settings.supremeai_public_paths = []
@@ -174,7 +187,10 @@ class TestTrustedOriginMiddleware:
 
         with (
             patch("core.security.origin_validator.settings") as mock_settings,
-            patch("os.getenv", return_value="production"),
+            patch(
+                "core.security.origin_validator.os.getenv",
+                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
+            ),
         ):
             mock_settings.cors_origins = []
             mock_settings.supremeai_public_paths = []
@@ -202,7 +218,10 @@ class TestTrustedOriginMiddleware:
 
         with (
             patch("core.security.origin_validator.settings") as mock_settings,
-            patch("os.getenv", return_value="production"),
+            patch(
+                "core.security.origin_validator.os.getenv",
+                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
+            ),
         ):
             mock_settings.cors_origins = []
             mock_settings.supremeai_public_paths = []
@@ -230,7 +249,10 @@ class TestTrustedOriginMiddleware:
 
         with (
             patch("core.security.origin_validator.settings") as mock_settings,
-            patch("os.getenv", return_value="production"),
+            patch(
+                "core.security.origin_validator.os.getenv",
+                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
+            ),
         ):
             mock_settings.cors_origins = ["https://trusted.example.com"]
             mock_settings.supremeai_public_paths = []
