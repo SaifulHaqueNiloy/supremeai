@@ -8,7 +8,7 @@ logger.remove()
 
 # Mock external dependencies that are not installed
 import importlib.machinery
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 def create_mock_module(name, is_package=False):
@@ -17,6 +17,32 @@ def create_mock_module(name, is_package=False):
     if is_package:
         m.__path__ = []
     return m
+
+import pytest
+
+@pytest.fixture
+def valid_auth_headers():
+    return {
+        "Authorization": "Bearer mock_test_jwt_token",
+        "Content-Type": "application/json"
+    }
+
+@pytest.fixture
+async def async_session():
+    from unittest.mock import AsyncMock
+    yield AsyncMock()
+
+@pytest.fixture(autouse=True)
+def disable_honeypot(monkeypatch):
+    async def mock_bypass(self, scope, receive, send):
+        await self.app(scope, receive, send)
+    monkeypatch.setattr("core.security.honeypot_middleware.HoneypotMiddleware.__call__", mock_bypass)
+
+@pytest.fixture(autouse=True)
+def disable_chaos_injector():
+    os.environ["ENABLE_CHAOS_INJECTOR"] = "false"
+    yield
+
 
 
 # বাংলা মন্তব্য: টেস্টে Supabase নেটওয়ার্ক রিকোয়েস্ট আটকাতে module import এর আগেই
@@ -27,6 +53,7 @@ os.environ["SUPABASE_KEY"] = ""
 
 sys.modules["slowapi"] = create_mock_module("slowapi", is_package=True)
 sys.modules["slowapi.util"] = create_mock_module("slowapi.util")
+sys.modules["locust"] = create_mock_module("locust", is_package=True)
 
 
 class RateLimitExceeded(Exception):

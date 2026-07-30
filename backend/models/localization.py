@@ -1,5 +1,6 @@
 """SQLAlchemy models for Layer 4: Localization & UX.
 
+from sqlalchemy import JSON
 BhashaBot translation cache and VoiceDidi voice processing records.
 """
 
@@ -59,6 +60,6 @@ class VoiceSession(Base):
     error_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # JSONB for flexible metadata: device info, noise level, regional accent, etc.
-    metadata_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

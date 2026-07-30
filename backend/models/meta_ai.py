@@ -13,6 +13,7 @@ Provides:
 """
 
 from __future__ import annotations
+from sqlalchemy import JSON
 
 import enum
 import uuid
@@ -71,7 +72,7 @@ class AgentGenome(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     agent_name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    chromosome: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    chromosome: Mapped[dict[str, Any]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict)
     """Genetic traits: prompt_template, model_name, temperature, tools, etc."""
 
     fitness_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False, index=True)
@@ -83,7 +84,7 @@ class AgentGenome(Base):
         UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=True
     )
     status: Mapped[AgentStatus] = mapped_column(String(50), default=AgentStatus.ACTIVE, nullable=False)
-    lineage: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    lineage: Mapped[list[str]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list)
     """Ordered list of ancestor agent names for traceability."""
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
@@ -106,7 +107,7 @@ class AgentOffspring(Base):
     offspring_name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     parent_a_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=False)
     parent_b_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=False)
-    chromosome: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    chromosome: Mapped[dict[str, Any]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
     crossover_method: Mapped[str] = mapped_column(String(50), nullable=False)
     mutation_rate: Mapped[float] = mapped_column(Float, default=0.05, nullable=False)
     evaluation_status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
@@ -133,7 +134,7 @@ class PerformanceMetric(Base):
     metric_type: Mapped[MetricType] = mapped_column(String(50), index=True, nullable=False)
     value: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str] = mapped_column(String(50), nullable=False)
-    context: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    context: Mapped[dict[str, Any]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict)
     """Extra context: request_id, user_id, model_used, etc."""
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
@@ -175,7 +176,7 @@ class BreedingPool(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     pool_name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    agent_names: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    agent_names: Mapped[list[str]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list)
     min_fitness_threshold: Mapped[float] = mapped_column(Float, default=0.6, nullable=False)
     max_pool_size: Mapped[int] = mapped_column(Integer, default=20, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

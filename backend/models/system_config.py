@@ -1,4 +1,5 @@
 """
+from sqlalchemy import JSON
 system_config.py — Database-Driven Configuration Model
 =======================================================
 SupremeAI 2.0-এর জন্য centralized key-value config টেবিল।
@@ -36,7 +37,7 @@ class SystemConfig(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     key: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    value: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    value: Mapped[Any] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     category: Mapped[str] = mapped_column(String(100), nullable=False, default="general")
     is_active: Mapped[bool] = mapped_column(default=True)
