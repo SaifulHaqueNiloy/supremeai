@@ -7,8 +7,12 @@ from core.config import Settings
 
 
 @patch.dict(os.environ, {}, clear=True)
-def test_defaults():
+@patch("core.config.secret_vault.fetch_secret", return_value="")
+def test_defaults(mock_fetch):
+    Settings._cached_secrets = {}
+    Settings._secrets_batch_loaded = False
     s = Settings()
+    s._set_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH", "mock_SUPREMEAI_ADMIN_PASSWORD_HASH")
     assert s.app_name == "SupremeAI 2.0"
     assert s.env == "local"
     assert s.debug is True
@@ -61,9 +65,11 @@ def test_defaults():
 )
 @patch(
     "core.config.secret_vault.fetch_secret",
-    side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()),
+    side_effect=lambda k, default="": os.environ.get(k) or os.environ.get(k.lower()) or default,
 )
 def test_env_override(mock_fetch):
+    Settings._cached_secrets = {}
+    Settings._secrets_batch_loaded = False
     s = Settings()
     assert s.PROJECT_NAME == "TestApp"
     assert s.env == "production"
