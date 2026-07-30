@@ -6,6 +6,19 @@ from loguru import logger
 # বাংলা মন্তব্য: pytest কালেকশনের সময় loguru-এর ডিফল্ট stderr হ্যান্ডলার যেন I/O error না দেয়, তাই প্রথমেই সেটি রিমুভ করা হলো।
 logger.remove()
 
+# বাংলা মন্তব্য: এই ব্লকটা একটা আগের কমিটে হারিয়ে গিয়েছিল, যার ফলে --import-mode=importlib
+# ব্যবহার করার সময় `from core...` ইমপোর্ট সব টেস্ট ফাইলে ModuleNotFoundError দিচ্ছিল (৩২টা
+# collection error)। backend/ রুট এবং রিপো-রুট + scripts/ ডিরেক্টরি sys.path-এ ফেরত যোগ করা হলো।
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+SCRIPTS_DIR = os.path.join(REPO_ROOT, "scripts")
+if REPO_ROOT not in sys.path:
+    sys.path.append(REPO_ROOT)
+if os.path.isdir(SCRIPTS_DIR) and SCRIPTS_DIR not in sys.path:
+    sys.path.append(SCRIPTS_DIR)
+
 # Mock external dependencies that are not installed
 import importlib.machinery
 from unittest.mock import MagicMock
