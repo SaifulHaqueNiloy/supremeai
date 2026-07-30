@@ -7,9 +7,12 @@ from core.app import app
 client = TestClient(app)
 
 
-def test_get_skill_graph_dry_run(valid_auth_headers):
-    # বাংলা মন্তব্য: ড্রাই-রান মোডে গ্রাফ নোড এবং এজ ফরম্যাট ভ্যালিডেশন
-    response = client.get("/api/v1/graph/skills", headers=valid_auth_headers)
+def test_get_skill_graph_dry_run():
+    from core.security import create_access_token
+
+    token = create_access_token({"sub": "test_user", "role": "user"})
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.get("/api/v1/graph/skills", headers=headers)
     assert response.status_code == 200
 
     data = response.json()
@@ -19,11 +22,14 @@ def test_get_skill_graph_dry_run(valid_auth_headers):
     assert data["nodes"][0]["id"] == "python"
 
 
-def test_get_learning_path_dry_run(valid_auth_headers):
-    # বাংলা মন্তব্য: দুটি স্কিলের মধ্যে ড্রাই-রান মোডে পাথ ফাইন্ডিং চেক
+def test_get_learning_path_dry_run():
+    from core.security import create_access_token
+
+    token = create_access_token({"sub": "test_user", "role": "user"})
+    headers = {"Authorization": f"Bearer {token}"}
     response = client.get(
         "/api/v1/graph/path?start_skill=Python&end_skill=FastAPI",
-        headers=valid_auth_headers,
+        headers=headers,
     )
     assert response.status_code == 200
 

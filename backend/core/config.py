@@ -1027,6 +1027,8 @@ class Settings(BaseSettings):
         """Production completeness verification helper for test coverage."""
         # বাংলা মন্তব্য: প্রোডাকশন এনভায়রনমেন্টের জন্য অতিরিক্ত কনফিগারেশন ভ্যালিডেশন
         if self.env == "production":
+            if hasattr(self, "_jwt_secret_cache"):
+                delattr(self, "_jwt_secret_cache")
             _ = self.jwt_secret
 
             # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
