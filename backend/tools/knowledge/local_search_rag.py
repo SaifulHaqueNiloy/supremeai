@@ -10,7 +10,6 @@ using ChromaDB, with a robust TF-IDF-based fallback for offline or
 unconfigured environments, allowing efficient access to previously gathered
 information to enhance contextual understanding."""
 
-import asyncio
 from typing import Any
 import contextlib
 import json
@@ -18,6 +17,9 @@ from pathlib import Path
 
 # Import BrowserAgent here to handle it separately
 from tools.ai_agents.browser_agent import BrowserAgent
+
+chromadb = None
+
 
 
 class SearchResult:

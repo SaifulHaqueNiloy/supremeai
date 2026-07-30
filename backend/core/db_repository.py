@@ -5,12 +5,6 @@ import re
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
 
 _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 

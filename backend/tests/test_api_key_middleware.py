@@ -48,7 +48,6 @@ class TestAPIKeyAuthMiddleware:
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
 
-        
             app.add_middleware(APIKeyAuthMiddleware)
             client = TestClient(app)
 
@@ -80,7 +79,6 @@ class TestAPIKeyAuthMiddleware:
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=None)
 
-        
             app.add_middleware(APIKeyAuthMiddleware)
             client = TestClient(app)
 
@@ -121,7 +119,6 @@ class TestAPIKeyAuthMiddleware:
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
 
-        
             app.add_middleware(APIKeyAuthMiddleware)
             client = TestClient(app)
 
@@ -162,7 +159,6 @@ class TestAPIKeyAuthMiddleware:
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
 
-        
             app.add_middleware(APIKeyAuthMiddleware)
             client = TestClient(app)
 
@@ -202,7 +198,6 @@ class TestAPIKeyAuthMiddleware:
         ):
             mock_pool.return_value.fetchrow = AsyncMock(return_value=mock_row)
 
-        
             app.add_middleware(APIKeyAuthMiddleware)
             client = TestClient(app)
 
