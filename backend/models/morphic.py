@@ -7,6 +7,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    JSON,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
@@ -26,7 +27,7 @@ class AgentReflection(Base):
     agent_id = Column(Integer, ForeignKey("dynamic_agents.id", ondelete="CASCADE"))
     task_id = Column(String)  # Reference to pending_tasks.db sqlite
     outcome_summary = Column(Text)
-    learned_patterns = Column(JSONB)
+    learned_patterns = Column(JSON().with_variant(JSONB, "postgresql"))
     confidence_score = Column(Float)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -59,5 +60,5 @@ class ExecutionChain(Base):
     chain_of_thought = Column(Text)
     tokens_used = Column(Integer)
     model_provider = Column(Text)
-    raw_response = Column(JSONB)
+    raw_response = Column(JSON().with_variant(JSONB, "postgresql"))
     created_at = Column(DateTime(timezone=True), default=func.now())

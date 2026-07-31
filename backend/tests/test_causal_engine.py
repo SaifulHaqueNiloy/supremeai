@@ -43,6 +43,20 @@ async def test_causal_discovery():
         }
     )
 
+    # Since pandas is mocked, we need to mock the dataframe methods used by discover_graph
+    data.columns = ["config_change", "db_latency", "error_rate"]
+
+    # Mock corr() to return a mock correlation matrix
+    from unittest.mock import MagicMock
+
+    class MockLoc:
+        def __getitem__(self, keys):
+            return 0.8
+
+    mock_corr = MagicMock()
+    mock_corr.loc = MockLoc()
+    data.corr.return_value = mock_corr
+
     dag = await engine.discover_graph(data)
     assert "nodes" in dag
     assert "edges" in dag

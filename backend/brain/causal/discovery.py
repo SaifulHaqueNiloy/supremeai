@@ -37,7 +37,7 @@ class CausalDiscoveryEngine:
                 col_i = cols[i]
                 col_j = cols[j]
                 val = corr.loc[col_i, col_j]
-                if abs(val) > (1.0 - alpha):
+                if abs(val) > 0.5:
                     # Direction heuristic: cause usually precedes or drives metrics
                     edges.append({"source": col_i, "target": col_j, "weight": float(val)})
 

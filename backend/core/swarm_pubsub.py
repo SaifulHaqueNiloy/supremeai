@@ -19,6 +19,8 @@ import asyncio  # noqa: E402
 import json  # noqa: E402
 from collections.abc import AsyncGenerator  # noqa: E402
 
+# বাংলা মন্তব্য: aioredis মডিউল লেভেলে ইমপোর্ট করা হয়েছে যাতে টেস্টের সময় সঠিক মক ট্র্যাকিং বজায় থাকে।
+import redis.asyncio as aioredis  # type: ignore[import-untyped] # noqa: E402
 from loguru import logger  # noqa: E402
 
 from core.messaging.event_bus import ErrorEvent  # noqa: E402
@@ -48,7 +50,6 @@ class SwarmPubSub:
     def _get_redis(self):
         if self._redis is not None:
             return self._redis
-        import redis.asyncio as aioredis  # type: ignore[import-untyped]
 
         from core.config import settings
 

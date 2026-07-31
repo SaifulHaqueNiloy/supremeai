@@ -64,7 +64,10 @@ class GCPCredentialManager:
 
     @staticmethod
     def validate_service_account(sa_dict: dict) -> bool:
-        # বাংলা মন্তব্য: সার্ভিস অ্যাকাউন্ট কী সঠিক কিনা তা google-auth লাইব্রেরি দিয়ে পরীক্ষা করা হচ্ছে
+        # বাংলা মন্তব্য: সার্ভিস অ্যাকাউন্ট কী সঠিক কিনা তা পরীক্ষা করা হচ্ছে
+        required = {"type", "project_id", "private_key"}
+        if not sa_dict or not required.issubset(sa_dict.keys()):
+            return False
         try:
             service_account.Credentials.from_service_account_info(sa_dict)
             return True

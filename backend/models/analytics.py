@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Float, String, Text
+from sqlalchemy import Boolean, DateTime, Float, String, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -31,7 +31,9 @@ class AutoReport(Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     data_source: Mapped[str] = mapped_column(String(100), nullable=False)  # firestore_table_name
-    metrics_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)  # extracted metrics
+    metrics_json: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict
+    )  # extracted metrics
     natural_language_summary: Mapped[str] = mapped_column(Text, nullable=False)
     anomaly_detected: Mapped[bool] = mapped_column(default=False, nullable=False)
     severity: Mapped[str | None] = mapped_column(String(20), nullable=True)  # low, medium, high, critical
@@ -51,8 +53,12 @@ class ChurnPrediction(Base):
     user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     churn_risk_score: Mapped[float] = mapped_column(Float, nullable=False)  # 0.0-1.0
     risk_level: Mapped[str] = mapped_column(String(20), nullable=False)  # low, medium, high, critical
-    factors_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)  # top contributing factors
-    recommended_actions: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    factors_json: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict
+    )  # top contributing factors
+    recommended_actions: Mapped[list] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list
+    )
     model_version: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Feedback loop: did the user actually churn?
