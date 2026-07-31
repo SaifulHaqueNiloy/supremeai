@@ -312,7 +312,8 @@ jobs:
       - name: 🔍 Parallel Security Scan
         if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
         run: |
-          wget -qO- https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.48.3
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.deb
+          sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
           trivy fs --format sarif --output trivy-python.sarif --severity CRITICAL,HIGH backend &
           trivy fs --format sarif --output trivy-nodejs.sarif --severity CRITICAL,HIGH . &
           wait
