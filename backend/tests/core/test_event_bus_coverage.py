@@ -637,7 +637,9 @@ class TestGlobalInstance:
 
     def test_global_instance_exists(self):
         """বাংলা মন্তব্য: Global instance create করা আছে।"""
-        assert isinstance(error_event_bus, ErrorEventBus)
+        from core.messaging.event_bus import _ErrorEventBusProxy
+
+        assert isinstance(error_event_bus, _ErrorEventBusProxy)
 
     def test_global_instance_is_singleton(self):
         """বাংলা মন্তব্য: Global instance singleton pattern follow করে।"""

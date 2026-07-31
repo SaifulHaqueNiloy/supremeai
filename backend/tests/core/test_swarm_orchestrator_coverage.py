@@ -18,7 +18,7 @@ from core.resilience.circuit_breaker import (
 
 
 @pytest.fixture(autouse=True)
-async def mock_llm_gateway():
+def mock_llm_gateway():
     """Mock the LLM gateway to prevent real network calls."""
     # বাংলা মন্তব্য: রিমোট এবং লোকাল উভয় ধরনের মকিং একসাথে করা হল যাতে টেস্টগুলো নেটওয়ার্ক কল ছাড়াই কাজ করে।
     with patch("core.llm.llm_gateway.get_llm_gateway", new_callable=MagicMock) as mock_gateway_factory:
@@ -38,6 +38,16 @@ async def mock_llm_gateway():
             with patch("litellm.acompletion", new_callable=AsyncMock) as mock_litellm:
                 mock_litellm.return_value = MagicMock()
                 yield mock_gateway
+
+
+@pytest.fixture(autouse=True)
+def mock_mcp_and_agent_factory():
+    """Mock MCP client and agent factory to prevent network calls and hanging."""
+    with patch("core.mcp_client.MCPRegistryClient.discover_tools", new_callable=AsyncMock, return_value=[]):
+        with patch(
+            "core.agent_factory.DynamicAgentFactory.create_specialized_agent", new_callable=AsyncMock, return_value=None
+        ):
+            yield
 
 
 @pytest.fixture
@@ -298,8 +308,7 @@ class TestSwarmOrchestratorExecuteTask:
                 ):
                     with patch.object(orchestrator.agents["reflection"], "run", new_callable=AsyncMock):
                         with patch(
-                            "core.orchestration.swarm_orchestrator.SharedWorkspace",
-                            return_value=mock_workspace,
+                            "core.orchestration.swarm_orchestrator.SharedWorkspace", return_value=mock_workspace
                         ):
                             result_exec = await orchestrator.execute_task("Build a python REST API", "user123")
                             result = result_exec.workspace

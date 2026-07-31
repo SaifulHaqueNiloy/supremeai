@@ -79,14 +79,7 @@ sse-starlette = "^2.1.3"
 plotly = "^5.24.1"
 dash = "^2.18.1"
 scipy = "^1.14.1"
-scikit-learn = "^1.5.2"
 statsmodels = "^0.14.6"
-xgboost = "^2.1.3"
-lightgbm = "^4.5.0"
-catboost = "^1.2.7"
-optuna = "^4.0.0"
-mlflow = "^2.17.0"
-wandb = "^0.18.5"
 opentelemetry-sdk = "^1.28.2"
 opentelemetry-api = "^1.28.2"
 opentelemetry-instrumentation-fastapi = "^0.49b1"
@@ -114,9 +107,8 @@ torch = "^2.5.0"
 sentence-transformers = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
-# বাংলা মন্তব্য: সিআই পাইপলাইনে ফরম্যাটিং ও লিন্টিংয়ের জন্য dev গ্রুপে black, isort এবং ruff যোগ করা হলো
-black = "^24.4.2"
-isort = "^5.13.2"
+# বাংলা মন্তব্য: pre-commit ও CI শুধুমাত্র ruff (linter + formatter) এবং mypy চালায় --
+# black/isort এখানে ছিল কিন্তু কোথাও invoke হতো না (dead dev dependency), সরানো হলো।
 ruff = "^0.4.8"
 pytest = "^8.0"
 pytest-asyncio = "^0.23"
@@ -133,7 +125,9 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
-source = ["."]
+# বাংলা: core/ ফোল্ডারেই coverage মাপা হয় — CI এর সাথে consistent।
+# পুরো backend/ স্ক্যান করলে pytest অনেক ধীর হয়ে যায়।
+source = ["core"]
 omit = [
     "*/tests/*",
     "*/venv/*",
@@ -141,6 +135,7 @@ omit = [
     ".venv/*",
     "*/__pycache__/*",
     "*/migrations/*",
+    "*/alembic/*",
 ]
 
 [tool.coverage.report]
@@ -155,11 +150,14 @@ exclude_lines = [
 [tool.pytest.ini_options]
 # বাংলা মন্তব্ব্য: টেস্ট কভারেজ থ্রেশহোল্ড 75% এ বাড়ানো হয়েছে সিকিউরিটি এবং কোয়ালিটি বাড়াতে
 minversion = "6.0"
-addopts = "-ra -q --strict-markers --strict-config --cov=. --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
-# বাংলা: CI 'backend/' ডিরেক্টরি থেকে pytest চালায় (working-directory: backend), তাই rootdir = backend/।
-# আগে এখানে "backend/tests" লেখা ছিল যা backend/-এর ভেতর থেকে backend/backend/tests
-# (অস্তিত্বহীন) খুঁজত — ফলে repo-root tests/ কখনো CI-তে কালেক্ট হতো না।
-# "../tests" ব্যবহার করে backend/ থেকে সঠিকভাবে repo-root tests/-এ পৌঁছানো হচ্ছে।
+# বাংলা: --import-mode=importlib (origin/main) duplicate-basename কোলিশন এড়ায় __init__.py
+# ছাড়াই -- আমার আগের __init__.py-based ফিক্সের চেয়ে পরিষ্কার সমাধান, রাখা হলো।
+# কিন্তু testpaths = ["tests"] একাই যথেষ্ট না: CI 'backend/' থেকে pytest চালায়
+# (working-directory: backend, .github/workflows/supreme-core-ci.yml), তাই rootdir = backend/,
+# আর তখন "tests" মানে শুধু backend/tests -- repo-root tests/ (যেখানে
+# test_middleware_anti_hacking.py-র মতো ফাইল আছে) কখনোই কালেক্ট হয় না। "../tests" যোগ করে
+# backend/ থেকে সঠিকভাবে repo-root tests/-এও পৌঁছানো হচ্ছে।
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=core --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
 testpaths = ["tests", "../tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]

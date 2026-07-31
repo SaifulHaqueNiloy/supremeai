@@ -345,7 +345,26 @@ class IntelligentErrorBus(ErrorEventBus):
 
 
 # বাংলা মন্তব্য: Module-level singleton — সিস্টেমে একটিই ErrorEventBus instance থাকবে।
-error_event_bus: ErrorEventBus = IntelligentErrorBus()
+# Lazy initialization to avoid asyncio.Queue creation at import time in test environments.
+_error_event_bus_instance: IntelligentErrorBus | None = None
+
+
+def _get_error_event_bus() -> IntelligentErrorBus:
+    """Lazy initialization of error_event_bus singleton."""
+    global _error_event_bus_instance
+    if _error_event_bus_instance is None:
+        _error_event_bus_instance = IntelligentErrorBus()
+    return _error_event_bus_instance
+
+
+class _ErrorEventBusProxy:
+    """Proxy that delegates all attribute access to the lazily-initialized singleton."""
+
+    def __getattr__(self, name: str):
+        return getattr(_get_error_event_bus(), name)
+
+
+error_event_bus: IntelligentErrorBus = _ErrorEventBusProxy()  # type: ignore[misc, assignment]
 
 
 class EventBus:

@@ -102,7 +102,8 @@ class TestAuthMiddlewareAdvanced:
         mock_app.assert_called_once()
 
     @pytest.mark.anyio
-    async def test_middleware_rejects_missing_token(self):
+    @patch("core.security.auth_middleware.is_test_environment", return_value=False)
+    async def test_middleware_rejects_missing_token(self, mock_is_test):
         """Missing token returns 401."""
         mock_app = AsyncMock()
         middleware = AuthMiddleware(mock_app)
@@ -117,7 +118,8 @@ class TestAuthMiddlewareAdvanced:
         assert send.await_count >= 1
 
     @pytest.mark.anyio
-    async def test_middleware_rejects_invalid_token(self):
+    @patch("core.security.auth_middleware.is_test_environment", return_value=False)
+    async def test_middleware_rejects_invalid_token(self, mock_is_test):
         """Invalid JWT returns 401."""
         mock_app = AsyncMock()
         middleware = AuthMiddleware(mock_app)
@@ -131,7 +133,8 @@ class TestAuthMiddlewareAdvanced:
         mock_app.assert_not_called()
 
     @pytest.mark.anyio
-    async def test_middleware_api_token_mismatch(self):
+    @patch("core.security.auth_middleware.is_test_environment", return_value=False)
+    async def test_middleware_api_token_mismatch(self, mock_is_test):
         """Wrong API token returns 401."""
         mock_app = AsyncMock()
         middleware = AuthMiddleware(mock_app)

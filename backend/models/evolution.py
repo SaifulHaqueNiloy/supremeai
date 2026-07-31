@@ -4,7 +4,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -50,7 +50,7 @@ class CodeProposal(Base):
     )  # proposed, approved, rejected, applied
 
     # Pro Tip: JSONB is highly optimized for PostgreSQL query matching.
-    metadata_json: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 

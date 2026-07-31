@@ -1,5 +1,5 @@
 import os
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -59,9 +59,7 @@ async def test_honeypot_allows_normal_post_in_test_env():
 @pytest.mark.asyncio
 async def test_honeypot_blocks_sql_injection_prod():
     middleware = make_middleware()
-    old_env = os.environ.get("ENV")
-    os.environ["ENV"] = "production"
-    try:
+    with patch.dict(os.environ, {"ENV": "production", "ENABLE_HONEYPOT_TEST": "true"}):
         scope = {
             "type": "http",
             "method": "POST",
@@ -84,19 +82,12 @@ async def test_honeypot_blocks_sql_injection_prod():
         start_event = send.await_args_list[0].args[0]
         assert start_event.get("type") == "http.response.start"
         assert start_event.get("status") == 418
-    finally:
-        if old_env is None:
-            os.environ.pop("ENV", None)
-        else:
-            os.environ["ENV"] = old_env
 
 
 @pytest.mark.asyncio
 async def test_honeypot_blocks_script_injection_prod():
     middleware = make_middleware()
-    old_env = os.environ.get("ENV")
-    os.environ["ENV"] = "production"
-    try:
+    with patch.dict(os.environ, {"ENV": "production", "ENABLE_HONEYPOT_TEST": "true"}):
         scope = {
             "type": "http",
             "method": "POST",
@@ -118,11 +109,6 @@ async def test_honeypot_blocks_script_injection_prod():
         assert send.await_args_list, "Expected the middleware to send a response"
         start_event = send.await_args_list[0].args[0]
         assert start_event.get("status") == 418
-    finally:
-        if old_env is None:
-            os.environ.pop("ENV", None)
-        else:
-            os.environ["ENV"] = old_env
 
 
 @pytest.mark.asyncio
@@ -130,6 +116,7 @@ async def test_honeypot_blocks_ignore_instructions_prod():
     middleware = make_middleware()
     old_env = os.environ.get("ENV")
     os.environ["ENV"] = "production"
+    os.environ["ENABLE_HONEYPOT_TEST"] = "true"
     try:
         scope = {
             "type": "http",

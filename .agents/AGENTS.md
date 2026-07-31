@@ -41,8 +41,8 @@ bash scripts/worktrees/setup_worktree.sh create <task-name>
 # Run task in worktree
 bash scripts/worktrees/run_task.sh <task-name> pytest
 
-# Setup local or docker runner
-bash scripts/runner/setup_runner.sh local
+# Setup docker/production runner
+bash scripts/runner/setup_runner.sh docker
 
 # Create isolated test environment
 bash scripts/testenv/setup_test_env.sh create
@@ -95,17 +95,45 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 
 ## Agent Behavioral Rules
 
+- **Universal Anti-Loop & Root-Cause First Rule (CRITICAL):**
+  - **No Command/Execution Loop:** If ANY task, command, code fix, or Git operation fails twice consecutively, STOP immediately. Do NOT try a 3rd time with small variations.
+  - **Root Cause Diagnosis:** Step back, inspect exact error logs/diffs, identify the core underlying issue, and present a clear single-line diagnostic summary to the user before proceeding.
+  - **No Assumption Code Edits:** Never modify code, schemas, or config files based on assumptions. Always view the full file context (`view_file` / `grep_search`) before applying patches.
+
+- **Zero Exaggeration & Strict Truthfulness Rule (NON-NEGOTIABLE):**
+  - **No Fake Promises:** Never claim or promise that a script, file, or patch will fix "all errors" or "100% pass" unless empirical evidence (actual test runs/logs) proves it.
+  - **Strict Objectivity:** Always report exact facts, raw test counts, and true limitations. Over-promising or hallucinating capabilities is strictly forbidden.
+
+- **Strict PR & Merge Anti-Loop Rule:**
+  - **DO NOT Create Multiple PRs:** Never create multiple pull requests for the same issue or task. If a PR has conflicts or fails, resolve the conflict on the EXISTING branch and push to the existing PR.
+  - **No PR Spamming:** If a PR creation or merge fails twice consecutively, STOP immediately, analyze the root cause (e.g., diverged main, protected branch, local file locks), and explain the exact issue to the user instead of trying alternative branch creation loops.
+  - **Direct Root-Cause Sync:** Always inspect `git diff` against `origin/main` FIRST before making changes or pushing, ensuring local code is aligned with the remote base.
+
+- **Conflict Resolution & Admin Permission Rule (CRITICAL):**
+  - Whenever any code, configuration, or environment key conflict is detected, the AI agent MUST NOT autonomously choose or duplicate items.
+  - The AI agent MUST list the conflicting options clearly for the admin and keep ONLY the single approved item after obtaining explicit admin permission.
+
+- **Timer & User Interaction Control Rule:**
+  - If the user explicitly says `"stop"` or expresses frustration, immediately kill all background timers/tasks using `manage_task(Action='kill')` and DO NOT set any new timers unless explicitly requested.
+  - Keep responses concise, objective, and focused on empirical log evidence without defensive explanations.
+
+- **Ultra-Concise Responses Rule (CRITICAL):**
+  - Always keep answers as short, direct, and minimal as possible.
+  - Do NOT write multi-paragraph explanations or background details unless the user explicitly asks "explain" or "why".
+
 - **Strict Git Push Rule (NON-NEGOTIABLE):** The AI agent MUST NEVER run `git push` under any circumstances unless the user explicitly sends a prompt that contains the exact word `"push"`. Generic user approvals (e.g. "ok", "do that", "fix it", "yes") DO NOT grant push permission. Without the literal word `"push"` present in the user's message, the AI will NEVER push to GitHub.
 
-- **Auto CI Monitor & Self-Healing Rule:** After executing a git push command, the AI agent MUST automatically set a timer for 5 minutes (using the scheduler tool) to check the remote GitHub Actions workflow status. The agent must check the run status every 5 minutes. If any job in the workflow fails, the agent must automatically retrieve the failed step logs, diagnose the failure, implement a fix, commit the changes with a pre-commit impact report, and ask for push permission again. (বাংলা মন্তব্য: পুশ করার পর প্রতি ৫ মিনিট অন্তর দূরবর্তী সিআই পাইপলাইন চেক করা হবে এবং কোনো জব ব্যর্থ হলে তা স্বয়ংক্রিয়ভাবে ফিক্স করা হবে।)
+- **No Background Timers Rule (STRICT):** The AI agent MUST NEVER schedule background timers or interval scheduler tasks after `git push` or during any execution unless the user explicitly requests a timer.
 
 - **Commit All Uncommitted Files & Impact Report:** When performing a commit, ALWAYS inspect all uncommitted files (`git status` / `git diff`), stage all uncommitted files, and provide a short, concise summary report explaining how the uncommitted files make the system better and what specific improvements/benefits they bring.
 
 - **Code Comments (Bangla):** Whenever making changes to the codebase, always try to add explanatory comments in **Bangla** so that the rationale behind the changes is easily understood later by the team.
 
-- **Elite Developer Mindset:** As an elite developer, do not just fix a single error. Always investigate and fix the root cause, and proactively find and fix similar errors across the codebase.
-
 - **Production-Ready Implementation:** DO NOT use mocks, stubs, or dummy implementations. All code must be production-ready and fully functional. If integrating a feature, integrate it with the real backing services (e.g., Supabase, database).
+
+- **Production-Grade Infrastructure Rule (STRICT):**
+  - There are NO local-only environment hacks or local targets. All code, setups, dependencies, models, and workflows MUST be production-grade targeting live cloud infrastructure (GCP Cloud Run, Render, Vercel, Infisical, Supabase, Cloudflare, GitHub Actions).
+  - Speculative local-path fallbacks, mock-type checking in production code, or local-only workarounds are strictly forbidden.
 
 ---
 
@@ -154,7 +182,7 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 - **PSI-001:** বাংলা ভাষার কাজ বা জটিল reasoning → **Moonshot Kimi K2.5** ব্যবহার করো।
 - **PSI-002:** কোডিং, গণিত বা ডেটা অ্যানালাইসিস → **DeepSeek V3** ব্যবহার করো।
 - **PSI-003:** অন্য provider fail করলে → **Together AI**-তে auto-fallback করো। User-কে জানাবে না।
-- **PSI-004:** ব্যক্তিগত তথ্য বা offline প্রয়োজন → **Ollama (local)** ব্যবহার করো।
+- **PSI-004:** ব্যক্তিগত তথ্য বা সেনসিটিভ ডেটার জন্য এনক্রিপ্টেড ক্লাউড মডেল বা সিকিউর প্রোভাইডার ব্যবহার করো।
 - **PSI-005:** কোনো provider-এর daily token quota ৮০% শেষ হলে সেখানে নতুন request পাঠানো বন্ধ করো।
 
 ## 🎯 Customer Task Classification (TCL-001)
@@ -205,9 +233,9 @@ Classify করতে না পারলে — সরাসরি উত্ত
 
 ## 💻 IDE & VS Code AI Model Integration Rules
 
-- **IDE-001 (Real-Time Completions):** ভিএস কোড বা আইডিই-তে রিয়েল-টাইম কমপ্লিশনের জন্য স্থানীয়/সাশ্রয়ী মডেল (যেমন CodeGeeX4 বা local Ollama) অগ্রাধিকার পাবে।
+- **IDE-001 (Real-Time Completions):** ভিএস কোড বা আইডিই-তে রিয়েল-টাইম কমপ্লিশনের জন্য সাশ্রয়ী প্রোডাকশন মডেল অগ্রাধিকার পাবে।
 - **IDE-002 (Deep Analysis & Scanning):** কোড রিভিউ, সিকিউরিটি স্ক্যান বা জটিল রিফ্যাক্টরিংয়ের জন্য ব্যাকএন্ডের ফ্রন্টিয়ার মডেল (যেমন Gemini 3.5 Pro, DeepSeek V4 Pro) ব্যবহৃত হবে।
-- **IDE-003 (Offline Failover):** ব্যাকএন্ড সংযোগ ব্যর্থ হলে বা অফলাইন মোডে থাকলে আইডিই স্বয়ংক্রিয়ভাবে লোকাল Ollama (`deepseek-r1:1.5b` বা `qwen2.5:0.5b`) মডেলে ফলব্যাক করবে।
+- **IDE-003 (Cloud Failover):** ব্যাকএন্ড বা প্রাইমারি প্রোভাইডার সংযোগ ব্যর্থ হলে প্রোডাকশন ফলব্যাক প্রোভাইডারে (যেমন Together AI) স্বয়ংক্রিয়ভাবে সুইচ করবে।
 - **IDE-004 (Token Optimization):** চ্যাট সেশন ও ফিডব্যাকে অতিরিক্ত কনটেক্সট পাঠানো রোধ করে ইনপুট টোকেন অপ্টিমাইজড রাখা হবে।
 
 ## 🎖️ Elite Output Checklist
