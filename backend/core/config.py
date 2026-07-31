@@ -405,14 +405,7 @@ class Settings(BaseSettings):
 
     @property
     def admin_notification_email(self) -> str | None:
-        val = self._get_cached_secret("ADMIN_NOTIFICATION_EMAIL")
-        if not val and self.admin_emails:
-            if isinstance(self.admin_emails, list) and self.admin_emails:
-                return self.admin_emails[0]
-            if isinstance(self.admin_emails, str):
-                return self.admin_emails.split(",")[0].strip()
-        return val
-
+        return self._get_cached_secret("ADMIN_NOTIFICATION_EMAIL")
 
     @property
     def redis_url(self) -> str:
