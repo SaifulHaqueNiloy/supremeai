@@ -59,19 +59,45 @@ from .optimization.performance_optimizer import (
     get_performance_optimizer,
     performance_monitor,
 )
-from .testing.qa_suite import (
-    ChaosEngineer,
-    IntegrationTestRunner,
-    PerformanceTester,
-    QASuite,
-    SecurityTester,
-    TestCase,
-    TestCategory,
-    TestPriority,
-    TestResult,
-    TestSuite,
-    UnitTestGenerator,
-)
+# বাংলা মন্তব্য: core.testing.qa_suite নিজে aiohttp আমদানি করে (একটা optional/dev-only
+# dependency — production API path কখনো এটা ব্যবহার করে না)। কিন্তু এই ব্লকটা আগে
+# try/except ছাড়াই ছিল, ফলে aiohttp ইনস্টল করা না থাকলে শুধু "import core" করলেই
+# (যেমন backend/middleware/anti_hacking.py-র "from core.cache.redis_manager import ..."
+# লাইনটা core/__init__.py ট্রিগার করে) পুরো ব্যাকএন্ড ImportError দিয়ে ভেঙে পড়ত --
+# ঠিক সেই একই ক্লাসের বাগ যেটা torch-এর জন্য নিচে evolution ব্লকে আগে থেকেই গার্ড করা
+# আছে। এখানে একই প্যাটার্ন প্রয়োগ করা হলো যাতে QA-স্যুট ছাড়াই বাকি core.* সাবমডিউল
+# (cache, config, otp_router ইত্যাদি) স্বাভাবিকভাবে import হতে পারে।
+try:
+    from .testing.qa_suite import (
+        ChaosEngineer,
+        IntegrationTestRunner,
+        PerformanceTester,
+        QASuite,
+        SecurityTester,
+        TestCase,
+        TestCategory,
+        TestPriority,
+        TestResult,
+        TestSuite,
+        UnitTestGenerator,
+    )
+
+    QA_SUITE_AVAILABLE = True
+except ImportError:
+    QA_SUITE_AVAILABLE = False
+    (
+        ChaosEngineer,
+        IntegrationTestRunner,
+        PerformanceTester,
+        QASuite,
+        SecurityTester,
+        TestCase,
+        TestCategory,
+        TestPriority,
+        TestResult,
+        TestSuite,
+        UnitTestGenerator,
+    ) = (None,) * 11
 
 # Import evolution components
 # বাংলা মন্তব্য: evolution প্যাকেজের কিছু সাব-মডিউল (EWC, adversarial defense,
