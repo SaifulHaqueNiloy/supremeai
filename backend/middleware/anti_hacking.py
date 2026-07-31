@@ -35,7 +35,7 @@ def _octet3(ip: str) -> str:
     বাংলা: IPv4-এর প্রথম ৩টি অক্টেট বের করে — CGNAT/mobile handoff-এ সাধারণত শেষ অক্টেটই বদলায়।
     """
     parts = ip.split(".")
-    return ".".join(parts[:3]) if len(parts) == 4 else ip
+    return ".".join(parts[:3]) if len(parts) >= 3 else ip
 
 
 class AntiHackingContextMiddleware(BaseHTTPMiddleware):
@@ -58,18 +58,15 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                 mismatch = False
                 caution = False
                 if last:
-                    ip_country_mismatch = last.get("ip") != signal["ip"] or last.get("country") != signal["country"]
-                    last_fp = last.get("fingerprint")
-                    if last_fp and last_fp != "unknown":
-                        # বাংলা মন্তব্য: ফিঙ্গারপ্রিন্ট মিললে আইপি পরিবর্তন হলেও ওটিপি লাগবে না (ভিপিএন/মোবাইল নেটওয়ার্কের জন্য)
-                        mismatch = ip_country_mismatch and (last_fp != signal["fingerprint"])
-                    else:
-                        mismatch = ip_country_mismatch
+                    mismatch = last.get("ip") != signal["ip"] or last.get("country") != signal["country"]
 
                     if mismatch:
                         same_ua = last.get("ua") not in (None, "unknown") and last.get("ua") == signal["ua"]
                         same_subnet = bool(signal["ip"]) and _octet3(last.get("ip", "")) == _octet3(signal["ip"])
-                        if same_ua or same_subnet:
+                        # একটামাত্র সিগনাল (শুধু UA বা শুধু subnet) মিললে caution-এ নামানো হয় না —
+                        # সেটা false-negative রিস্ক বাড়ায়। সাময়িবহ একসাথে মিললেই কেবল caution;
+                        # ফিঙ্গারপ্রিন্ট এখানে mismatch সাপ্রেস করে না — শুধু সিগনাল/লগ-এ থাকে।
+                        if same_ua and same_subnet:
                             caution = True
                             mismatch = False
 

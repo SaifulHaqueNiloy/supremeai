@@ -10,14 +10,25 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Mock the problematic core module imports before they're loaded
-sys.modules['core'] = MagicMock()
+# বাংলা মন্তব্য: backend/ কে sys.path-এ যোগ করা হচ্ছে যাতে "core.x" ইম্পোর্টগুলো
+# (backend/-এর ভেতরের কনভেনশন) আসল প্যাকেজ খুঁজে পায় — নিচের নির্দিষ্ট submodule mock গুলো
+# (ভারী/optional dependency-ওয়ালা) তখনও কাজ করবে, কারণ Python import system প্রথমে
+# sys.modules cache-ই চেক করে।
+backend_dir = project_root / "backend"
+if backend_dir.is_dir():
+    sys.path.insert(0, str(backend_dir))
+
+# Mock only the genuinely heavy/optional core submodules — NOT the whole "core" package.
+# আগে এখানে sys.modules['core'] = MagicMock() ছিল যা পুরো core প্যাকেজকেই ব্লক করে দিত,
+# ফলে core.cache, core.config, core.otp_router-এর মতো অন্য যেকোনো real submodule import
+# (যেমন backend/middleware/anti_hacking.py) ভেঙে যেত: "ModuleNotFoundError: No module
+# named 'core.cache'; 'core' is not a package"।
 sys.modules['core.evolution'] = MagicMock()
 sys.modules['core.llm'] = MagicMock()
-sys.modules['core.messaging'] = MagicMock()
 sys.modules['core.observability'] = MagicMock()
 sys.modules['core.orchestration'] = MagicMock()
-sys.modules['core.security'] = MagicMock()
+# বাংলা: core.security ও core.messaging ব্লক করা যাবে না — core.config (সব core.* মডিউলের
+# load-bearing dependency) ট্রানজিটিভলি এ দুটোর উপর নির্ভরশীল (secret_vault -> event_bus)।
 
 
 @pytest.fixture
