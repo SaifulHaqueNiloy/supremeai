@@ -7,7 +7,6 @@ import pytest
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.datastructures import Headers
-from starlette.requests import State
 
 from backend.middleware.anti_hacking import (
     AntiHackingContextMiddleware,
@@ -52,7 +51,6 @@ async def test_dispatch_non_admin_request():
             (b"user-agent", b"test-agent"),
         ],
     })
-    request.state = State()
     
     # Mock call_next to return a simple response
     call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
@@ -85,7 +83,6 @@ async def test_dispatch_admin_request_no_previous_context():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock Redis manager
@@ -129,7 +126,6 @@ async def test_dispatch_admin_request_matching_context():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock Redis manager with matching context
@@ -177,7 +173,6 @@ async def test_dispatch_admin_request_context_mismatch_alert_only():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock settings to be in alert-only mode (enforce_anti_hacking = False)
@@ -234,7 +229,6 @@ async def test_dispatch_admin_request_context_mismatch_enforce_mode():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock settings to be in enforce mode (enforce_anti_hacking = True)
@@ -252,6 +246,7 @@ async def test_dispatch_admin_request_context_mismatch_enforce_mode():
                 "fingerprint": "device123"
             }
             mock_redis_manager.get_cache = AsyncMock(return_value=json.dumps(previous_context))
+            mock_redis_manager.set_cache = AsyncMock()
             
             # Mock Redis SET command for cooldown
             mock_redis_manager.client.set = AsyncMock(return_value=True)  # Successfully acquire lock
@@ -265,7 +260,10 @@ async def test_dispatch_admin_request_context_mismatch_enforce_mode():
                 
                 # Should return a 403 response instead of calling next
                 assert response.status_code == 403
-                assert response.body.decode() == '{"error": "context_mismatch", "detail": "OTP verification required — check your configured channel."}'
+                assert json.loads(response.body) == {
+                    "error": "context_mismatch",
+                    "detail": "OTP verification required — check your configured channel.",
+                }
                 
                 # Verify that OTP was sent
                 mock_send_otp.assert_called_once()
@@ -288,7 +286,6 @@ async def test_dispatch_admin_request_same_subnet_ua_caution():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock Redis manager with similar context (different IP but same subnet/UA)
@@ -329,7 +326,6 @@ async def test_dispatch_admin_request_otp_cooldown_active():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock settings
@@ -386,7 +382,6 @@ async def test_dispatch_with_redis_disabled():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock Redis manager as None/disabled
@@ -420,7 +415,6 @@ async def test_dispatch_with_redis_client_none():
             (b"x-device-fingerprint", b"device123"),
         ],
     })
-    request.state = State()
     request.state.user = {"sub": "admin123"}
     
     # Mock Redis manager with None client
@@ -453,7 +447,6 @@ async def test_dispatch_admin_no_sub_attribute():
             (b"user-agent", b"test-agent"),
         ],
     })
-    request.state = State()
     request.state.user = {"id": "admin123"}  # No 'sub' attribute
     
     # Mock call_next to return a simple response
@@ -480,7 +473,6 @@ async def test_dispatch_admin_user_none():
             (b"user-agent", b"test-agent"),
         ],
     })
-    request.state = State()
     # No user attribute
     
     # Mock call_next to return a simple response

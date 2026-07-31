@@ -18,7 +18,14 @@ project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# Add backend/ to sys.path so 'core.*' imports also resolve (same as backend/tests/conftest.py)
+# Add backend/ to sys.path so 'core.*' imports resolve (same as backend/tests/conftest.py).
+# বাংলা: আগে এখানে নির্দিষ্ট core.* সাবমডিউল (core.evolution, core.llm, ...) আলাদাভাবে
+# sys.modules-এ MagicMock বসানো হয়েছিল "heavy dependency" এড়াতে, কিন্তু সেটা নিজেই একটা নতুন
+# বাগ তৈরি করেছিল: core.llm_router-এর "from .llm.free_tier_tracker import get_tracker" লাইন
+# ভেঙে পড়ত ("core.llm is not a package") কারণ sys.modules['core.llm']-এ বসানো MagicMock-এর
+# কোনো real __path__ নেই, ফলে তার নিচে কোনো submodule ইম্পোর্ট করা যায় না। core/__init__.py-এর
+# torch/aiohttp-নির্ভর ব্লকগুলো ইতিমধ্যে try/except দিয়ে গার্ড করা (দেখুন core/__init__.py), তাই
+# আলাদা করে এই সাবমডিউলগুলো ব্লক করার আর দরকার নেই -- শুধু backend/ পাথে যোগ করাই যথেষ্ট।
 backend_root = project_root / "backend"
 if str(backend_root) not in sys.path:
     sys.path.insert(0, str(backend_root))
