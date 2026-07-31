@@ -8,21 +8,30 @@ import asyncio
 
 @pytest.fixture(autouse=True)
 def setup_test_environment():
-    """Set up test environment variables."""
-    # Set test-specific environment variables
-    os.environ.setdefault("TESTING", "True")
-    os.environ.setdefault("ENV", "test")
-    # Use in-memory or mock database/redis for tests
-    os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
-    os.environ.setdefault("REDIS_URL", "redis://mocked-redis-url")
+    """Set up test environment variables.
+
+    বাংলা: আগের মান সংরক্ষণ করে টেস্ট শেষে রিস্টোর করা হয়।
+    এতে টেস্টের মধ্যে env var 'bleed' হয় না।
+    """
+    _SENTINEL = object()
+    _keys = ("TESTING", "ENV", "DATABASE_URL", "REDIS_URL")
+    _defaults = ("True", "test", "sqlite:///./test.db", "redis://mocked-redis-url")
+
+    # Save originals before overriding
+    originals = {k: os.environ.get(k, _SENTINEL) for k in _keys}
+
+    for k, v in zip(_keys, _defaults):
+        os.environ.setdefault(k, v)
 
     yield
 
-    # Cleanup environment variables after test
-    if "TESTING" in os.environ:
-        del os.environ["TESTING"]
-    if "ENV" in os.environ:
-        del os.environ["ENV"]
+    # Restore exactly what was there before — don't blindly delete
+    for k in _keys:
+        original = originals[k]
+        if original is _SENTINEL:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = original
 
 
 @pytest.fixture
@@ -70,9 +79,7 @@ def mock_external_apis():
         yield {"get": mock_get, "post": mock_post, "put": mock_put, "delete": mock_delete}
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for async tests."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# বাংলা: event_loop fixture সরানো হয়েছে।
+# pyproject.toml-এ asyncio_mode = "auto" সেট থাকায় pytest-asyncio নিজেই
+# event loop ম্যানেজ করে। manual event_loop fixture pytest-asyncio 0.21+ এ
+# DeprecationWarning দেয় এবং filterwarnings="error" এর কারণে টেস্ট ফেল করে।

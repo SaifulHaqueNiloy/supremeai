@@ -45,6 +45,9 @@ def test_get_distribution_stats():
 
 def test_rebalance():
     router = ParallelCloudRouter()
+    # Force the router to bypass any mock Redis clients and use the local dict
+    router.redis_client = None
+
     # Mock active status for all providers so normalization distributes weights
     for name in router.PROVIDERS:
         router.PROVIDERS[name]["status"] = "active"

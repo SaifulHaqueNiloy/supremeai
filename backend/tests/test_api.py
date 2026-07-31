@@ -11,7 +11,10 @@ import core.services as services_mod
 from core import services
 from core.app import app
 
-auth_headers = {"Authorization": "Bearer test-token"}
+from core.security import create_access_token
+
+valid_token = create_access_token({"sub": "test_admin", "role": "admin"})
+auth_headers = {"Authorization": f"Bearer {valid_token}"}
 
 client = TestClient(app)
 
@@ -38,13 +41,16 @@ def test_health_returns_ok():
 def test_task_execute_enforces_admin_block():
     from unittest.mock import patch
 
-    with patch("core.services.admin_god.is_admin_action_allowed", return_value=False):
-        resp = client.post(
-            "/task/execute",
-            json={"task": "do anything", "task_type": "general"},
-            headers=auth_headers,
-        )
-        assert resp.status_code == 403
+    from core.config import settings
+
+    with patch("admin.god.AdminGodLayer.is_admin_action_allowed", return_value=False):
+        with patch.object(settings, "allow_test_auth_bypass", False):
+            resp = client.post(
+                "/task/execute",
+                json={"task": "do anything", "task_type": "general"},
+                headers=auth_headers,
+            )
+            assert resp.status_code == 403
 
 
 def test_task_execute_allowed_and_success():

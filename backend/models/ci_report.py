@@ -1,4 +1,5 @@
 """
+from sqlalchemy import JSON
 SupremeAI 2.0 — CI Report Pydantic Model and Database Access Layer
 Uses raw asyncpg via PgBouncerConnectionPool
 """

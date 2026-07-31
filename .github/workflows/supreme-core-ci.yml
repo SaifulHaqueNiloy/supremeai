@@ -578,6 +578,8 @@ jobs:
       - name: 🧪 Run Tests
         id: backend_tests
         working-directory: backend
+        env:
+          ENABLE_CHAOS_INJECTOR: "false"
         run: |
           if [ "${{ needs.changes.outputs.backend }}" = 'true' ] || [ "${{ needs.changes.outputs.shared }}" = 'true' ]; then
             poetry run pytest -n auto --dist=loadfile --timeout=120 --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
