@@ -156,7 +156,11 @@ exclude_lines = [
 # বাংলা মন্তব্ব্য: টেস্ট কভারেজ থ্রেশহোল্ড 75% এ বাড়ানো হয়েছে সিকিউরিটি এবং কোয়ালিটি বাড়াতে
 minversion = "6.0"
 addopts = "-ra -q --strict-markers --strict-config --cov=. --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
-testpaths = ["tests", "backend/tests"]
+# বাংলা: CI 'backend/' ডিরেক্টরি থেকে pytest চালায় (working-directory: backend), তাই rootdir = backend/।
+# আগে এখানে "backend/tests" লেখা ছিল যা backend/-এর ভেতর থেকে backend/backend/tests
+# (অস্তিত্বহীন) খুঁজত — ফলে repo-root tests/ কখনো CI-তে কালেক্ট হতো না।
+# "../tests" ব্যবহার করে backend/ থেকে সঠিকভাবে repo-root tests/-এ পৌঁছানো হচ্ছে।
+testpaths = ["tests", "../tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
