@@ -24,6 +24,9 @@ _Last Updated: 2026-07-27_
 | **`SUPREMEAI_DOCS_USERNAME`** | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Admin docs username |
 | **`ADMIN_AUTHORIZED`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Admin authorization flag |
 | **`AUTOFIX_AUTHORIZED`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Auto-fix authorization flag |
+| **`DOCS_AUTH_ENABLED`** | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Swagger UI credentials authentication status (ডকুমেন্টেশন পাসওয়ার্ড নিরাপত্তা সচল কিনা) |
+| **`DEBUG`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Enable backend debug modes and exception tracebacks (ডিবাগ মোড ও এরর ডিটেইলস দেখানোর টগল) |
+
 
 ### 🗄️ Database & Storage
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -45,6 +48,10 @@ _Last Updated: 2026-07-27_
 | **`NEO4J_PASSWORD`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Neo4j database password |
 | **`EXPERIENCE_DB_PATH`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Experience database path |
 | **`CHROMADB_PATH`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ChromaDB vector database path |
+| **`ADMIN_RULES_DB_PATH`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Filesystem path for admin rules database (অ্যাডমিন রুলস ডাটাবেসের পাথ) |
+| **`MEMORY_DB_DIR`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Local directory path for memory vault database (মেমরি ডাটাবেসের পাথ) |
+| **`SKILL_REGISTRY_PATH`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Filesystem registry loading path for dynamic skills (ডাইনামিক স্কিল লোডিং পাথ) |
+
 
 ### 🤖 AI & LLM Services
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -106,6 +113,9 @@ _Last Updated: 2026-07-27_
 | **`CLOUDFLARE_API_KEY`** | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ✅ MUST | ❌ | Cloudflare API key |
 | **`CLOUDFLARE_ZONE_ID`** | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ✅ MUST | ❌ | Cloudflare domain zone ID |
 | **`CLOUDFLARE_WORKERS_API_TOKEN`** | ❌ | ❌ | ❌ | ✅ MUST | ❌ | ❌ | ✅ MUST | ❌ | Cloudflare Workers API token |
+| **`INFISICAL_PROJECT_ID`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Infisical project identifier for remote secrets integration (ইনফিসিক্যাল প্রজেক্ট আইডি) |
+| **`INFISICAL_CLIENT_ID`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Infisical client credentials identifier (ইনফিসিক্যাল ক্লায়েন্ট আইডি) |
+
 
 ### ☁️ Cloud & Infrastructure
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -129,6 +139,8 @@ _Last Updated: 2026-07-27_
 | **`LANGSMITH_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | LangSmith tracing & evaluation API key |
 | **`LAUNCHDARKLY_SDK_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | LaunchDarkly feature flag SDK key |
 | **`LAUNCHDARKLY_API_KEY`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | LaunchDarkly API key |
+| **`OTLP_ENDPOINT`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | OpenTelemetry Collector trace integration endpoint (ওপেন-টেলিমেট্রি কালেক্টর এন্ডপয়েন্ট) |
+
 
 ### 🎥 Media & Video Services
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -152,9 +164,10 @@ _Last Updated: 2026-07-27_
 | **`ADMIN_NOTIFICATION_EMAIL`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Security notification email |
 | **`ADMIN_EMAILS`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Admin notification email addresses |
 | **`SERVICE_ROLE`** | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | Admin service role flag (`admin`) |
-| **`DOCS_PASSWORD`** | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Admin docs protected password |
+| ~~**`DOCS_PASSWORD`**~~ | ❌ | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Admin docs protected password (Moved to separate section at bottom for investigation) |
 | **`INFISICAL_TOKEN`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Infisical project access token |
 | **`INFISICAL_CLIENT_SECRET`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Infisical client secret |
+
 
 ### ⚙️ System Configuration
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -175,6 +188,9 @@ _Last Updated: 2026-07-27_
 | **`API_V1_STR`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | API version string |
 | **`CORS_ORIGINS`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | CORS allowed origins |
 | **`HOST`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Server host address |
+| **`MAINTENANCE_INTERVAL`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | System database cleanups and tasks maintenance interval in minutes (রক্ষণাবেক্ষণ কাজের ব্যবধান মিনিটে) |
+| **`UVICORN_WORKERS`** | ✅ MUST | ✅ MUST | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Number of concurrent uvicorn worker processes (ইউভিকর্ন প্রসেস সংখ্যা) |
+
 
 ### 🤖 AI Agent Configuration
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -205,6 +221,13 @@ _Last Updated: 2026-07-27_
 | **`EVO_FITNESS_THRESHOLD`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Evolution fitness threshold |
 | **`EVO_BENCHMARK_PROMPT`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Evolution benchmark prompt |
 | **`EVO_BENCHMARK_EXPECTED`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ❌ | Evolution benchmark expected result |
+| **`ENABLE_AUTO_HEALER`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Settle auto-remediation self healing capability (সেলফ-হিলিং সক্রিয় করার টগল) |
+| **`ENABLE_DAILY_LEARNER`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Run daily auto-learner scheduled background tasks (ডেইলি লার্নিং টাস্ক টগল) |
+| **`ENABLE_EVOLUTION`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Enable continuous code and prompt evolution engine (কোড ও প্রম্পট ইভোলিউশন টগল) |
+| **`ENABLE_TIER8`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Enable execution of Tier 8 capability (টিয়ার-৮ এক্সিকিউশন সচল করার টগল) |
+| **`SELF_HEAL_APPROVAL_WEBHOOK`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Discord or alternative webhook URL for self healing approval (সেলফ-হিলিং অ্যাডমিন অনুমোদন ওয়েবহুক) |
+| **`SELF_HEAL_APPROVAL_TIMEOUT_HOURS`** | 🟡 Opt | 🟡 Opt | ❌ | ❌ | ❌ | ❌ | ✅ MUST | ✅ | Maximum wait hours for human-in-the-loop self-heal approvals (অ্যাডমিন অনুমোদনের সর্বোচ্চ সময় ঘণ্টায়) |
+
 
 ### 🧪 Testing & Development
 | Environment Variable / Secret Name | Render Backend | Render Admin | Vercel / Netlify | Cloudflare | Firebase / GCP | GitHub Actions | Infisical | .env File | Description (বাংলা বিবরণ) |
@@ -283,3 +306,13 @@ _Last Updated: 2026-07-27_
 1. **Backend & Admin (Render):** `.env` সিক্রেট ফাইল আপলোড করা সম্পন্ন। Render Backend এবং Render Admin উভয় সার্ভিসে ভেরিয়েবলগুলো লাইভ সিঙ্কড রয়েছে।
 2. **Frontend Clients (Vercel / Netlify):** কেবল `VITE_` প্রিফিক্সড ক্লায়েন্ট ভেরিয়েবল ও কানেক্টেড কীসমূহ Vercel-এ সক্রিয় রয়েছে।
 3. **CI/CD Automation (GitHub Actions):** `RENDER_API_KEY`, `VERCEL_TOKEN`, `NETLIFY_AUTH_TOKEN` এবং `CI_WEBHOOK_SECRET` সিক্রেট হিসেবে সেট করা রয়েছে।
+
+---
+
+## ⚠️ Discrepancy & Deprecated Keys under Investigation (তদন্তাধীন ও বিতর্কিত কীসমূহ)
+
+নিচে এমন সব এনভায়রনমেন্ট ভেরিয়েবল বা সিক্রেট কী তালিকাভুক্ত করা হলো যা বর্তমানে বিতর্কিত, অসঙ্গতিপূর্ণ, অথবা কোডবেসের সাম্প্রতিক পরিবর্তনের ফলে সরাসরি ব্যবহৃত হচ্ছে না। এগুলোকে মুছে না ফেলে ভবিষ্যতের বিশ্লেষণের জন্য এখানে সংরক্ষণ করা হলো:
+
+### 1. **`DOCS_PASSWORD`**
+* **বিবরণ**: অ্যাডমিন সোয়াগার (Swagger) ডকুমেন্টেশনের পাসওয়ার্ড নিরাপত্তা।
+* **অসঙ্গতির কারণ**: কোডবেসে ([config.py](file:///c:/Users/n/supremeai/supremeai_2.0/backend/core/config.py#L122-L125)) এর জন্য ভ্যালিডেশন অ্যালিয়াস হিসেবে শুধুমাত্র **`SUPREMEAI_DOCS_PASSWORD`** ডিফাইন করা আছে। ফলে `DOCS_PASSWORD` ভেরিয়েবলটি সেট করলেও কোডবেসে সেটি গৃহীত হয় না এবং ডিফল্ট সেটিং ব্যবহৃত হয়।
