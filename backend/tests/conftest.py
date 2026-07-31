@@ -68,6 +68,25 @@ def disable_chaos_injector():
     yield
 
 
+# বাংলা মন্তব্য: BUG FIX - একাধিক টেস্ট ফাইল (test_admin.py, test_swarm_routes.py,
+# test_api_new_endpoints.py) app.dependency_overrides সেট করে কিন্তু try/finally
+# ছাড়া প্লেইন কোডে শেষে ক্লিয়ার করে। কোনো assertion/request মাঝপথে fail করলে
+# ক্লিয়ার-করার লাইন কখনো রান হয় না, ফলে override একই xdist worker-এ পরের যেকোনো
+# টেস্টে leak করে -- এটাই test_task_execute_* টেস্টগুলোর non-deterministic
+# auth/admin bypass ফেইলিউরের আসল কারণ ছিল, শুধু worker-এ কোন ফাইল আগে/পরে
+# চলছে তার উপর নির্ভর করে। প্রতিটা টেস্টের পর unconditionally ক্লিয়ার করে দিলে
+# leak-এর সম্ভাবনাই থাকে না, কোন টেস্ট কী রেখে গেছে তা যাচাই করারও দরকার নেই।
+@pytest.fixture(autouse=True)
+def _reset_fastapi_dependency_overrides():
+    yield
+    try:
+        from core.app import app
+
+        app.dependency_overrides.clear()
+    except ImportError:
+        pass
+
+
 # বাংলা মন্তব্য: BUG FIX - ALLOW_TEST_AUTH_BYPASS আগে fixture-এর ভেতরে সেট করা হতো,
 # কিন্তু pydantic Settings() env var একবারই পড়ে module import-এর সময়ে, fixture রান
 # হওয়ার অনেক আগে। ফলে settings.allow_test_auth_bypass সবসময় False থাকতো এবং
