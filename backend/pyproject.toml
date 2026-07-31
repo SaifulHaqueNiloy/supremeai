@@ -42,26 +42,14 @@ qdrant-client = "^1.12.1"
 numpy = "^1.26.4"
 opencv-python-headless = "^4.10.0"  # headless: no GTK/GUI libs needed in CI containers
 pandas = "^2.2.3"
-pyarrow = "^18.1.0"
-gcsfs = "^2024.10.0"
-s3fs = "^2024.10.0"
-pyotp = "^2.9.0"
-qrcode = "^8.0"
 pillow = "^11.0.0"
 cryptography = "^43.0.1"
 pybreaker = "^1.4.1"
-python-socketio = "^5.11.4"
-bidict = "^0.23.1"
-webcolors = "^24.11.1"
 pytz = "^2024.2"
 python-dateutil = "^2.9.0.post0"
-croniter = "^5.0.1"
-phonenumbers = "^8.13.54"
 email-validator = "^2.2.0"
 asyncpg = "^0.30.0"
 aiosqlite = "^0.20.0"
-pymongo = "^4.10.0"
-elasticsearch = "^8.16.0"
 google-cloud-firestore = "^2.19.0"
 google-cloud-storage = "^2.18.2"
 google-auth = "^2.36.0"
@@ -70,16 +58,9 @@ google-auth-httplib2 = "^0.2.1"
 openai = "^1.54.0"
 anthropic = "^0.120.0"
 litellm = "^1.50.0"
-langchain = "^0.3.7"
-langchain-community = "^0.3.7"
-langchain-core = "^0.3.15"
-langchain-google-genai = "^2.0.6"
-langgraph = "^0.2.39"
 sse-starlette = "^2.1.3"
 plotly = "^5.24.1"
-dash = "^2.18.1"
 scipy = "^1.14.1"
-statsmodels = "^0.14.6"
 opentelemetry-sdk = "^1.28.2"
 opentelemetry-api = "^1.28.2"
 opentelemetry-instrumentation-fastapi = "^0.49b1"
@@ -150,8 +131,15 @@ exclude_lines = [
 [tool.pytest.ini_options]
 # বাংলা মন্তব্ব্য: টেস্ট কভারেজ থ্রেশহোল্ড 75% এ বাড়ানো হয়েছে সিকিউরিটি এবং কোয়ালিটি বাড়াতে
 minversion = "6.0"
+# বাংলা: --import-mode=importlib (origin/main) duplicate-basename কোলিশন এড়ায় __init__.py
+# ছাড়াই -- আমার আগের __init__.py-based ফিক্সের চেয়ে পরিষ্কার সমাধান, রাখা হলো।
+# কিন্তু testpaths = ["tests"] একাই যথেষ্ট না: CI 'backend/' থেকে pytest চালায়
+# (working-directory: backend, .github/workflows/supreme-core-ci.yml), তাই rootdir = backend/,
+# আর তখন "tests" মানে শুধু backend/tests -- repo-root tests/ (যেখানে
+# test_middleware_anti_hacking.py-র মতো ফাইল আছে) কখনোই কালেক্ট হয় না। "../tests" যোগ করে
+# backend/ থেকে সঠিকভাবে repo-root tests/-এও পৌঁছানো হচ্ছে।
 addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=core --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
-testpaths = ["tests"]
+testpaths = ["tests", "../tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
