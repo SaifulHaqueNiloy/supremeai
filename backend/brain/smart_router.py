@@ -105,8 +105,8 @@ class SelfSovereignRouter:
         """
         try:
             import os
-            import urllib.request
             import urllib.error
+            import urllib.request
 
             from core.config import settings
 

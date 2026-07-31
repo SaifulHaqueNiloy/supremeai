@@ -65,8 +65,9 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .security.secret_vault import secret_vault
 from utils.environment import is_test_environment
+
+from .security.secret_vault import secret_vault
 
 # বাংলা মন্তব্য: pytest environment-এ .env load করা হয় না — test isolation নিশ্চিত।
 if "pytest" not in sys.modules:

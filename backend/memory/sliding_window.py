@@ -50,7 +50,8 @@ class SlidingWindowMemory:
     def _init_db(self) -> None:
         conn = self._connect()
         try:
-            conn.executescript("""
+            conn.executescript(
+                """
                 CREATE TABLE IF NOT EXISTS conversation_windows (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_id TEXT NOT NULL,
@@ -69,7 +70,8 @@ class SlidingWindowMemory:
                     created_at TEXT NOT NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_windows_session ON conversation_windows(session_id, created_at);
-            """)
+            """
+            )
             conn.commit()
         finally:
             if self.db_path != ":memory:":
