@@ -65,9 +65,14 @@ def disable_honeypot(request, monkeypatch):
 @pytest.fixture(autouse=True)
 def disable_chaos_injector():
     os.environ["ENABLE_CHAOS_INJECTOR"] = "false"
-    os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
     yield
 
+
+# বাংলা মন্তব্য: BUG FIX - ALLOW_TEST_AUTH_BYPASS আগে fixture-এর ভেতরে সেট করা হতো,
+# কিন্তু pydantic Settings() env var একবারই পড়ে module import-এর সময়ে, fixture রান
+# হওয়ার অনেক আগে। ফলে settings.allow_test_auth_bypass সবসময় False থাকতো এবং
+# AuthMiddleware সব রিকোয়েস্ট 401 দিয়ে ব্লক করতো (৩৪+ টেস্ট ফেইল)। মডিউল-লেভেলে সেট করা হলো।
+os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
 
 # বাংলা মন্তব্য: টেস্টে Supabase নেটওয়ার্ক রিকোয়েস্ট আটকাতে module import এর আগেই
 # SUPABASE_URL ও SUPABASE_KEY খালি করা হচ্ছে। SupabaseDB.__init__() এ শর্ত আছে:
