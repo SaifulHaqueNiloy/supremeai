@@ -109,6 +109,10 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
   - **No PR Spamming:** If a PR creation or merge fails twice consecutively, STOP immediately, analyze the root cause (e.g., diverged main, protected branch, local file locks), and explain the exact issue to the user instead of trying alternative branch creation loops.
   - **Direct Root-Cause Sync:** Always inspect `git diff` against `origin/main` FIRST before making changes or pushing, ensuring local code is aligned with the remote base.
 
+- **Conflict Resolution & Admin Permission Rule (CRITICAL):**
+  - Whenever any code, configuration, or environment key conflict is detected, the AI agent MUST NOT autonomously choose or duplicate items.
+  - The AI agent MUST list the conflicting options clearly for the admin and keep ONLY the single approved item after obtaining explicit admin permission.
+
 - **Timer & User Interaction Control Rule:**
   - If the user explicitly says `"stop"` or expresses frustration, immediately kill all background timers/tasks using `manage_task(Action='kill')` and DO NOT set any new timers unless explicitly requested.
   - Keep responses concise, objective, and focused on empirical log evidence without defensive explanations.
