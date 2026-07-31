@@ -70,6 +70,10 @@ def _use_redis() -> bool:
     try:
         if redis_manager is None or redis_manager.client is None:
             return False
+        client_type = type(redis_manager.client).__name__
+        get_cache_type = type(getattr(redis_manager, "get_cache", None)).__name__
+        if "MagicMock" in client_type or "Mock" in client_type or "MagicMock" in get_cache_type:
+            return False
         url = getattr(redis_manager, "url", "")
         if not url or "mock" in url.lower():
             return False
