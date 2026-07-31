@@ -107,8 +107,8 @@ torch = "^2.5.0"
 sentence-transformers = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
-# বাংলা মন্তব্য: সিআই পাইপলাইনে ফরম্যাটিং ও লিন্টিংয়ের জন্য dev গ্রুপে black, isort এবং ruff যোগ করা হলো
-
+# বাংলা মন্তব্য: pre-commit ও CI শুধুমাত্র ruff (linter + formatter) এবং mypy চালায় --
+# black/isort এখানে ছিল কিন্তু কোথাও invoke হতো না (dead dev dependency), সরানো হলো।
 ruff = "^0.4.8"
 pytest = "^8.0"
 pytest-asyncio = "^0.23"
