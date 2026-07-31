@@ -277,7 +277,10 @@ class MoonshotProvider:
         try:
             resp = await self.client.get("/models", timeout=5.0)
             return resp.status_code == 200
-        except Exception:
+        except Exception as exc:
+            # বাংলা: health probe ব্যর্থতা debug স্তরে লগ করা হয়েছে।
+            # Provider এখন unhealthy হিসেবে চিহ্নিত হবে এবং fallback chain চলবে।
+            logger.debug(f"MoonshotProvider health check failed: {exc}")
             return False
 
 
@@ -345,7 +348,9 @@ class DeepSeekProvider:
         try:
             resp = await self.client.get("/models", timeout=5.0)
             return resp.status_code == 200
-        except Exception:
+        except Exception as exc:
+            # বাংলা: DeepSeek provider health probe ব্যর্থতা — fallback চালু হবে।
+            logger.debug(f"DeepSeekProvider health check failed: {exc}")
             return False
 
 
@@ -411,7 +416,9 @@ class TogetherProvider:
         try:
             resp = await self.client.get("/models", timeout=5.0)
             return resp.status_code == 200
-        except Exception:
+        except Exception as exc:
+            # বাংলা: Together AI provider health probe ব্যর্থতা — fallback চালু হবে।
+            logger.debug(f"TogetherProvider health check failed: {exc}")
             return False
 
 
@@ -527,7 +534,10 @@ class OllamaProvider:
         try:
             resp = await self.client.get("/api/tags", timeout=3.0)
             return resp.status_code == 200
-        except Exception:
+        except Exception as exc:
+            # বাংলা: Ollama local provider health probe ব্যর্থতা।
+            # Ollama না চললে এটা সাধারণ — debug স্তরে লগ করা হয়েছে।
+            logger.debug(f"OllamaProvider health check failed (local provider may be offline): {exc}")
             return False
 
 
@@ -610,11 +620,14 @@ class HuggingFaceSpaceProvider:
             # Test with a simple model listing request
             resp = await self.client.get("/models", timeout=10.0)
             return resp.status_code == 200
-        except Exception:  # Try health endpoint as alternative
+        except Exception as exc:  # Try health endpoint as alternative
+            logger.debug(f"HuggingFaceSpaceProvider /info check failed, trying /health: {exc}")
             try:
                 resp = await self.client.get("/health", timeout=10.0)
                 return resp.status_code == 200
-            except Exception:
+            except Exception as health_exc:
+                # বাংলা: HuggingFace Space উভয় endpoint-ই অনুপলব্ধ।
+                logger.debug(f"HuggingFaceSpaceProvider health check failed: {health_exc}")
                 return False
 
 

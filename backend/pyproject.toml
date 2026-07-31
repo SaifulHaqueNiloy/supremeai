@@ -250,20 +250,37 @@ target-version = "py311"
 select = [
     "E",     # pycodestyle errors
     "W",     # pycodestyle warnings
-    "F",     # Pyflakes
-    "UP",    # pyupgrade
+    "F",     # Pyflakes — undefined names, unused imports
+    "UP",    # pyupgrade — modernize Python syntax
+    "B",     # flake8-bugbear — common bug patterns
+    "I",     # isort — import ordering
+    "N",     # pep8 naming conventions
+    "S",     # flake8-bandit — security issues (hardcoded passwords, subprocess, etc.)
+    "RUF",   # Ruff-specific rules
 ]
 ignore = [
-    "E501",     # Line too long
-    "E402",     # Module level import not at top of file
-    "BLE001",   # Blind exception catch
-    "RUF012",   # ClassVar mutable attribute
-    "RUF001",   # Ambiguous unicode strings
-    "RUF002",   # Ambiguous unicode docstrings
-    "RUF003",   # Ambiguous unicode comments
-    "TRY002",   # Create own exception
+    # বাংলা: নিচের নিয়মগুলো প্রজেক্টের বাংলা কমেন্ট ও বিদ্যমান কোড স্টাইলের জন্য বাদ দেওয়া হয়েছে।
+    "E501",     # Line too long — 120 char limit already set above
+    "E402",     # Module level import not at top — main.py ENV bootstrap needs this
+    "BLE001",   # Blind exception catch — addressed individually in health checks
+    "RUF012",   # ClassVar mutable attribute — Pydantic models use this pattern
+    "RUF001",   # Ambiguous unicode — বাংলা comments need this
+    "RUF002",   # Ambiguous unicode docstrings — বাংলা docstrings
+    "RUF003",   # Ambiguous unicode comments — বাংলা comments
+    "TRY002",   # Create own exception — addressed via core/exceptions.py
     "TRY004",   # Prefer TypeError
-    "DTZ005",   # Datetime tz
-    "B008",     # Default args call
-    "I001",     # Unsorted imports
+    "DTZ005",   # Datetime tz — handled by explicit UTC usage
+    "B008",     # Default args call — FastAPI Depends() pattern requires this
+    "I001",     # Unsorted imports — handled by isort in pre-commit
+    "S101",     # Use of assert — needed in tests and guards
+    "S105",     # Hardcoded password string — false positives on param names
+    "S106",     # Hardcoded password func arg — false positives
+    "S603",     # subprocess — deployment scripts need this
+    "S607",     # Partial executable path — deployment scripts
+    "N803",     # Argument name should be lowercase — some SDK callbacks
+    "N806",     # Variable in function should be lowercase
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S", "N"]   # test files: security + naming rules শিথিল
+"**/migrations/**" = ["ALL"]   # alembic migrations: সব rules বন্ধ
