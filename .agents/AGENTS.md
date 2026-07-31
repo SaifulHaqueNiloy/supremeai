@@ -119,7 +119,7 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 
 - **Strict Git Push Rule (NON-NEGOTIABLE):** The AI agent MUST NEVER run `git push` under any circumstances unless the user explicitly sends a prompt that contains the exact word `"push"`. Generic user approvals (e.g. "ok", "do that", "fix it", "yes") DO NOT grant push permission. Without the literal word `"push"` present in the user's message, the AI will NEVER push to GitHub.
 
-- **Auto CI Monitor & Self-Healing Rule:** After executing a git push command, the AI agent MUST automatically set a timer for 5 minutes (using the scheduler tool) to check the remote GitHub Actions workflow status. The agent must check the run status every 5 minutes. If any job in the workflow fails, the agent must automatically retrieve the failed step logs, diagnose the failure, implement a fix, commit the changes with a pre-commit impact report, and ask for push permission again. (বাংলা মন্তব্য: পুশ করার পর প্রতি ৫ মিনিট অন্তর দূরবর্তী সিআই পাইপলাইন চেক করা হবে এবং কোনো জব ব্যর্থ হলে তা স্বয়ংক্রিয়ভাবে ফিক্স করা হবে।)
+- **No Background Timers Rule (STRICT):** The AI agent MUST NEVER schedule background timers or interval scheduler tasks after `git push` or during any execution unless the user explicitly requests a timer.
 
 - **Commit All Uncommitted Files & Impact Report:** When performing a commit, ALWAYS inspect all uncommitted files (`git status` / `git diff`), stage all uncommitted files, and provide a short, concise summary report explaining how the uncommitted files make the system better and what specific improvements/benefits they bring.
 
