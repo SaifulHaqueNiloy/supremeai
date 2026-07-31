@@ -113,6 +113,10 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
   - If the user explicitly says `"stop"` or expresses frustration, immediately kill all background timers/tasks using `manage_task(Action='kill')` and DO NOT set any new timers unless explicitly requested.
   - Keep responses concise, objective, and focused on empirical log evidence without defensive explanations.
 
+- **Ultra-Concise Responses Rule (CRITICAL):**
+  - Always keep answers as short, direct, and minimal as possible.
+  - Do NOT write multi-paragraph explanations or background details unless the user explicitly asks "explain" or "why".
+
 - **Strict Git Push Rule (NON-NEGOTIABLE):** The AI agent MUST NEVER run `git push` under any circumstances unless the user explicitly sends a prompt that contains the exact word `"push"`. Generic user approvals (e.g. "ok", "do that", "fix it", "yes") DO NOT grant push permission. Without the literal word `"push"` present in the user's message, the AI will NEVER push to GitHub.
 
 - **Auto CI Monitor & Self-Healing Rule:** After executing a git push command, the AI agent MUST automatically set a timer for 5 minutes (using the scheduler tool) to check the remote GitHub Actions workflow status. The agent must check the run status every 5 minutes. If any job in the workflow fails, the agent must automatically retrieve the failed step logs, diagnose the failure, implement a fix, commit the changes with a pre-commit impact report, and ask for push permission again. (বাংলা মন্তব্য: পুশ করার পর প্রতি ৫ মিনিট অন্তর দূরবর্তী সিআই পাইপলাইন চেক করা হবে এবং কোনো জব ব্যর্থ হলে তা স্বয়ংক্রিয়ভাবে ফিক্স করা হবে।)
