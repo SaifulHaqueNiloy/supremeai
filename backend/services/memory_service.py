@@ -20,28 +20,23 @@ def hash_vectorize(text: str, size: int = 384) -> list[float]:
     Pure Python Feature Hashing (Hashing Trick) to convert text into a 384-dimensional vector.
     Serves as a robust, zero-cost fallback when SentenceTransformer is unavailable.
     """
-    import zlib
-
     vector = [0.0] * size
-    words = [w.lower() for w in text.split() if len(w) > 0]
+    words = [w.lower() for w in text.split() if len(w) > 1]
     if not words:
         # Return a non-empty unit vector to prevent division by zero
         vector[0] = 1.0
         return vector
 
     for word in words:
-        # Generate stable, cross-platform hash key using crc32
-        h_val = zlib.crc32(word.encode("utf-8"))
-        h = h_val % size
-        sign = 1 if (h_val // size) % 2 == 0 else -1
+        # Generate stable hash key using fnv1a style simple hashing
+        h = abs(hash(word)) % size
+        sign = 1 if (abs(hash(word)) // size) % 2 == 0 else -1
         vector[h] += sign
 
     # L2 Normalization
     norm = math.sqrt(sum(x * x for x in vector))
     if norm > 0:
         vector = [x / norm for x in vector]
-    else:
-        vector[0] = 1.0
     return vector
 
 
