@@ -22,8 +22,9 @@ class ContainerOrchestrator:
         logger.info(f"Deploying skill '{skill}' for user '{user_id}' on Google Cloud Run...")
 
         tf_executable = shutil.which("terraform")
-        if not tf_executable:
-            logger.warning("Terraform binary not found. Running in simulated fallback mode.")
+        # বাংলা মন্তব্য: টেরাফর্ম ডিরেক্টরি বিদ্যমান না থাকলে বা টেরাফর্ম বাইনারি না থাকলে সিমুলেটেড ফলব্যাক মোডে রান করবে।
+        if not tf_executable or not os.path.exists(self.tf_dir):
+            logger.warning("Terraform binary not found or directory missing. Running in simulated fallback mode.")
             return {
                 "status": "deployed",
                 "user_id": user_id,
