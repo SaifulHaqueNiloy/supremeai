@@ -62,14 +62,19 @@ class LoggingConfig:
 
         # Add file handler if needed (with rotation)
         if settings.env in ["production", "staging"]:
-            logger.add(
-                "logs/app_{time}.log",
-                rotation="100 MB",
-                retention="10 days",
-                compression="zip",
-                serialize=True,
-                level="INFO",
-            )
+            try:
+                logger.add(
+                    "logs/app_{time}.log",
+                    rotation="100 MB",
+                    retention="10 days",
+                    compression="zip",
+                    serialize=True,
+                    level="INFO",
+                )
+            except Exception as _log_err:  # noqa: BLE001
+                # বাংলা মন্তব্য: কন্টেইনার বা রেন্ডারে ফাইলে লগের পারমিশন না থাকলে সাইলেন্টলি কনসোল লগে ফলব্যাক করবে
+                sys.stderr.write(f"⚠️ Warning: Could not write file log ({_log_err}). Falling back to stdout logging.\n")
+
 
     def _json_format(self, record: dict) -> str:
         """Custom JSON formatter with correlation ID."""
