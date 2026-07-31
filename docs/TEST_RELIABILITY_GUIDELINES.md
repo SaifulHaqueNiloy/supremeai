@@ -69,6 +69,36 @@ regression তৈরি করেছিল (এমন টেস্ট যেগ�
 fix একই bug-এর সমাধান কিনা যাচাই করুন — প্রায়ই দেখা গেছে অন্য সেশন একই bug আগেই
 independently ঠিক করে ফেলেছে।
 
+## ৭. Fixture-এর teardown কোডের ঠিক আগে `return` বা কোনো early-exit আছে কিনা যাচাই করুন
+
+`tests/test_task_endpoints.py`-এর `mock_session` fixture-এ এভাবে লেখা ছিল:
+
+```python
+services.admin_god = fake_admin
+...
+yield
+
+return                          # <-- এই লাইনটাই বাগ
+services.admin_god = previous_admin   # কখনো রান হয় না, dead code
+...
+```
+
+`yield`-এর পর একটা bare `return` থাকায় নিচের সব teardown/restoration কোড
+permanently unreachable — Python এটা silently আটকে দেয় না, কোনো error/warning
+ছাড়াই। ফলাফল: এই fixture ব্যবহারকারী প্রতিটা টেস্ট `core.services.admin_god`
+(এবং model_router, intent_clf)-কে permanently একটা fake MagicMock দিয়ে replace
+করে রেখে যেত, যা একই xdist worker-এ পরের **যেকোনো** টেস্টে leak করত — এমনকি
+সম্পূর্ণ ভিন্ন ফাইলের টেস্টেও, যদি সেই টেস্ট একই real singleton (`admin_god`)
+ব্যবহার করে। এই bug টা `pytest -n auto --dist=loadfile`-এ ১০০% reproducible
+ছিল, কিন্তু isolation-এ (একটা ফাইল একা চালালে) সবসময় pass করত — তাই সহজে
+মিস হয়ে যায়।
+
+**নিয়ম:** কোনো fixture-এ module-level singleton (`core.services.*`,
+`app.dependency_overrides`, ইত্যাদি) সরাসরি reassign/mutate করলে, সবসময়
+`try: yield ... finally: <restore>` প্যাটার্ন ব্যবহার করুন — plain sequential
+`yield` তারপর restoration কোড কখনো যথেষ্ট না, কারণ `return`/exception/early-exit
+সহজেই সেটাকে dead code বানিয়ে দিতে পারে কোনো visible error ছাড়াই।
+
 ---
 
 ## এই পাসে ঠিক হওয়া নির্দিষ্ট bug (রেফারেন্সের জন্য)
@@ -79,3 +109,7 @@ independently ঠিক করে ফেলেছে।
   `tests/test_security_middleware.py` (১টা টেস্ট): উপরের ফিক্সের ফলে তৈরি হওয়া
   bypass-related regression ঠিক করতে explicit `is_test_environment=False` patch
   যোগ করা হয়েছে।
+- `tests/test_task_endpoints.py`-এর `mock_session` fixture: teardown-এর আগে
+  ভুল `return` স্টেটমেন্ট সরিয়ে `try/finally` প্যাটার্নে রূপান্তর করা হয়েছে।
+- `tests/conftest.py`: `app.dependency_overrides` clear করার জন্য একটা global
+  autouse safety-net fixture যোগ করা হয়েছে।

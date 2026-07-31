@@ -70,12 +70,12 @@ def mock_session():
     services_mod.model_router = fake_router
     services.intent_clf = fake_intent
 
-    yield
-
-    return
-    services.admin_god = previous_admin
-    services_mod.model_router = previous_router
-    services.intent_clf = previous_intent
+    try:
+        yield
+    finally:
+        services.admin_god = previous_admin
+        services_mod.model_router = previous_router
+        services.intent_clf = previous_intent
 
 
 def test_task_execute_returns_200(mock_session, valid_auth_headers):
