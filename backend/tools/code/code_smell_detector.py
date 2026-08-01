@@ -208,7 +208,7 @@ class CodeSmellDetector:
                         "end_line": getattr(node, "end_lineno", node.lineno),
                     }
                 )
-        for norm, items in bodies.items():
+        for _norm, items in bodies.items():
             if len(items) > 1:
                 smells.append(
                     {
@@ -225,7 +225,7 @@ class CodeSmellDetector:
         return smells
 
     def _detect_broad_exceptions(self, tree: ast.AST, file_path: str) -> list[dict[str, Any]]:
-        """Detects broad exception handlers like `except Exception:` or bare `except:`."""  # noqa: BLE001
+        """Detects broad exception handlers like `except Exception:` or bare `except:`."""
         smells: list[dict[str, Any]] = []
         for node in ast.walk(tree):
             if isinstance(node, ast.ExceptHandler):
@@ -237,7 +237,7 @@ class CodeSmellDetector:
                     details = (
                         "A bare `except:` clause can catch system-exiting exceptions and hide bugs. Be more specific."
                     )
-                # Check for `except Exception:` or `except BaseException:`  # noqa: BLE001
+                # Check for `except Exception:` or `except BaseException:`
                 elif isinstance(node.type, ast.Name) and node.type.id in {
                     "Exception",
                     "BaseException",

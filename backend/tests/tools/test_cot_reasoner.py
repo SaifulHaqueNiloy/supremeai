@@ -151,8 +151,8 @@ class TestSafeEvalMath:
 
 class TestVerifySymbolicMath:
     def test_sympy_success_returns_verified(self):
-        ast.parse("x + x", mode="eval").body
-        ast.parse("2*x", mode="eval").body
+        _ = ast.parse("x + x", mode="eval").body
+        _ = ast.parse("2*x", mode="eval").body
         with _patch_sympy_in_modules():
             result = verify_symbolic_math("x + x", "2*x")
         assert result["is_verified"] is True
