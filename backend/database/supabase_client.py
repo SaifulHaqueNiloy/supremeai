@@ -24,7 +24,9 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
             "_is_schema_cache_error",
             "_execute_response_with_retry",
         ):
-            return None if func.__name__.startswith("get_") or func.__name__.startswith("is_") else None
+            # Client unavailable: every call path here previously returned None
+            # regardless of the get_/is_ prefix check, so return the constant directly.
+            return None
 
         max_retries = 3
         for attempt in range(max_retries):
