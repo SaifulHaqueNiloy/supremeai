@@ -113,7 +113,7 @@ class TestChurnProphet:
     @pytest.fixture
     def mock_llm_router(self):
         """Mock LLM router for testing."""
-        with patch('backend.agents.churn_prophet.LLMRouter') as mock:
+        with patch('core.llm_router.LLMRouter') as mock:
             instance = MagicMock()
             mock.return_value = instance
             yield instance
@@ -130,7 +130,7 @@ class TestChurnProphet:
         """Test user analysis."""
         from backend.agents.churn_prophet import ChurnProphet
 
-        with patch('backend.agents.churn_prophet.TenantAwareFirestore') as mock_db:
+        with patch('core.tenant_db.TenantAwareFirestore') as mock_db:
             mock_db_instance = AsyncMock()
             mock_db.return_value = mock_db_instance
 
@@ -160,7 +160,7 @@ class TestChurnProphet:
         """Test batch user analysis."""
         from backend.agents.churn_prophet import ChurnProphet
 
-        with patch('backend.agents.churn_prophet.TenantAwareFirestore'):
+        with patch('core.tenant_db.TenantAwareFirestore'):
             prophet = ChurnProphet()
 
             try:
