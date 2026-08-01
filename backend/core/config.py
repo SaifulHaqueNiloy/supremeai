@@ -372,8 +372,12 @@ class Settings(BaseSettings):
         check for empty strings where critical.
 
         বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
-        প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
+        অধিকন্তু, os.getenv()-এ মান থাবলে তা সিক্রেট ভল্টের ক্যাশের চেয়ে অগ্রাধিকার পাবে।
         """
+        env_val = os.getenv(key)
+        if env_val is not None:
+            return env_val
+
         self._ensure_secrets_loaded()
         if key not in self._cached_secrets:
             if is_test_environment():
