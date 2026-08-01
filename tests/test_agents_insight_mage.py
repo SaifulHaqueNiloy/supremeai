@@ -127,7 +127,9 @@ class TestReportFormatter:
         """Test report generation."""
         from backend.agents.insight_mage import ReportFormatter
 
-        formatter = ReportFormatter()
+        mock_router = MagicMock()
+        mock_router.route = AsyncMock(return_value={"content": "Summary report"})
+        formatter = ReportFormatter(llm_router=mock_router)
 
         data = {
             "metrics": [
@@ -136,12 +138,9 @@ class TestReportFormatter:
             ]
         }
 
-        try:
-            result = await formatter.generate(data)
-            assert isinstance(result, dict)
-        except Exception:
-            # May fail if LLM router not configured
-            pass
+        result = await formatter.generate(data, trends=[], anomalies=[])
+        assert isinstance(result, str)
+        assert result == "Summary report"
 
 
 class TestInsightMage:
@@ -162,4 +161,4 @@ class TestInsightMage:
 
         key = mage._cache_key("tenant-1", "users", "query-hash")
         assert isinstance(key, str)
-        assert "tenant-1" in key
+        assert key.startswith("insight_mage:")
