@@ -405,15 +405,19 @@ jobs:
         id: safety_guard
         working-directory: backend
         run: |
-          echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          # বাংলা মন্তব্য: poetry পরিবেশ ব্যবহার করে safety_guard.py রান করা হচ্ছে
           poetry run python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1 || true
 
-          # Parse and summarize
+          # Parse and summarize safety violations
           if [ -f safety-report.json ]; then
-            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে - রিপোর্ট দেখুন" >> $GITHUB_STEP_SUMMARY
+            VIOLATIONS=$(grep -c "VIOLATION" safety-report.json || echo "0")
+            if [ "$VIOLATIONS" -gt 0 ]; then
+              echo "❌ Found $VIOLATIONS Safety Guard violations — blocking merge!" >> $GITHUB_STEP_SUMMARY
+              cat safety-report.json >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে — কোনো ভাইওলেশন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
           else
-            echo "⚠️ সেফটি গার্ড ভ্যালিডেশন সম্পন্ন হয়েছে" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ সেফটি গার্ড রিপোর্ট তৈরি হয়নি" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 🔍 Multi-Model Validator - Security & Logic Check
