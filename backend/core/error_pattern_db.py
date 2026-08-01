@@ -66,15 +66,32 @@ class ErrorPatternDB:
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"ErrorPatternDB: Postgres schema init failed, falling back to SQLite: {exc}")
                 self._use_pg = False
+        # ":memory:" is a special SQLite path: every sqlite3.connect() call against
+        # it opens an *independent*, empty in-memory database. Since every method
+        # below opens its own short-lived connection, a plain ":memory:" path would
+        # lose its schema (and all data) the instant _init_sqlite()'s connection
+        # closes. Use a shared-cache URI instead, and keep one connection open for
+        # the lifetime of this object so the shared in-memory DB stays alive.
+        self._is_memory = self.db_path == ":memory:"
+        self._sqlite_uri = f"file:error_pattern_db_{id(self)}?mode=memory&cache=shared" if self._is_memory else None
+        self._memory_keepalive = None
         if not self._use_pg:
+            if self._is_memory:
+                self._memory_keepalive = sqlite3.connect(self._sqlite_uri, uri=True, check_same_thread=False)
             self._init_sqlite()
             logger.warning(
                 f"ErrorPatternDB: running on local SQLite fallback at {self.db_path} — NOT durable across restarts."
             )
 
+    def _connect(self) -> sqlite3.Connection:
+        """Open a SQLite connection, routing ":memory:" through the shared-cache URI."""
+        if self._is_memory:
+            return sqlite3.connect(self._sqlite_uri, uri=True, check_same_thread=False)
+        return sqlite3.connect(self.db_path, check_same_thread=False)
+
     # ---------------------------------------------------------------- SQLite fallback (unchanged behavior) ----
     def _init_sqlite(self):
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -117,7 +134,7 @@ class ErrorPatternDB:
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"ErrorPatternDB.log_error: Postgres write failed: {exc}")
                 return
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO errors (output, error_type, correction, timestamp) VALUES (?, ?, ?, ?)",
@@ -148,7 +165,7 @@ class ErrorPatternDB:
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"ErrorPatternDB.log_ai_mistake: Postgres write failed: {exc}")
                 return
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO ai_mistakes (model_name, mistake_type, task_description, "
@@ -171,7 +188,7 @@ class ErrorPatternDB:
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"ErrorPatternDB.get_prevention_strategy: Postgres read failed: {exc}")
                 return "No historical data - use default validation"
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
             "SELECT prevention_strategy FROM ai_mistakes WHERE model_name = ? AND "
@@ -194,7 +211,7 @@ class ErrorPatternDB:
             except Exception as exc:  # noqa: BLE001
                 logger.error(f"ErrorPatternDB.check_pattern: Postgres read failed: {exc}")
                 return {"known_patterns": [], "should_prevent": False}
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
             "SELECT error_type, correction, COUNT(*) FROM errors WHERE ? LIKE '%' || output || '%' GROUP BY error_type",
