@@ -3,6 +3,7 @@
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from backend.api.routes.config import router, _ConfigDBClientWrapper, db
@@ -18,7 +19,7 @@ def test_client():
 @pytest.fixture
 def mock_admin_token():
     """Mock admin token dependency."""
-    with patch('backend.api.routes.admin_dashboard.require_admin_token') as mock:
+    with patch('backend.api.routes.config.require_admin_token') as mock:
         mock.return_value = "mock_admin_token"
         yield mock
 
@@ -61,7 +62,7 @@ def test_get_config_by_key_not_found(mock_admin_token, test_client):
 def test_get_config_by_key_unauthorized(test_client):
     """Test getting config by key without admin token."""
     # Patch the admin token dependency to raise an exception
-    with patch('backend.api.routes.admin_dashboard.require_admin_token') as mock:
+    with patch('backend.api.routes.config.require_admin_token') as mock:
         mock.side_effect = Exception("Unauthorized")
         
         response = test_client.get("/config/test_key")
@@ -87,7 +88,7 @@ def test_update_config_by_key_success(mock_admin_token, test_client):
 def test_update_config_by_key_unauthorized(test_client):
     """Test updating config by key without admin token."""
     # Patch the admin token dependency to raise an exception
-    with patch('backend.api.routes.admin_dashboard.require_admin_token') as mock:
+    with patch('backend.api.routes.config.require_admin_token') as mock:
         mock.side_effect = Exception("Unauthorized")
         
         response = test_client.put("/config/test_key", json={"value": "test"})
@@ -214,7 +215,7 @@ def test_config_public_endpoint_caching_headers(test_client):
     assert cache_header == "public, max-age=3600, s-maxage=86400"
 
 
-@patch('backend.api.routes.admin_dashboard.require_admin_token')
+@patch('backend.api.routes.config.require_admin_token')
 def test_config_endpoints_admin_auth_failure(mock_require_admin, test_client):
     """Test that config endpoints return appropriate error when admin auth fails."""
     mock_require_admin.side_effect = HTTPException(status_code=401, detail="Not authenticated")
