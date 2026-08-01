@@ -35,14 +35,14 @@ class TestBehavioralScorer:
 
         scorer = BehavioralScorer()
 
-        user_signals = {
-            "login_count": 10,
-            "session_count": 5,
-            "average_session_minutes": 15,
-            "features_used": ["chat", "search"]
-        }
-
-        score = scorer.calculate(user_signals, {})
+        score, factors, risk_level = scorer.calculate(
+            days_since_active=5,
+            session_freq_change=-0.2,
+            feature_usage_change=-0.1,
+            support_tickets_recent=1,
+            payment_delay_days=0,
+            account_age_days=90,
+        )
 
         assert score is not None
 
@@ -57,7 +57,12 @@ class TestUserSegment:
         scorer = BehavioralScorer()
 
         # Regular user should have active engagement
-        segment = scorer.segment_user({"login_count": 20, "days_active": 10})
+        segment = scorer.segment_user(
+            score=0.1,
+            days_since_active=2,
+            total_sessions=20,
+            account_age_days=30,
+        )
 
         assert segment is not None
 
@@ -67,15 +72,19 @@ class TestChurnRiskScore:
 
     def test_churn_risk_score_creation(self):
         """Test creating a churn risk score."""
-        from backend.agents.churn_prophet import ChurnRiskScore
+        from backend.agents.churn_prophet import ChurnRiskScore, RiskLevel, UserSegment
 
         score = ChurnRiskScore(
-            risk_level="low",
+            user_id="test-user",
+            risk_level=RiskLevel.LOW,
+            score=0.15,
             confidence=0.85,
-            factors=["High engagement", "Regular logins"]
+            factors={"engagement": 0.1, "logins": -0.05},
+            segment=UserSegment.REGULAR,
+            predicted_churn_date=None,
         )
 
-        assert score.risk_level == "low"
+        assert score.risk_level == RiskLevel.LOW
         assert score.confidence == 0.85
         assert len(score.factors) == 2
 
@@ -85,9 +94,16 @@ class TestRetentionStrategy:
 
     def test_strategy_initialization(self):
         """Test strategy initializes."""
-        from backend.agents.churn_prophet import RetentionStrategy
+        from backend.agents.churn_prophet import RetentionStrategy, RiskLevel
 
-        strategy = RetentionStrategy()
+        strategy = RetentionStrategy(
+            user_id="test-user",
+            risk_level=RiskLevel.MEDIUM,
+            strategies=["Send re-engagement email", "Offer discount"],
+            personalized_message="We miss you!",
+            priority=1,
+            estimated_success_rate=0.3,
+        )
         assert strategy is not None
 
 
