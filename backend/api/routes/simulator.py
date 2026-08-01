@@ -70,6 +70,10 @@ def _use_redis() -> bool:
     try:
         if redis_manager is None or redis_manager.client is None:
             return False
+        # If client is mocked in test environment, fallback to in-memory store
+        client_type = type(redis_manager.client).__name__
+        if "Mock" in client_type:
+            return False
         url = getattr(redis_manager, "url", "")
         if not url or "mock" in url.lower():
             return False

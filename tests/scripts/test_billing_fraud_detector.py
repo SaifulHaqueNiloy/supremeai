@@ -28,13 +28,14 @@ def mock_http():
 
 class TestFraudDetectorInit:
     def test_defaults(self):
-        detector = FraudDetector()
-        assert detector.database_url == ""
-        assert detector.project_id == ""
-        assert detector.slack_webhook == ""
-        assert detector.fraud_spend_threshold == float(os.getenv("FRAUD_SPEND_THRESHOLD", "3.0"))
-        assert detector.db_session is None
-        assert detector._http is None
+        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "SLACK_WEBHOOK_URL": ""}):
+            detector = FraudDetector()
+            assert detector.database_url == ""
+            assert detector.project_id == ""
+            assert detector.slack_webhook == ""
+            assert detector.fraud_spend_threshold == 3.0
+            assert detector.db_session is None
+            assert detector._http is None
 
     def test_custom_threshold(self):
         detector = FraudDetector(threshold=5.0)
