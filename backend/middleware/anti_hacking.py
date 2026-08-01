@@ -63,10 +63,12 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                     if mismatch:
                         same_ua = last.get("ua") not in (None, "unknown") and last.get("ua") == signal["ua"]
                         same_subnet = bool(signal["ip"]) and _octet3(last.get("ip", "")) == _octet3(signal["ip"])
-                        # বাংলা: CGNAT পরিবেশে লাখো user একই /24 subnet share করে।
-                        # তাই same_subnet একা পেলে OTP না পাঠিয়ে caution লগ করা হয়।
-                        # একইভাবে same_ua একা পেলেও caution — UA spoofing সহজ।
-                        if same_subnet or same_ua:
+                        # বাংলা: main-এ একটা পরবর্তী commit এটাকে OR (same_subnet or same_ua)-এ ফিরিয়ে দিয়েছিল,
+                        # CGNAT/UA-spoofing-এর যুক্তি দিয়ে -- কিন্তু সেই যুক্তির সঙ্গে কোডটা উলটো (একটামাত্র
+                        # সিগনালকেই যথেষ্ট ধরে নিয়েছে)। tests/test_middleware_anti_hacking.py-এর
+                        # test_dispatch_admin_request_context_mismatch_alert_only/enforce_mode (same UA,
+                        # ভিন্ন subnet -- OTP তখনও পাঠাতে হবে বলে যাচাই) দুটোই একসাথে দরকার।
+                        if same_ua and same_subnet:
                             caution = True
                             mismatch = False
 
