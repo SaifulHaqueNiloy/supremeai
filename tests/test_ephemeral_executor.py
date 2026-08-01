@@ -20,7 +20,7 @@ class TestEphemeralExecutorSecurity:
 
     def test_malicious_skill_id_blocked(self, temp_skills_dir):
         """Test that path traversal in skill_id is blocked."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox') as mock_sandbox_class:
+        with patch('core.microvm_sandbox.MicroVMSandbox') as mock_sandbox_class:
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             mock_sandbox = MagicMock()
@@ -43,12 +43,12 @@ class TestEphemeralExecutorSecurity:
                     test_payload="{}"
                 )
 
-                assert result["exit_code"] == -1
-                assert "Malicious" in result["stderr"] or "Blocked" in result["stderr"]
+                assert result.exit_code == -1
+                assert "Malicious" in result.stderr or "Blocked" in result.stderr
 
     def test_special_characters_in_skill_id_blocked(self, temp_skills_dir):
         """Test that special characters in skill_id are blocked."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox') as mock_sandbox_class:
+        with patch('core.microvm_sandbox.MicroVMSandbox') as mock_sandbox_class:
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             mock_sandbox = MagicMock()
@@ -63,8 +63,8 @@ class TestEphemeralExecutorSecurity:
                 test_payload="{}"
             )
 
-            assert result["exit_code"] == -1
-            assert "Malicious" in result["stderr"] or "Blocked" in result["stderr"]
+            assert result.exit_code == -1
+            assert "Malicious" in result.stderr or "Blocked" in result.stderr
 
 
 class TestEphemeralExecutorCleanup:
@@ -79,7 +79,7 @@ class TestEphemeralExecutorCleanup:
 
     def test_ephemeral_directory_created(self, temp_skills_dir):
         """Test that ephemeral directory is created on initialization."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox'):
+        with patch('core.microvm_sandbox.MicroVMSandbox'):
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             executor = EphemeralExecutor(base_skills_dir=temp_skills_dir)
@@ -89,7 +89,7 @@ class TestEphemeralExecutorCleanup:
 
     def test_cleanup_after_execution(self, temp_skills_dir):
         """Test that runtime directory is cleaned up after execution."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox') as mock_sandbox_class:
+        with patch('core.microvm_sandbox.MicroVMSandbox') as mock_sandbox_class:
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             mock_sandbox = MagicMock()
@@ -115,7 +115,7 @@ class TestEphemeralExecutorCleanup:
 
     def test_cleanup_after_failed_execution(self, temp_skills_dir):
         """Test cleanup happens even when execution fails."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox') as mock_sandbox_class:
+        with patch('core.microvm_sandbox.MicroVMSandbox') as mock_sandbox_class:
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             mock_sandbox = MagicMock()
@@ -150,7 +150,7 @@ class TestEphemeralExecutorValidExecution:
 
     def test_valid_skill_execution(self, temp_skills_dir):
         """Test successful skill execution."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox') as mock_sandbox_class:
+        with patch('core.microvm_sandbox.MicroVMSandbox') as mock_sandbox_class:
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             mock_sandbox = MagicMock()
@@ -169,12 +169,12 @@ class TestEphemeralExecutorValidExecution:
                 test_payload="{'test': true}"
             )
 
-            assert result["exit_code"] == 0
-            assert result["stdout"] == "Execution successful"
+            assert result.exit_code == 0
+            assert result.stdout == "Execution successful"
 
     def test_sandbox_called_with_correct_params(self, temp_skills_dir):
         """Test that sandbox is called with correct parameters."""
-        with patch('backend.agents.ephemeral_executor.DockerSandbox') as mock_sandbox_class:
+        with patch('core.microvm_sandbox.MicroVMSandbox') as mock_sandbox_class:
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
             mock_sandbox = MagicMock()
@@ -189,7 +189,7 @@ class TestEphemeralExecutorValidExecution:
 
             executor.execute_use_and_throw(
                 skill_id="param_test_skill",
-                raw_code="test code content",
+                raw_code="def execute():\n    return 'ok'",
                 test_payload="test payload"
             )
 
