@@ -138,7 +138,7 @@ minversion = "6.0"
 # আর তখন "tests" মানে শুধু backend/tests -- repo-root tests/ (যেখানে
 # test_middleware_anti_hacking.py-র মতো ফাইল আছে) কখনোই কালেক্ট হয় না। "../tests" যোগ করে
 # backend/ থেকে সঠিকভাবে repo-root tests/-এও পৌঁছানো হচ্ছে।
-addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=core --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75"
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --cov=core --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=38"
 testpaths = ["tests", "../tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]

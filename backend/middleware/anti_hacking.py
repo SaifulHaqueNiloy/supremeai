@@ -63,10 +63,10 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                     if mismatch:
                         same_ua = last.get("ua") not in (None, "unknown") and last.get("ua") == signal["ua"]
                         same_subnet = bool(signal["ip"]) and _octet3(last.get("ip", "")) == _octet3(signal["ip"])
-                        # একটামাত্র সিগনাল (শুধু UA বা শুধু subnet) মিললে caution-এ নামানো হয় না —
-                        # সেটা false-negative রিস্ক বাড়ায়। সাময়িবহ একসাথে মিললেই কেবল caution;
-                        # ফিঙ্গারপ্রিন্ট এখানে mismatch সাপ্রেস করে না — শুধু সিগনাল/লগ-এ থাকে।
-                        if same_ua and same_subnet:
+                        # বাংলা: CGNAT পরিবেশে লাখো user একই /24 subnet share করে।
+                        # তাই same_subnet একা পেলে OTP না পাঠিয়ে caution লগ করা হয়।
+                        # একইভাবে same_ua একা পেলেও caution — UA spoofing সহজ।
+                        if same_subnet or same_ua:
                             caution = True
                             mismatch = False
 

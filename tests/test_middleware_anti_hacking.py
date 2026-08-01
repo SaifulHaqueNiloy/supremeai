@@ -161,16 +161,16 @@ async def test_dispatch_admin_request_context_mismatch_alert_only():
     """Test middleware dispatch for admin request with context mismatch in alert-only mode."""
     middleware = AntiHackingContextMiddleware(AsyncMock())  # Mock app
     
-    # Create a mock request with admin user
+    # Create a mock request with admin user — different IP AND different UA triggers OTP
     request = Request({
         "type": "http",
         "method": "GET",
         "path": "/test",
         "headers": [
-            (b"x-forwarded-for", b"192.168.2.100"),  # Different IP
+            (b"x-forwarded-for", b"192.168.2.100"),  # Different IP + different subnet
             (b"cf-ipcountry", b"US"),
-            (b"user-agent", b"test-agent"),
-            (b"x-device-fingerprint", b"device123"),
+            (b"user-agent", b"completely-different-agent"),  # Different UA → OTP fires
+            (b"x-device-fingerprint", b"device-new"),
         ],
     })
     request.state.user = {"sub": "admin123"}
@@ -184,9 +184,9 @@ async def test_dispatch_admin_request_context_mismatch_alert_only():
         with patch('backend.middleware.anti_hacking.redis_manager') as mock_redis_manager:
             mock_redis_manager.client = AsyncMock()
             previous_context = {
-                "ip": "192.168.1.100",  # Previous IP
+                "ip": "192.168.1.100",  # Previous IP (different subnet)
                 "country": "US",
-                "ua": "test-agent",
+                "ua": "test-agent",      # Different from new request UA
                 "fingerprint": "device123"
             }
             mock_redis_manager.get_cache = AsyncMock(return_value=json.dumps(previous_context))
@@ -217,16 +217,16 @@ async def test_dispatch_admin_request_context_mismatch_enforce_mode():
     """Test middleware dispatch for admin request with context mismatch in enforce mode."""
     middleware = AntiHackingContextMiddleware(AsyncMock())  # Mock app
     
-    # Create a mock request with admin user
+    # Create a mock request — different subnet AND different UA → OTP fires + 403
     request = Request({
         "type": "http",
         "method": "GET",
         "path": "/test",
         "headers": [
-            (b"x-forwarded-for", b"192.168.2.100"),  # Different IP
+            (b"x-forwarded-for", b"192.168.2.100"),  # Different IP + different subnet
             (b"cf-ipcountry", b"US"),
-            (b"user-agent", b"test-agent"),
-            (b"x-device-fingerprint", b"device123"),
+            (b"user-agent", b"completely-different-agent"),  # Different UA
+            (b"x-device-fingerprint", b"device-new"),
         ],
     })
     request.state.user = {"sub": "admin123"}
@@ -240,9 +240,9 @@ async def test_dispatch_admin_request_context_mismatch_enforce_mode():
         with patch('backend.middleware.anti_hacking.redis_manager') as mock_redis_manager:
             mock_redis_manager.client = AsyncMock()
             previous_context = {
-                "ip": "192.168.1.100",  # Previous IP
+                "ip": "192.168.1.100",  # Previous IP (different subnet)
                 "country": "US",
-                "ua": "test-agent",
+                "ua": "test-agent",      # Different from new request UA
                 "fingerprint": "device123"
             }
             mock_redis_manager.get_cache = AsyncMock(return_value=json.dumps(previous_context))
@@ -314,16 +314,16 @@ async def test_dispatch_admin_request_otp_cooldown_active():
     """Test middleware dispatch when OTP cooldown is active."""
     middleware = AntiHackingContextMiddleware(AsyncMock())  # Mock app
     
-    # Create a mock request with admin user
+    # Create a mock request — different subnet AND different UA → triggers mismatch + cooldown
     request = Request({
         "type": "http",
         "method": "GET",
         "path": "/test",
         "headers": [
-            (b"x-forwarded-for", b"192.168.2.100"),  # Different IP
+            (b"x-forwarded-for", b"192.168.2.100"),  # Different IP + different subnet
             (b"cf-ipcountry", b"US"),
-            (b"user-agent", b"test-agent"),
-            (b"x-device-fingerprint", b"device123"),
+            (b"user-agent", b"completely-different-agent"),  # Different UA
+            (b"x-device-fingerprint", b"device-new"),
         ],
     })
     request.state.user = {"sub": "admin123"}
@@ -337,9 +337,9 @@ async def test_dispatch_admin_request_otp_cooldown_active():
         with patch('backend.middleware.anti_hacking.redis_manager') as mock_redis_manager:
             mock_redis_manager.client = AsyncMock()
             previous_context = {
-                "ip": "192.168.1.100",  # Previous IP
+                "ip": "192.168.1.100",  # Previous IP (different subnet)
                 "country": "US",
-                "ua": "test-agent",
+                "ua": "test-agent",      # Different from new request UA
                 "fingerprint": "device123"
             }
             mock_redis_manager.get_cache = AsyncMock(return_value=json.dumps(previous_context))

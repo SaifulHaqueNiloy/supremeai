@@ -1,8 +1,9 @@
 # Coverage configuration for SupremeAI Backend
-# বাংলা মন্তব্য: কভারেজ এখন সব প্যাকেজে (core, api, tools, services, models) বিস্তৃত।
-# শুধুমাত্র সাইট-প্যাকেজ, টেস্ট ফাইল এবং ক্যাশে বাদ দেওয়া হয়েছে।
+# বাংলা মন্তব্য: শুধুমাত্র core/ ফোল্ডারের coverage মাপা হয়।
+# CI command এবং pyproject.toml উভয়ের সাথে consistent।
 
 [run]
+source = core
 branch = True
 omit =
     */site-packages/*
@@ -10,9 +11,9 @@ omit =
     */tests/*
     */__pycache__/*
     */migrations/*
+    */alembic/*
 
 [report]
-# Exclude lines that are inherently untestable
 exclude_lines =
     pragma: no cover
     def __repr__
@@ -26,30 +27,14 @@ exclude_lines =
     @abstractmethod
     @abstractproperty
 
-# Only exclude truly untestable modules (CLI entry points, generated code, JSON/db files)
 omit =
     core/constants.py
-    core/events.py
     core/telemetry.py
-    core/container_auditor.py
-    core/log_batcher.py
-    core/retry_budget.py
-    core/enum_guard.py
-    core/cost_guard.py
-    core/universal_rules.py
-    core/tenant_db.py
-    core/swarm_pubsub.py
-    core/agent_registry.json
-    core/supreme_memory.db
     core/base.py
-    core/metrics.py
     core/logging_config.py
     core/logging.py
     core/exceptions.py
-    core/ld_client.py
     core/playwright_manager.py
-    core/startup_validator.py
-    core/agent_supervisor.py
 
 [html]
 directory = htmlcov
