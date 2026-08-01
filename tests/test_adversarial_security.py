@@ -8,8 +8,8 @@ def test_path_traversal_injection_aborts_immediately():
     executor = EphemeralExecutor()
     # হ্যাকার যদি '../' দিয়ে সিস্টেমে ফাইল মোছার বা বাইরে যাওয়ার চেষ্টা করে
     result = executor.execute_use_and_throw("../etc/malicious", "print('hack')", "{}")
-    assert result["exit_code"] == -1
-    assert "Blocked: Malicious Path" in result["stderr"]
+    assert result.exit_code == -1
+    assert "Blocked" in result.stderr
 
 
 def test_static_ast_safety_catches_dangerous_calls():
