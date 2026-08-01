@@ -122,7 +122,7 @@ class TestChurnProphet:
         """Test ChurnProphet initializes correctly."""
         from backend.agents.churn_prophet import ChurnProphet
 
-        prophet = ChurnProphet()
+        prophet = ChurnProphet(db=MagicMock())
         assert prophet is not None
 
     @pytest.mark.asyncio
@@ -130,48 +130,52 @@ class TestChurnProphet:
         """Test user analysis."""
         from backend.agents.churn_prophet import ChurnProphet
 
-        with patch('core.tenant_db.TenantAwareFirestore') as mock_db:
-            mock_db_instance = AsyncMock()
-            mock_db.return_value = mock_db_instance
+        mock_db_instance = AsyncMock()
+        mock_collection = AsyncMock()
+        mock_db_instance.__aenter__ = AsyncMock(return_value=mock_db_instance)
+        mock_db_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_db_instance.collection.return_value = mock_collection
+        mock_collection.stream = AsyncMock(return_value=[])
 
-            # Mock the async context manager and collection reference
-            mock_collection = AsyncMock()
-            mock_db_instance.__aenter__ = AsyncMock(return_value=mock_db_instance)
-            mock_db_instance.__aexit__ = AsyncMock(return_value=None)
-            mock_db_instance.collection.return_value = mock_collection
+        mock_cache = AsyncMock()
+        mock_cache.get = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock(return_value=True)
 
-            # Mock stream to return empty list
-            mock_collection.stream = AsyncMock(return_value=[])
+        prophet = ChurnProphet(db=mock_db_instance)
+        prophet.cache = mock_cache
 
-            prophet = ChurnProphet()
-
-            try:
-                result = await prophet.analyze_user(
-                    tenant_id="test-tenant",
-                    user_id="test-user"
-                )
-                assert isinstance(result, object)
-            except Exception:
-                # May fail due to DB setup, but tests the code path
-                pass
+        try:
+            result = await prophet.analyze_user(
+                tenant_id="test-tenant",
+                user_id="test-user"
+            )
+            assert isinstance(result, object)
+        except Exception:
+            # May fail due to DB setup, but tests the code path
+            pass
 
     @pytest.mark.asyncio
     async def test_batch_analyze(self, mock_llm_router):
         """Test batch user analysis."""
         from backend.agents.churn_prophet import ChurnProphet
 
-        with patch('core.tenant_db.TenantAwareFirestore'):
-            prophet = ChurnProphet()
+        mock_db_instance = AsyncMock()
+        mock_cache = AsyncMock()
+        mock_cache.get = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock(return_value=True)
 
-            try:
-                results = await prophet.batch_analyze(
-                    tenant_id="test-tenant",
-                    user_ids=["user1", "user2", "user3"]
-                )
-                assert isinstance(results, list)
-            except Exception:
-                # May fail due to DB setup, but tests the code path
-                pass
+        prophet = ChurnProphet(db=mock_db_instance)
+        prophet.cache = mock_cache
+
+        try:
+            results = await prophet.batch_analyze(
+                tenant_id="test-tenant",
+                user_ids=["user1", "user2", "user3"]
+            )
+            assert isinstance(results, list)
+        except Exception:
+            # May fail due to DB setup, but tests the code path
+            pass
 
 
 class TestChurnProphetIntegration:
