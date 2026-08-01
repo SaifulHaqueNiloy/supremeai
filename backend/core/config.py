@@ -50,7 +50,7 @@ import os
 import secrets
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -63,7 +63,7 @@ from pydantic import (
     model_serializer,
     model_validator,
 )
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from utils.environment import is_test_environment
 
@@ -217,7 +217,7 @@ class Settings(BaseSettings):
         default=["system prompt", "ignore all previous", "you are an administrative"],
         validation_alias="PROMPT_BLOCKED_PATTERNS",
     )
-    rbac_role_definitions: dict[str, list[str]] = Field(
+    rbac_role_definitions: Annotated[dict[str, list[str]], NoDecode] = Field(
         default_factory=lambda: {
             "admin": ["*"],
             "user": ["read", "write"],
@@ -627,15 +627,19 @@ class Settings(BaseSettings):
         ভ্যালিডেশন বাইপাস করে টেস্ট অরিজিন বা ডিফল্ট অরিজিন ফেরত দেওয়া হয়।
         """
         env_origins = os.getenv("CORS_ORIGINS")
-        origins = (
-            [o.strip() for o in env_origins.split(",") if o.strip()]
-            if env_origins
-            else [
+        if env_origins:
+            env_origins = env_origins.strip()
+            try:
+                parsed = json.loads(env_origins)
+                origins = [str(o).strip() for o in parsed if str(o).strip()] if isinstance(parsed, list) else []
+            except json.JSONDecodeError:
+                origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+        else:
+            origins = [
                 "http://localhost:3000",
                 "http://localhost:5173",
                 "http://localhost:8000",
             ]
-        )
 
         # বাংলা মন্তব্য: টেস্ট ও CI এনভায়রনমেন্ট সনাক্তকরণ
         is_test_or_ci = (
