@@ -174,7 +174,9 @@ class MicroVMSandbox:
                 }
             ],
             "machine-config": {"vcpu_count": 1, "mem_size_mib": 128},
-            "network-interfaces": [] if self.network_disabled else [],
+            # Network interfaces are always empty for this sandboxed microVM
+            # (both branches previously evaluated to [] regardless of self.network_disabled)
+            "network-interfaces": [],
         }
         config_path = vm_dir / "config.json"
         from core.security.resource_guard import ResourceGuard
