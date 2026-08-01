@@ -96,11 +96,12 @@ async def test_stop_monitoring_when_running():
     service = InternetMonitorService()
     service.is_running = True
     
-    # Create a mock task
-    mock_task = MagicMock()
+    # Create a mock task using asyncio.Future
+    mock_task = asyncio.Future()
+    mock_task.set_result(None)
     mock_task.cancel = MagicMock()
     service.monitoring_task = mock_task
-    
+
     # Mock waiting for the task with CancelledError
     with patch.object(asyncio, 'wait_for', side_effect=asyncio.CancelledError()):
         await service.stop_monitoring()
@@ -128,12 +129,13 @@ async def test_stop_monitoring_with_task():
     """Test stopping monitoring with active task."""
     service = InternetMonitorService()
     service.is_running = True
-    
-    # Create a mock task that will be cancelled
-    mock_task = AsyncMock()
+
+    # Create a mock task using asyncio.Future
+    mock_task = asyncio.Future()
+    mock_task.set_result(None)
     mock_task.cancel = MagicMock()
     service.monitoring_task = mock_task
-    
+
     with patch('asyncio.wait_for', side_effect=asyncio.CancelledError):
         await service.stop_monitoring()
     
