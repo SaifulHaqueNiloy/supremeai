@@ -22,7 +22,7 @@ for fpath, finfo in files.items():
         pct = finfo["covered_lines"] / finfo["num_statements"] * 100
         file_pcts.append((pct, finfo["num_statements"], fpath))
 file_pcts.sort()
-for pct, stmts, fpath in file_pcts[:20]:
+for _pct, _stmts, _fpath in file_pcts[:20]:
     pass
 
 file_missing = []
@@ -32,5 +32,5 @@ for fpath, finfo in files.items():
         pct = finfo["covered_lines"] / finfo["num_statements"] * 100
         file_missing.append((missing, pct, finfo["num_statements"], fpath))
 file_missing.sort(reverse=True)
-for missing, pct, stmts, fpath in file_missing[:20]:
+for _missing, _pct, _stmts, _fpath in file_missing[:20]:
     pass

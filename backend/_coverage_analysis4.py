@@ -49,7 +49,7 @@ for fpath, finfo in files.items():
         norm = normalize_path(fpath)
         zero_coverage.append((stmts, norm))
 zero_coverage.sort(reverse=True)
-for stmts, fpath in zero_coverage[:25]:
+for _stmts, _fpath in zero_coverage[:25]:
     pass
 
 needs_work = []
@@ -63,7 +63,7 @@ for fpath, finfo in files.items():
             missing = stmts - covered
             needs_work.append((missing, pct, stmts, covered, norm))
 needs_work.sort(reverse=True)
-for missing, pct, stmts, covered, fpath in needs_work[:30]:
+for _missing, _pct, _stmts, _covered, _fpath in needs_work[:30]:
     pass
 
 medium = []
@@ -77,7 +77,7 @@ for fpath, finfo in files.items():
             missing = stmts - covered
             medium.append((missing, pct, stmts, covered, norm))
 medium.sort(reverse=True)
-for missing, pct, stmts, covered, fpath in medium[:20]:
+for _missing, _pct, _stmts, _covered, _fpath in medium[:20]:
     pass
 
 t = data["totals"]
