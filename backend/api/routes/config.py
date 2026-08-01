@@ -1,8 +1,31 @@
+import secrets
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import jwt
+from loguru import logger
 
-from api.routes.admin_dashboard import require_admin_token
+from core.config import settings
+
+security = HTTPBearer()
+
+
+def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """বাংলা মন্তব্য: এডমিন টোকেন ভ্যালিডেশন — gevent/locust হ্যাংিং রোধ করতে স্বাধীন ডিপেনডেন্সি।"""
+    token = credentials.credentials
+    try:
+        jwt_secret = settings.jwt_secret
+        decoded = jwt.decode(token, jwt_secret, algorithms=["HS256"])
+        if decoded.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
+        return decoded
+    except Exception as err:  # noqa: BLE001
+        logger.warning("Admin token validation failed", exc_info=True)
+        expected = getattr(settings, "supremeai_api_token", None) or ""
+        if expected and secrets.compare_digest(token, expected):
+            return {"uid": "admin", "role": "admin"}
+        raise HTTPException(status_code=401, detail="Authentication failed.") from err
 
 
 # টেস্ট কম্প্যাটিবিলিটি:
