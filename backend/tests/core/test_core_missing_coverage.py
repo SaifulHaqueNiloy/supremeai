@@ -108,6 +108,10 @@ class TestSettingsValidators:
     def test_computed_fields_read_from_vault(self, monkeypatch):
         from core.config import Settings
 
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        monkeypatch.delenv("SUPABASE_DATABASE_URL_POOLER", raising=False)
+        monkeypatch.delenv("REDIS_URL", raising=False)
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         monkeypatch.setattr("core.config.secret_vault.fetch_secret", lambda k: f"val-{k}")
         s = Settings()
         assert s.supabase_database_url == "val-SUPABASE_DATABASE_URL_POOLER"
