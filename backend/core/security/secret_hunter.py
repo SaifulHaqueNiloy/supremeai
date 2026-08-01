@@ -121,7 +121,7 @@ class GitleaksRunner:
             "severity": "high",
         },
         "github-token": {
-            "regex": r"(?<![A-Za-z0-9_])(ghp_[A-Za-z0-9_]{36}|gho_[A-Za-z0-9_]{36}|ghu_[A-Za-z0-9_]{36}|ghs_[A-Za-z0-9_]{36}|ghr_[A-Za-z0-9_]{36})(?![A-Za-z0-9_])",  # noqa: E501
+            "regex": r"(?<![A-Za-z0-9_])(ghp_[A-Za-z0-9_]{36}|gho_[A-Za-z0-9_]{36}|ghu_[A-Za-z0-9_]{36}|ghs_[A-Za-z0-9_]{36}|ghr_[A-Za-z0-9_]{36})(?![A-Za-z0-9_])",
             "type": "GitHub Token",
             "severity": "critical",
         },

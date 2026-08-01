@@ -135,48 +135,48 @@ def execute_ultimate_fuzz_test():
     bypass_count = 0
     syntax_error_count = 0
 
-    logger.info("\n" + "=" * 80)  # noqa: T201
-    logger.info(f"| {'ATTACK VECTOR CATEGORY':<35} | {'STATUS':<12} | {'ENGINE VERDICT':<23} |")  # noqa: T201
-    logger.info("=" * 80)  # noqa: T201
+    logger.info("\n" + "=" * 80)
+    logger.info(f"| {'ATTACK VECTOR CATEGORY':<35} | {'STATUS':<12} | {'ENGINE VERDICT':<23} |")
+    logger.info("=" * 80)
 
     for idx, (code, category) in enumerate(payloads, 1):
         try:
             is_safe = run_sandbox_ast_check(code)
             if is_safe:
                 # স্যান্ডবক্স কোডটিকে সেফ বলেছে -> অর্থাৎ হ্যাক সফল, স্যান্ডবক্স ফেল করেছে (Bypass)!
-                logger.info(  # noqa: T201
+                logger.info(
                     f"| {idx:03d}. {category:<30} | {RED}{'BYPASS':<12}{RESET} | Allowed Malicious Code  |"
                 )
                 bypass_count += 1
             else:
                 # সিনট্যাক্স এরর হ্যান্ডলিং
-                logger.info(  # noqa: T201
+                logger.info(
                     f"| {idx:03d}. {category:<30} | {GREEN}{'BLOCKED':<12}{RESET} | Syntax Normalization    |"
                 )
                 syntax_error_count += 1
         except SecurityError as e:
             # স্যান্ডবক্স সফলভাবে সিকিউরিটি এরর রেইজ করে অ্যাটাক ব্লক করেছে (Success)
-            logger.info(  # noqa: T201
+            logger.info(
                 f"| {idx:03d}. {category:<30} | {GREEN}{'BLOCKED':<12}{RESET} | {str(e)[:23]:<23} |"
             )
             blocked_count += 1
 
-    logger.info("=" * 80)  # noqa: T201
-    logger.info("\n📊 FINAL FUZZING LAB REPORT:")  # noqa: T201
-    logger.info(  # noqa: T201
+    logger.info("=" * 80)
+    logger.info("\n📊 FINAL FUZZING LAB REPORT:")
+    logger.info(
         f"  🟢 TOTAL ATTACKS SECURELY DEFENDED : {GREEN}{blocked_count + syntax_error_count}/100{RESET}"
     )
-    logger.info(  # noqa: T201
+    logger.info(
         f"  🔴 TOTAL BYPASSES (SANDBOX CRACKS) : {RED if bypass_count > 0 else GREEN}{bypass_count}/100{RESET}"
     )
-    logger.info("=" * 80)  # noqa: T201
+    logger.info("=" * 80)
 
     if bypass_count == 0:
-        logger.info(  # noqa: T201
+        logger.info(
             f"\n🏆 {GREEN}PASSED! Your SkillLoader AST Sandbox is 100% UNKILLABLE against all 100 fuzz vectors.{RESET}\n"
         )
     else:
-        logger.info(  # noqa: T201
+        logger.info(
             f"\n🚨 {RED}SECURITY WARNING: Your sandbox was cracked! Review the BYPASS vectors immediately.{RESET}\n"
         )
 

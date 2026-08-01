@@ -119,7 +119,7 @@ class AsyncRateLimiter:
                 logger.warning(f"Rate limit approaching for {key}: {count}/{limit}")
 
             return is_allowed
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if settings.env in ("production", "staging"):
                 logger.critical(f"Rate limiter failed critically in production: {e}. Blocking request (fail-closed).")
                 return False

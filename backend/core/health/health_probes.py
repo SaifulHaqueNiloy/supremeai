@@ -26,7 +26,7 @@ async def probe_redis():
         else:
             return {"status": "down", "latency": None, "reason": "Not initialized"}
         return {"status": "up", "latency": (time.perf_counter() - start) * 1000}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return {"status": "down", "latency": None, "reason": str(e)}
 
 
@@ -42,7 +42,7 @@ async def probe_database():
             # Here we just check if it exists as a placeholder, since true ping depends on the client library.
             pass
         return {"status": "up", "latency": (time.perf_counter() - start) * 1000}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return {"status": "down", "latency": None, "reason": str(e)}
 
 
@@ -59,5 +59,5 @@ async def probe_external_api(url: str):
             # which still means the network and the API gateway are UP.
             # Just getting a response means it's reachable.
             return {"status": "up", "latency": (time.perf_counter() - start) * 1000}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return {"status": "down", "latency": None, "reason": str(e)}

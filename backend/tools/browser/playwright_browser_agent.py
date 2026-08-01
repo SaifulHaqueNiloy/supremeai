@@ -66,7 +66,7 @@ class PlaywrightBrowserAgent:
                 )
             else:
                 raise ValueError("Cookie payload is not a list")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(
                 "Failed to load cookies from %s: %s. Removing stale cookie file.",
                 cookie_path,
@@ -124,7 +124,7 @@ class PlaywrightBrowserAgent:
             page.mouse.move(target_x, target_y, steps=steps)
             page.mouse.click(target_x, target_y)
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Human-like click failed for selector '{selector}': {e}. Falling back to simple click.")
             page.click(selector)  # Fallback to a simple click if anything goes wrong
 
@@ -186,12 +186,12 @@ class PlaywrightBrowserAgent:
             if login_check_selector and login_flow and credentials:
                 try:
                     is_authenticated = page.is_visible(login_check_selector)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     try:
                         import loguru
 
                         loguru.logger.error(f"Tool execution error: {e}")
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.warning(f"Exception suppressed: {e}")
                     is_authenticated = False
 
@@ -210,7 +210,7 @@ class PlaywrightBrowserAgent:
 
             result = task_function(page)
             return {"success": True, "result": result}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("Playwright task failed: %s", exc)
             return {"success": False, "error": str(exc)}
         finally:
@@ -293,7 +293,7 @@ class PlaywrightBrowserAgent:
                 args=(model_name, latency_ms, success),
             )
             thread.start()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to spawn background thread for model behavior update: {e}")
 
     def _update_model_behavior(self, model_name: str, latency_ms: float, success: bool):
@@ -388,7 +388,7 @@ class PlaywrightBrowserAgent:
                 "final_action": "implement" if is_confirmed else "reject",
             }
 
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Cross-verification failed: {exc}")
             return {"success": False, "error": str(exc)}
         finally:
@@ -440,14 +440,14 @@ class PlaywrightBrowserAgent:
             if response_text and response_text.strip():
                 return response_text.strip(), True
             return "", False
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Querying AI site {site_config['name']} failed: {e}")
             return "", False
 
     # Example Usage:
     # agent = PlaywrightBrowserAgent(headless=False)
-    # GROQ_CONFIG = {"name": "Groq", "url": "https://chat.groq.com/", "input_selector": 'textarea[aria-label="Prompt"]', "output_selector": '.message-content', "submit_button": 'button[aria-label="Submit"]'}  # noqa: E501
-    # GEMINI_CONFIG = {"name": "Gemini", "url": "https://gemini.google.com/", "input_selector": '.query-input > .input-area > .ql-editor', "output_selector": '.model-response-text .markdown', "submit_button": '.send-button-container > button'}  # noqa: E501
+    # GROQ_CONFIG = {"name": "Groq", "url": "https://chat.groq.com/", "input_selector": 'textarea[aria-label="Prompt"]', "output_selector": '.message-content', "submit_button": 'button[aria-label="Submit"]'}
+    # GEMINI_CONFIG = {"name": "Gemini", "url": "https://gemini.google.com/", "input_selector": '.query-input > .input-area > .ql-editor', "output_selector": '.model-response-text .markdown', "submit_button": '.send-button-container > button'}
     # result = agent.cross_verify_prompt("What is the capital of Bangladesh?", GROQ_CONFIG, GEMINI_CONFIG)
     # logger.info(result)
     # agent.stop()
@@ -540,7 +540,7 @@ class PlaywrightBrowserAgent:
                 page.wait_for_timeout(2000)
 
             return {"success": True, "result": f"Completed {max_steps} steps."}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Goal execution failed: {exc}")
             return {"success": False, "error": str(exc)}
         finally:

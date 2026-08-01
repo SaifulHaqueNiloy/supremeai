@@ -54,7 +54,7 @@ async def update_constitutional_rule(payload: RuleUpdate, admin_user: dict = Dep
             "status": "success",
             "message": f"Rule {payload.key} updated to {payload.value}",
         }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -116,7 +116,7 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                         continue
                     rows_res = await session.execute(text(f"SELECT * FROM {table}"))  # noqa: S608
                     columns = rows_res.keys()
-                    rows = [dict(zip(columns, row)) for row in rows_res.fetchall()]
+                    rows = [dict(zip(columns, row, strict=False)) for row in rows_res.fetchall()]
                     for row in rows:
                         for k, v in row.items():
                             if hasattr(v, "isoformat"):
@@ -128,7 +128,7 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
             backup_dir.mkdir(parents=True, exist_ok=True)
             backup_path = backup_dir / f"db_backup_{int(datetime.now(UTC).timestamp())}.json"
 
-            with open(backup_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
+            with open(backup_path, "w", encoding="utf-8") as f:
                 json.dump(backup_data, f, indent=2)
 
             logger.info(f"Database backup saved successfully to {backup_path}")

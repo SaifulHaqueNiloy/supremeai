@@ -57,7 +57,7 @@ def _require_admin(credentials: HTTPAuthorizationCredentials) -> dict[str, Any]:
         return payload
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # Fallback: check supremeai token
         expected = getattr(settings, "supremeai_api_token", None) or ""
         if expected and secrets.compare_digest(token.encode(), expected.encode()):

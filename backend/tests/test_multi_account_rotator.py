@@ -393,7 +393,7 @@ class TestMultiAccountRotator:
             "task_preferences": {},
         }
         config_file = str(tmp_path / "rotation_config.json")
-        with open(config_file, "w") as f:  # noqa: ASYNC230
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
         rotator2 = MultiAccountRotator(config_file=config_file)
         assert "groq" in rotator2.providers
@@ -420,7 +420,7 @@ class TestMultiAccountRotator:
             ],
         )
         rotator.save_config()
-        with open(rotator.config_file) as f:  # noqa: ASYNC230
+        with open(rotator.config_file) as f:
             data = json.load(f)
         assert len(data["providers"]) == 1
         assert data["providers"][0]["name"] == "groq"

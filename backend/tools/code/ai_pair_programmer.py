@@ -25,7 +25,7 @@ class AIPairProgrammer:
             router = ModelRouter()
             result = await router.async_route_and_generate(prompt, task_type=task_type, max_cost=max_cost)
             return result.get("text", "") if isinstance(result, dict) else ""
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"LLM call failed: {exc}")
             return ""
 
@@ -91,7 +91,7 @@ class AIPairProgrammer:
                 body=f"## AI Generated Fix\n\n**Issue:** {issue}\n\n**Changes:**\n```python\n{code[:500]}\n```",
                 files={"ai_fix.py": code},
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"PR creation failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -129,7 +129,7 @@ async def solve_issue(request: IssueRequest):
             create_pr=request.create_pr,
         )
         return result
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Solve issue failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

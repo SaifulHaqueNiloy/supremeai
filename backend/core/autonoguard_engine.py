@@ -133,7 +133,7 @@ class AutonoGuardEngine:
                 previous_ips.append(ip_val)
                 if ts < first_seen:
                     first_seen = ts
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Redis churn tracking failed: {exc}")
             previous_ips = []
             first_seen = now
@@ -176,7 +176,7 @@ class AutonoGuardEngine:
                 if redis_manager and redis_manager.client:
                     await redis_manager.client.delete(key)
                     await redis_manager.client.delete(failure_key)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"Failed to delete OTP keys: {exc}")
             logger.info(f"🔓 OTP verified for admin {admin_id}")
             return True
@@ -192,7 +192,7 @@ class AutonoGuardEngine:
                     ex_seconds=OTP_COOLDOWN_SECONDS * 12,  # 1 hour TTL for failure counter
                 )
                 logger.warning(f"🔐 OTP verification failed for {admin_id} (failure #{fail_count})")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"Failed to increment OTP failure counter: {exc}")
 
         return False
@@ -317,7 +317,7 @@ class AutonoGuardEngine:
                             "module": context.path,
                         },
                     )
-                except Exception as db_exc:  # noqa: BLE001, S110
+                except Exception as db_exc:
                     logger.warning(f"Failed to record retry error pattern: {db_exc}")
                 return True
 
@@ -335,11 +335,11 @@ class AutonoGuardEngine:
                         "module": context.path,
                     },
                 )
-            except Exception as db_exc:  # noqa: BLE001, S110
+            except Exception as db_exc:
                 logger.warning(f"Failed to record optimistic error pattern: {db_exc}")
             return True
 
-        except Exception as verify_exc:  # noqa: BLE001
+        except Exception as verify_exc:
             logger.warning(f"⚠️ Self-Heal verification failed: {verify_exc}")
             return False
 

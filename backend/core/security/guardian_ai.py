@@ -320,7 +320,7 @@ Respond ONLY with JSON:
                 confidence=result.get("confidence", 0.5),
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # বাংলা মন্তব্য: network/timeout/provider সহ যেকোনো ব্যর্থতায় crash না করে
             # fail-open করা হচ্ছে (local regex pattern check এখনও কাজ করছে)
             logger.critical(

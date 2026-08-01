@@ -102,7 +102,7 @@ async def safe_api_call(
         error_msg = handle_api_error(e, e.response.status_code)
         logger.warning(f"HTTP error calling {url}: {error_msg}")
         return (False, error_msg)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         error_msg = handle_api_error(e)
         logger.error(f"Request failed for {url}: {error_msg}")
         return (False, error_msg)

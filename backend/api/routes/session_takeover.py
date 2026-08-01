@@ -106,7 +106,7 @@ async def _redis_client():
         if not redis_url:
             return None
         return aioredis.from_url(redis_url, decode_responses=True)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.debug(f"Redis unavailable for takeover-token consumption, falling back to base check only: {exc}")
         return None
 
@@ -133,12 +133,12 @@ async def verify_takeover_token(token: str) -> bool:
                 if not consumed:
                     logger.warning(f"Replay attempt detected for already-used takeover token: {token[:10]}...")
                     return False
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Redis single-use check failed, allowing on base validation only: {exc}")
 
         return True
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Token verification failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Token verification failed: {e!s}")
         return False
 
 
@@ -147,7 +147,7 @@ def _is_production() -> bool:
 
 
 # A 1x1 black JPEG pixel encoded in base64 — dev/stress-test only, never sent in production.
-MOCK_FRAME_B64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="  # noqa: E501
+MOCK_FRAME_B64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
 
 
 async def dev_mock_screencast_emitter(websocket: WebSocket, session_id: str):
@@ -162,7 +162,7 @@ async def dev_mock_screencast_emitter(websocket: WebSocket, session_id: str):
     except asyncio.CancelledError:
         logger.warning("⚠️ Task execution was intentionally cancelled.")
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception(f"❌ Critical task failure in session_takeover.py: {e}")
         from core.messaging.event_bus import ErrorEvent, error_event_bus
 
@@ -239,7 +239,7 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str, toke
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket takeover disconnected for session {session_id}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"WebSocket takeover error: {e}")
     finally:
         if emitter_task is not None:

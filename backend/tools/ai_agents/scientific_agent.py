@@ -21,7 +21,7 @@ class ScientificAgent:
                 "solution": str(solution),
                 "method": method,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Equation solving failed: {exc}")
             # গ্যাপ ফিক্স (Anti-Silent-Failure): status="error" থাকা সত্ত্বেও আগে এখানে একটি
             # fabricated "x = 42" solution ফেরত দেওয়া হতো — একটি careless caller/UI যদি শুধু

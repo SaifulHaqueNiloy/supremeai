@@ -35,7 +35,7 @@ class BlindspotFinder:
                         self.report["low_coverage_files"].append({"file": filepath, "coverage": f"{cover_pct:.2f}%"})
                         if cover_pct < 25.0:
                             self.fail_build = True
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse coverage json: {e}")
 
     def scan_files(self):
@@ -84,7 +84,7 @@ class BlindspotFinder:
                             }
                         )
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Error scanning file {filepath}: {e}")
 
     def generate_markdown_summary(self, output_path: str):

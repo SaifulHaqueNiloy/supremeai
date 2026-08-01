@@ -21,7 +21,7 @@ def setup_test_environment():
     # Save originals before overriding
     originals = {k: os.environ.get(k, _SENTINEL) for k in _keys}
 
-    for k, v in zip(_keys, _defaults):
+    for k, v in zip(_keys, _defaults, strict=False):
         os.environ.setdefault(k, v)
 
     yield

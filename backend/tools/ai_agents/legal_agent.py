@@ -47,7 +47,7 @@ class LegalAgent:
                 "jurisdiction": jurisdiction,
                 "document": doc.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Contract generation failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -136,6 +136,6 @@ class LegalAgent:
                 "jurisdiction": jurisdiction,
                 "document": doc.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"ToS generation failed: {exc}")
             return {"status": "error", "error": str(exc)}

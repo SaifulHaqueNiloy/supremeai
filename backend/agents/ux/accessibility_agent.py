@@ -570,7 +570,7 @@ class AccessibilityAgent:
 
         except Exception as e:
             logger.error(f"Error generating accessibility plan: {e}")
-            return {"status": "error", "message": f"Error generating plan: {str(e)}", "steps": []}
+            return {"status": "error", "message": f"Error generating plan: {e!s}", "steps": []}
 
     async def _store_accessibility_report(self, report: AccessibilityReport):
         """Store accessibility report in Redis."""

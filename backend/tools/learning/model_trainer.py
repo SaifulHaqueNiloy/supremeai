@@ -25,7 +25,7 @@ class ModelTrainer:
         if not os.path.exists(dataset_path):
             # Ensure the directory exists
             os.makedirs(os.path.dirname(dataset_path) or ".", exist_ok=True)
-            with open(dataset_path, "w") as f:  # noqa: ASYNC230
+            with open(dataset_path, "w") as f:
                 f.write('{"prompt": "hello", "completion": "world"}')
 
         logger.info(f"Triggering {base_model} LoRA fine-tune on {self.provider} using {dataset_path}")
@@ -134,7 +134,7 @@ class ModelTrainer:
             return {
                 "status": "not_implemented",
                 "job_id": job_id,
-                "message": "Local training is simulated only — no real checkpoint was produced. Configure RUNPOD_API_KEY or MODAL credentials for real training.",  # noqa: E501
+                "message": "Local training is simulated only — no real checkpoint was produced. Configure RUNPOD_API_KEY or MODAL credentials for real training.",
             }
 
         return {
@@ -150,7 +150,7 @@ class ModelTrainer:
         try:
             logger.info(f"ModelTrainer: Learned fix pattern for fingerprint {fingerprint[:8]}")
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"ModelTrainer learn_from_execution_failure failed: {exc}")
             return False
 

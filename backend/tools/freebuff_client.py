@@ -24,6 +24,6 @@ class FreebuffClient:
                 "stdout": stdout.decode().strip(),
                 "stderr": stderr.decode().strip(),
             }
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"🔴 Freebuff CLI execution failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"🔴 Freebuff CLI execution failed: {e!s}")
             return {"success": False, "error": str(e)}

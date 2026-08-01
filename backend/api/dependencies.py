@@ -170,7 +170,7 @@ async def verify_idempotency(request: Request) -> None:
             # বাংলা মন্তব্য: HTTPException দিয়ে cached response ফেরত দেওয়া সম্ভব নয়
             # তাই এখানে শুধু duplicate lock চেক করা হয়
             logger.info(f"[Idempotency Dep] Cache hit for key: {idempotency_key}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"[Idempotency Dep] Cache read failed: {e}")
 
     # বাংলা মন্তব্য: ডুপ্লিকেট রিকোয়েস্ট প্রসেসিং ব্লক করা হচ্ছে

@@ -47,6 +47,6 @@ def register_creative_agents(manager: Any) -> dict[str, str]:
         try:
             manager.register_skill(name, agent)
             results[name] = "registered"
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             results[name] = f"failed: {exc}"
     return results

@@ -50,7 +50,7 @@ class NightlyChaosAuditor:
                     if run_sandbox_ast_check(code):
                         failures += 1
                         logger.critical("🚨 [SECURITY BREACH] Sandbox bypass detected during autonomous fuzzing!")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")  # SecurityError আশা করা হচ্ছে, তাই এটি পাস
 
             # 🧪 টেস্ট ২: রানটাইম কানেকশন পুল স্ট্রেস চেক (Synthetic Heavy Requests)
@@ -100,11 +100,11 @@ class NightlyChaosAuditor:
                     await asyncio.to_thread(self.gate_ref.set, gate_data)
                 return True
 
-        except Exception as global_err:  # noqa: BLE001
-            logger.critical(f"⚠️ Auditor crashed internally: {str(global_err)}. Locking pipeline for safety.")
+        except Exception as global_err:
+            logger.critical(f"⚠️ Auditor crashed internally: {global_err!s}. Locking pipeline for safety.")
             error_data = {
                 "status": "LOCKED",
-                "reason": f"Auditor internal error: {str(global_err)}",
+                "reason": f"Auditor internal error: {global_err!s}",
             }
             if self.gate_ref:
                 await asyncio.to_thread(self.gate_ref.set, error_data)

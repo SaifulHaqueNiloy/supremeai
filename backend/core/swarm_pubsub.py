@@ -13,18 +13,18 @@ Dependencies:
 - `loguru`: For structured logging of operational events and errors within the module.
 - `redis.asyncio`: The asynchronous Redis client library used for PubSub operations.
 - `core.config`: To retrieve application settings, specifically the Redis connection URL.
-- `core.messaging.event_bus`: For emitting structured error events to the central application event bus."""  # noqa: E501
+- `core.messaging.event_bus`: For emitting structured error events to the central application event bus."""
 
-import asyncio  # noqa: E402
-import json  # noqa: E402
-from collections.abc import AsyncGenerator  # noqa: E402
+import asyncio
+import json
+from collections.abc import AsyncGenerator
 
 # বাংলা মন্তব্য: aioredis মডিউল লেভেলে ইমপোর্ট করা হয়েছে যাতে টেস্টের সময় সঠিক মক ট্র্যাকিং বজায় থাকে।
-import redis.asyncio as aioredis  # type: ignore[import-untyped] # noqa: E402
-from loguru import logger  # noqa: E402
+import redis.asyncio as aioredis  # type: ignore[import-untyped]
+from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 # বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।
 # RedisURL এখন settings থেকে আসে, hardcode নয়।
@@ -92,7 +92,7 @@ class SwarmPubSub:
             try:
                 await pubsub.unsubscribe("swarm_stream")
                 await pubsub.close()
-            except Exception as cleanup_err:  # noqa: BLE001
+            except Exception as cleanup_err:
                 logger.error(f"SwarmPubSub cleanup error: {cleanup_err}")
                 error_event_bus.emit(
                     ErrorEvent(
@@ -104,7 +104,7 @@ class SwarmPubSub:
                     )
                 )
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"SwarmPubSub subscription error: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -125,7 +125,7 @@ class SwarmPubSub:
         try:
             redis_client = self._get_redis()
             await redis_client.set("swarm:halt:global", reason, ex=3600)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"SwarmPubSub: failed to set halt flag: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -143,7 +143,7 @@ class SwarmPubSub:
         try:
             redis_client = self._get_redis()
             await redis_client.delete("swarm:halt:global")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"SwarmPubSub: failed to clear halt flag: {e}")
             raise
 
@@ -157,7 +157,7 @@ class SwarmPubSub:
             redis_client = self._get_redis()
             value = await redis_client.get("swarm:halt:global")
             return value is not None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"SwarmPubSub: halt-flag check failed, defaulting to NOT halted: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -192,7 +192,7 @@ class SwarmPubSub:
             await redis_client.publish("swarm_stream", message)
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"SwarmPubSub broadcast failed: {e}")
             error_event_bus.emit(
                 ErrorEvent(

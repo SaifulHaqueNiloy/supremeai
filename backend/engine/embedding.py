@@ -22,8 +22,8 @@ class EmbeddingService:
             response = await litellm.aembedding(model=self.model_name, input=text)
             # LiteLLM normalizes the response to match OpenAI's schema
             return response.data[0]["embedding"]
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to generate embedding: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to generate embedding: {e!s}")
             raise
 
     async def generate_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
@@ -34,8 +34,8 @@ class EmbeddingService:
             response = await litellm.aembedding(model=self.model_name, input=texts)
             # Extract embeddings maintaining the original order
             return [item["embedding"] for item in response.data]
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to generate batch embeddings: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to generate batch embeddings: {e!s}")
             raise
 
 

@@ -14,12 +14,12 @@ Dependencies:
 - `typing`: Used for type hints, specifically `Any`.
 - `fastapi`: Utilized for raising `HTTPException` to signal budget-related failures to the API client.
 - `loguru`: Employed for structured logging of budget checks, warnings, and errors.
-- `asyncio`: Used internally within `check_budget` to adapt to both synchronous and asynchronous database client methods."""  # noqa: E501
+- `asyncio`: Used internally within `check_budget` to adapt to both synchronous and asynchronous database client methods."""
 
-from typing import Any  # noqa: E402
+from typing import Any
 
-from fastapi import HTTPException  # noqa: E402
-from loguru import logger  # noqa: E402
+from fastapi import HTTPException
+from loguru import logger
 
 
 class CostGuard:
@@ -41,7 +41,7 @@ class CostGuard:
             logger.info("💰 CostGuard: Initializing resource budget guardian connection protocol...")
             logger.info("✅ CostGuard: Budget guardian layer attached and armed successfully.")
             return self
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"🚨 [COST_GUARD_CONNECT_LEAK]: Lifespan handshake failed: {e}")
             raise
 
@@ -83,7 +83,7 @@ class CostGuard:
             return True
         except HTTPException:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"CostGuard DB Error: {e}")
             try:
                 from core.messaging.event_bus import ErrorEvent, error_event_bus
@@ -119,7 +119,7 @@ class CostGuard:
         try:
             spent_raw = await redis_manager.get_cache(key)
             spent = float(spent_raw) if spent_raw else 0.0
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[CostGuard] Redis unavailable, fail-safe reject: {e}")
             try:
                 from core.messaging.event_bus import ErrorEvent, error_event_bus
@@ -162,7 +162,7 @@ class CostGuard:
 
         try:
             await redis_manager.incrbyfloat(key, actual_cost, ex_seconds=86400)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[CostGuard] Failed to record spend in Redis: {e}")
             try:
                 from core.messaging.event_bus import ErrorEvent, error_event_bus

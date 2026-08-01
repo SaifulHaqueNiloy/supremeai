@@ -149,7 +149,7 @@ def _save_workspace_session(project_type: WorkspaceType, tenant_id: str | None =
             with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
                 f.write(json.dumps(session, indent=2, ensure_ascii=False))
             os.replace(temp_path, str(session_path))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             try:
                 os.unlink(temp_path)
             except OSError as exc:
@@ -416,7 +416,7 @@ async def workspace_read_file(params: ReadFileInput) -> str:
             content = content[:CHARACTER_LIMIT] + f"\n... [Truncated: Content exceeds {CHARACTER_LIMIT} chars]"
 
         return json.dumps({"path": str(resolved_path), "content": content}, ensure_ascii=False)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return json.dumps({"error": f"Failed to read file: {e}"}, ensure_ascii=False)
 
 
@@ -449,7 +449,7 @@ async def workspace_write_file(params: WriteFileInput) -> str:
             {"success": True, "path": str(resolved_path), "message": "File saved successfully."},
             ensure_ascii=False,
         )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return json.dumps({"error": f"Failed to write file: {e}"}, ensure_ascii=False)
 
 
@@ -493,7 +493,7 @@ async def workspace_search_files(params: SearchFilesInput) -> str:
         return json.dumps(
             {"workspace": str(base_dir), "count": len(matched_files), "files": matched_files}, ensure_ascii=False
         )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return json.dumps({"error": f"Failed to search files: {e}"}, ensure_ascii=False)
 
 

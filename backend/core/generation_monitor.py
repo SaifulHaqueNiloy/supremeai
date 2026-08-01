@@ -9,7 +9,7 @@ Key Components:
 - `track_agent_call()`: Logs details of agent calls for monitoring and debugging purposes.
 
 Dependencies:
-- `re`: For regular expression operations used in text analysis."""  # noqa: E501
+- `re`: For regular expression operations used in text analysis."""
 
 import re
 
@@ -78,7 +78,7 @@ class GenerationMonitor:
         }
 
     def track_agent_call(self, **kwargs):
-        logger.info("--- AGENT CALL ---")  # noqa: T201
+        logger.info("--- AGENT CALL ---")
         for key, value in kwargs.items():
-            logger.info(f"{key}: {value}")  # noqa: T201
-        logger.info("--------------------")  # noqa: T201
+            logger.info(f"{key}: {value}")
+        logger.info("--------------------")

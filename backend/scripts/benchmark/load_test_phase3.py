@@ -21,14 +21,14 @@ async def simulate_request(tenant_id: str, request_id: int):
             tenant_id=tenant_id,
         )
         return "success"
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         if "402 Payment Required" in str(e):
             return "402"
         return "error"
 
 
 async def main():
-    print("Starting Phase 3 Load Test (1,000 Transactions)")  # noqa: T201
+    print("Starting Phase 3 Load Test (1,000 Transactions)")
     tenant_id = "tenant-load-test"
     db = get_firestore_db()
 
@@ -60,15 +60,15 @@ async def main():
         results.count("402")
         errors = results.count("error")
 
-        print("\n=== Load Test Results ===")  # noqa: T201
-        print("Total Requests: 1000")  # noqa: T201
-        print(f"Success: {successes}")  # noqa: T201
-        print(f"Other Errors (Triggered SelfHealer): {errors}")  # noqa: T201
-        print(f"Total Time: {elapsed:.2f} seconds")  # noqa: T201
-        print(f"RPS: {1000 / elapsed:.2f} req/s")  # noqa: T201
+        print("\n=== Load Test Results ===")
+        print("Total Requests: 1000")
+        print(f"Success: {successes}")
+        print(f"Other Errors (Triggered SelfHealer): {errors}")
+        print(f"Total Time: {elapsed:.2f} seconds")
+        print(f"RPS: {1000 / elapsed:.2f} req/s")
 
         # Test Sandbox TTL
-        print("\n=== Testing Sandbox Auto-Destroy ===")  # noqa: T201
+        print("\n=== Testing Sandbox Auto-Destroy ===")
         orchestrator = CloudSandboxOrchestrator(provider="runpod")
         sandbox_id = "load-test-sandbox-1"
         orchestrator._active_sandboxes[sandbox_id] = {
@@ -76,12 +76,12 @@ async def main():
             "status": "running",
         }
 
-        print(f"Injected sandbox {sandbox_id} with age 11.6 minutes.")  # noqa: T201
+        print(f"Injected sandbox {sandbox_id} with age 11.6 minutes.")
 
         with patch("asyncio.sleep", AsyncMock(side_effect=Exception("Exit Loop"))):
             try:
                 await orchestrator.auto_destroy_worker(tenant_id)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 if str(e) == "Exit Loop":
                     pass
 
