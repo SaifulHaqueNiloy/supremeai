@@ -69,7 +69,7 @@ def _compute_embedding(text: str, vector_size: int = 384) -> list[float]:
     Returns:
         A list of floats of length `vector_size` representing the embedding.
     """
-    global _SENTENCE_TRANSFORMER_MODEL  # noqa: PLW0603
+    global _SENTENCE_TRANSFORMER_MODEL
 
     if _SENTENCE_TRANSFORMER_AVAILABLE:
         try:
@@ -78,7 +78,7 @@ def _compute_embedding(text: str, vector_size: int = 384) -> list[float]:
                 _SENTENCE_TRANSFORMER_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
             embedding = _SENTENCE_TRANSFORMER_MODEL.encode(text, normalize_embeddings=True)
             return embedding.tolist()  # type: ignore[union-attr]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"sentence-transformers encode failed, falling back to hash embedding: {exc}")
 
     # ── Deterministic hash-based fallback ──────────────────────────────────────
@@ -198,7 +198,7 @@ class ErrorRemediation:
             self._ensure_qdrant_collection()
             self._qdrant_initialized = True
             logger.info(f"✅ Qdrant error remediation client connected ({qdrant_url})")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"⚠️ Qdrant initialization failed: {exc}. Using local fallback only.")
             self._qdrant = None
             self._qdrant_initialized = True
@@ -420,7 +420,7 @@ class ErrorRemediation:
                 result = await operation()
                 self.circuit_breaker.mark_success()
                 return result
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_exception = exc
                 self.circuit_breaker.mark_failure()
                 logger.debug(f"Qdrant lookup attempt {attempt}/{max_attempts} failed: {exc}")
@@ -617,7 +617,7 @@ class ErrorRemediation:
                 )
             )
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to insert error pattern into Qdrant: {exc}")
             error_event_bus.emit(
                 ErrorEvent(

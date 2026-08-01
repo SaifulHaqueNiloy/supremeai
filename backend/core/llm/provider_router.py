@@ -74,7 +74,7 @@ class LatencyAwareWeightedRouter:
                 fallback = min(self.stats.values(), key=lambda s: s.circuit_open_until)
                 return fallback.name
 
-            names, weights = zip(*candidates)
+            names, weights = zip(*candidates, strict=False)
             return random.choices(names, weights=weights, k=1)[0]
 
     async def record_result(self, name: str, latency_ms: float, success: bool):

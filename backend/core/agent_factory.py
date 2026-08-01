@@ -26,7 +26,7 @@ class DynamicAgentFactory:
             with open(registry_path, encoding="utf-8") as f:
                 registry = json.load(f)
                 return registry.get(agent_name)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to read agent_registry.json: {e}")
             return None
 
@@ -56,7 +56,7 @@ class DynamicAgentFactory:
 
         try:
             agent_config = json.loads(response.get("text"))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse AI generated agent configuration JSON: {e}")
             import time
 
@@ -93,6 +93,6 @@ class DynamicAgentFactory:
                 self.db.add(new_agent)
             await self.db.commit()
             logger.success(f"🧠 [AgentFactory] New skill learned and registered: '{name}'")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             await self.db.rollback()
             logger.error(f"Failed to save dynamic agent to registry: {exc}")

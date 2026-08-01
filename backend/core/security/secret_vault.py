@@ -106,7 +106,7 @@ class ProductionSecretVault:
                 logger.info("Production Secret Vault hooked into Infisical via Token")
         except (ConnectionError, TimeoutError, ValueError) as exc:
             logger.warning(f"Failed to bind Infisical Client: {exc}. Falling back to raw env.")
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).warning(
                 "Unexpected error initializing Infisical client. Falling back to raw env."
             )
@@ -168,7 +168,7 @@ class ProductionSecretVault:
                 )
             )
             return self._fallback_to_env(secret_id, default)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Using fallback.")
             error_event_bus.emit(
                 ErrorEvent(
@@ -203,7 +203,7 @@ class ProductionSecretVault:
                             context={"secret_id": secret_id},
                         )
                     )
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.debug(f"Failed to emit error event: {exc}")
                 if default is None:
                     raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
@@ -212,14 +212,14 @@ class ProductionSecretVault:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
                 if default is not None:
                     env_fallback = default
-                elif secret_id == "SUPREMEAI_JWT_SECRET":  # noqa: S105
+                elif secret_id == "SUPREMEAI_JWT_SECRET":
                     # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
                     env_fallback = (
                         "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
                     )
-                elif secret_id == "SUPABASE_URL":  # noqa: S105
+                elif secret_id == "SUPABASE_URL":
                     env_fallback = "https://mock.supabase.co"
-                elif secret_id == "SUPABASE_KEY":  # noqa: S105
+                elif secret_id == "SUPABASE_KEY":
                     env_fallback = "mock-key"
                 else:
                     env_fallback = f"mock_{secret_id}"
@@ -279,7 +279,7 @@ def get_secret_vault() -> ProductionSecretVault:
     বাংলা মন্তব্য: লেজি সিঙ্গেলটন — প্রথম ব্যবহারের সময় ইনিশিয়ালাইজ হয়।
     ইম্পোর্ট টাইমে নয়, তাই settings লোড হওয়ার আগে vault তৈরি হয় না।
     """
-    global _secret_vault_instance, _vault_initialized  # noqa: PLW0603
+    global _secret_vault_instance, _vault_initialized
     if not _vault_initialized:
         _secret_vault_instance = ProductionSecretVault()
         _vault_initialized = True
@@ -288,7 +288,7 @@ def get_secret_vault() -> ProductionSecretVault:
 
 def reset_secret_vault() -> None:
     """বাংলা মন্তব্য: টেস্ট আইসোলেশনের জন্য vault রিসেট — শুধু টেস্টে ব্যবহার করুন।"""
-    global _secret_vault_instance, _vault_initialized  # noqa: PLW0603
+    global _secret_vault_instance, _vault_initialized
     _secret_vault_instance = None
     _vault_initialized = False
 

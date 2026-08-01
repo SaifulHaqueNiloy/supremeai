@@ -34,7 +34,7 @@ from core.logging_config import setup_logging
 setup_logging()
 
 
-def _handle_sigterm(signum: int, frame: object) -> None:  # noqa: ANN401
+def _handle_sigterm(signum: int, frame: object) -> None:
     """SIGTERM/SIGINT handler.
 
     SupremeAI FastAPI shutdown is handled by Uvicorn + `lifespan.app_lifespan`.
@@ -84,7 +84,7 @@ def run_server() -> None:
                 import sentry_sdk
 
                 sentry_sdk.capture_exception(exc)
-            except Exception as sentry_exc:  # noqa: BLE001
+            except Exception as sentry_exc:
                 logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
     except OSError as exc:
@@ -94,7 +94,7 @@ def run_server() -> None:
                 import sentry_sdk
 
                 sentry_sdk.capture_exception(exc)
-            except Exception as sentry_exc:  # noqa: BLE001
+            except Exception as sentry_exc:
                 logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
 

@@ -116,7 +116,7 @@ class EnhancedASTScanner(ast.NodeVisitor):
                                 node=node,
                                 recommendation="Use subprocess with shell=False, validate all inputs",
                             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Error visiting Call node: {exc}")
 
         self.generic_visit(node)
@@ -237,7 +237,7 @@ class SecurityScanner:
 
             scanner = EnhancedASTScanner(file_path, code)
             return scanner.scan()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"Failed to scan {file_path}: {exc}")
             return []
 
@@ -265,7 +265,7 @@ class SecurityScanner:
 
                 issues = self.scan_file(str(file_path))
                 all_issues.extend(issues)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Error scanning directory {directory}: {exc}")
 
         return all_issues

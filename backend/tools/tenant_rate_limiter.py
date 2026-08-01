@@ -65,7 +65,7 @@ class TenantRateLimiter:
                 tier = await tier
             if tier is not None:
                 return tier.decode("utf-8") if isinstance(tier, bytes) else str(tier)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Tier lookup failed: {exc}")
         return "free"
 
@@ -80,7 +80,7 @@ class TenantRateLimiter:
             res = self.queue.set(f"billing:tier:{tenant_id}", tier, ex=3600)
             if asyncio.iscoroutine(res):
                 await res
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Tier update failed: {exc}")
 
     async def check_quota(
@@ -137,7 +137,7 @@ class TenantRateLimiter:
                     "current": rpd,
                     "limit": tier["rpd"],
                 }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Redis quota check failed: {exc}")
             return {"allowed": True, "reason": "redis_error", "tier": tier_key}
 
@@ -237,7 +237,7 @@ class TenantRateLimiter:
                 )
                 if asyncio.iscoroutine(res6):
                     await res6
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Redis usage recording failed: {exc}")
 
         total_cost = cost
@@ -262,12 +262,12 @@ class TenantRateLimiter:
         if amount < 1.0:
             return
         try:
-            import stripe  # noqa: PLC0415
+            import stripe
 
             stripe.api_key = settings.stripe_api_key
             customer_id = None
             if self.queue:
-                import asyncio  # noqa: PLC0415
+                import asyncio
 
                 cust_val = self.queue.get(f"stripe:customer:{tenant_id}")
                 if asyncio.iscoroutine(cust_val):
@@ -309,5 +309,5 @@ class TenantRateLimiter:
                 description=f"SupremeAI usage - tenant {tenant_id}",
             )
             logger.info(f"Stripe usage recorded for tenant {tenant_id}: ${amount:.4f}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Stripe charge failed: {exc}")

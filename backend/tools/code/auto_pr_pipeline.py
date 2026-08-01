@@ -63,7 +63,7 @@ class AutoPRPipeline:
         # ── 2. Real GitHub PR via GitHubAgent ────────────────────────────────
         logger.info(f"🚀 [Auto PR] Creating real branch '{branch_name}' and PR on '{self.repo_name}'...")
         try:
-            from tools.devops.github_agent import GitHubAgent  # noqa: PLC0415
+            from tools.devops.github_agent import GitHubAgent
 
             agent = GitHubAgent(token=self.github_token)
 
@@ -93,7 +93,7 @@ class AutoPRPipeline:
                 "target_file": file_path,
             }
 
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"❌ [Auto PR] GitHub PR creation failed: {exc}")
             return {
                 "status": "failed",

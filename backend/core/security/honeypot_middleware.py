@@ -60,7 +60,7 @@ class HoneypotMiddleware:
                     messages.append(message)
                     body_bytes += message.get("body", b"")
                     more_body = message.get("more_body", False)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 # বল মনতবয: রকয়সট বড রড বযরথ হল ডউনসটরম হযনডলর খল বড দখব;
                 # নরব সযলপর বদল ডবগ লগ কর হল যত করপট/আংশক বড শনকত কর যয়
                 logger.debug(f"Honeypot middleware failed to read request body: {exc}")
@@ -117,7 +117,7 @@ class HoneypotMiddleware:
                         ),
                         ex=3600,
                     )
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Redis honeypot block operation failed: {e}")
 
             # 4. Fire security event to event bus
@@ -141,7 +141,7 @@ class HoneypotMiddleware:
                         },
                     )
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"Event bus emit failed during honeypot block (suppressed by design): {exc}")
 
             # 5. Return RFC 2324 (418 I'm a teapot) — اطلاعات-লীন রেসপন্স
@@ -179,7 +179,7 @@ class HoneypotMiddleware:
         except RuntimeError:
             # বাংলা মন্তব্য: event loop না থাকলে synchronously execute করুন
             self._persist_threat_intel(ip, payload, endpoint)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Failed to schedule threat intel persistence: {exc}")
 
     def _persist_threat_intel(self, ip: str, payload: str, endpoint: str):
@@ -198,5 +198,5 @@ class HoneypotMiddleware:
                     "timestamp": time.time(),
                 }
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Failed to persist threat intel to Firestore: {exc}")

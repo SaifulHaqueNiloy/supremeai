@@ -32,7 +32,7 @@ async def gmail_auth(payload: GmailAuthRequest):
         raise HTTPException(status_code=501, detail=str(e)) from e
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -43,5 +43,5 @@ async def imap_auth(payload: ImapAuthRequest):
         if success:
             return {"status": "success", "message": "Connected generic IMAP"}
         raise HTTPException(status_code=400, detail="Failed to connect generic IMAP")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

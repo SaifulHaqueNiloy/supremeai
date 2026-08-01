@@ -32,7 +32,7 @@ class ProxyManager:
                     data = json.load(f)
                     self.proxies = data.get("proxies", [])
                     logger.info(f"Loaded {len(self.proxies)} proxies from {self.config_path}.")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to read proxy config: {e}")
 
         # Fallback empty list

@@ -9,7 +9,7 @@ try:
     from tools.code.pr_reviewer import PRReviewer
 
     _PR_REVIEWER_AVAILABLE = True
-except Exception:  # noqa: BLE001
+except Exception:
     _PR_REVIEWER_AVAILABLE = False
     PRReviewer = None  # type: ignore[misc,assignment]
 
@@ -84,7 +84,7 @@ class PreCommitAI:
                 check=True,
             )
             return [f for f in result.stdout.splitlines() if f.strip()]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to list staged files: {exc}")
             return []
 
@@ -99,12 +99,12 @@ class PreCommitAI:
             try:
                 with open(filepath, encoding="utf-8", errors="ignore") as f:
                     original_content = f.read()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 continue  # Skip binary files that can't be read
 
@@ -150,7 +150,7 @@ class PreCommitAI:
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(new_content)
 
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"Auto-fix failed for {filepath}: {exc}")
         return {"fixes": fixes_applied, "count": len(fixes_applied)}
 
@@ -166,7 +166,7 @@ class PreCommitAI:
         if self.reviewer is not None:
             try:
                 issues = await self.reviewer.analyze_diff(diff)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"AI analysis failed: {exc}")
                 return {"status": "error", "message": f"AI analysis failed: {exc}"}
         else:
@@ -278,17 +278,17 @@ if __name__ == "__main__":
     result = asyncio.run(hook.run_hook(auto_fix=not args.no_fix))
     status = result.get("status", "error")
     if status == "blocked":
-        logger.info("❌ Commit blocked:", result.get("reason"))  # noqa: T201
+        logger.info("❌ Commit blocked:", result.get("reason"))
         for issue in result.get("issues", []):
-            logger.info(  # noqa: T201
+            logger.info(
                 f"  - {issue.get('path', '?')}:{issue.get('line', '?')} -> {issue.get('body', '')}"
             )
         raise SystemExit(1)
     elif status == "fixed":
-        logger.info("⚠️  Auto-fixed issues. Review and re-commit.")  # noqa: T201
+        logger.info("⚠️  Auto-fixed issues. Review and re-commit.")
         raise SystemExit(1)
     elif status == "error":
-        logger.info("❌ Error:", result.get("message"))  # noqa: T201
+        logger.info("❌ Error:", result.get("message"))
         raise SystemExit(1)
     else:
-        logger.info("✅ Pre-commit checks passed.")  # noqa: T201
+        logger.info("✅ Pre-commit checks passed.")

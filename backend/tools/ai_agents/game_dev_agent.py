@@ -39,7 +39,7 @@ class GameDevAgent:
                 "engine": "unity",
                 "code": code.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Unity script generation failed: {exc}")
             return {
                 "status": "error",
@@ -67,7 +67,7 @@ class GameDevAgent:
                 "engine": engine,
                 "code": code.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"GDD to code failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -89,7 +89,7 @@ class GameDevAgent:
                 "asset": asset_description,
                 "blender_script": code.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Asset script generation failed: {exc}")
             return {"status": "error", "error": str(exc)}
 

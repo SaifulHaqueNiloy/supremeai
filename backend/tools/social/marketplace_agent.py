@@ -104,7 +104,7 @@ class MarketplaceAgent:
 
         if sandbox:
             try:
-                from tools.devops.docker_sandbox import DockerSandbox  # noqa: PLC0415
+                from tools.devops.docker_sandbox import DockerSandbox
 
                 sb = DockerSandbox(image="python:3.11-slim")
                 result = sb.execute_command(install_cmd)
@@ -127,7 +127,7 @@ class MarketplaceAgent:
                         "status": "install_failed",
                         "error": result.get("error", "Unknown error"),
                     }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Sandbox install failed for '{tool_id}': {exc}")
                 return {
                     "success": False,
@@ -139,11 +139,11 @@ class MarketplaceAgent:
                 }
 
         # বাংলা মন্তব্য: sandbox=False হলে সরাসরি real install attempt
-        import shlex  # noqa: PLC0415
-        import subprocess  # noqa: PLC0415
+        import shlex
+        import subprocess
 
         try:
-            result = subprocess.run(  # noqa: S603
+            result = subprocess.run(
                 shlex.split(install_cmd),
                 capture_output=True,
                 text=True,
@@ -167,7 +167,7 @@ class MarketplaceAgent:
                 "status": "install_failed",
                 "error": exc.stderr.strip() if exc.stderr else str(exc),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Direct install failed for '{tool_id}': {exc}")
             return {
                 "success": False,

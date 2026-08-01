@@ -146,7 +146,7 @@ class CollaborativeEditor:
                 )
             else:
                 # ফলব্যাক (যদি Freebuff কাজ না করে)
-                ai_generated_code = f"\n\n# --- AI Response ---\n# Executed Prompt: {prompt}\ndef auto_generated_feature():\n    logger.info('Hello from SupremeAI!')\n"  # noqa: E501
+                ai_generated_code = f"\n\n# --- AI Response ---\n# Executed Prompt: {prompt}\ndef auto_generated_feature():\n    logger.info('Hello from SupremeAI!')\n"
 
             # বর্তমান স্টেট ফেচ করে শেষে কোড যুক্ত করা
             current_state = await self.get_session_state(session_id)
@@ -159,7 +159,7 @@ class CollaborativeEditor:
             # এডিটরে কোড ব্রডকাস্ট করা (সব ইউজারের কাছে চলে যাবে)
             await self.broadcast_delta(session_id, delta, sender_id="supreme-ai-agent")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error processing AI request: {e}")
         finally:
             # কাজ শেষ, "AI is typing..." অ্যানিমেশন বন্ধ করার সিগন্যাল পাঠানো
@@ -189,7 +189,7 @@ class CollaborativeEditor:
                             if client_id != sender_id:
                                 try:
                                     await ws.send_text(data)
-                                except Exception as e:  # noqa: BLE001
+                                except Exception as e:
                                     logger.error(f"Error sending to local client {client_id}: {e}")
         except asyncio.CancelledError:
             await pubsub.unsubscribe(channel)
@@ -204,7 +204,7 @@ class CollaborativeEditor:
             async for event in swarm_streamer.subscribe():
                 if f"session_{session_id}" in event:
                     logger.info(f"Received collaboration event: {event}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Collaboration session error: {e}")
             from core.messaging.event_bus import ErrorEvent, error_event_bus
 
@@ -252,6 +252,6 @@ async def websocket_collab(websocket: WebSocket, session_id: str, client_id: str
                 logger.warning(f"Invalid JSON received from client {client_id}")
     except WebSocketDisconnect:
         await editor_manager.disconnect_client(session_id, client_id)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"WebSocket error in session {session_id} for client {client_id}: {e}")
         await editor_manager.disconnect_client(session_id, client_id)

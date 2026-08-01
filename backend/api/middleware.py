@@ -202,7 +202,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                         content=cached_data.get("body", {}),
                         headers={"X-Cache-Lookup": "HIT - Idempotency Lock"},
                     )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"[Idempotency] Cache read failed — continuing: {e}")
 
         acquired = await acquire_idempotency_lock(idempotency_key, IDEMPOTENCY_TTL_SECONDS)
@@ -249,7 +249,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 except (json.JSONDecodeError, UnicodeDecodeError) as parse_err:
                     logger.warning(f"[Idempotency] Response body not JSON-serializable (non-blocking): {parse_err}")
                     await release_idempotency_lock(idempotency_key)
-                except Exception as cache_err:  # noqa: BLE001
+                except Exception as cache_err:
                     logger.warning(f"[Idempotency] Response caching failed (non-blocking): {cache_err}")
                     await release_idempotency_lock(idempotency_key)
             else:
@@ -259,7 +259,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
         except Exception as e:
             await release_idempotency_lock(idempotency_key)
-            logger.error(f"Execution failed inside Idempotency block: {str(e)}")
+            logger.error(f"Execution failed inside Idempotency block: {e!s}")
             raise
 
 

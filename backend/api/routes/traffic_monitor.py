@@ -69,5 +69,5 @@ async def get_live_traffic(admin: dict = Depends(get_current_admin)) -> dict[str
                 "timestamp": now,
             },
         }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

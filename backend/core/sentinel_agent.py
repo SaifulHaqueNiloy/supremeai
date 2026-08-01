@@ -16,7 +16,7 @@ Dependencies:
 - `sqlalchemy`: For asynchronous ORM interactions with the database, specifically for `ApiEndpoint`, `SystemDependency`, and `SystemIncident` models.
 - `database.session`: Internal module providing the asynchronous database session factory (`AsyncSessionLocal`).
 - `models.sentinel`: Internal module defining the ORM models (`ApiEndpoint`, `SystemDependency`, `SystemIncident`) used by the agent for data persistence.
-"""  # noqa: E501
+"""
 
 import asyncio
 import shutil
@@ -115,18 +115,18 @@ class SentinelAgent:
                             else:
                                 ep.last_ping_status = "up"
 
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             ep.last_ping_status = "down"
                             ep.last_check_at = datetime.now(UTC)
                             incident = SystemIncident(
                                 incident_type="api_endpoint_unreachable",
                                 severity="critical" if ep.is_critical else "warning",
-                                remediation_log=f"Exception connecting to {ep.path}: {str(e)}",
+                                remediation_log=f"Exception connecting to {ep.path}: {e!s}",
                             )
                             session.add(incident)
 
                 await session.commit()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[SentinelAgent] Error during monitor_endpoints: {e}")
 
     async def audit_dependencies(self):
@@ -161,7 +161,7 @@ class SentinelAgent:
                 stdout, _ = await proc.communicate()
                 if proc.returncode in (0, 1) and stdout:
                     vulnerabilities = json.loads(stdout.decode("utf-8"))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"[SentinelAgent] Failed executing audit process: {e}")
 
         try:
@@ -191,7 +191,7 @@ class SentinelAgent:
                     else:
                         dep.status = "secure"
                 await session.commit()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[SentinelAgent] Error during audit_dependencies: {e}")
 
     async def trigger_event(self, event_type: str, details: str):
@@ -208,7 +208,7 @@ class SentinelAgent:
                 session.add(incident)
                 await session.commit()
                 logger.info(f"[SentinelAgent] Event-driven incident recorded: {event_type}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[SentinelAgent] Error triggering event: {e}")
 
     async def run_periodic_loop(self):

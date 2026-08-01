@@ -32,7 +32,7 @@ class MetaArchitect:
                     doc_text = await asyncio.to_thread(Path(doc_path).read_text, encoding="utf-8")
                     if "gap" in doc_text.lower():
                         gaps.append(f"Potential gap context found in: {os.path.basename(doc_path)}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Could not read strategic doc {doc_path}: {e}")
         metrics = {
             "total_files": 0,
@@ -59,12 +59,12 @@ class MetaArchitect:
                         ext = os.path.splitext(file)[1].lower()
                         lang = ext.lstrip(".") or "unknown"
                         metrics["languages"][lang] = metrics["languages"].get(lang, 0) + len(lines)
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         try:
                             import loguru
 
                             loguru.logger.error(f"Tool execution error: {e}")
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             logger.warning(f"Exception suppressed: {e}")
                         pass
             if metrics["total_files"]:
@@ -78,7 +78,7 @@ class MetaArchitect:
             py_files = metrics["languages"].get("py", 0)
             if py_files > 200:
                 suggestions.append("Consider adding type hints to Python files for better maintainability.")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Codebase analysis failed: {exc}")
             issues.append(f"Analysis error: {exc}")
         return {
@@ -113,12 +113,12 @@ class MetaArchitect:
                 if cleaned.endswith("```"):
                     cleaned = "\n".join(cleaned.splitlines()[:-1])
                 plan = json.loads(cleaned)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 plan = {
                     "priority": "medium",
@@ -129,7 +129,7 @@ class MetaArchitect:
                     "estimated_effort_days": 3,
                 }
             return {"status": "success", "plan": plan}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Refactor proposal failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -164,6 +164,6 @@ class MetaArchitect:
                 "backup": backup_path,
                 "changes_applied": True,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Refactor implementation failed: {exc}")
             return {"status": "error", "error": str(exc)}

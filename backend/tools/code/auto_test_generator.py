@@ -236,7 +236,7 @@ class AutoTestGenerator:
             r = ModelRouter()
             result = await r.async_route_and_generate(prompt, task_type="coding", max_cost=0.05)
             return result.get("text", "") if isinstance(result, dict) else str(result)  # type: ignore
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"LLM call failed: {exc}")
             return ""
 
@@ -334,7 +334,7 @@ class AutoTestGenerator:
         if not os.path.exists(source_path):
             return {"status": "error", "error": f"File not found: {source_path}"}
 
-        with open(source_path, encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(source_path, encoding="utf-8") as f:
             source_code = f.read()
 
         result = await self.generate(source_code=source_code, file_path=source_path)
@@ -343,7 +343,7 @@ class AutoTestGenerator:
 
         test_file_path = result["test_file_path"]
         os.makedirs(os.path.dirname(os.path.abspath(test_file_path)), exist_ok=True)
-        with open(test_file_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(test_file_path, "w", encoding="utf-8") as f:
             f.write(result["test_code"])
         logger.info(f"Saved test file: {test_file_path}")
         result["saved"] = True
@@ -377,7 +377,7 @@ class AutoTestGenerator:
                 "stdout": proc.stdout[-2000:],
                 "stderr": proc.stderr[-500:],
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"returncode": -1, "passed": False, "error": str(exc)}
 
     async def batch_generate(self, source_paths: list[str], save: bool = True) -> dict[str, Any]:

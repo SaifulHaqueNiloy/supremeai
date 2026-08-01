@@ -357,7 +357,7 @@ class Settings(BaseSettings):
                 val = secret_vault.fetch_secret(secret_key)
                 if val:
                     self._cached_secrets[secret_key] = val
-            except Exception as _secret_err:  # noqa: BLE001
+            except Exception as _secret_err:
                 # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
                 # যদি কোনো optional secret missing থাকে, server startup block হবে না।
                 logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
@@ -399,7 +399,7 @@ class Settings(BaseSettings):
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
             url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
-        except Exception:  # noqa: BLE001
+        except Exception:
             url = ""
         return SecretStr(url) if url else None
 
@@ -506,7 +506,7 @@ class Settings(BaseSettings):
     def discord_bot_token(self) -> str:
         try:
             return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
-        except Exception:  # noqa: BLE001
+        except Exception:
             return ""
 
     @property
@@ -1061,7 +1061,7 @@ class Settings(BaseSettings):
 # কোনো "resilient boot" বা dummy fallback নেই। Exception মানেই sys.exit(1)।
 try:
     settings = Settings()
-except Exception as _boot_exc:  # noqa: BLE001
+except Exception as _boot_exc:
     logger.critical(
         f"🔥 FATAL CONFIG ERROR: {_boot_exc}\nServer startup ABORTED (Fail-Fast applied). Fix the configuration."
     )

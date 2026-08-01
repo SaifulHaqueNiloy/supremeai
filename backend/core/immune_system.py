@@ -203,7 +203,7 @@ class ImmuneSystemScanner:
 
         except SyntaxError as se:
             logger.error(f"Syntax validation failed: {se}")
-            return {"safe": False, "error": f"SyntaxError: {str(se)}"}
-        except Exception as e:  # noqa: BLE001
+            return {"safe": False, "error": f"SyntaxError: {se!s}"}
+        except Exception as e:
             logger.error(f"Unexpected error during static analysis: {e}")
-            return {"safe": False, "error": f"AnalysisException: {str(e)}"}
+            return {"safe": False, "error": f"AnalysisException: {e!s}"}

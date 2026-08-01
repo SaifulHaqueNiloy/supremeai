@@ -254,7 +254,7 @@ class SystemTopologyMapper:
         services_desc = [d[0] for d in cursor.description]
         services = []
         for row in services_rows:
-            service_dict = dict(zip(services_desc, row))
+            service_dict = dict(zip(services_desc, row, strict=False))
             services.append(service_dict)
 
         # Get all data flows
@@ -263,7 +263,7 @@ class SystemTopologyMapper:
         flows_desc = [d[0] for d in cursor.description]
         flows = []
         for row in flows_rows:
-            flow_dict = dict(zip(flows_desc, row))
+            flow_dict = dict(zip(flows_desc, row, strict=False))
             flows.append(flow_dict)
 
         # Get latest resource utilization for each node
@@ -283,7 +283,7 @@ class SystemTopologyMapper:
         utilization_desc = [d[0] for d in cursor.description]
         utilization = []
         for row in utilization_rows:
-            util_dict = dict(zip(utilization_desc, row))
+            util_dict = dict(zip(utilization_desc, row, strict=False))
             utilization.append(util_dict)
 
         conn.close()
@@ -321,7 +321,7 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        upstream_services = [dict(zip([d[0] for d in cursor.description], row)) for row in cursor.fetchall()]
+        upstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
 
         # Find services that this service depends on (outgoing edges)
         cursor.execute(
@@ -334,7 +334,7 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        downstream_services = [dict(zip([d[0] for d in cursor.description], row)) for row in cursor.fetchall()]
+        downstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
 
         # Calculate impact scores based on flow reliability and volume
         cursor.execute(
@@ -350,7 +350,7 @@ class SystemTopologyMapper:
             (service_id, service_id),
         )
 
-        impact_metrics = [dict(zip([d[0] for d in cursor.description], row)) for row in cursor.fetchall()]
+        impact_metrics = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
 
         conn.close()
 

@@ -390,7 +390,7 @@ class TestTenantAdminAPI:
             payload = TenantLimitCreate(tenant_id="test-org", org_name="Test", billing_tier="pro")
             try:
                 await create_tenant(payload)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # May fail on tier cache — check local store directly
                 import logging
 
@@ -437,7 +437,7 @@ class TestTenantAdminAPI:
                 result = await update_tenant("my-org", payload)
                 assert result["tenant"]["billing_tier"] == "pro"
                 assert result["tenant"]["requests_per_minute"] == TIER_DEFAULTS["pro"]["requests_per_minute"]
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")  # Redis cache failure OK
 
     @pytest.mark.anyio

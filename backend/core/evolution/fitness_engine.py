@@ -142,7 +142,7 @@ class FitnessEngine:
                 logger.error(f"Failed to decode fitness metrics JSON: {e}")
             except OSError as e:
                 logger.error(f"OS Error while reading fitness metrics: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.exception(f"Unexpected error loading metrics: {e}")
         return {}
 
@@ -153,13 +153,13 @@ class FitnessEngine:
                 json.dump(self.metrics, f, indent=4)
         except OSError as e:
             logger.error(f"OS Error while saving fitness metrics: {e}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception(f"Unexpected error saving fitness metrics: {e}")
 
         if self.db is not None:
             try:
                 self.db.collection("system_metrics").document("fitness_metrics").set({"metrics": self.metrics})
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to sync fitness metrics to DB: {e}")
 
     def track_execution(self, skill_name: str, success: bool, latency: float, token_cost: float = 0.0):
@@ -240,14 +240,14 @@ class FitnessEngine:
             skill_data = self.registry._skills.get(skill_name)
             if skill_data and hasattr(skill_data, "status"):
                 skill_data.status = "DEPRECATED"
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception(f"Failed to update registry status: {e}")
 
         # 2. Update Firestore Status
         if self.db is not None:
             try:
                 self.db.collection("supreme_dynamic_skills").document(skill_name).update({"status": "DEPRECATED"})
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.exception(f"Failed to update Firestore status for skill '{skill_name}': {e}")
 
         # 3. Soft Prune: Move files from skills/dynamic/<skill_name> to skills/deprecated/<skill_name>
@@ -263,7 +263,7 @@ class FitnessEngine:
                 logger.info(f"📁 Soft pruned skill files moved to deprecated zone: {dest_dir}")
             except OSError as e:
                 logger.error(f"OS Error while moving files to deprecated zone: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.exception(f"Failed to move files to deprecated zone: {e}")
 
         return True

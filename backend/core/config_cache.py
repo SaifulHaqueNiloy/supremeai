@@ -19,7 +19,7 @@ SupremeAI 2.0-এর জন্য TTL-based config cache layer.
 
     # Set a config value (also persists to DB)
     await config_cache.set("cache_threshold_code", 0.90)
-"""  # noqa: W293
+"""
 
 import threading
 import time
@@ -65,7 +65,7 @@ class ConfigCache:
     - TTL (ডিফল্ট: ৬০ সেকেন্ড) পর্যন্ত in-memory serve করে
     - TTL expire হলে পরবর্তি request-এ DB reload করে
     - force_refresh() দিয়ে ম্যানুয়ালি invalidate করা যায়
-    """  # noqa: W293
+    """
 
     def __init__(self, ttl_seconds: int = 60):
         self._cache: dict[str, Any] = {}
@@ -94,7 +94,7 @@ class ConfigCache:
                 for row in result.scalars().all():
                     configs[row.key] = row.value
             logger.info(f"ConfigCache: Loaded {len(configs)} configs from DB")
-        except Exception as exc:  # noqa: BLE001 — DB down হলেও app চলতে থাকুক, defaults দিয়ে
+        except Exception as exc:  # — DB down হলেও app চলতে থাকুক, defaults দিয়ে
             logger.warning(f"ConfigCache: DB load failed, using defaults: {exc}")
         return configs
 
@@ -112,7 +112,7 @@ class ConfigCache:
 
         try:
             new_cache = asyncio.run(self._load_from_db_async())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"ConfigCache: DB load failed during sync bootstrap, using defaults: {exc}")
             new_cache = dict(DEFAULT_CONFIGS)
         with self._lock:
@@ -206,7 +206,7 @@ class ConfigCache:
 
                 logger.info(f"ConfigCache: Set '{key}' = {value}")
                 return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"ConfigCache: Failed to set '{key}': {exc}")
             return False
 

@@ -79,10 +79,10 @@ def _get_compiled_patterns() -> list[re.Pattern]:
 
         rebuilt: list[re.Pattern] = []
         for p in all_patterns:
-            try:  # noqa
+            try:
                 # Escape pattern to prevent regex injection, then compile case-insensitive
                 rebuilt.append(re.compile(re.escape(p), re.IGNORECASE))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # বাংলা মন্তব্য: pattern compile ব্যর্থ হলে তা লগ করা হচ্ছে যাতে সিকিউরিটি রুল কার্যকর না হওয়ার কারণ বোঝা যায়।
                 logger.error(f"[PromptFirewall] Failed to compile blocked pattern '{p}': {e}")
         _compiled_patterns, _patterns_loaded_at = rebuilt, now
@@ -172,7 +172,7 @@ class PromptFirewall:
                     revised_response = await self.gateway.acompletion(prompt=revision_prompt, model=self.cheap_model)
                     return revised_response.get("text", response_text), True
 
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 # বাংলা মন্তব্য: httpx/provider-নির্দিষ্ট exception সহ যেকোনো ব্যর্থতায় পরের
                 # principle-এ এগিয়ে যাওয়া হচ্ছে, পুরো pipeline crash করার বদলে।
                 logger.error(f"Constitutional filter error on principle '{principle}': {type(exc).__name__}: {exc}")

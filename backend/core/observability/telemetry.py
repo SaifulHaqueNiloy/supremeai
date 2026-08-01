@@ -62,7 +62,7 @@ def trace_span(name: str, attributes: dict[str, Any] | None = None, kind: str = 
         try:
             yield _RealSpan(span)
             span.set_status(Status(StatusCode.OK))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             span.set_status(Status(StatusCode.ERROR, str(exc)))
             span.record_exception(exc)
             raise

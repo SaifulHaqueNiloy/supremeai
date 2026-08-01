@@ -63,7 +63,7 @@ class ErrorPatternDB:
                 for stmt in _PG_SCHEMA:
                     pooled_pg.execute(stmt)
                 logger.info("ErrorPatternDB: using pooled Postgres backend.")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"ErrorPatternDB: Postgres schema init failed, falling back to SQLite: {exc}")
                 self._use_pg = False
         # ":memory:" is a special SQLite path: every sqlite3.connect() call against
@@ -131,7 +131,7 @@ class ErrorPatternDB:
                     (output, error_type, correction),
                 )
                 return
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"ErrorPatternDB.log_error: Postgres write failed: {exc}")
                 return
         conn = self._connect()
@@ -162,7 +162,7 @@ class ErrorPatternDB:
                     args,
                 )
                 return
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"ErrorPatternDB.log_ai_mistake: Postgres write failed: {exc}")
                 return
         conn = self._connect()
@@ -185,7 +185,7 @@ class ErrorPatternDB:
                     (model, f"%{task_type}%"),
                 )
                 return rows[0][0] if rows else "No historical data - use default validation"
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"ErrorPatternDB.get_prevention_strategy: Postgres read failed: {exc}")
                 return "No historical data - use default validation"
         conn = self._connect()
@@ -208,7 +208,7 @@ class ErrorPatternDB:
                     (output,),
                 )
                 return {"known_patterns": rows, "should_prevent": len(rows) > 0}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"ErrorPatternDB.check_pattern: Postgres read failed: {exc}")
                 return {"known_patterns": [], "should_prevent": False}
         conn = self._connect()

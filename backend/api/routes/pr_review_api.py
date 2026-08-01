@@ -59,7 +59,7 @@ async def github_webhook(request: Request):
         import json
 
         event = json.loads(body or b"{}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}") from e
 
     action = event.get("action", "")
@@ -86,7 +86,7 @@ async def github_webhook(request: Request):
             "timestamp": time.time(),
         }
         return {"status": "reviewed", "pr": status_key, "result": result}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Webhook review failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 

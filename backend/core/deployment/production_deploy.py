@@ -410,7 +410,7 @@ class DeploymentManager:
                 return False
 
         except Exception as e:
-            self._update_deployment_status(deployment_id, DeploymentStatus.FAILED, f"Health check error: {str(e)}")
+            self._update_deployment_status(deployment_id, DeploymentStatus.FAILED, f"Health check error: {e!s}")
             return False
 
     def rollback_deployment(self, deployment_id: str) -> bool:

@@ -1289,7 +1289,7 @@ class HFSwarmRouter:
             response.raise_for_status()
             return {"status": "success", "task": task_type, "model": target_model, "output": response.json()}
         except Exception as e:
-            logger.error(f"❌ Inference error for model {target_model}: {str(e)}")
+            logger.error(f"❌ Inference error for model {target_model}: {e!s}")
             return {"status": "error", "task": task_type, "model": target_model, "error": str(e)}
 
 

@@ -115,7 +115,7 @@ def ensure_tables(conn, dry_run: bool) -> None:
         )
         conn.commit()
         logger.success("টেবিল প্রস্তুত (বিদ্যমান ডেটা অক্ষত আছে)।")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"টেবিল তৈরিতে সমস্যা: {e}")
         conn.rollback()
     finally:
@@ -160,7 +160,7 @@ def migrate_skills(conn, dry_run: bool) -> None:
                 )
                 migrated_count += 1
                 logger.success(f"  -> Migrated skill: {skill_name}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Skill মাইগ্রেট করতে ব্যর্থ {skill_name}: {e}")
 
     if not dry_run:
@@ -211,7 +211,7 @@ def migrate_rules(conn, dry_run: bool) -> None:
                     migrated_count += 1
                     logger.success(f"  -> Migrated rule: {rule_key}")
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"{filename} থেকে rule পার্স/মাইগ্রেট করতে ব্যর্থ: {e}")
 
     if not dry_run:
@@ -256,7 +256,7 @@ def migrate_agent_configs(conn, dry_run: bool) -> None:
             cursor.close()
         logger.info(f"Agent config migration সম্পন্ন। মোট প্রক্রিয়াকৃত: {migrated_count}")
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Agent configs মাইগ্রেট করতে ব্যর্থ: {e}")
 
 

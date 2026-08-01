@@ -59,7 +59,7 @@ JSON:"""
                     {"user_id": user_id, "preferences": merged_prefs},
                 )
                 logger.info(f"🤖 [WS] Updated user preferences for {user_id}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"⚠️ [WS] Failed to analyze user preferences: {type(e).__name__}: {e}")
 
 
@@ -92,7 +92,7 @@ class ConnectionManager:
             return None
         try:
             return verify_token(token)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"[WS] Invalid token — closing WebSocket connection: {e}")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
@@ -187,7 +187,7 @@ async def websocket_chat_endpoint(
                 pref_task = asyncio.create_task(analyze_and_save_preferences(user_id, content_to_send))
                 manager.track_pref_task(user_id, pref_task)
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # বাংলা মন্তব্য: P1 Fix — সকল exception সম্পূর্ণ log করা হচ্ছে।
                 # আগে শুধু logger.info("❌ [GENERATION ERROR]") ছিল — production debugging অসম্ভব ছিল।
                 logger.error(

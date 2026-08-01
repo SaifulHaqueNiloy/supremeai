@@ -71,8 +71,8 @@ async def execute_task(
 
         return {"result": result_text, "status": "success"}
 
-    except Exception as e:  # noqa: BLE001
-        logger.info(f"❌ Neural Pipeline Error: {str(e)}")  # noqa: T201
+    except Exception as e:
+        logger.info(f"❌ Neural Pipeline Error: {e!s}")
         raise HTTPException(status_code=500, detail="Neural connection pipeline error.") from e
 
 
@@ -91,7 +91,7 @@ async def get_quota(token_payload: dict = Depends(get_current_user_token)):
         from core.cache.redis_manager import redis_manager
 
         remaining = await redis_manager.client.get(f"quota:{_tenant_id}:remaining")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # Ripple-Effect Guard: do NOT report 0 here — that is indistinguishable
         # from "quota genuinely exhausted" and will silently block legitimate
         # users during a Redis outage. Surface a distinct error state instead.

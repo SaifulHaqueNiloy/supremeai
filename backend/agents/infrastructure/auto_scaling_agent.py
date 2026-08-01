@@ -274,7 +274,7 @@ class AutoScalingAgent:
             return ScalingRecommendation(
                 current_resources=current_resources,
                 recommended_resources=current_resources.copy(),
-                reason=f"Error analyzing scaling need: {str(e)}",
+                reason=f"Error analyzing scaling need: {e!s}",
                 confidence=0.0,
                 timestamp=datetime.utcnow(),
                 cost_impact=0.0,

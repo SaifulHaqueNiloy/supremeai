@@ -86,7 +86,7 @@ class LogBatcherService:
             except TimeoutError:
                 if self.buffer:
                     await self._flush()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Critical error in LogBatcherService: {e}")
                 # সেলফ-হিলিং: ডাটা লস রোধে বাফার রিকিউ করা হচ্ছে
                 while self.buffer:
@@ -107,7 +107,7 @@ class LogBatcherService:
                 await session.commit()
                 break  # Just run once
             logger.debug(f"Flushed {len(batch)} log entries to database.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to flush log entries to database: {e}")
             # Re-queue on failure (in a real system, might use a dead-letter queue)
             for item in batch:

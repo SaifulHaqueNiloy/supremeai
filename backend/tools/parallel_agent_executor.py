@@ -68,12 +68,12 @@ class ParallelAgentExecutor:
                     import core.services as app_mod
 
                     redis = app_mod.redis_queue
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     try:
                         import loguru
 
                         loguru.logger.error(f"Tool execution error: {e}")
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.warning(f"Exception suppressed: {e}")
                     redis = None
 
@@ -98,8 +98,8 @@ class ParallelAgentExecutor:
 
             logger.info(f"[Agent: {agent_name}] Task completed successfully.")
             return {"agent": agent_name, "status": "success", "result": result}
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"[Agent: {agent_name}] Task failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"[Agent: {agent_name}] Task failed: {e!s}")
             try:
                 redis = self.redis_client
                 if redis is None:
@@ -108,12 +108,12 @@ class ParallelAgentExecutor:
                     redis = app_mod.redis_queue
                 if redis and getattr(redis, "configured", False):
                     await self._publish_state(redis, agent_name, "failed", error=str(e))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
             return {"agent": agent_name, "status": "error", "error": str(e)}
@@ -171,7 +171,7 @@ class ParallelAgentExecutor:
             try:
                 disconnect_fn = mcp_client.disconnect
                 await asyncio.to_thread(disconnect_fn)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"MCP cleanup error for {name}: {exc}")
 
     async def _publish_state(self, redis, agent_name: str, state: str, **kwargs):
@@ -190,7 +190,7 @@ class ParallelAgentExecutor:
                 await redis.publish(f"supremeai:agents:{self.execution_group}", json.dumps(payload))
             else:
                 redis.publish(f"supremeai:agents:{self.execution_group}", json.dumps(payload))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to publish agent state: {e}. Running with local logger fallback.")
 
     async def run_parallel(self, agent_tasks: dict[str, Callable | dict[str, Any]]) -> dict[str, Any]:
@@ -261,7 +261,7 @@ class AgentDAGScheduler:
                 await publish(channel, json.dumps(state))
             else:
                 publish(channel, json.dumps(state))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to broadcast state on {channel}: {e}")
 
     async def subscribe_to_updates(self, channel: str) -> AsyncIterator[dict[str, Any]]:
@@ -285,7 +285,7 @@ class AgentDAGScheduler:
                             f"[PubSub] Failed to parse message on {channel}. Payload: {message.get('data')}. Error: {parse_err}"
                         )
                         continue
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Subscription to {channel} ended: {e}")
             return
 

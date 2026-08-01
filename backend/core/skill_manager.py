@@ -142,7 +142,7 @@ class SkillManager:
                         return skill_instance
         except ValueError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error fetching skill '{skill_name}' from DB: {e}")
 
         logger.info(f"Skill '{skill_name}' not in DB. Querying MCP-Hub...")
@@ -201,9 +201,9 @@ class SkillManager:
             new_skill = json.loads(raw_text)
             logger.success(f"Synthesized new skill schema: '{new_skill.get('skill_name')}'")
             return new_skill
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Failed to parse synthesized skill schema: {str(e)}")
-            raise ValueError("Invalid JSON configuration from Skill Factory.")  # noqa: B904
+        except Exception as e:
+            logger.error(f"Failed to parse synthesized skill schema: {e!s}")
+            raise ValueError("Invalid JSON configuration from Skill Factory.")
 
 
 # Global singleton instance

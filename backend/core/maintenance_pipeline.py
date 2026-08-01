@@ -12,19 +12,19 @@ Dependencies:
 - `time`: For timestamping health checks and implementing cooldown periods for remediation.
 - `core.messaging.event_bus`: For registering listeners to and emitting system-wide `ErrorEvent`s.
 - `core.health.health_probes`: Provides specific functions to probe the health of internal and external services (e.g., database, Redis, external APIs).
-- `core.cache.redis_manager`: Utilized within remediation logic to interact with Redis, such as updating configuration or re-initializing connections."""  # noqa: E501
+- `core.cache.redis_manager`: Utilized within remediation logic to interact with Redis, such as updating configuration or re-initializing connections."""
 
-import asyncio  # noqa: E402
-import logging  # noqa: E402
-import os  # noqa: E402
-import random  # noqa: E402
-import time  # noqa: E402
+import asyncio
+import logging
+import os
+import random
+import time
 
-from core.health.health_probes import probe_database  # noqa: E402
-from core.health.health_probes import probe_external_api  # noqa: E402
-from core.health.health_probes import probe_redis  # noqa: E402
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.health.health_probes import probe_database
+from core.health.health_probes import probe_external_api
+from core.health.health_probes import probe_redis
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 logger = logging.getLogger("supremeai.immune_system")
 
@@ -115,7 +115,7 @@ class MaintenancePipeline:
         """
         logger.info("🛡️ Immune System: Running performance regression detection...")
         try:
-            from api.routes.metrics import metrics_engine  # noqa: PLC0415
+            from api.routes.metrics import metrics_engine
 
             history = metrics_engine.latency_history
             if not history:
@@ -138,7 +138,7 @@ class MaintenancePipeline:
                 )
                 # In a real scenario, this would trigger a GitHub Actions workflow to rollback the deployment.
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to run performance regression check: {e}")
 
     async def auto_remediate(self, event=None):
@@ -174,7 +174,7 @@ class MaintenancePipeline:
                         )
                         self.last_recovery_time = current_time
                         self.health_score = min(100, self.health_score + 30)
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.error(f"Failed to switch provider: {e}")
 
             if "redis" in str(event.context).lower() or event.error_type == "redis_connection_lost":
@@ -185,7 +185,7 @@ class MaintenancePipeline:
                     # e.g., await redis_manager.connect()
                     self.last_recovery_time = current_time
                     self.health_score = min(100, self.health_score + 20)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to recover Redis: {e}")
 
         # বাংলা মন্তব্য: Health critical threshold-এ পৌঁছালে SelfEvolutionAgent-কে
@@ -193,9 +193,9 @@ class MaintenancePipeline:
         # এটাই সেই bridge যেটা self-healing → self-evolution loop বন্ধ করে।
         if self.health_score < 50:
             try:
-                import asyncio as _asyncio  # noqa: PLC0415
+                import asyncio as _asyncio
 
-                from core.evolution.self_evolution_agent import (  # noqa: PLC0415
+                from core.evolution.self_evolution_agent import (
                     SelfEvolutionAgent,
                 )
 
@@ -206,7 +206,7 @@ class MaintenancePipeline:
                     logger.warning(
                         f"🛡️→🧬 Health critical (score={self.health_score}), " "triggered emergency evolution tick."
                     )
-            except Exception as evo_exc:  # noqa: BLE001
+            except Exception as evo_exc:
                 logger.debug(f"Evolution trigger skipped: {evo_exc!r}")
 
         logger.info("🚑 Remediation cycle completed.")

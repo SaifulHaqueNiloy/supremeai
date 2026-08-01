@@ -329,7 +329,7 @@ class BehavioralAnalyzer:
         for handler in self.alert_handlers:
             try:
                 handler(anomaly)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Alert handler failed: {exc}")
 
     def register_alert_handler(self, handler: callable) -> None:

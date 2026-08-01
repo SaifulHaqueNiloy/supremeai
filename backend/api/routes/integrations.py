@@ -65,7 +65,7 @@ async def github_callback(
         )
 
     redirect_uri = _build_github_redirect_uri()
-    token_url = "https://github.com/login/oauth/access_token"  # noqa: S105
+    token_url = "https://github.com/login/oauth/access_token"
     payload = {
         "client_id": settings.github_client_id,
         "client_secret": settings.github_client_secret,
@@ -110,7 +110,7 @@ async def github_callback(
             db.add(new_integration)
         await db.commit()
         logger.info(f"✅ GitHub integration saved for user '{user_id}'")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         await db.rollback()
         logger.error(f"Failed to save GitHub integration for user '{user_id}': {exc}")
         return RedirectResponse(

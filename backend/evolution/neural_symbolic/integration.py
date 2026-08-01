@@ -144,7 +144,7 @@ class SymbolicReasoner:
 
         except Exception as e:
             logger.error(f"Error in theorem proving: {e}")
-            return False, [f"Error during proof: {str(e)}"]
+            return False, [f"Error during proof: {e!s}"]
 
     def _check_basic_derivability(self, goal: SymbolicExpression, premises: list[SymbolicExpression]) -> bool:
         """Basic check for whether goal can be derived from premises."""

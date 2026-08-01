@@ -117,7 +117,7 @@ class EvolutionEngine:
             # আগে: else: supabase_success = True — এটি false positive তৈরি করতো।
             else:
                 logger.warning("Supabase client is None. Task history will only be stored in local SQLite.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to insert success to Supabase: {e}")
             if evolution_write_failures:
                 evolution_write_failures.inc()
@@ -162,7 +162,7 @@ class EvolutionEngine:
                 supabase_success = True
             else:
                 logger.warning("Supabase client is not initialized, fallback to SQLite only for failure data.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to insert failure to Supabase: {e}")
             if evolution_write_failures:
                 evolution_write_failures.inc()
@@ -211,7 +211,7 @@ class EvolutionEngine:
                 failures = db.get_repeated_failures(min_occurrences=min_occurrences)
                 if failures:
                     return failures
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to query repeated failures from Supabase: {e}")
             if evolution_write_failures:
                 evolution_write_failures.inc()
@@ -301,7 +301,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             if not optimized_prompt or optimized_prompt == original_prompt:
                 return {"status": "no_change_generated"}
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return {"status": "error", "error": str(e)}
 
         created_at = datetime.now(UTC).isoformat()
@@ -341,7 +341,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
 
             creator = AutoSkillCreator()
             result = await creator.generate_and_deploy_skill(user_demand=pattern, skill_name=skill_name)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # বাংলা মন্তব্য: AutoSkillCreator instantiation/call ব্যর্থ হলেও পুরো daily evolution
             # run crash করবে না — failed status সহ রেকর্ড হয়ে পরের সাইকেলে retry হবে।
             logger.error(f"AutoSkillCreator failed for pattern '{pattern}': {e}")
@@ -356,7 +356,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
 
             if db.client:
                 db.insert_skill_proposal(skill_name, pattern, generated_code, status, created_at)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to insert skill proposal to Supabase: {e}")
             if evolution_write_failures:
                 evolution_write_failures.inc()
@@ -392,7 +392,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
                     user_rating,
                     created_at,
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to insert feedback to Supabase: {e}")
             if evolution_write_failures:
                 evolution_write_failures.inc()
@@ -445,7 +445,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
 
             if db.client:
                 db.append_evolution_log(report)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to append evolution log to Supabase: {e}")
             if evolution_write_failures:
                 evolution_write_failures.inc()

@@ -27,7 +27,7 @@ class CoverageAuditor:
             else:
                 logger.warning(f"Unsupported coverage report format: {report_path}")
                 return []
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse coverage report {report_path}: {e}")
             return []
 

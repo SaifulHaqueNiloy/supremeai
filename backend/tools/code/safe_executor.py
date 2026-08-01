@@ -163,7 +163,7 @@ def run_restricted(source: str, locals_: dict[str, Any] | None = None) -> tuple[
         error_message = f"Restricted execution failed: {type(e).__name__}: {e}"
         logger.error(error_message)
         return False, error_message
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         error_message = f"An unexpected error occurred during restricted execution: {e}"
         logger.error(error_message)
         return False, error_message

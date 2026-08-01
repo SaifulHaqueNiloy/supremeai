@@ -81,11 +81,11 @@ class SkillLibrarian:
 
         except Exception as e:
             # ব্যাকগ্রাউন্ড ফেইলর সাইলেন্টলি লগ করা হচ্ছে যাতে থ্রেড বা সার্ভার ক্র্যাশ না করে
-            logger.error(f"❌ Critical failure in librarian background loop for skill {skill_id}: {str(e)}")
+            logger.error(f"❌ Critical failure in librarian background loop for skill {skill_id}: {e!s}")
 
             # ব্যর্থতার অ্যালার্ট ডিসকর্ডে পাঠানো হচ্ছে (যদি কনফিগার করা থাকে)
             self._send_discord_message(
-                f"🚨 **Librarian Background Failure!**\nFailed to process skill `{skill_id}` with action `{action}`.\n**Error:** `{str(e)}`"
+                f"🚨 **Librarian Background Failure!**\nFailed to process skill `{skill_id}` with action `{action}`.\n**Error:** `{e!s}`"
             )
             return {"success": False, "detail": str(e)}
 
@@ -128,4 +128,4 @@ class SkillLibrarian:
                 if response.status not in [200, 204]:
                     logger.error(f"Discord Webhook returned invalid status code: {response.status}")
         except Exception as net_err:
-            logger.error(f"Failed to transmit payload to Discord Webhook channel: {str(net_err)}")
+            logger.error(f"Failed to transmit payload to Discord Webhook channel: {net_err!s}")

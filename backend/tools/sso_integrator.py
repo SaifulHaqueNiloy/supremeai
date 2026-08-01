@@ -119,7 +119,7 @@ class SSOIntegrator:
                     "roles": roles,
                     "method": "python-saml",
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"SAML response processing failed: {exc}")
         try:
             root = ET.fromstring(post_data.get("SAMLResponse", ""))
@@ -171,7 +171,7 @@ class SSOIntegrator:
                 req = self._prepare_request(request or {})
                 auth = self._OneLogin_Saml2_Auth(req, old_settings=settings_obj)
                 return auth.logout(return_to=relay_state)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Logout URL generation failed: {exc}")
         return self.saml_settings.get("idp_slo_url", "")
 
@@ -183,7 +183,7 @@ class SSOIntegrator:
                 auth = self._OneLogin_Saml2_Auth(req, old_settings=settings_obj)
                 auth.process_slo(delete_session_callback=lambda: None)
                 return {"status": "success", "method": "python-saml"}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"SLO processing failed: {exc}")
 
         # Fallback XML parsing for SLO (SAML LogoutResponse/LogoutRequest)
@@ -260,7 +260,7 @@ class SSOIntegrator:
         try:
             payload = jose_jwt.decode(token, secret, algorithms=["HS256"])
             return payload
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"error": str(exc)}
 
     def parse_saml_response(self, saml_xml: str) -> dict[str, Any]:
@@ -281,7 +281,7 @@ class SSOIntegrator:
                 "email": email,
                 "method": "xml_fallback",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"status": "error", "message": str(exc)}
 
     # ── OIDC helpers ───────────────────────────────────────────────
@@ -380,7 +380,7 @@ class SSOIntegrator:
                     "header": header,
                 }
             return {"status": "success", "tokens": tokens}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"OIDC code exchange failed: {exc}")
             return {"status": "error", "message": str(exc)}
 

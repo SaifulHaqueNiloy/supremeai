@@ -20,7 +20,7 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         if decoded.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
         return decoded
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         logger.warning("Admin token validation failed", exc_info=True)
         expected = getattr(settings, "supremeai_api_token", None) or ""
         if expected and secrets.compare_digest(token, expected):

@@ -316,7 +316,7 @@ class DisasterRecoveryAgent:
                 status="failed",
                 recovered_components=[],
                 duration_seconds=duration,
-                notes=f"Recovery failed: {str(e)}",
+                notes=f"Recovery failed: {e!s}",
             )
 
             await self._store_recovery_result(recovery_result)

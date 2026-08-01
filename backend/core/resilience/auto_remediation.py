@@ -51,7 +51,7 @@ class AutoRemediation:
         if not os.path.exists(safe_path):
             return {"success": False, "error": f"File {safe_path} not found"}
 
-        with open(safe_path, encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(safe_path, encoding="utf-8") as f:
             original_code = f.read()
 
         fixed_code = await self._get_ai_patch(safe_path, original_code, line_number, issue)
@@ -120,7 +120,7 @@ class AutoRemediation:
                     ),
                     variables=prompt_vars,
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"LaunchDarkly config evaluation failed, falling back: {exc}")
 
         if config and getattr(config, "enabled", False):
@@ -148,6 +148,6 @@ class AutoRemediation:
             from utils.text_helpers import strip_markdown_code_block
 
             return strip_markdown_code_block(raw_text)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to generate patch from Gemini: {exc}")
             return ""

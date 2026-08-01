@@ -79,12 +79,12 @@ def _get_connection():
     try:
         conn = psycopg2.connect(supabase_db_url)
         return conn
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         try:
             import loguru
 
             loguru.logger.error(f"Tool execution error: {e}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Exception suppressed: {e}")
         return None
 
@@ -197,18 +197,18 @@ async def supabase_execute_sql(params: ExecuteQueryInput) -> str:
             ensure_ascii=False,
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return _handle_db_error(e)
     finally:
         if conn:
             try:
                 conn.close()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 
@@ -273,18 +273,18 @@ async def supabase_create_table(params: CreateTableInput) -> str:
             ensure_ascii=False,
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return _handle_db_error(e)
     finally:
         if conn:
             try:
                 conn.close()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 
@@ -371,18 +371,18 @@ async def supabase_run_migration(params: MigrationInput) -> str:
             ensure_ascii=False,
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return _handle_db_error(e)
     finally:
         if conn:
             try:
                 conn.close()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 
@@ -433,18 +433,18 @@ async def supabase_list_tables() -> str:
             ensure_ascii=False,
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return _handle_db_error(e)
     finally:
         if conn:
             try:
                 conn.close()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 
@@ -503,18 +503,18 @@ async def supabase_explain_query(params: ExplainQueryInput) -> str:
             return json.dumps({"query": params.query, "plan": plan[0]}, ensure_ascii=False)
         return json.dumps({"error": "No execution plan returned."}, ensure_ascii=False)
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return _handle_db_error(e)
     finally:
         if conn:
             try:
                 conn.close()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 
@@ -576,18 +576,18 @@ async def supabase_describe_table(params: DescribeTableInput) -> str:
             ensure_ascii=False,
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return _handle_db_error(e)
     finally:
         if conn:
             try:
                 conn.close()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 

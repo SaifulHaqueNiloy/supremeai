@@ -100,7 +100,7 @@ class DockerSandbox:
             return {
                 "exit_code": -1,
                 "stdout": "",
-                "stderr": f"Docker execution engine failure: {str(e)}",
+                "stderr": f"Docker execution engine failure: {e!s}",
             }
 
     def run_safe_container(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -169,9 +169,9 @@ class DockerSandbox:
                 "stderr": f"Execution barrier breached: Timeout of {self.timeout_seconds}s exceeded.",
             }
         except Exception as e:
-            logger.error(f"Critical exception inside Docker execution wrapper: {str(e)}")
+            logger.error(f"Critical exception inside Docker execution wrapper: {e!s}")
             return {
                 "exit_code": -1,
                 "stdout": "",
-                "stderr": f"Sandbox Runtime Anomaly: {str(e)}",
+                "stderr": f"Sandbox Runtime Anomaly: {e!s}",
             }

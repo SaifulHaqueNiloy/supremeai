@@ -208,7 +208,7 @@ class TaskQueue:
         # Parse fallback sequence
         try:
             priorities = [p.strip() for p in settings.queue_backend_priority.split(",")]
-        except Exception:  # noqa: BLE001
+        except Exception:
             priorities = ["asyncio"]
 
         try:
@@ -250,7 +250,7 @@ class TaskQueue:
                 self._results[task_id].status = "cancelled"
                 self._completion_events[task_id].set()
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[TaskQueue] Failed to submit task {task_id}: {exc}")
             async with self._lock:
                 self._results[task_id].status = "failed"
@@ -329,7 +329,7 @@ class TaskQueue:
                 result_obj.completed_at = time.time()
             logger.warning(f"[TaskQueue] Task {task_id} cancelled during execution.")
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(
                 f"[TaskQueue] Task {task_id} failed: {exc}",
                 # বাংলা মন্তব্য: logger.exception() — full stack trace সহ
@@ -375,7 +375,7 @@ class TaskQueue:
                 # বাংলা মন্তব্য: CancelledError = graceful shutdown signal
                 logger.info("[TaskQueue] AsyncIO worker received cancellation. Shutting down.")
                 raise  # re-raise — কখনো suppress করা যাবে না
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 # বাংলা মন্তব্য: worker crash — log করা এবং continue
                 logger.exception(f"[TaskQueue] AsyncIO worker unexpected error: {exc}")
                 await asyncio.sleep(1)  # brief pause before retry
@@ -563,7 +563,7 @@ EnhancedTaskQueue = TaskQueue
 # বাংলা মন্তব্য: Celery worker application instance।
 # Celery না থাকলে একটি stub অবজেক্ট দেওয়া হচ্ছে যাতে import fail না করে।
 try:
-    from celery import Celery as _Celery  # noqa: PLC0415
+    from celery import Celery as _Celery
 
     celery_app = _Celery(
         "supremeai",

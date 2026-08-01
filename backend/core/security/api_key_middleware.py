@@ -31,7 +31,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
     - Running in test environment
     """
 
-    def __init__(self, app: Any) -> None:  # noqa: ANN401
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.limiter = AsyncRateLimiter()
         self.prefix = API_KEY_PREFIX
@@ -47,7 +47,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                 import json as _json
 
                 return _json.loads(cached)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"Redis cache read failed for API key: {exc}")
 
         # Use circuit breaker for database operations
@@ -59,10 +59,10 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                     import json as _json
 
                     await redis_manager.set_cache(cache_key, _json.dumps(dict(row)), ex_seconds=300)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.warning(f"Redis cache write failed for API key: {exc}")
                 return dict(row)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Database operation failed for API key {mask_api_key(key_hash)}: {exc}")
             # Return None to indicate failure, but we'll handle it gracefully
             pass
@@ -77,7 +77,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             key_hash,
         )
 
-    async def dispatch(self, request: Request, call_next: Any) -> JSONResponse:  # noqa: ANN401
+    async def dispatch(self, request: Request, call_next: Any) -> JSONResponse:
         # বাংলা মন্তব্য: public path-এ API key lookup DB call না করে সরাসরি skip করা হচ্ছে।
         # এটি health check, docs, auth endpoint-এ অযথা DB query এড়ায়।
         from core.config import settings as _settings
@@ -143,7 +143,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                 latency_ms=0.0,
                 ip_address=str(request.client.host) if request.client else None,
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).warning(f"Failed to record API key usage for {row['id']}")
 
         logger.info(f"API key authenticated: {request.state.api_key['masked']}")

@@ -13,7 +13,7 @@ try:
     from google.cloud import pubsub_v1  # type: ignore[import-untyped]
 
     PUBSUB_AVAILABLE = True
-except Exception:  # noqa: BLE001
+except Exception:
     PUBSUB_AVAILABLE = False
 
 
@@ -44,7 +44,7 @@ class GCPPubSubQueue:
                 self.subscription_path = self.subscriber.subscription_path(self.project_id, self.subscription_id)
                 self.mode = "gcp_pubsub"
                 logger.info("Using GCP Pub/Sub task queue")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Pub/Sub unavailable, falling back to SQLite: {exc}")
 
         if self.mode == "local_sqlite":
@@ -71,7 +71,7 @@ class GCPPubSubQueue:
             conn = self._memory_conn
         else:
             conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
-        assert conn is not None  # noqa: S101
+        assert conn is not None
 
         try:
             conn.execute(
@@ -156,7 +156,7 @@ class GCPPubSubQueue:
                             "published_at": data.get("published_at"),
                         }
                     )
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.error(f"Failed to decode message {received.ack_id}: {exc}")
                     error_event_bus.emit(
                         ErrorEvent(
@@ -198,7 +198,7 @@ class GCPPubSubQueue:
                     "message_id": message_id,
                     "acked": True,
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to ack message {message_id}: {exc}")
                 error_event_bus.emit(
                     ErrorEvent(

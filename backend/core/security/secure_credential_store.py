@@ -102,7 +102,7 @@ class LocalFernetProvider(EncryptionProvider):
                     keys = [k.strip() for k in raw_key.split(",") if k.strip()]
                     self.rotating_fernet = RotatingFernet(keys)
                     self.enabled = True
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.error(f"Failed to initialize Fernet: {exc}")
 
     def encrypt(self, plaintext: str) -> tuple[str, str | None]:
@@ -112,7 +112,7 @@ class LocalFernetProvider(EncryptionProvider):
             token = self.rotating_fernet.encrypt(plaintext.encode())
             ciphertext = base64.urlsafe_b64encode(token).decode()
             return ciphertext, None
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Encryption failed: {exc}")
             return plaintext, None
 
@@ -126,7 +126,7 @@ class LocalFernetProvider(EncryptionProvider):
         except InvalidToken:
             logger.warning("Token expired or invalid — decryption failed")
             return ciphertext
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Decryption failed: {exc}")
             return ciphertext
 
@@ -147,7 +147,7 @@ class CloudKMSProvider(EncryptionProvider):
             logger.info("Cloud KMS initialized successfully.")
         except ImportError:
             logger.warning("google-cloud-kms not installed; Cloud KMS unavailable.")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to initialize Cloud KMS: {exc}")
 
     def encrypt(self, plaintext: str) -> tuple[str, str | None]:
@@ -158,7 +158,7 @@ class CloudKMSProvider(EncryptionProvider):
             response = self.kms_client.encrypt(request={"name": self.key_name, "plaintext": plaintext.encode()})
             ciphertext = base64.b64encode(response.ciphertext).decode()
             return ciphertext, self.key_name
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"KMS encrypt failed: {exc}")
             return plaintext, None
 
@@ -174,7 +174,7 @@ class CloudKMSProvider(EncryptionProvider):
                 }
             )
             return response.plaintext.decode()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"KMS decrypt failed: {exc}")
             return ciphertext
 

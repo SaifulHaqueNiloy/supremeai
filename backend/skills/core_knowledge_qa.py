@@ -33,7 +33,7 @@ def _generate_embedding(text: str) -> list[float] | None:
 
         response = litellm.embedding(model="text-embedding-3-small", input=text)
         return response.data[0]["embedding"]
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"Embedding generation failed: {exc}")
         return None
 
@@ -49,7 +49,7 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
     """
     try:
         from database.supabase_client import db as supabase_db
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"Supabase client unavailable for knowledge_qa vector search: {exc}")
         return []
 
@@ -79,7 +79,7 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
                     }
                     for row in response.data
                 ]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"pgvector RPC 'match_knowledge_base' failed, falling back to ilike: {exc}")
 
     try:
@@ -92,7 +92,7 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
             .execute()
         )
         return result.data or []
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"Fallback ilike search on knowledge_base failed: {exc}")
         return []
 
@@ -182,5 +182,5 @@ def execute_tool(payload: dict) -> dict:
         }
 
     except Exception as e:
-        logger.error(f"Failed inside core_knowledge_qa skill loop: {str(e)}")
-        return {"success": False, "error": f"Skill execution anomaly: {str(e)}"}
+        logger.error(f"Failed inside core_knowledge_qa skill loop: {e!s}")
+        return {"success": False, "error": f"Skill execution anomaly: {e!s}"}

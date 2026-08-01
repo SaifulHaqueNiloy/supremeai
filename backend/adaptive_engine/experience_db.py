@@ -81,7 +81,7 @@ class ExperienceDatabase:
 
                 logger.info("Initializing ChromaDB EphemeralClient lazily...")
                 self.chroma_collection = chromadb.EphemeralClient().get_or_create_collection("experience")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"ChromaDB lazy init failed: {exc}")
 
     def _ensure_qdrant(self) -> None:
@@ -103,7 +103,7 @@ class ExperienceDatabase:
                         collection_name=self.qdrant_collection,
                         vectors_config=VectorParams(size=384, distance=Distance.COSINE),
                     )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Qdrant lazy init failed: {exc}")
 
     def _init_db(self) -> None:
@@ -151,7 +151,7 @@ class ExperienceDatabase:
         if self.encoder:
             try:
                 return self.encoder.encode(text).tolist()
-            except Exception as embed_err:  # noqa: BLE001
+            except Exception as embed_err:
                 # বাংলা মন্তব্য: embedding তৈরি ব্যর্থ হলে সতর্ক লগ দিই — নীরবে None ফেরানো বন্ধ
                 logger.warning(
                     f"[ExperienceDB] Embedding generation failed. "
@@ -226,7 +226,7 @@ class ExperienceDatabase:
                     metadatas=[{"result": result, "response": response_text}],
                     documents=[text],
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self.vector_backend_degraded = True
             logger.error(f"Chroma upsert failed (vector memory degraded, exp_id={exp_id}): {e}")
         try:
@@ -247,7 +247,7 @@ class ExperienceDatabase:
                         )
                     ],
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self.vector_backend_degraded = True
             logger.error(f"Qdrant upsert failed (vector memory degraded, exp_id={exp_id}): {e}")
 
@@ -308,7 +308,7 @@ class ExperienceDatabase:
                                 "text": hit.payload.get("text", ""),
                             }
                         )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self.vector_backend_degraded = True
             logger.error(
                 f"find_similar() query failed (returning empty, but this is a DEGRADED state, not 'no matches'): {e}"
@@ -375,5 +375,5 @@ class ExperienceDatabase:
             # Clean up local compressed file
             gz_path.unlink(missing_ok=True)
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             loguru.logger.error(f"Failed to sync experience db to GCS: {e}")

@@ -25,7 +25,7 @@ class PlatformLearner:
                     html_content = res.text[:15000]  # Take first 15k characters to fit context limits
                 else:
                     html_content = f"Failed to fetch content, status code: {res.status_code}"
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to fetch live documentation: {e}. Falling back to LLM general knowledge.")
             html_content = f"Unreachable URL: {docs_url}. Please use general knowledge to guess the API structure."
 
@@ -63,7 +63,7 @@ Return ONLY a JSON response in the following format (no markdown blocks, no text
 
         try:
             data = json.loads(text)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse learned platform JSON: {e}")
             # Fallback structure
             data = {
@@ -106,7 +106,7 @@ Return ONLY a JSON response in the following format (no markdown blocks, no text
                 best_practices=data.get("deploy_methods", []),
                 code_snippet_example=data.get("sdk_code", ""),
             )
-        except Exception as store_err:  # noqa: BLE001
+        except Exception as store_err:
             logger.warning(f"Failed to persist platform knowledge: {store_err}")
 
         return profile

@@ -62,9 +62,9 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
         if isinstance(user, dict):
             admin_id = user.get("sub") or user.get("user_id") or user.get("admin_id")
         elif hasattr(request.state, "admin_id"):
-            admin_id = getattr(request.state, "admin_id")
+            admin_id = request.state.admin_id
         elif hasattr(request.state, "user_id"):
-            admin_id = getattr(request.state, "user_id")
+            admin_id = request.state.user_id
 
         if not isinstance(admin_id, str):
             admin_id = str(admin_id) if admin_id is not None and not hasattr(admin_id, "_mock_name") else "unknown"
@@ -90,7 +90,7 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                         code_to_scan = payload.get("code") or payload.get("generated_code")
                     except json.JSONDecodeError:
                         pass
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"Failed to extract body for scanning: {exc}")
 
         # Enforce operation

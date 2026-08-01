@@ -84,7 +84,7 @@ class SelfPlanner:
         )
         try:
             result = await model_router.async_route_and_generate(prompt, task_type="reasoning", max_cost=0.05)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: LLM planning failures now propagate as real errors instead of
             # being masked by a hardcoded fallback plan. A caller must know planning failed.
             logger.error(f"LLM planner call failed: {e}")
@@ -105,7 +105,7 @@ class SelfPlanner:
             if not isinstance(plan, list):
                 err_msg = "LLM plan response was not a JSON array"
                 raise TypeError(err_msg)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: no more silent fallback to a hardcoded plan — an unparsable
             # response means planning genuinely failed and must be surfaced as an error.
             logger.error(f"LLM returned non-JSON/invalid plan: {e}")
@@ -247,7 +247,7 @@ async def create_plan(request: PlanRequest):
             "execution_batches": batches,
             "tasks": nodes,
         }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # বাংলা: str(e) সরাসরি ইউজারকে দেওয়া সম্পূর্ণ নিষিদ্ধ — API key বা DB string লিক হতে পারে।
         # Internal error log-এ যাবে, ইউজার শুধু generic message দেখবে।
         logger.error(f"Planner failed: {e}", exc_info=True)

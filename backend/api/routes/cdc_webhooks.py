@@ -52,7 +52,7 @@ async def _delete_from_vector_db(user_id: str, doc_id: str | None = None) -> Non
                 json={"ids": [vector_id]},
             )
         logger.info(f"CDC: Deleted vector {vector_id} from Pinecone")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"CDC vector deletion failed: {e}")
 
 
@@ -67,7 +67,7 @@ async def handle_cdc_webhook(request: Request, background_tasks: BackgroundTasks
         import json
 
         event = json.loads(body)
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Unhandled exception")
         raise HTTPException(status_code=400, detail="Invalid JSON payload") from None
 

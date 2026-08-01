@@ -36,7 +36,7 @@ class SupremeOrchestrator:
                 endpoint = rotation.get("endpoint")
                 if endpoint:
                     logger.info(f"VPN rotated for {task_type} -> {endpoint}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"VPN rotation skipped: {exc}")
 
     def run_autonomous(self, task_description: str, context: str | None = None) -> dict[str, Any]:

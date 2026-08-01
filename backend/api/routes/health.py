@@ -41,7 +41,7 @@ async def health_check(request: Request, response: Response):
             async with db_pool.acquire() as conn:
                 await conn.execute("SELECT 1")
             subsystems["db"] = "up"
-        except Exception:  # noqa: BLE001
+        except Exception:
             subsystems["db"] = "down"
     elif subsystems.get("db") != "down":
         subsystems["db"] = "sqlite"
@@ -50,7 +50,7 @@ async def health_check(request: Request, response: Response):
     if subsystems.get("redis") == "up":
         try:
             await redis_manager.client.ping()
-        except Exception:  # noqa: BLE001
+        except Exception:
             subsystems["redis"] = "down"
 
     has_critical_failure = any(subsystems.get(k) == "down" for k in ["db", "redis"])

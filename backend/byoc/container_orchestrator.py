@@ -91,7 +91,7 @@ class ContainerOrchestrator:
                 "user_id": user_id,
                 "skill": skill,
             }
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             logger.error(f"BYOC deployment failed: {err}")
             return {
                 "status": "failed",
@@ -117,7 +117,7 @@ class ContainerOrchestrator:
                     "deployment_id": deployment_id,
                     "mode": "live",
                 }
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Rollback terraform execution failed: {e}")
 
         return {

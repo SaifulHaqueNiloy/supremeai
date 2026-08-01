@@ -183,7 +183,7 @@ class SwarmCoordinationAgent(BaseSkill):
             except TimeoutError:
                 # বাংলা মন্তব্য: Python 3.11+ এ asyncio.TimeoutError এর স্থানে built-in TimeoutError ব্যবহৃত হচ্ছে
                 continue
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 await self._log_error("coordination_loop", str(exc))
 
     async def _heartbeat_loop(self) -> None:
@@ -202,7 +202,7 @@ class SwarmCoordinationAgent(BaseSkill):
                     ),
                 )
                 self._prune_stale_agents()
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 await self._log_error("heartbeat_loop", str(exc))
             await asyncio.sleep(self._heartbeat_interval)
 
@@ -285,7 +285,7 @@ class SwarmCoordinationAgent(BaseSkill):
                 "result": response.get("content", ""),
                 "timestamp": time.time(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"agent_id": agent.agent_id, "error": str(exc)}
 
     async def _reach_consensus(self, task: SwarmTask) -> dict[str, Any] | None:

@@ -39,10 +39,10 @@ async def get_active_skill_catalog():
             catalog.append(manifest_data)
 
         except json.JSONDecodeError as jde:
-            logger.error(f"Malformed JSON schema detected in manifest {json_file.name}: {str(jde)}")
+            logger.error(f"Malformed JSON schema detected in manifest {json_file.name}: {jde!s}")
             continue
         except Exception as e:
-            logger.error(f"Failed to read manifest file {json_file.name}: {str(e)}")
+            logger.error(f"Failed to read manifest file {json_file.name}: {e!s}")
             continue
 
     logger.info(f"Successfully broadcasted {len(catalog)} active skills to the frontend dashboard.")
