@@ -15,16 +15,16 @@ Dependencies:
 - `json`: For parsing JSON output from Docker commands.
 - `subprocess`: For executing external Docker commands like `docker stats` and `docker kill`.
 - `loguru`: For structured and colored logging throughout the auditing process.
-- `core.messaging.event_bus`: For emitting standardized error and warning events to the system's central event bus."""  # noqa: E501
+- `core.messaging.event_bus`: For emitting standardized error and warning events to the system's central event bus."""
 
-import asyncio  # noqa: E402
-import json  # noqa: E402
-import subprocess  # noqa: E402
+import asyncio
+import json
+import subprocess
 
-from loguru import logger  # noqa: E402
+from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 
 class ContainerAuditor:
@@ -58,7 +58,7 @@ class ContainerAuditor:
                 if line:
                     stats.append(json.loads(line))
             return stats
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error executing docker stats: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -96,7 +96,7 @@ class ContainerAuditor:
                             timeout=5,
                             check=False,
                         )
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.error(f"Failed to kill container {name}: {e}")
                         error_event_bus.emit(
                             ErrorEvent(
@@ -112,7 +112,7 @@ class ContainerAuditor:
                     logger.warning(f"⚠️ Memory Warning: Container {name} is nearing capacity at {mem_perc}%.")
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error in container audit cycle: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -134,7 +134,7 @@ class ContainerAuditor:
             except asyncio.CancelledError:
                 self.running = False
                 raise
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Container audit cycle failed: {e}")
                 error_event_bus.emit(
                     ErrorEvent(

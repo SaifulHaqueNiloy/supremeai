@@ -80,7 +80,7 @@ class ObservabilityMiddleware:
                 kind="server",
             ):
                 await self.app(scope, receive, custom_send)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             error_type = type(exc).__name__
             record_error(error_type, path)
             raise
@@ -103,7 +103,7 @@ class ObservabilityMiddleware:
                         "duration": duration,
                     },
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"PostHog capture failed in observability middleware: {exc}")
 
             # --- START REDIS TRAFFIC MONITORING ---
@@ -139,7 +139,7 @@ class ObservabilityMiddleware:
                                 }
                                 await redis_manager.client.lpush(minute_key, json.dumps(payload))
                                 await redis_manager.client.expire(minute_key, 86400)  # 24 hours retention
-                            except Exception as redis_err:  # noqa: BLE001
+                            except Exception as redis_err:
                                 self._redis_metric_fail_count += 1
                                 if self._redis_metric_fail_count == 1 or self._redis_metric_fail_count % 10 == 0:
                                     logger.warning(
@@ -151,7 +151,7 @@ class ObservabilityMiddleware:
                         task = asyncio.create_task(push_traffic())
                         self.app._background_tasks.add(task)
                         task.add_done_callback(self.app._background_tasks.discard)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.debug(f"Redis traffic monitoring failed: {e}")
             # --- END REDIS TRAFFIC MONITORING ---
 
@@ -172,7 +172,7 @@ class ObservabilityMiddleware:
                             },
                         }
                     )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"Evolution log persistence failed in observability middleware: {exc}")
 
             # --- START SENTINEL AGENT EVENT TRIGGER ---
@@ -190,6 +190,6 @@ class ObservabilityMiddleware:
                     task = asyncio.create_task(sentinel.trigger_event(event_type, details))
                     self.app._background_tasks.add(task)
                     task.add_done_callback(self.app._background_tasks.discard)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(f"Sentinel Agent event trigger failed: {e}")
             # --- END SENTINEL AGENT EVENT TRIGGER ---

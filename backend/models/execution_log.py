@@ -16,7 +16,7 @@ class LogType(enum.StrEnum):
     file_write = "file_write"
     file_delete = "file_delete"
     dom_action = "dom_action"
-    reasoning_token = "reasoning_token"  # noqa: S105
+    reasoning_token = "reasoning_token"
 
 
 class ExecutionLog(Base):

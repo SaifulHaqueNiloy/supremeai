@@ -26,7 +26,7 @@ class WebFallbackAgent:
         steps_executed = []
         try:
             # বাংলা মন্তব্য: Playwright dynamically import করা হচ্ছে যাতে dependency না থাকলে ক্র্যাশ না হয়
-            from playwright.async_api import async_playwright  # noqa: PLC0415
+            from playwright.async_api import async_playwright
 
             steps_executed.append(
                 {
@@ -143,7 +143,7 @@ class WebFallbackAgent:
                 "result_summary": f"Task '{task.get('action')}' completed successfully (Simulated fallback).",
                 "scraped_data": "Simulated web automation response data.",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Playwright execution failed: {exc}")
             return {
                 "success": False,

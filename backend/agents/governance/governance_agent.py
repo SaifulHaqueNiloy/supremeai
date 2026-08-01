@@ -175,7 +175,7 @@ class GovernanceAgent:
                 resource=resource,
                 action=action,
                 allowed=False,
-                reason=f"Access check failed: {str(e)}",
+                reason=f"Access check failed: {e!s}",
                 timestamp=datetime.utcnow(),
                 session_id=session_id or secrets.token_hex(16),
             )

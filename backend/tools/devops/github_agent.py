@@ -18,7 +18,7 @@ async def get_user_github_token(user_id: str, db: AsyncSession) -> str | None:
     ⚠️ FIX: AsyncSession.get() শুধুমাত্র primary key নেয়, dict ফিল্টার নয়।
     আগে db.get(Integration, {"user_id": ..., "provider": ...}) দিয়ে ArgumentError
     থ্রো করত। এখন select().where() ব্যবহার করা হচ্ছে।
-    """  # noqa: W291, W293
+    """
     stmt = select(Integration).where(
         Integration.user_id == user_id,
         Integration.provider == "github",
@@ -32,7 +32,7 @@ async def get_user_github_token(user_id: str, db: AsyncSession) -> str | None:
     try:
         access_token = decrypt_token(integration.encrypted_access_token)
         return access_token
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"Failed to decrypt GitHub token for user '{user_id}': {exc}")
         return None
 
@@ -50,7 +50,7 @@ async def create_autonomous_pr(
     repo_name ফরম্যাট হতে হবে: "username/repo"
 
     db_session বাধ্যতামূলক — না দিলে fail-fast করে, যাতে কেউ ভুলে placeholder দিয়ে ডিপ্লয় করতে না পারে।
-    """  # noqa: W293
+    """
     if db is None:
         raise RuntimeError(
             "create_autonomous_pr: db_session is required. Call with an active AsyncSession to fetch the GitHub token from DB."

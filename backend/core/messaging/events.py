@@ -64,6 +64,6 @@ def get_firebase_auth():
         auth = firebase_auth
         logger.info("Firebase Admin SDK ready ✅")
         return auth
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"Firebase Admin SDK not available: {e}")
         return None

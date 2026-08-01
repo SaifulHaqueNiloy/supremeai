@@ -39,7 +39,7 @@ class AdminGodLayer:
         if self._db is not None:
             try:
                 self._init_db()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Failed to initialize Firestore for AdminGodLayer: {e}. Falling back to SQLite.")
                 self._db = None
         else:
@@ -90,7 +90,7 @@ class AdminGodLayer:
             if not autofix_ref.get().exists:
                 self.set_rule("autofix_authorized", "false")
                 logger.warning("Firestore: Defaulting 'autofix_authorized' to 'false' for security.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error initializing AdminGodLayer DB: {e}")
 
     def get_rule(self, key: str, default: str | None = None) -> str | None:
@@ -101,7 +101,7 @@ class AdminGodLayer:
                 if doc.exists:
                     return doc.to_dict().get("value", default)
                 return default
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Error fetching rule {key} from Firestore: {e}")
 
         # বাংলা মন্তব্য: ফায়ারস্টোর নিষ্ক্রিয় বা টেস্ট মোডে থাকলে SQLite ব্যাকআপ থেকে রিড হবে
@@ -120,7 +120,7 @@ class AdminGodLayer:
                 doc_ref.set({"value": value, "updated_at": time.time()})
                 logger.info(f"Constitutional rule updated in Firestore: {key} = {value}")
                 return
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Error setting rule {key} in Firestore: {e}. Falling back to SQLite.")
 
         # বাংলা মন্তব্য: SQLite ব্যাকআপ ডাটাবেসে রুল সংরক্ষণ করা হচ্ছে

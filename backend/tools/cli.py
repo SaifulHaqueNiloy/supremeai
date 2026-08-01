@@ -76,7 +76,7 @@ def repl():
         except KeyboardInterrupt:
             console.print("\n[bold red]Interrupted by user. Quitting REPL.[/bold red]")
             break
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             console.print(f"[bold red]Error:[/bold red] {e}")
 
 

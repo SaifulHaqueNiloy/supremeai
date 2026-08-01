@@ -214,7 +214,7 @@ class HeuristicScorer:
                 score += semantic_score * 0.2
                 if semantic_score > 0.5:
                     reasons.append("Semantically relevant to your goals")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"LLM semantic similarity failed: {e}")
 
         return SkillRecommendation(
@@ -251,7 +251,7 @@ class HeuristicScorer:
             score = float(result.get("content", "0.0"))
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)
             return score
-        except Exception:  # noqa: BLE001
+        except Exception:
             return 0.0
 
     def _get_skill_name(self, skill_id: str) -> str:
@@ -343,7 +343,7 @@ class SkillRecommender:
                     .execute()
                 )
                 return cast(list[dict[str, Any]], res.data) if res.data else []
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"History fetch from DB failed: {exc}")
         return self._local_history.get(user_id, [])
 
@@ -354,7 +354,7 @@ class SkillRecommender:
             try:
                 db.client.table("task_history").insert(entry).execute()
                 return
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"History insert failed: {exc}")
 
         # Fallback if DB client is none or insert failed
@@ -429,12 +429,12 @@ class SkillRecommender:
                     res = db.client.table("tools_registry").select("*").eq("id", item["skill_id"]).execute()
                     if res.data:
                         enriched.append({**res.data[0], "match_score": round(item["score"], 3)})
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     try:
                         import loguru
 
                         loguru.logger.error(f"Tool execution error: {e}")
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.warning(f"Exception suppressed: {e}")
                     pass
         if not enriched:

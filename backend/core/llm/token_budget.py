@@ -19,16 +19,16 @@ Key features:
 """
 
 
-import re  # noqa: E402
-import time  # noqa: E402
-from dataclasses import dataclass  # noqa: E402
-from dataclasses import field  # noqa: E402
-from typing import Any  # noqa: E402
+import re
+import time
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Any
 
-from loguru import logger  # noqa: E402
+from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 # ---------------------------------------------------------------------------
 # Per-provider max token budgets (conservative — leaves headroom for system prompts)

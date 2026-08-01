@@ -111,7 +111,7 @@ async def login(body: LoginRequest, request: Request):
         if fingerprint and redis_manager and redis_manager.client:
             try:
                 await redis_manager.client.sadd(f"device:known:{user_id}", fingerprint)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Failed to register device fingerprint for {user_id}: {exc}")
 
         return TokenResponse(access_token=access_token, user_id=user_id, role=primary_role)

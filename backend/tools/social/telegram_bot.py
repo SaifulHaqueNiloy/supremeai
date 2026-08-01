@@ -64,7 +64,7 @@ class TelegramBotHandler:
 
     @property
     def configured(self) -> bool:
-        return bool(self.bot_token and self.bot_token != "mock_token")  # noqa: S105
+        return bool(self.bot_token and self.bot_token != "mock_token")
 
     # ── Telegram API helpers ──────────────────────────────────────
 
@@ -79,7 +79,7 @@ class TelegramBotHandler:
                 )
                 resp.raise_for_status()
                 return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Telegram sendMessage failed: {exc}")
             return False
 
@@ -92,7 +92,7 @@ class TelegramBotHandler:
                     f"{self.api_base}/sendChatAction",
                     json={"chat_id": chat_id, "action": "typing"},
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Telegram sendTyping failed for chat_id {chat_id}: {e}")
 
     async def set_webhook(self, webhook_url: str) -> bool:
@@ -114,7 +114,7 @@ class TelegramBotHandler:
                     return True
                 logger.error(f"Webhook error: {data}")
                 return False
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"set_webhook failed: {exc}")
             return False
 
@@ -127,7 +127,7 @@ class TelegramBotHandler:
                 resp = await client.get(f"{self.api_base}/getMe")
                 data = resp.json()
                 return data.get("result") if data.get("ok") else None
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"getMe failed: {exc}")
             return None
 
@@ -195,12 +195,12 @@ class TelegramBotHandler:
                     r = await c.get(url + "/health")
                     icon = "✅" if r.status_code == 200 else "⚠️"
                     status_lines.append(f"{icon} {name}: `{r.status_code}`")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 status_lines.append(f"❌ {name}: unreachable")
         await self.send_message(chat_id, "\n".join(status_lines))
@@ -213,7 +213,7 @@ class TelegramBotHandler:
                 # Run synchronous orchestrator call in executor to prevent blocking the event loop
                 result = await loop.run_in_executor(None, lambda: self.processor.execute_task(text, task_type))
                 return result.get("result", "Sorry, I couldn't process that.")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Orchestrator error: {exc}")
                 return "⚠️ Error processing request. Please try again."
         return "🤖 SupremeAI 2.0 is ready! (Orchestrator not connected)"
@@ -253,7 +253,7 @@ class TelegramBotHandler:
                             structured_context=ErrorContext(module="auto_fixed"),
                         )
                     )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Webhook setup exception: {e}")
             from core.messaging.event_bus import ErrorEvent, error_event_bus
 

@@ -49,7 +49,7 @@ class DependencyManagerAgent:
         except json.JSONDecodeError:
             logger.error("Failed to parse command output as JSON.")
             return {"error": "Invalid JSON output."}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
             return {"error": str(e)}
 

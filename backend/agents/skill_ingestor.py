@@ -163,4 +163,4 @@ class SkillIngestor:
         except Exception as e:
             manifest.status = SkillStatus.REJECTED
             self.index_manager.update_skill(manifest)
-            return {"success": False, "detail": f"Pipeline failure: {str(e)}"}
+            return {"success": False, "detail": f"Pipeline failure: {e!s}"}

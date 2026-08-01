@@ -46,7 +46,7 @@ class PlanSorter:
                         os.path.join(dest_dir, f"sorted_{category.lower()}_{filename}"),
                     )
                     logger.info(f"Organized plan '{filename}' as {category} -> {dest_subfolder}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to process plan file '{filename}': {e}")
 
         return categorized

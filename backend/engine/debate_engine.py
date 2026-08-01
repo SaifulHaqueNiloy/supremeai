@@ -105,7 +105,7 @@ class JudgeAgent:
                 task_type="reasoning",
                 model=self.model_name,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # বাংলা মন্তব্য: LLMGateway নিজেই fallback chain ও circuit breaker চেষ্টা করে
             # সব ব্যর্থ হলে এখানে exception আসে — পুরো debate crash না করিয়ে RETHINKING-এ পাঠানো হচ্ছে
             logger.warning(f"Judge Agent LLM call failed after all fallbacks: {exc}")
@@ -214,7 +214,7 @@ class ConsensusOrchestrator:
                     if not content:
                         raise RuntimeError("Empty response from LLM gateway.")
                     return Proposal(agent_id=agent_id, content=content)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.warning(f"Proposer '{agent_id}' failed to generate a proposal: {exc}")
                     return Proposal(
                         agent_id=agent_id,

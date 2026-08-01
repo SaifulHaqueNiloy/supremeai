@@ -308,7 +308,7 @@ class LearningLoop:
                 all_exps = await self.experience_db.get_all_experiences()
             else:
                 all_exps = self.experience_db.get_all_experiences()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"Failed to fetch experiences: {exc}")
             return []
 

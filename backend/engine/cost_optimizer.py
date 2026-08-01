@@ -55,7 +55,7 @@ class CostOptimizer:
             provider = self.free_tier_tracker.get_best_provider()
             if provider:
                 return provider
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Free tier tracker unavailable: {exc}")
         return None
 

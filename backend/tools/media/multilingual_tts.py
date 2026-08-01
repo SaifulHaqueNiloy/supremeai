@@ -199,7 +199,7 @@ class MultilingualTTS:
                 res = await client.post(url, headers=headers, json=payload)
             if res.status_code == 200:
                 os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-                with open(out_path, "wb") as f:  # noqa: ASYNC230
+                with open(out_path, "wb") as f:
                     f.write(res.content)
                 logger.info(f"ElevenLabs ✅ lang={lang} path={out_path}")
                 return {
@@ -217,7 +217,7 @@ class MultilingualTTS:
                 "language": lang,
                 "error": f"ElevenLabs HTTP {res.status_code}",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"ElevenLabs exception: {exc}")
             return {"status": "error", "language": lang, "error": str(exc)}
 
@@ -269,7 +269,7 @@ class MultilingualTTS:
                 "language": lang,
                 "error": "edge-tts not installed",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"edge-tts failed: {exc}")
             return {"status": "error", "language": lang, "error": str(exc)}
 
@@ -288,7 +288,7 @@ class MultilingualTTS:
                 "audio_path": out_path,
                 "text_length": len(text),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"gTTS failed: {exc}")
             return {"status": "error", "language": lang, "error": str(exc)}
 
@@ -384,7 +384,7 @@ class MultilingualTTS:
                 async for chunk in self._elevenlabs_stream(text, lang, voice_id, stability, similarity_boost):
                     yield chunk
                 return  # Success, exit
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"ElevenLabs streaming failed: {e}. Falling back to edge-tts.")
 
         # Fallback to edge-tts
@@ -404,7 +404,7 @@ class MultilingualTTS:
             if res.status_code == 200:
                 return {"status": "success", "voices": res.json().get("voices", [])}
             return {"status": "error", "error": f"HTTP {res.status_code}"}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"status": "error", "error": str(exc)}
 
 
@@ -476,12 +476,12 @@ async def clear_cache():
                 try:
                     os.unlink(os.path.join(base_dir, f))
                     removed += 1
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     try:
                         import loguru
 
                         loguru.logger.error(f"Tool execution error: {e}")
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.warning(f"Exception suppressed: {e}")
                     pass
     return {"status": "success", "removed_files": removed}

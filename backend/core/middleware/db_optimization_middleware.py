@@ -65,11 +65,11 @@ class ComprehensiveDBOptimizationMiddleware:
                     form_data = await request.form()
                     form_dict = dict(form_data)
                     await self.sql_guard_middleware.validate_request_params(form_dict)
-                except Exception as _form_err:  # noqa: BLE001
+                except Exception as _form_err:
                     logger.debug(f"Form parsing skipped for non-form request: {_form_err}")
 
         except ValueError as e:
-            logger.warning(f"SQL injection attempt detected: {str(e)}")
+            logger.warning(f"SQL injection attempt detected: {e!s}")
             # In a real implementation, we'd return an error response here
             raise
 
@@ -105,7 +105,7 @@ class ComprehensiveDBOptimizationMiddleware:
         """Handle errors during request processing."""
         request_duration = time.time() - self.request_start_time
 
-        logger.error(f"Request {request.url} failed after {request_duration:.3f}s: {str(error)}")
+        logger.error(f"Request {request.url} failed after {request_duration:.3f}s: {error!s}")
 
         # Update error statistics
         self.sql_guard_middleware.blocked_requests += 1
@@ -207,7 +207,7 @@ def monitor_performance(func):
                 return result
             except Exception as e:
                 execution_time = time.time() - start_time
-                logger.error(f"Function {func.__name__} failed after {execution_time:.3f}s: {str(e)}")
+                logger.error(f"Function {func.__name__} failed after {execution_time:.3f}s: {e!s}")
                 raise
 
     return wrapper

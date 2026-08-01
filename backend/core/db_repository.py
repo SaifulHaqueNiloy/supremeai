@@ -52,8 +52,8 @@ class SmartDataRepository:
                 raise PrimaryDatabaseDownException("Firebase client not initialized or missing collection method")
         except PrimaryDatabaseDownException:
             raise
-        except Exception as e:  # noqa: BLE001
-            logging.warning(f"⚠️ Firebase unreachable ({str(e)}). Retrying...")
+        except Exception as e:
+            logging.warning(f"⚠️ Firebase unreachable ({e!s}). Retrying...")
             raise PrimaryDatabaseDownException(str(e)) from e
 
     async def _fetch_from_primary(self, collection: str, doc_id: str) -> dict[str, Any] | None:
@@ -78,12 +78,12 @@ class SmartDataRepository:
                 # If it's CloudPostgresStore helper
                 elif hasattr(self.supabase, "_execute"):
                     self._validate_table_name(table_name)
-                    query = f"SELECT * FROM {table_name} WHERE id = %s LIMIT 1"  # noqa: S608, UP032
+                    query = f"SELECT * FROM {table_name} WHERE id = %s LIMIT 1"  # noqa: S608
                     row = self.supabase._execute(query, (doc_id,), fetchone=True)
                     return dict(row) if row else None
                 else:
                     logging.critical("Supabase client is not compatible or not initialized.")
                     return None
-            except Exception as backup_error:  # noqa: BLE001
-                logging.critical(f"💀 FATAL: Both databases are down! {str(backup_error)}")
+            except Exception as backup_error:
+                logging.critical(f"💀 FATAL: Both databases are down! {backup_error!s}")
                 raise ServiceDegradedException("Both primary and fallback databases unavailable") from backup_error

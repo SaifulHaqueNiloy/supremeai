@@ -237,7 +237,7 @@ class MicroVMSandbox:
             # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
             logger.warning(f"[MicroVMSandbox] Execution cancelled for vm_id={vm_id}")
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] Unexpected error for vm_id={vm_id}: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -310,7 +310,7 @@ class MicroVMSandbox:
                 "error": "Execution timeout",
                 "provider": "firecracker",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] Firecracker error: {exc}")
             return {"success": False, "error": str(exc), "provider": "firecracker"}
 
@@ -359,7 +359,7 @@ class MicroVMSandbox:
                 "error": "Execution timeout",
                 "provider": "gvisor",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] gVisor error: {exc}")
             return {"success": False, "error": str(exc), "provider": "gvisor"}
         finally:
@@ -380,7 +380,7 @@ class MicroVMSandbox:
 
         # বাংলা মন্তব্য: _ALLOWED_DOCKER_IMAGES whitelist enforce
         docker_image = _DEFAULT_DOCKER_IMAGE
-        assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101  # noqa: S101
+        assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101
 
         tmp_path: Path | None = None
         try:
@@ -432,7 +432,7 @@ class MicroVMSandbox:
                 "error": "Execution timeout",
                 "provider": "docker-fallback",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] Docker fallback error: {exc}")
             return {"success": False, "error": str(exc), "provider": "docker-fallback"}
         finally:
@@ -447,7 +447,7 @@ class MicroVMSandbox:
             if vm_dir.exists():
                 shutil.rmtree(vm_dir)
             logger.debug(f"[MicroVMSandbox] VM dir destroyed: {vm_dir}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"[MicroVMSandbox] Failed to destroy VM dir {vm_dir}: {exc}")
 
     async def health_check(self) -> dict[str, Any]:

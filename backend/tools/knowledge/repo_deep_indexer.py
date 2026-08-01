@@ -27,7 +27,7 @@ class RepoDeepIndexer:
                     elif isinstance(node, ast.ImportFrom):
                         imports.append(node.module)
                 return {"classes": classes, "functions": functions, "imports": imports}
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.debug(f"AST parse failed for {file_path}: {e}")
         return {"classes": [], "functions": [], "imports": []}
 
@@ -46,14 +46,14 @@ class RepoDeepIndexer:
                     file_path = os.path.join(root, file)
                     ast_data = self._parse_ast(file_path)
                     try:
-                        with open(file_path, encoding="utf-8") as f:  # noqa: ASYNC230
+                        with open(file_path, encoding="utf-8") as f:
                             snippet = f.read()[:200]
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         try:
                             import loguru
 
                             loguru.logger.error(f"Tool execution error: {e}")
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             logger.warning(f"Exception suppressed: {e}")
                         snippet = ""
                     node = {
@@ -67,7 +67,7 @@ class RepoDeepIndexer:
         if self.vector_db_client:
             try:
                 await self.vector_db_client.upsert(nodes)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.debug(f"Vector DB upsert skipped: {e}")
 
         logger.info(f"Successfully indexed {indexed_files} files.")
@@ -82,12 +82,12 @@ class RepoDeepIndexer:
         try:
             if self.vector_db_client:
                 return await self.vector_db_client.query(query, limit)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             try:
                 import loguru
 
                 loguru.logger.error(f"Tool execution error: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")
             pass
         return []

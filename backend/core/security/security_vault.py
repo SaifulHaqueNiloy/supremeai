@@ -87,7 +87,7 @@ def encrypt_token(plain_text: str) -> str:
 
     try:
         return _vault.encrypt(plain_text.encode("utf-8")).decode("utf-8")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error encrypting token: {e}")
         error_event_bus.emit(
             ErrorEvent(
@@ -110,7 +110,7 @@ def decrypt_token(cipher_text: str, ttl: int | None = None) -> str:
     # ttl=None keeps the RotatingFernet default behavior.
     try:
         return _vault.decrypt(cipher_text.encode("utf-8"), ttl=ttl).decode("utf-8")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error decrypting token: {e}")
         error_event_bus.emit(
             ErrorEvent(

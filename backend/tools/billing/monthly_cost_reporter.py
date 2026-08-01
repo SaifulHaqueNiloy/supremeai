@@ -70,7 +70,7 @@ class MonthlyCostReporter:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 await client.post(url, json={"chat_id": self.admin_chat_id, "text": text})
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to send monthly cost report: {exc}")
             return False
 

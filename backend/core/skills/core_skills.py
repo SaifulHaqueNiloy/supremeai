@@ -84,7 +84,7 @@ class StaticAnalysisSkill(BaseSkill):
         **kwargs: Any,
     ) -> Any:
         workspace.log(f"{self.name}: Simulating static analysis and QA review...")
-        sys_prompt = "You are a QA Agent. Analyze the provided code for bugs, security issues, and style violations. Respond with APPROVED or FAILED and feedback."  # noqa: E501
+        sys_prompt = "You are a QA Agent. Analyze the provided code for bugs, security issues, and style violations. Respond with APPROVED or FAILED and feedback."
         code = kwargs.get("code", "")
         user_prompt = f"Analyze this code:\n{code}"
 

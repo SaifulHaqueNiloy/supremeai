@@ -30,15 +30,15 @@ class TestAdminGodLayer:
     def test_init_db_path(self):
         # Test initializing AdminGodLayer with db_path
         admin_god_layer = AdminGodLayer(db_path="test_db_path")
-        assert admin_god_layer.collection_name == "constitutional_rules"  # noqa: S101
-        assert admin_god_layer._db is None  # noqa: S101
+        assert admin_god_layer.collection_name == "constitutional_rules"
+        assert admin_god_layer._db is None
 
     def test_init_db_no_path(self):
         # Test initializing AdminGodLayer without db_path
         admin_god_layer = AdminGodLayer()
-        assert admin_god_layer.collection_name == "constitutional_rules"  # noqa: S101
+        assert admin_god_layer.collection_name == "constitutional_rules"
         if "pytest" in sys.modules:
-            assert admin_god_layer._db is None  # noqa: S101
+            assert admin_god_layer._db is None
 
     @patch("admin.god.get_firestore_db")
     def test_init_db_with_firestore(self, mock_get_db):
@@ -51,7 +51,7 @@ class TestAdminGodLayer:
         # Test initializing AdminGodLayer without Firestore
         with patch("admin.god.get_firestore_db", return_value=None):
             admin_god_layer = AdminGodLayer()
-            assert admin_god_layer._db is None  # noqa: S101
+            assert admin_god_layer._db is None
 
     @patch("admin.god.get_firestore_db")
     def test_get_rule(self, mock_get_db):
@@ -63,7 +63,7 @@ class TestAdminGodLayer:
         mock_doc.to_dict.return_value = {"value": "test_value"}
         admin_god_layer = AdminGodLayer()
         rule = admin_god_layer.get_rule("test_key")
-        assert rule == "test_value"  # noqa: S101
+        assert rule == "test_value"
 
     @patch("admin.god.get_firestore_db")
     def test_get_rule_not_found(self, mock_get_db):
@@ -74,7 +74,7 @@ class TestAdminGodLayer:
         mock_doc.exists = False
         admin_god_layer = AdminGodLayer()
         rule = admin_god_layer.get_rule("test_key")
-        assert rule is None  # noqa: S101
+        assert rule is None
 
     @patch("admin.god.get_firestore_db")
     def test_get_rule_with_default(self, mock_get_db):
@@ -85,7 +85,7 @@ class TestAdminGodLayer:
         mock_doc.exists = False
         admin_god_layer = AdminGodLayer()
         rule = admin_god_layer.get_rule("test_key", default="default_value")
-        assert rule == "default_value"  # noqa: S101
+        assert rule == "default_value"
 
     @patch("admin.god.get_firestore_db")
     def test_set_rule(self, mock_get_db):
@@ -100,27 +100,27 @@ class TestAdminGodLayer:
         # Test setting a rule without Firestore
         admin_god_layer = AdminGodLayer()
         admin_god_layer.set_rule("test_key", "test_value")
-        assert admin_god_layer.get_rule("test_key") == "test_value"  # noqa: S101
+        assert admin_god_layer.get_rule("test_key") == "test_value"
 
     def test_is_admin_action_allowed_whitelist(self):
         # Test is_admin_action_allowed with a whitelisted action
         admin_god_layer = AdminGodLayer()
         allowed = admin_god_layer.is_admin_action_allowed("health")
-        assert allowed is True  # noqa: S101
+        assert allowed is True
 
     def test_is_admin_action_allowed_not_whitelist(self):
         # Test is_admin_action_allowed with a non-whitelisted action
         admin_god_layer = AdminGodLayer()
         admin_god_layer.set_rule("admin_authorized", "false")
         allowed = admin_god_layer.is_admin_action_allowed("not_whitelist")
-        assert allowed is False  # noqa: S101
+        assert allowed is False
 
     def test_is_admin_action_allowed_admin_authorized(self):
         # Test is_admin_action_allowed with admin_authorized set to true
         admin_god_layer = AdminGodLayer()
         admin_god_layer.set_rule("admin_authorized", "true")
         allowed = admin_god_layer.is_admin_action_allowed("not_whitelist")
-        assert allowed is True  # noqa: S101
+        assert allowed is True
 
     def test_enforce_allowed(self):
         # Test enforce with an allowed action
@@ -219,8 +219,8 @@ class TestAdminGodLayer:
     def test_init_db_empty_db_path(self):
         # Test initializing AdminGodLayer with an empty db_path
         admin_god_layer = AdminGodLayer(db_path="")
-        assert admin_god_layer.collection_name == "constitutional_rules"  # noqa: S101
-        assert admin_god_layer._db is None  # noqa: S101
+        assert admin_god_layer.collection_name == "constitutional_rules"
+        assert admin_god_layer._db is None
 
     def test_get_rule_empty_key(self):
         # Test getting a rule with an empty key
@@ -228,14 +228,14 @@ class TestAdminGodLayer:
         os.close(fd)
         admin_god_layer = AdminGodLayer(db_path=path)
         rule = admin_god_layer.get_rule("")
-        assert rule is None  # noqa: S101
+        assert rule is None
         os.remove(path)
 
     def test_set_rule_empty_key(self):
         # Test setting a rule with an empty key
         admin_god_layer = AdminGodLayer()
         admin_god_layer.set_rule("", "test_value")
-        assert admin_god_layer.get_rule("") == "test_value"  # noqa: S101
+        assert admin_god_layer.get_rule("") == "test_value"
 
     def test_set_rule_none_value(self):
         # Test setting a rule with a None value
@@ -255,7 +255,7 @@ class TestAdminGodLayer:
         # Test is_admin_action_allowed with a None action
         admin_god_layer = AdminGodLayer()
         allowed = admin_god_layer.is_admin_action_allowed(None)
-        assert allowed is False  # noqa: S101
+        assert allowed is False
 
     def test_init_db_large_db_path(self):
         # Test initializing AdminGodLayer with a large db_path
@@ -270,11 +270,11 @@ class TestAdminGodLayer:
         os.close(fd)
         admin_god_layer = AdminGodLayer(db_path=path)
         rule = admin_god_layer.get_rule("a" * 1000)
-        assert rule is None  # noqa: S101
+        assert rule is None
         os.remove(path)
 
     def test_set_rule_large_key(self):
         # Test setting a rule with a large key
         admin_god_layer = AdminGodLayer()
         admin_god_layer.set_rule("a" * 1000, "test_value")
-        assert admin_god_layer.get_rule("a" * 1000) == "test_value"  # noqa: S101
+        assert admin_god_layer.get_rule("a" * 1000) == "test_value"

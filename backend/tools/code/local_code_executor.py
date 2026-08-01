@@ -30,7 +30,7 @@ class LocalCodeExecutor:
                         if "stderr" in res and "error" not in res:
                             res["error"] = res["stderr"]
                         return res
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"🐳 Docker execution failure: {exc}")
 
         if env == "production" and not allow_fallback:

@@ -94,7 +94,7 @@ class ComprehensiveHealthChecker:
             logger.error(f"Application health check failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Application health check failed: {str(e)}",
+                message=f"Application health check failed: {e!s}",
                 details={"error": str(e)},
             )
 
@@ -138,7 +138,7 @@ class ComprehensiveHealthChecker:
             logger.error(f"Redis health check failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Redis health check failed: {str(e)}",
+                message=f"Redis health check failed: {e!s}",
                 details={"error": str(e), "connected": False},
             )
 
@@ -164,7 +164,7 @@ class ComprehensiveHealthChecker:
             logger.error(f"Database health check failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Database health check failed: {str(e)}",
+                message=f"Database health check failed: {e!s}",
                 details={"error": str(e), "connected": False},
             )
 
@@ -203,7 +203,7 @@ class ComprehensiveHealthChecker:
             logger.error(f"External services health check failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"External services health check failed: {str(e)}",
+                message=f"External services health check failed: {e!s}",
                 details={"error": str(e)},
             )
 
@@ -251,7 +251,7 @@ class ComprehensiveHealthChecker:
             logger.error(f"Memory health check failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Memory health check failed: {str(e)}",
+                message=f"Memory health check failed: {e!s}",
                 details={"error": str(e)},
             )
 
@@ -299,7 +299,7 @@ class ComprehensiveHealthChecker:
             logger.error(f"Disk health check failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Disk health check failed: {str(e)}",
+                message=f"Disk health check failed: {e!s}",
                 details={"error": str(e)},
             )
 
@@ -336,7 +336,7 @@ class ComprehensiveHealthChecker:
                 # Handle exception during check
                 checks[check_names[i]] = HealthCheckResult(
                     status=HealthStatus.UNHEALTHY,
-                    message=f"Health check failed with exception: {str(result)}",
+                    message=f"Health check failed with exception: {result!s}",
                     details={"error": str(result)},
                 ).to_dict()
                 overall_status = HealthStatus.UNHEALTHY

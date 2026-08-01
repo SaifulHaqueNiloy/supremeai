@@ -27,7 +27,7 @@ def get_sso_service():
             from tools.sso_integrator import SSOIntegrator
 
             _sso_instance = SSOIntegrator()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"SSOIntegrator unavailable; SSO features disabled: {exc}")
             _sso_error = exc
     return _sso_instance
@@ -162,7 +162,7 @@ async def oidc_logout(provider: str):
             tenant=getattr(settings, "oidc_tenant", ""),
         )
         logout_url = base or ""
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         # বল মনতবয: logout URL তরত বযরথ হল খল string ফরত যত; নরব সযলপর বদল
         # ডবগ লগ যকত কর হল যত OIDC কনফগ সমসয বঝ যয়
         logger.debug(f"Failed to build OIDC logout URL for provider {provider}: {exc}")
