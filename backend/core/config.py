@@ -1038,7 +1038,15 @@ class Settings(BaseSettings):
         if self.env == "production":
             if hasattr(self, "_jwt_secret_cache"):
                 delattr(self, "_jwt_secret_cache")
-            _ = self.jwt_secret
+            
+            # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট অবশ্যই থাকতে হবে এবং অন্তত ৬৪ বাইট দীর্ঘ হতে হবে — অন্যথায় সিকিউরিটি ক্র্যাশ
+            secret = (
+                os.getenv("SUPREMEAI_JWT_SECRET")
+                or os.getenv("JWT_SECRET")
+                or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            )
+            if not secret or len(secret) < 64:
+                raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
 
             # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
             if not self.user_cors_origins and not self.admin_cors_origins:
