@@ -44,7 +44,7 @@ for fpath, finfo in files.items():
         norm = normalize_path(fpath)
         zero_coverage.append((finfo["num_statements"], norm))
 zero_coverage.sort(reverse=True)
-for stmts, fpath in zero_coverage[:30]:
+for _stmts, _fpath in zero_coverage[:30]:
     pass
 
 low_coverage = []
@@ -55,7 +55,7 @@ for fpath, finfo in files.items():
             norm = normalize_path(fpath)
             low_coverage.append((pct, finfo["num_statements"], finfo["covered_lines"], norm))
 low_coverage.sort(key=lambda x: (-x[1], x[0]))  # largest first, then lowest %
-for pct, stmts, covered, fpath in low_coverage[:30]:
+for _pct, _stmts, _covered, _fpath in low_coverage[:30]:
     pass
 
 needs_work = []
@@ -67,5 +67,5 @@ for fpath, finfo in files.items():
             missing = finfo["num_statements"] - finfo["covered_lines"]
             needs_work.append((missing, pct, finfo["num_statements"], finfo["covered_lines"], norm))
 needs_work.sort(reverse=True)
-for missing, pct, stmts, covered, fpath in needs_work[:30]:
+for _missing, _pct, _stmts, _covered, _fpath in needs_work[:30]:
     pass
