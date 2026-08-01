@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -77,24 +78,26 @@ class TestTenantUsageDataclass:
 
 class TestUsageReporterInit:
     def test_defaults(self):
-        reporter = UsageReporter()
-        assert reporter.database_url == ""
-        assert reporter.project_id == ""
-        assert reporter.redis_url == ""
-        assert reporter.slack_webhook == ""
-        assert reporter.db_session is None
-        assert reporter.firestore_client is None
-        assert reporter._http is None
+        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "REDIS_URL": "", "SLACK_WEBHOOK_URL": ""}):
+            reporter = UsageReporter()
+            assert reporter.database_url == ""
+            assert reporter.project_id == ""
+            assert reporter.redis_url == ""
+            assert reporter.slack_webhook == ""
+            assert reporter.db_session is None
+            assert reporter.firestore_client is None
+            assert reporter._http is None
 
 
 class TestUsageReporterContextManager:
     @pytest.mark.asyncio
     async def test_aenter_without_services(self):
-        reporter = UsageReporter()
-        async with reporter:
-            assert reporter.firestore_client is None
-            assert reporter.db_session is None
-            assert reporter._http is None
+        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "REDIS_URL": "", "SLACK_WEBHOOK_URL": ""}):
+            reporter = UsageReporter()
+            async with reporter:
+                assert reporter.firestore_client is None
+                assert reporter.db_session is None
+                assert reporter._http is None
 
     @pytest.mark.asyncio
     async def test_aenter_with_firestore(self, mock_firestore):
