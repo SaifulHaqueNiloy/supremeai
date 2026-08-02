@@ -646,15 +646,6 @@ class Settings(BaseSettings):
             ]
 
         # বাংলা মন্তব্য: টেস্ট ও CI এনভায়রনমেন্ট সনাক্তকরণ
-        is_test_or_ci = (
-            "pytest" in sys.modules
-            or os.getenv("CI", "").lower() in ("true", "1")
-            or os.getenv("GITHUB_ACTIONS", "").lower() in ("true", "1")
-            or os.getenv("ALLOW_TEST_ORIGIN_BYPASS", "").lower() in ("true", "1")
-            or getattr(self, "allow_test_origin_bypass", False)
-            or self.env in ("test", "testing", "local")
-        )
-
         if self.env in ("production", "staging"):
             # Explicitly define allowed production domains
             allowed_production_origins = {
