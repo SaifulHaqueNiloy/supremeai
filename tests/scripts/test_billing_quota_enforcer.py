@@ -97,13 +97,13 @@ class TestQuotaEnforcerContextManager:
 
     @pytest.mark.asyncio
     async def test_aexit_closes_resources(self, mock_db_session, mock_redis):
-        enforcer = QuotaEnforcer()
-        enforcer.db_session = mock_db_session
-        enforcer._redis_lock = mock_redis
-        async with enforcer:
-            pass
-        mock_db_session.close.assert_called_once()
-        mock_redis.aclose.assert_called_once()
+        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "REDIS_URL": "", "SLACK_WEBHOOK_URL": ""}):
+            enforcer = QuotaEnforcer()
+            enforcer.db_session = mock_db_session
+            enforcer._redis_lock = mock_redis
+            await enforcer.__aexit__(None, None, None)
+            mock_db_session.close.assert_called_once()
+            mock_redis.aclose.assert_called_once()
 
 
 class TestQuotaEnforcerPricingTiers:
