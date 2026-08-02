@@ -14,9 +14,10 @@ from core.security.secret_vault import (
 @pytest.fixture(autouse=True)
 def reset_vault():
     reset_secret_vault()
-    yield
-    return
-    reset_secret_vault()
+    try:
+        yield
+    finally:
+        reset_secret_vault()
 
 
 class TestCacheEntry:

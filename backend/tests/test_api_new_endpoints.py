@@ -16,9 +16,10 @@ import pytest
 @pytest.fixture(autouse=True)
 def setup_token():
     os.environ["SUPREMEAI_API_TOKEN"] = "test-token"
-    yield
-    return
-    os.environ.pop("SUPREMEAI_API_TOKEN", None)
+    try:
+        yield
+    finally:
+        os.environ.pop("SUPREMEAI_API_TOKEN", None)
 
 
 @patch("tools.social.email_agent.imaplib.IMAP4_SSL")

@@ -22,9 +22,10 @@ def reset_globals():
     browser_mod.RECENT_ACTIVITIES.clear()
     browser_mod.TASKS.clear()
     browser_mod.FINDINGS.clear()
-    yield
-    return
-    os.environ.pop("SUPREMEAI_API_TOKEN", None)
+    try:
+        yield
+    finally:
+        os.environ.pop("SUPREMEAI_API_TOKEN", None)
 
 
 def test_secure_credential_store_encrypt_decrypt(monkeypatch):
