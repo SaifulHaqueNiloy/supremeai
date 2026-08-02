@@ -57,9 +57,9 @@ def run_server() -> None:
     বাংলা: কনফিগ-ড্রিভেন সেটিংস দিয়ে Uvicorn সার্ভার বুট।
     """
     port = int(os.getenv("PORT", str(settings.port)))
-    is_local = settings.env == "local"
+    host = os.getenv("HOST") or ("0.0.0.0" if os.getenv("RENDER") or os.getenv("PORT") or not is_local else settings.host)
     uvicorn_kwargs: dict = {
-        "host": settings.host,
+        "host": host,
         "port": port,
         "log_level": os.getenv("UVICORN_LOG_LEVEL", "info"),
         "access_log": os.getenv("UVICORN_ACCESS_LOG", "true").lower() == "true",
