@@ -30,7 +30,12 @@ class AdminGodLayer:
                 db_path = "data/constitutional_rules.db"
 
         self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        except PermissionError as e:
+            logger.warning(f"Permission denied creating directory for {self.db_path}: {e}. Falling back to /tmp/data.")
+            self.db_path = Path("/tmp/data") / self.db_path.name
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.sqlite_lock = threading.Lock()
 
         self.collection_name = "constitutional_rules"
