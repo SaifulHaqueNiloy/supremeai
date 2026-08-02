@@ -663,28 +663,17 @@ class Settings(BaseSettings):
                 "https://admin.supremeai.com",
             }
 
-            # Validate against allowed origins - allow localhost for development even in production mode
+            # Validate against strictly allowed origins — production mode enforces explicit whitelist only
             validated_origins = []
             for origin in origins:
-                if (
-                    origin in allowed_production_origins
-                    or "localhost" in origin
-                    or "127.0.0.1" in origin
-                    or is_test_or_ci
-                ):
+                if origin in allowed_production_origins:
                     validated_origins.append(origin)
                 else:
                     logger.warning(f"Disallowed CORS origin: {origin}")
 
             if not validated_origins:
-                if is_test_or_ci:
-                    return (
-                        origins
-                        if origins
-                        else ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
-                    )
                 raise RuntimeError(
-                    "No valid CORS origins provided. " "Must be one of: " + ", ".join(allowed_production_origins)
+                    "No valid CORS origins provided. Must be one of: " + ", ".join(allowed_production_origins)
                 )
 
             return validated_origins
