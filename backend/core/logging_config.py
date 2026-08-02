@@ -62,14 +62,20 @@ class LoggingConfig:
 
         # Add file handler if needed (with rotation)
         if settings.env in ["production", "staging"]:
-            logger.add(
-                "logs/app_{time}.log",
-                rotation="100 MB",
-                retention="10 days",
-                compression="zip",
-                serialize=True,
-                level="INFO",
-            )
+            try:
+                log_dir = Path(os.getenv("LOG_DIR", "/tmp/logs" if os.getenv("RENDER") else "logs"))
+                log_dir.mkdir(parents=True, exist_ok=True)
+                log_file = log_dir / "app_{time}.log"
+                logger.add(
+                    str(log_file),
+                    rotation="100 MB",
+                    retention="10 days",
+                    compression="zip",
+                    serialize=True,
+                    level="INFO",
+                )
+            except Exception as exc:
+                sys.stderr.write(f"⚠️ Failed to initialize file logger sink: {exc}. Continuing with stdout logging.\n")
 
     def _json_format(self, record: dict) -> str:
         """Custom JSON formatter with correlation ID."""
