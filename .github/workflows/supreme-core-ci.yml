@@ -409,17 +409,19 @@ jobs:
         id: safety_guard
         working-directory: backend
         run: |
-          poetry run python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1 || true
+          echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
+          # বাংলা মন্তব্য: safety_guard.py রান করে ক্রিটিক্যাল ফাইলের অনুমোদন ও রিপোর্ট যাচাই করা হচ্ছে
+          poetry run python ../scripts/safety_guard.py --report-json > safety-report.json 2>&1
 
           # Parse and summarize safety violations
           if [ -f safety-report.json ]; then
-            VIOLATIONS=$(grep -c "VIOLATION" safety-report.json || echo "0")
-            if [ "$VIOLATIONS" -gt 0 ]; then
-              echo "❌ Found $VIOLATIONS Safety Guard violations — blocking merge!" >> $GITHUB_STEP_SUMMARY
+            PENDING=$(grep -o '"pending_approvals": [1-9][0-9]*' safety-report.json | awk '{print $2}' || echo "0")
+            if [ -n "$PENDING" ] && [ "$PENDING" -gt 0 ]; then
+              echo "❌ Found $PENDING pending critical file approvals — blocking merge/deploy!" >> $GITHUB_STEP_SUMMARY
               cat safety-report.json >> $GITHUB_STEP_SUMMARY
               exit 1
             fi
-            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে — কোনো ভাইওলেশন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
+            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে — কোনো আনঅ্যাপ্রুভড সেফটি ভাইওলেশন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ সেফটি গার্ড রিপোর্ট তৈরি হয়নি" >> $GITHUB_STEP_SUMMARY
           fi
