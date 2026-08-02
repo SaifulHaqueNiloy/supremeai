@@ -35,6 +35,30 @@ if str(backend_root) not in sys.path:
 # Fixtures shared across root tests/
 # ---------------------------------------------------------------------------
 
+
+# বাংলা মন্তব্য: BUG FIX - core/security/secret_vault.py-এর secret_vault singleton
+# প্রতিটা secret key প্রথমবার fetch হওয়ার সময় নিজের ভেতরে cache করে রাখে এবং তারপর
+# আর কখনো os.environ চেক করে না। ফলে test_core_config.py/test_core_config_comprehensive.py-র
+# `with patch.dict(os.environ, {...}): settings = Settings()` প্যাটার্ন ব্যর্থ হতো যদি অন্য
+# কোনো টেস্ট আগে থেকেই সেই একই key (যেমন GEMINI_API_KEY) fetch করে খালি/ভিন্ন মান cache
+# করে রাখত -- পরবর্তী টেস্টের env var override-টা silently ignore হয়ে যেত। secret_vault
+# আগে থেকেই invalidate_cache() মেথড এক্সপোজ করে, শুধু কোথাও কল করা হতো না।
+@pytest.fixture(autouse=True)
+def _reset_secret_vault_cache():
+    def _invalidate_all():
+        for module_name in ("core.config", "backend.core.config"):
+            try:
+                module = sys.modules.get(module_name)
+                if module is not None and hasattr(module, "secret_vault"):
+                    module.secret_vault.invalidate_cache()
+            except Exception:
+                pass
+
+    _invalidate_all()
+    yield
+    _invalidate_all()
+
+
 @pytest.fixture
 def mock_docker_sandbox():
     """Mock DockerSandbox for testing without actual container runtime."""
