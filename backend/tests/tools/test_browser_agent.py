@@ -15,10 +15,11 @@ def reset_global_state():
 
     pm._global_browser = None
     pm._playwright_runner = None
-    yield
-    return
-    pm._global_browser = None
-    pm._playwright_runner = None
+    try:
+        yield
+    finally:
+        pm._global_browser = None
+        pm._playwright_runner = None
 
 
 # pytest-asyncio ব্যবহারের জন্য এই ফাইলএর সমস্ত টেস্টকে async হিসেবে চিহ্নিত করা হলো

@@ -25,13 +25,18 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
 
     @property
     def allowed_origins(self) -> set[str]:
-        configured = set(settings.cors_origins) if settings.cors_origins else set()
+        cors_origins = settings.cors_origins
+        configured = set(cors_origins) if cors_origins else set()
         return configured.union(self._default_origins)
 
     async def dispatch(self, request: Request, call_next):
         _env = os.getenv("ENV", "development").lower()
         origin = request.headers.get("Origin")
-        allowed = self.allowed_origins
+        # বাংলা মন্তব্য: allowed_origins (settings.cors_origins সহ) শুধু তখনই কম্পিউট করা হয়
+        # যখন request-এ আসলে Origin হেডার আছে -- না হলে (server-to-server call, health
+        # check, same-origin request) CORS_ORIGINS মিসকনফিগার/আনকনফিগারড থাকলেও
+        # অকারণে প্রতিটা request crash করবে না।
+        allowed = self.allowed_origins if origin else set()
 
         # বাংলা মন্তব্য: OPTIONS preflight রিকোয়েস্ট সরাসরি 200 OK রেসপন্স ও CORS হেডার ফেরত পাঠাবে
         if request.method == "OPTIONS":
