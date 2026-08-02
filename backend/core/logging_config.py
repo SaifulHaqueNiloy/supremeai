@@ -13,9 +13,11 @@ Critical Security Note: সমস্ত লগ এখন JSON ফরম্যা
 """
 
 import json
+import os
 import sys
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 from loguru import logger
 
@@ -63,7 +65,7 @@ class LoggingConfig:
         # Add file handler if needed (with rotation)
         if settings.env in ["production", "staging"]:
             try:
-                log_dir = Path(os.getenv("LOG_DIR", "/tmp/logs" if os.getenv("RENDER") else "logs"))
+                log_dir = Path(os.getenv("LOG_DIR", "/tmp/logs" if os.getenv("RENDER") else "logs"))  # noqa: S108
                 log_dir.mkdir(parents=True, exist_ok=True)
                 log_file = log_dir / "app_{time}.log"
                 logger.add(
