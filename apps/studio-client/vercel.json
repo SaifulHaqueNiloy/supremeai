@@ -1,68 +1,10 @@
 {
-  "version": 2,
-  "name": "supremeai-studio-client",
-  "framework": "vite",
-  "outputDirectory": "dist",
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ],
+  "outputDirectory": "dist-user",
+  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/preferences/:user_id/stream",
-      "destination": "https://supremeai-backend.onrender.com/api/preferences/:user_id/stream"
-    },
-    {
-      "source": "/logs/stream",
-      "destination": "https://supremeai-backend.onrender.com/logs/stream"
-    },
-    {
-      "source": "/default/stream",
-      "destination": "https://supremeai-backend.onrender.com/default/stream"
-    },
-    {
-      "source": "/:user_id/stream",
-      "destination": "https://supremeai-backend.onrender.com/:user_id/stream"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "https://supremeai-backend.onrender.com/api/$1"
-    },
-    {
-      "source": "/admin-api/(.*)",
-      "destination": "https://supremeai-backend.onrender.com/admin-api/$1"
-    },
-    {
-      "source": "/ws/(.*)",
-      "destination": "https://supremeai-backend.onrender.com/ws/$1"
-    },
-    {
-      "source": "/telemetry/(.*)",
-      "destination": "https://supremeai-backend.onrender.com/telemetry/$1"
+      "source": "/api/:path*",
+      "destination": "https://supremeai-backend.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
