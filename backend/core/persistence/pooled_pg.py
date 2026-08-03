@@ -26,8 +26,12 @@ import threading
 from contextlib import contextmanager
 from typing import Any
 
-import psycopg2
-import psycopg2.pool
+# psycopg2 মডিউল না থাকলে যেন সার্ভিস ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট ফলব্যাক ব্যবহার করা হলো।
+try:
+    import psycopg2
+    import psycopg2.pool
+except ImportError:
+    psycopg2 = None
 from loguru import logger
 
 from core.config import settings
@@ -50,8 +54,10 @@ def _resolve_dsn() -> str | None:
     return dsn
 
 
-def _get_pool() -> psycopg2.pool.ThreadedConnectionPool | None:
+def _get_pool() -> Any:
     global _pool, _pool_unavailable
+    if psycopg2 is None:
+        return None
     if _pool is not None:
         return _pool
     if _pool_unavailable:
