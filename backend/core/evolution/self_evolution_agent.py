@@ -184,7 +184,7 @@ class SelfEvolutionAgent:
         session: AsyncSession,
         skill_name: str,
         generated_code: str,
-        metadata: dict = None,
+        metadata: dict | None = None,
     ) -> bool:
         """
         Zero-Gap Pipeline for evaluating and integrating AI-generated code.

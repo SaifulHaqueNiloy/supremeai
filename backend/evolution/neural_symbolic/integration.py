@@ -334,7 +334,7 @@ class NeuralSymbolicIntegrator:
 
         return symbol_indices, operation_indices
 
-    def neural_symbolic_reasoning(self, expression: str, variables: dict[str, float] = None) -> dict[str, Any]:
+    def neural_symbolic_reasoning(self, expression: str, variables: dict[str, float] | None = None) -> dict[str, Any]:
         """
         Perform reasoning using both neural and symbolic approaches.
 
@@ -408,7 +408,7 @@ class NeuralSymbolicIntegrator:
             # If feedback indicates error, adjust approach
             logger.debug("Adjusting reasoning strategy based on negative feedback")
 
-    def solve_mathematical_problem(self, problem_statement: str, constraints: list[str] = None) -> dict[str, Any]:
+    def solve_mathematical_problem(self, problem_statement: str, constraints: list[str] | None = None) -> dict[str, Any]:
         """
         Solve a mathematical problem using neural-symbolic integration.
 

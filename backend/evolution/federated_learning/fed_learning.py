@@ -122,7 +122,7 @@ class DifferentialPrivacy:
 class SecureAggregator:
     """Implements secure aggregation for federated learning."""
 
-    def __init__(self, num_clients: int, threshold: int = None):
+    def __init__(self, num_clients: int, threshold: int | None = None):
         self.num_clients = num_clients
         self.threshold = threshold or (num_clients // 2 + 1)  # Majority
         self.client_keys = {}
@@ -229,8 +229,8 @@ class LocalClient:
         correct_predictions = 0
         total_samples = 0
 
-        for epoch in range(self.config.local_epochs):
-            for batch_idx, (data, target) in enumerate(self.data_loader):
+        for _epoch in range(self.config.local_epochs):
+            for _batch_idx, (data, target) in enumerate(self.data_loader):
                 data, target = (
                     data.to(next(self.local_model.parameters()).device),
                     target.to(next(self.local_model.parameters()).device),

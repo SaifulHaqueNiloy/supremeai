@@ -29,7 +29,7 @@ class MemoryWindowRecord:
 
 
 class SlidingWindowMemory:
-    def __init__(self, config: SlidingWindowConfig = None, db_path: str = None):
+    def __init__(self, config: SlidingWindowConfig = None, db_path: str | None = None):
         self.config = config or SlidingWindowConfig()
         if db_path is None:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -314,7 +314,7 @@ class SlidingWindowMemory:
         total = 0
         if query:
             first, rest = chunks[0], chunks[1:]
-            chunks = [first] + sorted(rest, key=len)
+            chunks = [first, *sorted(rest, key=len)]
         for part in chunks:
             tc = self._token_count(part)
             if total + tc <= budget:

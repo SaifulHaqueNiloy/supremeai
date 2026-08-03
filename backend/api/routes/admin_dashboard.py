@@ -919,7 +919,7 @@ async def get_events(limit: int = Query(50, ge=1, le=200)):
 
 
 @router.get("/reports")
-async def list_reports(report_name: str = None):
+async def list_reports(report_name: str | None = None):
     # বাংলা মন্তব্য: ডিরেক্টরি থেকে দৈনিক স্ট্যান্ডআপ রিপোর্টের মতো ফাইলগুলো স্ট্যান্ডআপ রিপোর্টের মতো ফাইলগুলো তালিকাভুক্ত বা নির্দিষ্ট রিপোর্ট রিট্রিভ করার এন্ডপয়েন্ট
     reports_dir = "data/reports"
     if not os.path.isdir(reports_dir):

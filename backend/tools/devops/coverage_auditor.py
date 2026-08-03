@@ -2,7 +2,7 @@ import json
 import os
 from dataclasses import dataclass
 
-import defusedxml.ElementTree as ET  # noqa: N817 -- standard idiom (mirrors stdlib xml.etree.ElementTree as ET)
+import defusedxml.ElementTree as ET  # -- standard idiom (mirrors stdlib xml.etree.ElementTree as ET)
 from loguru import logger
 
 

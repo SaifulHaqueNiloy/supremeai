@@ -1,7 +1,7 @@
 from typing import Any, ClassVar
 from urllib.parse import parse_qs, urlparse
 
-import defusedxml.ElementTree as ET  # noqa: N817 -- standard idiom (mirrors stdlib xml.etree.ElementTree as ET)
+import defusedxml.ElementTree as ET  # -- standard idiom (mirrors stdlib xml.etree.ElementTree as ET)
 from loguru import logger
 
 try:

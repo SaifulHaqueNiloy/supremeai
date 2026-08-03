@@ -97,7 +97,7 @@ class UniversalRulesEngine:
         "CIR-001",
     ]
 
-    def __init__(self, rules_path: str = None):
+    def __init__(self, rules_path: str | None = None):
         if rules_path is None:
             # Default location - এজেন্ট রুলসের ডিফল্ট লোকেশন
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

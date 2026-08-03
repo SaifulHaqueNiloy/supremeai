@@ -65,7 +65,7 @@ class LoggingConfig:
         # Add file handler if needed (with rotation)
         if settings.env in ["production", "staging"]:
             try:
-                log_dir = Path(os.getenv("LOG_DIR", "/tmp/logs" if os.getenv("RENDER") else "logs"))  # noqa: S108
+                log_dir = Path(os.getenv("LOG_DIR", "/tmp/logs" if os.getenv("RENDER") else "logs"))
                 log_dir.mkdir(parents=True, exist_ok=True)
                 log_file = log_dir / "app_{time}.log"
                 logger.add(

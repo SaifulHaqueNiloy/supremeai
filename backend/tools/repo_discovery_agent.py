@@ -9,7 +9,7 @@ class RepoDiscoveryAgent:
     এখন এটি সত্যিকারের GitHub REST API ব্যবহার করে রিকোয়ারমেন্ট অনুযায়ী রিপোজিটরি সার্চ করে।
     """
 
-    def __init__(self, token: str = None):
+    def __init__(self, token: str | None = None):
         self.token = token or ""
         if not self.token:
             logger.warning("RepoDiscoveryAgent initialized without a token; real API operations disabled.")

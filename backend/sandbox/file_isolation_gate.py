@@ -15,7 +15,7 @@ from sandbox.docker_sandbox import DockerSandbox  # আপনার এক্স
 logger = logging.getLogger("supremeai.sandbox.file_gate")
 
 # আইসোলেটেড স্টেজিং এরিয়ার রুট পাথ ডিফাইন
-SECURE_STAGING_DIR = Path("/tmp/supremeai_isolated_stage").resolve()  # noqa: S108
+SECURE_STAGING_DIR = Path("/tmp/supremeai_isolated_stage").resolve()
 
 
 class FileIsolationGate:

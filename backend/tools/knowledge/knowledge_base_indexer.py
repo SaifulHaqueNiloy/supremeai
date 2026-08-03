@@ -261,7 +261,7 @@ class KnowledgeBaseIndexer:
             return {"indexed": 0, "reason": "No data provided"}
 
         docs: list[dict[str, Any]] = []
-        for i, item in enumerate(data):
+        for _i, item in enumerate(data):
             text = item.get("text", "")
             if not text:
                 continue

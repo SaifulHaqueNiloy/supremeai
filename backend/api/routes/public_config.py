@@ -8,8 +8,8 @@ router = APIRouter(
 
 
 class PublicConfigResponse(BaseModel):
-    adminEmail: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
-    maxConcurrency: int  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    adminEmail: str  # -- camelCase required to match frontend JSON API contract
+    maxConcurrency: int  # -- camelCase required to match frontend JSON API contract
     features: dict[str, bool]
 
 

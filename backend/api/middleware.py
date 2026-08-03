@@ -132,12 +132,12 @@ class ChaosInjectorMiddleware(BaseHTTPMiddleware):
         if not self.chaos_enabled:
             return await call_next(request)
 
-        if random.random() < self.latency_spike_chance:  # noqa: S311
-            delay = random.uniform(0.5, self.max_latency_spike)  # noqa: S311
+        if random.random() < self.latency_spike_chance:
+            delay = random.uniform(0.5, self.max_latency_spike)
             logger.warning(f"[CHAOS ENGINE] Injecting artificial network lag: {delay:.2f}s on {request.url.path}")
             await asyncio.sleep(delay)
 
-        if random.random() < self.packet_drop_rate:  # noqa: S311
+        if random.random() < self.packet_drop_rate:
             logger.critical(f"[CHAOS ENGINE] Simulated Packet Drop! Severing connection for {request.url.path}")
             return JSONResponse(
                 status_code=504,

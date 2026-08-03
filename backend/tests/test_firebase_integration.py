@@ -106,7 +106,7 @@ def test_existing_gcp_roundtrip_coverage():
     scripts_dir = os.path.join(repo_root, "scripts")
     paths = [".", repo_root, scripts_dir]
     existing = env.get("PYTHONPATH", "")
-    env["PYTHONPATH"] = os.pathsep.join([p for p in ([existing] + paths) if p])
+    env["PYTHONPATH"] = os.pathsep.join([p for p in ([existing, *paths]) if p])
     # Ensure subprocess pytest does not inherit any global pytest addopts that enable
     # coverage enforcement (this can cause isolated roundtrip runs to fail due to
     # overall project coverage thresholds).

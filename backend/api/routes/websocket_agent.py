@@ -168,7 +168,7 @@ async def websocket_chat_endpoint(
                         f"Work Type: {user_prefs.get('work_type', 'default')}."
                     )
 
-                messages_payload = [{"role": "system", "content": system_instructions}] + chat_history
+                messages_payload = [{"role": "system", "content": system_instructions}, *chat_history]
 
                 response_stream = await llm_gateway.acompletion(prompt=messages_payload, task_type="chat", stream=True)
 

@@ -34,7 +34,7 @@ class BrowserAgent:
         self.scraper = WebScraper()
         logger.info("Initialized BrowserAgent")
 
-    async def execute_recipe(self, steps: list, initial_url: str = None) -> dict:
+    async def execute_recipe(self, steps: list, initial_url: str | None = None) -> dict:
         """
         ডাটাবেজ বা স্কিল ম্যানেজার থেকে আসা JSON রেসিপি অ্যারে ডাইনামিকালি ইন্টারপ্রিট করবে।
         """

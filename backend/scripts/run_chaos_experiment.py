@@ -50,7 +50,7 @@ async def run_experiment():
     # Scenario 2: LLM Provider Failure & Circuit Breaker Trip
     logger.info("⚡ Testing Scenario 2: LLM Provider Outage & Circuit Breaker Trip...")
     failures = 0
-    for i in range(3):
+    for _i in range(3):
         try:
             os.environ["CHAOS_FORCE_FAULT"] = "llm_down"
             await engine.inject_fault()
