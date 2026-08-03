@@ -31,6 +31,12 @@ try:
     from bs4 import BeautifulSoup
 except ImportError:
     BeautifulSoup = None
+# requests প্যাকেজটি ইনস্টল না থাকলেও যেন httpx ব্যবহার করে URL চেক করা যায়, সে জন্য সেফ ইমপোর্ট ফলব্যাক রাখা হলো।
+try:
+    import requests
+except ImportError:
+    import httpx as requests
+
 import logging
 
 logger = logging.getLogger(__name__)
