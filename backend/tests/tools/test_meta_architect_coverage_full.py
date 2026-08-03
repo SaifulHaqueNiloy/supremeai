@@ -34,8 +34,8 @@ async def test_meta_architect_analyze_codebase_with_files_and_strategic_docs():
         result = await architect.analyze_codebase(root_dir=tmpdir, strategic_docs=[str(doc_file)])
 
         assert result["metrics"]["total_files"] >= 1
-        assert "python" in result["metrics"]["languages"]
-        assert len(result["strategic_gaps"]) >= 1
+        assert "py" in result["metrics"]["languages"]
+        assert len(result["strategic_gaps_context"]) >= 1
 
 
 @pytest.mark.asyncio
