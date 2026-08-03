@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import os
 import re
@@ -234,6 +235,7 @@ class AsyncTaskManager:
             os.getenv("ENV", "production") in ("dev", "test", "local") or "pytest" in sys.modules
         )
 
+    @with_error_bus("_get_queue")
     def _get_queue(self):
         # বাংলা মন্তব্য: টেস্ট ও লোকাল রান টাইমে ফলব্যাক নিশ্চিত করার জন্য সরাসরি None রিটার্ন করা হলো।
         if self._allow_memory_fallback:

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import os
 
 from cryptography.fernet import Fernet
@@ -79,6 +80,7 @@ if not _raw_keys:
 _vault = RotatingFernet(_raw_keys)
 
 
+@with_error_bus("encrypt_token")
 def encrypt_token(plain_text: str) -> str:
     """Encrypts a token using Fernet via central RotatingFernet."""
 
@@ -101,6 +103,7 @@ def encrypt_token(plain_text: str) -> str:
         raise RuntimeError("Token encryption failed.") from e
 
 
+@with_error_bus("decrypt_token")
 def decrypt_token(cipher_text: str, ttl: int | None = None) -> str:
     """Decrypts a token using Fernet via central RotatingFernet."""
 

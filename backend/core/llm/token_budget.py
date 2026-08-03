@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """
@@ -205,6 +206,7 @@ class TokenBudgetManager:
         """Estimate token count for *text*."""
         return estimate_tokens(text)
 
+    @with_error_bus("prepare_prompt")
     def prepare_prompt(
         self,
         prompt: str,

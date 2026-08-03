@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import time
 from typing import Any
 
@@ -77,6 +78,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             key_hash,
         )
 
+    @with_error_bus("dispatch")
     async def dispatch(self, request: Request, call_next: Any) -> JSONResponse:
         # বাংলা মন্তব্য: public path-এ API key lookup DB call না করে সরাসরি skip করা হচ্ছে।
         # এটি health check, docs, auth endpoint-এ অযথা DB query এড়ায়।

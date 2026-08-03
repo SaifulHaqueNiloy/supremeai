@@ -5,6 +5,7 @@
 # Semantic cache, fallback chain, cost guard সব অক্ষুণ্ণ।
 # CancelledError সবসময় re-raise।
 # import litellm lazy করা হলো — cold start কমাতে।
+from core.error_bus import with_error_bus
 import asyncio
 import json
 import os
@@ -157,6 +158,7 @@ class LLMGateway:
         except ImportError:
             pass
 
+    @with_error_bus("_load_routing_policy")
     def _load_routing_policy(self) -> dict[str, Any]:
         """বাংলা মন্তব্ব: Routing policy JSON load — file not found = safe default।"""
         try:
@@ -220,6 +222,7 @@ class LLMGateway:
             except Exception as exc:
                 logger.warning(f"[LLMGateway] Success callback error: {exc}")
 
+        @with_error_bus("failure_callback")
         def failure_callback(kwargs, exception_obj, start_time, end_time):
             model = kwargs.get("model", "unknown")
             try:
@@ -364,6 +367,7 @@ class LLMGateway:
             "cost": 0.0,
         }
 
+    @with_error_bus("acompletion")
     async def acompletion(
         self,
         prompt: str | list[dict[str, Any]] | None = None,

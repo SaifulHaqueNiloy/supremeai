@@ -8,6 +8,7 @@ Fixes Applied (Autonomous Architecture Audit):
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from fastapi import HTTPException, status
 from loguru import logger
 
@@ -76,6 +77,7 @@ class TenantAwareFirestore:
 
         return MockFirestore()
 
+    @with_error_bus("_resolve_db_client")
     def _resolve_db_client(self):
         """Try to resolve a Firestore client — handling the case where google.cloud isn't installed."""
         try:

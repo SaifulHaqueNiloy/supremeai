@@ -7,6 +7,7 @@ No router is loaded silently; all failures are captured and reported.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import importlib
 import logging
 
@@ -18,6 +19,7 @@ from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 logger = logging.getLogger("SupremeAI.API")
 
 
+@with_error_bus("register_router")
 def register_router(
     app: FastAPI,
     router_module: str,

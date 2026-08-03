@@ -12,6 +12,7 @@ Channels:
     - alerts.emergency   — Critical system alerts
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import json
 
@@ -78,6 +79,7 @@ class DashboardWebSocketManager:
             logger.error(f"Error sending message to WebSocket: {e}")
             self.disconnect(websocket)
 
+    @with_error_bus("broadcast_to_clients")
     async def broadcast_to_clients(self):
         """Listen to SwarmPubSub and broadcast to interested WebSocket clients."""
         try:

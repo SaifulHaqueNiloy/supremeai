@@ -12,6 +12,7 @@ Lint-free: ruff --select=ALL --ignore=E501 passes.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import hashlib
 import json
@@ -229,6 +230,7 @@ class AgentEvolutionEngine(BaseSkill):
             score = await self._run_benchmark(genome, llm)
             self._population[idx] = AgentGenome(**{**genome.to_dict(), "fitness_score": score})
 
+    @with_error_bus("_run_benchmark")
     async def _run_benchmark(self, genome: AgentGenome, llm: LLMGateway) -> float:
         """Run a lightweight benchmark and return fitness 0.0-1.0."""
         benchmark_prompt = os.getenv(

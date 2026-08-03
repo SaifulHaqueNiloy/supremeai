@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import json
 import os
 import sqlite3
@@ -93,6 +94,7 @@ def _seed(conn: sqlite3.Connection) -> None:
     _seeded = True
 
 
+@with_error_bus("get_enabled_catalog_sources")
 def get_enabled_catalog_sources() -> list[str]:
     if not db.client:
         return DEFAULT_CATALOG_SOURCES

@@ -17,6 +17,7 @@ Usage:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import time
 from collections.abc import Callable, Coroutine
@@ -212,6 +213,7 @@ class AgentSupervisor:
 
     # ── Internal Monitoring ─────────────────────────────────────────────────────
 
+    @with_error_bus("_run_with_monitoring")
     async def _run_with_monitoring(
         self,
         name: str,

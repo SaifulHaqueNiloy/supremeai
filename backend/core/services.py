@@ -3,6 +3,7 @@
 বাংলা: কোর সার্ভিস রেজিস্ট্রি এবং লেজি ইনিশিয়ালাইজেশন।
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import logging
 import os
@@ -91,6 +92,7 @@ experience_db = ExperienceDatabase()
 global_http_client: httpx.AsyncClient | None = None
 
 
+@with_error_bus("__getattr__")
 def __getattr__(name: str) -> Any:
     """Dynamic service getter — ensures legacy test and router backward compatibility."""
     if name.startswith("__") and name.endswith("__"):

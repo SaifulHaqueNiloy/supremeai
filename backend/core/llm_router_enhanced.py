@@ -7,6 +7,7 @@ cost optimization, and Bengali language optimization.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import json
 import time
 from dataclasses import dataclass
@@ -152,6 +153,7 @@ class EnhancedLLMRouter:
 
         return best_provider
 
+    @with_error_bus("route_request")
     async def route_request(self, command: str, context: dict | None = None) -> RouteResult:
         """Route the request to the optimal provider based on command and context."""
         start_time = time.time()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import os
 from typing import Any
 
@@ -84,6 +85,7 @@ class VisionAgent:
         return entry
 
     @staticmethod
+    @with_error_bus("_extract_pdf_text")
     def _extract_pdf_text(pdf_path: str) -> list[str]:
         try:
             import fitz  # PyMuPDF

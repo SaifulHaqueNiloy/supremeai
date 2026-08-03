@@ -16,6 +16,7 @@ Features:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import json
 import os
 import sqlite3
@@ -145,6 +146,7 @@ def reset_firestore_client() -> None:
 
 
 @contextmanager
+@with_error_bus("firestore_transaction")
 def firestore_transaction(db: Any | None = None) -> Generator[Any, None, None]:
     """
     Context manager for Firestore transactions.

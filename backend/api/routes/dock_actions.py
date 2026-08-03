@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import uuid
 
@@ -85,6 +86,7 @@ async def handle_github_push(session_id: str, payload: DockActionPayload, user: 
         )
 
         # PyGithub ব্লকিং কল করে, তাই এটিকে async এ চালানোর জন্য একটু ট্রিকস:
+        @with_error_bus("push_code")
         def push_code():
             g = Github(user_token)
             gh_user = g.get_user()

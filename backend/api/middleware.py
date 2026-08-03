@@ -12,6 +12,7 @@ Provides:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import json
 import os
@@ -31,6 +32,7 @@ from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 class SupremeContextMiddleware(BaseHTTPMiddleware):
     """Injects Correlation ID for end-to-end observability and handles global failures."""
 
+    @with_error_bus("dispatch")
     async def dispatch(self, request: Request, call_next):
         correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
         request.state.correlation_id = correlation_id

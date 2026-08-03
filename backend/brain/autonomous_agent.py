@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import traceback
 from dataclasses import dataclass
@@ -19,6 +20,7 @@ class StepResult:
 
 
 class AutonomousAgent:
+    @with_error_bus("__init__")
     def __init__(self, name: str = "autonomous-agent") -> None:
         self.name = name
         self.history: list[dict[str, Any]] = []

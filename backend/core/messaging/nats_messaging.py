@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import json
 import logging
 from collections.abc import Callable
@@ -39,6 +40,7 @@ class NATSClient:
         self.js = None
         self.kv_store = None
 
+    @with_error_bus("connect")
     async def connect(self):
         """Establishes connection to NATS with Token Auth and enables JetStream."""
         if nats is None:

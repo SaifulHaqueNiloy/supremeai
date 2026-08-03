@@ -4,6 +4,7 @@
 # _asyncio_worker() এর while True → gracefully cancellable coroutine।
 # Bounded memory: max tracked tasks cap enforce।
 # CancelledError সবসময় re-raise।
+from core.error_bus import with_error_bus
 import asyncio
 import contextlib
 import functools
@@ -155,6 +156,7 @@ class TaskQueue:
             if oldest_result.status in ("completed", "failed", "cancelled"):
                 break
 
+    @with_error_bus("submit_task")
     async def submit_task(
         self,
         func: Callable,

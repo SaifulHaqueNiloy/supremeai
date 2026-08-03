@@ -1,3 +1,5 @@
+from core.error_bus import with_error_bus
+
 """Implements a dynamic, vector-based semantic cache for AI model responses.
 
 This module provides the `SemanticCache` class, which leverages an `ExperienceDatabase`
@@ -67,6 +69,7 @@ class SemanticCache:
         self.db = ExperienceDatabase()
         logger.info("SemanticCache initialized using ExperienceDatabase vector backend")
 
+    @with_error_bus("query_similar")
     async def query_similar(self, prompt: str, task_type: str = "general") -> CacheEntry | None:
         try:
             # বাংলা মন্তব্য: কাজের ধরণের ওপর ভিত্তি করে ডাইনামিক থ্রেশহোল্ড সেট করা হচ্ছে
@@ -101,6 +104,7 @@ class SemanticCache:
             )
             return None
 
+    @with_error_bus("set")
     async def set(self, prompt: str, response: str, task_type: str = "general") -> None:
         try:
             # বাংলা মন্তব্য: সফল ও ভেরিফাইড কোড/রেসপন্স এক্সপেরিয়েন্স ডেটাবেসে রাইট করা হচ্ছে

@@ -7,6 +7,7 @@ Provides curriculum planning, quiz generation, and learning path recommendations
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -142,6 +143,7 @@ class EducationAgent:
 
         return questions
 
+    @with_error_bus("create_learning_path")
     async def create_learning_path(
         self,
         user_id: str,

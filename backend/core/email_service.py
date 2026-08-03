@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """This module provides a robust and asynchronous email service for the SupremeAI project, centralizing the functionality for sending various transactional emails such as welcome messages, password reset links, and billing notifications. It integrates with an external email API (e.g., Resend) for delivery, leverages application settings for configuration, and reports errors via the internal event bus, ensuring reliable communication with users within the highly scalable AI ecosystem.
@@ -51,6 +52,7 @@ class EmailService:
         """বাংলা মন্তব্য: From email address."""
         return os.getenv("RESEND_FROM_EMAIL", "noreply@supremeai.dev")
 
+    @with_error_bus("_send_email")
     async def _send_email(self, to_email: str = "", subject: str = "", html_body: str = "", **kwargs) -> bool:
         to_email = to_email or kwargs.get("to", "") or kwargs.get("to_email", "")
         html_body = html_body or kwargs.get("body", "") or kwargs.get("html_body", "")

@@ -3,6 +3,7 @@ Governance Agent for SupremeAI 2.0
 Manages access controls, decision-making oversight, and policy enforcement.
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import json
 import logging
@@ -351,6 +352,7 @@ class GovernanceAgent:
             logger.error(f"Error enforcing policy: {e}")
             return {"action_permitted": False, "error": str(e), "next_action": "reject"}
 
+    @with_error_bus("_get_user_role")
     async def _get_user_role(self, user_id: str) -> str:
         """Get the role of a user."""
         # This would typically integrate with the auth system
@@ -362,6 +364,7 @@ class GovernanceAgent:
         except Exception:
             return "user"
 
+    @with_error_bus("_get_user_permissions")
     async def _get_user_permissions(self, user_id: str) -> list[str]:
         """Get the permissions of a user."""
         try:

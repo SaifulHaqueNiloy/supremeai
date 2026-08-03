@@ -7,6 +7,7 @@ Provides product analysis, review summarization, and shopping assistance.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -134,6 +135,7 @@ class EcommerceAgent:
 
         return recommendations
 
+    @with_error_bus("summarize_reviews")
     async def summarize_reviews(self, reviews: list[dict[str, Any]]) -> ReviewSummary:
         """Summarize product reviews."""
         if not reviews:

@@ -5,6 +5,7 @@
 # Docker image whitelist enforced — arbitrary image run নিষিদ্ধ।
 # os.environ-এ secrets inject করা বন্ধ।
 # CancelledError সবসময় re-raise।
+from core.error_bus import with_error_bus
 import asyncio
 import contextlib
 import json
@@ -187,6 +188,7 @@ class MicroVMSandbox:
         ResourceGuard.write_text(config_path, json.dumps(config), encoding="utf-8")
         return config_path
 
+    @with_error_bus("execute_async")
     async def execute_async(self, cmd: str, timeout: int = 30, language: str = "python") -> dict[str, Any]:
         """বাংলা মন্তব্য: Secure code execution। Path validation mandatory।"""
         # 🛡️ AST প্রি-এক্সিকিউশন ভ্যালিডেশন — getattr/hasattr বাইপাস প্রতিরোধ
