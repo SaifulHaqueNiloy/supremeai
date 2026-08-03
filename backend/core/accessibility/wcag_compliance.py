@@ -26,9 +26,14 @@ Bengali:
 from dataclasses import dataclass
 from enum import Enum
 
-import requests
-from bs4 import BeautifulSoup
-from loguru import logger
+# bs4 প্যাকেজটি ইনস্টল না থাকলেও যেন core মডিউল ইমপোর্ট ব্যর্থ না হয়, সেজন্য সেফ ইমপোর্ট ব্যবহার করা হলো।
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WCAGPrinciple(Enum):

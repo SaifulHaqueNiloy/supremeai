@@ -52,7 +52,12 @@ import sys
 from pathlib import Path
 from typing import Annotated, Any
 
-from dotenv import load_dotenv
+# dotenv লাইব্রেরি না থাকলেও যেন os.environ ব্যবহারে বাধা না পড়ে, সে জন্য সেফ ইমপোর্ট ফলব্যাক রাখা হলো।
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*args, **kwargs):
+        pass
 from loguru import logger
 from pydantic import (
     Field,

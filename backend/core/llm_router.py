@@ -1197,7 +1197,11 @@ async def bengali_chat(prompt: str, **kwargs: Any) -> str:
 # ── 5-Model Swarm Router & Round-Robin Key Rotator ───────────────────────────
 import itertools
 
-import requests
+# requests অনুপলব্ধ থাকলে httpx ফলব্যাক হিসেবে ব্যবহার করার সেফ ইমপোর্ট।
+try:
+    import requests
+except ImportError:
+    import httpx as requests
 
 
 class HFKeyRotator:

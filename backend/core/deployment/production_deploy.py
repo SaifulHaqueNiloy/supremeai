@@ -34,11 +34,19 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-import requests
-import yaml
-from loguru import logger
+# requests এবং loguru মডিউলের বদলে সেফ ইমপোর্ট ও প্রমিত logging ব্যবহার করা হলো।
+import logging
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
-import docker
+logger = logging.getLogger(__name__)
+
+try:
+    import docker
+except ImportError:
+    docker = None
 
 
 class DeploymentEnvironment(Enum):
