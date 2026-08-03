@@ -22,6 +22,7 @@ Bengali:
 - প্রতীক গ্রাউন্ডিং
 """
 
+from core.error_bus import with_error_bus
 import re
 from dataclasses import dataclass
 from enum import Enum
@@ -179,6 +180,7 @@ class SymbolicReasoner:
         """Check if goal can be derived from premise by substitution."""
         return True
 
+    @with_error_bus("perform_mathematical_reasoning")
     def perform_mathematical_reasoning(self, expression: str, variables: dict[str, float]) -> dict[str, Any]:
         """
         Perform mathematical reasoning on an expression.
@@ -408,6 +410,7 @@ class NeuralSymbolicIntegrator:
             # If feedback indicates error, adjust approach
             logger.debug("Adjusting reasoning strategy based on negative feedback")
 
+    @with_error_bus("solve_mathematical_problem")
     def solve_mathematical_problem(
         self, problem_statement: str, constraints: list[str] | None = None
     ) -> dict[str, Any]:
@@ -486,6 +489,7 @@ class MathematicalReasoningEngine:
     def __init__(self, config: NeuralSymbolicConfig):
         self.integrator = NeuralSymbolicIntegrator(config)
 
+    @with_error_bus("solve_equation")
     def solve_equation(self, equation: str, variable: str) -> dict[str, Any]:
         """
         Solve an equation for a given variable.

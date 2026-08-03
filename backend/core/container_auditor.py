@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """This module provides real-time memory auditing for Docker containers within the SupremeAI ecosystem. It proactively monitors container resource usage, issuing warnings when memory utilization approaches 80% and automatically triggering a termination "kill chain" for containers exceeding 95% memory usage to prevent Out-Of-Memory (OOM) abuse and ensure system stability in a highly scalable environment.
@@ -36,6 +37,7 @@ class ContainerAuditor:
         self.check_interval_seconds = check_interval_seconds
         self.running = False
 
+    @with_error_bus("get_container_stats")
     def get_container_stats(self) -> list:
         try:
             cmd = ["docker", "stats", "--no-stream", "--format", "{{ json . }}"]
@@ -77,6 +79,7 @@ class ContainerAuditor:
         except ValueError:
             return 0.0
 
+    @with_error_bus("audit_cycle")
     async def audit_cycle(self):
         """Single stateless audit cycle"""
         logger.info("🛡️ Running Container Audit Cycle...")
@@ -124,6 +127,7 @@ class ContainerAuditor:
                 )
             )
 
+    @with_error_bus("run")
     async def run(self):
         """বাংলা মন্তব্য: Continuous audit loop — Cron-এর পরিবর্তে asyncio loop ব্যবহার করে।"""
         self.running = True

@@ -1,9 +1,11 @@
+from core.error_bus import with_error_bus
 import ast
 import os
 import sys
 from pathlib import Path
 
 
+@with_error_bus("process_file")
 def process_file(filepath: Path, dry_run: bool = False):
     try:
         with open(filepath, encoding="utf-8") as f:
@@ -36,6 +38,7 @@ def process_file(filepath: Path, dry_run: bool = False):
 
     pass_pattern = re.compile(r"(except\s+Exception(\s+as\s+\w+)?:\s*\n\s*)pass", re.MULTILINE)
 
+    @with_error_bus("replacer")
     def replacer(match):
         prefix = match.group(1)
         # Use a safe fallback for the exception variable name

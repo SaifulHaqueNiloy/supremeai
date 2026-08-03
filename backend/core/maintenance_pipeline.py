@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """This module implements the `MaintenancePipeline`, acting as the "Immune System" for the SupremeAI ecosystem. It is responsible for continuously monitoring the health and performance of critical backend components such as databases, Redis, and external AI APIs. The pipeline proactively listens for system-wide error events, performs routine health checks, detects potential performance regressions, and attempts automated self-healing remediation actions like switching LLM providers or re-initializing services to ensure the overall stability and resilience of the AI platform.
@@ -61,6 +62,7 @@ class MaintenancePipeline:
             self.health_score = max(0, self.health_score - 5)
             await self.auto_remediate(event)
 
+    @with_error_bus("run_health_check")
     async def run_health_check(self):
         # logger.info("🛡️ Immune System: Running routine health check...")
 
@@ -141,6 +143,7 @@ class MaintenancePipeline:
         except Exception as e:
             logger.error(f"Failed to run performance regression check: {e}")
 
+    @with_error_bus("auto_remediate")
     async def auto_remediate(self, event=None):
         logger.warning("🚑 Immune System: Triggering self-healing remediation...")
 

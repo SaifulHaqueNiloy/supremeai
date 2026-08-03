@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """Implements a robust, multi-layered caching system for the SupremeAI project.
@@ -136,6 +137,7 @@ class MultiLayerCache:
             self._semantic_cache = SemanticCache()
         return self._semantic_cache
 
+    @with_error_bus("get")
     async def get(self, prompt: str, model_name: str, session_id: str | None = None) -> dict[str, Any] | None:
         """বাংলা মন্তব্ব্য: সব ৫টি ক্যাশ লেয়ার ক্রমান্বয়ে চেক করে। None মানে AI model call দরকার।"""
         start_time = time.time()
@@ -281,6 +283,7 @@ class MultiLayerCache:
         logger.info("❌ ALL CACHE LAYERS MISS - Calling AI Model")
         return None
 
+    @with_error_bus("set")
     async def set(self, prompt: str, response: str, model_name: str, session_id: str | None = None):
         """বাংলা মন্তব্ব্য: সব প্রযোজ্য ক্যাশ লেয়ারে রেসপন্স সংরক্ষণ করে।"""
         cache_set_start = time.time()

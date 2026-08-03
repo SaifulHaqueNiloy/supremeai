@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from datetime import UTC, datetime
 from typing import Any
 
@@ -119,6 +120,7 @@ class GCPCloudRunRouter:
         }
 
     @staticmethod
+    @with_error_bus("_safe_json")
     def _safe_json(response: httpx.Response) -> Any:
         try:
             return response.json()

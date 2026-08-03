@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """
@@ -226,6 +227,7 @@ class TelegramBotHandler:
             logger.warning("Telegram bot not configured — skipping polling.")
             return
 
+    @with_error_bus("start_webhook")
     async def start_webhook(self, webhook_url: str):
         """বাংলা মন্তব্য: while True: sleep() পোলিং লুপ বাদ দিয়ে Event-Driven Webhook মডেলে মাইগ্রেট করা হলো।"""
         if not self.bot_token:

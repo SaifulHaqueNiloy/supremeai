@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from loguru import logger
 
 
@@ -95,6 +96,7 @@ class RollbackMonitor:
 
         return await asyncio.to_thread(self.record_metrics_and_check, service_name, latency_ms, is_error)
 
+    @with_error_bus("trigger_rollback")
     def trigger_rollback(self, service_name: str) -> dict:
         """
         Triggers the Google Cloud Run rollback.

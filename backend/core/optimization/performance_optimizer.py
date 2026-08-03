@@ -19,6 +19,7 @@ Bengali:
 - রিসোর্স পুলিং
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import time
 import tracemalloc
@@ -311,6 +312,7 @@ def performance_monitor(func: Callable) -> Callable:
     """Decorator to monitor performance of functions."""
 
     @wraps(func)
+    @with_error_bus("async_wrapper")
     async def async_wrapper(*args, **kwargs):
         start_time = time.time()
 
@@ -342,6 +344,7 @@ def performance_monitor(func: Callable) -> Callable:
         return result
 
     @wraps(func)
+    @with_error_bus("sync_wrapper")
     def sync_wrapper(*args, **kwargs):
         start_time = time.time()
 

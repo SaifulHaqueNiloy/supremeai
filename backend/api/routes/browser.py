@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from datetime import UTC, datetime
 from typing import Any
 
@@ -98,6 +99,7 @@ def get_recent_activity():
 
 
 @router.get("/credentials")
+@with_error_bus("get_credentials")
 def get_credentials(userId: str = "default"):
     import json
 

@@ -1,3 +1,5 @@
+from core.error_bus import with_error_bus
+
 """Admin God Layer — admin-only constitutional enforcement + immutable audit.
 
 This module provides privileged control utilities (god mode) and an append-only
@@ -61,6 +63,7 @@ class GodModeAuditLog:
     _REDIS_KEY_PREFIX = "audit:godmode:events"
 
     @classmethod
+    @with_error_bus("_push_redis")
     def _push_redis(cls, entry: dict[str, Any]) -> None:
         """Fire-and-forget Redis persistence (never raise)."""
         try:
@@ -134,6 +137,7 @@ class AdminGodLayer:
         self.rbac = RoleBasedAccessControl()
         self.admin_password_hash = os.getenv("SUPREMEAI_ADMIN_PASSWORD_HASH", "")
 
+    @with_error_bus("verify_admin")
     def verify_admin(self, password_raw: str) -> bool:
         """Verifies admin password hash with audit trail."""
         from core.config import settings

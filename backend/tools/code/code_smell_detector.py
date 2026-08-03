@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import ast
 import json
 import os
@@ -224,6 +225,7 @@ class CodeSmellDetector:
                 )
         return smells
 
+    @with_error_bus("_detect_broad_exceptions")
     def _detect_broad_exceptions(self, tree: ast.AST, file_path: str) -> list[dict[str, Any]]:
         """Detects broad exception handlers like `except Exception:` or bare `except:`."""
         smells: list[dict[str, Any]] = []

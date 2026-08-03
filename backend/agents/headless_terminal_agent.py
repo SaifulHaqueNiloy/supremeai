@@ -12,6 +12,7 @@ CLI handler for terminal-based AI interactions.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import hashlib
 import json
@@ -304,6 +305,7 @@ class HeadlessTerminalAgent:
                 explanation=str(e),
             )
 
+    @with_error_bus("suggest")
     async def suggest(self, task: str, context: dict[str, Any] | None = None) -> str:
         """Suggest next command based on task and history."""
         history_context = [r.command for r in self.command_history[-5:]]
@@ -325,6 +327,7 @@ class HeadlessTerminalAgent:
         except Exception:
             return ""
 
+    @with_error_bus("explain_output")
     async def explain_output(self, output: str) -> str:
         """Explain command output in natural language."""
         prompt = "Explain the following command output in 1-2 sentences:\n\n" f"{output[:2000]}"

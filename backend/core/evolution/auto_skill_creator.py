@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 # ruff: noqa: E402
@@ -58,6 +59,7 @@ class AutoSkillCreator:
     Autonomously generates, validates, and provisions dynamic AI skills/tools on-the-fly.
     """
 
+    @with_error_bus("__init__")
     def __init__(self, db: TenantAwareFirestore | None = None, **kwargs: Any):
         # 🛡️ এখন আর সরাসরি firestore.Client() কল হবে না!
         self.db = db

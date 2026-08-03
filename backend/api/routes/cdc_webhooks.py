@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import hashlib
 import hmac
 from typing import Any
@@ -57,6 +58,7 @@ async def _delete_from_vector_db(user_id: str, doc_id: str | None = None) -> Non
 
 
 @router.post("/webhook")
+@with_error_bus("handle_cdc_webhook")
 async def handle_cdc_webhook(request: Request, background_tasks: BackgroundTasks):
     body = await request.body()
 

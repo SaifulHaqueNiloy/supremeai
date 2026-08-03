@@ -9,6 +9,7 @@ Provides:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
@@ -31,6 +32,7 @@ class AgentTaskResponse(BaseModel):
 
 
 @router.post("/execute", response_model=AgentTaskResponse)
+@with_error_bus("execute_agent_task")
 async def execute_agent_task(
     request: Request,
     payload: AgentTaskRequest,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import time
 from typing import Any
 
@@ -27,6 +28,7 @@ class ReliabilityController:
         logger.info("⚡ Reliability Control Plane initialized.")
 
     @classmethod
+    @with_error_bus("_persist_fingerprint")
     async def _persist_fingerprint(cls, fingerprint: str, count: int) -> None:
         try:
             from core.cache.redis_manager import redis_manager
@@ -52,6 +54,7 @@ class ReliabilityController:
             )
 
     @classmethod
+    @with_error_bus("_load_persisted_fingerprints")
     async def _load_persisted_fingerprints(cls) -> dict[str, int]:
         try:
             from core.cache.redis_manager import redis_manager

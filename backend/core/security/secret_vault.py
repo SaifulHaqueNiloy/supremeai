@@ -8,6 +8,7 @@ Strict secret handling ensures exceptions are raised for missing secrets.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import os
 import time
@@ -86,6 +87,7 @@ class ProductionSecretVault:
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
 
+    @with_error_bus("_init_infisical_client")
     def _init_infisical_client(self) -> None:
         """Initialize Infisical client with timeout protection."""
         try:
@@ -111,6 +113,7 @@ class ProductionSecretVault:
                 "Unexpected error initializing Infisical client. Falling back to raw env."
             )
 
+    @with_error_bus("fetch_secret")
     def fetch_secret(self, secret_id: str, default: str | None = None) -> str:
         """Fetch a secret from Infisical with TTL-based caching.
 
@@ -182,6 +185,7 @@ class ProductionSecretVault:
             )
             return self._fallback_to_env(secret_id, default)
 
+    @with_error_bus("_fallback_to_env")
     def _fallback_to_env(self, secret_id: str, default: str | None) -> str:
         """Fallback to environment variable.
 

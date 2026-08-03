@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import asyncio
 import json
 import os
@@ -66,6 +67,7 @@ class HoneypotMiddleware:
                 logger.debug(f"Honeypot middleware failed to read request body: {exc}")
 
         # Reconstruct receive channel for downstream handlers
+        @with_error_bus("new_receive")
         async def new_receive():
             if messages:
                 return messages.pop(0)

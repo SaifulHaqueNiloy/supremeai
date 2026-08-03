@@ -7,6 +7,7 @@ Analyzes past learning outcomes and optimizes future learning strategies.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -69,6 +70,7 @@ class MetaLearningAgent:
             outcome.success_rate,
         )
 
+    @with_error_bus("recommend_strategy")
     async def recommend_strategy(self, task_type: str) -> LearningStrategy:
         """Recommend the best learning strategy for a task type."""
         # Analyze historical outcomes for this task type

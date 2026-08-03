@@ -13,6 +13,7 @@ Key Features:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import secrets
 import time
@@ -343,6 +344,7 @@ class AutonoGuardEngine:
             logger.warning(f"⚠️ Self-Heal verification failed: {verify_exc}")
             return False
 
+    @with_error_bus("heal_error")
     async def heal_error(self, exc: Exception, context: OperationContext) -> str | None:
         """Trigger autonomous error remediation with verification.
 

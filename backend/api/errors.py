@@ -7,6 +7,7 @@ This module provides shared error models and a centralized handler.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -31,6 +32,7 @@ class ErrorResponse(BaseModel):
     error: APIErrorDetail
 
 
+@with_error_bus("api_error_handler")
 async def api_error_handler(request: Request, exc: Exception) -> JSONResponse:
     """Global exception handler — replaces bare `except Exception: print(e)`."""
     error_event_bus.emit(

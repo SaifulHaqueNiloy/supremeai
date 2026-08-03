@@ -10,6 +10,7 @@ Falls back to in-memory dicts if Redis is unavailable (e.g. in test environments
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import json
 from datetime import UTC, datetime
 from typing import Any
@@ -66,6 +67,7 @@ class InstallRequest(BaseModel):
     deviceProfile: str | None = "PIXEL_6"  # -- camelCase required to match frontend JSON API contract
 
 
+@with_error_bus("_use_redis")
 def _use_redis() -> bool:
     try:
         if redis_manager is None or redis_manager.client is None:

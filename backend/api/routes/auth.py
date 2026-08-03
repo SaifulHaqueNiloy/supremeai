@@ -1,6 +1,7 @@
 # ruff: noqa: BLE001, B904, E722
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -37,6 +38,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
+@with_error_bus("optional_current_user")
 async def optional_current_user(
     token: str | None = Depends(oauth2_scheme),
 ) -> UserContext | None:

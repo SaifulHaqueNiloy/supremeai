@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import traceback
 import uuid
@@ -14,6 +15,7 @@ class SelfHealerService:
         self._db = db
         self.event_bus = error_event_bus
 
+    @with_error_bus("self_heal")
     async def self_heal(self, coro, timeout: float = 30.0):
         try:
             async with asyncio.timeout(timeout):
@@ -76,6 +78,7 @@ class SelfHealerService:
             if keyword in proposed_fix:
                 raise ValueError(f"Dangerous keyword '{keyword}' detected in proposed fix. Rejected by Safety Filter.")
 
+    @with_error_bus("propose_fix")
     async def propose_fix(
         self,
         tenant_id: str,

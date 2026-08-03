@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import json
 import os
 from typing import Any
@@ -33,6 +34,7 @@ class StyleLearner:
     # ------------------------------------------------------------------ #
     # tree-sitter AST-level pattern analysis
     # ------------------------------------------------------------------ #
+    @with_error_bus("_analyze_ast_patterns")
     def _analyze_ast_patterns(self, repo_path: str) -> dict[str, Any]:
         """
         tree-sitter দিয়ে AST-level কোড pattern বিশ্লেষণ করে।
@@ -133,6 +135,7 @@ class StyleLearner:
 
         return patterns
 
+    @with_error_bus("analyze_codebase")
     async def analyze_codebase(self, repo_path: str) -> dict[str, Any]:
         """রিপোজিটরি বিশ্লেষণ করে স্টাইল প্রোফাইল তৈরি করে (tree-sitter + LLM)।"""
         logger.info(f"Analyzing {repo_path} for style guidelines...")

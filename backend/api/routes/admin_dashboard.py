@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import contextlib
 import json
@@ -115,6 +116,7 @@ class ConfigUpdate(BaseModel):
 USERS_FILE = "data/users.json"
 
 
+@with_error_bus("load_users")
 def load_users() -> list[dict[str, Any]]:
     if not os.path.exists(USERS_FILE):
         os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
@@ -310,6 +312,7 @@ def get_env_etag(redis_key: str = "config:env_etag") -> str:
 
 
 # বাংলা মন্তব্য: মাল্টি-ইনস্ট্যান্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
+@with_error_bus("_acquire_env_lock")
 def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
     import core.services as app_mod
 
@@ -959,6 +962,7 @@ SESSIONS_FILE = "data/sessions.json"
 CUSTOMERS_FILE = "data/customers.json"
 
 
+@with_error_bus("_load_json_data")
 def _load_json_data(file_path: str, default_data: Any) -> Any:
     if not os.path.exists(file_path):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)

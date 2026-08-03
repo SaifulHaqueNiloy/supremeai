@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import logging
 import uuid
@@ -27,6 +28,7 @@ async def stream_swarm_health(request: Request):
     URL: /api/v1/swarm/stream
     """
 
+    @with_error_bus("event_generator")
     async def event_generator():
         try:
             async for message in swarm_streamer.subscribe():
@@ -40,6 +42,7 @@ async def stream_swarm_health(request: Request):
     return EventSourceResponse(event_generator())
 
 
+@with_error_bus("_save_telemetry_to_db")
 async def _save_telemetry_to_db(data: dict):
     """বাংলা মন্তব্য: আগে এই ফাংশন শুধু logger.info() করত — ডেটা কখনো DB-তে যেত না
     (silent data loss)। Self-Healing Engine-এর ফিডব্যাক লুপ (কোন প্যাচ ইউজার

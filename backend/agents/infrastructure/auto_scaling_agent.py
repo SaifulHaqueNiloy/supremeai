@@ -3,6 +3,7 @@ Auto-Scaling Agent for SupremeAI 2.0
 Dynamically adjusts resources based on demand to optimize performance and costs.
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import json
 import logging
@@ -101,6 +102,7 @@ class AutoScalingAgent:
         except Exception as e:
             logger.error(f"Error initializing auto-scaling policies: {e}")
 
+    @with_error_bus("collect_current_metrics")
     async def collect_current_metrics(self) -> ResourceMetrics:
         """Collect current system resource metrics."""
         try:
@@ -402,6 +404,7 @@ class AutoScalingAgent:
             logger.error(f"Error performing scaling: {e}")
             return False
 
+    @with_error_bus("_estimate_cost_impact")
     def _estimate_cost_impact(self, current: dict[str, float], recommended: dict[str, float]) -> float:
         """Estimate the cost impact of scaling action."""
         try:
@@ -413,6 +416,7 @@ class AutoScalingAgent:
         except Exception:
             return 0.0
 
+    @with_error_bus("_calculate_scaling_confidence")
     def _calculate_scaling_confidence(self, metrics: ResourceMetrics, direction: int) -> float:
         """Calculate confidence in the scaling recommendation."""
         try:
@@ -439,6 +443,7 @@ class AutoScalingAgent:
         except Exception:
             return 0.7  # Default confidence
 
+    @with_error_bus("_get_last_scaling_time")
     async def _get_last_scaling_time(self) -> datetime | None:
         """Get the time of the last scaling action."""
         try:

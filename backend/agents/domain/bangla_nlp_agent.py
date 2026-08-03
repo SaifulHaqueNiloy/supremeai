@@ -7,6 +7,7 @@ Provides transliteration, sentiment analysis, and Bangla text processing.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import logging
 import re
@@ -134,6 +135,7 @@ class BanglaNLPAgent:
         raw = f"bangla:{prefix}:{text_hash}"
         return f"bangla:{hashlib.sha256(raw.encode()).hexdigest()[:16]}"
 
+    @with_error_bus("analyze_sentiment")
     async def analyze_sentiment(self, text: str) -> BanglaSentiment:
         """Analyze sentiment of Bangla text."""
         text_hash = hashlib.sha256(text.encode()).hexdigest()[:12]
@@ -185,6 +187,7 @@ class BanglaNLPAgent:
 
         return sentiment
 
+    @with_error_bus("transliterate")
     async def transliterate(self, romanized_text: str) -> TransliterationResult:
         """Convert Romanized Bangla (Banglish) to proper Bangla."""
         text_hash = hashlib.sha256(romanized_text.encode()).hexdigest()[:12]

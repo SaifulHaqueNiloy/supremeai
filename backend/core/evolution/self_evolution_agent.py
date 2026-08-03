@@ -9,6 +9,7 @@ which ensures the secure and validated integration of AI-generated code proposal
 through AST security scanning, CI/CD dry runs, and atomic database transactions.
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import contextlib
 import time
@@ -90,6 +91,7 @@ class SelfEvolutionAgent:
             self._task = None
         logger.info("SelfEvolutionAgent stopped")
 
+    @with_error_bus("_loop")
     async def _loop(self) -> None:
         while self._running:
             start = time.time()
