@@ -81,6 +81,20 @@ def check_render(label: str, api_key: str, service_id: str) -> Optional[str]:
     )
 
 
+def ping_render_warmup(label: str, service_url: str) -> None:
+    """
+    বাংলা মন্তব্য: Render-এর Free-tier সার্ভিস যদি ঘুমে (sleep mode) থাকে,
+    তবে pipeline-এর শুরুতেই ping পাঠিয়ে তাকে আগেই জাগিয়ে (warm-up) নেওয়া হয়।
+    এটি non-blocking — fail হলেও warning দেবে, CI থামাবে না।
+    """
+    health_url = f"{service_url.rstrip('/')}/health"
+    code = http_get(health_url, headers={"User-Agent": "SupremeAI-Preflight-Warmup/1.0"}, timeout=5)
+    if code == 200:
+        print(f"  🔥 [{label}-WARMUP] ✅ Service is awake & active (HTTP 200)")
+    else:
+        print(f"  ⏰ [{label}-WARMUP] Ping sent to {health_url} (HTTP {code}) — cold-start warm-up triggered in background.")
+
+
 # ──────────────────────────────────────────────────────────────
 # Vercel check
 # ──────────────────────────────────────────────────────────────
@@ -206,6 +220,8 @@ def main() -> None:
     render_key_backup   = os.environ.get("RENDER_API_KEY_BACKUP", "")
     primary_svc_id      = os.environ.get("PRIMARY_SVC_ID", "srv-d9d3n58js32c738n79k0")
     backup_svc_id       = os.environ.get("BACKUP_SVC_ID",  "srv-d9fg48bh523c73f63bb0")
+    primary_svc_url     = os.environ.get("RENDER_PRIMARY_URL", "https://supremeai-backend.onrender.com")
+    backup_svc_url      = os.environ.get("RENDER_BACKUP_URL",  "https://supremeai-admin.onrender.com")
     vercel_token        = os.environ.get("VERCEL_TOKEN", "")
     firebase_sa         = os.environ.get("FIREBASE_SERVICE_ACCOUNT", "")
     # gcp_sa_key        = os.environ.get("GCP_SA_KEY", "")        # uncomment when GCP enabled
@@ -219,12 +235,16 @@ def main() -> None:
     err = check_render("RENDER-PRIMARY", render_key_primary, primary_svc_id)
     if err:
         blocking_errors.append(err)
+    else:
+        ping_render_warmup("RENDER-PRIMARY", primary_svc_url)
 
     # Render Backup/Admin (BLOCKING)
     print("\n[2/4] Render Backup/Admin Backend...")
     err = check_render("RENDER-BACKUP", render_key_backup, backup_svc_id)
     if err:
         blocking_errors.append(err)
+    else:
+        ping_render_warmup("RENDER-BACKUP", backup_svc_url)
 
     # Vercel (BLOCKING)
     print("\n[3/4] Vercel User Portal...")
