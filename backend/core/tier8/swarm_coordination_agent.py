@@ -71,7 +71,7 @@ class SwarmTask:
             consensus_threshold=self.consensus_threshold,
             timeout_seconds=self.timeout_seconds,
             status=self.status,
-            results=self.results + (result,),
+            results=(*self.results, result),
             created_at=self.created_at,
         )
 

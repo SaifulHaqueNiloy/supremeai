@@ -371,7 +371,7 @@ class PerformanceTuningAgent:
             return []
 
     async def apply_optimization(
-        self, optimization_name: str, parameters: dict[str, Any] = None
+        self, optimization_name: str, parameters: dict[str, Any] | None = None
     ) -> PerformanceTuningResult:
         """
         Apply a specific performance optimization.

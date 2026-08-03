@@ -619,7 +619,7 @@ class TheoryOfMindSystem:
         self.reasoner = ToMReasoner(self.config)
         self.conversation_history = []
 
-    def process_interaction(self, speaker: str, message: str, context: dict[str, Any] = None) -> dict[str, Any]:
+    def process_interaction(self, speaker: str, message: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Process an interaction to update mental state attributions.
 

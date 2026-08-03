@@ -51,7 +51,7 @@ def init_db():
 
 def run_git(args):
     try:
-        return subprocess.check_output(["git"] + args, stderr=subprocess.STDOUT).decode("utf-8")
+        return subprocess.check_output(["git", *args], stderr=subprocess.STDOUT).decode("utf-8")
     except Exception as e:
         logger.info(f"Error running git: {e}")
         return ""

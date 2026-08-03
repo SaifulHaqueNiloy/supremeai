@@ -29,7 +29,7 @@ class ChromaDBStore:
     Provides add_document, add_documents, query, update, delete, and count APIs.
     """
 
-    def __init__(self, db_path: str = None, collection_name: str = "supremeai_knowledge"):
+    def __init__(self, db_path: str | None = None, collection_name: str = "supremeai_knowledge"):
         if db_path is None:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             db_path = os.path.join(base_dir, "data", "chromadb_store")
@@ -105,7 +105,7 @@ class ChromaDBStore:
     # ------------------------------------------------------------------
     # CRUD
     # ------------------------------------------------------------------
-    def add_document(self, doc_id: str, text: str, metadata: dict[str, Any] = None) -> None:
+    def add_document(self, doc_id: str, text: str, metadata: dict[str, Any] | None = None) -> None:
         self.add_documents([{"id": doc_id, "text": text, "metadata": metadata or {}}])
 
     def add_documents(self, documents: list[dict[str, Any]]) -> None:
@@ -137,7 +137,7 @@ class ChromaDBStore:
             }
         self._save_fallback()
 
-    def add_document_incremental(self, doc_id: str, text: str, metadata: dict[str, Any] = None) -> bool:
+    def add_document_incremental(self, doc_id: str, text: str, metadata: dict[str, Any] | None = None) -> bool:
         """Add or update document only if content hash changed (Bangla: ইনক্রিমেন্টাল ইনডেক্সিং).
 
         Returns:
@@ -170,7 +170,7 @@ class ChromaDBStore:
         return True
 
     def query(
-        self, query_text: str, n_results: int = 5, where: dict[str, Any] = None
+        self, query_text: str, n_results: int = 5, where: dict[str, Any] | None = None
     ) -> list[tuple[str, float, dict[str, Any]]]:
         if self._collection is not None:
             try:

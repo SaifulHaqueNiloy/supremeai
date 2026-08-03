@@ -269,7 +269,7 @@ async def save_swarm_blueprint(payload: dict):
 
 
 @router.post("/swarm/forge/{flow_id}/execute")
-async def execute_swarm_blueprint(flow_id: str, payload: dict = None):
+async def execute_swarm_blueprint(flow_id: str, payload: dict | None = None):
     """
     Trigger execution of a saved swarm blueprint.
     """

@@ -117,7 +117,7 @@ class EnhancedLLMRouter:
         else:
             return TaskCategory.CHAT
 
-    async def select_optimal_model(self, command: str, context: dict = None) -> Provider:
+    async def select_optimal_model(self, command: str, context: dict | None = None) -> Provider:
         """Select the optimal model based on command classification and context."""
         task_category = await self.classify_command(command)
 
@@ -152,7 +152,7 @@ class EnhancedLLMRouter:
 
         return best_provider
 
-    async def route_request(self, command: str, context: dict = None) -> RouteResult:
+    async def route_request(self, command: str, context: dict | None = None) -> RouteResult:
         """Route the request to the optimal provider based on command and context."""
         start_time = time.time()
 

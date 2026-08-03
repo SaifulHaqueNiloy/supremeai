@@ -93,7 +93,7 @@ async def test_acompletion_all_models_fail():
     gateway = LLMGateway()
     with patch("litellm.acompletion", new_callable=AsyncMock, side_effect=Exception("err")):
         os.environ["OPENAI_API_KEY"] = "mock_key"
-        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             await gateway.acompletion(prompt="hello")
 
 

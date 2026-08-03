@@ -129,7 +129,7 @@ class TestCrossProviderConsistency:
             Provider.MOONSHOT: FailingProvider(),
             Provider.DEEPSEEK: FailingProvider(),
         }
-        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             await router.route("hello", task_type=TaskType.CHAT)
 
     def test_provider_capabilities_matrix(self):

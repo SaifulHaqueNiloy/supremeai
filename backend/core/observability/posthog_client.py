@@ -22,7 +22,7 @@ class PostHogClient:
         else:
             logger.warning("POSTHOG_API_KEY not set. PostHog analytics running in mock/log mode.")
 
-    def capture(self, distinct_id: str, event: str, properties: dict = None):
+    def capture(self, distinct_id: str, event: str, properties: dict | None = None):
         if self.enabled:
             try:
                 posthog.capture(distinct_id, event, properties or {})

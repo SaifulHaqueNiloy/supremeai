@@ -16,7 +16,7 @@ class AdminGodLayer:
     Reads from Google Cloud Firestore (Distributed & Serverless) with SQLite local fallback.
     """
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str | None = None):
         if not db_path:
             # বাংলা মন্তব্য: settings থেকে রুলস ডাটাবেস পাথ রিড করা হচ্ছে
             try:

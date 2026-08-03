@@ -28,7 +28,7 @@ class PRReviewer:
         └── Post Comments → GitHub PR Review
     """
 
-    def __init__(self, github_token: str = None):
+    def __init__(self, github_token: str | None = None):
         self.github_token = github_token or getattr(settings, "github_token", None)
         if not self.github_token:
             logger.warning("GITHUB_TOKEN not found. PR reviewer will run in dry-run mode.")

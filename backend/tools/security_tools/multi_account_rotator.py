@@ -636,7 +636,7 @@ class MultiAccountRotator:
         )
 
     def get_best_provider_for_task(
-        self, task_type: TaskType, requirements: dict = None
+        self, task_type: TaskType, requirements: dict | None = None
     ) -> tuple[Provider, Account] | None:
         """Get the best provider and account for a specific task"""
         logger.info(f"Looking for provider/account for task: {task_type}")

@@ -74,7 +74,7 @@ class UnifiedDBManager:
             if not _VALID_COLLECTION_PATTERN.match(collection):
                 raise ValueError(f"Invalid collection name: {collection!r}")
             await self.postgres.execute_query(
-                f"INSERT INTO {collection} (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2",  # noqa: S608 — collection is whitelist-validated above
+                f"INSERT INTO {collection} (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2",  # — collection is whitelist-validated above
                 record_id,
                 data,
             )

@@ -43,7 +43,7 @@ async def main():
         def mock_acompletion_side_effect(*args, **kwargs):
             import random
 
-            if random.random() < 0.01:  # noqa: S311
+            if random.random() < 0.01:
                 raise Exception("Simulated LiteLLM Error for SelfHealer")
             return AsyncMock()
 

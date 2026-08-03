@@ -18,7 +18,7 @@ class SupremeLogBatcher:
         self._lock = threading.Lock()
         self._last_flush_time = time.time()
 
-    def append_log(self, level: str, message: str, metadata: dict = None) -> None:
+    def append_log(self, level: str, message: str, metadata: dict | None = None) -> None:
         log_entry = {
             "level": level,
             "message": message,

@@ -53,15 +53,15 @@ class KeyRequest(BaseModel):
 
 
 class CredentialRequest(BaseModel):
-    serviceName: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    serviceName: str  # -- camelCase required to match frontend JSON API contract
     username: str
     password: str
-    userId: str | None = "default"  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    userId: str | None = "default"  # -- camelCase required to match frontend JSON API contract
 
 
 class UrlPermissionRequest(BaseModel):
-    urlPattern: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
-    userId: str | None = "default"  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    urlPattern: str  # -- camelCase required to match frontend JSON API contract
+    userId: str | None = "default"  # -- camelCase required to match frontend JSON API contract
     reason: str | None = "None"
 
 

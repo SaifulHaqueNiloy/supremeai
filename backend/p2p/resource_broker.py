@@ -50,7 +50,7 @@ class P2PResourceBroker:
         বাংলা: চাওয়া কম্পিউট ক্ষমতার উপর ভিত্তি করে স্যান্ডবক্সড সেরা নোড খুঁজে বের করে।
         """
         now = time.time()
-        for node_id, node in self._active_nodes.items():
+        for _node_id, node in self._active_nodes.items():
             # Filter stale heartbeats (> 60s)
             if now - node["last_heartbeat"] > 60:
                 continue

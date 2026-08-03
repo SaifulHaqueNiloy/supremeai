@@ -136,7 +136,7 @@ class ParallelAgentExecutor:
                 logger.error(f"[Agent: {agent_name}] Cannot import MCPClient: {exc}")
                 continue
 
-            command = [config.get("command", "uvx")] + config.get("args", [])
+            command = [config.get("command", "uvx"), *config.get("args", [])]
             client = MCPClient(
                 server_name=server_name,
                 command=command,

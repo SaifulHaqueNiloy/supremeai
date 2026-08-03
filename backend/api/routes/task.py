@@ -66,9 +66,9 @@ class TaskResponse(BaseModel):
 class CompletionRequest(BaseModel):
     prefix: str
     suffix: str
-    filePath: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    filePath: str  # -- camelCase required to match frontend JSON API contract
     language: str
-    sessionId: str | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    sessionId: str | None = None  # -- camelCase required to match frontend JSON API contract
 
 
 class CompletionResponse(BaseModel):
@@ -78,7 +78,7 @@ class CompletionResponse(BaseModel):
 
 class ChatStreamRequest(BaseModel):
     message: str
-    sessionId: str | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    sessionId: str | None = None  # -- camelCase required to match frontend JSON API contract
     messages: list[dict] | None = None
     context: dict | None = None
 

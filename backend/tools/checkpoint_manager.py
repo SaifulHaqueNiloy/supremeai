@@ -49,7 +49,7 @@ class CheckpointManager:
 
     _batcher: WriteBehindBatcher | None = None
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str | None = None):
         self.collection_name = "checkpoints"
         self._db = None
         self.db_path = db_path

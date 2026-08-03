@@ -366,7 +366,7 @@ class AccessibilityAgent:
             category_issues[issue.category].append(issue)
 
         # Generate recommendations for each category
-        for category, cat_issues in category_issues.items():
+        for category, _cat_issues in category_issues.items():
             if category == "visual":
                 recommendations.add("Implement high contrast mode and support screen readers")
             elif category == "auditory":

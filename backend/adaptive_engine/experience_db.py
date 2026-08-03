@@ -45,7 +45,7 @@ class Experience:
 
 
 class ExperienceDatabase:
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str | None = None):
         import os
 
         if not db_path:

@@ -238,7 +238,7 @@ class TestLLMRouter:
             results = await router.health_check_all()
 
             assert len(results) > 0
-            for provider_name, is_healthy in results.items():
+            for _provider_name, is_healthy in results.items():
                 assert is_healthy is True
 
     @pytest.mark.asyncio

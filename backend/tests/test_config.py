@@ -108,7 +108,7 @@ def test_env_override(mock_fetch):
 )
 @patch.dict(os.environ, {"env": "bad"}, clear=False)
 def test_invalid_env_raises(bad_env):
-    with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+    with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         Settings()
 
 
@@ -161,5 +161,5 @@ def test_validate_production_completeness_raises_on_missing_production_keys(mock
 
 @patch.dict(os.environ, {"max_cost_per_task": "abc"}, clear=False)
 def test_invalid_type_cast():
-    with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+    with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         Settings()

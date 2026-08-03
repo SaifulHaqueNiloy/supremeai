@@ -69,7 +69,7 @@ class VoiceInterface:
         logger.info(f"Auto-detected language for TTS: {lang}")
 
         try:
-            from TTS.api import TTS as CoquiTTS  # noqa: N811 -- intentional rename to disambiguate from this module's own TTS engine abstraction
+            from TTS.api import TTS as CoquiTTS  # -- intentional rename to disambiguate from this module's own TTS engine abstraction
 
             logger.info("Using Coqui TTS for offline Text-to-Speech...")
             device = "cpu"

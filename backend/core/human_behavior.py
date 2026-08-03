@@ -25,10 +25,10 @@ class HumanBehaviorSimulators:
         x2, y2 = end
 
         # র্যান্ডম কন্ট্রোল পয়েন্ট নিয়ে ন্যাচারাল কার্ভ তৈরি করা হচ্ছে
-        control1_x = x1 + (x2 - x1) * random.uniform(0.1, 0.4)  # noqa: S311
-        control1_y = y1 + (y2 - y1) * random.uniform(0.1, 0.3)  # noqa: S311
-        control2_x = x1 + (x2 - x1) * random.uniform(0.6, 0.9)  # noqa: S311
-        control2_y = y1 + (y2 - y1) * random.uniform(0.7, 0.9)  # noqa: S311
+        control1_x = x1 + (x2 - x1) * random.uniform(0.1, 0.4)
+        control1_y = y1 + (y2 - y1) * random.uniform(0.1, 0.3)
+        control2_x = x1 + (x2 - x1) * random.uniform(0.6, 0.9)
+        control2_y = y1 + (y2 - y1) * random.uniform(0.7, 0.9)
 
         points = []
         for i in range(steps):
@@ -49,12 +49,12 @@ class HumanBehaviorSimulators:
                 raise ValueError(f"Element {selector} has no layout bounding box.")
 
             # এলিমেন্টের সেন্টারে সামান্য র্যান্ডম অফসেট নিয়ে ক্লিক কোঅর্ডিনেট নির্ধারণ
-            target_x = box["x"] + box["width"] / 2 + random.uniform(-5, 5)  # noqa: S311
-            target_y = box["y"] + box["height"] / 2 + random.uniform(-5, 5)  # noqa: S311
+            target_x = box["x"] + box["width"] / 2 + random.uniform(-5, 5)
+            target_y = box["y"] + box["height"] / 2 + random.uniform(-5, 5)
 
             # এন্ট্রি ভেক্টর সিমুলেট করার জন্য র্যান্ডম শুরু পয়েন্ট নেওয়া হলো
-            start_x = random.uniform(0, 100)  # noqa: S311
-            start_y = random.uniform(0, 100)  # noqa: S311
+            start_x = random.uniform(0, 100)
+            start_y = random.uniform(0, 100)
 
             path = cls._generate_bezier_points(
                 (start_x, start_y), (target_x, target_y), steps=random.randint(15, 30)
@@ -62,9 +62,9 @@ class HumanBehaviorSimulators:
 
             for x, y in path:
                 await page.mouse.move(x, y)
-                await asyncio.sleep(random.uniform(0.005, 0.015))  # মাইক্রো ডিলে  # noqa: S311
+                await asyncio.sleep(random.uniform(0.005, 0.015))  # মাইক্রো ডিলে
 
-            await asyncio.sleep(random.uniform(0.1, 0.25))  # ক্লিকের আগে সামান্য থামা  # noqa: S311
+            await asyncio.sleep(random.uniform(0.1, 0.25))  # ক্লিকের আগে সামান্য থামা
             await page.mouse.click(target_x, target_y)
             logger.debug(f"Simulated natural human click on selector: {selector}")
         except Exception as e:
@@ -77,7 +77,7 @@ class HumanBehaviorSimulators:
         try:
             element = await page.wait_for_selector(selector, state="visible", timeout=10000)
             await element.focus()
-            await asyncio.sleep(random.uniform(0.15, 0.3))  # noqa: S311
+            await asyncio.sleep(random.uniform(0.15, 0.3))
 
             for char in text:
                 await page.keyboard.type(char)

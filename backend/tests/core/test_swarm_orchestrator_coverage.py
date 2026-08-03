@@ -98,7 +98,7 @@ class TestCircuitBreakerOpenError:
             raise CircuitBreakerOpenError(name="test_service", state=CircuitBreakerState.OPEN)
 
     def test_is_exception(self):
-        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             raise CircuitBreakerOpenError(name="test_service", state=CircuitBreakerState.OPEN)
 
 

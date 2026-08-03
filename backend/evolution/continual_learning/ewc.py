@@ -219,7 +219,7 @@ class EWC:
         # ডেটা না — তাই এখানে untrusted deserialization ঝুঁকি নেই, কিন্তু ভবিষ্যতে যদি
         # multi-tenant শেয়ার্ড স্টোরেজে যায়, তাহলে এটা torch.save/load বা JSON-এ migrate করা উচিত।
         with open(checkpoint_path, "rb") as f:
-            checkpoint = pickle.load(f)  # noqa: S301 -- trusted, self-written checkpoint file (see comment above)
+            checkpoint = pickle.load(f)  # -- trusted, self-written checkpoint file (see comment above)
 
         self.task_count = checkpoint["task_count"]
         self.params_prev = checkpoint["params_prev"]
