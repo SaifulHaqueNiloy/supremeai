@@ -160,6 +160,20 @@ class SecureRedisManager:
     # and the method was never actually called anywhere in the codebase.
 
 
+    async def incrbyfloat(self, key: str, amount: float, ex_seconds: int = 86400) -> float:
+        """Increment floating point value in Redis with optional expiration.
+
+        বাংলা: Redis-এ ফ্লোটিং পয়েন্ট মান বৃদ্ধি করে এবং TTL সেট করে।
+        """
+        client = await self.get_client_async()
+        if client:
+            val = await client.incrbyfloat(key, amount)
+            if ex_seconds:
+                await client.expire(key, ex_seconds)
+            return float(val)
+        return 0.0
+
+
 redis_manager = SecureRedisManager()
 
 
