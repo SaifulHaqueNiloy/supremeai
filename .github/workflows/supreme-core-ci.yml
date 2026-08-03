@@ -1443,7 +1443,6 @@ jobs:
       - deploy-user-vercel
       - sync-mirror
       - canary-deploy
-      - mlops-nightly-eval
     permissions:
       actions: read
       contents: read
