@@ -84,11 +84,11 @@ export function AdminShell() {
   };
 
   const handleInstallSkill = (name: string) => {
-    console.log("Install skill", name);
+    console.warn("Install skill", name);
   };
 
   const handleDeleteCheckpoint = (taskId: string) => {
-    console.log("Delete checkpoint", taskId);
+    console.warn("Delete checkpoint", taskId);
   };
 
   const handleTriggerDeploy = () => {
@@ -111,7 +111,7 @@ export function AdminShell() {
   };
 
   const handleSendAdmin = () => {
-    console.log("Send admin message", adminInput);
+    console.warn("Send admin message", adminInput);
     setAdminInput("");
   };
 
@@ -170,7 +170,7 @@ export function AdminShell() {
         return res.json();
       })
       .then(() => {
-        console.log("Environment config saved successfully.");
+        console.warn("Environment config saved successfully.");
       })
       .catch(err => console.error("Error saving environment config:", err));
   };

@@ -31,5 +31,6 @@ export default tseslint.config({ ignores: ['dist'] }, {
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
     'react-hooks/set-state-in-effect': 'off',
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
 }, storybook.configs["flat/recommended"]);

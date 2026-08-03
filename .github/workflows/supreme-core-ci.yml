@@ -181,8 +181,8 @@ jobs:
         env:
           RENDER_API_KEY:           ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP:    ${{ secrets.RENDER_API_KEY_BACKUP }}
-          PRIMARY_SVC_ID:           srv-d9d3n58js32c738n79k0
-          BACKUP_SVC_ID:            srv-d9fg48bh523c73f63bb0
+          PRIMARY_SVC_ID:           ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}
+          BACKUP_SVC_ID:            ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}
           VERCEL_TOKEN:             ${{ secrets.VERCEL_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}
           # GCP_SA_KEY:             ${{ secrets.GCP_SA_KEY }}         # GCP চেক enable করতে uncomment করুন

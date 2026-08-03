@@ -24,7 +24,7 @@ const pingServers = () => {
         headers: { 'Cache-Control': 'no-cache' }
       });
       if (response.ok) {
-        console.log(`[Heartbeat] ✅ Live: ${url}/api/v1/live`);
+        console.warn(`[Heartbeat] ✅ Live: ${url}/api/v1/live`);
       } else {
         console.warn(`[Heartbeat] ⚠️ Non-ok response from: ${url}/api/v1/live (${response.status})`);
       }

@@ -19,7 +19,7 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
       try {
         const data = JSON.parse(event.data);
         if (data.event === 'theme_changed' && data.theme) {
-          console.log('[ThemeSync] Theme updated via SSE:', data.theme);
+          console.warn('[ThemeSync] Theme updated via SSE:', data.theme);
           setThemeState(data.theme);
         }
       } catch (err) {
@@ -29,7 +29,7 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
 
     if (typeof eventSource.addEventListener === 'function') {
       eventSource.addEventListener('connected', () => {
-        console.log('[ThemeSync] Connected to SSE Stream for user:', userId);
+        console.warn('[ThemeSync] Connected to SSE Stream for user:', userId);
       });
     }
 

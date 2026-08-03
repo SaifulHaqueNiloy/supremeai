@@ -23,7 +23,7 @@ export default function CollabEditor({ sessionId, clientId }: CollabEditorProps)
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log(`Connected to Collaborative Session: ${sessionId}`);
+      console.warn(`Connected to Collaborative Session: ${sessionId}`);
     };
 
     ws.onmessage = (event) => {
@@ -51,7 +51,7 @@ export default function CollabEditor({ sessionId, clientId }: CollabEditorProps)
     };
 
     ws.onclose = () => {
-      console.log("Disconnected from Collaborative Session");
+      console.warn("Disconnected from Collaborative Session");
     };
 
     return () => {
