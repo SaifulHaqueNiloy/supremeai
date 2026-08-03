@@ -145,3 +145,33 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
+
+  # ══════════════════════════════════════════════════════════════
+  # ৮. CI Parity Gates — GitHub-এ আছে কিন্তু আগে এখানে ছিল না
+  #    (pre-merge-gate job-এর Gate 3, 3.5 ও Observability Audit)
+  # ══════════════════════════════════════════════════════════════
+  - repo: local
+    hooks:
+      - id: admin-auth-lint-guard
+        name: "🛡️ Gate 3.5 — Admin Router Auth Lint Guard"
+        description: "admin prefix router-এ dependencies=[Depends(get_current_admin)] না থাকলে কমিট ব্লক করে।"
+        entry: poetry -C backend run python ../.github/scripts/verify_admin_auth.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: httpx-timeout-audit
+        name: "⏱️ Gate 3 — HTTP Timeout Audit (httpx.AsyncClient without timeout)"
+        description: "timeout parameter ছাড়া httpx.AsyncClient() থাকলে কমিট ব্লক করে (production hang risk)."
+        entry: bash -c 'V=$(grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv" | wc -l); if [ "$V" -gt 0 ]; then grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: observability-audit
+        name: "🔬 Observability Audit (silent excepts / stray print())"
+        description: "except Exception: pass এর মতো সাইলেন্ট এরর হ্যান্ডলার বা print() থাকলে কমিট ব্লক করে।"
+        entry: python scripts/audit_observability.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
