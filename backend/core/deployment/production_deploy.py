@@ -34,7 +34,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-# requests এবং loguru মডিউলের বদলে সেফ ইমপোর্ট ও প্রমিত logging ব্যবহার করা হলো।
+# requests মডিউল অনুপস্থিত থাকলেও যেন HealthCheck ও Deployment সার্ভিস ভেঙে না পড়ে, সে জন্য httpx ফলব্যাক সহ সেফ ইমপোর্ট করা হলো।
+try:
+    import requests
+except ImportError:
+    import httpx as requests
+    requests.exceptions = type("exceptions", (), {"RequestException": Exception})
+
 import logging
 try:
     import yaml
