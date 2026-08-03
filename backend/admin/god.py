@@ -30,9 +30,15 @@ class AdminGodLayer:
                 db_path = "data/constitutional_rules.db"
 
         self.db_path = Path(db_path)
+        import os
+
+        data_dir_env = os.getenv("DATA_DIR")
+        if data_dir_env:
+            self.db_path = Path(data_dir_env) / self.db_path.name
+
         try:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        except PermissionError as e:
+        except (PermissionError, OSError) as e:
             logger.warning(f"Permission denied creating directory for {self.db_path}: {e}. Falling back to /tmp/data.")
             self.db_path = Path("/tmp/data") / self.db_path.name
             self.db_path.parent.mkdir(parents=True, exist_ok=True)

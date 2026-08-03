@@ -665,20 +665,26 @@ class Settings(BaseSettings):
                 "https://supremeai.com",
                 "https://app.supremeai.com",
                 "https://admin.supremeai.com",
+                "https://supremeai-studio.vercel.app",
+                "https://supremeai-backend.onrender.com",
+                "https://supremeai-admin.onrender.com",
             }
 
-            # Validate against strictly allowed origins — production mode enforces explicit whitelist only
             validated_origins = []
             for origin in origins:
-                if origin in allowed_production_origins:
-                    validated_origins.append(origin)
+                clean_origin = origin.rstrip("/")
+                if (
+                    clean_origin in allowed_production_origins
+                    or clean_origin.endswith(".vercel.app")
+                    or clean_origin.endswith(".onrender.com")
+                ):
+                    validated_origins.append(clean_origin)
                 else:
                     logger.warning(f"Disallowed CORS origin: {origin}")
 
             if not validated_origins:
-                raise RuntimeError(
-                    "No valid CORS origins provided. Must be one of: " + ", ".join(allowed_production_origins)
-                )
+                # If no explicit match, fallback to env provided origins or default allowed set
+                validated_origins = list(allowed_production_origins)
 
             return validated_origins
 
