@@ -53,20 +53,18 @@ class TestSentinelAgent:
         assert agent.running is True
         assert agent._is_active is False
 
-    def test_monitor_endpoints_no_endpoints(self):
+    @pytest.mark.asyncio
+    async def test_monitor_endpoints_no_endpoints(self):
         """Test monitoring when no endpoints configured."""
         agent = SentinelAgent()
 
-        async def run_monitor():
-            mock_result = MagicMock()
-            mock_result.scalars.return_value.all.return_value = []
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
 
-            with patch("core.sentinel_agent.AsyncSessionLocal") as mock_session:
-                mock_session.return_value.__aenter__.return_value.execute.return_value = mock_result
+        with patch("core.sentinel_agent.AsyncSessionLocal") as mock_session:
+            mock_session.return_value.__aenter__.return_value.execute.return_value = mock_result
 
-                await agent.monitor_endpoints()
-
-        asyncio.get_event_loop().run_until_complete(run_monitor())
+            await agent.monitor_endpoints()
 
     @pytest.mark.asyncio
     async def test_audit_dependencies_no_pip(self):

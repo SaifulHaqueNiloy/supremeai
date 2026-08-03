@@ -61,13 +61,13 @@ class TestValidation:
 
     def test_validate_sandbox_root_valid(self):
         """Test sandbox root validation with whitelisted path."""
-        # Use a whitelisted path
-        whitelist = {"/tmp/sandboxes", "C:\\tmp\\sandboxes"}
+        whitelisted_path = str(Path("/tmp/sandboxes").resolve())
+        whitelist = {whitelisted_path}
 
         with patch("core.microvm_sandbox._SANDBOX_ROOT_WHITELIST", frozenset(whitelist)):
             result = _validate_sandbox_root("/tmp/sandboxes")
 
-            assert result == Path("/tmp/sandboxes")
+            assert result == Path("/tmp/sandboxes").resolve()
 
     def test_validate_sandbox_root_invalid(self):
         """Test sandbox root validation rejects non-whitelisted path."""
