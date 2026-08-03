@@ -1,16 +1,13 @@
 """Unit and integration tests for MLOps scripts (bias_detector, model_drift_detector, prompt_injection_tester, model_version_manager)."""
 
-import json
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
 import importlib.util
-from pathlib import Path
 
 repo_root = Path(__file__).resolve().parents[3]
 

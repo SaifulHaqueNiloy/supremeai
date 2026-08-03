@@ -5,8 +5,12 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-import asyncpg
-from asyncpg.connection import Connection  # Corrected import
+try:
+    import asyncpg
+    from asyncpg.connection import Connection
+except ImportError:
+    asyncpg = None  # type: ignore[assignment]
+    Connection = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
