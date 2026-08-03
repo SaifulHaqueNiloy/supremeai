@@ -10,6 +10,7 @@ POST /api/admin/tenant-limits/{id}/reset-usage — reset today's counters
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import time
 from typing import Any
 
@@ -78,6 +79,7 @@ TIER_DEFAULTS: dict[str, dict[str, int]] = {
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
 
+@with_error_bus("_get_db")
 def _get_db():
     try:
         from database.supabase_client import db

@@ -7,6 +7,7 @@ Provides ethical assessment, bias checking, and ethics compliance reporting.
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -69,6 +70,7 @@ class EthicsMonitorAgent:
         raw = f"ethics:{prefix}:{identifier}:{datetime.now(UTC).strftime('%Y%m%d%H')}"
         return f"ethics:{hashlib.sha256(raw.encode()).hexdigest()[:16]}"
 
+    @with_error_bus("assess_decision")
     async def assess_decision(self, decision_context: str, decision_id: str = "") -> DecisionAssessment:
         """Assess a decision against ethical principles."""
         prompt = (
@@ -125,6 +127,7 @@ class EthicsMonitorAgent:
             ),
         }
 
+    @with_error_bus("validate_ethical_principle")
     async def validate_ethical_principle(self, principle: EthicalPrinciple, context: str) -> EthicsVerdict:
         """Validate a decision against a specific ethical principle."""
         prompt = (

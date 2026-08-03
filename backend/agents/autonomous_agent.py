@@ -1,6 +1,7 @@
 # backend/agents/autonomous_agent.py
 # বাংলা মন্তব্য: স্বয়ংক্রিয় ব্যাকগ্রাউন্ড সিস্টেম মনিটরিং এজেন্ট — মেমোরি, ডাটাবেস, এপিআই ও সিকিউরিটি হেলথ ট্র্যাকিং এবং সেলফ-হিলিং প্রসেস রিগেড করা।
 
+from core.error_bus import with_error_bus
 import asyncio
 import gc
 import logging
@@ -44,6 +45,7 @@ class AutonomousAgent(ABC):
         logger.info(f"[Agent:{self.name}] Started with interval {self.check_interval}s")
         asyncio.create_task(self._monitoring_loop())
 
+    @with_error_bus("_monitoring_loop")
     async def _monitoring_loop(self) -> None:
         """বাংলা মন্তব্য: এজেন্টের প্রধান হেলথ-চেক লুপ।"""
         while self.is_running:
@@ -102,6 +104,7 @@ class DatabaseHealthAgent(AutonomousAgent):
     def __init__(self) -> None:
         super().__init__("DatabaseHealthAgent", check_interval=300)
 
+    @with_error_bus("perform_check")
     async def perform_check(self) -> None:
         try:
             from core.persistence.pooled_pg import _get_pool
@@ -142,6 +145,7 @@ class MemoryHealthAgent(AutonomousAgent):
         super().__init__("MemoryHealthAgent", check_interval=120)
         self.memory_threshold = 0.80
 
+    @with_error_bus("perform_check")
     async def perform_check(self) -> None:
         try:
             if not psutil:

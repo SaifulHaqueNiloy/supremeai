@@ -1,5 +1,6 @@
 # Secure Endpoints for Universal BYOC Management
 # বাংলা মন্তব্য: সিকিউর প্রক্সি, রোটেশন, ক্রেডেনশিয়াল ম্যানেজমেন্ট ও টেরাফর্ম রানার ট্রিগার এপিআই।
+from core.error_bus import with_error_bus
 import json
 import os
 import uuid
@@ -63,6 +64,7 @@ async def save_credentials(
 # 🚀 ROUTE: Trigger Terraform Container Deploy
 # ==========================================
 @router.post("/deploy")
+@with_error_bus("deploy_container")
 async def deploy_container(
     payload: BYOCDeployRequest,
     background_tasks: BackgroundTasks,

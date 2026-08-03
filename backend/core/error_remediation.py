@@ -29,6 +29,7 @@ Fixes Applied (Autonomous Architecture Audit):
 - 🟢 [LOW] Added `insert_error_pattern()` for self-healing capability
 """
 
+from core.error_bus import with_error_bus
 import asyncio
 import hashlib
 import json
@@ -237,6 +238,7 @@ class ErrorRemediation:
 
     # ── Fallback file management ───────────────────────────────────────────────
 
+    @with_error_bus("_ensure_fallback_file")
     def _ensure_fallback_file(self) -> None:
         """Ensure the fallback file exists with proper structure."""
         try:
@@ -295,6 +297,7 @@ class ErrorRemediation:
             )
             return False
 
+    @with_error_bus("_load_local_fallback")
     def _load_local_fallback(self, error_sig: str | None = None) -> str | None:
         """Load a fallback fix from the local JSON file.
 
@@ -371,6 +374,7 @@ class ErrorRemediation:
             )
             return None
 
+    @with_error_bus("_load_redis_fallback")
     async def _load_redis_fallback(self, error_sig: str) -> str | None:
         """Attempt to fetch a known fix from Redis if Qdrant is unavailable."""
         if not error_sig:
@@ -437,6 +441,7 @@ class ErrorRemediation:
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
+    @with_error_bus("lookup_fix")
     async def lookup_fix(self, error_sig: str) -> str | None:
         """Find a remediation fix for a given error signature.
 
@@ -494,6 +499,7 @@ class ErrorRemediation:
 
             embedding = _compute_embedding(error_sig, QDRANT_VECTOR_SIZE)
 
+            @with_error_bus("_search")
             async def _search():
                 # বাংলা মন্তব্য: Proper embedding-based search — no more zero vectors!
                 return self._qdrant.search(
@@ -568,6 +574,7 @@ class ErrorRemediation:
             # Fallback to local fallback in case of any unexpected errors
             return self._load_local_fallback(error_sig)
 
+    @with_error_bus("insert_error_pattern")
     async def insert_error_pattern(
         self,
         error_sig: str,

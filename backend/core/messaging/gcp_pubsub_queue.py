@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import json
 import os
 import sqlite3
@@ -135,6 +136,7 @@ class GCPPubSubQueue:
             "task_id": task_id,
         }
 
+    @with_error_bus("pull")
     def pull(self, max_messages: int = 10) -> list[dict[str, Any]]:
         if self.subscriber is not None:
             response = self.subscriber.pull(
@@ -183,6 +185,7 @@ class GCPPubSubQueue:
             ).fetchall()
         return [self._row_to_dict(row) for row in rows]
 
+    @with_error_bus("ack")
     def ack(self, message_id: str) -> dict[str, Any]:
         if self.subscriber is not None:
             try:

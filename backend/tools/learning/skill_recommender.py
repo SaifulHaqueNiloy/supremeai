@@ -14,6 +14,7 @@ ML/heuristic-based smart recommendation engine that:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import hashlib
 import re
 from collections import defaultdict
@@ -227,6 +228,7 @@ class HeuristicScorer:
             estimated_impact="low" if score < 0.3 else "medium",
         )
 
+    @with_error_bus("_semantic_similarity")
     async def _semantic_similarity(self, text_a: str, text_b: str) -> float:
         """Get semantic similarity score using LLM embeddings."""
         cache_key = f"semantic:{hashlib.sha256((text_a+text_b).encode()).hexdigest()[:16]}"

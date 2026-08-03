@@ -1,7 +1,9 @@
+from core.error_bus import with_error_bus
 import os
 import re
 
 
+@with_error_bus("main")
 def main():
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0

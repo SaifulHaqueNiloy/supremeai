@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from ..messaging.event_bus import (
     ErrorContext,  # Fixed import path - using relative import
 )
@@ -202,6 +203,7 @@ class ProviderBudget:
             return False
         return True
 
+    @with_error_bus("pause")
     def pause(self, seconds: float = 60.0) -> None:
         """Temporarily pause this provider (e.g. after a 429 response)."""
         self._paused_until = time.time() + seconds
@@ -284,6 +286,7 @@ class FreeTierTracker:
     async def load_from_db(self) -> None:
         import asyncio
 
+        @with_error_bus("_fetch")
         def _fetch():
             try:
                 from database.supabase_client import db

@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import json
 
@@ -197,6 +198,7 @@ class CollaborativeEditor:
             await pubsub.unsubscribe(channel)
             logger.info(f"Unsubscribed from Redis channel: {channel}")
 
+    @with_error_bus("start_collaboration_session")
     async def start_collaboration_session(self, session_id: str):
         """বাংলা মন্তব্য: while True: sleep() পোলিং লুপ বাদ দিয়ে PubSub/SSE Event-Driven মডেলে মাইগ্রেট করা হলো।"""
         logger.info(f"Starting collaborative session for {session_id} using Redis PubSub.")

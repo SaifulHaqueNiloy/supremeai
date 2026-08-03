@@ -13,6 +13,7 @@ Performs genetic breeding of two parent agents to produce a superior offspring:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import copy
 import random
 import secrets
@@ -429,6 +430,7 @@ class AgentBreeder:
 
     # ── High-level: Full breeding cycle ──
 
+    @with_error_bus("run_breeding_cycle")
     async def run_breeding_cycle(
         self,
         pool_name: str | None = None,

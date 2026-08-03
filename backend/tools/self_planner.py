@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import json
 from typing import Any
@@ -42,6 +43,7 @@ except ImportError:
         DiGraph = _MockDiGraph
 
         @staticmethod
+        @with_error_bus("is_directed_acyclic_graph")
         def is_directed_acyclic_graph(graph):
             return True
 
@@ -204,6 +206,7 @@ class SelfPlanner:
         self.active_tasks.clear()
         logger.info("SelfPlanner cleanup finalized.")
 
+    @with_error_bus("validate_plan")
     def validate_plan(self, graph: Any) -> bool:
         """Backward-compatible alias for basic validation."""
         try:

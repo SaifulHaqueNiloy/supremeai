@@ -10,6 +10,7 @@ Provides:
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -33,6 +34,7 @@ def get_fitness_engine() -> FitnessEngine:
     return _fitness_engine
 
 
+@with_error_bus("verify_autonomous_agent_token")
 async def verify_autonomous_agent_token(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),

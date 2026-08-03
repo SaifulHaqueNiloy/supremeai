@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 from .messaging.event_bus import (
     ErrorContext,  # Fixed import path - using relative import
 )
@@ -45,6 +46,7 @@ class CostGuard:
             logger.error(f"🚨 [COST_GUARD_CONNECT_LEAK]: Lifespan handshake failed: {e}")
             raise
 
+    @with_error_bus("check_budget")
     async def check_budget(self, tenant_id: str, estimated_cost: float) -> bool:
         """
         Pre-flight Check:
@@ -101,6 +103,7 @@ class CostGuard:
                 pass
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
 
+    @with_error_bus("validate_budget")
     async def validate_budget(self, tenant_id: str, tier: str) -> bool:
         """
         নতুন মেthod: টাস্ক রাউটারের ৮০/১৫/৫ মাল্টি-টিয়ার ফলব্যাক চেইনের বাজেট ভ্যালিডেশনের জন্য।
@@ -177,6 +180,7 @@ class CostGuard:
             logger.error(f"[CostGuard] Provider quota check error for {provider}: {exc}")
             return False
 
+    @with_error_bus("record_spend")
     async def record_spend(self, tenant_id: str, tier: str, actual_cost: float):
         from core.cache.redis_manager import redis_manager
 

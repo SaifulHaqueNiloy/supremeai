@@ -11,6 +11,7 @@ Critical Security Note: ফেইল-ক্লোজড মোডে রেট �
 যাতে প্রোডাকশনে Redis ডাউন থাকলে রিকোয়েস্ট পাস না করে।
 """
 
+from core.error_bus import with_error_bus
 import time
 from typing import Literal
 
@@ -59,6 +60,7 @@ class SlidingWindowRateLimiter:
         """
         self.script_sha = None
 
+    @with_error_bus("_load_script")
     async def _load_script(self, client):
         """Load the Lua script into Redis for better performance."""
         if self.script_sha is None:

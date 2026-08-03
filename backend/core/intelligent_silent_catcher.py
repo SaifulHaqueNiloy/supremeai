@@ -2,6 +2,7 @@
 # বাংলা মন্তব্য: গ্লোবাল এক্সেপশন ও থ্রেড ক্র্যাশ ক্যাচার। রানটাইমে হওয়া যেকোনো সাইলেন্ট বা আনহ্যান্ডেলড
 # ক্র্যাশ সনাক্ত করে তা Intelligent Error Bus-এ পাঠিয়ে দেওয়া হয়।
 
+from core.error_bus import with_error_bus
 import sys
 import threading
 import traceback
@@ -11,6 +12,7 @@ from loguru import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
+@with_error_bus("handle_unhandled_exception")
 def handle_unhandled_exception(exc_type, exc_value, exc_tb):
     """Custom sys.excepthook to catch silent/unhandled crashes globally.
 

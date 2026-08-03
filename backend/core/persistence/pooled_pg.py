@@ -20,6 +20,7 @@ Ripple-Effect Guard: this module is additive. It does not touch
 
 from __future__ import annotations
 
+from core.error_bus import with_error_bus
 import atexit
 import os
 import threading
@@ -98,6 +99,7 @@ def get_conn():
         pool.putconn(conn)
 
 
+@with_error_bus("execute")
 def execute(sql: str, params: tuple = ()) -> None:
     with get_conn() as conn:
         cur = conn.cursor()
@@ -111,6 +113,7 @@ def execute(sql: str, params: tuple = ()) -> None:
             cur.close()
 
 
+@with_error_bus("executemany")
 def executemany(sql: str, params_list: list[tuple]) -> None:
     if not params_list:
         return

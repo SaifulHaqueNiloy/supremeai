@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import asyncio
 import logging
 
@@ -10,6 +11,7 @@ from core.messaging.event_bus import ErrorEvent
 from core.messaging.event_bus import error_event_bus
 
 
+@with_error_bus("main")
 async def main():
     print("Mocking an error trigger...")
     event = ErrorEvent(

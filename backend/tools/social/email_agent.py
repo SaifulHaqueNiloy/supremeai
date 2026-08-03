@@ -1,3 +1,4 @@
+from core.error_bus import with_error_bus
 import email
 import imaplib
 import re
@@ -119,6 +120,7 @@ class EmailAgent:
         return "".join(decoded)
 
     @staticmethod
+    @with_error_bus("_extract_body")
     def _extract_body(msg) -> str:
         if msg.is_multipart():
             for part in msg.walk():
