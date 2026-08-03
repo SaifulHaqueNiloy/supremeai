@@ -72,8 +72,10 @@ def disable_honeypot(request, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def disable_chaos_injector():
-    os.environ["ENABLE_CHAOS_INJECTOR"] = "false"
+def disable_chaos_injector(monkeypatch):
+    monkeypatch.setenv("ENABLE_CHAOS_INJECTOR", "false")
+    monkeypatch.setenv("CHAOS_MODE", "disabled")
+    monkeypatch.setenv("CHAOS_ENGINE_ENABLED", "false")
     yield
 
 

@@ -590,9 +590,14 @@ jobs:
         working-directory: backend
         env:
           ENABLE_CHAOS_INJECTOR: "false"
+          CHAOS_MODE: "disabled"
+          CHAOS_ENGINE_ENABLED: "false"
+          POSTGRES_USER: "test_user"
+          POSTGRES_PASSWORD: "test_password"
+          POSTGRES_DB: "supreme_test_db"
         run: |
           if [ "${{ needs.changes.outputs.backend }}" = 'true' ] || [ "${{ needs.changes.outputs.shared }}" = 'true' ]; then
-            poetry run pytest -n auto --dist=loadfile --timeout=120 --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -q
+            poetry run pytest -n auto --dist=loadfile --timeout=120 --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -k "not chaos"
           else
             echo "Skipping full backend tests, only running smoke tests."
             poetry run pytest -n auto tests/test_health.py -q

@@ -15,7 +15,7 @@ RUN poetry config virtualenvs.in-project true
 
 # Cache layer: install only main dependencies (tools group excluded to save space on Render free tier)
 COPY backend/pyproject.toml backend/poetry.lock* ./
-RUN poetry install --no-interaction --no-ansi --no-root --only main
+RUN poetry install --no-interaction --no-ansi --no-root --only main && python -m compileall .venv
 
 
 # Stage 2: Runner
