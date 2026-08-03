@@ -17,6 +17,7 @@ from typing import Any
 from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.llm.token_deductor import TokenDeductor
+from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +317,7 @@ class DisasterRecoveryAgent:
                 status="failed",
                 recovered_components=[],
                 duration_seconds=duration,
-                notes=f"Recovery failed: {str(e)}",
+                notes=f"Recovery failed: {e!s}",
             )
 
             await self._store_recovery_result(recovery_result)
@@ -627,5 +628,13 @@ class DisasterRecoveryAgent:
 # Global instance
 disaster_recovery_agent = DisasterRecoveryAgent()
 
-# Initialize recovery plans on module load
-asyncio.create_task(disaster_recovery_agent.initialize_recovery_plans())
+# Initialize recovery plan on module load — শুধুমাত্র একটা event loop চলমান থাকলেই টাস্ক শিডিউল করা হয়;
+# বাংলা: import-time-এ event loop না থাকলে RuntimeError এড়ানো হয়, আর টাস্কের রেফারেন্স ট্র্যাক করে
+# রাখা হয় যাতে GC হয়ে মাঝপথে বাতিল না হয়ে যায় (RUF006)।
+try:
+    track_task(asyncio.get_running_loop().create_task(disaster_recovery_agent.initialize_recovery_plans()))
+except RuntimeError:
+    logger.debug(
+        "No running event loop at import time; skipping eager recovery plan init "
+        "(call initialize_recovery_plans() explicitly during app startup instead)."
+    )

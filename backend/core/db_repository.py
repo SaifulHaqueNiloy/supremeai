@@ -10,11 +10,11 @@ _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 # Custom Exception for Circuit Breaking
-class PrimaryDatabaseDownException(Exception):
+class PrimaryDatabaseDownError(Exception):
     pass
 
 
-class ServiceDegradedException(Exception):
+class ServiceDegradedError(Exception):
     pass
 
 
@@ -49,17 +49,17 @@ class SmartDataRepository:
                     return None
                 return doc.to_dict()
             else:
-                raise PrimaryDatabaseDownException("Firebase client not initialized or missing collection method")
-        except PrimaryDatabaseDownException:
+                raise PrimaryDatabaseDownError("Firebase client not initialized or missing collection method")
+        except PrimaryDatabaseDownError:
             raise
-        except Exception as e:  # noqa: BLE001
-            logging.warning(f"⚠️ Firebase unreachable ({str(e)}). Retrying...")
-            raise PrimaryDatabaseDownException(str(e)) from e
+        except Exception as e:
+            logging.warning(f"⚠️ Firebase unreachable ({e!s}). Retrying...")
+            raise PrimaryDatabaseDownError(str(e)) from e
 
     async def _fetch_from_primary(self, collection: str, doc_id: str) -> dict[str, Any] | None:
         try:
             return await self._fetch_from_primary_impl(collection, doc_id)
-        except PrimaryDatabaseDownException:
+        except PrimaryDatabaseDownError:
             raise
 
     # Tier 2: Fallback to Supabase if primary database fails
@@ -67,7 +67,7 @@ class SmartDataRepository:
         try:
             # Try to fetch from Firebase
             return await self._fetch_from_primary(table_name, doc_id)
-        except PrimaryDatabaseDownException:
+        except PrimaryDatabaseDownError:
             logging.critical("🚨 FIREBASE IS DOWN! Circuit Breaker Tripped. Falling back to Supabase.")
             try:
                 # If Supabase client has the execute API (standard Supabase-py)
@@ -78,12 +78,12 @@ class SmartDataRepository:
                 # If it's CloudPostgresStore helper
                 elif hasattr(self.supabase, "_execute"):
                     self._validate_table_name(table_name)
-                    query = f"SELECT * FROM {table_name} WHERE id = %s LIMIT 1"  # noqa: S608, UP032
+                    query = f"SELECT * FROM {table_name} WHERE id = %s LIMIT 1"
                     row = self.supabase._execute(query, (doc_id,), fetchone=True)
                     return dict(row) if row else None
                 else:
                     logging.critical("Supabase client is not compatible or not initialized.")
                     return None
-            except Exception as backup_error:  # noqa: BLE001
-                logging.critical(f"💀 FATAL: Both databases are down! {str(backup_error)}")
-                raise ServiceDegradedException("Both primary and fallback databases unavailable") from backup_error
+            except Exception as backup_error:
+                logging.critical(f"💀 FATAL: Both databases are down! {backup_error!s}")
+                raise ServiceDegradedError("Both primary and fallback databases unavailable") from backup_error

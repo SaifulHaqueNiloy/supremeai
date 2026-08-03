@@ -51,19 +51,19 @@ _IN_MEMORY_KNOWN_USERS: set[str] = set()
 
 class DeviceUpdateRequest(BaseModel):
     type: str
-    osVersion: str | None = None
-    screenResolution: str | None = None
-    densityDpi: int | None = None
+    osVersion: str | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    screenResolution: str | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    densityDpi: int | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
 
 
 class ProfileUpdateRequest(BaseModel):
-    installQuota: int | None = None
+    installQuota: int | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
     device: DeviceUpdateRequest | None = None
 
 
 class InstallRequest(BaseModel):
-    appId: str
-    deviceProfile: str | None = "PIXEL_6"
+    appId: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    deviceProfile: str | None = "PIXEL_6"  # noqa: N815 -- camelCase required to match frontend JSON API contract
 
 
 def _use_redis() -> bool:

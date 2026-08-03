@@ -74,7 +74,7 @@ class CollaborativeEditor:
                     del self.redis_listeners[session_id]
                     logger.info(f"Stopped Redis listener for session {session_id} on this instance")
 
-    async def broadcast(self, session_id: str, message: dict, sender_id: str = None):
+    async def broadcast(self, session_id: str, message: dict, sender_id: str | None = None):
         """বাংলা মন্তব্য: মেসেজটি সরাসরি লোকাল সকেটে না পাঠিয়ে, Redis চ্যানেলে পাবলিশ করা হচ্ছে।"""
         if sender_id:
             message["sender_id"] = sender_id
@@ -82,7 +82,7 @@ class CollaborativeEditor:
         channel = f"supremeai:collab:{session_id}"
         await self.redis.publish(channel, json.dumps(message))
 
-    async def broadcast_delta(self, session_id: str, delta: dict, sender_id: str = None):
+    async def broadcast_delta(self, session_id: str, delta: dict, sender_id: str | None = None):
         """বাংলা মন্তব্য: CRDT মার্জিং লজিক এবং স্টেট পারসিস্টেন্স"""
         current_state = await self.get_session_state(session_id)
         doc_state = current_state["document_state"]
@@ -124,7 +124,9 @@ class CollaborativeEditor:
         await self.broadcast(session_id, message, client_id)
 
         # ৩. মেইন থ্রেড ব্লক না করে ব্যাকগ্রাউন্ডে AI টাস্ক চালু করা
-        asyncio.create_task(self._process_ai_request(session_id, prompt))
+        from core.utils.background_tasks import track_task
+
+        track_task(asyncio.create_task(self._process_ai_request(session_id, prompt)))
 
     async def _process_ai_request(self, session_id: str, prompt: str):
         """বাংলা মন্তব্য: Freebuff বা AI মডেলকে দিয়ে কোড লিখিয়ে এডিটরে পুশ করা হবে।"""
@@ -146,7 +148,7 @@ class CollaborativeEditor:
                 )
             else:
                 # ফলব্যাক (যদি Freebuff কাজ না করে)
-                ai_generated_code = f"\n\n# --- AI Response ---\n# Executed Prompt: {prompt}\ndef auto_generated_feature():\n    logger.info('Hello from SupremeAI!')\n"  # noqa: E501
+                ai_generated_code = f"\n\n# --- AI Response ---\n# Executed Prompt: {prompt}\ndef auto_generated_feature():\n    logger.info('Hello from SupremeAI!')\n"
 
             # বর্তমান স্টেট ফেচ করে শেষে কোড যুক্ত করা
             current_state = await self.get_session_state(session_id)
@@ -159,7 +161,7 @@ class CollaborativeEditor:
             # এডিটরে কোড ব্রডকাস্ট করা (সব ইউজারের কাছে চলে যাবে)
             await self.broadcast_delta(session_id, delta, sender_id="supreme-ai-agent")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error processing AI request: {e}")
         finally:
             # কাজ শেষ, "AI is typing..." অ্যানিমেশন বন্ধ করার সিগন্যাল পাঠানো
@@ -189,7 +191,7 @@ class CollaborativeEditor:
                             if client_id != sender_id:
                                 try:
                                     await ws.send_text(data)
-                                except Exception as e:  # noqa: BLE001
+                                except Exception as e:
                                     logger.error(f"Error sending to local client {client_id}: {e}")
         except asyncio.CancelledError:
             await pubsub.unsubscribe(channel)
@@ -204,7 +206,7 @@ class CollaborativeEditor:
             async for event in swarm_streamer.subscribe():
                 if f"session_{session_id}" in event:
                     logger.info(f"Received collaboration event: {event}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Collaboration session error: {e}")
             from core.messaging.event_bus import ErrorEvent, error_event_bus
 
@@ -252,6 +254,6 @@ async def websocket_collab(websocket: WebSocket, session_id: str, client_id: str
                 logger.warning(f"Invalid JSON received from client {client_id}")
     except WebSocketDisconnect:
         await editor_manager.disconnect_client(session_id, client_id)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"WebSocket error in session {session_id} for client {client_id}: {e}")
         await editor_manager.disconnect_client(session_id, client_id)

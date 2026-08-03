@@ -43,7 +43,7 @@ class InternalGateway:
                 "status_code": response.status_code,
                 "data": response.json() if response.is_success else response.text,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"n8n trigger failed: {exc}")
             return {"success": False, "error": str(exc)}
 
@@ -52,7 +52,7 @@ class InternalGateway:
         try:
             response = httpx.post(webhook_url, json=payload, timeout=10.0)
             return {"success": response.is_success, "response": response.text}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"success": False, "error": str(exc)}
 
 
@@ -117,7 +117,7 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
                         # Record a basic hit (backend should ideally report exact tokens later)
                         tracker.record(provider.name, token_count=100)
                         logger.info(f"Injected {provider.name} key from rotator for {normalized}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to inject dynamic API key: {e}")
 
     try:
@@ -134,21 +134,21 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
                     failed_provider = headers["X-Dynamic-Provider"]
                     tracker.mark_rate_limited(failed_provider, pause_seconds=60)
                     logger.warning(f"Provider {failed_provider} hit 429, paused for 60s.")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     try:
                         import loguru
 
                         loguru.logger.error(f"Tool execution error: {e}")
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.warning(f"Exception suppressed: {e}")
                     pass
 
         return JSONResponse(content=response.json(), status_code=response.status_code)
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code)
-    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=exc.response.status_code) from exc
+    except Exception as exc:
         logger.exception("gateway forward failed")
-        raise HTTPException(status_code=502, detail=str(exc))
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.post("/dispatch/{capability}")
@@ -156,13 +156,13 @@ async def api_dispatch(capability: str, payload: dict[str, Any]) -> JSONResponse
     try:
         result = api_router.dispatch(capability, payload or {})
     except KeyError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     status = 200 if result.get("success", True) else 502
     return JSONResponse(content=result, status_code=status)
 
 
 @router.post("/n8n")
-async def trigger_n8n(webhook_path: str = "", payload: dict[str, Any] = None) -> JSONResponse:
+async def trigger_n8n(webhook_path: str = "", payload: dict[str, Any] | None = None) -> JSONResponse:
     if payload is None:
         payload = {}
     internal = InternalGateway()
@@ -172,7 +172,7 @@ async def trigger_n8n(webhook_path: str = "", payload: dict[str, Any] = None) ->
 
 
 @router.post("/make")
-async def trigger_make(webhook_url: str = "", payload: dict[str, Any] = None) -> JSONResponse:
+async def trigger_make(webhook_url: str = "", payload: dict[str, Any] | None = None) -> JSONResponse:
     if payload is None:
         payload = {}
     internal = InternalGateway()

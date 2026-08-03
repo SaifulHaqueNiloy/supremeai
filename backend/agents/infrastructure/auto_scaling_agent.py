@@ -15,6 +15,7 @@ import psutil  # This may need to be installed separately
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
+from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)
 
@@ -274,7 +275,7 @@ class AutoScalingAgent:
             return ScalingRecommendation(
                 current_resources=current_resources,
                 recommended_resources=current_resources.copy(),
-                reason=f"Error analyzing scaling need: {str(e)}",
+                reason=f"Error analyzing scaling need: {e!s}",
                 confidence=0.0,
                 timestamp=datetime.utcnow(),
                 cost_impact=0.0,
@@ -499,5 +500,13 @@ class AutoScalingAgent:
 # Global instance
 auto_scaling_agent = AutoScalingAgent()
 
-# Initialize policies on module load
-asyncio.create_task(auto_scaling_agent.initialize_policies())
+# Initialize scaling policy on module load — শুধুমাত্র একটা event loop চলমান থাকলেই টাস্ক শিডিউল করা হয়;
+# বাংলা: import-time-এ event loop না থাকলে RuntimeError এড়ানো হয়, আর টাস্কের রেফারেন্স ট্র্যাক করে
+# রাখা হয় যাতে GC হয়ে মাঝপথে বাতিল না হয়ে যায় (RUF006)।
+try:
+    track_task(asyncio.get_running_loop().create_task(auto_scaling_agent.initialize_policies()))
+except RuntimeError:
+    logger.debug(
+        "No running event loop at import time; skipping eager scaling policy init "
+        "(call initialize_policies() explicitly during app startup instead)."
+    )

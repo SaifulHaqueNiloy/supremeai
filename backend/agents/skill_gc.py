@@ -50,10 +50,12 @@ class SkillGarbageCollector:
             # ISO string → datetime parse (string হলে convert করতে হবে)
             if isinstance(last_used_raw, str):
                 try:
+                    # বাংলা: আগের কোডে .rstrip("+00:00") ভুলভাবে ব্যবহার হয়েছিল — rstrip
+                    # একটা character SET হিসেবে কাজ করে, পুরো substring হিসেবে না, তাই এটা
+                    # timestamp-এর শেষের আসল সংখ্যাও মুছে দিতে পারত (যেমন ...T00:00:00+00:00)।
+                    # সঠিক ফিক্স: শুধু "Z" suffix-টা "+00:00" দিয়ে replace করা, বাড়তি strip না করে।
                     last_used = datetime.fromisoformat(
-                        last_used_raw.replace("Z", "+00:00").rstrip("+00:00")
-                        if last_used_raw.endswith("Z")
-                        else last_used_raw
+                        last_used_raw[:-1] + "+00:00" if last_used_raw.endswith("Z") else last_used_raw
                     )
                 except ValueError:
                     # Parse করতে না পারলে খুব পুরনো ধরে নাও

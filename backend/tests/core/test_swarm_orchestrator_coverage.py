@@ -98,7 +98,7 @@ class TestCircuitBreakerOpenError:
             raise CircuitBreakerOpenError(name="test_service", state=CircuitBreakerState.OPEN)
 
     def test_is_exception(self):
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             raise CircuitBreakerOpenError(name="test_service", state=CircuitBreakerState.OPEN)
 
 
@@ -170,7 +170,7 @@ class TestCircuitBreakerCall:
         """বাংলা মন্তব্য: Threshold-এর নিচে failures থাকলে state CLOSED থাকে।"""
         mock_coro = AsyncMock(side_effect=RuntimeError("Service error"))
 
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(RuntimeError):
                 await circuit_breaker.acall(mock_coro)
 
@@ -182,7 +182,7 @@ class TestCircuitBreakerCall:
         """বাংলা মন্তব্য: Threshold cross করলে circuit OPEN হয়।"""
         mock_coro = AsyncMock(side_effect=RuntimeError("Service error"))
 
-        for i in range(3):
+        for _i in range(3):
             with pytest.raises(RuntimeError):
                 await circuit_breaker.acall(mock_coro)
 

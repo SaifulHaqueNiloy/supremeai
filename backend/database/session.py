@@ -78,7 +78,7 @@ def init_engine() -> None:
     import-এর সময় নয় — প্রথমবার engine/AsyncSessionLocal অ্যাক্সেসের সময় কল হয়।
     Safe to call multiple times — second call is a no-op.
     """
-    global _engine_instance, _session_maker_instance  # noqa: PLW0603
+    global _engine_instance, _session_maker_instance
     if _engine_instance is not None:
         return
 
@@ -135,7 +135,7 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def __dir__() -> list[str]:  # noqa: PLW3201
+def __dir__() -> list[str]:
     """বাংলা: dir()-এ engine ও AsyncSessionLocal দেখানোর জন্য।"""
     return [*list(globals().keys()), "engine", "AsyncSessionLocal"]
 
@@ -163,7 +163,7 @@ async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
         raise HTTPException(
             status_code=503,
             detail="Service temporarily unavailable due to high load (DB pool exhausted).",
-        )
+        ) from e
 
 
 # FastAPI Dependency Injection (with safe rollback)

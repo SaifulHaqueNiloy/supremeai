@@ -118,11 +118,11 @@ async def resume_swarm(admin_user: dict = Depends(get_current_admin)):
 
 
 class SelfHealingRequest(BaseModel):
-    filePath: str
+    filePath: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
     message: str
-    lineNumber: int
-    codeContext: str
-    languageId: str
+    lineNumber: int  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    codeContext: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    languageId: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
 
 
 @router.post("/execute-healing")
@@ -211,8 +211,8 @@ async def save_forge_swarm(payload: ForgePayload):
                 "edge_count": len(payload.edges),
             },
         }
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Failed to save Forge Swarm: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to save Forge Swarm: {e!s}")
         raise HTTPException(status_code=500, detail="Internal server error while saving swarm blueprint") from e
 
 
@@ -237,8 +237,8 @@ async def run_swarm_execution_async(execution_plan):
                     "message": f"Agent Node [{node['data'].get('label', 'Unknown')}] execution finished.",
                 },
             )
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Execution background task failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Execution background task failed: {e!s}")
 
 
 @router.post("/forge/{flow_id}/execute", status_code=202)
@@ -255,8 +255,8 @@ async def execute_forge_flow(flow_id: str, payload: ForgePayload, background_tas
             "message": "Swarm execution started in background",
         }
     except ValueError as e:
-        logger.error(f"DAG Validation Error: {str(e)}")
+        logger.error(f"DAG Validation Error: {e!s}")
         raise HTTPException(status_code=400, detail=str(e)) from e
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Execution failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Execution failed: {e!s}")
         raise HTTPException(status_code=500, detail="Failed to execute flow") from e

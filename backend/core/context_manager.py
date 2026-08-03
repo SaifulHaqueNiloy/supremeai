@@ -87,7 +87,7 @@ class ContextManager:
                         collection_name="conversation_contexts",
                         points=[
                             models.PointStruct(
-                                id=hashlib.md5(context.session_id.encode()).hexdigest(),
+                                id=hashlib.md5(context.session_id.encode(), usedforsecurity=False).hexdigest(),
                                 vector=context.context_embedding,
                                 payload={
                                     "user_id": context.user_id,
@@ -107,7 +107,7 @@ class ContextManager:
             self.logger.error(f"Error storing context: {e}")
             return False
 
-    async def retrieve_context(self, session_id: str, user_id: str = None) -> ConversationContext | None:
+    async def retrieve_context(self, session_id: str, user_id: str | None = None) -> ConversationContext | None:
         """Retrieve conversation context from Redis or vector database."""
         # First try Redis for quick access
         redis_key = f"context:{session_id}"
@@ -138,7 +138,7 @@ class ContextManager:
 
         return None
 
-    async def search_context_by_similarity(self, query: str, user_id: str = None) -> ConversationContext | None:
+    async def search_context_by_similarity(self, query: str, user_id: str | None = None) -> ConversationContext | None:
         """Search for similar conversation contexts using semantic similarity."""
         if not self.vector_client:
             return None

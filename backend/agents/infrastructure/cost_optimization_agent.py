@@ -13,6 +13,7 @@ from typing import Any
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
 from core.monitoring.metrics_collector import MetricsCollector
+from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)
 
@@ -767,5 +768,13 @@ class CostOptimizationAgent:
 # Global instance
 cost_optimization_agent = CostOptimizationAgent()
 
-# Initialize budget config on module load
-asyncio.create_task(cost_optimization_agent.initialize_budget_config())
+# Initialize budget config on module load — শুধুমাত্র একটা event loop চলমান থাকলেই টাস্ক শিডিউল করা হয়;
+# বাংলা: import-time-এ event loop না থাকলে RuntimeError এড়ানো হয়, আর টাস্কের রেফারেন্স ট্র্যাক করে
+# রাখা হয় যাতে GC হয়ে মাঝপথে বাতিল না হয়ে যায় (RUF006)।
+try:
+    track_task(asyncio.get_running_loop().create_task(cost_optimization_agent.initialize_budget_config()))
+except RuntimeError:
+    logger.debug(
+        "No running event loop at import time; skipping eager budget config init "
+        "(call initialize_budget_config() explicitly during app startup instead)."
+    )

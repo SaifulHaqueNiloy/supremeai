@@ -506,7 +506,7 @@ class AccessibilityComplianceEngine:
 
         return max(0.0, 100.0 - penalty)
 
-    def generate_compliance_report(self, url: str = None) -> dict:
+    def generate_compliance_report(self, url: str | None = None) -> dict:
         """Generate a detailed compliance report."""
         return {
             "timestamp": __import__("datetime").datetime.now().isoformat(),
@@ -533,7 +533,7 @@ class AccessibilityComplianceEngine:
 def check_url_accessibility(url: str) -> dict:
     """Check accessibility of a web page at the given URL."""
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
 
         engine = AccessibilityComplianceEngine()

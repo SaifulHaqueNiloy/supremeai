@@ -34,7 +34,7 @@ from .llm.free_tier_tracker import get_tracker
 from .llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
 from .logging import get_logger
 from .metrics import counter, timed
-from .resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from .resilience.circuit_breaker import CircuitBreaker as circuit_breaker  # noqa: N813 -- used as a decorator (@circuit_breaker(...)) below, lowercase is the intended convention for decorators
 from .resilience.circuit_breaker_manager import get_shared_circuit_breaker
 
 
@@ -1289,7 +1289,7 @@ class HFSwarmRouter:
             response.raise_for_status()
             return {"status": "success", "task": task_type, "model": target_model, "output": response.json()}
         except Exception as e:
-            logger.error(f"❌ Inference error for model {target_model}: {str(e)}")
+            logger.error(f"❌ Inference error for model {target_model}: {e!s}")
             return {"status": "error", "task": task_type, "model": target_model, "error": str(e)}
 
 

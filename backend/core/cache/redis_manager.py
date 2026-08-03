@@ -215,7 +215,7 @@ def acquire_idempotency_lock(key: str, ttl: int = 60, fail_closed: bool = True):
 class _TTLCacheItem:
     """TTL-ভিত্তিক ক্যাশ আইটেম — স্বয়ংক্রিয় মেয়াদোত্তীর্ণ (Bangla: TTL-based cache item with auto-expiry)"""
 
-    __slots__ = ("value", "expires_at")
+    __slots__ = ("expires_at", "value")
 
     def __init__(self, value: Any, ttl: int = 60):
         self.value = value
@@ -298,33 +298,33 @@ class MultiLevelCache:
         """Backward-compatibility wrapper mapping local_cache accesses to L1 store."""
 
         class _LocalCacheDictAdapter(dict):
-            def __init__(adapter_self, outer: MultiLevelCache):
-                adapter_self.outer = outer
+            def __init__(self, outer: MultiLevelCache):
+                self.outer = outer
 
-            def __getitem__(adapter_self, key: str) -> Any:
-                val = adapter_self.outer._l1_cache.get(key)
+            def __getitem__(self, key: str) -> Any:
+                val = self.outer._l1_cache.get(key)
                 if val is None:
                     raise KeyError(key)
                 return val
 
-            def __setitem__(adapter_self, key: str, value: Any) -> None:
-                adapter_self.outer._l1_cache.set(key, value)
+            def __setitem__(self, key: str, value: Any) -> None:
+                self.outer._l1_cache.set(key, value)
 
-            def __delitem__(adapter_self, key: str) -> None:
-                adapter_self.outer._l1_cache.delete(key)
+            def __delitem__(self, key: str) -> None:
+                self.outer._l1_cache.delete(key)
 
-            def __contains__(adapter_self, key: object) -> bool:
-                return adapter_self.outer._l1_cache.get(str(key)) is not None
+            def __contains__(self, key: object) -> bool:
+                return self.outer._l1_cache.get(str(key)) is not None
 
-            def pop(adapter_self, key: str, default: Any = None) -> Any:
-                val = adapter_self.outer._l1_cache.get(key)
+            def pop(self, key: str, default: Any = None) -> Any:
+                val = self.outer._l1_cache.get(key)
                 if val is not None:
-                    adapter_self.outer._l1_cache.delete(key)
+                    self.outer._l1_cache.delete(key)
                     return val
                 return default
 
-            def clear(adapter_self) -> None:
-                adapter_self.outer._l1_cache.clear()
+            def clear(self) -> None:
+                self.outer._l1_cache.clear()
 
         return _LocalCacheDictAdapter(self)
 

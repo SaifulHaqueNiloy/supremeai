@@ -66,9 +66,9 @@ class TaskResponse(BaseModel):
 class CompletionRequest(BaseModel):
     prefix: str
     suffix: str
-    filePath: str
+    filePath: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
     language: str
-    sessionId: str | None = None
+    sessionId: str | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
 
 
 class CompletionResponse(BaseModel):
@@ -78,7 +78,7 @@ class CompletionResponse(BaseModel):
 
 class ChatStreamRequest(BaseModel):
     message: str
-    sessionId: str | None = None
+    sessionId: str | None = None  # noqa: N815 -- camelCase required to match frontend JSON API contract
     messages: list[dict] | None = None
     context: dict | None = None
 
@@ -194,7 +194,7 @@ def format_chat_history(messages: list[dict]) -> str:
                 data = json.loads(content)
                 if isinstance(data, dict) and "content" in data:
                     content = data["content"]
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logging.getLogger(__name__).warning(f"Exception suppressed: {e}")
         role_label = "User" if role == "user" else "Assistant"
         lines.append(f"{role_label}: {content}")

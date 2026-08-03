@@ -134,7 +134,7 @@ async def test_stream_completion_raises_when_all_models_fail():
     gateway = LLMGateway()
     with patch("litellm.acompletion", new_callable=AsyncMock, side_effect=Exception("down")):
         os.environ["OPENAI_API_KEY"] = "mock_key"
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             _ = [c async for c in gateway._stream_completion([{"role": "user", "content": "x"}], ["m1", "m2"], 1.0)]
 
 

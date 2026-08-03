@@ -53,15 +53,15 @@ class KeyRequest(BaseModel):
 
 
 class CredentialRequest(BaseModel):
-    serviceName: str
+    serviceName: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
     username: str
     password: str
-    userId: str | None = "default"
+    userId: str | None = "default"  # noqa: N815 -- camelCase required to match frontend JSON API contract
 
 
 class UrlPermissionRequest(BaseModel):
-    urlPattern: str
-    userId: str | None = "default"
+    urlPattern: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    userId: str | None = "default"  # noqa: N815 -- camelCase required to match frontend JSON API contract
     reason: str | None = "None"
 
 
@@ -101,7 +101,7 @@ def get_credentials(userId: str = "default"):
             decrypted = credential_store.decrypt(c.get("ciphertext", ""), c.get("key_ref"))
             try:
                 decrypted_dict = json.loads(decrypted)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 logger.exception("Unhandled exception")
                 decrypted_dict = {}
 
@@ -479,8 +479,7 @@ def update_session(session_id: str, session: SessionIn):
 @router.delete("/sessions/{session_id}")
 def delete_session(session_id: str):
     """বাংলা মন্তব্য: সেশন মুছে ফেলে"""
-    if session_id in SESSIONS:
-        del SESSIONS[session_id]
+    SESSIONS.pop(session_id, None)
     return {"success": True}
 
 
