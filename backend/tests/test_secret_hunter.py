@@ -258,10 +258,16 @@ class TestSecretHunter:
     @pytest.mark.asyncio
     async def test_scan_codebase_nonexistent_directory(self):
         """Test scanning nonexistent directory raises error."""
+        import tempfile
+
         hunter = SecretHunter()
+        nonexistent_dir = Path(tempfile.gettempdir()) / "supremeai_nonexistent_test_dir_12345"
+        # বাংলা মন্তব্য: নিশ্চিত করো ডিরেক্টরিটা আসলে নেই
+        if nonexistent_dir.exists():
+            nonexistent_dir.rmdir()
 
         with pytest.raises(FileNotFoundError):
-            await hunter.scan_codebase("/nonexistent/path")
+            await hunter.scan_codebase(str(nonexistent_dir))
 
     @pytest.mark.asyncio
     async def test_scan_codebase_success(self):

@@ -98,10 +98,11 @@ def get_recent_activity():
 def get_credentials(userId: str = "default"):
     import json
 
+    cred_store = get_credential_store()
     user_creds = []
     for c in CREDENTIALS:
         if c.get("userId") == userId:
-            decrypted = credential_store.decrypt(c.get("ciphertext", ""), c.get("key_ref"))
+            decrypted = cred_store.decrypt(c.get("ciphertext", ""), c.get("key_ref"))
             try:
                 decrypted_dict = json.loads(decrypted)
             except Exception:
@@ -120,7 +121,7 @@ def get_credentials(userId: str = "default"):
                     if k == "username":
                         masked_dict[k] = v
                     else:
-                        masked_dict[k] = credential_store.mask(v)
+                        masked_dict[k] = cred_store.mask(v)
                 else:
                     masked_dict[k] = v
             masked_dict["serviceName"] = c.get("serviceName")
@@ -132,7 +133,8 @@ def get_credentials(userId: str = "default"):
 def save_credential(cred: CredentialRequest):
     import json
 
-    ciphertext, key_ref = credential_store.encrypt(json.dumps(cred.model_dump()))
+    cred_store = get_credential_store()
+    ciphertext, key_ref = cred_store.encrypt(json.dumps(cred.model_dump()))
     new_cred = {
         "id": f"cred_{len(CREDENTIALS) + 1}",
         "userId": cred.userId,
@@ -141,7 +143,7 @@ def save_credential(cred: CredentialRequest):
         "key_ref": key_ref,
     }
     CREDENTIALS.append(new_cred)
-    audit.log_decision(
+    get_audit().log_decision(
         action_type="browser_credential_saved",
         decision_details=f"Stored credential for service '{cred.serviceName}'",
         reasoning=f"User '{cred.userId}' saved browser credential.",
