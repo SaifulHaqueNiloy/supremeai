@@ -49,6 +49,12 @@ class HealthMonitor:
         )
         self.active_tasks = Gauge("supremeai_active_tasks", "Number of active asyncio tasks")
         self.status = Gauge("supremeai_health_status", "Health status (1=healthy, 0=degraded)")
+        try:
+            from prometheus_client import Counter
+            self.error_count = Counter("supremeai_errors_total", "Total error occurrences", ["error_type"])
+            self.token_usage = Counter("supremeai_tokens_total", "Total tokens processed", ["provider", "type"])
+        except Exception:
+            pass
 
     async def get_system_metrics(self) -> dict[str, Any]:
         import psutil
@@ -108,6 +114,20 @@ class HealthMonitor:
                 self.request_duration_seconds.observe(duration_seconds)
             except Exception as exc:
                 logger.debug(f"Failed to record request duration: {exc}")
+
+    def record_error(self, error_type: str = "general") -> None:
+        if _PROMETHEUS_AVAILABLE and hasattr(self, "error_count"):
+            try:
+                self.error_count.labels(error_type=error_type).inc()
+            except Exception as exc:
+                logger.debug(f"Failed to record error metric: {exc}")
+
+    def record_token_usage(self, provider: str, token_type: str, count: int) -> None:
+        if _PROMETHEUS_AVAILABLE and hasattr(self, "token_usage"):
+            try:
+                self.token_usage.labels(provider=provider, type=token_type).inc(count)
+            except Exception as exc:
+                logger.debug(f"Failed to record token usage metric: {exc}")
 
 
 _health_monitor_instance = None

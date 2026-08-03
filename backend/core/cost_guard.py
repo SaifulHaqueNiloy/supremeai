@@ -155,6 +155,27 @@ class CostGuard:
         # Default daily cap strategy based on tier limit (e.g. 10x the per task limit)
         return self.tier_limits.get(tier, 0.0) * 10.0
 
+    async def is_provider_quota_exceeded(self, provider: str, daily_limit: int = 1_000_000) -> bool:
+        """
+        Rule PSI-005: Stop routing when provider daily token quota reaches 80%.
+        """
+        key = f"cost_guard:provider:{provider}:daily_tokens"
+        try:
+            from core.cache.redis_manager import redis_manager
+            used_raw = await redis_manager.get_cache(key)
+            used_tokens = int(used_raw) if used_raw else 0
+            threshold = daily_limit * 0.80
+            if used_tokens >= threshold:
+                logger.warning(
+                    f"⚠️ [PSI-005] Provider '{provider}' daily token quota reached 80% threshold "
+                    f"({used_tokens}/{daily_limit}). Routing stopped for this provider."
+                )
+                return True
+            return False
+        except Exception as exc:
+            logger.error(f"[CostGuard] Provider quota check error for {provider}: {exc}")
+            return False
+
     async def record_spend(self, tenant_id: str, tier: str, actual_cost: float):
         from core.cache.redis_manager import redis_manager
 

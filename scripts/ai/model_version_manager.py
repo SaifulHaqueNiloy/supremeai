@@ -138,6 +138,60 @@ class ModelVersionManager:
 
         return version
 
+    def _sync_to_supabase(self, version: ModelVersion):
+        """Sync version metadata to Supabase ModelVersion table if env variables are available."""
+        import os
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+        if not url or not key:
+            return
+        try:
+            from supabase import create_client
+            client = create_client(url, key)
+            data = {
+                "version_id": version.version_id,
+                "model_name": version.model_name,
+                "version_number": version.version_number,
+                "status": version.status.value,
+                "created_at": version.created_at.isoformat(),
+                "artifacts_path": version.artifacts_path,
+                "metrics": version.metrics,
+                "parent_version": version.parent_version,
+                "tags": version.tags,
+                "checksum": version.checksum,
+            }
+            client.table("ModelVersion").upsert(data).execute()
+            logger.info(f"Synced version {version.version_id} to Supabase ModelVersion table.")
+        except Exception as e:
+            logger.warning(f"Supabase sync failed (non-blocking): {e}")
+
+    def _sync_to_hf_hub(self, version: ModelVersion, repo_id: Optional[str] = None):
+        """Sync version metadata to HuggingFace Hub repository if token is available."""
+        import os
+        token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+        if not token or not repo_id:
+            return
+        try:
+            from huggingface_hub import HfApi
+            api = HfApi(token=token)
+            api.create_repo(repo_id=repo_id, exist_ok=True)
+            meta_json = json.dumps({
+                "version_id": version.version_id,
+                "model_name": version.model_name,
+                "version_number": version.version_number,
+                "status": version.status.value,
+                "metrics": version.metrics,
+                "checksum": version.checksum,
+            }, indent=2)
+            api.upload_file(
+                path_or_fileobj=meta_json.encode("utf-8"),
+                path_in_repo=f"versions/{version.version_id}.json",
+                repo_id=repo_id,
+            )
+            logger.info(f"Uploaded model version {version.version_id} metadata to HF Hub repo {repo_id}.")
+        except Exception as e:
+            logger.warning(f"HF Hub sync failed (non-blocking): {e}")
+
     def _save_version(self, version: ModelVersion):
         """Save version to database."""
         conn = sqlite3.connect(self.db_path)
@@ -161,6 +215,8 @@ class ModelVersionManager:
         ))
         conn.commit()
         conn.close()
+
+        self._sync_to_supabase(version)
 
     def get_current_production_version(self, model_name: str) -> Optional[ModelVersion]:
         """Get the current production version of a model."""
