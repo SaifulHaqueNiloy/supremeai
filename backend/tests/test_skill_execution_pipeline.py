@@ -36,7 +36,9 @@ class TestSkillExecutionPipeline:
     async def test_get_unknown_skill_raises(self):
         """Test getting unknown skill raises error."""
         manager = SkillManager()
-        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(
+            Exception
+        ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             await manager.get_skill("nonexistent_skill")
 
     @pytest.mark.asyncio

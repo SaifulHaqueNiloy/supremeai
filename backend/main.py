@@ -58,7 +58,9 @@ def run_server() -> None:
     """
     is_local = settings.env == "local"
     port = int(os.getenv("PORT", str(settings.port)))
-    host = os.getenv("HOST") or ("0.0.0.0" if os.getenv("RENDER") or os.getenv("PORT") or not is_local else settings.host)
+    host = os.getenv("HOST") or (
+        "0.0.0.0" if os.getenv("RENDER") or os.getenv("PORT") or not is_local else settings.host
+    )
     uvicorn_kwargs: dict = {
         "host": host,
         "port": port,

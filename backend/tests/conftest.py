@@ -103,11 +103,13 @@ def _reset_secret_vault_cache():
     """বাংলা: টেস্ট আইসোলেশন নিশ্চিত করার জন্য Secret Vault এবং Settings ক্যাশ রিসেট"""
     try:
         from core.security.secret_vault import reset_secret_vault
+
         reset_secret_vault()
     except Exception:
         pass
     try:
         from core.config import settings
+
         if hasattr(settings, "_cached_secrets"):
             settings._cached_secrets.clear()
             settings._secrets_batch_loaded = False
@@ -116,6 +118,7 @@ def _reset_secret_vault_cache():
     yield
     try:
         from core.security.secret_vault import reset_secret_vault
+
         reset_secret_vault()
     except Exception:
         pass

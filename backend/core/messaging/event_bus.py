@@ -83,7 +83,6 @@ class ErrorEvent(BaseModel):
             self.error_type = self.type
 
 
-
 class DeadLetterQueueItem(BaseModel):
     """বাংলা মন্তব্য: Handler failure-এ এই item DLQ-তে যায়। Silent drop নিষিদ্ধ।"""
 
@@ -435,7 +434,6 @@ class _ErrorEventBusProxy:
 
 error_event_bus: IntelligentErrorBus = _ErrorEventBusProxy()  # type: ignore[misc, assignment]
 error_bus: IntelligentErrorBus = error_event_bus
-
 
 
 class EventBus:

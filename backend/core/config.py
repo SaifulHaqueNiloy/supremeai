@@ -56,8 +56,11 @@ from typing import Annotated, Any
 try:
     from dotenv import load_dotenv
 except ImportError:
+
     def load_dotenv(*args, **kwargs):
         pass
+
+
 from loguru import logger
 from pydantic import (
     Field,

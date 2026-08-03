@@ -59,6 +59,7 @@ from .optimization.performance_optimizer import (
     get_performance_optimizer,
     performance_monitor,
 )
+
 # বাংলা মন্তব্য: core.testing.qa_suite নিজে aiohttp আমদানি করে (একটা optional/dev-only
 # dependency — production API path কখনো এটা ব্যবহার করে না)। কিন্তু এই ব্লকটা আগে
 # try/except ছাড়াই ছিল, ফলে aiohttp ইনস্টল করা না থাকলে শুধু "import core" করলেই

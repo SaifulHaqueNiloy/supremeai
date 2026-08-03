@@ -83,7 +83,9 @@ class Orchestrator:
                 logger.info(f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}")
             except subprocess.TimeoutExpired:
                 logger.critical("[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed.")
-                raise RuntimeError("Budget guardian timed out. Halting orchestrator to prevent financial bleed.") from None
+                raise RuntimeError(
+                    "Budget guardian timed out. Halting orchestrator to prevent financial bleed."
+                ) from None
             except Exception as exc:
                 logger.critical(f"🔥 CRITICAL: Budget guardian failed! Error: {exc}")
                 raise RuntimeError("Budget Guardian failure. Halting orchestrator to prevent financial bleed.") from exc

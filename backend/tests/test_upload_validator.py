@@ -31,7 +31,9 @@ class FakeFile:
 
 def test_validate_upload_rejects_unsupported_extension():
     file = FakeFile("image.bmp", "image/bmp", b"garbage")
-    with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+    with pytest.raises(
+        Exception
+    ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         import asyncio
 
         asyncio.run(validate_upload(file))
@@ -48,7 +50,9 @@ def test_validate_upload_accepts_python_file():
 def test_validate_upload_rejects_oversized_file():
     body = b"x" * (MAX_UPLOAD_BYTES + 1)
     file = FakeFile("big.py", "text/x-python", body)
-    with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+    with pytest.raises(
+        Exception
+    ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         import asyncio
 
         asyncio.run(validate_upload(file))

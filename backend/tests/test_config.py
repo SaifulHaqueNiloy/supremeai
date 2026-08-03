@@ -67,7 +67,9 @@ def test_defaults(mock_fetch):
     "core.config.secret_vault.fetch_secret",
     side_effect=lambda k, default="": os.environ.get(k) or os.environ.get(k.lower()) or default,
 )
-@pytest.mark.skip(reason="Pre-existing test-isolation bug, unrelated to auth: conftest.py sets OPENROUTER_API_KEY (uppercase) via os.environ.setdefault at module level; this test's patch.dict uses lowercase 'openrouter_api_key', which does not override the existing uppercase key in os.environ. Needs test fix (use matching case) or conftest fix.")
+@pytest.mark.skip(
+    reason="Pre-existing test-isolation bug, unrelated to auth: conftest.py sets OPENROUTER_API_KEY (uppercase) via os.environ.setdefault at module level; this test's patch.dict uses lowercase 'openrouter_api_key', which does not override the existing uppercase key in os.environ. Needs test fix (use matching case) or conftest fix."
+)
 def test_env_override(mock_fetch):
     from core.config import settings
 
@@ -108,7 +110,9 @@ def test_env_override(mock_fetch):
 )
 @patch.dict(os.environ, {"env": "bad"}, clear=False)
 def test_invalid_env_raises(bad_env):
-    with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+    with pytest.raises(
+        Exception
+    ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         Settings()
 
 
@@ -161,5 +165,7 @@ def test_validate_production_completeness_raises_on_missing_production_keys(mock
 
 @patch.dict(os.environ, {"max_cost_per_task": "abc"}, clear=False)
 def test_invalid_type_cast():
-    with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+    with pytest.raises(
+        Exception
+    ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         Settings()

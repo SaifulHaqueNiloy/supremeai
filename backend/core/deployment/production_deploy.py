@@ -39,9 +39,11 @@ try:
     import requests
 except ImportError:
     import httpx as requests
+
     requests.exceptions = type("exceptions", (), {"RequestException": Exception})
 
 import logging
+
 try:
     import yaml
 except ImportError:

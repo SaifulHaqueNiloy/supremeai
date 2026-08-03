@@ -162,6 +162,7 @@ class CostGuard:
         key = f"cost_guard:provider:{provider}:daily_tokens"
         try:
             from core.cache.redis_manager import redis_manager
+
             used_raw = await redis_manager.get_cache(key)
             used_tokens = int(used_raw) if used_raw else 0
             threshold = daily_limit * 0.80

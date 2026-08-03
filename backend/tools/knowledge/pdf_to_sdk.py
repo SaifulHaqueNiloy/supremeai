@@ -104,9 +104,7 @@ class PDFToSDKConverter:
                 for e in spec.get("endpoints", [])[:5]
             )
             if lang.lower() == "python":
-                results[
-                    lang
-                ] = f"""
+                results[lang] = f"""
 import httpx
 
 class ApiClient:

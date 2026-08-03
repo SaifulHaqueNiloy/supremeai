@@ -111,7 +111,9 @@ class TestProviderFailoverChain:
             Provider.MOONSHOT: FakeProvider("moonshot", fail=True),
             Provider.DEEPSEEK: FakeProvider("deepseek", fail=True),
         }
-        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(
+            Exception
+        ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             await router.route("hello", task_type=TaskType.CHAT)
 
     @pytest.mark.asyncio
