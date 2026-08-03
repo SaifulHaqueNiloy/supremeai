@@ -403,7 +403,10 @@ class Settings(BaseSettings):
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
             url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
-        except Exception:
+        except Exception as e:
+            # বাংলা: এই সিক্রেট fetch ব্যর্থ হলে OTP alert silently বন্ধ হয়ে যায় —
+            # সেটা invisible না থেকে অন্তত ওয়ার্নিং লগ হওয়া উচিত
+            logger.warning(f"Failed to fetch DISCORD_OTP_WEBHOOK_URL secret: {e}")
             url = ""
         return SecretStr(url) if url else None
 
@@ -510,7 +513,10 @@ class Settings(BaseSettings):
     def discord_bot_token(self) -> str:
         try:
             return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
-        except Exception:
+        except Exception as e:
+            # বাংলা: টোকেন fetch ব্যর্থ হলে Discord bot silently অকার্যকর হয়ে যায় —
+            # কারণটি লগ করা হচ্ছে যাতে debug করা সহজ হয়
+            logger.warning(f"Failed to fetch DISCORD_BOT_TOKEN secret: {e}")
             return ""
 
     @property

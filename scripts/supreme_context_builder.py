@@ -65,6 +65,7 @@ def generate_ai_context():
 
         # ৩. ফাইল কনটেন্ট (XML Format)
         print("📂 Extracting Codebase...")
+        skipped_binary = 0
         for root, dirs, files in os.walk(ROOT_DIR):
             dirs[:] = [d for d in dirs if d not in IGNORE_DIRS and not d.startswith('.')]
 
@@ -92,10 +93,17 @@ def generate_ai_context():
                         total_words += len(content.split())
                         file_count += 1
 
-                except Exception:
-                    pass # বাইনারি বা আনরিডেবল ফাইলগুলো সাইলেন্টলি স্কিপ করবে
+                except UnicodeDecodeError:
+                    # বাংলা: এটা প্রত্যাশিত — বাইনারি ফাইল, তাই নীরবে স্কিপ করা ঠিক আছে
+                    skipped_binary += 1
+                except Exception as e:
+                    # বাংলা: অন্য যেকোনো ত্রুটি (permission, I/O) হলে সেটা জানিয়ে দিন,
+                    # কারণ এটা আসল কনটেক্সট-বিল্ডিং সমস্যা হতে পারে
+                    print(f"⚠️  Skipped {rel_path}: {e}")
 
         out_file.write("</project_files>\n")
+        if skipped_binary:
+            print(f"ℹ️  Skipped {skipped_binary} binary/non-text file(s)")
 
         # ৪. টোকেন এস্টিমেশন (1 word ≈ 1.3 tokens)
         estimated_tokens = math.ceil(total_words * 1.3)

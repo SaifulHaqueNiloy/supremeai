@@ -135,7 +135,9 @@ def parse_coverage_from_xml(xml_path: str) -> tuple[float, int, int]:
         lines_valid = int(root.attrib.get("lines-valid", 0))
         pct = round(line_rate * 100, 1)
         return pct, lines_covered, lines_valid
-    except Exception:
+    except Exception as exc:
+        # বাংলা: coverage XML পার্স ব্যর্থ হলে চুপচাপ 0.0% না দেখিয়ে কারণ জানিয়ে দিন
+        bprint(f"  ⚠️  Coverage XML পার্স করতে ব্যর্থ ({xml_path}): {exc}", YELLOW)
         return 0.0, 0, 0
 
 

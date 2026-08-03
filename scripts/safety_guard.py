@@ -138,7 +138,9 @@ class SafetyGuard:
 
             return any(marker in first_lines for marker in ai_markers)
 
-        except Exception:
+        except Exception as e:
+            # বাংলা: safe-default (False) অপরিবর্তিত রাখা হলো — শুধু কারণটি লগ করা হচ্ছে
+            logger.warning(f"Could not check AI-authorship marker for {file_path}: {e}")
             return False
 
     def block_or_approve(

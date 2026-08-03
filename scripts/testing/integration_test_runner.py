@@ -385,8 +385,9 @@ class TestExecutor:
             try:
                 data = json.loads(cov_file.read_text())
                 return data.get("totals", {}).get("percent_covered", 0.0)
-            except Exception:
-                pass
+            except Exception as e:
+                # বাংলা: coverage.json পার্স ব্যর্থ হলে চুপচাপ 0.0% না দেখিয়ে কারণ জানিয়ে দিন
+                logger.warning(f"Failed to parse {cov_file}: {e}")
         return 0.0
 
 

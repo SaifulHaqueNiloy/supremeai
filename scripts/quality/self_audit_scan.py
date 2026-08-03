@@ -67,7 +67,9 @@ def scan_python(root: Path) -> dict:
     for path in iter_files(root, CODE_EXTS):
         try:
             src = path.read_text(encoding="utf-8", errors="replace")
-        except Exception:
+        except Exception as e:
+            # বাংলা: ফাইল পড়া না গেলে পুরো audit থেকে চুপচাপ বাদ না দিয়ে stderr-এ জানিয়ে দিন
+            print(f"  ⚠️  Skipped from audit (unreadable): {path.relative_to(root)}: {e}", file=sys.stderr)
             continue
 
         rel = str(path.relative_to(root))
@@ -128,7 +130,9 @@ def scan_duplicates(root: Path) -> list[list[str]]:
     for path in iter_files(root, SRC_EXTS):
         try:
             data = path.read_bytes()
-        except Exception:
+        except Exception as e:
+            # বাংলা: ফাইল পড়া না গেলে অডিট থেকে চুপচাপ বাদ না দিয়ে stderr-এ জানিয়ে দিন
+            print(f"  ⚠️  Skipped (unreadable): {path.relative_to(root)}: {e}", file=sys.stderr)
             continue
         if len(data) < 50:
             continue
@@ -142,7 +146,9 @@ def scan_secrets(root: Path) -> list[str]:
     for path in iter_files(root, CODE_EXTS):
         try:
             src = path.read_text(encoding="utf-8", errors="replace")
-        except Exception:
+        except Exception as e:
+            # বাংলা: ফাইল পড়া না গেলে secret-scan থেকে চুপচাপ বাদ না দিয়ে stderr-এ জানিয়ে দিন
+            print(f"  ⚠️  Skipped secret scan (unreadable): {path.relative_to(root)}: {e}", file=sys.stderr)
             continue
         rel = str(path.relative_to(root))
         if "/tests/" in rel or rel.startswith("tests/"):

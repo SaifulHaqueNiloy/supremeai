@@ -86,7 +86,10 @@ class SupremeAILoadTester(HttpUser):
                                 logger.warning(f"⚠️ Cache Hit but High Latency: {duration:.2f}ms")
                         else:
                             response.success()
-                    except Exception:
+                    except Exception as e:
+                        # বাংলা: response 200 হলেও JSON পার্স ব্যর্থ হলে তা লগ করুন,
+                        # নাহলে ক্যাশ-হিট ডিটেকশন সাইলেন্টলি ভেঙে যেতে পারে এবং কেউ জানবে না
+                        logger.warning(f"Could not parse cache-hit signal from 200 response: {e}")
                         response.success()
                 else:
                     response.failure(f"Execution route failed: {response.status_code}")
@@ -121,5 +124,7 @@ class SupremeAILoadTester(HttpUser):
                 cached_hits = [r.json().get("source") == "semantic_cache" or "X-Cache-Lookup" in r.headers for r in responses if r.status_code == 200]
                 if not any(cached_hits):
                     print(f"🚨 CRITICAL FAILURE: Race Condition Exploded! Multiple execution passed: {status_codes}")
-            except Exception:
-                pass
+            except Exception as e:
+                # বাংলা: রেস-কন্ডিশন ভ্যালিডেশন লজিকটি নিজেই ভেঙে গেলে তা লগ করুন,
+                # নাহলে একটি প্রকৃত রেস-কন্ডিশন বাগ নীরবে miss হয়ে যেতে পারে
+                logger.warning(f"Race-condition validation check failed to parse responses: {e}")

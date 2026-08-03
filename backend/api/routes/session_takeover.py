@@ -63,7 +63,10 @@ def get_takeover_status(session_id: str, request: Request) -> dict:
         loop = _asyncio.new_event_loop()
         data = loop.run_until_complete(_get_status_from_redis(session_id))
         loop.close()
-    except Exception:
+    except Exception as e:
+        # বাংলা: এটি অ্যাডমিন সেশন-টেকওভার মনিটরিং এন্ডপয়েন্ট — Redis lookup ব্যর্থ হলে
+        # চুপচাপ "inactive" দেখানো বিভ্রান্তিকর, তাই কারণটি লগ করা হচ্ছে
+        logger.warning(f"Failed to fetch takeover status from Redis for session {session_id}: {e}")
         data = None
     if data:
         return {"status": "active", "session_id": session_id, "data": data}
