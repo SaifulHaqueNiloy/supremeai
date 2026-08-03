@@ -53,6 +53,8 @@ def verify_admin_routers() -> int:
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     errors = verify_admin_routers()
     if errors > 0:
         sys.exit(1)
