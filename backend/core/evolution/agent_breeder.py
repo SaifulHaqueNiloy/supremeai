@@ -20,7 +20,10 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-import litellm
+try:
+    import litellm
+except ImportError:
+    litellm = None  # type: ignore[assignment]
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
