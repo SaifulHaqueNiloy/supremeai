@@ -147,11 +147,15 @@ class LLMGateway:
         API keys আর এখানে set করা হচ্ছে না।
         প্রতিটি acompletion call-এ api_key parameter pass হবে।
         """
-        import litellm  # lazy import — module level নয়
+        # litellm প্যাকেজটি অনুপলব্ধ থাকলে সিস্টেম যেন ক্র্যাশ না করে, সে জন্য সেফ ট্রাই-এক্সেপ্ট ব্যবহার করা হলো।
+        try:
+            import litellm  # lazy import — module level নয়
 
-        litellm.drop_params = True
-        litellm.telemetry = False
-        litellm.use_litellm_proxy = False
+            litellm.drop_params = True
+            litellm.telemetry = False
+            litellm.use_litellm_proxy = False
+        except ImportError:
+            pass
 
     def _load_routing_policy(self) -> dict[str, Any]:
         """বাংলা মন্তব্ব: Routing policy JSON load — file not found = safe default।"""
@@ -193,7 +197,10 @@ class LLMGateway:
 
     def _setup_callbacks(self) -> None:
         """বাংলা মন্তব্ব: litellm callback — cost এবং error tracking।"""
-        import litellm  # lazy import
+        try:
+            import litellm  # lazy import
+        except ImportError:
+            return
 
         def success_callback(kwargs, response_obj, start_time, end_time):
             try:
