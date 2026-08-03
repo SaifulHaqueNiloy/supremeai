@@ -5,11 +5,11 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
-from core.observability.audit_logger import AuditLogger
-from core.security.secure_credential_store import SecureCredentialStore
+def get_audit() -> AuditLogger:
+    return AuditLogger()
 
-audit = AuditLogger()
-credential_store = SecureCredentialStore()
+def get_credential_store() -> SecureCredentialStore:
+    return SecureCredentialStore()
 
 router = APIRouter(prefix="/api/browser", tags=["browser"])
 BROWSER_STATUS: dict[str, Any] = {"browsing": False, "currentUrl": "about:blank"}

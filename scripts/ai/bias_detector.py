@@ -230,7 +230,7 @@ class BiasDetector:
             'model_id': result.model_id,
             'timestamp': result.timestamp.isoformat(),
             'overall_fairness_score': result.overall_fairness_score,
-            'data_drift_detected': result.data_drift_detected,
+            'data_drift_detected': bool(result.data_drift_detected),
             'bias_metrics': [
                 {
                     'attribute': m.attribute,
@@ -272,6 +272,7 @@ def main():
     parser.add_argument('--model-id', required=True, help='Model identifier to analyze')
     parser.add_argument('--predictions-file', help='Path to predictions JSON file')
     parser.add_argument('--output-dir', default='bias_reports', help='Output directory for reports')
+    parser.add_argument('--report-json', help='Path to output JSON report file')
 
     args = parser.parse_args()
 
@@ -293,6 +294,20 @@ def main():
     )
 
     report_path = detector.generate_report(result)
+
+    if args.report_json:
+        json_data = {
+            "model_id": result.model_id,
+            "timestamp": result.timestamp.isoformat(),
+            "overall_fairness_score": result.overall_fairness_score,
+            "data_drift_detected": bool(result.data_drift_detected),
+            "summary": detector.get_fairness_summary(result),
+            "recommendations": result.recommendations,
+        }
+        json_path = Path(args.report_json)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(json_data, indent=2), encoding="utf-8")
+        print(f"Exported JSON report to {args.report_json}")
 
     print(f"\nBias Detection Summary for {args.model_id}:")
     summary = detector.get_fairness_summary(result)

@@ -47,8 +47,14 @@ class KnowledgeQAService:
     ) -> None:
         self.vector_store = vector_store or ChromaDBStore()
         self.gateway = gateway or GatewayManager()
-        self.audit_logger = audit_logger or AuditLogger()
+        self._audit_logger = audit_logger
         self.manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    @property
+    def audit_logger(self) -> AuditLogger:
+        if self._audit_logger is None:
+            self._audit_logger = AuditLogger()
+        return self._audit_logger
         # বাংলা মন্তব্য: manifest দুটো ফর্ম্যাট সাপোর্ট করে:
         # ১. {"governance": {"allowed_roles": [...], ...}} — nested (new format)
         # ২. {"allowed_roles": [...], "allowed_data": {...}, ...} — flat (current manifest format)
