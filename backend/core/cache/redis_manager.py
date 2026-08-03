@@ -10,8 +10,11 @@ import os
 import time
 from typing import Any
 
-from loguru import logger
-from redis import asyncio as aioredis
+# redis লাইব্রেরি মিসিং থাকলেও যেন core.cache মডিউল ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট ব্যবহার করা হলো।
+try:
+    from redis import asyncio as aioredis
+except ImportError:
+    aioredis = None
 
 # Import pybreaker for circuit breaker functionality as mentioned in audit report
 try:
@@ -50,7 +53,7 @@ class SecureRedisManager:
         async with self._init_lock:
             if self._initialized:
                 return
-            if self.url:
+            if self.url and aioredis is not None:
                 pool = aioredis.ConnectionPool.from_url(
                     self.url,
                     max_connections=20,
@@ -64,7 +67,7 @@ class SecureRedisManager:
                 logger.critical("🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state.")
             self._initialized = True
 
-    async def get_client_async(self) -> aioredis.Redis | None:
+    async def get_client_async(self) -> Any:
         """Get Redis client with async-safe initialization.
 
         বাংলা: async-safe Redis ক্লায়েন্ট রিটার্ন করে।

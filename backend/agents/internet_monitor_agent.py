@@ -9,7 +9,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-import aiohttp
+# aiohttp প্যাকেজ উপলব্ধ না থাকলে সেফ ইমপোর্ট ফলব্যাক।
+try:
+    import aiohttp
+except ImportError:
+    aiohttp = None
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings

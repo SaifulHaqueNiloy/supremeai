@@ -19,7 +19,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlparse
 
-import jwt
+# pyjwt প্যাকেজ উপলব্ধ না থাকলেও সেফ ফলব্যাক নিশ্চিত করতে try/except ব্যবহার করা হলো।
+try:
+    import jwt
+except ImportError:
+    jwt = None
 from fastapi import HTTPException, status
 from loguru import logger
 
