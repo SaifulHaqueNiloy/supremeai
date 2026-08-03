@@ -764,7 +764,7 @@ class TestLLMGatewayMissingBranches:
             ),
         ):
             os.environ["OPENAI_API_KEY"] = "mock"
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
                 await gateway.acompletion(prompt="hi", tenant_id="t1")
             mock_healer.propose_fix.assert_called_once()
 

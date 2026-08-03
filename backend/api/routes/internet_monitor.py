@@ -60,7 +60,7 @@ async def get_latest_updates(current_user=Depends(get_current_admin)):
         }
     except Exception as e:
         logger.error(f"Error fetching internet updates: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch internet updates")
+        raise HTTPException(status_code=500, detail="Failed to fetch internet updates") from e
 
 
 @router.get("/summary", summary="Get Update Summary")
@@ -75,7 +75,7 @@ async def get_updates_summary(current_user=Depends(get_current_admin)):
         return {"success": True, "data": summary}
     except Exception as e:
         logger.error(f"Error fetching update summary: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch update summary")
+        raise HTTPException(status_code=500, detail="Failed to fetch update summary") from e
 
 
 @router.get("/history", summary="Get Update History")
@@ -90,7 +90,7 @@ async def get_updates_history(current_user=Depends(get_current_admin)):
         return {"success": True, "data": history, "count": len(history)}
     except Exception as e:
         logger.error(f"Error fetching update history: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch update history")
+        raise HTTPException(status_code=500, detail="Failed to fetch update history") from e
 
 
 @router.post("/start-monitoring", summary="Start Monitoring Process")
@@ -113,7 +113,7 @@ async def start_monitoring_process(current_user=Depends(get_current_admin)):
         }
     except Exception as e:
         logger.error(f"Error starting monitoring process: {e}")
-        raise HTTPException(status_code=500, detail="Failed to start monitoring process")
+        raise HTTPException(status_code=500, detail="Failed to start monitoring process") from e
 
 
 @router.get("/capabilities", summary="Get System Capabilities")
@@ -128,7 +128,7 @@ async def get_system_capabilities(current_user=Depends(get_current_admin)):
         return {"success": True, "data": caps}
     except Exception as e:
         logger.error(f"Error fetching system capabilities: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch system capabilities")
+        raise HTTPException(status_code=500, detail="Failed to fetch system capabilities") from e
 
 
 @router.get("/status", summary="Get Monitor Status")
@@ -153,4 +153,4 @@ async def get_monitor_status(current_user=Depends(get_current_admin)):
         }
     except Exception as e:
         logger.error(f"Error fetching monitor status: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch monitor status")
+        raise HTTPException(status_code=500, detail="Failed to fetch monitor status") from e

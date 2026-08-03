@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from core.messaging.nats_messaging import nats_client
+from core.utils.background_tasks import track_task
 from engine.worker_node import SwarmWorkerNode
 from engine.worker_registry import worker_registry
 
@@ -17,7 +18,8 @@ async def main():
 
     # 2. Start the Control Plane Registry Watcher
     logger.info("Starting Control Plane Worker Registry...")
-    asyncio.create_task(worker_registry.watch_registry())
+    registry_task = track_task(asyncio.create_task(worker_registry.watch_registry()))
+    _ = registry_task  # kept alive via track_task registry; referenced to satisfy linters
 
     # Give it a second to initialize
     await asyncio.sleep(2)
@@ -25,7 +27,8 @@ async def main():
     # 3. Spin up an Edge Worker Node
     logger.info("Starting Mock Edge Worker [Architect]...")
     worker = SwarmWorkerNode(agent_type="Architect")
-    asyncio.create_task(worker.start())
+    worker_task = track_task(asyncio.create_task(worker.start()))
+    _ = worker_task  # kept alive via track_task registry; referenced to satisfy linters
 
     # 4. Wait for Control Plane to discover it via JetStream KV
     logger.info("Waiting for Discovery...")

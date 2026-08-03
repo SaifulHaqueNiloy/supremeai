@@ -145,7 +145,7 @@ class AgentSupervisor:
             self._health[name].status = "stopped"
 
         # Cancel all agent tasks
-        for name, task in self._agents.items():
+        for _name, task in self._agents.items():
             if not task.done():
                 task.cancel()
 
@@ -246,7 +246,7 @@ class AgentSupervisor:
                 health.status = "stopped"
                 break
 
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 restart_count += 1
                 health.restart_count = restart_count
                 health.consecutive_failures += 1
@@ -271,7 +271,7 @@ class AgentSupervisor:
                             },
                         )
                     )
-                except Exception as bus_exc:  # noqa: BLE001, S110
+                except Exception as bus_exc:
                     logger.warning(f"Failed to emit agent restart event: {bus_exc}")
 
                 # Check max restarts
@@ -293,7 +293,7 @@ class AgentSupervisor:
                                 },
                             )
                         )
-                    except Exception as bus_exc:  # noqa: BLE001, S110
+                    except Exception as bus_exc:
                         logger.warning(f"Failed to emit permanent failure event: {bus_exc}")
                     break
 

@@ -82,7 +82,7 @@ class SkillIngestor:
             return {"success": False, "detail": "Source domain unauthorized."}
 
         try:
-            with urllib.request.urlopen(zip_url) as response:  # noqa: S310
+            with urllib.request.urlopen(zip_url) as response:
                 zip_data = response.read()
 
             if hashlib.sha256(zip_data).hexdigest() != manifest.checksum:
@@ -163,4 +163,4 @@ class SkillIngestor:
         except Exception as e:
             manifest.status = SkillStatus.REJECTED
             self.index_manager.update_skill(manifest)
-            return {"success": False, "detail": f"Pipeline failure: {str(e)}"}
+            return {"success": False, "detail": f"Pipeline failure: {e!s}"}

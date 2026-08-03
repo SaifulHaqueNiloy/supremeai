@@ -83,8 +83,8 @@ class Orchestrator:
                 logger.info(f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}")
             except subprocess.TimeoutExpired:
                 logger.critical("[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed.")
-                raise RuntimeError("Budget guardian timed out. Halting orchestrator to prevent financial bleed.")
-            except Exception as exc:  # noqa: BLE001
+                raise RuntimeError("Budget guardian timed out. Halting orchestrator to prevent financial bleed.") from None
+            except Exception as exc:
                 logger.critical(f"🔥 CRITICAL: Budget guardian failed! Error: {exc}")
                 raise RuntimeError("Budget Guardian failure. Halting orchestrator to prevent financial bleed.") from exc
 
@@ -164,7 +164,7 @@ class Orchestrator:
                 if len(executed_skills) > 1:
                     self.skill_graph.update_edge_weight(executed_skills[-2], skill, success=True)
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Skill execution failed for '{skill}': {e}. Triggering rollback/fallback.")
                 # Feedback loop: penalize weight of failed edge
                 if len(executed_skills) > 1:
@@ -200,7 +200,7 @@ class Orchestrator:
             logger.info("Orchestrator: Running fitness scoring cycle")
             # The fitness engine maintains internal state and persists scores.
             self.fitness_engine.evaluate_pending()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"Fitness scoring failed: {exc}")
 
     async def tick(self) -> None:
@@ -217,7 +217,7 @@ class Orchestrator:
         except asyncio.CancelledError:
             logger.info("Orchestrator tick cancelled.")
             raise
-        except ExceptionGroup as eg:  # noqa: BLE001
+        except ExceptionGroup as eg:
             for exc in eg.exceptions:
                 logger.error(f"Error in orchestrator task group loop: {exc}")
 

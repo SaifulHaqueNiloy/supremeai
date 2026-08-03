@@ -21,7 +21,7 @@ async def test_fingerprint_generation():
     বাংলা মন্তব্য: স্ট্যাক ট্রেস থেকে ইউনিক SHA-256 ফিঙ্গারপ্রিন্ট জেনারেশন টেস্ট।
     """
     try:
-        1 / 0
+        raise ZeroDivisionError("intentional test trigger")
     except ZeroDivisionError as exc:
         fp1 = make_fingerprint(exc)
         fp2 = make_fingerprint(exc)

@@ -16,6 +16,7 @@ Bengali:
 
 import os
 import pickle
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -205,14 +206,20 @@ class EWC:
         Returns:
             True if successful, False otherwise
         """
-        checkpoint_path = os.path.join(self.config.save_dir, f"ewc_checkpoint_task_{task_id}.pkl")
+        # বাংলা: task_id ফাইল পাথে বসানোর আগে sanitize করা হলো, যাতে path-traversal
+        # (যেমন task_id="../../etc/passwd") সম্ভব না হয়।
+        safe_task_id = re.sub(r"[^A-Za-z0-9_.-]", "_", str(task_id))
+        checkpoint_path = os.path.join(self.config.save_dir, f"ewc_checkpoint_task_{safe_task_id}.pkl")
 
         if not os.path.exists(checkpoint_path):
             logger.warning(f"No EWC checkpoint found for task {task_id}")
             return False
 
+        # বাংলা: এই pickle ফাইলগুলো আমাদের নিজস্ব save_checkpoint()-এর তৈরি, বাইরের/আপলোড করা
+        # ডেটা না — তাই এখানে untrusted deserialization ঝুঁকি নেই, কিন্তু ভবিষ্যতে যদি
+        # multi-tenant শেয়ার্ড স্টোরেজে যায়, তাহলে এটা torch.save/load বা JSON-এ migrate করা উচিত।
         with open(checkpoint_path, "rb") as f:
-            checkpoint = pickle.load(f)
+            checkpoint = pickle.load(f)  # noqa: S301 -- trusted, self-written checkpoint file (see comment above)
 
         self.task_count = checkpoint["task_count"]
         self.params_prev = checkpoint["params_prev"]
@@ -379,7 +386,7 @@ class EWCTrainer:
             num_batches = 0
 
             for inputs, targets in dataloader:
-                total_loss, pred_loss = self.train_step(inputs, targets, criterion)
+                total_loss, _pred_loss = self.train_step(inputs, targets, criterion)
                 epoch_loss += total_loss.item()
                 num_batches += 1
 

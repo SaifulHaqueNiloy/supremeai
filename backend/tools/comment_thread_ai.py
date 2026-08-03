@@ -61,7 +61,7 @@ class CommentThreadAI:
             r = ModelRouter()
             result = await r.async_route_and_generate(prompt, task_type=task_type, max_cost=max_cost)
             return result.get("text", "") if isinstance(result, dict) else str(result)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"LLM call failed: {exc}")
             return ""
 
@@ -85,20 +85,20 @@ class CommentThreadAI:
             # Review comments (line-level)
             review = await self._gh_get(f"/repos/{repo}/pulls/{pr_number}/comments")
             comments.extend(review if isinstance(review, list) else [])
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to get PR review comments for {repo}#{pr_number}: {e}")
         try:
             # Issue comments (general PR comments)
             issue = await self._gh_get(f"/repos/{repo}/issues/{pr_number}/comments")
             comments.extend(issue if isinstance(issue, list) else [])
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to get PR issue comments for {repo}#{pr_number}: {e}")
         return comments
 
     async def _get_pr_files(self, repo: str, pr_number: int) -> list[dict]:
         try:
             return await self._gh_get(f"/repos/{repo}/pulls/{pr_number}/files")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to get PR files for {repo}#{pr_number}: {e}")
             return []
 
@@ -110,7 +110,7 @@ class CommentThreadAI:
             result = await self._gh_post(f"/repos/{repo}/issues/{pr_number}/comments", {"body": body})
             logger.info(f"Posted comment on {repo}#{pr_number}")
             return {"status": "success", "comment_url": result.get("html_url")}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"GitHub post comment failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -124,7 +124,7 @@ class CommentThreadAI:
                 {"body": body},
             )
             return {"status": "success", "reply_url": result.get("html_url")}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Reply to review comment failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -207,7 +207,7 @@ class CommentThreadAI:
 
         try:
             comments = await self._get_pr_comments(repo_full_name, target_number)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"status": "error", "error": f"GitHub API failed: {exc}"}
 
         if not comments:
@@ -248,7 +248,7 @@ class CommentThreadAI:
         """Find PRs with no activity in N days."""
         try:
             prs = await self._gh_get(f"/repos/{repo_full_name}/pulls?state=open&per_page=50")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"status": "error", "error": str(exc)}
 
         import datetime
@@ -271,12 +271,12 @@ class CommentThreadAI:
                                 "url": pr.get("html_url", ""),
                             }
                         )
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     try:
                         import loguru
 
                         loguru.logger.error(f"Tool execution error: {e}")
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.warning(f"Exception suppressed: {e}")
                     pass
 
@@ -378,14 +378,14 @@ async def github_webhook(request: Request, x_github_event: str = Header(default=
         return {"status": "pong"}
     try:
         payload = await request.json()
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         try:
             import loguru
 
             loguru.logger.error(f"Tool execution error: {e}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Exception suppressed: {e}")
-        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+        raise HTTPException(status_code=400, detail="Invalid JSON payload") from e
 
     if x_github_event not in ("pull_request_review_comment", "issue_comment"):
         return {"status": "ignored", "event": x_github_event}

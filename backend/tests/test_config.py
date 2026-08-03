@@ -17,7 +17,7 @@ def test_defaults(mock_fetch):
     assert s.env == "local"
     assert s.debug is True
     assert s.port == 8080
-    assert s.host == "0.0.0.0"  # noqa: S104
+    assert s.host == "0.0.0.0"
     assert s.supremeai_admin_password_hash == "mock_SUPREMEAI_ADMIN_PASSWORD_HASH"
     assert s.ollama_url == ""
     assert s.gcp_project_id == ""
@@ -35,7 +35,7 @@ def test_defaults(mock_fetch):
         "env": "production",
         "debug": "false",
         "port": "9000",
-        "host": "0.0.0.0",  # noqa: S104
+        "host": "0.0.0.0",
         "supremeai_admin_password_hash": "mock_hash_value_for_test_pass",
         "openrouter_api_key": "TEST_ONLY_OPENROUTER_API_KEY",
         "hf_api_key": "TEST_ONLY_HF_API_KEY",
@@ -79,7 +79,7 @@ def test_env_override(mock_fetch):
     assert s.env == "production"
     assert s.debug is False
     assert s.port == 9000
-    assert s.host == "0.0.0.0"  # noqa: S104
+    assert s.host == "0.0.0.0"
     assert s.supremeai_admin_password_hash in (
         "mock_hash_value_for_test_pass",
         "dummy_admin_hash",
@@ -108,7 +108,7 @@ def test_env_override(mock_fetch):
 )
 @patch.dict(os.environ, {"env": "bad"}, clear=False)
 def test_invalid_env_raises(bad_env):
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         Settings()
 
 
@@ -161,5 +161,5 @@ def test_validate_production_completeness_raises_on_missing_production_keys(mock
 
 @patch.dict(os.environ, {"max_cost_per_task": "abc"}, clear=False)
 def test_invalid_type_cast():
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
         Settings()

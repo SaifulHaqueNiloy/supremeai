@@ -100,7 +100,7 @@ class VideoGenerator:
                 )
             try:
                 return self._call_runway(prompt, duration)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Runway failed: {exc}")
                 if self.kling_api_key and "kling" not in tried:
                     logger.info("Falling back to Kling provider.")
@@ -111,7 +111,7 @@ class VideoGenerator:
                         output_path=output_path,
                         tried={*tried, "runway"},
                     )
-                raise RuntimeError(f"Runway generation failed and no fallback succeeded: {exc}")
+                raise RuntimeError(f"Runway generation failed and no fallback succeeded: {exc}") from exc
 
         if provider == "kling":
             if not self.kling_api_key:
@@ -122,7 +122,7 @@ class VideoGenerator:
                 )
             try:
                 return self._call_kling(prompt, duration)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Kling failed: {exc}")
                 if self.runway_api_key and "runway" not in tried:
                     logger.info("Falling back to Runway provider.")
@@ -133,6 +133,6 @@ class VideoGenerator:
                         output_path=output_path,
                         tried={*tried, "kling"},
                     )
-                raise RuntimeError(f"Kling generation failed and no fallback succeeded: {exc}")
+                raise RuntimeError(f"Kling generation failed and no fallback succeeded: {exc}") from exc
 
         raise ValueError(f"Unknown provider: {provider!r}. Use 'runway', 'kling', or 'auto'.")
