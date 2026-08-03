@@ -362,7 +362,7 @@ class Settings(BaseSettings):
                 # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
                 # RuntimeError throw হবে না, বরং empty string return হবে।
                 # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
-                val = secret_vault.fetch_secret(secret_key)
+                val = secret_vault.fetch_secret(secret_key, default="")
                 if val:
                     self._cached_secrets[secret_key] = val
             except Exception as _secret_err:
