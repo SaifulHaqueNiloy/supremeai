@@ -209,9 +209,15 @@ class ProductionSecretVault:
                     )
                 except Exception as exc:
                     logger.debug(f"Failed to emit error event: {exc}")
-                if default is None:
+                OPTIONAL_SECRETS = {
+                    "ADMIN_NOTIFICATION_EMAIL",
+                    "DISCORD_OTP_WEBHOOK_URL",
+                    "DISCORD_WEBHOOK_URL",
+                    "RESEND_API_KEY",
+                }
+                if default is None and secret_id not in OPTIONAL_SECRETS:
                     raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
-                env_fallback = default
+                env_fallback = default if default is not None else ""
             else:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
                 if default is not None:
