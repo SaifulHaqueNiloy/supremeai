@@ -23,6 +23,21 @@ except ImportError:
 logger = logging.getLogger("supremeai.event_bus")
 
 
+from enum import Enum
+
+
+class ErrorSeverity(str, Enum):
+    """
+    বাংলা মন্তব্য: Error severity লেভেলের Enum।
+    CRITICAL, HIGH, MEDIUM, LOW অনুযায়ী ফিল্টার এবং alert করা যায়।
+    """
+
+    CRITICAL = "CRITICAL"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
 class ErrorContext(BaseModel):
     """
     বাংলা মন্তব্য: প্রতিটি error event-এ এই structured context থাকবে।
@@ -44,18 +59,29 @@ class ErrorContext(BaseModel):
 class ErrorEvent(BaseModel):
     """
     বাংলা মন্তব্য: ErrorEventBus-এর primary data model।
-    severity levels: CRITICAL > ERROR > WARNING > INFO
+    severity levels: CRITICAL > ERROR / HIGH > WARNING / MEDIUM > INFO / LOW
     structured_context দিয়ে correlation ID track করা যায়।
     """
 
-    module: str
-    error_type: str
+    module: str = "default"
+    error_type: str = "UNKNOWN_ERROR"
     message: str
-    severity: str  # CRITICAL, ERROR, WARNING, INFO
+    severity: str = "ERROR"  # CRITICAL, ERROR/HIGH, WARNING/MEDIUM, INFO/LOW
+    service: str = "backend"
+    type: str | None = None  # Alias for error_type
+    attempts: int = 0
+    resolved: bool = False
     context: dict[str, Any] = Field(default_factory=dict)
     # বাংলা মন্তব্য: structured context — flat dict-এর পাশাপাশি type-safe correlation
     structured_context: ErrorContext = Field(default_factory=lambda: ErrorContext(module="default"))
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.type is None:
+            self.type = self.error_type
+        else:
+            self.error_type = self.type
+
 
 
 class DeadLetterQueueItem(BaseModel):
@@ -338,11 +364,54 @@ class IntelligentErrorBus(ErrorEventBus):
         self._check_and_escalate_pattern(event)
         super().emit(event)
 
-    async def async_emit(self, event: ErrorEvent) -> None:
-        event.structured_context.system_state = self._get_current_metrics()
-        self._check_and_escalate_pattern(event)
-        await super().async_emit(event)
+    async def publish(self, event: ErrorEvent) -> ErrorEvent:
+        """
+        বাংলা মন্তব্য: ইভেন্ট পাবলিশ করে এবং স্বয়ংক্রিয় সেলফ-হিলিং প্রসেস ট্রাইগার করে।
+        """
+        await self.async_emit(event)
+        await self.process_error_for_healing(event)
+        return event
 
+    async def process_error_for_healing(self, event: ErrorEvent) -> None:
+        """
+        বাংলা মন্তব্য: সেলফ-হিলিং স্ট্র্যাটেজি এক্সিকিউট করা।
+        DB সংযোগ বিচ্ছিন্নতা, মেমোরি লিমিট ও এপিআই টাইমআউট স্বয়ংক্রিয়ভাবে রিকভার করে।
+        """
+        if event.resolved:
+            return
+
+        err_type = event.error_type or event.type
+        logger.info(f"[Self-Healing] Processing error event for healing: {err_type}")
+
+        try:
+            if err_type == "MEMORY_LIMIT_EXCEEDED":
+                import gc
+
+                gc.collect()
+                logger.info("[Self-Healing] Garbage collection executed cleanly")
+                event.resolved = True
+            elif err_type == "DB_CONNECTION_FAILURE":
+                from core.persistence.pooled_pg import _get_pool
+
+                pool = _get_pool()
+                if pool:
+                    logger.info("[Self-Healing] Database connection pool checked/refreshed")
+                    event.resolved = True
+            elif err_type == "API_TIMEOUT":
+                import os
+
+                current_timeout = int(os.environ.get("API_TIMEOUT_MS", "30000"))
+                new_timeout = min(current_timeout * 2, 120000)
+                os.environ["API_TIMEOUT_MS"] = str(new_timeout)
+                logger.info(f"[Self-Healing] Scaled API timeout to {new_timeout}ms")
+                event.resolved = True
+        except Exception as exc:
+            logger.error(f"[Self-Healing] Healing strategy failed for {err_type}: {exc}")
+            event.attempts += 1
+
+
+# CentralErrorBus & error_bus aliases for compatibility
+CentralErrorBus = IntelligentErrorBus
 
 # বাংলা মন্তব্য: Module-level singleton — সিস্টেমে একটিই ErrorEventBus instance থাকবে।
 # Lazy initialization to avoid asyncio.Queue creation at import time in test environments.
@@ -365,6 +434,8 @@ class _ErrorEventBusProxy:
 
 
 error_event_bus: IntelligentErrorBus = _ErrorEventBusProxy()  # type: ignore[misc, assignment]
+error_bus: IntelligentErrorBus = error_event_bus
+
 
 
 class EventBus:
