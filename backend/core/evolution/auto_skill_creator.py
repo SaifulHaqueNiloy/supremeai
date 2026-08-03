@@ -204,7 +204,7 @@ class AutoSkillCreator:
             schema_dict = data.get("schema", {})
 
             # Traceability enhancements
-            schema_dict["metadata"]["tags"] = schema_dict["metadata"].get("tags", []) + [f"trace_id:{trace_id}"]
+            schema_dict["metadata"]["tags"] = [*schema_dict["metadata"].get("tags", []), f"trace_id:{trace_id}"]
             schema_dict["metadata"]["author"] = f"supremeai_agent_id:{trace_id}"
             schema_dict["metadata"]["description"] = (
                 schema_dict["metadata"].get("description", "") + f" (Generated at {generation_timestamp})"

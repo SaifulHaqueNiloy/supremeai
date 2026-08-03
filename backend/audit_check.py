@@ -15,7 +15,7 @@ with open(path, encoding="utf-8") as f:
     content = f.read()
     has_substring_match = "'admin' in body.username" in content
     has_admin_emails = "admin_emails" in content
-    for i, line in enumerate(content.split("\n")):
+    for _i, line in enumerate(content.split("\n")):
         if "admin" in line.lower() and "role" in line.lower():
             pass
 
@@ -59,7 +59,7 @@ with open(path, encoding="utf-8") as f:
         lines = content.split("\n")
         in_rules = False
         rules_depends = False
-        for i, line in enumerate(lines):
+        for _i, line in enumerate(lines):
             if '@router.post("/rules")' in line:
                 in_rules = True
             if in_rules and "Depends" in line:
@@ -72,7 +72,7 @@ with open(path, encoding="utf-8") as f:
         lines = content.split("\n")
         in_actions = False
         actions_depends = False
-        for i, line in enumerate(lines):
+        for _i, line in enumerate(lines):
             if '@router.post("/actions/{action_type}")' in line:
                 in_actions = True
             if in_actions and "Depends" in line:

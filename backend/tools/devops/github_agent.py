@@ -95,7 +95,7 @@ class GitHubAgent:
             "Accept": "application/vnd.github.v3+json",
         }
 
-    async def connect_repo(self, repo_owner: str, repo_name: str, installation_id: str = None) -> dict:
+    async def connect_repo(self, repo_owner: str, repo_name: str, installation_id: str | None = None) -> dict:
         """Verifies the repo is actually reachable with this token before 'connecting'."""
         url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
         async with httpx.AsyncClient(timeout=10.0) as client:

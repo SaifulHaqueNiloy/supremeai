@@ -76,8 +76,8 @@ async def reset_circuit_breaker(name: str, current_user: dict = Depends(get_curr
 @router.get("/admin/providers/fallback-chain")
 async def get_fallback_chain(
     task_type: str = "chat",
-    model: str = None,
-    provider: str = None,
+    model: str | None = None,
+    provider: str | None = None,
     current_user: dict = Depends(get_current_user_token),
 ):
     """Get the current fallback chain for a given task type."""

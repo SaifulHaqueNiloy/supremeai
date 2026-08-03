@@ -26,7 +26,7 @@ class RAGPipeline:
                 break
         return chunks
 
-    def ingest_document(self, doc_id: str, content: str, metadata: dict[str, Any] = None):
+    def ingest_document(self, doc_id: str, content: str, metadata: dict[str, Any] | None = None):
         if metadata is None:
             metadata = {}
         chunks = self.chunk_text(content)

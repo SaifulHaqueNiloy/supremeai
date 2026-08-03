@@ -37,7 +37,7 @@ class SelfImprovingAgent:
         self.logger = get_logger(__name__)
 
     async def process_feedback(
-        self, user_id: str, request: str, response: str, feedback: str, rating: float = None
+        self, user_id: str, request: str, response: str, feedback: str, rating: float | None = None
     ) -> bool:
         """Process user feedback and apply improvements."""
         try:
@@ -348,7 +348,7 @@ class FeedbackAnalyzer:
         self.neutral_keywords = ["okay", "fine", "average", "decent", "acceptable"]
         self.logger = get_logger(__name__)
 
-    async def analyze(self, feedback: str, rating: float = None) -> dict:
+    async def analyze(self, feedback: str, rating: float | None = None) -> dict:
         """Analyze user feedback for sentiment and improvement opportunities."""
         feedback_lower = feedback.lower() if feedback else ""
 

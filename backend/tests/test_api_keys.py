@@ -177,19 +177,19 @@ class TestRouterStructure:
     def test_create_schema_requires_user_id(self):
         from api.routes.api_keys import CreateAPIKeyRequest
 
-        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             CreateAPIKeyRequest(user_id="", name="Test")
 
     def test_rotate_schema_requires_old_key(self):
         from api.routes.api_keys import RotateAPIKeyRequest
 
-        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             RotateAPIKeyRequest(old_key="")
 
     def test_bulk_delete_schema_limits_count(self):
         from api.routes.api_keys import BulkDeleteRequest
 
-        with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+        with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
             BulkDeleteRequest(key_ids=list(range(51)))
 
 

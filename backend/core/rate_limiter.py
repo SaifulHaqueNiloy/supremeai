@@ -76,7 +76,7 @@ class AsyncRateLimiter:
         """
         return None
 
-    async def acquire(self, key: str, limit: int = None, window: int = None) -> bool:
+    async def acquire(self, key: str, limit: int | None = None, window: int | None = None) -> bool:
         """Redis-based sliding window rate limiting with fail-closed behavior.
 
         বাংলা মন্তব্ব্য: Redis-ভিত্তিক sliding window রেট লিমিটিং।

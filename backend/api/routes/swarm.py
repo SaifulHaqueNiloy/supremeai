@@ -118,11 +118,11 @@ async def resume_swarm(admin_user: dict = Depends(get_current_admin)):
 
 
 class SelfHealingRequest(BaseModel):
-    filePath: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    filePath: str  # -- camelCase required to match frontend JSON API contract
     message: str
-    lineNumber: int  # noqa: N815 -- camelCase required to match frontend JSON API contract
-    codeContext: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
-    languageId: str  # noqa: N815 -- camelCase required to match frontend JSON API contract
+    lineNumber: int  # -- camelCase required to match frontend JSON API contract
+    codeContext: str  # -- camelCase required to match frontend JSON API contract
+    languageId: str  # -- camelCase required to match frontend JSON API contract
 
 
 @router.post("/execute-healing")

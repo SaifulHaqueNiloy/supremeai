@@ -55,7 +55,7 @@ async def test_subscribe_yields_messages():
     mock_redis.pubsub.return_value = mock_pubsub
 
     messages = [{"type": "message", "data": b"msg1"}]
-    mock_pubsub.get_message.side_effect = messages + [None]
+    mock_pubsub.get_message.side_effect = [*messages, None]
 
     async def fake_sleep(_):
         raise StopAsyncIteration

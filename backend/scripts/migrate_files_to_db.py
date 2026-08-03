@@ -183,7 +183,7 @@ def migrate_rules(conn, dry_run: bool) -> None:
         if filename.endswith(".xml"):
             file_path = os.path.join(rules_dir, filename)
             try:
-                tree = ET.parse(file_path)  # noqa: S314
+                tree = ET.parse(file_path)
                 root = tree.getroot()
                 category = os.path.splitext(filename)[0].replace("_context", "")
 

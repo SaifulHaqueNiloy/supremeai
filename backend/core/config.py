@@ -129,7 +129,7 @@ class Settings(BaseSettings):
     port: int = Field(
         default=8080, validation_alias="PORT"
     )  # বাংলা: Dockerfile CMD-এর ${PORT:-8080} default-এর সাথে consistent
-    host: str = Field(default="0.0.0.0", validation_alias="HOST")  # noqa: S104
+    host: str = Field(default="0.0.0.0", validation_alias="HOST")
 
     # CORS origins property is implemented dynamically below to support validation.
 
@@ -931,7 +931,7 @@ class Settings(BaseSettings):
     def validate_allowed_hosts(cls, v: list[str], info: ValidationInfo) -> list[str]:
         # Fail fast if no hosts are defined in production/staging
         env = info.data.get("env", "local")
-        forbidden = {"localhost", "127.0.0.1", "testserver", "0.0.0.0"}  # noqa: S104
+        forbidden = {"localhost", "127.0.0.1", "testserver", "0.0.0.0"}
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
             if not v:
@@ -1018,7 +1018,7 @@ class Settings(BaseSettings):
         if self.env == "production":
             if hasattr(self, "_jwt_secret_cache"):
                 delattr(self, "_jwt_secret_cache")
-            
+
             # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট অবশ্যই থাকতে হবে এবং অন্তত ৬৪ বাইট দীর্ঘ হতে হবে — অন্যথায় সিকিউরিটি ক্র্যাশ
             secret = (
                 os.getenv("SUPREMEAI_JWT_SECRET")

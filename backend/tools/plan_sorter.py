@@ -5,7 +5,7 @@ from loguru import logger
 
 
 class PlanSorter:
-    def __init__(self, admin_plan_dir: str = None, output_dir: str = None):
+    def __init__(self, admin_plan_dir: str | None = None, output_dir: str | None = None):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.admin_plan_dir = admin_plan_dir or os.path.join(base_dir, "document", "admin's_plan")
         self.output_dir = output_dir or os.path.join(base_dir, "document")

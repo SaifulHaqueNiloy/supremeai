@@ -196,7 +196,7 @@ class DrawIOParser:
         edges: list[ComponentEdge] = []
 
         try:
-            root = ET.fromstring(xml_content)  # noqa: S314
+            root = ET.fromstring(xml_content)
 
             # Find all cells with style (shapes)
             for cell in root.iter():

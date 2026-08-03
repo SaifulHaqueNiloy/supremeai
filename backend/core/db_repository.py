@@ -38,7 +38,7 @@ class SmartDataRepository:
                     res = get_target()
                     if inspect.iscoroutine(res) or (hasattr(asyncio, "isfuture") and asyncio.isfuture(res)):
                         doc = await res
-                    elif inspect.isawaitable(res) and not isinstance(res, (MagicMock, Mock)):
+                    elif inspect.isawaitable(res) and not isinstance(res, MagicMock | Mock):
                         doc = await res
                     else:
                         doc = res
@@ -78,7 +78,7 @@ class SmartDataRepository:
                 # If it's CloudPostgresStore helper
                 elif hasattr(self.supabase, "_execute"):
                     self._validate_table_name(table_name)
-                    query = f"SELECT * FROM {table_name} WHERE id = %s LIMIT 1"  # noqa: S608
+                    query = f"SELECT * FROM {table_name} WHERE id = %s LIMIT 1"
                     row = self.supabase._execute(query, (doc_id,), fetchone=True)
                     return dict(row) if row else None
                 else:

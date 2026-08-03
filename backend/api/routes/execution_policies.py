@@ -63,11 +63,7 @@ async def update_policy(
     try:
         pid = uuid.UUID(policy_id)
     except ValueError:
-<<<<<<< HEAD
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid policy UUID") from None  # noqa  # noqa
-=======
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid policy UUID")
->>>>>>> origin/main
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid policy UUID") from None
 
     try:
         result = await session.execute(select(ExecutionPolicy).where(ExecutionPolicy.id == pid))
@@ -107,8 +103,4 @@ async def update_policy(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-<<<<<<< HEAD
         ) from e
-=======
-        )
->>>>>>> origin/main

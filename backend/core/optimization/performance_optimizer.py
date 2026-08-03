@@ -442,7 +442,7 @@ class PerformanceOptimizer:
             @wraps(func)
             async def async_wrapper(*args, **kwargs):
                 # Create cache key
-                key_parts = [func.__name__] + list(args) + sorted(kwargs.items())
+                key_parts = [func.__name__, *list(args), *sorted(kwargs.items())]
                 cache_key = str(hash(str(key_parts)))
 
                 # Try to get from cache
@@ -462,7 +462,7 @@ class PerformanceOptimizer:
             @wraps(func)
             def sync_wrapper(*args, **kwargs):
                 # Create cache key
-                key_parts = [func.__name__] + list(args) + sorted(kwargs.items())
+                key_parts = [func.__name__, *list(args), *sorted(kwargs.items())]
                 cache_key = str(hash(str(key_parts)))
 
                 # Try to get from cache

@@ -441,7 +441,7 @@ class DeploymentManager:
             logger.error(f"Rollback failed for {deployment_id}: {e}")
             return False
 
-    def _update_deployment_status(self, deployment_id: str, status: DeploymentStatus, error_message: str = None):
+    def _update_deployment_status(self, deployment_id: str, status: DeploymentStatus, error_message: str | None = None):
         """Update deployment status."""
         if deployment_id in self.active_deployments:
             result = self.active_deployments[deployment_id]
@@ -512,7 +512,7 @@ class ProductionDeploymentSystem:
         self.monitoring_integrator = MonitoringIntegrator()
 
     async def deploy_new_version(
-        self, environment: DeploymentEnvironment, version_tag: str, config_overrides: dict[str, Any] = None
+        self, environment: DeploymentEnvironment, version_tag: str, config_overrides: dict[str, Any] | None = None
     ) -> DeploymentResult:
         """Deploy a new version to the specified environment."""
 

@@ -14,7 +14,7 @@ class MarketplaceAgent:
     def __init__(self):
         logger.info("MarketplaceAgent initialized with real PyPI + npm registry search.")
 
-    def search_marketplaces(self, query: str, categories: list = None, filters: dict = None) -> list:
+    def search_marketplaces(self, query: str, categories: list | None = None, filters: dict | None = None) -> list:
         """
         PyPI এবং npm registry থেকে সত্যিকারের প্যাকেজ সার্চ করে।
         বাংলা মন্তব্য: আগে 3টি hardcoded mock result রিটার্ন হতো (pdf-parse, pdfplumber, alpine-pdf)।
