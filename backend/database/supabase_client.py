@@ -4,7 +4,11 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-import psycopg2
+# psycopg2 মডিউল না থাকলে যেন ডিরেক্ট ক্লায়েন্ট ইনিশিয়ালাইজেশন ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট করা হলো।
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
 from loguru import logger
 from supabase import Client, create_client
 

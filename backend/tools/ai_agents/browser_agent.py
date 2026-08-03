@@ -1,7 +1,11 @@
 import asyncio
 from typing import Any
 
-from bs4 import BeautifulSoup
+# bs4 মডিউল না থাকলে যেন এজেন্ট ইমপোর্ট ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট করা হলো।
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 from loguru import logger
 from pydantic import BaseModel
 
