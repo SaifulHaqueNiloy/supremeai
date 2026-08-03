@@ -21,9 +21,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install safety
+      - name: Install dependencies for auto-fix
         working-directory: backend
-        run: poetry run pip install safety
+        run: poetry run pip install safety isort black "setuptools>=77.0.3"
 
       - name: Run isort
         working-directory: backend

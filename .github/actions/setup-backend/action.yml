@@ -51,12 +51,12 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        poetry run pip install --upgrade pip setuptools==68.0.0 wheel || true
+        poetry run pip install --upgrade pip "setuptools>=77.0.3" wheel || true
         poetry run pip install openai-whisper==20240930 --no-build-isolation || true
 
     - name: 📥 Poetry Install (backend deps)
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        poetry run pip install setuptools==68.0.0 wheel
+        poetry run pip install "setuptools>=77.0.3" wheel
         poetry install --no-root --with dev
