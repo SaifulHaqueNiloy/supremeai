@@ -85,8 +85,9 @@ for f in base.rglob('*.py'):
         content = f.read_text(encoding='utf-8')
         if '\r\n' in content[:100]:
             errors.append({'type': 'WINDOWS_CRLF', 'file': str(f.relative_to(base)), 'detail': 'Windows line endings'})
-    except:
-        pass
+    except Exception as e:
+        # বাংলা: ফাইল পড়তে বা CRLF চেক করতে ব্যর্থ হলে ত্রুটি লগ করুন, silent ignore নয়
+        print(f'  ⚠️  Could not scan {f}: {e}')
 
 # 10. Check pnpm-lock and poetry.lock consistency
 if (base/'pnpm-lock.yaml').exists() and (base/'pnpm-workspace.yaml').exists():
