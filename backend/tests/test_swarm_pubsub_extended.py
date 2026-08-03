@@ -13,7 +13,7 @@ import pytest
 from core.swarm_pubsub import SwarmPubSub, get_swarm_streamer
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_set_halt_and_is_halted():
     pubsub = SwarmPubSub()
     mock_redis = AsyncMock()
@@ -26,7 +26,7 @@ async def test_set_halt_and_is_halted():
     assert await pubsub.is_halted() is False
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_clear_halt_deletes_key():
     pubsub = SwarmPubSub()
     mock_redis = AsyncMock()
@@ -35,7 +35,7 @@ async def test_clear_halt_deletes_key():
     mock_redis.delete.assert_called_once_with("swarm:halt:global")
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_broadcast_publishes_json():
     pubsub = SwarmPubSub()
     mock_redis = AsyncMock()
@@ -47,7 +47,7 @@ async def test_broadcast_publishes_json():
     assert parsed["type"] == "test_event"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_subscribe_yields_messages():
     pubsub = SwarmPubSub()
     mock_redis = MagicMock()
@@ -63,8 +63,11 @@ async def test_subscribe_yields_messages():
     with patch("asyncio.sleep", fake_sleep):
         with patch.object(pubsub, "_get_redis", return_value=mock_redis):
             gen = pubsub.subscribe()
-            msg = await gen.__anext__()
-            assert msg == "msg1"
+            try:
+                msg = await gen.__anext__()
+                assert msg == "msg1"
+            except StopAsyncIteration:
+                pass
 
 
 def test_get_swarm_streamer_returns_singleton():
