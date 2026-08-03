@@ -11,24 +11,24 @@ The system prioritizes cache hits across layers before falling back to AI model
 
 """
 
-import asyncio  # noqa: E402
-import hashlib  # noqa: E402
-import json  # noqa: E402
-import threading  # noqa: E402
-import time  # noqa: E402 - Added for performance metrics
-from typing import Any  # noqa: E402
+import asyncio
+import hashlib
+import json
+import threading
+import time  # - Added for performance metrics
+from typing import Any
 
 try:
-    from cachetools import TTLCache  # noqa: E402
+    from cachetools import TTLCache
 except ImportError:
     TTLCache = dict  # fallback for lightweight environments lacking cachetools
 
-from loguru import logger  # noqa: E402
+from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
-from core.metrics_collector import metrics_collector, record_cache_access  # noqa: E402
-from core.swarm_pubsub import swarm_streamer  # noqa: E402
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
+from core.metrics_collector import metrics_collector, record_cache_access
+from core.swarm_pubsub import swarm_streamer
 
 # বাংলা মন্তব্ব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
 # Redis client এখন lazy function-level এ initialize হবে।
@@ -158,7 +158,7 @@ class MultiLayerCache:
                 }
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"L1 cache read error: {e}")
             await record_cache_access(False)  # Record cache miss/error
             error_event_bus.emit(
@@ -190,7 +190,7 @@ class MultiLayerCache:
                 }
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"L2 semantic cache error: {e}")
             await record_cache_access(False)  # Record cache miss/error
             error_event_bus.emit(
@@ -237,7 +237,7 @@ class MultiLayerCache:
                         }
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"L3 prefix cache error: {e}")
             await record_cache_access(False)  # Record cache miss/error
             error_event_bus.emit(
@@ -291,7 +291,7 @@ class MultiLayerCache:
             await exact_match_cache.setex(exact_cache_key, 3600, response)
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"L1 cache write error: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -312,7 +312,7 @@ class MultiLayerCache:
             )
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"L2 semantic cache write error: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -352,7 +352,7 @@ class MultiLayerCache:
             )
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"L3 prefix cache write error: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -478,11 +478,11 @@ async def start_swarm_cache_invalidator():
                 logger.warning(
                     f"🧹 Swarm Event Cache Invalidation: Malformed message payload dropped. Error: {json_err}"
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Error in swarm cache invalidator processing: {e}")
     except asyncio.CancelledError:
         logger.info("Swarm cache invalidator task cancelled.")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Swarm cache invalidator crashed: {e}")
 
 

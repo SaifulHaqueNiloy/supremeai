@@ -41,9 +41,9 @@ def main():
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(new_content)
                     count += 1
-                    print(f"Fixed {filepath}")  # noqa: T201
+                    print(f"Fixed {filepath}")
 
-    print(f"Total files fixed: {count}")  # noqa: T201
+    print(f"Total files fixed: {count}")
 
 
 if __name__ == "__main__":

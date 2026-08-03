@@ -101,5 +101,5 @@ def execute_tool(payload: dict) -> dict:
         }
 
     except Exception as e:
-        logger.error(f"Critical execution barrier inside core_doc_summarizer: {str(e)}")
-        return {"success": False, "error": f"File analysis exception: {str(e)}"}
+        logger.error(f"Critical execution barrier inside core_doc_summarizer: {e!s}")
+        return {"success": False, "error": f"File analysis exception: {e!s}"}

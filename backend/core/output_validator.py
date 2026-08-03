@@ -1,13 +1,22 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from loguru import logger
 
 
 class MultiAICodeGenerator:
-    # বাংলা মন্তব্য: generate_with_consensus — ৩টি AI থেকে আসা কোডের মধ্যে consensus খোঁজে।
-    # signature: (code_kimi, code_deepseek, code_gpt) — task argument ছাড়া।
-    def generate_with_consensus(self, code_kimi: str, code_deepseek: str, code_gpt: str) -> dict:
+    def generate_with_consensus(
+        self,
+        code_kimi: str = "",
+        code_deepseek: str = "",
+        code_gpt: str = "",
+        task: str | None = None,
+        code_claude: str | None = None,
+        **kwargs: Any,
+    ) -> dict:
+        if code_claude is not None and not code_deepseek:
+            code_deepseek = code_claude
         # ফাঁকা string edge case
         if code_kimi == "" and code_deepseek == "" and code_gpt == "":
             return {"code": "", "confidence": 0.0, "differences": []}

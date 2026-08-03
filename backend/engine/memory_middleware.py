@@ -54,7 +54,7 @@ class MemoryMiddleware:
                 f"{task_prompt}\n\n--- RELEVANT PAST EXPERIENCE ---\n{memory_context}\n--------------------------------"
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # বাংলা মন্তব্য: silent failure নিষিদ্ধ — ERROR level-এ log করা হচ্ছে
             # যাতে health monitoring এই failure ধরতে পারে।
             logger.error(

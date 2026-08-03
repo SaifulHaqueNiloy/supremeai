@@ -67,7 +67,7 @@ class AutoHealerService:
         while self._running:
             try:
                 await self._check_and_heal()
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"🚑 AutoHealer check cycle failed unexpectedly: {exc!r}")
             await asyncio.sleep(self.check_interval)
 
@@ -81,11 +81,11 @@ class AutoHealerService:
     async def _check_database(self) -> None:
         """PostgreSQL pool health check এবং auto-heal।"""
         try:
-            from core.health.health_probes import probe_database  # noqa: PLC0415
+            from core.health.health_probes import probe_database
 
             result = await probe_database()
             db_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             db_up = False
             logger.warning(f"🚑 DB probe raised exception: {exc!r}")
 
@@ -108,8 +108,8 @@ class AutoHealerService:
         """
         logger.warning("🚑 Attempting DB pool reset (self-healing)...")
         try:
-            from core.config import settings  # noqa: PLC0415
-            from core.pgbouncer_pool import close_db_pool, init_db_pool  # noqa: PLC0415
+            from core.config import settings
+            from core.pgbouncer_pool import close_db_pool, init_db_pool
 
             await close_db_pool()
             await asyncio.sleep(2)  # brief backoff
@@ -117,7 +117,7 @@ class AutoHealerService:
             logger.info("🚑 ✅ Database pool successfully healed.")
             self.failure_counts["db"] = 0
             self._last_heal_time["db"] = time.monotonic()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"🚑 ❌ DB heal failed: {exc!r}")
 
     # ── Redis Healing ──────────────────────────────────────────────────────────
@@ -125,11 +125,11 @@ class AutoHealerService:
     async def _check_redis(self) -> None:
         """Redis health check এবং auto-heal।"""
         try:
-            from core.health.health_probes import probe_redis  # noqa: PLC0415
+            from core.health.health_probes import probe_redis
 
             result = await probe_redis()
             redis_up = result.get("status") == "up" if isinstance(result, dict) else bool(result)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             redis_up = False
             logger.warning(f"🚑 Redis probe raised exception: {exc!r}")
 
@@ -152,12 +152,12 @@ class AutoHealerService:
         """
         logger.warning("🚑 Attempting Redis reconnect (self-healing)...")
         try:
-            from core.cache.redis_manager import redis_manager  # noqa: PLC0415
+            from core.cache.redis_manager import redis_manager
 
             if hasattr(redis_manager, "client") and redis_manager.client:
                 try:
                     await redis_manager.client.aclose()
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     # বাংলা: Redis client বন্ধ করার সময় কোনো এরর হলে তা লগ করা হচ্ছে সাইলেন্টলি ইগনোর করার বদলে
                     logger.debug(f"Redis client close error: {exc!r}")
             # Reconnect — SecureRedisManager নিজেই __init__-এ connect করে
@@ -166,7 +166,7 @@ class AutoHealerService:
             logger.info("🚑 ✅ Redis successfully healed.")
             self.failure_counts["redis"] = 0
             self._last_heal_time["redis"] = time.monotonic()
-        except Exception as exc:  # noqa: BLE001, S110
+        except Exception as exc:
             logger.error(f"🚑 ❌ Redis heal failed: {exc!r}")
 
     # ── Utilities ──────────────────────────────────────────────────────────────
@@ -205,7 +205,7 @@ class AutoHealerService:
                 revert_success = await RollbackMonitor().execute_automatic_rollback(
                     fingerprint=fingerprint, reason=f"mutation_depth_exceeded: {exc}"
                 )
-            except Exception as revert_err:  # noqa: BLE001
+            except Exception as revert_err:
                 logger.error(f"AutoHealer: Git revert execution failed: {revert_err}")
 
             try:

@@ -14,7 +14,7 @@ class TestTrendDetector:
         from backend.agents.insight_mage import TrendDetector
 
         detector = TrendDetector()
-        assert detector.min_points == 3
+        assert detector.min_points == 7  # TREND_MIN_POINTS in source
 
     def test_trend_detector_custom_min_points(self):
         """Test trend detector with custom minimum points."""
@@ -29,13 +29,12 @@ class TestTrendDetector:
 
         detector = TrendDetector()
 
-        # Clear increasing values
-        values = [1.0, 2.0, 3.0, 4.0, 5.0]
-        timestamps = [datetime.now() - timedelta(days=i) for i in range(5)]
+        # Clear increasing values (index-based x since no timestamps passed)
+        values = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
 
-        result = detector.analyze(values, timestamps)
+        result = detector.analyze(values)
 
-        assert isinstance(result.trend, str)
+        assert isinstance(result.direction, str)
         assert result.slope > 0  # Should detect positive slope
 
     def test_analyze_decreasing_trend(self):
@@ -44,13 +43,12 @@ class TestTrendDetector:
 
         detector = TrendDetector()
 
-        # Clear decreasing values
-        values = [5.0, 4.0, 3.0, 2.0, 1.0]
-        timestamps = [datetime.now() - timedelta(days=i) for i in range(5)]
+        # Clear decreasing values (index-based x since no timestamps passed)
+        values = [7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]
 
-        result = detector.analyze(values, timestamps)
+        result = detector.analyze(values)
 
-        assert isinstance(result.trend, str)
+        assert isinstance(result.direction, str)
         assert result.slope < 0  # Should detect negative slope
 
     def test_analyze_stable_trend(self):
@@ -60,12 +58,11 @@ class TestTrendDetector:
         detector = TrendDetector()
 
         # Stable values
-        values = [2.0, 2.0, 2.0, 2.0, 2.0]
-        timestamps = [datetime.now() - timedelta(days=i) for i in range(5)]
+        values = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
-        result = detector.analyze(values, timestamps)
+        result = detector.analyze(values)
 
-        assert isinstance(result.trend, str)
+        assert isinstance(result.direction, str)
 
 
 class TestAnomalyDetector:
@@ -76,7 +73,7 @@ class TestAnomalyDetector:
         from backend.agents.insight_mage import AnomalyDetector
 
         detector = AnomalyDetector()
-        assert detector.z_threshold == 2.0
+        assert detector.z_threshold == 2.5  # ANOMALY_Z_THRESHOLD in source
 
     def test_anomaly_detector_custom_threshold(self):
         """Test anomaly detector with custom threshold."""
@@ -97,7 +94,7 @@ class TestAnomalyDetector:
         result = detector.detect(1.1, historical)
 
         # Should not be anomaly (is_normal should be True or anomaly should be False)
-        assert isinstance(result.anomaly, bool)
+        assert isinstance(result.is_anomaly, bool)
 
     def test_detect_outlier_value(self):
         """Test that outlier values are detected as anomalies."""
@@ -112,7 +109,7 @@ class TestAnomalyDetector:
         result = detector.detect(100.0, historical)
 
         # Should be anomaly
-        assert result.anomaly is True or result.z_score > 3
+        assert result.is_anomaly is True or result.z_score > 3
 
 
 class TestReportFormatter:
@@ -130,7 +127,9 @@ class TestReportFormatter:
         """Test report generation."""
         from backend.agents.insight_mage import ReportFormatter
 
-        formatter = ReportFormatter()
+        mock_router = MagicMock()
+        mock_router.route = AsyncMock(return_value={"content": "Summary report"})
+        formatter = ReportFormatter(llm_router=mock_router)
 
         data = {
             "metrics": [
@@ -139,12 +138,9 @@ class TestReportFormatter:
             ]
         }
 
-        try:
-            result = await formatter.generate(data)
-            assert isinstance(result, dict)
-        except Exception:
-            # May fail if LLM router not configured
-            pass
+        result = await formatter.generate(data, trends=[], anomalies=[])
+        assert isinstance(result, str)
+        assert result == "Summary report"
 
 
 class TestInsightMage:
@@ -165,4 +161,4 @@ class TestInsightMage:
 
         key = mage._cache_key("tenant-1", "users", "query-hash")
         assert isinstance(key, str)
-        assert "tenant-1" in key
+        assert key.startswith("insight_mage:")

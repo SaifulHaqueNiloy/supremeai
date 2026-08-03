@@ -66,8 +66,8 @@ class SupremeMetricsEngine:
                     "sandbox_violations_logged": 0,  # AST ব্লকার ট্র্যাক
                 },
             }
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"❌ Failed to aggregate cloud run metrics: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ Failed to aggregate cloud run metrics: {e!s}")
             return {"status": "DEGRADED", "error": str(e)}
 
 
@@ -178,7 +178,7 @@ def record_request(method: str, path: str, status: int) -> None:
         try:
             http_requests_total.labels(method=method, endpoint=path, status=str(status)).inc()
             supremeai_requests_total.labels(method=method, endpoint=path).inc()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Failed to record request metrics: {exc}")
 
 
@@ -196,14 +196,14 @@ def record_request_duration(method: str, path: str, duration: float) -> None:
         metrics_engine.latency_history.append(duration)
         if len(metrics_engine.latency_history) > 1000:
             metrics_engine.latency_history.pop(0)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.debug(f"Failed to record local latency log: {exc}")
 
     if _PROMETHEUS_AVAILABLE:
         try:
             request_duration_seconds.labels(method=method, endpoint=path).observe(duration)
             supremeai_response_seconds.labels(method=method, endpoint=path).observe(duration)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Failed to record request duration metrics: {exc}")
 
 

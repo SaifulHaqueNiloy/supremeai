@@ -220,7 +220,7 @@ class SkillMarketplaceCurator(BaseSkill):
                 await self._auto_review_pending()
                 await self._prune_deprecated()
                 await self._generate_trending_report()
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 await self._log_error("curation_loop", str(exc))
             await asyncio.sleep(interval)
 
@@ -249,7 +249,7 @@ class SkillMarketplaceCurator(BaseSkill):
                     self._listings[lid] = listing.with_status(ListingStatus.PUBLISHED)
                 else:
                     self._listings[lid] = listing.with_status(ListingStatus.REMOVED)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # বাংলা মন্তব্য: লিন্ট এরর এড়াতে এক্সেপশন লগ করা হচ্ছে
                 logger.error(f"Error in verification: {e}")
 

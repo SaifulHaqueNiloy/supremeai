@@ -137,7 +137,7 @@ class BrowserStealth:
                     random.randint(80, 300),
                     delay=random.randint(80, 220),
                 )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"Human behavior simulation skipped: {exc}")
 
     async def safe_screenshot(self, page: Page, path: str | None = None) -> str | None:
@@ -149,7 +149,7 @@ class BrowserStealth:
             Path("data/artifacts").mkdir(parents=True, exist_ok=True)
             await page.screenshot(path=target, full_page=True)
             return target
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug(f"screenshot failed: {exc}")
             return None
 
@@ -159,11 +159,11 @@ class BrowserStealth:
                 await self.context.close()
             if self.playwright:
                 await self.playwright.stop()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             try:
                 import loguru
 
                 loguru.logger.error(f"Tool execution error: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")
             pass

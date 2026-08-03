@@ -37,7 +37,7 @@ from typing import Any
 
 try:
     import bcrypt
-except Exception:  # pragma: no cover - optional fallback  # noqa: BLE001
+except Exception:  # pragma: no cover - optional fallback
     bcrypt = None
 
 from .security.rbac import PermissionDeniedError, RoleBasedAccessControl, UserContext
@@ -156,7 +156,7 @@ class AdminGodLayer:
             else:
                 GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "incorrect password")
             return result
-        except Exception:  # noqa: BLE001
+        except Exception:
             GodModeAuditLog.record(
                 actor,
                 "VERIFY_ERROR",

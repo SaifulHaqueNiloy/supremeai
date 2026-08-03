@@ -143,7 +143,7 @@ class UsageTracker:
                 data = json.loads(self.db_file.read_text(encoding="utf-8"))
                 self.records = [UsageRecord(**r) for r in data.get("records", [])]
                 logger.info(f"📚 Loaded {len(self.records)} usage records")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"⚠️ Failed to load cost DB: {e}")
 
     def _save_db(self):
@@ -154,7 +154,7 @@ class UsageTracker:
                 "records": [asdict(r) for r in self.records],
             }
             self.db_file.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"⚠️ Failed to save cost DB: {e}")
 
     def record_usage(
@@ -239,7 +239,7 @@ class BudgetManager:
                 data = json.loads(self.config_file.read_text(encoding="utf-8"))
                 for k, v in data.items():
                     self.budgets[k] = BudgetConfig(**v)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"⚠️ Failed to load budget config: {e}")
         else:
             self.budgets = {
@@ -257,7 +257,7 @@ class BudgetManager:
         try:
             data = {k: asdict(v) for k, v in self.budgets.items()}
             self.config_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"⚠️ Failed to save budget config: {e}")
 
     def check_budgets(self) -> list[dict[str, Any]]:

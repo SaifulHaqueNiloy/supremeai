@@ -43,7 +43,7 @@ Dependencies:
 - `jose.jwt`: For encoding JSON Web Tokens (JWTs).
 - `google.cloud.firestore`: For Firestore field deletion.
 - `core.llm.free_tier_tracker`: For managing and monitoring LLM free-tier usage.
-- `core.llm.token_budget`: For managing and monitoring LLM token budgets."""  # noqa: E501
+- `core.llm.token_budget`: For managing and monitoring LLM token budgets."""
 
 import base64
 import hashlib
@@ -120,7 +120,7 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
             )
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Token verification/decoding failed")
         raise HTTPException(status_code=401, detail="Authentication failed") from e
 
@@ -139,7 +139,7 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
             elif email.lower() in [e.lower() for e in settings.admin_emails]:
                 role = "admin"
                 doc_ref.set({"email": email, "role": "admin", "created_at": str(time.time())})
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.critical(f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}")
             role = "user"
     elif email.lower() in [e.lower() for e in settings.admin_emails]:
@@ -183,8 +183,8 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
             )
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=401, detail=f"Token decoding failed: {str(e)}") from e
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token decoding failed: {e!s}") from e
 
     secret = base64.b32encode(os.urandom(10)).decode("utf-8")
 
@@ -192,7 +192,7 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     if db:
         try:
             db.collection("admin_users").document(uid).update({"temp_totp_secret": secret})
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to store temp TOTP secret in Firestore: {e}")
 
     # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি রিকোয়েস্ট করা হলো
@@ -225,8 +225,8 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
             )
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=401, detail=f"Token decoding failed: {str(e)}") from e
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token decoding failed: {e!s}") from e
 
     db = get_firestore_client()
     totp_secret = None
@@ -239,7 +239,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                 data = doc.to_dict()
                 totp_secret = data.get("totp_secret")
                 temp_totp_secret = data.get("temp_totp_secret")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to retrieve TOTP secret: {e}")
 
     secret_to_use = totp_secret or temp_totp_secret
@@ -256,7 +256,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         from core.cache.redis_manager import redis_manager
 
         _redis = redis_manager.client
-    except Exception as e:  # noqa: BLE001, S110
+    except Exception as e:
         logger.debug(f"Redis client not available: {e}")
 
     if _redis:
@@ -268,7 +268,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                 )
         except HTTPException:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Redis lockout check failed — proceeding (fail-open): {e}")
 
     if not check_totp(otp.strip(), secret_to_use):
@@ -280,7 +280,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                 if int(attempts) >= _TOTP_MAX_ATTEMPTS:
                     await _redis.setex(lockout_key, _TOTP_LOCKOUT_SECONDS, "locked")
                     logger.critical(f"TOTP lockout triggered for uid={uid} after {attempts} failed attempts")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Redis attempt tracking failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid verification code")
 
@@ -288,7 +288,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     if _redis:
         try:
             await _redis.delete(attempt_key)
-        except Exception as e:  # noqa: BLE001, S110
+        except Exception as e:
             logger.debug(f"Failed to clear Redis attempts: {e}")
 
     if temp_totp_secret and not totp_secret and db:
@@ -301,7 +301,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                     "temp_totp_secret": firestore.DELETE_FIELD,
                 }
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to promote temp TOTP secret: {e}")
 
     from jose import jwt
@@ -462,7 +462,7 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
             if hmac.compare_digest(code, user_otp):
                 return True
         return False
-    except Exception:  # noqa: BLE001
+    except Exception:
         return False
 
 

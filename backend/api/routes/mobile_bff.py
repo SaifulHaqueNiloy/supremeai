@@ -45,6 +45,6 @@ async def proxy_mobile_ai_request(request: Request, payload: MobileChatRequest):
             "provider": raw_response.get("provider"),
         }
 
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"❌ Mobile BFF Execution Error: {str(e)}")
+    except Exception as e:
+        logger.error(f"❌ Mobile BFF Execution Error: {e!s}")
         raise HTTPException(status_code=500, detail="Internal BFF Proxy Error.") from e

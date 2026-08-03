@@ -270,7 +270,7 @@ Respond ONLY with the translated text. No explanations, no quotes around output.
 
             return result
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"BhashaBot LLM translation failed: {e}")
             # Degraded: return original with warning
             return {

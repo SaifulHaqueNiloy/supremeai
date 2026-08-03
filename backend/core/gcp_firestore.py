@@ -14,7 +14,7 @@ Dependencies:
 - `loguru`: For flexible and structured logging of operational status and warnings.
 - `google.cloud.firestore`: The official Google Cloud client library for interacting with Firestore.
 - `utils.environment`: An internal utility for determining the application's execution environment.
-- `utils.firestore_helpers`: An internal utility providing shared logic for obtaining Firestore client instances."""  # noqa: E501
+- `utils.firestore_helpers`: An internal utility providing shared logic for obtaining Firestore client instances."""
 
 import json
 import os
@@ -29,7 +29,7 @@ try:
     from google.cloud import firestore  # type: ignore[import-untyped]
 
     FIRESTORE_AVAILABLE = True
-except Exception:  # noqa: BLE001
+except Exception:
     FIRESTORE_AVAILABLE = False
 
 
@@ -78,7 +78,7 @@ class GCPFirestoreVerificationQueue:
         else:
             conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
 
-        assert conn is not None  # noqa: S101
+        assert conn is not None
 
         try:
             conn.execute(

@@ -97,7 +97,7 @@ async def observability_fetch_sentry_issues(params: SentryIssueInput) -> str:
                 )
 
             return json.dumps({"count": len(issues), "issues": issues}, ensure_ascii=False)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return json.dumps({"error": f"Failed to fetch Sentry issues: {e}"}, ensure_ascii=False)
 
 
@@ -134,7 +134,7 @@ async def observability_tail_local_logs(params: LocalLogInput) -> str:
         return json.dumps(
             {"log_file": str(target_log), "total_lines": len(content_lines), "tail": tail_lines}, ensure_ascii=False
         )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return json.dumps({"error": f"Failed to read log file: {e}"}, ensure_ascii=False)
 
 

@@ -58,15 +58,15 @@ class NATSClient:
             # Initialize or bind to the Key-Value store for Worker Registry
             try:
                 self.kv_store = await self.js.key_value("WORKER_REGISTRY")
-            except Exception:  # noqa: BLE001
+            except Exception:
                 # Create the bucket if it doesn't exist
                 self.kv_store = await self.js.create_key_value(bucket="WORKER_REGISTRY")
                 logger.info("🛠️ Created JetStream Key-Value bucket: WORKER_REGISTRY")
 
         except NoServersError:
             logger.error("❌ Failed to connect to NATS Broker. Is it running?")
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"❌ NATS Connection Error: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ NATS Connection Error: {e!s}")
 
     async def publish_event(self, subject: str, data: BaseModel | dict[str, Any]):
         """Publishes an event to a specific NATS subject."""
@@ -87,8 +87,8 @@ class NATSClient:
             try:
                 decoded_data = json.loads(msg.data.decode())
                 await callback(decoded_data)
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Error handling NATS message on {subject}: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error handling NATS message on {subject}: {e!s}")
 
         await self.nc.subscribe(subject, cb=message_handler)
 
@@ -117,7 +117,7 @@ class NATSClient:
         if self.kv_store:
             try:
                 keys = await self.kv_store.keys()
-            except Exception as keys_err:  # noqa: BLE001
+            except Exception as keys_err:
                 # বাংলা মন্তব্য: KV store key list পেতে ব্যর্থ — swarm routing এ খালি list ফেরাবে
                 logger.error(f"[NATS] Failed to list worker keys from KV store: {keys_err!r}")
                 return workers
@@ -126,7 +126,7 @@ class NATSClient:
                 try:
                     entry = await self.kv_store.get(key)
                     workers[key] = json.loads(entry.value.decode())
-                except Exception as entry_err:  # noqa: BLE001
+                except Exception as entry_err:
                     # বাংলা মন্তব্য: একটি key পার্স ব্যর্থ হলেও বাকিগুলো চলতে থাকবে
                     skipped.append(key)
                     logger.warning(f"[NATS] Skipped malformed worker entry '{key}': {entry_err!r}")

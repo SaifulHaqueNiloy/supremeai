@@ -107,8 +107,8 @@ async def get_skill_graph(user=Depends(require_auth_token)):
 
             return {"nodes": list(nodes_dict.values()), "edges": edges}
 
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Error fetching skill graph: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error fetching skill graph: {e!s}")
         raise HTTPException(status_code=500, detail="Failed to fetch knowledge graph") from e
 
 
@@ -128,6 +128,6 @@ async def get_learning_path(
                 detail=f"No path found between {start_skill} and {end_skill}",
             )
         return {"path": path}
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Error finding path: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error finding path: {e!s}")
         raise HTTPException(status_code=500, detail=str(e)) from e

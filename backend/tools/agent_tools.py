@@ -92,7 +92,7 @@ def check_system_health() -> str:
 
     # ── CPU & RAM (psutil) ──────────────────────────
     try:
-        import psutil  # noqa: PLC0415
+        import psutil
 
         cpu_pct = psutil.cpu_percent(interval=0.5)
         mem = psutil.virtual_memory()
@@ -104,21 +104,21 @@ def check_system_health() -> str:
     except ImportError:
         health["cpu_percent"] = "psutil_not_installed"
         health["ram_used_pct"] = "psutil_not_installed"
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         health["system_error"] = str(exc)
 
     # ── Redis Ping ──────────────────────────────────
     redis_url = os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL", "")
     if redis_url:
         try:
-            import redis as redis_lib  # noqa: PLC0415
+            import redis as redis_lib
 
             r = redis_lib.from_url(redis_url, socket_connect_timeout=3, socket_timeout=3)
             r.ping()
             health["redis"] = "ONLINE"
             info = r.info("memory")
             health["redis_used_memory_mb"] = round(info.get("used_memory", 0) / (1024**2), 2)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             health["redis"] = f"OFFLINE ({exc})"
     else:
         health["redis"] = "NOT_CONFIGURED"
@@ -134,7 +134,7 @@ def check_system_health() -> str:
                 timeout=5.0,
             )
             health["database"] = "ONLINE" if resp.status_code < 500 else f"ERROR ({resp.status_code})"
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             health["database"] = f"OFFLINE ({exc})"
     else:
         health["database"] = "NOT_CONFIGURED"
@@ -171,7 +171,7 @@ def execute_python_code(code: str) -> str:
     logger.info(f"⚙️ [TOOL] Executing Python code in sandbox (length={len(code)} chars)")
 
     try:
-        from tools.devops.docker_sandbox import DockerSandbox  # noqa: PLC0415
+        from tools.devops.docker_sandbox import DockerSandbox
 
         sandbox = DockerSandbox(image="python:3.11-slim")
 
@@ -199,7 +199,7 @@ def execute_python_code(code: str) -> str:
     except ImportError:
         logger.error("DockerSandbox not available — cannot execute code.")
         return "Code execution unavailable: DockerSandbox module not found."
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"Code execution error: {exc}")
         return f"Execution error: {exc}"
 

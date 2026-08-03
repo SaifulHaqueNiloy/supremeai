@@ -31,6 +31,6 @@ class AIWebExtractor:
                 "extracted": extracted,
                 "raw": page_data,
             }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # মডেল রাউটার বা ডেটা এক্সট্র্যাকশন সম্পর্কিত যেকোনো ত্রুটি এখানে ধরা হলো
             return {"success": False, "error": str(e)}

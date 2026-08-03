@@ -217,7 +217,7 @@ class AgentEvolutionEngine(BaseSkill):
                 best = max((g.fitness_score for g in self._population), default=0.0)
                 if best >= self._fitness_threshold:
                     break
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 await self._log_error("evolution_loop", str(exc))
             await asyncio.sleep(1.0)
 
@@ -250,7 +250,7 @@ class AgentEvolutionEngine(BaseSkill):
             used = response.get("usage", {}).get("total_tokens", genome.max_tokens)
             efficiency = 1.0 - (used / genome.max_tokens)
             return min(1.0, max(0.0, score * 0.7 + efficiency * 0.3))
-        except Exception:  # noqa: BLE001
+        except Exception:
             return 0.0
 
     @trace_span("evolution.breed")

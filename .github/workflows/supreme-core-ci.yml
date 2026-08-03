@@ -346,9 +346,13 @@ jobs:
       - name: 🚨 Force Cancel Workflow on Failure
         if: failure()
         run: |
-          gh run cancel ${{ github.run_id }}
+          echo "❌ Pre-Merge Gate failed — force canceling entire workflow..." >> $GITHUB_STEP_SUMMARY
+          curl -s -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel" || gh run cancel ${{ github.run_id }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   ai-scribe-docs:
     name: "📚 AI Scribe — Auto-Documentation Generation"
@@ -406,14 +410,20 @@ jobs:
         working-directory: backend
         run: |
           echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
-          # বাংলা মন্তব্য: poetry পরিবেশ ব্যবহার করে safety_guard.py রান করা হচ্ছে
-          poetry run python ../scripts/safety_guard.py --check-only --report-json > safety-report.json 2>&1 || true
+          # বাংলা মন্তব্য: safety_guard.py রান করে ক্রিটিক্যাল ফাইলের অনুমোদন ও রিপোর্ট যাচাই করা হচ্ছে
+          poetry run python ../scripts/safety_guard.py --report-json > safety-report.json 2>&1
 
-          # Parse and summarize
+          # Parse and summarize safety violations
           if [ -f safety-report.json ]; then
-            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে - রিপোর্ট দেখুন" >> $GITHUB_STEP_SUMMARY
+            PENDING=$(grep -o '"pending_approvals": [1-9][0-9]*' safety-report.json | awk '{print $2}' || echo "0")
+            if [ -n "$PENDING" ] && [ "$PENDING" -gt 0 ]; then
+              echo "❌ Found $PENDING pending critical file approvals — blocking merge/deploy!" >> $GITHUB_STEP_SUMMARY
+              cat safety-report.json >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে — কোনো আনঅ্যাপ্রুভড সেফটি ভাইওলেশন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
           else
-            echo "⚠️ সেফটি গার্ড ভ্যালিডেশন সম্পন্ন হয়েছে" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ সেফটি গার্ড রিপোর্ট তৈরি হয়নি" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 🔍 Multi-Model Validator - Security & Logic Check

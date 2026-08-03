@@ -38,7 +38,7 @@ class BlockchainAgent:
                 "contract": code.strip(),
                 "security_score": 90,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Contract generation failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -117,7 +117,7 @@ class BlockchainAgent:
                 "status": "success",
                 "optimized_contract": code.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Gas optimization failed: {exc}")
             return {"status": "error", "error": str(exc)}
 
@@ -141,6 +141,6 @@ class BlockchainAgent:
                 "test_framework": "hardhat",
                 "tests": code.strip(),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Test generation failed: {exc}")
             return {"status": "error", "error": str(exc)}

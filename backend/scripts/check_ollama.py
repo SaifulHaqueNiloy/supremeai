@@ -31,7 +31,7 @@ RESET = "\033[0m"
 
 def bprint(msg: str, color: str = "") -> None:
     """বাংলা/ইংলিশ মিক্সড প্রিন্ট"""
-    print(f"{color}{msg}{RESET}")  # noqa: T201
+    print(f"{color}{msg}{RESET}")
 
 
 # ──────────────────────────────────────────────
@@ -51,7 +51,7 @@ def check_server() -> bool:
         bprint(f"❌ সার্ভারে কানেক্ট করা যাচ্ছে না! — {OLLAMA_URL}", RED)
         bprint("   🔧 সমাধান: `ollama serve` চালু করুন বা Windows-তে Ollama এপ খুলুন", YELLOW)
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         bprint(f"❌ এরর: {e}", RED)
         return False
 
@@ -113,7 +113,7 @@ def ensure_model(model_name: str) -> bool:
     except httpx.TimeoutException:
         bprint(f"  ❌ '{model_name}' pull হল时间内 শেষ হয়নি ({PULL_TIMEOUT}s)", RED)
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         bprint(f"  ❌ Pull এরর: {e}", RED)
         return False
 
@@ -148,7 +148,7 @@ def test_generation(model_name: str) -> bool:
     except httpx.TimeoutException:
         bprint("  ❌ জেনারেশন timeout (৬০s)", RED)
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         bprint(f"  ❌ এরর: {e}", RED)
         return False
 

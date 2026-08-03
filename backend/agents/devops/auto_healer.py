@@ -133,7 +133,7 @@ class CircuitBreaker:
                 self.last_failure_time = {
                     k: datetime.datetime.fromisoformat(v) for k, v in data.get("last_failure", {}).items()
                 }
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"⚠️ Failed to load circuit breaker state: {e}")
 
     def _save_state(self):
@@ -145,7 +145,7 @@ class CircuitBreaker:
                 "last_failure": {k: v.isoformat() for k, v in self.last_failure_time.items()},
             }
             STATE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"⚠️ Failed to save circuit breaker state: {e}")
 
     def record_success(self, service_name: str):
@@ -219,7 +219,7 @@ class HealthChecker:
                     time.sleep(1)
                     continue
                 return False, None, f"Connection error: {e}"
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 if attempt < retries:
                     time.sleep(1)
                     continue
@@ -305,7 +305,7 @@ class BackupProviderSwitch:
         if state_path.exists():
             try:
                 self.active_provider = json.loads(state_path.read_text(encoding="utf-8"))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # বাংলা: state ফাইল corrupt/unreadable হলে চুপচাপ খালি অবস্থায় শুরু করা যাবে না —
                 # তাহলে কোন সার্ভিস backup provider-এ ছিল সেই তথ্য হারিয়ে যায় এবং AutoHealer
                 # ভুল করে down থাকা primary-তে আবার ট্রাফিক পাঠাতে পারে। তাই এটাকে জোরালোভাবে
@@ -318,7 +318,7 @@ class BackupProviderSwitch:
                     corrupt_backup = state_path.with_suffix(".json.corrupt")
                     state_path.replace(corrupt_backup)
                     logger.warning(f"⚠️ Corrupted state file moved to {corrupt_backup} for inspection.")
-                except Exception as move_err:  # noqa: BLE001
+                except Exception as move_err:
                     logger.error(f"❌ Could not preserve corrupted state file: {move_err}")
                 self.active_provider = {}
 
@@ -326,7 +326,7 @@ class BackupProviderSwitch:
         state_path = Path(__file__).parent / ".provider_state.json"
         try:
             state_path.write_text(json.dumps(self.active_provider, indent=2), encoding="utf-8")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"⚠️ Failed to save provider state: {e}")
 
     def switch_to_backup(self, service_name: str, original_url: str) -> tuple[bool, str]:
@@ -383,7 +383,7 @@ class AlertManager:
             )
             resp.raise_for_status()
             return True
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ Discord alert failed: {e}")
             return False
 
@@ -486,7 +486,7 @@ class AutoHealer:
                 try:
                     record = future.result()
                     records.append(record)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"❌ Exception healing {svc_name}: {e}")
 
         logger.info(f"🏁 AutoHealer scan complete. {len(records)} services checked.")

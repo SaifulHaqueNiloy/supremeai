@@ -75,7 +75,7 @@ Return ONLY a JSON object (no markdown blocks, no text around it) with the follo
                 deployment_target=data.get("deployment_target"),
                 clarification_question=data.get("clarification_question"),
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse JSON specification from: {text}. Error: {e}")
             # Fallback to basic spec
             return AppSpecification(

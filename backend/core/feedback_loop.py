@@ -12,7 +12,7 @@ Key Components:
 Dependencies:
 - `logging`: For logging debug information about recorded events.
 - `time`: For generating timestamps for each recorded event.
-- `typing`: For type hinting to improve code readability and maintainability."""  # noqa: E501
+- `typing`: For type hinting to improve code readability and maintainability."""
 
 from __future__ import annotations
 

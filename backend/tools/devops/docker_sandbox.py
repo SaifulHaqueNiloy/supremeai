@@ -15,7 +15,7 @@ class DockerSandbox:
     def _check_docker(self) -> bool:
         try:
             # Check if docker daemon is running
-            subprocess.run(  # noqa: S603, S607
+            subprocess.run(
                 ["docker", "info"],
                 capture_output=True,
                 timeout=3,
@@ -109,7 +109,7 @@ class DockerSandbox:
                     text=True,
                     timeout=5,
                     check=True,
-                )  # noqa: S603
+                )
                 return {
                     "success": True,
                     "stdout": result.stdout,
@@ -145,7 +145,7 @@ class DockerSandbox:
                 "-c",
                 cmd,
             ]
-            result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=10, check=True)  # noqa: S603
+            result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=10, check=True)
             return {
                 "success": True,
                 "stdout": result.stdout,

@@ -32,8 +32,15 @@ class ChaosInjectorMiddleware(BaseHTTPMiddleware):
         self.chaos_enabled = os.getenv("LOCAL_CHAOS_MODE", "false").lower() == "true"
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        # Production safety switch — সম্পূর্ণ bypass
         env = os.getenv("ENV", "local").lower()
+        # Production safety switch — production is completely bypassed regardless of
+        # LOCAL_CHAOS_MODE. self.chaos_enabled (explicit LOCAL_CHAOS_MODE=true opt-in) is
+        # the only other gate needed: nothing in .github/workflows/ or render.yaml ever sets
+        # that var, so no test/CI run is affected unless it deliberately opts in (as this
+        # middleware's own unit tests do, to verify the injection logic itself). An earlier
+        # blanket "pytest in sys.modules" / CI/GITHUB_ACTIONS bypass here broke exactly those
+        # tests, in both local pytest runs and real GitHub Actions CI (GITHUB_ACTIONS=true is
+        # always set there).
         if env == "production" or not self.chaos_enabled:
             return await call_next(request)
 

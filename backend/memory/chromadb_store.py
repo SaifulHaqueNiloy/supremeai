@@ -54,7 +54,7 @@ class ChromaDBStore:
                 name=self.collection_name,
                 metadata={"hnsw:space": "cosine"},
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _logger.warning(f"Failed to initialize ChromaDB client: {e}")
             self._client = None
             self._collection = None
@@ -66,7 +66,7 @@ class ChromaDBStore:
             try:
                 with open(path, encoding="utf-8") as f:
                     self._fallback_docs = json.load(f)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _logger.warning(f"Failed to load fallback docs: {e}")
                 self._fallback_docs = {}
 
@@ -124,7 +124,7 @@ class ChromaDBStore:
             try:
                 self._collection.upsert(ids=ids, documents=texts, metadatas=metadatas)
                 return
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _logger.warning(f"ChromaDB upsert failed, falling back to local storage: {e}")
         for doc in documents:
             doc_id = doc.get("id") or str(uuid.uuid4())
@@ -158,7 +158,7 @@ class ChromaDBStore:
                     if old_hash == content_hash:
                         _logger.debug(f"Skipping indexing for unchanged document {doc_id}")
                         return False
-            except Exception as e:  # noqa: BLE001, S110
+            except Exception as e:
                 _logger.debug(f"Failed to check existing hash in chromadb: {e}")
 
         elif doc_id in self._fallback_docs:
@@ -184,7 +184,7 @@ class ChromaDBStore:
                         doc_text = results["documents"][0][idx] if results.get("documents") else ""
                         matches.append((doc_id, score, {"text": doc_text, "metadata": meta}))
                     return matches
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _logger.warning(f"ChromaDB query failed, falling back to TF-IDF: {e}")
         query_vector = self._get_vector(query_text)
         scored = []
@@ -199,7 +199,7 @@ class ChromaDBStore:
             try:
                 self._collection.delete(ids=[doc_id])
                 return
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _logger.warning(f"ChromaDB delete failed, falling back to local: {e}")
         self._fallback_docs.pop(doc_id, None)
         self._save_fallback()
@@ -208,7 +208,7 @@ class ChromaDBStore:
         if self._collection is not None:
             try:
                 return self._collection.count()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _logger.warning(f"ChromaDB count failed: {e}")
                 return -1  # -1 indicates failure, 0 means empty - distinct states
         return len(self._fallback_docs)
@@ -223,6 +223,6 @@ class ChromaDBStore:
                         "text": result["documents"][0],
                         "metadata": (result["metadatas"][0] if result.get("metadatas") else {}),
                     }
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _logger.warning(f"ChromaDB get_document failed for {doc_id}: {e}")
         return self._fallback_docs.get(doc_id)

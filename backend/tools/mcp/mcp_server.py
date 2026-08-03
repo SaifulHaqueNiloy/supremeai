@@ -88,9 +88,9 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
         else:
             raise ValueError(f"Unknown MCP tool: {name}")
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"MCP Server execution error: {e}")
-        return [types.TextContent(type="text", text=f"Error gathering graph context: {str(e)}")]
+        return [types.TextContent(type="text", text=f"Error gathering graph context: {e!s}")]
 
 
 async def main():
