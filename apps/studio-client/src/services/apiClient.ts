@@ -54,6 +54,17 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
 };
 
 const handleResponse = async (res: Response) => {
+  // 🔐 Phase 2 JIT-OTP Interceptor — Status 202 Accepted means JIT OTP is required
+  if (res.status === 202) {
+    const data = await res.json().catch(() => ({}));
+    return {
+      success: false,
+      requiresOTP: true,
+      message: data.message || 'JIT OTP verification required',
+      data,
+    };
+  }
+
   if (!res.ok) {
     let errMsg = `HTTP error! status: ${res.status}`;
     try {
@@ -183,6 +194,19 @@ export const apiClient = {
       method: 'DELETE',
       headers: await getAuthHeaders(),
       ...options,
+    });
+    return handleResponse(res);
+  },
+
+  performSensitiveAction: async <T>(path: string, body?: any, otpCode?: string): Promise<T> => {
+    const headers = await getAuthHeaders();
+    if (otpCode) {
+      headers['X-JIT-OTP'] = otpCode;
+    }
+    const res = await throttledFetch(`${getApiBaseUrl()}${path}`, {
+      method: 'POST',
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
     });
     return handleResponse(res);
   },
