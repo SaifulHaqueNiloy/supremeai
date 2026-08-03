@@ -49,6 +49,10 @@ on:
         description: '📚 Generate & Deploy Docs'
         type: boolean
         default: false
+      run_mlops_nightly_eval:
+        description: '🧠 Run MLOps Nightly Evolution & Governance (Drift, Bias, Injection)'
+        type: boolean
+        default: true
       run_generate_modular_audits:
         description: '📝 Generate 6 Modular Audit Markdowns (PR)'
         type: boolean
@@ -642,6 +646,31 @@ jobs:
           SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+
+  mlops-nightly-eval:
+    name: 🧠 MLOps Nightly Evolution & Governance
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.run_mlops_nightly_eval == 'true'
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-backend
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Run MLOps Nightly Suite
+        working-directory: backend
+        run: |
+          poetry run python ../scripts/ai/model_drift_detector.py --export-promql
+          poetry run python ../scripts/ai/bias_detector.py --report-json ../reports/bias_nightly.json
+          poetry run python ../scripts/ai/prompt_injection_tester.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+
 
 
 
