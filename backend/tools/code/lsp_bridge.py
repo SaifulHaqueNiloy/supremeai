@@ -51,7 +51,7 @@ class LanguageServerBridge:
 
             return completion_text
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"LSP bridge completion failed: {e}")
             return ""
 

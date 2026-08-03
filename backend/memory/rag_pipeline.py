@@ -66,6 +66,6 @@ class RAGPipeline:
                 if score > 0.05:
                     context_parts.append(doc_data["text"])
             return "\n---\n".join(context_parts)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"HyDE retrieval failed, falling back to standard retrieval: {e}")
             return self.retrieve_context(query, limit)

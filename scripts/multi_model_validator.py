@@ -37,7 +37,27 @@ class MultiModelValidator:
         self.risk_levels = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
 
     async def validate_code(self, file_path: str) -> dict[str, Any]:
-        """কোড ফাইল ভ্যালিডেট করুন মাল্টি-মডেল দিয়ে"""
+        """কোড ফাইল বা ডিরেক্টরি ভ্যালিডেট করুন মাল্টি-মডেল দিয়ে (Directory সমর্থিত)"""
+        path_obj = Path(file_path)
+
+        # বাংলা মন্তব্য: যদি ডিরেক্টরি পাস করা হয় তবে রিকার্সিভলি পাইথন ফাইলগুলো প্রসেস করা হবে
+        if path_obj.is_dir():
+            py_files = [str(p) for p in path_obj.rglob("*.py") if p.is_file()]
+            dir_results = []
+            all_passed = True
+            for py_f in py_files:
+                res = await self.validate_code(py_f)
+                dir_results.append(res)
+                if not res.get("passed", True):
+                    all_passed = False
+            return {
+                "file": file_path,
+                "is_directory": True,
+                "total_files": len(py_files),
+                "results": dir_results,
+                "passed": all_passed,
+            }
+
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 code_content = f.read()

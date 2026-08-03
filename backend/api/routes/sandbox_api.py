@@ -58,7 +58,7 @@ async def create_sandbox(req: CreateSandboxRequest) -> dict[str, Any]:
             "volume_path": session.volume_path,
             "provider": session.provider,
         }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 

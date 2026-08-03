@@ -69,13 +69,13 @@ registry = ServiceRegistry()
 # These imports are mandatory for the application to function correctly.
 # Removing the try/except blocks ensures a "fail-fast" startup if a
 # critical dependency is missing, preventing NoneType errors at runtime.
-from adaptive_engine.experience_db import ExperienceDatabase  # noqa: E402
-from adaptive_engine.intent_parser import IntentParser  # noqa: E402
-from admin.god import AdminGodLayer  # noqa: E402
-from brain.model_router import ModelRouter  # noqa: E402
-from brain.parallel_cloud_router import ParallelCloudRouter  # noqa: E402
-from core.intent import IntentClassifier  # noqa: E402
-from core.messaging.upstash_redis_queue import UpstashRedisQueue  # noqa: E402
+from adaptive_engine.experience_db import ExperienceDatabase
+from adaptive_engine.intent_parser import IntentParser
+from admin.god import AdminGodLayer
+from brain.model_router import ModelRouter
+from brain.parallel_cloud_router import ParallelCloudRouter
+from core.intent import IntentClassifier
+from core.messaging.upstash_redis_queue import UpstashRedisQueue
 
 redis_queue = UpstashRedisQueue()
 admin_god = AdminGodLayer()
@@ -119,7 +119,7 @@ def __getattr__(name: str) -> Any:
             f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!"
         )
         try:
-            from core.messaging.event_bus import (  # noqa: PLC0415
+            from core.messaging.event_bus import (
                 ErrorContext,
                 ErrorEvent,
                 error_event_bus,
@@ -134,10 +134,10 @@ def __getattr__(name: str) -> Any:
                     structured_context=ErrorContext(module="services_registry"),
                 )
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logging.getLogger(__name__).debug("ErrorEvent emit bypassed: %s", exc)
 
-        from unittest.mock import MagicMock  # noqa: PLC0415
+        from unittest.mock import MagicMock
 
         return MagicMock()
 

@@ -66,6 +66,16 @@ class AsyncRateLimiter:
         """Helper for test mock compatibility."""
         return await redis_manager.get_client_async()
 
+    async def close(self) -> None:
+        """No-op: this limiter does not own a Redis connection.
+
+        It shares the centralized `redis_manager` connection, which has its
+        own lifecycle. This method exists for interface completeness so
+        callers can treat AsyncRateLimiter symmetrically with other
+        resources that need explicit shutdown.
+        """
+        return None
+
     async def acquire(self, key: str, limit: int = None, window: int = None) -> bool:
         """Redis-based sliding window rate limiting with fail-closed behavior.
 
@@ -109,7 +119,7 @@ class AsyncRateLimiter:
                 logger.warning(f"Rate limit approaching for {key}: {count}/{limit}")
 
             return is_allowed
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if settings.env in ("production", "staging"):
                 logger.critical(f"Rate limiter failed critically in production: {e}. Blocking request (fail-closed).")
                 return False

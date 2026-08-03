@@ -86,7 +86,7 @@ class CloudSandboxOrchestrator:
             return data
         except httpx.HTTPStatusError as e:
             logger.error(f"Failed to create sandbox. Status: {e.response.status_code}, Body: {e.response.text}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An unexpected error occurred during sandbox creation: {e}")
 
         return None
@@ -186,7 +186,7 @@ class CloudSandboxOrchestrator:
                         await self.destroy_sandbox(sandbox_id)
 
                 await asyncio.sleep(60)  # Check every minute
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Auto-Destroy Worker encountered an error: {e}")
                 await asyncio.sleep(60)
 
@@ -225,7 +225,7 @@ class CloudSandboxOrchestrator:
         except FileNotFoundError:
             logger.error("🚨 Freebuff CLI not found. Please ensure it is installed globally (npm install -g freebuff).")
             return {"status": "error", "error": "Freebuff CLI not installed."}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"⚠️ Unexpected error running Freebuff: {e}")
             return {"status": "error", "error": str(e)}
 

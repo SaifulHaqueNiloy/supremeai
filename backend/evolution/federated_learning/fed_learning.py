@@ -150,7 +150,7 @@ class SecureAggregator:
         for param_name in client_updates[0].keys():
             aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
-            for update, weight in zip(client_updates, weights):
+            for update, weight in zip(client_updates, weights, strict=False):
                 aggregated[param_name] += update[param_name] * (weight / total_weight)
 
         return aggregated
@@ -323,7 +323,7 @@ class FederatedServer:
             for param_name in client_updates[0].keys():
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
-                for update, weight in zip(client_updates, client_weights):
+                for update, weight in zip(client_updates, client_weights, strict=False):
                     aggregated[param_name] += update[param_name] * (weight / total_weight)
 
         elif self.config.aggregation_method == AggregationMethod.FEDPROX:
@@ -336,7 +336,7 @@ class FederatedServer:
             for param_name in client_updates[0].keys():
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
-                for update, weight in zip(client_updates, client_weights):
+                for update, weight in zip(client_updates, client_weights, strict=False):
                     aggregated[param_name] += update[param_name] * (weight / total_weight)
 
         elif self.config.aggregation_method == AggregationMethod.SCAFFOLD:
@@ -347,7 +347,7 @@ class FederatedServer:
             for param_name in client_updates[0].keys():
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
-                for update, weight in zip(client_updates, client_weights):
+                for update, weight in zip(client_updates, client_weights, strict=False):
                     aggregated[param_name] += update[param_name] * (weight / total_weight)
 
         else:
@@ -358,7 +358,7 @@ class FederatedServer:
             for param_name in client_updates[0].keys():
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
-                for update, weight in zip(client_updates, client_weights):
+                for update, weight in zip(client_updates, client_weights, strict=False):
                     aggregated[param_name] += update[param_name] * (weight / total_weight)
 
         # Apply Byzantine-robust aggregation if needed

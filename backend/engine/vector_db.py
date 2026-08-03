@@ -35,13 +35,13 @@ class VectorDatabaseClient:
         """Lazily fetch the shared experience_db singleton from core.services."""
         if self._exp_db is None:
             try:
-                import core.services as _services  # noqa: PLC0415
+                import core.services as _services
 
                 self._exp_db = _services.experience_db
                 # বাংলা মন্তব্য: singleton থেকে degraded state propagate করা হচ্ছে
                 if getattr(self._exp_db, "vector_backend_degraded", False):
                     self.degraded = True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 _logger.error(
                     f"VectorDatabaseClient: failed to fetch shared experience_db — "
                     f"memory will be DEGRADED. error={exc!r}"
@@ -65,7 +65,7 @@ class VectorDatabaseClient:
             return
 
         try:
-            from adaptive_engine.experience_db import Experience  # noqa: PLC0415
+            from adaptive_engine.experience_db import Experience
 
             exp = Experience(
                 request=metadata.get("request", metadata.get("patch_id", "")),
@@ -78,7 +78,7 @@ class VectorDatabaseClient:
             # বাংলা মন্তব্য: blocking SQLite write — thread-এ offload করা হচ্ছে
             await asyncio.to_thread(exp_db.record_experience, exp)
             _logger.debug(f"🧠 Saved neural memory experience via shared pool: {metadata.get('patch_id', 'n/a')}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.degraded = True
             _logger.error(f"save_experience() failed (experience NOT persisted, DEGRADED): {exc!r}")
 
@@ -121,7 +121,7 @@ class VectorDatabaseClient:
                 }
                 for h in hits
             ]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.degraded = True
             _logger.error(f"find_similar_experiences() failed (returning empty, DEGRADED state): {exc!r}")
             return []

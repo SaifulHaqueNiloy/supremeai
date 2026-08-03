@@ -32,12 +32,12 @@ class VoiceCoder:
             feedback_text = f"Done. {action}."
             try:
                 audio_feedback = await self.voice.text_to_speech_async(feedback_text)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 audio_feedback = None
 
@@ -48,8 +48,8 @@ class VoiceCoder:
                 "code": code,
                 "feedback_audio": audio_feedback,
             }
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Voice coding failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"Voice coding failed: {e!s}")
             return {"status": "error", "error": str(e)}
 
     async def _classify_and_execute(self, transcript: str):
@@ -84,7 +84,7 @@ class VoiceCoder:
             if not text:
                 return f"# Could not generate code for: {instruction}\n"
             return text
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Code generation failed: {e}")
             return f"# Error generating code: {e}\n"
 
@@ -95,7 +95,7 @@ class VoiceCoder:
             router = ModelRouter()
             result = await router.async_route_and_generate(question, task_type="general", max_cost=0.01)
             return result.get("text", "") if isinstance(result, dict) else ""
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return f"Could not explain: {e}"
 
 
@@ -115,7 +115,7 @@ async def process_audio(file: UploadFile = File(...)):
         result = await voice_coder.process_voice_command(tmp_path)
         os.unlink(tmp_path)
         return result
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Audio processing failed: {e}")
         return {"status": "error", "error": str(e)}
 
@@ -140,7 +140,7 @@ async def voice_ws(websocket: WebSocket):
         await websocket.send_json(result)
     except WebSocketDisconnect:
         logger.info("Voice coder WebSocket disconnected before response")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Voice WebSocket error: {e}")
         await websocket.close()
     finally:

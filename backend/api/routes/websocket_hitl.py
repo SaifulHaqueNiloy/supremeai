@@ -41,7 +41,7 @@ class HITLConnectionManager:
                 await connection.send_text(message)
             except WebSocketDisconnect:
                 disconnected.add(connection)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Error sending message to HITL WebSocket: {e}")
                 disconnected.add(connection)
 
@@ -69,7 +69,7 @@ async def hitl_event_listener(event: ErrorEvent):
             await manager.broadcast(message)
         except TypeError as e:
             logger.error(f"Failed to serialize HITL event payload: {e}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Unexpected error in HITL event listener: {e}")
 
 
@@ -120,7 +120,7 @@ async def verify_hitl_token(websocket: WebSocket) -> bool:
     except jwt.PyJWTError as e:
         logger.warning(f"HITL WebSocket connection rejected: Invalid token - {e}")
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Unexpected error during token verification: {e}")
         return False
 
@@ -142,7 +142,7 @@ async def websocket_hitl_endpoint(websocket: WebSocket):
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
         logger.info("HITL WebSocket client gracefully disconnected.")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"HITL WebSocket error: {e}")
     finally:
         # finally block নিশ্চিত করে যে যেকোনো এরর বা ডিসকানেক্টে কানেকশন রিমুভ হবে

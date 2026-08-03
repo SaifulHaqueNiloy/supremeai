@@ -133,7 +133,7 @@ class SelfImprovementAgent(BaseSkill):
                 await self._scan_and_propose()
                 await self._dry_run_pending()
                 await self._apply_approved()
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 await self._feedback.record_error_report(
                     agent="self_improvement",
                     error=str(exc),

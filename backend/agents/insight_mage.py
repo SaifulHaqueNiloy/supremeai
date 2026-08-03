@@ -413,7 +413,7 @@ class InsightMage:
                         continue
 
             # Sort by timestamp
-            paired = sorted(zip(timestamps, values), key=lambda x: x[0])
+            paired = sorted(zip(timestamps, values, strict=False), key=lambda x: x[0])
             if paired:
                 sorted_ts = [p[0] for p in paired]
                 sorted_vals = [p[1] for p in paired]

@@ -132,7 +132,7 @@ class SlidingWindowMemory:
             if self.config.auto_compact:
                 self._compact_if_needed(session_id)
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to persist sliding window records: {exc}")
             return False
         finally:
@@ -171,7 +171,7 @@ class SlidingWindowMemory:
             )
             conn.commit()
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to clear sliding window memory: {exc}")
             return False
         finally:

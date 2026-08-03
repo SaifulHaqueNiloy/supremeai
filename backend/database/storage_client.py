@@ -47,7 +47,7 @@ class StorageClient:
             elif self.provider == "s3" and self.s3_client:
                 self.s3_client.upload_file(local_path, self.bucket_name, remote_path)
                 return {"status": "success", "provider": "s3", "path": remote_path}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Upload failed: {e}")
             return {"status": "error", "error": str(e)}
 

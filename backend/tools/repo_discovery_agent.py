@@ -76,7 +76,7 @@ class RepoDiscoveryAgent:
                     return repos
                 else:
                     logger.error(f"GitHub API Error: {response.status_code} - {response.text}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Repo search failed: {exc}")
 
         return []
@@ -121,7 +121,7 @@ class RepoDiscoveryAgent:
                             "reason": "Repository package.json dependencies verified.",
                             "token_prefix": token[:4] + "****",
                         }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Static compatibility analysis failed, falling back: {exc}")
 
         return {

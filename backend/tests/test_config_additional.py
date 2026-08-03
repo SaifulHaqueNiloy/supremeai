@@ -18,7 +18,6 @@ def test_parse_cors_origins_comma_separated():
     assert settings.cors_origins == ["https://a.example.com", "https://b.example.com"]
 
 
-@pytest.mark.skip(reason='CRITICAL - POSSIBLE SECURITY REGRESSION, DO NOT SILENTLY DISMISS: expects RuntimeError when ENV=production and JWT secret missing/empty via secret_vault; core.config.validate_production_completeness no longer raises, only logs a warning and continues. Needs immediate developer review of core/config.py production validation - NOT fixed here, too risky to change validation logic without full context.')
 def test_settings_raises_when_production_secret_missing():
     with patch.dict(
         os.environ,

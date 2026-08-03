@@ -55,8 +55,8 @@ async def save_credentials(
             "message": "GCP Service Account credentials encrypted and securely saved.",
             "provider": payload.provider,
         }
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"Failed to encrypt credentials: {str(e)}") from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to encrypt credentials: {e!s}") from e
 
 
 # ==========================================
@@ -81,10 +81,10 @@ async def deploy_container(
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config_path = os.path.join(base_dir, "config", "byoc_limits.json")
     try:
-        with open(config_path, encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(config_path, encoding="utf-8") as f:
             limits = json.load(f)["limits"]
             user_limits = limits.get(user_tier, limits["free"])
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Unhandled exception")
         user_limits = {"max_containers": 1, "max_memory": "256Mi", "max_cpu": "500m"}
 
@@ -133,11 +133,11 @@ async def deploy_container(
                 job.finished_at = datetime.now(UTC)
                 job.error_message = res.get("error", "Deployment failed")
                 job.logs.append(f"❌ Deployment failed: {job.error_message}")
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:
             job.status = "failed"
             job.finished_at = datetime.now(UTC)
             job.error_message = str(ex)
-            job.logs.append(f"❌ Pipeline crashed: {str(ex)}")
+            job.logs.append(f"❌ Pipeline crashed: {ex!s}")
 
     background_tasks.add_task(run_deployment)
 

@@ -25,11 +25,7 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
             "_execute_response_with_retry",
         ):
             # বাংলা: আগে এখানে "None if ... else None" ছিল — দুই branch-ই None রিটার্ন করত,
-            # মানে get_/is_ প্রেফিক্স চেকটা কার্যত কোনো effect ফেলছিল না। সম্ভবত মূল ইচ্ছা ছিল
-            # get_/is_ মেথডের জন্য আলাদা fallback (যেমন [] বা False) দেওয়া, কিন্তু নিশ্চিত না
-            # হয়ে সেই আচরণ পরিবর্তন করা risky, তাই বর্তমান কার্যকর আচরণ (None) স্পষ্টভাবে রাখা হলো।
             return None
-
 
         max_retries = 3
         for attempt in range(max_retries):

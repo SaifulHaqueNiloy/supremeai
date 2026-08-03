@@ -143,7 +143,7 @@ class SelfHealerService:
                     },
                 )
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to emit HITL_REVIEW_REQUIRED event: {e}")
 
         return fix_id
@@ -202,7 +202,7 @@ import sys
 
 # Write the fix to a dummy module or apply patch if we had full codebase access
 with open("patched_module.py", "w") as f:  # noqa: ASYNC230
-    f.write({repr(fix_code)})
+    f.write({fix_code!r})
 
 # Run pytest
 try:
@@ -270,7 +270,7 @@ def register_self_healer_listener() -> None:
     """বাংলা মন্তব্য: Self-healer error listener এক্সপ্লিসিটলি রেজিস্টার করে।
     এটি lifespan-এ বা app startup-এ কল করতে হবে — মডিউল ইম্পোর্টে নয়।
     """
-    global _listener_registered  # noqa: PLW0603
+    global _listener_registered
     if not _listener_registered:
         error_event_bus.register_listener(_self_healer_error_listener)
         _listener_registered = True

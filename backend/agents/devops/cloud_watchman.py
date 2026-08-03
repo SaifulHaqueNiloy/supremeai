@@ -91,14 +91,14 @@ class AnomalyDetector:
             try:
                 self.history = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
                 logger.info(f"📚 Loaded {len(self.history)} metric histories")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"⚠️ Failed to load history: {e}")
 
     def _save_history(self):
         # বাংলা মন্তব্য: মেমোরি থেকে হিস্ট্রি ক্যাশে ফাইল রাইট করা।
         try:
             HISTORY_FILE.write_text(json.dumps(self.history, indent=2), encoding="utf-8")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"⚠️ Failed to save history: {e}")
 
     def _key(self, source: str, metric: str) -> str:
@@ -234,7 +234,7 @@ class AlertManager:
                 json={"content": "\n".join(lines[:15])},
                 timeout=REQUEST_TIMEOUT,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Summary send failed: {e}")
 
 
@@ -269,7 +269,7 @@ class FirebaseMonitor:
                 value=float(total_reads),
                 unit="reads",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ Firestore quota check failed: {e}")
             return None
 
@@ -288,7 +288,7 @@ class FirebaseMonitor:
                 value=float(len(active_incidents)),
                 unit="incidents",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ Firebase status check failed: {e}")
             return None
 
@@ -332,7 +332,7 @@ class VercelMonitor:
                 value=(failed / len(deployments)) * 100,
                 unit="percent",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ Vercel deployment check failed: {e}")
             return None
 
@@ -354,7 +354,7 @@ class VercelMonitor:
                 value=float(total_bandwidth),
                 unit="bytes",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ Vercel bandwidth check failed: {e}")
             return None
 
@@ -391,7 +391,7 @@ class GCPMonitor:
                 value=float(len(accounts)),
                 unit="count",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ GCP billing check failed: {e}")
             return None
 
@@ -421,7 +421,7 @@ class GCPMonitor:
                 value=float(total_requests),
                 unit="requests",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"❌ GCP API quota check failed: {e}")
             return None
 
@@ -464,7 +464,7 @@ class CloudWatchman:
                     snapshots = future.result()
                     all_snapshots.extend(snapshots)
                     logger.info(f"✅ {source.upper()}: {len(snapshots)} metrics loaded sync.")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"❌ {source} metrics aggregator failed: {e}")
 
         for snapshot in all_snapshots:

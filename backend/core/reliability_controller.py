@@ -40,7 +40,7 @@ class ReliabilityController:
                     json.dumps({"count": count, "last_seen": time.time()}),
                     ex=cls._REDIS_TTL,
                 )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             error_event_bus.emit(
                 ErrorEvent(
                     module="reliability_controller",
@@ -72,17 +72,17 @@ class ReliabilityController:
                 pipe.get(key)
             values = await pipe.execute()
 
-            for key, raw in zip(keys, values):
+            for key, raw in zip(keys, values, strict=False):
                 if raw:
                     try:
                         data = json.loads(raw)
                         fp = key.replace(cls._REDIS_KEY_PREFIX, "")
                         result[fp] = data.get("count", 0)
-                    except Exception as exc:  # noqa: BLE001
+                    except Exception as exc:
                         logger.debug(f"Failed to parse persisted fingerprint {key}: {exc}")
                         continue
             return result
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             error_event_bus.emit(
                 ErrorEvent(
                     module="reliability_controller",

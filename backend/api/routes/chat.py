@@ -60,8 +60,8 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
             "cached": False,
             "cache_source": "L5_AI_MODEL",
         }
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Async LLM Error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Async LLM Error: {e!s}")
         raise HTTPException(status_code=500, detail="AI Gateway Timeout.") from e
 
 
@@ -82,9 +82,9 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                     yield f"data: {chunk}\n\n"
 
             yield "data: [DONE]\n\n"
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Stream broken: {str(e)}")
-            yield f"data: [ERROR] {str(e)}\n\n"
+        except Exception as e:
+            logger.error(f"Stream broken: {e!s}")
+            yield f"data: [ERROR] {e!s}\n\n"
 
     # ইভেন্ট লুপ ব্লক না করে স্ট্রিমিং রেসপন্স থ্রো করা
     return StreamingResponse(async_generator(), media_type="text/event-stream")

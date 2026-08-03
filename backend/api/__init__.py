@@ -85,7 +85,7 @@ def register_router(
                 ),
             )
             raise
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         # বাংলা মন্তব্য: Optional রাউটার মডিউল-লেভেলে যেকোনো কনফিগারেশন/রানটাইম এরর
         # (যেমন BYOC-এর মতো ফিচারের জন্য মিসিং এনক্রিপশন কী) ছুঁড়তে পারে। এই catch
         # নিশ্চিত করে যে "optional=True" এর প্রতিশ্রুতি সত্যিই রাখা হচ্ছে -- একটি ঐচ্ছিক

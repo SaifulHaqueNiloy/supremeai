@@ -50,7 +50,7 @@ async def shutdown_global_browser():
             res = _global_browser.close()
             if asyncio.iscoroutine(res):
                 await res
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.critical(f"Error closing global browser: {e}")
 
     try:
@@ -61,7 +61,7 @@ async def shutdown_global_browser():
             res = _playwright_runner.stop()
             if asyncio.iscoroutine(res):
                 await res
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.critical(f"Error stopping global playwright runner: {e}")
     finally:
         _global_browser = None

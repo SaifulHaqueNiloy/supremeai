@@ -48,7 +48,7 @@ async def legal_analyze(payload: LegalAnalysisRequest):
         agent = LegalAgent()
         result = agent.analyze(payload.document_text, doc_type=payload.doc_type)
         return result
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -60,7 +60,7 @@ async def medical_symptoms(payload: SymptomRequest):
         agent = MedicalAgent()
         result = agent.symptom_analysis(payload.symptoms, age=payload.age, medical_history=payload.medical_history)
         return result
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -72,7 +72,7 @@ async def medical_drug_interactions(payload: DrugInteractionRequest):
         agent = MedicalAgent()
         result = agent.drug_interaction(payload.medications)
         return result
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -83,7 +83,7 @@ async def trading_analyze(symbol: str):
 
         agent = TradingAgent()
         return agent.analyze_trend(symbol)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -94,7 +94,7 @@ async def trading_buy(payload: TradeRequest):
 
         agent = TradingAgent()
         return agent.buy(payload.symbol, payload.quantity, price=payload.price)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -105,7 +105,7 @@ async def trading_sell(payload: TradeRequest):
 
         agent = TradingAgent()
         return agent.sell(payload.symbol, payload.quantity, price=payload.price)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -116,7 +116,7 @@ async def trading_portfolio():
 
         agent = TradingAgent()
         return agent.portfolio()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -133,7 +133,7 @@ async def research_search(payload: ResearchRequest):
             "papers": results,
             "count": len(results),
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -144,7 +144,7 @@ async def research_summarize(payload: SummarizeRequest):
 
         assistant = ResearchAssistant()
         return assistant.summarize(payload.paper)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -155,5 +155,5 @@ async def research_cite(payload: SummarizeRequest):
 
         assistant = ResearchAssistant()
         return {"citation": assistant.citations(payload.paper, style=payload.style)}
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

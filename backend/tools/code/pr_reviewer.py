@@ -132,9 +132,9 @@ class PRReviewer:
                                     "body": item["body"],
                                 }
                             )
-            except (json.JSONDecodeError, ValueError) as _json_err:  # noqa: BLE001
+            except (json.JSONDecodeError, ValueError) as _json_err:
                 logger.warning(f"Failed to parse LLM response in PRReviewer: {_json_err}")
-        except BaseException as _router_err:  # noqa: BLE001
+        except BaseException as _router_err:
             # বাংলা মন্তব্য: ExceptionGroup (Python 3.11+ TaskGroup) সহ সব ধরনের exception gracefully হ্যান্ডেল করা হচ্ছে।
             logger.warning(f"ModelRouter call failed in PRReviewer: {_router_err}")
 
@@ -161,7 +161,7 @@ class PRReviewer:
                                     "body": "Style: function naming should follow snake_case convention.",
                                 }
                             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Style compliance check skipped: {e}")
         return issues
 
@@ -194,7 +194,7 @@ class PRReviewer:
                 import os
 
                 os.unlink(tmp_path)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Code smell scan skipped: {e}")
         return issues
 
@@ -242,7 +242,7 @@ class PRReviewer:
                 await self._auto_approve(repo_full_name, pr_number)
 
             return {"status": "success", "action_taken": action, "comments": comments}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error reviewing PR: {e}")
             return {"status": "error", "error": str(e), "comments": []}
 
@@ -259,7 +259,7 @@ class PRReviewer:
                 body="✅ All automated checks passed. Auto-approved by SupremeAI.",
             )
             return {"status": "success", "approved": True}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Auto-approve failed: {e}")
             return {"status": "error", "error": str(e)}
 
@@ -275,6 +275,6 @@ class PRReviewer:
             pr = repo.get_pull(pr_number)
             comment = pr.create_issue_comment(comment_body)
             return {"status": "success", "comment_url": comment.html_url}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to post comment to GitHub: {e}")
             return {"status": "error", "error": str(e)}

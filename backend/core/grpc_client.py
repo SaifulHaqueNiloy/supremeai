@@ -12,7 +12,7 @@ Dependencies:
 - `logging`: For logging operational information and errors.
 - `grpc`: The core library for gRPC communication.
 - `protos.supreme_engine_pb2`: Generated protobuf message definitions for requests and responses.
-- `protos.supreme_engine_pb2_grpc`: Generated gRPC service stubs for the Worker Service."""  # noqa: E501
+- `protos.supreme_engine_pb2_grpc`: Generated gRPC service stubs for the Worker Service."""
 
 import json
 import logging

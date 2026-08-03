@@ -77,7 +77,7 @@ class EmailAgent:
         cfg = self._imap_config
         try:
             app_password = self._credential_store.decrypt(cfg["ciphertext"], cfg["key_ref"])
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to decrypt stored IMAP credentials: {exc}")
             return ""
 
@@ -127,13 +127,13 @@ class EmailAgent:
                         payload = part.get_payload(decode=True)
                         if payload:
                             return payload.decode(part.get_content_charset() or "utf-8", errors="ignore")
-                    except Exception:  # noqa: BLE001, S112
+                    except Exception:  # noqa: S112
                         continue
             return ""
         try:
             payload = msg.get_payload(decode=True)
             return payload.decode(msg.get_content_charset() or "utf-8", errors="ignore") if payload else ""
-        except Exception:  # noqa: BLE001
+        except Exception:
             return ""
 
     def extract_otp(self, email_body: str) -> str:

@@ -21,7 +21,7 @@ class AssetManager:
             firebase_bucket_name = os.getenv("FIREBASE_STORAGE_BUCKET")
             if firebase_bucket_name:
                 self._firebase_bucket = firebase_storage.bucket(firebase_bucket_name)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"Firebase storage unavailable: {exc}")
 
     def _get_supabase(self):
@@ -33,7 +33,7 @@ class AssetManager:
                 key = os.getenv("SUPABASE_KEY")
                 if url and key:
                     self._supabase_client = create_client(url, key)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Supabase client unavailable: {exc}")
         return self._supabase_client
 
@@ -44,7 +44,7 @@ class AssetManager:
                 blob = self._firebase_bucket.blob(path)
                 # Generate signed URL
                 return blob.generate_signed_url(version="v4", expiration=expires_in)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to generate Firebase URL: {exc}")
 
         # Fallback to Supabase
@@ -53,7 +53,7 @@ class AssetManager:
             try:
                 res = supabase.storage.from_(self.bucket).get_public_url(path)
                 return res
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to get Supabase public URL: {exc}")
         return None
 
@@ -72,7 +72,7 @@ class AssetManager:
                 blob.upload_from_filename(local_path, content_type=content_type)
                 logger.info(f"Uploaded to Firebase: {remote_path}")
                 success = True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Firebase upload failed: {exc}")
 
         # Backup: Supabase
@@ -83,7 +83,7 @@ class AssetManager:
                     supabase.storage.from_(self.bucket).upload(remote_path, f, {"content-type": content_type})
                 logger.info(f"Uploaded to Supabase: {remote_path}")
                 success = True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 # If Supabase fails but Firebase succeeded, we still consider it a success
                 logger.error(f"Supabase upload failed: {exc}")
 
@@ -99,7 +99,7 @@ class AssetManager:
                 if blob.exists():
                     blob.download_to_filename(local_path)
                     return True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Firebase download failed: {exc}")
 
         # Fallback to Supabase
@@ -110,7 +110,7 @@ class AssetManager:
                 with open(local_path, "wb") as f:
                     f.write(data)
                 return True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Supabase download failed: {exc}")
 
         return False
@@ -125,7 +125,7 @@ class AssetManager:
                 if blob.exists():
                     blob.delete()
                     success = True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Firebase delete failed: {exc}")
 
         # Delete from Supabase
@@ -134,7 +134,7 @@ class AssetManager:
             try:
                 supabase.storage.from_(self.bucket).remove([remote_path])
                 success = True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Supabase delete failed: {exc}")
 
         return success

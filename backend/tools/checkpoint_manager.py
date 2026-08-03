@@ -69,7 +69,7 @@ class CheckpointManager:
                     )
                 self.mode = "pg"
                 logger.info("Initialized Postgres CheckpointManager (write-behind batched).")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Postgres CheckpointManager init failed, falling back: {exc}")
                 self._init_fallback()
         else:
@@ -113,7 +113,7 @@ class CheckpointManager:
                 # where an existing row's `resumed` flag was read-then-reused.
                 CheckpointManager._batcher.submit(_UPSERT_SQL, (task_id, step_index, json.dumps(state), False))
                 return True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to save Postgres checkpoint: {exc}")
                 return False
 
@@ -141,7 +141,7 @@ class CheckpointManager:
                 conn.commit()
                 conn.close()
                 return True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to save SQLite checkpoint: {exc}")
                 return False
 
@@ -163,7 +163,7 @@ class CheckpointManager:
             )
             logger.info(f"Firestore checkpoint saved for task_id={task_id} step={step_index}")
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to save Firestore checkpoint: {exc}")
             return False
 
@@ -192,7 +192,7 @@ class CheckpointManager:
                     (task_id,),
                 )
                 return cp
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to load Postgres checkpoint: {exc}")
                 return None
 
@@ -220,7 +220,7 @@ class CheckpointManager:
                 conn.commit()
                 conn.close()
                 return cp
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to load SQLite checkpoint: {exc}")
                 return None
 
@@ -243,7 +243,7 @@ class CheckpointManager:
             # Mark as resumed
             doc_ref.update({"resumed": True})
             return cp
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to load Firestore checkpoint: {exc}")
             return None
 
@@ -263,7 +263,7 @@ class CheckpointManager:
                     }
                     for r in rows
                 ]
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to list Postgres checkpoints: {exc}")
                 return []
 
@@ -285,7 +285,7 @@ class CheckpointManager:
                     }
                     for r in rows
                 ]
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to list SQLite checkpoints: {exc}")
                 return []
 
@@ -306,7 +306,7 @@ class CheckpointManager:
                 }
                 for d in docs
             ]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to list Firestore checkpoints: {exc}")
             return []
 
@@ -316,7 +316,7 @@ class CheckpointManager:
                 CheckpointManager._batcher.flush()
                 pooled_pg.execute("DELETE FROM task_checkpoints WHERE task_id = %s", (task_id,))
                 return True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to clear Postgres checkpoint: {exc}")
                 return False
 
@@ -328,7 +328,7 @@ class CheckpointManager:
                 conn.commit()
                 conn.close()
                 return True
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to clear SQLite checkpoint: {exc}")
                 return False
 
@@ -337,6 +337,6 @@ class CheckpointManager:
         try:
             self._db.collection(self.collection_name).document(task_id).delete()
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Failed to clear Firestore checkpoint: {exc}")
             return False

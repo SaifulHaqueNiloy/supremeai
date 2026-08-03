@@ -45,7 +45,7 @@ def _persist_feedback(event_type: str, payload: dict[str, Any]) -> None:
         )
         conn.commit()
         conn.close()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"feedback persist failed: {exc}")
 
 
@@ -79,6 +79,6 @@ async def ingest(event: FeedbackEvent) -> FeedbackResponse:
         raise HTTPException(status_code=400, detail=handled.get("reason", "Unsupported feedback type"))
     except HTTPException:
         raise
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"feedback ingest failed: {exc}")
         raise HTTPException(status_code=500, detail=str(exc)) from exc

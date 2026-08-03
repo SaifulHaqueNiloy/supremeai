@@ -33,9 +33,9 @@ class OfflineModeManager:
                 )
                 res.raise_for_status()
                 return res.json().get("response", "No response from local model.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Ollama local fallback failed: {e}")
-            return f"[Offline Error] Could not reach local Ollama instance: {str(e)}"
+            return f"[Offline Error] Could not reach local Ollama instance: {e!s}"
 
     async def execute_task(self, prompt: str, task_type: str = "general") -> dict[str, Any]:
         logger.info(f"Executing task offline via Ollama: {prompt}")
@@ -87,7 +87,7 @@ class OfflineModeManager:
             self.sync_queue.clear()
             logger.info(f"Successfully synced {synced_count} actions.")
             return {"status": "success", "synced": synced_count}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to sync offline queue: {e}")
             return {"status": "error", "error": str(e), "synced": 0}
         finally:

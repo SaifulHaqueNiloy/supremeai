@@ -40,7 +40,7 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
 
     try:
         decoded = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # বাংলা মন্তব্য: সিকিউরিটি ইনফরমেশন লিক এড়াতে জেনেরিক এরর মেসেজ রিটার্ন করা হচ্ছে।
         raise HTTPException(status_code=401, detail="Invalid token. Please re-authenticate.") from e
 
@@ -86,12 +86,12 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
                 event="checkout_session_created",
                 properties={"price_id": payload.price_id},
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # বল মনতবয: PostHog তলমটর বযরথ হল চকআউট পরসস আটকান উচত নয়;
             # তব নরব সযলপ ন কর ডবগ লগ কর হল
             logger.debug(f"PostHog checkout capture failed: {exc}")
         return {"status": "success", "session_id": session.id, "url": session.url}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to create Stripe checkout session: {e}")
         # বাংলা মন্তব্য: সিকিউরিটি ইনফরমেশন লিক এড়াতে জেনেরিক এরর মেসেজ রিটার্ন করা হচ্ছে।
         raise HTTPException(status_code=500, detail="Payment processing error. Please contact support.") from e
@@ -136,7 +136,7 @@ async def stripe_webhook_endpoint(request: Request):
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
         return {"status": "success", "event_type": event.get("type")}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Webhook signature verification failed: {e}")
         # বাংলা মন্তব্য: সিকিউরিটি ইনফরমেশন লিক এড়াতে জেনেরিক এরর মেসেজ রিটার্ন করা হচ্ছে।
         raise HTTPException(status_code=400, detail="Webhook payload validation failed") from e

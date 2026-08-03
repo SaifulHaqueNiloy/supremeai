@@ -33,7 +33,7 @@ async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
     try:
         # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await ব্যবহার করা হলো।
         report = await engine.run_daily_evolution(task_history)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"EvolutionEngine failed: {exc}")
         raise HTTPException(status_code=500, detail=f"Evolution failed: {exc}") from exc
     try:
@@ -44,13 +44,13 @@ async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
             db = getattr(fq, "client", None)
             if db:
                 db.collection("evolution_logs").add(report)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.debug(f"Failed to persist evolution log to Firestore: {exc}")
     try:
         from database.supabase_client import db as supabase_db
 
         if supabase_db.client:
             supabase_db.append_evolution_log(report)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.debug(f"Failed to persist evolution log to Supabase: {exc}")
     return report

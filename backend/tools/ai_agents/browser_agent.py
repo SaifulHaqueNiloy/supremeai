@@ -112,9 +112,9 @@ class BrowserAgent:
                 # সমস্ত স্টেপ সফলভাবে শেষ হলে
                 return {"status": "success", "data": extracted_data}
 
-            except (TimeoutError, Exception) as e:  # noqa: BLE001
+            except (TimeoutError, Exception) as e:
                 # প্লে-রাইট বা অন্যান্য অপ্রত্যাশিত ত্রুটি সুনির্দিষ্টভাবে ক্যাচ করা হলো
-                logger.error(f"❌ Recipe Interpreter crashed mid-execution: {str(e)}")
+                logger.error(f"❌ Recipe Interpreter crashed mid-execution: {e!s}")
                 return {"status": "failed", "error": str(e), "step": index + 1}
 
             finally:
@@ -193,7 +193,7 @@ class BrowserAgent:
                 "links": links,
                 "action": action,
             }
-        except (TimeoutError, Exception) as e:  # noqa: BLE001
+        except (TimeoutError, Exception) as e:
             # প্লে-রাইট সম্পর্কিত যেকোনো সাধারণ ত্রুটি এখানে ধরা হলো
             logger.error(f"Playwright action failed: {e}")
             return {"success": False, "error": str(e), "url": url}

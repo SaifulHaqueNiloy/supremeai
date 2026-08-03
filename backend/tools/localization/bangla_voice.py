@@ -25,12 +25,12 @@ class BanglaVoice:
             import whisper  # type: ignore
 
             return whisper is not None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             try:
                 import loguru
 
                 loguru.logger.error(f"Tool execution error: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")
             return False
 
@@ -39,12 +39,12 @@ class BanglaVoice:
             from TTS.api import TTS  # type: ignore
 
             return TTS is not None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             try:
                 import loguru
 
                 loguru.logger.error(f"Tool execution error: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")
             return False
 
@@ -55,7 +55,7 @@ class BanglaVoice:
             if self._stt_available:
                 return self._transcribe_whisper(audio_path)
             return self._transcribe_whisper(audio_path)
-        except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-except
             raise RuntimeError(f"Bangla STT failed: {exc}") from exc
 
     def speak(self, text: str, output_path: str = "bangla_speech.mp3") -> BanglaVoiceResult:
@@ -67,7 +67,7 @@ class BanglaVoice:
             if self._tts_available:
                 return self._speak_coqui(text, output_path)
             return self._speak_gtts(text, output_path)
-        except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-except
             raise RuntimeError(f"Bangla TTS failed: {exc}") from exc
 
     def _transcribe_whisper(self, audio_path: str) -> BanglaVoiceResult:
