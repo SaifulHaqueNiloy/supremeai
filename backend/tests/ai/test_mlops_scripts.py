@@ -14,12 +14,14 @@ from pathlib import Path
 
 repo_root = Path(__file__).resolve().parents[3]
 
+
 def _import_script(relative_path: str, module_name: str):
     file_path = repo_root / relative_path
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
 
 bias_mod = _import_script("scripts/ai/bias_detector.py", "bias_detector")
 drift_mod = _import_script("scripts/ai/model_drift_detector.py", "model_drift_detector")

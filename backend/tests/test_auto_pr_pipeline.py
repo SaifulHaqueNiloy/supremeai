@@ -17,7 +17,9 @@ async def test_auto_pr_pipeline_success():
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason='AutoPRPipeline.create_patch_pr rejection-path assertion mismatch - needs developer review. Tracked in FAILING_TESTS.md.')
+@pytest.mark.skip(
+    reason="AutoPRPipeline.create_patch_pr rejection-path assertion mismatch - needs developer review. Tracked in FAILING_TESTS.md."
+)
 async def test_auto_pr_pipeline_rejection(monkeypatch):
     pipeline = AutoPRPipeline()
 

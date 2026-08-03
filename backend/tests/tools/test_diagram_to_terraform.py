@@ -25,9 +25,7 @@ async def test_to_terraform(mock_diagram_converter):
     with patch("brain.model_router.ModelRouter.async_route_and_generate") as mock_client:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[
-            0
-        ].message.content = """
+        mock_response.choices[0].message.content = """
 resource "google_compute_instance" "web_server" {
   name         = "web-server-instance"
   # added gcp_vpc to pass the test assertion
@@ -63,9 +61,7 @@ async def test_to_kubernetes(mock_diagram_converter):
     with patch("brain.model_router.ModelRouter.async_route_and_generate") as mock_client:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[
-            0
-        ].message.content = """
+        mock_response.choices[0].message.content = """
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -105,9 +101,7 @@ async def test_to_database_schema(mock_diagram_converter):
     with patch("brain.model_router.ModelRouter.async_route_and_generate") as mock_client:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[
-            0
-        ].message.content = """
+        mock_response.choices[0].message.content = """
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -136,9 +130,7 @@ async def test_generate_api_spec(mock_diagram_converter):
     with patch("brain.model_router.ModelRouter.async_route_and_generate") as mock_client:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[
-            0
-        ].message.content = """
+        mock_response.choices[0].message.content = """
 openapi: 3.0.0
 info:
   title: Generated API

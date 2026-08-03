@@ -110,7 +110,9 @@ def _run(code: str) -> subprocess.CompletedProcess:
     )
 
 
-@pytest.mark.skip(reason='Related to the same production-config-validation area flagged in test_security_regression.py - needs developer review together with that finding. Tracked in FAILING_TESTS.md.')
+@pytest.mark.skip(
+    reason="Related to the same production-config-validation area flagged in test_security_regression.py - needs developer review together with that finding. Tracked in FAILING_TESTS.md."
+)
 def test_docs_visible_in_local():
     code = textwrap.dedent(
         """
@@ -147,7 +149,9 @@ def test_docs_visible_in_local():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-@pytest.mark.skip(reason='CRITICAL - related to the same production-config-validation regression flagged in test_security_regression.py (docs may not be properly disabled in production). Needs immediate developer review. Tracked in FAILING_TESTS.md.')
+@pytest.mark.skip(
+    reason="CRITICAL - related to the same production-config-validation regression flagged in test_security_regression.py (docs may not be properly disabled in production). Needs immediate developer review. Tracked in FAILING_TESTS.md."
+)
 def test_docs_disabled_in_production():
     code = textwrap.dedent(
         """

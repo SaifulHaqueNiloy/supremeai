@@ -321,7 +321,9 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        upstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
+        upstream_services = [
+            dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()
+        ]
 
         # Find services that this service depends on (outgoing edges)
         cursor.execute(
@@ -334,7 +336,9 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        downstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
+        downstream_services = [
+            dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()
+        ]
 
         # Calculate impact scores based on flow reliability and volume
         cursor.execute(
