@@ -1396,7 +1396,7 @@ jobs:
         run: VITE_PORTAL_TYPE=user pnpm --dir apps/studio-client run build
       - name: Deploy to Vercel
         run: |
-          pnpm exec vercel deploy --prod --archive=tgz --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID apps/studio-client/dist-user
+          pnpm exec vercel deploy --prod --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
