@@ -22,7 +22,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
 HOOKS_DIR="$REPO_ROOT/.git/hooks"
 mkdir -p "$HOOKS_DIR"
 
-SRC_PRE_PUSH="$SCRIPT_DIR/pre-push"
+SRC_PRE_PUSH="$SCRIPT_DIR/git/pre-push"
 if [ ! -f "$SRC_PRE_PUSH" ]; then
   echo "❌ pre-push file not found next to this installer ($SRC_PRE_PUSH)."
   echo "   Download both files into the same folder before running this script."

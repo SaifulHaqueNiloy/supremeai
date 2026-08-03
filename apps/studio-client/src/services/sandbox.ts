@@ -27,10 +27,10 @@ export class SandboxService {
     }
 
     this.isInitializing = true;
-    console.log('Booting WebContainer...');
+    console.warn('Booting WebContainer...');
     try {
       this.containerInstance = await WebContainer.boot();
-      console.log('WebContainer booted successfully.');
+      console.warn('WebContainer booted successfully.');
     } catch (e) {
       console.error('Failed to boot WebContainer:', e);
       throw e;
@@ -49,7 +49,7 @@ export class SandboxService {
       throw new Error('WebContainer is not initialized');
     }
 
-    console.log(`Executing in Sandbox: ${command} ${args.join(' ')} (Timeout: ${this.timeoutMs}ms)`);
+    console.warn(`Executing in Sandbox: ${command} ${args.join(' ')} (Timeout: ${this.timeoutMs}ms)`);
 
     const startTime = Date.now();
     let stdout = '';

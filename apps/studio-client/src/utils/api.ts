@@ -8,7 +8,7 @@ export const switchActiveBackend = (): string => {
   const current = sessionStorage.getItem('supremeai_active_backend') || RENDER_BACKENDS[0];
   const next = current === RENDER_BACKENDS[0] ? RENDER_BACKENDS[1] : RENDER_BACKENDS[0];
   sessionStorage.setItem('supremeai_active_backend', next);
-  console.log(`[Failover] Switched backend to: ${next}`);
+  console.error(`[Failover] Switched backend to: ${next}`);
   return next;
 };
 
