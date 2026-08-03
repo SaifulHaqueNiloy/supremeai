@@ -98,6 +98,29 @@ def _reset_fastapi_dependency_overrides():
         pass
 
 
+@pytest.fixture(autouse=True)
+def _reset_secret_vault_cache():
+    """বাংলা: টেস্ট আইসোলেশন নিশ্চিত করার জন্য Secret Vault এবং Settings ক্যাশ রিসেট"""
+    try:
+        from core.security.secret_vault import reset_secret_vault
+        reset_secret_vault()
+    except Exception:
+        pass
+    try:
+        from core.config import settings
+        if hasattr(settings, "_cached_secrets"):
+            settings._cached_secrets.clear()
+            settings._secrets_batch_loaded = False
+    except Exception:
+        pass
+    yield
+    try:
+        from core.security.secret_vault import reset_secret_vault
+        reset_secret_vault()
+    except Exception:
+        pass
+
+
 # বাংলা মন্তব্য: BUG FIX - ALLOW_TEST_AUTH_BYPASS আগে fixture-এর ভেতরে সেট করা হতো,
 # কিন্তু pydantic Settings() env var একবারই পড়ে module import-এর সময়ে, fixture রান
 # হওয়ার অনেক আগে। ফলে settings.allow_test_auth_bypass সবসময় False থাকতো এবং

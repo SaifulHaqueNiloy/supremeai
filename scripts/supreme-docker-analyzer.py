@@ -51,7 +51,8 @@ class SupremeDockerAnalyzer:
                 size_str = parts[0]
                 created_by = parts[1] if len(parts) > 1 else ""
                 layers.append({"size": size_str, "created_by": created_by})
-        except Exception:
+        except Exception as e:
+            print(f"⚠️  Failed to parse docker layer history: {e}")
             layers = []
 
         return {

@@ -462,7 +462,11 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
             if hmac.compare_digest(code, user_otp):
                 return True
         return False
-    except Exception:
+    except Exception as e:
+        # বাংলা: fail-closed (False) আচরণ অপরিবর্তিত রাখা হলো — এটা 2FA verification,
+        # তাই নিরাপত্তার জন্য এটাই সঠিক ডিফল্ট। শুধু কারণ লগ করা হচ্ছে (secret/OTP বাদে)
+        # যাতে বোঝা যায় এটা invalid code নাকি malformed input/আসল বাগ
+        logger.warning(f"TOTP verification raised an exception (not treated as valid): {type(e).__name__}: {e}")
         return False
 
 

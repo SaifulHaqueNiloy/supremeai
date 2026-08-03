@@ -400,7 +400,9 @@ class LiveAPITester:
 
             try:
                 response_data = response.json()
-            except Exception:
+            except Exception as e:
+                # বাংলা: JSON পার্স ব্যর্থ হওয়ার কারণটি লগ করুন, শুধু raw text-এ fallback করাই যথেষ্ট নয়
+                logger.debug(f"Non-JSON response from {url}, falling back to raw text: {e}")
                 response_data = {"_raw": response.text}
 
             status_code = str(response.status_code)
