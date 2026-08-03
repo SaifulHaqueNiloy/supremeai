@@ -21,7 +21,7 @@ class SelfHealingStateManager {
   }
 
   private handleOnline = () => {
-    console.log('[Self-Healing] Device back online. Restoring network connection state.');
+    console.warn('[Self-Healing] Device back online. Restoring network connection state.');
     this.isOnline = true;
     this.notify();
   };

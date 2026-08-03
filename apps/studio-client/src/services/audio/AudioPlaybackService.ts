@@ -50,7 +50,7 @@ export class AudioPlaybackService {
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
     utterance.onstart = () => {
-      console.log('🗣️ [AudioPlaybackService] SupremeAI started speaking.');
+      console.warn('🗣️ [AudioPlaybackService] SupremeAI started speaking.');
       // Create a dummy oscillator to feed the analyser so the visualizer moves
       if (this.audioContext.state === 'suspended') {
         this.audioContext.resume();
@@ -71,7 +71,7 @@ export class AudioPlaybackService {
     };
 
     utterance.onend = () => {
-      console.log('🛑 [AudioPlaybackService] SupremeAI finished speaking.');
+      console.warn('🛑 [AudioPlaybackService] SupremeAI finished speaking.');
       if (intervalId) clearInterval(intervalId);
       if (osc) {
         osc.stop();

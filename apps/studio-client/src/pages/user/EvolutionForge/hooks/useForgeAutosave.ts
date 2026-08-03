@@ -11,7 +11,7 @@ export const useForgeAutosave = (nodes: Node[], edges: Edge[], debounceMs = 1000
       try {
         const flow = toObject();
         localStorage.setItem('supremeai_forge_autosave', JSON.stringify(flow));
-        console.log('[SupremeAI Forge] Auto-saved layout to LocalStorage');
+        console.warn('[SupremeAI Forge] Auto-saved layout to LocalStorage');
       } catch (e) {
         console.error('[SupremeAI Forge] Failed to auto-save layout', e);
       }

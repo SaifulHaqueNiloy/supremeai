@@ -22,11 +22,11 @@ const SujonCoreCockpit: React.FC<SujonCoreCockpitProps> = ({ authToken }) => {
     const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws/dashboard?token=${authToken}&channels=logs.stream,metrics.update`;
     const wsManager = new WebSocketManager(wsUrl, {
       onOpen: () => {
-        console.log('Connected to Sujon Core WebSocket');
+        console.warn('Connected to Sujon Core WebSocket');
         setIsConnected(true);
       },
       onClose: () => {
-        console.log('Disconnected from Sujon Core WebSocket');
+        console.warn('Disconnected from Sujon Core WebSocket');
         setIsConnected(false);
       },
       onMessage: (event) => {

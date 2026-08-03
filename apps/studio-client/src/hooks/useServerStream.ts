@@ -26,13 +26,13 @@ export const useServerStream = () => {
         return;
       }
 
-      console.log("🔌 Initializing SupremeAI Unified Lifespan SSE Stream...");
+      console.warn("🔌 Initializing SupremeAI Unified Lifespan SSE Stream...");
       setStreamStatus(reconnectAttempts > 0 ? 'connecting' : 'connecting');
       eventSource = new EventSource(sseEndpoint);
 
       eventSource.onopen = () => {
         if (!isMounted) return;
-        console.log("🟢 SSE Stream connected.");
+        console.warn("🟢 SSE Stream connected.");
         setServerStatus(true);
         setStreamStatus('connected');
         fetchGateStatus();
@@ -48,7 +48,7 @@ export const useServerStream = () => {
         reconnectAttempts++;
         const backoff = Math.min(1000 * 2 ** reconnectAttempts, 30000);
         const jitter = Math.random() * 500;
-        console.log(`🔄 SSE Reconnecting in ${(backoff + jitter) / 1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+        console.warn(`🔄 SSE Reconnecting in ${(backoff + jitter) / 1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
 
         if (isMounted) {
           setStreamStatus('connecting'); // Transition back to connecting during wait
@@ -73,7 +73,7 @@ export const useServerStream = () => {
     return () => {
       isMounted = false;
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      console.log("🔌 Cleaning up SSE Stream...");
+      console.warn("🔌 Cleaning up SSE Stream...");
       eventSource?.close();
     };
   }, [setServerStatus, fetchGateStatus]);

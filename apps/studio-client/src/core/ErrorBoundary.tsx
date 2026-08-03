@@ -43,7 +43,7 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-      console.log('[Self-Healing] Network issue detected. Retrying render with backoff...');
+      console.warn('[Self-Healing] Network issue detected. Retrying render with backoff...');
       setTimeout(() => {
         this.setState((prevState) => ({
           hasError: false,

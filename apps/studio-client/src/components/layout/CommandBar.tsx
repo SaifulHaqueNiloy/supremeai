@@ -98,21 +98,21 @@ export const CommandBar: React.FC<CommandBarProps> = ({ isOpen: controlledOpen, 
       category: 'Actions',
       icon: Zap,
       shortcut: 'Ctrl+H',
-      action: () => { console.log('Self healer triggered'); handleClose(); }
+      action: () => { console.warn('Self healer triggered'); handleClose(); }
     },
     {
       id: 'model-deepseek',
       title: 'Switch to DeepSeek-V3 (Coding Expert)',
       category: 'AI Models',
       icon: Cpu,
-      action: () => { console.log('Switched to DeepSeek-V3'); handleClose(); }
+      action: () => { console.warn('Switched to DeepSeek-V3'); handleClose(); }
     },
     {
       id: 'model-kimi',
       title: 'Switch to Kimi K2.5 (Bangla & Reasoning)',
       category: 'AI Models',
       icon: Sparkles,
-      action: () => { console.log('Switched to Kimi K2.5'); handleClose(); }
+      action: () => { console.warn('Switched to Kimi K2.5'); handleClose(); }
     },
   ];
 

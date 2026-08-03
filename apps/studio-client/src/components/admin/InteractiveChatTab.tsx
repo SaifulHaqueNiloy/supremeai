@@ -470,7 +470,7 @@ export function InteractiveChatTab({
                 src={browserUrl}
                 sandbox="allow-scripts allow-same-origin"
                 className="w-full h-full border-none bg-white"
-                onError={() => console.log('Iframe load error')}
+                onError={() => console.error('Iframe load error')}
               />
             </div>
           </div>

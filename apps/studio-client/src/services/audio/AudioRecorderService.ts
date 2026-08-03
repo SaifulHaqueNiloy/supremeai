@@ -34,7 +34,7 @@ export class AudioRecorderService {
       // Chunk every 500ms
       this.mediaRecorder.start(500);
       this.isRecording = true;
-      console.log('🎙️ [AudioRecorderService] Started recording...');
+      console.warn('🎙️ [AudioRecorderService] Started recording...');
     } catch (error) {
       console.error('❌ [AudioRecorderService] Microphone access denied:', error);
       throw error;
@@ -47,7 +47,7 @@ export class AudioRecorderService {
     this.mediaRecorder.stop();
     this.mediaRecorder.stream.getTracks().forEach((track) => track.stop());
     this.isRecording = false;
-    console.log('🛑 [AudioRecorderService] Stopped recording.');
+    console.warn('🛑 [AudioRecorderService] Stopped recording.');
 
     // Signal backend to process the buffer
     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
@@ -79,7 +79,7 @@ export class AudioRecorderService {
     this.websocket = new WebSocket(this.wsUrl);
 
     this.websocket.onopen = () => {
-      console.log('🟢 [AudioRecorderService] WebSocket connected.');
+      console.warn('🟢 [AudioRecorderService] WebSocket connected.');
     };
 
     this.websocket.onmessage = (event) => {
@@ -102,7 +102,7 @@ export class AudioRecorderService {
     };
 
     this.websocket.onclose = () => {
-      console.log('🔴 [AudioRecorderService] WebSocket closed.');
+      console.warn('🔴 [AudioRecorderService] WebSocket closed.');
       this.websocket = null;
     };
   }

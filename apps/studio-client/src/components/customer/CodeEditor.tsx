@@ -18,8 +18,8 @@ const LANGUAGES = [
 ];
 
 const DEFAULT_CODE: Record<string, string> = {
-  javascript: '// JavaScript\nconsole.log("Hello, SupremeAI!");',
-  typescript: '// TypeScript\nconst greeting: string = "Hello, SupremeAI!";\nconsole.log(greeting);',
+  javascript: '// JavaScript\nconsole.warn("Hello, SupremeAI!");',
+  typescript: '// TypeScript\nconst greeting: string = "Hello, SupremeAI!";\nconsole.warn(greeting);',
   python: '# Python\nprint("Hello, SupremeAI!")',
   html: '<!-- HTML -->\n<h1>Hello, SupremeAI!</h1>',
   css: '/* CSS */\nh1 {\n  color: #00f3ff;\n  font-family: "Space Grotesk", sans-serif;\n}',
@@ -84,4 +84,3 @@ export function CodeEditor({ code, onChange }: CodeEditorProps) {
     </div>
   );
 }
-

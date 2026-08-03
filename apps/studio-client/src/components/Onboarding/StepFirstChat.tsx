@@ -2,7 +2,7 @@
 const StepFirstChat = ({ data, updateData, prevStep }: any) => {
   const completeOnboarding = () => {
     // In real app, we'd send data to backend here
-    console.log("Onboarding complete:", data);
+    console.warn("Onboarding complete:", data);
     window.location.href = "/studio";
   };
 
