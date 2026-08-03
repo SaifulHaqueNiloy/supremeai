@@ -54,7 +54,14 @@ class ExperienceDatabase:
             db_path = "data/experience.db"
         self.db_path = Path(db_path)
         if str(self.db_path) != ":memory:":
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError) as _perm_err:
+                import tempfile
+
+                tmp_dir = Path(tempfile.gettempdir()) / "data"
+                tmp_dir.mkdir(parents=True, exist_ok=True)
+                self.db_path = tmp_dir / self.db_path.name
         self._init_db()
         self.encoder = None
         self.chroma_collection: Any = None
