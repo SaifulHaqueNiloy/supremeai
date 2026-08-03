@@ -51,6 +51,7 @@ class HealthMonitor:
         self.status = Gauge("supremeai_health_status", "Health status (1=healthy, 0=degraded)")
         try:
             from prometheus_client import Counter
+
             self.error_count = Counter("supremeai_errors_total", "Total error occurrences", ["error_type"])
             self.token_usage = Counter("supremeai_tokens_total", "Total tokens processed", ["provider", "type"])
         except Exception as exc:

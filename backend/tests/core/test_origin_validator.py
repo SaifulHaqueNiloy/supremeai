@@ -69,7 +69,9 @@ class TestTrustedOriginMiddleware:
             app.assert_awaited_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="SECURITY: TrustedOriginMiddleware has NO public-path bypass by design (intentional, secure) - test expects a bypass that doesn't exist. Needs test rewrite, not code change.")
+    @pytest.mark.skip(
+        reason="SECURITY: TrustedOriginMiddleware has NO public-path bypass by design (intentional, secure) - test expects a bypass that doesn't exist. Needs test rewrite, not code change."
+    )
     async def test_public_path_bypasses_origin_check(self):
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app)

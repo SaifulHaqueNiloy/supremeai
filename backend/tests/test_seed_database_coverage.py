@@ -84,7 +84,9 @@ class TestSeedAll:
                 patch("tools.seed_database.LocalSearchRAG", side_effect=Exception("RAG init failed")),
                 patch("tools.seed_database.logger"),
             ):
-                with pytest.raises(Exception):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
+                with pytest.raises(
+                    Exception
+                ):  # -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
                     seed_all()
 
     def test_seed_all_empty_seed_dir(self):

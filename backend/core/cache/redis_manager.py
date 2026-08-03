@@ -166,7 +166,6 @@ class SecureRedisManager:
     # pybreaker.CircuitBreaker.call() was called with a coroutine that was never awaited,
     # and the method was never actually called anywhere in the codebase.
 
-
     async def incrbyfloat(self, key: str, amount: float, ex_seconds: int = 86400) -> float:
         """Increment floating point value in Redis with optional expiration.
 

@@ -29,14 +29,19 @@ class LocalModelHandler:
     ]
 
     def __init__(self, ollama_base_url: str | None = None) -> None:
-        self.base_url = (ollama_base_url or os.getenv("OLLAMA_URL") or getattr(settings, "ollama_url", "") or "http://localhost:11434").rstrip("/")
+        self.base_url = (
+            ollama_base_url
+            or os.getenv("OLLAMA_URL")
+            or getattr(settings, "ollama_url", "")
+            or "http://localhost:11434"
+        ).rstrip("/")
         self.timeout = float(os.getenv("LOCAL_MODEL_TIMEOUT", "30.0"))
         self._cache: dict[str, tuple[float, dict[str, Any]]] = {}
         self._cache_ttl = 60.0  # 1 minute TTL for local caching
 
     async def deploy_distilled_edge_model(self, model_tag: str = "qwen2.5:3b") -> dict[str, Any]:
         """Pull and initialize distilled 3B/4B edge model on local Ollama runtime.
-        
+
         বাংলা মন্তব্য: ডিস্টিল্ড ৩বি/৪বি এজ মডেল ওলামাতে পুল এবং সেটআপ।
         """
         try:
@@ -52,7 +57,7 @@ class LocalModelHandler:
 
     async def health_check(self) -> bool:
         """Check if local inference engine (Ollama) is operational.
-        
+
         বাংলা মন্তব্য: লোকাল ওলামা এন্ডপয়েন্টের স্বাস্থ্য পরীক্ষা।
         """
         try:
@@ -65,7 +70,7 @@ class LocalModelHandler:
 
     async def list_models(self) -> list[str]:
         """List models available locally in Ollama.
-        
+
         বাংলা মন্তব্য: লোকাল ওলামায় ইনস্টল থাকা মডেলগুলোর তালিকা।
         """
         try:
@@ -81,7 +86,7 @@ class LocalModelHandler:
 
     async def infer(self, model: str, prompt: str, system_prompt: str | None = None) -> dict[str, Any]:
         """Run inference on a local model.
-        
+
         বাংলা মন্তব্য: ইনফারেন্স এক্সিকিউশন — মেমোরি ক্যাশিং ও টাইমআউট হ্যান্ডলিং সহ।
         """
         cache_key = f"{model}:{hash(prompt)}"
