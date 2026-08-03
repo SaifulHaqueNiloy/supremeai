@@ -2,7 +2,7 @@ import json
 import os
 from dataclasses import dataclass
 
-import defusedxml.ElementTree as ET
+import defusedxml.ElementTree as ET  # noqa: N817 -- standard idiom (mirrors stdlib xml.etree.ElementTree as ET)
 from loguru import logger
 
 
@@ -27,7 +27,7 @@ class CoverageAuditor:
             else:
                 logger.warning(f"Unsupported coverage report format: {report_path}")
                 return []
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse coverage report {report_path}: {e}")
             return []
 

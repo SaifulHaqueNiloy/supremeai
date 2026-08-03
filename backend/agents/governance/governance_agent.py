@@ -13,6 +13,7 @@ from typing import Any
 
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
+from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class GovernanceAgent:
             logger.error(f"Error initializing governance policies: {e}")
 
     async def check_access(
-        self, user_id: str, resource: str, action: str, session_id: str = None
+        self, user_id: str, resource: str, action: str, session_id: str | None = None
     ) -> AccessControlResult:
         """
         Check if a user has access to perform an action on a resource.
@@ -175,7 +176,7 @@ class GovernanceAgent:
                 resource=resource,
                 action=action,
                 allowed=False,
-                reason=f"Access check failed: {str(e)}",
+                reason=f"Access check failed: {e!s}",
                 timestamp=datetime.utcnow(),
                 session_id=session_id or secrets.token_hex(16),
             )
@@ -291,7 +292,7 @@ class GovernanceAgent:
             logger.error(f"Error approving decision: {e}")
             return False
 
-    async def enforce_policy(self, user_id: str, action: str, context: dict[str, Any] = None) -> dict[str, Any]:
+    async def enforce_policy(self, user_id: str, action: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Enforce governance policies for an action.
 
@@ -539,5 +540,13 @@ class GovernanceAgent:
 # Global instance
 governance_agent = GovernanceAgent()
 
-# Initialize policies on module load
-asyncio.create_task(governance_agent.initialize_policies())
+# Initialize policy on module load — শুধুমাত্র একটা event loop চলমান থাকলেই টাস্ক শিডিউল করা হয়;
+# বাংলা: import-time-এ event loop না থাকলে RuntimeError এড়ানো হয়, আর টাস্কের রেফারেন্স ট্র্যাক করে
+# রাখা হয় যাতে GC হয়ে মাঝপথে বাতিল না হয়ে যায় (RUF006)।
+try:
+    track_task(asyncio.get_running_loop().create_task(governance_agent.initialize_policies()))
+except RuntimeError:
+    logger.debug(
+        "No running event loop at import time; skipping eager policy init "
+        "(call initialize_policies() explicitly during app startup instead)."
+    )

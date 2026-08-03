@@ -46,12 +46,12 @@ async def get_policies(session: AsyncSession = Depends(get_db_session)):
                 }
             )
         return {"items": formatted}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception(f"Failed to fetch execution policies: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa  # noqa
+        ) from e
 
 
 @router.put("/{policy_id}")
@@ -63,7 +63,7 @@ async def update_policy(
     try:
         pid = uuid.UUID(policy_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid policy UUID")  # noqa  # noqa
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid policy UUID") from None  # noqa  # noqa
 
     try:
         result = await session.execute(select(ExecutionPolicy).where(ExecutionPolicy.id == pid))
@@ -97,10 +97,10 @@ async def update_policy(
         }
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         await session.rollback()
         logger.exception(f"Failed to update execution policy {policy_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa  # noqa
+        ) from e

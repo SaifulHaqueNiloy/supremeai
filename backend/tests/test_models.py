@@ -82,7 +82,7 @@ class TestDynamicAgent:
 
         with Session(engine) as session:
             session.add(DynamicAgent(name="unique-agent", execution_steps={}))
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017 -- intentionally broad: asserts *some* error propagates (mocked/validation failure), exact type varies
                 session.commit()
 
     def test_is_active_default_true(self):

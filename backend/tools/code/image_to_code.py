@@ -66,8 +66,8 @@ class ImageToCode:
         try:
             base64_image = self._encode_image_bytes(image_bytes)
             return await self._call_vision_model(base64_image, framework, styling)
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Image to Code generation failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"Image to Code generation failed: {e!s}")
             return {"status": "error", "error": str(e)}
 
     async def generate_code(
@@ -77,8 +77,8 @@ class ImageToCode:
         try:
             base64_image = self._encode_image_file(image_path)
             return await self._call_vision_model(base64_image, framework, styling)
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Image to Code generation failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"Image to Code generation failed: {e!s}")
             return {"status": "error", "error": str(e)}
 
     async def figma_to_react(
@@ -111,7 +111,7 @@ class ImageToCode:
                 if match:
                     component_name = match.group(1)
             return ComponentCode(framework=framework, code=code.strip(), component_name=component_name)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: previously returned an empty-code ComponentCode disguised as a
             # normal result; now the failure is surfaced so the router returns a real error.
             logger.error(f"figma_to_react failed: {e}")
@@ -139,7 +139,7 @@ class ImageToCode:
                 palette=parsed.get("palette", []),
                 css_variables=parsed.get("css_variables", {}),
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: removed hardcoded default palette fallback — a fake palette
             # returned as "success" would silently corrupt downstream theming.
             logger.error(f"Color palette extraction failed: {e}")
@@ -163,7 +163,7 @@ class ImageToCode:
                 cleaned = "\n".join(cleaned.splitlines()[:-1])
             parsed = json.loads(cleaned)
             return ComponentHierarchy(tree=parsed if isinstance(parsed, list) else [])
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: removed hardcoded single-node tree fallback for the same reason as above.
             logger.error(f"Component tree detection failed: {e}")
             raise RuntimeError(f"Component tree detection failed: {e}") from e
@@ -215,7 +215,7 @@ class ImageToCode:
                 "styling": styling,
                 "code": code.strip(),
             }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: ImportError (ModelRouter unavailable) no longer silently returns a
             # hardcoded placeholder component disguised as a successful generation — every
             # failure now surfaces as a real error the caller can act on.
@@ -243,9 +243,9 @@ async def api_image_to_code(
             raise HTTPException(status_code=500, detail=result.get("error"))
 
         return result
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to process image upload: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/image-to-component")
@@ -263,7 +263,7 @@ async def api_figma_to_component(
     try:
         component = await image_to_code_tool.figma_to_react(tmp_path, framework=framework, styling=styling)
         return {"status": "success", **component.to_dict()}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=502, detail=f"Component generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
@@ -280,7 +280,7 @@ async def api_extract_palette(file: UploadFile = File(...)):
     try:
         theme = await image_to_code_tool.extract_color_palette(tmp_path)
         return {"status": "success", **theme.to_dict()}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=502, detail=f"Palette extraction failed: {e}") from e
     finally:
         os.unlink(tmp_path)
@@ -297,7 +297,7 @@ async def api_detect_tree(file: UploadFile = File(...)):
     try:
         hierarchy = await image_to_code_tool.detect_component_tree(tmp_path)
         return {"status": "success", **hierarchy.to_dict()}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=502, detail=f"Component tree detection failed: {e}") from e
     finally:
         os.unlink(tmp_path)

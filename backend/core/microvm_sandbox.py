@@ -174,7 +174,13 @@ class MicroVMSandbox:
                 }
             ],
             "machine-config": {"vcpu_count": 1, "mem_size_mib": 128},
-            "network-interfaces": [] if self.network_disabled else [],
+            # বাংলা: আগে এখানে "[] if self.network_disabled else []" ছিল — দুই branch-ই
+            # একই ফলাফল দিত, মানে self.network_disabled ফ্ল্যাগটা কার্যকরী ছিল না, নেটওয়ার্ক
+            # ইন্টারফেস সবসময় খালি থাকত। এখানে কোনো real network-interface config এখনো
+            # implement করা হয়নি, তাই আপাতত explicit খালি লিস্ট রাখা হলো (নিরাপদ ডিফল্ট),
+            # কিন্তু এটা একটা real gap — network_disabled=False হলে actual interface দরকার।
+            "network-interfaces": [],  # TODO: wire up a real interface when network_disabled is False
+
         }
         config_path = vm_dir / "config.json"
         from core.security.resource_guard import ResourceGuard
@@ -235,7 +241,7 @@ class MicroVMSandbox:
             # বাংলা মন্তব্য: CancelledError re-raise — কখনো suppress করা যাবে না
             logger.warning(f"[MicroVMSandbox] Execution cancelled for vm_id={vm_id}")
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] Unexpected error for vm_id={vm_id}: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -308,7 +314,7 @@ class MicroVMSandbox:
                 "error": "Execution timeout",
                 "provider": "firecracker",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] Firecracker error: {exc}")
             return {"success": False, "error": str(exc), "provider": "firecracker"}
 
@@ -357,7 +363,7 @@ class MicroVMSandbox:
                 "error": "Execution timeout",
                 "provider": "gvisor",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] gVisor error: {exc}")
             return {"success": False, "error": str(exc), "provider": "gvisor"}
         finally:
@@ -378,7 +384,7 @@ class MicroVMSandbox:
 
         # বাংলা মন্তব্য: _ALLOWED_DOCKER_IMAGES whitelist enforce
         docker_image = _DEFAULT_DOCKER_IMAGE
-        assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101  # noqa: S101
+        assert docker_image in _ALLOWED_DOCKER_IMAGES  # nosec B101
 
         tmp_path: Path | None = None
         try:
@@ -430,7 +436,7 @@ class MicroVMSandbox:
                 "error": "Execution timeout",
                 "provider": "docker-fallback",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(f"[MicroVMSandbox] Docker fallback error: {exc}")
             return {"success": False, "error": str(exc), "provider": "docker-fallback"}
         finally:
@@ -445,7 +451,7 @@ class MicroVMSandbox:
             if vm_dir.exists():
                 shutil.rmtree(vm_dir)
             logger.debug(f"[MicroVMSandbox] VM dir destroyed: {vm_dir}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"[MicroVMSandbox] Failed to destroy VM dir {vm_dir}: {exc}")
 
     async def health_check(self) -> dict[str, Any]:
