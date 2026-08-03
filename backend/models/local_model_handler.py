@@ -21,11 +21,34 @@ from core.config import settings
 class LocalModelHandler:
     """Local model provider supporting Ollama API and custom local transformer endpoints."""
 
+    DISTILLED_EDGE_MODELS = [
+        "qwen2.5:3b",
+        "llama3.2:3b",
+        "deepseek-r1:1.5b",
+        "phi3:mini",
+    ]
+
     def __init__(self, ollama_base_url: str | None = None) -> None:
         self.base_url = (ollama_base_url or os.getenv("OLLAMA_URL") or getattr(settings, "ollama_url", "") or "http://localhost:11434").rstrip("/")
         self.timeout = float(os.getenv("LOCAL_MODEL_TIMEOUT", "30.0"))
         self._cache: dict[str, tuple[float, dict[str, Any]]] = {}
         self._cache_ttl = 60.0  # 1 minute TTL for local caching
+
+    async def deploy_distilled_edge_model(self, model_tag: str = "qwen2.5:3b") -> dict[str, Any]:
+        """Pull and initialize distilled 3B/4B edge model on local Ollama runtime.
+        
+        বাংলা মন্তব্য: ডিস্টিল্ড ৩বি/৪বি এজ মডেল ওলামাতে পুল এবং সেটআপ।
+        """
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                res = await client.post(f"{self.base_url}/api/pull", json={"name": model_tag, "stream": False})
+                if res.status_code == 200:
+                    logger.info(f"Successfully deployed distilled edge model: {model_tag}")
+                    return {"status": "deployed", "model": model_tag}
+                return {"status": "error", "model": model_tag, "error": res.text}
+        except Exception as exc:
+            logger.error(f"Failed to deploy distilled edge model {model_tag}: {exc}")
+            return {"status": "error", "model": model_tag, "error": str(exc)}
 
     async def health_check(self) -> bool:
         """Check if local inference engine (Ollama) is operational.

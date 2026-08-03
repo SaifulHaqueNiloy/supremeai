@@ -1420,6 +1420,27 @@ jobs:
         run: |
           python .github/scripts/canary-deploy.py
 
+  mlops-nightly-eval:
+    name: "🤖 MLOps Nightly Evaluation & Governance"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pydantic loguru
+      - name: 🛡️ Run Prompt Injection Vulnerability Audit
+        run: python scripts/ai/prompt_injection_tester.py --model-id nightly-eval
+      - name: ⚖️ Run AI Bias & Fairness Detector
+        run: python scripts/ai/bias_detector.py --model-id nightly-eval --report-json reports/nightly_bias.json
+      - name: 📉 Run AI Model Drift Monitor
+        run: python scripts/ai/model_drift_detector.py --model-id nightly-eval --export-promql reports/nightly_drift.prom --alert-on-drift
+
   smart-summary:
     name: "🧠 Smart Pipeline Summary"
     runs-on: ubuntu-latest
@@ -1443,6 +1464,7 @@ jobs:
       - deploy-user-vercel
       - sync-mirror
       - canary-deploy
+      - mlops-nightly-eval
     permissions:
       actions: read
       contents: read

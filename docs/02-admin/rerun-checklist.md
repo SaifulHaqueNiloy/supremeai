@@ -46,9 +46,12 @@ curl -s "$BASE/api/v1/metrics/usage" | jq .
 - [ ] `poetry run ruff check .` → 0 errors
 - [ ] `poetry run mypy core/ brain/ api/ memory/ tools/ storage/` → no errors
 
-## 6. Tests
+## 6. Tests & MLOps Verification
 - [ ] `poetry run pytest backend/tests/` → all pass
-- [ ] Coverage >= 38% (`--cov-fail-under=38`)
+- [ ] Coverage >= 50% (`--cov-fail-under=50`)
+- [ ] `python scripts/ai/bias_detector.py --model-id check --report-json reports/bias.json` succeeds
+- [ ] `python scripts/ai/model_drift_detector.py --model-id check --export-promql reports/drift.prom` succeeds
+- [ ] `python scripts/ai/prompt_injection_tester.py --model-id check` passes with exit code 0
 
 ## 7. Frontend
 - [ ] `pnpm turbo run build --filter=supremeai-studio-client` succeeds

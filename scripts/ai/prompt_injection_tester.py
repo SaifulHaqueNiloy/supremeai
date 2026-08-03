@@ -279,6 +279,15 @@ def main():
             print(f"\n⚠️ Found {summary['vulnerabilities_found']} potential vulnerabilities!")
             print(f"See full report: {report_path}")
 
+        has_critical = any(
+            r.detected and r.risk_level in [InjectionRisk.HIGH, InjectionRisk.CRITICAL]
+            for r in results
+        )
+        if has_critical:
+            import sys
+            logger.error(f"🚨 [SECURITY_LEAK]: Critical or High-risk prompt injection vulnerability detected!")
+            sys.exit(1)
+
         return results
 
     asyncio.run(run_tests())

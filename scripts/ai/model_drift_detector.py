@@ -256,6 +256,9 @@ def main():
                        help='Check prediction distribution drift')
     parser.add_argument('--update-baseline', action='store_true',
                        help='Update baseline statistics')
+    parser.add_argument('--alert-on-drift', action='store_true',
+                       help='Exit with status 1 if any drift is detected')
+    parser.add_argument('--export-promql', help='Export PromQL metrics to specified file')
 
     args = parser.parse_args()
 
@@ -278,10 +281,29 @@ def main():
     )
 
     print(f"\nDrift Detection Results for {args.model_id}:")
+    drift_detected = False
+    prom_metrics = []
     for result in results:
         status = "DETECTED" if result.detected else "OK"
+        if result.detected:
+            drift_detected = True
         print(f"  {result.drift_type.value}: {status} "
               f"(confidence: {result.confidence:.2f})")
+        prom_metrics.append(
+            f'model_drift_status{{model_id="{args.model_id}",drift_type="{result.drift_type.value}"}} {1 if result.detected else 0}\n'
+            f'model_drift_confidence{{model_id="{args.model_id}",drift_type="{result.drift_type.value}"}} {result.confidence:.4f}'
+        )
+
+    if args.export_promql:
+        prom_file = Path(args.export_promql)
+        prom_file.parent.mkdir(parents=True, exist_ok=True)
+        prom_file.write_text("\n".join(prom_metrics) + "\n", encoding="utf-8")
+        print(f"PromQL metrics exported to {args.export_promql}")
+
+    if drift_detected and args.alert_on_drift:
+        import sys
+        logger.error(f"🚨 [DRIFT_ALERT]: Model drift detected for {args.model_id}!")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
