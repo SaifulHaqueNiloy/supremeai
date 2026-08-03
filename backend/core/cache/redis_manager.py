@@ -10,6 +10,10 @@ import os
 import time
 from typing import Any
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # redis লাইব্রেরি মিসিং থাকলেও যেন core.cache মডিউল ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট ব্যবহার করা হলো।
 try:
     from redis import asyncio as aioredis
