@@ -371,7 +371,7 @@ def budget_aware_route(
                 )
             else:
                 logger.warning("[Orchestrator] budget_aware_route: all free providers exhausted")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"[Orchestrator] budget_aware_route failed: {exc}")
 
     return {

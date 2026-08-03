@@ -54,7 +54,7 @@ class StyleLearner:
 
             try:
                 PY_LANG = Language("build/my-languages.so", "python")
-            except Exception:  # noqa: BLE001
+            except Exception:
                 # বাংলা মন্তব্য: prebuilt language না থাকলে AST বিশ্লেষণ বাদ দেওয়া হচ্ছে।
                 logger.debug("tree-sitter python grammar not compiled; skipping AST analysis.")
                 return patterns
@@ -80,7 +80,7 @@ class StyleLearner:
                     try:
                         with open(path, encoding="utf-8") as f:
                             tree = parser.parse(f.read().encode("utf-8"))
-                    except Exception as parse_err:  # noqa: BLE001
+                    except Exception as parse_err:
                         skipped_ast_files.append(f"{path} ({parse_err})")
                         continue
 
@@ -128,7 +128,7 @@ class StyleLearner:
 
         except ImportError:
             logger.debug("tree-sitter not installed; using heuristic fallback.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"AST pattern analysis failed: {e}")
 
         return patterns
@@ -147,9 +147,9 @@ class StyleLearner:
                 if file.endswith((".py", ".ts", ".tsx", ".js")):
                     path = os.path.join(root, file)
                     try:
-                        with open(path, encoding="utf-8") as f:  # noqa: ASYNC230
+                        with open(path, encoding="utf-8") as f:
                             code_samples.append(f.read()[:1500])
-                    except Exception as read_err:  # noqa: BLE001
+                    except Exception as read_err:
                         skipped_sample_files.append(f"{path} ({read_err})")
                         continue
                 if len(code_samples) >= 20:
@@ -189,9 +189,9 @@ class StyleLearner:
                         self.learned_styles[repo_path] = parsed
                         await self._persist_style(repo_path, parsed)
                         return parsed
-                except Exception:  # noqa: BLE001
+                except Exception:
                     logger.warning("Failed to parse style guidelines JSON from LLM.")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"LLM style analysis failed: {e}")
 
         guidelines = self._default_guidelines()
@@ -210,7 +210,7 @@ class StyleLearner:
             result = await router_llm.async_route_and_generate(full_prompt, task_type="coding", max_cost=0.03)
             code = result.get("text", "") if isinstance(result, dict) else ""
             return {"status": "success", "code": code.strip(), "style_injected": True}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Styled generation failed: {e}")
             return {"status": "error", "error": str(e)}
 
@@ -234,7 +234,7 @@ class StyleLearner:
                     }
                 ).execute()
                 return
-        except Exception as persist_err:  # noqa: BLE001
+        except Exception as persist_err:
             # বাংলা মন্তব্য: Supabase persist ব্যর্থ হলে warning দেওয়া হচ্ছে যাতে DB সমস্যাটি অগোচরে না থাকে।
             logger.warning(
                 f"[StyleLearner] Supabase style persist failed for {repo_path}: {persist_err}. Falling back to local storage."
@@ -243,9 +243,9 @@ class StyleLearner:
         try:
             os.makedirs("data/styles", exist_ok=True)
             safe_name = repo_path.replace("/", "_").replace("\\", "_")[:50]
-            with open(f"data/styles/{safe_name}.json", "w") as f:  # noqa: ASYNC230
+            with open(f"data/styles/{safe_name}.json", "w") as f:
                 json.dump(style, f, indent=2)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Style persist fallback failed: {e}")
 
     def _default_guidelines(self) -> dict[str, Any]:

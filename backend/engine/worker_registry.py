@@ -49,7 +49,7 @@ class WorkerRegistry:
                                 )
                             # Delete stale record from KV
                             await nats_client.kv_store.delete(worker_id)
-                    except Exception as hb_err:  # noqa: BLE001
+                    except Exception as hb_err:
                         # বাংলা মন্তব্য: heartbeat পার্স বা KV delete ব্যর্থ হলে worker_id ও এরর লগ করা হচ্ছে
                         logger.warning(
                             f"⚠️ Worker registry: failed to process heartbeat for worker '{worker_id}'. "
@@ -57,8 +57,8 @@ class WorkerRegistry:
                         )
 
                 self.active_workers = valid_workers
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Error reading worker registry: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error reading worker registry: {e!s}")
 
             await asyncio.sleep(5)
 

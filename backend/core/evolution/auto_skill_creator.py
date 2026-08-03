@@ -72,7 +72,7 @@ class AutoSkillCreator:
                 client = get_firestore_client()
                 if client is not None:
                     self.skills_ref = client.collection("supreme_dynamic_skills")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     from core.messaging.event_bus import ErrorEvent, error_event_bus
 
@@ -217,21 +217,21 @@ class AutoSkillCreator:
                     raise SecurityError("Generated code failed AST layout normalization.")
             except SecurityError as sec_err:
                 logger.critical(
-                    f"🚨 [EVOLUTION BLOCKED] AI generated a dangerous skill payload! Threat defused: {str(sec_err)}"
+                    f"🚨 [EVOLUTION BLOCKED] AI generated a dangerous skill payload! Threat defused: {sec_err!s}"
                 )
                 return {
                     "success": False,
-                    "error": f"Security Sandbox Violation: {str(sec_err)}",
+                    "error": f"Security Sandbox Violation: {sec_err!s}",
                 }
 
             # ৪. USS Pydantic Schema Validation
             try:
                 uss = UniversalSkillSchema(**schema_dict)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"❌ USS Validation failed: {e}")
                 return {
                     "success": False,
-                    "error": f"USS Validation Exception: {str(e)}",
+                    "error": f"USS Validation Exception: {e!s}",
                 }
 
             # ৫. Quarantine Zone & Automated Testing Loop
@@ -266,7 +266,7 @@ import asyncio
 
 async def run():
     instance = {skill_name}()
-    res = await instance.execute({repr(test.input)})
+    res = await instance.execute({test.input!r})
     print("RESULT:" + json.dumps(res))
 
 asyncio.run(run())
@@ -336,7 +336,7 @@ asyncio.run(run())
 
                 exp_db = ExperienceDatabase()
                 exp_db.record_experience(Experience(request=user_demand, generated_code=code_block, result="success"))
-            except Exception as exp_e:  # noqa: BLE001
+            except Exception as exp_e:
                 logger.warning(f"Failed to record verified skill experience: {exp_e}")
 
             latency = time.time() - start_time
@@ -347,8 +347,8 @@ asyncio.run(run())
                 "message": "Autonomous evolution loop successfully completed. Skill is live.",
             }
 
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"❌ Self-Evolution loop crashed: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ Self-Evolution loop crashed: {e!s}")
             latency = time.time() - start_time
             self.fitness_engine.track_execution(skill_name, success=False, latency=latency)
             # Cleanup quarantine on failure

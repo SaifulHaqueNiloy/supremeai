@@ -52,7 +52,7 @@ class GCPCloudRunRouter:
                 "status": "active" if 200 <= response.status_code < 300 else "degraded",
                 "data": self._safe_json(response),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"GCP Cloud Run health check failed: {exc}")
             return {
                 "success": False,
@@ -95,7 +95,7 @@ class GCPCloudRunRouter:
                 "latency_ms": round(latency_ms, 2),
                 "data": data,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"GCP Cloud Run route failed: {exc}")
             return {
                 "success": False,
@@ -122,5 +122,5 @@ class GCPCloudRunRouter:
     def _safe_json(response: httpx.Response) -> Any:
         try:
             return response.json()
-        except Exception:  # noqa: BLE001
+        except Exception:
             return {"text": response.text}

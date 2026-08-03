@@ -25,7 +25,7 @@ class MusicGenerator:
                 "audio_url": "",
                 "note": "Real audio generation requires MusicGen/Jukebox integration.",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Music generation failed: {exc}")
             return {
                 "status": "error",

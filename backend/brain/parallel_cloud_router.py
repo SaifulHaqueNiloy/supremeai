@@ -56,7 +56,7 @@ class ParallelCloudRouter:
 
                 self.redis_client = redis.from_url(redis_url, decode_responses=True)
                 logger.info("Connected to Redis for ParallelCloudRouter state tracking.")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to connect to Redis: {e}")
         if self.upstash.configured:
             logger.info("Connected to Upstash Redis REST for ParallelCloudRouter state tracking.")
@@ -70,7 +70,7 @@ class ParallelCloudRouter:
             try:
                 val = self.redis_client.get(f"parallel_router:requests:{provider}")
                 return int(val) if val else 0
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis get requests failed: {e}")
         return self.PROVIDERS[provider]["current_requests"]
 
@@ -81,7 +81,7 @@ class ParallelCloudRouter:
         if self.redis_client:
             try:
                 return self.redis_client.incr(f"parallel_router:requests:{provider}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis incr requests failed: {e}")
         self.PROVIDERS[provider]["current_requests"] += 1
         return self.PROVIDERS[provider]["current_requests"]
@@ -94,7 +94,7 @@ class ParallelCloudRouter:
             try:
                 val = self.redis_client.decr(f"parallel_router:requests:{provider}")
                 return max(0, val)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis decr requests failed: {e}")
         self.PROVIDERS[provider]["current_requests"] = max(0, self.PROVIDERS[provider]["current_requests"] - 1)
         return self.PROVIDERS[provider]["current_requests"]
@@ -107,7 +107,7 @@ class ParallelCloudRouter:
             try:
                 val = self.redis_client.get(f"parallel_router:status:{provider}")
                 return str(val) if val else str(self.PROVIDERS[provider]["status"])
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis get status failed: {e}")
         return str(self.PROVIDERS[provider]["status"])
 
@@ -117,7 +117,7 @@ class ParallelCloudRouter:
         if self.redis_client:
             try:
                 self.redis_client.set(f"parallel_router:status:{provider}", status)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis set status failed: {e}")
         self.PROVIDERS[provider]["status"] = status
 
@@ -142,7 +142,7 @@ class ParallelCloudRouter:
                     config["latency_ms"] = response.elapsed.total_seconds() * 1000
                 else:
                     self._set_status(name, "degraded")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"{name} health check failed: {e}")
                 self._set_status(name, "down")
 
@@ -213,7 +213,7 @@ class ParallelCloudRouter:
             result["_provider"] = provider
             result["_region"] = config["region"]
             return result
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"{provider} failed: {e}")
             self._set_status(provider, "down")
             self._decrement_current_requests(provider)

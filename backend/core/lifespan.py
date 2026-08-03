@@ -24,36 +24,36 @@ Dependencies:
 - `core.sentinel_agent`: Manages a background agent responsible for periodic system tasks.
 - `database.db`: Used for bootstrapping and ensuring the integrity of the Supabase database schema.
 - `tools.ai_agents.browser_agent`: Provides functionality to shut down any globally managed browser instances.
-- `core.metrics_collector`: Collects system metrics for observability and monitoring."""  # noqa: E501
+- `core.metrics_collector`: Collects system metrics for observability and monitoring."""
 
 # backend/core/lifespan.py
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
 # Moving this file will break relative paths, imports, and core app lifespan management.
-import asyncio  # noqa: E402
-import time  # noqa: E402 - Added for metrics collection
-from contextlib import asynccontextmanager  # noqa: E402
+import asyncio
+import time  # - Added for metrics collection
+from contextlib import asynccontextmanager
 
-import httpx  # noqa: E402
-from loguru import logger  # noqa: E402
+import httpx
+from loguru import logger
 
-from core import services  # noqa: E402
-from core.agent_supervisor import agent_supervisor  # noqa: E402
-from core.cache.redis_manager import redis_manager  # noqa: E402
-from core.config import settings  # noqa: E402
-from core.config_cache import config_cache  # noqa: E402
-from core.maintenance_pipeline import maintenance_pipeline  # noqa: E402
-from core.messaging.event_bus import ErrorEvent  # noqa: E402
-from core.messaging.event_bus import error_event_bus  # noqa: E402
-from core.metrics_collector import metrics_collector, record_db_operation  # noqa: E402
-from core.orchestration.orchestrator import Orchestrator  # noqa: E402
-from core.persistence import pooled_pg  # noqa: E402
-from core.persistence.write_behind import (  # noqa: E402
+from core import services
+from core.agent_supervisor import agent_supervisor
+from core.cache.redis_manager import redis_manager
+from core.config import settings
+from core.config_cache import config_cache
+from core.maintenance_pipeline import maintenance_pipeline
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
+from core.metrics_collector import metrics_collector, record_db_operation
+from core.orchestration.orchestrator import Orchestrator
+from core.persistence import pooled_pg
+from core.persistence.write_behind import (
     flush_all as flush_write_behind_batchers,
 )
-from core.pgbouncer_pool import get_db_pool  # noqa: E402
-from core.pgbouncer_pool import init_db_pool  # noqa: E402
-from core.reliability_controller import ReliabilityController  # noqa: E402
-from core.startup_validator import StartupValidator  # noqa: E402
+from core.pgbouncer_pool import get_db_pool
+from core.pgbouncer_pool import init_db_pool
+from core.reliability_controller import ReliabilityController
+from core.startup_validator import StartupValidator
 
 
 async def _ensure_api_key_tables() -> None:
@@ -183,7 +183,7 @@ async def app_lifespan(app):
 
             await asyncio.to_thread(setup_tracing)
             logger.info("✅ OpenTelemetry tracing provider successfully initialized.")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"Failed to initialize tracing provider: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -230,7 +230,7 @@ async def app_lifespan(app):
 
                 # Optimize queries with connection pooling best practices
                 app.state.db_pool = pool
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"❌ Failed to initialize DB Pool: {exc}")
             app.state.db_pool = None
             app.state.subsystem_status["db"] = "down"
@@ -257,7 +257,7 @@ async def app_lifespan(app):
         try:
             await config_cache.refresh_async()
             logger.info("✅ System configuration cache successfully initialized.")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"⚠️ Async config load failed, falling back to local DEFAULT_CONFIGS: {exc}")
             app.state.subsystem_status["config"] = "fallback"
             error_event_bus.emit(
@@ -281,7 +281,7 @@ async def app_lifespan(app):
                 await redis_manager.client.ping()
                 logger.info("✅ Redis connection verified successfully.")
                 await ReliabilityController.restore_from_persistence()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to initialize Redis Manager: {e}")
             app.state.subsystem_status["redis"] = "down"
             error_event_bus.emit(
@@ -306,7 +306,7 @@ async def app_lifespan(app):
 
             await cost_guard.connect()
             logger.info("✅ CostGuard Redis connection initialized for budget tracking.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"CostGuard initialization failed (non-critical): {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -340,7 +340,7 @@ async def app_lifespan(app):
         app.state.orchestrator = orch_inst
         logger.info("⚙️ Orchestrator background tasks initialized successfully.")
         await metrics_collector.increment_counter("orchestrator_init_success_total")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to initialize Orchestrator: {e}")
         await metrics_collector.increment_counter("orchestrator_init_failure_total")
         error_event_bus.emit(
@@ -364,7 +364,7 @@ async def app_lifespan(app):
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
         logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
         error_event_bus.emit(
             ErrorEvent(
@@ -413,7 +413,7 @@ async def app_lifespan(app):
             restart_delay=2.0,
         )
         logger.info("✅ System Telemetry Broadcaster background loop started.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
 
     # Agent 4: Bug Prophet Anomaly Detector
@@ -442,7 +442,7 @@ async def app_lifespan(app):
             logger.info("✅ Tier-8 Meta-Self subsystem initialized successfully.")
         else:
             logger.info("ℹ️ Tier-8 Meta-Self subsystem disabled via environment variable.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ Tier-8 initialization failed: {exc}")
 
     # বাংলা মন্তব্ব্য: SelfEvolutionAgent শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
@@ -457,7 +457,7 @@ async def app_lifespan(app):
         else:
             app.state.evo_agent = None
             logger.info("ℹ️ SelfEvolutionAgent disabled via environment variable.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ SelfEvolutionAgent failed to start: {exc}")
         app.state.evo_agent = None
 
@@ -474,7 +474,7 @@ async def app_lifespan(app):
                         await _daily_learner.learn_and_plan(
                             "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
                         )
-                    except Exception as _exc:  # noqa: BLE001
+                    except Exception as _exc:
                         logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
                     await asyncio.sleep(86400)
 
@@ -488,7 +488,7 @@ async def app_lifespan(app):
             logger.info("✅ DailyLearner background task started (24h research scan cycle).")
         else:
             logger.info("ℹ️ DailyLearner disabled via environment variable.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
     # বাংলা মন্তব্ব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
@@ -501,7 +501,7 @@ async def app_lifespan(app):
             logger.info("✅ AutoHealerService started (DB/Redis healing active, 30s check interval).")
         else:
             logger.info("ℹ️ AutoHealerService disabled via environment variable.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ AutoHealerService failed to start: {exc}")
 
     # বাংলা মন্তব্ব্য: SelfHealer error listener এক্সপ্লিসিটলি রেজিস্টার করা হচ্ছে।
@@ -510,7 +510,7 @@ async def app_lifespan(app):
 
         register_self_healer_listener()
         logger.info("✅ SelfHealer error listener registered in lifespan.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ SelfHealer listener registration failed: {exc}")
 
     # Start the agent health monitor
@@ -526,7 +526,7 @@ async def app_lifespan(app):
 
         await shutdown_tier8()
         logger.info("✅ Tier-8 Meta-Self subsystem shutdown completed.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"⚠️ Tier-8 shutdown failed: {exc}")
 
     # Orchestrator cleanup
@@ -534,7 +534,7 @@ async def app_lifespan(app):
         orch = getattr(app.state, "orchestrator", None)
         if orch and hasattr(orch, "stop"):
             await orch.stop()
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error during orchestrator shutdown: {e}")
         error_event_bus.emit(
             ErrorEvent(
@@ -552,7 +552,7 @@ async def app_lifespan(app):
     try:
         await agent_supervisor.shutdown_all(timeout=30)
         logger.info("✅ All background agents shut down via centralized supervisor.")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error during agent supervisor shutdown: {e}")
         error_event_bus.emit(
             ErrorEvent(
@@ -573,7 +573,7 @@ async def app_lifespan(app):
     try:
         await asyncio.to_thread(flush_write_behind_batchers)
         logger.info("✅ Write-behind persistence batchers flushed successfully.")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"Error flushing write-behind batchers: {exc}")
         error_event_bus.emit(
             ErrorEvent(
@@ -592,7 +592,7 @@ async def app_lifespan(app):
         if pool:
             await pool.close()
             logger.info("✅ Database connection pool closed successfully.")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error closing DB pool: {e}")
         error_event_bus.emit(
             ErrorEvent(
@@ -609,14 +609,14 @@ async def app_lifespan(app):
         if hasattr(pooled_pg, "_pool") and pooled_pg._pool is not None:
             await asyncio.to_thread(pooled_pg.close_pool)
             logger.info("✅ Synchronous pgbouncer pool closed successfully.")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error closing sync pgbouncer pool: {e}")
 
     # Redis cleanup
     try:
         await redis_manager.close()
         logger.info("✅ Redis Manager connection closed.")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error closing Redis Manager: {e}")
         error_event_bus.emit(
             ErrorEvent(
@@ -634,8 +634,8 @@ async def app_lifespan(app):
         if services.global_http_client:
             await services.global_http_client.aclose()
         logger.info("✅ Global HTTP connection pool closed successfully.")
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Error during HTTP connection pool drainage: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error during HTTP connection pool drainage: {e!s}")
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -652,7 +652,7 @@ async def app_lifespan(app):
         from core.playwright_manager import shutdown_global_browser
 
         await shutdown_global_browser()
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to shutdown global browser: {e}")
         error_event_bus.emit(
             ErrorEvent(

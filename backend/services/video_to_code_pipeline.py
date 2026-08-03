@@ -185,7 +185,7 @@ class FrameAnalyzer:
 
         import base64
 
-        with open(frame_path, "rb") as f:  # noqa: ASYNC230
+        with open(frame_path, "rb") as f:
             base64_image = base64.b64encode(f.read()).decode("utf-8")
 
         prompt = (

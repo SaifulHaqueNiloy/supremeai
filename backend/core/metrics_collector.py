@@ -47,7 +47,7 @@ class MetricsCollector:
     async def increment_counter(self, metric_name: str, value: int = 1, labels: dict[str, str] | None = None):
         """Increment a counter metric."""
         labels = labels or {}
-        key = f"{metric_name}:{str(sorted(labels.items()))}"
+        key = f"{metric_name}:{sorted(labels.items())!s}"
 
         async with self._lock:
             if key not in self._metrics:
@@ -57,7 +57,7 @@ class MetricsCollector:
     async def set_gauge(self, metric_name: str, value: float, labels: dict[str, str] | None = None):
         """Set a gauge metric value."""
         labels = labels or {}
-        key = f"{metric_name}:{str(sorted(labels.items()))}"
+        key = f"{metric_name}:{sorted(labels.items())!s}"
 
         async with self._lock:
             self._metrics[key] = value
@@ -65,7 +65,7 @@ class MetricsCollector:
     async def observe_histogram(self, metric_name: str, value: float, labels: dict[str, str] | None = None):
         """Record a histogram observation."""
         labels = labels or {}
-        key = f"{metric_name}:{str(sorted(labels.items()))}"
+        key = f"{metric_name}:{sorted(labels.items())!s}"
 
         async with self._lock:
             if key not in self._metrics:

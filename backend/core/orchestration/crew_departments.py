@@ -116,7 +116,7 @@ class CodeGeneratorAgent(SwarmAgentBase):
     ):
         workspace.log("CodeGeneratorAgent: Refining code based on Guardian feedback...")
         sys_prompt = "You are an expert backend engineer. Refine the python code based on the feedback."
-        user_prompt = f"Original Code:\n{workspace.work_product.get('generated_code', {}).get('main.py', '')}\nFeedback:\n{feedback}\nGenerate the fixed python code matching the constraints."  # noqa: E501
+        user_prompt = f"Original Code:\n{workspace.work_product.get('generated_code', {}).get('main.py', '')}\nFeedback:\n{feedback}\nGenerate the fixed python code matching the constraints."
         code_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
         workspace.work_product["generated_code"]["main.py"] = code_output
         workspace.log("CodeGeneratorAgent: Code successfully refined.")
@@ -218,10 +218,10 @@ class GuardianAgent(SwarmAgentBase):
 
         # Define specialized sub-agents and their prompts
         sub_agents = {
-            "SecuritySentinel": "You are a Security Sentinel. Analyze the code for security vulnerabilities like injections, auth bypass, and secret leaks. Report only findings or 'SECURITY_OK'.",  # noqa: E501
-            "CodeQualityArchitect": "You are a Code Quality Architect. Analyze the code for clean code violations, architectural inconsistencies, and performance issues. Report only findings or 'QUALITY_OK'.",  # noqa: E501
-            "ComplianceAuditor": "You are a Compliance Auditor. Analyze the code for PII exposure or violations of GDPR/CCPA rules. Report only findings or 'COMPLIANCE_OK'.",  # noqa: E501
-            "DocumentationChecker": "You are a Documentation Checker. Analyze the code for missing or inadequate docstrings and comments for all functions and classes. Report only findings or 'DOCS_OK'.",  # noqa: E501
+            "SecuritySentinel": "You are a Security Sentinel. Analyze the code for security vulnerabilities like injections, auth bypass, and secret leaks. Report only findings or 'SECURITY_OK'.",
+            "CodeQualityArchitect": "You are a Code Quality Architect. Analyze the code for clean code violations, architectural inconsistencies, and performance issues. Report only findings or 'QUALITY_OK'.",
+            "ComplianceAuditor": "You are a Compliance Auditor. Analyze the code for PII exposure or violations of GDPR/CCPA rules. Report only findings or 'COMPLIANCE_OK'.",
+            "DocumentationChecker": "You are a Documentation Checker. Analyze the code for missing or inadequate docstrings and comments for all functions and classes. Report only findings or 'DOCS_OK'.",
         }
 
         user_prompt_template = (
@@ -302,7 +302,7 @@ class ReflectionAgent(SwarmAgentBase):
         model_name: str = "gemini/gemini-2.5-flash",
     ):
         workspace.log("ReflectionAgent: Analyzing task outcome to generate experience...")
-        sys_prompt = "You are an AI Reflection engine. Analyze the workspace logs and extract what worked, what failed, and suggested improvements. Return JSON with 'what_worked', 'what_failed', 'suggested_improvements'."  # noqa: E501
+        sys_prompt = "You are an AI Reflection engine. Analyze the workspace logs and extract what worked, what failed, and suggested improvements. Return JSON with 'what_worked', 'what_failed', 'suggested_improvements'."
         user_prompt = f"Logs: {workspace.execution_logs}\nOriginal Prompt: {workspace.original_prompt}"
 
         analysis = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
@@ -317,7 +317,7 @@ class ReflectionAgent(SwarmAgentBase):
 
             try:
                 parsed = json.loads(analysis)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 parsed = {
                     "what_worked": [analysis],
                     "what_failed": [],
@@ -335,7 +335,7 @@ class ReflectionAgent(SwarmAgentBase):
             )
             db.record_experience(exp)
             workspace.log("ReflectionAgent: Experience successfully saved to Vector DB.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             workspace.log(f"ReflectionAgent: Failed to persist experience: {e}")
 
         return analysis
@@ -369,7 +369,7 @@ class ToolSynthesizerAgent(SwarmAgentBase):
         model_name: str = "gemini/gemini-2.5-pro",
     ):
         workspace.log("ToolSynthesizerAgent: Starting Zero-Shot Tool Synthesis...")
-        sys_prompt = "You are a master tool builder. Based on a task intent, create a JSON definition for a new tool. The definition must include a name, description, and a list of parameters."  # noqa: E501
+        sys_prompt = "You are a master tool builder. Based on a task intent, create a JSON definition for a new tool. The definition must include a name, description, and a list of parameters."
         user_prompt = f"Create a tool definition for the intent: '{workspace.original_prompt}'. Respond with only the JSON object."
 
         tool_definition_str = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)

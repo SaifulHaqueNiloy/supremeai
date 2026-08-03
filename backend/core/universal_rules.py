@@ -148,13 +148,13 @@ class UniversalRulesEngine:
                     except (json.JSONDecodeError, TypeError):
                         parsed_val = value
                     db_rules[category][rule_key] = parsed_val
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"⚠️ Failed to load rules from DB, falling back to defaults: {e}")
         finally:
             if conn:
-                try:  # noqa
+                try:
                     conn.close()
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Failed to close connection: {e}")
 
         # Default fallback rules (Admin definitions) - সম্পূর্ণ রুলস গাইডেলাইন
@@ -253,7 +253,7 @@ class UniversalRulesEngine:
                         if isinstance(rules_dict, dict):
                             target2.update(rules_dict)
                     return default_rules
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Failed to load rules from file, falling back to defaults: {e}")
 
         # Save defaults if not present

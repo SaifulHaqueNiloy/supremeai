@@ -443,7 +443,7 @@ import traceback
 # Execution harness
 if __name__ == "__main__":
     try:
-        payload = json.loads({repr(payload_json)})
+        payload = json.loads({payload_json!r})
         if "execute_tool" in dir():
             result = execute_tool(payload)
         elif "main" in dir():

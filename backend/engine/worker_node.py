@@ -43,8 +43,8 @@ class SwarmWorkerNode:
                 capabilities = self.get_capabilities()
                 await self.nats.register_worker(self.worker_id, capabilities)
                 logger.debug(f"💓 Heartbeat sent for {self.worker_id}")
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Heartbeat failed: {str(e)}")
+            except Exception as e:
+                logger.error(f"Heartbeat failed: {e!s}")
             await asyncio.sleep(5)  # 5 seconds interval
 
     async def handle_task(self, payload: dict):

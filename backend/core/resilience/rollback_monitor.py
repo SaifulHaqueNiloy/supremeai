@@ -147,7 +147,7 @@ class RollbackMonitor:
                 }
             else:
                 logger.error("Could not find a previous revision to rollback to.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to execute gcloud rollback command: {e}")
 
         # বাংলা মন্তব্য: rollback আসলে না ঘটলে success:False রিপোর্ট করা হচ্ছে (Patch 20 fix) —
@@ -174,7 +174,7 @@ class RollbackMonitor:
                     context={"service": service_name},
                 )
             )
-        except Exception as bus_exc:  # noqa: BLE001
+        except Exception as bus_exc:
             logger.error(f"Failed to emit rollback-failure event: {bus_exc}")
 
         report = {

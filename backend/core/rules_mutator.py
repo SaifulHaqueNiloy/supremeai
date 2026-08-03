@@ -19,7 +19,7 @@ class RulesMutator:
                 val = services.redis_queue.get(redis_key)
                 if val is not None:
                     return val != "ok"
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis connection failed during is_ip_blocked: {e}")
         return False
 
@@ -32,7 +32,7 @@ class RulesMutator:
             try:
                 services.redis_queue.set(redis_key, f"blocked:{reason}", ex=self.cooldown_seconds)
                 return True
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis connection failed during block_ip: {e}")
         return False
 
@@ -45,6 +45,6 @@ class RulesMutator:
             try:
                 services.redis_queue.set(redis_key, "", ex=1)
                 return True
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Redis connection failed during release_ip: {e}")
         return False

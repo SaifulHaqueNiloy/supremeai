@@ -172,7 +172,7 @@ class GaussianMutation:
             )
             refined = response.choices[0].message.content.strip()
             return refined if len(refined) > 5 else text
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"LLM refine failed, keeping original: {e}")
             return text
 
@@ -388,7 +388,7 @@ class AgentBreeder:
         if offspring.fitness_score is None:
             await self.evaluate_offspring(offspring)
 
-        assert offspring.fitness_score is not None  # noqa: S101
+        assert offspring.fitness_score is not None
 
         parent_fitness = max(parent_a.fitness_score, parent_b.fitness_score)
 

@@ -129,7 +129,7 @@ async def github_create_pull_request(params: CreatePRInput) -> str:
 
     except httpx.HTTPStatusError as e:
         return handle_api_error(e, e.response.status_code)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return handle_api_error(e)
 
 
@@ -199,7 +199,7 @@ async def github_run_auto_fix(params: FixIssueInput) -> str:
 
     except httpx.HTTPStatusError as e:
         return handle_api_error(e, e.response.status_code)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return handle_api_error(e)
 
 
@@ -268,7 +268,7 @@ async def github_list_issues(state: str = "open", labels: str | None = None) -> 
 
     except httpx.HTTPStatusError as e:
         return handle_api_error(e, e.response.status_code)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return handle_api_error(e)
 
 
@@ -320,7 +320,7 @@ async def github_get_ci_status(branch: str = "main") -> str:
 
     except httpx.HTTPStatusError as e:
         return handle_api_error(e, e.response.status_code)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return handle_api_error(e)
 
 
@@ -404,7 +404,7 @@ async def github_get_file_contents(params: GetFileContentsInput) -> str:
 
     except httpx.HTTPStatusError as e:
         return handle_api_error(e, e.response.status_code)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return handle_api_error(e)
 
 
@@ -474,7 +474,7 @@ async def github_search_code(params: SearchCodeInput) -> str:
 
     except httpx.HTTPStatusError as e:
         return handle_api_error(e, e.response.status_code)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return handle_api_error(e)
 
 

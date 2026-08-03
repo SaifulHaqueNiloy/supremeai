@@ -69,7 +69,7 @@ class EnsembleRouter:
                 "all_responses": valid,
                 "quota_exhausted_models": list(self.quota_exhausted),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Ensemble routing exception: {exc}")
             return {
                 "status": "error",

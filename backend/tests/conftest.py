@@ -59,6 +59,15 @@ def disable_honeypot(request, monkeypatch):
         await self.app(scope, receive, send)
 
     monkeypatch.setattr("core.security.honeypot_middleware.HoneypotMiddleware.__call__", mock_bypass)
+    # বাংলা মন্তব্য: BUG FIX - `backend.core.*` prefix দিয়ে import হওয়া app-এর
+    # HoneypotMiddleware একটা সম্পূর্ণ আলাদা ক্লাস অবজেক্ট (module identity duplication,
+    # secret_vault-এ আগে পাওয়া একই সমস্যা) -- শুধু bare `core.security...` patch করলে
+    # ওই ক্লাসটা অপরিবর্তিত থেকে যায় এবং real honeypot চালু থাকে, যেটা মাঝেমধ্যে
+    # RulesMutator().block_ip() সত্যিই কল করে ফেলত এবং পরের টেস্টগুলো (যেমন
+    # test_byoc_endpoints.py) কে corrupt করত। উভয় identity patch করা হলো।
+    backend_module = sys.modules.get("backend.core.security.honeypot_middleware")
+    if backend_module is not None and hasattr(backend_module, "HoneypotMiddleware"):
+        monkeypatch.setattr(backend_module.HoneypotMiddleware, "__call__", mock_bypass)
     yield
 
 

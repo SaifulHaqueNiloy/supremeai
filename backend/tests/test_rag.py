@@ -40,8 +40,8 @@ async def main():
         else:
             logger.warning("No matches found.")
 
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Test failed. Make sure API keys are set correctly: {str(e)}")
+    except Exception as e:
+        logger.error(f"Test failed. Make sure API keys are set correctly: {e!s}")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ class VisionAgent:
     def analyze_image(self, image_path: str) -> dict[str, Any]:
         try:
             import easyocr  # type: ignore[import-untyped]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"EasyOCR is not available: {exc}")
             return {"success": False, "error": str(exc), "text": "", "structured": {}}
 
@@ -31,7 +31,7 @@ class VisionAgent:
                 "lines": text_lines,
                 "structured": self._structure(text_lines),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Vision image analysis failed: {exc}")
             return {"success": False, "error": str(exc), "text": "", "structured": {}}
 
@@ -47,7 +47,7 @@ class VisionAgent:
                 "summary": cover_text,
                 "structured": {"pages": len(text_pages)},
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Vision PDF analysis failed: {exc}")
             return {"success": False, "error": str(exc), "text": "", "structured": {}}
 

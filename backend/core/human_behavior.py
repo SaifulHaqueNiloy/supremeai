@@ -58,7 +58,7 @@ class HumanBehaviorSimulators:
 
             path = cls._generate_bezier_points(
                 (start_x, start_y), (target_x, target_y), steps=random.randint(15, 30)
-            )  # noqa: S311
+            )
 
             for x, y in path:
                 await page.mouse.move(x, y)
@@ -67,8 +67,8 @@ class HumanBehaviorSimulators:
             await asyncio.sleep(random.uniform(0.1, 0.25))  # ক্লিকের আগে সামান্য থামা  # noqa: S311
             await page.mouse.click(target_x, target_y)
             logger.debug(f"Simulated natural human click on selector: {selector}")
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Human-like click failed on {selector}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Human-like click failed on {selector}: {e!s}")
             raise
 
     @classmethod
@@ -88,6 +88,6 @@ class HumanBehaviorSimulators:
                 await asyncio.sleep(delay)
 
             logger.debug(f"Simulated natural typing into selector: {selector}")
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Human-like typing failed on {selector}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Human-like typing failed on {selector}: {e!s}")
             raise

@@ -115,6 +115,7 @@ async def test_honeypot_blocks_script_injection_prod():
 async def test_honeypot_blocks_ignore_instructions_prod():
     middleware = make_middleware()
     old_env = os.environ.get("ENV")
+    old_honeypot_test_flag = os.environ.get("ENABLE_HONEYPOT_TEST")
     os.environ["ENV"] = "production"
     os.environ["ENABLE_HONEYPOT_TEST"] = "true"
     try:
@@ -144,6 +145,10 @@ async def test_honeypot_blocks_ignore_instructions_prod():
             os.environ.pop("ENV", None)
         else:
             os.environ["ENV"] = old_env
+        if old_honeypot_test_flag is None:
+            os.environ.pop("ENABLE_HONEYPOT_TEST", None)
+        else:
+            os.environ["ENABLE_HONEYPOT_TEST"] = old_honeypot_test_flag
 
 
 @pytest.mark.asyncio

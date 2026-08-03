@@ -15,7 +15,7 @@ def _skip_if_media_deps_missing():
     try:
         import tools.media.image_generator as _ig  # noqa: F401
         import tools.media.video_generator as _vg  # noqa: F401
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         pytest.skip(f"Media backend dependencies missing: {exc}")
 
 

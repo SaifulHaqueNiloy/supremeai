@@ -102,5 +102,5 @@ class MorphicAdapter:
             return {
                 "success": False,
                 "code": "",
-                "detail": f"LLM Morphic adaptation failure: {str(e)}",
+                "detail": f"LLM Morphic adaptation failure: {e!s}",
             }

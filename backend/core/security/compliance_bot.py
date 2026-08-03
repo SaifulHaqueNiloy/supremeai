@@ -246,7 +246,7 @@ class GDPRChecker:
                     expires_at=(datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None),
                     version=data.get("version", "1.0"),
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error fetching consent: {e}")
         return None
 
@@ -272,7 +272,7 @@ class GDPRChecker:
                 .stream()
             )
             return [d.to_dict() for d in docs]
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error fetching deletion requests: {e}")
             return []
 
@@ -358,7 +358,7 @@ class DigitalSecurityActChecker:
             # Check if audit_logs collection exists with recent entries
             docs = list(self.db.collection("audit_logs").limit(1).stream())
             return len(docs) > 0
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Audit check failed: {e}")
             return False
 
@@ -367,7 +367,7 @@ class DigitalSecurityActChecker:
         try:
             doc = self.db.collection("system_config").document("incident_response").get()
             return doc.exists
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Incident response check failed: {e}")
             return False
 
@@ -428,7 +428,7 @@ class ConsentManager:
                     granted_at=datetime.fromisoformat(data["granted_at"]),
                     withdrawn_at=datetime.now(UTC),
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error withdrawing consent: {e}")
         return None
 
@@ -442,7 +442,7 @@ class ConsentManager:
                 c_type = data.get("consent_type")
                 if c_type:
                     status[c_type] = data.get("granted", False)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error fetching consent status: {e}")
         return status
 
@@ -467,7 +467,7 @@ class DataRetentionPolicy:
             logger.info(
                 f"Enforced retention for {data_type}: Deleted {count} records older than {retention_days} days."
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error enforcing retention on {data_type}: {e}")
         return count
 

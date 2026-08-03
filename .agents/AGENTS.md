@@ -125,6 +125,11 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 
 - **No Background Timers Rule (STRICT):** The AI agent MUST NEVER schedule background timers or interval scheduler tasks after `git push` or during any execution unless the user explicitly requests a timer.
 
+- **Execution Time-Tracking & Hang Prevention Rule (CRITICAL):**
+  - **Estimate Expected Runtime:** Before launching any test, build, or script, estimate its expected duration (unit tests should run in < 15 seconds; builds < 30 seconds).
+  - **Strict Time-Tracking:** Keep track of elapsed time vs expected duration. If a test or command takes significantly longer than expected (e.g., > 2x estimated time or > 30 seconds), inspect log output immediately or terminate it to diagnose unmocked network calls.
+  - **No Silent Network Blockers:** Ensure all external LLM routes (`core.llm_router.LLMRouter`) and database connections (`core.tenant_db.TenantAwareFirestore`) are fully mocked before executing test suites to prevent network connection timeouts.
+
 - **Commit All Uncommitted Files & Impact Report:** When performing a commit, ALWAYS inspect all uncommitted files (`git status` / `git diff`), stage all uncommitted files, and provide a short, concise summary report explaining how the uncommitted files make the system better and what specific improvements/benefits they bring.
 
 - **Code Comments (Bangla):** Whenever making changes to the codebase, always try to add explanatory comments in **Bangla** so that the rationale behind the changes is easily understood later by the team.

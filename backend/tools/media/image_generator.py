@@ -53,7 +53,7 @@ class HFImageGenerator:
 
                 # Ensure directories exist
                 os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-                with open(output_path, "wb") as f:  # noqa: ASYNC230
+                with open(output_path, "wb") as f:
                     f.write(image_data)
 
                 return {
@@ -63,7 +63,7 @@ class HFImageGenerator:
                     "output_path": output_path,
                     "mock": False,
                 }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # বাংলা মন্তব্য: কানেকশন বা সার্ভার এরর হলে এটি আর সাইলেন্টলি ফেইল না করে সরাসরি এরর ডিকশনারি রিটার্ন করবে।
             logger.error(f"HuggingFace image generation failed: {e}")
-            return {"success": False, "error": f"HuggingFace API call failed: {str(e)}"}
+            return {"success": False, "error": f"HuggingFace API call failed: {e!s}"}

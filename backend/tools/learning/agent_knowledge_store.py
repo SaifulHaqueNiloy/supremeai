@@ -42,14 +42,14 @@ class AgentKnowledgeStore:
             try:
                 self.queue.client.collection(self.collection_name).add(record)
                 logger.info(f"✅ Successfully stored AI agent knowledge for '{agent_name}' in Firestore.")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to store knowledge in Firestore: {e}")
 
         # Local fallback SQLite / verification queue
         try:
             self.queue.enqueue(task_id=f"agent_knowledge_{agent_name}", payload=record)
             logger.info(f"✅ Enqueued agent knowledge for '{agent_name}' in local store.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to enqueue knowledge locally: {e}")
 
         return {"status": "success", "agent_name": agent_name, "best_skill": best_skill}

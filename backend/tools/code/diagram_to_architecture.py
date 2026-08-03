@@ -89,11 +89,11 @@ class DiagramToArchitecture:
                 "identified_components": components,
                 "code": code.strip(),
             }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: ImportError (ModelRouter unavailable) no longer silently returns
             # hardcoded infrastructure — every failure path now surfaces the real error
             # so the API caller knows generation did not actually happen.
-            logger.error(f"Architecture generation failed: {str(e)}")
+            logger.error(f"Architecture generation failed: {e!s}")
             return {"status": "error", "error": str(e)}
 
     async def to_terraform(self, diagram_path: str, cloud_provider: str = "gcp") -> TerraformCode:
@@ -119,7 +119,7 @@ class DiagramToArchitecture:
             if not code:
                 raise RuntimeError("Model returned empty Terraform response.")
             return TerraformCode(code=code.strip(), provider=cloud_provider)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: removed hardcoded HCL fallback — a generation failure must be
             # visible to the caller, not disguised as a valid (fake) result.
             logger.error(f"Terraform generation failed: {e}")
@@ -148,7 +148,7 @@ class DiagramToArchitecture:
             if not code:
                 raise RuntimeError("Model returned empty Kubernetes manifest response.")
             return K8sManifest(code=code.strip())
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: removed hardcoded manifest fallback for the same reason as Terraform above.
             logger.error(f"Kubernetes generation failed: {e}")
             raise RuntimeError(f"Kubernetes generation failed: {e}") from e
@@ -182,7 +182,7 @@ class DiagramToArchitecture:
             if not code:
                 raise RuntimeError("Model returned empty schema response.")
             return SchemaCode(code=code.strip(), orm=orm)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # ✅ FIXED: removed hardcoded schema fallback for the same reason as Terraform above.
             logger.error(f"Schema generation failed: {e}")
             raise RuntimeError(f"Schema generation failed: {e}") from e
@@ -207,7 +207,7 @@ class DiagramToArchitecture:
             )
             yaml_spec = result.get("text", "") if isinstance(result, dict) else ""
             return {"status": "success", "openapi_yaml": yaml_spec}
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return {"status": "error", "error": str(e)}
 
     def _parse_components_from_code(self, code: str, iac_tool: str) -> list[dict[str, str]]:
@@ -269,7 +269,7 @@ async def api_to_terraform(file: UploadFile = File(...), cloud_provider: str = F
     try:
         result = await _converter.to_terraform(tmp_path, cloud_provider=cloud_provider)
         return {"status": "success", **result.to_dict()}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=502, detail=f"Terraform generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
@@ -286,7 +286,7 @@ async def api_to_kubernetes(file: UploadFile = File(...)):
     try:
         result = await _converter.to_kubernetes(tmp_path)
         return {"status": "success", **result.to_dict()}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=502, detail=f"Kubernetes generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)
@@ -303,7 +303,7 @@ async def api_to_schema(file: UploadFile = File(...), orm: str = Form("sqlalchem
     try:
         result = await _converter.to_database_schema(tmp_path, orm=orm)
         return {"status": "success", **result.to_dict()}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise HTTPException(status_code=502, detail=f"Schema generation failed: {e}") from e
     finally:
         os.unlink(tmp_path)

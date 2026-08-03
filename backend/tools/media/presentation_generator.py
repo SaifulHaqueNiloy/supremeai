@@ -29,12 +29,12 @@ class PresentationGenerator:
                 slides = json.loads(cleaned)
                 if not isinstance(slides, list):
                     slides = []
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 for i in range(1, num_slides + 1):
                     slides.append(
@@ -58,7 +58,7 @@ class PresentationGenerator:
                 out_path = f"data/{hash(topic)}.pptx"
                 prs.save(out_path)
                 file_url = out_path
-            except Exception as pptx_err:  # noqa: BLE001
+            except Exception as pptx_err:
                 logger.warning(f"PPTX generation failed: {pptx_err}")
                 file_url = f"https://cdn.supremeai.example/presentations/{hash(topic)}.pptx"
             return {
@@ -68,7 +68,7 @@ class PresentationGenerator:
                 "slides_preview": slides,
                 "download_url": file_url,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Presentation generation failed: {exc}")
             return {
                 "status": "error",

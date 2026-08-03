@@ -84,7 +84,7 @@ class ModelRouter:
         if self.cot_reasoner is not None and hasattr(self.cot_reasoner, "reason"):
             try:
                 reasoning_res = self.cot_reasoner.reason(prompt)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"CoT reasoner failed (null-safe guard): {exc}")
         type_name = type(reasoning_res).__name__
         if type_name == "MagicMock" or (hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)):
@@ -100,7 +100,7 @@ class ModelRouter:
         if self.cot_reasoner is not None and hasattr(self.cot_reasoner, "verify"):
             try:
                 verification_res = self.cot_reasoner.verify(res.get("text", ""))
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"CoT verification failed (null-safe guard): {exc}")
         if type(verification_res).__name__ == "MagicMock":
             verification_res = {"matches": True}
@@ -163,7 +163,7 @@ class ModelRouter:
                         return await val(p_str, "model")
                     else:
                         return val(p_str, "model")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return {
                 "success": False,
                 "text": f"Error: {e} (Services unavailable)",
@@ -274,7 +274,7 @@ class ModelRouter:
                         "error": "LLM Gateway returned None",
                     }
                 return response
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 breaker.mark_failure()
                 # Track the exception with performance optimizer
                 await self.performance_optimizer.handle_failure(
@@ -288,7 +288,7 @@ class ModelRouter:
                     },
                 )
                 raise exc
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[ModelRouter] Gateway completion failed: {e}")
             # Track the error with performance optimizer
             await self.performance_optimizer.handle_failure(

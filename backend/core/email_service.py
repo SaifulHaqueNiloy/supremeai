@@ -18,16 +18,16 @@ Dependencies:
 - `httpx`: For making asynchronous HTTP requests to the external email API.
 - `loguru`: For structured logging of email sending operations, warnings, and errors.
 - `core.messaging.event_bus`: For emitting `ErrorEvent`s when email sending encounters API or network failures.
-- `core.config`: For accessing application-wide settings such as the Resend API URL and the SupremeAI frontend URL."""  # noqa: E501
+- `core.config`: For accessing application-wide settings such as the Resend API URL and the SupremeAI frontend URL."""
 
-import os  # noqa: E402
-from typing import Any  # noqa: E402
+import os
+from typing import Any
 
-import httpx  # noqa: E402
-from loguru import logger  # noqa: E402
+import httpx
+from loguru import logger
 
 from core.config import settings
-from core.messaging.event_bus import ErrorEvent, error_event_bus  # noqa: E402
+from core.messaging.event_bus import ErrorEvent, error_event_bus
 
 
 class EmailService:
@@ -99,7 +99,7 @@ class EmailService:
                         )
                     )
                     return False
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Exception while sending email: {e}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -127,7 +127,7 @@ class EmailService:
                 <a href="{frontend_url}/studio" style="padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">Go to Studio</a>
             </body>
         </html>
-        """  # noqa: E501
+        """
         return await self._send_email(to_email, subject, html)
 
     async def send_password_reset(self, user_email: str = "", reset_link: str = "", **kwargs) -> Any:

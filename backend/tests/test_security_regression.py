@@ -10,7 +10,6 @@ from core.security.auth_middleware import AuthMiddleware
 
 
 @pytest.mark.anyio
-@pytest.mark.skip(reason='CRITICAL SECURITY REGRESSION - DO NOT SILENTLY DISMISS: core.config.validate_production_completeness no longer raises RuntimeError when ENV=production and JWT secret is missing/empty - it now only logs a warning and lets the app start. This test is correctly catching a real problem. Needs immediate developer review of core/config.py - deliberately NOT patched here since fixing it requires understanding the full secret-loading fallback chain (Vault/env/defaults) to avoid breaking legitimate startup paths.')
 async def test_production_jwt_secret_required():
     """Verify that in production environment, a missing jwt_secret raises a RuntimeError."""
 
@@ -24,7 +23,6 @@ async def test_production_jwt_secret_required():
     assert "Production JWT secret must be set and >= 64 bytes" in str(excinfo.value)
 
 
-@pytest.mark.skip(reason="Needs update")
 def test_auth_middleware_rejects_invalid_api_token():
     """Verify that AuthMiddleware rejects invalid API tokens and 'test-token' if the expected token is different."""
     from fastapi import FastAPI
@@ -41,7 +39,10 @@ def test_auth_middleware_rejects_invalid_api_token():
     client = TestClient(app)
 
     # Setup expected API token env var and test that an invalid token (like 'test-token') gets 401
-    with patch.dict(os.environ, {"SUPREMEAI_API_TOKEN": "super-secure-production-api-token"}):
+    with (
+        patch.dict(os.environ, {"ALLOW_TEST_AUTH_BYPASS": "false", "SUPREMEAI_API_TOKEN": "super-secure-production-api-token"}),
+        patch("core.config.settings.allow_test_auth_bypass", False),
+    ):
         resp = client.get("/api/task/execute", headers={"Authorization": "Bearer test-token"})
         assert resp.status_code == 401
-        assert resp.json()["detail"] == "Invalid or missing API token."
+        assert resp.json()["detail"] == "Invalid or expired token"

@@ -103,7 +103,7 @@ Reason through the requirements and any previous failure errors. Then output:
             except (RuntimeError, ValueError, TypeError) as e:
                 logger.error(f"❌ ReAct agent loop exception: {e}")
                 current_error = str(e)
-                reasoning_history.append(f"Turn {turn} Exception: {str(e)}")
+                reasoning_history.append(f"Turn {turn} Exception: {e!s}")
 
         return {
             "success": False,

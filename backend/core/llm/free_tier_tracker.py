@@ -17,13 +17,13 @@ Supports optional Redis persistence for multi-worker environments.
 """
 
 
-import time  # noqa: E402
-from collections import deque  # noqa: E402
-from dataclasses import dataclass  # noqa: E402
-from dataclasses import field  # noqa: E402
-from typing import Any  # noqa: E402
+import time
+from collections import deque
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Any
 
-from loguru import logger  # noqa: E402
+from loguru import logger
 
 from ..config import settings  # Fixed import path - using relative import
 from ..messaging.event_bus import (
@@ -314,7 +314,7 @@ class FreeTierTracker:
                                     "is_active": True,
                                 }
                             )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.debug(f"Failed to fetch provider configs from Supabase: {e}")
                 try:
                     from core.messaging.event_bus import ErrorEvent, error_event_bus

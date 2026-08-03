@@ -34,7 +34,7 @@ from core.logging_config import setup_logging
 setup_logging()
 
 
-def _handle_sigterm(signum: int, frame: object) -> None:  # noqa: ANN401
+def _handle_sigterm(signum: int, frame: object) -> None:
     """SIGTERM/SIGINT handler.
 
     SupremeAI FastAPI shutdown is handled by Uvicorn + `lifespan.app_lifespan`.
@@ -56,10 +56,11 @@ def run_server() -> None:
 
     বাংলা: কনফিগ-ড্রিভেন সেটিংস দিয়ে Uvicorn সার্ভার বুট।
     """
-    port = int(os.getenv("PORT", str(settings.port)))
     is_local = settings.env == "local"
+    port = int(os.getenv("PORT", str(settings.port)))
+    host = os.getenv("HOST") or ("0.0.0.0" if os.getenv("RENDER") or os.getenv("PORT") or not is_local else settings.host)  # noqa: S104
     uvicorn_kwargs: dict = {
-        "host": settings.host,
+        "host": host,
         "port": port,
         "log_level": os.getenv("UVICORN_LOG_LEVEL", "info"),
         "access_log": os.getenv("UVICORN_ACCESS_LOG", "true").lower() == "true",
@@ -84,7 +85,7 @@ def run_server() -> None:
                 import sentry_sdk
 
                 sentry_sdk.capture_exception(exc)
-            except Exception as sentry_exc:  # noqa: BLE001
+            except Exception as sentry_exc:
                 logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
     except OSError as exc:
@@ -94,7 +95,7 @@ def run_server() -> None:
                 import sentry_sdk
 
                 sentry_sdk.capture_exception(exc)
-            except Exception as sentry_exc:  # noqa: BLE001
+            except Exception as sentry_exc:
                 logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
 

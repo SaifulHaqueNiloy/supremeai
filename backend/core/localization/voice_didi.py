@@ -247,7 +247,7 @@ Respond ONLY with the intent name (single word from the list above).
                 "message": self._generate_response_message(intent, action_result),
             }
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"VoiceDidi processing failed: {e}")
             return {
                 "success": False,

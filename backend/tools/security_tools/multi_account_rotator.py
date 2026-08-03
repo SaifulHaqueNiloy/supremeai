@@ -179,7 +179,7 @@ class MultiAccountRotator:
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Firestore check failed, falling back to SQLite: {e}")
 
         # Fallback to SQLite
@@ -215,7 +215,7 @@ class MultiAccountRotator:
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"SQLite fallback check failed: {e}")
 
         return None
@@ -294,7 +294,7 @@ class MultiAccountRotator:
                     await page.fill('input[id="confirm-password"]', password)
                     await page.click('button[id="signup-button"]')
                     logger.info(f"[SUPREME-AI] Submitted signup form for {new_email}")
-                except Exception as form_err:  # noqa: BLE001
+                except Exception as form_err:
                     logger.warning(f"[SUPREME-AI] Form filling warning/error (continuing): {form_err}")
 
                 # Wait for verification (Firestore with SQLite fallback)
@@ -315,7 +315,7 @@ class MultiAccountRotator:
                             logger.info(f"[SUPREME-AI] Verification link: {verification_link}. Navigating to link.")
                             await page.goto(verification_link)
                             logger.info("[SUPREME-AI] Navigated to verification link.")
-                    except Exception as verify_err:  # noqa: BLE001
+                    except Exception as verify_err:
                         logger.warning(f"[SUPREME-AI] Verification filling warning/error (continuing): {verify_err}")
 
                     with contextlib.suppress(Exception):
@@ -363,7 +363,7 @@ class MultiAccountRotator:
                     return False
             except asyncio.CancelledError:
                 raise
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"[SUPREME-AI] Playwright automation failed for {provider_name}: {e}")
                 return False
             finally:
@@ -374,12 +374,12 @@ class MultiAccountRotator:
         """Load configuration from file"""
         if os.path.exists(self.config_file):
             try:
-                with open(self.config_file) as f:  # noqa: ASYNC230
+                with open(self.config_file) as f:
                     config = json.load(f)
                     self._load_providers_from_config(config)
             except asyncio.CancelledError:
                 raise
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to load config: {e}")
                 self._create_default_config()
         else:
@@ -393,7 +393,7 @@ class MultiAccountRotator:
             "Creating a blank config file as a template."
         )
         skeleton = {"providers": [], "task_preferences": {}}
-        with open(self.config_file, "w") as f:  # noqa: ASYNC230
+        with open(self.config_file, "w") as f:
             json.dump(skeleton, f, indent=2)
 
     def _load_providers_from_config(self, config: dict):
@@ -447,7 +447,7 @@ class MultiAccountRotator:
             "task_preferences": self.task_preferences,
         }
 
-        with open(self.config_file, "w") as f:  # noqa: ASYNC230
+        with open(self.config_file, "w") as f:
             json.dump(config, f, indent=2, default=str)
 
     def _provider_to_dict(self, provider: Provider) -> dict:
@@ -581,7 +581,7 @@ class MultiAccountRotator:
                             return api_key
                 except asyncio.CancelledError:
                     raise
-                except Exception as sel_err:  # noqa: BLE001
+                except Exception as sel_err:
                     logger.debug(f"[ROTATOR] Selector '{selector}' failed extraction: {sel_err}")
                     continue
 
@@ -591,7 +591,7 @@ class MultiAccountRotator:
             return None
         except asyncio.CancelledError:
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"[ROTATOR] API key extraction failed for {provider_name}: {exc}")
             return None
 
@@ -741,7 +741,7 @@ class MultiAccountRotator:
 
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Record failed request
             account.record_request(success=False)
             logger.error(f"Task execution failed: {e}")
@@ -779,7 +779,7 @@ class MultiAccountRotator:
 
         except asyncio.CancelledError:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"[ROTATOR] LLM Gateway API call failed: {e}")
             raise
 
@@ -811,7 +811,7 @@ class MultiAccountRotator:
 
             except asyncio.CancelledError:
                 raise
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 account.record_request(success=False)
                 logger.warning(f"Failover attempt failed for {provider.name}: {e}")
                 continue
@@ -898,14 +898,14 @@ async def main():
     for task_type, prompt in tasks:
         result = await rotator.execute_task(task_type, prompt)
         if result:
-            logger.info(f"✅ {task_type.value}: {result['provider']} - {result['result'][:100]}...")  # noqa: T201
+            logger.info(f"✅ {task_type.value}: {result['provider']} - {result['result'][:100]}...")
         else:
-            logger.info(f"❌ {task_type.value}: Failed to execute")  # noqa: T201
+            logger.info(f"❌ {task_type.value}: Failed to execute")
 
     # Print system status
     status = rotator.get_system_status()
-    logger.info(f"\n📊 System Status: {status['system_health']:.1f}% healthy")  # noqa: T201
-    logger.info(f"Active accounts: {status['active_accounts']}/{status['total_accounts']}")  # noqa: T201
+    logger.info(f"\n📊 System Status: {status['system_health']:.1f}% healthy")
+    logger.info(f"Active accounts: {status['active_accounts']}/{status['total_accounts']}")
 
 
 if __name__ == "__main__":

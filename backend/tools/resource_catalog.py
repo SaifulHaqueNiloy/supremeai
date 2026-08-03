@@ -81,7 +81,7 @@ class ResourceCatalog:
             response = await self.http_client.get(self.AWESOME_SELFHOSTED_URL)
             response.raise_for_status()
             return self._parse_awesome_markdown(response.text, query, limit, source_name="awesome-selfhosted")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"ResourceCatalog: failed to search awesome-selfhosted for '{query}': {exc}")
             return []
 
@@ -90,7 +90,7 @@ class ResourceCatalog:
             response = await self.http_client.get(self.AWESOME_PYTHON_URL)
             response.raise_for_status()
             return self._parse_awesome_markdown(response.text, query, limit, source_name="awesome-python")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"ResourceCatalog: failed to search awesome-python for '{query}': {exc}")
             return []
 
@@ -127,7 +127,7 @@ class ResourceCatalog:
                     }
                 )
             return results
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"ResourceCatalog: failed to search ossinsight for '{query}': {exc}")
             return []
 
@@ -161,7 +161,7 @@ class ResourceCatalog:
                     }
                 )
             return results
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"ResourceCatalog: failed to search libraries.io for '{query}': {exc}")
             return []
 

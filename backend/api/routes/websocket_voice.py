@@ -21,12 +21,12 @@ class VoiceConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info("🟢 [WS] Voice Client Connected to SupremeAI Nexus.")  # noqa: T201
+        logger.info("🟢 [WS] Voice Client Connected to SupremeAI Nexus.")
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-        logger.info("🔴 [WS] Voice Client Disconnected.")  # noqa: T201
+        logger.info("🔴 [WS] Voice Client Disconnected.")
 
     async def _authenticate(self, websocket: WebSocket) -> dict | None:
         token = websocket.query_params.get("token")
@@ -34,12 +34,12 @@ class VoiceConnectionManager:
             return None
         try:
             return verify_token(token)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             from jose import jwt
 
             if isinstance(e, jwt.ExpiredSignatureError):
                 client_host = websocket.client.host if websocket.client else "unknown"
-                logger.info(f"⚠️ [WS Auth] Expired token attempt from {client_host}")  # noqa: T201
+                logger.info(f"⚠️ [WS Auth] Expired token attempt from {client_host}")
             return None
 
 
@@ -65,9 +65,9 @@ async def process_audio_with_groq(audio_bytes: bytes) -> str:
             response.raise_for_status()
             result = response.json()
             return result.get("text", "")
-        except Exception as e:  # noqa: BLE001
-            logger.info(f"❌ [Groq STT Error]: {e}")  # noqa: T201
-            return f"Error processing audio: {str(e)}"
+        except Exception as e:
+            logger.info(f"❌ [Groq STT Error]: {e}")
+            return f"Error processing audio: {e!s}"
 
 
 async def handle_intent(transcript: str, websocket: WebSocket, start_time: float, user_id: str):
@@ -92,8 +92,8 @@ async def handle_intent(transcript: str, websocket: WebSocket, start_time: float
         )
         try:
             db.client.table("voice_interactions").insert(log_entry.dict(exclude_none=True)).execute()
-        except Exception as db_err:  # noqa: BLE001
-            logger.info(f"⚠️ [DB Logging Error]: {db_err}")  # noqa: T201
+        except Exception as db_err:
+            logger.info(f"⚠️ [DB Logging Error]: {db_err}")
 
     # Stream text response back for Web Speech API TTS
     words = supremeai_response.split(" ")
@@ -143,9 +143,9 @@ async def websocket_voice_endpoint(
                             continue
 
                         # 1. Process STT using Groq
-                        logger.info(f"🎙️ [WS] Processing audio buffer ({len(audio_buffer)} bytes)...")  # noqa: T201
+                        logger.info(f"🎙️ [WS] Processing audio buffer ({len(audio_buffer)} bytes)...")
                         transcript = await process_audio_with_groq(bytes(audio_buffer))
-                        logger.info(f"🗣️ [User Voice]: {transcript}")  # noqa: T201
+                        logger.info(f"🗣️ [User Voice]: {transcript}")
 
                         # Clear buffer for next recording
                         audio_buffer.clear()
@@ -164,7 +164,7 @@ async def websocket_voice_endpoint(
 
                     elif action == "text_chat":
                         transcript = payload.get("text", "")
-                        logger.info(f"💬 [User Text]: {transcript}")  # noqa: T201
+                        logger.info(f"💬 [User Text]: {transcript}")
 
                         # Process text intent directly
                         await handle_intent(
@@ -176,12 +176,12 @@ async def websocket_voice_endpoint(
                         start_time = time.time()  # Reset timer
 
                 except json.JSONDecodeError:
-                    logger.info("⚠️ [WS] Received invalid text message.")  # noqa: T201
+                    logger.info("⚠️ [WS] Received invalid text message.")
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-    except Exception as e:  # noqa: BLE001
-        logger.info(f"❌ [WS Voice Engine Error]: {e}")  # noqa: T201
+    except Exception as e:
+        logger.info(f"❌ [WS Voice Engine Error]: {e}")
         manager.disconnect(websocket)
         try:
             await websocket.close(code=status.WS_1011_INTERNAL_ERROR)

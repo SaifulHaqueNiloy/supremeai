@@ -217,7 +217,7 @@ class ErrorEventBus:
                     except asyncio.CancelledError:
                         # বাংলা মন্তব্য: CancelledError কখনো suppress করা যাবে না
                         raise
-                    except Exception as dl_exc:  # noqa: BLE001
+                    except Exception as dl_exc:
                         logger.error(f"[ErrorEventBus] Dead letter handler failed: {dl_exc}")
 
     async def _safe_invoke(self, handler: Callable, event: ErrorEvent) -> Any:
@@ -235,7 +235,7 @@ class ErrorEventBus:
                 f"[ErrorEventBus] CancelledError in handler '{getattr(handler, '__name__', str(handler))}' — re-raising."
             )
             raise  # CRITICAL: CancelledError কখনো suppress করা যাবে না
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return exc  # exception return করা হচ্ছে, suppress নয়
 
     def _log_event(self, event: ErrorEvent) -> None:
@@ -407,5 +407,5 @@ class EventBus:
                 res = listener(event)
                 if asyncio.iscoroutine(res):
                     await res
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"[EventBus] Error in listener on topic '{topic}': {e}")

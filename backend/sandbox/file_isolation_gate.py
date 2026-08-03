@@ -78,10 +78,10 @@ class FileIsolationGate:
             }
 
         except Exception as e:
-            logger.error(f"❌ Critical failure in Sandbox File Isolation Gate: {str(e)}")
+            logger.error(f"❌ Critical failure in Sandbox File Isolation Gate: {e!s}")
             return {
                 "success": False,
-                "error": f"Transaction isolation barrier failure: {str(e)}",
+                "error": f"Transaction isolation barrier failure: {e!s}",
             }
 
         finally:

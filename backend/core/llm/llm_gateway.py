@@ -121,7 +121,7 @@ class LLMGateway:
     def performance_optimizer(self):
         """Circular import guard: performance_enhancer → llm_gateway চক্র ভাঙতে lazy-load।"""
         if self._performance_optimizer is None:
-            from core.performance_enhancer import (  # noqa: PLC0415
+            from core.performance_enhancer import (
                 get_performance_optimizer,
             )
 
@@ -160,7 +160,7 @@ class LLMGateway:
                 with open(_POLICY_PATH, encoding="utf-8") as f:
                     return json.load(f)
             logger.warning(f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config.")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.opt(exception=True).error(f"[LLMGateway] Error loading routing policy: {exc}")
             error_event_bus.emit(
                 ErrorEvent(
@@ -210,7 +210,7 @@ class LLMGateway:
                 logger.info(
                     f"[LLMGateway] ✅ Model={model} | Cost=${cost:.6f} | P={prompt_tokens} C={completion_tokens} | {duration:.2f}s"
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"[LLMGateway] Success callback error: {exc}")
 
         def failure_callback(kwargs, exception_obj, start_time, end_time):
@@ -218,7 +218,7 @@ class LLMGateway:
             try:
                 delta = end_time - start_time
                 duration = delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 duration = 0.0
             logger.error(f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s")
             error_event_bus.emit(
@@ -401,7 +401,7 @@ class LLMGateway:
 
                     tokens = estimate_tokens(prompt_text)
                     estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
-                except Exception:  # Safe fallback cost on token estimate failure  # noqa: BLE001
+                except Exception:  # Safe fallback cost on token estimate failure
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
@@ -508,7 +508,7 @@ class LLMGateway:
                     f"[LLMGateway] Model {current_model} failed with status {exc.response.status_code}. Trying next in chain..."
                 )
                 continue
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_exception = exc
                 cb.mark_failure()
                 logger.opt(exception=True).warning(
@@ -608,7 +608,7 @@ class LLMGateway:
                 cb.mark_failure()
                 logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
                 continue
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_exception = exc
                 cb.mark_failure()
                 logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
@@ -704,6 +704,6 @@ async def stream_llm_response(
     except httpx.TimeoutException:
         logger.error(f"Timeout while streaming from {provider_url}")
         yield f"data: {json.dumps({'error': 'timeout'})}\n\n"
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Unexpected streaming error: {exc}")
         yield f"data: {json.dumps({'error': 'internal_stream_error'})}\n\n"

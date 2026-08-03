@@ -94,7 +94,7 @@ class ConfigCache:
                 for row in result.scalars().all():
                     configs[row.key] = row.value
             logger.info(f"ConfigCache: Loaded {len(configs)} configs from DB")
-        except Exception as exc:
+        except Exception as exc:  # — DB down হলেও app চলতে থাকুক, defaults দিয়ে
             logger.warning(f"ConfigCache: DB load failed, using defaults: {exc}")
         return configs
 

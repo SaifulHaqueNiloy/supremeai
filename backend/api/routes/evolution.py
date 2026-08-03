@@ -56,11 +56,11 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         if decoded.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
         return decoded
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         expected = getattr(settings, "supremeai_api_token", None) or ""
         if expected and secrets.compare_digest(token, expected):
             return {"uid": "admin", "role": "admin"}
-        raise HTTPException(status_code=401, detail=f"Invalid Admin Authorization Token: {str(e)}") from e
+        raise HTTPException(status_code=401, detail=f"Invalid Admin Authorization Token: {e!s}") from e
 
 
 @router.get("/logs")
@@ -71,7 +71,7 @@ async def get_evolution_logs(admin: dict = Depends(require_admin_token)):
         if db.client:
             logs = db.get_evolution_logs(limit=500)
             return {"logs": logs}
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         # বল মনতবয: Supabase থক লগ আনত বযরথ হল লকল JSONL ফলবযক বযবহত হয়;
         # নরব সযলপ ন কর ডবগ লগ কর হল যত DB সমসয দশযমন থক
         logger.debug(f"Supabase evolution logs fetch failed, using local fallback: {exc}")
@@ -81,11 +81,11 @@ async def get_evolution_logs(admin: dict = Depends(require_admin_token)):
     if not log_path.exists():
         return {"logs": []}
     try:
-        with open(log_path, encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(log_path, encoding="utf-8") as f:
             lines = f.readlines()
         logs = [json.loads(line) for line in lines if line.strip()]
         return {"logs": logs}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to read evolution logs: {e}")
         raise HTTPException(status_code=500, detail="Failed to read evolution logs") from e
 
@@ -143,7 +143,7 @@ async def quarantine_skill(
             )
         skill_data["status"] = "QUARANTINED"
         fitness_engine.registry.skills["skills"][skill_name] = skill_data
-        with open(fitness_engine.registry.registry_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(fitness_engine.registry.registry_path, "w", encoding="utf-8") as f:
             json.dump(fitness_engine.registry.skills, f, indent=4)
         base_dir = Path(__file__).resolve().parent.parent.parent
         src = base_dir / "skills" / "dynamic" / skill_name
@@ -173,11 +173,11 @@ async def quarantine_skill(
                         "created_at": datetime.now(UTC).isoformat(),
                     }
                 )
-        except Exception as db_err:  # noqa: BLE001
+        except Exception as db_err:
             logger.warning(f"Failed to log quarantine action to Supabase: {db_err}")
 
         try:
-            with open(log_path, "a", encoding="utf-8") as f:  # noqa: ASYNC230
+            with open(log_path, "a", encoding="utf-8") as f:
                 f.write(
                     json.dumps(
                         {
@@ -190,12 +190,12 @@ async def quarantine_skill(
                     )
                     + "\n"
                 )
-        except Exception as log_err:  # noqa: BLE001
+        except Exception as log_err:
             logger.warning(f"Failed to append quarantine log: {log_err}")
         return {"success": True, "skill_name": skill_name, "new_status": "QUARANTINED"}
     except HTTPException:
         raise
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Quarantine failed for '{skill_name}'")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

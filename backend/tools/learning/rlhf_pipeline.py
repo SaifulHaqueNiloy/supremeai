@@ -23,7 +23,7 @@ class RLHFPipeline:
                         if line.strip():
                             self.preference_logs.append(json.loads(line))
                 logger.info(f"Loaded {len(self.preference_logs)} existing local preference records")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to load existing preferences: {e}")
 
         # Firestore sync if available
@@ -40,7 +40,7 @@ class RLHFPipeline:
                         self.preference_logs.append(data)
                         fs_count += 1
                 logger.info(f"Synced {fs_count} preference records from Firestore 'ai_rlhf_preferences'")
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             logger.debug(f"Firestore sync skipped or not configured: {err}")
 
     def record_preference(self, prompt: str, chosen_response: str, rejected_response: str) -> dict[str, Any]:
@@ -64,7 +64,7 @@ class RLHFPipeline:
             if queue.mode == "firestore" and queue.client:
                 queue.client.collection("ai_rlhf_preferences").add(record)
                 logger.info("Successfully persisted preference record to Firestore database.")
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             logger.debug(f"Firestore auto-save skipped: {err}")
 
         return {"status": "success", "recorded": len(self.preference_logs)}
@@ -76,7 +76,7 @@ class RLHFPipeline:
         output_path = output_path or os.path.join(self.storage_dir, "dpo_dataset.jsonl")
         logger.info(f"Exporting {len(self.preference_logs)} DPO records to {output_path}")
         try:
-            with open(output_path, "w", encoding="utf-8") as f:  # noqa: ASYNC230
+            with open(output_path, "w", encoding="utf-8") as f:
                 for log in self.preference_logs:
                     f.write(json.dumps(log) + "\n")
             return {
@@ -84,7 +84,7 @@ class RLHFPipeline:
                 "exported": len(self.preference_logs),
                 "output_path": output_path,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"DPO export failed: {exc}")
             return {"status": "error", "error": str(exc)}
 

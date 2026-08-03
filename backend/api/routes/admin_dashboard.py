@@ -50,7 +50,7 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
                 logger.warning("Redis not configured; falling back to in-memory JWT blacklist check.")
 
         return decoded
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         logger.warning("Admin token validation failed", exc_info=True)
         expected = getattr(settings, "supremeai_api_token", None) or ""
         if expected and secrets.compare_digest(token, expected):
@@ -88,7 +88,7 @@ def admin_rate_limit(request: Request):
                 )
         except HTTPException:
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"Distributed rate limiter check failed, falling back: {exc}")
 
 
@@ -133,7 +133,7 @@ def load_users() -> list[dict[str, Any]]:
     try:
         with open(USERS_FILE) as f:
             return json.load(f)
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Unhandled exception")
         return []
 
@@ -152,17 +152,17 @@ def logs_stream():
 
         if os.path.exists(log_file):
             try:
-                with open(log_file) as f:  # noqa: ASYNC230
+                with open(log_file) as f:
                     lines = f.readlines()[-30:]
                     for line in lines:
                         yield f"data: {line.strip()}\n\n"
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 yield f"data: Error reading logs: {e}\n\n"
 
         file_obj = None
         try:
             if os.path.exists(log_file):
-                file_obj = open(log_file)  # noqa: SIM115
+                file_obj = open(log_file)
                 file_obj.seek(0, os.SEEK_END)
 
             while True:
@@ -174,7 +174,7 @@ def logs_stream():
                         await asyncio.sleep(0.5)
                 else:
                     if os.path.exists(log_file):
-                        file_obj = open(log_file)  # noqa: SIM115
+                        file_obj = open(log_file)
                         file_obj.seek(0, os.SEEK_END)
                     await asyncio.sleep(1.0)
         except asyncio.CancelledError:
@@ -215,11 +215,11 @@ def get_costs():
                 "status": "ok",
                 "report": "# 📊 Cost Data Unavailable\n\nNo tasks have been executed in the current billing cycle to generate a cost report.",
             }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to generate cost report: {e}")
         return {
             "status": "error",
-            "report": f"# ⚠️ Cost Engine Error\n\nUnable to pull metrics from DB: {str(e)}",
+            "report": f"# ⚠️ Cost Engine Error\n\nUnable to pull metrics from DB: {e!s}",
         }
 
 
@@ -302,7 +302,7 @@ def get_env_etag(redis_key: str = "config:env_etag") -> str:
             if redis_queue and getattr(redis_queue, "configured", False):
                 redis_queue.set(redis_key, etag, ex=300)
             return etag
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # বল মনতবয: .env এর etag গণনা বযর্থ হল "empty-env" ফলবযাক হয়;
             # নরব সযলপ ন কর ডবগ লগ কর হল
             logger.debug(f"Failed to compute .env etag: {exc}")
@@ -317,7 +317,7 @@ def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
     if redis_queue and getattr(redis_queue, "configured", False):
         try:
             return redis_queue.set_nx("lock:env_write", "locked", ex=10)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # বল মনতবয: রডস লক বযর্থ হল ফাইল-লক ফলবযাক বযবহত হয়;
             # নরব সযলপ ন কর ডবগ লগ কর হল
             logger.debug(f"Redis env lock acquisition failed, falling back to file lock: {exc}")
@@ -327,7 +327,7 @@ def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
         return True
     except FileExistsError:
         return False
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Unhandled exception")
         return False
 
@@ -401,7 +401,7 @@ def get_metrics():
 
         # GPU Usage estimation: check if we can estimate or fallback to CPU load baseline
         gpu_usage = min(90.0, float(cpu_usage * 0.8 + 10.0))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"Failed to fetch system metrics via psutil: {exc}")
         cpu_usage = 22.4
         memory_usage = 45.2
@@ -518,9 +518,9 @@ async def get_codebase_export():
     try:
         codebase_md = await export_codebase_to_markdown("..")
         return {"success": True, "markdown": codebase_md}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to export codebase: {e}")
-        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"Export failed: {e!s}") from e
 
 
 COST_CAPS_FILE = "data/cost_caps.json"
@@ -596,7 +596,7 @@ def trigger_backup():
         if os.path.exists(fname):
             try:
                 shutil.copy2(fname, os.path.join(backup_dir, os.path.basename(fname)))
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Backup skipped for {fname}: {exc}")
     logger.info(f"Backup created at {backup_dir}")
     return {"status": "success", "backup_path": backup_dir}
@@ -697,9 +697,9 @@ def get_full_data_export():
             "users": users,
             "costs": costs,
         }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Full data export failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"Export failed: {e!s}") from e
 
 
 @router.get("/security-scan")
@@ -743,7 +743,7 @@ def run_security_scan():
                     "message": ".env file not found",
                 }
             )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Security scan failed: {e}")
         return {"status": "error", "detail": str(e)}
     return {
@@ -774,12 +774,12 @@ async def admin_websocket(websocket: WebSocket):
                         },
                     }
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug(f"WS send error: {exc}")
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         logger.info("Admin WebSocket client disconnected")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error(f"Admin WebSocket error: {exc}")
 
 
@@ -842,9 +842,9 @@ async def execute_manual_gate_override(payload: GateOverridePayload):
             "message": f"SupremeAI 2.0 Deployment Gate has been successfully forced to {requested_status}.",
         }
 
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"❌ Failed to commit manual gate override to Cloud Firestore: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Infrastructure Sync Failure: {str(e)}") from e
+    except Exception as e:
+        logger.error(f"❌ Failed to commit manual gate override to Cloud Firestore: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Infrastructure Sync Failure: {e!s}") from e
 
 
 @router.get("/ci-logs")
@@ -855,9 +855,9 @@ async def get_ci_logs(limit: int = 20):
     try:
         reports = await get_recent_ci_reports(limit)
         return reports
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"❌ Failed to fetch CI logs: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Database query failure: {str(e)}") from e
+    except Exception as e:
+        logger.error(f"❌ Failed to fetch CI logs: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Database query failure: {e!s}") from e
 
 
 @router.post("/ci-report")
@@ -886,9 +886,9 @@ async def receive_ci_report(report: CIReportPayload, request: Request):
         report_id = res.get("id") if res else None
         logger.info(f"Successfully saved CI report with ID: {report_id}")
         return {"status": "success", "report_id": report_id}
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"❌ Failed to save CI report: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to save CI report: {str(e)}") from e
+    except Exception as e:
+        logger.error(f"❌ Failed to save CI report: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Failed to save CI report: {e!s}") from e
 
 
 @router.get("/events")
@@ -902,7 +902,7 @@ async def get_events(limit: int = Query(50, ge=1, le=200)):
         return []
 
     try:
-        with open(events_log_path, encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(events_log_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         events = []
@@ -913,7 +913,7 @@ async def get_events(limit: int = Query(50, ge=1, le=200)):
                 logger.warning(f"Skipping malformed event log line: {line.strip()}")
 
         return events[:limit]
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error reading events log: {e}")
         raise HTTPException(status_code=500, detail="Could not read event logs.") from e
 
@@ -942,7 +942,7 @@ async def list_reports(report_name: str = None):
 
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="Report not found.")
-        with open(file_path, encoding="utf-8") as f:  # noqa: ASYNC230
+        with open(file_path, encoding="utf-8") as f:
             return {"name": report_name, "content": f.read()}
     else:
         import glob

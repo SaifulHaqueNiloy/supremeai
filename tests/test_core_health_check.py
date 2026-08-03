@@ -2,7 +2,7 @@
 """Tests for core health check functionality."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import pytest
 
 from backend.core.health_check import (
@@ -85,12 +85,13 @@ def test_comprehensive_health_checker_initialization():
     assert checker.checks == expected_checks
 
 
+# বাংলা মন্তব্য: health_check.py তে সরাসরি 'from .config import settings' ইম্পোর্ট করায় patch লক্ষ্য করতে হবে 'backend.core.health_check.settings'
 @pytest.mark.asyncio
 async def test_check_application_healthy():
     """Test application health check."""
     checker = ComprehensiveHealthChecker()
     
-    with patch('backend.core.config.settings') as mock_settings:
+    with patch('backend.core.health_check.settings') as mock_settings:
         mock_settings.env = "test"
         mock_settings.PROJECT_NAME = "Test Project"
         
@@ -108,9 +109,8 @@ async def test_check_application_exception():
     """Test application health check with exception."""
     checker = ComprehensiveHealthChecker()
     
-    # Patch the settings to raise an exception
-    with patch('backend.core.config.settings') as mock_settings:
-        mock_settings.__getattribute__ = MagicMock(side_effect=Exception("Test error"))
+    with patch('backend.core.health_check.settings') as mock_settings:
+        type(mock_settings).env = PropertyMock(side_effect=Exception("Test error"))
         
         result = await checker.check_application()
         
@@ -200,28 +200,11 @@ async def test_check_database_exception():
     """Test database health check with exception."""
     checker = ComprehensiveHealthChecker()
     
-    with patch.object(checker, '_check_database_internal', side_effect=Exception("DB Error")):
-        # Since the actual implementation doesn't have this private method,
-        # we'll simulate an exception during the database check
-        with patch('backend.core.config.settings') as mock_settings:
-            # Simulate an error during the check
-            original_time = __import__('time').time
-            with patch('time.time', side_effect=[1000, 1000.001]):  # Mock time to calculate response time
-                with patch('backend.core.health_check.redis_manager') as mock_redis:
-                    mock_redis.client = AsyncMock()
-                    mock_redis.client.ping.side_effect = Exception("DB Error simulated")
-                    
-                    # We'll simulate the exception by patching the entire method differently
-                    pass
-        
-        # Since the implementation is a placeholder, let's directly test the exception handling
-        # by patching the time function and simulating an exception
-        with patch('time.time', return_value=1000):
-            with patch('backend.core.config.settings') as mock_settings:
-                mock_settings.supabase_url = "test_url"
-                result = await checker.check_database()
-                # The placeholder implementation should return healthy
-                assert result.status == HealthStatus.HEALTHY
+    # বাংলা মন্তব্য: সময় নির্ধারণ ফাংশনে এরর দিয়ে প্লেসহোল্ডার ডেটাবেস ফাংশনে এক্সেপশন পরীক্ষা করা হচ্ছে
+    with patch('backend.core.health_check.time.time', side_effect=Exception("DB Error")):
+        result = await checker.check_database()
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "failed" in result.message
 
 
 @pytest.mark.asyncio
@@ -229,7 +212,7 @@ async def test_check_external_services_all_configured():
     """Test external services health check when all are configured."""
     checker = ComprehensiveHealthChecker()
     
-    with patch('backend.core.config.settings') as mock_settings:
+    with patch('backend.core.health_check.settings') as mock_settings:
         mock_settings.gemini_api_key = "test_key"
         mock_settings.openrouter_api_key = "test_key"
         mock_settings.redis_url = "redis://localhost:6379"
@@ -251,7 +234,7 @@ async def test_check_external_services_some_missing():
     """Test external services health check when some are missing."""
     checker = ComprehensiveHealthChecker()
     
-    with patch('backend.core.config.settings') as mock_settings:
+    with patch('backend.core.health_check.settings') as mock_settings:
         mock_settings.gemini_api_key = None
         mock_settings.openrouter_api_key = "test_key"
         mock_settings.redis_url = None
@@ -272,8 +255,8 @@ async def test_check_external_services_exception():
     """Test external services health check with exception."""
     checker = ComprehensiveHealthChecker()
     
-    with patch('backend.core.config.settings') as mock_settings:
-        mock_settings.__getattribute__ = MagicMock(side_effect=Exception("Config error"))
+    with patch('backend.core.health_check.settings') as mock_settings:
+        type(mock_settings).gemini_api_key = PropertyMock(side_effect=Exception("Config error"))
         
         result = await checker.check_external_services()
         
@@ -558,16 +541,19 @@ async def test_check_all_with_exception():
     """Test comprehensive health check handling exceptions."""
     checker = ComprehensiveHealthChecker()
     
-    # Mock one check to raise an exception
-    with patch.object(checker, 'check_application') as mock_app, \
-         patch.object(checker, 'check_redis', side_effect=Exception("Redis error")), \
-         patch.object(checker, 'check_database'), \
-         patch.object(checker, 'check_external_services'), \
-         patch.object(checker, 'check_memory'), \
-         patch.object(checker, 'check_disk'):
+    # বাংলা মন্তব্য: async চেক মেথডগুলোতে AsyncMock ও সাইড ইফেক্ট ব্যবহার নিশ্চিত করা হচ্ছে
+    with patch.object(checker, 'check_application', new_callable=AsyncMock) as mock_app, \
+         patch.object(checker, 'check_redis', new_callable=AsyncMock, side_effect=Exception("Redis error")), \
+         patch.object(checker, 'check_database', new_callable=AsyncMock) as mock_db, \
+         patch.object(checker, 'check_external_services', new_callable=AsyncMock) as mock_ext, \
+         patch.object(checker, 'check_memory', new_callable=AsyncMock) as mock_mem, \
+         patch.object(checker, 'check_disk', new_callable=AsyncMock) as mock_disk:
         
-        # The application check should still work
         mock_app.return_value = HealthCheckResult(HealthStatus.HEALTHY, "App OK")
+        mock_db.return_value = HealthCheckResult(HealthStatus.HEALTHY, "DB OK")
+        mock_ext.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Ext OK")
+        mock_mem.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Mem OK")
+        mock_disk.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Disk OK")
         
         result = await checker.check_all()
         

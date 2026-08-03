@@ -144,7 +144,7 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
                 logger.debug(f"Permission string conversion fallback: {ve}")
 
         return False
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"Invalid role or permission check: role={role}, permission={required_permission}, error={exc}")
         return False
 

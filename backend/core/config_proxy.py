@@ -87,6 +87,6 @@ class DynamicConfigProxy:
                     ),
                 }
                 self._expiry = utc_now() + timedelta(minutes=1)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to refresh config from DB: {e}")
             raise RuntimeError(f"Failed to refresh config from DB: {e}") from e

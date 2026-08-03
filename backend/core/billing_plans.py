@@ -5,7 +5,7 @@ Key Components:
 - `SUBSCRIPTION_PLANS`: A constant dict keyed by plan name, each containing details like price, cost (Decimal), currency, interval, and included features.
 
 Dependencies:
-- `pydantic`: Used for defining `CheckoutRequest` to ensure robust data validation and serialization."""  # noqa: E501
+- `pydantic`: Used for defining `CheckoutRequest` to ensure robust data validation and serialization."""
 
 from dataclasses import dataclass
 from decimal import Decimal

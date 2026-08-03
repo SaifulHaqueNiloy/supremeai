@@ -61,7 +61,7 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception as e:
             # Log the error and potentially adjust health status
-            logger.error(f"Error in request processing: {str(e)}")
+            logger.error(f"Error in request processing: {e!s}")
             await self._update_error_health_metric(str(e))
             raise
 
@@ -102,7 +102,7 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
             )
             return fresh_health
         except Exception as e:
-            logger.error(f"Error getting cached health: {str(e)}")
+            logger.error(f"Error getting cached health: {e!s}")
             return {"status": "degraded", "reason": "health_check_failed"}
 
     async def _compute_health_status(self) -> dict[str, Any]:
@@ -153,8 +153,8 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
                 "timestamp": time.time(),
             }
         except Exception as e:
-            logger.error(f"Error computing health status: {str(e)}")
-            return {"status": "degraded", "reason": f"computation_error: {str(e)}"}
+            logger.error(f"Error computing health status: {e!s}")
+            return {"status": "degraded", "reason": f"computation_error: {e!s}"}
 
     async def _check_db_connectivity(self) -> bool:
         """Check database connectivity."""
@@ -168,7 +168,7 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
                     await conn.fetchval("SELECT 1")
                     return True
         except Exception as e:
-            logger.warning(f"DB connectivity check failed: {str(e)}")
+            logger.warning(f"DB connectivity check failed: {e!s}")
         return False
 
     def _calculate_health_score(
@@ -216,7 +216,7 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
                 await redis_manager.client.lpush("metrics:response_times", response_time)
                 await redis_manager.client.ltrim("metrics:response_times", 0, 99)  # Keep last 100 samples
             except Exception as e:
-                logger.warning(f"Could not update response time metric: {str(e)}")
+                logger.warning(f"Could not update response time metric: {e!s}")
 
     async def _update_error_health_metric(self, error_message: str):
         """Update error metrics for health assessment."""
@@ -231,7 +231,7 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
                 await redis_manager.client.lpush("metrics:error_log", str(error_entry))
                 await redis_manager.client.ltrim("metrics:error_log", 0, 49)  # Keep last 50 errors
             except Exception as e:
-                logger.warning(f"Could not update error metric: {str(e)}")
+                logger.warning(f"Could not update error metric: {e!s}")
 
     def _is_critical_endpoint(self, path: str) -> bool:
         """Determine if the endpoint is critical for system operation."""

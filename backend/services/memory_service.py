@@ -67,7 +67,7 @@ class CascadeMemoryService:
                 pooled_pg.execute(_PG_SCHEMA)
                 self.db_path = None
                 logger.info("CascadeMemoryService: using pooled Postgres backend.")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}")
                 self._use_pg = False
 
@@ -196,7 +196,7 @@ class CascadeMemoryService:
                     """,
                     (file_path, content, summary, structure, embedding_str),
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"CascadeMemoryService.store_memory: Postgres write failed: {exc}")
             return
 
@@ -225,7 +225,7 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 rows = pooled_pg.query_dicts("SELECT file_path, content, summary, structure FROM file_memories")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
                 rows = []
             for row in rows:
@@ -263,7 +263,7 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 pooled_pg.execute("DELETE FROM file_memories WHERE file_path = %s", (file_path,))
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"CascadeMemoryService.delete_memory: Postgres delete failed: {exc}")
             return
 
@@ -311,7 +311,7 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 rows = pooled_pg.query_dicts("SELECT file_path, summary, structure, embedding FROM file_memories")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
                 rows = []
             for row in rows:

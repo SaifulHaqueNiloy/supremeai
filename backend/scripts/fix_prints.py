@@ -29,7 +29,7 @@ def process_file(filepath: Path):
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print(f"Fixed {count} prints in {filepath}")  # noqa: T201
+        print(f"Fixed {count} prints in {filepath}")
 
 
 root = Path(r"c:\Users\n\supremeai\supremeai_2.0\backend")

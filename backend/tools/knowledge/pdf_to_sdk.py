@@ -27,12 +27,12 @@ class PDFToSDKConverter:
 
             doc = fitz.open(pdf_path)
             text = "\n".join(page.get_text() for page in doc)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             try:
                 import loguru
 
                 loguru.logger.error(f"Tool execution error: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")
             pass
 
@@ -42,12 +42,12 @@ class PDFToSDKConverter:
 
                 with pdfplumber.open(pdf_path) as pdf:
                     text = "\n".join(page.extract_text() or "" for page in pdf.pages)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 try:
                     import loguru
 
                     loguru.logger.error(f"Tool execution error: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Exception suppressed: {e}")
                 pass
 
@@ -94,7 +94,7 @@ class PDFToSDKConverter:
                         "status": "success",
                         "sdks": {languages[0] if languages else "python": text.strip()},
                     }
-            except Exception as llm_err:  # noqa: BLE001
+            except Exception as llm_err:
                 logger.warning(f"LLM-based SDK generation failed: {llm_err}")
 
             results = {}
@@ -120,6 +120,6 @@ class ApiClient:
             else:
                 results[lang] = f"// SDK generation for {lang} requires manual implementation."
             return {"status": "success", "sdks": results}
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"SDK Generation failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"SDK Generation failed: {e!s}")
             return {"status": "error", "error": str(e)}

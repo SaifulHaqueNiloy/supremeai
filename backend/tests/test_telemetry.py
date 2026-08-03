@@ -109,7 +109,7 @@ def test_trace_span_records_exception_on_error():
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
     with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
-        with pytest.raises(RuntimeError):  # noqa: F821
+        with pytest.raises(RuntimeError):
             with trace_span("error-span"):
                 raise RuntimeError("boom")
 

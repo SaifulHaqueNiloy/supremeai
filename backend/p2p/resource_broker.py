@@ -90,7 +90,7 @@ class P2PResourceBroker:
 
         try:
             await credit_system.add_credits(node["owner_id"], cost, reason=f"p2p_task:{node['node_id']}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.critical(f"P2P credit transfer to provider FAILED after consumer debit: {e}")
             await credit_system.add_credits(consumer_id, cost, reason="refund_failed_provider_credit")
             node["status"] = "idle"

@@ -428,7 +428,7 @@ class PerformanceTuningAgent:
                 applied_optimizations=[optimization_name],
                 performance_improvement={},
                 status="failed",
-                notes=f"Error applying optimization: {str(e)}",
+                notes=f"Error applying optimization: {e!s}",
             )
 
     async def _execute_optimization(self, optimization_name: str, parameters: dict[str, Any]) -> bool:

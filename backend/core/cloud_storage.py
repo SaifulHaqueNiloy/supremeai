@@ -8,7 +8,7 @@ Dependencies:
 - `httpx`: For performing asynchronous HTTP requests to the cloud storage API.
 - `fastapi`: For raising standardized HTTP exceptions and status codes in case of storage failures.
 - `core.config`: To retrieve application-wide settings, including cloud storage credentials.
-- `core.logging_config`: For structured logging of storage operations, successes, and errors."""  # noqa: E501
+- `core.logging_config`: For structured logging of storage operations, successes, and errors."""
 
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ক্লাউড অবজেক্ট স্টোরেজ ম্যানেজার।
 # সার্ভারলেস এনভায়রনমেন্টে ডেটা লস রুখতে এটি লোকাল ফাইল রাইটের বদলে সরাসরি ক্লাউড বাকেটে ফাইল আপলোড ও রিড করে।
@@ -68,7 +68,7 @@ class CloudStorageManager:
             return public_url
 
         except httpx.HTTPError as http_err:
-            logger.critical(f"🔥 Network Failure during cloud file streaming: {str(http_err)}")
+            logger.critical(f"🔥 Network Failure during cloud file streaming: {http_err!s}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Storage cluster network timeout.",

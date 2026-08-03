@@ -357,7 +357,7 @@ class Settings(BaseSettings):
                 val = secret_vault.fetch_secret(secret_key)
                 if val:
                     self._cached_secrets[secret_key] = val
-            except Exception as _secret_err:  # noqa: BLE001
+            except Exception as _secret_err:
                 # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
                 # যদি কোনো optional secret missing থাকে, server startup block হবে না।
                 logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
@@ -372,8 +372,12 @@ class Settings(BaseSettings):
         check for empty strings where critical.
 
         বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
-        প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
+        অধিকন্তু, os.getenv()-এ মান থাবলে তা সিক্রেট ভল্টের ক্যাশের চেয়ে অগ্রাধিকার পাবে।
         """
+        env_val = os.getenv(key)
+        if env_val is not None:
+            return env_val
+
         self._ensure_secrets_loaded()
         if key not in self._cached_secrets:
             if is_test_environment():
@@ -395,7 +399,7 @@ class Settings(BaseSettings):
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
             url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
-        except Exception:  # noqa: BLE001
+        except Exception:
             url = ""
         return SecretStr(url) if url else None
 
@@ -502,7 +506,7 @@ class Settings(BaseSettings):
     def discord_bot_token(self) -> str:
         try:
             return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
-        except Exception:  # noqa: BLE001
+        except Exception:
             return ""
 
     @property
@@ -642,15 +646,6 @@ class Settings(BaseSettings):
             ]
 
         # বাংলা মন্তব্য: টেস্ট ও CI এনভায়রনমেন্ট সনাক্তকরণ
-        is_test_or_ci = (
-            "pytest" in sys.modules
-            or os.getenv("CI", "").lower() in ("true", "1")
-            or os.getenv("GITHUB_ACTIONS", "").lower() in ("true", "1")
-            or os.getenv("ALLOW_TEST_ORIGIN_BYPASS", "").lower() in ("true", "1")
-            or getattr(self, "allow_test_origin_bypass", False)
-            or self.env in ("test", "testing", "local")
-        )
-
         if self.env in ("production", "staging"):
             # Explicitly define allowed production domains
             allowed_production_origins = {
@@ -659,28 +654,17 @@ class Settings(BaseSettings):
                 "https://admin.supremeai.com",
             }
 
-            # Validate against allowed origins - allow localhost for development even in production mode
+            # Validate against strictly allowed origins — production mode enforces explicit whitelist only
             validated_origins = []
             for origin in origins:
-                if (
-                    origin in allowed_production_origins
-                    or "localhost" in origin
-                    or "127.0.0.1" in origin
-                    or is_test_or_ci
-                ):
+                if origin in allowed_production_origins:
                     validated_origins.append(origin)
                 else:
                     logger.warning(f"Disallowed CORS origin: {origin}")
 
             if not validated_origins:
-                if is_test_or_ci:
-                    return (
-                        origins
-                        if origins
-                        else ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
-                    )
                 raise RuntimeError(
-                    "No valid CORS origins provided. " "Must be one of: " + ", ".join(allowed_production_origins)
+                    "No valid CORS origins provided. Must be one of: " + ", ".join(allowed_production_origins)
                 )
 
             return validated_origins
@@ -1034,7 +1018,15 @@ class Settings(BaseSettings):
         if self.env == "production":
             if hasattr(self, "_jwt_secret_cache"):
                 delattr(self, "_jwt_secret_cache")
-            _ = self.jwt_secret
+            
+            # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট অবশ্যই থাকতে হবে এবং অন্তত ৬৪ বাইট দীর্ঘ হতে হবে — অন্যথায় সিকিউরিটি ক্র্যাশ
+            secret = (
+                os.getenv("SUPREMEAI_JWT_SECRET")
+                or os.getenv("JWT_SECRET")
+                or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            )
+            if not secret or len(secret) < 64:
+                raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
 
             # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
             if not self.user_cors_origins and not self.admin_cors_origins:
@@ -1057,7 +1049,7 @@ class Settings(BaseSettings):
 # কোনো "resilient boot" বা dummy fallback নেই। Exception মানেই sys.exit(1)।
 try:
     settings = Settings()
-except Exception as _boot_exc:  # noqa: BLE001
+except Exception as _boot_exc:
     logger.critical(
         f"🔥 FATAL CONFIG ERROR: {_boot_exc}\nServer startup ABORTED (Fail-Fast applied). Fix the configuration."
     )

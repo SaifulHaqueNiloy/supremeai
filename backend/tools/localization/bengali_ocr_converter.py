@@ -112,7 +112,7 @@ def convert_image_to_excel(image_path, excel_path, client):
 
     except (OSError, ValueError, RuntimeError) as e:
         # সুনির্দিষ্ট ত্রুটি ক্যাচ করে লগ করা হলো, যাতে অন্য অপ্রত্যাশিত সমস্যাগুলো চাপা না পড়ে
-        logger.error(f"Error processing {os.path.basename(image_path)}: {str(e)}")
+        logger.error(f"Error processing {os.path.basename(image_path)}: {e!s}")
         return False
 
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     # For now, try without credentials (requires GOOGLE_APPLICATION_CREDENTIALS env var)
     try:
         batch_convert_images(folder)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.critical(f"Setup error: {e}")
         logger.critical("Please ensure you have set up Google Cloud Vision API credentials")
         logger.critical("Either:")

@@ -105,7 +105,7 @@ class WriteBehindBatcher:
                 for sql, params_list in grouped.items():
                     pooled_pg.executemany(sql, params_list)
                 return len(items)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 # Anti-Silent-Failure: log loudly. Requeue so a transient
                 # Postgres blip (e.g. pooler reconnect) doesn't silently
                 # drop rows — they'll be retried on the next flush cycle.
@@ -130,7 +130,7 @@ def flush_all() -> None:
             n = batcher.flush()
             if n:
                 logger.info(f"write_behind[{batcher.name}]: flushed {n} rows on shutdown.")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(f"write_behind[{batcher.name}]: shutdown flush failed: {exc}")
 
 

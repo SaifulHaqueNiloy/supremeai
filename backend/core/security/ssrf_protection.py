@@ -414,7 +414,7 @@ def get_ssrf_protection() -> SSRFProtection:
 
     বাংলা মন্তব্য: লেজি সিঙ্গেলটন — প্রথম ব্যবহারের সময় ইনিশিয়ালাইজ হয়।
     """
-    global _ssrf_protection_instance  # noqa: PLW0603
+    global _ssrf_protection_instance
     if _ssrf_protection_instance is None:
         _ssrf_protection_instance = SSRFProtection()
     return _ssrf_protection_instance
@@ -426,7 +426,7 @@ def reset_ssrf_protection() -> None:
 
     বাংলা মন্তব্য: টেস্ট আইসোলেশনের জন্য SSRF প্রোটেকশন রিসেট — শুধু টেস্টে ব্যবহার করুন।
     """
-    global _ssrf_protection_instance  # noqa: PLW0603
+    global _ssrf_protection_instance
     _ssrf_protection_instance = None
 
 
