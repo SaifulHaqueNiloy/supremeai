@@ -371,8 +371,7 @@ class Settings(BaseSettings):
         Returns empty string as fallback to avoid crashes, but the caller should
         check for empty strings where critical.
 
-        বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
-        অধিকন্তু, os.getenv()-এ মান থাবলে তা সিক্রেট ভল্টের ক্যাশের চেয়ে অগ্রাধিকার পাবে।
+        বাংলা মন্তব্য: os.getenv(key) যদি os.environ-এ উপস্থিত থাকে তবে সরাসরি রিটার্ন করে (ইউনিট টেস্ট মকিংয়ের জন্য)।
         """
         env_val = os.getenv(key)
         if env_val is not None:
