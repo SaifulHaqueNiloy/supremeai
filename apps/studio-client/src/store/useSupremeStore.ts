@@ -2,12 +2,45 @@ import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { getApiBaseUrl } from '../utils/api';
 
+export interface User {
+  id: string;
+  email: string;
+  role: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions?: string[];
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+}
+
+export interface Session {
+  id: string;
+  user_id: string;
+  status: string;
+  created_at: string;
+}
+
 interface AuthState {
   isAuthenticated: boolean;
-  user: any | null;
-  login: (userData: any) => void;
+  user: User | null;
+  login: (userData: User) => void;
   logout: () => void;
-  updateUser: (userData: any) => void;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 interface ThemeState {
@@ -17,21 +50,21 @@ interface ThemeState {
 }
 
 interface DashboardState {
-  metrics: Record<string, any>;
-  recentActivity: any[];
-  quickActions: any[];
-  setMetrics: (metrics: Record<string, any>) => void;
-  setRecentActivity: (activity: any[]) => void;
+  metrics: Record<string, unknown>;
+  recentActivity: Record<string, unknown>[];
+  quickActions: Record<string, unknown>[];
+  setMetrics: (metrics: Record<string, unknown>) => void;
+  setRecentActivity: (activity: Record<string, unknown>[]) => void;
   refreshMetrics: () => Promise<void>;
 }
 
 interface AdminState {
-  users: any[];
-  roles: any[];
-  permissions: any[];
-  addUser: (user: any) => void;
+  users: User[];
+  roles: Role[];
+  permissions: Permission[];
+  addUser: (user: User) => void;
   removeUser: (userId: string) => void;
-  updateUser: (user: any) => void;
+  updateUser: (user: User) => void;
   fetchUsers: () => Promise<void>;
   fetchRoles: () => Promise<void>;
   fetchPermissions: () => Promise<void>;
@@ -39,25 +72,25 @@ interface AdminState {
 
 interface WorkspaceState {
   activeWorkspace: string | null;
-  workspaces: any[];
+  workspaces: Workspace[];
   setActiveWorkspace: (workspaceId: string) => void;
-  createWorkspace: (workspaceData: any) => Promise<void>;
-  updateWorkspace: (workspaceId: string, data: any) => Promise<void>;
+  createWorkspace: (workspaceData: Partial<Workspace>) => Promise<void>;
+  updateWorkspace: (workspaceId: string, data: Partial<Workspace>) => Promise<void>;
   deleteWorkspace: (workspaceId: string) => Promise<void>;
   fetchWorkspaces: () => Promise<void>;
 }
 
 interface WorkspaceSettingsState {
-  settings: Record<string, any>;
-  updateSetting: (key: string, value: any) => void;
+  settings: Record<string, unknown>;
+  updateSetting: (key: string, value: unknown) => void;
   resetSettings: () => void;
   saveSettings: () => Promise<void>;
   loadSettings: () => Promise<void>;
 }
 
 interface SessionCockpitState {
-  sessions: any[];
-  activeSession: any | null;
+  sessions: Session[];
+  activeSession: Session | null;
   createSession: (sessionData: any) => void;
   closeSession: (sessionId: string) => void;
   setActiveSession: (session: any) => void;
