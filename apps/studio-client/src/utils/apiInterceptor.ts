@@ -1,7 +1,7 @@
 // apps/studio-client/src/utils/apiInterceptor.ts
 // 🛡️ Production-ready API interceptor with structured error handling
 
-export const apiInterceptor = async (response: Response): Promise<any> => {
+export const apiInterceptor = async <T = unknown>(response: Response): Promise<T> => {
   const contentType = response.headers.get("content-type");
 
   if (!response.ok) {
@@ -11,9 +11,10 @@ export const apiInterceptor = async (response: Response): Promise<any> => {
   // 🛡️ অডিটর ফিক্স: সাইলেন্ট কমেন্ট রিমুভ করে মালফর্মড বডি ভ্যালিডেশন
   if (contentType && contentType.includes("application/json")) {
     try {
-      return await response.json();
-    } catch (parseError: any) {
-      console.error("🚨 [INTERCEPTOR_PARSING_CRASH]: Body claimed JSON but failed to decode.", parseError);
+      return (await response.json()) as T;
+    } catch (parseError: unknown) {
+      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+      console.error("🚨 [INTERCEPTOR_PARSING_CRASH]: Body claimed JSON but failed to decode.", errorMsg);
       throw new Error("Malformed JSON response packet received from SupremeAI core backend.");
     }
   }
@@ -21,7 +22,7 @@ export const apiInterceptor = async (response: Response): Promise<any> => {
   // স্ট্রিম বা প্লেইন টেক্সট মেসেজের জন্য সেফ গ্রেসফুল ফলব্যাক
   const rawText = await response.text();
   console.debug("ℹ️ [NON_JSON_STREAM_TRAFFIC]: Handling streaming or text matrix payload.", { length: rawText.length });
-  return rawText;
+  return rawText as unknown as T;
 };
 
 // Legacy support: Keep existing fetch interceptor for backward compatibility
@@ -32,7 +33,7 @@ export function setupGlobalFetchInterceptor() {
 
   window.fetch = async function (...args) {
     const url = args[0];
-    let options: any = args[1];
+    let options: RequestInit | undefined = args[1] as RequestInit;
     const apiBase = (await import('./api')).getApiBaseUrl();
 
     if (typeof url === 'string' && url.startsWith(apiBase)) {
