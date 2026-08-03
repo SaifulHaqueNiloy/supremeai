@@ -53,8 +53,8 @@ class HealthMonitor:
             from prometheus_client import Counter
             self.error_count = Counter("supremeai_errors_total", "Total error occurrences", ["error_type"])
             self.token_usage = Counter("supremeai_tokens_total", "Total tokens processed", ["provider", "type"])
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(f"Failed to initialize optional Prometheus counters: {exc}")
 
     async def get_system_metrics(self) -> dict[str, Any]:
         import psutil
