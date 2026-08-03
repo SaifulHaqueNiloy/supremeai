@@ -5,6 +5,9 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
+from core.observability.audit_logger import AuditLogger
+from core.security.secure_credential_store import SecureCredentialStore
+
 def get_audit() -> AuditLogger:
     return AuditLogger()
 
