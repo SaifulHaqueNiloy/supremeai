@@ -92,7 +92,7 @@ class TestSettingsValidators:
 
         calls = []
 
-        def fake_fetch(key):
+        def fake_fetch(key, *args, **kwargs):
             calls.append(key)
             return f"secret-for-{key}"
 
@@ -112,7 +112,7 @@ class TestSettingsValidators:
         monkeypatch.delenv("SUPABASE_DATABASE_URL_POOLER", raising=False)
         monkeypatch.delenv("REDIS_URL", raising=False)
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-        monkeypatch.setattr("core.config.secret_vault.fetch_secret", lambda k: f"val-{k}")
+        monkeypatch.setattr("core.config.secret_vault.fetch_secret", lambda k, *a, **kw: f"val-{k}")
         s = Settings()
         assert s.supabase_database_url == "val-SUPABASE_DATABASE_URL_POOLER"
         assert s.redis_url == "redis://val-REDIS_URL"
@@ -188,8 +188,8 @@ class TestConfigCacheMissingBranches:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock()
 
-        with patch("database.session.AsyncSessionLocal") as mock_local:
-            mock_local.return_value.__aenter__.return_value = mock_session
+        with patch("database.session._get_session_maker") as mock_maker:
+            mock_maker.return_value = MagicMock(return_value=mock_session)
             ok = await cache.set("new_key", "new_value")
         assert ok is True
         assert cache.get("new_key") == "new_value"
@@ -219,7 +219,7 @@ class TestConfigCacheMissingBranches:
         from core.config_cache import DEFAULT_CONFIGS, ConfigCache
 
         cache = ConfigCache()
-        with patch("database.session.AsyncSessionLocal", side_effect=RuntimeError("db down")):
+        with patch("database.session._get_session_maker", side_effect=RuntimeError("db down")):
             await cache.refresh_async()
         assert cache._loaded is True
         assert cache.get("cache_threshold_code") == DEFAULT_CONFIGS["cache_threshold_code"]
