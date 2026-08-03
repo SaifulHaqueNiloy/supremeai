@@ -23,7 +23,8 @@ class KnowledgeQuestion(BaseModel):
     question: str = Field(min_length=1, max_length=4_000)
 
 
-knowledge_qa_service = KnowledgeQAService()
+def get_knowledge_qa_service() -> KnowledgeQAService:
+    return KnowledgeQAService()
 
 
 @router.post("/knowledge/ask", tags=["Knowledge Base"])
@@ -33,7 +34,7 @@ async def ask_company_knowledge(
     user: dict = Depends(get_current_user_token),
 ):
     """Return a tenant-filtered, source-cited answer from approved knowledge only."""
-    return await knowledge_qa_service.answer(request.question, user, limit)
+    return await get_knowledge_qa_service().answer(request.question, user, limit)
 
 
 @router.post("/knowledge/ask-scribe", tags=["Knowledge Base"])
