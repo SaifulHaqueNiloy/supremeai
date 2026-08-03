@@ -1,69 +1,78 @@
 # tests/test_cost_guard_coverage_full.py
 """Comprehensive unit tests for backend/core/cost_guard.py targeting 80%+ line coverage."""
 
-import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import HTTPException
 
 from core.cost_guard import CostGuard
 
 
-@pytest.fixture
-def cost_guard_instance():
-    return CostGuard(monthly_budget=10.0, alert_threshold=0.8)
-
-
-def test_init_defaults():
+@pytest.mark.asyncio
+async def test_connect():
     cg = CostGuard()
-    assert cg.monthly_budget == 100.0
-    assert cg.alert_threshold == 0.8
-    assert cg.current_spend == 0.0
+    res = await cg.connect()
+    assert res == cg
 
 
-def test_record_cost(cost_guard_instance):
-    cost_guard_instance.record_cost(1.5, task_type="coding", provider="openai")
-    assert cost_guard_instance.current_spend == 1.5
-    assert len(cost_guard_instance.history) == 1
-    assert cost_guard_instance.history[0]["cost"] == 1.5
-    assert cost_guard_instance.history[0]["task_type"] == "coding"
-    assert cost_guard_instance.history[0]["provider"] == "openai"
+@pytest.mark.asyncio
+async def test_check_budget_no_db():
+    cg = CostGuard(db=None)
+    res = await cg.check_budget("tenant_1", 0.05)
+    assert res is True
 
 
-def test_can_proceed_within_budget(cost_guard_instance):
-    cost_guard_instance.record_cost(5.0)
-    assert cost_guard_instance.can_proceed(estimated_cost=2.0) is True
+@pytest.mark.asyncio
+async def test_check_budget_with_db_success():
+    mock_db = MagicMock()
+    mock_doc = MagicMock()
+    mock_snapshot = MagicMock()
+    mock_snapshot.exists = True
+    mock_snapshot.to_dict.return_value = {"monthly_limit": 10.0, "spent_amount": 2.0}
+    mock_doc.get.return_value = mock_snapshot
+    mock_db.collection.return_value.document.return_value = mock_doc
+
+    cg = CostGuard(db=mock_db)
+    res = await cg.check_budget("tenant_1", 1.0)
+    assert res is True
 
 
-def test_can_proceed_exceeds_budget(cost_guard_instance):
-    cost_guard_instance.record_cost(9.0)
-    # Estimated cost 2.0 would push total spend to 11.0 > 10.0 budget
-    assert cost_guard_instance.can_proceed(estimated_cost=2.0) is False
+@pytest.mark.asyncio
+async def test_check_budget_exceeded_raises_http_exception():
+    mock_db = MagicMock()
+    mock_doc = MagicMock()
+    mock_snapshot = MagicMock()
+    mock_snapshot.exists = True
+    mock_snapshot.to_dict.return_value = {"monthly_limit": 5.0, "spent_amount": 4.5}
+    mock_doc.get.return_value = mock_snapshot
+    mock_db.collection.return_value.document.return_value = mock_doc
+
+    cg = CostGuard(db=mock_db)
+    with pytest.raises(HTTPException) as exc_info:
+        await cg.check_budget("tenant_1", 1.0)
+    assert exc_info.value.status_code == 402
 
 
-def test_alert_triggered(cost_guard_instance):
-    with patch("core.cost_guard.logger") as mock_logger:
-        # Spend 8.5 on a 10.0 budget (85% > 80% threshold)
-        cost_guard_instance.record_cost(8.5)
-        assert cost_guard_instance.current_spend == 8.5
-        mock_logger.warning.assert_called()
+@pytest.mark.asyncio
+async def test_validate_budget_free_tier():
+    cg = CostGuard()
+    res = await cg.validate_budget("tenant_1", "free")
+    assert res is True
 
 
-def test_get_summary(cost_guard_instance):
-    cost_guard_instance.record_cost(2.0, provider="groq")
-    cost_guard_instance.record_cost(3.0, provider="gemini")
-    summary = cost_guard_instance.get_summary()
-
-    assert summary["monthly_budget"] == 10.0
-    assert summary["current_spend"] == 5.0
-    assert summary["remaining_budget"] == 5.0
-    assert summary["total_requests"] == 2
-    assert summary["utilization_percentage"] == 50.0
+@pytest.mark.asyncio
+async def test_validate_budget_economy_tier_success():
+    cg = CostGuard()
+    with patch("core.cache.redis_manager.redis_manager.get_cache", new_callable=AsyncMock) as mock_redis:
+        mock_redis.return_value = "0.05"
+        res = await cg.validate_budget("tenant_1", "economy")
+        assert res is True
 
 
-def test_reset_monthly_spend(cost_guard_instance):
-    cost_guard_instance.record_cost(7.0)
-    assert cost_guard_instance.current_spend == 7.0
-    cost_guard_instance.reset_monthly_spend()
-    assert cost_guard_instance.current_spend == 0.0
-    assert len(cost_guard_instance.history) == 0
+@pytest.mark.asyncio
+async def test_record_spend():
+    cg = CostGuard()
+    with patch("core.cache.redis_manager.redis_manager.incrbyfloat", new_callable=AsyncMock) as mock_incr:
+        await cg.record_spend("tenant_1", "economy", 0.02)
+        mock_incr.assert_called_once()
