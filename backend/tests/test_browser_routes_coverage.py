@@ -99,17 +99,22 @@ class TestCredentials:
 
     def test_save_and_get_credential(self):
         """save_credential and get_credentials should work together."""
+        from unittest.mock import MagicMock
+
         from api.routes.browser import CredentialRequest, save_credential
 
+        mock_store = MagicMock()
+        mock_store.encrypt.return_value = ("encrypted_data", "key_ref_1")
+        mock_audit = MagicMock()
+
         with (
-            patch("api.routes.browser.credential_store.encrypt") as mock_encrypt,
-            patch("api.routes.browser.audit.log_decision") as mock_audit,
+            patch("api.routes.browser.get_credential_store", return_value=mock_store),
+            patch("api.routes.browser.get_audit", return_value=mock_audit),
         ):
-            mock_encrypt.return_value = ("encrypted_data", "key_ref_1")
             cred_req = CredentialRequest(serviceName="github", username="testuser", password=_TEST_PASSWORD)
             result = save_credential(cred_req)
             assert result["serviceName"] == "github"
-            assert mock_audit.called
+            assert mock_audit.log_decision.called
 
     def test_delete_credential(self):
         """delete_credential should remove credential."""
