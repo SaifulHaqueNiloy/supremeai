@@ -27,7 +27,18 @@ SERVICES = {
         "name": "User Backend (Primary)",
         "service_id": "srv-d9d3n58js32c738n79k0",
         "url": "https://supremeai-backend.onrender.com",
-    }
+    },
+    # বাংলা মন্তব্য: আগে এই ডিকশনারিতে শুধু User Backend ছিল। ফলে
+    # deploy-combined-backend job (যেটা --service-id ছাড়াই এই স্ক্রিপ্ট চালায় এবং
+    # SERVICES.values() এর সবকিছু ভেরিফাই করে) নীরবে Admin Backend-এর হেলথ চেক
+    # স্কিপ করত — Admin ডেপ্লয় ব্যর্থ হলেও কম্বাইন্ড জব সবুজ দেখাত। এখন Admin
+    # Backend-ও ডিফল্ট টার্গেট লিস্টে যুক্ত করা হলো (deploy-admin-backend জব
+    # আলাদাভাবে --service-id দিয়ে এটিকে আইসোলেটেডভাবে চালায়, সেটা অপরিবর্তিত থাকল)।
+    "srv-d9fg48bh523c73f63bb0": {
+        "name": "Admin Backend (Backup)",
+        "service_id": "srv-d9fg48bh523c73f63bb0",
+        "url": "https://supremeai-admin.onrender.com",
+    },
 }
 
 # Optimized timing: Poll interval 10s and timeout to 540s (9 minutes) for Render free tier
