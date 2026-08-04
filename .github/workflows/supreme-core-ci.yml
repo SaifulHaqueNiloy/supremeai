@@ -1337,9 +1337,10 @@ jobs:
   deploy-admin-firebase:
     name: 🚀 Deploy Admin Portal (Firebase)
     needs: [changes, service-preflight]
-    # Trigger if frontend files changed
+    # Trigger if frontend files changed AND running in main repo
     if: |
       always() &&
+      github.repository == 'paykaribazaronline/supremeai' &&
       needs.changes.outputs.frontend == 'true' &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -1351,18 +1352,11 @@ jobs:
         run: pnpm install
       - name: Build Admin
         env:
-          # বাংলা মন্তব্য: আগে এই build step-এ কোনো VITE_API_URL সেট করা হতো না, তাই Vite build-time bake করে
-          # ফেলা admin bundle backend URL না পেয়ে utils/api.ts-এর ডিফল্ট fallback (RENDER_BACKENDS[0] = user-role
-          # সার্ভিস) ব্যবহার করত — যেটাতে ADMIN_CORS_ORIGINS সেট নেই, ফলে সব admin API call CORS-এ ব্লক হতো।
-          # এখন explicit ভাবে admin-role সার্ভিসের URL পাস করা হচ্ছে (repo variable দিয়ে override করা যায়,
-          # ডিফল্ট মান render.yaml-এর supremeai-admin সার্ভিসের ALLOWED_HOSTS থেকে নেওয়া, হার্ডকোড নয়)।
           VITE_API_URL: ${{ vars.SUPREMEAI_ADMIN_API_URL || 'https://supremeai-admin.onrender.com' }}
           VITE_API_BASE: ${{ vars.SUPREMEAI_ADMIN_API_URL || 'https://supremeai-admin.onrender.com' }}
         run: VITE_PORTAL_TYPE=admin pnpm --dir apps/studio-client run build
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
-        # বাংলা মন্তব্য (জরুরি): FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A অথবা FIREBASE_SERVICE_ACCOUNT সিক্রেট না থাকলে
-        # বা রিমোট সিক্রেট মিসিং হলে এই হোস্ট ডেপ্লয়মেন্ট ব্যর্থ হলেও পুরো CI বিল্ড ফেল করবে না।
         continue-on-error: true
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -1374,9 +1368,10 @@ jobs:
   deploy-user-vercel:
     name: 🚀 Deploy User Portal (Vercel)
     needs: [changes, service-preflight]
-    # Trigger if frontend files changed
+    # Trigger if frontend files changed AND running in main repo
     if: |
       always() &&
+      github.repository == 'paykaribazaronline/supremeai' &&
       needs.changes.outputs.frontend == 'true' &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -1390,8 +1385,6 @@ jobs:
         run: pnpm install
       - name: Build User Portal
         env:
-          # বাংলা মন্তব্য: user-role ব্যাকএন্ডের URL এখন এখানেও explicit করা হলো (আগে অনুপস্থিত ছিল)।
-          # ডিফল্ট মান render.yaml-এর supremeai-backend সার্ভিসের ALLOWED_HOSTS থেকে নেওয়া।
           VITE_API_URL: ${{ vars.SUPREMEAI_USER_API_URL || 'https://supremeai-backend.onrender.com' }}
           VITE_API_BASE: ${{ vars.SUPREMEAI_USER_API_URL || 'https://supremeai-backend.onrender.com' }}
         run: VITE_PORTAL_TYPE=user pnpm --dir apps/studio-client run build
@@ -1405,13 +1398,11 @@ jobs:
 
   sync-mirror:
     name: 📤 Sync to Secondary Repo
-    needs: [deploy-backend, deploy-admin-firebase, deploy-user-vercel]
+    needs: [deploy-admin-firebase, deploy-user-vercel]
     if: |
       always() &&
-      github.ref == 'refs/heads/main' &&
-      needs.deploy-backend.result != 'failure' && needs.deploy-backend.result != 'cancelled' &&
-      needs.deploy-admin-firebase.result != 'failure' && needs.deploy-admin-firebase.result != 'cancelled' &&
-      needs.deploy-user-vercel.result != 'failure' && needs.deploy-user-vercel.result != 'cancelled'
+      github.repository == 'paykaribazaronline/supremeai' &&
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
