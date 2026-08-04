@@ -33,6 +33,9 @@ export class BrowserPreviewProvider {
           case 'resume':
             vscode.window.showInformationMessage(`ব্রাউজার টাস্ক ${sessionId} চালু করা হচ্ছে।`);
             return;
+          case 'taskCompleteNotification':
+            vscode.window.showInformationMessage('ব্রাউজার টাস্ক সম্পন্ন হয়েছে!');
+            return;
         }
       },
       undefined,
@@ -51,6 +54,7 @@ export class BrowserPreviewProvider {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SupremeAI ব্রাউজার প্রিভিউ</title>
     <style>
@@ -143,11 +147,12 @@ export class BrowserPreviewProvider {
                 case 'taskComplete': {
                     const taskEntry = document.createElement('p');
                     const taskLabel = document.createElement('b');
-                    taskLabel.textContent = 'টাস্ক সম্পন্ন হয়েছে:';
+                    taskLabel.textContent = 'টাস্ক সম্পন্ন হয়েছে:';
                     taskEntry.appendChild(taskLabel);
                     taskEntry.appendChild(document.createTextNode(' ' + message.result));
                     logOutput.appendChild(taskEntry);
-                    vscode.window.showInformationMessage('ব্রাউজার টাস্ক সম্পন্ন হয়েছে!');
+                    // vscode.window webview-এ সংজ্ঞায়িত নয় — postMessage দিয়ে extension-কে জানানো হবে
+                    vscode.postMessage({ command: 'taskCompleteNotification' });
                     break;
                 }
             }
@@ -157,3 +162,6 @@ export class BrowserPreviewProvider {
 </html>`;
   }
 }
+
+
+

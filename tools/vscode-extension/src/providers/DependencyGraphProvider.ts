@@ -76,6 +76,7 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dependency Graph</title>
         <!-- Removed external stylesheet reference -->
@@ -130,8 +131,22 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
         </div>
         <div id="graph-container"></div>
 
-        <!-- Note: We'll need to provide D3.js locally or use CDN -->
+        <!-- D3.js CDN (offline হলে local d3 ফাংশন fallback) -->
         <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+          // CDN ব্যর্থ হলে fallback stub
+          if (typeof d3 === 'undefined') {
+            window.d3 = {
+              select: () => ({ append: () => ({ attr: () => ({ call: () => {}, append: () => ({ selectAll: () => ({ data: () => ({ enter: () => ({ append: () => ({ attr: () => ({ call: () => {} }) }) }) }) }) }) }) }),
+              zoom: () => ({ scaleExtent: () => ({ on: () => ({}) }) }),
+              forceSimulation: () => ({ force: () => ({ on: () => ({ restart: () => {} }) }), nodes: () => ({}), alphaTarget: () => ({}), alpha: () => ({ restart: () => {} }) }),
+              forceLink: () => ({ id: () => ({ distance: () => ({}) }) }),
+              forceManyBody: () => ({ strength: () => ({}) }),
+              forceCenter: () => ({}),
+              drag: () => ({ on: () => ({}) })
+            };
+          }
+        </script>
         <script>
           // D3.js ব্যবহার করে ডিপেন্ডেন্সি গ্রাফ তৈরি
           const container = d3.select("#graph-container");
@@ -270,3 +285,6 @@ export class DependencyGraphProvider implements vscode.WebviewViewProvider {
     `;
   }
 }
+
+
+

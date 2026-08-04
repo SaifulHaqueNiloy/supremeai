@@ -26,8 +26,18 @@ export class WebSocketManager {
   private shouldReconnect = true;
   private options: WsManagerOptions;
 
+  // বাংলা: পেলোড ডিফিং — ২s ডেল্টা, ৩০s ফুল স্ন্যাপশট
+  private snapshotCache = new Map<string, unknown>();
+  private lastSnapshotTime = new Map<string, number>();
+  private STALE_THRESHOLD_MS = 35_000;
+  private queryInvalidate?: () => void;
+
   constructor(options: WsManagerOptions) {
     this.options = options;
+  }
+
+  setQueryInvalidate(fn: () => void) {
+    this.queryInvalidate = fn;
   }
 
   connect() {
@@ -67,7 +77,7 @@ export class WebSocketManager {
         try {
           const data = JSON.parse(event.data);
           if (data.type) {
-            this.options.onEvent(data.type, data.payload ?? data);
+            this.applyPayload(data.type, data.payload ?? data);
           }
         } catch (err) {
           this.options.onError(new Error(`Failed to parse WS message: ${err}`));
@@ -140,5 +150,36 @@ export class WebSocketManager {
 
   getStatus(): WsStatus {
     return this.status;
+  }
+
+  private applyPayload(type: string, payload: unknown) {
+    const p = payload as { channel?: string; patch?: Record<string, unknown>; data?: unknown; mode?: 'delta' | 'snapshot' };
+    if (!p?.channel) {
+      this.options.onEvent(type, payload);
+      return;
+    }
+
+    if (p.mode === 'delta' && p.patch) {
+      const existing = (this.snapshotCache.get(p.channel) ?? {}) as Record<string, unknown>;
+      const merged = { ...existing, ...p.patch };
+      this.snapshotCache.set(p.channel, merged);
+      this.options.onEvent(type, merged);
+    } else {
+      // full snapshot
+      this.snapshotCache.set(p.channel, p.data ?? payload);
+      this.lastSnapshotTime.set(p.channel, Date.now());
+      this.options.onEvent(type, p.data ?? payload);
+    }
+
+    // stale guard
+    this.guardStale(p.channel);
+  }
+
+  private guardStale(channel: string) {
+    const last = this.lastSnapshotTime.get(channel);
+    if (!last) return;
+    if (Date.now() - last > this.STALE_THRESHOLD_MS) {
+      this.queryInvalidate?.();
+    }
   }
 }

@@ -195,7 +195,8 @@ export function getApiBridge(config?: SupremeAIConfig): SupremeExtensionBridge {
   return _apiBridgeSingleton;
 }
 
-export const apiBridge = getApiBridge();
-export const apiBridgeInstance = apiBridge;
+// মডিউল লোডের সময় ইন্সট্যান্স তৈরি করা হয় না — getApiBridge() কল করলেই তৈরি হবে (লেজি ইনিশিয়ালাইজেশন)
+// export const apiBridge = getApiBridge();
+// export const apiBridgeInstance = apiBridge;
 
 

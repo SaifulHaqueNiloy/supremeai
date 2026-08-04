@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AETHEL Command Center — Virtualized Data Table
@@ -57,6 +58,14 @@ export function DataTable<T extends Record<string, unknown>>({
         });
     }, [data, sortKey, sortDir]);
 
+    const containerRef = useRef<HTMLDivElement>(null);
+    const virtualizer = useVirtualizer({
+        count: sorted.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 32,
+        overscan: 5,
+    });
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-6 text-[10px] text-[var(--sa-text-2)] font-mono">
@@ -72,6 +81,8 @@ export function DataTable<T extends Record<string, unknown>>({
             </div>
         );
     }
+
+    const useVirtual = sorted.length > 50 && containerRef.current != null;
 
     return (
         <div className="overflow-x-auto rounded-xl border border-[var(--sa-line)]" style={{ maxHeight }}>
@@ -94,27 +105,68 @@ export function DataTable<T extends Record<string, unknown>>({
                         ))}
                     </tr>
                 </thead>
-                <tbody>
-                    {sorted.map((row, i) => (
-                        <tr
-                            key={String(row[keyField] ?? i)}
-                            onClick={() => onRowClick?.(row)}
-                            className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
-                                } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
-                        >
-                            {columns.map(col => (
-                                <td
-                                    key={col.key}
-                                    className={`px-3 py-2 text-[var(--sa-text-0)] ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
-                                        }`}
+                <tbody ref={containerRef}>
+                    {useVirtual ? (
+                        virtualizer.getVirtualItems().map(vRow => {
+                            const row = sorted[vRow.index];
+                            const i = vRow.index;
+                            return (
+                                <tr
+                                    key={String(row[keyField] ?? i)}
+                                    onClick={() => onRowClick?.(row)}
+                                    className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
+                                        } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
+                                    style={{
+                                        position: 'absolute',
+                                        transform: `translateY(${vRow.start}px)`,
+                                        width: '100%',
+                                        height: '32px',
+                                        display: 'flex',
+                                    }}
                                 >
-                                    {col.render(row)}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
+                                    {columns.map(col => (
+                                        <td
+                                            key={col.key}
+                                            className={`px-3 py-2 text-[var(--sa-text-0)] ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                                                }`}
+                                            style={{ flex: col.width ? undefined : 1, width: col.width, minWidth: col.width ? 0 : undefined }}
+                                        >
+                                            {col.render(row)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            );
+                        })
+                    ) : (
+                        sorted.map((row, i) => (
+                            <tr
+                                key={String(row[keyField] ?? i)}
+                                onClick={() => onRowClick?.(row)}
+                                className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
+                                    } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
+                            >
+                                {columns.map(col => (
+                                    <td
+                                        key={col.key}
+                                        className={`px-3 py-2 text-[var(--sa-text-0)] ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                                            }`}
+                                    >
+                                        {col.render(row)}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
+            {useVirtual && (
+                <div style={{ height: virtualizer.getTotalSize() }} className="relative w-full">
+                    <div
+                        className="absolute left-0 top-0 right-0"
+                        style={{ height: virtualizer.getTotalSize() }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
