@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useSupremeStore from '../../store/useSupremeStore';
 import WebSocketManager from '../../services/realtime/WebSocketManager';
 import { getWebSocketBaseUrl } from '../../utils/api';
 
