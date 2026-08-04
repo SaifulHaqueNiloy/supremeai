@@ -1,3 +1,5 @@
+import React, { useState } from "react";
+
 interface UserManagerProps {
   newUsername: string;
   setNewUsername: (val: string) => void;
@@ -17,8 +19,48 @@ export function UserManager({
   handleSaveUser,
   adminUsers, handleDeleteUser
 }: UserManagerProps) {
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const totalPages = Math.ceil(adminUsers.length / itemsPerPage) || 1;
+  const paginatedUsers = adminUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      handleDeleteUser(userToDelete);
+      setUserToDelete(null);
+    }
+  };
+
   return (
-    <div className="flex-grow bg-[#030611] p-6 overflow-y-auto font-sans">
+    <div className="flex-grow bg-[#030611] p-6 overflow-y-auto font-sans relative">
+      {/* Delete Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0c0d12] border border-red-900/60 rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <h4 className="text-sm font-bold text-red-400 font-mono mb-2 uppercase tracking-wider">⚠️ Confirm Revoke Role</h4>
+            <p className="text-xs text-slate-300 mb-6 font-mono">
+              Are you sure you want to revoke administrative access for user <span className="text-white font-bold">{userToDelete}</span>? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 font-mono text-xs">
+              <button
+                onClick={() => setUserToDelete(null)}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-950 hover:bg-red-900 text-red-300 font-bold rounded-lg border border-red-900 transition-colors"
+              >
+                Confirm Revoke
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800">
         <h3 className="text-sm font-bold text-slate-200 tracking-wider font-mono">👤 USER & RBAC MANAGEMENT</h3>
         <span className="text-[10px] text-slate-400 font-mono bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">Active Admins: {adminUsers.length}</span>
@@ -74,7 +116,7 @@ export function UserManager({
       {/* Users List */}
       <h4 className="text-xs font-bold text-slate-400 mb-4 tracking-wider uppercase font-mono">Administrative User Registry</h4>
       <div className="flex flex-col gap-3">
-        {Array.isArray(adminUsers) && adminUsers.map(user => {
+        {Array.isArray(paginatedUsers) && paginatedUsers.map(user => {
           const perms = Array.isArray(user.permissions)
             ? user.permissions
             : typeof user.permissions === 'string'
@@ -109,7 +151,7 @@ export function UserManager({
               </div>
 
               <button
-                onClick={() => handleDeleteUser(user.username)}
+                onClick={() => setUserToDelete(user.username)}
                 className="self-end md:self-auto bg-red-950/30 hover:bg-red-900/40 text-red-400 border border-red-900/30 hover:border-red-900/60 px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase font-mono tracking-wider"
               >
                 Revoke Role
@@ -123,6 +165,30 @@ export function UserManager({
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {adminUsers.length > itemsPerPage && (
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-900 text-xs font-mono text-slate-400">
+          <span>Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, adminUsers.length)} of {adminUsers.length}</span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              className="px-3 py-1 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed rounded border border-slate-800 transition-colors"
+            >
+              Prev
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              className="px-3 py-1 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed rounded border border-slate-800 transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
