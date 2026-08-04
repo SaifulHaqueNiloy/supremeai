@@ -1,5 +1,10 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, Menu, session, shell, Tray } from 'electron';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// বাংলা: ES module সোপে __dirname সংজ্ঞায়িত না থাকায় fileURLToPath দিয়ে তা তৈরি করা হয়েছে
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const PRELOAD_PATH = path.join(__dirname, 'preload.cjs');
 const IS_DEV = !app.isPackaged;
