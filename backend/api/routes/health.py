@@ -39,7 +39,14 @@ async def health_check(request: Request, response: Response):
     db_pool = getattr(request.app.state, "db_pool", None)
     if db_pool is not None:
         try:
-            async with db_pool.acquire() as conn:
+            # বাংলা: db_pool.acquire() একটি plain coroutine রিটার্ন করে (async context
+            # manager নয়) — এটিকে সরাসরি `async with` দিয়ে ব্যবহার করলে
+            # `__aenter__` না থাকায় AttributeError হয় এবং coroutine 'never awaited'
+            # warning তৈরি হয়, ফলে health check প্রতিবার 503 দিত (Render deploy
+            # verification ব্যর্থ হওয়ার মূল কারণ)। PgBouncerConnectionPool-এর
+            # @asynccontextmanager-সজ্জিত `.connection()` মেথড এখানে ব্যবহার করা হলো,
+            # যা acquire+release উভয়ই নিরাপদভাবে হ্যান্ডেল করে।
+            async with db_pool.connection() as conn:
                 await conn.execute("SELECT 1")
             subsystems["db"] = "up"
         except Exception as e:

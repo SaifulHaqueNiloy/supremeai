@@ -159,12 +159,18 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
     async def _check_db_connectivity(self) -> bool:
         """Check database connectivity."""
         try:
-            # Try to get a database connection and execute a simple query
-            from database.session import get_db_pool
+            # বাংলা: এখানে ৩টি বাগ ছিল — (১) get_db_pool() ভুল মডিউল (database.session)
+            # থেকে import হচ্ছিল, আসলে সেটি core.pgbouncer_pool-এ সংজ্ঞায়িত;
+            # (২) get_db_pool() একটি async ফাংশন, কিন্তু await ছাড়া কল করায় coroutine
+            # অবজেক্ট পাওয়া যেত (যা সবসময় truthy, তাই `if db_pool` চেক অকার্যকর ছিল);
+            # (৩) .acquire() একটি plain coroutine রিটার্ন করে, async context manager নয় —
+            # তাই `async with db_pool.acquire()` AttributeError দিত। ফলে এই DB
+            # connectivity check সবসময় ব্যর্থ হয়ে health score কমিয়ে দিত।
+            from core.pgbouncer_pool import get_db_pool
 
-            db_pool = get_db_pool()
+            db_pool = await get_db_pool()
             if db_pool:
-                async with db_pool.acquire() as conn:
+                async with db_pool.connection() as conn:
                     await conn.fetchval("SELECT 1")
                     return True
         except Exception as e:
