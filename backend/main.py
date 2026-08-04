@@ -18,15 +18,23 @@ setup_silent_catcher()
 import uvicorn
 from loguru import logger
 
-# বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে সম্পূর্ণ অ্যাপ এবং প্রোডাকশনে রোল অনুযায়ী ইউজার/অ্যাডমিন এন্ট্রি পয়েন্ট লোড করা হচ্ছে
+# বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে সম্পূর্ণ অ্যাপ এবং প্রোডাকশনে রোল অনুযায়ী ইউজার/অ্যাডমিন এন্ট্রি পয়েন্ট লোড করা হচ্ছে
+# বাংলা: _APP_IMPORT_STRING ট্র্যাক করা হয় যাতে uvicorn.run()-এ app object-এর বদলে
+# import string পাস করা যায় — reload=True বা workers>1 উভয় ক্ষেত্রেই সঠিকভাবে কাজ করে।
 if "pytest" in sys.modules:
     from core.app import app
+
+    _APP_IMPORT_STRING = "core.app:app"
 else:
     role = os.getenv("SERVICE_ROLE", "user").lower()
     if role == "admin":
         from core.app_admin import app
+
+        _APP_IMPORT_STRING = "core.app_admin:app"
     else:
         from core.app_user import app
+
+        _APP_IMPORT_STRING = "core.app_user:app"
 
 from core.config import settings
 from core.logging_config import setup_logging
@@ -78,8 +86,10 @@ def run_server() -> None:
             uvicorn_kwargs["workers"] = workers
 
     try:
-        # বাংলা: app-এর সরাসরি রেফারেন্স ব্যবহার, যাতে মডিউল রিলোডিং পরিবর্তনে ভাঙ্গবে না
-        uvicorn.run(app, **uvicorn_kwargs)
+        # বাংলা: আগে app object সরাসরি পাস হতো — reload=True বা workers>1 হলে uvicorn
+        # 'must pass import string' ওয়ার্নিং দিত এবং port bind না করেই exit হতো (status 3)।
+        # import string ব্যবহারে reload ও multi-worker দুটো ক্ষেত্রেই নির্ভরযোগ্যভাবে কাজ করে।
+        uvicorn.run(_APP_IMPORT_STRING, **uvicorn_kwargs)
     except RuntimeError as exc:
         logger.critical(f"Server failed to start (configuration error): {exc}")
         if settings.sentry_dsn:
