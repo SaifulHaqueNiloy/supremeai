@@ -34,10 +34,11 @@ export function GuardrailsPage() {
     try {
       const updated = await apiClient.put<ExecutionPolicy>(`/api/admin/execution-policies/${id}`, updates);
       setPolicies(policies.map(p => p.id === id ? updated : p));
-      showToast('Policy updated successfully', 'success');
+      // বাংলা মন্তব্য: Toast এর সঠিক প্যারামিটার অর্ডার (type, message) পাস করা হলো
+      showToast('success', 'Policy updated successfully');
     } catch (err) {
       console.error("Policy update failed", err);
-      showToast('Failed to update policy', 'error');
+      showToast('error', 'Failed to update policy');
     } finally {
       setSavingId(null);
     }

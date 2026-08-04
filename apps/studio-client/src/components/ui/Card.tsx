@@ -1,8 +1,14 @@
 import React from 'react';
 import { cn } from '../../utils/cn';
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+// বাংলা মন্তব্য: Card কম্পোনেন্টে title ও icon props গ্রহণ ও রেন্ডার করার সাপোর্ট যোগ করা হলো
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: React.ReactNode;
+  icon?: React.ReactNode;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, title, icon, children, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
@@ -10,7 +16,15 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
         className
       )}
       {...props}
-    />
+    >
+      {(title || icon) && (
+        <CardHeader className="flex flex-row items-center gap-2 border-b border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] pb-3 mb-4">
+          {icon && <span className="text-xl">{icon}</span>}
+          {title && (typeof title === 'string' ? <CardTitle>{title}</CardTitle> : title)}
+        </CardHeader>
+      )}
+      {children}
+    </div>
   )
 )
 Card.displayName = "Card"

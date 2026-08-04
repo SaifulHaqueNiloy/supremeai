@@ -128,7 +128,8 @@ export const RateLimitManager: React.FC = () => {
     try {
       const resp = await fetch(`${API_BASE}/admin/tenant-limits`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAdminToken()}` },
+        // বাংলা মন্তব্য: getAdminToken এর পরিবর্তে প্রপার adminTokenStore.getDecodedToken() মেথড কল যোগ করা হলো
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminTokenStore.getDecodedToken()}` },
         body: JSON.stringify(record),
       });
       if (!resp.ok) {
