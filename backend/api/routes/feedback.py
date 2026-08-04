@@ -13,12 +13,27 @@ from pydantic import BaseModel
 
 from core.feedback_loop import FeedbackLoop
 
-DB_PATH = Path("data/feedback.db")
+import tempfile
+
+def _get_db_path() -> Path:
+    base = Path("data")
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+        return base / "feedback.db"
+    except PermissionError:
+        fallback = Path(tempfile.gettempdir()) / "data"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback / "feedback.db"
+
+DB_PATH = _get_db_path()
 _feedback_loop = FeedbackLoop()
 
 
 def _ensure_db() -> None:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        pass
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     try:
         conn.execute(
