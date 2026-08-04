@@ -59,7 +59,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "🤖 Auto-fix: CI linting fixes"
+          commit-message: "🤖 Auto-fix: CI linting fixes [skip ci]"
           title: "🤖 Auto-fix: CI linting fixes"
           branch: "chore/auto-fix-${{ github.run_id }}"
           labels: "maintenance, automated"
