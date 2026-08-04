@@ -36,9 +36,12 @@ import litellm
 try:
     from backend.core.config import settings
 except ImportError:
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    # বাংলা: এই ফলব্যাক পাথটি আগে ভুল ছিল — Path(__file__).parent মানে
+    # scripts/devops/ ডিরেক্টরি, যেখানে backend/ সাবফোল্ডার আদৌ নেই। রিপো-রুট
+    # খুঁজতে .parent.parent.parent দরকার (scripts/devops/ → scripts/ → repo root)।
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "backend"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
     from core.config import settings
 
 # --- Configuration ---
@@ -596,7 +599,18 @@ if __name__ == "__main__":
 import asyncio
 import math
 from collections import deque
-from backend.core.messaging.event_bus import error_event_bus, ErrorEvent, ErrorContext
+# বাংলা: এই ইমপোর্টে আগে try/except fallback ছিল না — ফলে যখন এই মডিউলটি লাইভ
+# backend অ্যাপ থেকে `run_anomaly_detector_loop` হিসেবে ইমপোর্ট করা হতো (core.lifespan
+# app_lifespan-এর ভেতর থেকে, যেখানে sys.path-এ শুধু backend/-এর ভেতরের প্যাকেজ
+# (core.*) দৃশ্যমান, `backend` নিজে একটা top-level প্যাকেজ হিসেবে দৃশ্যমান নয়),
+# এটি সবসময় `ModuleNotFoundError: No module named 'backend'` দিত এবং BugProphet
+# Anomaly Detector agent-টি চালুই হতো না (render_admin_.txt লগে এই এররই বারবার
+# দেখা যাচ্ছিল)। উপরের config import-এর মতোই একই try/except fallback প্যাটার্ন এখানে
+# প্রয়োগ করা হলো।
+try:
+    from backend.core.messaging.event_bus import error_event_bus, ErrorEvent, ErrorContext
+except ImportError:
+    from core.messaging.event_bus import error_event_bus, ErrorEvent, ErrorContext
 
 class AnomalyDetector:
     def __init__(self):
