@@ -34,10 +34,10 @@ jobs:
         run: |
           echo "✅ Secondary CI Pipeline passed (GREEN 🟢)!"
           echo "🔄 Checking for existing PR from SaifulHaqueNiloy:main to paykaribazaronline:main..."
-          
+
           # Check if PR already exists
           EXISTING_PR=$(gh pr list --repo paykaribazaronline/supremeai --head SaifulHaqueNiloy:main --base main --json number --jq '.[0].number')
-          
+
           if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
             echo "ℹ️ Existing promotion PR #$EXISTING_PR found. Updated automatically."
           else
@@ -48,12 +48,12 @@ jobs:
               --base main \
               --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
               --body "## 🛡️ Secondary Staging CI Pass Report
-              
+
               All quality gates passed on \`SaifulHaqueNiloy/supremeai\`:
               - 🟢 Pytest & Backend Unit Tests
               - 🟢 Vitest & Web Client Tests
               - 🟢 Preflight & Security Audit
               - 🟢 Zero Production Deploys Executed on Staging
-              
+
               **Admin Action Required:** Please review and merge to trigger live production deployments across Render, Vercel, and Firebase."
           fi
