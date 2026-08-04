@@ -30,9 +30,9 @@ SERVICES = {
     }
 }
 
-# Optimized timing: Reduce poll interval to 10s and timeout to 300s (5 minutes)
+# Optimized timing: Poll interval 10s and timeout to 540s (9 minutes) for Render free tier
 POLL_INTERVAL = 10  # poll every 10s for faster feedback
-TIMEOUT_LIMIT = 300  # 5 minutes (reduced from 7.5 minutes)
+TIMEOUT_LIMIT = 540  # 9 minutes (allows Render free tier image pull & container spin-up)
 
 class _UrllibResponse:
     def __init__(self, resp):

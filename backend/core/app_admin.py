@@ -17,18 +17,18 @@ app: FastAPI = build_app_shell(title="SupremeAI Admin API")
 # বুট-টাইমে crash এড়াতে ডিফল্ট অ্যাডমিন origin অটো-পপুলেট করা হচ্ছে।
 # শুধুমাত্র অ্যাডমিন কনসোল origin — Vercel/Netlify user client নয়।
 if settings.env == "production":
-    if not settings.admin_cors_origins:
+    # বাংলা মন্তব্য: প্রোডাকশনে অ্যাডমিন CORS অরিজিনে '*' থাকলে বা খালি হলে ক্র্যাশ এড়াতে সেফ অরিজিন সেট করা হচ্ছে
+    if not settings.admin_cors_origins or "*" in settings.admin_cors_origins:
         from loguru import logger
 
-        logger.warning("⚠️ Production Admin CORS drift detected. Auto-populating default trusted admin origins.")
+        logger.warning("⚠️ Production Admin CORS wildcard/drift detected. Setting default trusted admin origins.")
         settings.admin_cors_origins = [
+            origin for origin in (settings.admin_cors_origins or []) if origin != "*"
+        ] + [
             "https://supremeai-admin.web.app",
             "https://supremeai-backend.onrender.com",
+            "https://supremeai-backend-08zd.onrender.com",
         ]
-    if "*" in settings.admin_cors_origins:
-        raise RuntimeError(
-            "🚨 SECURITY: Wildcard '*' is strictly prohibited in production Admin CORS. Set ADMIN_CORS_ORIGINS."
-        )
 
 app.add_middleware(
     CORSMiddleware,
