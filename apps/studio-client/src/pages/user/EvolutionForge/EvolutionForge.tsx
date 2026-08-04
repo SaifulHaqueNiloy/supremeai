@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
+// বাংলা মন্তব্য: EvolutionForge কম্পোনেন্টে মিসিং useEffect ইম্পোর্ট যোগ করা হলো
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,

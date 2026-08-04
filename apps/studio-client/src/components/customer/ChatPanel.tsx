@@ -119,7 +119,8 @@ export function ChatPanel({ messages, input, onInputChange, onSend, loading, onS
       </div>
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-4">
         {messages.map(msg => {
-          const isUser = msg.sender === 'User' || msg.sender === 'user';
+          // বাংলা মন্তব্য: sender এর টাইপ 'user' বা 'User' যেকোনো কেস এ আসলেই সঠিকভাবে হ্যান্ডেল করার জন্য toLowerCase() চেক যোগ করা হলো
+          const isUser = msg.sender?.toLowerCase() === 'user';
           return (
             <div key={msg.id} className="group relative">
               <UnifiedChatBubble

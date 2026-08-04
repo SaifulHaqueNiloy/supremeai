@@ -119,6 +119,9 @@ interface CustomerState {
   fetchCustomers: () => Promise<void>;
 }
 
+// বাংলা মন্তব্য: সুপ্রিম স্টেট টাইপ অ্যালাইয়াস এবং ইউজার অ্যাক্সেস নিশ্চিত করতে SupremeState এক্সপোর্ট করা হলো
+export type SupremeState = SupremeStore;
+
 export interface SupremeStore
   extends AuthState,
     ThemeState,
