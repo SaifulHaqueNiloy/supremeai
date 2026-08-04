@@ -22,9 +22,7 @@ if settings.env == "production":
         from loguru import logger
 
         logger.warning("⚠️ Production Admin CORS wildcard/drift detected. Setting default trusted admin origins.")
-        settings.admin_cors_origins = [
-            origin for origin in (settings.admin_cors_origins or []) if origin != "*"
-        ] + [
+        settings.admin_cors_origins = [origin for origin in (settings.admin_cors_origins or []) if origin != "*"] + [
             "https://supremeai-admin.web.app",
             "https://supremeai-backend.onrender.com",
             "https://supremeai-backend-08zd.onrender.com",
