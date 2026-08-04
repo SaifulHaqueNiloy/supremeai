@@ -27,6 +27,29 @@ export const ProfilePage: React.FC = () => {
     }));
   };
 
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarError(null);
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setAvatarError('Only JPG, PNG, and WebP images are allowed.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError('Avatar image size must be under 2MB.');
+      return;
+    }
+
+    // Avatar validation passed
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
   return (
     <div className="flex h-screen w-full bg-slate-950 text-slate-100 overflow-hidden">
       <NavRail />
@@ -54,12 +77,14 @@ export const ProfilePage: React.FC = () => {
                 <div>
                   <h2 className="text-lg font-semibold text-slate-200">{name}</h2>
                   <p className="text-sm text-slate-400">{email}</p>
+                  {avatarError && <p className="text-xs text-red-400 mt-1 font-mono">{avatarError}</p>}
                 </div>
               </div>
               <div className="flex space-x-3">
-                <button className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 transition-colors text-sm">
-                  Change Avatar
-                </button>
+                <label className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 transition-colors text-sm cursor-pointer inline-flex items-center justify-center">
+                  <span>Change Avatar</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} className="hidden" />
+                </label>
                 <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 transition-colors text-sm">
                   Edit Profile
                 </button>
