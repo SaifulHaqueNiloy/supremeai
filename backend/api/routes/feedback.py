@@ -15,6 +15,7 @@ from core.feedback_loop import FeedbackLoop
 
 import tempfile
 
+
 def _get_db_path() -> Path:
     base = Path("data")
     try:
@@ -24,6 +25,7 @@ def _get_db_path() -> Path:
         fallback = Path(tempfile.gettempdir()) / "data"
         fallback.mkdir(parents=True, exist_ok=True)
         return fallback / "feedback.db"
+
 
 DB_PATH = _get_db_path()
 _feedback_loop = FeedbackLoop()
