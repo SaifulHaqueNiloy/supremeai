@@ -11,7 +11,7 @@ import { LivingActionDock } from './LivingActionDock';
 import { LiveSimulator } from './LiveSimulator';
 import { SidebarSettings } from './SidebarSettings';
 import { HITLModal } from './HITLModal';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore, AuthStatus } from '../../store/authStore';
 import { Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 
@@ -32,7 +32,7 @@ export function LivingDashboardShell({ chatPanel, resolveDraggedContent, onOpenS
   const isSidebarCollapsed = useWorkspaceSettings((s) => s.isSidebarCollapsed);
   const toggleSidebar = useWorkspaceSettings((s) => s.toggleSidebar);
   const enabledIntegrations = useEnabledIntegrations();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => s.status === AuthStatus.LOGGED_IN);
 
   const { nodeStatus, handleDragEnd, pendingAction, confirmAction, cancelAction } = useDynamicDock({
     resolveContent: resolveDraggedContent,

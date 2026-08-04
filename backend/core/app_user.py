@@ -33,9 +33,7 @@ if settings.env == "production":
         from loguru import logger
 
         logger.warning("⚠️ Production User CORS wildcard/drift detected. Setting default trusted production origins.")
-        settings.user_cors_origins = [
-            origin for origin in (settings.user_cors_origins or []) if origin != "*"
-        ] + [
+        settings.user_cors_origins = [origin for origin in (settings.user_cors_origins or []) if origin != "*"] + [
             "https://supremeai-lac.vercel.app",
             "https://supremeai-studio.vercel.app",
             "https://tiny-stroopwafel-2d981c.netlify.app",
