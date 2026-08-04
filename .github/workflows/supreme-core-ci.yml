@@ -891,6 +891,7 @@ jobs:
     environment: production
     if: |
       always() &&
+      github.repository == 'paykaribazaronline/supremeai' &&
       needs.build-backend-image.result == 'success' &&
       (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       needs.changes.outputs.customer_backend_changed == 'true' &&
@@ -969,6 +970,7 @@ jobs:
     environment: production
     if: |
       always() &&
+      github.repository == 'paykaribazaronline/supremeai' &&
       needs.build-backend-image.result == 'success' &&
       (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       needs.changes.outputs.admin_backend_changed == 'true' &&
@@ -1053,6 +1055,7 @@ jobs:
     environment: production
     if: |
       always() &&
+      github.repository == 'paykaribazaronline/supremeai' &&
       needs.build-backend-image.result == 'success' &&
       (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       needs.changes.outputs.admin_backend_changed == 'true' &&

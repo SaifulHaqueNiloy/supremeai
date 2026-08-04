@@ -1,0 +1,59 @@
+name: 🔀 Staging PR Promotion Dispatcher
+
+on:
+  workflow_run:
+    workflows: ["🧠 SupremeAI Core CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-promotion-pr:
+    name: 🟢 Auto Create Promotion PR to Main Repo
+    # 1. Secondary repo-তে চলবে
+    # 2. workflow_run সম্পন্ন ও successful (GREEN 🟢) হতে হবে
+    if: |
+      github.repository == 'SaifulHaqueNiloy/supremeai' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Staging Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🤖 Create or Update PR to Main Repository
+        env:
+          GH_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          STAGING_HEAD: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          echo "✅ Secondary CI Pipeline passed (GREEN 🟢)!"
+          echo "🔄 Checking for existing PR from SaifulHaqueNiloy:main to paykaribazaronline:main..."
+          
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --repo paykaribazaronline/supremeai --head SaifulHaqueNiloy:main --base main --json number --jq '.[0].number')
+          
+          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
+            echo "ℹ️ Existing promotion PR #$EXISTING_PR found. Updated automatically."
+          else
+            echo "🚀 Opening new automated Staging Promotion PR..."
+            gh pr create \
+              --repo paykaribazaronline/supremeai \
+              --head SaifulHaqueNiloy:main \
+              --base main \
+              --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
+              --body "## 🛡️ Secondary Staging CI Pass Report
+              
+              All quality gates passed on \`SaifulHaqueNiloy/supremeai\`:
+              - 🟢 Pytest & Backend Unit Tests
+              - 🟢 Vitest & Web Client Tests
+              - 🟢 Preflight & Security Audit
+              - 🟢 Zero Production Deploys Executed on Staging
+              
+              **Admin Action Required:** Please review and merge to trigger live production deployments across Render, Vercel, and Firebase."
+          fi
