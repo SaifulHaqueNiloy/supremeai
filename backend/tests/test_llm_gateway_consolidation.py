@@ -153,7 +153,9 @@ async def test_gateway_health_endpoint_simulation():
     from fastapi.testclient import TestClient
 
     from core.api.routes.llm_gateway import router
-    from main import app  # Assuming main.py contains the FastAPI app
+
+    # বাংলা মন্তব্য: মেইন মডিউলের বদলে core.app থেকে অ্যাপ ইমপোর্ট করা হলো
+    from core.app import app
 
     # Add the router to the main app for testing
     app.include_router(router)
