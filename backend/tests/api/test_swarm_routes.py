@@ -10,7 +10,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.dependencies import get_current_user_token
-from main import app
+
+# বাংলা মন্তব্য: মেইন মডিউলের বদলে core.app থেকে সরাসরি app ইমপোর্ট করা হলো
+from core.app import app
 
 client = TestClient(app)
 

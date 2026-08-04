@@ -8,6 +8,8 @@ from __future__ import annotations
 from core.error_bus import with_error_bus
 import os
 
+import sys
+
 from cryptography.fernet import Fernet
 from loguru import logger
 
@@ -42,11 +44,12 @@ else:
     )
 
     if not ENCRYPTION_KEY:
-        # টেস্ট ও সিআই পরিবেশে ক্র্যাশ এড়াতে একটি ডামি/এফেমেরাল কী জেনারেট করা হচ্ছে।
+        # বাংলা মন্তব্য: টেস্ট ও সিআই পরিবেশে ক্র্যাশ এড়াতে একটি ডামি/এফেমেরাল কী জেনারেট করা হচ্ছে।
         if (
             os.environ.get("ENV") in {"test", "testing", "ci"}
             or os.environ.get("CI") == "true"
             or os.environ.get("GITHUB_ACTIONS") == "true"
+            or "pytest" in sys.modules
         ):
             ENCRYPTION_KEY = Fernet.generate_key().decode("utf-8")
         else:
