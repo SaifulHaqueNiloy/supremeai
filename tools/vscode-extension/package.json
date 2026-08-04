@@ -1,6 +1,7 @@
 {
   "name": "supremeai-vscode",
   "displayName": "SupremeAI - AI-Powered Development Assistant",
+  "icon": "media/icon.png",
   "description": "Real-time code analysis, learning, and AI assistance with SupremeAI Core Engine",
   "version": "6.0.0",
   "license": "MIT",
@@ -319,14 +320,13 @@
           "description": "Performance mode: balanced (default), powerful (more features), or efficient (lower resource usage)."
         }
       }
-    }
-  },
+    },
   "viewsContainers": {
     "activitybar": [
       {
         "id": "supremeai-sidebar",
         "title": "SupremeAI",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       }
     ]
   },
@@ -336,53 +336,54 @@
         "id": "supremeaiChat",
         "name": "Chat",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiDependencyGraph",
         "name": "Dependency Graph",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiArchitectureMap",
         "name": "Architecture Map",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiFlowChart",
         "name": "Flow Chart",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiSecurityIssues",
         "name": "Security Issues",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiPerformanceInsights",
         "name": "Performance Insights",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiAdminDashboard",
         "name": "Admin Dashboard",
         "when": "supremeai.authenticated && supremeai.isAdmin",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       },
       {
         "id": "supremeaiCustomerDashboard",
         "name": "User Settings",
         "when": "supremeai.authenticated",
         "type": "webview",
-        "icon": "media/icon.svg"
+        "icon": "media/icon.png"
       }
     ]
+  }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package-ext",
