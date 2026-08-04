@@ -158,6 +158,21 @@ def check_firebase_warning(sa_json_str: str) -> Optional[str]:
 
 
 # ──────────────────────────────────────────────────────────────
+# Secondary Repo Sync Check — WARNING ONLY (non-blocking)
+# ──────────────────────────────────────────────────────────────
+def check_secondary_mirror_warning(token: str) -> None:
+    """
+    বাংলা মন্তব্য: Secondary Repository Mirror (MIRROR_REPO_TOKEN) সেট করা আছে কিনা চেক করে।
+    এটি Warning-only — খালি থাকলে বা সেট না থাকলে warning মেসেজ প্রিন্ট করে যাতে জানা যায় কেন মিররিং স্কিপ হতে পারে।
+    """
+    if not token:
+        print("  ⚠️  [SECONDARY-MIRROR] WARNING: MIRROR_REPO_TOKEN secret is empty or missing in GitHub Secrets.")
+        print("      → Secondary repository (SaifulHaqueNiloy/supremeai) will NOT automatically sync on push.")
+    else:
+        print("  ✅ [SECONDARY-MIRROR] PASS — MIRROR_REPO_TOKEN detected.")
+
+
+# ──────────────────────────────────────────────────────────────
 # GCP check — COMMENTED OUT (enable করতে uncomment করুন)
 # ──────────────────────────────────────────────────────────────
 # def check_gcp(sa_json_str: str, project_id: str) -> Optional[str]:
@@ -224,6 +239,7 @@ def main() -> None:
     backup_svc_url      = os.environ.get("RENDER_BACKUP_URL",  "https://supremeai-admin.onrender.com")
     vercel_token        = os.environ.get("VERCEL_TOKEN", "")
     firebase_sa         = os.environ.get("FIREBASE_SERVICE_ACCOUNT", "")
+    mirror_token        = os.environ.get("MIRROR_REPO_TOKEN", "")
     # gcp_sa_key        = os.environ.get("GCP_SA_KEY", "")        # uncomment when GCP enabled
     # gcp_project_id    = os.environ.get("GCP_PROJECT_ID", "")    # uncomment when GCP enabled
 
@@ -231,7 +247,7 @@ def main() -> None:
     blocking_errors: list[str] = []
 
     # Render Primary (BLOCKING)
-    print("\n[1/4] Render Primary Backend...")
+    print("\n[1/5] Render Primary Backend...")
     err = check_render("RENDER-PRIMARY", render_key_primary, primary_svc_id)
     if err:
         blocking_errors.append(err)
@@ -239,7 +255,7 @@ def main() -> None:
         ping_render_warmup("RENDER-PRIMARY", primary_svc_url)
 
     # Render Backup/Admin (BLOCKING)
-    print("\n[2/4] Render Backup/Admin Backend...")
+    print("\n[2/5] Render Backup/Admin Backend...")
     err = check_render("RENDER-BACKUP", render_key_backup, backup_svc_id)
     if err:
         blocking_errors.append(err)
@@ -247,14 +263,18 @@ def main() -> None:
         ping_render_warmup("RENDER-BACKUP", backup_svc_url)
 
     # Vercel (BLOCKING)
-    print("\n[3/4] Vercel User Portal...")
+    print("\n[3/5] Vercel User Portal...")
     err = check_vercel(vercel_token)
     if err:
         blocking_errors.append(err)
 
     # Firebase (WARNING ONLY — non-blocking)
-    print("\n[4/4] Firebase Service Account (warning-only)...")
+    print("\n[4/5] Firebase Service Account (warning-only)...")
     check_firebase_warning(firebase_sa)
+
+    # Secondary Repo Mirror Check (WARNING ONLY — non-blocking)
+    print("\n[5/5] Secondary Repository Mirror Token (warning-only)...")
+    check_secondary_mirror_warning(mirror_token)
 
     # GCP check — uncomment block below when GCP deploy is re-enabled
     # print("\n[5/5] GCP Cloud Run (blocking)...")
