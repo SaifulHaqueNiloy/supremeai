@@ -22,17 +22,14 @@ from loguru import logger
 # বাংলা: _APP_IMPORT_STRING ট্র্যাক করা হয় যাতে uvicorn.run()-এ app object-এর বদলে
 # import string পাস করা যায় — reload=True বা workers>1 উভয় ক্ষেত্রেই সঠিকভাবে কাজ করে।
 if "pytest" in sys.modules:
-    from core.app import app
 
     _APP_IMPORT_STRING = "core.app:app"
 else:
     role = os.getenv("SERVICE_ROLE", "user").lower()
     if role == "admin":
-        from core.app_admin import app
 
         _APP_IMPORT_STRING = "core.app_admin:app"
     else:
-        from core.app_user import app
 
         _APP_IMPORT_STRING = "core.app_user:app"
 
