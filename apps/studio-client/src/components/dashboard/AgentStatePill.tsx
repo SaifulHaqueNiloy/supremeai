@@ -14,6 +14,8 @@ const stateConfig: Record<SujonState, { color: string; label: string; animation:
   awaiting_human: { color: 'bg-purple-500', label: 'Awaiting Input', animation: 'animate-ping' },
   success: { color: 'bg-emerald-400', label: 'Success', animation: '' },
   failed: { color: 'bg-red-500', label: 'Failed', animation: '' },
+  // বাংলা মন্তব্য: SujonState enum এর processing স্টেটের জন্য কালার ও লেবেল ম্যাপিং যোগ করা হলো
+  processing: { color: 'bg-indigo-500', label: 'Processing', animation: 'animate-pulse' },
 };
 
 export const AgentStatePill: React.FC<AgentStatePillProps> = ({ state }) => {

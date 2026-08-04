@@ -4,6 +4,7 @@ import { apiClient } from '../services/apiClient';
 import { adminTokenStore } from '../services/adminTokenStore';
 import { useErrorHandler } from './useErrorHandler';
 
+// বাংলা মন্তব্য: MetricsData ফিল্ডগুলোতে active_agents, cpu_percent, memory_percent যোগ করা হলো
 export interface MetricsData {
   latency_p50_ms: number;
   latency_p95_ms: number;
@@ -18,6 +19,9 @@ export interface MetricsData {
   cpu_usage_percent?: number;
   gpu_usage_percent?: number;
   memory_usage_percent?: number;
+  cpu_percent?: number;
+  memory_percent?: number;
+  active_agents?: number;
 }
 
 export interface CostReport {
@@ -59,35 +63,33 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const { handleError } = useErrorHandler();
 
-  const loadMetrics = async () => {
-    setLoading(true);
+  const loadMetrics = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/dashboard/metrics');
-      if (!response.ok) throw new Error(`Metrics sync drop out. Status: ${response.status}`);
-      const data = await response.json();
+      setLoading(true);
+      const data = await apiClient.get<MetricsData>('/admin-api/metrics');
       setMetrics(data);
-    } catch (error: any) {
-      // 🛡️ অডিটর ফিক্স: সائেন্ট কনসোল ড্রপ বন্ধ করে প্রপার গ্লোবাল টোস্ট এবং ফলব্যাক ট্রিগার
-      handleError(error, "Dashboard global metrics core pipeline crash");
-      setMetrics(null);
+    } catch (err) {
+      handleError(err, 'Failed to load metrics data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleError]);
 
   useEffect(() => {
-    loadMetrics();
-  }, []);
+    if (hasToken()) {
+      loadMetrics();
+    }
+  }, [loadMetrics]);
 
   return { metrics, loading, refetch: loadMetrics };
 };
 
-// বাংলা মন্তব্য: পোলিং বন্ধ করে SSE-এর মাধ্যমে ডেটা আপডেট করা হবে
-export function useMetrics() {
+// বাংলা মন্তব্য: পোলিং বন্ধ করে SSE-এর মাধ্যমে ডেটা আপডেট করা হবে, তবে optional interval প্যারামিটার সাপোর্ট করা হলো
+export function useMetrics(refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: ['dashboard', 'metrics'],
     queryFn: () => apiClient.get<MetricsData>('/admin-api/metrics'),
-    refetchInterval: false,
+    refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: Infinity,
   });
@@ -103,17 +105,17 @@ export function useCostReport() {
   });
 }
 
-export function useHealthMap() {
+export function useHealthMap(refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: ['dashboard', 'health'],
     queryFn: () => apiClient.get<HealthMapData>('/admin-api/health-map'),
-    refetchInterval: false,
+    refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: Infinity,
   });
 }
 
-export function useCIReports(limit = 5) {
+export function useCIReports(limit = 5, refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: ['dashboard', 'ci-logs', limit],
     queryFn: () => apiClient.get<CIReport[]>(`/admin-api/ci-logs?limit=${limit}`),
@@ -168,11 +170,11 @@ export interface ReportDetail {
 }
 
 // বাংলা মন্তব্য: রিয়েল-টাইম ইভেন্ট ডেটা ফেচ করার জন্য রিয়্যাক্ট কোয়েরি হুক
-export function useDashboardEvents(limit = 50) {
+export function useDashboardEvents(limit = 50, refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: ['dashboard', 'events', limit],
     queryFn: () => apiClient.get<DashboardEvent[]>(`/admin-api/events?limit=${limit}`),
-    refetchInterval: false,
+    refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: Infinity,
   });
