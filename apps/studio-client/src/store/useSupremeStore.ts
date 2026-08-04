@@ -64,7 +64,7 @@ interface AdminState {
   permissions: Permission[];
   addUser: (user: User) => void;
   removeUser: (userId: string) => void;
-  updateUser: (user: User) => void;
+  updateAdminUser: (user: User) => void;
   fetchUsers: () => Promise<void>;
   fetchRoles: () => Promise<void>;
   fetchPermissions: () => Promise<void>;
@@ -220,7 +220,7 @@ const useSupremeStore = create<SupremeStore>()(
       removeUser: (userId) => set(state => ({
         users: state.users.filter(user => user.id !== userId)
       })),
-      updateUser: (user) => set(state => ({
+      updateAdminUser: (user) => set(state => ({
         users: state.users.map(u => u.id === user.id ? { ...u, ...user } : u)
       })),
       fetchUsers: async () => {

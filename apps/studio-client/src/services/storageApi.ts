@@ -1,6 +1,6 @@
 // FrR2 Storage API
 
-import { getApiBaseUrl } from './utils/api';
+import { getApiBaseUrl } from '../utils/api';
 import { adminTokenStore } from './adminTokenStore';
 
 
