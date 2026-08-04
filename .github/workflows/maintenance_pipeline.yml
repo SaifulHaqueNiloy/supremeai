@@ -318,7 +318,7 @@ jobs:
       - name: Install Graphviz + erdantic
         run: |
           sudo apt-get update && sudo apt-get install -y graphviz
-          poetry run pip install erdantic
+          poetry run pip install erdantic || pip install erdantic || true
 
       - name: 📊 Generate ERD from Pydantic Models
         working-directory: backend
@@ -660,6 +660,7 @@ jobs:
       - name: Run MLOps Nightly Suite
         working-directory: backend
         run: |
+          mkdir -p ../reports
           poetry run python ../scripts/ai/model_drift_detector.py --export-promql
           poetry run python ../scripts/ai/bias_detector.py --report-json ../reports/bias_nightly.json
           poetry run python ../scripts/ai/prompt_injection_tester.py
