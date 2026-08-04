@@ -28,20 +28,21 @@ app.add_middleware(
 )
 
 if settings.env == "production":
-    if not settings.user_cors_origins:
+    # বাংলা মন্তব্য: প্রোডাকশনে CORS অরিজিনে '*' থাকলে বা খালি হলে ক্র্যাশ এড়াতে সেফ প্রোডাকশন অরিজিন সেট করা হচ্ছে
+    if not settings.user_cors_origins or "*" in settings.user_cors_origins:
         from loguru import logger
 
-        logger.warning("⚠️ Production User CORS drift detected. Auto-populating default trusted production origins.")
+        logger.warning("⚠️ Production User CORS wildcard/drift detected. Setting default trusted production origins.")
         settings.user_cors_origins = [
+            origin for origin in (settings.user_cors_origins or []) if origin != "*"
+        ] + [
+            "https://supremeai-lac.vercel.app",
             "https://supremeai-studio.vercel.app",
             "https://tiny-stroopwafel-2d981c.netlify.app",
             "https://supremeai-admin.web.app",
             "https://supremeai-backend.onrender.com",
+            "https://supremeai-backend-08zd.onrender.com",
         ]
-    if "*" in settings.user_cors_origins:
-        raise RuntimeError(
-            "🚨 SECURITY: Wildcard '*' is strictly prohibited in production User CORS. Set USER_CORS_ORIGINS."
-        )
 
 include_user_routers(app)
 router_health_check(app)
