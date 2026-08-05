@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const user = useAuthStore((state) => state.user);
 
   // বাংলা মন্তব্য: টেস্ট আইডি সহ নেভিগেশন আইটেম লিস্ট তৈরি করা হলো
   const navItems = [
@@ -84,11 +86,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-slate-800">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3">
-              <span className="text-green-800 dark:text-green-400 font-medium">U</span>
+              <span className="text-green-800 dark:text-green-400 font-medium">
+                {user ? user.name.charAt(0).toUpperCase() : 'U'}
+              </span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-800 dark:text-slate-200">User Name</p>
-              <p className="text-xs text-gray-500 dark:text-slate-500">user@example.com</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-slate-200">
+                {user ? user.name : 'Guest User'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-500">
+                {user ? user.email : 'guest@supremeai.dev'}
+              </p>
             </div>
           </div>
         </div>

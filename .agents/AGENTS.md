@@ -140,6 +140,11 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
   - There are NO local-only environment hacks or local targets. All code, setups, dependencies, models, and workflows MUST be production-grade targeting live cloud infrastructure (GCP Cloud Run, Render, Vercel, Infisical, Supabase, Cloudflare, GitHub Actions).
   - Speculative local-path fallbacks, mock-type checking in production code, or local-only workarounds are strictly forbidden.
 
+- **Strict Documentation Architecture Rule (MANDATORY):**
+  - Whenever generating, updating, or maintaining ANY technical documentation, design specs, or knowledge items, the AI agent **MUST strictly follow the Master Documentation Plan and Benefits specification** ([docs/bangla/01-admin-plans/master-documentation-plan-and-benefits.md](file:///g:/supremeai%20backup/docs/bangla/01-admin-plans/master-documentation-plan-and-benefits.md) / [docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md](file:///g:/supremeai%20backup/docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md)).
+  - All new technical documents must be placed within the AI-Native Engineering Knowledge Base (`docs/kb/`) or categorized subfolders (`docs/bangla/<category>` / `docs/english/<category>`), fully adhering to the 12 Core Pillars, Knowledge Cards, Living Impact Analysis, and Mermaid Diagram standards.
+
+
 ---
 
 ## 🧬 Role: Principal Autonomous AI Architect

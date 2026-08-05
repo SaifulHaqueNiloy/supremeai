@@ -184,11 +184,10 @@ export function UserDashboard({
             key={tab}
             data-testid={`tab-${tab}`}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-xs font-bold tracking-wider rounded-lg transition-all ${
-              activeTab === tab
+            className={`px-4 py-2 text-xs font-bold tracking-wider rounded-lg transition-all ${activeTab === tab
                 ? 'bg-accent-primary/20 text-neon-blue border border-border-accent shadow-[0_0_15px_rgba(0,243,255,0.1)]'
                 : 'text-text-secondary hover:text-foreground border border-transparent hover:border-border-accent'
-            }`}
+              }`}
           >
             {tab === 'overview' && <><Activity size={10} className="inline mr-1" /> Overview</>}
             {tab === 'feed' && <><Sparkles size={10} className="inline mr-1" /> Home Feed</>}
@@ -269,7 +268,7 @@ export function UserDashboard({
                 <h2 className="text-xs font-bold tracking-widest text-neon-blue uppercase flex items-center gap-2">
                   <FolderOpen size={12} /> Your Projects
                 </h2>
-                <button className="text-[10px] text-slate-400 hover:text-neon-blue font-mono transition-colors flex items-center gap-1">
+                <button onClick={() => setActiveTab('feed')} className="text-[10px] text-slate-400 hover:text-neon-blue font-mono transition-colors flex items-center gap-1">
                   View All <ChevronRight size={8} />
                 </button>
               </div>
@@ -345,7 +344,7 @@ export function UserDashboard({
                   </div>
                   <ChevronRight size={16} className="text-slate-400" />
                 </button>
-                <button className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 hover:bg-slate-700/50 text-left transition-all group">
+                <button onClick={() => setActiveTab('analytics')} className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-700 hover:bg-slate-700/50 text-left transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-slate-700/20 rounded-lg group-hover:bg-slate-600/20 transition-colors">
                       <Settings2 size={16} className="text-slate-400" />

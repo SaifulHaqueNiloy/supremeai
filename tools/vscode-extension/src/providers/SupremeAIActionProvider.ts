@@ -25,3 +25,4 @@ export class SupremeAIActionProvider implements vscode.CodeActionProvider<vscode
         return [action];
     }
 }
+

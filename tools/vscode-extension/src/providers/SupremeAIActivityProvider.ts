@@ -99,3 +99,4 @@ export class SupremeAIActivityItem extends vscode.TreeItem {
     }
   }
 }
+

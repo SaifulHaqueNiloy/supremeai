@@ -174,7 +174,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  const explainCodeCommand = vscode.commands.registerCommand('supremeai.explainCode', async () => {
+  const explainCodeCommand = vscode.commands.registerCommand('supremeai.aiExplain', async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showWarningMessage('No active editor selected.');
@@ -210,7 +210,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     });
   });
 
-  const reviewCodeCommand = vscode.commands.registerCommand('supremeai.reviewCode', async () => {
+  const reviewCodeCommand = vscode.commands.registerCommand('supremeai.aiReview', async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showWarningMessage('No active editor selected.');
@@ -430,7 +430,26 @@ function registerCommands(context: vscode.ExtensionContext): void {
   // Command to show dependency graph - initialize provider when needed
   const showDependencyGraphCommand = vscode.commands.registerCommand('supremeai.showDependencyGraph', async () => {
     // Create and show dependency graph view
-    await vscode.commands.executeCommand('supremeaiDependencyGraph.focus');
+    const providers = vscode.window.visibleTextEditors;
+    if (providers.length > 0) {
+      await vscode.commands.executeCommand('supremeaiDependencyGraph.focus');
+    } else {
+      // Fallback: show a message
+      vscode.window.showInformationMessage('Dependency Graph view is registered in the sidebar.');
+    }
+  });
+
+  // Register openChat command for status bar click
+  const openChatCommand = vscode.commands.registerCommand('supremeai.openChat', () => {
+    vscode.commands.executeCommand('workbench.view.extension.supremeai-sidebar');
+    vscode.commands.executeCommand('supremeaiChat.focus');
+  });
+
+  // Register analyzeCodeFlow command to trigger CodeFlow analysis
+  const analyzeCodeFlowCommand = vscode.commands.registerCommand('supremeai.analyzeCodeFlow', () => {
+    if (codeFlowHandler) {
+      codeFlowHandler.analyzeCodeFlow();
+    }
   });
 
   // Register visualization handler only when needed
@@ -454,7 +473,9 @@ function registerCommands(context: vscode.ExtensionContext): void {
     performSecurityScanCommand,
     analyzePerformanceCommand,
     showDependencyGraphCommand,
-    visualizationCommand
+    visualizationCommand,
+    openChatCommand,
+    analyzeCodeFlowCommand
   );
 }
 

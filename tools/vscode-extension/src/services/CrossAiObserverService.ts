@@ -24,9 +24,16 @@ export class CrossAiObserverService {
                 timestamp: new Date().toISOString()
             };
 
-            await axios.post(this._backendUrl, payload, {
-                headers: { 'Authorization': 'Bearer YOUR_VALID_PRODUCTION_TEST_JWT_TOKEN' }
-            });
+            // AuthService থেকে বর্তমান টোকেন ব্যবহার করা হলো (হার্ডকোডেড টোকেন নয়)
+            const { AuthService } = require('./AuthService');
+            const authService = AuthService.getInstance();
+            const token = authService?.getToken();
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            await axios.post(this._backendUrl, payload, { headers });
             console.log('💾 [Cross-AI Learned] Intercepted workflow synced to Supreme Database Pool.');
         } catch (error) {
             console.error('❌ Failed to stream cross-AI observed metrics to backend:', error);

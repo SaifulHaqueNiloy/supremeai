@@ -34,6 +34,7 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <style>
     body {
       font-family: var(--vscode-font-family, sans-serif);
@@ -142,6 +143,7 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SupremeAI Admin Dashboard</title>
   <style>
@@ -349,32 +351,34 @@ export class SupremeAIAdminDashboardProvider implements vscode.WebviewViewProvid
 
   <script>
     const vscode = acquireVsCodeApi();
-    const abortController = new AbortController();
-    window.addEventListener("unload", () => abortController.abort());
+    window.addEventListener("unload", () => { /* Cleanup */ });
 
     document.getElementById('analyzeBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'analyzeCodeFlow' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'analyzeCodeFlow' });
     });
     document.getElementById('securityAuditBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'runSecurityAudit' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'runSecurityAudit' });
     });
     document.getElementById('settingsBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'openSettings' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'openSettings' });
     });
     document.getElementById('healthCheckBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'runHealthCheck' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'runHealthCheck' });
     });
     document.getElementById('perfOptimizeBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'optimizePerformance' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'optimizePerformance' });
     });
     document.getElementById('reportBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'generateReport' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'generateReport' });
     });
     document.getElementById('refreshBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'refresh' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'refresh' });
     });
   </script>
 </body>
 </html>`;
   }
 }
+
+
+

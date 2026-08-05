@@ -128,7 +128,6 @@ export class AuthService {
   }
 
   public async completeLogin(token: string, user: Record<string, any>): Promise<void> {
-    const store = vscode.workspace.isTrusted;
     if (this.secrets) {
       await this.secrets.store('supremeai.aiApiKey', token);
     } else {

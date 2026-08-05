@@ -57,7 +57,7 @@ export function InteractiveChatTab({
     {
       id: 'init',
       sender: 'system',
-      text: 'স্বাগতম! আমি SupremeAI 2.0 অ্যাসিস্ট্যান্ট। আমি চ্যাট, কোড, রিসার্চ এবং ডেপ্লয়মেন্ট — সবকিছু এই Unified Command Portal থেকে সাপোর্ট করি।órm',
+      text: 'স্বাগতম! আমি SupremeAI 2.0 অ্যাসিস্ট্যান্ট। আমি চ্যাট, কোড, রিসার্চ এবং ডেপ্লয়মেন্ট — সবকিছু এই Unified Command Portal থেকে সাপোর্ট করি।',
       timestamp: new Date().toLocaleTimeString(),
     },
   ]);
@@ -191,7 +191,7 @@ export function InteractiveChatTab({
     setInternalMessages(prev => [...prev, userMsg]);
     setActiveInput('');
 
-    // Prompt-to-Action: metadata প্রত্যেকachus Georgian মেসেজের সাথে
+    // Prompt-to-Action: মেটাডেটা প্রত্যেকটি মেসেজের সাথে যুক্ত করা হয়
     const actionMeta = await fetchActionMetadata(inputVal);
 
     if (abortControllerRef.current) {
@@ -199,7 +199,7 @@ export function InteractiveChatTab({
     }
     await streamChatResponse(inputVal);
 
-    // শেষ বাবলের action স sandwichedetect এবং আপডেট
+    // শেষ বাবলের action সেট করা হয় এবং আপডেট করা হয়
     setInternalMessages(prev => {
       const last = prev[prev.length - 1];
       if (last && last.sender === 'system' && actionMeta) {
