@@ -161,8 +161,9 @@ class KnowledgeGraph:
                 if self._chroma:
                     try:
                         self._chroma.delete(f"entity::{name}")
-                    except Exception:
-                        pass
+                    except Exception as err:
+                        # বাংলা মন্তব্য: ChromaDB entity ডিলেট না করা গেলে লগ রেকর্ড করা হচ্ছে
+                        logger.warning("Failed to delete entity %s from ChromaDB: %s", name, err)
                 deleted.append(name)
         return deleted
 
@@ -261,8 +262,9 @@ class KnowledgeGraph:
                         if name in self._entities:
                             semantic_hits.append(self._entities[name])
                 return semantic_hits
-            except Exception:
-                pass
+            except Exception as err:
+                # বাংলা মন্তব্য: ChromaDB search query ব্যর্থ হলে লগ রেকর্ড করা হচ্ছে
+                logger.warning("ChromaDB search query failed for '%s': %s", query, err)
         return []
 
     def open_nodes(self, names: list[str]) -> dict[str, Any]:

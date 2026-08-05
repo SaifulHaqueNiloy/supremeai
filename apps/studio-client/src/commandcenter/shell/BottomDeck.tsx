@@ -32,9 +32,16 @@ export function BottomDeck({ metrics, loading }: BottomDeckProps) {
   const wsLabel = wsStatus === 'open' ? '●' : wsStatus === 'connecting' ? '◐' : '○';
   const wsColor = wsStatus === 'open' ? 'text-[#10b981]' : wsStatus === 'connecting' ? 'text-[#f59e0b]' : 'text-[#ef4444]';
 
-  const lastSync = lastSyncAt
-    ? `${Math.max(0, Math.round((Date.now() - lastSyncAt) / 1000))}s`
-    : '—';
+  // বাংলা মন্তব্য: Date.now() ইমপিওর কল রেন্ডার বডি থেকে সরিয়ে useEffect-এ নেওয়া হলো।
+  const [lastSync, setLastSync] = React.useState('—');
+  React.useEffect(() => {
+    if (!lastSyncAt) {
+      setLastSync('—');
+      return;
+    }
+    const diff = Math.max(0, Math.round((Date.now() - lastSyncAt) / 1000));
+    setLastSync(`${diff}s`);
+  }, [lastSyncAt]);
 
   return (
     <footer className="flex items-center justify-between h-9 border-t border-[var(--sa-line)] bg-[var(--sa-bg-1)]">

@@ -74,7 +74,7 @@ export function CommandDeck() {
       name,
       pct: total > 0 ? Math.round((value / total) * 100) : 0,
     }));
-  }, [metrics?.model_call_distribution]);
+  }, [metrics]);
 
   const quickActions = [
     {
@@ -231,6 +231,7 @@ export function CommandDeck() {
               </>
             )}
           </div>
+        </div>
 
         {/* Traffic Sparkline */}
         <div className="rounded-xl border border-[var(--sa-line)] bg-[var(--sa-bg-1)] p-4">
@@ -270,6 +271,7 @@ export function CommandDeck() {
               </div>
             ))}
           </div>
+        </div>
       </div>
 
       {/* ── Row 3: Provider Donut + Quick Actions ── */}
@@ -299,6 +301,7 @@ export function CommandDeck() {
               </div>
             ))}
           </div>
+        </div>
 
         {/* Quick Action Grid */}
         <div className="rounded-xl border border-[var(--sa-line)] bg-[var(--sa-bg-1)] p-4">
@@ -318,6 +321,7 @@ export function CommandDeck() {
               </button>
             ))}
           </div>
+        </div>
       </div>
 
       {/* ── Live Event Feed ── */}

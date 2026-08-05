@@ -30,7 +30,11 @@ self.onmessage = function(e) {
 
     case 'SEARCH_LOGS': {
       const { logs, query } = e.data.payload;
-      const results = logs.filter((log: any) =>
+      interface LogItem {
+        raw?: string;
+        message?: string;
+      }
+      const results = (logs as LogItem[]).filter((log: LogItem) =>
         log.raw?.toLowerCase().includes(query.toLowerCase()) ||
         log.message?.toLowerCase().includes(query.toLowerCase())
       );

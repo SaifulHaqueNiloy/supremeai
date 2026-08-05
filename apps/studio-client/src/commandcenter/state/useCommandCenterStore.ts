@@ -49,4 +49,4 @@ export const useCommandCenterStore = create<CommandCenterState>((set) => ({
 
     drawerOpen: false,
     setDrawerOpen: (open) => set({ drawerOpen: open }),
-}
+}));
