@@ -754,6 +754,37 @@ jobs:
         if: always()
         run: python .github/scripts/supreme_ci.py generate-report --vitest-json apps/studio-client/vitest-report.json --label "Studio Client"
 
+      - name: 🔍 Studio Client — Bundle Size Check
+        run: bash apps/studio-client/scripts/bundle-check.sh apps/studio-client/dist-admin
+
+      - name: 🔍 Studio Client — Hardcoded Values Grep
+        run: |
+          echo "Checking for hardcoded localhost, TODO_FIXME, or hardcoded secrets in commandcenter..."
+          violations=0
+          if grep -rn 'localhost' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+            echo "FAIL: Found hardcoded 'localhost' references"
+            violations=$((violations + 1))
+          fi
+          if grep -rn 'TODO_FIXME' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+            echo "FAIL: Found TODO_FIXME markers"
+            violations=$((violations + 1))
+          fi
+          if grep -rn -E '(api_key|apikey|secret|password|token)\s*[:=]\s*["'"'"'][^"'"'"']+["'"'"']' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+            echo "FAIL: Found potential hardcoded secrets"
+            violations=$((violations + 1))
+          fi
+          if [ $violations -gt 0 ]; then
+            echo "FAIL: $violations hardcoded value violation(s) found"
+            exit 1
+          fi
+          echo "PASS: No hardcoded values found"
+
+      - name: ♿ Studio Client — Accessibility Check (axe-core)
+        run: |
+          pnpm --dir apps/studio-client exec vite preview --port 4173 &
+          npx wait-on http://localhost:4173
+          npx --yes @axe-core/cli http://localhost:4173
+
       - name: Run Web Chat Vitest with JSON Report
         if: always()
         run: |
