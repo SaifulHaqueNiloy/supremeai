@@ -50,7 +50,6 @@ import json
 import logging
 import os
 import sys
-import time
 from typing import Any
 
 # বাংলা মন্তব্য: Python path ঠিক করা হচ্ছে যাতে backend/ modules import করা যায়
@@ -62,7 +61,6 @@ try:
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
     from mcp.types import (
-        CallToolResult,
         TextContent,
         Tool,
     )
@@ -114,7 +112,7 @@ class KnowledgeGraph:
     Official MCP memory server-এর মতো Entity-Relation-Observation structure।
     """
 
-    def __init__(self, chroma_store: "ChromaDBStore | None" = None) -> None:
+    def __init__(self, chroma_store: ChromaDBStore | None = None) -> None:
         # বাংলা মন্তব্য: entities ও relations dict-এ রাখা হচ্ছে fast lookup এর জন্য
         self._entities: dict[str, dict[str, Any]] = {}
         self._relations: list[dict[str, Any]] = []
@@ -255,7 +253,7 @@ class KnowledgeGraph:
             try:
                 results = self._chroma.query(query_text=query, n_results=5)
                 semantic_hits = []
-                for _doc_id, score, data in results:
+                for _doc_id, _score, data in results:
                     meta = data.get("metadata", {})
                     if meta.get("type") == "entity":
                         name = meta.get("entity_name", "")
@@ -280,7 +278,7 @@ class KnowledgeGraph:
 # MCP Server Builder
 # =============================================================================
 
-def build_server() -> "Server":
+def build_server() -> Server:
     """
     SupremeAI Memory MCP Server তৈরি করে সব tools সহ।
     বাংলা মন্তব্য: Official MCP SDK-এর Server class ব্যবহার করা হচ্ছে।
@@ -663,11 +661,11 @@ async def _dispatch(
     name: str,
     args: dict[str, Any],
     kg: KnowledgeGraph,
-    episodic: "EpisodicMemory | None",
-    sliding: "SlidingWindowMemory | None",
-    supabase: "SupabaseStore | None",
-    chroma: "ChromaDBStore | None",
-    rag: "RAGPipeline | None",
+    episodic: EpisodicMemory | None,
+    sliding: SlidingWindowMemory | None,
+    supabase: SupabaseStore | None,
+    chroma: ChromaDBStore | None,
+    rag: RAGPipeline | None,
 ) -> Any:
     """
     বাংলা মন্তব্য: Tool নাম অনুসারে সঠিক memory layer-এ dispatch করা হচ্ছে।
@@ -739,7 +737,7 @@ async def _dispatch(
         if not rag:
             return {"error": "RAG pipeline not available"}
         rag.vector_store = chroma
-        rag.chunk_text  # ensure method exists
+        getattr(rag, "chunk_text", None)  # ensure method exists
         rag.ingest_document(
             doc_id=args["doc_id"],
             content=args["content"],
@@ -881,7 +879,7 @@ async def main() -> None:
             )
             port = int(os.getenv("MEMORY_MCP_PORT", "8765"))
             logger.info(f"SSE MCP Server listening on port {port}")
-            uvicorn.run(app, host="0.0.0.0", port=port)
+            uvicorn.run(app, host="0.0.0.0", port=port)  # noqa: S104
         except ImportError as e:
             logger.error(f"SSE transport requires starlette + uvicorn: {e}")
             sys.exit(1)
