@@ -10,7 +10,6 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { useCommandCenterStore } from '../../state/useCommandCenterStore';
 import { useHealthMap, useProviders } from '../../data/hooks';
 import { HealthNode, Provider } from '../../data/types';
 
@@ -31,7 +30,6 @@ function getStatusColor(status: string) {
 function buildTopology(health: { gcp?: HealthNode; railway?: HealthNode; render?: HealthNode; core_services?: Record<string, HealthNode> } | undefined, providers: Provider[] | undefined) {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
-  let idCounter = 0;
 
   const addNode = (id: string, label: string, tier: 'cloud' | 'core' | 'provider', status: string, x: number, y: number) => {
     const colors = getStatusColor(status);

@@ -99,7 +99,7 @@ export function CommandPalette({ open, items, onClose, onSelect }: CommandPalett
               <div className="px-4 py-1 text-[9px] font-mono uppercase tracking-widest text-[var(--sa-text-2)]">
                 {group}
               </div>
-              {groupItems.map((item, idx) => {
+              {groupItems.map((item, _idx) => {
                 const globalIdx = filtered.indexOf(item);
                 return (
                   <button

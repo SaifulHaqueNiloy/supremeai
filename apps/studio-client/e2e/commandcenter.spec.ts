@@ -11,7 +11,7 @@ async function waitForCommandCenter(page: Page) {
   await page.waitForSelector('text=কমান্ড সেন্টার', { timeout: 15_000 }).catch(() => {});
 }
 
-async function navigateToModule(page: Page, moduleName: string) {
+export async function navigateToModule(page: Page, moduleName: string) {
   const rail = page.locator('text=' + moduleName).first();
   if (await rail.count() > 0) {
     await rail.click();

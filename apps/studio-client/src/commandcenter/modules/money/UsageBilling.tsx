@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useUsage, useBudgetCaps, useUpdateBudgetCap } from '../../data/hooks';
-import { Sparkline, ConfirmModal, EmptyState } from '../../kit';
+import { ConfirmModal, EmptyState } from '../../kit';
 
 export function UsageBilling() {
   const { data: usage, isLoading } = useUsage(60_000);
@@ -63,10 +63,27 @@ export function UsageBilling() {
       <ConfirmModal
         open={showEdit}
         title="বাজেট ক্যাপ আপডেট"
-        message="নিশ্চিত করতে OTP দিন"
+        message="নিশ্চিত করতে OTP এবং নতুন ক্যাপ দিন"
         onCancel={() => { setShowEdit(false); setOtp(''); }}
         onConfirm={handleSave}
-      />
+      >
+        <div className="space-y-2 mt-2">
+          <input
+            type="number"
+            value={newCap}
+            onChange={e => setNewCap(e.target.value)}
+            placeholder="নতুন ক্যাপ ($)"
+            className="w-full bg-[var(--sa-bg-0)] border border-[var(--sa-line)] rounded px-2 py-1 text-xs text-[var(--sa-text-0)] font-mono"
+          />
+          <input
+            type="text"
+            value={otp}
+            onChange={e => setOtp(e.target.value)}
+            placeholder="OTP Code"
+            className="w-full bg-[var(--sa-bg-0)] border border-[var(--sa-line)] rounded px-2 py-1 text-xs text-[var(--sa-text-0)] font-mono"
+          />
+        </div>
+      </ConfirmModal>
     </div>
   );
 }
