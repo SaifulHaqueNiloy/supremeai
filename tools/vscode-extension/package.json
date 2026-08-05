@@ -1,6 +1,7 @@
 {
   "name": "supremeai-vscode",
   "displayName": "SupremeAI - AI-Powered Development Assistant",
+  "icon": "media/icon.png",
   "description": "Real-time code analysis, learning, and AI assistance with SupremeAI Core Engine",
   "version": "6.0.0",
   "license": "MIT",
@@ -21,24 +22,6 @@
     "Snippets",
     "Other"
   ],
-  "localizations": {
-    "en": {
-      "packageDisplayName": "SupremeAI - AI-Powered Development Assistant",
-      "packageDescription": "Real-time code analysis, learning, and AI assistance with SupremeAI Core Engine"
-    },
-    "bn": {
-      "packageDisplayName": "সুপ্রিমএআই - এআই-চালিত ডেভেলপমেন্ট সহায়ক",
-      "packageDescription": "সুপ্রিমএআই কোর ইঞ্জিনের সাথে রিয়েল-টাইম কোড বিশ্লেষণ, শিখুন এবং এআই সহায়তা"
-    },
-    "es": {
-      "packageDisplayName": "SupremeAI - Asistente de desarrollo impulsado por IA",
-      "packageDescription": "Análisis de código en tiempo real, aprendizaje y asistencia de IA con el motor SupremeAI Core"
-    },
-    "hi": {
-      "packageDisplayName": "सुप्रीमएआई - एआई-संचालित विकास सहायक",
-      "packageDescription": "सुप्रीमएआई कोर इंजन के साथ वास्तविक समय कोड विश्लेषण, सीखना और एआई सहायता"
-    }
-  },
   "keywords": [
     "AI",
     "Code Assistant",
@@ -52,7 +35,7 @@
     "Refactoring"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -118,8 +101,33 @@
         "category": "SupremeAI"
       },
       {
-        "command": "supremeai.openCodeFlowDashboard",
-        "title": "Open Code Flow Dashboard",
+        "command": "supremeai.openChat",
+        "title": "Open Chat",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.createProject",
+        "title": "Create Project",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.viewHistory",
+        "title": "View History",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.aiReview",
+        "title": "AI Code Review",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.aiExplain",
+        "title": "Explain Code",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.visualizeCode",
+        "title": "Visualize Code Flow Dashboard",
         "category": "SupremeAI"
       },
       {
@@ -319,70 +327,70 @@
           "description": "Performance mode: balanced (default), powerful (more features), or efficient (lower resource usage)."
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "supremeai-sidebar",
+          "title": "SupremeAI",
+          "icon": "media/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "supremeai-sidebar": [
+        {
+          "id": "supremeaiChat",
+          "name": "Chat",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiDependencyGraph",
+          "name": "Dependency Graph",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiArchitectureMap",
+          "name": "Architecture Map",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiFlowChart",
+          "name": "Flow Chart",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiSecurityIssues",
+          "name": "Security Issues",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiPerformanceInsights",
+          "name": "Performance Insights",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiAdminDashboard",
+          "name": "Admin Dashboard",
+          "when": "supremeai.authenticated && supremeai.isAdmin",
+          "type": "webview",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "supremeaiCustomerDashboard",
+          "name": "User Settings",
+          "when": "supremeai.authenticated",
+          "type": "webview",
+          "icon": "media/icon.png"
+        }
+      ]
     }
-  },
-  "viewsContainers": {
-    "activitybar": [
-      {
-        "id": "supremeai-sidebar",
-        "title": "SupremeAI",
-        "icon": "media/icon.svg"
-      }
-    ]
-  },
-  "views": {
-    "supremeai-sidebar": [
-      {
-        "id": "supremeaiChat",
-        "name": "Chat",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiDependencyGraph",
-        "name": "Dependency Graph",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiArchitectureMap",
-        "name": "Architecture Map",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiFlowChart",
-        "name": "Flow Chart",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiSecurityIssues",
-        "name": "Security Issues",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiPerformanceInsights",
-        "name": "Performance Insights",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiAdminDashboard",
-        "name": "Admin Dashboard",
-        "when": "supremeai.authenticated && supremeai.isAdmin",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      },
-      {
-        "id": "supremeaiCustomerDashboard",
-        "name": "User Settings",
-        "when": "supremeai.authenticated",
-        "type": "webview",
-        "icon": "media/icon.svg"
-      }
-    ]
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package-ext",

@@ -34,6 +34,7 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <style>
     body {
       font-family: var(--vscode-font-family, sans-serif);
@@ -81,10 +82,10 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
             vscode.commands.executeCommand('supremeai.viewHistory');
             break;
           case 'runAnalysis':
-            vscode.commands.executeCommand('supremeai.reviewCode');
+            vscode.commands.executeCommand('supremeai.aiReview');
             break;
           case 'getCodeHelp':
-            vscode.commands.executeCommand('supremeai.explainCode');
+            vscode.commands.executeCommand('supremeai.aiExplain');
             break;
         }
       },
@@ -144,6 +145,7 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SupremeAI Customer Dashboard</title>
   <style>
@@ -368,26 +370,28 @@ export class SupremeAICustomerDashboardProvider implements vscode.WebviewViewPro
 
   <script>
     const vscode = acquireVsCodeApi();
-    const abortController = new AbortController();
-    window.addEventListener("unload", () => abortController.abort());
+    window.addEventListener("unload", () => { /* Cleanup */ });
 
     document.getElementById('chatBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'newChat' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'newChat' });
     });
     document.getElementById('loginBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'logout' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'logout' });
     });
     document.getElementById('analysisBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'runAnalysis' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'runAnalysis' });
     });
     document.getElementById('helpBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'getCodeHelp' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'getCodeHelp' });
     });
     document.getElementById('historyBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'viewHistory' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'viewHistory' });
     });
   </script>
 </body>
 </html>`;
   }
 }
+
+
+

@@ -58,6 +58,7 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <style>
     ${this.globalCss}
     body {
@@ -181,6 +182,7 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <style>
     ${this.globalCss}
     body {
@@ -239,10 +241,9 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
 
   <script>
     const vscode = acquireVsCodeApi();
-    const abortController = new AbortController();
-    window.addEventListener("unload", () => abortController.abort());
+    window.addEventListener("unload", () => { /* Cleanup */ });
     document.getElementById('loginBtn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'login' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'login' });
     });
   </script>
 </body>
@@ -270,6 +271,7 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     ${this.globalCss}
@@ -430,23 +432,22 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
 
   <script>
     const vscode = acquireVsCodeApi();
-    const abortController = new AbortController();
-    window.addEventListener("unload", () => abortController.abort());
+    window.addEventListener("unload", () => { /* Cleanup */ });
 
     document.getElementById('forceLearn').addEventListener('click', () => {
-      vscode.postMessage({ type: 'forceLearn' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'forceLearn' });
     });
 
     document.getElementById('reportError').addEventListener('click', () => {
-      vscode.postMessage({ type: 'reportError' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'reportError' });
     });
 
     document.getElementById('sendFeedback').addEventListener('click', () => {
-      vscode.postMessage({ type: 'sendFeedback' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'sendFeedback' });
     });
 
     document.getElementById('openSettings').addEventListener('click', () => {
-      vscode.postMessage({ type: 'openSettings' }, { signal: abortController.signal });
+      vscode.postMessage({ type: 'openSettings' });
     });
   </script>
 </body>
@@ -510,3 +511,6 @@ export class SupremeAISidebarProvider implements vscode.WebviewViewProvider {
     return date.toLocaleDateString();
   }
 }
+
+
+

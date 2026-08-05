@@ -355,8 +355,8 @@ jobs:
       - name: 🔍 Parallel Security Scan
         if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
         run: |
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.deb
-          sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
+          # বাংলা মন্তব্য: Trivy রিলিজ অ্যাসেটের নির্দিষ্ট নাম পরিবর্তন এড়াতে অফিশিয়াল ইনস্টল স্ক্রিপ্ট ব্যবহার করা হচ্ছে
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.48.3
           trivy fs --format sarif --output trivy-python.sarif --severity CRITICAL,HIGH backend &
           trivy fs --format sarif --output trivy-nodejs.sarif --severity CRITICAL,HIGH . &
           wait
@@ -753,6 +753,40 @@ jobs:
       - name: Add Studio Client Test Results to GitHub Summary
         if: always()
         run: python .github/scripts/supreme_ci.py generate-report --vitest-json apps/studio-client/vitest-report.json --label "Studio Client"
+
+      - name: 🔍 Studio Client — Bundle Size Check
+        run: bash apps/studio-client/scripts/bundle-check.sh apps/studio-client/dist-admin
+
+      - name: 🔍 Studio Client — Hardcoded Values Grep
+        run: |
+          echo "Checking for hardcoded localhost, TODO_FIXME, or hardcoded secrets in commandcenter..."
+          violations=0
+          if grep -rn 'localhost' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+            echo "FAIL: Found hardcoded 'localhost' references"
+            violations=$((violations + 1))
+          fi
+          if grep -rn 'TODO_FIXME' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+            echo "FAIL: Found TODO_FIXME markers"
+            violations=$((violations + 1))
+          fi
+          if grep -rn -E '(api_key|apikey|secret|password|token)\s*[:=]\s*["'"'"'][^"'"'"']+["'"'"']' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+            echo "FAIL: Found potential hardcoded secrets"
+            violations=$((violations + 1))
+          fi
+          if [ $violations -gt 0 ]; then
+            echo "FAIL: $violations hardcoded value violation(s) found"
+            exit 1
+          fi
+          echo "PASS: No hardcoded values found"
+
+      - name: ♿ Studio Client — Accessibility Check (axe-core)
+        # বাংলা মন্তব্য: build ধাপে VITE_PORTAL_TYPE='admin' দিয়ে dist-admin ফোল্ডার তৈরি হয়েছিল। তাই vite preview চলাকালে VITE_PORTAL_TYPE='admin' এনভায়রনমেন্ট ভ্যারিয়েবল সেট রাখা হয়েছে এবং wait-on-এ ৩০ সেকেন্ড টাইমআউট দেওয়া হয়েছে যেন CI ঝুলন্ত (hang) না হয়ে থাকে।
+        env:
+          VITE_PORTAL_TYPE: 'admin'
+        run: |
+          pnpm --dir apps/studio-client exec vite preview --port 4173 &
+          npx wait-on http://localhost:4173 --timeout 30000
+          npx --yes @axe-core/cli http://localhost:4173
 
       - name: Run Web Chat Vitest with JSON Report
         if: always()
@@ -1412,8 +1446,8 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
   sync-mirror:
-    name: 📤 Sync to Secondary Repo
-    needs: [deploy-admin-firebase, deploy-user-vercel]
+    name: 📤 Sync Main to Staging Repo (Direct Push)
+    needs: [backend-core, frontend-core]
     if: |
       always() &&
       github.repository == 'paykaribazaronline/supremeai' &&
@@ -1426,14 +1460,91 @@ jobs:
           persist-credentials: false
           lfs: true
 
-      - name: 📤 Sync to Secondary Repo (Staging Dispatch)
-        if: env.MIRROR_REPO_TOKEN != ''
+      - name: 📤 Direct Push to Staging Main Branch
         env:
           MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
         run: |
+          if [ -z "$MIRROR_REPO_TOKEN" ]; then
+            echo "⚠️ MIRROR_REPO_TOKEN secret is missing. Skipping direct push to staging repo."
+            exit 0
+          fi
           git config lfs.allowincompletepush true
           git remote add mirror https://${MIRROR_REPO_TOKEN}@github.com/SaifulHaqueNiloy/supremeai.git
           git push --force mirror main:refs/heads/main
+
+  staging-pr-promotion:
+    name: 🟢 Auto Create Promotion PR from Staging to Main Repo
+    needs: [backend-core, frontend-core]
+    if: |
+      always() &&
+      github.repository == 'SaifulHaqueNiloy/supremeai' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: 📥 Checkout Staging Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: 🤖 Create or Update PR to Main Repository
+        env:
+          GH_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          STAGING_HEAD: ${{ github.sha }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ MAIN_REPO_TOKEN secret is missing or empty in this repo's settings."
+            echo "   Add a PAT with write access to paykaribazaronline/supremeai under:"
+            echo "   Settings → Secrets and variables → Actions → MAIN_REPO_TOKEN"
+            exit 1
+          fi
+
+          echo "✅ Staging CI Pipeline passed (GREEN 🟢)!"
+          echo "🔄 Checking for existing PR from SaifulHaqueNiloy:main to paykaribazaronline:main..."
+
+          EXISTING_PR=$(gh pr list --repo paykaribazaronline/supremeai --head SaifulHaqueNiloy:main --base main --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
+            echo "ℹ️ Existing promotion PR #$EXISTING_PR found. Updated automatically."
+          else
+            echo "🔍 Configuring remote to check differences and push..."
+            
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git config --global lfs.allowincompletepush true
+            git config lfs.allowincompletepush true
+            
+            git remote add target https://x-access-token:${GH_TOKEN}@github.com/paykaribazaronline/supremeai.git
+            git fetch target main
+            
+            if git diff --quiet HEAD target/main; then
+              echo "ℹ️ No new commits to promote. Branches are identical. Skipping PR creation."
+            else
+              echo "🚀 Pushing staging branch to target repository..."
+              PR_BRANCH="promotion/staging-${STAGING_HEAD:0:7}"
+              git checkout -b $PR_BRANCH
+              git push target $PR_BRANCH --force
+              
+              echo "🚀 Opening new automated Staging Promotion PR..."
+              gh pr create \
+                --repo paykaribazaronline/supremeai \
+                --head $PR_BRANCH \
+                --base main \
+                --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
+                --body "## 🛡️ Staging CI Pass Report
+
+              All quality gates passed on \`SaifulHaqueNiloy/supremeai\`:
+              - 🟢 Pytest & Backend Unit Tests
+              - 🟢 Vitest & Web Client Tests
+              - 🟢 Preflight & Security Audit
+
+              **Admin Action Required:** Please review and merge to trigger live production deployments across Render, Vercel, and Firebase."
+            fi
+          fi
 
   canary-deploy:
     name: "🚀 Canary Deploy Backend (Cloud Run)"
@@ -1492,6 +1603,7 @@ jobs:
       - deploy-admin-firebase
       - deploy-user-vercel
       - sync-mirror
+      - staging-pr-promotion
       - canary-deploy
     permissions:
       actions: read

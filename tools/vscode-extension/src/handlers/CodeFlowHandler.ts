@@ -45,10 +45,17 @@ export class CodeFlowHandler {
 
     this.statusBarItem.show();
 
-    // এক্সটেনশন চালু হওয়ার পর ব্যাকগ্রাউন্ডে প্রাথমিক ওয়ার্কস্পেস ইনডেক্সিং ও সিঙ্ক (পিসি স্মুথ রাখতে ১৫ সেকেন্ড পর শুরু)
-    setTimeout(() => {
-      this.syncWorkspaceToMemory();
-    }, 15000);
+    // Zero-Lag Architecture: ব্যাকগ্রাউন্ড ইনডেক্সিং ডিফল্টভাবে নিষ্ক্রিয় (Disabled by default)
+    // এবং টার্মিনাল সেশন খালি থাকলে অন-ডিমান্ড আইডিলে কাজ করবে।
+    const config = vscode.workspace.getConfiguration('supremeai');
+    const enableBackgroundSync = config.get<boolean>('enableBackgroundSync', false);
+
+    if (enableBackgroundSync) {
+      setTimeout(() => {
+        this.syncWorkspaceToMemory();
+      }, 30000);
+    }
+
   }
 
   /**

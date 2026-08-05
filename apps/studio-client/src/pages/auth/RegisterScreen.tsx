@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../store/authStore';
+import { Link } from 'react-router-dom';
 
 export const RegisterScreen = () => {
   const [name, setName] = useState('');
@@ -76,9 +77,9 @@ export const RegisterScreen = () => {
         </CardContent>
         <CardFooter className="flex justify-center text-sm text-[var(--supremeai-color-neutral-500)]">
           Already have an account?{' '}
-          <button className="text-[var(--supremeai-color-brand-500)] font-medium hover:underline ml-1">
+          <Link to="/login" className="text-[var(--supremeai-color-brand-500)] font-medium hover:underline ml-1">
             Sign In
-          </button>
+          </Link>
         </CardFooter>
       </Card>
     </div>

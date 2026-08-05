@@ -2,6 +2,10 @@ import * as vscode from 'vscode';
 import * as levenshtein from 'fast-levenshtein';
 import { BaseDisposable } from '../utils/BaseDisposable';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LevenshteinStatic = { get(a: string, b: string): number };
+const levenshteinImpl = (levenshtein as unknown as LevenshteinStatic);
+
 export class TelemetryTracker extends BaseDisposable {
     private activePatches: Map<string, { originalErrorId: string, proposedPatch: string }> = new Map();
     private static instance: TelemetryTracker;
@@ -20,11 +24,14 @@ export class TelemetryTracker extends BaseDisposable {
         return this.instance;
     }
 
-    public static trackProposedPatch(filePath: string, errorId: string, patchText: string) {
-        if (this.instance) {
-            this.instance.activePatches.set(filePath, { originalErrorId: errorId, proposedPatch: patchText });
-        }
+  public static trackProposedPatch(filePath: string, errorId: string, patchText: string) {
+    // Instance না থাকলে এখনই initialize করা হচ্ছে (silent fail প্রতিরোধ)
+    if (!this.instance) {
+      const context = { subscriptions: [] as vscode.Disposable[] } as unknown as vscode.ExtensionContext;
+      this.instance = TelemetryTracker.initialize(context);
     }
+    this.instance.activePatches.set(filePath, { originalErrorId: errorId, proposedPatch: patchText });
+  }
 
     private async handleDocumentSave(document: vscode.TextDocument) {
         const filePath = document.uri.fsPath;
@@ -36,7 +43,7 @@ export class TelemetryTracker extends BaseDisposable {
         const proposedText = patchData.proposedPatch;
 
         // Calculate Levenshtein distance
-        const distance = levenshtein.get(savedText, proposedText);
+        const distance = levenshteinImpl.get(savedText, proposedText);
         const maxLength = Math.max(savedText.length, proposedText.length);
         const similarityScore = maxLength === 0 ? 1.0 : 1.0 - (distance / maxLength);
 
