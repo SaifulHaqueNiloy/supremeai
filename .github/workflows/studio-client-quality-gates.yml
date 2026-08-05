@@ -71,7 +71,7 @@ jobs:
           fi
           
           # Check for common secret patterns
-          if grep -rn -E '(api_key|apikey|secret|password|token)\s*[:=]\s*["\'][^"\']+["\']' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
+          if grep -rn -E '(api_key|apikey|secret|password|token)\s*[:=]\s*["'"'"'][^"'"'"']+["'"'"']' apps/studio-client/src/commandcenter/ --include='*.ts' --include='*.tsx' 2>/dev/null; then
             echo "FAIL: Found potential hardcoded secrets"
             violations=$((violations + 1))
           fi
@@ -121,12 +121,7 @@ jobs:
         run: npx wait-on http://localhost:4173
 
       - name: Run axe-core accessibility scan
-        uses: dequelabs/axe-core-js-action@v1
-        with:
-          url: 'http://localhost:4173'
-          wait: 5000
-          timeout: 30000
-          exit-code: 1
+        run: npx --yes @axe-core/cli http://localhost:4173
 
   playwright-smoke:
     name: Playwright Smoke Tests
