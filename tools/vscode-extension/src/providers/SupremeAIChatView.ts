@@ -13,7 +13,6 @@ export class SupremeAIChatView {
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <style>
     body {
       font-family: var(--vscode-font-family);
@@ -84,8 +83,6 @@ export class SupremeAIChatView {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -273,7 +270,6 @@ export class SupremeAIChatView {
     function login() { vscode.postMessage({ type: 'login' }); }
     function logout() { vscode.postMessage({ type: 'logout' }); }
     function quickAction(action) { vscode.postMessage({ type: action === 'review' ? 'sendMessage' : action + 'Code', message: action === 'explain' ? 'Please explain this code' : action === 'fix' ? 'Please help fix this code' : action === 'refactor' ? 'Please suggest improvements for this code' : 'Please review this code and suggest improvements' }); }
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   </script>
 </body>
 </html>`;
