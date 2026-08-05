@@ -93,7 +93,10 @@ class TestProductionReadinessSystems:
 
     def test_ai_agent_system_prompt_exists(self):
         """AI Agent System Prompt ডকুমেন্ট বিদ্যমান এবং বৈধ"""
-        prompt_path = REPO_ROOT / "docs" / "AI_AGENT_SYSTEM_PROMPT.md"
+        # বাংলা মন্তব্য: restructuring-এর পর নতুন পাথে ফাইল চেক করা হচ্ছে (fallback সহ)
+        prompt_path = REPO_ROOT / "docs" / "english" / "02-architecture" / "AI_AGENT_SYSTEM_PROMPT.md"
+        if not prompt_path.exists():
+            prompt_path = REPO_ROOT / "docs" / "AI_AGENT_SYSTEM_PROMPT.md"
 
         assert prompt_path.exists(), f"Prompt file missing: {prompt_path}"
 

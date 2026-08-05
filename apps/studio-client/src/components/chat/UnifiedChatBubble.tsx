@@ -164,7 +164,7 @@ export function UnifiedChatBubble({
       );
     }
 
-    // Bangla comment: ক্যাচ-এleist flat text fallback
+    // Bangla comment: ক্যাচ-এ flat text fallback
     return (
       <div className={`max-w-[85%] flex flex-col gap-1 self-start items-start`}>
         {actionBadge}

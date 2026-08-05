@@ -102,8 +102,10 @@ ${context.currentFileContent.slice(0, 4000)}`;
 
     try {
       const packageJsonPath = path.join(projectRoot, 'package.json');
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const packageJson = require(packageJsonPath);
+      // Dynamic require bundler-এ কাজ করে না — fs.readFileSync + JSON.parse ব্যবহার করা হলো
+      const fs = await import('fs');
+      const fileContent = fs.readFileSync(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(fileContent);
 
       const allDeps = {
         ...packageJson.dependencies,

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { SupremeAIService } from './SupremeAIService';
 import { HealingStateManager, HealingState } from './HealingStateManager';
 import { BaseDisposable } from '../utils/BaseDisposable';
+import { TelemetryTracker } from './TelemetryTracker';
 
 export class SelfHealingService extends BaseDisposable {
     private static instance: SelfHealingService;
@@ -74,7 +75,6 @@ export class SelfHealingService extends BaseDisposable {
                 stateManager.setState(HealingState.APPLYING_DIFF);
 
                 // Track for Telemetry
-                const { TelemetryTracker } = require('./TelemetryTracker');
                 TelemetryTracker.trackProposedPatch(uri.fsPath, `error-${Date.now()}`, fixResponse.fixedCode);
 
                 await this.showDiffView(uri, editor.document.getText(), fixResponse.fixedCode);

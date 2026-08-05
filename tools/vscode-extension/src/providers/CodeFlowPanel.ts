@@ -95,6 +95,7 @@ export class CodeFlowPanel {
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https: vscode-webview-resource:; script-src 'unsafe-inline' 'unsafe-eval' https: vscode-webview-resource:; img-src 'self' data: https: vscode-webview-resource:;">
   <style>
     body { font-family: var(--vscode-font-family); background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); padding: 12px; }
     .section { margin: 12px 0; }
@@ -134,3 +135,6 @@ export class CodeFlowPanel {
     this.disposables = [];
   }
 }
+
+
+

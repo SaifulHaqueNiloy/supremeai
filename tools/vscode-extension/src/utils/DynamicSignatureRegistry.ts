@@ -4,7 +4,12 @@ export class DynamicSignatureRegistry {
 
   private constructor() {
     this.loadDefaultSignatures();
-    this.loadFromConfig();
+    // async loadFromConfig কে fire-and-forget বলা হচ্ছে (await না করা হলে config পরে load হবে)
+    this.loadFromConfig().then(() => {
+      console.debug('[SupremeAI] Dynamic signatures loaded from config.');
+    }).catch(err => {
+      console.debug('Using default signatures', err);
+    });
   }
 
   static getInstance(): DynamicSignatureRegistry {

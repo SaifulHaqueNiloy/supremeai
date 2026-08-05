@@ -29,11 +29,17 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
 
     private async _fetchLiveRecipes(): Promise<any[]> {
         try {
-            // আমাদের স্ট্রেস টেস্টে গ্রিন প্রমাণিত হওয়া ব্যাকএন্ড এন্ডপয়েন্ট
+            // আমাদের স্ট্রেস টেস্টে গ্রিন প্রমাণিত হওয়া ব্যাকএন্ড এন্ডপয়েন্ট
             const backendUrl = 'https://supremeai-api-lhlwyikwlq-uc.a.run.app/api/skills';
-            const response = await axios.get(backendUrl, {
-                headers: { 'Authorization': 'Bearer YOUR_VALID_PRODUCTION_TEST_JWT_TOKEN' }
-            });
+            // AuthService থেকে বর্তমান টোকেন ব্যবহার করা হলো (হার্ডকোডেড টোকেন নয়)
+            const { AuthService } = require('../services/AuthService');
+            const authService = AuthService.getInstance();
+            const token = authService?.getToken();
+            const headers: Record<string, string> = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            const response = await axios.get(backendUrl, { headers });
 
             if (response.status === 200 && response.data) {
                 return response.data.skills || response.data; // ডিবি স্কিল অ্যারে
@@ -116,3 +122,4 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
         });
     }
 }
+

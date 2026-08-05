@@ -150,19 +150,53 @@ export class SupremeExtensionBridge {
     return response.data;
   }
 
+  /**
+   * 100+ রেজিস্টার্ড টার্গেট রেপো ও প্ল্যাটফর্মের লাইভ পারমিশন স্কোপ ফ্রেচ করে।
+   */
+  public async fetchTargetRepositories(): Promise<any[]> {
+    try {
+      const response = await this.client.get<any[]>('/admin-api/workspaces/targets');
+      return response.data;
+    } catch {
+      // Fallback target list if backend API is offline
+      return [{
+        id: 'main-repository',
+        name: 'SupremeAI Main Codebase',
+        scope: 'READ_ONLY',
+        is_read_only: true,
+        can_write: false
+      }];
+    }
+  }
+
+  /**
+   * নতুন টার্গেট রেপো বা প্ল্যাটফর্ম ডাইনামিক্যালি বাইন্ড করে (JIT OTP protected)।
+   */
+  public async bindTargetRepository(payload: any, otpCode?: string): Promise<any> {
+    const headers: Record<string, string> = {};
+    if (otpCode) {
+      headers['X-JIT-OTP'] = otpCode;
+    }
+    const response = await this.client.post<any>('/admin-api/workspaces/bind-target', payload, { headers });
+    return response.data;
+  }
+
   public getBaseUrl(): string {
     return this.baseUrl;
   }
 }
 
-// সিঙ্গেলটন ইনস্ট্যান্স — লেজি ইনিশিয়ালাইজেশন
-let apiBridge: SupremeExtensionBridge | null = null;
+let _apiBridgeSingleton: SupremeExtensionBridge | null = null;
 
 export function getApiBridge(config?: SupremeAIConfig): SupremeExtensionBridge {
-  if (!apiBridge) {
-    apiBridge = new SupremeExtensionBridge(config);
+  if (!_apiBridgeSingleton) {
+    _apiBridgeSingleton = new SupremeExtensionBridge(config);
   }
-  return apiBridge;
+  return _apiBridgeSingleton;
 }
 
-export const apiBridgeInstance = getApiBridge();
+// মডিউল লোডের সময় ইন্সট্যান্স তৈরি করা হয় না — getApiBridge() কল করলেই তৈরি হবে (লেজি ইনিশিয়ালাইজেশন)
+// export const apiBridge = getApiBridge();
+// export const apiBridgeInstance = apiBridge;
+
+

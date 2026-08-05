@@ -37,6 +37,7 @@
     "@supremeai/ui-components": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-query": "^5.101.0",
+    "@tanstack/react-virtual": "^3.14.9",
     "@webcontainer/api": "^1.6.4",
     "@xterm/addon-fit": "^0.11.0",
     "@xyflow/react": "^12.11.2",

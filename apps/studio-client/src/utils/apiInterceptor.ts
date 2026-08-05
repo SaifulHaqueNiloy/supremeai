@@ -21,7 +21,7 @@ export const apiInterceptor = async <T = unknown>(response: Response): Promise<T
 
   // স্ট্রিম বা প্লেইন টেক্সট মেসেজের জন্য সেফ গ্রেসফুল ফলব্যাক
   const rawText = await response.text();
-  console.debug("ℹ️ [NON_JSON_STREAM_TRAFFIC]: Handling streaming or text matrix payload.", { length: rawText.length });
+  console.info("ℹ️ [NON_JSON_STREAM_TRAFFIC]: Handling streaming or text matrix payload.", { length: rawText.length });
   return rawText as unknown as T;
 };
 
@@ -70,15 +70,17 @@ export function setupGlobalFetchInterceptor() {
           console.error('🚨 [INTERCEPTOR_ERROR]: Failed to parse error response', e);
         }
 
-        if ((window as any).showGlobalToast) {
-          (window as any).showGlobalToast('error', errorMsg);
+        const win = window as unknown as { showGlobalToast?: (type: string, msg: string) => void };
+        if (win.showGlobalToast) {
+          win.showGlobalToast('error', errorMsg);
         }
       }
 
       return response;
     } catch (error) {
-      if ((window as any).showGlobalToast) {
-        (window as any).showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
+      const win = window as unknown as { showGlobalToast?: (type: string, msg: string) => void };
+      if (win.showGlobalToast) {
+        win.showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
       throw error;
     }

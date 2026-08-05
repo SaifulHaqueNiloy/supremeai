@@ -1,0 +1,172 @@
+import React, { useCallback, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AETHEL Command Center — Virtualized Data Table
+// বাংলা মন্তব্য: ভার্চুয়ালাইজড টেবিল — বড় ডেটাসেটের জন্য লাইটওয়েট
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface Column<T> {
+    key: string;
+    label: string;
+    render: (row: T) => React.ReactNode;
+    sortable?: boolean;
+    width?: string;
+    align?: 'left' | 'center' | 'right';
+}
+
+interface DataTableProps<T> {
+    columns: Column<T>[];
+    data: T[];
+    keyField: string;
+    maxHeight?: number;
+    loading?: boolean;
+    emptyMessage?: string;
+    onRowClick?: (row: T) => void;
+}
+
+export function DataTable<T extends Record<string, unknown>>({
+    columns,
+    data,
+    keyField,
+    maxHeight = 400,
+    loading,
+    emptyMessage = 'NO DATA',
+    onRowClick,
+}: DataTableProps<T>) {
+    const [sortKey, setSortKey] = useState<string | null>(null);
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+    const handleSort = useCallback((key: string) => {
+        if (sortKey === key) {
+            setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortKey(key);
+            setSortDir('asc');
+        }
+    }, [sortKey]);
+
+    const sorted = React.useMemo(() => {
+        if (!sortKey) return data;
+        return [...data].sort((a, b) => {
+            const aVal = a[sortKey];
+            const bVal = b[sortKey];
+            if (aVal == null) return 1;
+            if (bVal == null) return -1;
+            const cmp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
+    }, [data, sortKey, sortDir]);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const virtualizer = useVirtualizer({
+        count: sorted.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 32,
+        overscan: 5,
+    });
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-6 text-[10px] text-[var(--sa-text-2)] font-mono">
+                <span className="animate-pulse">LOADING...</span>
+            </div>
+        );
+    }
+
+    if (sorted.length === 0) {
+        return (
+            <div className="flex items-center justify-center p-6 text-[10px] text-[var(--sa-text-2)] font-mono">
+                {emptyMessage}
+            </div>
+        );
+    }
+
+    const useVirtual = sorted.length > 50 && containerRef.current != null;
+
+    return (
+        <div className="overflow-x-auto rounded-xl border border-[var(--sa-line)]" style={{ maxHeight }}>
+            <table className="w-full text-[10px] font-mono">
+                <thead>
+                    <tr className="bg-[var(--sa-bg-2)] border-b border-[var(--sa-line)]">
+                        {columns.map(col => (
+                            <th
+                                key={col.key}
+                                className={`px-3 py-2 text-[9px] uppercase tracking-widest text-[var(--sa-text-2)] font-bold ${col.sortable ? 'cursor-pointer hover:text-[var(--sa-cyan)] select-none' : ''
+                                    } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
+                                style={{ width: col.width }}
+                                onClick={() => col.sortable && handleSort(col.key)}
+                            >
+                                {col.label}
+                                {sortKey === col.key && (
+                                    <span className="ml-1 text-[var(--sa-cyan)]">{sortDir === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody ref={containerRef}>
+                    {useVirtual ? (
+                        virtualizer.getVirtualItems().map(vRow => {
+                            const row = sorted[vRow.index];
+                            const i = vRow.index;
+                            return (
+                                <tr
+                                    key={String(row[keyField] ?? i)}
+                                    onClick={() => onRowClick?.(row)}
+                                    className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
+                                        } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
+                                    style={{
+                                        position: 'absolute',
+                                        transform: `translateY(${vRow.start}px)`,
+                                        width: '100%',
+                                        height: '32px',
+                                        display: 'flex',
+                                    }}
+                                >
+                                    {columns.map(col => (
+                                        <td
+                                            key={col.key}
+                                            className={`px-3 py-2 text-[var(--sa-text-0)] ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                                                }`}
+                                            style={{ flex: col.width ? undefined : 1, width: col.width, minWidth: col.width ? 0 : undefined }}
+                                        >
+                                            {col.render(row)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            );
+                        })
+                    ) : (
+                        sorted.map((row, i) => (
+                            <tr
+                                key={String(row[keyField] ?? i)}
+                                onClick={() => onRowClick?.(row)}
+                                className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
+                                    } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
+                            >
+                                {columns.map(col => (
+                                    <td
+                                        key={col.key}
+                                        className={`px-3 py-2 text-[var(--sa-text-0)] ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                                            }`}
+                                    >
+                                        {col.render(row)}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+            {useVirtual && (
+                <div style={{ height: virtualizer.getTotalSize() }} className="relative w-full">
+                    <div
+                        className="absolute left-0 top-0 right-0"
+                        style={{ height: virtualizer.getTotalSize() }}
+                    />
+                </div>
+            )}
+        </div>
+    );
+}

@@ -111,6 +111,14 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     app_name: str = "SupremeAI 2.0"
 
+    # ── Dynamic Target Repository & Multi-Platform Configuration ─────────────
+    # বাংলা মন্তব্য: ডাইনামিক রেপো বাইন্ডিং ও মাল্টি-প্ল্যাটফর্ম অটোনোমাস কনফিগারেশন।
+    target_repo_url: str = Field(default="", validation_alias="TARGET_REPO_URL")
+    target_repo_branch: str = Field(default="main", validation_alias="TARGET_REPO_BRANCH")
+    target_repo_token: SecretStr = Field(default=SecretStr(""), validation_alias="TARGET_REPO_TOKEN")
+    workspace_base_dir: str = Field(default="storage/workspaces", validation_alias="WORKSPACE_BASE_DIR")
+
+
     # ── LLM Gateway & Streaming Configuration ────────────────────────────────
     LLM_CONNECT_TIMEOUT: float = Field(default=5.0, validation_alias="LLM_CONNECT_TIMEOUT")
     LLM_READ_TIMEOUT: float = Field(default=30.0, validation_alias="LLM_READ_TIMEOUT")
