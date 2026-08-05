@@ -14,8 +14,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 import threading
 
 logger = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ class TargetEntity:
     branch: str = "main"
     scope: PermissionScope = PermissionScope.FULL_CONTROL
     credentials_token: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_read_only(self) -> bool:
         """টার্গেটটি রিড-অনলি কি না পরীক্ষা করে।"""
@@ -60,7 +59,7 @@ class TargetPlatformRegistry:
     """১০০+ ডাইনামিক রেপো ও প্ল্যাটফর্ম টার্গেট রেজিস্ট্রি ম্যানেজার।"""
 
     def __init__(self) -> None:
-        self._targets: Dict[str, TargetEntity] = {}
+        self._targets: dict[str, TargetEntity] = {}
         self._lock = threading.RLock()
         self._register_default_main_repo()
 
@@ -95,12 +94,12 @@ class TargetPlatformRegistry:
                 return True
             return False
 
-    def get_target(self, target_id: str) -> Optional[TargetEntity]:
+    def get_target(self, target_id: str) -> TargetEntity | None:
         """টার্গেট আইডি দিয়ে অবজেক্ট রিটার্ন করে।"""
         with self._lock:
             return self._targets.get(target_id)
 
-    def list_targets(self) -> List[TargetEntity]:
+    def list_targets(self) -> list[TargetEntity]:
         """সমস্ত রেজিস্টার্ড টার্গেটের তালিকা রিটার্ন করে।"""
         with self._lock:
             return list(self._targets.values())

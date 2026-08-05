@@ -82,7 +82,7 @@ def test_repo_manager_prevents_commit_on_read_only():
     """READ_ONLY স্কোপের টার্গেটে Commit করতে গেলে PermissionDeniedError রেইজ করে কি না।"""
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = DynamicRepoManager(workspace_base=Path(tmpdir))
-        
+
         # Test commit on protected main-repository
         with pytest.raises(PermissionDeniedError, match="READ_ONLY permission scope"):
             manager.execute_git_commit("main-repository", "Unauthorized commit attempt")

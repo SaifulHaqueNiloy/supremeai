@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, WebSocket
-from loguru import logger
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/ws/command-center", tags=["Command Center WS"])
 

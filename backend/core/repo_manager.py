@@ -14,10 +14,9 @@ from __future__ import annotations
 import logging
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional
 
 from core.config import settings
-from core.target_registry import PermissionScope, TargetEntity, target_registry
+from core.target_registry import TargetEntity, target_registry
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class PermissionDeniedError(PermissionError):
 class DynamicRepoManager:
     """স্বায়ত্ত্বশাসিত এআই এজেন্টদের জন্য ডাইনামিক রেপো ও ওয়ার্কস্পেস ম্যানেজার।"""
 
-    def __init__(self, workspace_base: Optional[Path] = None) -> None:
+    def __init__(self, workspace_base: Path | None = None) -> None:
         self.base_dir = workspace_base or Path(settings.workspace_base_dir)
         # বাংলা মন্তব্য: ওয়ার্কস্পেস গন্তব্য তৈরি নিশ্চিত করা
         self.base_dir.mkdir(parents=True, exist_ok=True)

@@ -11,9 +11,9 @@ Endpoints:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Header, status
+from fastapi import APIRouter, Header, status
 from pydantic import BaseModel, Field
 
 from core.repo_manager import repo_manager
@@ -33,7 +33,7 @@ class BindTargetRequest(BaseModel):
     branch: str = Field(default="main", description="Git branch name")
     scope: PermissionScope = Field(default=PermissionScope.FULL_CONTROL, description="Permission scope (READ_ONLY / FULL_CONTROL)")
     credentials_token: str = Field(default="", description="Secret access token or PAT (Optional)")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class TargetResponse(BaseModel):
@@ -51,7 +51,7 @@ class TargetResponse(BaseModel):
 @router.post("/bind-target", response_model=TargetResponse, status_code=status.HTTP_201_CREATED)
 async def bind_target_repository(
     req: BindTargetRequest,
-    x_jit_otp: Optional[str] = Header(None, alias="X-JIT-OTP")
+    x_jit_otp: str | None = Header(None, alias="X-JIT-OTP")
 ) -> TargetResponse:
     """ডাইনামিক্যালি নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম বাইন্ড ও রেজিস্টার করে।"""
     # JIT OTP verification flag logic
@@ -69,7 +69,7 @@ async def bind_target_repository(
     )
 
     registered = target_registry.register_target(target)
-    
+
     # Prepare workspace folder on disk
     try:
         repo_manager.prepare_workspace(registered)
@@ -88,8 +88,8 @@ async def bind_target_repository(
     )
 
 
-@router.get("/targets", response_model=List[TargetResponse])
-async def list_target_repositories() -> List[TargetResponse]:
+@router.get("/targets", response_model=list[TargetResponse])
+async def list_target_repositories() -> list[TargetResponse]:
     """রেজিস্টার্ড সমস্ত ১০০+ টার্গেট রেপো ও প্ল্যাটফর্মের তালিকা রিটার্ন করে।"""
     targets = target_registry.list_targets()
     return [
