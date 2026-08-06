@@ -77,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Initialize services lazily and only when needed
   const config = vscode.workspace.getConfiguration('supremeai');
-  const backendUrl = config.get<string>('backendUrl', 'https://supremeai-a.web.app');
+  const backendUrl = config.get<string>('backendUrl', 'https://supremeai-backend.onrender.com');
 
   const supremeConfig: SupremeAIConfig = {
     backendUrl,
@@ -134,6 +134,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register commands for additional features (only initialize services when commands are used)
   registerCommands(context);
+
+  // Auto-focus SupremeAI Chat panel on startup so user does not need to open it manually
+  setTimeout(() => {
+    vscode.commands.executeCommand('supremeaiChat.focus');
+  }, 1500);
 
   // Show lightweight activation message
   console.log('[SupremeAI] Extension activated with essential services only');
