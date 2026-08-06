@@ -498,7 +498,7 @@ jobs:
         working-directory: backend
         run: |
           echo "## 📊 নলেজ গ্রাফ জেনারেশন" >> $GITHUB_STEP_SUMMARY
-          python ../scripts/codegraph_integration.py --full --output-dir ../docs/codebase/knowledge_graph 2>&1 || true
+          poetry run python ../scripts/codegraph_integration.py --full --output-dir ../docs/codebase/knowledge_graph 2>&1 || true
           echo "✅ নলেজ গ্রাফ আপডেট করা হয়েছে" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Production Readiness Reports
@@ -1632,11 +1632,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 🧠 Generate Smart Pipeline Summary (Zero-Dependency)
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: python3 .github/scripts/ci_smart_summary.py
       - name: 🚨 Generate Detailed Error Report (Bangla Diagnosis)
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_RUN_ID: ${{ github.run_id }}
