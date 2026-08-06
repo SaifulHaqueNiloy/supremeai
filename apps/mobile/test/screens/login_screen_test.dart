@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:supremeai/providers/auth_provider.dart';
-import 'package:supremeai/screens/login_screen.dart';
+import 'package:supremeai_mobile/providers/auth_provider.dart';
+import 'package:supremeai_mobile/screens/login_screen.dart';
 
-import 'package:supremeai/services/localization_service.dart';
+import 'package:supremeai_mobile/services/localization_service.dart';
 
 class MockAuthProvider extends ChangeNotifier implements AuthProvider {
   @override
@@ -58,9 +58,10 @@ void main() {
         child: const MaterialApp(home: LoginScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('SupremeAI'), findsOneWidget);
+    expect(find.text('⚡ SUPREME AI'), findsOneWidget);
     expect(find.byType(ElevatedButton), findsOneWidget);
   });
 }

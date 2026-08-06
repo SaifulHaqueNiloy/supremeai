@@ -98,7 +98,7 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
 - **Universal Anti-Loop & Root-Cause First Rule (CRITICAL):**
   - **No Command/Execution Loop:** If ANY task, command, code fix, or Git operation fails twice consecutively, STOP immediately. Do NOT try a 3rd time with small variations.
   - **Root Cause Diagnosis:** Step back, inspect exact error logs/diffs, identify the core underlying issue, and present a clear single-line diagnostic summary to the user before proceeding.
-  - **No Assumption Code Edits:** Never modify code, schemas, or config files based on assumptions. Always view the full file context (`view_file` / `grep_search`) before applying patches.
+  - **Zero-Assumption & Empirical Verification Rule (STRICT):** Never modify code, schemas, or config files, nor answer architecture/workflow questions based on memory or assumptions. Always perform empirical inspection (`view_file`, `grep_search`, or log reads) of authoritative source files, CI workflows, and deployment manifests BEFORE formulating answers or executing actions.
 
 - **Zero Exaggeration & Strict Truthfulness Rule (NON-NEGOTIABLE):**
   - **No Fake Promises:** Never claim or promise that a script, file, or patch will fix "all errors" or "100% pass" unless empirical evidence (actual test runs/logs) proves it.
@@ -131,6 +131,10 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
   - **No Silent Network Blockers:** Ensure all external LLM routes (`core.llm_router.LLMRouter`) and database connections (`core.tenant_db.TenantAwareFirestore`) are fully mocked before executing test suites to prevent network connection timeouts.
 
 - **Commit All Uncommitted Files & Impact Report:** When performing a commit, ALWAYS inspect all uncommitted files (`git status` / `git diff`), stage all uncommitted files, and provide a short, concise summary report explaining how the uncommitted files make the system better and what specific improvements/benefits they bring.
+
+- **Homologous & Scope-Wide Verification Rule (MANDATORY):**
+  - Whenever a bug, breaking change, type mismatch, refactoring, or feature update is identified in a specific file or module, the AI agent MUST NOT limit fixes to that single file alone.
+  - The AI agent MUST proactively search (`grep_search`) for all related, homologous, duplicate, or caller components across all platforms (Backend, Web Studio, Mobile, Extensions, CI/CD scripts) and fix or update them consistently in the same execution scope.
 
 - **Code Comments (Bangla):** Whenever making changes to the codebase, always try to add explanatory comments in **Bangla** so that the rationale behind the changes is easily understood later by the team.
 
