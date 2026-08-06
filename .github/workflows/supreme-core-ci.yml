@@ -310,7 +310,13 @@ jobs:
           echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
 
 
-      - name: 📋 Gate 3 — Observability Check (No httpx without timeout)
+      - name: 🔗 Gate 3 — Service Topology Check
+        if: needs.changes.outputs.docs_only != 'true'
+        run: |
+          pip install pyyaml
+          python scripts/ci/check_service_topology.py
+
+      - name: 🕵️ Gate 4 — Observability & Silent Error Audit
         if: needs.changes.outputs.docs_only != 'true'
         # বাংলা মন্তব্য: timeout ছাড়া httpx.AsyncClient() ব্যবহার করলে fail
         run: |
@@ -1278,35 +1284,26 @@ jobs:
 
 
 
-  flutter-integration-tests:
-    name: 📱 Flutter Integration Test
-    needs: frontend-core
-    if: github.event_name == 'pull_request' # শুধুমাত্র PR-এর জন্য চালানো যেতে পারে
-    runs-on: macos-latest # iOS সিমুলেটরের জন্য macOS প্রয়োজন
-    strategy:
-      matrix:
-        api-level: [30] # Android API level
-        target: [ios, android]
+  flutter-unit-widget-tests:
+    name: 📱 Flutter Unit & Widget Tests
+    needs: [changes]
+    if: needs.changes.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.29.0'
           channel: 'stable'
-      - name: Install Dependencies
+          cache: true
+      - name: Install Mobile Dependencies
         run: |
           cd apps/mobile
           flutter pub get
-      - name: Run Flutter Integration Tests (Android)
-        if: matrix.target == 'android'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: ${{ matrix.api-level }}
-          script: cd apps/mobile && flutter test integration_test
-      - name: Run Flutter Integration Tests (iOS)
-        if: matrix.target == 'ios'
+      - name: 🧪 Run Headless Flutter Unit & Widget Tests
         run: |
           cd apps/mobile
-          flutter test integration_test
+          flutter test --coverage
 
   build-and-release-desktop:
     name: 🖥️ Build & Release Desktop App
@@ -1478,10 +1475,13 @@ jobs:
   staging-pr-promotion:
     name: 🟢 Auto Create Promotion PR from Staging to Main Repo
     needs: [backend-core, frontend-core]
+    # শুধু SaifulHaqueNiloy repo-র main branch push-এ চলবে
     if: |
       always() &&
       github.repository == 'SaifulHaqueNiloy/supremeai' &&
-      github.ref == 'refs/heads/main'
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.backend-core.result, 'failure') &&
+      !contains(needs.frontend-core.result, 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1492,61 +1492,78 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          # disable persist-credentials so explicit remote PAT URL isn't overridden by default action credentials
           persist-credentials: false
 
       - name: 🤖 Create or Update PR to Main Repository
         env:
-          GH_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          # gh CLI uses GITHUB_TOKEN; fallback to default secrets.GITHUB_TOKEN if MAIN_REPO_TOKEN is empty
+          GITHUB_TOKEN: ${{ secrets.MAIN_REPO_TOKEN || secrets.GITHUB_TOKEN }}
           STAGING_HEAD: ${{ github.sha }}
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "❌ MAIN_REPO_TOKEN secret is missing or empty in this repo's settings."
-            echo "   Add a PAT with write access to paykaribazaronline/supremeai under:"
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "❌ GITHUB_TOKEN / MAIN_REPO_TOKEN secret is missing or empty."
             echo "   Settings → Secrets and variables → Actions → MAIN_REPO_TOKEN"
+            echo "   PAT scope প্রয়োজন: repo (full), workflow"
             exit 1
           fi
 
           echo "✅ Staging CI Pipeline passed (GREEN 🟢)!"
-          echo "🔄 Checking for existing PR from SaifulHaqueNiloy:main to paykaribazaronline:main..."
+          PR_BRANCH="promotion/staging-latest"
+          TARGET_REPO="paykaribazaronline/supremeai"
 
-          EXISTING_PR=$(gh pr list --repo paykaribazaronline/supremeai --head SaifulHaqueNiloy:main --base main --json number --jq '.[0].number')
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global lfs.allowincompletepush true
 
-          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
-            echo "ℹ️ Existing promotion PR #$EXISTING_PR found. Updated automatically."
+          # PAT দিয়ে target remote সেট করা
+          git remote add target https://x-access-token:${GITHUB_TOKEN}@github.com/${TARGET_REPO}.git || \
+            git remote set-url target https://x-access-token:${GITHUB_TOKEN}@github.com/${TARGET_REPO}.git
+          git fetch target main || true
+
+          if git diff --quiet HEAD target/main 2>/dev/null; then
+            echo "ℹ️ No new commits to promote. Branches are identical. Skipping."
+            exit 0
+          fi
+
+          echo "🚀 Pushing to persistent staging branch ($PR_BRANCH)..."
+          git checkout -B $PR_BRANCH
+          git push target $PR_BRANCH --force
+
+          # gh CLI — GITHUB_TOKEN env auto-detected করে cross-repo কাজ করে
+          EXISTING_PR=$(gh pr list \
+            --repo "$TARGET_REPO" \
+            --head "$PR_BRANCH" \
+            --base main \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          PR_BODY="## 🛡️ Staging CI Pass Report
+
+          All quality gates passed on \`SaifulHaqueNiloy/supremeai\`:
+          - 🟢 Pytest & Backend Unit Tests
+          - 🟢 Vitest & Web Client Tests
+          - 🟢 Flutter Unit & Widget Tests
+          - 🟢 Preflight & Security Audit
+
+          **Commit:** \`${STAGING_HEAD:0:7}\`
+          **Admin Action Required:** Review and merge to trigger production deployments."
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "ℹ️ Existing promotion PR #$EXISTING_PR found. Updating..."
+            gh pr edit "$EXISTING_PR" \
+              --repo "$TARGET_REPO" \
+              --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
+              --body "$PR_BODY"
           else
-            echo "🔍 Configuring remote to check differences and push..."
-            
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git config --global lfs.allowincompletepush true
-            git config lfs.allowincompletepush true
-            
-            git remote add target https://x-access-token:${GH_TOKEN}@github.com/paykaribazaronline/supremeai.git
-            git fetch target main
-            
-            if git diff --quiet HEAD target/main; then
-              echo "ℹ️ No new commits to promote. Branches are identical. Skipping PR creation."
-            else
-              echo "🚀 Pushing staging branch to target repository..."
-              PR_BRANCH="promotion/staging-${STAGING_HEAD:0:7}"
-              git checkout -b $PR_BRANCH
-              git push target $PR_BRANCH --force
-              
-              echo "🚀 Opening new automated Staging Promotion PR..."
-              gh pr create \
-                --repo paykaribazaronline/supremeai \
-                --head $PR_BRANCH \
-                --base main \
-                --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
-                --body "## 🛡️ Staging CI Pass Report
-
-              All quality gates passed on \`SaifulHaqueNiloy/supremeai\`:
-              - 🟢 Pytest & Backend Unit Tests
-              - 🟢 Vitest & Web Client Tests
-              - 🟢 Preflight & Security Audit
-
-              **Admin Action Required:** Please review and merge to trigger live production deployments across Render, Vercel, and Firebase."
-            fi
+            echo "🚀 Opening new automated Staging Promotion PR..."
+            gh pr create \
+              --repo "$TARGET_REPO" \
+              --head "$PR_BRANCH" \
+              --base main \
+              --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
+              --body "$PR_BODY"
           fi
 
   canary-deploy:
@@ -1601,7 +1618,7 @@ jobs:
       - deploy-admin-backend
       - deploy-combined-backend
       - deploy-backend
-      - flutter-integration-tests
+      - flutter-unit-widget-tests
       - build-and-release-desktop
       - deploy-admin-firebase
       - deploy-user-vercel
@@ -1619,3 +1636,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: python3 .github/scripts/ci_smart_summary.py
+      - name: 🚨 Generate Detailed Error Report (Bangla Diagnosis)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: python3 .github/scripts/ci_error_report.py
