@@ -140,8 +140,14 @@ _Generated for SupremeAI 2.0 — Admin Plan Execution_
   - There are NO local-only environment hacks or local targets. All code, setups, dependencies, models, and workflows MUST be production-grade targeting live cloud infrastructure (GCP Cloud Run, Render, Vercel, Infisical, Supabase, Cloudflare, GitHub Actions).
   - Speculative local-path fallbacks, mock-type checking in production code, or local-only workarounds are strictly forbidden.
 
+- **Strict Master Audit Execution Rule (MANDATORY):**
+  - Whenever the user requests an audit (e.g., "audit", "run audit", "check code", "phase audit"), the AI agent **MUST strictly execute the Master Audit Blueprint** defined in [`docs/long-term-maintenance/SUPREMEAI_MASTER_AUDIT_PLAN.md`](file:///g:/supremeai%20backup/docs/long-term-maintenance/SUPREMEAI_MASTER_AUDIT_PLAN.md).
+  - **Audit Reports Location:** Every Phase report MUST be saved as a separate markdown file inside the `docs/audit_reports/` directory (e.g., `docs/audit_reports/PHASE_01_CORE_BACKEND.md`).
+  - **Empirical Evidence First:** Every finding MUST contain concrete evidence (exact file path, line number, grep output, or test log). Never claim an issue is "Fixed" without verifying code changes.
+  - **Technical Taxonomy:** Audit findings MUST be categorized using standard technical error terms (`Content Security Policy Violation`, `CORS Blocked`, `Configuration Drift`, `Silent Failure`, `Race Condition`, etc.) and P0-P3 severity matrix.
+
 - **Strict Documentation Architecture Rule (MANDATORY):**
-  - Whenever generating, updating, or maintaining ANY technical documentation, design specs, or knowledge items, the AI agent **MUST strictly follow the Master Documentation Plan and Benefits specification** ([docs/bangla/01-admin-plans/master-documentation-plan-and-benefits.md](file:///g:/supremeai%20backup/docs/bangla/01-admin-plans/master-documentation-plan-and-benefits.md) / [docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md](file:///g:/supremeai%20backup/docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md)).
+  - Whenever generating, updating, or maintaining ANY technical documentation, design specs, or knowledge items, the AI agent **MUST strictly follow the Master Documentation Plan and Benefits specification** ([docs/long-term-maintenance/master-documentation-plan-and-benefits.md](file:///g:/supremeai%20backup/docs/long-term-maintenance/master-documentation-plan-and-benefits.md) / [docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md](file:///g:/supremeai%20backup/docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md)).
   - All new technical documents must be placed within the AI-Native Engineering Knowledge Base (`docs/kb/`) or categorized subfolders (`docs/bangla/<category>` / `docs/english/<category>`), fully adhering to the 12 Core Pillars, Knowledge Cards, Living Impact Analysis, and Mermaid Diagram standards.
 
 
@@ -263,3 +269,22 @@ _Rules Book v3.0 — Last Updated: 2026-07-27_
   - After any git push, schedule a 5-minute recurring timer to check GitHub Actions run status.
   - If any workflow job/step fails, inspect raw logs, apply root-cause fixes, commit with Bangla comments, and push.
   - Repeat monitoring loop until the entire workflow is green (conclusion: success).
+
+## Custom Learned Rule: Multi-Agent Coordination & Risk-Tiered Autonomy
+
+_(পুরো যুক্তি ও উদাহরণ: [`docs/long-term-maintenance/AGENT_GOVERNANCE_ADDENDUM.md`](../docs/long-term-maintenance/AGENT_GOVERNANCE_ADDENDUM.md))_
+
+- **Work-Claim Ledger:** কোনো module-এ কাজ শুরু করার আগে `docs/audit_reports/ACTIVE_CLAIMS.md` চেক করো। ফাইলটা না থাকলে বানাও। অন্য কোনো active claim থাকলে সেই module স্কিপ করো অথবা user-কে conflict সম্ভাবনার কথা জানাও। কাজ শুরুর আগে নিজের claim row যোগ করো, শেষে মুছে দাও বা "done" মার্ক করো।
+
+- **Pre-Commit Sanity Gate (NON-NEGOTIABLE):** যেকোনো `.py`/`.ts`/`.tsx` ফাইল edit করার পর, commit করার ঠিক আগে বাধ্যতামূলকভাবে চালাও: `python3 -m py_compile <file>` (Python) অথবা `npx tsc --noEmit` (TS/TSX), এবং `ruff check <file>`। এই gate fail করলে commit করবে না — নিজে ফিক্স করে আবার চেষ্টা করো (২বারের বেশি loop করবে না, existing Anti-Loop Rule অনুযায়ী)।
+
+- **Blast-Radius Classification:** কাজ শুরুর আগে LOW/MEDIUM/HIGH tier-এ classify করো:
+  - **LOW** (rename, comment, dead code, lint fix) — পুরোপুরি autonomous, approval লাগবে না।
+  - **MEDIUM** (নতুন module/ফাংশন, অন্য module-কে touch না করা logic change) — autonomous, কিন্তু commit message-এ `MEDIUM-RISK` ট্যাগ ও PHASE_LOG এন্ট্রি বাধ্যতামূলক।
+  - **HIGH** (auth/permission logic, payment integration, DB schema migration, secret/env handling, production deploy config, CI gate condition যেমন repo-check) — **explicit user confirmation ছাড়া apply করবে না।** শুধু ready patch/diff `docs/audit_reports/PENDING_APPROVALS.md`-এ যোগ করবে এবং approval-এর অপেক্ষা করবে। এই ক্ষেত্রে "১০০% autonomy" ও "DIRECT EXECUTION COMMAND" rule প্রযোজ্য না।
+
+- **Freeze Switch:** কাজ শুরুর আগে প্রতিবার চেক করো `.agents/FREEZE` ফাইল আছে কিনা। থাকলে কোনো commit/push করবে না — শুধু analysis/report করবে।
+
+- **Checkpoint Tag:** MEDIUM বা HIGH-tier কাজ apply করার ঠিক আগে `git tag checkpoint-$(date -u +%Y%m%d-%H%M) && git push origin --tags` চালাও, যাতে rollback সহজ থাকে।
+
+- **CODEOWNERS Respect:** `.github/CODEOWNERS`-এ লিস্ট করা path (payment, auth, secrets, migrations, deploy config, `.agents/**`) — এগুলোতে সরাসরি `main`-এ push না করে, সবসময় PR বানিয়ে admin review-এর জন্য রেখে দাও, `main` protection bypass করার চেষ্টা কখনো করবে না।
