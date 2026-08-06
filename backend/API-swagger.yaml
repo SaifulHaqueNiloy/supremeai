@@ -1135,6 +1135,8 @@ paths:
       - browser
       summary: Get Credentials
       operationId: get_credentials_api_browser_credentials_get
+      security:
+      - HTTPBearer: []
       parameters:
       - name: userId
         in: query
@@ -1160,6 +1162,8 @@ paths:
       - browser
       summary: Save Credential
       operationId: save_credential_api_browser_credentials_post
+      security:
+      - HTTPBearer: []
       requestBody:
         required: true
         content:
@@ -1184,6 +1188,8 @@ paths:
       - browser
       summary: Delete Credential
       operationId: delete_credential_api_browser_credentials__id__delete
+      security:
+      - HTTPBearer: []
       parameters:
       - name: credential_id
         in: query
@@ -1327,6 +1333,8 @@ paths:
       - browser
       summary: Add Allowed Url
       operationId: add_allowed_url_api_browser_urls_allowed_post
+      security:
+      - HTTPBearer: []
       requestBody:
         required: true
         content:
@@ -1376,6 +1384,8 @@ paths:
       - browser
       summary: Add Denied Url
       operationId: add_denied_url_api_browser_urls_denied_post
+      security:
+      - HTTPBearer: []
       requestBody:
         required: true
         content:
@@ -1400,6 +1410,8 @@ paths:
       - browser
       summary: Allow All Urls
       operationId: allow_all_urls_api_browser_urls_allowAll_post
+      security:
+      - HTTPBearer: []
       parameters:
       - name: userId
         in: query
@@ -1426,6 +1438,8 @@ paths:
       - browser
       summary: Delete Url
       operationId: delete_url_api_browser_urls__id__delete
+      security:
+      - HTTPBearer: []
       parameters:
       - name: url_id
         in: query
@@ -5390,6 +5404,7 @@ paths:
       tags:
       - api-keys
       summary: List All Keys
+      description: "List ALL API keys across users \u2014 admin only."
       operationId: list_all_keys_api_api_keys_all_get
       parameters:
       - name: limit
@@ -5642,6 +5657,7 @@ paths:
       tags:
       - api-keys
       summary: Bulk Delete
+      description: "Bulk delete API keys \u2014 admin only."
       operationId: bulk_delete_api_api_keys_admin_bulk_delete_post
       requestBody:
         content:
