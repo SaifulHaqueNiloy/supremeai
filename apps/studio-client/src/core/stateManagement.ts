@@ -12,6 +12,17 @@ class SelfHealingStateManager {
   private errors: AppErrorEvent[] = [];
   private isOnline: boolean = typeof navigator !== 'undefined' ? navigator.onLine : true;
   private listeners: Array<() => void> = [];
+  // বাংলা মন্তব্য: সেলফ-হিলিং টগল — backend/AppDefaults থেকে সেট হয়। false হলে recovery/retry নিষ্ক্রিয়।
+  private enabled: boolean = true;
+
+  public setEnabled(value: boolean): void {
+    this.enabled = Boolean(value);
+    this.notify();
+  }
+
+  public isEnabled(): boolean {
+    return this.enabled;
+  }
 
   constructor() {
     if (typeof window !== 'undefined') {
