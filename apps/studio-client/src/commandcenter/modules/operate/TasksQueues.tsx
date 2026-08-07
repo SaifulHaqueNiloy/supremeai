@@ -1,6 +1,4 @@
-import React from 'react';
 import { useAgents } from '../../data/hooks';
-import { EmptyState } from '../../kit';
 
 export function TasksQueues() {
   const { data: agents } = useAgents(5_000);

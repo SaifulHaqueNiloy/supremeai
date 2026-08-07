@@ -1,7 +1,8 @@
 // apps/studio-client/src/core/ErrorBoundary.tsx
 // বাংলা মন্তব্য: ফ্রন্টএন্ড এরর বাউন্ডারি — কোনো রিঅ্যাক্ট কম্পোনেন্ট ক্র্যাশ করলে অ্যাপ সম্পূর্ণ ব্রেক হওয়া রোধ করে ও সেলফ-হিলিং রিট্রাই এক্সিকিউট করে।
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;

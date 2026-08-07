@@ -1,4 +1,3 @@
-import React from 'react';
 import { useCIReports } from '../../data/hooks';
 import { StatusPill, EmptyState } from '../../kit';
 

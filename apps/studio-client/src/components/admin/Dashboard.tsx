@@ -1,10 +1,10 @@
 import React from 'react';
-import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, X, DollarSign, Database, GitBranch, Sparkles, RefreshCw, Layout, Users, TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpRight, ArrowDownRight, GitPullRequest, Zap, Cloud, Lock } from 'lucide-react';
+import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, DollarSign, Database, GitBranch, Sparkles, RefreshCw, Layout, Users, TrendingUp, Clock, CheckCircle, ArrowUpRight, Zap, Lock } from 'lucide-react';
 import ReactFlow, { Background, Controls, useNodesState, useEdgesState } from 'reactflow';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import 'reactflow/dist/style.css';
 import './AethelCoreStyles.css';
-import { useMetrics, useHealthMap, useThreatScan, useCostReport, useCIReports, useDashboardEvents, useDashboardReports } from '../../hooks/useDashboardData';
+import { useMetrics, useHealthMap, useThreatScan, useCIReports, useDashboardEvents, useDashboardReports } from '../../hooks/useDashboardData';
 import { useDashboardStore } from '../../store/dashboardStore';
 import HealthBanner from './HealthBanner';
 import DeploymentModal from './DeploymentModal';
@@ -30,7 +30,6 @@ const Dashboard: React.FC = () => {
   const { data: metrics } = useMetrics();
   const { data: health } = useHealthMap();
   const { data: threats } = useThreatScan();
-  const { data: costs } = useCostReport();
   const { data: ciReports } = useCIReports();
 
   const [selectedReportName, setSelectedReportName] = React.useState<string | undefined>();
@@ -167,7 +166,7 @@ const Dashboard: React.FC = () => {
         // 🌟 GORGEOUS SIMPLE MODE (User-Friendly Cockpit View)
         // ==========================================
         <div className="w-full h-screen bg-gradient-to-br from-gray-50 to-slate-100 text-slate-800 relative overflow-y-auto font-sans p-6 transition-colors duration-500">
-          
+
           {/* Header with beautiful gradient */}
           <div className="flex justify-between items-center border-b border-slate-200 pb-5 mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-1">
             <div className="bg-white rounded-xl p-5 w-full">
@@ -183,9 +182,9 @@ const Dashboard: React.FC = () => {
 
           {/* Beautiful Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            
+
             {/* System Health Card */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
@@ -202,9 +201,9 @@ const Dashboard: React.FC = () => {
               </p>
               <p className="text-xs text-slate-500 mt-2">All systems operational</p>
               <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full" 
-                  style={{ 
+                <div
+                  className="h-full rounded-full"
+                  style={{
                     width: `${health?.gcp?.status === 'healthy' ? '98' : health?.gcp?.status === 'degraded' ? '60' : '30'}%`,
                     backgroundColor: health?.gcp?.status === 'healthy' ? '#10b981' : health?.gcp?.status === 'degraded' ? '#f59e0b' : '#ef4444'
                   }}
@@ -213,7 +212,7 @@ const Dashboard: React.FC = () => {
             </motion.div>
 
             {/* Threat Card */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -233,9 +232,9 @@ const Dashboard: React.FC = () => {
                 {threats && threats.total_findings > 0 ? `${threats.total_findings} threats detected` : 'No active threats'}
               </p>
               <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full" 
-                  style={{ 
+                <div
+                  className="h-full rounded-full"
+                  style={{
                     width: `${threats && threats.total_findings > 0 ? Math.min(threats.total_findings * 10, 100) : 0}%`,
                     backgroundColor: threats && threats.total_findings > 0 ? '#f59e0b' : '#10b981'
                   }}
@@ -244,7 +243,7 @@ const Dashboard: React.FC = () => {
             </motion.div>
 
             {/* AI Skills Card */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -266,15 +265,15 @@ const Dashboard: React.FC = () => {
                 {metrics ? metrics.active_agents : 0} agents processing tasks
               </p>
               <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-indigo-500 rounded-full" 
+                <div
+                  className="h-full bg-indigo-500 rounded-full"
                   style={{ width: `${metrics ? Math.min(metrics.active_agents * 10, 100) : 0}%` }}
                 ></div>
               </div>
             </motion.div>
 
             {/* Cost Efficiency Card */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -296,9 +295,9 @@ const Dashboard: React.FC = () => {
                 Under budget allocation
               </p>
               <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full" 
-                  style={{ 
+                <div
+                  className="h-full rounded-full"
+                  style={{
                     width: `${metrics ? Math.min(metrics.cost_per_hour * 50, 100) : 25}%`,
                     backgroundColor: metrics && metrics.cost_per_hour < 0.5 ? '#10b981' : metrics && metrics.cost_per_hour < 1.0 ? '#f59e0b' : '#ef4444'
                   }}
@@ -309,9 +308,9 @@ const Dashboard: React.FC = () => {
 
           {/* Main Content Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            
+
             {/* Activity Feed */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
@@ -326,7 +325,7 @@ const Dashboard: React.FC = () => {
                   View All
                 </button>
               </div>
-              
+
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {events && events.length > 0 ? (
                   events.map((evt, idx) => {
@@ -337,7 +336,7 @@ const Dashboard: React.FC = () => {
                     const bgColor = isError ? 'bg-rose-50 border-rose-100' : (isWarn ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100');
 
                     return (
-                      <motion.div 
+                      <motion.div
                         key={idx}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -367,16 +366,16 @@ const Dashboard: React.FC = () => {
 
             {/* Quick Actions & Performance */}
             <div className="space-y-8">
-              
+
               {/* Quick Actions */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
                 className="bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
               >
                 <h2 className="text-lg font-bold text-slate-900 mb-6">Quick Actions</h2>
-                
+
                 <div className="space-y-4">
                   <button
                     onClick={runSmartOptimization}
@@ -398,6 +397,10 @@ const Dashboard: React.FC = () => {
                       <ArrowUpRight size={18} className="text-indigo-600" />
                     )}
                   </button>
+
+                  {optimizeStatus && (
+                    <div className="text-xs text-indigo-600 px-1">{optimizeStatus}</div>
+                  )}
 
                   <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
                     <div className="flex items-center gap-3">
@@ -441,14 +444,14 @@ const Dashboard: React.FC = () => {
               </motion.div>
 
               {/* Performance Stats */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 }}
                 className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg"
               >
                 <h2 className="text-lg font-bold mb-4">Performance Overview</h2>
-                
+
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between mb-1">
@@ -458,13 +461,13 @@ const Dashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-white rounded-full" 
+                      <div
+                        className="h-full bg-white rounded-full"
                         style={{ width: `${metrics ? Math.min(metrics.cpu_percent, 100) : 0}%` }}
                       ></div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm font-medium">Memory Usage</span>
@@ -473,13 +476,13 @@ const Dashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-white rounded-full" 
+                      <div
+                        className="h-full bg-white rounded-full"
                         style={{ width: `${metrics ? Math.min(metrics.memory_percent, 100) : 0}%` }}
                       ></div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm font-medium">Network</span>
@@ -488,8 +491,8 @@ const Dashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-300 rounded-full" 
+                      <div
+                        className="h-full bg-emerald-300 rounded-full"
                         style={{ width: `${Math.min((metrics ? metrics.requests_per_second : 0) / 100 * 100, 100)}%` }}
                       ></div>
                     </div>
@@ -500,7 +503,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Detailed Reports Section */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
@@ -515,7 +518,7 @@ const Dashboard: React.FC = () => {
                 Export Data
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Report List */}
               <div className="md:col-span-1 border-r border-slate-200 pr-6">

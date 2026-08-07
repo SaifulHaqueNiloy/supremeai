@@ -11,6 +11,7 @@ import {
   MiniMap,
   type Connection,
   type Edge,
+  type Node,
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -55,8 +56,9 @@ const loadAutosavedFlow = () => {
 const EvolutionForgeCanvas = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(() => loadAutosavedFlow()?.nodes || initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(() => loadAutosavedFlow()?.edges || []);
+  const autosaved = loadAutosavedFlow();
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(autosaved?.nodes || initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(autosaved?.edges || []);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);

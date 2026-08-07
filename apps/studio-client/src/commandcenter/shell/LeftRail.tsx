@@ -32,7 +32,7 @@ import {
   DatabaseBackup,
   Lock,
 } from 'lucide-react';
-import type { CommandModuleId } from '../data/types';
+import type {} from '../data/types';
 import { useCommandCenterStore } from '../state/useCommandCenterStore';
 
 // ═══════════════════════════════════════════════════════════════════════════

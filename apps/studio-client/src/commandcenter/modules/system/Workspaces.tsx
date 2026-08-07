@@ -1,7 +1,6 @@
-import React from 'react';
 import { useWorkspaces } from '../../data/hooks';
 import { DataTable, EmptyState } from '../../kit';
-import type { Workspace } from '../../data/types';
+import type {} from '../../data/types';
 
 export function Workspaces() {
   const { data: workspaces, isLoading } = useWorkspaces();

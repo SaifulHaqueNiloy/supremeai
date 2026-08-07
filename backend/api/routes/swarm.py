@@ -7,7 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from core.error_bus import with_error_bus
 from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.swarm_pubsub import swarm_streamer

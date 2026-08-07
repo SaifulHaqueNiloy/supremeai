@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Shield, Clock, User, Zap } from 'lucide-react';
 import { useCommandCenterStore } from '../state/useCommandCenterStore';
 

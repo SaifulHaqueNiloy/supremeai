@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.dependencies import get_current_user_token
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 
 # বাংলা মন্তব্য: মেইন মডিউলের বদলে core.app থেকে সরাসরি app ইমপোর্ট করা হলো
 from core.app import app
@@ -36,7 +36,7 @@ def mock_firestore():
         yield db
 
 
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "user_test", "role": "user"}
@@ -58,7 +58,7 @@ def test_get_fixes_unauthorized(mock_decode_jwt, mock_token):
     app.dependency_overrides = {}
 
 
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_firestore):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
@@ -96,7 +96,7 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
 @patch("api.routes.admin.god_layer")
 @patch("api.routes.admin.redis_manager")
 @patch("database.session.get_db_session")
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_quick_actions_success(
     mock_decode_jwt,
@@ -168,7 +168,7 @@ def test_quick_actions_success(
 
 
 @patch("api.routes.admin.god_layer")
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_quick_action_unknown_returns_404(mock_decode_jwt, mock_token, mock_god_layer):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}

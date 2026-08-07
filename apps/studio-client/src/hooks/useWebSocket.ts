@@ -77,7 +77,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
   // বাংলা মন্তব্য: connectRef এ connect function এর রেফারেন্স রাখা হয়,
   // যাতে reconnect টাইমআউটে রেফারেন্স থাকে
-  const connectRef = useRef<() => void>();
+  const connectRef = useRef<(() => void) | null>(null);
 
   // বাংলা মন্তব্য: connect function এর dependency list থেকে callbacks সরানো হয়েছে
   // কারণ callbacks গুলো ref এ সংরক্ষিত আছে

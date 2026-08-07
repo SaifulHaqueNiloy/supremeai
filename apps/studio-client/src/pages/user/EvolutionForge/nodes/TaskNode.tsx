@@ -1,12 +1,14 @@
 import React, { memo } from 'react';
-import { Handle, Position, type NodeProps, useReactFlow } from '@xyflow/react';
+import { Handle, Position, type Node, type NodeProps, useReactFlow } from '@xyflow/react';
 
 export type TaskNodeData = {
   label: string;
   prompt: string;
 };
 
-const TaskNode = ({ id, data, selected }: NodeProps<TaskNodeData>) => {
+export type TaskFlowNode = Node<TaskNodeData, 'taskNode'>;
+
+const TaskNode = ({ id, data, selected }: NodeProps<TaskFlowNode>) => {
   const { updateNodeData } = useReactFlow();
 
   const handlePromptChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {

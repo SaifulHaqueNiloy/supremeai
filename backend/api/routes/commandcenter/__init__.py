@@ -1,15 +1,23 @@
-# বাংলা মন্তব্য: অব্যবহৃত ইম্পোর্ট (Depends, HTTPException, logger) সরিয়ে শুধু APIRouter রাখা হলো
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/admin-api/commandcenter", tags=["Command Center"])
+from api.dependencies import get_current_admin
+
+router = APIRouter(
+    prefix="/admin-api/commandcenter",
+    tags=["Command Center"],
+    dependencies=[Depends(get_current_admin)],
+)
+
 
 @router.get("/health")
 async def command_health():
     return {"status": "ok"}
 
+
 @router.get("/metrics")
 async def command_metrics():
     return {}
+
 
 @router.get("/events")
 async def command_events():

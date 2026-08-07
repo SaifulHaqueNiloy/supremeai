@@ -5,17 +5,21 @@ import pytest
 from backend.core.config import Settings
 from backend.core.pgbouncer_pool import dispose_db_pool
 
+
 def test_jwt_secret_validation_local():
     settings = Settings(env="local")
     assert len(settings.jwt_secret) >= 64
+
 
 def test_jwt_secret_validation_production_valid():
     settings = Settings(env="production")
     assert len(settings.jwt_secret) >= 64
 
+
 def test_jwt_secret_validation_production_invalid():
     with pytest.raises(ValueError, match="JWT secret must be at least 64 bytes long in production"):
         Settings.set_jwt_secret("short_prod_key", info=type("Info", (), {"data": {"env": "production"}})())
+
 
 @pytest.mark.asyncio
 async def test_dispose_db_pool_safely():

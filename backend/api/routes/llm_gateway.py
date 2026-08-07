@@ -10,12 +10,12 @@
 
 import os
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
 
-from api.dependencies import get_current_user_token
+from api.dependencies import get_current_admin, get_current_user_token
 from core.llm.free_tier_tracker import get_tracker
 from core.llm.llm_gateway import get_llm_gateway
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
@@ -28,13 +28,6 @@ def _learning_enabled() -> bool:
     # চালু করলে learning engine embedding-similarity দিয়ে self-sufficient উত্তর দেয়,
     # নাহলে স্ট্যান্ডার্ড stateless orchestration (প্রডাকশন স্থিতিশীল)।
     return os.getenv("ENABLE_DAILY_LEARNER", "false").lower() in ("1", "true", "yes")
-
-
-def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
-    """Enforce admin role for sensitive LLM gateway admin routes."""
-    if payload.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return payload
 
 
 @router.get("/health")
@@ -146,7 +139,7 @@ async def completion(
                 temperature=req.temperature,
             )
             return {"response": response, "source": "learning_engine"}
-        except Exception as exc:  # noqa: BLE001 — safe fallback to standard path
+        except Exception as exc:  # safe fallback to standard path
             logger.warning(f"Learning gateway failed, falling back to standard router: {exc}")
 
     # STANDARD PATH (safe fallback / flag off)

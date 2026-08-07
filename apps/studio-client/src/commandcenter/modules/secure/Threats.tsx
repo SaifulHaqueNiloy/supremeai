@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useThreatScan, useSecurityFindings } from '../../data/hooks';
 import { useSecurityRescan } from '../../data/hooks';
 import { StatusPill, EmptyState } from '../../kit';

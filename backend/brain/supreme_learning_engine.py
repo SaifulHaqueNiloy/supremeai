@@ -27,10 +27,44 @@ from loguru import logger
 
 # বাংলা মন্তব্য: similarity embedder-এর জন্য স্টপওয়ার্ড + regex (MD5 signature-এর বদলে ব্যবহৃত)
 _STOPWORDS = {
-    "the", "and", "for", "with", "you", "your", "how", "what", "why", "when",
-    "this", "that", "from", "into", "have", "will", "can", "are", "was", "were",
-    "does", "done", "please", "using", "use", "would", "could", "should", "write",
-    "make", "create", "give", "explain", "tell", "show", "need", "want", "about",
+    "the",
+    "and",
+    "for",
+    "with",
+    "you",
+    "your",
+    "how",
+    "what",
+    "why",
+    "when",
+    "this",
+    "that",
+    "from",
+    "into",
+    "have",
+    "will",
+    "can",
+    "are",
+    "was",
+    "were",
+    "does",
+    "done",
+    "please",
+    "using",
+    "use",
+    "would",
+    "could",
+    "should",
+    "write",
+    "make",
+    "create",
+    "give",
+    "explain",
+    "tell",
+    "show",
+    "need",
+    "want",
+    "about",
 }
 re_findall = re.findall
 
@@ -394,7 +428,6 @@ class SupremeLearningEngine:
         if existing:
             row_id = existing["row_id"]
             cur_conf = existing["confidence"]
-            cur_success = existing["success_count"]
             cur_models = existing["source_models"]
             cur_sim = existing["similarity"]
             # বাংলা মন্তব্ট: রিয়েল ফিডব্যাক → confidence পরিবর্তন (আগে শুধু +0.02 হতো)।
@@ -433,8 +466,10 @@ class SupremeLearningEngine:
                     new_conf,
                     datetime.now().isoformat(),
                     json.dumps(list(set([*cur_models, model]))),
-                    response_template, response_template,
-                    query_template, query_template,
+                    response_template,
+                    response_template,
+                    query_template,
+                    query_template,
                     json.dumps(query_embed),
                     row_id,
                 ),

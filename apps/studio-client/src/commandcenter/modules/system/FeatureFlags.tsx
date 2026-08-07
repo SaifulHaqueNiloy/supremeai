@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useFeatureFlags, useUpdateFeatureFlag } from '../../data/hooks';
 import { ConfirmModal, EmptyState } from '../../kit';
 

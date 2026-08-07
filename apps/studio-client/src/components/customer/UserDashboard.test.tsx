@@ -40,7 +40,9 @@ const defaultProps = {
   isServerOnline: true,
   deployGate: { status: 'UNLOCKED' },
   user: {
+    id: 'user-1',
     username: 'TestUser',
+    created_at: '2026-06-01',
     last_login: '2026-06-29',
     email: 'test@example.com',
     role: 'operator' as const,
@@ -202,4 +204,3 @@ describe('UserDashboard', () => {
     expect(getTabButton(/Quick Presets/i).classList.contains('bg-accent-primary/20')).toBe(true);
   });
 });
-

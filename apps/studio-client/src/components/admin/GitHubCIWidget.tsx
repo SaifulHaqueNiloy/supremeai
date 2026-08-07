@@ -29,7 +29,6 @@ export const GitHubCIWidget: React.FC<GitHubCIWidgetProps> = ({ reports, isLoadi
           reports.map((report, idx) => {
             const isSuccess = report.status === 'success' || report.status === 'passed';
             const isFailed = report.status === 'failure' || report.status === 'failed';
-            const isRunning = !isSuccess && !isFailed;
 
             return (
               <div key={report.id || idx} className="bg-[#040814] border border-slate-800/50 rounded-lg p-3 flex flex-col gap-2 transition-all hover:border-slate-700">

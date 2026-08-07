@@ -3,7 +3,7 @@
 // বাংলা মন্তব্য: বিলিং ও সাবস্ক্রিপশন ব্যবস্থাপনা পেজ — সম্পূর্ণ ফ্রি-টিয়ার এবং অন-ডিমান্ড টোকেন প্ল্যান।
 
 import React from 'react';
-import { Zap, CheckCircle2, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
+import { Zap, CheckCircle2, ShieldCheck, CreditCard } from 'lucide-react';
 import { NavRail } from '../components/layout/NavRail';
 
 export const BillingPage: React.FC = () => {

@@ -1,7 +1,6 @@
-import React from 'react';
 import { useSessions } from '../../data/hooks';
 import { DataTable, EmptyState } from '../../kit';
-import type { Session } from '../../data/types';
+import type {} from '../../data/types';
 
 export function Sessions() {
   const { data: sessions, isLoading } = useSessions();

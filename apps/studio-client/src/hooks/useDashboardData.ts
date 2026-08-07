@@ -119,7 +119,7 @@ export function useCIReports(limit = 5, refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: ['dashboard', 'ci-logs', limit],
     queryFn: () => apiClient.get<CIReport[]>(`/admin-api/ci-logs?limit=${limit}`),
-    refetchInterval: false,
+    refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: Infinity,
   });

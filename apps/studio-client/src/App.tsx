@@ -14,6 +14,7 @@ import { RegisterScreen } from './pages/auth/RegisterScreen';
 import { DashboardShell } from "./components/dashboard/DashboardShell";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
+import type { ChatMessage } from "./components/customer/UserDashboard";
 
 // বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।
 const AdminShell = React.lazy(() => import("./pages/admin/AdminShell").then(m => ({ default: m.AdminShell })));
@@ -30,8 +31,7 @@ const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 
 // Services & Hooks
 import { getAethelResponse } from "./services/chatService";
-import type { ChatMessage } from "./services/chatService";
-import { useServerStream } from "./hooks/useServerStream";
+import type { ChatMessage as ApiChatMessage } from "./services/chatService";
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import { primeDeviceFingerprint } from "./utils/deviceFingerprint";
 
@@ -87,22 +87,22 @@ const AppContent: React.FC = () => {
   const handleSendCustomer = async () => {
     if (!chatInput.trim()) return;
     const now = new Date().toLocaleTimeString();
-    const userMessage = { id: Date.now(), sender: 'User', text: chatInput, timestamp: now };
+    const userMessage: ChatMessage = { id: Date.now(), sender: 'User', text: chatInput, timestamp: now };
     const responseId = Date.now() + 1;
 
     setChatMessages(prev => [
       ...prev,
       userMessage,
-      { id: responseId, sender: 'Aethel', text: `Analyzing request "${chatInput}"... Processing on central core.`, timestamp: now }
+      { id: responseId, sender: 'SupremeAI', text: `Analyzing request "${chatInput}"... Processing on central core.`, timestamp: now }
     ]);
     setChatInput('');
 
     try {
-      const history = [...chatMessages, userMessage].map(msg => ({
+      const history: ApiChatMessage[] = [...chatMessages, userMessage].map(msg => ({
         role: msg.sender === 'User' ? 'user' : 'assistant',
         content: msg.text,
       }));
-      const responseText = await getAethelResponse(chatInput, history as ChatMessage[]);
+      const responseText = await getAethelResponse(chatInput, history);
       setChatMessages(prev => prev.map(msg => msg.id === responseId ? { ...msg, text: responseText } : msg));
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Unable to fetch response.';

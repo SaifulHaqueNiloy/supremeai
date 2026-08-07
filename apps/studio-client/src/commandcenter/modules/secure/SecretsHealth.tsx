@@ -1,4 +1,3 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 import { StatusPill, EmptyState } from '../../kit';

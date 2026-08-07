@@ -70,6 +70,16 @@ SCAN_EXTENSIONS = {
 }
 
 
+def _is_excluded(path: Path) -> bool:
+    """Mirror SecretHunter's own directory/file exclusions for staged-file scans.
+
+    বাংলা মন্তব্য: full-codebase স্ক্যানে tests/ ও test_* ফাইল বাদ পড়ে, কিন্তু staged
+    স্ক্যানে পড়ত না — ফলে স্ক্যানারের নিজের ডকুমেন্টেড fixture কী কমিট ব্লক করত।
+    """
+    parts = set(path.parts)
+    return bool(parts & {"node_modules", "__pycache__", "tests"}) or path.name.startswith("test_")
+
+
 def get_staged_files() -> list[Path]:
     """Get list of staged files from git.
 
@@ -85,7 +95,11 @@ def get_staged_files() -> list[Path]:
             cwd=Path(__file__).resolve().parent.parent.parent,
         )
         files = [Path(f.strip()) for f in result.stdout.split("\n") if f.strip()]
-        return [f for f in files if f.suffix in SCAN_EXTENSIONS]
+        return [
+            f
+            for f in files
+            if f.suffix in SCAN_EXTENSIONS and not _is_excluded(f)
+        ]
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         print(f"⚠️  Git not available or not a git repository: {e}")
         return []
