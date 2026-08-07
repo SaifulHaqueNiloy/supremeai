@@ -122,6 +122,9 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
     ("api.routes.health", "/api/v1"),
     # বাংলা মন্তব্ব্য: অ্যাডমিন পোর্টালে গ্লোবাল কনফিগারেশন লোড করার জন্য public_config রাউটার যুক্ত করা হলো
     ("api.routes.public_config", "/api"),
+    # বাংলা মন্তব্য: অ্যাডমিন প্যানেলের safe-default preferences স্ট্রিম (/api/preferences/default/stream)
+    # রাউটারটি আগে শুধু core_routers-এ ছিল, তাই অ্যাডমিন অ্যাপে 404 দিচ্ছিল। এখানে যোগ করা হলো।
+    ("api.routes.preferences", "/api"),
     ("api.routes.simulator_admin", ""),
     ("api.routes.site_actions", ""),
     ("api.routes.llm_gateway", ""),

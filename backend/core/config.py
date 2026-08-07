@@ -226,6 +226,11 @@ class Settings(BaseSettings):
             "/api/billing/webhook/stripe",
             "/api/billing/webhook/sslcommerz",
             "/api/v1/markdown",
+            # বাংলা মন্তব্য: অ্যাডমিন পোর্টাল safe-default কনফিগ ও preferences স্ট্রিম
+            # পাবলিক করা হলো (auth-free)। শুধু নির্দিষ্ট GET/stream পাথ — সব /api/preferences
+            # নয়, নাহলে POST write endpoint-ও অ্যাথেনটিকেশন ছাড়া চলে যাবে।
+            "/api/config/public",
+            "/api/preferences/default/stream",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )
