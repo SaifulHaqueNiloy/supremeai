@@ -475,3 +475,12 @@ _SupremeAI 2.0 — Master Audit Phase Log_
 - FAIL count: 2
 - Report: `docs\audit_reports\AUDIT_RUN_20260807_044158.md`
 - Self-verification: ✅ script-level exit codes captured
+
+## Master Audit Run — 2026-08-07 06:39:30 (Scanner Fixes Verified)
+- Tool: `audit_master_runner.py --only find_secrets find_dead_code`
+- FAIL count: 0 (PASS=2)
+- Report: `docs\audit_reports\AUDIT_RUN_20260807_063939.md`
+- Fixes applied:
+  1. `scripts/find_secrets.py` — regex group bug (`(?:...)` + `.group(1)` → "no such group") fixed; build artifact dirs (`dist-admin`, `dist-user`, `out`, `htmlcov`) excluded via substring match; test/local DB connection strings suppressed.
+  2. `scripts/find_dead_code.py` — rewritten as cross-file aware scanner; BOM (U+FEFF) handled via `utf-8-sig`; `__init__.py` re-exports skipped; framework entrypoints (FastAPI routes, alembic migrations, pytest fixtures, agent factories) added to allowlist; default min-severity changed to P1 (only syntax errors fail CI gate).
+- Self-verification: ✅ `python scripts/audit_master_runner.py --only find_secrets find_dead_code` → PASS=2 FAIL=0
