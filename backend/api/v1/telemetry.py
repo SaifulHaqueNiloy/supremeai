@@ -115,3 +115,14 @@ async def get_detailed_status():
     }
 
     return JSONResponse(content=status)
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর GlobalErrorBoundary.tsx-এর
+# /api/telemetry/frontend-error কল এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+@router.post("/frontend-error", tags=["telemetry"])
+async def report_frontend_error(payload: dict):
+    """Receive and log frontend error reports from the Studio Client."""
+    import logging
+    logger = logging.getLogger("supremeai.telemetry.frontend")
+    logger.error(f"Frontend error report: {payload}")
+    return {"status": "logged", "message": "Frontend error report received"}

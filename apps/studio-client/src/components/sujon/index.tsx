@@ -26,7 +26,7 @@ export function useSujonMetrics() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('/api/v1/metrics/realtime');
+        const response = await fetch('/api/admin/metrics/realtime');
         const data = await response.json();
         setMetrics(data.metrics || []);
       } catch (error) {
