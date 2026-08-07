@@ -6,6 +6,7 @@
 import os
 import signal
 import sys
+from typing import Any
 
 if not os.getenv("ENV"):
     os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
@@ -30,10 +31,30 @@ else:
     else:
         _APP_IMPORT_STRING = "core.app_user:app"
 
-# বাংলা মন্তব্য: ব্যাকওয়ার্ড কম্প্যাটিবিলিটি এবং টেস্টের সুবিধার জন্য core.app থেকে app এক্সপোর্ট করা হচ্ছে
-from core.app import app
-
+# বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে `from core.app import app` করে মডিউল-লেভেলে
+# সম্পূর্ণ (all-routers) অ্যাপ তৈরি হতো। কিন্তু production-এ uvicorn আবার
+# `core.app_user:app` / `core.app_admin:app` ইম্পোর্ট করে দ্বিতীয় FastAPI অ্যাপ
+# বানাত। ফলে একই প্রসেসে দুইটা সম্পূর্ণ অ্যাপ (~70 router × 2, middleware chain × 2)
+# লোড হতো — Render free tier-এর 512MB RAM-এ এটি OOM/অতিরিক্ত ধীর বুট ঘটাত এবং
+# deploy `update_failed` + /health timeout দিত।
+# এখন `app` লেজি `__getattr__`-এর মাধ্যমে দেওয়া হয়: শুধু যারা সত্যিই
+# `from main import app` করে (schema_exporter, generate_openapi, legacy tests)
+# তারাই full app তৈরি করবে; সার্ভার বুট পথে এটি আর তৈরি হবে না।
 __all__ = ["app"]
+
+
+def __getattr__(name: str) -> Any:
+    """Lazy re-export of `core.app:app` for backward compatibility.
+
+    বাংলা: `from main import app` আগের মতোই কাজ করবে, কিন্তু সার্ভার বুটের সময়
+    অপ্রয়োজনীয়ভাবে দ্বিতীয় অ্যাপ ইনস্ট্যান্স তৈরি হবে না।
+    """
+    if name == "app":
+        from core.app import app as _app
+
+        return _app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 from core.config import settings
 from core.logging_config import setup_logging
