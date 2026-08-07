@@ -10,7 +10,9 @@ class RulesMutator:
     def __init__(self) -> None:
         self.cooldown_seconds = 1800  # Default 30 minutes block
 
-    # বাংলা মন্তব্য: প্রতি রিকোয়েস্টে যেন Sync Redis HTTP Call দিয়ে event loop ব্লক না হয়, সেজন্য In-Memory LRU/TTL Cache ব্যবহার করা হচ্ছে।
+    # বাংলা মন্তব্য: প্রতি রিকোয়েস্টে যেন Sync Redis HTTP Call দিয়ে event loop ব্লক না হয়, সেজন্য
+    # module-level shared in-memory TTL cache ব্যবহার করা হচ্ছে (সব instance শেয়ার করে)।
+    # ক্যাশে TTL ৩ সেকেন্ড — একই IP-এর জন্য sync Redis কল সর্বোচ্চ ৩৩% এর কম (শুধু cold miss-এ)।
     _local_blocked_cache: dict[str, tuple[bool, float]] = {}
 
     def is_ip_blocked(self, ip_address: str) -> bool:

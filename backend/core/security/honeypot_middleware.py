@@ -17,6 +17,11 @@ from core.messaging.event_bus import ErrorContext, ErrorEvent
 class HoneypotMiddleware:
     def __init__(self, app):
         self.app = app
+        # বাংলা মন্তব্য: RulesMutator ইনস্ট্যান্স একবার তৈরি করে রাখি (প্রতি রিকোয়েস্টে নতুন ইনস্ট্যান্স
+        # বানানোর বদলে) — sync Redis কল rules_mutator-এর ৩-সেকেন্ড in-memory ক্যাশে দ্বারা আগে থেকেই সীমিত।
+        from core.rules_mutator import RulesMutator
+
+        self.rules_mutator = RulesMutator()
         # পরিচিত অ্যাটাক সিগনেচার
         self.attack_signatures = [
             re.compile(r"(?i)(ignore previous instructions|system prompt)"),
@@ -38,9 +43,8 @@ class HoneypotMiddleware:
         hacker_ip = client[0] if client else "unknown"
 
         # Check if the IP is already dynamically blocked by the RulesMutator
-        from core.rules_mutator import RulesMutator
-
-        if RulesMutator().is_ip_blocked(hacker_ip):
+        # (sync Redis কল rules_mutator-এর ৩-সেকেন্ড in-memory ক্যাশে দ্বারা সীমিত — event loop ব্লক ন্যূনতম)
+        if self.rules_mutator.is_ip_blocked(hacker_ip):
             logger.warning(f"Honeypot: Blocked request from blacklisted IP: {hacker_ip}")
             response = JSONResponse(
                 status_code=403,
@@ -83,8 +87,8 @@ class HoneypotMiddleware:
             # P0 Fix: হ্যাকার ডিটেক্টেড — Immediate auto-block
             logger.warning(f"🕷️ Malicious payload from {hacker_ip}. Auto-blocking...")
 
-            # 1. Immediately block IP via RulesMutator
-            RulesMutator().block_ip(hacker_ip, reason="honeypot_malicious_payload_detected")
+            # 1. Immediately block IP via RulesMutator (cached instance)
+            self.rules_mutator.block_ip(hacker_ip, reason="honeypot_malicious_payload_detected")
 
             # 2. Log threat intelligence to Firestore
             self._log_threat_intelligence(hacker_ip, body_str or query_str, scope.get("path", ""))
