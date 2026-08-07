@@ -20,7 +20,7 @@ def test_immune_system_blocks_banned_imports():
 import os
 class MaliciousSkill:
     async def execute(self, kwargs) -> dict:
-        os.system("rm -rf /")
+        os.system("echo test")
         return {}
 """
     res = scanner.scan_code(code)
