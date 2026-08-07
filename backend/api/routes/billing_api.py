@@ -1,4 +1,4 @@
-﻿# Secure billing and transactional routing endpoints
+# Secure billing and transactional routing endpoints
 # বাংলা মন্তব্য: ওয়ালেট ব্যালেন্স চেক, পেমেন্ট টপ-আপ, এবং স্ট্রাইপ/লোকাল পেমেন্ট গেটওয়ে ওয়েবহুক রাউট।
 
 import os
@@ -176,7 +176,7 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
     try:
         stripe_key = settings.stripe_api_key
         if not stripe_key:
-            if os.environ.get("SUPREMEAI_ENV") == "production":
+            if settings.env == "production":
                 raise RuntimeError("Stripe API key not configured in production. Payment processing is unavailable.")
             logger.warning("Stripe API key not set in settings. Using mock checkout session.")
             return {
@@ -290,7 +290,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                         }
                     )
                 except Exception as e:
+                    # বাংলা মন্তব্য: Firestore সাবস্ক্রিপশন আপডেট ফেইল করলে এরর রেইজ করা হচ্ছে যাতে Stripe ওয়েবহুক রিট্রাই করে
                     logger.error(f"Failed to update user subscription status in Firestore: {e}")
+                    raise
 
                 try:
                     from core.observability.posthog_client import posthog_client
