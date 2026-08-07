@@ -80,7 +80,7 @@ services:
         value: '["https://supremeai-studio-client.onrender.com","https://supremeai-lac.vercel.app","https://supremeai-studio.vercel.app","https://supremeai-a.web.app","https://supremeai-admin.web.app"]'
       # যাতে User API কঠোরভাবে শুধু Vercel/Netlify/Render client-গুলোকেই ট্রাস্ট করে (Admin console নয়)।
       - key: USER_CORS_ORIGINS
-        value: '["https://supremeai-studio-client.onrender.com","https://supremeai-lac.vercel.app","https://supremeai-studio.vercel.app"]'
+        value: '["https://supremeai-studio-client.onrender.com","https://supremeai-lac.vercel.app","https://supremeai-studio.vercel.app","https://supremeai-a.web.app","https://supremeai-admin.web.app"]'
       - key: SERVICE_ROLE
         value: user
       - key: ALLOWED_HOSTS
