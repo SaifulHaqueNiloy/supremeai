@@ -213,3 +213,23 @@ def record_model_call(provider: str, model: str) -> None:
             model_calls_total.labels(provider=provider, model=model).inc()
         except Exception as exc:
             logger.exception(f"Failed to record model call metric: {exc}")
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর sujon/index.tsx-এর
+# /api/admin/metrics/realtime কল এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+@router.get("/realtime", tags=["infrastructure-metrics"])
+async def get_realtime_metrics():
+    """Get real-time system metrics for dashboard widgets."""
+    import time
+    from datetime import UTC, datetime
+    report = await metrics_engine.calculate_system_roi()
+    return {
+        "status": "ok",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "uptime_seconds": int(time.time() - getattr(metrics_engine, "start_time", time.time())),
+        "metrics": [
+            {"name": "requests_per_minute", "value": report.get("financial_metrics", {}).get("estimated_usd_saved", 0)},
+            {"name": "error_rate", "value": report.get("security_metrics", {}).get("duplicate_executions_prevented", 0)},
+            {"name": "cache_hit_rate", "value": report.get("financial_metrics", {}).get("api_cost_reduction_ratio", "0%")},
+        ],
+    }

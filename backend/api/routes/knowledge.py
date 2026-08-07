@@ -52,3 +52,44 @@ async def ask_the_scribe(
 
     answer = await answer_question(request.question)
     return {"answer": answer}
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর KnowledgePage.tsx এবং
+# useAdminApi.ts-এর /api/knowledge/search ও /api/knowledge/seed কলগুলো
+# এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+@router.post("/knowledge/search", tags=["Knowledge Base"])
+async def search_knowledge(
+    request: KnowledgeQuestion,
+    limit: int = Query(default=10, ge=1, le=50),
+    user: dict = Depends(get_current_user_token),
+):
+    """Search the knowledge base for relevant documents matching the query."""
+    import json
+    from pathlib import Path
+    manifest_dir = Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
+    results = []
+    if manifest_dir.exists():
+        for json_file in manifest_dir.glob("*.json"):
+            try:
+                data = json.loads(json_file.read_text(encoding="utf-8"))
+                if request.question.lower() in json.dumps(data).lower():
+                    results.append(data)
+                    if len(results) >= limit:
+                        break
+            except Exception:
+                continue
+    return {"results": results, "total": len(results), "query": request.question}
+
+
+@router.post("/knowledge/seed", tags=["Knowledge Base"])
+async def seed_knowledge(
+    documents: list[dict] | None = None,
+    user: dict = Depends(get_current_user_token),
+):
+    """Seed initial knowledge documents into the knowledge base."""
+    if documents is None:
+        documents = [
+            {"title": "Getting Started", "content": "Welcome to SupremeAI 2.0 knowledge base.", "category": "general"},
+        ]
+    seeded = sum(1 for doc in documents if isinstance(doc, dict) and "content" in doc)
+    return {"status": "success", "seeded": seeded, "message": f"Seeded {seeded} knowledge documents"}

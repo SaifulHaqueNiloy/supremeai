@@ -1052,3 +1052,27 @@ def get_customers():
     return _load_json_data(
         CUSTOMERS_FILE, [{"id": "cust_1", "name": "Acme Corp", "email": "admin@acme.com", "billing_tier": "pro"}]
     )
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর useAdminApi.ts এবং
+# AdminShell.tsx-এর /admin-api/config কল এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+@router.get("/config")
+def get_config():
+    """Get environment configuration for the admin dashboard."""
+    import os
+    config = {}
+    for key in ["ENV", "DEBUG", "LOG_LEVEL", "REDIS_URL", "DATABASE_URL"]:
+        val = os.environ.get(key, "")
+        if val:
+            config[key] = val
+    return config
+
+
+@router.post("/config")
+def update_config(payload: dict):
+    """Update environment configuration (writes to settings.json)."""
+    import os
+    config = _load_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), {})
+    config.update(payload)
+    _save_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), config)
+    return {"status": "success", "message": "Configuration updated"}

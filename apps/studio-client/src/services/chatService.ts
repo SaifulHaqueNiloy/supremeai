@@ -128,7 +128,7 @@ export const chatService = {
 };
 
 export async function getAethelResponse(message: string, history: ChatMessage[] = []): Promise<string> {
-  const response = await apiClient.post<{ result: string }>('/task/execute', {
+  const response = await apiClient.post<{ result: string }>('/api/task/execute', {
     task: message,
     task_type: 'general',
     messages: history,
