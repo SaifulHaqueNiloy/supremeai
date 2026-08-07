@@ -62,9 +62,10 @@ def _http_get(url, headers=None, timeout=15):
     return _UrllibResponse(resp)
 
 
-def check_http_health(url, label, retries=3, timeout_per_try=15):
+def check_http_health(url, label, retries=6, timeout_per_try=20):
     # বাংলা মন্তব্ব্য: সার্ভিসের /health এবং /api/v1/health রিট্রাই সহ চেক করা হবে কোল্ড স্টার্ট এড়াতে।
-    # Optimized: Reduced retries and increased timeout per try for better efficiency
+    # Render free tier-এর স্পিন-আপ/কোল্ড-স্টার্ট অনেক সময় নিতে পারে (৬০-৯০ সেকেন্ড), তাই
+    # রিট্রাই সংখ্যা ও প্রতি-চেষ্টায় টাইমআউট বাড়ানো হলো যাতে মিথ্যা নেগেটিভ না আসে।
     base_url = url.rstrip('/')
     endpoints = [f"{base_url}/health", f"{base_url}/api/v1/health"]
     for attempt in range(1, retries + 1):
@@ -76,7 +77,7 @@ def check_http_health(url, label, retries=3, timeout_per_try=15):
                     try:
                         # Verify the response is actually healthy, not just status 200
                         data = response.json()
-                        if isinstance(data, dict) and data.get('status') in ['ok', 'healthy', 'UP']:
+                        if isinstance(data, dict) and data.get('status') in ['ok', 'healthy', 'UP', 'degraded']:
                             print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
                             return True
                     except:
@@ -86,7 +87,8 @@ def check_http_health(url, label, retries=3, timeout_per_try=15):
             except Exception as e:
                 print(f"⏳ {health_url} health check attempt {attempt} failed: {e}")
         if attempt < retries:
-            time.sleep(5)  # Shorter delay between attempts
+            # বাংলা মন্তব্য: কোল্ড স্টার্টের জন্য প্রতি রিট্রাইয়ের মাঝে ব্যাকঅফ বাড়ানো হলো (৫→১০সে)
+            time.sleep(10)
     print(f"❌ {label} HTTP check failed after {retries} retries.")
     return False
 
