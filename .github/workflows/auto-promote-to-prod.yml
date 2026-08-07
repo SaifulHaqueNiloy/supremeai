@@ -36,6 +36,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Guard — fail loudly if the promote token is missing
         env:
@@ -51,6 +52,8 @@ jobs:
         env:
           TARGET_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
         run: |
+          # বাংলা মন্তব্য: checkout action-এর ডিফল্ট GITHUB_TOKEN সরাতে অতিরিক্ত হেডার আনসেট করা হচ্ছে, যাতে MAIN_REPO_TOKEN সঠিকভাবে কাজ করে।
+          git config --unset-all http.https://github.com/.extraheader || true
           git config --global user.name "SupremeAI Continuous Sync Bot"
           git config --global user.email "sync-bot@supremeai.dev"
           BRANCH="promote/staging-${{ github.event.workflow_run.head_sha }}"
@@ -59,13 +62,15 @@ jobs:
           # না থাকলে push/PR তৈরি করবে না, ফলে continuous loop বন্ধ হবে।
           echo "🔍 Checking for diff against target/main before pushing..."
           git fetch target main
-          if git diff --quiet target/main HEAD -- . ':(exclude).github/workflows'; then
+          # শুধু এই promote workflow ফাইলটাকেই exclude করা হচ্ছে (নিজেকে নিজে ট্রিগার করা ঠেকাতে) —
+          # বাকি সব .github/workflows/*.yml পরিবর্তন (CI fixes, new gates ইত্যাদি) এখন সঠিকভাবে promote হবে।
+          if git diff --quiet target/main HEAD -- . ':(exclude).github/workflows/auto-promote-to-prod.yml'; then
             echo "✅ No code difference vs target/main — skipping push/PR to prevent infinite loop."
             echo "PROMOTE_BRANCH=" >> "$GITHUB_ENV"
             exit 0
           fi
           echo "⚠️ Difference detected — pushing promotion branch to target."
-          git push target "HEAD:refs/heads/${BRANCH}" --force-with-lease
+          git push target "HEAD:refs/heads/${BRANCH}" --force-with-lease -o ci.skip
           echo "PROMOTE_BRANCH=${BRANCH}" >> "$GITHUB_ENV"
 
       - name: Open (or update) the PR on the main repo
