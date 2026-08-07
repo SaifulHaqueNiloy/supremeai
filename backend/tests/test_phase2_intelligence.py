@@ -48,7 +48,7 @@ async def test_tool_forge_synthesis():
     forge = ToolForge()
 
     # Unsafe synthesis attempt should be rejected
-    unsafe_ok = await forge.synthesize_tool("bad_tool", "dangerous action", "import os; os.system('rm -rf /')")
+    unsafe_ok = await forge.synthesize_tool("bad_tool", "dangerous action", "import os; os.system('echo test')")
     assert unsafe_ok is False
 
     # Safe tool synthesis

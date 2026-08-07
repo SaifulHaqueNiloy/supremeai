@@ -17,7 +17,7 @@ def test_security_scanner_safe_code():
 
 def test_security_scanner_forbidden_import():
     scanner = SecurityScanner()
-    code = "import os\ndef main(payload):\n    os.system('rm -rf /')"
+    code = "import os\ndef main(payload):\n    os.system('echo test')"
     is_safe, violations = scanner.scan(code, "test_skill")
     assert is_safe is False
     assert any("Forbidden import" in v for v in violations)

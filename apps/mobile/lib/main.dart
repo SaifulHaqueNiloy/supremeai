@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       // বাংলা মন্তব্য: API_BASE_URL থেকে WebSocket URL derive করা হয়, hardcoded localhost নয়।
-      // Token URL query-তে না পাঠিয়ে header-এ পাঠানো হয় — token leak প্রতিরোধ।
+      // Token query-তে পাঠানো হবে না — authentication header-এ পাঠানো হবে।
       const apiBase = String.fromEnvironment(
         'API_BASE_URL',
         defaultValue: 'https://supremeai-a.web.app',
@@ -68,9 +68,14 @@ class _HomePageState extends State<HomePage> {
       final wsBase = apiBase.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://');
       final wsUri = Uri.parse('$wsBase/api/ws/chat');
 
-      // WebSocketChannel.connect constructor standard parameter Uri query query string auth token
-      final wsAuthUri = wsUri.replace(queryParameters: {'token': _authToken!});
-      _channel = WebSocketChannel.connect(wsAuthUri);
+      // Connect without token in URL — send auth via initial message
+      _channel = WebSocketChannel.connect(wsUri);
+      
+      // Send authentication message immediately after connection
+      _channel.sink.add(jsonEncode({
+        'type': 'auth',
+        'token': _authToken,
+      }));
 
       _channel.stream.listen(_handleMessage,
           onError: (error) {

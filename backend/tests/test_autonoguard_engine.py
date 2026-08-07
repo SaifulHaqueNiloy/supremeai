@@ -252,7 +252,7 @@ class TestAutonoGuardEngine:
                 otp_code=None,
                 path="/api/v1/admin/users",
                 method="POST",
-                code_to_scan="import os; os.system('rm -rf /')",
+                code_to_scan="import os; os.system('echo test')",
             )
 
             assert allowed is False
