@@ -49,5 +49,6 @@ app.add_middleware(AntiHackingContextMiddleware)
 include_admin_routers(app)
 
 # বাংলা মন্তব্য: অ্যাডমিন এপিআইতে ইউজারের মতো ২০টি রাউটার লোড হয় না (কেবল ADMIN_ROUTERS লোড হয়)।
-# তাই এখানে মিনিমাম ৫টি রাউটের উপস্থিতি চেক করা হচ্ছে যাতে প্রসেসটি ক্র্যাশ না করে।
-router_health_check(app, expected_count=5)
+# তাই এখানে মিনিমাম রাউটের উপস্থিতি চেক করা হচ্ছে যাতে প্রসেসটি ক্র্যাশ না করে।
+# বাংলা মন্তব্য: preferences রাউটার যোগ হওয়ায় কাউন্ট ৫->৬ আপডেট করা হলো।
+router_health_check(app, expected_count=6)
