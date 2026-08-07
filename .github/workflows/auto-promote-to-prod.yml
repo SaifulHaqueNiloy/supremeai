@@ -55,6 +55,16 @@ jobs:
           git config --global user.email "sync-bot@supremeai.dev"
           BRANCH="promote/staging-${{ github.event.workflow_run.head_sha }}"
           git remote add target "https://x-access-token:${TARGET_TOKEN}@github.com/paykaribazaronline/supremeai.git"
+          # Git diff গার্ড — শুধু তখনই push করবে যখন target/main-এর সাথে আসল পার্থক্য থাকবে।
+          # না থাকলে push/PR তৈরি করবে না, ফলে continuous loop বন্ধ হবে।
+          echo "🔍 Checking for diff against target/main before pushing..."
+          git fetch target main
+          if git diff --quiet target/main HEAD -- . ':(exclude).github/workflows'; then
+            echo "✅ No code difference vs target/main — skipping push/PR to prevent infinite loop."
+            echo "PROMOTE_BRANCH=" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "⚠️ Difference detected — pushing promotion branch to target."
           git push target "HEAD:refs/heads/${BRANCH}" --force-with-lease
           echo "PROMOTE_BRANCH=${BRANCH}" >> "$GITHUB_ENV"
 
@@ -62,6 +72,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
         run: |
+          if [ -z "${PROMOTE_BRANCH}" ]; then
+            echo "✅ No promotion branch (no diff) — skipping PR creation."
+            exit 0
+          fi
           gh pr create \
             --repo paykaribazaronline/supremeai \
             --base main \
