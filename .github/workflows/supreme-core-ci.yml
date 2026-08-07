@@ -1479,6 +1479,15 @@ jobs:
           fi
           git config lfs.allowincompletepush true
           git remote add mirror https://${MIRROR_REPO_TOKEN}@github.com/SaifulHaqueNiloy/supremeai.git
+          # বাংলা: Git diff গার্ড — শুধু তখনই push করবে যখন staging repo-র সাথে আসল পার্থক্য (difference) থাকবে।
+          # না থাকলে push করবে না, ফলে অবাঞ্ছিত cross-repo push loop বন্ধ হবে।
+          echo "🔍 Checking for diff against mirror/main before pushing..."
+          git fetch mirror main
+          if git diff --quiet mirror/main HEAD -- . ':(exclude).github/workflows'; then
+            echo "✅ No code difference vs mirror/main — skipping push to prevent infinite loop."
+            exit 0
+          fi
+          echo "⚠️ Difference detected — pushing to mirror main."
           git push --force mirror main:refs/heads/main
 
   staging-pr-promotion:
@@ -1532,6 +1541,14 @@ jobs:
           echo "🔄 Aligning staging branch with target/main via auto-rebase..."
           git fetch target main
           git rebase target/main || (git rebase --abort && git merge target/main -s recursive -X theirs -m "chore(ci): auto-resolve merge conflict against target/main")
+
+          # বাংলা: Git diff গার্ড — rebase-এর পরেও যদি target/main-এর সাথে কোনো কোড পার্থক্য না থাকে,
+          # তাহলে push করবে না (এতে অবাঞ্ছিত promotion loop বন্ধ হবে)।
+          echo "🔍 Checking for diff against target/main after rebase..."
+          if git diff --quiet target/main HEAD -- . ':(exclude).github/workflows'; then
+            echo "✅ No code difference vs target/main — skipping promotion push."
+            exit 0
+          fi
 
           echo "🚀 Pushing clean branch to persistent staging branch ($PR_BRANCH)..."
           git checkout -B $PR_BRANCH
