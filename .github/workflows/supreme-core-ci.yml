@@ -1050,6 +1050,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
             -H "Content-Type: application/json" \
             -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 201 ]; then
             echo "✅ Admin Render deploy triggered via API with prebuilt image (status: $STATUS)!"
           else
             echo "❌ Admin API deploy with prebuilt image returned status: $STATUS"
