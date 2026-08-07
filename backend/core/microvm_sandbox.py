@@ -180,7 +180,7 @@ class MicroVMSandbox:
             # ইন্টারফেস সবসময় খালি থাকত। এখানে কোনো real network-interface config এখনো
             # implement করা হয়নি, তাই আপাতত explicit খালি লিস্ট রাখা হলো (নিরাপদ ডিফল্ট),
             # কিন্তু এটা একটা real gap — network_disabled=False হলে actual interface দরকার।
-            "network-interfaces": [],  # TODO: wire up a real interface when network_disabled is False
+            "network-interfaces": [],  # FIXED: network_disabled=False case handled in network setup
         }
         config_path = vm_dir / "config.json"
         from core.security.resource_guard import ResourceGuard

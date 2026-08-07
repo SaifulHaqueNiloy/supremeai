@@ -156,7 +156,7 @@ def authorize(
 ) -> bool:
     """Authorize a user action based on their role.
 
-    বাংলা: ইউজারের রোলের ভিত্তিতে অ্যাকশন অথরাইজ করে।
+    বাংলা: ইউজারের রোলের ভিত্তিকে অ্যাকশন অথরাইজ করে।
 
     Args:
         user_role: The role of the user requesting the action.
@@ -165,13 +165,7 @@ def authorize(
 
     Returns:
         True if authorized, False otherwise.
-
-    Security Note: `bypass_rbac` is REMOVED — it was a security risk allowing
-    any caller to bypass RBAC by passing `{"bypass_rbac": true}` in context.
     """
-    if context and context.get("bypass_rbac") is True:
-        logger.info("RBAC bypass enabled via authorization context")
-        return True
     return has_permission(user_role, required_permission)
 
 
