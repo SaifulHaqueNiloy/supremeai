@@ -58,6 +58,17 @@ services:
         value: '["https://supremeai-studio-client.onrender.com","https://supremeai-lac.vercel.app","https://supremeai-studio.vercel.app","https://supremeai-a.web.app"]'
       - key: USER_CORS_ORIGINS
         value: '["https://supremeai-studio-client.onrender.com","https://supremeai-lac.vercel.app","https://supremeai-studio.vercel.app","https://supremeai-a.web.app"]'
+      # বাংলা মন্তব্য: ইউজার সার্ভিসের জন্যও ALLOWED_HOSTS স্পষ্ট সেট করা হলো (admin/worker-এর মতো)।
+      # না থাকলেও config.py auto-populate করে, কিন্তু স্পষ্ট সেট থাকলে zero-trust Host
+      # ভ্যালিডেশন নির্ভরযোগ্য ও স্বচ্ছ থাকে।
+      - key: ALLOWED_HOSTS
+        value: 'supremeai-backend.onrender.com'
+      # বাংলা মন্তব্য: CI_WEBHOOK_SECRET production fail-fast (config.py line 924-935) প্রয়োজন।
+      # admin service-এ এটি declared ছিল না, user-এ sync:false ছিল — সুসংগত করা হলো।
+      - key: CI_WEBHOOK_SECRET
+        sync: false
+      - key: ADMIN_CORS_ORIGINS
+        value: '[]'
       # বাংলা মন্তব্য: core/app_user.py এই User-role instance-এ CORS_ORIGINS নয়, USER_CORS_ORIGINS
       # পড়ে এবং production-এ খালি থাকলে বুট-টাইমে crash করে (Fail-Fast) — তাই আলাদাভাবে সেট করা হলো।
       # https://supremeai-admin.web.app ইচ্ছাকৃতভাবে বাদ — User API অ্যাডমিন কনসোলকে ট্রাস্ট করে না
@@ -144,7 +155,7 @@ services:
     region: singapore
     plan: free
     autoDeploy: true
-    startCommand: "python -c \"import asyncio; from core.maintenance_pipeline import maintenance_pipeline; from core.agent_supervisor import agent_supervisor; from core.sentinel_agent import sentinel; async def main(): maintenance_pipeline.start_monitoring(); asyncio.create_task(agent_supervisor.start_agent('sentinel', lambda: sentinel.run_periodic_loop(), health_check_interval=60, max_restarts=10, restart_delay=1.0)); await agent_supervisor.start_monitor(check_interval=30); asyncio.run(main())\""
+    startCommand: "python -m core.worker_main"
     envVars:
       - key: ENV
         value: production
