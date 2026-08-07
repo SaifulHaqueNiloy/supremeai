@@ -10,3 +10,6 @@ _Location: docs/audit_reports/AUDIT_FIX_TRACKER.md_
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `example/auth_core.py` | Security Bug / P0 | 2026-08-07 05:25 | Antigravity AI | Pytest + Admin Verify | ✅ Fixed & Verified |
 | `example/db_helper.py` | Silent Failure / P1 | 2026-08-07 05:30 | Antigravity AI | Pytest | ✅ Fixed & Verified |
+| `scripts/find_secrets.py` | Runtime Error (regex group bug) / P1 | 2026-08-07 06:42 | Antigravity AI | `python scripts/find_secrets.py --no-external` → PASS (rc=0) | ✅ Fixed & Verified |
+| `scripts/find_secrets.py` | False Positive (build artifacts + test DB creds) / P2 | 2026-08-07 06:42 | Antigravity AI | `python scripts/find_secrets.py --no-external` → 0 FAIL-able findings | ✅ Fixed & Verified |
+| `scripts/find_dead_code.py` | False Positive (per-file scanner, BOM parse error, framework entrypoints) / P2 | 2026-08-07 06:42 | Antigravity AI | `python scripts/find_dead_code.py` → PASS (rc=0) | ✅ Fixed & Verified |
