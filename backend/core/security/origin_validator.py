@@ -27,10 +27,17 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
     def allowed_origins(self) -> set[str]:
         # বাংলা মন্তব্য: উভয় user এবং admin CORS origins কে combine করা হচ্ছে
         # যাতে admin panel থেকে আসা request গুলোও accept করা যায়
-        user_origins = set(settings.cors_origins) if settings.cors_origins else set()
-        admin_origins = set(settings.admin_cors_origins) if hasattr(settings, "admin_cors_origins") else set()
-        configured = user_origins.union(admin_origins)
-        return configured.union(self._default_origins)
+        allowed: set[str] = set(self._default_origins)
+        try:
+            user_origins = set(settings.cors_origins) if settings.cors_origins else set()
+            admin_origins = set(settings.admin_cors_origins) if hasattr(settings, "admin_cors_origins") and settings.admin_cors_origins else set()
+            allowed = allowed.union(user_origins, admin_origins)
+        except Exception as exc:  # noqa: BLE001
+            # Defensive: never let a settings/parse error turn an OPTIONS preflight into a 500
+            from core.logging_config import logger
+
+            logger.warning(f"⚠️ TrustedOriginMiddleware failed to read CORS origins, using defaults only: {exc}")
+        return allowed
 
     async def dispatch(self, request: Request, call_next):
         _env = os.getenv("ENV", "development").lower()

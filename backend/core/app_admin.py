@@ -17,17 +17,20 @@ app: FastAPI = build_app_shell(title="SupremeAI Admin API")
 # বুট-টাইমে crash এড়াতে ডিফল্ট অ্যাডমিন origin অটো-পপুলেট করা হচ্ছে।
 # শুধুমাত্র অ্যাডমিন কনসোল origin — Vercel/Netlify user client নয়।
 if settings.env == "production":
-    # বাংলা মন্তব্য: প্রোডাকশনে অ্যাডমিন CORS অরিজিনে '*' থাকলে বা খালি হলে ক্র্যাশ এড়াতে সেফ অরিজিন সেট করা হচ্ছে
-    if not settings.admin_cors_origins or "*" in settings.admin_cors_origins:
+    # বাংলা মন্তব্য: প্রোডাকশনে অ্যাডমিন CORS অরিজিনে '*' থাকলে বা খালি হলে ক্র্যাশ এড়াতে সেফ অরিজিন সেট করা হচ্ছে।
+    # Always ensure the admin web console origin is present (covers misconfigured non-empty lists too).
+    _admin_origins = list(settings.admin_cors_origins or [])
+    if "*" in _admin_origins:
         from loguru import logger
 
-        # বাংলা মন্তব্য: Admin CORS ফলব্যাকে শুধুমাত্র অ্যাডমিন কনসোল origin রাখা হচ্ছে।
-        # আগে ভুলবশত supremeai-backend* user backend URLs যোগ হয়েছিল — এগুলো CORS origin নয়,
-        # বরং এগুলো server-to-server URLs। এটিই preflight OPTIONS এ HTTP ok status না পাওয়ার কারণ।
-        logger.warning("⚠️ Production Admin CORS wildcard/drift detected. Setting default trusted admin origins.")
-        settings.admin_cors_origins = [origin for origin in (settings.admin_cors_origins or []) if origin != "*"] + [
-            "https://supremeai-admin.web.app",
-        ]
+        logger.warning("⚠️ Production Admin CORS wildcard detected. Removing '*' and forcing admin web console origin.")
+        _admin_origins = [o for o in _admin_origins if o != "*"]
+    if "https://supremeai-admin.web.app" not in _admin_origins:
+        from loguru import logger
+
+        logger.warning("⚠️ admin_cors_origins missing admin web console origin — adding it to prevent preflight 403/500.")
+        _admin_origins.append("https://supremeai-admin.web.app")
+    settings.admin_cors_origins = _admin_origins
 
 app.add_middleware(
     CORSMiddleware,
