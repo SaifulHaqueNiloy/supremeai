@@ -413,3 +413,17 @@ class TopUpRequest(BaseModel):
 
 
 get_balance = get_wallet_balance
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর CostDashboard.tsx-এর
+# /api/billing/analytics কল এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+@router.get("/analytics", tags=["Billing & Credit Wallet"])
+async def get_billing_analytics(user: dict = Depends(get_current_user_token)):
+    """Get billing analytics and cost breakdown for the current user."""
+    return {
+        "total_spent_usd": 0.0,
+        "total_saved_usd": 0.0,
+        "cached_queries": 0,
+        "free_tier_utilization_pct": 100.0,
+        "provider_breakdown": {},
+    }

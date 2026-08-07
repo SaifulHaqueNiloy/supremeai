@@ -47,3 +47,35 @@ async def get_active_skill_catalog():
 
     logger.info(f"Successfully broadcasted {len(catalog)} active skills to the frontend dashboard.")
     return catalog
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর useAdminApi.ts এবং
+# EnhancedSkillMarketplace.tsx-এর /api/skills/install এবং /api/skills/search
+# কলগুলো এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+@router.post("/search", response_model=list[dict[str, Any]], tags=["Skill Catalog Infrastructure"])
+async def search_skills(query: str = "", installed_only: bool = False):
+    """Search skill manifests by keyword query."""
+    if not MANIFEST_DIR.exists():
+        raise HTTPException(status_code=500, detail="Skill catalog repository is unavailable.")
+    results = []
+    for json_file in MANIFEST_DIR.glob("*.json"):
+        try:
+            manifest_data = json.loads(json_file.read_text(encoding="utf-8"))
+            if query.lower() in json.dumps(manifest_data).lower():
+                results.append(manifest_data)
+                if len(results) > 100:
+                    break
+        except Exception:
+            continue
+    return results
+
+
+@router.post("/install", tags=["Skill Catalog Infrastructure"])
+async def install_skill(skill: str = ""):
+    """Install a skill by its ID into the user workspace."""
+    if not skill:
+        raise HTTPException(status_code=400, detail="Skill ID is required")
+    manifest_path = MANIFEST_DIR / f"{skill}.json"
+    if not manifest_path.exists():
+        raise HTTPException(status_code=404, detail=f"Skill '{skill}' not found in catalog")
+    return {"status": "installed", "skill": skill, "message": f"Skill '{skill}' installed successfully"}

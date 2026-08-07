@@ -60,6 +60,14 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.websocket_hitl", ""),
     ("api.routes.syncguard", "/api/v1"),
     ("api.routes.admin_librarian", "/api"),
+    # বাংলা মন্তব্ট: AUDIT-018 ফিক্স — session_stream router-টি কোথাও register করা হয়নি,
+    # ফলে Studio Client-এর /api/session/${sessionId}/stream SSE কলে 404 পেত।
+    # রাউটারটির নিজস্ব prefix নেই, তাই এখানে /api যোগ করলে full path মিলে যায়।
+    ("api.routes.session_stream", "/api"),
+    # বাংলা মন্তব্ট: AUDIT-018 ফিক্স — execution_policies router-টি কোথাও register করা হয়নি,
+    # ফলে /api/admin/execution-policies/* এন্ডপয়েন্টগুলো 404 দিচ্ছিল।
+    # রাউটারটির নিজস্ব prefix="/api/admin/execution-policies" আছে, তাই "" prefix।
+    ("api.routes.execution_policies", ""),
     # বাংলা মন্তব্ব্য: এই রাউটারটি আগে এখানে যোগই করা হয়নি — ফলে /api/v1/swarm/*
     # (real-time SSE stream, patch-telemetry persistence, VSCode self-healing
     # endpoint, এবং নতুন emergency-stop /halt+/resume) সব HTTP 404 দিত।
@@ -74,7 +82,7 @@ optional_routers: list[tuple[str, str]] = [
     # Systemic fix: core_routers থেকে এখানে সরানো হয়েছে (দেখুন উপরের কমেন্ট)।
     ("api.routes.llm_gateway", ""),
     # বাংলা মন্তব্ব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
-    ("api.routes.knowledge", ""),
+    ("api.routes.knowledge", "/api"),
     ("api.routes.dock_actions", "/api"),
     ("api.routes.websocket_voice", ""),
     ("tools.collaborative_editor", "/api/v1"),
@@ -96,7 +104,7 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.sandbox_api", ""),
     ("api.routes.pr_review_api", ""),
     # Added telemetry router for performance monitoring and system health
-    ("api.v1.telemetry", "/api/v1"),
+    ("api.v1.telemetry", "/api"),
 ]
 
 
@@ -119,6 +127,7 @@ _admin_paths = {
     "api.routes.metrics",
     "api.routes.cloud_mesh",
     "api.routes.tools_ops",
+    "api.routes.execution_policies",
 }
 
 # ADMIN_ROUTERS includes health and specific admin routes

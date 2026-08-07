@@ -272,3 +272,13 @@ async def verify_otp(payload: VerifyOtpRequest, admin_user: dict = Depends(get_c
 
     logger.info(f"✅ Admin {admin_id} passed OTP verification — context promoted to trusted")
     return {"status": "verified"}
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — useAdminApi.ts-এর useAdminRules() হুক
+# GET /api/admin/rules কল করে, কিন্তু আগে শুধু POST /rules ছিল।
+# এখন GET endpoint যোগ করা হয়েছে যাতে rules লিস্ট ফেচ করা যায়।
+@router.get("/rules")
+async def get_rules(admin_user: dict = Depends(get_current_admin)):
+    """Fetch all constitutional rules from God.py."""
+    rules = god_layer.list_rules()
+    return {"rules": rules}

@@ -14,7 +14,7 @@ export const CostDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/v1/billing/analytics')
+    fetch('/api/billing/analytics')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch cost analytics');
         return res.json();

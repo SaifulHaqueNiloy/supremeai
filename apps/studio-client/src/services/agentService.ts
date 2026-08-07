@@ -12,16 +12,16 @@ export interface AgentTask {
 
 export const agentService = {
   executeAgentTask: async (agentId: string, instruction: string): Promise<AgentTask> => {
-    return apiClient.post<AgentTask>(`/api/agent/${agentId}/execute`, {
+    return apiClient.post<AgentTask>('/api/v1/agents/execute', {
       instruction,
     });
   },
 
   listAgents: async (): Promise<unknown[]> => {
-    return apiClient.get<unknown[]>('/api/agents');
+    return apiClient.get<unknown[]>('/api/v1/agents');
   },
 
   getAgentStatus: async (agentId: string): Promise<{ status: string }> => {
-    return apiClient.get<{ status: string }>(`/api/agent/${agentId}/status`);
+    return apiClient.get<{ status: string }>(`/api/v1/agents/${agentId}/status`);
   },
 };
