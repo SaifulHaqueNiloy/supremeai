@@ -11,8 +11,10 @@ on:
   schedule:
     - cron: '0 3 * * 1'  # প্রতি সোমবার ৩টা UTC
   workflow_dispatch: {}
-  pull_request:
-    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   self-audit:
