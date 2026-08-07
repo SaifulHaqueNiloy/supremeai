@@ -1,4 +1,4 @@
-﻿# mypy: ignore-errors
+# mypy: ignore-errors
 """This module, `backend.core.config`, serves as the single, authoritative source
 for all application settings within the SupremeAI project. It implements a robust,
 "Fail-Fast" configuration layer using Pydantic, ensuring that all critical parameters
@@ -198,6 +198,7 @@ class Settings(BaseSettings):
 
     max_prompt_tokens: int = Field(default=4_000, validation_alias="MAX_PROMPT_TOKENS")
     max_response_tokens: int = Field(default=1_500, validation_alias="MAX_RESPONSE_TOKENS")
+    jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
     max_cost_per_task: float = Field(default=0.01, validation_alias="MAX_COST_PER_TASK")
     enable_token_compression: bool = True
 
@@ -379,9 +380,8 @@ class Settings(BaseSettings):
                 if val:
                     self._cached_secrets[secret_key] = val
             except Exception as _secret_err:
-                # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
-                # যদি কোনো optional secret missing থাকে, server startup block হবে না।
-                logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
+                # বাংলা মন্তব্য: সিক্রেট ভল্ট থেকে কী লোড ফেইল করলে কভার-আপ এড়াতে WARNING লেভেলে স্পষ্ট লগ দেওয়া হচ্ছে
+                logger.warning(f"Secret {secret_key} not available during batch load: {_secret_err}")
         self._secrets_batch_loaded = True
 
     def _get_cached_secret(self, key: str) -> str:
@@ -702,6 +702,7 @@ class Settings(BaseSettings):
                 "https://supremeai.com",
                 "https://app.supremeai.com",
                 "https://admin.supremeai.com",
+                "https://supremeai-admin.web.app",
                 "https://supremeai-studio.vercel.app",
                 "https://supremeai-backend.onrender.com",
                 "https://supremeai-admin.onrender.com",
@@ -927,9 +928,8 @@ class Settings(BaseSettings):
             if not self.ci_webhook_secret:
                 missing.append("CI_WEBHOOK_SECRET")
             if missing:
-                logger.warning(
-                    f"⚠️ Missing config vars: {', '.join(missing)}. Bypassing hard crash for server resilience."
-                )
+                logger.critical(f"🚨 FATAL: Missing critical config vars: {', '.join(missing)}. Fail-Fast enforced.")
+                sys.exit(1)
         return self
 
     @field_validator(
@@ -1060,9 +1060,12 @@ class Settings(BaseSettings):
 
     @classmethod
     def set_jwt_secret(cls, value: Any, info: Any = None) -> str:
+        # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট অন্তত ৬৪ বাইট দীর্ঘ হতে হবে — কম হলে এক্সেপশন রেইজ হবে
         env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
         if not value and env == "production":
             raise ValueError("JWT secret cannot be empty in production.")
+        if value and env == "production" and len(str(value)) < 64:
+            raise ValueError("JWT secret must be at least 64 bytes long in production.")
         if not value or value is None:
             return "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         return str(value)

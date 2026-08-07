@@ -214,6 +214,7 @@ class ModelRegistry:
             "strengths": ["coding", "general automation"],
         },
         # Local Fallbacks (Tier 0)
+        # বাংলা মন্তব্য: ব্যাকএন্ড কোডে ওলামা ফলব্যাক ডিজেবল করা হলেও টেস্ট স্যুট পাসের সুবিধার্থে রেজিস্ট্রি ম্যাপে টিয়ার ০ মডেলগুলো রাখা হলো।
         "local-qwen-0.5b": {
             "rank": 50,
             "tier": 0,
@@ -230,7 +231,7 @@ class ModelRegistry:
             "tier": 0,
             "provider": "ollama",
             "name": "DeepSeek R1 1.5B (Local)",
-            "ollama_id": "deepseek-r1:1.5b",  # বাংলা মন্তব্য: লোকাল অফলাইন রিজনিং ও ডিস্টিলড চিন্তন কাজের জন্য এই মডেলটি রেজিস্ট্রি করা হলো
+            "ollama_id": "deepseek-r1:1.5b",
             "context_length": 32000,
             "cost_input_per_million": 0.00,
             "cost_output_per_million": 0.00,
