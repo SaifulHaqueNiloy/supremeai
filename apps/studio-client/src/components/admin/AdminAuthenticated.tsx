@@ -5,7 +5,6 @@ import { AdminTopNav } from './AdminTopNav';
 import {
   Search,
   LayoutDashboard,
-  FileCode,
   GitMerge,
   Server,
   BarChart3,

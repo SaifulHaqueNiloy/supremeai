@@ -6,6 +6,7 @@ src-tauri/Cargo.lock
 dist/
 out/
 build/
+!**/src/**/build/
 .next/
 .vercel/
 
@@ -55,6 +56,7 @@ logs/
 *.log
 *.db
 data/
+!**/src/**/data/
 backend/data/
 data/*.db
 data/episodic_memory.db
@@ -258,4 +260,3 @@ archive/
 *.bak
 backend/tmp_test_learning_data/
 New folder/
-

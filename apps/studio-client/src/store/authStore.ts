@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import { apiClient, updateTokenCache } from '../services/apiClient';
 
-export enum AuthStatus {
-  UNINITIALIZED = 'uninitialized',
-  LOGGED_OUT = 'loggedOut',
-  LOGGED_IN = 'loggedIn',
-}
+// বাংলা মন্তব্য: erasableSyntaxOnly সক্রিয় থাকায় enum-এর বদলে const object + union type ব্যবহার করা হচ্ছে
+export const AuthStatus = {
+  UNINITIALIZED: 'uninitialized',
+  LOGGED_OUT: 'loggedOut',
+  LOGGED_IN: 'loggedIn',
+} as const;
+
+export type AuthStatus = (typeof AuthStatus)[keyof typeof AuthStatus];
 
 interface UserProfile {
   id: string;

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 export function useDashboardActions() {
-  const runIntegrationAction = useCallback(async (id: string) => {
+  const runIntegrationAction = useCallback(async (_id: string) => {
     // TODO: Connect to actual backend execution engine
     return new Promise<{ ok: boolean }>((resolve) => {
       setTimeout(() => {

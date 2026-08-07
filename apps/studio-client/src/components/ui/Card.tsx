@@ -2,15 +2,17 @@ import React from 'react';
 import { cn } from '../../utils/cn';
 
 // বাংলা মন্তব্য: Card কম্পোনেন্টে title ও icon props গ্রহণ ও রেন্ডার করার সাপোর্ট যোগ করা হলো
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode;
   icon?: React.ReactNode;
+  banglaHint?: string;
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, title, icon, children, ...props }, ref) => (
+  ({ className, title, icon, banglaHint, children, ...props }, ref) => (
     <div
       ref={ref}
+      title={banglaHint}
       className={cn(
         "rounded-xl border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] bg-[var(--supremeai-color-bg-elevated-light)] dark:bg-[var(--supremeai-color-bg-elevated-dark)] text-foreground shadow-sm",
         className

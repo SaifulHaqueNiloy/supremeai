@@ -92,6 +92,7 @@ sentence-transformers = "^3.3.0"
 # বাংলা মন্তব্য: pre-commit ও CI শুধুমাত্র ruff (linter + formatter) এবং mypy চালায় --
 # black/isort এখানে ছিল কিন্তু কোথাও invoke হতো না (dead dev dependency), সরানো হলো।
 ruff = "^0.4.8"
+mypy = "^1.11"
 pytest = "^8.0"
 pytest-asyncio = "^0.23"
 pytest-cov = "^5.0"

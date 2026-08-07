@@ -10,8 +10,6 @@ import {
   Cpu,
   Send,
   Mic,
-  Maximize2,
-  Minimize2,
   Settings,
   Activity,
   Shield,
@@ -36,6 +34,7 @@ import { AudioPlaybackService } from '../../services/audio/AudioPlaybackService'
 import { WaveformVisualizer } from '../audio/WaveformVisualizer';
 import { ServiceHealthMetrics } from './ServiceHealthMetrics';
 import { getAethelResponse } from '../../services/chatService';
+import type { ChatMessage as ApiChatMessage } from '../../services/chatService';
 import { getWebSocketBaseUrl } from '../../utils/api';
 
 // বাংলা মন্তব্য: চ্যাট এবং ভয়েস ওভাররাইডের জন্য ডামি কথোপকথন ডাটা ডিক্লেয়ার করা হচ্ছে
@@ -50,7 +49,6 @@ export function CommandCenter() {
   const [edges, setEdges] = useEdgesState([]);
   const [chatMessages, setChatMessages] = useState(initialChat);
   const [chatInput, setChatInput] = useState('');
-  const [voiceActive] = useState(true);
   const [isCentralPanelOpen, setIsCentralPanelOpen] = useState(false);
 
   // বাংলা মন্তব্য: ৩টি প্যানেলের (চ্যাট, ব্রাউজার, টার্মিনাল) ভিজিবিলিটি স্টেট
@@ -142,7 +140,7 @@ export function CommandCenter() {
     setChatMessages(nextMessages);
     setChatInput('');
 
-    const history = nextMessages
+    const history: ApiChatMessage[] = nextMessages
       .filter(message => message.sender !== 'SupremeAI' || message.id !== placeholderId)
       .map(message => ({
         role: message.sender === 'Admin' ? 'user' : 'assistant',
@@ -312,7 +310,7 @@ export function CommandCenter() {
               panOnDrag={false}
               nodesDraggable={true}
               onNodeClick={handleNodeClick}
-              colorMode={theme === 'dark' ? 'dark' : 'light'}
+              className={theme === 'dark' ? 'dark' : 'light'}
             >
               <Background color="var(--accent-primary)" gap={24} style={{ opacity: theme === 'dark' ? 0.03 : 0.1 }} />
             </ReactFlow>

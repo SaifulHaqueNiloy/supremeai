@@ -5,7 +5,11 @@ export class AudioRecorderService {
   private isRecording: boolean = false;
   private onTranscriptCallback: ((text: string) => void) | null = null;
 
-  constructor(private wsUrl: string) {}
+  private wsUrl: string;
+
+  constructor(wsUrl: string) {
+    this.wsUrl = wsUrl;
+  }
 
   public onTranscript(callback: (text: string) => void) {
     this.onTranscriptCallback = callback;

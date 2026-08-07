@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from database.session import get_db_session
 from models.selector_healing_event import SelectorHealingEvent
 

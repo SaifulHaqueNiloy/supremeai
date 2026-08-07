@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSessionCockpitStore, type SujonState } from '../store/sessionCockpitStore';
 // বাংলা মন্তব্য: utility functions একে অপর ফাইল থেকে ইম্পোর্ট করা হয়েছে, যাতে react-refresh সতর্কতা দূর হয়
 import {
@@ -98,9 +98,6 @@ export function LiveSujonBackground({ state: forcedState }: { state?: SujonState
 
         const timeLocation = gl.getUniformLocation(program, 'u_time');
         const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-        const colorLocation = gl.getUniformLocation(program, 'u_baseColor');
-        const intensityLocation = gl.getUniformLocation(program, 'u_intensity');
-        const stateIdLocation = gl.getUniformLocation(program, 'u_stateId');
 
         let startTime = performance.now();
         let isVisible = document.visibilityState === 'visible';

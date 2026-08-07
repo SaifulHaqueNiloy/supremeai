@@ -15,8 +15,6 @@ interface ChatMessage {
 }
 
 export const DashboardShell: React.FC<DashboardShellProps> = ({
-  theme,
-  toggleTheme,
   isServerOnline,
   workspace
 }) => {

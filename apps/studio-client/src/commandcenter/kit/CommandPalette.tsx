@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Command } from 'lucide-react';
 import type { CommandModuleId } from '../data/types';
 

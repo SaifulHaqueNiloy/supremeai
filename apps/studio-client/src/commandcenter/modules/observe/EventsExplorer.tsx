@@ -1,4 +1,3 @@
-import React from 'react';
 import { useDashboardEvents } from '../../data/hooks';
 import { Timeline, EmptyState } from '../../kit';
 

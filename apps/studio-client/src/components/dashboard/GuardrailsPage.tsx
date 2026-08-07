@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Save, Loader2, Settings2, Globe, Server, Code2 } from 'lucide-react';
+import { Shield, Save, Loader2, Globe, Server, Code2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { useToast } from '../../contexts/useToast';
 
