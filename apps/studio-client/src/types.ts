@@ -3,6 +3,15 @@ export interface ChatMessage {
   sender: 'ai' | 'user';
   text: string;
   timestamp: string;
+  action?: {
+    type: string;
+    target?: string;
+    label?: string;
+    icon?: string;
+    confidence?: number;
+    requires_confirmation?: boolean;
+    payload?: Record<string, unknown>;
+  };
 }
 
 export interface Skill {

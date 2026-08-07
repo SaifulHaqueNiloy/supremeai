@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { GitBranch, ArrowRight, Settings } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 
+interface ModelRouterConfig {
+  override_active?: boolean;
+  override_provider?: string;
+  override_remaining_requests?: number;
+  ab_test_active?: boolean;
+}
+
 const PROVIDER_LIST = [
   { id: 'openrouter', label: 'OpenRouter', color: 'bg-cyan-500' },
   { id: 'gemini', label: 'Gemini', color: 'bg-purple-500' },
@@ -14,7 +21,7 @@ const PROVIDER_LIST = [
 export function ModelRouter() {
   const routerQuery = useQuery({
     queryKey: ['model-router'],
-    queryFn: () => apiClient.get('/admin-api/model-router'),
+    queryFn: () => apiClient.get<ModelRouterConfig>('/admin-api/model-router'),
   });
   const providersQuery = useQuery({
     queryKey: ['providers'],

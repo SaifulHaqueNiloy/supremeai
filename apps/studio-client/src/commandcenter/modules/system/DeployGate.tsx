@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useDeployGate, useToggleDeployGate } from '../../data/hooks';
-import { GaugeRing, StatusPill, ConfirmModal, EmptyState } from '../../kit';
+import { GaugeRing, ConfirmModal, EmptyState } from '../../kit';
 
 export function DeployGate() {
   const { data: gate, isLoading } = useDeployGate();

@@ -32,7 +32,6 @@ interface InteractiveChatTabProps {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
-import { adminTokenStore } from '../../services/adminTokenStore';
 
 
 export function InteractiveChatTab({
@@ -40,7 +39,6 @@ export function InteractiveChatTab({
   input: propInput,
   onInputChange,
   onSend,
-  loading = false,
   onSaveToProject,
   onPreview,
 }: InteractiveChatTabProps) {

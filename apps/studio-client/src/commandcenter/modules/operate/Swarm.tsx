@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSwarm } from '../../data/hooks';
 import { EmptyState, StatusPill } from '../../kit';
 

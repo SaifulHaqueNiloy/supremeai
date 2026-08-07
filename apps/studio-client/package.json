@@ -16,6 +16,7 @@
     "build:user": "cross-env VITE_PORTAL_TYPE=user vite build && node -e \"const fs=require('fs'); if(fs.existsSync('dist-user')) fs.cpSync('dist-user', 'dist', {recursive: true});\"",
     "build:report": "vite build --mode production --reporter=json",
     "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"cross-env BROWSER=none pnpm run dev\" \"wait-on http://127.0.0.1:5173 && electron .\"",
     "electron:build": "cross-env ELECTRON=true pnpm run build && electron-builder",

@@ -1,8 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/admin-api/commandcenter", tags=["Command Center"])
+from api.dependencies import get_current_admin
+
+router = APIRouter(
+    prefix="/admin-api/commandcenter",
+    tags=["Command Center"],
+    dependencies=[Depends(get_current_admin)],
+)
+
 
 class OverviewResponse(BaseModel):
     active_agents: int
@@ -12,6 +19,7 @@ class OverviewResponse(BaseModel):
     error_rate: float
     cost_per_hour: float
     health_percent: float
+
 
 @router.get("/overview", response_model=OverviewResponse)
 async def get_overview():

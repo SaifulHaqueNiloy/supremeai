@@ -62,7 +62,7 @@ from loguru import logger
 _TOTP_MAX_ATTEMPTS = 5
 _TOTP_LOCKOUT_SECONDS = 600  # 10 minutes
 
-from api.dependencies import get_current_user_token
+from api.dependencies import get_current_admin
 from core import services
 from core.config import settings
 from core.gcp_firestore import get_firestore_client
@@ -74,15 +74,6 @@ from models.admin import (
 )
 
 router = APIRouter()
-
-
-def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
-    """Enforce admin role for sensitive admin routes (e.g. rules engine)."""
-    if payload.get("role") != "admin":
-        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
-        # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের জন্য সঠিক status.HTTP_403_FORBIDDEN অবজেক্ট ব্যবহার করা হলো
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return payload
 
 
 auth = get_firebase_auth()
@@ -246,7 +237,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
             logger.error(f"Redis unavailable during TOTP validation: {exc}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Authentication security service temporarily unavailable"
+                detail="Authentication security service temporarily unavailable",
             )
         except Exception as e:
             logger.error(f"Failed to retrieve TOTP secret: {e}")

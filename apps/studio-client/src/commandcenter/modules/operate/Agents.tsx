@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAgents } from '../../data/hooks';
 import { DataTable, StatusPill, EmptyState } from '../../kit';
 import type { Agent } from '../../data/types';

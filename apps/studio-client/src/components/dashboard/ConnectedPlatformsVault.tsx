@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import useSupremeStore from '../../store/useSupremeStore';
+import React, { useState } from 'react';
 
 interface PlatformCredential {
   id: string;

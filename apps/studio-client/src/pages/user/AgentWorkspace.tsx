@@ -23,7 +23,6 @@ export const AgentWorkspace: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const webcontainerRef = useRef<WebContainer | null>(null); // 🟢 WebContainer Ref
-  const wsRef = useRef<WebSocket | null>(null);
   const shellWriterRef = useRef<WritableStreamDefaultWriter<string> | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 

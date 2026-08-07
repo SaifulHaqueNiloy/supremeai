@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApprovalQueue, useApproveAction } from '../../data/hooks';
 import { ConfirmModal, StatusPill, EmptyState } from '../../kit';
 

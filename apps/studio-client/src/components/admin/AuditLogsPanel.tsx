@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ScrollText, Activity } from 'lucide-react';
+import { X, ScrollText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { apiClient } from '../../services/apiClient';

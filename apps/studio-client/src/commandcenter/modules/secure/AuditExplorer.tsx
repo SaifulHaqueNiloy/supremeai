@@ -1,7 +1,6 @@
-import React from 'react';
 import { useAuditLogs } from '../../data/hooks';
 import { DataTable, EmptyState } from '../../kit';
-import type { AuditEntry } from '../../data/types';
+import type {} from '../../data/types';
 
 export function AuditExplorer() {
   const { data: audit, isLoading } = useAuditLogs(100);

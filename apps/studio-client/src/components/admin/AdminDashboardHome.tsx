@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Play, Activity, Server, AlertTriangle, Monitor, Sparkles, Cpu, Layers } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import {  Cpu } from 'lucide-react';
 import { RealTimeMetricsPanel } from './RealTimeMetricsPanel';
 import { useMetrics, useHealthMap, useCIReports, useDashboardEvents } from '../../hooks/useDashboardData';
 import { HealthReportWidget } from './HealthReportWidget';
@@ -175,7 +174,7 @@ export const AdminDashboardHome: React.FC = () => {
             <div>
               <div className="text-[9px] text-slate-400">F1-Score</div>
               <div className="text-emerald-400 text-lg font-bold">
-                {metrics?.model_call_distribution?.['NEURAL_CORE_v5'] 
+                {metrics?.model_call_distribution?.['NEURAL_CORE_v5']
                   ? (metrics.model_call_distribution['NEURAL_CORE_v5'] / 100).toFixed(3)
                   : '0.965'}
               </div>

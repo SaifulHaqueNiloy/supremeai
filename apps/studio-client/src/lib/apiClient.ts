@@ -31,8 +31,6 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config;
-
     // Auto-logout on token expiration
     if (error.response?.status === 401) {
       useWorkspaceStore.getState().logout();

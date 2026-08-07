@@ -15,7 +15,7 @@ from agents.internet_monitor_agent import (
 )
 from fastapi import APIRouter, Depends, HTTPException
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 
 router = APIRouter(prefix="/internet-monitor", tags=["Internet Monitor"])
 logger = logging.getLogger(__name__)

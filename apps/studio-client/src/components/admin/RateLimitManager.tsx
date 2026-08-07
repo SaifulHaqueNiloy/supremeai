@@ -44,7 +44,11 @@ export const RateLimitManager: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<TenantLimit>>({});
   const { showToast } = useToast();
-  const [newTenant, setNewTenant] = useState({ tenant_id: '', org_name: '', billing_tier: 'free' as const });
+  const [newTenant, setNewTenant] = useState<Pick<TenantLimit, 'tenant_id' | 'org_name' | 'billing_tier'>>({
+    tenant_id: '',
+    org_name: '',
+    billing_tier: 'free',
+  });
   const [showNewForm, setShowNewForm] = useState(false);
 
   const fetchData = useCallback(async () => {

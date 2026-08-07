@@ -1,6 +1,6 @@
 // বাংলা মন্তব্য: Devin-স্টাইল ড্যাশবোর্ড শেলের স্মোক টেস্ট — সাইডবার নেভিগেশন ও পেজ রাউটিং যাচাই
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 vi.mock('../../services/apiClient', () => {
   const sessionsStore: Record<string, any> = {};
@@ -16,7 +16,7 @@ vi.mock('../../services/apiClient', () => {
         }
         return Promise.resolve({});
       }),
-      put: vi.fn().mockImplementation((path: string, body?: any) => {
+      put: vi.fn().mockImplementation((_path: string, body?: any) => {
         if (body?.id) sessionsStore[body.id] = body;
         return Promise.resolve({});
       }),

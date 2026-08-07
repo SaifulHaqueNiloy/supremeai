@@ -4,7 +4,7 @@ import { useBudgetCheck } from "../../hooks/useBudgetCheck";
 
 export const EvolutionForgeWidget: React.FC = () => {
   const { isForging, forgeFeedback, forgeSuccessCode, forgeNewSkill } = useStore();
-  const { checkBudget, isChecking, budgetError } = useBudgetCheck();
+  const { checkBudget, budgetError } = useBudgetCheck();
   const [skillName, setSkillName] = useState("");
   const [userDemand, setUserDemand] = useState("");
 

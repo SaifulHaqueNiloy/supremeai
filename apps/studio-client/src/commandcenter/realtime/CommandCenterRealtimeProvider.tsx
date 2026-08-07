@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { WebSocketManager, type WsStatus } from './websocketManager';
 import { SseBridges } from './sseBridges';

@@ -33,7 +33,7 @@ export function BackupRestore() {
     setBackups([newBackup, ...backups]);
 
     try {
-      const res = await apiClient.post<{ status: string; backup_path: string }>('/admin-api/backup');
+      await apiClient.post<{ status: string; backup_path: string }>('/admin-api/backup');
       await fetchBackups(); // Refresh the list
     } catch (e: any) {
       setBackups(prev => prev.filter(b => b.id !== tempId));

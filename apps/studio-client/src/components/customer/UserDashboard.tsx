@@ -15,14 +15,12 @@ import {
   Smartphone,
   BarChart3,
   Users,
-  Shield,
-  Server
+  Shield
 } from 'lucide-react';
 import { HomeFeed } from './HomeFeed';
 import { QuickPresets } from './QuickPresets';
 // বাংলা মন্তব্য: CodeEditor (Monaco) ভারী লাইব্রেরি — ইনিশিয়াল বান্ডিলে না যাওয়ার জন্য lazy load করা হয়েছে।
 const CodeEditor = lazy(() => import('./CodeEditor').then(m => ({ default: m.CodeEditor })));
-import { ChatPanel } from './ChatPanel';
 // বাংলা মন্তব্য: নতুন ইন্টারঅ্যাক্টিভ চ্যাট ট্যাব ইম্পোর্ট করা হলো
 import { InteractiveChatTab } from '../admin/InteractiveChatTab';
 // বাংলা মন্তব্য: ব্রাউজার প্রিভিউ ও মোবাইল সিমুলেটর অ্যাক্টিভেট করা হলো

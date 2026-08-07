@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 from loguru import logger
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from core.config import settings
 
 # শেয়ার্ড ইউটিলিটি — Firestore ইনিশিয়ালাইজেশন কেন্দ্রীভূত

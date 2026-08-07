@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from api.routes.simulator import (
     _IN_MEMORY_KNOWN_USERS,
     _KNOWN_USERS_SET,

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useRateLimits } from '../../data/hooks';
 import { EmptyState } from '../../kit';
 
