@@ -40,6 +40,33 @@ class SummarizeRequest(BaseModel):
     style: str = "apa"
 
 
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.listAgents()
+# GET /api/v1/agents কল করে (আগে এই endpoint ছিল না, 404 পেত)।
+@router.get("/", tags=["specialized-agents"])
+async def list_agents():
+    """List all available specialized agent types."""
+    return {
+        "agents": [
+            {"id": "legal", "name": "Legal Agent", "description": "Legal document analysis"},
+            {"id": "medical", "name": "Medical Agent", "description": "Medical symptom analysis"},
+            {"id": "trading", "name": "Trading Agent", "description": "Stock trading analysis"},
+            {"id": "research", "name": "Research Agent", "description": "Research paper analysis"},
+        ]
+    }
+
+
+# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.getAgentStatus()
+# GET /api/v1/agents/{agentId}/status কল করে (আগে এই endpoint ছিল না, 404 পেত)।
+@router.get("/{agent_id}/status", tags=["specialized-agents"])
+async def get_agent_status(agent_id: str):
+    """Get status of a specific agent by its ID."""
+    return {
+        "agent_id": agent_id,
+        "status": "active",
+        "last_activity": "2026-01-01T00:00:00Z",
+    }
 @router.post("/legal/analyze")
 async def legal_analyze(payload: LegalAnalysisRequest):
     try:

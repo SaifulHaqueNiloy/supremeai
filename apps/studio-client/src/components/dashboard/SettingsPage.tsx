@@ -34,7 +34,7 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
 
   useEffect(() => {
     apiClient
-      .get<Partial<Preferences>>('/preferences/?user_id=default')
+      .get<Partial<Preferences>>('/api/preferences/?user_id=default')
       .then((data) => setPrefs({ ...DEFAULT_PREFS, ...data }))
       .catch(() => setStatus('Failed to load preferences — using defaults.'))
       .finally(() => setLoading(false));
@@ -44,7 +44,7 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
     setSaving(true);
     setStatus('');
     try {
-      await apiClient.post('/preferences/?user_id=default', {
+      await apiClient.post('/api/preferences/?user_id=default', {
         theme: prefs.theme,
         default_model: prefs.default_model,
         max_tokens: prefs.max_tokens,

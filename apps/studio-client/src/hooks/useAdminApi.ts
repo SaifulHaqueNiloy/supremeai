@@ -8,7 +8,7 @@ const hasToken = (): boolean => !!adminTokenStore.getDecodedToken();
 export function useAdminRules() {
   return useQuery({
     queryKey: ['admin', 'rules'],
-    queryFn: () => apiClient.get<any>('/admin/rules'),
+    queryFn: () => apiClient.get<any>('/api/admin/rules'),
     enabled: hasToken(),
     staleTime: 30_000,
   });
@@ -17,7 +17,7 @@ export function useAdminRules() {
 export function useSaveRules() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (rules: unknown) => apiClient.post('/admin/rules', { rules }),
+    mutationFn: (rules: unknown) => apiClient.post('/api/admin/rules', { rules }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'rules'] }),
   });
 }
