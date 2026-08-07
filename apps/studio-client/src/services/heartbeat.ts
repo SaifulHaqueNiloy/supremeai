@@ -16,7 +16,12 @@ export const startAntiSleepHeartbeat = () => {
 };
 
 const pingServers = () => {
-  RENDER_BACKENDS.forEach(async (url) => {
+  // বাংলা: শুধু বর্তমান origin-এর ব্যাকএন্ডে পিং করো — admin origin থেকে user backend-এ কল করলে
+  // CORS preflight fail করে (USER_CORS_ORIGINS-এ admin origin নেই)। তাই cross-origin পিং বন্ধ করা হলো।
+  const isAdmin =
+    typeof window !== 'undefined' && window.location.hostname.includes('admin');
+  const targets = isAdmin ? [RENDER_BACKENDS[1]] : [RENDER_BACKENDS[0]];
+  targets.forEach(async (url) => {
     try {
       // বাংলা: /api/v1/live প্রোব ব্যাকেন্ডের নতুন Liveness Probe দিয়ে পিং করার জন্য মাইগ্রেটেড
       const response = await fetch(`${url}/api/v1/live`, {
