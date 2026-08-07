@@ -1158,11 +1158,15 @@ jobs:
             fi
           fi
 
-          # বাংলা মন্তব্য (জরুরি): এই কন্ডিশন ও exit 1 কোডটি অপরিবর্তনীয়!
-          # Primary এবং Backup উভয় ডেপ্লয়মেন্ট ট্রিগারই যদি ব্যর্থ হয় (401/403/404 Status), তবে জবটিকে মিথ্যা Success হতে দেওয়া যাবে না।
-          if [ "$STATUS" != "201" ] && [ "$STATUS" != "202" ] && [ "$STATUS_B" != "201" ] && [ "$STATUS_B" != "202" ]; then
-            echo "❌ CRITICAL: Both primary and backup prebuilt-image deploys failed to trigger! Failing build."
-            exit 1
+          # বাংলা মন্তব্য: যদি ব্যাকআপ কি না থাকে তবে প্রাইমারি সফল হলেই গ্রিন বিল্ড পাস হবে।
+          if [ "$STATUS" != "201" ] && [ "$STATUS" != "202" ]; then
+            if [ -n "${{ secrets.RENDER_API_KEY_BACKUP }}" ] && [ "$STATUS_B" != "201" ] && [ "$STATUS_B" != "202" ]; then
+              echo "❌ CRITICAL: Primary deploy failed and Backup deploy failed! Failing build."
+              exit 1
+            elif [ -z "${{ secrets.RENDER_API_KEY_BACKUP }}" ]; then
+              echo "❌ CRITICAL: Primary deploy failed! Failing build."
+              exit 1
+            fi
           fi
 
       - name: Trigger Combined Render Deploy (Source Code)
