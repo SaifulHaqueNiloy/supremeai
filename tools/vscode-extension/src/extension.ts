@@ -466,6 +466,48 @@ function registerCommands(context: vscode.ExtensionContext): void {
     // Execute visualization command
   });
 
+  // Register remaining commands declared in package.json so their buttons work
+  const aiCompleteCommand = vscode.commands.registerCommand('supremeai.aiComplete', async () => {
+    vscode.window.showInformationMessage('AI Code Completion is provided inline as you type. Just keep typing and suggestions appear automatically.');
+  });
+
+  const createProjectCommand = vscode.commands.registerCommand('supremeai.createProject', async () => {
+    const name = await vscode.window.showInputBox({ prompt: 'Enter the new project name:' });
+    if (!name) {
+      return;
+    }
+    vscode.window.showInformationMessage(`Project creation ("${name}") is managed from the SupremeAI Web Dashboard. Open Settings to configure your backend.`);
+  });
+
+  const openExtensionSettingsCommand = vscode.commands.registerCommand('supremeai.openExtensionSettings', () => {
+    vscode.commands.executeCommand('workbench.action.openSettings', '@ext:supremeai.supremeai-vscode');
+  });
+
+  const reportErrorCommand = vscode.commands.registerCommand('supremeai.reportError', async () => {
+    try {
+      const errorText = await vscode.window.showInputBox({ prompt: 'Describe the error you want to report:' });
+      if (!errorText) {
+        return;
+      }
+      const editor = vscode.window.activeTextEditor;
+      await supremeAIService.reportError({
+        errorType: 'runtime',
+        errorMessage: errorText,
+        filePath: editor?.document.fileName ?? 'unknown',
+        lineNumber: editor ? editor.selection.active.line + 1 : 0,
+        severity: 'info',
+        timestamp: new Date().toISOString(),
+      });
+      vscode.window.showInformationMessage('Error reported to SupremeAI. Thank you!');
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to report error: ${error}`);
+    }
+  });
+
+  const viewHistoryCommand = vscode.commands.registerCommand('supremeai.viewHistory', () => {
+    vscode.window.showInformationMessage('Learning history is available in the SupremeAI Chat panel and Web Dashboard.');
+  });
+
   context.subscriptions.push(
     forceLearnCommand,
     explainCodeCommand,
@@ -480,7 +522,12 @@ function registerCommands(context: vscode.ExtensionContext): void {
     showDependencyGraphCommand,
     visualizationCommand,
     openChatCommand,
-    analyzeCodeFlowCommand
+    analyzeCodeFlowCommand,
+    aiCompleteCommand,
+    createProjectCommand,
+    openExtensionSettingsCommand,
+    reportErrorCommand,
+    viewHistoryCommand
   );
 }
 
