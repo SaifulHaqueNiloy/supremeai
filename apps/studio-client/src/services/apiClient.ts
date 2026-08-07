@@ -114,8 +114,8 @@ const handleResponse = async (res: Response) => {
   return res.json();
 };
 
-// বাংলা মন্তব্য: এপিআই রিকোয়েস্ট হ্যাং হওয়া রোধে ১৫ সেকেন্ডের ডিফল্ট টাইমআউট নির্ধারণ করা হচ্ছে।
-const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000);
+// বাংলা মন্তব্য: রেন্ডার ফ্রি টিয়ার কোল্ড স্টার্ট (Wake up time ৩০-৫০ সেকেন্ড) সামলাতে এপিআই রিকোয়েস্ট টাইমআউট ৬০ সেকেন্ডে বৃদ্ধি করা হলো।
+const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 60000);
 
 const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<Response> => {
   const controller = new AbortController();
