@@ -28,7 +28,7 @@ def test_swarm_router_is_registered(mock_streamer):
     assert response.status_code != 404, "Swarm router not registered! Returned 404."
 
 
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_halt_requires_admin(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "user_test", "role": "user"}
@@ -43,7 +43,7 @@ def test_halt_requires_admin(mock_decode_jwt, mock_token):
     app.dependency_overrides = {}
 
 
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
@@ -52,7 +52,7 @@ def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
         "role": "admin",
     }
 
-    from api.routes.admin import get_current_admin
+    from api.dependencies import get_current_admin
 
     app.dependency_overrides[get_current_admin] = lambda: {
         "sub": "admin_test",
@@ -74,7 +74,7 @@ def test_halt_sets_flag_and_broadcasts(mock_decode_jwt, mock_token):
     app.dependency_overrides = {}
 
 
-@patch("api.routes.admin.get_current_user_token")
+@patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_resume_clears_flag_and_broadcasts(mock_decode_jwt, mock_token):
     mock_decode_jwt.return_value = {"sub": "admin_test", "role": "admin"}
@@ -83,7 +83,7 @@ def test_resume_clears_flag_and_broadcasts(mock_decode_jwt, mock_token):
         "role": "admin",
     }
 
-    from api.routes.admin import get_current_admin
+    from api.dependencies import get_current_admin
 
     app.dependency_overrides[get_current_admin] = lambda: {
         "sub": "admin_test",

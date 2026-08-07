@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useBackups, useCreateBackup, useRestoreBackup } from '../../data/hooks';
 import { DataTable, ConfirmModal, EmptyState } from '../../kit';
-import type { Backup } from '../../data/types';
+import type {} from '../../data/types';
 
 export function Backups() {
   const { data: backups, isLoading } = useBackups();

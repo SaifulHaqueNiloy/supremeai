@@ -7,9 +7,10 @@ export function useTranslation(locale: Locale = 'en') {
   const t = (key: TranslationKey, params?: Record<string, string | number>) => {
     const current = locales.includes(locale) ? locale : 'en';
     let value = translations[current][key] ?? translations.en[key] ?? key;
-    if (params) {
+    // বাংলা মন্তব্য: কিছু ট্রান্সলেশন এন্ট্রি নেস্টেড অবজেক্ট, তাই শুধু string হলেই প্যারামিটার ইন্টারপোলেট হবে
+    if (params && typeof value === 'string') {
       Object.entries(params).forEach(([k, v]) => {
-        value = value.replace(`{${k}}`, String(v));
+        value = (value as string).replace(`{${k}}`, String(v));
       });
     }
     return value;
@@ -17,4 +18,3 @@ export function useTranslation(locale: Locale = 'en') {
 
   return { t, locale, setLocale: (_next: Locale) => {} };
 }
-

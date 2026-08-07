@@ -102,6 +102,18 @@ def get_current_user_token(request: Request) -> dict:
     raise HTTPException(status_code=401, detail="Unauthorized")
 
 
+def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Enforce the admin role for any admin-facing route.
+
+    বাংলা মন্তব্য: আগে এই গার্ডটি তিনটি মডিউলে আলাদা আলাদাভাবে ডিফাইন করা ছিল, ফলে
+    নতুন admin রাউটার লেখার সময় সহজেই বাদ পড়ে যেত। এখন এটিই একমাত্র উৎস।
+    """
+    if payload.get("role") != "admin":
+        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return payload
+
+
 def get_tenant_db(
     payload: dict = Depends(get_current_user_token),
 ) -> TenantAwareFirestore:
@@ -192,6 +204,7 @@ __all__ = [
     "verify_autonomous_agent_token",
     "get_fitness_engine",
     "get_current_user_token",
+    "get_current_admin",
     "get_tenant_db",
     "get_current_tenant",
     "verify_idempotency",

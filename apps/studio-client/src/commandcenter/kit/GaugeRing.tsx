@@ -1,4 +1,3 @@
-import React from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AETHEL Command Center — Gauge Ring (circular progress)

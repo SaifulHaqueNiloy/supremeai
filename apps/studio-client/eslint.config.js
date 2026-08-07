@@ -33,4 +33,11 @@ export default tseslint.config({ ignores: ['dist'] }, {
     'react-hooks/set-state-in-effect': 'off',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
-}, storybook.configs["flat/recommended"]);
+}, storybook.configs["flat/recommended"], {
+  // বাংলা মন্তব্য: eslint-plugin-storybook v10 framework প্যাকেজ থেকে ইম্পোর্ট চায়, কিন্তু
+  // ইনস্টল করা Storybook 8-এ @storybook/react-vite থেকে Meta/StoryObj এক্সপোর্ট হয় না।
+  files: ['**/*.stories.{ts,tsx}'],
+  rules: {
+    'storybook/no-renderer-packages': 'off',
+  },
+});

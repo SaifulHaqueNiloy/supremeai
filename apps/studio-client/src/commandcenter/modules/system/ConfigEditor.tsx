@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useConfigEntries, useUpdateConfig } from '../../data/hooks';
-import { ConfigForm, ConfirmModal, EmptyState } from '../../kit';
-import type { ConfigEntry } from '../../data/types';
+import {  ConfirmModal, EmptyState } from '../../kit';
+import type {} from '../../data/types';
 
 export function ConfigEditor() {
   const { data: config, isLoading } = useConfigEntries(120_000);

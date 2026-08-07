@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { memo } from 'react';
+import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 
 // Custom data type for our Agent Node
 export type AgentNodeData = {
@@ -8,7 +8,9 @@ export type AgentNodeData = {
   model: string;
 };
 
-const AgentNode = ({ data, selected }: NodeProps<AgentNodeData>) => {
+export type AgentFlowNode = Node<AgentNodeData, 'agentNode'>;
+
+const AgentNode = ({ data, selected }: NodeProps<AgentFlowNode>) => {
   return (
     <div className={`
       relative min-w-[200px] p-4 rounded-xl border-2 backdrop-blur-md transition-all duration-fast

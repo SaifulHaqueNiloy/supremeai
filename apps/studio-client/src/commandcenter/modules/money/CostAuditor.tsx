@@ -1,4 +1,3 @@
-import React from 'react';
 import { useCostReport, useBudgetCaps } from '../../data/hooks';
 import { EmptyState } from '../../kit';
 

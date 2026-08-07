@@ -14,8 +14,8 @@ export const fetchJavaWorkerHealth = async (): Promise<JavaWorkerHealth> => {
   // Mock implementation, eventually connects to FastAPI which proxies from Java
   // For now, returning mocked data to simulate the Java worker metrics
   try {
-    const response = await apiClient.get<JavaWorkerHealth>('/admin/microservices/java-worker/health');
-    return response.data || {
+    const response = await apiClient.get<JavaWorkerHealth | null>('/admin/microservices/java-worker/health');
+    return response || {
       status: 'OFFLINE',
       uptimeSeconds: 0,
       activeTasks: 0,

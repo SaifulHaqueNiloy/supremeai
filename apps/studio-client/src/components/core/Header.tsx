@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useStore } from "../../store/useStore";
+import { useAuthStore } from "../../store/authStore";
 
 interface HeaderProps {
   title: string;
@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
   theme
 }) => {
-  const { user } = useStore();
+  const user = useAuthStore((s) => s.user);
   const [showNotifications, setShowNotifications] = useState(false);
 
   return (

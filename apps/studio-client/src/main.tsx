@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { App } from './App.tsx'
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
-import { getApiBaseUrl } from './utils/api';
 import { setupGlobalFetchInterceptor } from './utils/apiInterceptor';
 import { ToastProvider } from './contexts/ToastProvider';
 
@@ -46,4 +45,3 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     });
   });
 }
-

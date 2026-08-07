@@ -3,10 +3,8 @@
 // বাংলা মন্তব্য: র‍্যাপ্টি-ড্রিভ কোড ট্রান্সফরমেশন ম্যাপ দেখায়।
 
 import React from 'react';
-import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 
 export const LiveSimulator: React.FC = () => {
-  const { isSimulatorActive } = useWorkspaceStore();
 
   return (
     <div className="p-4">

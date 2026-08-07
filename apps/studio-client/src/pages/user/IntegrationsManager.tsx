@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/Button';
 
 export const IntegrationsManager: React.FC = () => {
-  const [githubStatus, setGithubStatus] = useState<'Disconnected' | 'Connected'>('Disconnected');
+  const [githubStatus] = useState<'Disconnected' | 'Connected'>('Disconnected');
 
   const handleGithubConnect = () => {
     const API_BASE = getApiBaseUrl();
@@ -34,7 +34,7 @@ export const IntegrationsManager: React.FC = () => {
           <CardContent>
             <Button
               onClick={handleGithubConnect}
-              variant={githubStatus === 'Connected' ? 'outline' : 'primary'}
+              variant={githubStatus === 'Connected' ? 'secondary' : 'primary'}
               className="w-full"
             >
               {githubStatus === 'Connected' ? '✅ Connected' : 'Connect GitHub'}
@@ -52,7 +52,7 @@ export const IntegrationsManager: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button disabled variant="outline" className="w-full cursor-not-allowed">
+            <Button disabled variant="secondary" className="w-full cursor-not-allowed">
               Coming Soon
             </Button>
           </CardContent>
@@ -68,7 +68,7 @@ export const IntegrationsManager: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button disabled variant="outline" className="w-full cursor-not-allowed">
+            <Button disabled variant="secondary" className="w-full cursor-not-allowed">
               Coming Soon
             </Button>
           </CardContent>

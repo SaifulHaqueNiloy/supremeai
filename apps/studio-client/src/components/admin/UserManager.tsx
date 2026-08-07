@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { AdminUser } from '../../types';
 
 interface UserManagerProps {
@@ -141,11 +141,7 @@ export function UserManager({
       <h4 className="text-xs font-bold text-slate-400 mb-4 tracking-wider uppercase font-mono">Administrative User Registry</h4>
       <div className="flex flex-col gap-3">
         {Array.isArray(paginatedUsers) && paginatedUsers.map(user => {
-          const perms = Array.isArray(user.permissions)
-            ? user.permissions
-            : typeof user.permissions === 'string'
-              ? user.permissions.split(',').map((p: string) => p.trim())
-              : [];
+          const perms = Array.isArray(user.permissions) ? user.permissions : [];
 
           return (
             <div key={user.username} className="bg-[#0c0d12]/60 border border-slate-900 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">

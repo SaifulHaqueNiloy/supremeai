@@ -1,4 +1,3 @@
-import React from 'react';
 import { useHealthMap } from '../../data/hooks';
 import { GaugeRing, StatusPill, EmptyState } from '../../kit';
 

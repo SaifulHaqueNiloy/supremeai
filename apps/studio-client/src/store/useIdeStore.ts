@@ -24,7 +24,7 @@ interface IdeState {
   markFileSaved: (path: string) => void;
 }
 
-export const useIdeStore = create<IdeState>((set, get) => ({
+export const useIdeStore = create<IdeState>((set) => ({
   webContainer: null,
   setWebContainer: (instance) => set({ webContainer: instance }),
 

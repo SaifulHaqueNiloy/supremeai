@@ -33,7 +33,7 @@ export const ChatInterface: React.FC = () => {
     triggerOrchestration(true);
 
     try {
-      const response = await apiClient.post('/api/orchestrate', {
+      const response = await apiClient.post<{ response?: string }>('/api/orchestrate', {
         message: userMessage,
         idempotency_key: crypto.randomUUID(),
       });
@@ -41,7 +41,7 @@ export const ChatInterface: React.FC = () => {
       // Add assistant response
       addMessage({
         role: 'assistant',
-        content: response.data.response || JSON.stringify(response.data)
+        content: response.response || JSON.stringify(response)
       });
     } catch (error: any) {
       addMessage({
@@ -68,7 +68,7 @@ export const ChatInterface: React.FC = () => {
           <UnifiedChatBubble
             key={msg.id}
             text={msg.content}
-            sender={msg.role}
+            sender={msg.role === 'user' ? 'user' : 'system'}
             timestamp={new Date(msg.timestamp).toLocaleTimeString()}
           />
         ))}
