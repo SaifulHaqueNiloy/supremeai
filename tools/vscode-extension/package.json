@@ -121,11 +121,6 @@
         "category": "SupremeAI"
       },
       {
-        "command": "supremeai.aiExplain",
-        "title": "Explain Code",
-        "category": "SupremeAI"
-      },
-      {
         "command": "supremeai.visualizeCode",
         "title": "Visualize Code Flow Dashboard",
         "category": "SupremeAI"
@@ -148,11 +143,6 @@
       {
         "command": "supremeai.sendMessageToChat",
         "title": "Send to Chat",
-        "category": "SupremeAI"
-      },
-      {
-        "command": "supremeai.aiReview",
-        "title": "Review Code",
         "category": "SupremeAI"
       },
       {
