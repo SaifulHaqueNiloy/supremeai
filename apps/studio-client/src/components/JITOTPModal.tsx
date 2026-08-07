@@ -1,7 +1,8 @@
 // apps/studio-client/src/components/JITOTPModal.tsx
 // বাংলা মন্তব্য: JIT OTP ভেরিফিকেশন মোডাল কম্পোনেন্ট — সেনসিটিভ অপারেশনের সময় ৬ ডিজিটের অন-স্পট ওটিপি ভেরিফিকেশনের সুন্দর ইন্টারফেস।
 
-import React, { useState, useEffect, FC } from 'react';
+import { useState, useEffect } from 'react';
+import type { FC } from 'react';
 import { apiClient } from '../services/apiClient';
 
 interface JITOTPModalProps {

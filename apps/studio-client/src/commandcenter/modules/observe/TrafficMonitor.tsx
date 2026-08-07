@@ -1,6 +1,5 @@
-import React from 'react';
 import { useTraffic } from '../../data/hooks';
-import { Sparkline, StatusPill, EmptyState } from '../../kit';
+import { Sparkline, EmptyState } from '../../kit';
 
 export function TrafficMonitor() {
   const { data: traffic, isLoading } = useTraffic(5_000);

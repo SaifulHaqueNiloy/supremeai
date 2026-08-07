@@ -7,7 +7,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from core.config import settings
 
 router = APIRouter(

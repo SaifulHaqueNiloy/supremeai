@@ -1,6 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useStore } from '../../store/useStore';
-import { getApiBaseUrl } from '../../utils/api';
 import { AppDefaults } from '../../config/constants';
 import { apiClient, setApiConcurrency } from '../../services/apiClient';
 import { selfHealingState } from '../../core/stateManagement';
@@ -126,4 +125,3 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
     </>
   );
 };
-

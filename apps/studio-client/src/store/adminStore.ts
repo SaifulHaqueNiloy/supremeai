@@ -165,7 +165,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           if (data.token) {
             localStorage.setItem('adminToken', data.token);
             const decoded = decodeJwt(data.token);
-            if (decoded && decoded.role) {
+            if (decoded && typeof decoded.role === 'string') {
               set({ adminRole: decoded.role });
             }
           }

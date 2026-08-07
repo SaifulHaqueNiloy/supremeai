@@ -1,4 +1,3 @@
-import React from 'react';
 import { CommandBar } from './CommandBar';
 import { LeftRail } from './LeftRail';
 import { WorkspaceViewport } from './WorkspaceViewport';

@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from core.error_bus import with_error_bus
 
 router = APIRouter(

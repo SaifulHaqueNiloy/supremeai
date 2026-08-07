@@ -9,11 +9,13 @@ router = APIRouter(prefix="/api/v1/router", tags=["Advanced Model Router"])
 
 global_router = AdvancedModelRouter()
 
+
 class RouteRequest(BaseModel):
     prompt: str
     task_type: str | None = "general"
     user_id: str | None = None
     budget_constraint: float | None = None
+
 
 @router.post("/route")
 async def route_model(req: RouteRequest):
@@ -27,7 +29,7 @@ async def route_model(req: RouteRequest):
         prompt=req.prompt,
         task_type=req.task_type or "general",
         user_id=req.user_id,
-        budget_constraint=req.budget_constraint
+        budget_constraint=req.budget_constraint,
     )
 
     complexity = global_router.analyze_prompt_complexity(req.prompt)
@@ -41,6 +43,6 @@ async def route_model(req: RouteRequest):
             "model": decision.model,
             "priority_score": decision.priority_score,
             "expected_cost": decision.expected_cost,
-            "expected_latency": decision.expected_latency
-        }
+            "expected_latency": decision.expected_latency,
+        },
     }

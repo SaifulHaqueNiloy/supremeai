@@ -1,4 +1,3 @@
-import React from 'react';
 import { useROI } from '../../data/hooks';
 import { KpiTile, EmptyState } from '../../kit';
 

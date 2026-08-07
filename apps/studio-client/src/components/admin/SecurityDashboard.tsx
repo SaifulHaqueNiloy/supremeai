@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Badge } from '../ui';
-import { Shield, ShieldAlert, Cpu, Database, Eye, RefreshCw, Server, Loader2 } from 'lucide-react';
+import {  ShieldAlert, Cpu, Database, RefreshCw, Server, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 
 interface TaskReference {

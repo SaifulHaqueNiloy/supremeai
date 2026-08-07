@@ -34,11 +34,11 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
   const setDeploymentModal = useDashboardStore((s) => s.setDeploymentModal);
 
   const [target, setTarget] = useState<DeploymentTarget['region']>('us-central1');
-  const [logs, setLogs] = useState<Array<{ status: string; message: string }>>(initialLogs);
+  const [logs, setLogs] = useState<Array<{ status: string; message: string; branch?: string; created_at?: number }>>(initialLogs);
   const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus | null>(null);
 
   // পোস্ট-ডিপ্লয় লগ লোড করার জন্য CI রিপোর্ট হুক ব্যবহার করা হচ্ছে
-  const { data: ciLogs, refetch: refetchCILogs } = useQuery({
+  const { data: ciLogs } = useQuery({
     queryKey: ['deployment-logs'],
     queryFn: () => apiClient.get('/admin-api/ci-logs?limit=10'),
     refetchInterval: (query: any) => query.state.error ? false : 15000,

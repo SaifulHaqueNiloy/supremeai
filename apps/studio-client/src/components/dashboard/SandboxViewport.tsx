@@ -3,7 +3,7 @@ import { useSessionCockpitStore } from '../../store/sessionCockpitStore';
 
 export const SandboxViewport: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { sseRef, wsRef, controlMode } = useSessionCockpitStore();
+    const { wsRef, controlMode } = useSessionCockpitStore();
     const imageCache = useRef<HTMLImageElement>(new Image());
 
     useEffect(() => {

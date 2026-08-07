@@ -12,10 +12,11 @@ export const SwarmHealthDashboard: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <SupremeHeader
-          title="Swarm Health Dashboard"
           subtitle={`Connection: ${connectionStatus.toUpperCase()} | Circuit: ${circuitState}`}
           gradient={true}
-        />
+        >
+          Swarm Health Dashboard
+        </SupremeHeader>
         <div className="flex items-center gap-4">
           {circuitState === 'OPEN' && (
             <button
@@ -83,7 +84,7 @@ export const SwarmHealthDashboard: React.FC = () => {
 
       {/* Live Log Feed */}
       <SupremeCard className="h-96 flex flex-col">
-        <SupremeHeader title="Live Execution Logs" />
+        <SupremeHeader>Live Execution Logs</SupremeHeader>
         <div className="flex-1 overflow-y-auto space-y-2 mt-4 font-mono text-sm bg-input-bg p-4 rounded-lg border border-border-accent">
           {logs.length === 0 ? (
             <div className="text-text-secondary text-center py-8">No logs available.</div>

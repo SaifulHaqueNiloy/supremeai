@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient, setApiConcurrency } from './apiClient';
-import { useAdminStore } from '../store/adminStore';
 
 // Mock getApiBaseUrl
 vi.mock('../utils/api', () => ({

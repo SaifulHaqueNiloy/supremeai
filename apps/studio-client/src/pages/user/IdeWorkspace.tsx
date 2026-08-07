@@ -9,7 +9,6 @@ import 'xterm/css/xterm.css';
 import { useIdeStore } from '../../store/useIdeStore';
 import { FileExplorer } from '../../components/editor/FileExplorer';
 import { EditorTabs } from '../../components/editor/EditorTabs';
-import { Play } from 'lucide-react';
 
 export const IdeWorkspace: React.FC = () => {
   const { webContainer, setWebContainer, files, activeFile, updateFileContent, markFileSaved } = useIdeStore();
@@ -148,7 +147,7 @@ export const IdeWorkspace: React.FC = () => {
 
       {/* Main Layout using react-resizable-panels */}
       <div className="flex-1 flex min-h-0">
-        <PanelGroup direction="horizontal">
+        <PanelGroup orientation="horizontal">
 
           {/* LEFT: File Explorer */}
           <Panel defaultSize={20} minSize={10} maxSize={40}>
@@ -159,7 +158,7 @@ export const IdeWorkspace: React.FC = () => {
 
           {/* RIGHT: Editor + Terminal */}
           <Panel defaultSize={80}>
-            <PanelGroup direction="vertical">
+            <PanelGroup orientation="vertical">
 
               {/* TOP: Editor */}
               <Panel defaultSize={70} minSize={30}>

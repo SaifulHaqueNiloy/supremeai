@@ -8,17 +8,10 @@ from loguru import logger
 from pydantic import BaseModel
 
 from admin.god import AdminGodLayer  # Your existing god.py
-from api.dependencies import get_current_user_token
+from api.dependencies import get_current_admin
 from core.cache.redis_manager import redis_manager
 from core.health.self_healer import SelfHealerService
 from utils.firestore_helpers import get_firestore_db
-
-
-def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
-    if payload.get("role") != "admin":
-        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return payload
 
 
 router = APIRouter(

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { SwarmContextState, SwarmMetrics, SwarmLog, CircuitState } from '../types/swarm';
+import type {  SwarmMetrics, SwarmLog, CircuitState } from '../types/swarm';
 import { SwarmHealthContext } from './SwarmHealthContext';
 import { apiClient } from '../services/apiClient';
 

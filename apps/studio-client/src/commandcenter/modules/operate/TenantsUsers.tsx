@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTenants, useUsers } from '../../data/hooks';
 import { useImpersonateUser, useResetTenantUsage } from '../../data/hooks';
 import { DataTable, StatusPill, ConfirmModal, EmptyState } from '../../kit';

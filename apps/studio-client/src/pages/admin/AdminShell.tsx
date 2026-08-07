@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAdminStore } from "../../store/adminStore";
-import { useStore } from "../../store/useStore";
 import { AdminConsole } from "../../components/admin/AdminConsole";
 import { apiClient } from "../../services/apiClient";
 import { Shield } from "lucide-react";
@@ -24,17 +23,16 @@ export function AdminShell() {
     setActionStatus,
   } = useAdminStore();
 
-  const { systemConfig } = useStore();
   const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>("dashboard");
   const [skillQuery, setSkillQuery] = useState("");
   const [skillsList] = useState<Skill[]>([]);
   const [checkpointsList] = useState<Checkpoint[]>([]);
-  const [adminMessages, setAdminMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [adminMessages] = useState<ChatMessage[]>([]);
+  const [loading] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
-  const [costReport, setCostReport] = useState("");
-  const [healthMap, setHealthMap] = useState<HealthMap>({ gcp: { status: 'unknown', latency: '', region: '' }, railway: { status: 'unknown', latency: '', region: '' }, render: { status: 'unknown', latency: '', region: '' } });
+  const [costReport] = useState("");
+  const [healthMap] = useState<HealthMap>({ gcp: { status: 'unknown', latency: '', region: '' }, railway: { status: 'unknown', latency: '', region: '' }, render: { status: 'unknown', latency: '', region: '' } });
   const [newUsername, setNewUsername] = useState("");
   const [newUserRole, setNewUserRole] = useState("Operator");
   const [newUserPerms, setNewUserPerms] = useState("read,write");
