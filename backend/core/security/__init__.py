@@ -229,7 +229,7 @@ BLACKLIST_PREFIX = "jwt:blacklist:"
 BLACKLIST_TTL = 86400  # 24 hours
 
 
-async def revoke_token(jti: str, exp: int | None = None) -> None:
+async def revoke_token(jti: str, exp: int | None = None) -> bool:
     """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।"""
     import time
 
@@ -240,8 +240,13 @@ async def revoke_token(jti: str, exp: int | None = None) -> None:
         try:
             await redis_manager.client.setex(f"{BLACKLIST_PREFIX}{jti}", min(ttl, BLACKLIST_TTL), "revoked")
             logger.info(f"✅ JWT Token revoked: {jti}")
+            return True
         except Exception as e:
-            logger.warning(f"⚠️ Failed to revoke token in Redis: {e}")
+            # বাংলা মন্তব্য: সিকিউরিটি গার্ড — টোকেন রিভোকেশন ফেইল করলে নীরব না থেকে এরর রেইজ করা হচ্ছে
+            logger.error(f"⚠️ Failed to revoke token in Redis: {e}")
+            raise RuntimeError(f"Failed to revoke JWT token: {e}") from e
+    logger.warning(f"Redis manager unavailable, token revocation skipped: {jti}")
+    return False
 
 
 async def is_token_revoked(jti: str) -> bool:
@@ -249,7 +254,7 @@ async def is_token_revoked(jti: str) -> bool:
     from core.cache.redis_manager import redis_manager
 
     if not redis_manager or not getattr(redis_manager, "client", None):
-        return False  # Redis ডাউন থাকলে গ্রেসফুলি সার্ভিস বজায় থাকে
+        return False  # Fail-open: Redis down means we cannot verify revocation, allow valid JWTs
     try:
         return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
     except Exception as e:
@@ -264,25 +269,36 @@ def verify_token(token: str) -> dict:
         if jti:
             # Sync wrapper for sync verify_token callers
             import asyncio
+            import threading
 
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # If called inside active event loop, task check will handle in async auth middleware
-                    pass
+            def check_revoked():
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = None
+
+                if loop and loop.is_running():
+                    result = [False]
+                    def run():
+                        new_loop = asyncio.new_event_loop()
+                        result[0] = new_loop.run_until_complete(is_token_revoked(jti))
+                        new_loop.close()
+                    t = threading.Thread(target=run)
+                    t.start()
+                    t.join()
+                    return result[0]
                 else:
-                    revoked = loop.run_until_complete(is_token_revoked(jti))
-                    if revoked:
-                        raise HTTPException(
-                            status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Token has been revoked",
-                        )
-            except RuntimeError:
-                pass
+                    return asyncio.run(is_token_revoked(jti))
+
+            if check_revoked():
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token has been revoked",
+                )
         return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired") from None
-    except jwt.PyJWTError:
+    except Exception as e:
+        if type(e).__name__ == "ExpiredSignatureError":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired") from None
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials") from None
 
 
