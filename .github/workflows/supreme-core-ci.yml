@@ -656,22 +656,66 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
 
-      - name: ⚙️ Setup Poetry Cache
+      # বাংলা মন্তব্য: পূর্বে শুধু global pypoetry/pip cache করা হতো।
+      # এখন backend/.venv-ও cache করা হচ্ছে — poetry.lock অপরিবর্তিত থাকলে
+      # poetry install সম্পূর্ণ skip হবে এবং প্রতি রানে ২-৩ মিনিট বাঁচবে।
+      - name: ⚙️ Setup Poetry + venv Cache
+        id: poetry-cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pypoetry
             ~/.cache/pip
-          key: ${{ runner.os }}-poetry-v3-${{ hashFiles('backend/poetry.lock') }}
+            backend/.venv
+          key: ${{ runner.os }}-poetry-v4-py3.11-${{ hashFiles('backend/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-poetry-v3-
+            ${{ runner.os }}-poetry-v4-py3.11-
+            ${{ runner.os }}-poetry-v4-
 
+      # বাংলা মন্তব্য: Playwright Chromium বাইনারি (~200MB) cache করা হচ্ছে।
+      # poetry.lock পরিবর্তন না হলে এই বড় ডাউনলোড প্রতি রানে skip হবে।
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('backend/poetry.lock') }}-v1
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      # বাংলা মন্তব্য: venv cache miss হলেই poetry install চলবে — hit হলে skip।
       - name: 📦 Install Dependencies (Smart Sync)
         run: |
           mkdir -p backend
           cd backend
-          poetry install --with dev
+          if [ "${{ steps.poetry-cache.outputs.cache-hit }}" != "true" ]; then
+            poetry install --with dev
+          else
+            echo "venv cache HIT — skipping full poetry install"
+            poetry install --no-root --sync --with dev --dry-run 2>&1 | head -5 || true
+          fi
+
+      # বাংলা মন্তব্য: Playwright browser cache miss হলেই download হবে — hit হলে skip।
+      - name: 🎭 Install Playwright Browsers (cache miss only)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: |
+          cd backend
           poetry run python -m playwright install --with-deps chromium || poetry run python -m playwright install chromium || true
+
+      # বাংলা মন্তব্য: cache hit/miss স্ট্যাটাস GitHub Step Summary-তে লগ করা হচ্ছে।
+      - name: 📊 Backend Cache Status Report
+        run: |
+          echo "### Backend Cache Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.poetry-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "- Poetry/venv cache: HIT — poetry install skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Poetry/venv cache: MISS — fresh install completed" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "- Playwright cache: HIT — browser download skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Playwright cache: MISS — browsers downloaded and cached" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: 🧪 Run Tests
         id: backend_tests
@@ -770,13 +814,26 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm store prune
 
+      # বাংলা মন্তব্য: পূর্বে github.sha ব্যবহার করা হতো — ফলে প্রতিটি commit-এ নতুন key,
+      # cache hit-rate ছিল শূন্যের কাছাকাছি। এখন lockfile ও package.json hash ব্যবহার করা হচ্ছে
+      # যাতে dependency না বদলালে Turborepo build cache পুনরায় ব্যবহার হয়।
       - name: Cache Turborepo
+        id: turbo-cache
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'apps/**/package.json', 'tools/**/package.json') }}
           restore-keys: |
             ${{ runner.os }}-turbo-
+
+      # বাংলা মন্তব্য: Turbo cache hit/miss রিপোর্ট GitHub Step Summary-তে দেখানো হচ্ছে।
+      - name: 📊 Turbo Cache Report
+        run: |
+          if [ "${{ steps.turbo-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "- Turbo cache: HIT — build artifacts restored from cache" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Turbo cache: MISS — fresh build running" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Build & Lint Frontend Packages
         env:
