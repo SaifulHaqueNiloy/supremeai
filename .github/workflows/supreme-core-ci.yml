@@ -854,6 +854,15 @@ jobs:
             echo "- Turbo cache: MISS — fresh build running" >> $GITHUB_STEP_SUMMARY
           fi
 
+      # বাংলা মন্তব্য: Turbo cache hit/miss রিপোর্ট GitHub Step Summary-তে দেখানো হচ্ছে।
+      - name: 📊 Turbo Cache Report
+        run: |
+          if [ "${{ steps.turbo-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "- Turbo cache: HIT — build artifacts restored from cache" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Turbo cache: MISS — fresh build running" >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Build & Lint Frontend Packages
         env:
           VITE_PORTAL_TYPE: 'admin'
