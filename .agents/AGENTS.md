@@ -97,5 +97,4 @@
 
 - **BLE-001:** প্রজেক্টের **ডিফল্ট ভাষা বাংলা** (Default Language is Bangla)। ইউজার যেকোনো ভাষায় প্রশ্ন করলেও উত্তর সবসময় স্পষ্ট ও সাবলীল বাংলায় দিতে হবে — **Banglish সম্পূর্ণ নিষিদ্ধ**।
 - **BLE-002:** Customer-কে সর্বদা **'আপনি'** সম্বোধন করো — 'তুমি' নয়।
->>>>>>> f08b4adae1 (feat(config): add descriptive Bangla comments for missing API key fallback mode)
 - **BLE-003:** Code সবসময় English-এ — তবে কোডের মন্তব্য (comments) বাধ্যতামূলক বাংলায় থাকতে হবে।
