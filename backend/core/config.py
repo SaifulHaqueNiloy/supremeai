@@ -908,6 +908,9 @@ class Settings(BaseSettings):
                 logger.warning("⚠️ Stripe webhook secret missing in production/staging. Webhook validation disabled.")
 
         # Production completeness / degraded mode allowed
+        # বাংলা মন্তব্য: প্রোডাকশন বা ক্লাউড এনভায়রনমেন্টে কোনো LLM API Key (যেমন OPENROUTER_API_KEY, GEMINI_API_KEY, GROQ_API_KEY)
+        # সেট করা না থাকলেও সার্ভার ক্র্যাশ করানো যাবে না। সিস্টেম শুধুমাত্র একটি সতর্কবার্তা (Warning) লগ করবে
+        # এবং জিরো-কস্ট ডিক্রেডেড ফলব্যাক মোডে ড্যাশবোর্ড ও হেলথচেকসহ সকল সার্ভিস সচল রাখবে।
         if self.env == "production":
             missing = []
             if not self.openrouter_api_key:
@@ -918,19 +921,18 @@ class Settings(BaseSettings):
                 missing.append("CI_WEBHOOK_SECRET")
             if missing:
                 logger.warning(
-                    f"⚠️ Production missing config vars: {', '.join(missing)}. Running in degraded zero-cost mode."
+                    f"⚠️ [Degraded Zero-Cost Mode Active] প্রোডাকশনে ঐচ্ছিক কনফিগ ভেরিয়েবল অনুপস্থিত: {', '.join(missing)}। এটি কোনো ত্রুটি বা এরর নয়, সিস্টেম অটোমেটিক লকাল ফলব্যাকে কাজ করবে।"
                 )
 
         # General resilience guard for non-test environments
-        # বাংলা মন্তব্য: প্রজেক্টের "Zero-Cost Mode" নীতি অনুসারে OPENROUTER_API_KEY বা অন্যান্য LLM API Key
-        # না থাকলেও সার্ভার বুট হবে এবং Degraded Zero-Cost Mode-এ চলবে। তাই এখানে OPENROUTER_API_KEY
-        # না থাকলে sys.exit(1) দিয়ে সার্ভিস ক্র্যাশ করানো যাবে না (Render free tier boot resiliency)।
+        # বাংলা মন্তব্য: সিকিউরিটির জন্য শুধুমাত্র ক্রিপ্টোগ্রাফিক ENCRYPTION_KEY না থাকলে ক্র্যাশ করবে।
+        # কিন্তু সকল এআই এপিআই কী (LLM API Keys) এর জন্য সিস্টেম ক্র্যাশ না করে শতভাগ সার্ভার বুট রেজিলিয়েন্সি বজায় রাখবে।
         if self.env not in {"test"}:
             missing: list[str] = []
             if not self.encryption_key.get_secret_value():
                 missing.append("ENCRYPTION_KEY")
             if missing:
-                logger.critical(f"🚨 FATAL: Missing critical config vars: {', '.join(missing)}. Fail-Fast enforced.")
+                logger.critical(f"🚨 FATAL: মিসিং সিকিউরিটি ভেরিয়েবল: {', '.join(missing)}। Fail-Fast প্রয়োগ করা হলো।")
                 sys.exit(1)
         return self
 

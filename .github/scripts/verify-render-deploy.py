@@ -80,10 +80,12 @@ def check_http_health(url, label, retries=6, timeout_per_try=20):
                         if isinstance(data, dict) and data.get('status') in ['ok', 'healthy', 'UP', 'degraded']:
                             print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
                             return True
-                    except:
-                        # If response is not JSON but status is 200, consider it healthy
-                        print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
-                        return True
+                        else:
+                            print(f"⚠️ {label} HTTP check returned unverified body: {data}")
+                    except Exception as json_err:
+                        print(f"⚠️ {label} HTTP check response is not valid JSON: {json_err}")
+                else:
+                    print(f"⚠️ {label} HTTP check returned HTTP {res.status_code}")
             except Exception as e:
                 print(f"⏳ {health_url} health check attempt {attempt} failed: {e}")
         if attempt < retries:
