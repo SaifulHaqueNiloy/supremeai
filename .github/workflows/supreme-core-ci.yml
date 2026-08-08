@@ -1361,11 +1361,10 @@ jobs:
             exit 1
           fi
 
-      # বাংলা মন্তব্য: continue-on-error: true যোগ করা হয়েছে কারণ Render Free Tier-এ
-      # container startup crash বা cold-start timeout হলে পুরো CI pipeline block হচ্ছিল।
-      # Deploy trigger সফল হলেই যথেষ্ট — health verification ব্যর্থ হলেও pipeline চলবে।
+      # বাংলা মন্তব্য: continue-on-error: true সরানো হয়েছে — কারণ এটি real deployment failure mask করছিল।
+      # User Backend (primary) fail হলেও CI pipeline সবুজ দেখাচ্ছিল, কিন্তু Render-এ আসলে service unhealthy ছিল।
+      # এখন verify-render-deploy.py সঠিকভাবে exit code 1 return করলে job fail হবে এবং CI লাল দেখাবে।
       - name: Verify Render Deploy Health
-        continue-on-error: true
         run: python .github/scripts/verify-render-deploy.py
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
