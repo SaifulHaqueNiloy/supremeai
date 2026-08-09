@@ -35,6 +35,9 @@ class AdminGodLayer:
         data_dir_env = os.getenv("DATA_DIR")
         if data_dir_env:
             self.db_path = Path(data_dir_env) / self.db_path.name
+        elif os.getenv("RENDER"):
+            # বাংলা মন্তব্য: Render কনটেইনারের রিড-ওনলি ফাইল সিস্টেমের জন্য /tmp ফাস্ট ডিরেক্টরি ব্যবহার করা
+            self.db_path = Path("/tmp/data") / self.db_path.name
 
         try:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
