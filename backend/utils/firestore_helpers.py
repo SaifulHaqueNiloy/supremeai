@@ -51,6 +51,22 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
 
     resolved_project = project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT") or "supremeai-a"
 
+    # বাংলা মন্তব্য: GCP Cloud Run বা রিয়েল ক্রেডেনশিয়ালস না থাকলে (যেমন Render/Railway/local)
+    # google.auth.default() মেটাডাটা সার্ভার (169.254.169.254) ২৩+ সেকেন্ডের জন্য হ্যাং হয়।
+    # ক্রেডেনশিয়ালস না থাকলে সরাসরি None ফেরত দিয়ে ফাস্ট বুট নিশ্চিত করা হলো।
+    has_gcp_creds = any(
+        os.getenv(k)
+        for k in (
+            "GOOGLE_APPLICATION_CREDENTIALS",
+            "GCP_SERVICE_ACCOUNT_JSON",
+            "FIREBASE_SERVICE_ACCOUNT",
+            "FIREBASE_ADMIN_CREDENTIALS",
+            "K_SERVICE",
+        )
+    )
+    if not has_gcp_creds and not os.getenv("FORCE_FIRESTORE_ADC"):
+        return None
+
     # ক্যাশ চেক — আগেই তৈরি থাকলে সেটাই রিটার্ন
     if resolved_project in _client_cache:
         return _client_cache[resolved_project]
