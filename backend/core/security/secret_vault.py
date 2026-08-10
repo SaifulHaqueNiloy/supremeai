@@ -145,7 +145,7 @@ class ProductionSecretVault:
                     infisical_env = "staging"
                 else:
                     infisical_env = "dev"
-                    
+
             options = GetSecretOptions(
                 environment=infisical_env,
                 project_id=self.project_id,
