@@ -33,6 +33,7 @@ import asyncio
 import hashlib
 import json
 import os
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
@@ -127,7 +128,7 @@ class ErrorRemediation:
     def __init__(self) -> None:
         self._qdrant: QdrantClient | None = None
         self._qdrant_initialized: bool = False
-        self.fallback_path = Path(__file__).parent.parent / "data" / "error_remediation_fallback.json"
+        self.fallback_path = Path(tempfile.gettempdir()) / "error_remediation_fallback.json"
         self.circuit_breaker = CircuitBreaker(name="qdrant", failure_threshold=3, recovery_timeout=60.0)
         self._ensure_fallback_file()
 
