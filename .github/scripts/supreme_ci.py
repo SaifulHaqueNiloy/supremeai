@@ -195,8 +195,6 @@ def cmd_deploy(args):
         "GCP_REGION",
         "SERVICE_ROLE",
         "INFISICAL_TOKEN",
-        "INFISICAL_CLIENT_ID",
-        "INFISICAL_CLIENT_SECRET",
         "INFISICAL_PROJECT_ID",
         "INFISICAL_ENV",
     ]
