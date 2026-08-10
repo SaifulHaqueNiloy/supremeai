@@ -36,15 +36,33 @@ SUCCESS_CONCLUSIONS = {"success"}
 SKIPPED_CONCLUSIONS = {"skipped", "neutral"}
 
 
+def _build_ssl_context() -> ssl.SSLContext:
+    # বাংলা মন্তব্য (fix 23834c8): আগে এখানে verify_mode=ssl.CERT_NONE দিয়ে TLS
+    # verification পুরোপুরি বন্ধ করে দেওয়া হয়েছিল — সম্ভবত runner-এ কোনো cert
+    # error সমাধান করতেই, কিন্তু এটা man-in-the-middle risk তৈরি করে এবং কোনো
+    # script কপি করলে ছড়িয়ে পড়তে পারে। সঠিক fix: system CA bundle দিয়ে
+    # default verified context ব্যবহার করা, আর সেটা fail করলে (কিছু runner-এ
+    # bundled CA store পুরনো/অনুপস্থিত থাকতে পারে) certifi-র bundle দিয়ে
+    # verified fallback — কখনোই verification বন্ধ করা হয় না।
+    try:
+        return ssl.create_default_context()
+    except ssl.SSLError:
+        try:
+            import certifi
+            return ssl.create_default_context(cafile=certifi.where())
+        except ImportError:
+            # certifi না থাকলেও verification off করা হবে না — বরং error
+            # loudly raise হবে, যাতে silent MITM risk তৈরি না হয়।
+            raise
+
+
 def api_get(path: str, params: Dict = None) -> Dict:
     url = f"https://api.github.com/repos/{REPO}{path}"
     if params:
         url += "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers=HEADERS, method="GET")
-    
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+
+    ctx = _build_ssl_context()
 
     try:
         with urllib.request.urlopen(req, context=ctx) as resp:
