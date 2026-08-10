@@ -44,6 +44,11 @@ core_routers: list[tuple[str, str]] = [
     # সবসময় 404 পেত। router-এর নিজস্ব prefix ("/skills") + এখানে "/api" যোগ করলে
     # final path মিলে যায়।
     ("api.routes.skills", "/api"),
+    # বাংলা মন্তব্য: AUDIT-018 (৩য় আইটেম) ফিক্স — /api/files/{path} PUT আগে flag
+    # করা হয়েছিল কারণ path-traversal protection ছাড়া বানানো ঝুঁকিপূর্ণ ছিল।
+    # এখন backend/api/routes/files.py-তে tenant-scoped, resolved-path-containment
+    # সহ safely implement করে register করা হলো।
+    ("api.routes.files", "/api"),
     ("api.routes.preferences", "/api"),
     ("api.routes.usage_metrics", ""),
     ("api.routes.sso", ""),
