@@ -9,8 +9,8 @@ import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { ToastProvider } from './components/ui/Toast';
 
 // Pages (Core Layouts & Auth)
-import { LoginScreen } from './pages/auth/LoginScreen';
-import { RegisterScreen } from './pages/auth/RegisterScreen';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardShell } from "./components/dashboard/DashboardShell";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
@@ -171,12 +171,12 @@ const AppContent: React.FC = () => {
                   {/* GUEST STATE */}
                   <Route path="/login" element={
                     <GuestRoute>
-                      <LoginScreen />
+                      <LoginPage />
                     </GuestRoute>
                   } />
                   <Route path="/register" element={
                     <GuestRoute>
-                      <RegisterScreen />
+                      <RegisterPage />
                     </GuestRoute>
                   } />
                   <Route path="/" element={<Navigate to="/workspace" replace />} />
