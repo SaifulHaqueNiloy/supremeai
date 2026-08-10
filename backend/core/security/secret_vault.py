@@ -136,9 +136,18 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
         try:
-            env_name = self.env if self.env in ("production", "staging", "development") else "development"
+            # বাংলা মন্তব্য: Infisical-এর ডিফল্ট স্লাগ হলো prod, staging, dev।
+            infisical_env = os.environ.get("INFISICAL_ENV")
+            if not infisical_env:
+                if self.env == "production":
+                    infisical_env = "prod"
+                elif self.env == "staging":
+                    infisical_env = "staging"
+                else:
+                    infisical_env = "dev"
+                    
             options = GetSecretOptions(
-                environment=env_name,
+                environment=infisical_env,
                 project_id=self.project_id,
                 secret_name=secret_id,
             )
