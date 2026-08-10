@@ -35,7 +35,7 @@ def get_infisical_token(client_id: str, client_secret: str) -> str:
     payload = json.dumps({"clientId": client_id, "clientSecret": client_secret}).encode("utf-8")
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.load(resp)
             return data.get("accessToken")
     except urllib.error.HTTPError as e:
@@ -49,7 +49,7 @@ def fetch_infisical_secrets(project_id: str, token: str, env: str = "prod") -> s
     url = f"https://app.infisical.com/api/v3/secrets/raw?workspaceId={project_id}&environment={env}"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.load(resp)
             secrets = data.get("secrets", [])
             return {s.get("secretKey") for s in secrets if s.get("secretKey")}
