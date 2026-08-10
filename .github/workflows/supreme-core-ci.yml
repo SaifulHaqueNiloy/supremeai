@@ -982,19 +982,16 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'apps/**/package.json', 'tools/**/package.json') }}
+          # বাংলা মন্তব্য (পারফরম্যান্স ফিক্স): আগে key-তে "turbo:" prefix ছিল না অথচ
+          # restore-keys সবগুলোতে "turbo:" prefix দিয়ে prefix-match খুঁজত — ফলে
+          # restore-keys কখনো কোনো সংরক্ষিত cache-এর সাথে match করত না (actions/cache
+          # prefix-match করে restore-keys-এর জন্য), অর্থাৎ hash না মিললেই সম্পূর্ণ fresh
+          # build হতো, node-version/OS-level fallback কখনো কাজ করত না। key ও restore-keys
+          # একই "turbo:" prefix scheme-এ আনা হলো যাতে partial-cache fallback আসলেই কাজ করে।
+          key: turbo:${{ runner.os }}-turbo-node${{ env.NODE_VERSION }}-${{ hashFiles('pnpm-lock.yaml', 'apps/**/package.json', 'tools/**/package.json') }}
           restore-keys: |
             turbo:${{ runner.os }}-turbo-node${{ env.NODE_VERSION }}-
             turbo:${{ runner.os }}-turbo-
-
-      # বাংলা মন্তব্য: Turbo cache hit/miss রিপোর্ট GitHub Step Summary-তে দেখানো হচ্ছে।
-      - name: 📊 Turbo Cache Report
-        run: |
-          if [ "${{ steps.turbo-cache.outputs.cache-hit }}" == "true" ]; then
-            echo "- Turbo cache: HIT — build artifacts restored from cache" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- Turbo cache: MISS — fresh build running" >> $GITHUB_STEP_SUMMARY
-          fi
 
       # বাংলা মন্তব্য: Turbo cache hit/miss রিপোর্ট GitHub Step Summary-তে দেখানো হচ্ছে।
       - name: 📊 Turbo Cache Report
