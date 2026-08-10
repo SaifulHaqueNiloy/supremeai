@@ -194,6 +194,9 @@ def cmd_deploy(args):
         "GCP_PROJECT_ID",
         "GCP_REGION",
         "SERVICE_ROLE",
+        "INFISICAL_TOKEN",
+        "INFISICAL_PROJECT_ID",
+        "INFISICAL_ENV",
     ]
     env_pairs = [f"{k}={os.environ[k]}" for k in required_env if os.environ.get(k)]
     if env_pairs:
