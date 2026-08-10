@@ -34,7 +34,7 @@ jobs:
             os: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           lfs: true
 
@@ -43,14 +43,14 @@ jobs:
       # ----------------------------------------------------
       - name: Setup Flutter
         if: matrix.target == 'APK'
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Cache Gradle & Pub Packages
         if: matrix.target == 'APK'
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.gradle/caches
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload APK Artifact
         if: matrix.target == 'APK'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supremeai-mobile-apk
           path: apps/mobile/build/app/outputs/flutter-apk/*.apk
@@ -80,12 +80,12 @@ jobs:
       # ----------------------------------------------------
       - name: Setup Node & PNPM
         if: matrix.target == 'VSIX' || matrix.target == 'EXE'
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
         with:
           version: 9.0.0
       - name: Setup Node caching
         if: matrix.target == 'VSIX' || matrix.target == 'EXE'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -100,7 +100,7 @@ jobs:
 
       - name: Upload VSIX Artifact
         if: matrix.target == 'VSIX'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supremeai-vscode-vsix
           path: tools/vscode-extension/*.vsix
@@ -121,7 +121,7 @@ jobs:
 
       - name: Upload EXE Artifact
         if: matrix.target == 'EXE'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supremeai-studio-windows-exe
           path: apps/studio-client/release/*.exe
@@ -139,11 +139,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           lfs: true
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: release-artifacts
           merge-multiple: true
@@ -159,7 +159,7 @@ jobs:
         shell: bash
 
       - name: Publish Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ steps.release_tag.outputs.TAG_NAME }}
           files: release-artifacts/**/*
@@ -177,7 +177,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-backend
         with:
           python-version: '3.11'
