@@ -17,7 +17,7 @@
 - [x] Compare backend API schemas vs studio-client usage → **AUDIT-018** (broken endpoints):
   - `/api/voice/voices` (chatService.getVoices) — voice router only has `/stream_audio` ❌
   - `/api/skills/catalog` (skillsService) — skills router NOT registered in routers.py ❌
-  - `/api/files/` (useSupremeStore PUT) — no such endpoint ❌
+  - `/api/files/` (useSupremeStore PUT) — no such endpoint ❌ **FIXED**: `backend/api/routes/files.py` — tenant-scoped GET+PUT with path-traversal protection (see `tests/test_files_endpoint.py`)
   - `/api/session/{id}/stream` — exists ✅
   - `/api/v1/media/generate-upload-url` — exists ✅
 
