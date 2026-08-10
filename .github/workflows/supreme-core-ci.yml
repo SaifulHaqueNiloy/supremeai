@@ -326,12 +326,35 @@ jobs:
           python scripts/verify_render_env.py --env ${{ matrix.env }} --service-id "$SVC"
 
   # ==============================================================================
+  # INFISICAL VAULT HEALTH CHECK: Verifies that Infisical Vault has all critical secrets.
+  # ==============================================================================
+  infisical-vault-health-check:
+    name: 🔐 Infisical Vault Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Verify Infisical Secrets
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+        run: python scripts/verify_infisical_env.py
+
+  # ==============================================================================
   # PRE-MERGE GATE: Iron Curtain — যেকোনো কোড মার্জের আগে বাধ্যতামূলক চেক
   # এই job fail হলে অন্য কোনো job চলবে না।
   # ==============================================================================
   pre-merge-gate:
     name: 🚧 Pre-Merge Gate (Iron Curtain)
-    needs: [changes, service-preflight, env-drift-check, render-env-live-check]
+    needs: [changes, service-preflight, env-drift-check, render-env-live-check, infisical-vault-health-check]
     runs-on: ubuntu-latest
     permissions:
       actions: write
