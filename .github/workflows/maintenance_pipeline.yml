@@ -643,7 +643,11 @@ jobs:
         run: poetry run python ../scripts/cost_guard_monitor.py
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+      INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+      INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+      INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+      INFISICAL_ENV: "prod"
       SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
       SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
       SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET || 'supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad' }}
@@ -696,7 +700,7 @@ jobs:
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
           INFISICAL_ENV: "prod"
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+
           SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET || 'supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad' }}
