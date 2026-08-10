@@ -577,7 +577,7 @@ jobs:
           pip install poetry
           poetry config virtualenvs.in-project true
           poetry install --only main --no-root
-          poetry run pip install litellm python-dotenv
+          poetry run pip install litellm python-dotenv infisical-python
           poetry run python ../scripts/devops/ai_scribe_historian.py --files $(find ../backend/core ../backend/tools -name "*.py" -not -name "__init__.py" 2>/dev/null | head -20)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
@@ -1804,8 +1804,10 @@ jobs:
           TOKEN=$(python -c '
           import urllib.request, json, os
           try:
-              url = f"https://app.infisical.com/api/v3/secrets/raw/SUPREMEAI_GITHUB_TOKEN?workspaceId={os.environ[\"INFISICAL_PROJECT_ID\"]}&environment=prod"
-              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {os.environ[\"INFISICAL_TOKEN\"]}"})
+              project_id = os.environ.get("INFISICAL_PROJECT_ID")
+              token = os.environ.get("INFISICAL_TOKEN")
+              url = f"https://app.infisical.com/api/v3/secrets/raw/SUPREMEAI_GITHUB_TOKEN?workspaceId={project_id}&environment=prod"
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
               with urllib.request.urlopen(req) as resp:
                   val = json.loads(resp.read().decode())["secret"]["secretValue"]
                   if val: print(val)
