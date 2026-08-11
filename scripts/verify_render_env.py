@@ -40,7 +40,7 @@ def load_registry(path: str) -> dict:
     return {e["name"]: e.get("criticality", {}) for e in data.get("keys", [])}
 
 
-def fetch_render_env(service_id: str, api_key: str) -> set:
+def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
     """বাংলা: Render API থেকে service env var-এর key গুলোর set ফেরত দেয়।"""
     url = f"{RENDER_API}/services/{service_id}/env-vars?limit=100"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}"})
@@ -55,14 +55,17 @@ def fetch_render_env(service_id: str, api_key: str) -> set:
         print(f"::error::Render API unreachable: {e}")
         sys.exit(1)
 
-    keys = set()
-    # বাংলা: Render API response হতে পারে list অথবা {{envVars: [...]}} wrapper
+    # বাংলা: Render API response হতে পারে list অথবা {envVars: [...]} wrapper
+    # key → value (Render লুকানো secrets-এ value=None দেয়, কিন্তু key থাকে)
+    env_data: dict[str, str | None] = {}
     items = payload if isinstance(payload, list) else payload.get("envVars", [])
     for item in items:
-        key = item.get("key") or item.get("envVar", {}).get("key")
+        ev = item.get("envVar", item)
+        key = ev.get("key")
+        val = ev.get("value")  # manual sync secrets-এ None আসে
         if key:
-            keys.add(key)
-    return keys
+            env_data[key] = val
+    return env_data
 
 
 def main() -> int:
@@ -80,8 +83,18 @@ def main() -> int:
         print("::error::RENDER_API_KEY/BACKUP env চার্জ করা হয়নি (GitHub secret থেকে ইনজেক্ট করুন)।")
         sys.exit(1)
 
+    # বাংলা: min_length validation-এর জন্য raw registry load
+    try:
+        import yaml as _yaml
+        with open(REGISTRY_PATH, "r", encoding="utf-8") as _fh:
+            _raw = _yaml.safe_load(_fh)
+        min_lengths = {e["name"]: e.get("min_length") for e in _raw.get("keys", []) if e.get("min_length")}
+    except Exception:
+        min_lengths = {}
+
     registry = load_registry(REGISTRY_PATH)
-    present = fetch_render_env(args.service_id, api_key)
+    env_data = fetch_render_env(args.service_id, api_key)
+    present = set(env_data.keys())
 
     has_critical_failure = False
     print(f"=== Render Runtime Env Check [{args.env}] service={args.service_id} ===")
@@ -91,10 +104,21 @@ def main() -> int:
         tier = crit_map.get(args.env)
         if not tier:
             continue  # ওই render env-এর জন্য প্রযোজ্য নয়
-        if name in present:
+        if name not in present:
+            if tier == "critical":
+                print(f"::error::[{args.env}] CRITICAL env var missing in Render: {name} (production boot will crash)")
+                has_critical_failure = True
+            elif tier == "important":
+                print(f"::warning::[{args.env}] IMPORTANT env var missing in Render: {name} (feature degraded)")
+            else:
+                print(f"[{args.env}] [optional] env var missing in Render: {name} (feature disabled)")
             continue
-        if tier == "critical":
-            print(f"::error::[{args.env}] CRITICAL env var missing in Render: {name} (production boot will crash)")
+
+        # বাংলা: min_length validation — value available হলেই check
+        value = env_data.get(name)
+        min_len = min_lengths.get(name)
+        if value is not None and min_len and len(value) < min_len:
+            print(f"::error::[{args.env}] {name}: {len(value)} chars < {min_len} required min (will crash)")
             has_critical_failure = True
         elif tier == "important":
             print(f"::warning::[{args.env}] IMPORTANT env var missing in Render: {name} (feature degraded)")
