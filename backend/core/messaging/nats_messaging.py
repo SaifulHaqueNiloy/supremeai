@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from collections.abc import Callable
@@ -33,10 +34,14 @@ class NATSClient:
     def __init__(
         self,
         url: str = "nats://localhost:4222",
-        token: str | None = "super_secret_token",
+        token: str | None = None,
     ):
         self.url = url
-        self.token = token
+        # বাংলা মন্তব্য: আগে এখানে হার্ডকোডেড ডিফল্ট টোকেন ("super_secret_token") ছিল,
+        # যেটা প্রোডাকশনে ব্যবহৃত হলে একটা পাবলিকলি-জানা টোকেন দিয়ে NATS-এ authenticate
+        # হয়ে যেত (security risk)। এখন worker_node.py-এর প্যাটার্ন অনুসরণ করে
+        # NATS_TOKEN env var থেকে পড়া হচ্ছে, না থাকলে None (unauthenticated/no token).
+        self.token = token if token is not None else os.getenv("NATS_TOKEN")
         self.nc = None
         self.js = None
         self.kv_store = None
