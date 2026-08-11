@@ -150,7 +150,7 @@ class ProductionSecretVault:
                     infisical_env = "staging"
                 else:
                     infisical_env = "dev"
-                    
+
             options = GetSecretOptions(
                 environment=infisical_env,
                 project_id=self.project_id,
@@ -175,7 +175,9 @@ class ProductionSecretVault:
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             self._circuit_breaker_open = True
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment.")
+            logger.warning(
+                f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -189,7 +191,9 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:
             self._circuit_breaker_open = True
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback.")
+            logger.opt(exception=True).warning(
+                f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
