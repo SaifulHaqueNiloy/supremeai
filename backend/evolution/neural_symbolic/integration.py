@@ -33,8 +33,6 @@ import torch.nn as nn
 from loguru import logger
 from sympy.parsing.sympy_parser import parse_expr
 
-from core.error_bus import with_error_bus
-
 
 class SymbolicOperation(Enum):
     ADDITION = "+"
@@ -181,7 +179,6 @@ class SymbolicReasoner:
         """Check if goal can be derived from premise by substitution."""
         return True
 
-    @with_error_bus("perform_mathematical_reasoning")
     def perform_mathematical_reasoning(self, expression: str, variables: dict[str, float]) -> dict[str, Any]:
         """
         Perform mathematical reasoning on an expression.
@@ -411,10 +408,7 @@ class NeuralSymbolicIntegrator:
             # If feedback indicates error, adjust approach
             logger.debug("Adjusting reasoning strategy based on negative feedback")
 
-    @with_error_bus("solve_mathematical_problem")
-    def solve_mathematical_problem(
-        self, problem_statement: str, constraints: list[str] | None = None
-    ) -> dict[str, Any]:
+    def solve_mathematical_problem(self, problem_statement: str, constraints: list[str] | None = None) -> dict[str, Any]:
         """
         Solve a mathematical problem using neural-symbolic integration.
 
@@ -490,7 +484,6 @@ class MathematicalReasoningEngine:
     def __init__(self, config: NeuralSymbolicConfig):
         self.integrator = NeuralSymbolicIntegrator(config)
 
-    @with_error_bus("solve_equation")
     def solve_equation(self, equation: str, variable: str) -> dict[str, Any]:
         """
         Solve an equation for a given variable.

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """
@@ -22,12 +21,14 @@ Key features:
 
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 
 from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 # ---------------------------------------------------------------------------
 # Per-provider max token budgets (conservative — leaves headroom for system prompts)
@@ -204,7 +205,6 @@ class TokenBudgetManager:
         """Estimate token count for *text*."""
         return estimate_tokens(text)
 
-    @with_error_bus("prepare_prompt")
     def prepare_prompt(
         self,
         prompt: str,

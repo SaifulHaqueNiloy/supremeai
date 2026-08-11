@@ -1,4 +1,3 @@
-from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """This module implements the `MaintenancePipeline`, acting as the "Immune System" for the SupremeAI ecosystem. It is responsible for continuously monitoring the health and performance of critical backend components such as databases, Redis, and external AI APIs. The pipeline proactively listens for system-wide error events, performs routine health checks, detects potential performance regressions, and attempts automated self-healing remediation actions like switching LLM providers or re-initializing services to ensure the overall stability and resilience of the AI platform.
@@ -21,8 +20,11 @@ import os
 import random
 import time
 
-from core.health.health_probes import probe_database, probe_external_api, probe_redis
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.health.health_probes import probe_database
+from core.health.health_probes import probe_external_api
+from core.health.health_probes import probe_redis
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 logger = logging.getLogger("supremeai.immune_system")
 
@@ -59,7 +61,6 @@ class MaintenancePipeline:
             self.health_score = max(0, self.health_score - 5)
             await self.auto_remediate(event)
 
-    @with_error_bus("run_health_check")
     async def run_health_check(self):
         # logger.info("🛡️ Immune System: Running routine health check...")
 
@@ -140,7 +141,6 @@ class MaintenancePipeline:
         except Exception as e:
             logger.error(f"Failed to run performance regression check: {e}")
 
-    @with_error_bus("auto_remediate")
     async def auto_remediate(self, event=None):
         logger.warning("🚑 Immune System: Triggering self-healing remediation...")
 
@@ -199,19 +199,10 @@ class MaintenancePipeline:
                     SelfEvolutionAgent,
                 )
 
-                # বাংলা: আগে এখানে SelfEvolutionAgent.__new__(SelfEvolutionAgent) দিয়ে
-                # instance বানানো হতো, যেটা __init__() সম্পূর্ণ স্কিপ করে দেয় — ফলে
-                # fitness_engine (ও অন্য সব attribute) কখনো সেট হতো না, আর প্রতিটা
-                # _tick() কল AttributeError দিয়ে ক্র্যাশ করত (production লগে দেখা
-                # "Task exception was never retrieved... 'fitness_engine'" এর মূল কারণ)।
-                # SelfEvolutionAgent.__init__() নিজে থেকে কোনো continuous loop চালু করে
-                # না — সেটা শুধু .start() কল করলেই শুরু হয় — তাই স্বাভাবিক constructor
-                # ব্যবহার করলেও "শুধু tick(), পুরো loop নয়" এই উদ্দেশ্য অক্ষুণ্ণ থাকে।
-                _evo = SelfEvolutionAgent()
+                # শুধু tick() চালাই, পুরো loop নয় — non-blocking
+                _evo = SelfEvolutionAgent.__new__(SelfEvolutionAgent)
                 if hasattr(_evo, "_tick"):
-                    from core.utils.background_tasks import track_task
-
-                    track_task(_asyncio.create_task(_evo._tick()))
+                    _asyncio.create_task(_evo._tick())
                     logger.warning(
                         f"🛡️→🧬 Health critical (score={self.health_score}), " "triggered emergency evolution tick."
                     )

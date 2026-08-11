@@ -22,19 +22,12 @@ Dependencies:
 - `re`: Utilized for regular expression operations to extract Python code blocks and URLs from text.
 - `urllib.parse`: For parsing and validating URL structures.
 - `importlib.util`: Employed to dynamically check for the existence of Python modules.
-- `builtins`: Accessed to identify and filter out Python's built-in names during variable definition checks.
-- `loguru.logger`: For structured logging of validation failures (anti-silent-failure).
-- `core.error_bus.with_error_bus`: For automatic error reporting to the ErrorEventBus.
-"""
+- `builtins`: Accessed to identify and filter out Python's built-in names during variable definition checks."""
 
 import ast
 import os
 import re
 import urllib.parse
-
-from loguru import logger
-
-from core.error_bus import with_error_bus
 
 
 class AICodeValidator:
@@ -57,21 +50,18 @@ class AICodeValidator:
         try:
             ast.parse(code)
             return True
-        except SyntaxError as exc:
-            logger.debug(f"[AICodeValidator] Syntax error: {exc}")
+        except SyntaxError:
             return False
 
     def _check_indentation(self, code: str) -> bool:
         try:
             ast.parse(code)
             return True
-        except IndentationError as exc:
-            logger.debug(f"[AICodeValidator] Indentation error: {exc}")
+        except IndentationError:
             return False
         except SyntaxError as e:
             return not ("unexpected indent" in str(e) or "unindent does not match" in str(e))
 
-    @with_error_bus("_check_imports_exist")
     def _check_imports_exist(self, code: str) -> bool:
         try:
             tree = ast.parse(code)
@@ -83,11 +73,9 @@ class AICodeValidator:
                 elif isinstance(node, ast.ImportFrom) and not self._module_exists(node.module):
                     return False
             return True
-        except Exception as exc:
-            logger.error(f"[AICodeValidator] _check_imports_exist failed: {exc}")
+        except Exception:
             return False
 
-    @with_error_bus("_module_exists")
     def _module_exists(self, module_name: str) -> bool:
         if not module_name:
             return False
@@ -100,11 +88,9 @@ class AICodeValidator:
         try:
             spec = importlib.util.find_spec(base_module)
             return spec is not None
-        except Exception as exc:
-            logger.error(f"[AICodeValidator] _module_exists failed for '{module_name}': {exc}")
+        except Exception:
             return False
 
-    @with_error_bus("_check_variables_defined")
     def _check_variables_defined(self, code: str) -> bool:
         try:
             tree = ast.parse(code)
@@ -137,11 +123,9 @@ class AICodeValidator:
                     undefined.discard(node.func.id)
 
             return len(undefined) == 0
-        except Exception as exc:
-            logger.error(f"[AICodeValidator] _check_variables_defined failed: {exc}")
+        except Exception:
             return False
 
-    @with_error_bus("_check_loop_safety")
     def _check_loop_safety(self, code: str) -> bool:
         try:
             tree = ast.parse(code)
@@ -155,8 +139,7 @@ class AICodeValidator:
                     if not has_break:
                         return False
             return True
-        except Exception as exc:
-            logger.error(f"[AICodeValidator] _check_loop_safety failed: {exc}")
+        except Exception:
             return False
 
     def _auto_fix(self, code: str) -> str:

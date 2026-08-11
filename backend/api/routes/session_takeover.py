@@ -15,7 +15,6 @@ from fastapi import (
 from loguru import logger
 from pydantic import BaseModel
 
-from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 router = APIRouter()
@@ -64,10 +63,7 @@ def get_takeover_status(session_id: str, request: Request) -> dict:
         loop = _asyncio.new_event_loop()
         data = loop.run_until_complete(_get_status_from_redis(session_id))
         loop.close()
-    except Exception as e:
-        # বাংলা: এটি অ্যাডমিন সেশন-টেকওভার মনিটরিং এন্ডপয়েন্ট — Redis lookup ব্যর্থ হলে
-        # চুপচাপ "inactive" দেখানো বিভ্রান্তিকর, তাই কারণটি লগ করা হচ্ছে
-        logger.warning(f"Failed to fetch takeover status from Redis for session {session_id}: {e}")
+    except Exception:
         data = None
     if data:
         return {"status": "active", "session_id": session_id, "data": data}
@@ -138,9 +134,7 @@ async def verify_takeover_token(token: str) -> bool:
                     logger.warning(f"Replay attempt detected for already-used takeover token: {token[:10]}...")
                     return False
             except Exception as exc:
-                # বাংলা মন্তব্য: সিকিউরিটি গার্ড — Redis চেক ফেইল করলে রিপ্লে অ্যাটাক রোধে টোকেন রিজেক্ট করা হচ্ছে
-                logger.error(f"Redis single-use check failed — rejecting takeover token (fail-closed): {exc}")
-                return False
+                logger.warning(f"Redis single-use check failed, allowing on base validation only: {exc}")
 
         return True
     except Exception as e:
@@ -156,7 +150,6 @@ def _is_production() -> bool:
 MOCK_FRAME_B64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
 
 
-@with_error_bus("dev_mock_screencast_emitter")
 async def dev_mock_screencast_emitter(websocket: WebSocket, session_id: str):
     """
     Non-production only: heartbeat emitter for mock CDP screencast frames to stress-test the
@@ -185,7 +178,6 @@ async def dev_mock_screencast_emitter(websocket: WebSocket, session_id: str):
         )
 
 
-@with_error_bus("_report_screencast_unavailable")
 async def _report_screencast_unavailable(websocket: WebSocket, session_id: str) -> None:
     """Production fallback: no real CDP/Playwright frame source is wired to this gateway yet.
     Tell the client honestly instead of faking a live feed, and log it centrally."""

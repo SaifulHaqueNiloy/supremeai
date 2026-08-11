@@ -33,17 +33,13 @@ jobs:
         working-directory: backend
         run: poetry run pip install safety isort black "setuptools>=77.0.3"
 
-      - name: Run isort
+      - name: Run ruff format (replaces isort + black)
+        # বাংলা: isort ও black dev dependency থেকে সরানো হয়েছে (unused ছিল)।
+        # ruff format isort-compatible import sorting + black-compatible formatting করে।
         working-directory: backend
         run: |
-          poetry run isort --check-only --diff . || true
-          poetry run isort .
-
-      - name: Run black
-        working-directory: backend
-        run: |
-          poetry run black --check . || true
-          poetry run black .
+          poetry run ruff check --select I --fix . || true
+          poetry run ruff format . || true
 
       - name: Run ruff linting
         working-directory: backend

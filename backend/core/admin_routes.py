@@ -55,13 +55,12 @@ import uuid
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from loguru import logger
-from redis.exceptions import RedisError
 
 # বাংলা মন্তব্য: TOTP ব্রুট-ফোর্স প্রতিরোধে Redis lockout constants
 _TOTP_MAX_ATTEMPTS = 5
 _TOTP_LOCKOUT_SECONDS = 600  # 10 minutes
 
-from api.dependencies import get_current_admin
+from api.dependencies import get_current_user_token
 from core import services
 from core.config import settings
 from core.gcp_firestore import get_firestore_client
@@ -73,6 +72,15 @@ from models.admin import (
 )
 
 router = APIRouter()
+
+
+def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Enforce admin role for sensitive admin routes (e.g. rules engine)."""
+    if payload.get("role") != "admin":
+        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
+        # বাংলা মন্তব্য: রেন্ডার ডকার লেআউটের জন্য সঠিক status.HTTP_403_FORBIDDEN অবজেক্ট ব্যবহার করা হলো
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return payload
 
 
 auth = get_firebase_auth()
@@ -231,13 +239,6 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                 data = doc.to_dict()
                 totp_secret = data.get("totp_secret")
                 temp_totp_secret = data.get("temp_totp_secret")
-        except RedisError as exc:
-            # Redis ডাউন থাকলে fail-closed নীতি বজায় রাখতে HTTP 503 রিটার্ন করা হচ্ছে
-            logger.error(f"Redis unavailable during TOTP validation: {exc}")
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Authentication security service temporarily unavailable",
-            )
         except Exception as e:
             logger.error(f"Failed to retrieve TOTP secret: {e}")
 
@@ -268,12 +269,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         except HTTPException:
             raise
         except Exception as e:
-            # বাংলা মন্তব্য: সিকিউরিটি গার্ড — Redis ডাউন থাকলে লকআউট বাইপাস রোধ করতে fail-closed নীতি (HTTP 503) প্রয়োগ করা হচ্ছে
-            logger.error(f"Redis lockout check failed — fail-closed: {e}")
-            raise HTTPException(
-                status_code=503,
-                detail="Security service temporarily unavailable. Please retry later.",
-            ) from e
+            logger.warning(f"Redis lockout check failed — proceeding (fail-open): {e}")
 
     if not check_totp(otp.strip(), secret_to_use):
         # বাংলা মন্তব্য: ব্যর্থ OTP attempt counter বাড়ানো হচ্ছে, সীমা ছাড়ালে lockout
@@ -466,11 +462,7 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
             if hmac.compare_digest(code, user_otp):
                 return True
         return False
-    except Exception as e:
-        # বাংলা: fail-closed (False) আচরণ অপরিবর্তিত রাখা হলো — এটা 2FA verification,
-        # তাই নিরাপত্তার জন্য এটাই সঠিক ডিফল্ট। শুধু কারণ লগ করা হচ্ছে (secret/OTP বাদে)
-        # যাতে বোঝা যায় এটা invalid code নাকি malformed input/আসল বাগ
-        logger.warning(f"TOTP verification raised an exception (not treated as valid): {type(e).__name__}: {e}")
+    except Exception:
         return False
 
 

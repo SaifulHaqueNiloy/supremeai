@@ -317,10 +317,7 @@ class ReflectionAgent(SwarmAgentBase):
 
             try:
                 parsed = json.loads(analysis)
-            except Exception as e:
-                # বাংলা: LLM-এর analysis output valid JSON না হলে fallback ব্যবহার করা হচ্ছে ঠিক আছে,
-                # কিন্তু কেন parse fail হলো সেটা লগ না করলে prompt/model regression ধরা পড়বে না
-                logger.warning(f"Swarm analysis output was not valid JSON, using fallback: {e}")
+            except Exception:
                 parsed = {
                     "what_worked": [analysis],
                     "what_failed": [],

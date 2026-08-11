@@ -144,21 +144,31 @@ def execute_ultimate_fuzz_test():
             is_safe = run_sandbox_ast_check(code)
             if is_safe:
                 # স্যান্ডবক্স কোডটিকে সেফ বলেছে -> অর্থাৎ হ্যাক সফল, স্যান্ডবক্স ফেল করেছে (Bypass)!
-                logger.info(f"| {idx:03d}. {category:<30} | {RED}{'BYPASS':<12}{RESET} | Allowed Malicious Code  |")
+                logger.info(
+                    f"| {idx:03d}. {category:<30} | {RED}{'BYPASS':<12}{RESET} | Allowed Malicious Code  |"
+                )
                 bypass_count += 1
             else:
                 # সিনট্যাক্স এরর হ্যান্ডলিং
-                logger.info(f"| {idx:03d}. {category:<30} | {GREEN}{'BLOCKED':<12}{RESET} | Syntax Normalization    |")
+                logger.info(
+                    f"| {idx:03d}. {category:<30} | {GREEN}{'BLOCKED':<12}{RESET} | Syntax Normalization    |"
+                )
                 syntax_error_count += 1
         except SecurityError as e:
             # স্যান্ডবক্স সফলভাবে সিকিউরিটি এরর রেইজ করে অ্যাটাক ব্লক করেছে (Success)
-            logger.info(f"| {idx:03d}. {category:<30} | {GREEN}{'BLOCKED':<12}{RESET} | {str(e)[:23]:<23} |")
+            logger.info(
+                f"| {idx:03d}. {category:<30} | {GREEN}{'BLOCKED':<12}{RESET} | {str(e)[:23]:<23} |"
+            )
             blocked_count += 1
 
     logger.info("=" * 80)
     logger.info("\n📊 FINAL FUZZING LAB REPORT:")
-    logger.info(f"  🟢 TOTAL ATTACKS SECURELY DEFENDED : {GREEN}{blocked_count + syntax_error_count}/100{RESET}")
-    logger.info(f"  🔴 TOTAL BYPASSES (SANDBOX CRACKS) : {RED if bypass_count > 0 else GREEN}{bypass_count}/100{RESET}")
+    logger.info(
+        f"  🟢 TOTAL ATTACKS SECURELY DEFENDED : {GREEN}{blocked_count + syntax_error_count}/100{RESET}"
+    )
+    logger.info(
+        f"  🔴 TOTAL BYPASSES (SANDBOX CRACKS) : {RED if bypass_count > 0 else GREEN}{bypass_count}/100{RESET}"
+    )
     logger.info("=" * 80)
 
     if bypass_count == 0:
