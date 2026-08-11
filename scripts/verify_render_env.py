@@ -40,6 +40,9 @@ def get_required_keys(env_name: str) -> set:
     categories = parse_policy(POLICY_PATH)
     return categories.get(env_name, set())
 
+# Add scripts directory to path to import local module
+sys.path.insert(0, os.path.dirname(__file__))
+from parse_env_policy import parse_policy
 
 def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
     """বাংলা: Render API থেকে service env var-এর key গুলোর set ফেরত দেয়।"""
