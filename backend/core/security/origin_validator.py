@@ -137,11 +137,12 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
         public_paths = settings.supremeai_public_paths
         if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
-            response = await call_next(request)
-            if origin and origin in allowed:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Credentials"] = "true"
-            return response
+            # বাংলা মন্তব্য: এখানে আগে Access-Control-Allow-Origin ম্যানুয়ালি সেট করা হতো,
+            # কিন্তু app_user.py/app_admin.py-এর প্রকৃত CORSMiddleware এই middleware-এর
+            # চেয়ে বাইরে (outer) থাকায় ইতিমধ্যেই একই header যোগ করে। দুটো মিলে duplicate
+            # Access-Control-Allow-Origin header তৈরি হতো, যা ব্রাউজার invalid CORS ধরে
+            # response block করে দিত -- ঠিক frontend-backend connect ভাঙার মতো উপসর্গ।
+            return await call_next(request)
 
         # বাংলা মন্তব্য: হোস্ট হেডার ভ্যালিডেশন
         host_header = request.headers.get("Host")
@@ -171,15 +172,13 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         if request.url.scheme == "https":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
-        # বাংলা মন্তব্য: জিরো-গ্যাপ CORS হেডার ইনজেকশন — Cache-Control, Pragma সহ ফ্রন্টএন্ড হেডার অনুমোদিত
-        if origin and origin in allowed:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = (
-                "Content-Type, Authorization, X-Requested-With, X-API-Key, Accept, Origin, "
-                "X-Device-Fingerprint, X-CSRF-Token, X-JIT-OTP, X-Request-ID, X-Tenant-ID, "
-                "X-Correlation-ID, Cache-Control, Pragma, *"
-            )
+        # বাংলা মন্তব্য: এখানে আগে "জিরো-গ্যাপ CORS হেডার ইনজেকশন" নামে ম্যানুয়ালি
+        # Access-Control-Allow-* header সেট করা হতো। কিন্তু app_user.py/app_admin.py-এর
+        # প্রকৃত CORSMiddleware এই middleware-এর বাইরে (outer) বসানো থাকায় প্রতিটা
+        # response-এ ইতিমধ্যেই সঠিক Access-Control-Allow-Origin/Credentials/Methods/
+        # Headers যোগ করে দেয়। দুই জায়গা থেকে একই header যোগ হওয়ায় response-এ
+        # duplicate Access-Control-Allow-Origin থাকতো -- ব্রাউজার এটাকে invalid CORS
+        # ধরে পুরো response block করে দিত। এই manual injection সরিয়ে দেওয়া হলো;
+        # CORS header responsibility এখন শুধুই CORSMiddleware-এর, যেটা ঠিক জায়গা।
 
         return response
