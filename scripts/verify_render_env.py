@@ -30,14 +30,16 @@ except ImportError:
     print("::error::PyYAML ইনস্টল করা নাই — `pip install pyyaml` চালান।")
     sys.exit(1)
 
-REGISTRY_PATH = os.path.join(os.path.dirname(__file__), "..", "secrets_registry.yaml")
+POLICY_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "env_maintenance_policy.md")
 RENDER_API = "https://api.render.com/v1"
 
+# Add scripts directory to path to import local module
+sys.path.insert(0, os.path.dirname(__file__))
+from parse_env_policy import parse_policy
 
-def load_registry(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh)
-    return {e["name"]: e.get("criticality", {}) for e in data.get("keys", [])}
+def get_required_keys(env_name: str) -> set:
+    categories = parse_policy(POLICY_PATH)
+    return categories.get(env_name, set())
 
 
 def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
@@ -74,13 +76,21 @@ def main() -> int:
     parser.add_argument("--service-id", required=True, help="Render service ID")
     args = parser.parse_args()
 
+    # বাংলা: admin env-এর জন্য backup key ব্যবহার, অন্যথায় primary key
     if args.env == "render-admin":
         api_key = os.environ.get("RENDER_API_KEY_BACKUP") or os.environ.get("RENDER_API_KEY")
     else:
         api_key = os.environ.get("RENDER_API_KEY")
-        
+
     if not api_key:
-        print("::error::RENDER_API_KEY/BACKUP env চার্জ করা হয়নি (GitHub secret থেকে ইনজেক্ট করুন)।")
+        print("::error::RENDER_API_KEY/BACKUP env চার্জ করা হয়নি (GitHub secret থেকে ইনজেক্ট করুন)।")
+        sys.exit(1)
+
+    # বাংলা: env_maintenance_policy.md থেকে এই env-এর জন্য required keys লোড করো
+    required_keys = get_required_keys(args.env)
+    
+    if not required_keys:
+        print(f"::error::কোনো required keys পাওয়া যায়নি {args.env} এর জন্য env_maintenance_policy.md ফাইলে।")
         sys.exit(1)
 
     # বাংলা: min_length validation-এর জন্য raw registry load
@@ -128,7 +138,9 @@ def main() -> int:
     if has_critical_failure:
         print(f"\n❌ FAIL [{args.env}]: Render-এ এক বা একাধিক critical env var নাই — Render dashboard-এ সেট করুন।")
         return 1
-    print(f"\n✅ PASS [{args.env}]: Render-এ সব critical env var উপস্থিত।")
+
+    print(f"\n✅ PASS [{args.env}]: সব required key Render-এ উপস্থিত।")
+
     return 0
 
 

@@ -54,9 +54,12 @@ class TestNATSClientInit:
     """বাংলা মন্তব্য: Initialization টেস্ট।"""
 
     def test_default_initialization(self):
-        client = NATSClient()
+        with patch.dict("os.environ", {}, clear=True):
+            client = NATSClient()
         assert client.url == "nats://localhost:4222"
-        assert client.token == "super_secret_token"
+        # বাংলা মন্তব্য: আগে এখানে হার্ডকোডেড "super_secret_token" ডিফল্ট ছিল
+        # (security bug) — এখন NATS_TOKEN env var না থাকলে token None হয়।
+        assert client.token is None
         assert client.nc is None
         assert client.js is None
         assert client.kv_store is None
@@ -129,7 +132,7 @@ class TestConnect:
     @pytest.mark.asyncio
     async def test_connection_no_servers_error(self, nats_client):
         """বাংলা মন্তব্য: NoServersError handle করে gracefully।"""
-        from nats.errors import NoServersError
+        from core.messaging.nats_messaging import NoServersError
 
         with patch.object(
             nats_messaging.nats,
@@ -422,7 +425,8 @@ class TestGlobalInstance:
 
     def test_global_instance_default_config(self):
         """বাংলা মন্তব্য: Global instance default configuration দিয়ে create করা আছে।"""
+        import os
         from core.messaging.nats_messaging import nats_client
 
         assert nats_client.url == "nats://localhost:4222"
-        assert nats_client.token == "super_secret_token"
+        assert nats_client.token == os.getenv("NATS_TOKEN")

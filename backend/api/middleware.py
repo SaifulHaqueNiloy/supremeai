@@ -111,7 +111,18 @@ class ResponseStandardizationMiddleware(BaseHTTPMiddleware):
             if hasattr(response, "body") and getattr(response, "body", b""):
                 body_content = response.body.decode()
             body = {"error": {"title": description, "detail": body_content}}
-            return JSONResponse(status_code=response.status_code, content=body)
+            # বাংলা মন্তব্য: আগে এখানে নতুন JSONResponse বানানোর সময় মূল response-এর
+            # headers (Retry-After, WWW-Authenticate, X-Request-ID, rate-limit
+            # headers, ইত্যাদি) হারিয়ে যেত -- CORS header ঠিক থাকে (CORSMiddleware
+            # ASGI-লেভেলে বাইরে থেকে যোগ হয়) কিন্তু বাকি সব inner middleware-এর
+            # header silently drop হয়ে যেত error response-এ। এখন সেগুলো কপি করে
+            # রাখা হচ্ছে, শুধু content-type/content-length বাদে (নতুন body-র
+            # সাথে সেগুলো নিজে থেকেই ঠিকভাবে সেট হবে)।
+            standardized = JSONResponse(status_code=response.status_code, content=body)
+            for key, value in response.headers.items():
+                if key.lower() not in ("content-type", "content-length", "content-encoding", "transfer-encoding"):
+                    standardized.headers[key] = value
+            return standardized
         return response
 
 

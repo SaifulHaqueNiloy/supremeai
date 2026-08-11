@@ -31,9 +31,10 @@ try:
         InfisicalClient,
         UniversalAuthMethod,
     )
-except ImportError:
+except ImportError as e:
+    import logging
+    logging.getLogger("core.security").warning(f"Failed to import infisical_client: {e}")
     InfisicalClient = None  # type: ignore[assignment]
-
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 CACHE_TTL_SECONDS: int = int(os.getenv("SECRET_CACHE_TTL", "300"))  # 5 min default
@@ -75,6 +76,7 @@ class ProductionSecretVault:
 
         self.client: InfisicalClient | None = None
         self._cache: dict[str, _CacheEntry] = {}
+        self._circuit_breaker_open: bool = False
 
         # বাংলা মন্তব্য: PRE_COMMIT=1 বা TESTING=1 থাকলে Infisical init skip করো।
         # এটি pre-commit hook hang প্রতিরোধ করে — network call হবে না।
@@ -123,6 +125,10 @@ class ProductionSecretVault:
         Raises:
             RuntimeError: If secret not found in Infisical or env in production.
         """
+        # Circuit Breaker check
+        if self._circuit_breaker_open:
+            return self._fallback_to_env(secret_id, default)
+
         # Check cache first
         cached = self._cache.get(secret_id)
         if cached and not cached.is_expired:
@@ -136,9 +142,18 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
         try:
-            env_name = self.env if self.env in ("production", "staging", "development") else "development"
+            # বাংলা মন্তব্য: Infisical-এর ডিফল্ট স্লাগ হলো prod, staging, dev।
+            infisical_env = os.environ.get("INFISICAL_ENV")
+            if not infisical_env:
+                if self.env == "production":
+                    infisical_env = "prod"
+                elif self.env == "staging":
+                    infisical_env = "staging"
+                else:
+                    infisical_env = "dev"
+                    
             options = GetSecretOptions(
-                environment=env_name,
+                environment=infisical_env,
                 project_id=self.project_id,
                 secret_name=secret_id,
             )
@@ -160,7 +175,8 @@ class ProductionSecretVault:
             # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Using fallback environment.")
+            self._circuit_breaker_open = True
+            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment.")
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -173,7 +189,8 @@ class ProductionSecretVault:
             )
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Using fallback.")
+            self._circuit_breaker_open = True
+            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback.")
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",

@@ -76,7 +76,7 @@ jobs:
       customer_backend_changed: ${{ steps.filter.outputs.customer_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
       trivial_change: ${{ steps.gate-logic.outputs.trivial_change }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Detect previous failures
         id: detect
         env:
@@ -93,7 +93,7 @@ jobs:
             echo "force_docker_build=$(echo $JSON_STR | jq -r '.docker_build')" >> $GITHUB_OUTPUT
             echo "force_dependencies=$(echo $JSON_STR | jq -r '.dependencies')" >> $GITHUB_OUTPUT
           fi
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
         with:
           filters: |
@@ -190,7 +190,7 @@ jobs:
       actions: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: 🔌 Ping all external services
         run: python .github/scripts/service_preflight_check.py
@@ -231,11 +231,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [github-actions, vercel-frontend, cloudflare-worker, firebase-gcp, infisical-vault]
+        env: [github-actions, vercel-frontend, cloudflare-worker, firebase-gcp]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install PyYAML
@@ -266,9 +266,10 @@ jobs:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          # বাংলা: Machine Identity credentials — infisical-vault env check-এর জন্য প্রয়োজনীয়
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_API_TOKEN: ${{ secrets.GITHUB_API_TOKEN }}
           SUPREMEAI_GITHUB_TOKEN: ${{ secrets.SUPREMEAI_GITHUB_TOKEN }}
@@ -277,10 +278,14 @@ jobs:
           CI_WEBHOOK_SECRET: ${{ secrets.CI_WEBHOOK_SECRET }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           SUPREMEAI_ADMIN_PASSWORD_HASH: ${{ secrets.SUPREMEAI_ADMIN_PASSWORD_HASH }}
-          SUPREMEAI_ENCRYPTION_KEY: ${{ secrets.SUPREMEAI_ENCRYPTION_KEY }}
           SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_API_BASE: ${{ vars.VITE_API_BASE }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
@@ -301,9 +306,9 @@ jobs:
       matrix:
         env: [render-backend, render-admin, render-worker]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install PyYAML
@@ -327,22 +332,46 @@ jobs:
           python scripts/verify_render_env.py --env ${{ matrix.env }} --service-id "$SVC"
 
   # ==============================================================================
+  # INFISICAL VAULT HEALTH CHECK: Verifies that Infisical Vault has all critical secrets.
+  # ==============================================================================
+  infisical-vault-health-check:
+    name: 🔐 Infisical Vault Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Verify Infisical Secrets
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          # বাংলা: Machine Identity auth-এর জন্য CLIENT_ID ও SECRET যোগ করা হলো (Fix #2)
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+        run: python scripts/verify_infisical_env.py
+
+  # ==============================================================================
   # PRE-MERGE GATE: Iron Curtain — যেকোনো কোড মার্জের আগে বাধ্যতামূলক চেক
   # এই job fail হলে অন্য কোনো job চলবে না।
   # ==============================================================================
   pre-merge-gate:
     name: 🚧 Pre-Merge Gate (Iron Curtain)
-    needs: [changes, service-preflight, env-drift-check, render-env-live-check]
+    needs: [changes, service-preflight, env-drift-check, render-env-live-check, infisical-vault-health-check]
     runs-on: ubuntu-latest
     permissions:
       actions: write
       security-events: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
         if: needs.changes.outputs.docs_only != 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -470,20 +499,31 @@ jobs:
           echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
 
       # 🛡️ CodeQL & Trivy Security Scan (Merged)
+      # বাংলা মন্তব্য (৫-ধাপ প্ল্যান, ধাপ ২ স্কিপ করা হয়েছে — এডমিনের অনুরোধে আলাদা
+      # job/workflow বানানো হয়নি, তাই Python+JS matrix parallel এখনই সম্ভব না;
+      # single job-এর মধ্যে থেকে ধাপ ৩,৪,৫ প্রয়োগ করা হলো):
+      # - ধাপ ৩: trigger আরও সংকুচিত — docs_only বাদ, run_attempt>1 বাদ (retry-তে
+      #   অহেতুক পুরো CodeQL re-run বন্ধ), push (merge-পরবর্তী main/develop) trigger যোগ
+      # - ধাপ ৪: নিচে codeql-config.yml দিয়ে scan scope ছোট করা হলো (config-path দ্রষ্টব্য)
+      # - ধাপ ৫: timeout-minutes যোগ করা হলো যাতে আটকে গেলে নির্দিষ্ট সময় পর নিজে বন্ধ হয়
       - name: Initialize CodeQL
-        if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        if: (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        timeout-minutes: 10
         uses: github/codeql-action/init@v4
         with:
           languages: 'python, javascript'
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
-        if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        if: (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        timeout-minutes: 25
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:python,javascript"
 
       - name: 🔍 Parallel Security Scan
-        if: (needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        if: (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+        timeout-minutes: 10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -504,20 +544,20 @@ jobs:
 
       - name: Upload Trivy Python SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always() && ((needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-python.sarif') != ''
+        if: always() && ((needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-python.sarif') != ''
         with:
           sarif_file: 'trivy-python.sarif'
           category: 'trivy-python'
 
       - name: Upload Trivy Node.js SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always() && ((needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-nodejs.sarif') != ''
+        if: always() && ((needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-nodejs.sarif') != ''
         with:
           sarif_file: 'trivy-nodejs.sarif'
           category: 'trivy-nodejs'
 
       - name: 📊 Add Security Audit Results to GitHub Summary
-        if: always() && ((needs.changes.outputs.trivial_change != 'true' && (github.event_name == 'schedule' || needs.changes.outputs.dependencies == 'true' || github.run_attempt > 1)) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true')))
+        if: always() && ((needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true')))
         run: |
           echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -546,9 +586,9 @@ jobs:
       (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.dependencies == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: 📚 Run AI Scribe Historian
@@ -559,12 +599,15 @@ jobs:
           pip install poetry
           poetry config virtualenvs.in-project true
           poetry install --only main --no-root
-          poetry run pip install litellm python-dotenv
+          poetry run pip install litellm python-dotenv infisical-python
           poetry run python ../scripts/devops/ai_scribe_historian.py --files $(find ../backend/core ../backend/tools -name "*.py" -not -name "__init__.py" 2>/dev/null | head -20)
         env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          INFISICAL_ENV: "prod"
       - name: 📤 Upload Generated Docs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: ai-scribe-generated-docs
@@ -581,7 +624,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 1
 
@@ -637,7 +680,7 @@ jobs:
           echo "✅ নলেজ গ্রাফ আপডেট করা হয়েছে" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload Production Readiness Reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: production-readiness-reports
@@ -665,15 +708,15 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Lowercase Repository Name
         id: string
         run: |
@@ -681,7 +724,7 @@ jobs:
           echo "OWNER_LOWER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
 
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
           context: .
           file: ./backend/Dockerfile.ci
@@ -734,7 +777,7 @@ jobs:
       # এবং poetry run pytest-এ "Command not found: pytest" error হয় (paykaribazaronline repo-তে cache miss-এর পর নিশ্চিত fail)।
       # তাই এই env-var সম্পূর্ণ বাদ দেওয়া হলো — নিচের poetry config virtualenvs.create true-ই কার্যকর হবে।
       SETUPTOOLS_USE_DISTUTILS: stdlib
-      SUPREMEAI_ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
+      ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
       PYTHONPATH: ${{ github.workspace }}/backend
       GITHUB_TOKEN: "mock_dummy_token"
       RENDER_API_KEY: "mock_render_key"
@@ -759,10 +802,10 @@ jobs:
       ALLOW_TEST_AUTH_BYPASS: "true"
       ALLOW_TEST_ORIGIN_BYPASS: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: 🐍 Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
 
@@ -780,7 +823,7 @@ jobs:
       # poetry install সম্পূর্ণ skip হবে এবং প্রতি রানে ২-৩ মিনিট বাঁচবে।
       - name: ⚙️ Setup Poetry + venv Cache
         id: poetry-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.cache/pypoetry
@@ -795,7 +838,7 @@ jobs:
       # poetry.lock পরিবর্তন না হলে এই বড় ডাউনলোড প্রতি রানে skip হবে।
       - name: Cache Playwright Browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('backend/poetry.lock') }}-v1
@@ -880,7 +923,7 @@ jobs:
 
       - name: Login to GAR
         if: false
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev
           username: _json_key
@@ -888,12 +931,12 @@ jobs:
 
       - name: Set up Docker Buildx
         if: false
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Build and Push Backend Image to GAR
         if: false
         id: build-and-push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
           context: .
           file: ./backend/Dockerfile
@@ -919,16 +962,16 @@ jobs:
         (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_frontend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
       )
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
         with:
           version: 9.0.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: ⚙️ Setup Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.pnpm-store
           # বাংলা মন্তব্য: deps: prefix — cache-janitor-এ dependency cache হিসেবে চিহ্নিত হবে,
@@ -948,22 +991,19 @@ jobs:
       # যাতে dependency না বদলালে Turborepo build cache পুনরায় ব্যবহার হয়।
       - name: Cache Turborepo
         id: turbo-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'apps/**/package.json', 'tools/**/package.json') }}
+          # বাংলা মন্তব্য (পারফরম্যান্স ফিক্স): আগে key-তে "turbo:" prefix ছিল না অথচ
+          # restore-keys সবগুলোতে "turbo:" prefix দিয়ে prefix-match খুঁজত — ফলে
+          # restore-keys কখনো কোনো সংরক্ষিত cache-এর সাথে match করত না (actions/cache
+          # prefix-match করে restore-keys-এর জন্য), অর্থাৎ hash না মিললেই সম্পূর্ণ fresh
+          # build হতো, node-version/OS-level fallback কখনো কাজ করত না। key ও restore-keys
+          # একই "turbo:" prefix scheme-এ আনা হলো যাতে partial-cache fallback আসলেই কাজ করে।
+          key: turbo:${{ runner.os }}-turbo-node${{ env.NODE_VERSION }}-${{ hashFiles('pnpm-lock.yaml', 'apps/**/package.json', 'tools/**/package.json') }}
           restore-keys: |
             turbo:${{ runner.os }}-turbo-node${{ env.NODE_VERSION }}-
             turbo:${{ runner.os }}-turbo-
-
-      # বাংলা মন্তব্য: Turbo cache hit/miss রিপোর্ট GitHub Step Summary-তে দেখানো হচ্ছে।
-      - name: 📊 Turbo Cache Report
-        run: |
-          if [ "${{ steps.turbo-cache.outputs.cache-hit }}" == "true" ]; then
-            echo "- Turbo cache: HIT — build artifacts restored from cache" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- Turbo cache: MISS — fresh build running" >> $GITHUB_STEP_SUMMARY
-          fi
 
       # বাংলা মন্তব্য: Turbo cache hit/miss রিপোর্ট GitHub Step Summary-তে দেখানো হচ্ছে।
       - name: 📊 Turbo Cache Report
@@ -1049,7 +1089,7 @@ jobs:
 
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: frontend-dist
           path: apps/studio-client/dist-admin
@@ -1073,10 +1113,10 @@ jobs:
       remaining_min: ${{ steps.quota.outputs.remaining_min }}
       checked_at: ${{ steps.quota.outputs.checked_at }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Restore minutes cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: render_minutes_cache.json
           key: render-quota-${{ github.run_number }}
@@ -1089,13 +1129,13 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
-          PRIMARY_SVC_ID: srv-d9d3n58js32c738n79k0
-          BACKUP_SVC_ID: srv-d9fg48bh523c73f63bb0
+          PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}
+          BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}
           RENDER_BILLING_DAY: ${{ vars.RENDER_BILLING_DAY }}
           RENDER_BILLING_DAY_BACKUP: ${{ vars.RENDER_BILLING_DAY_BACKUP }}
 
       - name: Save minutes cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: render_minutes_cache.json
           key: render-quota-${{ github.run_number }}
@@ -1129,17 +1169,17 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Lowercase Repository Name
         id: string
@@ -1149,7 +1189,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           images: ghcr.io/${{ steps.string.outputs.OWNER_LOWER }}/supremeai-backend
           tags: |
@@ -1157,7 +1197,7 @@ jobs:
             type=sha
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
           context: .
           file: ./backend/Dockerfile
@@ -1185,7 +1225,7 @@ jobs:
       needs.changes.outputs.customer_backend_changed == 'true' &&
       needs.changes.outputs.admin_backend_changed == 'false'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Trigger User Render Deploy (Prebuilt Image)
         if: needs.check-render-quota.outputs.use_github_build == 'true'
@@ -1193,7 +1233,7 @@ jobs:
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
           echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
-          PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+          PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
@@ -1224,7 +1264,7 @@ jobs:
 
           if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
             echo "🔄 Using Render API to trigger primary deploy..."
-            PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+            PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
               "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
@@ -1247,7 +1287,7 @@ jobs:
         run: |
           # বাংলা মন্তব্য (জরুরি): এই পদে শুধু User Backend (srv-d9d3n58js32c738n79k0) আইসোলেটেডভাবে ভেরিফাই হবে.
           # অন্য কোনো ব্যাকএন্ডের হেলথ চেক এখানে মেপে মিথ্যা Success দেওয়া সম্পূর্ণ নিষিদ্ধ।
-          python .github/scripts/verify-render-deploy.py --service-id srv-d9d3n58js32c738n79k0 --name "User Backend"
+          python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}" --name "User Backend"
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
@@ -1265,7 +1305,7 @@ jobs:
       needs.changes.outputs.admin_backend_changed == 'true' &&
       needs.changes.outputs.customer_backend_changed == 'false'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Trigger Admin Render Deploy (Prebuilt Image)
         if: needs.check-render-quota.outputs.use_github_build == 'true'
@@ -1273,7 +1313,7 @@ jobs:
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
           echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
@@ -1292,7 +1332,7 @@ jobs:
         run: |
           BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
           BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
           BACKUP_SUCCESS=false
 
           if [ -n "$BACKUP_HOOK" ]; then
@@ -1334,7 +1374,7 @@ jobs:
       - name: Verify Admin Backend Deploy Status
         run: |
           # বাংলা মন্তব্য (জরুরি): এই পদে শুধু Admin Backend (srv-d9fg48bh523c73f63bb0) আইসোলেটেডভাবে ভেরিফাই হবে।
-          python .github/scripts/verify-render-deploy.py --service-id srv-d9fg48bh523c73f63bb0 --name "Admin Backend"
+          python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}" --name "Admin Backend"
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
@@ -1352,7 +1392,7 @@ jobs:
       needs.changes.outputs.admin_backend_changed == 'true' &&
       needs.changes.outputs.customer_backend_changed == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Trigger Combined Render Deploy (Prebuilt Image)
         if: needs.check-render-quota.outputs.use_github_build == 'true'
@@ -1360,8 +1400,8 @@ jobs:
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
           echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
-          PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
 
           # Deploy Primary
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
@@ -1406,7 +1446,7 @@ jobs:
           PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
           BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
           BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
-          BACKUP_SVC_ID="srv-d9fg48bh523c73f63bb0"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
 
           PRIMARY_SUCCESS=false
           BACKUP_SUCCESS=false
@@ -1423,7 +1463,7 @@ jobs:
 
           if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
             echo "🔄 Using Render API to trigger primary deploy..."
-            PRIMARY_SVC_ID="srv-d9d3n58js32c738n79k0"
+            PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
               "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
@@ -1489,27 +1529,27 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: GCP Auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Authenticate Docker to GCP Artifact Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
         with:
           driver-opts: image=moby/buildkit:buildx-stable-1
 
       - name: Build & Push API Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
           context: .
           file: ./backend/Dockerfile
@@ -1522,7 +1562,9 @@ jobs:
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          INFISICAL_ENV: "prod"
           SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
           SUPABASE_DATABASE_URL_POOLER: ${{ secrets.SUPABASE_DATABASE_URL_POOLER }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -1538,8 +1580,8 @@ jobs:
     if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: '3.29.0'
           channel: 'stable'
@@ -1574,20 +1616,20 @@ jobs:
             pnpm_arch_filter: '--filter=supremeai-desktop'
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: 🦀 Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
         with:
           toolchain: stable
           target: ${{ matrix.target }}
           override: true
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
         with:
           version: 9.0.0
       - name: 📦 Set up Node.js and pnpm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -1608,7 +1650,7 @@ jobs:
         run: pnpm ${{ matrix.pnpm_arch_filter }} tauri build --target ${{ matrix.target }}
 
       - name: 📦 Upload Release Assets
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -1642,7 +1684,7 @@ jobs:
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Install pnpm
         run: npm install -g pnpm
       - name: Install Dependencies
@@ -1659,7 +1701,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
         run: pnpm --dir apps/studio-client run build:admin
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0
         continue-on-error: true
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -1679,7 +1721,7 @@ jobs:
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Install Vercel CLI & pnpm
         run: |
           npm install -g pnpm
@@ -1707,7 +1749,7 @@ jobs:
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -1772,22 +1814,46 @@ jobs:
       pull-requests: write
     steps:
       - name: 📥 Checkout Staging Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           lfs: true
           # disable persist-credentials so explicit remote PAT URL isn't overridden by default action credentials
           persist-credentials: false
 
+      - name: 🔑 Fetch Promotion Token from Infisical
+        id: fetch-token
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+        run: |
+          TOKEN=$(python -c '
+          import urllib.request, json, os
+          try:
+              project_id = os.environ.get("INFISICAL_PROJECT_ID")
+              token = os.environ.get("INFISICAL_TOKEN")
+              url = f"https://app.infisical.com/api/v3/secrets/raw/SUPREMEAI_GITHUB_TOKEN?workspaceId={project_id}&environment=prod"
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req) as resp:
+                  val = json.loads(resp.read().decode())["secret"]["secretValue"]
+                  if val: print(val)
+          except Exception:
+              pass
+          ')
+          if [ -n "$TOKEN" ]; then
+            echo "::add-mask::$TOKEN"
+            echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          fi
+
       - name: 🤖 Create or Update PR to Main Repository
         env:
-          # gh CLI uses GITHUB_TOKEN; fallback to default secrets.GITHUB_TOKEN if MAIN_REPO_TOKEN is empty
-          GITHUB_TOKEN: ${{ secrets.MAIN_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+          # Use Infisical Token, fallback to MIRROR_REPO_TOKEN, fallback to MAIN_REPO_TOKEN
+          GITHUB_TOKEN: ${{ steps.fetch-token.outputs.token || secrets.MIRROR_REPO_TOKEN || secrets.MAIN_REPO_TOKEN }}
           STAGING_HEAD: ${{ github.sha }}
         run: |
           if [ -z "$GITHUB_TOKEN" ]; then
-            echo "❌ GITHUB_TOKEN / MAIN_REPO_TOKEN secret is missing or empty."
-            echo "   Settings → Secrets and variables → Actions → MAIN_REPO_TOKEN"
+            echo "❌ GITHUB_TOKEN / MIRROR_REPO_TOKEN secret is missing or empty."
+            echo "   Settings → Secrets and variables → Actions → MIRROR_REPO_TOKEN"
             echo "   PAT scope প্রয়োজন: repo (full), workflow"
             exit 1
           fi
@@ -1796,8 +1862,8 @@ jobs:
           PR_BRANCH="promotion/staging-latest"
           TARGET_REPO="paykaribazaronline/supremeai"
 
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "SupremeAI Bot"
+          git config --global user.email "bot@supremeai.com"
           git config --global lfs.allowincompletepush true
 
           # PAT দিয়ে target remote সেট করা
@@ -1875,7 +1941,7 @@ jobs:
     # deploy-backend এর পরিবর্তে এই জবটি ব্যবহার করা হবে
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: GCP Auth
         uses: 'google-github-actions/auth@v2'
@@ -1883,7 +1949,7 @@ jobs:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -1929,7 +1995,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: 🧠 Generate Smart Pipeline Summary (Zero-Dependency)
         if: always()
         env:

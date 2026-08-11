@@ -5,7 +5,18 @@ services:
     name: supremeai-backend
     env: image
     image:
-      url: ghcr.io/paykaribazaronline/supremeai/supremeai-backend:latest
+      # বাংলা মন্তব্য: আগে এখানে ভুলভাবে nested path
+      # (ghcr.io/paykaribazaronline/supremeai/supremeai-backend) দেওয়া ছিল, যেটা
+      # CI (.github/workflows/supreme-core-ci.yml) আসলে যেখানে push করে
+      # (ghcr.io/paykaribazaronline/supremeai-backend — flat path, admin ও
+      # background-worker service দুটোতেই একই path ব্যবহৃত হয়) তার সাথে মেলে না।
+      # সাধারণত CI প্রতিটা deploy-তে Render API-কে সরাসরি sha-ট্যাগড image দিয়ে
+      # override করে বলেই এটা এতদিন চোখে পড়েনি, কিন্তু blueprint sync / manual
+      # redeploy / fresh environment তৈরির সময় Render এই ভুল path থেকে ইমেজ
+      # টানার চেষ্টা করবে, যেটা exist করে না — ফলে backend deploy fail করে
+      # frontend connect করতে ব্যর্থ হবে। এখানে flat path-এ ঠিক করা হলো, বাকি
+      # দুই সার্ভিসের সাথে সামঞ্জস্যপূর্ণ।
+      url: ghcr.io/paykaribazaronline/supremeai-backend:latest
     region: singapore
     plan: free
     healthCheckPath: /health
@@ -38,11 +49,11 @@ services:
         sync: false
       - key: SUPREMEAI_ADMIN_PASSWORD_HASH
         sync: false
-      - key: SUPREMEAI_ENCRYPTION_KEY
+      - key: ENCRYPTION_KEY
         sync: false
       - key: SUPREMEAI_DOCS_PASSWORD
         sync: false
-      - key: SUPREMEAI_API_TOKEN
+      - key: SUPREMEAI_API_KEY
         sync: false
       - key: STRIPE_API_KEY
         sync: false
@@ -66,6 +77,8 @@ services:
       # বাংলা মন্তব্য: CI_WEBHOOK_SECRET production fail-fast (config.py line 924-935) প্রয়োজন।
       # admin service-এ এটি declared ছিল না, user-এ sync:false ছিল — সুসংগত করা হলো।
       - key: CI_WEBHOOK_SECRET
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: ADMIN_CORS_ORIGINS
         value: '[]'
@@ -116,11 +129,11 @@ services:
         sync: false
       - key: SUPREMEAI_ADMIN_PASSWORD_HASH
         sync: false
-      - key: SUPREMEAI_ENCRYPTION_KEY
+      - key: ENCRYPTION_KEY
         sync: false
       - key: SUPREMEAI_DOCS_PASSWORD
         sync: false
-      - key: SUPREMEAI_API_TOKEN
+      - key: SUPREMEAI_API_KEY
         sync: false
       - key: DISCORD_OTP_WEBHOOK_URL
         sync: false
@@ -131,6 +144,8 @@ services:
       - key: INFISICAL_TOKEN
         sync: false
       - key: INFISICAL_CLIENT_SECRET
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       # বাংলা মন্তব্য: শুধমাত্র অ্যাডমিন কনসোল origin — Vercel/Netlify user client নয়
       - key: ADMIN_CORS_ORIGINS

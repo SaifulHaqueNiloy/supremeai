@@ -25,6 +25,12 @@ def vault_production():
                 v.env = "production"
                 v.client = mock_client
                 v._cache = {}
+                # বাংলা মন্তব্য: __init__ পুরোপুরি no-op patch করা হয়েছে বলে
+                # circuit-breaker state (_circuit_breaker_open) নিজে থেকে সেট
+                # হয় না -- fetch_secret() এটা প্রথমেই চেক করে, না থাকলে
+                # AttributeError দেয়। এখানে বাস্তব __init__-এর ডিফল্টের মতোই
+                # explicit False সেট করা হলো।
+                v._circuit_breaker_open = False
                 yield v
 
 
@@ -79,6 +85,11 @@ def test_production_mode_missing_client_and_project(monkeypatch, vault_productio
     v.client = None
     v.project_id = None
     v._cache = {}
+    # বাংলা মন্তব্য: vault_production fixture-এর patch.object(__init__, no-op)
+    # এই টেস্টের পুরো সময় জুড়ে সক্রিয় থাকে (yield-এর কারণে), তাই এই নতুন
+    # instance-টাও real __init__ পায় না -- _circuit_breaker_open ম্যানুয়ালি
+    # সেট করতে হবে, নাহলে fetch_secret() AttributeError দেবে।
+    v._circuit_breaker_open = False
     import pytest
 
     with pytest.raises(RuntimeError):
