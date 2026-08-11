@@ -54,9 +54,12 @@ class TestNATSClientInit:
     """বাংলা মন্তব্য: Initialization টেস্ট।"""
 
     def test_default_initialization(self):
-        client = NATSClient()
+        with patch.dict("os.environ", {}, clear=True):
+            client = NATSClient()
         assert client.url == "nats://localhost:4222"
-        assert client.token == "super_secret_token"
+        # বাংলা মন্তব্য: আগে এখানে হার্ডকোডেড "super_secret_token" ডিফল্ট ছিল
+        # (security bug) — এখন NATS_TOKEN env var না থাকলে token None হয়।
+        assert client.token is None
         assert client.nc is None
         assert client.js is None
         assert client.kv_store is None
