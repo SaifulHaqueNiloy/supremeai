@@ -170,14 +170,15 @@ class AuthMiddleware:
 
         path = scope.get("path", "")
 
-        if _is_public_path(path) or (is_test_environment() and settings.allow_test_auth_bypass):
+        if _is_public_path(path) or (is_test_environment() and settings.is_bypass_allowed):
             await self.app(scope, receive, send)
             return
 
         headers: Headers = scope.get("headers", [])
         token = _get_bearer_token(headers) or _get_token_from_query(scope)
 
-        allow_bypass = getattr(settings, "allow_test_auth_bypass", False)
+        # বাংলা: is_bypass_allowed production guard সহ check করে (ENV=production → always False)
+        allow_bypass = settings.is_bypass_allowed
         if not isinstance(allow_bypass, bool):
             allow_bypass = False
         is_test_auth_bypassed = allow_bypass and is_test_environment()

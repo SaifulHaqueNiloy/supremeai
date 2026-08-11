@@ -94,10 +94,28 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True)
 
     # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে AuthMiddleware-এর JWT ভেরিফিকেশন বাইপাস করার জন্য
-    # CI workflow-এ ALLOW_TEST_AUTH_BYPASS=true সেট করা হয়। Production-এ এটি কখনো true হবে না।
-    # auth_middleware.py:139 এই field চেক করে।
+    # বাংলা: CI pytest-এ ALLOW_TEST_AUTH_BYPASS=true সেট করা হয় — শুধু তখনই।
+    # Production guard: ENV=production হলে এই field সবসময় False থাকবে।
+    # auth_middleware.py এবং origin_validator.py এই field চেক করে।
     allow_test_auth_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_AUTH_BYPASS")
     allow_test_origin_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS")
+
+    @property
+    def is_bypass_allowed(self) -> bool:
+        """বাংলা: Production-এ bypass সম্পূর্ণ নিষিদ্ধ — ENV নির্বিশেষে।
+        শুধু test/ci/staging environment-এই bypass কাজ করবে।"""
+        env = (self.environment or "").lower()
+        if env in ("production", "prod"):
+            return False  # Production-এ সর্বদা False — hardcoded guard
+        return self.allow_test_auth_bypass
+
+    @property
+    def is_origin_bypass_allowed(self) -> bool:
+        """বাংলা: Production-এ origin bypass সম্পূর্ণ নিষিদ্ধ।"""
+        env = (self.environment or "").lower()
+        if env in ("production", "prod"):
+            return False
+        return self.allow_test_origin_bypass
 
     PROJECT_NAME: str = "SupremeAI 2.0"
     API_V1_STR: str = "/api/v1"
@@ -647,7 +665,7 @@ class Settings(BaseSettings):
             or os.getenv("CI", "").lower() in ("true", "1")
             or os.getenv("GITHUB_ACTIONS", "").lower() in ("true", "1")
             or os.getenv("ALLOW_TEST_ORIGIN_BYPASS", "").lower() in ("true", "1")
-            or getattr(self, "allow_test_origin_bypass", False)
+            or self.is_origin_bypass_allowed
             or self.env in ("test", "testing", "local")
         )
 
