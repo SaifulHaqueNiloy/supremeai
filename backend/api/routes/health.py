@@ -9,7 +9,6 @@ import time
 from datetime import UTC, datetime
 
 from fastapi import APIRouter
-from loguru import logger
 from pydantic import BaseModel
 
 from core.cache.redis_manager import redis_manager
@@ -39,20 +38,10 @@ async def health_check(request: Request, response: Response):
     db_pool = getattr(request.app.state, "db_pool", None)
     if db_pool is not None:
         try:
-            # বাংলা: db_pool.acquire() একটি plain coroutine রিটার্ন করে (async context
-            # manager নয়) — এটিকে সরাসরি `async with` দিয়ে ব্যবহার করলে
-            # `__aenter__` না থাকায় AttributeError হয় এবং coroutine 'never awaited'
-            # warning তৈরি হয়, ফলে health check প্রতিবার 503 দিত (Render deploy
-            # verification ব্যর্থ হওয়ার মূল কারণ)। PgBouncerConnectionPool-এর
-            # @asynccontextmanager-সজ্জিত `.connection()` মেথড এখানে ব্যবহার করা হলো,
-            # যা acquire+release উভয়ই নিরাপদভাবে হ্যান্ডেল করে।
-            async with db_pool.connection() as conn:
+            async with db_pool.acquire() as conn:
                 await conn.execute("SELECT 1")
             subsystems["db"] = "up"
-        except Exception as e:
-            # বাংলা: debug লেভেলে লগ করা হচ্ছে (warning না) যাতে ঘন ঘন health-check
-            # poll-এ log spam না হয়, কিন্তু কারণ ট্রেস করার সুযোগ থাকে
-            logger.debug(f"DB health check failed: {e}")
+        except Exception:
             subsystems["db"] = "down"
     elif subsystems.get("db") != "down":
         subsystems["db"] = "sqlite"
@@ -61,25 +50,23 @@ async def health_check(request: Request, response: Response):
     if subsystems.get("redis") == "up":
         try:
             await redis_manager.client.ping()
-        except Exception as e:
-            logger.debug(f"Redis health check failed: {e}")
-    # বাংলা মন্তব্য: Redis হলো optional/fallback cache layer — এটি down থাকলেও সিস্টেম সচল থাকে।
-    # Render infrastructure probe যেন 503 পেয়ে কন্টেইনার ফেল না করে, সেজন্য শুধু DB down হলেই 503 দেওয়া হবে।
-    has_critical_failure = subsystems.get("db") == "down"
+        except Exception:
+            subsystems["redis"] = "down"
+
+    has_critical_failure = any(subsystems.get(k) == "down" for k in ["db", "redis"])
 
     if has_critical_failure:
         response.status_code = 503
         return {
-            "status": "unhealthy",
+            "status": "degraded",
             "service": "supremeai-backend",
             "version": "2.0",
             "timestamp": _timestamp(),
             "subsystems": subsystems,
         }
 
-    is_degraded = any(subsystems.get(k) == "down" for k in ["redis"])
     return {
-        "status": "degraded" if is_degraded else "ok",
+        "status": "ok",
         "service": "supremeai-backend",
         "version": "2.0",
         "timestamp": _timestamp(),

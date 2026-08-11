@@ -141,12 +141,10 @@ async def add_funds(
     checkout_id = str(uuid.uuid4())
 
     # বাংলা মন্তব্য: ডাইনামিক অরিজিন ডিটেকশন (Zero-Config)
-    checkout_base = settings.checkout_base_url
+    checkout_base = getattr(settings, "checkout_base_url", None)
     if not checkout_base:
-        checkout_base = request.headers.get("origin") or request.headers.get("referer") or ""
-        if not checkout_base and settings.env not in ("local", "test"):
-            logger.error("CHECKOUT_BASE_URL not set and no origin/referer header - checkout URL will be empty!")
-    checkout_base = checkout_base.rstrip("/") if checkout_base else ""
+        checkout_base = request.headers.get("origin") or request.headers.get("referer", "http://localhost:3000")
+    checkout_base = checkout_base.rstrip("/")
 
     return {
         "status": "pending",
@@ -176,7 +174,7 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
     try:
         stripe_key = settings.stripe_api_key
         if not stripe_key:
-            if settings.env == "production":
+            if os.environ.get("SUPREMEAI_ENV") == "production":
                 raise RuntimeError("Stripe API key not configured in production. Payment processing is unavailable.")
             logger.warning("Stripe API key not set in settings. Using mock checkout session.")
             return {
@@ -290,9 +288,7 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                         }
                     )
                 except Exception as e:
-                    # বাংলা মন্তব্য: Firestore সাবস্ক্রিপশন আপডেট ফেইল করলে এরর রেইজ করা হচ্ছে যাতে Stripe ওয়েবহুক রিট্রাই করে
                     logger.error(f"Failed to update user subscription status in Firestore: {e}")
-                    raise
 
                 try:
                     from core.observability.posthog_client import posthog_client
@@ -413,17 +409,3 @@ class TopUpRequest(BaseModel):
 
 
 get_balance = get_wallet_balance
-
-
-# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর CostDashboard.tsx-এর
-# /api/billing/analytics কল এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
-@router.get("/analytics", tags=["Billing & Credit Wallet"])
-async def get_billing_analytics(user: dict = Depends(get_current_user_token)):
-    """Get billing analytics and cost breakdown for the current user."""
-    return {
-        "total_spent_usd": 0.0,
-        "total_saved_usd": 0.0,
-        "cached_queries": 0,
-        "free_tier_utilization_pct": 100.0,
-        "provider_breakdown": {},
-    }

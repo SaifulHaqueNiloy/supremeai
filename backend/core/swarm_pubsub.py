@@ -1,4 +1,3 @@
-from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """This module provides a robust, Redis-backed Publish/Subscribe (PubSub) system, `SwarmPubSub`, designed to facilitate real-time event streaming and communication across the SupremeAI ecosystem. It offers a multi-worker safe mechanism for broadcasting and subscribing to a central "swarm_stream" channel, ensuring scalable and decoupled event propagation, with lazy Redis client initialization and comprehensive error handling integrated with the project's central event bus.
@@ -24,7 +23,8 @@ from collections.abc import AsyncGenerator
 import redis.asyncio as aioredis  # type: ignore[import-untyped]
 from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 
 # বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।
 # RedisURL এখন settings থেকে আসে, hardcode নয়।
@@ -59,7 +59,6 @@ class SwarmPubSub:
         self._redis = aioredis.from_url(url)
         return self._redis
 
-    @with_error_bus("subscribe")
     async def subscribe(self) -> AsyncGenerator[str, None]:
         """বাংলা মন্তব্য: নতুন ক্লায়েন্টের জন্য Redis চ্যানেল সাবস্ক্রাইব করবে (Multi-Worker Safe)।"""
         try:
@@ -118,7 +117,6 @@ class SwarmPubSub:
             )
             raise
 
-    @with_error_bus("set_halt")
     async def set_halt(self, reason: str = "manual_emergency_stop") -> None:
         """বাংলা মন্তব্য: গ্লোবাল ইমার্জেন্সি-স্টপ ফ্ল্যাগ সেট করে (Redis-backed, multi-worker safe)।
         মোবাইল অ্যাপের 'Hold to Kill' বাটন থেকে আসা একমাত্র সত্যিকারের হল্ট সিগন্যাল —
@@ -149,7 +147,6 @@ class SwarmPubSub:
             logger.error(f"SwarmPubSub: failed to clear halt flag: {e}")
             raise
 
-    @with_error_bus("is_halted")
     async def is_halted(self) -> bool:
         """বাংলা মন্তব্য: এক্সিকিউশন লুপে চেক করার জন্য — গ্লোবাল হল্ট চালু আছে কিনা।
         Redis সাময়িকভাবে আনরিচেবল হলে fail-open (halted=False) থাকবে, কারণ একটি
@@ -173,7 +170,6 @@ class SwarmPubSub:
             )
             return False
 
-    @with_error_bus("broadcast")
     async def broadcast(self, event_type: str, payload: dict):
         """বাংলা মন্তব্য: সকল অ্যাক্টিভ ক্লায়েন্টকে Redis চ্যানেলে ডেটা পুশ করবে।"""
         try:

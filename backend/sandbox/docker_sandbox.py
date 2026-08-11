@@ -107,12 +107,7 @@ class DockerSandbox:
         """
         হোস্টের আইসোলেটেড ফাইলকে কন্টেইনারের ভেতর Read-Only মাউন্ট করে
         নিরাপদে পাইথন স্ক্রিপ্ট এক্সিকিউট করে এবং আউটপুট রিটার্ন করে।
-
-        Security: Script-কে সরাসরি `-c` argument-এ পাস না করে temp file-এ লিখে
-        read-only mount করা হয় — command injection প্রতিরোধ।
         """
-        import tempfile
-
         script = payload.get("script", "")
         bind_source = payload.get("bind_mount_source", "")
         bind_target = payload.get("bind_mount_target", "")
@@ -134,67 +129,49 @@ class DockerSandbox:
                 "stderr": "Invalid bind mount path detected.",
             }
 
-        # 🔒 Security Fix: Script-কে temp file-এ লিখে read-only mount করা হয়
-        # যাতে command injection (shell metacharacters) প্রতিরোধ হয়।
-        script_path = None
+        docker_command = [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "-v",
+            f"{bind_source}:{bind_target}:ro",
+            self.image_name,
+            "python3",
+            "-c",
+            script,
+        ]
+
         try:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as f:
-                f.write(script)
-                script_path = f.name
+            logger.info(f"⚡ Spawning Docker Sandbox for source volume: {bind_source}")
 
-            docker_command = [
-                "docker",
-                "run",
-                "--rm",
-                "--network",
-                "none",
-                "--read-only",
-                "-v",
-                f"{script_path}:/sandbox_script.py:ro",
-                "-v",
-                f"{bind_source}:{bind_target}:ro",
-                self.image_name,
-                "python3",
-                "/sandbox_script.py",
-            ]
+            result = subprocess.run(
+                docker_command,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_seconds,
+                check=False,
+            )
 
-            try:
-                logger.info(f"⚡ Spawning Docker Sandbox for source volume: {bind_source}")
+            return {
+                "exit_code": result.returncode,
+                "stdout": result.stdout.strip(),
+                "stderr": result.stderr.strip(),
+            }
 
-                result = subprocess.run(
-                    docker_command,
-                    capture_output=True,
-                    text=True,
-                    timeout=self.timeout_seconds,
-                    check=False,
-                )
-
-                return {
-                    "exit_code": result.returncode,
-                    "stdout": result.stdout.strip(),
-                    "stderr": result.stderr.strip(),
-                }
-
-            except subprocess.TimeoutExpired:
-                logger.error(f"❌ Sandbox execution timed out after {self.timeout_seconds}s limit.")
-                return {
-                    "exit_code": 124,
-                    "stdout": "",
-                    "stderr": f"Execution barrier breached: Timeout of {self.timeout_seconds}s exceeded.",
-                }
-            except Exception as e:
-                logger.error(f"Critical exception inside Docker execution wrapper: {e!s}")
-                return {
-                    "exit_code": -1,
-                    "stdout": "",
-                    "stderr": f"Sandbox Runtime Anomaly: {e!s}",
-                }
-        finally:
-            # Cleanup temp file
-            if script_path:
-                try:
-                    import os
-
-                    os.unlink(script_path)
-                except OSError:
-                    pass
+        except subprocess.TimeoutExpired:
+            logger.error(f"❌ Sandbox execution timed out after {self.timeout_seconds}s limit.")
+            return {
+                "exit_code": 124,
+                "stdout": "",
+                "stderr": f"Execution barrier breached: Timeout of {self.timeout_seconds}s exceeded.",
+            }
+        except Exception as e:
+            logger.error(f"Critical exception inside Docker execution wrapper: {e!s}")
+            return {
+                "exit_code": -1,
+                "stdout": "",
+                "stderr": f"Sandbox Runtime Anomaly: {e!s}",
+            }

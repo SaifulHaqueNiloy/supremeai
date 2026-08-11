@@ -14,7 +14,6 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.cache.redis_manager import redis_manager
-from core.error_bus import with_error_bus
 from core.pgbouncer_pool import get_db_pool
 from core.rate_limiter import AsyncRateLimiter
 from core.resilience.circuit_breaker import CircuitBreaker
@@ -64,9 +63,9 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                     logger.warning(f"Redis cache write failed for API key: {exc}")
                 return dict(row)
         except Exception as exc:
-            # বাংলা মন্তব্য: DB আউটেজ হলে 503 ডায়াগনস্টিক সিগন্যাল দিতে Sentinel নির্দেশক অবজেক্ট রিটার্ন করা হচ্ছে
             logger.error(f"Database operation failed for API key {mask_api_key(key_hash)}: {exc}")
-            return {"_db_error": True, "_error": str(exc)}
+            # Return None to indicate failure, but we'll handle it gracefully
+            pass
 
         return None
 
@@ -78,7 +77,6 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             key_hash,
         )
 
-    @with_error_bus("dispatch")
     async def dispatch(self, request: Request, call_next: Any) -> JSONResponse:
         # বাংলা মন্তব্য: public path-এ API key lookup DB call না করে সরাসরি skip করা হচ্ছে।
         # এটি health check, docs, auth endpoint-এ অযথা DB query এড়ায়।
@@ -107,11 +105,8 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
 
         key_hash = hash_api_key(api_key_header)
         row = await self._get_cached_api_key(key_hash)
-        if row and row.get("_db_error"):
-            logger.error(f"DB outage during API key lookup: {mask_api_key(api_key_header)}")
-            return JSONResponse(status_code=503, content={"detail": "Database service temporarily unavailable"})
         if row is None:
-            logger.warning(f"Invalid API key attempt: {mask_api_key(api_key_header)}")
+            logger.warning(f"Invalid API key attempt or DB unavailable: {mask_api_key(api_key_header)}")
             return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
         if row["revoked"]:
             logger.warning(f"Revoked API key used: {row['id']}")

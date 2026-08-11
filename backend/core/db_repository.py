@@ -5,15 +5,16 @@ import re
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
+
 _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 # Custom Exception for Circuit Breaking
-class PrimaryDatabaseDownError(Exception):
+class PrimaryDatabaseDownException(Exception):
     pass
 
 
-class ServiceDegradedError(Exception):
+class ServiceDegradedException(Exception):
     pass
 
 
@@ -48,17 +49,17 @@ class SmartDataRepository:
                     return None
                 return doc.to_dict()
             else:
-                raise PrimaryDatabaseDownError("Firebase client not initialized or missing collection method")
-        except PrimaryDatabaseDownError:
+                raise PrimaryDatabaseDownException("Firebase client not initialized or missing collection method")
+        except PrimaryDatabaseDownException:
             raise
         except Exception as e:
             logging.warning(f"⚠️ Firebase unreachable ({e!s}). Retrying...")
-            raise PrimaryDatabaseDownError(str(e)) from e
+            raise PrimaryDatabaseDownException(str(e)) from e
 
     async def _fetch_from_primary(self, collection: str, doc_id: str) -> dict[str, Any] | None:
         try:
             return await self._fetch_from_primary_impl(collection, doc_id)
-        except PrimaryDatabaseDownError:
+        except PrimaryDatabaseDownException:
             raise
 
     # Tier 2: Fallback to Supabase if primary database fails
@@ -66,7 +67,7 @@ class SmartDataRepository:
         try:
             # Try to fetch from Firebase
             return await self._fetch_from_primary(table_name, doc_id)
-        except PrimaryDatabaseDownError:
+        except PrimaryDatabaseDownException:
             logging.critical("🚨 FIREBASE IS DOWN! Circuit Breaker Tripped. Falling back to Supabase.")
             try:
                 # If Supabase client has the execute API (standard Supabase-py)
@@ -85,4 +86,4 @@ class SmartDataRepository:
                     return None
             except Exception as backup_error:
                 logging.critical(f"💀 FATAL: Both databases are down! {backup_error!s}")
-                raise ServiceDegradedError("Both primary and fallback databases unavailable") from backup_error
+                raise ServiceDegradedException("Both primary and fallback databases unavailable") from backup_error

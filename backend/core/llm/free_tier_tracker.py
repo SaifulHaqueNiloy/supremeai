@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from core.error_bus import with_error_bus
-
 from ..messaging.event_bus import (
     ErrorContext,  # Fixed import path - using relative import
 )
@@ -21,7 +19,8 @@ Supports optional Redis persistence for multi-worker environments.
 
 import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 
 from loguru import logger
@@ -203,7 +202,6 @@ class ProviderBudget:
             return False
         return True
 
-    @with_error_bus("pause")
     def pause(self, seconds: float = 60.0) -> None:
         """Temporarily pause this provider (e.g. after a 429 response)."""
         self._paused_until = time.time() + seconds
@@ -286,7 +284,6 @@ class FreeTierTracker:
     async def load_from_db(self) -> None:
         import asyncio
 
-        @with_error_bus("_fetch")
         def _fetch():
             try:
                 from database.supabase_client import db

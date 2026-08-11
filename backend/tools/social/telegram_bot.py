@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """
@@ -197,7 +196,12 @@ class TelegramBotHandler:
                     icon = "✅" if r.status_code == 200 else "⚠️"
                     status_lines.append(f"{icon} {name}: `{r.status_code}`")
             except Exception as e:
-                logger.error(f"Health check failed for {name}: {e}")
+                try:
+                    import loguru
+
+                    loguru.logger.error(f"Tool execution error: {e}")
+                except Exception as e:
+                    logger.warning(f"Exception suppressed: {e}")
                 status_lines.append(f"❌ {name}: unreachable")
         await self.send_message(chat_id, "\n".join(status_lines))
 
@@ -222,7 +226,6 @@ class TelegramBotHandler:
             logger.warning("Telegram bot not configured — skipping polling.")
             return
 
-    @with_error_bus("start_webhook")
     async def start_webhook(self, webhook_url: str):
         """বাংলা মন্তব্য: while True: sleep() পোলিং লুপ বাদ দিয়ে Event-Driven Webhook মডেলে মাইগ্রেট করা হলো।"""
         if not self.bot_token:
@@ -278,9 +281,7 @@ def create_telegram_router(handler: TelegramBotHandler):
     @router.post("/webhook")
     async def telegram_webhook(request: Request):
         update = await request.json()
-        from core.utils.background_tasks import track_task
-
-        track_task(asyncio.create_task(handler.handle_update(update)))
+        asyncio.create_task(handler.handle_update(update))
         return Response(status_code=200)
 
     @router.get("/health")

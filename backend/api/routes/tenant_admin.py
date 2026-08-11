@@ -17,8 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
-from api.dependencies import get_current_admin
-from core.error_bus import with_error_bus
+from api.routes.admin import get_current_admin
 
 router = APIRouter(
     prefix="/admin/tenant-limits",
@@ -79,7 +78,6 @@ TIER_DEFAULTS: dict[str, dict[str, int]] = {
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
 
-@with_error_bus("_get_db")
 def _get_db():
     try:
         from database.supabase_client import db
@@ -140,9 +138,7 @@ async def _db_delete_tenant(tenant_id: str) -> bool:
             client.table("tenant_limits").delete().eq("tenant_id", tenant_id).execute()
             return True
         except Exception as exc:
-            # বাংলা মন্তব্য: DB ডিলিট ফেইল করলে লোকাল মেমোরি স্টোর মোছা এবং ভুয়া True রিটার্ন করা বন্ধ করা হলো
-            logger.error(f"Supabase delete failed for tenant {tenant_id}: {exc}")
-            return False
+            logger.warning(f"Supabase delete failed: {exc}")
     tenants = _local_store.setdefault("tenants", [])
     _local_store["tenants"] = [t for t in tenants if t["tenant_id"] != tenant_id]
     return True
