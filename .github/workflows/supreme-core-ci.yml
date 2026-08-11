@@ -231,7 +231,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [github-actions, vercel-frontend, cloudflare-worker, firebase-gcp, infisical-vault]
+        env: [github-actions, vercel-frontend, cloudflare-worker, firebase-gcp]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
