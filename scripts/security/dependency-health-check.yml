@@ -41,7 +41,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # package.json থেকে পাওয়া
+          node-version: '24' # package.json থেকে পাওয়া
           cache: 'pnpm'
 
       - name: Install Node.js dependencies

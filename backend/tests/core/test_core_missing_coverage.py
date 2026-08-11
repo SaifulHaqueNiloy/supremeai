@@ -22,7 +22,7 @@ def _isolate_test_env(monkeypatch):
     monkeypatch.setenv("ENV", "test")
     monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "test-secret-placeholder")
     monkeypatch.setenv("SUPREMEAI_ADMIN_PASSWORD_HASH", "")
-    monkeypatch.delenv("SUPREMEAI_ENCRYPTION_KEY", raising=False)
+    monkeypatch.delenv("ENCRYPTION_KEY", raising=False)
     yield
     return
 
@@ -553,7 +553,7 @@ class TestSecurityVaultModuleInit:
         # বাংলা মন্তব্য: নতুন STRICT_ENCRYPTION_CHECK ফ্ল্যাগ সেট করে এক্সেপশন রেইজ পাথটি টেস্ট করা হচ্ছে।
         monkeypatch.setenv("STRICT_ENCRYPTION_CHECK", "true")
         monkeypatch.delenv("ENCRYPTION_KEY", raising=False)
-        monkeypatch.delenv("SUPREMEAI_ENCRYPTION_KEY", raising=False)
+        monkeypatch.delenv("ENCRYPTION_KEY", raising=False)
 
         monkeypatch.delitem(sys.modules, "core.security_vault", raising=False)
         monkeypatch.delitem(sys.modules, "core.security.security_vault", raising=False)
@@ -959,7 +959,8 @@ class TestNATSMessagingMissingBranches:
             pytest.skip("nats module not installed")
         client = NATSClient()
         assert client.url == "nats://localhost:4222"
-        assert client.token == "super_secret_token"
+        # বাংলা মন্তব্য: token এখন NATS_TOKEN env var থেকে ডিফল্ট হিসেবে আসে
+        assert client.token == os.getenv("NATS_TOKEN")
         assert client.nc is None
         assert client.js is None
         assert client.kv_store is None

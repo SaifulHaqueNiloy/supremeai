@@ -346,13 +346,13 @@ class Settings(BaseSettings):
         "CI_WEBHOOK_SECRET",
         "SUPABASE_URL",
         "SUPABASE_KEY",
-        "SUPREMEAI_API_TOKEN",
+        "SUPREMEAI_API_KEY",
         "NEO4J_URI",
         "NEO4J_USER",
         "NEO4J_PASSWORD",
         "SUPREMEAI_ADMIN_PASSWORD_HASH",
         "SUPREMEAI_JWT_SECRET",
-        "SUPREMEAI_ENCRYPTION_KEY",
+        "ENCRYPTION_KEY",
         "STRIPE_API_KEY",
         "STRIPE_WEBHOOK_SECRET",
     ]
@@ -548,11 +548,11 @@ class Settings(BaseSettings):
         return self._get_cached_secret("SUPABASE_KEY")
 
     # ── System API Token — settings-এ মাইগ্রেট করা হলো ──────────────────────
-    # বাংলা মন্তব্য: আগে auth_middleware.py সরাসরি os.getenv("SUPREMEAI_API_TOKEN") করত।
+    # বাংলা মন্তব্য: আগে auth_middleware.py সরাসরি os.getenv("SUPREMEAI_API_KEY") করত।
     # এখন এই computed field settings-এর Single Source of Truth।
     @property
     def supremeai_api_token(self) -> str:
-        return self._get_cached_secret("SUPREMEAI_API_TOKEN")
+        return self._get_cached_secret("SUPREMEAI_API_KEY")
 
     @property
     def neo4j_uri(self) -> str:
@@ -707,7 +707,7 @@ class Settings(BaseSettings):
 
     @property
     def encryption_key(self) -> SecretStr:
-        val = self._get_cached_secret("SUPREMEAI_ENCRYPTION_KEY")
+        val = self._get_cached_secret("ENCRYPTION_KEY")
         return SecretStr(val) if val else SecretStr("")
 
     # ── Stripe Credentials — Infisical-backed ────────────────────────────────
@@ -857,7 +857,7 @@ class Settings(BaseSettings):
             if not available:
                 # বাংলা: কোনো LLM key নেই — সিস্টেম boot হবে কিন্তু সব AI feature মৃত।
                 # Silent failure রোধ করতে CRITICAL log emit করা হচ্ছে।
-                logger.critical(
+                logger.warning(
                     "🚨 BOOT-TIME ALERT: কোনো LLM API key পাওয়া যায়নি! "
                     f"Missing: {missing}. "
                     "সব AI feature কাজ করবে না। Infisical / env var চেক করুন।"
