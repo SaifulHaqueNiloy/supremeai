@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     def is_bypass_allowed(self) -> bool:
         """বাংলা: Production-এ bypass সম্পূর্ণ নিষিদ্ধ — ENV নির্বিশেষে।
         শুধু test/ci/staging environment-এই bypass কাজ করবে।"""
-        env = (self.environment or "").lower()
+        env = (self.env or "").lower()
         if env in ("production", "prod"):
             return False  # Production-এ সর্বদা False — hardcoded guard
         return self.allow_test_auth_bypass
@@ -112,7 +112,7 @@ class Settings(BaseSettings):
     @property
     def is_origin_bypass_allowed(self) -> bool:
         """বাংলা: Production-এ origin bypass সম্পূর্ণ নিষিদ্ধ।"""
-        env = (self.environment or "").lower()
+        env = (self.env or "").lower()
         if env in ("production", "prod"):
             return False
         return self.allow_test_origin_bypass
