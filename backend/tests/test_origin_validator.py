@@ -143,8 +143,17 @@ class TestTrustedOriginMiddleware:
 
         assert resp.status_code == 200
 
-    def test_cors_headers_added(self):
-        """Test CORS headers are added to response for allowed origin."""
+    def test_allowed_origin_passes_through_without_duplicate_cors_headers(self):
+        """Test an allowed origin's request passes through successfully.
+
+        বাংলা মন্তব্য: TrustedOriginMiddleware আর নিজে Access-Control-Allow-Origin
+        header যোগ করে না -- এটা এখন শুধুমাত্র app_user.py/app_admin.py-এর প্রকৃত
+        CORSMiddleware (outer)-এর দায়িত্ব। এই মিডলওয়্যারকে একা টেস্ট করার সময়
+        সেই outer CORSMiddleware উপস্থিত থাকে না, তাই এখানে header assert করা
+        ঠিক না -- বরং allowed origin-এর request block না হওয়া (200 status)
+        যাচাই করাই এই টেস্টের উদ্দেশ্য। Header-level CORS coverage
+        test_app_isolation.py-তে পুরো app স্ট্যাক দিয়ে করা হয়।
+        """
         app = FastAPI()
 
         @app.get("/api/test")
@@ -173,9 +182,8 @@ class TestTrustedOriginMiddleware:
                 },
             )
 
-            # Check CORS headers
-            assert "Access-Control-Allow-Origin" in resp.headers
-            assert resp.headers["Access-Control-Allow-Origin"] == "https://trusted.example.com"
+            assert resp.status_code == 200
+            assert resp.text == "ok"
 
     def test_blocks_malicious_host(self):
         """Test that malicious host header is blocked."""
