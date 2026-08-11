@@ -4,7 +4,7 @@ from agents.skill_librarian import SkillLibrarian
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.dependencies import get_current_admin
+from api.routes.admin import get_current_admin
 
 # 🔄 প্রিফিক্স ডুপ্লিকেশন ফিক্স (/api/api/admin... থেকে /api/admin...)
 router = APIRouter(
@@ -27,7 +27,7 @@ async def get_quarantine_queue():
     try:
         return librarian.list_quarantine_queue()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch queue: {e!s}") from e
+        raise HTTPException(status_code=500, detail=f"Failed to fetch queue: {e!s}")
 
 
 @router.post("/process")

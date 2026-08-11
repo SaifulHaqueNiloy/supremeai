@@ -14,7 +14,6 @@ from enum import Enum, StrEnum
 
 # Internal core imports
 from core.cache import get_redis_client
-from core.error_bus import with_error_bus
 from core.llm.llm_gateway import get_llm_gateway
 from core.logging import get_logger
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
@@ -153,7 +152,6 @@ class EnhancedLLMRouter:
 
         return best_provider
 
-    @with_error_bus("route_request")
     async def route_request(self, command: str, context: dict | None = None) -> RouteResult:
         """Route the request to the optimal provider based on command and context."""
         start_time = time.time()

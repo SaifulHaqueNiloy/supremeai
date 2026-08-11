@@ -494,11 +494,4 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for internet_monitor_router: {traceback.format_exc()}")
     internet_monitor_router = None
 
-__all__ = [
-    *list(_safe_imports.keys()),
-    "voice_router",
-    "websocket_voice_router",
-    "integrations_router",
-    "swarm_router",
-    "internet_monitor_router",
-]
+__all__ = [*list(_safe_imports.keys()), "voice_router", "websocket_voice_router", "integrations_router", "swarm_router", "internet_monitor_router"]

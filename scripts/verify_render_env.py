@@ -41,7 +41,7 @@ def get_required_keys(env_name: str) -> set:
     return categories.get(env_name, set())
 
 
-def fetch_render_env(service_id: str, api_key: str) -> set:
+def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
     """বাংলা: Render API থেকে service env var-এর key গুলোর set ফেরত দেয়।"""
     url = f"{RENDER_API}/services/{service_id}/env-vars?limit=100"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}"})
@@ -56,14 +56,17 @@ def fetch_render_env(service_id: str, api_key: str) -> set:
         print(f"::error::Render API unreachable: {e}")
         sys.exit(1)
 
-    keys = set()
-    # বাংলা: Render API response হতে পারে list অথবা {{envVars: [...]}} wrapper
+    # বাংলা: Render API response হতে পারে list অথবা {envVars: [...]} wrapper
+    # key → value (Render লুকানো secrets-এ value=None দেয়, কিন্তু key থাকে)
+    env_data: dict[str, str | None] = {}
     items = payload if isinstance(payload, list) else payload.get("envVars", [])
     for item in items:
-        key = item.get("key") or item.get("envVar", {}).get("key")
+        ev = item.get("envVar", item)
+        key = ev.get("key")
+        val = ev.get("value")  # manual sync secrets-এ None আসে
         if key:
-            keys.add(key)
-    return keys
+            env_data[key] = val
+    return env_data
 
 
 def main() -> int:

@@ -86,7 +86,8 @@ class SystemTopologyMapper:
         cursor = conn.cursor()
 
         # Create services table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS services (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -100,10 +101,12 @@ class SystemTopologyMapper:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
-        """)
+        """
+        )
 
         # Create data_flows table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS data_flows (
                 id TEXT PRIMARY KEY,
                 source_node_id TEXT NOT NULL,
@@ -117,10 +120,12 @@ class SystemTopologyMapper:
                 FOREIGN KEY (source_node_id) REFERENCES services(id),
                 FOREIGN KEY (target_node_id) REFERENCES services(id)
             )
-        """)
+        """
+        )
 
         # Create resource_utilization table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS resource_utilization (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 node_id TEXT NOT NULL,
@@ -131,7 +136,8 @@ class SystemTopologyMapper:
                 timestamp TEXT NOT NULL,
                 FOREIGN KEY (node_id) REFERENCES services(id)
             )
-        """)
+        """
+        )
 
         conn.commit()
         conn.close()
@@ -261,7 +267,8 @@ class SystemTopologyMapper:
             flows.append(flow_dict)
 
         # Get latest resource utilization for each node
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT ru.*, s.name as service_name
             FROM resource_utilization ru
             JOIN services s ON ru.node_id = s.id
@@ -270,7 +277,8 @@ class SystemTopologyMapper:
                 FROM resource_utilization ru2
                 WHERE ru2.node_id = ru.node_id
             )
-        """)
+        """
+        )
         utilization_rows = cursor.fetchall()
         utilization_desc = [d[0] for d in cursor.description]
         utilization = []
@@ -313,9 +321,7 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        upstream_services = [
-            dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()
-        ]
+        upstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
 
         # Find services that this service depends on (outgoing edges)
         cursor.execute(
@@ -328,9 +334,7 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        downstream_services = [
-            dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()
-        ]
+        downstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
 
         # Calculate impact scores based on flow reliability and volume
         cursor.execute(

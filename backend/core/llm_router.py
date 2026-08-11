@@ -222,7 +222,7 @@ class MoonshotProvider:
     name = Provider.MOONSHOT
 
     def __init__(self) -> None:
-        self.api_key = getattr(settings, "moonshot_api_key", "mock-key")
+        self.api_key = getattr(settings, "moonshot_api_key", "") or ""
         self.base_url = "https://api.moonshot.cn/v1"
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
@@ -279,12 +279,13 @@ class MoonshotProvider:
                         continue
 
     async def health_check(self) -> bool:
+        if not self.api_key:
+            # বাংলা: API key নেই — provider unavailable, fallback chain চলবে
+            return False
         try:
             resp = await self.client.get("/models", timeout=5.0)
             return resp.status_code == 200
         except Exception as exc:
-            # বাংলা: health probe ব্যর্থতা debug স্তরে লগ করা হয়েছে।
-            # Provider এখন unhealthy হিসেবে চিহ্নিত হবে এবং fallback chain চলবে।
             logger.debug(f"MoonshotProvider health check failed: {exc}")
             return False
 
@@ -295,7 +296,7 @@ class DeepSeekProvider:
     name = Provider.DEEPSEEK
 
     def __init__(self) -> None:
-        self.api_key = getattr(settings, "deepseek_api_key", "mock-key")
+        self.api_key = getattr(settings, "deepseek_api_key", "") or ""
         self.base_url = "https://api.deepseek.com/v1"
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
@@ -350,11 +351,12 @@ class DeepSeekProvider:
                         continue
 
     async def health_check(self) -> bool:
+        if not self.api_key:
+            return False
         try:
             resp = await self.client.get("/models", timeout=5.0)
             return resp.status_code == 200
         except Exception as exc:
-            # বাংলা: DeepSeek provider health probe ব্যর্থতা — fallback চালু হবে।
             logger.debug(f"DeepSeekProvider health check failed: {exc}")
             return False
 
@@ -365,7 +367,7 @@ class TogetherProvider:
     name = Provider.TOGETHER
 
     def __init__(self) -> None:
-        self.api_key = getattr(settings, "together_api_key", "mock-key")
+        self.api_key = getattr(settings, "together_api_key", "") or ""
         self.base_url = "https://api.together.xyz/v1"
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
@@ -418,11 +420,12 @@ class TogetherProvider:
                         continue
 
     async def health_check(self) -> bool:
+        if not self.api_key:
+            return False
         try:
             resp = await self.client.get("/models", timeout=5.0)
             return resp.status_code == 200
         except Exception as exc:
-            # বাংলা: Together AI provider health probe ব্যর্থতা — fallback চালু হবে।
             logger.debug(f"TogetherProvider health check failed: {exc}")
             return False
 
@@ -691,14 +694,27 @@ class LLMRouter:
     """
 
     def __init__(self, budget: TokenBudget | None = None) -> None:
-        self.providers: dict[Provider, LLMProvider] = {
+        # বাংলা: শুধু API key আছে এমন provider-ই register হয়।
+        # কোনো specific AI missing হলে system break হয় না — fallback chain
+        # automatically পরবর্তী available provider-এ route করে।
+        # design goal: zero single-provider dependency.
+        _candidate_providers: dict[Provider, LLMProvider] = {
             Provider.MOONSHOT: MoonshotProvider(),
             Provider.DEEPSEEK: DeepSeekProvider(),
             Provider.TOGETHER: TogetherProvider(),
             Provider.GEMINI: GeminiProvider(),
             Provider.OLLAMA: OllamaProvider(),
-            Provider.HUGGINGFACE_SPACE: HuggingFaceSpaceProvider(),  # Added HuggingFace Space provider
+            Provider.HUGGINGFACE_SPACE: HuggingFaceSpaceProvider(),
         }
+        # key-less provider বাদ দেওয়া হচ্ছে — Ollama local provider-এর key নেই, সেটা রাখা হবে
+        self.providers: dict[Provider, LLMProvider] = {
+            p: prov for p, prov in _candidate_providers.items()
+            if getattr(prov, "api_key", None) or p == Provider.OLLAMA
+        }
+        if not self.providers:
+            logger.warning("llm_router_no_providers", msg="কোনো LLM provider configured নেই — সব request fail করবে!")
+        else:
+            logger.info("llm_router_providers_loaded", providers=[p.value for p in self.providers])
         self.budget = budget or TokenBudget()
         self.cache = get_redis_client()
         self.normalizer = BengaliNormalizer()

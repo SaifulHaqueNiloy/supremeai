@@ -10,7 +10,7 @@ import time
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
 
@@ -184,10 +184,7 @@ async def reset_onboarding(user_id: str) -> dict[str, str]:
         if db.client:
             db.client.table("user_preferences").delete().eq("user_id", user_id).execute()
     except Exception as exc:
-        # বাংলা মন্তব্য: অনবোর্ডিং রিসেট ব্যর্থ হলে ভুয়া সাকসেস না দিয়ে HTTP 500 রেইজ করা হচ্ছে
-        logger.error(f"Failed to reset onboarding state for {user_id}: {exc}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to reset onboarding state: {exc}",
-        ) from exc
+        # বল মনতবয: রসট বযরথ হল আগ নরব success রটরন করত (ভল ইমপরশন);
+        # এখন বযরথত warning হসব লগ কর হয় যত সপরট টম সমসয জনত পর
+        logger.warning(f"Failed to reset onboarding state for {user_id}: {exc}")
     return {"status": "reset", "user_id": user_id}

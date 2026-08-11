@@ -1,5 +1,3 @@
-from core.error_bus import with_error_bus
-
 from .messaging.event_bus import (
     ErrorContext,  # Fixed import path - using relative import
 )
@@ -23,18 +21,15 @@ from typing import Any
 from fastapi import HTTPException
 from loguru import logger
 
-from core.config import settings
-
 
 class CostGuard:
     def __init__(self, db: Any = None):
         self._db = db
         # টাস্ক রাউটারের বাজেট ট্র্যাকিংয়ের জন্য ডিফল্ট টিয়ার থ্রেশহোল্ড
-        # বাংলা মন্তব্য: Config-driven — settings থেকে override করা যায়।
         self.tier_limits = {
             "free": 0.0,
-            "economy": float(getattr(settings, "cost_tier_economy_limit", 0.02)),  # প্রতি টাস্কে সর্বোচ্চ খরচ ২ সেন্ট
-            "premium": float(getattr(settings, "cost_tier_premium_limit", 0.50)),  # প্রিমিয়াম মডেলের বাজেট গেট
+            "economy": 0.02,  # প্রতি টাস্কে সর্বোচ্চ খরচ ২ সেন্ট
+            "premium": 0.50,  # প্রিমিয়াম মডেলের বাজেট গেট
         }
 
     async def connect(self) -> "CostGuard":
@@ -50,7 +45,6 @@ class CostGuard:
             logger.error(f"🚨 [COST_GUARD_CONNECT_LEAK]: Lifespan handshake failed: {e}")
             raise
 
-    @with_error_bus("check_budget")
     async def check_budget(self, tenant_id: str, estimated_cost: float) -> bool:
         """
         Pre-flight Check:
@@ -107,7 +101,6 @@ class CostGuard:
                 pass
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
 
-    @with_error_bus("validate_budget")
     async def validate_budget(self, tenant_id: str, tier: str) -> bool:
         """
         নতুন মেthod: টাস্ক রাউটারের ৮০/১৫/৫ মাল্টি-টিয়ার ফলব্যাক চেইনের বাজেট ভ্যালিডেশনের জন্য।
@@ -162,29 +155,6 @@ class CostGuard:
         # Default daily cap strategy based on tier limit (e.g. 10x the per task limit)
         return self.tier_limits.get(tier, 0.0) * 10.0
 
-    async def is_provider_quota_exceeded(self, provider: str, daily_limit: int = 1_000_000) -> bool:
-        """
-        Rule PSI-005: Stop routing when provider daily token quota reaches 80%.
-        """
-        key = f"cost_guard:provider:{provider}:daily_tokens"
-        try:
-            from core.cache.redis_manager import redis_manager
-
-            used_raw = await redis_manager.get_cache(key)
-            used_tokens = int(used_raw) if used_raw else 0
-            threshold = daily_limit * 0.80
-            if used_tokens >= threshold:
-                logger.warning(
-                    f"⚠️ [PSI-005] Provider '{provider}' daily token quota reached 80% threshold "
-                    f"({used_tokens}/{daily_limit}). Routing stopped for this provider."
-                )
-                return True
-            return False
-        except Exception as exc:
-            logger.error(f"[CostGuard] Provider quota check error for {provider}: {exc}")
-            return False
-
-    @with_error_bus("record_spend")
     async def record_spend(self, tenant_id: str, tier: str, actual_cost: float):
         from core.cache.redis_manager import redis_manager
 

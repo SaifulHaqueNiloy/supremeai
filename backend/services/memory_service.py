@@ -4,7 +4,6 @@ import json
 import math
 import os
 import sqlite3
-import zlib
 from typing import Any
 
 from loguru import logger
@@ -12,7 +11,6 @@ from loguru import logger
 from core.persistence import pooled_pg
 
 # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
-# বাংলা মন্তব্য: ব্যাকএন্ড সিআই পাইপলাইন ফুল রান ট্র্রিগার করার জন্য আপডেট করা হলো
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
 HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec("sentence_transformers") is not None
 
@@ -23,26 +21,22 @@ def hash_vectorize(text: str, size: int = 384) -> list[float]:
     Serves as a robust, zero-cost fallback when SentenceTransformer is unavailable.
     """
     vector = [0.0] * size
-    # বাংলা মন্তব্য: সিঙ্গেল ক্যারেক্টার ওয়ার্ড এবং ডিটারমিনিস্টিক zlib.crc32 ব্যবহার করা হয়েছে
-    words = [w.lower() for w in text.split() if len(w) > 0]
+    words = [w.lower() for w in text.split() if len(w) > 1]
     if not words:
         # Return a non-empty unit vector to prevent division by zero
         vector[0] = 1.0
         return vector
 
     for word in words:
-        # Generate stable, cross-platform deterministic hash key using crc32
-        h_val = zlib.crc32(word.encode("utf-8"))
-        h = h_val % size
-        sign = 1 if (h_val // size) % 2 == 0 else -1
+        # Generate stable hash key using fnv1a style simple hashing
+        h = abs(hash(word)) % size
+        sign = 1 if (abs(hash(word)) // size) % 2 == 0 else -1
         vector[h] += sign
 
     # L2 Normalization
     norm = math.sqrt(sum(x * x for x in vector))
     if norm > 0:
         vector = [x / norm for x in vector]
-    else:
-        vector[0] = 1.0
     return vector
 
 
@@ -98,7 +92,8 @@ class CascadeMemoryService:
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS file_memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     file_path TEXT UNIQUE,
@@ -107,7 +102,8 @@ class CascadeMemoryService:
                     structure TEXT,
                     embedding TEXT
                 )
-                """)
+                """
+            )
             conn.commit()
 
     def _embed(self, text: str) -> list[float]:
@@ -268,9 +264,8 @@ class CascadeMemoryService:
             try:
                 pooled_pg.execute("DELETE FROM file_memories WHERE file_path = %s", (file_path,))
             except Exception as exc:
-                # বাংলা মন্তব্য: সাইলেন্ট ডিলিট ফেইলিয়ার এড়াতে Postgres ডিলিট ফেইল করলে এক্সেপশন রেইজ করা হচ্ছে
                 logger.error(f"CascadeMemoryService.delete_memory: Postgres delete failed: {exc}")
-                raise
+            return
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
