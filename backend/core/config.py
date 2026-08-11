@@ -52,15 +52,7 @@ import sys
 from pathlib import Path
 from typing import Annotated, Any
 
-# dotenv লাইব্রেরি না থাকলেও যেন os.environ ব্যবহারে বাধা না পড়ে, সে জন্য সেফ ইমপোর্ট ফলব্যাক রাখা হলো।
-try:
-    from dotenv import load_dotenv
-except ImportError:
-
-    def load_dotenv(*args, **kwargs):
-        pass
-
-
+from dotenv import load_dotenv
 from loguru import logger
 from pydantic import (
     Field,
@@ -110,13 +102,6 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "SupremeAI 2.0"
     API_V1_STR: str = "/api/v1"
     app_name: str = "SupremeAI 2.0"
-
-    # ── Dynamic Target Repository & Multi-Platform Configuration ─────────────
-    # বাংলা মন্তব্য: ডাইনামিক রেপো বাইন্ডিং ও মাল্টি-প্ল্যাটফর্ম অটোনোমাস কনফিগারেশন।
-    target_repo_url: str = Field(default="", validation_alias="TARGET_REPO_URL")
-    target_repo_branch: str = Field(default="main", validation_alias="TARGET_REPO_BRANCH")
-    target_repo_token: SecretStr = Field(default=SecretStr(""), validation_alias="TARGET_REPO_TOKEN")
-    workspace_base_dir: str = Field(default="storage/workspaces", validation_alias="WORKSPACE_BASE_DIR")
 
     # ── LLM Gateway & Streaming Configuration ────────────────────────────────
     LLM_CONNECT_TIMEOUT: float = Field(default=5.0, validation_alias="LLM_CONNECT_TIMEOUT")
@@ -197,7 +182,6 @@ class Settings(BaseSettings):
 
     max_prompt_tokens: int = Field(default=4_000, validation_alias="MAX_PROMPT_TOKENS")
     max_response_tokens: int = Field(default=1_500, validation_alias="MAX_RESPONSE_TOKENS")
-    jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
     max_cost_per_task: float = Field(default=0.01, validation_alias="MAX_COST_PER_TASK")
     enable_token_compression: bool = True
 
@@ -225,11 +209,6 @@ class Settings(BaseSettings):
             "/api/billing/webhook/stripe",
             "/api/billing/webhook/sslcommerz",
             "/api/v1/markdown",
-            # বাংলা মন্তব্য: অ্যাডমিন পোর্টাল safe-default কনফিগ ও preferences স্ট্রিম
-            # পাবলিক করা হলো (auth-free)। শুধু নির্দিষ্ট GET/stream পাথ — সব /api/preferences
-            # নয়, নাহলে POST write endpoint-ও অ্যাথেনটিকেশন ছাড়া চলে যাবে।
-            "/api/config/public",
-            "/api/preferences/default/stream",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )
@@ -273,6 +252,9 @@ class Settings(BaseSettings):
 
     sentry_dsn: str = Field(default="", validation_alias="SENTRY_DSN")
 
+    # বাংলা মন্তব্য: OLLAMA_URL — fail-fast, কোনো localhost fallback নেই
+    ollama_url: str = Field(default="", validation_alias="OLLAMA_URL")
+
     gcp_project_id: str = Field(default="", validation_alias="GCP_PROJECT_ID")
     gcp_region: str = Field(default="us-central1", validation_alias="GCP_REGION")
 
@@ -302,10 +284,6 @@ class Settings(BaseSettings):
     # বাংলা মন্তব্য: আগে llm_gateway.py-এ `estimated_cost = tokens * 0.00001` hardcoded ছিল।
     # এখন এই factor settings থেকে নিয়ন্ত্রিত হয় যা runtime-এ override করা যাবে।
     llm_cost_per_token: float = Field(default=0.00001, validation_alias="LLM_COST_PER_TOKEN")
-
-    # বাংলা মন্তব্য: CostGuard-এর tier limits — env থেকে override করা যাবে।
-    cost_tier_economy_limit: float = Field(default=0.02, validation_alias="COST_TIER_ECONOMY_LIMIT")
-    cost_tier_premium_limit: float = Field(default=0.50, validation_alias="COST_TIER_PREMIUM_LIMIT")
 
     # ── Task Queue Config — env-driven ──────────────────────────────────────
     # বাংলা মন্তব্য: task_queue_enhanced.py-এ TTL এবং backend priority এখন config-driven।
@@ -359,9 +337,6 @@ class Settings(BaseSettings):
         "SUPREMEAI_ENCRYPTION_KEY",
         "STRIPE_API_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "FRONTEND_BASE_URL",
-        "CHECKOUT_BASE_URL",
-        "OLLAMA_URL",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -379,12 +354,13 @@ class Settings(BaseSettings):
                 # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
                 # RuntimeError throw হবে না, বরং empty string return হবে।
                 # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
-                val = secret_vault.fetch_secret(secret_key, default="")
+                val = secret_vault.fetch_secret(secret_key)
                 if val:
                     self._cached_secrets[secret_key] = val
             except Exception as _secret_err:
-                # বাংলা মন্তব্য: সিক্রেট ভল্ট থেকে কী লোড ফেইল করলে কভার-আপ এড়াতে WARNING লেভেলে স্পষ্ট লগ দেওয়া হচ্ছে
-                logger.warning(f"Secret {secret_key} not available during batch load: {_secret_err}")
+                # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
+                # যদি কোনো optional secret missing থাকে, server startup block হবে না।
+                logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
         self._secrets_batch_loaded = True
 
     def _get_cached_secret(self, key: str) -> str:
@@ -395,12 +371,9 @@ class Settings(BaseSettings):
         Returns empty string as fallback to avoid crashes, but the caller should
         check for empty strings where critical.
 
-        বাংলা মন্তব্য: os.getenv(key) যদি os.environ-এ উপস্থিত থাকে তবে সরাসরি রিটার্ন করে (ইউনিট টেস্ট মকিংয়ের জন্য)।
+        বাংলা মন্তব্য: ব্যাচ লোড করা ক্যাশ থেকে সিক্রেট রিটার্ন করে।
+        প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
         """
-        env_val = os.getenv(key)
-        if env_val is not None:
-            return env_val
-
         self._ensure_secrets_loaded()
         if key not in self._cached_secrets:
             if is_test_environment():
@@ -422,10 +395,7 @@ class Settings(BaseSettings):
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
             url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
-        except Exception as e:
-            # বাংলা: এই সিক্রেট fetch ব্যর্থ হলে OTP alert silently বন্ধ হয়ে যায় —
-            # সেটা invisible না থেকে অন্তত ওয়ার্নিং লগ হওয়া উচিত
-            logger.warning(f"Failed to fetch DISCORD_OTP_WEBHOOK_URL secret: {e}")
+        except Exception:
             url = ""
         return SecretStr(url) if url else None
 
@@ -532,10 +502,7 @@ class Settings(BaseSettings):
     def discord_bot_token(self) -> str:
         try:
             return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
-        except Exception as e:
-            # বাংলা: টোকেন fetch ব্যর্থ হলে Discord bot silently অকার্যকর হয়ে যায় —
-            # কারণটি লগ করা হচ্ছে যাতে debug করা সহজ হয়
-            logger.warning(f"Failed to fetch DISCORD_BOT_TOKEN secret: {e}")
+        except Exception:
             return ""
 
     @property
@@ -571,10 +538,7 @@ class Settings(BaseSettings):
 
     @property
     def neo4j_uri(self) -> str:
-        uri = self._get_cached_secret("NEO4J_URI")
-        if not uri and self.env not in ("local", "test") and "pytest" not in sys.modules:
-            logger.warning("NEO4J_URI not configured — GraphService will run in dry-run mode.")
-        return uri
+        return self._get_cached_secret("NEO4J_URI") or "bolt://localhost:7687"
 
     @property
     def neo4j_user(self) -> str:
@@ -583,27 +547,6 @@ class Settings(BaseSettings):
     @property
     def neo4j_password(self) -> str:
         return self._get_cached_secret("NEO4J_PASSWORD") or ""
-
-    @property
-    def frontend_base_url(self) -> str:
-        """বাংলা: OAuth/Integration রিডাইরেক্টের জন্য ফ্রন্টএন্ড বেস URL।"""
-        url = self._get_cached_secret("FRONTEND_BASE_URL")
-        if not url and not is_test_environment() and self.env not in ("local", "test"):
-            logger.warning("FRONTEND_BASE_URL not set in production — OAuth redirects may fail!")
-        return url
-
-    @property
-    def checkout_base_url(self) -> str:
-        """বাংলা: পেমেন্ট চেকআউট রিডাইরেক্টের জন্য বেস URL।"""
-        url = self._get_cached_secret("CHECKOUT_BASE_URL")
-        if not url and not is_test_environment() and self.env not in ("local", "test"):
-            logger.warning("CHECKOUT_BASE_URL not set — payment checkout URLs may be incorrect!")
-        return url
-
-    @property
-    def ollama_url(self) -> str:
-        """বাংলা: Ollama URL।"""
-        return self._get_cached_secret("OLLAMA_URL")
 
     # ── Admin Password Hash — Infisical-backed lazy property ────────────────
     # বাংলা মন্তব্য: Pydantic Field(validation_alias=...) সরাসরি OS env var থেকে পড়ে, যা Infisical
@@ -699,33 +642,46 @@ class Settings(BaseSettings):
             ]
 
         # বাংলা মন্তব্য: টেস্ট ও CI এনভায়রনমেন্ট সনাক্তকরণ
+        is_test_or_ci = (
+            "pytest" in sys.modules
+            or os.getenv("CI", "").lower() in ("true", "1")
+            or os.getenv("GITHUB_ACTIONS", "").lower() in ("true", "1")
+            or os.getenv("ALLOW_TEST_ORIGIN_BYPASS", "").lower() in ("true", "1")
+            or getattr(self, "allow_test_origin_bypass", False)
+            or self.env in ("test", "testing", "local")
+        )
+
         if self.env in ("production", "staging"):
             # Explicitly define allowed production domains
             allowed_production_origins = {
                 "https://supremeai.com",
                 "https://app.supremeai.com",
                 "https://admin.supremeai.com",
-                "https://supremeai-admin.web.app",
-                "https://supremeai-studio.vercel.app",
-                "https://supremeai-backend.onrender.com",
-                "https://supremeai-admin.onrender.com",
             }
 
+            # Validate against allowed origins - allow localhost for development even in production mode
             validated_origins = []
             for origin in origins:
-                clean_origin = origin.rstrip("/")
                 if (
-                    clean_origin in allowed_production_origins
-                    or clean_origin.endswith(".vercel.app")
-                    or clean_origin.endswith(".onrender.com")
+                    origin in allowed_production_origins
+                    or "localhost" in origin
+                    or "127.0.0.1" in origin
+                    or is_test_or_ci
                 ):
-                    validated_origins.append(clean_origin)
+                    validated_origins.append(origin)
                 else:
                     logger.warning(f"Disallowed CORS origin: {origin}")
 
             if not validated_origins:
-                # If no explicit match, fallback to env provided origins or default allowed set
-                validated_origins = list(allowed_production_origins)
+                if is_test_or_ci:
+                    return (
+                        origins
+                        if origins
+                        else ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
+                    )
+                raise RuntimeError(
+                    "No valid CORS origins provided. " "Must be one of: " + ", ".join(allowed_production_origins)
+                )
 
             return validated_origins
 
@@ -908,9 +864,6 @@ class Settings(BaseSettings):
                 logger.warning("⚠️ Stripe webhook secret missing in production/staging. Webhook validation disabled.")
 
         # Production completeness / degraded mode allowed
-        # বাংলা মন্তব্য: প্রোডাকশন বা ক্লাউড এনভায়রনমেন্টে কোনো LLM API Key (যেমন OPENROUTER_API_KEY, GEMINI_API_KEY, GROQ_API_KEY)
-        # সেট করা না থাকলেও সার্ভার ক্র্যাশ করানো যাবে না। সিস্টেম শুধুমাত্র একটি সতর্কবার্তা (Warning) লগ করবে
-        # এবং জিরো-কস্ট ডিক্রেডেড ফলব্যাক মোডে ড্যাশবোর্ড ও হেলথচেকসহ সকল সার্ভিস সচল রাখবে।
         if self.env == "production":
             missing = []
             if not self.openrouter_api_key:
@@ -921,19 +874,22 @@ class Settings(BaseSettings):
                 missing.append("CI_WEBHOOK_SECRET")
             if missing:
                 logger.warning(
-                    f"⚠️ [Degraded Zero-Cost Mode Active] প্রোডাকশনে ঐচ্ছিক কনফিগ ভেরিয়েবল অনুপস্থিত: {', '.join(missing)}। এটি কোনো ত্রুটি বা এরর নয়, সিস্টেম অটোমেটিক লকাল ফলব্যাকে কাজ করবে।"
+                    f"⚠️ Production missing config vars: {', '.join(missing)}. Running in degraded zero-cost mode."
                 )
 
         # General resilience guard for non-test environments
-        # বাংলা মন্তব্য: সিকিউরিটির জন্য শুধুমাত্র ক্রিপ্টোগ্রাফিক ENCRYPTION_KEY না থাকলে ক্র্যাশ করবে।
-        # কিন্তু সকল এআই এপিআই কী (LLM API Keys) এর জন্য সিস্টেম ক্র্যাশ না করে শতভাগ সার্ভার বুট রেজিলিয়েন্সি বজায় রাখবে।
         if self.env not in {"test"}:
             missing: list[str] = []
+            if not self.openrouter_api_key:
+                missing.append("OPENROUTER_API_KEY")
             if not self.encryption_key.get_secret_value():
                 missing.append("ENCRYPTION_KEY")
+            if not self.ci_webhook_secret:
+                missing.append("CI_WEBHOOK_SECRET")
             if missing:
-                logger.critical(f"🚨 FATAL: মিসিং সিকিউরিটি ভেরিয়েবল: {', '.join(missing)}। Fail-Fast প্রয়োগ করা হলো।")
-                sys.exit(1)
+                logger.warning(
+                    f"⚠️ Missing config vars: {', '.join(missing)}. Bypassing hard crash for server resilience."
+                )
         return self
 
     @field_validator(
@@ -1064,12 +1020,9 @@ class Settings(BaseSettings):
 
     @classmethod
     def set_jwt_secret(cls, value: Any, info: Any = None) -> str:
-        # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট অন্তত ৬৪ বাইট দীর্ঘ হতে হবে — কম হলে এক্সেপশন রেইজ হবে
         env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
         if not value and env == "production":
             raise ValueError("JWT secret cannot be empty in production.")
-        if value and env == "production" and len(str(value)) < 64:
-            raise ValueError("JWT secret must be at least 64 bytes long in production.")
         if not value or value is None:
             return "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         return str(value)
@@ -1081,15 +1034,7 @@ class Settings(BaseSettings):
         if self.env == "production":
             if hasattr(self, "_jwt_secret_cache"):
                 delattr(self, "_jwt_secret_cache")
-
-            # বাংলা মন্তব্য: প্রোডাকশনে JWT সিক্রেট অবশ্যই থাকতে হবে এবং অন্তত ৬৪ বাইট দীর্ঘ হতে হবে — অন্যথায় সিকিউরিটি ক্র্যাশ
-            secret = (
-                os.getenv("SUPREMEAI_JWT_SECRET")
-                or os.getenv("JWT_SECRET")
-                or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
-            )
-            if not secret or len(secret) < 64:
-                raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
+            _ = self.jwt_secret
 
             # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
             if not self.user_cors_origins and not self.admin_cors_origins:

@@ -73,7 +73,8 @@ class AuditLogger:
     def _init_sqlite(self):
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         with self._get_conn() as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS audit_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     action_type TEXT,
@@ -81,7 +82,8 @@ class AuditLogger:
                     reasoning TEXT,
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
             conn.commit()
 
     def _ensure_schema(self) -> bool:
@@ -120,9 +122,7 @@ class AuditLogger:
                 )
                 conn.commit()
         except Exception as e:
-            # বাংলা মন্তব্য: সিকিউরিটি গার্ড — tamper-evident অডিট ট্রেইল রাইট ফেইল করলে সাইলেন্ট না থেকে এরর রেইজ করা হচ্ছে
             logger.error(f"Failed to write to audit database: {e}")
-            raise
 
     def get_audit_trail(self) -> list:
         if self._ensure_schema():

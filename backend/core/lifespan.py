@@ -1,4 +1,3 @@
-from core.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 """This module serves as the central FastAPI application lifespan manager for the SupremeAI project, orchestrating the robust startup and graceful shutdown of all critical backend infrastructure. It handles the initialization of essential services such as database connection pools, Redis caches, global HTTP clients, OpenTelemetry tracing, the core AI Orchestrator, and various background agents, ensuring the application is fully prepared to serve requests. The module is designed with defensive programming principles, allowing the application to start in a degraded mode if certain non-critical services fail to initialize, thereby enhancing operational stability and resilience in a highly scalable AI ecosystem.
@@ -43,17 +42,20 @@ from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.config_cache import config_cache
 from core.maintenance_pipeline import maintenance_pipeline
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorEvent
+from core.messaging.event_bus import error_event_bus
 from core.metrics_collector import metrics_collector, record_db_operation
 from core.orchestration.orchestrator import Orchestrator
 from core.persistence import pooled_pg
-from core.persistence.write_behind import flush_all as flush_write_behind_batchers
-from core.pgbouncer_pool import get_db_pool, init_db_pool
+from core.persistence.write_behind import (
+    flush_all as flush_write_behind_batchers,
+)
+from core.pgbouncer_pool import get_db_pool
+from core.pgbouncer_pool import init_db_pool
 from core.reliability_controller import ReliabilityController
 from core.startup_validator import StartupValidator
 
 
-@with_error_bus("_ensure_api_key_tables")
 async def _ensure_api_key_tables() -> None:
     """Ensure API key database tables exist."""
     pool = await get_db_pool()
@@ -66,7 +68,8 @@ async def _ensure_api_key_tables() -> None:
     conn = await pool.acquire()
     try:
         async with conn.transaction():
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS api_keys (
                     id SERIAL PRIMARY KEY,
                     user_id TEXT NOT NULL,
@@ -82,8 +85,10 @@ async def _ensure_api_key_tables() -> None:
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL
                 )
-                """)
-            await conn.execute("""
+                """
+            )
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS api_key_usage (
                     id SERIAL PRIMARY KEY,
                     api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
@@ -93,8 +98,10 @@ async def _ensure_api_key_tables() -> None:
                     ip_address TEXT,
                     created_at INTEGER NOT NULL
                 )
-                """)
-            await conn.execute("""
+                """
+            )
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS api_key_events (
                     id SERIAL PRIMARY KEY,
                     api_key_id INTEGER NOT NULL REFERENCES api_keys(id),
@@ -103,7 +110,8 @@ async def _ensure_api_key_tables() -> None:
                     ip_address TEXT,
                     created_at INTEGER NOT NULL
                 )
-                """)
+                """
+            )
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
             await conn.execute("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_window INTEGER DEFAULT 60")
             await conn.execute(
@@ -168,7 +176,6 @@ async def app_lifespan(app):
     logger.info("✅ Global HTTP Connection Pool initialized [Max Cons: 200].")
 
     # Parallel Phase: DB pool, Config cache, Redis, Tracing, CostGuard
-    @with_error_bus("_init_tracing")
     async def _init_tracing() -> None:
         """Initialize OpenTelemetry tracing in a thread to avoid blocking."""
         try:
@@ -189,7 +196,6 @@ async def app_lifespan(app):
                 )
             )
 
-    @with_error_bus("_init_db_pool")
     async def _init_db_pool() -> None:
         """Initialize database connection pool and API key tables with unified connection management."""
         _db_url = settings.supabase_database_url
@@ -246,7 +252,6 @@ async def app_lifespan(app):
                     "🔥 PRODUCTION DB UNAVAILABLE — running in degraded mode. DB-dependent endpoints will return 503."
                 )
 
-    @with_error_bus("_init_config_cache")
     async def _init_config_cache() -> None:
         """Initialize system configuration cache."""
         try:
@@ -269,7 +274,6 @@ async def app_lifespan(app):
 
             config_cache._cache = dict(DEFAULT_CONFIGS)
 
-    @with_error_bus("_init_redis")
     async def _init_redis() -> None:
         """Verify Redis connection and restore reliability state."""
         try:
@@ -295,7 +299,6 @@ async def app_lifespan(app):
                     "🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail."
                 )
 
-    @with_error_bus("_init_cost_guard")
     async def _init_cost_guard() -> None:
         """Initialize CostGuard for distributed budget tracking."""
         try:
@@ -465,7 +468,6 @@ async def app_lifespan(app):
 
             _daily_learner = DailyLearner()
 
-            @with_error_bus("_daily_learner_loop")
             async def _daily_learner_loop() -> None:
                 while True:
                     try:

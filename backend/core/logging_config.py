@@ -13,11 +13,9 @@ Critical Security Note: সমস্ত লগ এখন JSON ফরম্যা
 """
 
 import json
-import os
 import sys
 import uuid
 from datetime import datetime
-from pathlib import Path
 
 from loguru import logger
 
@@ -64,20 +62,14 @@ class LoggingConfig:
 
         # Add file handler if needed (with rotation)
         if settings.env in ["production", "staging"]:
-            try:
-                log_dir = Path(os.getenv("LOG_DIR", "/tmp/logs" if os.getenv("RENDER") else "logs"))
-                log_dir.mkdir(parents=True, exist_ok=True)
-                log_file = log_dir / "app_{time}.log"
-                logger.add(
-                    str(log_file),
-                    rotation="100 MB",
-                    retention="10 days",
-                    compression="zip",
-                    serialize=True,
-                    level="INFO",
-                )
-            except Exception as exc:
-                sys.stderr.write(f"⚠️ Failed to initialize file logger sink: {exc}. Continuing with stdout logging.\n")
+            logger.add(
+                "logs/app_{time}.log",
+                rotation="100 MB",
+                retention="10 days",
+                compression="zip",
+                serialize=True,
+                level="INFO",
+            )
 
     def _json_format(self, record: dict) -> str:
         """Custom JSON formatter with correlation ID."""
@@ -86,7 +78,7 @@ class LoggingConfig:
         try:
             if hasattr(context, "exists") and context.exists():
                 correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
-        except Exception:
+        except Exception as _ctx_err:
             # বাংলা মন্তব্য: starlette_context request scope-এর বাইরে থাকলে এই exception আসে।
             # সাইলেন্ট ফেইলিউর নয় — fallback value সেট করা হচ্ছে।
             correlation_id = "N/A"

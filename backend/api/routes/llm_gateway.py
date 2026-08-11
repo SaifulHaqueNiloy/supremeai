@@ -4,30 +4,15 @@
 # import করেছিল যা কোডবেসে কখনোই ছিল না। প্রতিটি অন্য রাউটারের মতো
 # `from api.dependencies import get_current_user_token` ব্যবহার করা হচ্ছে।
 
-# বাংলা মন্তব্য: P0 STOP-THE-LINE FIX — অ্যাডমিন রুটগুলো `get_current_user_token` ব্যবহার করত,
-# যার ফলে যেকোনো authenticated user (viewer role সহ) admin endpoints-এ access পেত।
-# এখন `get_current_admin` ডিপেন্ডেন্সি যোগ করা হলো — role চেক বাধ্যতামূলক।
-
-import os
-
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
-from loguru import logger
-from pydantic import BaseModel
 
-from api.dependencies import get_current_admin, get_current_user_token
+from api.dependencies import get_current_user_token
 from core.llm.free_tier_tracker import get_tracker
 from core.llm.llm_gateway import get_llm_gateway
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 
 router = APIRouter(prefix="/llm-gateway", tags=["llm-gateway"])
-
-
-def _learning_enabled() -> bool:
-    # বাংলা মন্তব্য: ENABLE_DAILY_LEARNER flag — default OFF (safe mode)।
-    # চালু করলে learning engine embedding-similarity দিয়ে self-sufficient উত্তর দেয়,
-    # নাহলে স্ট্যান্ডার্ড stateless orchestration (প্রডাকশন স্থিতিশীল)।
-    return os.getenv("ENABLE_DAILY_LEARNER", "false").lower() in ("1", "true", "yes")
 
 
 @router.get("/health")
@@ -53,7 +38,7 @@ async def llm_gateway_health(current_user: dict = Depends(get_current_user_token
 
 
 @router.get("/admin/gateway/state")
-async def get_gateway_state(admin_user: dict = Depends(get_current_admin)):
+async def get_gateway_state(current_user: dict = Depends(get_current_user_token)):
     """Get detailed state information for all gateways."""
     gateway = get_llm_gateway()
 
@@ -77,7 +62,7 @@ async def get_gateway_state(admin_user: dict = Depends(get_current_admin)):
 
 
 @router.post("/admin/circuit-breaker/reset/{name}")
-async def reset_circuit_breaker(name: str, admin_user: dict = Depends(get_current_admin)):
+async def reset_circuit_breaker(name: str, current_user: dict = Depends(get_current_user_token)):
     """Reset a specific circuit breaker."""
     cb_manager = get_circuit_breaker_manager()
     success = cb_manager.reset_breaker(name)
@@ -93,65 +78,10 @@ async def get_fallback_chain(
     task_type: str = "chat",
     model: str | None = None,
     provider: str | None = None,
-    admin_user: dict = Depends(get_current_admin),
+    current_user: dict = Depends(get_current_user_token),
 ):
     """Get the current fallback chain for a given task type."""
     gateway = get_llm_gateway()
     call_chain = gateway._build_call_chain(model, provider, task_type)
 
     return {"task_type": task_type, "fallback_chain": call_chain, "chain_length": len(call_chain)}
-
-
-class CompletionRequest(BaseModel):
-    """Chat completion request that can route through the learning engine."""
-
-    model: str = "gpt-4o"
-    messages: list[dict] = []
-    task_type: str = "general"
-    max_tokens: int = 1000
-    temperature: float = 0.7
-
-
-@router.post("/completion")
-async def completion(
-    req: CompletionRequest,
-    current_user: dict = Depends(get_current_user_token),
-):
-    """Unified chat completion.
-
-    বাংলা মন্তব্য: ENABLE_DAILY_LEARNER=true হলে LLMGatewayWithLearning দিয়ে চলে —
-    যেটা embedding similarity দিয়ে self-sufficient উত্তর দিতে পারে এবং শেখে।
-    Flag বন্ধ থাকলে স্ট্যান্ডার্ড LLMRouter.async_generate (safe fallback) ব্যবহার হয়।
-    দুই ক্ষেত্রেই যেকোনো এরর হলে স্ট্যান্ডার্ড পাথে ফলব্যাক করে — প্রডাকশন ঝুঁকিমুক্ত।
-    """
-    user_query = req.messages[-1].get("content", "") if req.messages else ""
-
-    if _learning_enabled():
-        try:
-            from core.llm.llm_gateway_with_learning import LLMGatewayWithLearning
-
-            gateway = LLMGatewayWithLearning(min_confidence=0.75, learning_enabled=True)
-            response = await gateway.acompletion(
-                model=req.model,
-                messages=req.messages,
-                task_type=req.task_type,
-                max_tokens=req.max_tokens,
-                temperature=req.temperature,
-            )
-            return {"response": response, "source": "learning_engine"}
-        except Exception as exc:  # safe fallback to standard path
-            logger.warning(f"Learning gateway failed, falling back to standard router: {exc}")
-
-    # STANDARD PATH (safe fallback / flag off)
-    from core.llm_router import LLMRouter
-
-    router = LLMRouter()
-    gen = await router.async_generate(
-        prompt=user_query,
-        task_type=req.task_type,
-        max_tokens=req.max_tokens,
-        temperature=req.temperature,
-        model_override=req.model,
-    )
-    text = gen.get("text", "") if isinstance(gen, dict) else str(gen)
-    return {"response": text, "source": "standard"}
