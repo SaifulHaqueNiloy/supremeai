@@ -33,9 +33,11 @@ except ImportError:
 POLICY_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "env_maintenance_policy.md")
 RENDER_API = "https://api.render.com/v1"
 
-# Add scripts directory to path to import local module
 sys.path.insert(0, os.path.dirname(__file__))
 from parse_env_policy import parse_policy
+from audit_env_usage import load_registry
+
+REGISTRY_PATH = os.path.join(os.path.dirname(__file__), "..", "secrets_registry.yaml")
 
 def get_required_keys(env_name: str) -> set:
     categories = parse_policy(POLICY_PATH)
