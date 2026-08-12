@@ -17,13 +17,25 @@
 1. **Infisical Vault (Central Truth):** সমস্ত API Keys, Database URLs, Tokens, Webhook Secrets ইত্যাদি যা এনভায়রনমেন্ট ভেদে পরিবর্তন হয় না। 
 2. **Environment-Specific `.env` (Local to Service):** শুধুমাত্র সেই সব ভ্যালু যেগুলো সার্ভিস-স্পেসিফিক বা বুটস্ট্র্যাপ করার জন্য অপরিহার্য।
 
----
+## 🔒 Category 1: Infisical Vault (Shared & Scoped Secrets)
 
-## 🔒 Category 1: Infisical Vault (Shared Secrets)
+যাবতীয় API Keys, Database URLs, Tokens, Webhook Secrets ইত্যাদি Infisical-এর ১টি মাত্র কেন্দ্রীয় প্রজেক্টের ভেতরে **Folder Architecture** মেনে সংরক্ষিত থাকবে:
 
-যেসব সিক্রেট সব এনভায়রনমেন্টে (বা একাধিক এনভায়রনমেন্টে) **একই ভ্যালু** শেয়ার করে, সেগুলো শুধু Infisical-এ থাকবে। 
+```text
+SupremeAI Infisical Vault (Single Project)
+ ├── / (Root Shared Secrets: Supabase, Redis, Gemini, Stripe, JWT Secrets)
+ ├── /github-actions (CI/CD Runner Tokens, Deployment Keys)
+ ├── /render-backend (Backend Non-Bootstrap Specific Keys)
+ ├── /render-admin (Admin Non-Bootstrap Specific Keys)
+ └── /vercel-frontend (Frontend Build & Vite Keys)
+```
+
+**সুবিধা:**
+১. একটিমাত্র `INFISICAL_TOKEN` বা Machine Identity দিয়েই পুরো সিস্টেমের সার্ভারগুলো কানেক্ট থাকবে।
+২. Infisical SDK বা CLI দিয়েই Root (`/`) এবং স্পেসিফিক Folder-এর Secrets ডাইনামিক্যালি মার্চ করা সম্ভব।
 
 **✅ Infisical-এ আপলোড ও যাচাইকৃত সিক্রেটগুলোর পূর্ণাঙ্গ তালিকা (Total: 72 Verified):**
+
 - `ADMIN_AUTHORIZED`
 - `ADMIN_EMAILS`
 - `ADMIN_NOTIFICATION_EMAIL`
