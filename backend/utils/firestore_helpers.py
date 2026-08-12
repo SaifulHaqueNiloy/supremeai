@@ -77,7 +77,9 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
         sa_json_str = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
         if sa_json_str:
             import json
+
             from google.oauth2 import service_account
+
             sa_info = json.loads(sa_json_str)
             credentials = service_account.Credentials.from_service_account_info(sa_info)
 

@@ -192,7 +192,9 @@ class ModelRouter:
         if not any(_configured_providers.values()) and "pytest" not in sys.modules:
             # We don't force fallback just because pytest is running,
             # so that mocked LLMGateway can be hit during testing.
-            error_msg = "No LLM provider configured: none of gemini/openrouter/groq/deepseek/openai/hf/nvidia keys are set."
+            error_msg = (
+                "No LLM provider configured: none of gemini/openrouter/groq/deepseek/openai/hf/nvidia keys are set."
+            )
             logger.error(f"[ModelRouter] {error_msg}")
             # Track the configuration error
             await self.performance_optimizer.handle_failure(
