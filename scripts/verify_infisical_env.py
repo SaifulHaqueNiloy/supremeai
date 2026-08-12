@@ -77,20 +77,24 @@ def fetch_infisical_secrets(project_id: str, token: str, env: str = "prod") -> s
             data = json.load(resp)
             secrets = data.get("secrets", [])
             return {s.get("secretKey") for s in secrets if s.get("secretKey")}
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8", "ignore")
+        print(f"::error::Failed to fetch secrets from Infisical API (HTTP {e.code}): {err_msg}")
+        sys.exit(1)
     except Exception as e:
         print(f"::error::Failed to fetch secrets from Infisical API: {e}")
         sys.exit(1)
 
 
 def main() -> int:
-    client_id = os.environ.get("INFISICAL_CLIENT_ID")
-    client_secret = os.environ.get("INFISICAL_CLIENT_SECRET")
-    project_id = os.environ.get("INFISICAL_PROJECT_ID")
-    env = os.environ.get("INFISICAL_ENV", "prod")
+    client_id = load_env_fallback("INFISICAL_CLIENT_ID")
+    client_secret = load_env_fallback("INFISICAL_CLIENT_SECRET")
+    project_id = load_env_fallback("INFISICAL_PROJECT_ID")
+    env = load_env_fallback("INFISICAL_ENV") or "prod"
 
     if not client_id or not client_secret or not project_id:
         # Fallback to Service Token if Universal Auth is not available
-        service_token = os.environ.get("INFISICAL_TOKEN")
+        service_token = load_env_fallback("INFISICAL_TOKEN")
         if not service_token:
             print("::error::INFISICAL_CLIENT_ID/SECRET or INFISICAL_TOKEN is missing!")
             sys.exit(1)

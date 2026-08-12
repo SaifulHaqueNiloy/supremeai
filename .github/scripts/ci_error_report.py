@@ -43,6 +43,19 @@ class ErrorEntry:
     job_url: str = ""
 
 
+class HTTPRedirectWithoutAuth(urllib.request.HTTPRedirectHandler):
+    # বাংলা: GitHub API থেকে S3/Azure storage-এ রিডাইরেক্ট হওয়ার সময় Authorization হেডার রিমুভ করার জন্য custom handler
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req:
+            new_req.headers.pop("Authorization", None)
+            new_req.headers.pop("authorization", None)
+        return new_req
+
+
+log_opener = urllib.request.build_opener(HTTPRedirectWithoutAuth())
+
+
 # ─────────────────────────────────────────────
 # GitHub API Helper ফাংশন
 # ─────────────────────────────────────────────
@@ -76,7 +89,7 @@ def fetch_text(url: str, token: str) -> str:
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with log_opener.open(req, timeout=15) as resp:
             return resp.read().decode("utf-8", errors="replace")
     except (HTTPError, URLError, OSError) as e:
         print(f"[ERROR] Log fetch failed for {url}: {e}")
