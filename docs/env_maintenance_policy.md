@@ -16,6 +16,7 @@
 
 1. **Infisical Vault (Central Truth):** সমস্ত API Keys, Database URLs, Tokens, Webhook Secrets ইত্যাদি যা এনভায়রনমেন্ট ভেদে পরিবর্তন হয় না। 
 2. **Environment-Specific `.env` (Local to Service):** শুধুমাত্র সেই সব ভ্যালু যেগুলো সার্ভিস-স্পেসিফিক বা বুটস্ট্র্যাপ করার জন্য অপরিহার্য।
+3. **GitHub Actions Repo Secrets Sync:** প্রাইমারি ডেভেলপার রেপো (`SaifulHaqueNiloy/supremeai`) এবং প্রোডাকশন মীরর রেপো (`paykaribazaronline/supremeai`) উভয়েই প্রয়োজনীয় ২০টি বুটস্ট্র্যাপ ও ডিপ্লয়মেন্ট সিক্রেট (Infisical Token, Render API Key, Vercel Configs) সিঙ্ক্রোনাইজ করা আছে।
 
 ---
 
