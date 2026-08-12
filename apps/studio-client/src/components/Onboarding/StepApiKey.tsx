@@ -1,5 +1,16 @@
 
-const StepApiKey = ({ data, updateData, nextStep }: any) => {
+interface StepApiKeyData {
+  apiKey?: string;
+  [key: string]: unknown;
+}
+
+interface StepApiKeyProps {
+  data: StepApiKeyData;
+  updateData: (partial: Partial<StepApiKeyData>) => void;
+  nextStep: () => void;
+}
+
+const StepApiKey = ({ data, updateData, nextStep }: StepApiKeyProps) => {
   return (
     <div className="flex flex-col space-y-4 animate-fadeIn">
       <h3 className="text-xl font-semibold">Step 1: Connect your preferred API</h3>
