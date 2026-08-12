@@ -708,7 +708,8 @@ class LLMRouter:
         }
         # key-less provider বাদ দেওয়া হচ্ছে — Ollama local provider-এর key নেই, সেটা রাখা হবে
         self.providers: dict[Provider, LLMProvider] = {
-            p: prov for p, prov in _candidate_providers.items()
+            p: prov
+            for p, prov in _candidate_providers.items()
             if getattr(prov, "api_key", None) or p == Provider.OLLAMA
         }
         if not self.providers:

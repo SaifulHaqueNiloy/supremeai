@@ -280,9 +280,7 @@ if __name__ == "__main__":
     if status == "blocked":
         logger.info("❌ Commit blocked:", result.get("reason"))
         for issue in result.get("issues", []):
-            logger.info(
-                f"  - {issue.get('path', '?')}:{issue.get('line', '?')} -> {issue.get('body', '')}"
-            )
+            logger.info(f"  - {issue.get('path', '?')}:{issue.get('line', '?')} -> {issue.get('body', '')}")
         raise SystemExit(1)
     elif status == "fixed":
         logger.info("⚠️  Auto-fixed issues. Review and re-commit.")
