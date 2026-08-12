@@ -23,10 +23,10 @@ except ImportError:
 logger = logging.getLogger("supremeai.event_bus")
 
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ErrorSeverity(str, Enum):
+class ErrorSeverity(StrEnum):
     """
     বাংলা মন্তব্য: Error severity লেভেলের Enum।
     CRITICAL, HIGH, MEDIUM, LOW অনুযায়ী ফিল্টার এবং alert করা যায়।

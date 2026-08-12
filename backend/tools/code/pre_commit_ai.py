@@ -38,13 +38,13 @@ class PreCommitAI:
         self.isort_available = False
         self.black_available = False
         try:
-            import isort
+            import isort  # noqa: F401 -- শুধু availability probe
 
             self.isort_available = True
         except ImportError:
             logger.warning("isort is not installed. Some auto-fixes will be unavailable. Run 'pip install isort'")
         try:
-            import black
+            import black  # noqa: F401 -- শুধু availability probe
 
             self.black_available = True
         except ImportError:
