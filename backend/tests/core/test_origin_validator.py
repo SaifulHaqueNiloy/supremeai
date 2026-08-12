@@ -118,6 +118,7 @@ class TestTrustedOriginMiddleware:
             ) as mock_origins:
                 mock_origins.return_value = {"https://trusted.com"}
                 with patch("core.security.origin_validator.settings") as mock_settings:
+                    mock_settings.is_origin_bypass_allowed = False
                     mock_settings.supremeai_public_paths = ["/health"]
                     mock_settings.allowed_hosts = ["api.supremeai.com"]
                     response = await middleware.dispatch(request, app)
