@@ -43,11 +43,11 @@ except ImportError:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("autohealer")
 
-REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS", "10"))
-HEALTH_CHECK_INTERVAL = int(os.getenv("HEALTH_CHECK_INTERVAL", "30"))  # seconds
-MAX_RETRIES = int(os.getenv("AUTOHEAL_MAX_RETRIES", "3"))
-CIRCUIT_BREAKER_THRESHOLD = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD", "5"))
-CIRCUIT_BREAKER_TIMEOUT = int(os.getenv("CIRCUIT_BREAKER_TIMEOUT", "300"))  # 5 minutes
+REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS") or "10")
+HEALTH_CHECK_INTERVAL = int(os.getenv("HEALTH_CHECK_INTERVAL") or "30")  # seconds
+MAX_RETRIES = int(os.getenv("AUTOHEAL_MAX_RETRIES") or "3")
+CIRCUIT_BREAKER_THRESHOLD = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD") or "5")
+CIRCUIT_BREAKER_TIMEOUT = int(os.getenv("CIRCUIT_BREAKER_TIMEOUT") or "300")  # 5 minutes
 STATE_FILE = Path(__file__).parent / ".autohealer_state.json"
 
 RENDER_API_KEY = os.getenv("RENDER_API_KEY", "")

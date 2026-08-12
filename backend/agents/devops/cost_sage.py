@@ -55,7 +55,7 @@ logger = logging.getLogger("costsage")
 
 COST_DB_FILE = Path(__file__).parent / ".costsage_db.json"
 BUDGET_CONFIG_FILE = Path(__file__).parent / ".costsage_budget.json"
-REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS", "15"))
+REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS") or "15")
 
 DEFAULT_COST_RATES = {
     "gemini": {

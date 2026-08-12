@@ -161,7 +161,7 @@ class SkillMarketplaceCurator(BaseSkill):
         self._running = False
         self._auto_curate = os.getenv("MARKETPLACE_AUTO_CURATE", "true").lower() == "true"
         self._min_rating_threshold = float(os.getenv("MARKETPLACE_MIN_RATING", "3.0"))
-        self._review_required = int(os.getenv("MARKETPLACE_REVIEW_REQUIRED", "3"))
+        self._review_required = int(os.getenv("MARKETPLACE_REVIEW_REQUIRED") or "3")
         self._task: asyncio.Task[Any] | None = None
         self._skills_dir = Path(os.getenv("SKILLS_DIR", "backend/core/skills"))
 
