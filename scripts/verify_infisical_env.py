@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # scripts/verify_infisical_env.py
+from __future__ import annotations
+
 """
 বাংলা: Infisical Vault-এ সব প্রয়োজনীয় সিক্রেট আছে কিনা তা চেক করার স্ক্রিপ্ট।
 
@@ -18,6 +20,7 @@ import sys
 import json
 import urllib.request
 import urllib.error
+from typing import Optional, Dict, Set
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -71,7 +74,7 @@ def get_infisical_token(client_id: str, client_secret: str) -> str:
         sys.exit(1)
 
 
-def load_env_fallback(key: str) -> str | None:
+def load_env_fallback(key: str) -> Optional[str]:
     # বাংলা: os.environ-এ ভ্যালু না থাকলে local .env ফাইল থেকে পড়ার চেষ্টা করে
     val = os.environ.get(key)
     if val:
@@ -89,7 +92,7 @@ def load_env_fallback(key: str) -> str | None:
     return None
 
 
-def fetch_infisical_secrets(project_id: str | None, token: str, env: str = "prod") -> set:
+def fetch_infisical_secrets(project_id: Optional[str], token: str, env: str = "prod") -> Set[str]:
     # বাংলা: project_id থাকলে workspaceId পাঠাব, না থাকলে শুধু environment পাঠাব
     if project_id and project_id.strip():
         url = f"https://app.infisical.com/api/v3/secrets/raw?workspaceId={project_id.strip()}&environment={env}"
