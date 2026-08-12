@@ -1,5 +1,16 @@
 
-const StepFirstChat = ({ data, updateData, prevStep }: any) => {
+interface StepFirstChatData {
+  firstPrompt?: string;
+  [key: string]: unknown;
+}
+
+interface StepFirstChatProps {
+  data: StepFirstChatData;
+  updateData: (partial: Partial<StepFirstChatData>) => void;
+  prevStep: () => void;
+}
+
+const StepFirstChat = ({ data, updateData, prevStep }: StepFirstChatProps) => {
   const completeOnboarding = () => {
     // In real app, we'd send data to backend here
     console.warn("Onboarding complete:", data);

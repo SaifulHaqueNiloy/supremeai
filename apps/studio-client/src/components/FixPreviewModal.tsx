@@ -1,12 +1,24 @@
 import React from 'react';
 import { X, Check, XCircle } from 'lucide-react';
 
+interface FixData {
+  id: string | number;
+  error_type?: string;
+  impact_score?: number;
+  metadata?: {
+    original_code?: string;
+    proposed_code?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 interface FixPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
-  fix: any;
+  fix: FixData;
   loading: boolean;
 }
 

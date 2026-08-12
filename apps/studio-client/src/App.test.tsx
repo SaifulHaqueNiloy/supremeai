@@ -92,12 +92,25 @@ vi.mock('./hooks/useServerStream', () => ({
 
 // Mock InteractiveChatTab to simplify chat tab tests
 // বাংলা মন্তব্য: চ্যাট ট্যাবের মেসেজ এবং ইনপুট অ্যাকশনগুলো যাতে টেস্ট করতে সুবিধা হয়, সে জন্য mock প্রপস ওয়্যার আপ করা হলো
+interface MockChatMessage {
+  id: string | number;
+  sender: string;
+  text: string;
+}
+
+interface MockInteractiveChatTabProps {
+  messages?: MockChatMessage[];
+  input?: string;
+  onInputChange?: (value: string) => void;
+  onSend?: () => void;
+}
+
 vi.mock('./components/admin/InteractiveChatTab', () => ({
-  InteractiveChatTab: ({ messages, input, onInputChange, onSend }: any) => (
+  InteractiveChatTab: ({ messages, input, onInputChange, onSend }: MockInteractiveChatTabProps) => (
     <div>
       <div data-testid="chat-header">Chat</div>
       <div data-testid="chat-messages">
-        {messages?.map((msg: any) => (
+        {messages?.map((msg) => (
           <div key={msg.id}>
             <span>{msg.sender}</span>
             <span>{msg.text}</span>
