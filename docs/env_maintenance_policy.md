@@ -24,10 +24,11 @@
 
 যেসব সিক্রেট সব এনভায়রনমেন্টে (বা একাধিক এনভায়রনমেন্টে) **একই ভ্যালু** শেয়ার করে, সেগুলো শুধু Infisical-এ থাকবে। 
 
-**✅ Infisical-এ আপলোড করা সিক্রেটগুলোর পূর্ণাঙ্গ তালিকা (Verified):**
+**✅ Infisical-এ আপলোড ও যাচাইকৃত সিক্রেটগুলোর পূর্ণাঙ্গ তালিকা (Total: 72 Verified):**
 - `ADMIN_AUTHORIZED`
 - `ADMIN_EMAILS`
 - `ADMIN_NOTIFICATION_EMAIL`
+- `ALLOWED_HOSTS`
 - `ALLOW_TEST_AUTH_BYPASS`
 - `ALLOW_TEST_ORIGIN_BYPASS`
 - `API_KEY_SIGNING_SECRET`
@@ -36,10 +37,12 @@
 - `CI_WEBHOOK_SECRET`
 - `CLOUDFLARE_API_KEY`
 - `CLOUDFLARE_EMAIL`
+- `CORS_ORIGINS`
 - `DISCORD_OTP_WEBHOOK_URL`
 - `DISCORD_WEBHOOK_URL`
 - `DOCS_PASSWORD`
 - `ENCRYPTION_KEY`
+- `EXPERIENCE_DB_PATH`
 - `FIREBASE_SERVICE_ACCOUNT_JSON`
 - `FIRECRAWL_API_KEY`
 - `GCP_KMS_KEY_RING`
@@ -54,6 +57,7 @@
 - `JIT_OTP_SECRET`
 - `LAUNCHDARKLY_API_KEY`
 - `LOW_MEMORY_MODE`
+- `MIRROR_REPO_TOKEN`
 - `MISTRAL_API_KEY`
 - `OPENHANDS_API_KEY`
 - `OPENROUTER_API_KEY`
@@ -63,6 +67,9 @@
 - `REDIS_URL`
 - `RENDER_API_KEY`
 - `RENDER_API_KEY_BACKUP`
+- `RENDER_BACKUP_SVC_ID`
+- `RENDER_DEPLOY_HOOK_URL`
+- `RENDER_PRIMARY_SVC_ID`
 - `RESEND_API_KEY`
 - `STRIPE_API_KEY`
 - `STRIPE_PUBLISHABLE_KEY`
@@ -80,11 +87,15 @@
 - `SUPREMEAI_ADMIN_PASSWORD_HASH`
 - `SUPREMEAI_ADMIN_TOTP_SECRET`
 - `SUPREMEAI_API_KEY`
+- `SUPREMEAI_GITHUB_TOKEN`
 - `SUPREMEAI_JWT_SECRET`
 - `UPSTASH_REDIS_REST_TOKEN`
 - `UPSTASH_REDIS_REST_URL`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
 - `VERCEL_TOKEN`
 - `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_PROJECT_ID`
 - `routeme_api_key`
 
 > [!TIP]
@@ -92,11 +103,13 @@
 
 ---
 
-
-
-**❓ Missing / Pending Keys (ভ্যালু পাওয়া মাত্রই Infisical-এ অ্যাড করতে হবে):**
+**❓ Missing / Pending Keys in Infisical (ভ্যালু পাওয়া মাত্রই Infisical-এ অ্যাড করতে হবে - Total: 88):**
 - `AIDER_API_KEY`
 - `ALLOWED_TAKEOVER_TOKENS`
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+- `ANDROID_STORE_PASSWORD`
 - `ANTHROPIC_API_KEY`
 - `APP_STORE_CONNECT_API_KEY_CONTENT`
 - `APP_STORE_CONNECT_API_KEY_ID`
@@ -108,6 +121,7 @@
 - `CLINE_API_KEY`
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_WORKERS_API_TOKEN`
+- `CLOUDFLARE_ZONE_ID`
 - `CODEIUM_API_KEY`
 - `CONTINUE_API_KEY`
 - `DB_PASSWORD`
@@ -134,13 +148,13 @@
 - `LOAD_TEST_TOKEN`
 - `MINIO_ACCESS_KEY`
 - `MINIO_SECRET_KEY`
-- `MIRROR_REPO_TOKEN`
 - `MOONSHOT_API_KEY`
 - `NATS_TOKEN`
 - `NEO4J_PASSWORD`
 - `NEO4J_URI`
 - `NEO4J_USER`
 - `NETLIFY_AUTH_TOKEN`
+- `NVIDIA_API_KEY`
 - `OPENAI_API_KEY`
 - `ORACLE_CLOUD_API_KEY`
 - `PINECONE_API_KEY`
@@ -150,20 +164,34 @@
 - `R2_ACCESS_KEY`
 - `R2_SECRET_KEY`
 - `RAILWAY_TOKEN`
+- `RENDER_DEPLOY_HOOK_URL_BACKUP`
 - `SECONDARY_SERVICE_ACCOUNT_KEY`
 - `SECRET`
 - `SECRET_BACKEND`
 - `SECRET_CACHE_TTL`
+- `SENDGRID_API_KEY`
 - `SENTRY_AUTH_TOKEN`
 - `SLACK_BOT_TOKEN`
+- `SMTP_PASSWORD`
 - `STAGING_REPO_TOKEN`
 - `SUPREMEAI_CREDENTIAL_ENC_KEY`
 - `SUPREMEAI_EMAIL_PASSWORD`
-- `SUPREMEAI_GITHUB_TOKEN`
 - `TELEGRAM_BOT_TOKEN`
 - `TEST_VAULT_KEY`
 - `TOGETHER_API_KEY`
+- `TWILIO_AUTH_TOKEN`
 - `VERCEL_OIDC_TOKEN`
+- `VITE_ADMIN_BACKEND`
+- `VITE_API_BASE`
+- `VITE_API_BASE_URL`
+- `VITE_API_URL`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_USER_BACKEND`
 
 ---
 
@@ -172,8 +200,6 @@
 যেসব সিক্রেট Infisical-এ রাখলে অ্যাপ **ব্রেক** করবে বা যেগুলো এনভায়রনমেন্টের ওপর ভিত্তি করে ডাইনামিক, সেগুলো সার্ভিসের নিজস্ব প্ল্যাটফর্মে বা লোকাল ফাইলে থাকতে হবে।
 
 **✅ এনভায়রনমেন্ট অনুযায়ী আলাদা থাকা সিক্রেটগুলোর পূর্ণাঙ্গ তালিকা:**
-
-*(বি.দ্র. প্রতিটি ফাইলে বুটস্ট্র্যাপ করার জন্য `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`, `INFISICAL_PROJECT_ID`, `INFISICAL_ENV` কমনভাবে থাকবে, তাই নিচের তালিকায় সেগুলো দেখানো হয়নি)*
 
 ### ১. Render Backend (`render-backend.env`)
 - `PORT`
@@ -222,37 +248,7 @@
 - `VITE_PRIMARY_BACKEND`
 - `VITE_SECONDARY_BACKEND`
 
-**❓ Missing / Pending Keys (শুধু Vercel Frontend-এর জন্য):**
-- `VITE_ADMIN_BACKEND`
-- `VITE_API_BASE`
-- `VITE_API_BASE_URL`
-- `VITE_API_URL`
-- `VITE_FIREBASE_APP_ID`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_SUPABASE_URL`
-- `VITE_USER_BACKEND`
-
-### ৫. GitHub Actions Primary (`github-primary.env`) & Secondary (`github-secondary.env`)
-
-> [!IMPORTANT]
-> `MAIN_REPO_TOKEN` — Primary GitHub অ্যাকাউন্ট থেকে Secondary/Target রেপোতে মিরর/পুশ করার জন্য এই PAT অপরিহার্য।
-
-**✅ Configured Keys:**
-- `ENV`
-- `NODE_ENV`
-- `RENDER_DEPLOY_HOOK_URL`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
-- `INFISICAL_CLIENT_ID`
-- `INFISICAL_CLIENT_SECRET`
-- `INFISICAL_PROJECT_ID`
-- `INFISICAL_TOKEN`
-
-**✅ GitHub Repository Secrets (Platform-level — GitHub Secrets UI-তে সেট করতে হবে):**
+### ৫. GitHub Actions Primary & Secondary
 - `MAIN_REPO_TOKEN` — Primary → Target রেপো পুশ/মিরর করার PAT *(⚠️ এটি Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `MIRROR_REPO_TOKEN` — Secondary রেপো মিরর PAT
 - `STAGING_REPO_TOKEN` — Staging রেপো অ্যাক্সেস PAT
@@ -260,31 +256,6 @@
 - `GCP_SA_KEY` — Google Cloud Platform Service Account Key
 - `GCP_PROJECT_ID` — GCP প্রজেক্ট ID
 - `SENTRY_AUTH_TOKEN` — Sentry Error Monitoring Upload Token
-
-**❓ Missing / Pending Keys (ভ্যালু পাওয়া মাত্রই GitHub Secrets-এ অ্যাড করতে হবে):**
-- `ANDROID_KEYSTORE_BASE64` — Android APK Signing Keystore (Base64)
-- `ANDROID_KEY_ALIAS` — Android Key Alias
-- `ANDROID_KEY_PASSWORD` — Android Key Password
-- `ANDROID_STORE_PASSWORD` — Android Store Password
-- `APP_STORE_CONNECT_API_KEY_CONTENT` — iOS App Store Connect API Key Content
-- `APP_STORE_CONNECT_API_KEY_ID` — iOS App Store Connect API Key ID
-- `APP_STORE_CONNECT_API_ISSUER_ID` — iOS App Store Connect API Issuer ID
-- `CLOUDFLARE_ZONE_ID` — Cloudflare Zone ID
-- `CLOUDFLARE_API_TOKEN` — Cloudflare API Token
-- `CLOUDFLARE_WORKERS_API_TOKEN` — Cloudflare Workers API Token
-- `FIREBASE_SERVICE_ACCOUNT` — Firebase Service Account (Generic)
-- `NETLIFY_AUTH_TOKEN` — Netlify Auth Token
-- `NETLIFY_SITE_ID` — Netlify Site ID
-- `PLAY_STORE_CONFIG_JSON` — Google Play Store Config JSON
-- `RENDER_BACKUP_SVC_ID` — Render Backup Service ID
-- `RENDER_DEPLOY_HOOK_URL_BACKUP` — Render Backup Deploy Hook URL
-- `RENDER_PRIMARY_SVC_ID` — Render Primary Service ID
-- `RENDER_WORKER_SVC_ID` — Render Worker Service ID
-- `SUPREMEAI_GITHUB_TOKEN` — SupremeAI-specific GitHub PAT
-- `VERCEL_OIDC_TOKEN` — Vercel OIDC Token
-
-### ৬. Local Development (`local.env`)
-- (Render Backend-এর সব কি, তবে ভ্যালুগুলো হবে `localhost` বা লোকাল পাথ)
 
 ---
 
@@ -300,4 +271,4 @@
 
 > [!WARNING]
 > **Strict Restriction:** 
-> `PORT`, `NODE_ENV`, `INFISICAL_*` — এই প্রিফিক্স/নামের কোনো ভেরিয়েবল কখনোই Infisical Vault-এর ভেতরে ಸೇভ করা যাবে না।
+> `PORT`, `NODE_ENV`, `INFISICAL_*` — এই প্রিফিক্স/নামের কোনো ভেরিয়েবল কখনোই Infisical Vault-এর ভেতরে সেভ করা যাবে না (কারণ এগুলো সার্ভিস বুটস্ট্র্যাপ করার জন্য ব্যবহার হয়)।
