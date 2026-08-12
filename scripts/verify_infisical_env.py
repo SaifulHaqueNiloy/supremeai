@@ -69,28 +69,54 @@ def get_infisical_token(client_id: str, client_secret: str) -> str:
         sys.exit(1)
 
 
-def fetch_infisical_secrets(project_id: str, token: str, env: str = "prod") -> set:
-    url = f"https://app.infisical.com/api/v3/secrets/raw?workspaceId={project_id}&environment={env}"
+def load_env_fallback(key: str) -> str | None:
+    # বাংলা: os.environ-এ ভ্যালু না থাকলে local .env ফাইল থেকে পড়ার চেষ্টা করে
+    val = os.environ.get(key)
+    if val:
+        return val
+    env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line.startswith(f"{key}="):
+                        return line.split("=", 1)[1].strip('"\'')
+        except Exception:
+            pass
+    return None
+
+
+def fetch_infisical_secrets(project_id: str | None, token: str, env: str = "prod") -> set:
+    # বাংলা: project_id থাকলে workspaceId পাঠাব, না থাকলে শুধু environment পাঠাব
+    if project_id and project_id.strip():
+        url = f"https://app.infisical.com/api/v3/secrets/raw?workspaceId={project_id.strip()}&environment={env}"
+    else:
+        url = f"https://app.infisical.com/api/v3/secrets/raw?environment={env}"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.load(resp)
             secrets = data.get("secrets", [])
             return {s.get("secretKey") for s in secrets if s.get("secretKey")}
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8", "ignore")
+        print(f"::error::Failed to fetch secrets from Infisical API (HTTP {e.code}): {err_msg}")
+        sys.exit(1)
     except Exception as e:
         print(f"::error::Failed to fetch secrets from Infisical API: {e}")
         sys.exit(1)
 
 
 def main() -> int:
-    client_id = os.environ.get("INFISICAL_CLIENT_ID")
-    client_secret = os.environ.get("INFISICAL_CLIENT_SECRET")
-    project_id = os.environ.get("INFISICAL_PROJECT_ID")
-    env = os.environ.get("INFISICAL_ENV", "prod")
+    client_id = load_env_fallback("INFISICAL_CLIENT_ID")
+    client_secret = load_env_fallback("INFISICAL_CLIENT_SECRET")
+    project_id = load_env_fallback("INFISICAL_PROJECT_ID")
+    env = load_env_fallback("INFISICAL_ENV") or "prod"
 
     if not client_id or not client_secret or not project_id:
         # Fallback to Service Token if Universal Auth is not available
-        service_token = os.environ.get("INFISICAL_TOKEN")
+        service_token = load_env_fallback("INFISICAL_TOKEN")
         if not service_token:
             print("::error::INFISICAL_CLIENT_ID/SECRET or INFISICAL_TOKEN is missing!")
             sys.exit(1)
