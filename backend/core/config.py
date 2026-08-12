@@ -890,10 +890,7 @@ class Settings(BaseSettings):
         # Production completeness / degraded mode allowed
         if self.env == "production":
             missing = []
-            if not self.openrouter_api_key:
-                missing.append("OPENROUTER_API_KEY")
-            if not self.gemini_api_key:
-                missing.append("GEMINI_API_KEY")
+            # বাংলা মন্তব্য: AI API keys (OPENROUTER_API_KEY, GEMINI_API_KEY) মিসিং থাকলেও সিস্টেম degraded mode-এ বুট করবে, ক্র্যাশ করবে না।
             if not self.ci_webhook_secret:
                 missing.append("CI_WEBHOOK_SECRET")
             if missing:
@@ -904,8 +901,7 @@ class Settings(BaseSettings):
         # General resilience guard for non-test environments
         if self.env not in {"test"}:
             missing: list[str] = []
-            if not self.openrouter_api_key:
-                missing.append("OPENROUTER_API_KEY")
+            # বাংলা মন্তব্য: ENCRYPTION_KEY ও CI_WEBHOOK_SECRET সিকিউরিটি-ক্রিটিক্যাল — এগুলো fail-fast থাকা সঠিক। AI keys ক্র্যাশ ঘটায় না।
             if not self.encryption_key.get_secret_value():
                 missing.append("ENCRYPTION_KEY")
             if not self.ci_webhook_secret:
