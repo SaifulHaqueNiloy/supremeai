@@ -528,16 +528,38 @@ jobs:
           echo "Outcome: **${{ steps.obs_audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
           echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
 
-      # 🛡️ CodeQL & Trivy Security Scan (Merged)
-      # বাংলা মন্তব্য (৫-ধাপ প্ল্যান, ধাপ ২ স্কিপ করা হয়েছে — এডমিনের অনুরোধে আলাদা
-      # job/workflow বানানো হয়নি, তাই Python+JS matrix parallel এখনই সম্ভব না;
-      # single job-এর মধ্যে থেকে ধাপ ৩,৪,৫ প্রয়োগ করা হলো):
-      # - ধাপ ৩: trigger আরও সংকুচিত — docs_only বাদ, run_attempt>1 বাদ (retry-তে
-      #   অহেতুক পুরো CodeQL re-run বন্ধ), push (merge-পরবর্তী main/develop) trigger যোগ
-      # - ধাপ ৪: নিচে codeql-config.yml দিয়ে scan scope ছোট করা হলো (config-path দ্রষ্টব্য)
-      # - ধাপ ৫: timeout-minutes যোগ করা হলো যাতে আটকে গেলে নির্দিষ্ট সময় পর নিজে বন্ধ হয়
+      - name: 🚨 Force Cancel Workflow on Failure
+        if: failure()
+        run: |
+          echo "❌ Pre-Merge Gate failed — force canceling entire workflow..." >> $GITHUB_STEP_SUMMARY
+          curl -s -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel" || gh run cancel ${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==============================================================================
+  # CODEQL ANALYSIS: Standalone Security Analysis Job (Iron Curtain Speedup)
+  # বাংলা মন্তব্য: Pre-Merge Gate-কে দ্রুত করার জন্য CodeQL ও Trivy সিকিউরিটি স্ক্যানকে
+  # একটি পৃথক সমান্তরাল (standalone) job-এ স্থানান্তর করা হলো। এতে pre-merge-gate
+  # কোনো বিলম্ব ছাড়াই ১০-১৫ সেকেন্ডে শেষ হতে পারবে।
+  # ==============================================================================
+  codeql-analysis:
+    name: 🛡️ CodeQL Security Analysis
+    needs: [changes, service-preflight]
+    if: >
+      (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
       - name: Initialize CodeQL
-        if: (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
         timeout-minutes: 10
         uses: github/codeql-action/init@v4
         with:
@@ -545,21 +567,18 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
-        if: (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
         timeout-minutes: 25
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:python,javascript"
 
-      - name: 🔍 Parallel Security Scan
-        if: (needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))
+      - name: 🔍 Parallel Security Scan (Trivy)
         timeout-minutes: 10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # বাংলা মন্তব্য: GitHub API রেট লিমিট এবং ইনস্টল স্ক্রিপ্ট ফেইলর এড়াতে সরাসরি বাইনারি ডাউনলোড করা হচ্ছে
           mkdir -p ./bin
-          # বাংলা মন্তব্য: GitHub API থেকে dynamic ভাবে লেটেস্ট Trivy ভার্সন এবং তার ডাউনলোড URL বের করা হচ্ছে যাতে ৪MD বা অবসোলেট রিলিজের কারণে বিল্ড ফেইল না করে
           TRIVY_VERSION=$(curl -sL https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
           if [ -z "$TRIVY_VERSION" ]; then
             TRIVY_VERSION="0.55.0"
@@ -574,20 +593,20 @@ jobs:
 
       - name: Upload Trivy Python SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always() && ((needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-python.sarif') != ''
+        if: always() && hashFiles('trivy-python.sarif') != ''
         with:
           sarif_file: 'trivy-python.sarif'
           category: 'trivy-python'
 
       - name: Upload Trivy Node.js SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always() && ((needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true'))) && hashFiles('trivy-nodejs.sarif') != ''
+        if: always() && hashFiles('trivy-nodejs.sarif') != ''
         with:
           sarif_file: 'trivy-nodejs.sarif'
           category: 'trivy-nodejs'
 
       - name: 📊 Add Security Audit Results to GitHub Summary
-        if: always() && ((needs.changes.outputs.trivial_change != 'true' && needs.changes.outputs.docs_only != 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || needs.changes.outputs.dependencies == 'true')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_backend_core == 'true' || github.event.inputs.ignore_dependencies == 'true')))
+        if: always()
         run: |
           echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -596,17 +615,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Trivy Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
           echo "✅ Python dependencies scanned (backend/)" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🚨 Force Cancel Workflow on Failure
-        if: failure()
-        run: |
-          echo "❌ Pre-Merge Gate failed — force canceling entire workflow..." >> $GITHUB_STEP_SUMMARY
-          curl -s -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel" || gh run cancel ${{ github.run_id }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   ai-scribe-docs:
     name: "📚 AI Scribe — Auto-Documentation Generation"
@@ -2002,6 +2010,7 @@ jobs:
     needs:
       - changes
       - service-preflight
+      - codeql-analysis
       - ai-scribe-docs
       - production-readiness
       - docker-build

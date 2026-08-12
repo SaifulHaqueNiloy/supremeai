@@ -54,6 +54,8 @@ def load_registry_keys(path: str) -> dict[str, str]:
 
 
 def get_infisical_token(client_id: str, client_secret: str) -> str:
+    # বাংলা: Infisical Universal Auth (Machine Identity) এর মাধ্যমে Access Token পাওয়ার এপিআই কল।
+    # এটি Client ID এবং Client Secret গ্রহণ করে ১ ঘণ্টার জন্য মেয়াদ থাকা Bearer Token রিটার্ন করে।
     url = "https://app.infisical.com/api/v1/auth/universal-auth/login"
     payload = json.dumps({"clientId": client_id, "clientSecret": client_secret}).encode("utf-8")
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
