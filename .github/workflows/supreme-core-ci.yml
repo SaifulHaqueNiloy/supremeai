@@ -335,6 +335,7 @@ jobs:
     name: 🔄 Sync Mirror Repo
     needs: [backend-tests, frontend-tests, production-readiness]
     if: |
+      always() &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
