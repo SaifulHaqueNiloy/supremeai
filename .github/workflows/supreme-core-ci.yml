@@ -231,7 +231,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [github-actions, vercel-frontend, cloudflare-worker, firebase-gcp]
+        # বাংলা: cloudflare-worker ইচ্ছাকৃতভাবে বাদ — cloudflare-worker/src/index.js এবং
+        # দুইটা wrangler.toml (infrastructure/) ঘেঁটে verify করা হয়েছে, worker কোনো secret
+        # ব্যবহার করে না (শুধু public [vars] URL)। secrets_registry.yaml-এ cloudflare-worker
+        # criticality-যুক্ত কোনো key নেই বলে এই matrix entry প্রতিবার trivially pass করত —
+        # শূন্য coverage দিয়ে একটা matrix slot + runner-minute নষ্ট হচ্ছিল। Worker সত্যিই কোনো
+        # secret নেওয়া শুরু করলে এখানে ফিরিয়ে আনতে হবে।
+        env: [github-actions, vercel-frontend, firebase-gcp]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
