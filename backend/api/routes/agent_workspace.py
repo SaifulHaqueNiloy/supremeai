@@ -1,11 +1,26 @@
 import asyncio
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel
 
+from api.dependencies import get_current_user_token
 from core.knowledge_base import get_from_memory, save_to_memory
 
+# 🛡️ SECURITY FIX: এই router-এর কোনো HTTP endpoint-এই আগে কোনো authentication
+# ছিল না — /agent/learn অন্য যেকোনো (unauthenticated) কলার একটা shared, global
+# memory file (knowledge_base.py-এর MEMORY_FILE_PATH, prompt-string দিয়ে keyed,
+# কোনো user/tenant scoping ছাড়া)-এ সরাসরি লিখতে পারত। এরপর /agent/execute একই
+# prompt-এর জন্য সেই (potentially malicious) cached "solution code" যেকোনো
+# ইউজারকে ফেরত দিত — অর্থাৎ একজন অননুমোদিত attacker পুরো সিস্টেমের সব ইউজারের
+# জন্য একটা shared code-cache poison করতে পারত।
+#
+# NOTE: get_current_user_token() Request.state.user পড়ে, যেটা AuthMiddleware
+# শুধু HTTP scope-এ সেট করে (websocket scope-এ না, দেখুন
+# core/security/auth_middleware.py:167 `if scope["type"] != "http"`), তাই এই
+# dependency router-level না বসিয়ে শুধু নিচের HTTP POST endpoint গুলোতে
+# per-endpoint বসানো হলো — নাহলে /agent/terminal-stream websocket route-টা
+# .accept()-এর আগেই সবসময় 401 দিয়ে ভেঙে যেত।
 router = APIRouter()
 
 
@@ -28,7 +43,7 @@ class LearnRequest(BaseModel):
 
 
 @router.post("/agent/execute")
-async def execute_agent_command(command: WorkspaceCommand):
+async def execute_agent_command(command: WorkspaceCommand, _user: dict = Depends(get_current_user_token)):
     # 🟢 Step 1: Zero-Cost Memory Check (Project Auto-Didact)
     cached_solution = get_from_memory(command.prompt)
     if cached_solution:
@@ -58,7 +73,7 @@ async def execute_agent_command(command: WorkspaceCommand):
 
 
 @router.post("/agent/learn")
-async def commit_to_memory(request: LearnRequest):
+async def commit_to_memory(request: LearnRequest, _user: dict = Depends(get_current_user_token)):
     """
     শুধুমাত্র ভেরিফায়েড এবং কাজ করা কোডগুলোই মেমোরি ভল্টে সেভ হবে।
     """
