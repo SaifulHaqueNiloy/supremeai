@@ -37,8 +37,8 @@ except ImportError as e:
     InfisicalClient = None  # type: ignore[assignment]
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-CACHE_TTL_SECONDS: int = int(os.getenv("SECRET_CACHE_TTL", "300"))  # 5 min default
-INFISICAL_TIMEOUT: int = int(os.getenv("INFISICAL_TIMEOUT", "10"))  # 10s default
+CACHE_TTL_SECONDS: int = int(os.getenv("SECRET_CACHE_TTL") or "300")  # 5 min default
+INFISICAL_TIMEOUT: int = int(os.getenv("INFISICAL_TIMEOUT") or "10")  # 10s default
 
 
 class _CacheEntry:
