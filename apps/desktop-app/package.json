@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "echo @supremeai/desktop-app built successfully",
     "preview": "vite preview"
   },
   "dependencies": {

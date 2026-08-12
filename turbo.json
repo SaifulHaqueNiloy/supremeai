@@ -5,7 +5,15 @@
     "NODE_ENV",
     "API_URL",
     "VITE_PORTAL_TYPE",
-    "VITE_API_URL"
+    "VITE_API_URL",
+    "INFISICAL_CLIENT_ID",
+    "INFISICAL_CLIENT_SECRET",
+    "INFISICAL_PROJECT_ID",
+    "INFISICAL_ENV",
+    "VITE_PRIMARY_BACKEND",
+    "VITE_SECONDARY_BACKEND",
+    "VERCEL_ORG_ID",
+    "VERCEL_PROJECT_ID"
   ],
   "tasks": {
     "build": {
