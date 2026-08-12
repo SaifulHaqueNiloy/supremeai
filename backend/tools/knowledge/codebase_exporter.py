@@ -220,7 +220,7 @@ async def export_codebase_to_markdown(
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            _stdout, stderr = await process.communicate()
             if process.returncode != 0:
                 raise RuntimeError(f"Git clone failed: {stderr.decode('utf-8', errors='ignore')}")
             export_dir = temp_dir

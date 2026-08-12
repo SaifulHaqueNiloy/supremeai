@@ -559,7 +559,7 @@ class TestSecurityVaultModuleInit:
         monkeypatch.delitem(sys.modules, "core.security.security_vault", raising=False)
 
         with pytest.raises(ValueError, match="CRITICAL: ENCRYPTION_KEY"):
-            import core.security.security_vault  # noqa: F401
+            import core.security.security_vault
 
 
 # ========================== swarm_orchestrator.py ==========================

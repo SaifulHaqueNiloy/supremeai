@@ -91,10 +91,10 @@ def resolve_admin_cors_origins(configured: Iterable[str] | None) -> list[str]:
 
 
 __all__ = [
-    "USER_ALLOWED_ORIGINS",
     "ADMIN_ALLOWED_ORIGINS",
-    "USER_ORIGIN_DENYLIST",
     "ADMIN_ORIGIN_DENYLIST",
-    "resolve_user_cors_origins",
+    "USER_ALLOWED_ORIGINS",
+    "USER_ORIGIN_DENYLIST",
     "resolve_admin_cors_origins",
+    "resolve_user_cors_origins",
 ]

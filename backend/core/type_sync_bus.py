@@ -201,7 +201,7 @@ class TypeSyncBus:
                 stderr=asyncio.subprocess.PIPE,
                 cwd=SCRIPTS_DIR.parent,
             )
-            stdout, stderr = await proc.communicate(timeout=60)
+            stdout, _stderr = await proc.communicate(timeout=60)
 
             drift_detected = proc.returncode != 0
             return {
