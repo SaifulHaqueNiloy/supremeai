@@ -43,7 +43,7 @@ class MaintenancePipeline:
     def start_monitoring(self, interval: int | None = None):
         """Starts the background probing task with configurable interval."""
         if interval is None:
-            interval = int(os.getenv("MAINTENANCE_INTERVAL", "120"))
+            interval = int(os.getenv("MAINTENANCE_INTERVAL") or "120")
         self._monitor_interval = interval
         if self._monitor_task is None:
             self._monitor_task = asyncio.create_task(self._monitoring_loop())

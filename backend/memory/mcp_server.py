@@ -882,7 +882,7 @@ async def main() -> None:
                     Mount("/messages/", app=sse_transport.handle_post_message),
                 ]
             )
-            port = int(os.getenv("MEMORY_MCP_PORT", "8765"))
+            port = int(os.getenv("MEMORY_MCP_PORT") or "8765")
             logger.info(f"SSE MCP Server listening on port {port}")
             uvicorn.run(app, host="0.0.0.0", port=port)
         except ImportError as e:

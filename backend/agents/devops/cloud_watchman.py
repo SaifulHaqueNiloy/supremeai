@@ -43,8 +43,8 @@ except ImportError:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("cloudwatchman")
 
-REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS", "15"))
-MAX_WORKERS = int(os.getenv("CLOUDWATCH_CONCURRENCY", "5"))
+REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS") or "15")
+MAX_WORKERS = int(os.getenv("CLOUDWATCH_CONCURRENCY") or "5")
 ANOMALY_Z_THRESHOLD = float(os.getenv("ANOMALY_Z_THRESHOLD", "2.5"))
 HISTORY_FILE = Path(__file__).parent / ".cloudwatch_history.json"
 

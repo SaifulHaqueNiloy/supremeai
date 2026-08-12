@@ -33,7 +33,7 @@ except ImportError:
 
 # --- Zero hardcoded config ---
 VOICE_CONFIDENCE_THRESHOLD = float(os.getenv("VOICE_DIDI_CONFIDENCE", "0.6"))
-MAX_AUDIO_DURATION_SEC = int(os.getenv("VOICE_DIDI_MAX_DURATION", "30"))
+MAX_AUDIO_DURATION_SEC = int(os.getenv("VOICE_DIDI_MAX_DURATION") or "30")
 SUPPORTED_INTENTS = os.getenv(
     "VOICE_DIDI_INTENTS",
     "search,order,help,price,location,cancel,repeat",

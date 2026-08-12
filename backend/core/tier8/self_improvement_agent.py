@@ -93,7 +93,7 @@ class SelfImprovementAgent(BaseSkill):
         self._tracer = get_tracer()
         self._scan_interval = float(os.getenv("SELF_IMPROVE_SCAN_INTERVAL", "3600"))
         self._min_confidence = float(os.getenv("SELF_IMPROVE_MIN_CONFIDENCE", "0.85"))
-        self._max_proposals = int(os.getenv("SELF_IMPROVE_MAX_PROPOSALS", "50"))
+        self._max_proposals = int(os.getenv("SELF_IMPROVE_MAX_PROPOSALS") or "50")
         self._repo_root = Path(os.getenv("REPO_ROOT", str(Path(__file__).resolve().parents[3])))
         self._running = False
         self._task: asyncio.Task[Any] | None = None
@@ -175,7 +175,7 @@ class SelfImprovementAgent(BaseSkill):
 
     async def _scan_long_functions(self) -> list[dict[str, Any]]:
         """Heuristic scan for functions exceeding line threshold."""
-        threshold = int(os.getenv("SELF_IMPROVE_LONG_FUNC_THRESHOLD", "60"))
+        threshold = int(os.getenv("SELF_IMPROVE_LONG_FUNC_THRESHOLD") or "60")
         weaknesses: list[dict[str, Any]] = []
         for py_file in self._repo_root.rglob("*.py"):
             if ".venv" in str(py_file) or "__pycache__" in str(py_file):
@@ -210,7 +210,7 @@ class SelfImprovementAgent(BaseSkill):
 
     async def _scan_deep_nesting(self) -> list[dict[str, Any]]:
         """Heuristic scan for deeply nested blocks."""
-        threshold = int(os.getenv("SELF_IMPROVE_NESTING_THRESHOLD", "4"))
+        threshold = int(os.getenv("SELF_IMPROVE_NESTING_THRESHOLD") or "4")
         weaknesses: list[dict[str, Any]] = []
         for py_file in self._repo_root.rglob("*.py"):
             if ".venv" in str(py_file) or "__pycache__" in str(py_file):

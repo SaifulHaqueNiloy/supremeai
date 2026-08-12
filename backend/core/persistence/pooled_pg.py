@@ -42,7 +42,7 @@ from core.config import settings
 # primary request traffic. They must never meaningfully compete with the
 # User (max 15) / Admin (max 3) pools already budgeted in database/session.py.
 _MIN_CONN = 1
-_MAX_CONN = int(os.getenv("PERSISTENCE_PG_POOL_MAX", "4"))
+_MAX_CONN = int(os.getenv("PERSISTENCE_PG_POOL_MAX") or "4")
 
 _pool_lock = threading.Lock()
 _pool: psycopg2.pool.ThreadedConnectionPool | None = None

@@ -29,9 +29,9 @@ except ImportError:
 
 
 # --- Zero hardcoded configuration - all from environment/settings ---
-DEFAULT_CACHE_TTL_HOURS = int(os.getenv("BHASHA_CACHE_TTL_HOURS", "24"))
+DEFAULT_CACHE_TTL_HOURS = int(os.getenv("BHASHA_CACHE_TTL_HOURS") or "24")
 MIN_QUALITY_THRESHOLD = float(os.getenv("BHASHA_MIN_QUALITY", "0.7"))
-MAX_CACHE_SIZE = int(os.getenv("BHASHA_MAX_CACHE", "10000"))
+MAX_CACHE_SIZE = int(os.getenv("BHASHA_MAX_CACHE") or "10000")
 
 
 class BhashaBot:
@@ -292,7 +292,7 @@ Respond ONLY with the translated text. No explanations, no quotes around output.
         # বাংলা মন্তব্য: একসাথে অনেকগুলো আইটেম প্যারালাল অনুবাদ করা
         import asyncio
 
-        semaphore = asyncio.Semaphore(int(os.getenv("BHASHA_BATCH_CONCURRENCY", "5")))
+        semaphore = asyncio.Semaphore(int(os.getenv("BHASHA_BATCH_CONCURRENCY") or "5"))
 
         async def _translate_one(item: dict[str, Any]) -> dict[str, Any]:
             async with semaphore:

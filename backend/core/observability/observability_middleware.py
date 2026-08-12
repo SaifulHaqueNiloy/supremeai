@@ -17,7 +17,7 @@ class ObservabilityMiddleware:
         # Redis traffic monitoring is expensive. We sample and bound background tasks.
         # Long-run safety: avoid cardinality/cost explosions and unbounded task growth.
         self._redis_traffic_sampling_rate = float(os.getenv("REDIS_TRAFFIC_METRICS_SAMPLING_RATE", "0.05"))
-        self._redis_traffic_max_background_tasks = int(os.getenv("REDIS_TRAFFIC_MAX_BACKGROUND_TASKS", "50"))
+        self._redis_traffic_max_background_tasks = int(os.getenv("REDIS_TRAFFIC_MAX_BACKGROUND_TASKS") or "50")
         self._redis_metric_fail_count = 0
 
     async def __call__(self, scope, receive, send) -> None:

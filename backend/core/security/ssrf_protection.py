@@ -74,7 +74,7 @@ DEFAULT_BLOCKLIST_HOSTNAMES: frozenset[str] = frozenset(
 )
 
 # DNS cache TTL (seconds)
-_DNS_CACHE_TTL: int = int(os.getenv("SSRF_DNS_CACHE_TTL", "300"))
+_DNS_CACHE_TTL: int = int(os.getenv("SSRF_DNS_CACHE_TTL") or "300")
 
 
 @dataclass

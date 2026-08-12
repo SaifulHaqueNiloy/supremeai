@@ -134,10 +134,10 @@ class AgentEvolutionEngine(BaseSkill):
         # বাংলা মন্তব্য: প্রোজেক্টের get_tracer ফাংশনটি কোনো আর্গুমেন্ট গ্রহণ করে না
         self._tracer = get_tracer()
         self._population: list[AgentGenome] = []
-        self._population_size = int(os.getenv("EVO_POPULATION_SIZE", "10"))
+        self._population_size = int(os.getenv("EVO_POPULATION_SIZE") or "10")
         self._mutation_rate = float(os.getenv("EVO_MUTATION_RATE", "0.15"))
         self._selection_pressure = float(os.getenv("EVO_SELECTION_PRESSURE", "0.3"))
-        self._max_generations = int(os.getenv("EVO_MAX_GENERATIONS", "100"))
+        self._max_generations = int(os.getenv("EVO_MAX_GENERATIONS") or "100")
         self._fitness_threshold = float(os.getenv("EVO_FITNESS_THRESHOLD", "0.9"))
         self._running = False
         self._task: asyncio.Task[Any] | None = None

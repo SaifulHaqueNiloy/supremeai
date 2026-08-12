@@ -94,14 +94,14 @@ def run_server() -> None:
         "port": port,
         "log_level": os.getenv("UVICORN_LOG_LEVEL", "info"),
         "access_log": os.getenv("UVICORN_ACCESS_LOG", "true").lower() == "true",
-        "timeout_keep_alive": int(os.getenv("UVICORN_KEEP_ALIVE_TIMEOUT", "30")),
+        "timeout_keep_alive": int(os.getenv("UVICORN_KEEP_ALIVE_TIMEOUT") or "30"),
     }
     if is_local:
         uvicorn_kwargs["reload"] = True
     else:
         uvicorn_kwargs["reload"] = False
         # বাংলা: UVICORN_WORKERS env var ব্যবহার করা হয়, GUNICORN_WORKERS deprecated
-        workers = int(os.getenv("UVICORN_WORKERS", "1"))
+        workers = int(os.getenv("UVICORN_WORKERS") or "1")
         if workers > 1:
             uvicorn_kwargs["workers"] = workers
 
