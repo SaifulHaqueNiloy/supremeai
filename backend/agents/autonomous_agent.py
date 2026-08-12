@@ -34,6 +34,12 @@ class AutonomousAgent(ABC):
         self.status: str = "idle"
         self.health_metrics: list[dict[str, Any]] = []
         self.max_metrics = 100
+        # বাংলা মন্তব্য (RUF006 fix): create_task()-এর রিটার্ন ভ্যালু কোথাও ধরে
+        # না রাখলে event loop শুধু weak reference রাখে, ফলে GC যেকোনো সময়
+        # চলমান task-টা mid-execution-এ collect করে ফেলতে পারে (Python-এর
+        # নিজস্ব asyncio docs-এই এই pitfall সম্পর্কে সতর্ক করা আছে)। এখানে
+        # strong reference ধরে রাখা হলো।
+        self._background_task: asyncio.Task | None = None
 
     async def start(self) -> None:
         """বাংলা মন্তব্য: এজেন্ট চালু করে এবং ব্যাকগ্রাউন্ড লুপে রান করে।"""
@@ -44,7 +50,7 @@ class AutonomousAgent(ABC):
         self.is_running = True
         self.status = "running"
         logger.info(f"[Agent:{self.name}] Started with interval {self.check_interval}s")
-        asyncio.create_task(self._monitoring_loop())
+        self._background_task = asyncio.create_task(self._monitoring_loop())
 
     @with_error_bus("_monitoring_loop")
     async def _monitoring_loop(self) -> None:

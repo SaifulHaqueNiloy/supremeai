@@ -33,6 +33,9 @@ class MaintenancePipeline:
     def __init__(self):
         self.health_score = 100
         self._monitor_task = None
+        # বাংলা মন্তব্য (RUF006 fix): নিচে emergency evolution tick-এর জন্য
+        # create_task() করা হয়, সেটার strong reference ধরে রাখার জন্য।
+        self._evolution_tick_task = None
         self.last_recovery_time = 0  # Cooldown tracker
         # Register to listen to error events
         error_event_bus.register_listener("*", self._handle_error_event)
@@ -202,7 +205,7 @@ class MaintenancePipeline:
                 # শুধু tick() চালাই, পুরো loop নয় — non-blocking
                 _evo = SelfEvolutionAgent.__new__(SelfEvolutionAgent)
                 if hasattr(_evo, "_tick"):
-                    _asyncio.create_task(_evo._tick())
+                    self._evolution_tick_task = _asyncio.create_task(_evo._tick())
                     logger.warning(
                         f"🛡️→🧬 Health critical (score={self.health_score}), " "triggered emergency evolution tick."
                     )

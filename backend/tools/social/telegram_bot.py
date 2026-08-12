@@ -278,10 +278,19 @@ def create_telegram_router(handler: TelegramBotHandler):
 
     router = APIRouter(prefix="/telegram", tags=["telegram"])
 
+    # বাংলা মন্তব্য (RUF006 fix): প্রতিটা webhook request-এ create_task() করা হয়,
+    # কিন্তু রিটার্ন ভ্যালু কোথাও রাখা না হলে event loop শুধু weak reference
+    # রাখে — GC যেকোনো সময় চলমান task mid-execution-এ collect করে ফেলতে পারে,
+    # ফলে user-এর message silently না-প্রসেস হয়ে যেতে পারত। module-level set-এ
+    # strong reference রাখা হলো, done হলে নিজে থেকেই set থেকে সরে যায়।
+    _webhook_background_tasks: set[asyncio.Task] = set()
+
     @router.post("/webhook")
     async def telegram_webhook(request: Request):
         update = await request.json()
-        asyncio.create_task(handler.handle_update(update))
+        task = asyncio.create_task(handler.handle_update(update))
+        _webhook_background_tasks.add(task)
+        task.add_done_callback(_webhook_background_tasks.discard)
         return Response(status_code=200)
 
     @router.get("/health")

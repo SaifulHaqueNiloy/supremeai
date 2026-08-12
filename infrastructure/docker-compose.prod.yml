@@ -14,20 +14,34 @@ services:
   nats:
     image: nats:2.10-alpine
     # বাংলা মন্তব্য: আগে token হার্ডকোড ছিল command argument-এ — এখন Docker secret থেকে আসে
+    # -m 8222: internal monitoring/healthz endpoint চালু করা হলো (শুধু internal network-এ,
+    # publicly expose করা হয়নি) — নিচের healthcheck এটা ব্যবহার করে।
     command:
       - "-js"
       - "--auth"
       - "${NATS_AUTH_TOKEN}"
+      - "-m"
+      - "8222"
     environment:
       - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
     expose:
       - "4222"
+      - "8222"
     # বাংলা মন্তব্য: শুধু internal network, public port bind নেই
     networks:
       - supreme_net
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    # বাংলা মন্তব্য (INFRA-001 ফিক্স): nats:alpine image-এ alpine-এর busybox wget applet
+    # থাকে, আলাদা কোনো প্যাকেজ ইনস্টল ছাড়াই ব্যবহারযোগ্য — NATS-এর নিজস্ব ডকুমেন্টেশনেও
+    # এই একই প্যাটার্ন suggest করা হয়।
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8222/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -52,14 +66,24 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    # বাংলা মন্তব্য (INFRA-001 ফিক্স): requirepass সেট থাকায় auth ছাড়া ping করলে
+    # NOAUTH error দেবে, তাই -a দিয়ে password পাস করা আবশ্যক।
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
-      - nats
-      - redis
+      nats:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - NATS_URL=nats://${NATS_AUTH_TOKEN}@nats:4222
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
@@ -86,7 +110,8 @@ services:
       context: ./backend
       dockerfile: docker/swarm-worker.Dockerfile
     depends_on:
-      - nats
+      nats:
+        condition: service_healthy
     environment:
       - NATS_URL=nats://${NATS_AUTH_TOKEN}@nats:4222
       - PINECONE_API_KEY=${PINECONE_API_KEY}
@@ -112,7 +137,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - supreme_net
     security_opt:
@@ -122,6 +148,13 @@ services:
     tmpfs:
       - /var/cache/nginx
       - /var/run
+    # বাংলা মন্তব্য (INFRA-001 ফিক্স): nginx:alpine-এও busybox wget থাকে (extra install লাগে না)।
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 networks:
   supreme_net:
