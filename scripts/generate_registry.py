@@ -24,13 +24,10 @@ _REG = [
     # ── Core Authentication & Security ──
     ("ENV", "rb:I,ra:I,vf:O,iv:I", "Environment name (production/staging)"),
     ("SUPREMEAI_JWT_SECRET", "rb:C,ra:C,rw:C,iv:C", "JWT secret; <64 bytes হলে RuntimeError (config.py)"),
-    ("ENCRYPTION_KEY", "rb:C,ra:C,rw:C,iv:C", "Data encryption key (canonical)"),
-    ("ENCRYPTION_KEY", "rb:C,ra:C,rw:C,iv:C", "Payload encryption key (duplicate of ENCRYPTION_KEY)"),
+    ("ENCRYPTION_KEY", "rb:C,ra:C,rw:C,iv:C", "Data/payload encryption key"),
     ("SUPREMEAI_ADMIN_PASSWORD_HASH", "rb:C,ra:C,iv:C", "Hashed admin password (config.py required)"),
     ("SUPREMEAI_ADMIN_TOTP_SECRET", "rb:I,ra:I,iv:I", "Admin 2FA TOTP secret"),
     ("SUPREMEAI_API_KEY", "rb:I,ra:I,iv:I", "Primary API authentication token"),
-    ("SUPREMEAI_API_KEY", "rb:I,ra:I,iv:I", "Primary API key (first)"),
-    ("SUPREMEAI_API_KEY", "rb:I,ra:I,iv:I", "Primary API key (alt name)"),
     ("SUPREMEAI_DOCS_PASSWORD", "ra:I,iv:I", "Admin docs protected password"),
     ("SUPREMEAI_DOCS_USERNAME", "ra:I,iv:I", "Admin docs username"),
     ("ADMIN_AUTHORIZED", "rb:I,ra:I,iv:I", "Admin authorization flag"),
@@ -157,12 +154,20 @@ _REG = [
     # ── Boot/test flags (non-secret but required) ──
     ("ALLOW_TEST_AUTH_BYPASS", "rb:I,ra:I,iv:I", "Test auth bypass flag"),
     ("ALLOW_TEST_ORIGIN_BYPASS", "rb:I,ra:I,iv:I", "Test origin bypass flag"),
+
+    # ── CI/tooling-only integrations (scripts/, .github/scripts/ — না চললেও backend চলে) ──
+    ("GH_TOKEN", "ga:O", "GitHub API token fallback (detect-previous-failures.py, check_if_fix.py) — GITHUB_TOKEN auto-provided না থাকলে ব্যবহার হয়"),
+    ("HF_TOKEN", "ga:O", "HuggingFace access token (model_version_manager.py) — HUGGINGFACE_TOKEN-এর shorthand fallback"),
+    ("HUGGINGFACE_TOKEN", "ga:O", "HuggingFace access token (model_version_manager.py)"),
+    ("NETLIFY_API_KEY", "ga:O", "Netlify cost-monitoring integration (cost_analyzer.py)"),
+    ("PAGERDUTY_ROUTING_KEY", "ga:O", "PagerDuty alert routing (alert_manager.py)"),
+    ("SAFETY_API_KEY", "ga:O", "PyUp Safety vulnerability-DB API key (auto_vulnerability_scanner.py)"),
+    ("TEST_ADMIN_PASSWORD", "ga:O", "Test-only admin password (create_test_admin.py) — CI/local test fixture, production-এ দরকার নাই"),
 ]
 
 # বাংলা: যেসব key-এর validity (length) check করা দরকার
 _MIN_LENGTH = {
     "SUPREMEAI_JWT_SECRET": 64,
-    "ENCRYPTION_KEY": 16,
     "ENCRYPTION_KEY": 16,
 }
 
