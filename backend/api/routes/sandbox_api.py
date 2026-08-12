@@ -16,11 +16,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/v1/sandbox", tags=["sandbox"])
+from api.dependencies import get_current_user_token
+
+# 🛡️ SECURITY FIX (CRITICAL): এই router-এর কোনো endpoint-এই আগে কোনো
+# authentication ছিল না — POST /{sandbox_id}/execute সরাসরি manager-এর
+# execute_in_session() কল করে sandbox-এ real শেল কমান্ড চালায় (স্টাব/ডামি
+# না, প্রকৃত remote code execution)। কোনো auth ছাড়া যে কেউ /create দিয়ে
+# একটা sandbox বানিয়ে /execute দিয়ে ইচ্ছামতো কমান্ড রান করতে পারত, /list
+# দিয়ে সব sandbox দেখতে পারত এবং অন্যদের sandbox_id অনুমান করতে পারলে
+# /{id}/execute বা /{id} DELETE দিয়ে সেগুলোও নিয়ন্ত্রণ/মুছে ফেলতে পারত।
+# router-level auth যোগ করা হলো, বাকি sensitive router (tools_ops.py,
+# admin.py ইত্যাদি) যে প্যাটার্ন ব্যবহার করে ঠিক সেভাবে।
+router = APIRouter(prefix="/api/v1/sandbox", tags=["sandbox"], dependencies=[Depends(get_current_user_token)])
 
 # বাংলা মন্তব্য: অ্যাপ্লিকেশন-স্কোপ স্যান্ডবক্স ম্যানেজার (singleton)।
 _sandbox_manager: Any = None
