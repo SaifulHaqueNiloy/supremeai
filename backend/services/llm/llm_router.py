@@ -27,17 +27,15 @@ from typing import Any, Protocol
 import httpx
 
 # Internal core imports
-from .cache import get_redis_client
-from .config import settings
-from .exceptions import LLMProviderError, QuotaExceededError
-from .llm.free_tier_tracker import get_tracker
-from .llm.llm_gateway import get_llm_gateway  # Enhanced LLM gateway for integration
-from .logging import get_logger
-from .metrics import counter, timed
-from .resilience.circuit_breaker import (
-    CircuitBreaker as circuit_breaker,  # -- used as a decorator (@circuit_breaker(...)) below, lowercase is the intended convention for decorators
-)
-from .resilience.circuit_breaker_manager import get_shared_circuit_breaker
+from backend.core.cache import get_redis_client
+from backend.core.config import settings
+from backend.core.exceptions import LLMProviderError, QuotaExceededError
+from backend.core.llm.free_tier_tracker import get_tracker
+from backend.core.llm.llm_gateway import get_llm_gateway
+from backend.core.logging import get_logger
+from backend.core.metrics import counter, timed
+from backend.core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from backend.core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
 
 
 class Provider(StrEnum):
