@@ -248,6 +248,10 @@
 - `VITE_SECONDARY_BACKEND`
 
 ### ৫. GitHub Actions Primary & Secondary
+- `INFISICAL_PROJECT_ID` — Infisical Project ID *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
+- `INFISICAL_TOKEN` — Infisical Service Access Token *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
+- `INFISICAL_CLIENT_ID` — Infisical Machine Identity Client ID *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
+- `INFISICAL_CLIENT_SECRET` — Infisical Machine Identity Client Secret *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `MAIN_REPO_TOKEN` — Primary → Target রেপো পুশ/মিরর করার PAT *(⚠️ এটি Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `MIRROR_REPO_TOKEN` — Secondary রেপো মিরর PAT
 - `STAGING_REPO_TOKEN` — Staging রেপো অ্যাক্সেস PAT
