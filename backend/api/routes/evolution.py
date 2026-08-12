@@ -297,7 +297,17 @@ class PerformanceRequest(BaseModel):
 
 
 @router.post("/breed")
-async def breed_agents(payload: BreedRequest, db: AsyncSession = Depends(get_db_session)):
+# 🛡️ SECURITY FIX: আগে এই endpoint-এ কোনো auth ছিল না — get_db_session() শুধু
+# একটা DB connection দেয়, identity check করে না। /breed সত্যিকারের genetic
+# breeding চালায়, DB-তে লেখে, এমনকি offspring-কে production-এ promote করতে
+# পারে — এই ফাইলের নিজস্ব sibling endpoint (/quarantine, /proposals/approve)
+# একই sensitivity-র জন্য require_admin_token ব্যবহার করে, তাই এখানেও একই
+# প্যাটার্ন প্রয়োগ করা হলো।
+async def breed_agents(
+    payload: BreedRequest,
+    db: AsyncSession = Depends(get_db_session),
+    admin: dict = Depends(require_admin_token),
+):
     """Breed new agent genetic offspring from parents."""
     # বাংলা মন্তব্য: জেনেটিক অ্যালগরিদমের মাধ্যমে এজেন্টের জিনোমে ব্রিডিং ও মিউটেশন পরিচালনা এন্ডপয়েন্ট
     config = BreederConfig.from_settings()
@@ -336,7 +346,11 @@ async def breed_agents(payload: BreedRequest, db: AsyncSession = Depends(get_db_
 
 
 @router.post("/evaluate-performance")
-async def evaluate_performance(payload: PerformanceRequest, db: AsyncSession = Depends(get_db_session)):
+async def evaluate_performance(
+    payload: PerformanceRequest,
+    db: AsyncSession = Depends(get_db_session),
+    admin: dict = Depends(require_admin_token),
+):
     """Evaluate agent performance and trigger alerts if thresholds are breached."""
     # বাংলা মন্তব্য: এজেন্টের কাজের গতি ও নির্ভুলতা বিশ্লেষণ করে কোনো অ্যালার্ট ট্রিগার হচ্ছে কি না তা বের করা
     from models.meta_ai import MetricType, SuggestionAction
