@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # scripts/verify_infisical_env.py
+from __future__ import annotations
+
 """
 বাংলা: Infisical Vault-এ সব প্রয়োজনীয় সিক্রেট আছে কিনা তা চেক করার স্ক্রিপ্ট।
 
@@ -18,6 +20,7 @@ import sys
 import json
 import urllib.request
 import urllib.error
+from typing import Optional, Dict, Set
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
