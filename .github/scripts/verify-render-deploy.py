@@ -28,12 +28,7 @@ SERVICES = {
         "service_id": "srv-d9d3n58js32c738n79k0",
         "url": "https://supremeai-backend.onrender.com",
     },
-    # বাংলা মন্তব্য: আগে এই ডিকশনারিতে শুধু User Backend ছিল। ফলে
-    # deploy-combined-backend job (যেটা --service-id ছাড়াই এই স্ক্রিপ্ট চালায় এবং
-    # SERVICES.values() এর সবকিছু ভেরিফাই করে) নীরবে Admin Backend-এর হেলথ চেক
-    # স্কিপ করত — Admin ডেপ্লয় ব্যর্থ হলেও কম্বাইন্ড জব সবুজ দেখাত। এখন Admin
-    # Backend-ও ডিফল্ট টার্গেট লিস্টে যুক্ত করা হলো (deploy-admin-backend জব
-    # আলাদাভাবে --service-id দিয়ে এটিকে আইসোলেটেডভাবে চালায়, সেটা অপরিবর্তিত থাকল)।
+    # বাংলা মন্তব্য: Admin Backend সার্ভিসকে আলাদাভাবে হেলথ চেক করার জন্য যুক্ত করা হয়েছে।
     "srv-d9fg48bh523c73f63bb0": {
         "name": "Admin Backend (Backup)",
         "service_id": "srv-d9fg48bh523c73f63bb0",
@@ -41,9 +36,10 @@ SERVICES = {
     },
 }
 
-# Optimized timing: Poll interval 10s and timeout to 540s (9 minutes) for Render free tier
+# Optimized timing: Poll interval 10s and timeout strictly set to 120s (2 minutes max) per CI rules
+# বাংলা মন্তব্য: সর্বোচ্চ ২ মিনিট পোলিং টাইমআউট রুল অনুযায়ী দ্রুত রেজাল্ট নিশ্চিতকরণ।
 POLL_INTERVAL = 10  # poll every 10s for faster feedback
-TIMEOUT_LIMIT = 540  # 9 minutes (allows Render free tier image pull & container spin-up)
+TIMEOUT_LIMIT = 120  # 2 minutes maximum (fast fail per CI polling guidelines)
 
 class _UrllibResponse:
     def __init__(self, resp):
@@ -56,16 +52,14 @@ class _UrllibResponse:
         return json.loads(self.text)
 
 
-def _http_get(url, headers=None, timeout=15):
+def _http_get(url, headers=None, timeout=10):
     req = urllib.request.Request(url, headers=headers or {}, method="GET")
     resp = urllib.request.urlopen(req, timeout=timeout)
     return _UrllibResponse(resp)
 
 
-def check_http_health(url, label, retries=6, timeout_per_try=20):
-    # বাংলা মন্তব্ব্য: সার্ভিসের /health এবং /api/v1/health রিট্রাই সহ চেক করা হবে কোল্ড স্টার্ট এড়াতে।
-    # Render free tier-এর স্পিন-আপ/কোল্ড-স্টার্ট অনেক সময় নিতে পারে (৬০-৯০ সেকেন্ড), তাই
-    # রিট্রাই সংখ্যা ও প্রতি-চেষ্টায় টাইমআউট বাড়ানো হলো যাতে মিথ্যা নেগেটিভ না আসে।
+def check_http_health(url, label, retries=3, timeout_per_try=10):
+    # বাংলা মন্তব্য: দ্রুততম ভেরিফিকেশনের জন্য রিট্রাই ৩টি এবং টাইমআউট ১০ সেকেন্ডে রাখা হয়েছে যাতে অহেতুক সময় নষ্ট না হয়।
     base_url = url.rstrip('/')
     endpoints = [f"{base_url}/health", f"{base_url}/api/v1/health"]
     for attempt in range(1, retries + 1):
@@ -75,7 +69,6 @@ def check_http_health(url, label, retries=6, timeout_per_try=20):
                 response = _http_get(health_url, timeout=timeout_per_try)
                 if response.status_code == 200:
                     try:
-                        # Verify the response is actually healthy, not just status 200
                         data = response.json()
                         if isinstance(data, dict) and data.get('status') in ['ok', 'healthy', 'UP', 'degraded']:
                             print(f"✅ {label} HTTP check passed! Status: 200 OK ({health_url})")
@@ -85,12 +78,11 @@ def check_http_health(url, label, retries=6, timeout_per_try=20):
                     except Exception as json_err:
                         print(f"⚠️ {label} HTTP check response is not valid JSON: {json_err}")
                 else:
-                    print(f"⚠️ {label} HTTP check returned HTTP {res.status_code}")
+                    print(f"⚠️ {label} HTTP check returned HTTP {response.status_code}")
             except Exception as e:
                 print(f"⏳ {health_url} health check attempt {attempt} failed: {e}")
         if attempt < retries:
-            # বাংলা মন্তব্য: কোল্ড স্টার্টের জন্য প্রতি রিট্রাইয়ের মাঝে ব্যাকঅফ বাড়ানো হলো (৫→১০সে)
-            time.sleep(10)
+            time.sleep(5)
     print(f"❌ {label} HTTP check failed after {retries} retries.")
     return False
 
@@ -134,7 +126,7 @@ def monitor_service(service):
 
     deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
     try:
-        res = _http_get(deploys_url, headers=headers, timeout=15)
+        res = _http_get(deploys_url, headers=headers, timeout=10)
         if res.status_code != 200:
             print(f"❌ Failed to fetch deploys for {name}: HTTP {res.status_code} - {res.text}")
             return check_http_health(service["url"], name)
@@ -157,21 +149,22 @@ def monitor_service(service):
             print(f"⚠️ createdAt timestamp is missing. Checking HTTP health directly.")
             return check_http_health(service["url"], name)
 
-        # If latest deploy is already LIVE, proceed directly to health check
         status_str = (status or "").lower()
         if status_str == "live":
             print(f"🎉 Deploy {deploy_id} for {name} is already LIVE on Render!")
             return check_http_health(service["url"], name)
+        elif any(f_word in status_str for f_word in ["fail", "cancel", "error"]):
+            # বাংলা মন্তব্য:Render-এ ডিপ্লয়মেন্ট ফেইল অবস্থা পাওয়া মাত্রই সঙ্গে সঙ্গে CI লাল করে দ্রুত রেসপন্স দেয়া হচ্ছে।
+            print(f"❌ Deploy {deploy_id} for {name} already in failure state ({status_str}). Failing immediately.")
+            return False
 
         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
 
-        # Allow up to 5 minutes for deploy record initiation / polling (reduced from 10)
-        if now - created_at > timedelta(minutes=5):
+        if now - created_at > timedelta(minutes=3):
             print(
-                f"⚠️ No new deploy record found for {name} within 5 minutes. Falling back to direct HTTP health check..."
+                f"⚠️ No active new deploy record for {name} within 3 minutes (latest status: {status_str})."
             )
-            return check_http_health(service["url"], name)
 
     except Exception as e:
         print(f"❌ Error communicating with Render API: {e}")
@@ -185,28 +178,26 @@ def monitor_service(service):
     while True:
         elapsed = time.time() - start_time
         if elapsed > TIMEOUT_LIMIT:
-            print(f"❌ Timeout reached ({TIMEOUT_LIMIT}s) while waiting for deploy {deploy_id} to complete.")
-            print(f"⚠️ Proceeding to direct HTTP health check regardless of deploy status...")
-            # Even if deploy status check times out, we still check HTTP health
-            return check_http_health(service["url"], name)
+            # বাংলা মন্তব্য: ২ মিনিটের বেশি সময় ধরে ঝুলে থাকলে অহেতুক ওয়েট না করে অবিলম্বে HARD FAIL করানো হচ্ছে।
+            print(f"❌ Timeout reached ({TIMEOUT_LIMIT}s) while waiting for deploy {deploy_id} (status: {status_str}).")
+            print(f"❌ Deployment did not reach LIVE status within {TIMEOUT_LIMIT}s. Fast failing step.")
+            return False
 
         try:
-            res = _http_get(deploy_url, headers=headers, timeout=15)
+            res = _http_get(deploy_url, headers=headers, timeout=10)
             if res.status_code == 200:
                 deploy_info = res.json()
                 deploy_data = deploy_info.get("deploy", deploy_info) if isinstance(deploy_info, dict) else deploy_info
-                status = deploy_data.get("status", "").lower()
+                status = str(deploy_data.get("status", "")).lower()
+                status_str = status
                 print(f"  Deploy {deploy_id} status: {status} (elapsed: {int(elapsed)}s)")
 
                 if status == "live":
                     print(f"🎉 Deploy {deploy_id} is now LIVE on Render!")
                     return check_http_health(service["url"], name)
-                elif status in ["update_failed", "build_failed", "canceled"]:
-                    # বাংলা মন্তব্য: ডিপ্লয় ফেইল হলে সরাসরি HTTP হেলথ চেক দিয়ে পাশ করা যাবে না।
-                    # কারণ HTTP 200 শুধু পুরনো চলমান ভার্সন থেকে আসে (নতুন বিল্ড ডিপ্লয়ই হয়নি),
-                    # যা ফলস-পজিটিভ (সবুজ CI) তৈরি করে। তাই ফেইল স্ট্যাটাস = সরাসরি HARD FAIL।
-                    print(f"⚠️ Deploy {deploy_id} reported status: {status}. This is a HARD FAIL — the new build did not deploy.")
-                    print(f"❌ {name} deployment FAILED (status: {status}). HTTP health fallback is intentionally skipped because it would only reflect the previous running version, masking the failure.")
+                elif any(f_word in status for f_word in ["fail", "cancel", "error"]):
+                    # বাংলা মন্তব্য: ডিপ্লয় ফেইল হলে সময় নষ্ট না করে সাথে সাথে HARD FAIL রিটার্ন করা হচ্ছে।
+                    print(f"⚠️ Deploy {deploy_id} reported status: {status}. HARD FAIL — new build failed to deploy.")
                     return False
             else:
                 print(f"⚠️ Error fetching deploy details: HTTP {res.status_code}")
