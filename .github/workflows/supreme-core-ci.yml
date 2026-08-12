@@ -327,6 +327,43 @@ jobs:
     secrets: inherit
 
   # ============================================================================
+  # STAGE 6 (PARALLEL): SYNC MIRROR — Secondary repo-তে main push
+  # বাংলা মন্তব্য: deploy-render ও deploy-frontend-এর সাথে parallel চলবে।
+  # MIRROR_REPO_TOKEN না থাকলে gracefully skip করবে — CI fail করবে না।
+  # ============================================================================
+  sync-mirror:
+    name: 🔄 Sync Mirror Repo
+    needs: [backend-tests, frontend-tests, production-readiness]
+    if: |
+      !startsWith(github.head_ref, 'promotion/staging') &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
+      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔄 Push to Production Mirror (paykaribazaronline)
+        # বাংলা মন্তব্য: SaifulHaqueNiloy/supremeai (origin) থেকে paykaribazaronline/supremeai (production target)-এ push।
+        # MIRROR_REPO_TOKEN না থাকলে warning দিয়ে gracefully skip — CI fail করবে না।
+        env:
+          MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
+        run: |
+          if [ -z "$MIRROR_REPO_TOKEN" ]; then
+            echo "::warning::MIRROR_REPO_TOKEN not set — mirror sync to paykaribazaronline skipped"
+            echo "⚠️ Mirror sync skipped (token absent)" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          git remote add target \
+            https://x-access-token:${MIRROR_REPO_TOKEN}@github.com/paykaribazaronline/supremeai.git
+          git push target main:refs/heads/main --force-with-lease || \
+            git push target main:refs/heads/main
+          echo "✅ Mirror sync to paykaribazaronline/supremeai completed" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
   # STAGE 7: POST-DEPLOY VERIFICATION — Production endpoint health check
   # বাংলা মন্তব্য: deploy সম্পন্ন হওয়ার পর production URL গুলো যাচাই করে।
   # ============================================================================
@@ -346,6 +383,7 @@ jobs:
   # ============================================================================
   # STAGE 8: FINAL SUMMARY — সব stage-এর ফলাফল একটি summary-তে দেখায়
   # বাংলা মন্তব্য: সর্বশেষ job — সব কিছু শেষ হওয়ার পরে চলে। GitHub Step Summary আপডেট করে।
+  # sync-mirror ও deploy-frontend এখন needs-এ যোগ করা হয়েছে।
   # ============================================================================
   final-summary:
     name: 📋 Final Summary
@@ -358,6 +396,7 @@ jobs:
       - build-backend
       - deploy-render
       - deploy-frontend
+      - sync-mirror
       - post-deploy-verify
     if: always()
     uses: ./.github/workflows/_final-summary.yml
@@ -370,4 +409,6 @@ jobs:
       production_readiness_status: ${{ needs.production-readiness.result }}
       build_status: ${{ needs.build-backend.result }}
       deploy_status: ${{ needs.deploy-render.result }}
+      frontend_deploy_status: ${{ needs.deploy-frontend.result }}
+      mirror_status: ${{ needs.sync-mirror.result }}
       verify_status: ${{ needs.post-deploy-verify.result }}

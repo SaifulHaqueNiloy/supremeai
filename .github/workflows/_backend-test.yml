@@ -334,6 +334,22 @@ jobs:
             poetry run pytest -n auto tests/test_health.py -q
           fi
 
+      - name: 🤖 Auto-Fix Engine (failure-only)
+        # বাংলা মন্তব্য: backend test fail হলে ruff + isort + black দিয়ে auto-fix চেষ্টা করা হবে।
+        # ci-auto-fix-v3.py আর নেই — auto-fix.yml-এর existing logic inline করা হলো।
+        # এই fix শুধু local workspace-এ apply হয়, পরবর্তী commit-এ কার্যকর হবে।
+        if: failure()
+        working-directory: backend
+        run: |
+          echo "## 🤖 Auto-Fix Engine চালু হচ্ছে..." >> $GITHUB_STEP_SUMMARY
+          pip install isort black || true
+          poetry run isort . || true
+          poetry run ruff check . --fix --unsafe-fixes \
+            --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402 || true
+          poetry run black . || true
+          echo "✅ Auto-fix সম্পন্ন (ruff + isort + black) — review করে recommit করুন" >> $GITHUB_STEP_SUMMARY
+          echo "::warning::Backend tests failed. Auto-fix applied (ruff + isort + black). Review and recommit."
+
       - name: Add Backend Test Results to GitHub Summary
         if: always()
         run: |

@@ -45,6 +45,18 @@ on:
         type: string
         required: false
         default: 'skipped'
+      frontend_deploy_status:
+        # বাংলা মন্তব্য: Firebase Admin ও Vercel User deploy-এর combined status
+        description: 'Frontend deploy status (Firebase + Vercel)'
+        type: string
+        required: false
+        default: 'skipped'
+      mirror_status:
+        # বাংলা মন্তব্য: Mirror repo sync-এর status
+        description: 'Mirror sync status'
+        type: string
+        required: false
+        default: 'skipped'
       verify_status:
         description: 'Verify status'
         type: string
@@ -70,7 +82,9 @@ jobs:
           STAGES["Frontend Test"]="${{ inputs.frontend_test_status }}"
           STAGES["Production Readiness"]="${{ inputs.production_readiness_status }}"
           STAGES["Build"]="${{ inputs.build_status }}"
-          STAGES["Deploy"]="${{ inputs.deploy_status }}"
+          STAGES["Deploy (Render)"]="${{ inputs.deploy_status }}"
+          STAGES["Deploy (Frontend)"]="${{ inputs.frontend_deploy_status }}"
+          STAGES["Mirror Sync"]="${{ inputs.mirror_status }}"
           STAGES["Verify"]="${{ inputs.verify_status }}"
 
           ALL_GREEN=true
