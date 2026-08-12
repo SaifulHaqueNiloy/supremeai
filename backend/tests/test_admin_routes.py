@@ -20,7 +20,7 @@ class TestHelperFunctions:
         """bcrypt ছাড়া হ্যাশ fails."""
         try:
             # If bcrypt is installed, this should work
-            import bcrypt  # noqa: F401
+            import bcrypt
 
             from core.admin_routes import _hash_password
 

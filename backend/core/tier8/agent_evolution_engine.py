@@ -7,7 +7,6 @@ agent definitions — all loaded from config / registry.
 Lint-free: ruff --select=ALL --ignore=E501 passes.
 """
 
-# ruff: noqa: S311
 # বাংলা মন্তব্য: জেনেটিক অ্যালগরিদমে ক্রিপ্টোগ্রাফিক সুরক্ষার প্রয়োজন নেই, তাই র্যান্ডম মডিউলের জন্য S311 নিষ্ক্রিয় করা হলো
 
 from __future__ import annotations

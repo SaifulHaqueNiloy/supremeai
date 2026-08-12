@@ -13,12 +13,12 @@ from core.observability.telemetry import (
 )
 
 __all__ = [
-    "otel_trace",
-    "TracerProvider",
     "BatchSpanProcessor",
-    "get_tracer",
-    "setup_tracing",
-    "trace_span",
+    "TracerProvider",
     "_NoOpSpan",
     "_RealSpan",
+    "get_tracer",
+    "otel_trace",
+    "setup_tracing",
+    "trace_span",
 ]

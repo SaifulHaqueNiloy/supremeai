@@ -50,4 +50,4 @@ def get_tenant_db(
     return TenantAwareFirestore(tenant_id=tenant_id)
 
 
-__all__ = ["get_fitness_engine", "get_current_user_token", "get_tenant_db"]
+__all__ = ["get_current_user_token", "get_fitness_engine", "get_tenant_db"]

@@ -156,7 +156,14 @@ class PerformanceGuardian:
 
         # Check CPU
         cpu = metrics.get("cpu_percent", 0)
-        is_anomaly, _ = self.detector.detect("cpu_percent", [cpu])
+        # বাংলা মন্তব্য: NOTE — AnomalyDetector.detect() পরিসংখ্যানগতভাবে অর্থপূর্ণ ফলাফল
+        # দিতে ন্যূনতম ৫টা historical value দরকার (len(values) < 5 হলে সবসময়
+        # (False, 0.0) রিটার্ন করে)। এখানে শুধু বর্তমান মুহূর্তের একটা মান
+        # ([cpu]) পাঠানো হচ্ছে, তাই এই কলটা কখনোই anomaly detect করতে পারবে না —
+        # আপাতত শুধু নিচের হার্ডকোডেড থ্রেশহোল্ড (cpu > 80) দিয়েই alert হচ্ছে।
+        # প্রকৃত anomaly detection চালু করতে PerformanceGuardian-এ প্রতিটা metric-এর
+        # rolling history buffer রাখা দরকার — এটা একটা আলাদা ফিচার-স্কোপ কাজ।
+        _is_anomaly, _ = self.detector.detect("cpu_percent", [cpu])
         if cpu > 80:
             alerts.append(
                 PerformanceAlert(

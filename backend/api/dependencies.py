@@ -201,11 +201,11 @@ async def verify_idempotency(request: Request) -> None:
 
 
 __all__ = [
-    "verify_autonomous_agent_token",
-    "get_fitness_engine",
-    "get_current_user_token",
     "get_current_admin",
-    "get_tenant_db",
     "get_current_tenant",
+    "get_current_user_token",
+    "get_fitness_engine",
+    "get_tenant_db",
+    "verify_autonomous_agent_token",
     "verify_idempotency",
 ]

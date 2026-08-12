@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """
 SupremeAI — Code-to-Database Outbox Sync Daemon
 ===============================================

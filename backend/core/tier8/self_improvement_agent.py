@@ -304,7 +304,7 @@ class SelfImprovementAgent(BaseSkill):
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await proc.communicate()
+            _stdout, stderr = await proc.communicate()
             # Restore original
             target.write_text(original, encoding="utf-8")
             # বাংলা মন্তব্য: Python 3.11+ এ asyncio.TimeoutError এর পরিবর্তে built-in TimeoutError ব্যবহার করা শ্রেয়

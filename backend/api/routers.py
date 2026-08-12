@@ -193,11 +193,11 @@ def include_admin_routers(app: FastAPI) -> None:
 
 
 __all__ = [
-    "register_all_routers",
-    "include_user_routers",
-    "include_admin_routers",
-    "core_routers",
-    "optional_routers",
-    "USER_ROUTERS",
     "ADMIN_ROUTERS",
+    "USER_ROUTERS",
+    "core_routers",
+    "include_admin_routers",
+    "include_user_routers",
+    "optional_routers",
+    "register_all_routers",
 ]

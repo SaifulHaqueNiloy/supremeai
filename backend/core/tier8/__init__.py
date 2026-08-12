@@ -46,12 +46,12 @@ from core.tier8.swarm_coordination_agent import (
 )
 
 __all__ = [
-    "SelfImprovementAgent",
-    "get_self_improvement_agent",
     "AgentEvolutionEngine",
-    "get_agent_evolution_engine",
-    "SwarmCoordinationAgent",
-    "get_swarm_coordination_agent",
+    "SelfImprovementAgent",
     "SkillMarketplaceCurator",
+    "SwarmCoordinationAgent",
+    "get_agent_evolution_engine",
+    "get_self_improvement_agent",
     "get_skill_marketplace_curator",
+    "get_swarm_coordination_agent",
 ]

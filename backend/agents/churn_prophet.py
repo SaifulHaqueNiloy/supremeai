@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """
 SupremeAI — Layer 5: Data & Analytics — ChurnProphet Agent
 ==========================================================

@@ -129,7 +129,7 @@ class EmailAgent:
                         payload = part.get_payload(decode=True)
                         if payload:
                             return payload.decode(part.get_content_charset() or "utf-8", errors="ignore")
-                    except Exception:  # noqa: S112
+                    except Exception:
                         continue
             return ""
         try:

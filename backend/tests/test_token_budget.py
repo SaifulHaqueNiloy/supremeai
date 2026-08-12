@@ -22,7 +22,7 @@ async def test_prepare_prompt_truncates_when_exceeds_budget(monkeypatch):
     mgr = TokenBudgetManager(custom_budgets={"default": {"max_input_tokens": 200, "max_output_tokens": 50}})
 
     long_prompt = "hello " * 1000
-    processed, meta = mgr.prepare_prompt(long_prompt, provider="default", system_prompt="sys")
+    _processed, meta = mgr.prepare_prompt(long_prompt, provider="default", system_prompt="sys")
 
     assert meta["truncated"] is True
     assert meta["estimated_input_tokens"] > 0

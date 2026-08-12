@@ -70,7 +70,7 @@ MOCK_AI_RESPONSE_JSON = {
 @pytest.mark.anyio
 async def test_pipeline_success(clean_dynamic_skills, monkeypatch):
     monkeypatch.setenv("ALLOW_LOCAL_SANDBOX_FALLBACK", "true")
-    loader, registry, installer = clean_dynamic_skills
+    loader, _registry, _installer = clean_dynamic_skills
 
     async def mock_acompletion(*args, **kwargs):
         return {"success": True, "text": json.dumps(MOCK_AI_RESPONSE_JSON)}
@@ -93,7 +93,7 @@ async def test_pipeline_success(clean_dynamic_skills, monkeypatch):
 @pytest.mark.anyio
 async def test_pipeline_validation_mismatch(clean_dynamic_skills, monkeypatch):
     monkeypatch.setenv("ALLOW_LOCAL_SANDBOX_FALLBACK", "true")
-    loader, registry, installer = clean_dynamic_skills
+    loader, _registry, _installer = clean_dynamic_skills
 
     # Modify mock JSON so that execute return value mismatch validation expected output
     mismatch_json = MOCK_AI_RESPONSE_JSON.copy()
@@ -121,7 +121,7 @@ async def test_pipeline_validation_mismatch(clean_dynamic_skills, monkeypatch):
 @pytest.mark.anyio
 async def test_pipeline_invalid_uss_pydantic(clean_dynamic_skills, monkeypatch):
     monkeypatch.setenv("ALLOW_LOCAL_SANDBOX_FALLBACK", "true")
-    loader, registry, installer = clean_dynamic_skills
+    _loader, _registry, _installer = clean_dynamic_skills
 
     # Invalid semver version format inside metadata
     bad_uss_json = MOCK_AI_RESPONSE_JSON.copy()

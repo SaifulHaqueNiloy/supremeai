@@ -59,7 +59,7 @@ class SkillProvisioner:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await proc.communicate()
+            _stdout, stderr = await proc.communicate()
             if proc.returncode != 0:
                 logger.error(f"Failed to install Python packages for {skill_id}: {stderr.decode()}")
                 return {

@@ -83,7 +83,7 @@ class TestVoiceCoder:
         coder = VoiceCoder()
         with patch.object(coder, "_explain", new_callable=AsyncMock) as mock_exp:
             mock_exp.return_value = "This is a variable"
-            action, result = await coder._classify_and_execute("explain what is a variable")
+            action, _result = await coder._classify_and_execute("explain what is a variable")
         assert action == "explanation"
 
 

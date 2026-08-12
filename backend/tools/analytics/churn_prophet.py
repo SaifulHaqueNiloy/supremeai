@@ -15,11 +15,11 @@ from agents.churn_prophet import (
 )
 
 __all__ = [
-    "ChurnProphet",
     "BehavioralScorer",
+    "ChurnProphet",
+    "ChurnRiskScore",
     "RetentionStrategist",
+    "RetentionStrategy",
     "RiskLevel",
     "UserSegment",
-    "ChurnRiskScore",
-    "RetentionStrategy",
 ]

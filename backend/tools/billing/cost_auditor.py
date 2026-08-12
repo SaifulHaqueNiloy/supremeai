@@ -46,7 +46,7 @@ class CostAuditor:
         try:
             import matplotlib.pyplot as plt
 
-            fig, ax = plt.subplots(figsize=(6, 4))
+            _fig, ax = plt.subplots(figsize=(6, 4))
             types = list(by_type.keys())
             costs = list(by_type.values())
             ax.bar(types, costs, color="skyblue")
