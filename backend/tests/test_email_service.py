@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from core.email_service import EmailService
+from services.email.email_service import EmailService
 
 
 @pytest.fixture
@@ -22,12 +22,12 @@ class TestEmailService:
         assert email_service._settings is None
 
     def test_get_settings_returns_settings(self, email_service):
-        with patch("core.email_service.settings") as mock_settings:
+        with patch("services.email.email_service.settings") as mock_settings:
             result = email_service._get_settings()
             assert result is mock_settings
 
     def test_get_settings_fallback(self, email_service):
-        with patch("core.email_service.settings", side_effect=Exception("No settings")):
+        with patch("services.email.email_service.settings", side_effect=Exception("No settings")):
             result = email_service._get_settings()
             assert hasattr(result, "resend_api_url")
             assert hasattr(result, "frontend_url")
@@ -96,7 +96,7 @@ class TestEmailService:
             mock_instance.post.return_value = mock_response
             mock_client.return_value.__aenter__.return_value = mock_instance
 
-            with patch("core.email_service.error_event_bus") as mock_event_bus:
+            with patch("services.email.email_service.error_event_bus") as mock_event_bus:
                 result = await email_service._send_email(
                     to_email="user@example.com",
                     subject="Test",
@@ -130,7 +130,7 @@ class TestEmailService:
             mock_instance.post.side_effect = Exception("Connection refused")
             mock_client.return_value.__aenter__.return_value = mock_instance
 
-            with patch("core.email_service.error_event_bus") as mock_event_bus:
+            with patch("services.email.email_service.error_event_bus") as mock_event_bus:
                 result = await email_service._send_email(
                     to_email="user@example.com",
                     subject="Test",

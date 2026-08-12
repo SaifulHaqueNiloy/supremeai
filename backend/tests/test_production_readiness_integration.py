@@ -157,7 +157,7 @@ class TestProductionReadinessSystems:
 
             # সিস্টেমগুলি সঠিক ক্রমে চলে নিশ্চিত করুন
             # production-readiness → backend-core
-            assert "backend-core" in content
+            assert "backend-tests" in content
 
     def test_code_style_guide_includes_bengali_comments(self):
         """কোড স্টাইল গাইড বাংলা মন্তব্য অন্তর্ভুক্ত করে"""
