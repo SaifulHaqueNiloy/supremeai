@@ -347,6 +347,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 🔄 Push to Production Mirror (paykaribazaronline)
         # বাংলা মন্তব্য: SaifulHaqueNiloy/supremeai (origin) থেকে paykaribazaronline/supremeai (production target)-এ push।
@@ -360,7 +361,7 @@ jobs:
             exit 0
           fi
           git remote add target \
-            https://x-access-token:${MIRROR_REPO_TOKEN}@github.com/paykaribazaronline/supremeai.git
+            https://${MIRROR_REPO_TOKEN}@github.com/paykaribazaronline/supremeai.git
           git push target main:refs/heads/main --force-with-lease || \
             git push target main:refs/heads/main
           echo "✅ Mirror sync to paykaribazaronline/supremeai completed" >> $GITHUB_STEP_SUMMARY
