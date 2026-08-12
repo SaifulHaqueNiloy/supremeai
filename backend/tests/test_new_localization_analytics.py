@@ -148,7 +148,7 @@ async def test_churn_prophet():
             return_value=mock_signals,
         ),
         patch(
-            "core.llm_router.LLMRouter.route",
+            "backend.services.llm.llm_router.LLMRouter.route",
             new_callable=AsyncMock,
             return_value=mock_strategy,
         ),
@@ -178,7 +178,7 @@ async def test_insight_mage():
             return_value=mock_time_series,
         ),
         patch(
-            "core.llm_router.LLMRouter.route",
+            "backend.services.llm.llm_router.LLMRouter.route",
             new_callable=AsyncMock,
             return_value=mock_report,
         ),

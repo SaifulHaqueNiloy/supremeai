@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from core.cache import get_cache
-from core.llm_router import LLMRouter
+from backend.services.llm.llm_router import LLMRouter
 
 logger = logging.getLogger("supremeai.multi_agent_collab")
 
