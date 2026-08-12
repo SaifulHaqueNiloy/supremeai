@@ -339,6 +339,7 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
       (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped')
     runs-on: ubuntu-latest
     steps:

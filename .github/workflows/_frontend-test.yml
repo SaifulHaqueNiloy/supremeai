@@ -27,9 +27,9 @@ on:
         default: false
       run_attempt:
         description: 'Run attempt number'
-        type: number
+        type: string
         required: false
-        default: 1
+        default: '1'
 
 jobs:
   frontend-core:
