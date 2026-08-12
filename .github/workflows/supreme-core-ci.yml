@@ -618,6 +618,7 @@ jobs:
 
   ai-scribe-docs:
     name: "📚 AI Scribe — Auto-Documentation Generation"
+    continue-on-error: true
     needs: [changes, service-preflight]
     if: >
 
@@ -1813,7 +1814,7 @@ jobs:
             exit 0
           fi
           echo "⚠️ Difference detected — pushing to mirror main."
-          git push --force mirror main:refs/heads/main
+          git push --force mirror main:refs/heads/main || echo "⚠️ Mirror push failed non-blockingly."
 
   # ==============================================================================
   # 🟢 STAGING → PRODUCTION PROMOTION JOB
