@@ -382,11 +382,35 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install gate and backend dependencies
+        run: pip install ruff poetry && cd backend && poetry config virtualenvs.in-project true
+
+      # বাংলা মন্তব্য: এই gate আগে প্রতি রানে backend-core-এর মতোই ১৭৯টা প্যাকেজ
+      # কোনো cache ছাড়াই ফ্রেশ ইনস্টল করত (~২৫-৩০ সেকেন্ড)। backend-core job-এ
+      # ইতিমধ্যেই যে poetry/.venv cache pattern আছে সেটাই এখানে যোগ করা হলো --
+      # poetry.lock অপরিবর্তিত থাকলে cache hit-এ install সম্পূর্ণ skip হবে।
+      - name: ⚙️ Poetry Cache (gate — main deps only)
+        id: gate_poetry_cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-gate-main-v1-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-gate-main-v1-
+
+      - name: 📦 Install backend deps (main only, cache-aware)
+        if: needs.changes.outputs.docs_only != 'true'
         run: |
-          pip install ruff poetry
           cd backend
-          poetry config virtualenvs.in-project true
-          poetry install --only main --no-root
+          if [ "${{ steps.gate_poetry_cache.outputs.cache-hit }}" == "true" ]; then
+            echo "gate poetry cache HIT — syncing only"
+            poetry install --only main --no-root --sync
+          else
+            echo "gate poetry cache MISS — fresh install"
+            poetry install --only main --no-root
+          fi
 
       - name: 🚫 Gate 1 — Zero-Gap Stub/Placeholder Data Check
         if: needs.changes.outputs.docs_only != 'true'
@@ -747,11 +771,17 @@ jobs:
   backend-core:
     name: 🐍 Backend (Test)
     timeout-minutes: 10
-    needs: [changes, docker-build, service-preflight, pre-merge-gate]
+    # বাংলা মন্তব্য (রানটাইম অপ্টিমাইজেশন): আগে এখানে docker-build-ও needs-এ ছিল,
+    # কিন্তু এই job কোথাও backend-ci-base ইমেজ pull/use করে না -- সরাসরি
+    # ubuntu-latest runner-এ poetry দিয়ে টেস্ট চালায়। docker-build-এর জন্য
+    # অপেক্ষা করা শুধু critical path-এ অহেতুক সময় (Docker image build+push,
+    # সাধারণত ১-৩ মিনিট) যোগ করছিল। docker-build সরিয়ে দেওয়ায় এখন backend-core
+    # pre-merge-gate + service-preflight শেষ হওয়া মাত্রই docker-build-এর সাথে
+    # সমান্তরালে শুরু হবে।
+    needs: [changes, service-preflight, pre-merge-gate]
     if: >
       always() &&
       (needs.pre-merge-gate.result == 'success') &&
-      (needs.docker-build.result == 'success' || needs.docker-build.result == 'skipped') &&
       (needs.changes.outputs.backend == 'true' || needs.changes.outputs.docker_build == 'true' || github.event_name == 'workflow_dispatch' || github.run_attempt > 1)
     runs-on: ubuntu-latest
     services:
