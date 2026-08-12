@@ -13,8 +13,7 @@ client = TestClient(app)
 
 def _skip_if_media_deps_missing():
     try:
-        import tools.media.image_generator as _ig
-        import tools.media.video_generator as _vg
+        pass
     except Exception as exc:
         pytest.skip(f"Media backend dependencies missing: {exc}")
 
