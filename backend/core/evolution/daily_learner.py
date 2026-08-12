@@ -25,7 +25,7 @@ from loguru import logger
 
 from core.cache import get_cache
 from core.evolution.evolution_engine import EvolutionEngine
-from core.llm_router import LLMRouter
+from backend.services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 LEARNER_CACHE_TTL = 1800  # 30 minutes

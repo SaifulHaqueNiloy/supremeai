@@ -9,7 +9,7 @@ from typing import Any
 
 from loguru import logger
 
-from core.llm_router import LLMRouter
+from backend.services.llm.llm_router import LLMRouter
 
 # Local inference configuration
 LOCAL_MODELS = {

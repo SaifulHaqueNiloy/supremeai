@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
-from core.llm_router import LLMRouter
+from backend.services.llm.llm_router import LLMRouter
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 

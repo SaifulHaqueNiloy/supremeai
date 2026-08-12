@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from core.llm_router import LLMRouter, Provider, TaskType
+from backend.services.llm.llm_router import LLMRouter, Provider, TaskType
 
 
 class FakeProvider:
@@ -49,7 +49,7 @@ def mock_router_settings(monkeypatch):
     mock_settings.gemini_api_key = ""
     mock_settings.OLLAMA_URL = "http://localhost:11434"
     mock_settings.OLLAMA_MODEL = "qwen2.5:0.5b"
-    monkeypatch.setattr("core.llm_router.settings", mock_settings)
+    monkeypatch.setattr("backend.services.llm.llm_router.settings", mock_settings)
     return mock_settings
 
 
@@ -136,7 +136,7 @@ class TestCrossProviderConsistency:
 
     def test_provider_capabilities_matrix(self):
         """Test provider capabilities matrix is defined."""
-        from core.llm_router import PROVIDER_CAPABILITIES
+        from backend.services.llm.llm_router import PROVIDER_CAPABILITIES
 
         assert Provider.MOONSHOT in PROVIDER_CAPABILITIES
         assert Provider.DEEPSEEK in PROVIDER_CAPABILITIES

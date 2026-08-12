@@ -18,7 +18,7 @@ OVER TIME: Self-sufficiency grows from 30% -> 80%+
 from loguru import logger
 
 from brain.supreme_learning_engine import SupremeLearningEngine
-from core.llm_router import LLMRouter
+from backend.services.llm.llm_router import LLMRouter
 
 _learning_engine: SupremeLearningEngine | None = None
 
