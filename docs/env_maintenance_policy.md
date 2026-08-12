@@ -1,6 +1,16 @@
-# SupremeAI 2.0 - Environment & Secret Maintenance Policy (Single Source of Truth)
+# SupremeAI 2.0 - Environment & Secret Maintenance Policy (আর্কিটেকচার ডকুমেন্টেশন)
 
-এই ডকুমেন্টটি SupremeAI 2.0-এর নতুন "Hybrid Secret Architecture"-এর সম্পূর্ণ নির্দেশিকা এবং **Single Source of Truth**। কোন কি (key) কোথায় থাকবে তার পূর্ণাঙ্গ তালিকা এখানে দেওয়া হলো।
+> ⚠️ **এই ফাইলটি আর CI-তে machine-parse করা হয় না।** আগে `scripts/parse_env_policy.py`
+> এই ফাইল থেকে key-list scrape করত এবং `secrets_registry.yaml`-এর সাথে সমান্তরাল
+> ভাবে চলত — দুটো ফাইল একই environment-এর জন্য ভিন্ন সংখ্যক key বলছিল, কারণ কেউ একটায়
+> key যোগ করলে অন্যটা জানত না। এখন **`secrets_registry.yaml`-ই একমাত্র enforced
+> single source of truth** (`scripts/audit_env_usage.py`, `scripts/verify_render_env.py`,
+> `scripts/verify_infisical_env.py` — সবগুলো CI check এখন শুধু ওই ফাইল পড়ে)। এই
+> ডকুমেন্ট এখন শুধু architecture ও rationale বোঝানোর জন্য মানুষের পড়ার প্রবন্ধ —
+> নিচের key-list গুলো stale হতে পারে, নতুন key যোগ করতে `secrets_registry.yaml`
+> (বা `scripts/generate_registry.py`) এডিট করুন, এই ফাইল না।
+
+এই ডকুমেন্টটি SupremeAI 2.0-এর "Hybrid Secret Architecture"-এর নির্দেশিকা — কোন কি (key) কোথায় থাকে তার প্রেক্ষাপট এখানে ব্যাখ্যা করা হলো।
 
 ## 🏗️ মূল আর্কিটেকচার (Hybrid Approach)
 সিকিউরিটি, স্কেলাবিলিটি এবং মেইনটেইনবিলিটির কথা মাথায় রেখে প্রোজেক্টের সিক্রেটগুলোকে **দুটি ভাগে** ভাগ করা হয়েছে:
