@@ -176,74 +176,74 @@ __description__ = "Core Components for SupremeAI 2.0"
 
 # All available components
 __all__ = [
-    # Performance Optimization
-    "PerformanceOptimizer",
-    "get_performance_optimizer",
-    "performance_monitor",
-    "LRUCache",
-    "AsyncLRUCache",
-    "OptimizationLevel",
+    # Continual Learning
+    "EWC",
     # Accessibility
     "AccessibilityComplianceEngine",
-    "HTMLAccessibilityChecker",
-    "ColorContrastChecker",
     "AccessibilityIssue",
-    "WCAGPrinciple",
-    "WCAGGuideline",
-    "WCAGLevel",
-    # Testing & QA
-    "QASuite",
-    "TestSuite",
-    "TestCase",
-    "UnitTestGenerator",
-    "IntegrationTestRunner",
-    "SecurityTester",
-    "PerformanceTester",
+    # Adversarial Defense
+    "AdversarialDefenseSystem",
+    "AdversarialTrainer",
+    "AggregationMethod",
+    "AsyncLRUCache",
     "ChaosEngineer",
-    "TestCategory",
-    "TestPriority",
-    "TestResult",
-    # Deployment
-    "ProductionDeploymentSystem",
-    "DeploymentManager",
+    "ColorContrastChecker",
     "ConfigManager",
-    "ImageBuilder",
-    "HealthChecker",
+    "DefenseConfig",
     "DeploymentConfig",
     "DeploymentEnvironment",
+    "DeploymentManager",
     "DeploymentStatus",
     # Evolution Components
     # Digital Twin
     "DigitalTwinWorldModel",
-    "get_digital_twin_model",
-    "SystemTopologyMapper",
-    "ImpactSimulator",
-    "RemediationEngine",
-    # Continual Learning
-    "EWC",
-    "OnlineEWC",
-    "EWCTrainer",
     "EWCConfig",
-    # Adversarial Defense
-    "AdversarialDefenseSystem",
-    "AdversarialTrainer",
-    "DefenseConfig",
-    # Neural-Symbolic Integration
-    "NeuralSymbolicIntegrator",
-    "MathematicalReasoningEngine",
-    "NeuralSymbolicConfig",
+    "EWCTrainer",
+    "FLConfig",
     # Federated Learning
     "FederatedLearningCoordinator",
-    "FLConfig",
-    "AggregationMethod",
+    "HTMLAccessibilityChecker",
+    "HealthChecker",
+    "ImageBuilder",
+    "ImpactSimulator",
+    "IntegrationTestRunner",
+    "LRUCache",
+    "MathematicalReasoningEngine",
+    "NeuralSymbolicConfig",
+    # Neural-Symbolic Integration
+    "NeuralSymbolicIntegrator",
+    "OnlineEWC",
+    "OptimizationLevel",
+    # Performance Optimization
+    "PerformanceOptimizer",
+    "PerformanceTester",
+    # Deployment
+    "ProductionDeploymentSystem",
+    # Testing & QA
+    "QASuite",
+    "RemediationEngine",
+    "SecurityTester",
+    "SystemTopologyMapper",
+    "TemporalAbstractionConfig",
+    # Temporal Abstraction
+    "TemporalAbstractionSystem",
+    "TemporalGranularity",
+    "TestCase",
+    "TestCategory",
+    "TestPriority",
+    "TestResult",
+    "TestSuite",
     # Theory of Mind
     "TheoryOfMindSystem",
     "ToMConfig",
     "ToMLevel",
-    # Temporal Abstraction
-    "TemporalAbstractionSystem",
-    "TemporalAbstractionConfig",
-    "TemporalGranularity",
+    "UnitTestGenerator",
+    "WCAGGuideline",
+    "WCAGLevel",
+    "WCAGPrinciple",
+    "get_digital_twin_model",
+    "get_performance_optimizer",
+    "performance_monitor",
 ]
 
 

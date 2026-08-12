@@ -292,30 +292,30 @@ async def initialize_digital_twin():
 
 # For backward compatibility
 __all__ = [
-    # Topology components
-    "SystemTopologyMapper",
-    "ServiceNode",
     "DataFlowEdge",
-    "ResourceUtilization",
-    "get_topology_mapper",
-    "discover_system_topology",
-    # Simulation components
-    "ImpactSimulator",
-    "SimulationType",
-    "SimulationResult",
-    "FailureScenario",
-    "TrafficScenario",
-    "get_impact_simulator",
-    # Remediation components
-    "RemediationEngine",
-    "RemediationAction",
-    "RemediationStatus",
-    "RemediationPlan",
-    "RemediationExecution",
-    "get_remediation_engine",
     # Main integration
     "DigitalTwinWorldModel",
+    "FailureScenario",
+    # Simulation components
+    "ImpactSimulator",
+    "RemediationAction",
+    # Remediation components
+    "RemediationEngine",
+    "RemediationExecution",
+    "RemediationPlan",
+    "RemediationStatus",
+    "ResourceUtilization",
+    "ServiceNode",
+    "SimulationResult",
+    "SimulationType",
+    # Topology components
+    "SystemTopologyMapper",
+    "TrafficScenario",
+    "discover_system_topology",
     "get_digital_twin_model",
+    "get_impact_simulator",
+    "get_remediation_engine",
+    "get_topology_mapper",
     "initialize_digital_twin",
 ]
 

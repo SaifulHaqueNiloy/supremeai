@@ -96,7 +96,7 @@ class HTMLAccessibilityParser(HTMLParser):
                     )
 
         # Check for form inputs without labels
-        if tag in ["input", "textarea", "select"] and "type" not in attrs or attrs.get("type") != "hidden":
+        if (tag in ["input", "textarea", "select"] and "type" not in attrs) or attrs.get("type") != "hidden":
             if "aria-label" not in attrs and "aria-labelledby" not in attrs:
                 # Check if previous element is a label
                 if "id" in attrs:
