@@ -122,7 +122,8 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                 headers=headers,
             )
 
-        if getattr(__import__("core.config", fromlist=["settings"]).settings, "is_origin_bypass_allowed", False) or _env in {"test", "testing", "ci"}:
+        # বাংলা মন্তব্য: dynamic __import__("core.config") তুলে দিয়ে সরাসরি ইম্পোর্টেড settings অবজেক্ট ব্যবহার করা হলো, যাতে unit test-এর patching সঠিকভাবে কার্যকর থাকে।
+        if getattr(settings, "is_origin_bypass_allowed", False) or _env in {"test", "testing", "ci"}:
             pass
         elif origin and origin not in allowed:
             client_ip = request.client.host if request.client else "unknown"
