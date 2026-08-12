@@ -214,3 +214,22 @@ def test_config_endpoint_admin_control(monkeypatch):
     assert resp.json()["status"] == "success"
 
     app.dependency_overrides.clear()
+
+
+def test_config_endpoint_missing_key_returns_404(monkeypatch):
+    # বাংলা মন্তব্য: regression test — get_config_by_key-এ HTTPException import
+    # করা ছিল না, ফলে missing key request করলে 404-এর বদলে NameError দিয়ে
+    # 500 crash হতো। কোনো existing test এই path কভার করতো না, তাই আগে ধরা
+    # পড়েনি (ruff --select F821 দিয়ে ধরা পড়েছে)।
+    monkeypatch.setattr(config_route.db, "client", MagicMock())
+    monkeypatch.setattr(config_route.db, "get_config", lambda key: None)
+
+    from api.routes.admin_dashboard import require_admin_token
+
+    app.dependency_overrides[require_admin_token] = lambda: "admin"
+
+    resp = client.get("/config/nonexistent.key", headers=auth_headers)
+    assert resp.status_code == 404
+    assert "not found" in resp.json()["detail"].lower()
+
+    app.dependency_overrides.clear()
