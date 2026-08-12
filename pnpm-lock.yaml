@@ -17,6 +17,9 @@ importers:
       '@webcontainer/api':
         specifier: ^1.6.4
         version: 1.6.4
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -182,6 +185,9 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
       firebase:
         specifier: ^12.15.0
         version: 12.16.0
@@ -282,9 +288,6 @@ importers:
       concurrently:
         specifier: ^9.2.1
         version: 9.2.3
-      cross-env:
-        specifier: ^10.1.0
-        version: 10.1.0
       electron:
         specifier: ^41.8.0
         version: 41.10.1
