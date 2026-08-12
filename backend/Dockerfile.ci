@@ -16,3 +16,8 @@ RUN pip install --no-cache-dir poetry
 RUN poetry config virtualenvs.create false
 WORKDIR /app
 RUN chown -R 1001:1001 /app
+# বাংলা মন্তব্য (INFRA-002 ফিক্স): উপরের chown লাইন দেখেই বোঝা যায় non-root user
+# হিসেবে চালানোর ইচ্ছা ছিল, কিন্তু USER directive টাই বাদ পড়ে গিয়েছিল — ফলে
+# আসলে root হিসেবেই চলছিল। এটা CI-only image (production-এ deploy হয় না),
+# তাই severity কম ছিল, কিন্তু ঠিক করে দেওয়াই ভালো অভ্যাস।
+USER 1001
