@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.database.pgbouncer_pool"
+_DEPRECATED_TARGET = "database.pgbouncer_pool"
 _warned = False
 
 def __getattr__(name):

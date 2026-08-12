@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.middleware.idempotency_middleware"
+_DEPRECATED_TARGET = "middleware.idempotency_middleware"
 _warned = False
 
 def __getattr__(name):

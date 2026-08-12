@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.database.db_repository"
+_DEPRECATED_TARGET = "database.db_repository"
 _warned = False
 
 def __getattr__(name):

@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.middleware.cors_policy"
+_DEPRECATED_TARGET = "middleware.cors_policy"
 _warned = False
 
 def __getattr__(name):

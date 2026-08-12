@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.services.llm.llm_router"
+_DEPRECATED_TARGET = "services.llm.llm_router"
 _warned = False
 
 def __getattr__(name):

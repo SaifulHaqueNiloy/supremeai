@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.services.storage.gcp_firestore"
+_DEPRECATED_TARGET = "services.storage.gcp_firestore"
 _warned = False
 
 def __getattr__(name):
