@@ -123,8 +123,7 @@ def check_vercel(token: str) -> Optional[str]:
     401/403 → ❌ Token invalid/expired
     """
     if not token:
-        print("  ⚠️  [VERCEL] WARNING: VERCEL_TOKEN secret is empty — Vercel deploy will be skipped.")
-        return None
+        return "[VERCEL] ❌ FAIL: Secret is empty — set VERCEL_TOKEN in GitHub Secrets"
 
     code = http_get(
         "https://api.vercel.com/v2/user",
