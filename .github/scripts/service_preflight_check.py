@@ -40,7 +40,7 @@ from typing import Optional
 # হার্ডকোড এড়াতে env var দিয়ে override করার সুযোগও রাখা হলো
 # (repo/org variable PROD_REPO_SLUG সেট থাকলে সেটাই ব্যবহার হবে)।
 # ──────────────────────────────────────────────────────────────
-PROD_REPO_SLUG = os.environ.get("PROD_REPO_SLUG", "paykaribazaronline/supremeai")
+PROD_REPO_SLUG = os.environ.get("PROD_REPO_SLUG", "SaifulHaqueNiloy/supremeai")
 
 
 # ──────────────────────────────────────────────────────────────
