@@ -277,10 +277,10 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
 
 __all__ = [
-    "SupremeContextMiddleware",
-    "RequestIdMiddleware",
-    "TenantExtractionMiddleware",
-    "ResponseStandardizationMiddleware",
     "ChaosInjectorMiddleware",
     "IdempotencyMiddleware",
+    "RequestIdMiddleware",
+    "ResponseStandardizationMiddleware",
+    "SupremeContextMiddleware",
+    "TenantExtractionMiddleware",
 ]

@@ -15,11 +15,11 @@ from agents.insight_mage import (
 )
 
 __all__ = [
-    "InsightMage",
-    "TrendDetector",
     "AnomalyDetector",
-    "ReportFormatter",
-    "TrendResult",
     "AnomalyResult",
+    "InsightMage",
+    "ReportFormatter",
     "ReportResult",
+    "TrendDetector",
+    "TrendResult",
 ]

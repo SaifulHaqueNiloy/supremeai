@@ -158,7 +158,7 @@ class ImageBuilder:
             logger.info(f"Building Docker image: {image_name}")
 
             # Build the image
-            image, build_logs = self.client.images.build(
+            image, _build_logs = self.client.images.build(
                 path=context_path,
                 dockerfile=self.dockerfile_path,
                 tag=f"{image_name}:{tags[0]}",

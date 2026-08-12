@@ -356,7 +356,7 @@ class TestMultiAccountRotator:
         rotator.task_preferences = {"coding": ["groq"]}
         result = rotator.get_best_provider_for_task(TaskType.CODING, {})
         assert result is not None
-        provider, account = result
+        provider, _account = result
         assert provider.name == "groq"
 
     def test_get_best_provider_for_task_no_match(self, rotator):

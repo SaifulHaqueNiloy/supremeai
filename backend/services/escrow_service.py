@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """
 SupremeAI — Escrow Service
 ============================

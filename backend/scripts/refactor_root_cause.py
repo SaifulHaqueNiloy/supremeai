@@ -16,7 +16,7 @@ def process_file(filepath: Path, dry_run: bool = False):
         return
 
     try:
-        tree = ast.parse(content)  # noqa: F841
+        tree = ast.parse(content)
     except Exception as e:
         print(f"Skipping {filepath} due to syntax error: {e}")
         return
