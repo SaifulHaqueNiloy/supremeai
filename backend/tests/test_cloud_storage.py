@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from core.cloud_storage import CloudStorageManager
+from services.storage.cloud_storage import CloudStorageManager
 
 
 class TestCloudStorageManager:
@@ -12,7 +12,7 @@ class TestCloudStorageManager:
 
     def test_init_no_credentials(self):
         """ক্রেডেনশিয়াল ছাড়াই ইনিশialization করা হচ্ছে।"""
-        with patch("core.cloud_storage.settings") as mock_settings:
+        with patch("services.storage.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = None
             mock_settings.supabase_key = None
             manager = CloudStorageManager()
@@ -21,7 +21,7 @@ class TestCloudStorageManager:
 
     def test_init_with_credentials(self):
         """ক্রেডেনশিয়াল সহ ইনিশialization করা হচ্ছে।"""
-        with patch("core.cloud_storage.settings") as mock_settings:
+        with patch("services.storage.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = "https://test.supabase.co"
             mock_settings.supabase_key = "test-key"
             manager = CloudStorageManager()
@@ -34,7 +34,7 @@ class TestCloudStorageManager:
         """ক্রেডেনশিয়াল ছাড়াই আপলোড রিজেক্স করা হচ্ছে।"""
         from fastapi import HTTPException
 
-        with patch("core.cloud_storage.settings") as mock_settings:
+        with patch("services.storage.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = None
             mock_settings.supabase_key = None
             manager = CloudStorageManager()
@@ -47,7 +47,7 @@ class TestCloudStorageManager:
     @pytest.mark.anyio
     async def test_upload_file_success(self):
         """সফল ফাইল আপলোড করা হচ্ছে।"""
-        with patch("core.cloud_storage.settings") as mock_settings:
+        with patch("services.storage.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = "https://test.supabase.co"
             mock_settings.supabase_key = "test-key"
             manager = CloudStorageManager()
@@ -70,7 +70,7 @@ class TestCloudStorageManager:
         """সার্ভার ত্রুটি হলে আপলোড ব্যর্থ হয়।"""
         from fastapi import HTTPException
 
-        with patch("core.cloud_storage.settings") as mock_settings:
+        with patch("services.storage.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = "https://test.supabase.co"
             mock_settings.supabase_key = "test-key"
             manager = CloudStorageManager()
@@ -97,7 +97,7 @@ class TestCloudStorageManager:
         import httpx
         from fastapi import HTTPException
 
-        with patch("core.cloud_storage.settings") as mock_settings:
+        with patch("services.storage.cloud_storage.settings") as mock_settings:
             mock_settings.supabase_url = "https://test.supabase.co"
             mock_settings.supabase_key = "test-key"
             manager = CloudStorageManager()

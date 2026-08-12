@@ -284,7 +284,7 @@ class TestLLMRouter:
             for provider in router.providers.values():
                 provider.health_check = AsyncMock(return_value=False)
 
-            from core.exceptions import LLMProviderError
+            from backend.core.exceptions import LLMProviderError
 
             with pytest.raises(LLMProviderError):
                 await router.route("test prompt", task_type="chat", stream=False)
