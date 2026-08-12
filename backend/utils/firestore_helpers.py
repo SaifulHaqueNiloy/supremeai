@@ -80,7 +80,7 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
             from google.oauth2 import service_account
             sa_info = json.loads(sa_json_str)
             credentials = service_account.Credentials.from_service_account_info(sa_info)
-            
+
         client = firestore.Client(project=resolved_project, credentials=credentials)
         _client_cache[resolved_project] = client
         logger.info(f"Firestore client initialized for project: {resolved_project}")

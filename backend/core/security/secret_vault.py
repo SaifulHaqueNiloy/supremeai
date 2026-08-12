@@ -44,7 +44,7 @@ INFISICAL_TIMEOUT: int = int(os.getenv("INFISICAL_TIMEOUT", "10"))  # 10s defaul
 class _CacheEntry:
     """Cache entry with TTL expiry."""
 
-    __slots__ = ("value", "expires_at")
+    __slots__ = ("expires_at", "value")
 
     def __init__(self, value: str, ttl: int = CACHE_TTL_SECONDS) -> None:
         self.value = value
@@ -151,7 +151,7 @@ class ProductionSecretVault:
                     infisical_env = "staging"
                 else:
                     infisical_env = "dev"
-                    
+
             options = GetSecretOptions(
                 environment=infisical_env,
                 project_id=self.project_id,

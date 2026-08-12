@@ -14,20 +14,20 @@ from __future__ import annotations
 import logging
 import threading
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class PermissionScope(str, Enum):
+class PermissionScope(StrEnum):
     """পারমিশন স্কোপ এনাম - রিড-অনলি বনাম ফুল-কন্ট্রোল।"""
 
     READ_ONLY = "READ_ONLY"
     FULL_CONTROL = "FULL_CONTROL"
 
 
-class TargetPlatformType(str, Enum):
+class TargetPlatformType(StrEnum):
     """টার্গেট প্ল্যাটফর্ম টাইপ এনাম।"""
 
     GIT_REPOSITORY = "GIT_REPOSITORY"
