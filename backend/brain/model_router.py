@@ -151,7 +151,7 @@ class ModelRouter:
     ) -> dict[str, Any]:
         logger.info(f"[ModelRouter] Forwarding task_type='{task_type}' to LLMGateway")
 
-        # বাংলা মন্তব্ব: টেস্ট কেসে যদি monkeypatch করা মেথডসমূহ থাকে, তবে ফলব্যাক রান করানো হচ্ছে
+        # বাংলা মন্তব্ব: টেস্ট কেসে যদি monkeypatch করা মেথডসমূহ থাকে, তবে ফলfallback রান করানো হচ্ছে
         p_str = str(prompt)
         try:
             for attr in ("_call_openrouter", "_call_huggingface", "_call_ollama"):
@@ -175,10 +175,24 @@ class ModelRouter:
         # চালিয়ে দেওয়া হতো। ✅ FIXED: এখন কনফিগারেশন সমস্যাটা স্পষ্ট error হিসেবে propagate হয়,
         # যাতে self_planner/diagram_to_architecture/image_to_code-সহ কোনো কলারই ভুলবশত এই
         # নির্দিষ্ট hardcoded স্কিমাকে বাস্তব জেনারেশন মনে না করে।
-        if not settings.gemini_api_key and not settings.openrouter_api_key and "pytest" not in sys.modules:
+        # বাংলা মন্তব্ব: LLMGateway (_MODEL_KEY_MAP) যে সব provider সাপোর্ট করে তার সব কটাই
+        # এখানে চেক করা হচ্ছে — আগে শুধু gemini/openrouter চেক হতো, ফলে groq/deepseek/openai/
+        # hf/nvidia-এর মতো অন্য কোনো provider একাই কনফিগার করা থাকলেও ভুলভাবে
+        # "No LLM provider configured" error দিয়ে reject করত। এতে "কোনো নির্দিষ্ট AI-এর উপর
+        # নির্ভরশীল না থাকা, যা পাওয়া যায় তাই ব্যবহার করা" — এই মূল ডিজাইন প্ল্যান ভাঙত।
+        _configured_providers = {
+            "gemini": bool(settings.gemini_api_key),
+            "openrouter": bool(settings.openrouter_api_key),
+            "groq": bool(settings.groq_api_key),
+            "deepseek": bool(settings.deepseek_api_key),
+            "openai": bool(settings.openai_api_key),
+            "hf": bool(getattr(settings, "hf_api_key", "")),
+            "nvidia": bool(getattr(settings, "nvidia_api_key", "")),
+        }
+        if not any(_configured_providers.values()) and "pytest" not in sys.modules:
             # We don't force fallback just because pytest is running,
             # so that mocked LLMGateway can be hit during testing.
-            error_msg = "No LLM provider configured: GEMINI_API_KEY and OPENROUTER_API_KEY are both unset."
+            error_msg = "No LLM provider configured: none of gemini/openrouter/groq/deepseek/openai/hf/nvidia keys are set."
             logger.error(f"[ModelRouter] {error_msg}")
             # Track the configuration error
             await self.performance_optimizer.handle_failure(
@@ -186,10 +200,7 @@ class ModelRouter:
                 error_message=error_msg,
                 context={
                     "task_type": task_type,
-                    "providers_configured": {
-                        "gemini": bool(settings.gemini_api_key),
-                        "openrouter": bool(settings.openrouter_api_key),
-                    },
+                    "providers_configured": _configured_providers,
                     "dependency_tree": ["model_router", "llm_gateway"],
                 },
             )
