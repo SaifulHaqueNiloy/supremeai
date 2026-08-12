@@ -242,11 +242,16 @@
 - `VITE_SECONDARY_BACKEND`
 
 ### ৪. Vercel Frontend (`vercel.env`)
+<!-- বাংলা মন্তব্য: Vercel ক্লাউড বিল্ড প্রসেসের সময় ইনফিসিক্যাল এবং ব্যাকএন্ড কনফিগারের জন্য এই কিগুলো আবশ্যক -->
 - `NODE_ENV`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 - `VITE_PRIMARY_BACKEND`
 - `VITE_SECONDARY_BACKEND`
+- `INFISICAL_CLIENT_ID`
+- `INFISICAL_CLIENT_SECRET`
+- `INFISICAL_PROJECT_ID`
+- `INFISICAL_ENV`
 
 ### ৫. GitHub Actions Primary & Secondary
 - `INFISICAL_PROJECT_ID` — Infisical Project ID *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
