@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """
 SupremeAI — Multi-Database Router & Transactional Outbox System
 ===============================================================

@@ -3,6 +3,7 @@ API Endpoints for Knowledge Base Interaction.
 """
 
 from fastapi import APIRouter, Depends, Query
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_user_token
@@ -76,7 +77,10 @@ async def search_knowledge(
                     results.append(data)
                     if len(results) >= limit:
                         break
-            except Exception:  # noqa: S112 — বাংলা: ফাইল রিড ত্রুটি হলে স্কিপ করে পরবর্তী ফাইলের জন্য লুপ চালু রাখা হয়
+            except Exception as e:
+                # বাংলা মন্তব্য: আগে এখানে exception সম্পূর্ণ silent-এ swallow হতো —
+                # কোনো manifest file corrupt/malformed হলে debug করা কঠিন হতো।
+                logger.warning(f"[knowledge-search] Skipping malformed manifest '{json_file.name}': {e}")
                 continue
     return {"results": results, "total": len(results), "query": request.question}
 
