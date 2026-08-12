@@ -140,7 +140,7 @@ class GaussianMutation:
                 sigma = abs(value) * 0.1 if value != 0 else 0.1
                 mutated[key] = value + random.gauss(0, sigma)
                 if isinstance(value, int):
-                    mutated[key] = int(round(mutated[key]))
+                    mutated[key] = round(mutated[key])
 
             elif isinstance(value, str) and len(value) > 10:
                 # LLM-guided refinement for text traits (prompts, instructions)
