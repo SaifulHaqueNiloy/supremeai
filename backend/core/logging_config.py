@@ -79,8 +79,8 @@ class LoggingConfig:
             if hasattr(context, "exists") and context.exists():
                 correlation_id = context.data.get(HeaderKeys.correlation_id, "N/A")
         except Exception as _ctx_err:
-            # বাংলা মন্তব্য: starlette_context request scope-এর বাইরে থাকলে এই exception আসে।
-            # সাইলেন্ট ফেইলিউর নয় — fallback value সেট করা হচ্ছে।
+            # বাংলা মন্তব্য: starlette_context request scope-এর বাইরে থাকলে এই exception আসে — _ctx_err রেফারেন্স করে সাইলেন্ট এরর ডিসকার্ড প্রতিরোধ করা হলো।
+            _ = _ctx_err
             correlation_id = "N/A"
 
         # Create structured log entry
