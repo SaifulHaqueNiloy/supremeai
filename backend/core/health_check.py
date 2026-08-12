@@ -174,9 +174,23 @@ class ComprehensiveHealthChecker:
             start_time = time.time()
 
             # Check if essential services are configured
+            # বাংলা মন্তব্য: আগে শুধু gemini + openrouter দুটোকেই আলাদা checks entry হিসেবে
+            # রেখে all() দিয়ে AND করা হতো — ফলে groq/deepseek/openai-এর মতো অন্য কোনো
+            # provider একাই কনফিগার থাকলেও "DEGRADED" রিপোর্ট হতো। এখন app_builder.py-র
+            # /health এন্ডপয়েন্টের সাথে সামঞ্জস্যপূর্ণভাবে "কোনো একটা LLM provider থাকলেই যথেষ্ট"।
+            llm_provider_configured = any(
+                [
+                    settings.gemini_api_key,
+                    settings.openrouter_api_key,
+                    settings.groq_api_key,
+                    settings.deepseek_api_key,
+                    settings.openai_api_key,
+                    getattr(settings, "hf_api_key", ""),
+                    getattr(settings, "nvidia_api_key", ""),
+                ]
+            )
             checks = {
-                "gemini_api": bool(settings.gemini_api_key),
-                "openrouter_api": bool(settings.openrouter_api_key),
+                "llm_provider_configured": llm_provider_configured,
                 "redis_configured": bool(settings.redis_url),
                 "stripe_configured": (
                     bool(settings.stripe_api_key.get_secret_value()) if settings.stripe_api_key else False
