@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 # scripts/verify_infisical_env.py
 """
-বাংলা: Infisical Vault-এ সব প্রয়োজনীয় সিক্রেট আছে কিনা তা চেক করার স্ক্রিপ্ট।
-Hybrid Migration-এর পর সব সিক্রেট Infisical-এ সেভ করা হয়েছে, তাই গিটহাবের বদলে আমরা
-সরাসরি Infisical API কল করে চেক করবো। 
+বাংলা: Infisical Vault-এ সব প্রয়োজনীয় সিক্রেট আছে কিনা তা চেক করার স্ক্রিপ্ট।
+
+REWRITE NOTE (drift-fix): আগে এই script `docs/env_maintenance_policy.md` থেকে
+key list পড়ত (via parse_env_policy.py) — যেটা `secrets_registry.yaml` থেকে
+সম্পূর্ণ আলাদা, নিজে থেকে maintain হওয়া একটা দ্বিতীয় "single source of truth"
+ছিল। দুটো ফাইল একই `infisical-vault` environment-এর জন্য ভিন্ন সংখ্যক key বলছিল
+(policy.md ৬১টা, registry.yaml ১৩৭+টা) — কেউ একটাতে key যোগ করলে অন্যটা জানতই না।
+এখন থেকে এই script সরাসরি `secrets_registry.yaml` পড়ে, ঠিক audit_env_usage.py-র
+মতো একই criticality tier (critical/important/optional) সম্মান করে — একটাই
+source of truth।
 """
 
 import os
@@ -23,14 +30,28 @@ except ImportError:
     print("::error::PyYAML ইনস্টল করা নাই — `pip install pyyaml` চালান।")
     sys.exit(1)
 
-POLICY_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "env_maintenance_policy.md")
+REGISTRY_PATH = os.path.join(os.path.dirname(__file__), "..", "secrets_registry.yaml")
+TARGET_ENV = "infisical-vault"
 
-sys.path.insert(0, os.path.dirname(__file__))
-from parse_env_policy import parse_policy
 
-def get_required_keys() -> set:
-    categories = parse_policy(POLICY_PATH)
-    return categories.get('infisical-vault', set())
+def load_registry_keys(path: str) -> dict[str, str]:
+    """বাংলা: registry থেকে {key_name: criticality} ম্যাপ বের করে, শুধু
+    infisical-vault-এ entry থাকা key গুলোর জন্য।"""
+    if not os.path.exists(path):
+        print(f"::error::Registry ফাইল পাওয়া যায়নি: {path}")
+        sys.exit(1)
+    with open(path, "r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    result: dict[str, str] = {}
+    for entry in data.get("keys", []):
+        name = entry.get("name")
+        crit_map = entry.get("criticality", {})
+        if isinstance(crit_map, str):
+            continue  # legacy flat-string entries — infisical-vault-specific না
+        if name and TARGET_ENV in crit_map:
+            result[name] = crit_map[TARGET_ENV]
+    return result
+
 
 def get_infisical_token(client_id: str, client_secret: str) -> str:
     url = "https://app.infisical.com/api/v1/auth/universal-auth/login"
@@ -47,6 +68,7 @@ def get_infisical_token(client_id: str, client_secret: str) -> str:
         print(f"::error::Infisical Login failed: {e}")
         sys.exit(1)
 
+
 def fetch_infisical_secrets(project_id: str, token: str, env: str = "prod") -> set:
     url = f"https://app.infisical.com/api/v3/secrets/raw?workspaceId={project_id}&environment={env}"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
@@ -58,6 +80,7 @@ def fetch_infisical_secrets(project_id: str, token: str, env: str = "prod") -> s
     except Exception as e:
         print(f"::error::Failed to fetch secrets from Infisical API: {e}")
         sys.exit(1)
+
 
 def main() -> int:
     client_id = os.environ.get("INFISICAL_CLIENT_ID")
@@ -76,27 +99,41 @@ def main() -> int:
     else:
         print("[info] Using Universal Auth (Machine Identity) for authentication.")
         access_token = get_infisical_token(client_id, client_secret)
-        
-    required_keys = get_required_keys()
+
+    registry_keys = load_registry_keys(REGISTRY_PATH)
     present = fetch_infisical_secrets(project_id, access_token, env)
-    
+
     print(f"=== Infisical Vault Health Check [{env}] ===")
     print(f"[info] Infisical-এ সর্বমোট সিক্রেট সংখ্যা: {len(present)}")
-    print(f"[info] Policy-তে required সিক্রেট সংখ্যা: {len(required_keys)}")
-    
+    print(f"[info] secrets_registry.yaml-এ {TARGET_ENV}-এর জন্য tracked key সংখ্যা: {len(registry_keys)}")
+
     has_critical_failure = False
-    
-    for name in required_keys:
-        if name not in present:
+    warnings = 0
+
+    for name in sorted(registry_keys):
+        crit = registry_keys[name]
+        if name in present:
+            continue
+        if crit == "critical":
             print(f"::error::CRITICAL secret missing in Infisical: {name} (production boot will crash)")
             has_critical_failure = True
-            
+        elif crit == "important":
+            print(f"::warning::IMPORTANT secret missing in Infisical: {name} (feature degraded)")
+            warnings += 1
+        else:
+            print(f"[optional] secret missing in Infisical: {name} (feature disabled)")
+            warnings += 1
+
     if has_critical_failure:
-        print(f"\n❌ FAIL: Infisical-এ এক বা একাধিক critical সিক্রেট মিসিং!")
+        print("\n❌ FAIL: Infisical-এ এক বা একাধিক critical সিক্রেট মিসিং!")
         return 1
-        
-    print(f"\n✅ PASS: Infisical-এ সব critical সিক্রেট উপস্থিত আছে!")
+
+    if warnings:
+        print(f"\n⚠️ PASS with {warnings} warning(s): critical সব ঠিক আছে, কিছু important/optional key মিসিং।")
+    else:
+        print("\n✅ PASS: Infisical-এ সব tracked সিক্রেট উপস্থিত আছে!")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

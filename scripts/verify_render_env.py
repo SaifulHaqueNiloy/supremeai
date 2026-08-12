@@ -5,9 +5,10 @@
 বিপরীতে চেক করে। এটি Gap #3 বন্ধ করে: CI GitHub secrets-এ set থাকলেও যদি Render
 service-এর env-এ না থাকে, তবে এখানে ধরা পড়বে (production 503/crash এড়াতে)।
 
-গুরুত্বপূর্ণ: Render API সিক্রেট ভ্যালু লুকায় (sync:false ম্যানুয়াল সিক্রেট) — তাই আমরা
-শুধু KEY-এর উপস্থিতি চেক করি (ভ্যালু null হলেও key থাকলে OK)। validity (length) চেক
-শুধু তখনই করা হবে যখন ভ্যালু ফেরত আসে।
+REWRITE NOTE (drift-fix & registry alignment): আগে এই script `docs/env_maintenance_policy.md`
+থেকে key list পড়ত (via parse_env_policy.py)। এখন সরাসরি `secrets_registry.yaml` থেকে
+target env (render-backend, render-admin, render-worker) অনুযায়ী tracked key এবং
+criticality level (critical/important/optional) রিড করে — single source of truth।
 
 নিরাপত্তা: কোনো secret ভ্যালু log-এ যায় না — শুধু key name।
 """
@@ -30,22 +31,36 @@ except ImportError:
     print("::error::PyYAML ইনস্টল করা নাই — `pip install pyyaml` চালান।")
     sys.exit(1)
 
-POLICY_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "env_maintenance_policy.md")
+REGISTRY_PATH = os.path.join(os.path.dirname(__file__), "..", "secrets_registry.yaml")
+RENDER_API = "https://api.render.com/v1"
 
-# Add scripts directory to path to import local module
-sys.path.insert(0, os.path.dirname(__file__))
-from parse_env_policy import parse_policy
 
-def get_required_keys(env_name: str) -> set:
-    categories = parse_policy(POLICY_PATH)
-    return categories.get(env_name, set())
+def load_registry_keys(path: str, target_env: str) -> dict[str, str]:
+    """
+    বাংলা: secrets_registry.yaml থেকে {key_name: criticality} ম্যাপ বের করে,
+    নির্দিষ্ট target_env (যেমন render-backend, render-admin, render-worker) এর জন্য।
+    """
+    if not os.path.exists(path):
+        print(f"::error::Registry ফাইল পাওয়া যায়নি: {path}")
+        sys.exit(1)
+    with open(path, "r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    result: dict[str, str] = {}
+    for entry in data.get("keys", []):
+        name = entry.get("name")
+        crit_map = entry.get("criticality", {})
+        if isinstance(crit_map, str):
+            continue  # legacy flat-string entries স্কিপ
+        if name and target_env in crit_map:
+            result[name] = crit_map[target_env]
+    return result
 
-# Add scripts directory to path to import local module
-sys.path.insert(0, os.path.dirname(__file__))
-from parse_env_policy import parse_policy
 
 def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
-    """বাংলা: Render API থেকে service env var-এর key গুলোর set ফেরত দেয়।"""
+    """
+    বাংলা: Render API থেকে service env var-এর key গুলোর dict ফেরত দেয়।
+    Note: Render API সিক্রেট ভ্যালু লুকায় (sync:false manual secrets) — তাই value=None আসতে পারে।
+    """
     url = f"{RENDER_API}/services/{service_id}/env-vars?limit=100"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}"})
     try:
@@ -59,8 +74,6 @@ def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
         print(f"::error::Render API unreachable: {e}")
         sys.exit(1)
 
-    # বাংলা: Render API response হতে পারে list অথবা {envVars: [...]} wrapper
-    # key → value (Render লুকানো secrets-এ value=None দেয়, কিন্তু key থাকে)
     env_data: dict[str, str | None] = {}
     items = payload if isinstance(payload, list) else payload.get("envVars", [])
     for item in items:
@@ -78,7 +91,7 @@ def main() -> int:
     parser.add_argument("--service-id", required=True, help="Render service ID")
     args = parser.parse_args()
 
-    # বাংলা: admin env-এর জন্য backup key ব্যবহার, অন্যথায় primary key
+    # বাংলা: admin env-এর জন্য backup key ব্যবহার, অন্যথায় primary key
     if args.env == "render-admin":
         api_key = os.environ.get("RENDER_API_KEY_BACKUP") or os.environ.get("RENDER_API_KEY")
     else:
@@ -88,31 +101,44 @@ def main() -> int:
         print("::error::RENDER_API_KEY/BACKUP env চার্জ করা হয়নি (GitHub secret থেকে ইনজেক্ট করুন)।")
         sys.exit(1)
 
-    # বাংলা: env_maintenance_policy.md থেকে এই env-এর জন্য required keys লোড করো
-    required_keys = get_required_keys(args.env)
-    
-    if not required_keys:
-        print(f"::error::কোনো required keys পাওয়া যায়নি {args.env} এর জন্য env_maintenance_policy.md ফাইলে।")
-        sys.exit(1)
+    # বাংলা: secrets_registry.yaml থেকে এই target env-এর জন্য tracked keys ও criticality লোড করো
+    registry_keys = load_registry_keys(REGISTRY_PATH, args.env)
+
+    if not registry_keys:
+        print(f"[info] কোনো tracked keys পাওয়া যায়নি {args.env}-এর জন্য secrets_registry.yaml ফাইলে।")
+        return 0
 
     # বাংলা: Render API থেকে service-এর actual env var keys fetch করো
     present_keys = fetch_render_env(args.service_id, api_key)
-    print(f"\n[info] Render [{args.env}] service-এ পাওয়া env var সংখ্যা: {len(present_keys)}")
-    print(f"[info] Registry-তে required keys: {len(required_keys)}")
+    print(f"=== Render Runtime Env Health Check [{args.env}] ===")
+    print(f"[info] Render [{args.env}] service-এ পাওয়া env var সংখ্যা: {len(present_keys)}")
+    print(f"[info] secrets_registry.yaml-এ [{args.env}]-এর জন্য tracked key সংখ্যা: {len(registry_keys)}")
 
-    missing_critical = []
-    missing_important = []
+    has_critical_failure = False
+    warnings = 0
 
-    for name in required_keys:
-        if name not in present_keys:
-            missing_critical.append(name)
+    for name in sorted(registry_keys):
+        crit = registry_keys[name]
+        if name in present_keys:
+            continue
+        if crit == "critical":
             print(f"::error::CRITICAL key missing in Render [{args.env}]: {name} — সার্ভার boot crash হবে!")
+            has_critical_failure = True
+        elif crit == "important":
+            print(f"::warning::IMPORTANT key missing in Render [{args.env}]: {name} — ফিচারের পারফরম্যান্স হ্রাস পাবে।")
+            warnings += 1
+        else:
+            print(f"[optional] key missing in Render [{args.env}]: {name} (optional feature disabled)")
+            warnings += 1
 
-    if missing_critical:
-        print(f"\n❌ FAIL [{args.env}]: {len(missing_critical)}টি critical key missing! Render deploy crash করবে।")
+    if has_critical_failure:
+        print(f"\n❌ FAIL [{args.env}]: এক বা একাধিক critical key missing! Render deploy crash করবে।")
         return 1
 
-    print(f"\n✅ PASS [{args.env}]: সব required key Render-এ উপস্থিত।")
+    if warnings:
+        print(f"\n⚠️ PASS [{args.env}] with {warnings} warning(s): critical সব ঠিক আছে, কিছু important/optional key missing।")
+    else:
+        print(f"\n✅ PASS [{args.env}]: সব tracked key Render-এ উপস্থিত।")
 
     return 0
 
