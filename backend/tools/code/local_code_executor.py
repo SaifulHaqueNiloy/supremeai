@@ -24,7 +24,7 @@ class LocalCodeExecutor:
                 logger.info("🐳 Running code inside tight Docker Sandbox Container...")
                 if hasattr(self.docker_sandbox, "run_secure"):
                     res = await self.docker_sandbox.run_secure(code, timeout=timeout_seconds)
-                    if res and (res.get("success") or isinstance(res, dict) and "success" not in res):
+                    if res and (res.get("success") or (isinstance(res, dict) and "success" not in res)):
                         if "stdout" in res and "output" not in res:
                             res["output"] = res["stdout"]
                         if "stderr" in res and "error" not in res:
