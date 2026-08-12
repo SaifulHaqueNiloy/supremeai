@@ -251,10 +251,13 @@
 - `MAIN_REPO_TOKEN` — Primary → Target রেপো পুশ/মিরর করার PAT *(⚠️ এটি Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `MIRROR_REPO_TOKEN` — Secondary রেপো মিরর PAT
 - `STAGING_REPO_TOKEN` — Staging রেপো অ্যাক্সেস PAT
+- `RENDER_API_KEY` — Primary Render Account API Token *(CI-তে live env verifier & deploy validation-এর জন্য উভয় GitHub Repo Secrets-এ সেট করতে হবে)*
+- `RENDER_API_KEY_BACKUP` — Secondary/Backup Render Account API Token *(CI-তে backup account verifier-এর জন্য উভয় GitHub Repo Secrets-এ সেট করতে হবে)*
 - `FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A` — Firebase Hosting CI Deploy Service Account JSON
 - `GCP_SA_KEY` — Google Cloud Platform Service Account Key
 - `GCP_PROJECT_ID` — GCP প্রজেক্ট ID
 - `SENTRY_AUTH_TOKEN` — Sentry Error Monitoring Upload Token
+
 
 ---
 
