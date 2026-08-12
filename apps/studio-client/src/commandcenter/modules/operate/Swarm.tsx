@@ -22,7 +22,7 @@ export function Swarm() {
                 key={node.id}
                 className="px-3 py-2 rounded-lg border border-[var(--sa-line)] bg-[var(--sa-bg-0)] flex items-center gap-2"
               >
-                <StatusPill status={node.status as any} label={node.name} size="sm" />
+                <StatusPill status={node.status} label={node.name} size="sm" />
                 {node.load != null && (
                   <span className="text-[9px] font-mono text-[var(--sa-text-2)]">{Math.round(node.load * 100)}%</span>
                 )}

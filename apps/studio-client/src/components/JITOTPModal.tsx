@@ -5,13 +5,19 @@ import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { apiClient } from '../services/apiClient';
 
+interface SensitiveActionResult {
+  requiresOTP?: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
+
 interface JITOTPModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onVerify: (resultData: any) => void;
+  onVerify: (resultData: SensitiveActionResult) => void;
   actionDescription?: string;
   targetEndpoint?: string;
-  actionPayload?: any;
+  actionPayload?: Record<string, unknown>;
 }
 
 export const JITOTPModal: FC<JITOTPModalProps> = ({
@@ -61,7 +67,7 @@ export const JITOTPModal: FC<JITOTPModalProps> = ({
     setError('');
 
     try {
-      const result: any = await apiClient.performSensitiveAction(
+      const result = await apiClient.performSensitiveAction<SensitiveActionResult>(
         targetEndpoint,
         actionPayload,
         otp
@@ -74,9 +80,10 @@ export const JITOTPModal: FC<JITOTPModalProps> = ({
         setAttempts((prev) => prev + 1);
         setError(result?.message || 'OTP verification failed. Please check the code.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setAttempts((prev) => prev + 1);
-      setError(err?.message || 'Verification request failed. Try again.');
+      const message = err instanceof Error ? err.message : undefined;
+      setError(message || 'Verification request failed. Try again.');
     } finally {
       setIsVerifying(false);
     }
