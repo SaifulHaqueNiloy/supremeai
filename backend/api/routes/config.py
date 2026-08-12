@@ -1,31 +1,12 @@
-import secrets
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt
+from fastapi import APIRouter, Body, Depends, Response
 from loguru import logger
 
-from core.config import settings
-
-security = HTTPBearer()
-
-
-def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """বাংলা মন্তব্য: এডমিন টোকেন ভ্যালিডেশন — gevent/locust হ্যাংিং রোধ করতে স্বাধীন ডিপেনডেন্সি।"""
-    token = credentials.credentials
-    try:
-        jwt_secret = settings.jwt_secret
-        decoded = jwt.decode(token, jwt_secret, algorithms=["HS256"])
-        if decoded.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
-        return decoded
-    except Exception as err:
-        logger.warning("Admin token validation failed", exc_info=True)
-        expected = getattr(settings, "supremeai_api_token", None) or ""
-        if expected and secrets.compare_digest(token, expected):
-            return {"uid": "admin", "role": "admin"}
-        raise HTTPException(status_code=401, detail="Authentication failed.") from err
+# বাংলা: একটি কেন্দ্রীয় require_admin_token import করা হচ্ছে।
+# আগে এই module-এ duplicate local function ছিল —
+# তার ফলে test এ dependency_overrides কাজ করত না।
+from api.routes.admin_dashboard import require_admin_token
 
 
 # টেস্ট কম্প্যাটিবিলিটি:

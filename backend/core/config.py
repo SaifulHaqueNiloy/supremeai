@@ -103,17 +103,18 @@ class Settings(BaseSettings):
     @property
     def is_bypass_allowed(self) -> bool:
         """বাংলা: Production-এ bypass সম্পূর্ণ নিষিদ্ধ — ENV নির্বিশেষে।
-        শুধু test/ci/staging environment-এই bypass কাজ করবে।"""
-        env = (self.environment or "").lower()
-        if env in ("production", "prod"):
+        শুধু test/ci/staging environment-এই bypass কাজ করবে।
+        field নাম: self.env (validation_alias="ENV"), self.environment নয়।"""
+        current_env = (self.env or "").lower()
+        if current_env in ("production", "prod"):
             return False  # Production-এ সর্বদা False — hardcoded guard
         return self.allow_test_auth_bypass
 
     @property
     def is_origin_bypass_allowed(self) -> bool:
         """বাংলা: Production-এ origin bypass সম্পূর্ণ নিষিদ্ধ।"""
-        env = (self.environment or "").lower()
-        if env in ("production", "prod"):
+        current_env = (self.env or "").lower()
+        if current_env in ("production", "prod"):
             return False
         return self.allow_test_origin_bypass
 
@@ -284,6 +285,11 @@ class Settings(BaseSettings):
     chromadb_path: str = Field(default="supremeai_knowledge_base", validation_alias="CHROMADB_PATH")
 
     # ── Sandbox config — env-driven ──────────────────────────────────────────
+    workspace_base_dir: str = Field(
+        default="/tmp/supremeai_workspace",
+        validation_alias="WORKSPACE_BASE_DIR",
+        description="Base directory for user workspace files (api/routes/files.py)",
+    )
     sandbox_root: str = Field(default="/tmp/sandboxes", validation_alias="SANDBOX_ROOT")  # nosec B108
     firecracker_path: str = Field(default="/usr/bin/firecracker", validation_alias="FIRECRACKER_PATH")
     gvisor_path: str = Field(default="/usr/bin/runsc", validation_alias="GVISOR_PATH")
@@ -1043,6 +1049,9 @@ class Settings(BaseSettings):
             raise ValueError("JWT secret cannot be empty in production.")
         if not value or value is None:
             return "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+        # বাংলা: Production-এ JWT secret কমপক্ষে 64 bytes হতে হবে — brute-force attack ঠেকাতে
+        if env == "production" and len(str(value)) < 64:
+            raise ValueError("JWT secret must be at least 64 bytes long in production")
         return str(value)
 
     @model_validator(mode="after")

@@ -9,8 +9,18 @@ os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
 from core.app import app as app_mod
 from core.security.secure_credential_store import SecureCredentialStore, generate_key
 
+from api.routes.admin_dashboard import require_admin_token
+
 client = TestClient(app_mod)
 auth_headers = {"Authorization": "Bearer test-token"}
+
+
+@pytest.fixture(autouse=True)
+def override_admin_auth():
+    """বাংলা: test env এ JWT নেই — require_admin_token override করা হচ্ছে।"""
+    app_mod.dependency_overrides[require_admin_token] = lambda: {"uid": "admin", "role": "admin"}
+    yield
+    app_mod.dependency_overrides = {}
 
 
 @pytest.fixture(autouse=True)
