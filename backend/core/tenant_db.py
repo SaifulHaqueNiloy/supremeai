@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.database.tenant_db"
+_DEPRECATED_TARGET = "database.tenant_db"
 _warned = False
 
 def __getattr__(name):

@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.middleware.rate_limiter"
+_DEPRECATED_TARGET = "middleware.rate_limiter"
 _warned = False
 
 def __getattr__(name):

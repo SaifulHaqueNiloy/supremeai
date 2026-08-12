@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.monitoring.logging_config"
+_DEPRECATED_TARGET = "monitoring.logging_config"
 _warned = False
 
 def __getattr__(name):

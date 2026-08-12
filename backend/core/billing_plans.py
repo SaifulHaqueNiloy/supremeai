@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.services.billing.billing_plans"
+_DEPRECATED_TARGET = "services.billing.billing_plans"
 _warned = False
 
 def __getattr__(name):

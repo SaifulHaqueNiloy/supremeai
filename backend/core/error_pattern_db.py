@@ -4,7 +4,7 @@
 import importlib
 import warnings
 
-_DEPRECATED_TARGET = "backend.core.errors.error_pattern_db"
+_DEPRECATED_TARGET = "core.errors.error_pattern_db"
 _warned = False
 
 def __getattr__(name):
