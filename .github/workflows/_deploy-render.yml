@@ -1,0 +1,316 @@
+# ==============================================================================
+# _deploy-render.yml — Deploy to Render (User + Admin + Combined Backend)
+# ==============================================================================
+# Extracted from supreme-core-ci.yml (lines 1156-1580)
+# Called via workflow_call from the orchestrator.
+# ==============================================================================
+
+name: 🚀 Deploy Render
+
+on:
+  workflow_call:
+    inputs:
+      admin_backend_changed:
+        description: 'Whether admin backend files changed'
+        type: boolean
+        required: false
+        default: false
+      customer_backend_changed:
+        description: 'Whether customer backend files changed'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  check-render-quota:
+    name: 📊 Check Render Build Quota
+    runs-on: ubuntu-latest
+    outputs:
+      use_github_build: ${{ steps.quota.outputs.use_github_build }}
+      minutes_used: ${{ steps.quota.outputs.minutes_used }}
+      pct_used: ${{ steps.quota.outputs.pct_used }}
+      remaining_min: ${{ steps.quota.outputs.remaining_min }}
+      checked_at: ${{ steps.quota.outputs.checked_at }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Restore minutes cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: render_minutes_cache.json
+          key: render-quota-${{ github.run_number }}
+          restore-keys: |
+            render-quota-
+      - name: Check Render quota
+        id: quota
+        run: python .github/scripts/check-render-quota.py
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+          PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}
+          BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}
+          RENDER_BILLING_DAY: ${{ vars.RENDER_BILLING_DAY }}
+          RENDER_BILLING_DAY_BACKUP: ${{ vars.RENDER_BILLING_DAY_BACKUP }}
+      - name: Save minutes cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: render_minutes_cache.json
+          key: render-quota-${{ github.run_number }}
+      - name: Report quota status
+        run: |
+          echo "### 📊 Render Build Minutes Report" >> $GITHUB_STEP_SUMMARY
+          echo "**Checked at:** ${{ steps.quota.outputs.checked_at }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Minutes Used | ${{ steps.quota.outputs.minutes_used }} / 500 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Remaining | ${{ steps.quota.outputs.remaining_min }} min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Usage % | ${{ steps.quota.outputs.pct_used }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| GitHub Build Mode | ${{ steps.quota.outputs.use_github_build }} |" >> $GITHUB_STEP_SUMMARY
+
+  deploy-user-backend:
+    name: 🚀 Deploy User Backend (Render)
+    needs: [check-render-quota]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Trigger User Render Deploy (Prebuilt Image)
+        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
+          PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+            echo "✅ Primary Render deploy triggered via API with prebuilt image (status: $STATUS)!"
+          else
+            echo "❌ Primary API deploy with prebuilt image returned status: $STATUS"
+            exit 1
+          fi
+      - name: Trigger User Render Deploy (Source Code)
+        if: needs.check-render-quota.outputs.use_github_build != 'true'
+        run: |
+          PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          PRIMARY_SUCCESS=false
+          if [ -n "$PRIMARY_HOOK" ]; then
+            echo "Triggering primary Render account (Customer backend)..."
+            if curl -f -s "$PRIMARY_HOOK" > /dev/null; then
+              echo "✅ Primary Render deploy triggered successfully!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary hook failed."
+            fi
+          fi
+          if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "🔄 Using Render API to trigger primary deploy..."
+            PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "✅ Primary Render deploy triggered via API (status: $STATUS)!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary API deploy returned status: $STATUS"
+            fi
+          fi
+          if [ "$PRIMARY_SUCCESS" = "false" ]; then
+            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded for User backend! Failing build."
+            exit 1
+          fi
+      - name: Verify User Backend Deploy Status
+        run: |
+          python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}" --name "User Backend"
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+
+  deploy-admin-backend:
+    name: 🚀 Deploy Admin Backend (Render)
+    needs: [check-render-quota]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Trigger Admin Render Deploy (Prebuilt Image)
+        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+            echo "✅ Admin Render deploy triggered via API with prebuilt image (status: $STATUS)!"
+          else
+            echo "❌ Admin API deploy with prebuilt image returned status: $STATUS"
+            exit 1
+          fi
+      - name: Trigger Admin Render Deploy (Source Code)
+        if: needs.check-render-quota.outputs.use_github_build != 'true'
+        run: |
+          BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
+          BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
+          BACKUP_SUCCESS=false
+          if [ -n "$BACKUP_HOOK" ]; then
+            echo "🔄 Triggering admin backend via deploy webhook..."
+            if curl -f -s "$BACKUP_HOOK" > /dev/null; then
+              echo "✅ Admin backup hook triggered!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Admin backup webhook failed."
+            fi
+          elif [ -n "$BACKUP_API_KEY" ]; then
+            echo "🔄 Using Render API to trigger admin backend deploy..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+              -H "Authorization: Bearer $BACKUP_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "404" ]; then
+              echo "❌ Admin service $BACKUP_SVC_ID returned 404. RENDER_API_KEY_BACKUP does not own this service."
+              echo "❌ ACTION REQUIRED: Set RENDER_DEPLOY_HOOK_URL_BACKUP webhook for Admin backend in GitHub Secrets."
+              exit 1
+            fi
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "✅ Admin Render deploy triggered via API (status: $STATUS)!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Admin API deploy returned status: $STATUS"
+            fi
+          fi
+          if [ "$BACKUP_SUCCESS" = "false" ]; then
+            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded for Admin backend!"
+            exit 1
+          fi
+      - name: Verify Admin Backend Deploy Status
+        run: |
+          python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}" --name "Admin Backend"
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+
+  deploy-combined-backend:
+    name: 🚀 Deploy Combined Backend (Render)
+    needs: [check-render-quota]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Trigger Combined Render Deploy (Prebuilt Image)
+        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
+          echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
+          PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+            echo "✅ Primary Render deploy triggered with prebuilt image (status: $STATUS)!"
+          else
+            echo "⚠️ Primary API deploy returned status: $STATUS"
+          fi
+          if [ -n "${{ secrets.RENDER_API_KEY_BACKUP }}" ]; then
+            STATUS_B=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+            if [ "$STATUS_B" = "201" ] || [ "$STATUS_B" = "202" ]; then
+              echo "✅ Backup Render deploy triggered with prebuilt image (status: $STATUS_B)!"
+            else
+              echo "⚠️ Backup API deploy returned status: $STATUS_B"
+            fi
+          fi
+          if [ "$STATUS" != "201" ] && [ "$STATUS" != "202" ]; then
+            if [ -n "${{ secrets.RENDER_API_KEY_BACKUP }}" ] && [ "$STATUS_B" != "201" ] && [ "$STATUS_B" != "202" ]; then
+              echo "❌ CRITICAL: Primary deploy failed and Backup deploy failed! Failing build."
+              exit 1
+            elif [ -z "${{ secrets.RENDER_API_KEY_BACKUP }}" ]; then
+              echo "❌ CRITICAL: Primary deploy failed! Failing build."
+              exit 1
+            fi
+          fi
+      - name: Trigger Combined Render Deploy (Source Code)
+        if: needs.check-render-quota.outputs.use_github_build != 'true'
+        run: |
+          PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
+          BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
+          BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
+          PRIMARY_SUCCESS=false
+          BACKUP_SUCCESS=false
+          if [ -n "$PRIMARY_HOOK" ]; then
+            echo "Trying primary Render account..."
+            if curl -f -s "$PRIMARY_HOOK" > /dev/null; then
+              echo "✅ Primary Render deploy triggered successfully!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary hook failed."
+            fi
+          fi
+          if [ "$PRIMARY_SUCCESS" = "false" ] && [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "🔄 Using Render API to trigger primary deploy..."
+            PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "✅ Primary Render deploy triggered via API (status: $STATUS)!"
+              PRIMARY_SUCCESS=true
+            else
+              echo "⚠️ Primary API deploy returned status: $STATUS"
+            fi
+          fi
+          if [ -n "$BACKUP_HOOK" ]; then
+            echo "🔄 Triggering admin backend via deploy webhook..."
+            if curl -f -s "$BACKUP_HOOK" > /dev/null; then
+              echo "✅ Admin backup hook triggered!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Admin backup webhook failed."
+            fi
+          elif [ -n "$BACKUP_API_KEY" ]; then
+            echo "🔄 Using Render API to trigger admin backend deploy..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
+              -H "Authorization: Bearer $BACKUP_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"clearCache":"do_not_clear"}')
+            if [ "$STATUS" = "404" ]; then
+              echo "⚠️ Admin service $BACKUP_SVC_ID returned 404."
+            elif [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
+              echo "✅ Admin Render deploy triggered via API (status: $STATUS)!"
+              BACKUP_SUCCESS=true
+            else
+              echo "⚠️ Admin API deploy returned status: $STATUS"
+            fi
+          fi
+          if [ "$PRIMARY_SUCCESS" = "false" ] && [ "$BACKUP_SUCCESS" = "false" ]; then
+            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded! Failing build."
+            exit 1
+          fi
+      - name: Verify Render Deploy Health
+        run: python .github/scripts/verify-render-deploy.py
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
