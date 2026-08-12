@@ -1795,10 +1795,9 @@ jobs:
   sync-mirror:
     name: 📤 Sync Main to Staging Repo (Direct Push)
     needs: [backend-core, frontend-core]
-    if: |
-      always() &&
-      github.repository == 'paykaribazaronline/supremeai' &&
-      github.ref == 'refs/heads/main'
+    # বাংলা মন্তব্য: Production (paykaribazaronline/supremeai) থেকে Primary/Staging (SaifulHaqueNiloy/supremeai)-এ
+    # রিভার্স পুশ সম্পূর্ণ বন্ধ রাখা হলো — ফ্লো থাকবে শুধু Primary -> Production Promotion PR।
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
