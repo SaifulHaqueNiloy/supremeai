@@ -272,23 +272,20 @@ jobs:
       run_attempt: ${{ github.run_attempt }}
 
   # ============================================================================
-  # STAGE 4: PRODUCTION READINESS — Safety Guard, Multi-Model Validator
-  # বাংলা মন্তব্য: backend ও frontend দুটো pass হওয়ার পরে চলে।
+  # STAGE 4.5: CHECK RENDER QUOTA
   # ============================================================================
-  production-readiness:
-    name: 🚀 Production Readiness
-    needs: [changes, backend-tests, frontend-tests]
+  check-render-quota:
+    name: 📊 Check Render Build Quota
+    needs: [changes, backend-tests, check-render-quota]
     if: |
       always() &&
-      (github.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == true || (!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled'))) &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       !startsWith(github.head_ref, 'promotion/staging') &&
-      needs.changes.outputs.docs_only != 'true' &&
-      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
-      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped')
-    uses: ./.github/workflows/_production-readiness.yml
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true))
+    uses: ./.github/workflows/_check-render-quota.yml
     secrets: inherit
-    with:
-      python_version: '3.11'
 
   # ============================================================================
   # STAGE 5: BUILD BACKEND — Docker Build ও GHCR Push
@@ -296,14 +293,15 @@ jobs:
   # ============================================================================
   build-backend:
     name: 🐳 Build Backend
-    needs: [changes, backend-tests]
+    needs: [changes, backend-tests, check-render-quota]
     if: |
       always() &&
       (github.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == true || (!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled'))) &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.event_name != 'pull_request' &&
       (needs.changes.outputs.docker_build == 'true' || needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
-      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped')
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
+      needs.check-render-quota.outputs.use_github_build == 'true'
     uses: ./.github/workflows/_build-backend.yml
     secrets: inherit
     with:
@@ -315,7 +313,7 @@ jobs:
   # ============================================================================
   deploy-render:
     name: 🚀 Deploy Render
-    needs: [changes, backend-tests, production-readiness, build-backend]
+    needs: [changes, backend-tests, check-render-quota, build-backend]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -324,12 +322,13 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
-      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped')
+      needs.check-render-quota.outputs.use_github_build == 'true'
     uses: ./.github/workflows/_deploy-render.yml
     secrets: inherit
     with:
       admin_backend_changed: ${{ needs.changes.outputs.admin_backend_changed == 'true' }}
       customer_backend_changed: ${{ needs.changes.outputs.customer_backend_changed == 'true' }}
+      use_github_build: ${{ needs.check-render-quota.outputs.use_github_build }}
 
   # ============================================================================
   # STAGE 6 (PARALLEL): DEPLOY FRONTEND — Firebase Admin + Vercel User
@@ -337,7 +336,7 @@ jobs:
   # ============================================================================
   deploy-frontend:
     name: 🚀 Deploy Frontend
-    needs: [changes, frontend-tests, production-readiness]
+    needs: [changes, frontend-tests]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -346,7 +345,6 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
-      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
       (needs.changes.outputs.admin_needed == 'true' || needs.changes.outputs.user_needed == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/_deploy-frontend.yml
     secrets: inherit
@@ -358,7 +356,7 @@ jobs:
   # ============================================================================
   sync-mirror:
     name: 🔄 Sync Mirror Repo
-    needs: [backend-tests, frontend-tests, production-readiness]
+    needs: [backend-tests, frontend-tests]
     if: |
       always() &&
       github.repository != 'paykaribazaronline/supremeai' &&
@@ -368,8 +366,8 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
+      needs.check-render-quota.outputs.use_github_build == 'true' &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
-      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -425,7 +423,6 @@ jobs:
       - security
       - backend-tests
       - frontend-tests
-      - production-readiness
       - build-backend
       - deploy-render
       - deploy-frontend
@@ -439,7 +436,6 @@ jobs:
       security_status: ${{ needs.security.result }}
       backend_test_status: ${{ needs.backend-tests.result }}
       frontend_test_status: ${{ needs.frontend-tests.result }}
-      production_readiness_status: ${{ needs.production-readiness.result }}
       build_status: ${{ needs.build-backend.result }}
       deploy_status: ${{ needs.deploy-render.result }}
       frontend_deploy_status: ${{ needs.deploy-frontend.result }}

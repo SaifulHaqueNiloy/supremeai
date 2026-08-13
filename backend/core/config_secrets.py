@@ -380,25 +380,21 @@ class SettingsSecretsMixin:
         )
 
         if self.env in ("production", "staging"):
-            # Explicitly define allowed production domains
-            allowed_production_origins = {
-                "https://supremeai.com",
-                "https://app.supremeai.com",
-                "https://admin.supremeai.com",
-            }
-
-            # Validate against allowed origins - allow localhost for development even in production mode
+            # বাংলা মন্তব্য: পুরনো hardcoded domain allowlist সরানো হয়েছে।
+            # render.yaml-এ operator যেসব domain সেট করেন (onrender.com, vercel.app, web.app)
+            # সেগুলো আগের stale list-এর সাথে না মেলায় সব origin reject হতো → RuntimeError → crash।
+            # এখন শুধু scheme (https://) validate করা হয় — operator-configured যেকোনো domain গ্রহণযোগ্য।
             validated_origins = []
             for origin in origins:
                 if (
-                    origin in allowed_production_origins
+                    origin.startswith("https://")
                     or "localhost" in origin
                     or "127.0.0.1" in origin
                     or is_test_or_ci
                 ):
                     validated_origins.append(origin)
                 else:
-                    logger.warning(f"Disallowed CORS origin: {origin}")
+                    logger.warning(f"Rejecting non-HTTPS CORS origin in production: {origin}")
 
             if not validated_origins:
                 if is_test_or_ci:
@@ -408,7 +404,8 @@ class SettingsSecretsMixin:
                         else ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
                     )
                 raise RuntimeError(
-                    "No valid CORS origins provided. " "Must be one of: " + ", ".join(allowed_production_origins)
+                    "No valid CORS origins provided. "
+                    "Ensure CORS_ORIGINS env var contains https:// origins."
                 )
 
             return validated_origins

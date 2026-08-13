@@ -22,65 +22,15 @@ on:
         default: false
 
 jobs:
-  check-render-quota:
-    name: 📊 Check Render Build Quota
-    runs-on: ubuntu-latest
-    outputs:
-      use_github_build: ${{ steps.quota.outputs.use_github_build }}
-      minutes_used: ${{ steps.quota.outputs.minutes_used }}
-      pct_used: ${{ steps.quota.outputs.pct_used }}
-      remaining_min: ${{ steps.quota.outputs.remaining_min }}
-      checked_at: ${{ steps.quota.outputs.checked_at }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Restore minutes cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: render_minutes_cache.json
-          key: render-quota-${{ github.run_number }}
-          restore-keys: |
-            render-quota-
-      - name: Check Render quota
-        id: quota
-        run: python .github/scripts/check-render-quota.py
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
-          PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}
-          BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}
-          RENDER_BILLING_DAY: ${{ vars.RENDER_BILLING_DAY }}
-          RENDER_BILLING_DAY_BACKUP: ${{ vars.RENDER_BILLING_DAY_BACKUP }}
-      - name: Save minutes cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: render_minutes_cache.json
-          key: render-quota-${{ github.run_number }}
-      - name: Report quota status
-        run: |
-          echo "### 📊 Render Build Minutes Report" >> $GITHUB_STEP_SUMMARY
-          echo "**Checked at:** ${{ steps.quota.outputs.checked_at }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Minutes Used | ${{ steps.quota.outputs.minutes_used }} / 500 |" >> $GITHUB_STEP_SUMMARY
-          echo "| Remaining | ${{ steps.quota.outputs.remaining_min }} min |" >> $GITHUB_STEP_SUMMARY
-          echo "| Usage % | ${{ steps.quota.outputs.pct_used }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| GitHub Build Mode | ${{ steps.quota.outputs.use_github_build }} |" >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # বাংলা মন্তব্য: paykaribazaronline/supremeai (প্রোডাকশন রিপো) শুধুমাত্র User Backend-এ ডিপ্লয় করবে।
-  # SaifulHaqueNiloy/supremeai (ডেভেলপার রিপো) এর জন্য এই জবটি স্কিপ করা হবে।
-  # ============================================================================
   deploy-user-backend:
     name: 🚀 Deploy User Backend (Render)
     if: github.repository != 'SaifulHaqueNiloy/supremeai'
-    needs: [check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Trigger User Render Deploy (Prebuilt Image)
-        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        if: inputs.use_github_build == 'true'
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
@@ -98,7 +48,7 @@ jobs:
             exit 1
           fi
       - name: Trigger User Render Deploy (Source Code)
-        if: needs.check-render-quota.outputs.use_github_build != 'true'
+        if: inputs.use_github_build != 'true'
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:latest"
@@ -150,13 +100,12 @@ jobs:
   deploy-admin-backend:
     name: 🚀 Deploy Admin Backend (Render)
     if: github.repository != 'paykaribazaronline/supremeai'
-    needs: [check-render-quota]
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Trigger Admin Render Deploy (Prebuilt Image)
-        if: needs.check-render-quota.outputs.use_github_build == 'true'
+        if: inputs.use_github_build == 'true'
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
@@ -177,7 +126,7 @@ jobs:
             exit 1
           fi
       - name: Trigger Admin Render Deploy (Source Code)
-        if: needs.check-render-quota.outputs.use_github_build != 'true'
+        if: inputs.use_github_build != 'true'
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:latest"

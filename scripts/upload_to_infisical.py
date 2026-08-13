@@ -67,15 +67,33 @@ def upload_to_infisical(env_vars, token, workspace_id, env_slug="prod"):
     print(f"\nUpload Complete! Success: {success}, Failed: {failed}")
 
 if __name__ == "__main__":
-    env_file = ".env"
+    env_file = "infisical_upload.env"
     env_vars = parse_env_file(env_file)
     
     token = env_vars.get("INFISICAL_TOKEN")
     project_id = env_vars.get("INFISICAL_PROJECT_ID")
+    client_id = env_vars.get("INFISICAL_CLIENT_ID")
+    client_secret = env_vars.get("INFISICAL_CLIENT_SECRET")
     
+    if client_id and client_secret:
+        print("Using Machine Identity to authenticate...")
+        auth_url = "https://app.infisical.com/api/v1/auth/universal-auth/login"
+        resp = requests.post(auth_url, json={"clientId": client_id, "clientSecret": client_secret})
+        if resp.status_code == 200:
+            token = resp.json().get("accessToken")
+            print("Successfully obtained access token!")
+        else:
+            print(f"Failed to authenticate with Machine Identity: {resp.status_code} {resp.text}")
+            exit(1)
+
     if not token or not project_id:
-        print("Missing INFISICAL_TOKEN or INFISICAL_PROJECT_ID in .env")
+        print("Missing valid token or INFISICAL_PROJECT_ID")
         exit(1)
         
-    print(f"Starting upload of {len(env_vars)} variables to Infisical...")
-    upload_to_infisical(env_vars, token, project_id, env_slug="prod")
+    # Filter out Infisical config keys
+    upload_vars = {k: v for k, v in env_vars.items() if not k.startswith("INFISICAL_")}
+    
+    print(f"Starting upload of {len(upload_vars)} variables to Infisical...")
+    for env in ["prod", "staging", "dev"]:
+        print(f"\n--- Uploading to {env} ---")
+        upload_to_infisical(upload_vars, token, project_id, env_slug=env)
