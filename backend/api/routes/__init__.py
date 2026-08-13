@@ -494,4 +494,8 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for internet_monitor_router: {traceback.format_exc()}")
     internet_monitor_router = None
 
-__all__ = [*list(_safe_imports.keys()), "voice_router", "websocket_voice_router", "integrations_router", "swarm_router", "internet_monitor_router"]
+# বাংলা মন্তব্য: নিচের ৫টা router (voice, websocket_voice, integrations, swarm,
+# internet_monitor) আগে explicit list-এও duplicate ছিল, অথচ এগুলো ইতিমধ্যে
+# উপরের try/except ব্লকগুলোর মাধ্যমে _safe_imports-এ যোগ হয়ে যায় — dict-এ
+# duplicate key থাকে না, তাই এখানে আলাদা করে আর লেখার দরকার নেই।
+__all__ = list(_safe_imports.keys())
