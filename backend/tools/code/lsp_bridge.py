@@ -33,10 +33,10 @@ class LanguageServerBridge:
                 f"<context_after>\n{suffix}\n</context_after>\n"
             )
 
-            # Using deepseek or gemini-flash for fast code generation
+            # বাংলা: আগে model="deepseek/deepseek-coder" হার্ডকোড ছিল — DeepSeek down হলে code completion সম্পূর্ণ বন্ধ হতো।
+            # এখন task_type="coding" দিয়ে gateway নিজে best available coding model বাছবে + failover chain ব্যবহার করবে।
             response = await self.gateway.acompletion(
                 prompt=prompt,
-                model="deepseek/deepseek-coder",
                 task_type="coding",
                 stream=False,
             )

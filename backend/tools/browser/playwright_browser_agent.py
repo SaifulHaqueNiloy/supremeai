@@ -493,14 +493,14 @@ class PlaywrightBrowserAgent:
                 )
 
                 model_router = ModelRouter()
-                # Use a vision-capable model like gpt-4o or gemini-2.5-pro-vision-latest
+                # বাংলা: আগে model_filter=["gpt-4o", "gemini-2.5-pro-vision-latest"] হার্ডকোড ছিল —
+                # দুটোই unavailable হলে browser agent সম্পূর্ণ ব্যর্থ হতো।
+                # এখন task_type="vision" শুধু দিয়ে gateway সব available vision model থেকে failover করবে।
                 vlm_response = asyncio.run(
                     model_router.async_route_and_generate(
                         prompt=vlm_prompt,
                         task_type="vision",
                         image_base64=b64_image,
-                        # Force a vision model
-                        model_filter=["gpt-4o", "gemini-2.5-pro-vision-latest"],
                     )
                 )
 

@@ -185,10 +185,12 @@ class SkillManager:
             ]
         }}
         """
+        # বাংলা: আগে model_filters=["claude-3-5-sonnet"] হার্ডকোড ছিল — claude unavailable হলে skill synthesis ব্যর্থ হতো।
+        # এখন task_type="coding" দিয়ে gateway নিজে best available coding model বেছে নেবে, failover সহ।
         response = await llm_gateway.acompletion(
             prompt=prompt,
             system_prompt=system_prompt,
-            model_filters=["claude-3-5-sonnet"],
+            task_type="coding",
         )
 
         raw_text = response.get("text", "{}").strip()
