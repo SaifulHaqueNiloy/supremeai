@@ -26,6 +26,7 @@ on:
 jobs:
   docker-build:
     name: 🐳 Build Base Image
+    if: inputs.docker_build_changed == true
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -64,6 +65,7 @@ jobs:
   build-backend-image:
     name: 🐳 Build & Push Backend Image
     needs: [docker-build]
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -272,6 +272,23 @@ jobs:
       run_attempt: ${{ github.run_attempt }}
 
   # ============================================================================
+  # STAGE 4: PRODUCTION READINESS — Safety Guard, Multi-Model Validator, Codegraph
+  # ============================================================================
+  production-readiness:
+    name: 🚀 Production Readiness
+    needs: [changes, backend-tests]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      !startsWith(github.head_ref, 'promotion/staging') &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_backend_core == true)
+    uses: ./.github/workflows/_production-readiness.yml
+    secrets: inherit
+    with:
+      python_version: '3.11'
+
+  # ============================================================================
   # STAGE 4.5: CHECK RENDER QUOTA
   # ============================================================================
   check-render-quota:
@@ -421,6 +438,7 @@ jobs:
       - security
       - backend-tests
       - frontend-tests
+      - production-readiness
       - build-backend
       - deploy-render
       - deploy-frontend
