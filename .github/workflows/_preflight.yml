@@ -63,6 +63,11 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ inputs.python_version }}
+      - name: ⚙️ Setup Pip Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-preflight-${{ inputs.python_version }}
       - name: Install PyYAML
         run: pip install pyyaml
       - name: 🔍 Audit env usage vs registry [${{ matrix.env }}]
@@ -128,6 +133,11 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ inputs.python_version }}
+      - name: ⚙️ Setup Pip Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-preflight-${{ inputs.python_version }}
       - name: Install PyYAML
         run: pip install pyyaml
       - name: 🔍 Verify Render runtime env [${{ matrix.env }}]
@@ -157,6 +167,11 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ inputs.python_version }}
+      - name: ⚙️ Setup Pip Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-preflight-${{ inputs.python_version }}
       - name: Install dependencies
         run: pip install pyyaml
       - name: Verify Infisical Secrets
@@ -197,6 +212,18 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ inputs.python_version }}
+      - name: ⚙️ Setup Poetry + venv Cache
+        id: poetry-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-v4-py${{ inputs.python_version }}-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-v4-py${{ inputs.python_version }}-
+            ${{ runner.os }}-poetry-v4-
       - name: Install & Run Backend
         env:
           REDIS_URL: "redis://127.0.0.1:6379/0"
@@ -206,8 +233,15 @@ jobs:
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           cd backend
+          python -m pip install --upgrade pip
           pip install poetry
-          poetry install --no-root
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          if [ "${{ steps.poetry-cache.outputs.cache-hit }}" != "true" ]; then
+            poetry install --no-root
+          else
+            poetry install --no-root --sync
+          fi
           poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
           sleep 10
@@ -247,6 +281,18 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ inputs.python_version }}
+      - name: ⚙️ Setup Poetry + venv Cache
+        id: poetry-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-v4-py${{ inputs.python_version }}-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-v4-py${{ inputs.python_version }}-
+            ${{ runner.os }}-poetry-v4-
       - name: Install & Run User Services
         env:
           REDIS_URL: "redis://127.0.0.1:6379/0"
@@ -256,8 +302,15 @@ jobs:
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           cd backend
+          python -m pip install --upgrade pip
           pip install poetry
-          poetry install --no-root
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          if [ "${{ steps.poetry-cache.outputs.cache-hit }}" != "true" ]; then
+            poetry install --no-root
+          else
+            poetry install --no-root --sync
+          fi
           poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8001 &
           sleep 10
