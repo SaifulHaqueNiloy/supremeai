@@ -67,6 +67,10 @@ jobs:
           echo "| Usage % | ${{ steps.quota.outputs.pct_used }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| GitHub Build Mode | ${{ steps.quota.outputs.use_github_build }} |" >> $GITHUB_STEP_SUMMARY
 
+  # ============================================================================
+  # বাংলা মন্তব্য: paykaribazaronline/supremeai (প্রোডাকশন রিপো) শুধুমাত্র User Backend-এ ডিপ্লয় করবে।
+  # SaifulHaqueNiloy/supremeai (ডেভেলপার রিপো) এর জন্য এই জবটি স্কিপ করা হবে।
+  # ============================================================================
   deploy-user-backend:
     name: 🚀 Deploy User Backend (Render)
     if: github.repository != 'SaifulHaqueNiloy/supremeai'
@@ -139,6 +143,10 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
 
+  # ============================================================================
+  # বাংলা মন্তব্য: SaifulHaqueNiloy/supremeai (ডেভেলপার রিপো) শুধুমাত্র Admin Backend-এ ডিপ্লয় করবে।
+  # paykaribazaronline/supremeai (প্রোডাকশন রিপো) এর জন্য এই জবটি স্কিপ করা হবে।
+  # ============================================================================
   deploy-admin-backend:
     name: 🚀 Deploy Admin Backend (Render)
     if: github.repository != 'paykaribazaronline/supremeai'
