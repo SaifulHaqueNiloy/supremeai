@@ -1,5 +1,6 @@
 """Secret loading and lazy-secret behavior for SupremeAI settings."""
 
+import json
 import os
 import secrets
 import sys
