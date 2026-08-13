@@ -1,11 +1,12 @@
 import asyncio
 import contextlib
 import json
-import jwt
 import os
 import secrets
 import shutil
 from typing import Any
+
+from jose import jwt
 
 # বাংলা মন্তব্য: কোয়েরি প্যারামিটার হ্যান্ডেল করার জন্য Query ক্লাস ইম্পোর্ট করা হলো
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket

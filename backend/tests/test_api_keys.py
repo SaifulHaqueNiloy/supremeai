@@ -66,7 +66,7 @@ from core.security import (
 def client():
     fake_pool = FakePool()
     with (
-        patch("core.lifespan._ensure_api_key_tables"),
+        patch("core.startup.api_key_tables.ensure_api_key_tables"),
         patch("core.pgbouncer_pool.get_db_pool", return_value=fake_pool),
         patch("models.api_key.get_db_pool", return_value=fake_pool),
         patch("api.routes.api_keys._get_current_user", return_value="test_owner"),
