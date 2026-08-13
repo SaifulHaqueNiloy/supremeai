@@ -179,9 +179,11 @@ jobs:
           python-version: ${{ inputs.python_version }}
       - name: Install & Run Backend
         run: |
-          pip install -r backend/requirements.txt
-          python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
-          sleep 5
+          cd backend
+          pip install poetry
+          poetry install --no-root
+          poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
+          sleep 10
       - name: Probe Admin API & CORS Headers
         run: |
           curl -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
@@ -200,9 +202,11 @@ jobs:
           python-version: ${{ inputs.python_version }}
       - name: Install & Run User Services
         run: |
-          pip install -r backend/requirements.txt
-          python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001 &
-          sleep 5
+          cd backend
+          pip install poetry
+          poetry install --no-root
+          poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8001 &
+          sleep 10
       - name: Verify User App Core Handshake
         run: |
           curl -f --max-time 3 http://127.0.0.1:8001/api/v1/mobile-bff/health || exit 1
