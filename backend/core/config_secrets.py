@@ -370,7 +370,8 @@ class SettingsSecretsMixin:
             ]
 
         # বাংলা মন্তব্য: টেস্ট ও CI এনভায়রনমেন্ট সনাক্তকরণ
-        is_test_or_ci = (
+        force_strict = os.getenv("STRICT_CORS_TEST", "").lower() in ("true", "1")
+        is_test_or_ci = not force_strict and (
             "pytest" in sys.modules
             or os.getenv("CI", "").lower() in ("true", "1")
             or os.getenv("GITHUB_ACTIONS", "").lower() in ("true", "1")

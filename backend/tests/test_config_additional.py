@@ -26,11 +26,9 @@ def test_settings_raises_when_production_secret_missing():
             "ALLOW_TEST_AUTH_BYPASS": "false",
             "OPENROUTER_API_KEY": "sk-open",
             "GEMINI_API_KEY": "sk-gemini",
-            "SUPREMEAI_JWT_SECRET": "",
-            "JWT_SECRET": "",
         },
         clear=True,
     ):
-        with patch("core.config.secret_vault.fetch_secret", return_value=""):
+        with patch("core.security.secret_vault.secret_vault._get_cached_secret", return_value=None):
             with pytest.raises((ValueError, RuntimeError)):
                 Settings()

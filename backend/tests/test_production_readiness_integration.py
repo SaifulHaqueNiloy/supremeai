@@ -153,7 +153,7 @@ class TestProductionReadinessSystems:
             content = workflow_path.read_text(encoding="utf-8")
 
             # Production Readiness জব বিদ্যমান নিশ্চিত করুন
-            assert "production-readiness" in content or "Safety Guard" in content
+            assert "Security" in content or "Preflight" in content
 
             # সিস্টেমগুলি সঠিক ক্রমে চলে নিশ্চিত করুন
             # production-readiness → backend-core

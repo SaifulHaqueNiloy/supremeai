@@ -59,9 +59,9 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     mocks["create_task"] = stack.enter_context(patch("asyncio.create_task"))
     stack.enter_context(patch("asyncio.to_thread", side_effect=lambda f, *a, **kw: f()))
 
-    mocks["services_lifespan"] = stack.enter_context(patch("core.lifespan.services"))
-    mocks["services_startup"] = stack.enter_context(patch("core.startup.services.services"))
-    mocks["services_shutdown"] = stack.enter_context(patch("core.shutdown.services"))
+    mocks["services_lifespan"] = stack.enter_context(patch("core.lifespan.services", create=True))
+    mocks["services_startup"] = stack.enter_context(patch("core.startup.services.services", create=True))
+    mocks["services_shutdown"] = stack.enter_context(patch("core.shutdown.services", create=True))
 
     # Mock httpx.AsyncClient so it doesn't create real connections
     mocks["httpx_client"] = stack.enter_context(

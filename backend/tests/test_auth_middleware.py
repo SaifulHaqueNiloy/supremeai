@@ -71,7 +71,8 @@ class TestAuthMiddleware:
         """সঠিক API টোকেন সহ মিডলওয়্যার বংয়েজ করা হচ্ছে।"""
         # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_KEY", "test-token")
-        from core.config import secret_vault, settings
+        from core.config import settings
+        from core.security.secret_vault import secret_vault
 
         settings._cached_secrets["SUPREMEAI_API_KEY"] = "test-token"
         secret_vault._cache["SUPREMEAI_API_KEY"] = "test-token"
@@ -92,7 +93,8 @@ class TestAuthMiddleware:
         """ভুল API টোকেন রিজেক্স করা হচ্ছে।"""
         # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_KEY", "test-token")
-        from core.config import secret_vault, settings
+        from core.config import settings
+        from core.security.secret_vault import secret_vault
 
         # বাংলা মন্তব্য: explicit cache set করা হচ্ছে এবং bypass নিষ্ক্রিয় করা হচ্ছে
         settings._cached_secrets["SUPREMEAI_API_KEY"] = "test-token"
@@ -118,7 +120,8 @@ class TestAuthMiddleware:
         """API টোকেন এনভ ভ্যারিয়েbl না থাকলে মিডলওয়্যার বংয়েজ করা হচ্ছে।"""
         # বাংলা মন্তব্য: autouse fixture-এর ওভাররাইট এড়াতে monkeypatch ব্যবহার করে টোকেন ও ক্যাশ সেট করা হচ্ছে।
         monkeypatch.setenv("SUPREMEAI_API_KEY", "test-token")
-        from core.config import secret_vault, settings
+        from core.config import settings
+        from core.security.secret_vault import secret_vault
 
         # বাংলা মন্তব্য: empty token দিয়ে set করা হচ্ছে যাতে API token check fail হয়
         settings._cached_secrets["SUPREMEAI_API_KEY"] = "test-token"
