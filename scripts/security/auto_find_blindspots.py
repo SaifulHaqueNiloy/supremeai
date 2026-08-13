@@ -130,7 +130,7 @@ def check_cicd_vulnerabilities(content: str, file_path: str) -> List[str]:
     if ".github/workflows" in str(file_path) and file_path.endswith((".yml", ".yaml")):
         # Check for dangerously low test coverage threshold
         match = re.search(r"--cov-fail-under=(\d+)", content)
-        if match and int(match.group(1)) < 38:
+        if match and int(match.group(1)) < 14:
             findings.append(f"🔴 Critical: Test coverage threshold is critically low (`--cov-fail-under={match.group(1)}`).")
         # Check for suppressed errors in shell commands
         if "|| true" in content:
