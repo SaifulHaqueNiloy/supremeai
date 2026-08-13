@@ -276,7 +276,7 @@ jobs:
   # ============================================================================
   check-render-quota:
     name: 📊 Check Render Build Quota
-    needs: [changes, backend-tests, check-render-quota]
+    needs: [changes, backend-tests]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
