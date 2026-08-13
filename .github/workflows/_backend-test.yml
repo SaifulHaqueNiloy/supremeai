@@ -340,7 +340,9 @@ jobs:
           poetry config virtualenvs.in-project true
           if [ "${{ inputs.backend_changed }}" = "true" ] || [ "${{ inputs.docs_only }}" = "true" ]; then
             # xdist re-enabled with isolated DB and Redis configs per worker
-            poetry run pytest tests/ -n auto --timeout=120 --md pytest-report.md --cov --cov-report=json:coverage.json --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=14 -k "not chaos"
+            # বাংলা মন্তব্য: matrix.test_paths ব্যবহার করে প্রতিটা group শুধু নিজের subset রান করবে
+            # (আগে পুরো tests/ ৪টা matrix job-এ ৪ বার রিডানডেন্ট রান হচ্ছিল)
+            poetry run pytest ${{ matrix.test_paths }} -n auto --timeout=120 --md pytest-report.md --cov --cov-report=json:coverage.json --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=14 -k "not chaos"
           else
             echo "Skipping full backend tests, only running smoke tests."
             poetry run pytest tests/test_health.py -q
@@ -419,7 +421,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
-          name: production-readiness-reports
+          name: production-readiness-reports-${{ strategy.job-index }}
           path: |
             backend/safety-report.json
             backend/validator-report.json
