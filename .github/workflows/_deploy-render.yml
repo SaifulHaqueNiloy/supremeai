@@ -20,6 +20,11 @@ on:
         type: boolean
         required: false
         default: false
+      use_github_build:
+        description: 'Whether to use GitHub built images for Render deploy'
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   deploy-user-backend:
