@@ -232,6 +232,14 @@ class ProductionSecretVault:
                     "DISCORD_OTP_WEBHOOK_URL",
                     "DISCORD_WEBHOOK_URL",
                     "RESEND_API_KEY",
+                    "NVIDIA_API_KEY",
+                    "OPENAI_API_KEY",
+                    "DEEPSEEK_API_KEY",
+                    "GEMINI_API_KEY",
+                    "OPENROUTER_API_KEY",
+                    "GROQ_API_KEY",
+                    "GITHUB_CLIENT_ID",
+                    "GITHUB_CLIENT_SECRET",
                 }
                 if default is None and secret_id not in OPTIONAL_SECRETS:
                     raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
