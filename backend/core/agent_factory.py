@@ -64,7 +64,8 @@ class DynamicAgentFactory:
             agent_config = {
                 "agent_name": f"AutoAgent_{int(time.time())}",
                 "description": task_description,
-                "script": "logger.info('Error: AI failed to generate a valid script.')",
+                # বাংলা: fallback script-এ logger ব্যবহার করা যাবে না, কারণ script একটি string হিসেবে exec হবে
+                "script": "print('Error: AI failed to generate a valid script.')",
             }
 
         # ডাটাবেজে আজীবনের জন্য সেভ করে রাখা
@@ -87,7 +88,7 @@ class DynamicAgentFactory:
             result = await self.db.execute(stmt)
             existing = result.scalars().first()
             if existing:
-                existing.execution_steps = {"script": steps}  # সামঞ্জস্যের জন্য script-কে JSON-এ মোড়ানো হলো
+                existing.execution_steps = steps  # আগে থেকেই মোড়ানো আছে, তাই সরাসরি অ্যাসাইন করা হলো
                 existing.description = description
             else:
                 new_agent = DynamicAgent(name=name, description=description, execution_steps=steps)
@@ -95,5 +96,7 @@ class DynamicAgentFactory:
             await self.db.commit()
             logger.success(f"🧠 [AgentFactory] New skill learned and registered: '{name}'")
         except Exception as exc:
-            await self.db.rollback()
+            # বাংলা: db session None হলে rollback() ডাকলে AttributeError হবে — গার্ড যোগ করা হলো
+            if self.db:
+                await self.db.rollback()
             logger.error(f"Failed to save dynamic agent to registry: {exc}")
