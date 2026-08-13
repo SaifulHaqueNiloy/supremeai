@@ -172,6 +172,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: supreme_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:7-alpine
         ports:
@@ -185,7 +198,8 @@ jobs:
       - name: Install & Run Backend
         env:
           REDIS_URL: "redis://127.0.0.1:6379/0"
-          SUPABASE_DATABASE_URL: "sqlite+aiosqlite:///./preflight.db"
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
           ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
@@ -206,6 +220,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: supreme_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:7-alpine
         ports:
@@ -219,7 +246,8 @@ jobs:
       - name: Install & Run User Services
         env:
           REDIS_URL: "redis://127.0.0.1:6379/0"
-          SUPABASE_DATABASE_URL: "sqlite+aiosqlite:///./preflight.db"
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
           ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
