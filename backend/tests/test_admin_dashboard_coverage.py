@@ -6,7 +6,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
-from api.routes.admin_dashboard import (
+from api.routes.admin_auth import (
     _in_memory_jwt_blacklist,
     admin_rate_limit,
     require_admin_token,
@@ -74,7 +74,7 @@ class TestRequireAdminToken:
         if not expected:
             pytest.skip("supremeai_api_token not configured")
 
-        with patch("api.routes.admin_dashboard.jwt.decode", side_effect=Exception("bad")):
+        with patch("api.routes.admin_auth.jwt.decode", side_effect=Exception("bad")):
             result = require_admin_token(HTTPAuthorizationCredentials(credentials=expected, scheme="Bearer"))
         assert result["role"] == "admin"
 
@@ -90,7 +90,7 @@ class TestAdminRateLimit:
         request.client.host = "127.0.0.1"
 
         with patch("core.services.redis_queue", new=MagicMock(configured=False)):
-            with patch("api.routes.admin_dashboard.logger"):
+            with patch("api.routes.admin_auth.logger"):
                 admin_rate_limit(request)
 
     def test_rate_limit_raises_after_limit(self):
@@ -105,7 +105,7 @@ class TestAdminRateLimit:
         fake_redis.get.return_value = "600"
 
         with patch("core.services.redis_queue", fake_redis):
-            with patch("api.routes.admin_dashboard.logger"):
+            with patch("api.routes.admin_auth.logger"):
                 with pytest.raises(HTTPException) as exc_info:
                     admin_rate_limit(request)
         assert exc_info.value.status_code == 429
