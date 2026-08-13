@@ -14,8 +14,19 @@ from .security.secret_vault import secret_vault
 
 
 class SettingsSecretsMixin:
+    # বাংলা মন্তব্য: Pydantic v2-এ Mixin-এর ভেতরে PrivateAttr ব্যবহার করলে
+    # instance-level private attr initialize নাও হতে পারে (ModelPrivateAttr iterable error)।
+    # তাই নিরাপদ সমাধান হিসেবে __dict__-এ আলাদা namespace ব্যবহার করা হচ্ছে।
     _cached_secrets: dict[str, str] = PrivateAttr(default_factory=dict)
     _secrets_batch_loaded: bool = PrivateAttr(default=False)
+
+    def _get_private_state(self) -> dict:
+        """Mixin-এ নিরাপদ private state access।"""
+        if "_cached_secrets" not in self.__dict__:
+            self.__dict__["_cached_secrets"] = {}
+        if "_secrets_batch_loaded" not in self.__dict__:
+            self.__dict__["_secrets_batch_loaded"] = False
+        return self.__dict__
 
     # বাংলা মন্তব্য: ব্যাচ লোডিংয়ের জন্য প্রয়োজনীয় সিক্রেট কীগুলোর তালিকা।
     # startup-এ একবারে সব সিক্রেট লোড করা হবে, lazy per-property কল এড়াতে।
@@ -57,9 +68,13 @@ class SettingsSecretsMixin:
         এর ফলে প্রতিটি @property-র জন্য আলাদা vault কল হয় না, cold start latency কমে।
         বাংলা: default="" পাস করা হচ্ছে যাতে ঐচ্ছিক secrets (যেমন ADMIN_NOTIFICATION_EMAIL)
         production-এ missing থাকলেও server startup crash না করে।
+        বাংলা: `_get_private_state()` ব্যবহার করা হচ্ছে — Pydantic v2 Mixin-এ PrivateAttr
+        সরাসরি iterable না হওয়ায় `__dict__`-ভিত্তিক state নিশ্চিত করা হয়।
         """
-        if self._secrets_batch_loaded:
+        state = self._get_private_state()
+        if state["_secrets_batch_loaded"]:
             return
+        cached = state["_cached_secrets"]
         for secret_key in self._BATCH_SECRET_KEYS:
             try:
                 # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
@@ -67,12 +82,12 @@ class SettingsSecretsMixin:
                 # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
                 val = secret_vault.fetch_secret(secret_key)
                 if val:
-                    self._cached_secrets[secret_key] = val
+                    cached[secret_key] = val
             except Exception as _secret_err:
                 # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
                 # যদি কোনো optional secret missing থাকে, server startup block হবে না।
                 logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
-        self._secrets_batch_loaded = True
+        state["_secrets_batch_loaded"] = True
 
     def _get_cached_secret(self, key: str) -> str:
         """Get cached secret with explicit empty vs not-found handling.
@@ -86,12 +101,13 @@ class SettingsSecretsMixin:
         প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
         """
         self._ensure_secrets_loaded()
-        if key not in self._cached_secrets:
+        cached = self._get_private_state()["_cached_secrets"]
+        if key not in cached:
             if is_test_environment():
                 logger.debug(f"Secret '{key}' not found in cache after batch load - returning empty string")
             else:
                 logger.warning(f"Secret '{key}' not found in cache after batch load - returning empty string")
-        return self._cached_secrets.get(key, "")
+        return cached.get(key, "")
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
     # বাংলা মন্তব্য: স্টার্টআপ টাইম কমাতে এবং Infisical ভল্ট থেকে একের পর এক সিক্রেট ফেচ করা এড়াতে
@@ -128,7 +144,7 @@ class SettingsSecretsMixin:
 
     def _set_cached_secret(self, key: str, value: Any) -> None:
         self._ensure_secrets_loaded()
-        self._cached_secrets[key] = str(value) if value is not None else ""
+        self._get_private_state()["_cached_secrets"][key] = str(value) if value is not None else ""
 
     @property
     def openrouter_api_key(self) -> str:
