@@ -205,8 +205,8 @@ jobs:
         run: |
           echo "=== Ruff স্ট্যাটিক অ্যানালাইসিস গেট ===" >> $GITHUB_STEP_SUMMARY
           cd backend
-          ruff check . --config pyproject.toml --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
-          ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+          poetry run ruff check . --config pyproject.toml --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+          poetry run ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
           echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
 
       - name: 🤖 Bot Commit Detection
