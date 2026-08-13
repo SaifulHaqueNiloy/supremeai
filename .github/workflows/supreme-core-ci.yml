@@ -367,7 +367,7 @@ jobs:
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
       needs.check-render-quota.outputs.use_github_build == 'true' &&
-      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
