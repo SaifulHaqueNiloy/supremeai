@@ -62,14 +62,22 @@ class LoggingConfig:
 
         # Add file handler if needed (with rotation)
         if settings.env in ["production", "staging"]:
-            logger.add(
-                "logs/app_{time}.log",
-                rotation="100 MB",
-                retention="10 days",
-                compression="zip",
-                serialize=True,
-                level="INFO",
-            )
+            try:
+                import os
+                # Use /tmp/logs for ephemeral environments like Render
+                log_dir = os.environ.get("LOG_DIR", "/tmp/logs")
+                os.makedirs(log_dir, exist_ok=True)
+                logger.add(
+                    f"{log_dir}/app_{{time}}.log",
+                    rotation="100 MB",
+                    retention="10 days",
+                    compression="zip",
+                    serialize=True,
+                    level="INFO",
+                )
+            except Exception as e:
+                # Fallback to stdout only if file logging fails (e.g., permission denied)
+                logger.warning(f"Could not initialize file logging: {e}")
 
     def _json_format(self, record: dict) -> str:
         """Custom JSON formatter with correlation ID."""
