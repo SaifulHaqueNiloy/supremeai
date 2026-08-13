@@ -17,7 +17,7 @@ class ResourceCatalog:
     LIBRARIES_IO_SEARCH_URL = "https://libraries.io/api/search"
 
     _MARKDOWN_ENTRY_RE = re.compile(
-        r"^- \[(?P<name>[^\]]+)\]\((?P<link>https?://[^\)]+)\)\s*-\s*(?P<description>.+)$",
+        r"^- \[(?P<name>[^\]]+)\]\((?P<link>https?://[^\)]+)\)\s*-\s*(?P<description>.*)",
         re.IGNORECASE,
     )
 
