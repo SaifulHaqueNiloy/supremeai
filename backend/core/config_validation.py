@@ -7,7 +7,7 @@ import sys
 from typing import Any
 
 from loguru import logger
-from pydantic import ValidationInfo, field_validator, model_validator
+from pydantic import SecretStr, ValidationInfo, field_validator, model_validator
 
 
 class SettingsValidationMixin:
@@ -289,7 +289,7 @@ class SettingsValidationMixin:
         return str(value)
 
     @model_validator(mode="after")
-    def validate_production_completeness(self) -> "Settings":
+    def validate_production_completeness(self) -> Any:
         """Production completeness verification helper for test coverage."""
         # বাংলা মন্তব্য: প্রোডাকশন এনভায়রনমেন্টের জন্য অতিরিক্ত কনফিগারেশন ভ্যালিডেশন
         if self.env == "production":
