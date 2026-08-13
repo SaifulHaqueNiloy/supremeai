@@ -29,6 +29,6 @@ def test_settings_raises_when_production_secret_missing():
         },
         clear=True,
     ):
-        with patch("core.security.secret_vault.secret_vault._get_cached_secret", return_value=None):
+        with patch("core.config_secrets.secret_vault.fetch_secret", return_value=None):
             with pytest.raises((ValueError, RuntimeError)):
                 Settings()
