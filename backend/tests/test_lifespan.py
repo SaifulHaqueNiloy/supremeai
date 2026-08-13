@@ -16,15 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from core.lifespan import _ensure_api_key_tables, app_lifespan
-
-
-# ────────────────────────────────────────────────────────────────────────────
-# Helper: asyncio.run() ব্যবহার করো — Python 3.11-এ get_event_loop() deprecated
-# ────────────────────────────────────────────────────────────────────────────
-def _run(coro):
-    """Async coroutine sync-এ run করার helper।"""
-    return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(coro)
+from core.lifespan import app_lifespan
+from core.startup.api_key_tables import ensure_api_key_tables
+import core.startup.services
 
 
 async def _run_lifespan(mock_app) -> None:
@@ -33,12 +27,14 @@ async def _run_lifespan(mock_app) -> None:
         pass
 
 
-# ────────────────────────────────────────────────────────────────────────────
-# Common patches helper — ExitStack দিয়ে Python-এর nested block limit এড়ানো হচ্ছে
-# setup_tracing locally imported তাই `core.observability.telemetry.setup_tracing` patch করতে হবে
-# ────────────────────────────────────────────────────────────────────────────
 def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
-    """সব common patches একটি ExitStack-এ enter করে mocks-এর dict রিটার্ন করো।"""
+    """সব common patches একটি ExitStack-এ enter করে mocks-এর dict রিটার্ন করো।
+
+    বাংলা মন্তব্য: মডিউলারাইজড lifespan-এর নতুন পাথ অনুযায়ী patch টার্গেটগুলো আপডেট করা হয়েছে।
+    - core.lifespan (মূল entrypoint)
+    - core.startup.services (initialize_independent_services)
+    - core.shutdown (shutdown_services)
+    """
     mocks = {}
 
     mocks["validate"] = stack.enter_context(patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock))
@@ -47,36 +43,41 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     )
     # setup_tracing locally imported — সঠিক patch path ব্যবহার করতে হবে
     stack.enter_context(patch("core.observability.telemetry.setup_tracing", return_value=None))
-    mocks["init_db_pool"] = stack.enter_context(patch("core.lifespan.init_db_pool", new_callable=AsyncMock))
-    mocks["ensure_api_keys"] = stack.enter_context(
-        patch("core.lifespan._ensure_api_key_tables", new_callable=AsyncMock)
+    mocks["init_db_pool"] = stack.enter_context(
+        patch("core.startup.services.init_db_pool", new_callable=AsyncMock)
     )
     mocks["config_refresh"] = stack.enter_context(
-        patch("core.lifespan.config_cache.refresh_async", new_callable=AsyncMock)
+        patch("core.startup.services.config_cache.refresh_async", new_callable=AsyncMock)
     )
-    mocks["redis_manager"] = stack.enter_context(patch("core.lifespan.redis_manager"))
+    mocks["redis_manager"] = stack.enter_context(patch("core.startup.services.redis_manager"))
     # Redis ping-এর জন্য mock return value সেট করো
     mock_ping = AsyncMock()
     mocks["redis_manager"].client.ping = mock_ping
     mocks["redis_manager"].close = AsyncMock()
     mocks["orchestrator"] = stack.enter_context(patch("core.lifespan.Orchestrator"))
-    stack.enter_context(patch("core.lifespan.maintenance_pipeline.start_monitoring"))
+    stack.enter_context(patch("core.startup.services.maintenance_pipeline.start_monitoring"))
     mocks["create_task"] = stack.enter_context(patch("asyncio.create_task"))
     stack.enter_context(patch("asyncio.to_thread", side_effect=lambda f, *a, **kw: f()))
 
-    mocks["services"] = stack.enter_context(patch("core.lifespan.services"))
+    mocks["services_lifespan"] = stack.enter_context(patch("core.lifespan.services"))
+    mocks["services_startup"] = stack.enter_context(patch("core.startup.services.services"))
+    mocks["services_shutdown"] = stack.enter_context(patch("core.shutdown.services"))
 
     # Mock httpx.AsyncClient so it doesn't create real connections
-    mocks["httpx_client"] = stack.enter_context(patch("core.lifespan.httpx.AsyncClient", return_value=AsyncMock()))
+    mocks["httpx_client"] = stack.enter_context(
+        patch("core.startup.services.httpx.AsyncClient", return_value=AsyncMock())
+    )
 
     # Services HTTP client mock (legacy, but keep for compatibility)
-    mocks["services"].global_http_client = mocks["httpx_client"].return_value
+    mocks["services_lifespan"].global_http_client = mocks["httpx_client"].return_value
+    mocks["services_startup"].global_http_client = mocks["httpx_client"].return_value
+    mocks["services_shutdown"].global_http_client = mocks["httpx_client"].return_value
 
     return mocks
 
 
 class TestEnsureAPIKeyTables:
-    """Tests for _ensure_api_key_tables function."""
+    """Tests for ensure_api_key_tables function."""
 
     @pytest.mark.anyio
     async def test_creates_tables_successfully(self):
@@ -90,23 +91,23 @@ class TestEnsureAPIKeyTables:
         mock_conn.transaction = MagicMock(return_value=mock_transaction)
         mock_conn.execute = AsyncMock()
 
-        with patch("core.lifespan.get_db_pool", return_value=mock_pool):
-            await _ensure_api_key_tables()
+        with patch("core.startup.api_key_tables.get_db_pool", return_value=mock_pool):
+            await ensure_api_key_tables()
 
         mock_pool.acquire.assert_called_once()
         mock_pool.release.assert_called_once()
 
     @pytest.mark.anyio
     async def test_handles_db_error(self):
-        """Database error — _ensure_api_key_tables exception propagate করে কিনা পরীক্ষা করো।"""
+        """Database error — ensure_api_key_tables exception propagate করে কিনা পরীক্ষা করো।"""
         mock_pool = AsyncMock()
         mock_pool.acquire = AsyncMock(side_effect=Exception("DB error"))
 
-        with patch("core.lifespan.get_db_pool", return_value=mock_pool):
-            # _ensure_api_key_tables internally exception propagate করে
+        with patch("core.startup.api_key_tables.get_db_pool", return_value=mock_pool):
+            # ensure_api_key_tables internally exception propagate করে
             # lifespan startup-এ এটি ধরে defensive mode-এ চালু হয়
             with pytest.raises(Exception, match="DB error"):
-                await _ensure_api_key_tables()
+                await ensure_api_key_tables()
 
 
 class TestAppLifespan:
@@ -116,6 +117,8 @@ class TestAppLifespan:
     async def test_startup_validates(self):
         """Startup validation call করা হয় কিনা পরীক্ষা করো।"""
         mock_app = MagicMock()
+        mock_app.state = MagicMock()
+        mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
             mocks = _apply_common_patches(stack)
@@ -128,11 +131,15 @@ class TestAppLifespan:
     async def test_startup_skips_db_for_sqlite(self):
         """SQLite database-এ PostgreSQL pool init skip করা হয় কিনা পরীক্ষা করো।"""
         mock_app = MagicMock()
+        mock_app.state = MagicMock()
+        mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
             mocks = _apply_common_patches(stack)
-            mock_settings = stack.enter_context(patch("core.lifespan.settings"))
-            mock_settings.supabase_database_url = "sqlite+aiosqlite:///:memory:"
+            mock_settings_lifespan = stack.enter_context(patch("core.lifespan.settings"))
+            mock_settings_lifespan.supabase_database_url = "sqlite+aiosqlite:///:memory:"
+            mock_settings_services = stack.enter_context(patch("core.startup.services.settings"))
+            mock_settings_services.supabase_database_url = "sqlite+aiosqlite:///:memory:"
 
             await _run_lifespan(mock_app)
 
@@ -143,6 +150,8 @@ class TestAppLifespan:
     async def test_shutdown_closes_http_client(self):
         """Shutdown-এ HTTP client বন্ধ করা হয় কিনা পরীক্ষা করো।"""
         mock_app = MagicMock()
+        mock_app.state = MagicMock()
+        mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
             mocks = _apply_common_patches(stack)
@@ -151,7 +160,7 @@ class TestAppLifespan:
 
             mock_pool = AsyncMock()
             mock_pool.close = AsyncMock()
-            mock_get_pool = stack.enter_context(patch("core.lifespan.get_db_pool", new_callable=AsyncMock))
+            mock_get_pool = stack.enter_context(patch("core.shutdown.get_db_pool", new_callable=AsyncMock))
             mock_get_pool.return_value = mock_pool
 
             mock_orch = MagicMock()
@@ -166,6 +175,8 @@ class TestAppLifespan:
     async def test_shutdown_cancels_background_tasks(self):
         """Background tasks shutdown-এ cancel করা হয় কিনা পরীক্ষা করো।"""
         mock_app = MagicMock()
+        mock_app.state = MagicMock()
+        mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
             mocks = _apply_common_patches(stack)
@@ -174,7 +185,7 @@ class TestAppLifespan:
 
             mock_pool = AsyncMock()
             mock_pool.close = AsyncMock()
-            mock_get_pool = stack.enter_context(patch("core.lifespan.get_db_pool", new_callable=AsyncMock))
+            mock_get_pool = stack.enter_context(patch("core.shutdown.get_db_pool", new_callable=AsyncMock))
             mock_get_pool.return_value = mock_pool
 
             mock_orch = MagicMock()
@@ -191,6 +202,8 @@ class TestAppLifespan:
     async def test_handles_teardown_errors(self):
         """Teardown errors সত্ত্বেও crash না করা পরীক্ষা করো।"""
         mock_app = MagicMock()
+        mock_app.state = MagicMock()
+        mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
             stack.enter_context(patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock))
@@ -201,16 +214,20 @@ class TestAppLifespan:
                 )
             )
             stack.enter_context(patch("core.observability.telemetry.setup_tracing", return_value=None))
-            stack.enter_context(patch("core.lifespan.init_db_pool", new_callable=AsyncMock))
-            stack.enter_context(patch("core.lifespan._ensure_api_key_tables", new_callable=AsyncMock))
-            stack.enter_context(patch("core.lifespan.config_cache.refresh_async", new_callable=AsyncMock))
-            mock_redis = stack.enter_context(patch("core.lifespan.redis_manager"))
+            stack.enter_context(patch("core.startup.services.init_db_pool", new_callable=AsyncMock))
+            stack.enter_context(patch("core.startup.services.config_cache.refresh_async", new_callable=AsyncMock))
+            mock_redis = stack.enter_context(patch("core.startup.services.redis_manager"))
+            # Make the ping mock work
             mock_redis.client.ping = AsyncMock()
-            # Redis close-এ error simulate করো
-            mock_redis.close = AsyncMock(side_effect=Exception("Redis error"))
 
-            # Redis error সত্ত্বেও exception raise করা উচিত নয়
+            # shutdown.py uses `from core.cache.redis_manager import redis_manager`
+            mock_redis_shutdown = stack.enter_context(patch("core.shutdown.redis_manager"))
+            mock_redis_shutdown.close = AsyncMock(side_effect=Exception("Redis error"))
+
             await _run_lifespan(mock_app)
+
+            # We check if it was set
+            assert mock_app.state.subsystem_status["db"] == "down"
 
 
 class TestLifespanSubsystemStatus:
@@ -220,13 +237,15 @@ class TestLifespanSubsystemStatus:
     async def test_subsystem_status_defaults(self):
         """Subsystem status সঠিকভাবে initialize হয় কিনা পরীক্ষা করো।"""
         mock_app = MagicMock()
+        mock_app.state = MagicMock()
+        mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
             mocks = _apply_common_patches(stack)
             # Make sure it's not sqlite so it calls init_db_pool
             mock_settings = MagicMock()
             mock_settings.supabase_database_url = "postgresql://dummy"
-            stack.enter_context(patch("core.lifespan.settings", mock_settings))
+            stack.enter_context(patch("core.startup.services.settings", mock_settings))
             # DB failure simulate করো
             mocks["init_db_pool"].side_effect = Exception("DB failed")
             mocks["redis_manager"].client.ping.side_effect = Exception("Redis failed")
