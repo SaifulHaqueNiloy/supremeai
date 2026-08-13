@@ -341,13 +341,12 @@ jobs:
           poetry config virtualenvs.in-project true
           if [ "${{ inputs.backend_changed }}" = "true" ] || [ "${{ inputs.docs_only }}" = "true" ]; then
             # বাংলা মন্তব্য: coverage source এখন core+api+tools+ws+workers (combined)।
-            # স্কোপ বাড়ানোয় রিপোর্টেড % অনেক নিচে নামবে, তাই gate সাময়িকভাবে 30-এ
-            # রাখা হলো এবং পরবর্তী স্প্রিন্টে ধাপে ধাপে 40→50→60-এ তোলা হবে।
-            poetry run pytest ${{ matrix.test_paths }} -n auto --dist=loadfile --timeout=120 --md pytest-report-${{ strategy.job-index }}.md --cov --cov-report=json:coverage-${{ strategy.job-index }}.json --cov-report=xml:coverage-${{ strategy.job-index }}.xml --cov-report=term-missing --cov-fail-under=14 -k "not chaos"
+            # বাংলা মন্তব্য: xdist (-n auto) এর কারণে Shared State Deadlock (Redis/DB) হয়ে Worker Crash (KeyError: gw1) করছিল, তাই সমান্তরাল এক্সিকিউশন বন্ধ করা হলো।
+            poetry run pytest ${{ matrix.test_paths }} --timeout=120 --md pytest-report-${{ strategy.job-index }}.md --cov --cov-report=json:coverage-${{ strategy.job-index }}.json --cov-report=xml:coverage-${{ strategy.job-index }}.xml --cov-report=term-missing --cov-fail-under=14 -k "not chaos"
           else
             echo "Skipping full backend tests, only running smoke tests."
             if [ "${{ matrix.test_group_name }}" = "Others" ]; then
-              poetry run pytest -n auto tests/test_health.py -q
+              poetry run pytest tests/test_health.py -q
             else
               echo "Skipped for this matrix job."
             fi
