@@ -2,16 +2,13 @@ import asyncio
 import contextlib
 import json
 import os
-import secrets
 import shutil
 from typing import Any
 
 # বাংলা মন্তব্য: কোয়েরি প্যারামিটার হ্যান্ডেল করার জন্য Query ক্লাস ইম্পোর্ট করা হলো
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket
 from fastapi.responses import StreamingResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.websockets import WebSocketDisconnect
-from jose import jwt
 from loguru import logger
 from pydantic import BaseModel
 
@@ -21,76 +18,11 @@ from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report
 from tools.billing.cost_auditor import CostAuditor
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
-
-security = HTTPBearer()
-
-# বাংলা মন্তব্য: রেডিস বন্ধ থাকলে টোকেন ব্ল্যাকলিস্ট চেকের জন্য ইন-মেমোরি ব্যাকআপ
-_in_memory_jwt_blacklist: set[str] = set()
+from api.routes.admin_auth import admin_rate_limit, require_admin_token
 
 
-def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    try:
-        jwt_secret = settings.jwt_secret
-        decoded = jwt.decode(token, jwt_secret, algorithms=["HS256"])
-        if decoded.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
-
-        jti = decoded.get("jti")
-        if jti:
-            import core.services as app_mod
-
-            redis_queue = getattr(app_mod, "redis_queue", None)
-            if redis_queue and getattr(redis_queue, "configured", False):
-                blocked = redis_queue.get(f"jwt_blacklist:{jti}")
-                if blocked is not None:
-                    raise HTTPException(status_code=401, detail="Token has been revoked.")
-            else:
-                if jti in _in_memory_jwt_blacklist:
-                    raise HTTPException(status_code=401, detail="Token has been revoked.")
-                logger.warning("Redis not configured; falling back to in-memory JWT blacklist check.")
-
-        return decoded
-    except Exception as err:
-        logger.warning("Admin token validation failed", exc_info=True)
-        expected = getattr(settings, "supremeai_api_token", None) or ""
-        if expected and secrets.compare_digest(token, expected):
-            return {"uid": "admin", "role": "admin"}
-        raise HTTPException(status_code=401, detail="Authentication failed.") from err
 
 
-def admin_rate_limit(request: Request):
-    import core.services as app_mod
-
-    client_ip = request.client.host if request.client else "unknown"
-    key = f"rate_limit:admin:{client_ip}"
-    limit = 600
-    window = 60
-
-    redis_queue = getattr(app_mod, "redis_queue", None)
-    if redis_queue and getattr(redis_queue, "configured", False):
-        try:
-            current_hits = redis_queue.get(key)
-            if current_hits is not None and int(current_hits) >= limit:
-                logger.warning(f"Distributed admin rate limit exceeded for {client_ip}")
-                raise HTTPException(
-                    status_code=429,
-                    detail="Too many admin requests. Please try again later.",
-                )
-
-            hits = redis_queue.incr(key)
-            if hits == 1:
-                redis_queue.set(key, "1", ex=window)
-            elif hits is not None and hits > limit:
-                logger.warning(f"Distributed admin rate limit exceeded for {client_ip}")
-                raise HTTPException(
-                    status_code=429,
-                    detail="Too many admin requests. Please try again later.",
-                )
-        except HTTPException:
-            raise
-        except Exception as exc:
-            logger.error(f"Distributed rate limiter check failed, falling back: {exc}")
 
 
 router = APIRouter(
