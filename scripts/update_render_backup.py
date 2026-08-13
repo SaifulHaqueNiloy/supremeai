@@ -11,10 +11,13 @@ headers = {
     "Accept": "application/json"
 }
 
+# বাংলা: dockerCommand শূন্য করা হলো — আগে port 10000 হার্ডকোড থাকায় render.yaml PORT=8080
+# মিস্ম্যাচ হতো এবং 'No open ports detected' এরর দিত। Dockerfile CMD सার্ভার
+# সঠিকভাবে $PORT নিয়ে রান করবে।
 data = {
     "serviceDetails": {
         "envSpecificDetails": {
-            "dockerCommand": "uvicorn main:app --host 0.0.0.0 --port 10000 --workers 1"
+            "dockerCommand": ""
         }
     }
 }

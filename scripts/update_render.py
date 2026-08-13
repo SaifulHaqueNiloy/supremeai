@@ -16,10 +16,13 @@ services = [
     {"sid": "srv-d9e4q5rrjlhs73bnh71g", "key": api_key_backup}
 ]
 
+# বাংলা: dockerCommand সরানো হলো — আগে port 10000 হার্ডকোড থাকায় render.yaml-এর PORT=8080
+# মিস্ম্যাচ হতো এবং 'No open ports detected' এরর দিত। এখন Dockerfile-এর
+# CMD ["sh", "-c", "exec python main.py"] ব্যবহার হবে, যা $PORT এনভ ভার রেসপেক্ট করে।
 data = {
     "serviceDetails": {
         "envSpecificDetails": {
-            "dockerCommand": "uvicorn main:app --host 0.0.0.0 --port 10000 --workers 1"
+            "dockerCommand": ""
         }
     }
 }
