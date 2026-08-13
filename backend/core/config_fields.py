@@ -43,11 +43,11 @@ class SettingsFieldsMixin:
 
     # বাংলা মন্তব্য: রোল-ভিত্তিক CORS সেটিংস এবং সিকিউরিটি টগল
     user_cors_origins: str | list[str] = Field(
-        default_factory=list,
+        default=["https://supremeai-lac.vercel.app", "https://supremeai-a.firebaseapp.com", "https://supremeai-a.web.app"],
         validation_alias="USER_CORS_ORIGINS",
     )
     admin_cors_origins: str | list[str] = Field(
-        default_factory=list,
+        default=["https://supremeai-lac.vercel.app", "https://supremeai-a.firebaseapp.com", "https://supremeai-a.web.app"],
         validation_alias="ADMIN_CORS_ORIGINS",
     )
     enforce_anti_hacking: bool = Field(
