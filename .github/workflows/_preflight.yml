@@ -166,3 +166,43 @@ jobs:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
         run: python scripts/verify_infisical_env.py
+
+  check-admin-bridge:
+    name: 🔌 Admin Bridge Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: Install & Run Backend
+        run: |
+          pip install -r backend/requirements.txt
+          python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+      - name: Probe Admin API & CORS Headers
+        run: |
+          curl -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
+          curl -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
+          curl -i -X OPTIONS http://127.0.0.1:8000/api/v1/health -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: GET" | grep -i "access-control-allow-origin" || exit 1
+
+  check-user-bridge:
+    name: 🔌 User Bridge Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: Install & Run User Services
+        run: |
+          pip install -r backend/requirements.txt
+          python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001 &
+          sleep 5
+      - name: Verify User App Core Handshake
+        run: |
+          curl -f --max-time 3 http://127.0.0.1:8001/api/v1/mobile-bff/health || exit 1
