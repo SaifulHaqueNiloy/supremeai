@@ -162,11 +162,14 @@ jobs:
           IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
           echo "🐳 GitHub build mode ACTIVE! Deploying pre-built image: $IMAGE_URL"
           BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY_BACKUP }}" \
             -H "Content-Type: application/json" \
             -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+          STATUS=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "API Response Body: $BODY"
           if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
             echo "✅ Admin Render deploy triggered via API with prebuilt image (status: $STATUS)!"
           else
@@ -184,11 +187,14 @@ jobs:
           
           if [ -n "$BACKUP_API_KEY" ]; then
             echo "🔄 Using Render API to trigger admin backend deploy with explicit image URL..."
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
               -H "Authorization: Bearer $BACKUP_API_KEY" \
               -H "Content-Type: application/json" \
               -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+            STATUS=$(echo "$RESPONSE" | tail -n 1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "API Response Body: $BODY"
             if [ "$STATUS" = "404" ]; then
               echo "❌ Admin service $BACKUP_SVC_ID returned 404. RENDER_API_KEY_BACKUP does not own this service."
               echo "❌ ACTION REQUIRED: Set RENDER_DEPLOY_HOOK_URL_BACKUP webhook for Admin backend in GitHub Secrets."
