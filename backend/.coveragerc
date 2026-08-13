@@ -1,9 +1,15 @@
 # Coverage configuration for SupremeAI Backend
-# বাংলা মন্তব্য: শুধুমাত্র core/ ফোল্ডারের coverage মাপা হয়।
-# CI command এবং pyproject.toml উভয়ের সাথে consistent।
+# বাংলা মন্তব্য: আগে শুধু core/ এর coverage মাপা হতো, ফলে api/, tools/, ws/, workers/
+# প্যাকেজগুলোর আসল লাইন-কভারেজ কখনো গণনা হতো না (ব্লাইন্ড স্পট)। এখন সব প্রডাকশন
+# প্যাকেজ একসাথে মাপা হয় যাতে রিপোর্ট সত্যিকারের কভারেজ দেখায়। CI command এবং
+# pyproject.toml উভয়ের সাথে consistent।
 
 [run]
 source = core
+       api
+       tools
+       ws
+       workers
 branch = True
 omit =
     */site-packages/*
@@ -12,6 +18,9 @@ omit =
     */__pycache__/*
     */migrations/*
     */alembic/*
+    */__init__.py
+    tools/cli.py
+    core/worker_main.py
 
 [report]
 exclude_lines =
@@ -35,6 +44,12 @@ omit =
     core/logging.py
     core/exceptions.py
     core/playwright_manager.py
+    api/__init__.py
+    api/v1/__init__.py
+    api/routes/__init__.py
+    tools/__init__.py
+    ws/__init__.py
+    workers/__init__.py
 
 [html]
 directory = htmlcov

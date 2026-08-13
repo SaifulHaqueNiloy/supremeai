@@ -17,9 +17,20 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/components/customer/**/*.{ts,tsx}', 'src/hooks/**/*.{ts,tsx}'],
-      exclude: ['**/*.d.ts', '**/test/**', '**/*.test.*'],
+      reporter: ['text', 'json', 'html', 'lcov'],
+      // বাংলা মন্তব্য: আগে শুধু components/customer ও hooks মাপা হতো। এখন store/services/
+      // providers/core যোগ করা হলো (integration-সংবেদনশীল লেয়ার)। pages ইউআই স্ন্যাপশট
+      // চার্নের জন্য বাদ রাখা হয়েছে।
+      include: [
+        'src/components/customer/**/*.{ts,tsx}',
+        'src/hooks/**/*.{ts,tsx}',
+        'src/store/**/*.{ts,tsx}',
+        'src/services/**/*.{ts,tsx}',
+        'src/providers/**/*.{ts,tsx}',
+        'src/core/**/*.{ts,tsx}',
+        'src/i18n/**/*.{ts,tsx}',
+      ],
+      exclude: ['**/*.d.ts', '**/test/**', '**/*.test.*', '**/*.spec.*', 'src/pages/**'],
       thresholds: {
         lines: 60,
         functions: 60,
