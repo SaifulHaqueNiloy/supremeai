@@ -264,7 +264,7 @@ class SupremeLearningEngine:
                 signature_words.append("{entity}")
             else:
                 signature_words.append(word)
-        return hashlib.md5(" ".join(signature_words).encode()).hexdigest()[:16]
+        return hashlib.md5(" ".join(signature_words).encode(), usedforsecurity=False).hexdigest()[:16]
 
     def _extract_reasoning(self, response: str) -> list[str]:
         reasoning = []
@@ -311,7 +311,7 @@ class SupremeLearningEngine:
         complexity: str,
         feedback: float | None,
     ) -> dict:
-        pattern_id = hashlib.md5(f"{query_sig}:{domain}".encode()).hexdigest()[:16]
+        pattern_id = hashlib.md5(f"{query_sig}:{domain}".encode(), usedforsecurity=False).hexdigest()[:16]
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -454,7 +454,7 @@ class SupremeLearningEngine:
         concepts = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", response)
 
         for concept in concepts[:5]:
-            node_id = hashlib.md5(concept.encode()).hexdigest()[:16]
+            node_id = hashlib.md5(concept.encode(), usedforsecurity=False).hexdigest()[:16]
 
             if node_id not in self.knowledge_graph.get("nodes", {}):
                 self.knowledge_graph.setdefault("nodes", {})[node_id] = {
