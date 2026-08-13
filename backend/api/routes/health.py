@@ -49,7 +49,9 @@ async def health_check(request: Request, response: Response):
     # ── Redis Health Check ──
     if subsystems.get("redis") == "up":
         try:
-            await redis_manager.client.ping()
+            client = redis_manager.client
+            if client:
+                await client.ping()
         except Exception:
             subsystems["redis"] = "down"
 

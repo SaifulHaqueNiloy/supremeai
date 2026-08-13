@@ -149,11 +149,14 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         host_header = request.headers.get("Host")
         is_allowed = True
         if host_header:
+            # বাংলা মন্তব্য: Host হেডার থেকে পোর্ট বাদ দিয়ে চেক করতে হবে (যেমন localhost:10000 -> localhost),
+            # তা না হলে Dockerfile-এর curl health check বা Render-এর load balancer 403 Forbidden খাবে।
+            host_header_no_port = host_header.split(":")[0]
             allowed_hosts = set(settings.allowed_hosts)
             allowed_hosts.add("testserver")
             allowed_hosts.add("localhost")
             allowed_hosts.add("127.0.0.1")
-            is_allowed = host_header in allowed_hosts or any(host_header.endswith("." + h) for h in allowed_hosts)
+            is_allowed = host_header_no_port in allowed_hosts or any(host_header_no_port.endswith("." + h) for h in allowed_hosts)
 
         if host_header and not is_allowed:
             logger.critical(f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}")
