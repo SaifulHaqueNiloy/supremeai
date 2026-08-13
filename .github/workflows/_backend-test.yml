@@ -195,9 +195,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   backend-core:
-    name: 🐍 Backend (Test)
-    timeout-minutes: 10
+    name: 🐍 Backend (Test - ${{ matrix.test_group_name }})
+    timeout-minutes: 15
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - test_group_name: "API"
+            test_paths: "tests/api"
+          - test_group_name: "Core"
+            test_paths: "tests/core"
+          - test_group_name: "Agents & AI"
+            test_paths: "tests/agents tests/ai tests/llm"
+          - test_group_name: "Others"
+            test_paths: "tests/byoc tests/engine tests/load tests/middleware tests/monitoring tests/p2p tests/rag tests/scout tests/test_*.py"
     services:
       postgres:
         image: postgres:15-alpine
@@ -331,10 +343,14 @@ jobs:
             # বাংলা মন্তব্য: coverage source এখন core+api+tools+ws+workers (combined)।
             # স্কোপ বাড়ানোয় রিপোর্টেড % অনেক নিচে নামবে, তাই gate সাময়িকভাবে 30-এ
             # রাখা হলো এবং পরবর্তী স্প্রিন্টে ধাপে ধাপে 40→50→60-এ তোলা হবে।
-            poetry run pytest -n auto --dist=loadfile --timeout=120 --md pytest-report.md --cov --cov-report=json:coverage.json --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=80 -k "not chaos"
+            poetry run pytest ${{ matrix.test_paths }} -n auto --dist=loadfile --timeout=120 --md pytest-report-${{ strategy.job-index }}.md --cov --cov-report=json:coverage-${{ strategy.job-index }}.json --cov-report=xml:coverage-${{ strategy.job-index }}.xml --cov-report=term-missing --cov-fail-under=80 -k "not chaos"
           else
             echo "Skipping full backend tests, only running smoke tests."
-            poetry run pytest -n auto tests/test_health.py -q
+            if [ "${{ matrix.test_group_name }}" = "Others" ]; then
+              poetry run pytest -n auto tests/test_health.py -q
+            else
+              echo "Skipped for this matrix job."
+            fi
           fi
 
       - name: 🤖 Auto-Fix Engine (failure-only)
@@ -359,6 +375,6 @@ jobs:
           mkdir -p backend
           cd backend
           python ../.github/scripts/supreme_ci.py generate-report \
-            --pytest-json pytest-report.md \
-            --coverage-json coverage.json \
-            --label Backend
+            --pytest-json pytest-report-${{ strategy.job-index }}.md \
+            --coverage-json coverage-${{ strategy.job-index }}.json \
+            --label "Backend (${{ matrix.test_group_name }})"
