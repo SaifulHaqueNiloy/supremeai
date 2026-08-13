@@ -315,7 +315,7 @@ jobs:
   # ============================================================================
   deploy-render:
     name: 🚀 Deploy Render
-    needs: [changes, backend-tests, production-readiness]
+    needs: [changes, backend-tests, production-readiness, build-backend]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
