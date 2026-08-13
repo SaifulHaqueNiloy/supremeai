@@ -714,7 +714,26 @@ class Settings(BaseSettings):
     @property
     def encryption_key(self) -> SecretStr:
         val = self._get_cached_secret("ENCRYPTION_KEY")
-        return SecretStr(val) if val else SecretStr("")
+        if val:
+            return SecretStr(val)
+            
+        # Fallback: Generate a valid Fernet key from any available LLM API key
+        import base64
+        import hashlib
+        fallback_material = (
+            self._get_cached_secret("GEMINI_API_KEY")
+            or self._get_cached_secret("OPENROUTER_API_KEY")
+            or self._get_cached_secret("GROQ_API_KEY")
+            or self._get_cached_secret("DEEPSEEK_API_KEY")
+            or self._get_cached_secret("OPENAI_API_KEY")
+            or "supremeai-default-fallback-encryption-key-2026-v2"
+        )
+        if fallback_material:
+            digest = hashlib.sha256(fallback_material.encode("utf-8")).digest()
+            fernet_key = base64.urlsafe_b64encode(digest).decode("utf-8")
+            return SecretStr(fernet_key)
+            
+        return SecretStr("")
 
     # ── Stripe Credentials — Infisical-backed ────────────────────────────────
     # বাংলা মন্তব্য: Stripe এপিআই এবং ওয়েবহুক সিক্রেটসমূহের জন্য Infisical lazy fetching নিশ্চিত করা হলো,
