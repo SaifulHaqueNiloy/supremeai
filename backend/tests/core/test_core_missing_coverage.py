@@ -96,7 +96,7 @@ class TestSettingsValidators:
             calls.append(key)
             return f"secret-for-{key}"
 
-        monkeypatch.setattr("core.security.secret_vault.secret_vault._get_cached_secret", fake_fetch)
+        monkeypatch.setattr("core.config_secrets.secret_vault.fetch_secret", fake_fetch)
         s = Settings()
         s._secrets_batch_loaded = False
         s._BATCH_SECRET_KEYS = ["X"]
@@ -112,7 +112,7 @@ class TestSettingsValidators:
         monkeypatch.delenv("SUPABASE_DATABASE_URL_POOLER", raising=False)
         monkeypatch.delenv("REDIS_URL", raising=False)
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-        monkeypatch.setattr("core.security.secret_vault.secret_vault._get_cached_secret", lambda k, *a, **kw: f"val-{k}")
+        monkeypatch.setattr("core.config_secrets.secret_vault.fetch_secret", lambda k, *a, **kw: f"val-{k}")
         s = Settings()
         assert s.supabase_database_url == "val-SUPABASE_DATABASE_URL_POOLER"
         assert s.redis_url == "redis://val-REDIS_URL"
