@@ -379,6 +379,19 @@ infrastructure/firebase_functions/**/lib/
 render.exe
 render_cli.zip
 render_temp/
+
+# ============================================
+# RENDER API SECRETS - DO NOT COMMIT
+# ============================================
+# বাংলা মন্তব্য: এইগুলো Render API keys ও Infisical token ধারণ করে — কখনোই commit করা যাবে না।
+render_*.json
+enc_key_payload.json
+set_env_key.py
+trigger_redeploy.py
+check_ci.py
+run.json
+render.env
+render_env.json
 docs/codebase_dump.md
 scripts/observability_report.json
 backend/coverage.json
