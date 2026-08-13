@@ -3,7 +3,9 @@ import os
 import requests
 from dotenv import dotenv_values
 
-render_api_key = "rnd_S0H7uYcNWmqX3jcepMTBL9WXghGP"
+render_api_key = os.environ.get("RENDER_API_KEY")
+if not render_api_key:
+    raise ValueError("RENDER_API_KEY environment variable is missing!")
 service_id = "srv-d9d3n58js32c738n79k0"
 url = f"https://api.render.com/v1/services/{service_id}/env-vars"
 
