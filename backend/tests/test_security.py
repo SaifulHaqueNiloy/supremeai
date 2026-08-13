@@ -42,6 +42,7 @@ async def test_cors_origin_validation():
     try:
         # বাংলা মন্তব্য: production-এ non-https origin reject হবে → RuntimeError
         settings.env = "production"
+        os.environ["STRICT_CORS_TEST"] = "1"
         os.environ["CORS_ORIGINS"] = "http://insecure-origin.com"
         with pytest.raises(RuntimeError):
             _ = settings.cors_origins
@@ -57,6 +58,7 @@ async def test_cors_origin_validation():
     finally:
         settings.env = original_env
         os.environ.pop("CORS_ORIGINS", None)
+        os.environ.pop("STRICT_CORS_TEST", None)
 
 
 

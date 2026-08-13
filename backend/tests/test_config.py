@@ -7,7 +7,7 @@ from core.config import Settings
 
 
 @patch.dict(os.environ, {}, clear=True)
-@patch("core.config.secret_vault.fetch_secret", return_value="")
+@patch("core.security.secret_vault.secret_vault.fetch_secret", return_value="")
 def test_defaults(mock_fetch):
     Settings._cached_secrets = {}
     Settings._secrets_batch_loaded = False
@@ -64,7 +64,7 @@ def test_defaults(mock_fetch):
     clear=False,
 )
 @patch(
-    "core.config.secret_vault.fetch_secret",
+    "core.security.secret_vault.secret_vault.fetch_secret",
     side_effect=lambda k, default="": os.environ.get(k) or os.environ.get(k.lower()) or default,
 )
 @pytest.mark.skip(
@@ -131,7 +131,7 @@ def test_parse_allowed_hosts_empty_string():
 
 @pytest.mark.skip(reason="CORS origins production env settings mock override variance")
 @patch(
-    "core.config.secret_vault.fetch_secret",
+    "core.security.secret_vault.secret_vault.fetch_secret",
     side_effect=lambda k: os.environ.get(k) or os.environ.get(k.lower()),
 )
 def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
@@ -152,7 +152,7 @@ def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
     assert "https://example.com" in s.cors_origins
 
 
-@patch("core.config.secret_vault.fetch_secret", return_value="")
+@patch("core.security.secret_vault.secret_vault.fetch_secret", return_value="")
 def test_validate_production_completeness_raises_on_missing_production_keys(mock_fetch):
     from core.config import Settings
 
