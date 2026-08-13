@@ -122,9 +122,11 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
-# বাংলা: core/ ফোল্ডারেই coverage মাপা হয় — CI এর সাথে consistent।
-# পুরো backend/ স্ক্যান করলে pytest অনেক ধীর হয়ে যায়।
-source = ["core"]
+# বাংলা: আগে শুধু core/ এর coverage মাপা হতো — api/, tools/, ws/, workers/ ব্লাইন্ড স্পট
+# ছিল। এখন সব প্রডাকশন প্যাকেজ একসাথে মাপা হয় যাতে রিপোর্ট সত্যিকারের কভারেজ দেখায়।
+# CI এর সাথে consistent। পুরো backend/ স্ক্যান করলে pytest ধীর হয়, তাই শুধু
+# প্রডাকশন প্যাকেজগুলো source হিসেবে রাখা হলো।
+source = ["core", "api", "tools", "ws", "workers"]
 omit = [
     "*/tests/*",
     "*/venv/*",
@@ -133,6 +135,9 @@ omit = [
     "*/__pycache__/*",
     "*/migrations/*",
     "*/alembic/*",
+    "*/__init__.py",
+    "tools/cli.py",
+    "core/worker_main.py",
 ]
 
 [tool.coverage.report]

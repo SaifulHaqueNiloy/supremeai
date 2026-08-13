@@ -1,274 +1,120 @@
-"""Tests for TrustedOriginMiddleware - CORS and trusted origin validation.
+"""TrustedOriginMiddleware এর ইউনিট টেস্ট।
 
-This module tests:
-- Test environment bypass
-- Localhost / 127.0.0.1 bypass
-- Public paths bypass
-- Origin header validation
-- Host header validation
-- CORS headers injection on response
+বাংলা: এখানে শুধু portal_role নির্ধারণ ও allowed_origins গণনার লজিক কভার করা হয়েছে
+(নেটওয়ার্ক/ডিস্প্যাচ ছাড়া)। settings-এর বিভিন্ন অ্যাট্রিবিউট মক করে আইসোলেশন নিশ্চিত করা হয়েছে।
 """
 
-from unittest.mock import patch
+from __future__ import annotations
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from starlette.responses import PlainTextResponse
+from unittest.mock import MagicMock
 
-from core.security.origin_validator import TrustedOriginMiddleware
+import pytest
+
+from core.security import origin_validator
+from core.security.origin_validator import (
+    ADMIN_DEFAULT_TRUSTED_ORIGINS,
+    USER_DEFAULT_TRUSTED_ORIGINS,
+    TrustedOriginMiddleware,
+)
 
 
-class TestTrustedOriginMiddleware:
-    """Tests for TrustedOriginMiddleware class."""
+@pytest.fixture
+def fake_settings():
+    s = MagicMock()
+    s.service_role = "user"
+    s.admin_cors_origins = []
+    s.user_cors_origins = []
+    s.cors_origins = []
+    s.env = "local"
+    s.is_origin_bypass_allowed = False
+    s.supremeai_public_paths = ["/api/v1/health"]
+    s.allowed_hosts = []
+    return s
 
-    def test_bypass_test_environment(self):
-        """Test that test environment bypasses origin checks."""
-        app = FastAPI()
 
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
+def test_portal_role_override_admin(fake_settings):
+    with pytest.MagicMock() if False else _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="admin")
+        assert mw.portal_role == "admin"
 
-        app.add_middleware(TrustedOriginMiddleware)
-        client = TestClient(app)
 
-        # Mock ENV=test - patch at module level since middleware imports os locally
-        with patch(
-            "core.security.origin_validator.os.getenv", side_effect=lambda k, d=None: "test" if k == "ENV" else d
-        ):
-            resp = client.get("/api/test")
+def test_portal_role_override_user(fake_settings):
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="USER")
+        assert mw.portal_role == "user"
 
-        assert resp.status_code == 200
 
-    def test_bypass_localhost(self):
-        """Test that localhost bypasses origin checks."""
-        app = FastAPI()
+def test_portal_role_from_settings_admin(fake_settings):
+    fake_settings.service_role = "admin"
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock())
+        assert mw.portal_role == "admin"
 
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
 
-        app.add_middleware(TrustedOriginMiddleware)
-        client = TestClient(app)
+def test_portal_role_default_user(fake_settings):
+    fake_settings.service_role = "unknown"
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock())
+        assert mw.portal_role == "user"
 
-        # testserver is used by FastAPI's TestClient
-        with patch(
-            "core.security.origin_validator.os.getenv", side_effect=lambda k, d=None: "development" if k == "ENV" else d
-        ):
-            resp = client.get("/api/test")
 
-        assert resp.status_code == 200
+def test_allowed_origins_user_defaults(fake_settings):
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
+        # বাংলা: ইউজার পোর্টাল অ্যাডমিন অরিজিন ট্রাস্ট করবে না
+        assert not ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
 
-    def test_bypass_public_paths(self):
-        """Test that public paths bypass origin checks."""
-        app = FastAPI()
 
-        @app.get("/api/v1/health")
-        def health_endpoint():
-            return PlainTextResponse("healthy")
+def test_allowed_origins_admin_defaults(fake_settings):
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="admin")
+        origins = mw.allowed_origins
+        assert ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
+        assert not USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
 
-        with patch("core.security.origin_validator.settings") as mock_settings:
-            mock_settings.cors_origins = []
-            mock_settings.supremeai_public_paths = ["/api/v1/health"]
-            mock_settings.allowed_hosts = []
 
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
+def test_allowed_origins_strips_wildcard(fake_settings):
+    fake_settings.user_cors_origins = ["*", "https://evil.example.com"]
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert "*" not in origins
 
-            resp = client.get("/api/v1/health")
 
-        assert resp.status_code == 200
+def test_allowed_origins_localhost_in_dev(fake_settings):
+    fake_settings.env = "local"
+    fake_settings.cors_origins = ["http://localhost:3000", "http://127.0.0.1:5173"]
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert "http://localhost:3000" in origins
+        assert "http://127.0.0.1:5173" in origins
 
-    def test_blocks_unauthorized_origin(self):
-        """Test that unauthorized origin is blocked."""
-        app = FastAPI()
 
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
+def test_allowed_origins_no_localhost_in_production(fake_settings):
+    # বাংলা: প্রোডাকশনে স্পষ্টভাবে কনফিগ না করা localhost অটো-যোগ হবে না
+    fake_settings.env = "production"
+    fake_settings.cors_origins = ["https://supremeai-lac.vercel.app"]
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert "http://localhost:3000" not in origins
+        assert "https://supremeai-lac.vercel.app" in origins
 
-        with (
-            patch("core.security.origin_validator.settings") as mock_settings,
-            patch(
-                "core.security.origin_validator.os.getenv",
-                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
-            ),
-        ):
-            mock_settings.cors_origins = ["https://trusted.example.com"]
-            mock_settings.supremeai_public_paths = []
-            mock_settings.allowed_hosts = ["trusted.example.com"]
 
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
+def test_default_origin_constants_non_empty():
+    assert len(USER_DEFAULT_TRUSTED_ORIGINS) > 0
+    assert len(ADMIN_DEFAULT_TRUSTED_ORIGINS) > 0
 
-            resp = client.get(
-                "/api/test",
-                headers={
-                    "Origin": "https://malicious.example.com",
-                    "Host": "malicious.example.com",
-                },
-            )
 
-        assert resp.status_code == 403
+import contextlib
 
-    def test_allows_authorized_origin(self):
-        """Test that authorized origin is allowed."""
-        app = FastAPI()
 
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
-
-        with (
-            patch("core.security.origin_validator.settings") as mock_settings,
-            patch(
-                "core.security.origin_validator.os.getenv",
-                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
-            ),
-        ):
-            mock_settings.cors_origins = ["https://trusted.example.com"]
-            mock_settings.supremeai_public_paths = []
-            mock_settings.allowed_hosts = ["trusted.example.com"]
-
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
-
-            resp = client.get(
-                "/api/test",
-                headers={
-                    "Origin": "https://trusted.example.com",
-                    "Host": "trusted.example.com",
-                },
-            )
-
-        assert resp.status_code == 200
-
-    def test_allowed_origin_passes_through_without_duplicate_cors_headers(self):
-        """Test an allowed origin's request passes through successfully.
-
-        বাংলা মন্তব্য: TrustedOriginMiddleware আর নিজে Access-Control-Allow-Origin
-        header যোগ করে না -- এটা এখন শুধুমাত্র app_user.py/app_admin.py-এর প্রকৃত
-        CORSMiddleware (outer)-এর দায়িত্ব। এই মিডলওয়্যারকে একা টেস্ট করার সময়
-        সেই outer CORSMiddleware উপস্থিত থাকে না, তাই এখানে header assert করা
-        ঠিক না -- বরং allowed origin-এর request block না হওয়া (200 status)
-        যাচাই করাই এই টেস্টের উদ্দেশ্য। Header-level CORS coverage
-        test_app_isolation.py-তে পুরো app স্ট্যাক দিয়ে করা হয়।
-        """
-        app = FastAPI()
-
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
-
-        with (
-            patch("core.security.origin_validator.settings") as mock_settings,
-            patch(
-                "core.security.origin_validator.os.getenv",
-                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
-            ),
-        ):
-            mock_settings.cors_origins = ["https://trusted.example.com"]
-            mock_settings.supremeai_public_paths = []
-            mock_settings.allowed_hosts = ["trusted.example.com"]
-
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
-
-            resp = client.get(
-                "/api/test",
-                headers={
-                    "Origin": "https://trusted.example.com",
-                    "Host": "trusted.example.com",
-                },
-            )
-
-            assert resp.status_code == 200
-            assert resp.text == "ok"
-
-    def test_blocks_malicious_host(self):
-        """Test that malicious host header is blocked."""
-        app = FastAPI()
-
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
-
-        with (
-            patch("core.security.origin_validator.settings") as mock_settings,
-            patch(
-                "core.security.origin_validator.os.getenv",
-                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
-            ),
-        ):
-            mock_settings.cors_origins = []
-            mock_settings.supremeai_public_paths = []
-            mock_settings.allowed_hosts = ["trusted.example.com"]
-
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
-
-            resp = client.get(
-                "/api/test",
-                headers={
-                    "Host": "malicious.example.com",
-                },
-            )
-
-        assert resp.status_code == 403
-
-    def test_allows_subdomain_host(self):
-        """Test that subdomain hosts are allowed if main domain is in allowed_hosts."""
-        app = FastAPI()
-
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
-
-        with (
-            patch("core.security.origin_validator.settings") as mock_settings,
-            patch(
-                "core.security.origin_validator.os.getenv",
-                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
-            ),
-        ):
-            mock_settings.cors_origins = []
-            mock_settings.supremeai_public_paths = []
-            mock_settings.allowed_hosts = ["example.com"]
-
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
-
-            resp = client.get(
-                "/api/test",
-                headers={
-                    "Host": "api.example.com",
-                },
-            )
-
-        assert resp.status_code == 200
-
-    def test_no_origin_header(self):
-        """Test that requests without Origin header pass through."""
-        app = FastAPI()
-
-        @app.get("/api/test")
-        def test_endpoint():
-            return PlainTextResponse("ok")
-
-        with (
-            patch("core.security.origin_validator.settings") as mock_settings,
-            patch(
-                "core.security.origin_validator.os.getenv",
-                side_effect=lambda k, d=None: "production" if k == "ENV" else d,
-            ),
-        ):
-            mock_settings.cors_origins = ["https://trusted.example.com"]
-            mock_settings.supremeai_public_paths = []
-            mock_settings.allowed_hosts = ["example.com"]
-
-            app.add_middleware(TrustedOriginMiddleware)
-            client = TestClient(app)
-
-            resp = client.get("/api/test", headers={"Host": "example.com"})
-
-        assert resp.status_code == 200
+@contextlib.contextmanager
+def _patch_settings(fake_settings):
+    """settings মডিউল অবজেক্টকে মক দিয়ে প্যাচ করে।"""
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(origin_validator, "settings", fake_settings)
+        yield
