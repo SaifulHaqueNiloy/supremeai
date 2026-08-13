@@ -46,9 +46,11 @@ class ComponentHierarchy:
 
 
 class ImageToCode:
-    def __init__(self, vision_model: str = "gpt-4o"):
+    # বাংলা: আগে vision_model হিসেবে "gpt-4o" ডিফোল্ট ছিল — OpenAI key না থাকলে সব ভিজিশন ফিচার ব্যর্থ হতো।
+    # এখন None দিয়ে llm_gateway-এর task_type="vision" ফেলোভার চেইন ব্যবহার করা হবে।
+    def __init__(self, vision_model: str | None = None):
         self.vision_model = vision_model
-        logger.info(f"Initialized ImageToCode with model {self.vision_model}")
+        logger.info(f"Initialized ImageToCode with model {self.vision_model or 'auto (gateway-routed)'}")
 
     def _encode_image_bytes(self, image_bytes: bytes) -> str:
         return base64.b64encode(image_bytes).decode("utf-8")

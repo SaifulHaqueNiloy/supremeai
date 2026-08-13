@@ -39,9 +39,11 @@ class SchemaCode:
 
 
 class DiagramToArchitecture:
-    def __init__(self, vision_model: str = "gpt-4o"):
+    # বাংলা: আগে vision_model ডিফোল্ট "gpt-4o" ছিল — OpenAI key না থাকলে ডায়াগ্রাম বিশ্লেষণ ব্যর্থ হতো।
+    # এখন None দিয়ে gateway task_type="vision" ফেলোভার চেইন ব্যবহার করবে।
+    def __init__(self, vision_model: str | None = None):
         self.vision_model = vision_model
-        logger.info(f"Initialized DiagramToArchitecture with model {self.vision_model}")
+        logger.info(f"Initialized DiagramToArchitecture with model {self.vision_model or 'auto (gateway-routed)'}")
 
     def _encode_image(self, image_path: str) -> str:
         if not os.path.exists(image_path):

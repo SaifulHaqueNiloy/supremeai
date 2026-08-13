@@ -47,11 +47,12 @@ class DynamicAgentFactory:
         # আগের execution_steps ভিত্তিক প্রম্পট এখন আরও জেনেরিক পাইথন স্ক্রিপ্টে পরিবর্তিত হয়েছে
         prompt = f"Create a Python script to solve this task: '{task_description}'"
 
-        # প্রিমিয়াম এআই দিয়ে ১ বার খরচ করে এজেন্টের স্ক্রিপ্ট বানিয়ে নেওয়া
+        # বাংলা: আগে model_filters=["claude-3-5-sonnet"] হার্ডকোড ছিল — claude না থাকলে crash হতো।
+        # এখন task_type="coding" দিয়ে llm_gateway নিজে best available model বেছে নেবে (failover সহ)।
         response = await llm_gateway.acompletion(
             prompt=prompt,
             system_prompt=system_prompt,
-            model_filters=["claude-3-5-sonnet"],
+            task_type="coding",
         )
 
         try:
