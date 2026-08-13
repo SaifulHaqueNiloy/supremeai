@@ -321,8 +321,7 @@ jobs:
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
-      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
-      needs.check-render-quota.outputs.use_github_build == 'true'
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped')
     uses: ./.github/workflows/_deploy-render.yml
     secrets: inherit
     with:
@@ -366,7 +365,6 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
-      needs.check-render-quota.outputs.use_github_build == 'true' &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
