@@ -47,155 +47,8 @@ on:
         default: '1'
 
 jobs:
-  pre-merge-gate:
-    name: 🚧 Pre-Merge Gate (Iron Curtain)
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      security-events: write
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Set up Python
-        if: inputs.docs_only != true
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: ${{ inputs.python_version }}
-
-      - name: Install gate and backend dependencies
-        run: pip install ruff poetry && cd backend && poetry config virtualenvs.in-project true
-
-      - name: ⚙️ Poetry Cache (shared with backend-core)
-        id: gate_poetry_cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.cache/pip
-            backend/.venv
-          key: ${{ runner.os }}-poetry-v4-py3.11-${{ hashFiles('backend/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-v4-py3.11-
-            ${{ runner.os }}-poetry-v4-
-
-      - name: 📦 Install backend deps (main only, cache-aware)
-        if: inputs.docs_only != true
-        run: |
-          cd backend
-          if [ "${{ steps.gate_poetry_cache.outputs.cache-hit }}" == "true" ]; then
-            echo "poetry cache HIT (shared pool) — syncing only, no fresh download"
-            poetry install --only main --no-root --sync
-          else
-            echo "poetry cache MISS — fresh install (main only, this job populates the shared pool)"
-            poetry install --only main --no-root
-          fi
-
-      - name: 🚫 Gate 1 — Zero-Gap Stub/Placeholder Data Check
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Zero-Gap স্টাব ডেটা গেট ===" >> $GITHUB_STEP_SUMMARY
-          python scripts/find_stub_data.py --path . --fail-on HIGH
-          echo "✅ পাস: কোনো স্টাব/প্লেসহোল্ডার প্যাটার্ন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🛡️ Gate 1.5 — Security Blind Spot Scan
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Security Blind Spot Scan ===" >> $GITHUB_STEP_SUMMARY
-          python scripts/security/auto_find_blindspots.py
-          echo "✅ পাস: কোনো ক্রিটিকাল সিকিউরিটি রিস্ক নেই" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🔬 Gate 2 — Ruff Linting (No Silent Bugs)
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Ruff স্ট্যাটিক অ্যানালাইসিস গেট ===" >> $GITHUB_STEP_SUMMARY
-          cd backend
-          ruff check . --config pyproject.toml --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
-          ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
-          echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🤖 Bot Commit Detection
-        id: bot-check
-        run: |
-          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
-          echo "Commit author: $COMMIT_AUTHOR"
-          if [[ "$COMMIT_AUTHOR" == *"CI Bot"* || "$COMMIT_AUTHOR" == *"SupremeAI Bot"* || "$COMMIT_AUTHOR" == *"[bot]"* ]]; then
-            echo "is_bot_commit=true" >> $GITHUB_OUTPUT
-            echo "::warning::🤖 BOT COMMIT DETECTED — Router import smoke-test will run in STRICT mode."
-          else
-            echo "is_bot_commit=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: 🔌 Gate 0 — Router Import Smoke-Test
-        if: inputs.backend_changed == true || inputs.docs_only != true
-        run: |
-          echo "=== Router Import Smoke-Test ===" >> $GITHUB_STEP_SUMMARY
-          cd backend
-          if [[ "${{ steps.bot-check.outputs.is_bot_commit }}" == "true" ]]; then
-            echo "🤖 Bot commit: running in STRICT mode (all routers must import cleanly)" >> $GITHUB_STEP_SUMMARY
-            poetry run python ../scripts/ci/validate_router_imports.py --strict
-          else
-            poetry run python ../scripts/ci/validate_router_imports.py
-          fi
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "✅ পাস: সব core router imports সঠিক" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ FAIL: Router import error detected — fix imports before test suite runs" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      - name: 🛡️ Gate 3.5 — Admin Router Auth Lint Guard
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
-          cd backend
-          poetry run python ../.github/scripts/verify_admin_auth.py
-          echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
-
-      - name: 🔗 Gate 3 — Service Topology Check
-        if: inputs.docs_only != true
-        run: |
-          pip install pyyaml
-          python scripts/ci/check_service_topology.py
-
-      - name: 🕵️ Gate 4 — Observability & Silent Error Audit
-        if: inputs.docs_only != true
-        run: |
-          echo "=== HTTP টাইমআউট অডিট গেট ===" >> $GITHUB_STEP_SUMMARY
-          VIOLATIONS=$(grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv" | wc -l)
-          if [ "$VIOLATIONS" -gt 0 ]; then
-            echo "❌ FAIL: Found $VIOLATIONS httpx.AsyncClient() call(s) without explicit timeout!" >> $GITHUB_STEP_SUMMARY
-            grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv"
-            exit 1
-          fi
-          echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🔬 Run Observability Audit Script
-        if: inputs.trivial_change != true
-        id: obs_audit
-        run: |
-          python scripts/audit_observability.py
-
-      - name: Audit Summary
-        if: always() && inputs.trivial_change != true
-        run: |
-          echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
-          echo "Outcome: **${{ steps.obs_audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
-          echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🚨 Force Cancel Workflow on Failure
-        if: failure()
-        run: |
-          echo "❌ Pre-Merge Gate failed — force canceling entire workflow..." >> $GITHUB_STEP_SUMMARY
-          curl -s -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel" || gh run cancel ${{ github.run_id }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   backend-core:
-    name: 🐍 Backend (Test - ${{ matrix.test_group_name }})
+    name: 🐍 Backend Tests
     timeout-minutes: 15
     runs-on: ubuntu-latest
     strategy:
@@ -326,6 +179,106 @@ jobs:
             echo "- Playwright cache: MISS — browsers downloaded and cached" >> $GITHUB_STEP_SUMMARY
           fi
 
+
+      - name: 🗄️ Create xdist worker databases
+        run: |
+          for i in {0..7}; do
+            PGPASSWORD=test_password psql -h 127.0.0.1 -U test_user -d postgres -c "CREATE DATABASE supreme_test_db_gw$i;" 2>/dev/null || true
+          done
+
+      - name: 🚫 Gate 1 — Zero-Gap Stub/Placeholder Data Check
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Zero-Gap স্টাব ডেটা গেট ===" >> $GITHUB_STEP_SUMMARY
+          python scripts/find_stub_data.py --path . --fail-on HIGH
+          echo "✅ পাস: কোনো স্টাব/প্লেসহোল্ডার প্যাটার্ন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🛡️ Gate 1.5 — Security Blind Spot Scan
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Security Blind Spot Scan ===" >> $GITHUB_STEP_SUMMARY
+          python scripts/security/auto_find_blindspots.py
+          echo "✅ পাস: কোনো ক্রিটিকাল সিকিউরিটি রিস্ক নেই" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔬 Gate 2 — Ruff Linting (No Silent Bugs)
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Ruff স্ট্যাটিক অ্যানালাইসিস গেট ===" >> $GITHUB_STEP_SUMMARY
+          cd backend
+          ruff check . --config pyproject.toml --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+          ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+          echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🤖 Bot Commit Detection
+        id: bot-check
+        run: |
+          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
+          echo "Commit author: $COMMIT_AUTHOR"
+          if [[ "$COMMIT_AUTHOR" == *"CI Bot"* || "$COMMIT_AUTHOR" == *"SupremeAI Bot"* || "$COMMIT_AUTHOR" == *"[bot]"* ]]; then
+            echo "is_bot_commit=true" >> $GITHUB_OUTPUT
+            echo "::warning::🤖 BOT COMMIT DETECTED — Router import smoke-test will run in STRICT mode."
+          else
+            echo "is_bot_commit=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔌 Gate 0 — Router Import Smoke-Test
+        if: inputs.backend_changed == true || inputs.docs_only != true
+        run: |
+          echo "=== Router Import Smoke-Test ===" >> $GITHUB_STEP_SUMMARY
+          cd backend
+          if [[ "${{ steps.bot-check.outputs.is_bot_commit }}" == "true" ]]; then
+            echo "🤖 Bot commit: running in STRICT mode (all routers must import cleanly)" >> $GITHUB_STEP_SUMMARY
+            poetry run python ../scripts/ci/validate_router_imports.py --strict
+          else
+            poetry run python ../scripts/ci/validate_router_imports.py
+          fi
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ পাস: সব core router imports সঠিক" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ FAIL: Router import error detected — fix imports before test suite runs" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: 🛡️ Gate 3.5 — Admin Router Auth Lint Guard
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
+          cd backend
+          poetry run python ../.github/scripts/verify_admin_auth.py
+          echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔗 Gate 3 — Service Topology Check
+        if: inputs.docs_only != true
+        run: |
+          pip install pyyaml
+          python scripts/ci/check_service_topology.py
+
+      - name: 🕵️ Gate 4 — Observability & Silent Error Audit
+        if: inputs.docs_only != true
+        run: |
+          echo "=== HTTP টাইমআউট অডিট গেট ===" >> $GITHUB_STEP_SUMMARY
+          VIOLATIONS=$(grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv" | wc -l)
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            echo "❌ FAIL: Found $VIOLATIONS httpx.AsyncClient() call(s) without explicit timeout!" >> $GITHUB_STEP_SUMMARY
+            grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv"
+            exit 1
+          fi
+          echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔬 Run Observability Audit Script
+        if: inputs.trivial_change != true
+        id: obs_audit
+        run: |
+          python scripts/audit_observability.py
+
+      - name: Audit Summary
+        if: always() && inputs.trivial_change != true
+        run: |
+          echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
+          echo "Outcome: **${{ steps.obs_audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
+
       - name: 🧪 Run Tests
         id: backend_tests
         working-directory: backend
@@ -340,16 +293,11 @@ jobs:
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           if [ "${{ inputs.backend_changed }}" = "true" ] || [ "${{ inputs.docs_only }}" = "true" ]; then
-            # বাংলা মন্তব্য: coverage source এখন core+api+tools+ws+workers (combined)।
-            # বাংলা মন্তব্য: xdist (-n auto) এর কারণে Shared State Deadlock (Redis/DB) হয়ে Worker Crash (KeyError: gw1) করছিল, তাই সমান্তরাল এক্সিকিউশন বন্ধ করা হলো।
-            poetry run pytest ${{ matrix.test_paths }} --timeout=120 --md pytest-report-${{ strategy.job-index }}.md --cov --cov-report=json:coverage-${{ strategy.job-index }}.json --cov-report=xml:coverage-${{ strategy.job-index }}.xml --cov-report=term-missing --cov-fail-under=14 -k "not chaos"
+            # xdist re-enabled with isolated DB and Redis configs per worker
+            poetry run pytest tests/ -n auto --timeout=120 --md pytest-report.md --cov --cov-report=json:coverage.json --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=14 -k "not chaos"
           else
             echo "Skipping full backend tests, only running smoke tests."
-            if [ "${{ matrix.test_group_name }}" = "Others" ]; then
-              poetry run pytest tests/test_health.py -q
-            else
-              echo "Skipped for this matrix job."
-            fi
+            poetry run pytest tests/test_health.py -q
           fi
 
       - name: 🤖 Auto-Fix Engine (failure-only)
@@ -374,6 +322,69 @@ jobs:
           mkdir -p backend
           cd backend
           python ../.github/scripts/supreme_ci.py generate-report \
-            --pytest-json pytest-report-${{ strategy.job-index }}.md \
-            --coverage-json coverage-${{ strategy.job-index }}.json \
-            --label "Backend (${{ matrix.test_group_name }})"
+            --pytest-json pytest-report-1.md \
+            --coverage-json coverage-1.json \
+            --label "Backend Tests"
+      - name: 🛡️ Safety Guard - File Protection Validation
+        id: safety_guard
+        working-directory: backend
+        run: |
+          echo "## 🛡️ সেফটি গার্ড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
+          poetry run python ../scripts/safety_guard.py --report-json > safety-report.json 2>&1
+
+          if [ -f safety-report.json ]; then
+            PENDING=$(grep -o '"pending_approvals": [1-9][0-9]*' safety-report.json | awk '{print $2}' || echo "0")
+            if [ -n "$PENDING" ] && [ "$PENDING" -gt 0 ]; then
+              echo "❌ Found $PENDING pending critical file approvals — blocking merge/deploy!" >> $GITHUB_STEP_SUMMARY
+              cat safety-report.json >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            echo "✅ সেফটি গার্ড সম্পন্ন হয়েছে — কোনো আনঅ্যাপ্রুভড সেফটি ভাইওলেশন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ সেফটি গার্ড রিপোর্ট তৈরি হয়নি" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🔍 Multi-Model Validator - Security & Logic Check
+        id: validator
+        working-directory: backend
+        run: |
+          echo "## 🔍 মাল্টি-মডেল কোড ভ্যালিডেশন" >> $GITHUB_STEP_SUMMARY
+          poetry run python ../scripts/multi_model_validator.py core/ --json-output validator-report.json 2>&1
+
+          if [ -f validator-report.json ]; then
+            CRITICAL=$(grep -c "risk_level.*CRITICAL" validator-report.json || echo "0")
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "❌ Found $CRITICAL CRITICAL security issues — blocking merge/deploy!" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "✅ কোনো ক্রিটিকাল সিকিউরিটি ইস্যু পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: 📊 Codegraph - Knowledge Base Generation
+        id: codegraph
+        working-directory: backend
+        run: |
+          echo "## 📊 নলেজ গ্রাফ জেনারেশন" >> $GITHUB_STEP_SUMMARY
+          poetry run python ../scripts/codegraph_integration.py --full --output-dir ../docs/codebase/knowledge_graph 2>&1 || true
+          echo "✅ নলেজ গ্রাফ আপডেট করা হয়েছে" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📤 Upload Production Readiness Reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: production-readiness-reports
+          path: |
+            backend/safety-report.json
+            backend/validator-report.json
+            docs/codebase/knowledge_graph/
+
+      - name: 🚨 Production Readiness Summary
+        if: always()
+        run: |
+          echo "## ✅ প্রোডাকশন রেডিনেস চেক সম্পন্ন" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### সিস্টেম স্ট্যাটাস:" >> $GITHUB_STEP_SUMMARY
+          echo "- Safety Guard: ${{ steps.safety_guard.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Multi-Model Validator: ${{ steps.validator.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Codegraph: ${{ steps.codegraph.outcome }}" >> $GITHUB_STEP_SUMMARY

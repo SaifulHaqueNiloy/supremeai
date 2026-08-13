@@ -30,25 +30,34 @@ async def test_jwt_secret_persistence():
         settings.env = original_env
 
 
-@pytest.mark.skip(reason="CORS validator filters localhost rather than raising RuntimeError")
+
 @pytest.mark.asyncio
 async def test_cors_origin_validation():
-    """Test CORS origin validation in production/staging."""
+    """Test CORS origin validation in production/staging.
+
+    বাংলা মন্তব্য: নতুন scheme-only validation — operator-configured যেকোনো https:// domain গ্রহণযোগ্য।
+    পুরনো hardcoded supremeai.com allowlist সরানো হয়েছে।
+    """
     original_env = settings.env
     try:
-        # Test with invalid origin in production
+        # বাংলা মন্তব্য: production-এ non-https origin reject হবে → RuntimeError
         settings.env = "production"
-        os.environ["CORS_ORIGINS"] = "https://invalid-origin.com"
+        os.environ["CORS_ORIGINS"] = "http://insecure-origin.com"
         with pytest.raises(RuntimeError):
             _ = settings.cors_origins
 
-        # Test with valid origin in production
-        os.environ["CORS_ORIGINS"] = "https://supremeai.com,https://app.supremeai.com"
-        assert "https://supremeai.com" in settings.cors_origins
-        assert "https://app.supremeai.com" in settings.cors_origins
+        # বাংলা মন্তব্য: যেকোনো https:// origin এখন গ্রহণযোগ্য (onrender.com, vercel.app, web.app)
+        os.environ["CORS_ORIGINS"] = (
+            "https://supremeai-studio-client.onrender.com,"
+            "https://supremeai-lac.vercel.app"
+        )
+        origins = settings.cors_origins
+        assert "https://supremeai-studio-client.onrender.com" in origins
+        assert "https://supremeai-lac.vercel.app" in origins
     finally:
         settings.env = original_env
         os.environ.pop("CORS_ORIGINS", None)
+
 
 
 @pytest.mark.asyncio
