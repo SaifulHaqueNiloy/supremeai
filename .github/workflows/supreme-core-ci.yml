@@ -351,9 +351,9 @@ jobs:
     uses: ./.github/workflows/_deploy-frontend.yml
     secrets: inherit
 
-  # ============================================================================
   # STAGE 6 (PARALLEL): SYNC MIRROR — Secondary repo-তে main push
   # বাংলা মন্তব্য: deploy-render ও deploy-frontend-এর সাথে parallel চলবে।
+  # paykaribazaronline/supremeai রিপোজিটরির ক্ষেত্রে এই জবটি skip করা হবে (লুপ এড়াতে)।
   # MIRROR_REPO_TOKEN না থাকলে gracefully skip করবে — CI fail করবে না।
   # ============================================================================
   sync-mirror:
@@ -361,6 +361,7 @@ jobs:
     needs: [backend-tests, frontend-tests, production-readiness]
     if: |
       always() &&
+      github.repository != 'paykaribazaronline/supremeai' &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       !startsWith(github.head_ref, 'promotion/staging') &&
