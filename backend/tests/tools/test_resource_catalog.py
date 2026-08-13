@@ -39,7 +39,7 @@ def test_build_headers_with_token(fake_settings):
 def test_parse_awesome_markdown_matches_query(fake_settings):
     markdown = (
         "- [Gitea](https://gitea.io) - Self-hosted git service\n"
-        "- [Nextcloud](https://nextcloud.com) - File sync and share\n"
+        "- [Nextcloud](https://nextcloud.com) - git file sync and share\n"
         "- [NotMatching](https://x.com) - unrelated tool\n"
     )
     with patch("tools.resource_catalog.settings", fake_settings):
