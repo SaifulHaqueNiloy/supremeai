@@ -69,7 +69,7 @@ jobs:
 
   deploy-user-backend:
     name: 🚀 Deploy User Backend (Render)
-    if: github.repository != 'paykaribazaronline/supremeai'
+    if: github.repository != 'SaifulHaqueNiloy/supremeai'
     needs: [check-render-quota]
     runs-on: ubuntu-latest
     environment: production
@@ -141,7 +141,7 @@ jobs:
 
   deploy-admin-backend:
     name: 🚀 Deploy Admin Backend (Render)
-    if: github.repository != 'SaifulHaqueNiloy/supremeai'
+    if: github.repository != 'paykaribazaronline/supremeai'
     needs: [check-render-quota]
     runs-on: ubuntu-latest
     environment: production
