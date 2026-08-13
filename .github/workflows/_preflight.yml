@@ -171,6 +171,11 @@ jobs:
     name: 🔌 Admin Bridge Preflight
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
@@ -178,10 +183,16 @@ jobs:
         with:
           python-version: ${{ inputs.python_version }}
       - name: Install & Run Backend
+        env:
+          REDIS_URL: "redis://127.0.0.1:6379/0"
+          SUPABASE_DATABASE_URL: "sqlite+aiosqlite:///./preflight.db"
+          ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           cd backend
           pip install poetry
           poetry install --no-root
+          poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
           sleep 10
       - name: Probe Admin API & CORS Headers
@@ -194,6 +205,11 @@ jobs:
     name: 🔌 User Bridge Preflight
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python
@@ -201,10 +217,16 @@ jobs:
         with:
           python-version: ${{ inputs.python_version }}
       - name: Install & Run User Services
+        env:
+          REDIS_URL: "redis://127.0.0.1:6379/0"
+          SUPABASE_DATABASE_URL: "sqlite+aiosqlite:///./preflight.db"
+          ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           cd backend
           pip install poetry
           poetry install --no-root
+          poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8001 &
           sleep 10
       - name: Verify User App Core Handshake
