@@ -21,14 +21,23 @@ def _make_auditor():
         return chaos_worker.NightlyChaosAuditor()
 
 
+def _make_async_client(status_code: int = 200):
+    # বাংলা: `async with httpx.AsyncClient() as client` কাজ করার জন্য
+    # __aenter__ যাতে নিজেকেই রিটার্ন করে (client == async_client)
+    async_client = AsyncMock()
+    async_client.__aenter__.return_value = async_client
+    async_client.__aexit__.return_value = False
+    resp = MagicMock()
+    resp.status_code = status_code
+    async_client.post.return_value = resp
+    return async_client
+
+
 @pytest.mark.asyncio
 async def test_audit_passes_when_safe():
     auditor = _make_auditor()
     payloads = [("print('hello')", {"risk": "low"}), ("x = 1", {})]
-    fake_resp = MagicMock()
-    fake_resp.status_code = 200
-    async_client = AsyncMock()
-    async_client.post.return_value = fake_resp
+    async_client = _make_async_client(status_code=200)
 
     with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(
         "workers.chaos_worker.run_sandbox_ast_check", return_value=False
@@ -43,8 +52,7 @@ async def test_audit_locks_on_sandbox_breach():
     auditor = _make_auditor()
     # বাংলা: স্যান্ডবক্স যদি ম্যালিশিয়াস কোডকে Safe বলে (True রিটার্ন), তবে breach গণ্য হয়
     payloads = [("import os; os.system('rm -rf /')", {"risk": "high"})]
-    async_client = AsyncMock()
-    async_client.post.return_value = MagicMock(status_code=200)
+    async_client = _make_async_client(status_code=200)
 
     with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(
         "workers.chaos_worker.run_sandbox_ast_check", return_value=True
@@ -58,10 +66,7 @@ async def test_audit_locks_on_sandbox_breach():
 async def test_audit_locks_on_runtime_server_error():
     auditor = _make_auditor()
     payloads = [("print('ok')", {})]
-    fake_resp = MagicMock()
-    fake_resp.status_code = 503  # SERVER_ERROR_THRESHOLD (500) এর ওপরে
-    async_client = AsyncMock()
-    async_client.post.return_value = fake_resp
+    async_client = _make_async_client(status_code=503)  # SERVER_ERROR_THRESHOLD (500) এর ওপরে
 
     with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(
         "workers.chaos_worker.run_sandbox_ast_check", return_value=False
@@ -74,8 +79,7 @@ async def test_audit_locks_on_runtime_server_error():
 @pytest.mark.asyncio
 async def test_audit_locks_when_fuzz_unavailable():
     auditor = _make_auditor()
-    async_client = AsyncMock()
-    async_client.post.return_value = MagicMock(status_code=200)
+    async_client = _make_async_client(status_code=200)
 
     # বাংলা: fuzz_sandbox আনঅভেইলেবল হলে ImportError → LOCKED (False)
     with patch("workers.chaos_worker.generate_fuzz_payloads", None), patch(

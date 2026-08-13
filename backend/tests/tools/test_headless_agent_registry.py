@@ -15,8 +15,9 @@ from tools import headless_agent_registry
 
 def test_get_configs_fallback_returns_dict():
     # বাংলা: DB কানেকশন None রিটার্ন করলে লোকাল ডিফল্ট কনফিগ ফেরত দেয়
+    # _get_connection একটি লোকাল import, তাই সোর্স মডিউলে প্যাচ করা হয়েছে
     with patch.object(headless_agent_registry, "settings", MagicMock()), patch(
-        "tools.headless_agent_registry._get_connection", return_value=None
+        "tools.mcp.mcp_supabase._get_connection", return_value=None
     ):
         configs = headless_agent_registry.get_headless_agent_configs()
         assert isinstance(configs, dict)
@@ -27,7 +28,7 @@ def test_get_configs_fallback_returns_dict():
 def test_get_configs_db_error_falls_back():
     # বাংলা: DB কোয়েরি এক্সেপশন দিলেও graceful ফলব্যাক
     with patch.object(headless_agent_registry, "settings", MagicMock()), patch(
-        "tools.headless_agent_registry._get_connection", side_effect=Exception("db down")
+        "tools.mcp.mcp_supabase._get_connection", side_effect=Exception("db down")
     ):
         configs = headless_agent_registry.get_headless_agent_configs()
         assert "gemini-cli" in configs
@@ -35,7 +36,7 @@ def test_get_configs_db_error_falls_back():
 
 def test_get_configs_has_required_keys():
     with patch.object(headless_agent_registry, "settings", MagicMock()), patch(
-        "tools.headless_agent_registry._get_connection", return_value=None
+        "tools.mcp.mcp_supabase._get_connection", return_value=None
     ):
         configs = headless_agent_registry.get_headless_agent_configs()
         for name, cfg in configs.items():
