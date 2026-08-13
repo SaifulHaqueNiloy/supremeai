@@ -211,8 +211,8 @@ jobs:
           sleep 10
       - name: Probe Admin API & CORS Headers
         run: |
-          curl -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
-          curl -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
           curl -i -X OPTIONS http://127.0.0.1:8000/api/v1/health -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: GET" | grep -i "access-control-allow-origin" || exit 1
 
   check-user-bridge:
@@ -259,4 +259,4 @@ jobs:
           sleep 10
       - name: Verify User App Core Handshake
         run: |
-          curl -f --max-time 3 http://127.0.0.1:8001/api/v1/mobile-bff/health || exit 1
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8001/api/v1/mobile-bff/health || exit 1

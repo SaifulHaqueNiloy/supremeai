@@ -224,4 +224,29 @@ export const apiClient = {
     });
     return handleResponse(res);
   },
+
+  // 🟢 Non-blocking Telemetry / Background Check (10s timeout, silent fallback)
+  // বাংলা মন্তব্য: Telemetry বা Analytics এর জন্য Non-blocking method, যা ফেইল করলে UI ক্র্যাশ করবে না।
+  sendTelemetry: async <T>(path: string, body?: unknown, method: 'GET' | 'POST' = 'POST'): Promise<T | null> => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+
+      const res = await fetch(`${getApiBaseUrl()}${path}`, {
+        method,
+        headers: await getAuthHeaders(),
+        body: body && method === 'POST' ? JSON.stringify(body) : undefined,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      if (!res.ok) {
+        return null; // Safe default value instead of throwing
+      }
+      return await res.json();
+    } catch (e) {
+      if (isDev()) console.warn(`[Telemetry] Silent fallback triggered (timeout or network error):`, e);
+      return null; // Safe default value
+    }
+  },
 };
