@@ -18,12 +18,16 @@ on:
 
 jobs:
   codeql-analysis:
-    name: 🛡️ CodeQL Security Analysis
+    name: 🛡️ CodeQL Analysis (${{ matrix.language }})
     runs-on: ubuntu-latest
     permissions:
       actions: read
       security-events: write
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript' ]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -31,14 +35,30 @@ jobs:
         timeout-minutes: 10
         uses: github/codeql-action/init@v4
         with:
-          languages: 'python, javascript'
+          languages: ${{ matrix.language }}
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         timeout-minutes: 25
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:python,javascript"
+          category: "/language:${{ matrix.language }}"
+
+      - name: 📊 Add CodeQL Results to GitHub Summary
+        if: always()
+        run: |
+          echo "## 🛡️ CodeQL Analysis (${{ matrix.language }})" >> $GITHUB_STEP_SUMMARY
+          echo "✅ SARIF report uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY
+
+  trivy-analysis:
+    name: 🔍 Trivy Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: 🔍 Parallel Security Scan (Trivy)
         timeout-minutes: 10
@@ -72,13 +92,9 @@ jobs:
           sarif_file: 'trivy-nodejs.sarif'
           category: 'trivy-nodejs'
 
-      - name: 📊 Add Security Audit Results to GitHub Summary
+      - name: 📊 Add Trivy Results to GitHub Summary
         if: always()
         run: |
-          echo "## 🛡️ Security Audit Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### CodeQL Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "✅ CodeQL SARIF report uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Trivy Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+          echo "## 🛡️ Trivy Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
           echo "✅ Python dependencies scanned (backend/)" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Node.js dependencies scanned" >> $GITHUB_STEP_SUMMARY
