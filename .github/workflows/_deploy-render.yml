@@ -53,20 +53,20 @@ jobs:
             exit 1
           fi
       - name: Trigger User Render Deploy (Source Code)
-        if: inputs.use_github_build != 'true'
+        # বাংলা মন্তব্য: quota available থাকলে (use_github_build=false) Render-এর নিজস্ব build system ব্যবহার করতে হবে।
+        # imageUrl পাঠালে Render নিজে build করে না — শুধু deploy trigger করতে হবে।
+        if: inputs.use_github_build != true
         run: |
-          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:latest"
           PRIMARY_SUCCESS=false
-          
+          PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+
           if [ -n "${{ secrets.RENDER_API_KEY }}" ]; then
-            echo "🔄 Using Render API to trigger primary deploy with explicit image URL..."
-            PRIMARY_SVC_ID="${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}"
+            echo "🔄 Quota available — triggering Render native build for primary (no imageUrl)..."
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
               "https://api.render.com/v1/services/$PRIMARY_SVC_ID/deploys" \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
               -H "Content-Type: application/json" \
-              -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+              -d '{"clearCache":"do_not_clear"}')
             if [ "$STATUS" = "201" ] || [ "$STATUS" = "202" ]; then
               echo "✅ Primary Render deploy triggered via API (status: $STATUS)!"
               PRIMARY_SUCCESS=true
@@ -74,21 +74,22 @@ jobs:
               echo "⚠️ Primary API deploy returned status: $STATUS"
             fi
           fi
-          
+
           if [ "$PRIMARY_SUCCESS" = "false" ]; then
             PRIMARY_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
             if [ -n "$PRIMARY_HOOK" ]; then
-              echo "Triggering primary Render account via webhook..."
+              echo "🔄 Triggering primary Render via deploy webhook..."
               if curl -f -s "$PRIMARY_HOOK" > /dev/null; then
-                echo "✅ Primary Render deploy triggered successfully!"
+                echo "✅ Primary Render deploy triggered via webhook!"
                 PRIMARY_SUCCESS=true
               else
-                echo "⚠️ Primary hook failed."
+                echo "⚠️ Primary webhook failed."
               fi
             fi
           fi
+
           if [ "$PRIMARY_SUCCESS" = "false" ]; then
-            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded for User backend! Failing build."
+            echo "❌ CRITICAL: No Render deploy triggers succeeded for User backend!"
             exit 1
           fi
       - name: Verify User Backend Deploy Status
@@ -131,21 +132,21 @@ jobs:
             exit 1
           fi
       - name: Trigger Admin Render Deploy (Source Code)
-        if: inputs.use_github_build != 'true'
+        # বাংলা মন্তব্য: quota available থাকলে (use_github_build=false) Render-এর নিজস্ব build system ব্যবহার করতে হবে।
+        # imageUrl পাঠালে Render নিজে build করে না — শুধু deploy trigger করতে হবে।
+        if: inputs.use_github_build != true
         run: |
-          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:latest"
           BACKUP_API_KEY="${{ secrets.RENDER_API_KEY_BACKUP }}"
           BACKUP_SVC_ID="${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}"
           BACKUP_SUCCESS=false
-          
+
           if [ -n "$BACKUP_API_KEY" ]; then
-            echo "🔄 Using Render API to trigger admin backend deploy with explicit image URL..."
+            echo "🔄 Quota available — triggering Render native build for admin (no imageUrl)..."
             RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               "https://api.render.com/v1/services/$BACKUP_SVC_ID/deploys" \
               -H "Authorization: Bearer $BACKUP_API_KEY" \
               -H "Content-Type: application/json" \
-              -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}")
+              -d '{"clearCache":"do_not_clear"}')
             STATUS=$(echo "$RESPONSE" | tail -n 1)
             BODY=$(echo "$RESPONSE" | sed '$d')
             echo "API Response Body: $BODY"
@@ -161,7 +162,7 @@ jobs:
               echo "⚠️ Admin API deploy returned status: $STATUS"
             fi
           fi
-          
+
           if [ "$BACKUP_SUCCESS" = "false" ]; then
             BACKUP_HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
             if [ -n "$BACKUP_HOOK" ]; then
@@ -174,8 +175,9 @@ jobs:
               fi
             fi
           fi
+
           if [ "$BACKUP_SUCCESS" = "false" ]; then
-            echo "❌ CRITICAL: No Render deploy hooks or API triggers succeeded for Admin backend!"
+            echo "❌ CRITICAL: No Render deploy triggers succeeded for Admin backend!"
             exit 1
           fi
       - name: Verify Admin Backend Deploy Status
