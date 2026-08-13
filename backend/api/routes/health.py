@@ -47,6 +47,9 @@ async def health_check(request: Request, response: Response):
         subsystems["db"] = "sqlite"
 
     # ── Redis Health Check ──
+    # বাংলা: Redis শুধু cache/telemetry-এর জন্য ব্যবহৃত হয়, core request serving
+    # এর জন্য critical না। তাই Redis down থাকলেও health check যেন 503 না দেয়
+    # (Render deploy fail করে যেত), বরং "degraded" হিসেবে রিপোর্ট করে 200 দেবে।
     if subsystems.get("redis") == "up":
         try:
             client = redis_manager.client
@@ -55,7 +58,8 @@ async def health_check(request: Request, response: Response):
         except Exception:
             subsystems["redis"] = "down"
 
-    has_critical_failure = any(subsystems.get(k) == "down" for k in ["db", "redis"])
+    has_critical_failure = subsystems.get("db") == "down"
+    is_degraded = subsystems.get("redis") == "down"
 
     if has_critical_failure:
         response.status_code = 503
@@ -68,7 +72,7 @@ async def health_check(request: Request, response: Response):
         }
 
     return {
-        "status": "ok",
+        "status": "degraded" if is_degraded else "ok",
         "service": "supremeai-backend",
         "version": "2.0",
         "timestamp": _timestamp(),
