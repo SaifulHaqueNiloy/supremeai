@@ -196,7 +196,12 @@ jobs:
   preflight:
     name: 🔌 Preflight
     needs: [changes]
-    if: "!startsWith(github.head_ref, 'promotion/staging')"
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      !startsWith(github.head_ref, 'promotion/staging') &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_pre_merge_gate == true)
     uses: ./.github/workflows/_preflight.yml
     secrets: inherit
     with:
@@ -210,8 +215,12 @@ jobs:
     name: 🛡️ Security
     needs: [changes, preflight]
     if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       !startsWith(github.head_ref, 'promotion/staging') &&
-      needs.changes.outputs.docs_only != 'true'
+      needs.changes.outputs.docs_only != 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_pre_merge_gate == true)
     uses: ./.github/workflows/_security.yml
     secrets: inherit
     with:
@@ -225,8 +234,11 @@ jobs:
     name: 🐍 Backend Tests
     needs: [changes, preflight]
     if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == true || (!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled'))) &&
       !startsWith(github.head_ref, 'promotion/staging') &&
-      needs.changes.outputs.docs_only != 'true'
+      needs.changes.outputs.docs_only != 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_backend_core == true)
     uses: ./.github/workflows/_backend-test.yml
     secrets: inherit
     with:
@@ -246,8 +258,11 @@ jobs:
     name: 🌐 Frontend Tests
     needs: [changes, preflight]
     if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == true || (!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled'))) &&
       !startsWith(github.head_ref, 'promotion/staging') &&
-      needs.changes.outputs.docs_only != 'true'
+      needs.changes.outputs.docs_only != 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_frontend_core == true)
     uses: ./.github/workflows/_frontend-test.yml
     secrets: inherit
     with:
@@ -264,6 +279,8 @@ jobs:
     name: 🚀 Production Readiness
     needs: [changes, backend-tests, frontend-tests]
     if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == true || (!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled'))) &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       needs.changes.outputs.docs_only != 'true' &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
@@ -281,10 +298,12 @@ jobs:
     name: 🐳 Build Backend
     needs: [changes, backend-tests]
     if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == true || (!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled'))) &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.event_name != 'pull_request' &&
-      (needs.changes.outputs.docker_build == 'true' || needs.changes.outputs.backend == 'true') &&
-      needs.backend-tests.result == 'success'
+      (needs.changes.outputs.docker_build == 'true' || needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped')
     uses: ./.github/workflows/_build-backend.yml
     secrets: inherit
     with:
@@ -298,11 +317,14 @@ jobs:
     name: 🚀 Deploy Render
     needs: [changes, backend-tests, production-readiness]
     if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.ref == 'refs/heads/main' &&
-      github.event_name == 'push' &&
-      needs.backend-tests.result == 'success' &&
-      needs.production-readiness.result == 'success'
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
+      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped')
     uses: ./.github/workflows/_deploy-render.yml
     secrets: inherit
     with:
@@ -317,12 +339,15 @@ jobs:
     name: 🚀 Deploy Frontend
     needs: [changes, frontend-tests, production-readiness]
     if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.ref == 'refs/heads/main' &&
-      github.event_name == 'push' &&
-      needs.frontend-tests.result == 'success' &&
-      needs.production-readiness.result == 'success' &&
-      (needs.changes.outputs.admin_needed == 'true' || needs.changes.outputs.user_needed == 'true')
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped') &&
+      (needs.changes.outputs.admin_needed == 'true' || needs.changes.outputs.user_needed == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/_deploy-frontend.yml
     secrets: inherit
 
@@ -336,9 +361,11 @@ jobs:
     needs: [backend-tests, frontend-tests, production-readiness]
     if: |
       always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       !startsWith(github.head_ref, 'promotion/staging') &&
       github.ref == 'refs/heads/main' &&
-      github.event_name == 'push' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_render == true)) &&
       (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
       (needs.production-readiness.result == 'success' || needs.production-readiness.result == 'skipped')
@@ -375,9 +402,11 @@ jobs:
     needs: [deploy-render, deploy-frontend]
     if: |
       always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       github.ref == 'refs/heads/main' &&
-      github.event_name == 'push' &&
-      (needs.deploy-render.result == 'success' || needs.deploy-frontend.result == 'success')
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_performance_e2e == true)) &&
+      (needs.deploy-render.result == 'success' || needs.deploy-frontend.result == 'success' || needs.deploy-render.result == 'skipped' || needs.deploy-frontend.result == 'skipped')
     uses: ./.github/workflows/_post-deploy-verify.yml
     secrets: inherit
     with:
