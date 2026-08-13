@@ -47,9 +47,148 @@ on:
         default: '1'
 
 jobs:
+  backend-gates:
+    name: 🛡️ Backend Quality Gates
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    env:
+      SETUPTOOLS_USE_DISTUTILS: stdlib
+      PYTHONPATH: ${{ github.workspace }}/backend
+      GITHUB_TOKEN: "mock_dummy_token"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.11"
+      - name: 📦 Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+      - name: ⚙️ Setup Poetry + venv Cache
+        id: poetry-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-v4-py3.11-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-v4-py3.11-
+            ${{ runner.os }}-poetry-v4-
+      - name: 📦 Install Dependencies (Smart Sync)
+        run: |
+          mkdir -p backend
+          cd backend
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          if [ "${{ steps.poetry-cache.outputs.cache-hit }}" != "true" ]; then
+            poetry install --with dev
+          else
+            echo "venv cache HIT — syncing dependencies with poetry"
+            poetry install --no-root --sync --with dev
+          fi
+      - name: 🚫 Gate 1 — Zero-Gap Stub/Placeholder Data Check
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Zero-Gap স্টাব ডেটা গেট ===" >> $GITHUB_STEP_SUMMARY
+          python scripts/find_stub_data.py --path . --fail-on HIGH
+          echo "✅ পাস: কোনো স্টাব/প্লেসহোল্ডার প্যাটার্ন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🛡️ Gate 1.5 — Security Blind Spot Scan
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Security Blind Spot Scan ===" >> $GITHUB_STEP_SUMMARY
+          python scripts/security/auto_find_blindspots.py
+          echo "✅ পাস: কোনো ক্রিটিকাল সিকিউরিটি রিস্ক নেই" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔬 Gate 2 — Ruff Linting (No Silent Bugs)
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Ruff স্ট্যাটিক অ্যানালাইসিস গেট ===" >> $GITHUB_STEP_SUMMARY
+          cd backend
+          poetry run ruff check . --config pyproject.toml --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+          poetry run ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+          echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🤖 Bot Commit Detection
+        id: bot-check
+        run: |
+          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
+          echo "Commit author: $COMMIT_AUTHOR"
+          if [[ "$COMMIT_AUTHOR" == *"CI Bot"* || "$COMMIT_AUTHOR" == *"SupremeAI Bot"* || "$COMMIT_AUTHOR" == *"[bot]"* ]]; then
+            echo "is_bot_commit=true" >> $GITHUB_OUTPUT
+            echo "::warning::🤖 BOT COMMIT DETECTED — Router import smoke-test will run in STRICT mode."
+          else
+            echo "is_bot_commit=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔌 Gate 0 — Router Import Smoke-Test
+        if: inputs.backend_changed == true || inputs.docs_only != true
+        run: |
+          echo "=== Router Import Smoke-Test ===" >> $GITHUB_STEP_SUMMARY
+          cd backend
+          if [[ "${{ steps.bot-check.outputs.is_bot_commit }}" == "true" ]]; then
+            echo "🤖 Bot commit: running in STRICT mode (all routers must import cleanly)" >> $GITHUB_STEP_SUMMARY
+            poetry run python ../scripts/ci/validate_router_imports.py --strict
+          else
+            poetry run python ../scripts/ci/validate_router_imports.py
+          fi
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ পাস: সব core router imports সঠিক" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ FAIL: Router import error detected — fix imports before test suite runs" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: 🛡️ Gate 3.5 — Admin Router Auth Lint Guard
+        if: inputs.docs_only != true
+        run: |
+          echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
+          cd backend
+          poetry run python ../.github/scripts/verify_admin_auth.py
+          echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔗 Gate 3 — Service Topology Check
+        if: inputs.docs_only != true
+        run: |
+          pip install pyyaml
+          python scripts/ci/check_service_topology.py
+
+      - name: 🕵️ Gate 4 — Observability & Silent Error Audit
+        if: inputs.docs_only != true
+        run: |
+          echo "=== HTTP টাইমআউট অডিট গেট ===" >> $GITHUB_STEP_SUMMARY
+          VIOLATIONS=$(grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv" | wc -l)
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            echo "❌ FAIL: Found $VIOLATIONS httpx.AsyncClient() call(s) without explicit timeout!" >> $GITHUB_STEP_SUMMARY
+            grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv"
+            exit 1
+          fi
+          echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔬 Run Observability Audit Script
+        if: inputs.trivial_change != true
+        id: obs_audit
+        run: |
+          python scripts/audit_observability.py
+
+      - name: Audit Summary
+        if: always() && inputs.trivial_change != true
+        run: |
+          echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
+          echo "Outcome: **${{ steps.obs_audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
+
+
   backend-core:
     name: 🐍 Backend Tests
     timeout-minutes: 15
+    needs: [backend-gates]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -185,99 +324,6 @@ jobs:
           for i in {0..7}; do
             PGPASSWORD=test_password psql -h 127.0.0.1 -U test_user -d postgres -c "CREATE DATABASE supreme_test_db_gw$i;" 2>/dev/null || true
           done
-
-      - name: 🚫 Gate 1 — Zero-Gap Stub/Placeholder Data Check
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Zero-Gap স্টাব ডেটা গেট ===" >> $GITHUB_STEP_SUMMARY
-          python scripts/find_stub_data.py --path . --fail-on HIGH
-          echo "✅ পাস: কোনো স্টাব/প্লেসহোল্ডার প্যাটার্ন পাওয়া যায়নি" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🛡️ Gate 1.5 — Security Blind Spot Scan
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Security Blind Spot Scan ===" >> $GITHUB_STEP_SUMMARY
-          python scripts/security/auto_find_blindspots.py
-          echo "✅ পাস: কোনো ক্রিটিকাল সিকিউরিটি রিস্ক নেই" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🔬 Gate 2 — Ruff Linting (No Silent Bugs)
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Ruff স্ট্যাটিক অ্যানালাইসিস গেট ===" >> $GITHUB_STEP_SUMMARY
-          cd backend
-          poetry run ruff check . --config pyproject.toml --fix --unsafe-fixes --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
-          poetry run ruff check . --config pyproject.toml --no-fix --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
-          echo "✅ পাস: Ruff লিন্টিং গেট ক্লিয়ার" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🤖 Bot Commit Detection
-        id: bot-check
-        run: |
-          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
-          echo "Commit author: $COMMIT_AUTHOR"
-          if [[ "$COMMIT_AUTHOR" == *"CI Bot"* || "$COMMIT_AUTHOR" == *"SupremeAI Bot"* || "$COMMIT_AUTHOR" == *"[bot]"* ]]; then
-            echo "is_bot_commit=true" >> $GITHUB_OUTPUT
-            echo "::warning::🤖 BOT COMMIT DETECTED — Router import smoke-test will run in STRICT mode."
-          else
-            echo "is_bot_commit=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: 🔌 Gate 0 — Router Import Smoke-Test
-        if: inputs.backend_changed == true || inputs.docs_only != true
-        run: |
-          echo "=== Router Import Smoke-Test ===" >> $GITHUB_STEP_SUMMARY
-          cd backend
-          if [[ "${{ steps.bot-check.outputs.is_bot_commit }}" == "true" ]]; then
-            echo "🤖 Bot commit: running in STRICT mode (all routers must import cleanly)" >> $GITHUB_STEP_SUMMARY
-            poetry run python ../scripts/ci/validate_router_imports.py --strict
-          else
-            poetry run python ../scripts/ci/validate_router_imports.py
-          fi
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "✅ পাস: সব core router imports সঠিক" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ FAIL: Router import error detected — fix imports before test suite runs" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      - name: 🛡️ Gate 3.5 — Admin Router Auth Lint Guard
-        if: inputs.docs_only != true
-        run: |
-          echo "=== Admin Auth Lint Guard ===" >> $GITHUB_STEP_SUMMARY
-          cd backend
-          poetry run python ../.github/scripts/verify_admin_auth.py
-          echo "✅ All admin prefixed routers verified structurally." >> $GITHUB_STEP_SUMMARY
-
-      - name: 🔗 Gate 3 — Service Topology Check
-        if: inputs.docs_only != true
-        run: |
-          pip install pyyaml
-          python scripts/ci/check_service_topology.py
-
-      - name: 🕵️ Gate 4 — Observability & Silent Error Audit
-        if: inputs.docs_only != true
-        run: |
-          echo "=== HTTP টাইমআউট অডিট গেট ===" >> $GITHUB_STEP_SUMMARY
-          VIOLATIONS=$(grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv" | wc -l)
-          if [ "$VIOLATIONS" -gt 0 ]; then
-            echo "❌ FAIL: Found $VIOLATIONS httpx.AsyncClient() call(s) without explicit timeout!" >> $GITHUB_STEP_SUMMARY
-            grep -rn "httpx\.AsyncClient()" backend/ --include="*.py" | grep -v "test_" | grep -v ".venv"
-            exit 1
-          fi
-          echo "✅ পাস: সব httpx ক্লায়েন্টে নির্দিষ্ট টাইমআউট আছে" >> $GITHUB_STEP_SUMMARY
-
-      - name: 🔬 Run Observability Audit Script
-        if: inputs.trivial_change != true
-        id: obs_audit
-        run: |
-          python scripts/audit_observability.py
-
-      - name: Audit Summary
-        if: always() && inputs.trivial_change != true
-        run: |
-          echo "## 🔬 Observability Audit" >> $GITHUB_STEP_SUMMARY
-          echo "Outcome: **${{ steps.obs_audit.outcome }}**" >> $GITHUB_STEP_SUMMARY
-          echo "✅ কোনো সাইলেন্ট বা ব্রড exception হ্যান্ডলার পাওয়া যায়নি।" >> $GITHUB_STEP_SUMMARY
 
       - name: 🧪 Run Tests
         id: backend_tests
