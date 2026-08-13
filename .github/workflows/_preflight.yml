@@ -171,6 +171,8 @@ jobs:
     name: 🔌 Admin Bridge Preflight
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # TODO: Remove continue-on-error when render deploy is stable to make this a hard failure
+    continue-on-error: true
     services:
       postgres:
         image: postgres:15-alpine
@@ -219,6 +221,8 @@ jobs:
     name: 🔌 User Bridge Preflight
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # TODO: Remove continue-on-error when render deploy is stable to make this a hard failure
+    continue-on-error: true
     services:
       postgres:
         image: postgres:15-alpine
