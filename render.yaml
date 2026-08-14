@@ -74,10 +74,7 @@ services:
       # ভ্যালিডেশন নির্ভরযোগ্য ও স্বচ্ছ থাকে।
       - key: ALLOWED_HOSTS
         value: 'supremeai-backend.onrender.com'
-      # বাংলা মন্তব্য: CI_WEBHOOK_SECRET production fail-fast (config.py line 924-935) প্রয়োজন।
-      # admin service-এ এটি declared ছিল না, user-এ sync:false ছিল — সুসংগত করা হলো।
-      - key: CI_WEBHOOK_SECRET
-        sync: false
+      # বাংলা মন্তব্য: CI_WEBHOOK_SECRET এখানে duplicate ছিল (উপরে line 62-এও declared) — মুছে ফেলা হলো।
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: ADMIN_CORS_ORIGINS
