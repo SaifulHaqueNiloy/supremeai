@@ -1,0 +1,51 @@
+name: SupremeAI Simple CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --with test
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          pytest tests/ -q
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          # Depending on if package-lock.json or pnpm-lock.yaml is used in frontend
+          # we just skip cache for simplicity or use npm install
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build

@@ -25,18 +25,10 @@ from loguru import logger
 if "pytest" in sys.modules:
     _APP_IMPORT_STRING = "core.app:app"
 else:
-    role = os.getenv("SERVICE_ROLE", "user").lower()
-    if role == "admin":
-        _APP_IMPORT_STRING = "core.app_admin:app"
-    else:
-        _APP_IMPORT_STRING = "core.app_user:app"
+    _APP_IMPORT_STRING = "core.app:app"
 
 # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে `from core.app import app` করে মডিউল-লেভেলে
-# সম্পূর্ণ (all-routers) অ্যাপ তৈরি হতো। কিন্তু production-এ uvicorn আবার
-# `core.app_user:app` / `core.app_admin:app` ইম্পোর্ট করে দ্বিতীয় FastAPI অ্যাপ
-# বানাত। ফলে একই প্রসেসে দুইটা সম্পূর্ণ অ্যাপ (~70 router × 2, middleware chain × 2)
-# লোড হতো — Render free tier-এর 512MB RAM-এ এটি OOM/অতিরিক্ত ধীর বুট ঘটাত এবং
-# deploy `update_failed` + /health timeout দিত।
+# সম্পূর্ণ (all-routers) অ্যাপ তৈরি হতো।
 # এখন `app` লেজি `__getattr__`-এর মাধ্যমে দেওয়া হয়: শুধু যারা সত্যিই
 # `from main import app` করে (schema_exporter, generate_openapi, legacy tests)
 # তারাই full app তৈরি করবে; সার্ভার বুট পথে এটি আর তৈরি হবে না।
