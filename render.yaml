@@ -19,8 +19,6 @@ services:
     env: static
     buildCommand: "cd frontend && npm install && npm run build:user"
     staticPublishPath: "./frontend/dist-user"
-    region: singapore
-    plan: free
     autoDeploy: true
     routes:
       - type: rewrite
