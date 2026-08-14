@@ -138,7 +138,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             }
           }
         } else {
-          set({ adminError: data.detail || 'Not authorized as admin.' });
+          const detail = typeof data.detail === 'string' ? data.detail : (Array.isArray(data.detail) ? JSON.stringify(data.detail) : 'Not authorized as admin.');
+          set({ adminError: detail });
         }
       } else {
         // Step 3: Verify TOTP
@@ -173,11 +174,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false, adminOtp: '' });
         } else {
           const data = await res.json();
-          set({ adminError: data.detail || 'Invalid verification code.' });
+          const detail = typeof data.detail === 'string' ? data.detail : (Array.isArray(data.detail) ? JSON.stringify(data.detail) : 'Invalid verification code.');
+          set({ adminError: detail });
         }
       }
     } catch (err: any) {
-      set({ adminError: 'Connection failed: ' + err.message });
+      const msg = err && typeof err === 'object' && err.message ? err.message : String(err);
+      set({ adminError: 'Connection failed: ' + msg });
     }
   },
   handleAdminLogout: async () => {
