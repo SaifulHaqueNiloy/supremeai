@@ -7,7 +7,7 @@ Follows the 8-layer architecture and integrates with:
     • backend.core.orchestration.orchestrator.Orchestrator
 
 Usage:
-    from backend.tools.creative.creative_agents_registry import register_creative_agents
+    from tools.creative.creative_agents_registry import register_creative_agents
     register_creative_agents(skill_manager)
 """
 
@@ -17,10 +17,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from backend.tools.creative.audio_engineering_agent import AudioEngineeringAgent
-from backend.tools.creative.brand_identity_agent import BrandIdentityAgent
-from backend.tools.creative.game_design_agent import GameDesignAgent
-from backend.tools.creative.video_production_agent import VideoProductionAgent
+from tools.creative.audio_engineering_agent import AudioEngineeringAgent
+from tools.creative.brand_identity_agent import BrandIdentityAgent
+from tools.creative.game_design_agent import GameDesignAgent
+from tools.creative.video_production_agent import VideoProductionAgent
 
 _AGENT_CLASSES: tuple[type, ...] = (
     VideoProductionAgent,

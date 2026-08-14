@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.metrics_collector is deprecated; import from backend.monitoring.metrics_collector",
+            "backend.core.metrics_collector is deprecated; import from monitoring.metrics_collector",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

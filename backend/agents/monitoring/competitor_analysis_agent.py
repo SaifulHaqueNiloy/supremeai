@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from core.cache import get_cache
-from backend.services.llm.llm_router import LLMRouter
+from services.llm.llm_router import LLMRouter
 
 logger = logging.getLogger("supremeai.competitor_analysis")
 

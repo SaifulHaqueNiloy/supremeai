@@ -74,7 +74,7 @@ async def github_webhook(request: Request):
     pr_number = pr.get("number")
 
     try:
-        from backend.tools.pr_reviewer import PRReviewer
+        from tools.pr_reviewer import PRReviewer
 
         reviewer = PRReviewer()
         result = await reviewer.review_pr(repo_full_name, pr_number)

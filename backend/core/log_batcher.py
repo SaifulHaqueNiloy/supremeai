@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.log_batcher is deprecated; import from backend.monitoring.log_batcher",
+            "backend.core.log_batcher is deprecated; import from monitoring.log_batcher",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

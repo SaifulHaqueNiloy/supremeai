@@ -32,7 +32,7 @@ if sys.platform == "win32":
 # --- Path Setup (consistent with existing codebase) ---
 # বাংলা মন্তব্য: পাথ সেটআপ ও কোর কনফিগ ইম্পোর্ট
 try:
-    from backend.core.config import settings
+    from core.config import settings
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))

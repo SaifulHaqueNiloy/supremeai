@@ -3,7 +3,7 @@
 
 from typing import Any
 
-from backend.core.rag.sparse_bm25 import SparseBM25Index
+from core.rag.sparse_bm25 import SparseBM25Index
 
 
 class HybridRetriever:

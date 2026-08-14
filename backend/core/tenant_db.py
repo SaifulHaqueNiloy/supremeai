@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.tenant_db is deprecated; import from backend.database.tenant_db",
+            "backend.core.tenant_db is deprecated; import from database.tenant_db",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

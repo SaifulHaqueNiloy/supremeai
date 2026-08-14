@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.email_service is deprecated; import from backend.services.email.email_service",
+            "backend.core.email_service is deprecated; import from services.email.email_service",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

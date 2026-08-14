@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.rate_limiter is deprecated; import from backend.middleware.rate_limiter",
+            "backend.core.rate_limiter is deprecated; import from middleware.rate_limiter",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

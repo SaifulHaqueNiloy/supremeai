@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.cors_policy is deprecated; import from backend.middleware.cors_policy",
+            "backend.core.cors_policy is deprecated; import from middleware.cors_policy",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

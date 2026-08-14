@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.core.rag.hybrid_retriever import HybridRetriever
+from core.rag.hybrid_retriever import HybridRetriever
 
 router = APIRouter(prefix="/api/v1/rag", tags=["RAG Hybrid Search"])
 

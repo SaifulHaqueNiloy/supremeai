@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.idempotency_middleware is deprecated; import from backend.middleware.idempotency_middleware",
+            "backend.core.idempotency_middleware is deprecated; import from middleware.idempotency_middleware",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

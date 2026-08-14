@@ -26,7 +26,7 @@ from fastapi import APIRouter
 from loguru import logger
 
 from core.cache import get_cache
-from backend.services.llm.llm_router import LLMRouter
+from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 DIAGRAM_CACHE_TTL = 3600  # 1 hour

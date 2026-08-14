@@ -42,7 +42,7 @@ try:
     from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
 except (ImportError, KeyError):
     try:
-        from backend.tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
+        from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
     except (ImportError, KeyError):
         # test env-এর জন্য fallback dummy definitions
         class SecurityError(Exception):  # type: ignore[no-redef]

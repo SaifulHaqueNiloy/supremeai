@@ -28,7 +28,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from loguru import logger
 
 from core.cache import get_cache
-from backend.services.llm.llm_router import LLMRouter
+from services.llm.llm_router import LLMRouter
 from core.upload_validator import validate_upload
 
 router = APIRouter(prefix="/video-to-code", tags=["video-to-code"])

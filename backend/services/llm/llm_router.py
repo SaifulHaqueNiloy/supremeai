@@ -27,16 +27,16 @@ from typing import Any, Protocol
 import httpx
 
 # Internal core imports
-from backend.core.cache import get_redis_client
-from backend.core.config import settings
-from backend.core.exceptions import LLMProviderError, QuotaExceededError
-from backend.core.llm.free_tier_tracker import get_tracker
-from backend.core.llm.llm_gateway import get_llm_gateway
-from backend.core.logging import get_logger
-from backend.core.metrics import counter, timed
-from backend.core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
-from backend.core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
-from backend.services.llm.providers import (
+from core.cache import get_redis_client
+from core.config import settings
+from core.exceptions import LLMProviderError, QuotaExceededError
+from core.llm.free_tier_tracker import get_tracker
+from core.llm.llm_gateway import get_llm_gateway
+from core.logging import get_logger
+from core.metrics import counter, timed
+from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
+from services.llm.providers import (
     BengaliNormalizer,
     DeepSeekProvider,
     GeminiProvider,

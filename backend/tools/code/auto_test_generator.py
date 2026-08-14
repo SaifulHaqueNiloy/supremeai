@@ -231,7 +231,7 @@ class AutoTestGenerator:
             return await self._llm_client(prompt)
 
         try:
-            from backend.brain.model_router import ModelRouter
+            from brain.model_router import ModelRouter
 
             r = ModelRouter()
             result = await r.async_route_and_generate(prompt, task_type="coding", max_cost=0.05)

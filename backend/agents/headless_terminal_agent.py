@@ -24,7 +24,7 @@ from loguru import logger
 
 from core.cache import get_cache
 from core.error_bus import with_error_bus
-from backend.services.llm.llm_router import LLMRouter
+from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 COMMAND_TIMEOUT = 30  # seconds

@@ -22,7 +22,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
-from backend.services.llm.llm_router import LLMRouter
+from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 METRIC_CACHE_TTL = 300  # 5 minutes

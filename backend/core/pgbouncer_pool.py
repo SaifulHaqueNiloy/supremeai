@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.pgbouncer_pool is deprecated; import from backend.database.pgbouncer_pool",
+            "backend.core.pgbouncer_pool is deprecated; import from database.pgbouncer_pool",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

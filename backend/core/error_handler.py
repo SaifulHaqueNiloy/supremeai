@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.error_handler is deprecated; import from backend.core.errors.error_handler",
+            "backend.core.error_handler is deprecated; import from core.errors.error_handler",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

@@ -37,11 +37,11 @@ def test_health_ready_returns_ok():
 
 
 def test_health_check_ok_without_subsystems():
-    # বাংলা: app.state-এ db_pool/redis সাবসিস্টেম না থাকলে 'ok' ফেরত দেওয়া উচিত
+    # বাংলা: app.state-এ db_pool/redis সাবসিস্টেম না থাকলে 'degraded' ফেরত দেওয়া উচিত (কিন্তু HTTP 200)
     client = TestClient(_build_client())
     resp = client.get("/health")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "healthy"
+    assert resp.json()["status"] == "degraded"
 
 
 def test_health_agents_requires_registry():

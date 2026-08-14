@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.db_repository is deprecated; import from backend.database.db_repository",
+            "backend.core.db_repository is deprecated; import from database.db_repository",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

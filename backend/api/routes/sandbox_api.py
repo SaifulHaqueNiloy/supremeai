@@ -41,7 +41,7 @@ def _get_manager():
     """PersistentSandbox ম্যানেজার লেজি-লোড করা হচ্ছে।"""
     global _sandbox_manager
     if _sandbox_manager is None:
-        from backend.tools.cloud_sandbox_orchestrator import PersistentSandbox
+        from tools.cloud_sandbox_orchestrator import PersistentSandbox
 
         _sandbox_manager = PersistentSandbox(provider="local")
     return _sandbox_manager

@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.billing_plans is deprecated; import from backend.services.billing.billing_plans",
+            "backend.core.billing_plans is deprecated; import from services.billing.billing_plans",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

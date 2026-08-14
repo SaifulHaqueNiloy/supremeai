@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.cloud_storage is deprecated; import from backend.services.storage.cloud_storage",
+            "backend.core.cloud_storage is deprecated; import from services.storage.cloud_storage",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

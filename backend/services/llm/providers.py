@@ -15,10 +15,10 @@ from typing import Any, Protocol
 
 import httpx
 
-from backend.core.config import settings
-from backend.core.logging import get_logger
-from backend.core.metrics import timed
-from backend.core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from core.config import settings
+from core.logging import get_logger
+from core.metrics import timed
+from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 
 logger = get_logger(__name__)
 

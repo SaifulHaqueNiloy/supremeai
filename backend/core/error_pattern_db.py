@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.error_pattern_db is deprecated; import from backend.core.errors.error_pattern_db",
+            "backend.core.error_pattern_db is deprecated; import from core.errors.error_pattern_db",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

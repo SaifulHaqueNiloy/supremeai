@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.error_bus is deprecated; import from backend.core.errors.error_bus",
+            "backend.core.error_bus is deprecated; import from core.errors.error_bus",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

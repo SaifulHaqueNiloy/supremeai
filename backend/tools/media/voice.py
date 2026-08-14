@@ -141,7 +141,7 @@ class VoiceInterface:
         Yields audio chunks as bytes.
         """
         # বাংলা মন্তব্য: সঠিক ডিরেক্টরি অনুযায়ী মডিউল ইম্পোর্ট পাথ আপডেট করা হলো
-        from backend.tools.media.multilingual_tts import MultilingualTTS
+        from tools.media.multilingual_tts import MultilingualTTS
 
         tts = MultilingualTTS()
         async for chunk in tts.synthesize_stream(text=text):

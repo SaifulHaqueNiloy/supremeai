@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.logging is deprecated; import from backend.monitoring.logging",
+            "backend.core.logging is deprecated; import from monitoring.logging",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

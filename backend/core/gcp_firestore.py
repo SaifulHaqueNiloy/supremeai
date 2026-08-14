@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.gcp_firestore is deprecated; import from backend.services.storage.gcp_firestore",
+            "backend.core.gcp_firestore is deprecated; import from services.storage.gcp_firestore",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True

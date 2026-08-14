@@ -11,7 +11,7 @@ def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
-            "backend.core.llm_router is deprecated; import from backend.services.llm.llm_router",
+            "backend.core.llm_router is deprecated; import from services.llm.llm_router",
             DeprecationWarning, stacklevel=2,
         )
         _warned = True
