@@ -35,10 +35,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
-          # Depending on if package-lock.json or pnpm-lock.yaml is used in frontend
-          # we just skip cache for simplicity or use npm install
+          node-version: "22"
 
       - name: Install frontend dependencies
         run: |
