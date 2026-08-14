@@ -58,4 +58,9 @@
 ### ১. Render Deployment Crash (Syntax Error in python)
 - **ভুল (Mistake):** Python ফাইলে (যেমন `secret_vault.py`) এডিট করার সময় ভুলবশত ফাইলের ভেতরে `invalid character 'া' (U+09BE)` বা বাংলা কমেন্টের অংশ কোডের ব্লকে চলে গিয়েছিল। 
 - **প্রভাব (Impact):** `uvicorn` সার্ভার রান হওয়ার সময় মডিউল ইম্পোর্ট ফেইল করে এবং `No open ports detected` এরর দিয়ে ডিপ্লয়মেন্ট ক্র্যাশ করে।
-- **সমাধান (Solution):** ফাইলে থাকা ভুল ক্যারেক্টার বা সিনট্যাক্স মুছে ফেলা এবং এডিটের সময় Python-এর indentation ও syntax ব্লক সতর্কতার সাথে চেক করা।
+- **সমাধান (Solution):** ফাইলে থাকা ভুল ক্যারেক্টার বা সিনট্যাক্স মুছে ফেলা এবং এডিটের সময় Python-এর indentation ও syntax ব্লক সতর্কতার সাথে চেক করা.
+
+### ২. Frontend 401 Unauthorized on Admin Dashboard Metrics
+- **ভুল (Mistake):** ফ্রন্টএন্ডে যখনই রিয়েল-টাইম (SSE) স্ট্রিম কানেক্ট হয়, তখন `useStore.ts`-এর `fetchGateStatus()` ফাংশনটি অটোমেটিক্যালি `/api/admin/metrics/dashboard` এ রিকোয়েস্ট পাঠায় কোনো টোকেন চেক করা ছাড়াই।
+- **প্রভাব (Impact):** সাধারণ ইউজার বা পাবলিক পেজ (যেমন `/login`) ভিজিট করলে ব্যাকএন্ড এই রিকোয়েস্ট রিজেক্ট করে এবং কনসোলে ৪০১ আনঅথোরাইজড (401 Unauthorized) এরর স্প্যাম হতে থাকে।
+- **সমাধান (Solution):** `fetchGateStatus()` এ API কল করার আগে ক্লায়েন্ট-সাইডেই চেক করা যে লোকাল স্টোরেজে `supreme_admin_jwt` (অ্যাডমিন টোকেন) আছে কি না। টোকেন না থাকলে API কল বাইপাস করা।।
