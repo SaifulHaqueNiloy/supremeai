@@ -9,6 +9,7 @@ export const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
 
@@ -27,10 +28,10 @@ export const RegisterPage: React.FC = () => {
       navigate('/workspace');
     } catch (err: any) {
       if (err.status === 403 || (err.message && err.message.includes('confirmation'))) {
-        alert('রেজিস্ট্রেশন সফল হয়েছে! দয়া করে আপনার ইমেইলের ভেরিফিকেশন লিংকটিতে ক্লিক করে লগইন করুন।');
-        navigate('/login');
+        setIsSuccess(true);
       } else {
-        setError('রেজিস্ট্রেশন ব্যর্থ হয়েছে। ইমেইল বা পাসওয়ার্ড যাচাই করুন।');
+        const errorMsg = err.response?.data?.detail || err.message || 'রেজিস্ট্রেশন ব্যর্থ হয়েছে।';
+        setError(`Error: ${errorMsg}`);
       }
     } finally {
       setIsLoading(false);
@@ -46,62 +47,88 @@ export const RegisterPage: React.FC = () => {
         <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-accent-primary to-neon-purple bg-clip-text text-transparent">
           ⚡ SUPREME AI
         </h1>
-        <p className="text-center text-neon-blue font-semibold tracking-wide mb-8">Create Your Core</p>
 
-        {error && <div className="mb-4 text-danger text-sm text-center font-medium">{error}</div>}
-
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
-            />
+        {isSuccess ? (
+          <div className="text-center mt-6 animate-fade-in">
+            <div className="w-16 h-16 mx-auto mb-4 bg-neon-blue/20 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] mb-3">
+              Check your Inbox!
+            </h2>
+            <p className="text-text-secondary mb-6 text-sm">
+              We've sent a verification link to <span className="font-semibold text-neon-purple">{email}</span>. Please click the link to activate your account before signing in.
+            </p>
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-accent-primary to-neon-purple hover:brightness-110 text-white font-bold transition-all"
+            >
+              Go to Login
+            </button>
           </div>
-          <div>
-            <input
-              type="email"
-              placeholder="Email / Identity"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              placeholder="Passphrase"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
-            />
-          </div>
+        ) : (
+          <>
+            <p className="text-center text-neon-blue font-semibold tracking-wide mb-8">Create Your Core</p>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-accent-primary to-neon-purple hover:brightness-110 text-white font-bold transition-all disabled:opacity-50 disabled:pointer-events-none"
-          >
-            {isLoading ? 'CREATING...' : 'CREATE ACCOUNT'}
-          </button>
+            {error && <div className="mb-4 text-danger text-sm text-center font-medium">{error}</div>}
 
-          <button
-            type="button"
-            className="w-full py-3 rounded-xl border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] hover:bg-neon-blue/10 text-text-secondary transition-all mt-4 font-semibold"
-          >
-            Authenticate with Google
-          </button>
-        </form>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
+                />
+              </div>
+              <div>
+                <input
+                  type="email"
+                  placeholder="Email / Identity"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
+                />
+              </div>
+              <div>
+                <input
+                  type="password"
+                  placeholder="Passphrase"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
+                />
+              </div>
 
-        <p className="text-center text-sm text-text-secondary mt-6">
-          Already have an account?{' '}
-          <Link to="/login" className="text-neon-blue font-medium hover:underline ml-1">
-            Sign In
-          </Link>
-        </p>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-accent-primary to-neon-purple hover:brightness-110 text-white font-bold transition-all disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {isLoading ? 'CREATING...' : 'CREATE ACCOUNT'}
+              </button>
+
+              <button
+                type="button"
+                className="w-full py-3 rounded-xl border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] hover:bg-neon-blue/10 text-text-secondary transition-all mt-4 font-semibold"
+              >
+                Authenticate with Google
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-text-secondary mt-6">
+              Already have an account?{' '}
+              <Link to="/login" className="text-neon-blue font-medium hover:underline ml-1">
+                Sign In
+              </Link>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
 };
+
