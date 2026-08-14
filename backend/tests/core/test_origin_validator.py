@@ -151,21 +151,21 @@ class TestTrustedOriginMiddleware:
             app.assert_awaited_once()
 
     def test_allowed_origins_property_user_portal(self):
-        """বাংলা: User instance শুধু ইউজার অরিজিন ট্রাস্ট করবে — অ্যাডমিন কনসোল অরিজিন নয়।"""
+        """বাংলা: Unified backend আর্কিটেকচারে User instance সব অরিজিন ট্রাস্ট করবে।"""
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app, portal_role="user")
         origins = middleware.allowed_origins
         assert "https://supremeai-backend.onrender.com" in origins
         assert "https://supremeai-a.web.app" in origins
-        assert "https://supremeai-admin.web.app" not in origins, "User instance-এ admin console origin leak!"
-        assert "https://supremeai-admin.onrender.com" not in origins
+        assert "https://supremeai-admin.web.app" in origins
+        assert "https://supremeai-admin.onrender.com" in origins
 
     def test_allowed_origins_property_admin_portal(self):
-        """বাংলা: Admin instance শুধু অ্যাডমিন কনসোল অরিজিন ট্রাস্ট করবে — ইউজার অরিজিন নয়।"""
+        """বাংলা: Unified backend আর্কিটেকচারে Admin instance সব অরিজিন ট্রাস্ট করবে।"""
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app, portal_role="admin")
         origins = middleware.allowed_origins
         assert "https://supremeai-admin.web.app" in origins
-        assert "https://supremeai-a.web.app" not in origins, "Admin instance-এ user origin leak!"
-        assert "https://supremeai-lac.vercel.app" not in origins
-        assert "https://supremeai-backend.onrender.com" not in origins
+        assert "https://supremeai-a.web.app" in origins
+        assert "https://supremeai-lac.vercel.app" in origins
+        assert "https://supremeai-backend.onrender.com" in origins

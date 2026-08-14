@@ -63,8 +63,8 @@ def test_allowed_origins_user_defaults(fake_settings):
         mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
         origins = mw.allowed_origins
         assert USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
-        # বাংলা: ইউজার পোর্টাল অ্যাডমিন অরিজিন ট্রাস্ট করবে না
-        assert not ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
+        # বাংলা: Unified backend আর্কিটেকচারে ইউজার পোর্টাল অ্যাডমিন অরিজিনও ট্রাস্ট করবে
+        assert ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
 
 
 def test_allowed_origins_admin_defaults(fake_settings):
@@ -72,7 +72,7 @@ def test_allowed_origins_admin_defaults(fake_settings):
         mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="admin")
         origins = mw.allowed_origins
         assert ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
-        assert not USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
+        assert USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
 
 
 def test_allowed_origins_strips_wildcard(fake_settings):
