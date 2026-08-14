@@ -117,6 +117,7 @@ class SettingsFieldsMixin:
             "/api/billing/webhook/stripe",
             "/api/billing/webhook/sslcommerz",
             "/api/v1/markdown",
+            "/api/config/public",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )
