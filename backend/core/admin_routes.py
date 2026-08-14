@@ -191,7 +191,7 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     db = get_firestore_client()
     if db:
         try:
-            db.collection("admin_users").document(uid).update({"temp_totp_secret": secret})
+            db.collection("admin_users").document(uid).set({"temp_totp_secret": secret}, merge=True)
         except Exception as e:
             logger.error(f"Failed to store temp TOTP secret in Firestore: {e}")
 
