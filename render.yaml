@@ -13,13 +13,18 @@ services:
         value: 8080
       - key: ENV
         value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
 
   - type: web
     name: supremeai-frontend
     env: static
-    buildCommand: "cd frontend && npm install && npm run build:user"
+    buildCommand: "npm install -g pnpm@9 && pnpm install --no-frozen-lockfile && cd frontend && pnpm run build:user"
     staticPublishPath: "./frontend/dist-user"
     autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.0.0
     routes:
       - type: rewrite
         source: /*
