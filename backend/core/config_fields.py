@@ -106,6 +106,8 @@ class SettingsFieldsMixin:
             "/redoc",
             "/openapi.json",
             "/api/v1/auth/token",
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
             "/actuator",
             "/api/admin/firebase-auth",
             "/api/admin/firebase-login",

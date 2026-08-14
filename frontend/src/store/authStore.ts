@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email, password) => {
     try {
-      const response = await apiClient.post<any>('/auth/login', {
+      const response = await apiClient.post<any>('/api/v1/auth/login', {
         username: email,
         password: password
       });
@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   register: async (email, name, password) => {
     try {
-      const response = await apiClient.post<any>('/auth/register', {
+      const response = await apiClient.post<any>('/api/v1/auth/register', {
         username: email,
         password: password,
         name: name
@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const token = localStorage.getItem('supremeai_auth_token');
     if (token) {
       try {
-        const response = await apiClient.get<any>('/auth/me');
+        const response = await apiClient.get<any>('/api/v1/auth/me');
         set({
           status: AuthStatus.LOGGED_IN,
           user: {
