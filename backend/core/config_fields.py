@@ -47,7 +47,7 @@ class SettingsFieldsMixin:
         validation_alias="USER_CORS_ORIGINS",
     )
     admin_cors_origins: str | list[str] = Field(
-        default=["https://supremeai-lac.vercel.app", "https://supremeai-a.firebaseapp.com", "https://supremeai-a.web.app"],
+        default=["https://supremeai-lac.vercel.app", "https://supremeai-a.firebaseapp.com", "https://supremeai-a.web.app", "https://supremeai-admin.web.app", "https://supremeai-admin.firebaseapp.com"],
         validation_alias="ADMIN_CORS_ORIGINS",
     )
     enforce_anti_hacking: bool = Field(

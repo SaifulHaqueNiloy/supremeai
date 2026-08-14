@@ -41,10 +41,11 @@ export const getApiBaseUrl = (): string => {
   // বাংলা মন্তব্য: Firebase hosting-এ (web.app/firebaseapp.com) relative path ব্যবহার।
   // ব্রাউজার একই origin-এ request করে, Firebase server-side proxy করে Render-এ।
   // CORS preflight সম্পূর্ণ বাদ — Render free tier-এ সবচেয়ে নির্ভরযোগ্য পদ্ধতি।
-  const hostname = window.location.hostname;
-  if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
-    return '';
-  }
+  // removed firebase relative path proxy to force absolute backend URL
+  // const hostname = window.location.hostname;
+  // if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+  //   return '';
+  // }
 
   // বাংলা মন্তব্য: Vercel বা local dev-এ সরাসরি portal-নির্দিষ্ট backend URL
   return BACKEND_URL;
@@ -59,9 +60,10 @@ export const getWebSocketBaseUrl = (): string => {
   const apiBase = getApiBaseUrl();
 
   // বাংলা মন্তব্য: Firebase hosting থেকে direct WSS — WebSocket firebase.json rewrite দিয়ে proxy হয় না
-  if (apiBase === '') {
-    return BACKEND_URL.replace(/^https?:\/\//, 'wss://');
-  }
+  // removed relative path check
+  // if (apiBase === '') {
+  //   return BACKEND_URL.replace(/^https?:\/\//, 'wss://');
+  // }
 
   if (apiBase.startsWith('https://')) {
     return apiBase.replace(/^https:\/\//, 'wss://');
