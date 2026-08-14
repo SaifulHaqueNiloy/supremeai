@@ -34,15 +34,25 @@
 logs/
 log/
 
-# টেস্ট ফাইল
+# টেস্ট ও ক্যাশ ফাইল (রিকার্সিভ)
 tests/
 test/
 __pycache__/
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 .pytest_cache/
+**/.pytest_cache/
+**/.pytest_cache
+**/.ruff_cache/
+**/.ruff_cache
+**/.mypy_cache/
+**/.mypy_cache
+**/.coverage*
+backend/.pytest_cache/
+backend/.ruff_cache/
 
 # নোড মডিউল
 node_modules/
