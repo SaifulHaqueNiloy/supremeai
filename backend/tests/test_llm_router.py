@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backend.services.llm.llm_router import (
+from services.llm.llm_router import (
     FALLBACK_CHAINS,
     PROVIDER_CAPABILITIES,
     PROVIDER_COSTS,
@@ -284,7 +284,7 @@ class TestLLMRouter:
             for provider in router.providers.values():
                 provider.health_check = AsyncMock(return_value=False)
 
-            from backend.core.exceptions import LLMProviderError
+            from core.exceptions import LLMProviderError
 
             with pytest.raises(LLMProviderError):
                 await router.route("test prompt", task_type="chat", stream=False)

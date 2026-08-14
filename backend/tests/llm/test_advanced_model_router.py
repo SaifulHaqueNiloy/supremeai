@@ -3,7 +3,7 @@
 
 import pytest
 
-from backend.core.llm.advanced_model_router import AdvancedModelRouter
+from core.llm.advanced_model_router import AdvancedModelRouter
 
 
 @pytest.mark.asyncio

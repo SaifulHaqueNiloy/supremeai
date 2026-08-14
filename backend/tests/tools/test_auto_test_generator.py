@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backend.tools.code.auto_test_generator import (
+from tools.code.auto_test_generator import (
     AutoTestGenerator,
     TestGenRequest,
     TestGenResponse,
@@ -349,13 +349,13 @@ async def test_llm_method(monkeypatch):
 @pytest.fixture
 def client(generator):
     try:
-        from backend.api import app as _app
+        from api import app as _app
 
         app = _app
     except Exception:
         from fastapi import FastAPI
 
-        from backend.tools.code.auto_test_generator import router as test_router
+        from tools.code.auto_test_generator import router as test_router
 
         app = FastAPI()
         app.include_router(test_router)
@@ -457,11 +457,11 @@ async def test_batch_generate_save_true(tmp_path, generator):
 async def test_generate_endpoint_success(client):
     from fastapi.testclient import TestClient
 
-    from backend.tools.code.auto_test_generator import _generator
+    from tools.code.auto_test_generator import _generator
 
     app = None
     try:
-        from backend.api import app as _app
+        from api import app as _app
 
         app = _app
     except Exception:
@@ -470,7 +470,7 @@ async def test_generate_endpoint_success(client):
     if app is None:
         from fastapi import FastAPI
 
-        from backend.tools.code.auto_test_generator import router as test_router
+        from tools.code.auto_test_generator import router as test_router
 
         app = FastAPI()
         app.include_router(test_router)
@@ -502,11 +502,11 @@ async def test_generate_endpoint_success(client):
 async def test_generate_endpoint_error(client):
     from fastapi.testclient import TestClient
 
-    from backend.tools.code.auto_test_generator import _generator
+    from tools.code.auto_test_generator import _generator
 
     app = None
     try:
-        from backend.api import app as _app
+        from api import app as _app
 
         app = _app
     except Exception:
@@ -515,7 +515,7 @@ async def test_generate_endpoint_error(client):
     if app is None:
         from fastapi import FastAPI
 
-        from backend.tools.code.auto_test_generator import router as test_router
+        from tools.code.auto_test_generator import router as test_router
 
         app = FastAPI()
         app.include_router(test_router)
@@ -549,7 +549,7 @@ async def test_generate_file_endpoint(client, generator):
 
     app = None
     try:
-        from backend.api import app as _app
+        from api import app as _app
 
         app = _app
     except Exception:
@@ -558,7 +558,7 @@ async def test_generate_file_endpoint(client, generator):
     if app is None:
         from fastapi import FastAPI
 
-        from backend.tools.code.auto_test_generator import router as test_router
+        from tools.code.auto_test_generator import router as test_router
 
         app = FastAPI()
         app.include_router(test_router)

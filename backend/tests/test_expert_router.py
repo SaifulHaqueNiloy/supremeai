@@ -1,7 +1,7 @@
 import pytest
 
 from brain.expert_router import ExpertType, SupremeMoERouter
-from backend.services.llm.llm_router import get_llm_gateway
+from services.llm.llm_router import get_llm_gateway
 
 
 def test_moe_prompt_classification():

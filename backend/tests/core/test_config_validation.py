@@ -3,8 +3,8 @@
 
 import pytest
 
-from backend.core.config import Settings
-from backend.core.pgbouncer_pool import dispose_db_pool
+from core.config import Settings
+from core.pgbouncer_pool import dispose_db_pool
 
 
 def test_jwt_secret_validation_local():

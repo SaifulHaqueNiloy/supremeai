@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from backend.services.llm.llm_router import LLMRouter, Provider, TaskType, TokenBudget
+from services.llm.llm_router import LLMRouter, Provider, TaskType, TokenBudget
 
 
 class FakeProvider:

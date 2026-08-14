@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from backend.services.llm.llm_router import LLMRouter, Provider, TaskType
+from services.llm.llm_router import LLMRouter, Provider, TaskType
 
 
 class FakeProvider:
@@ -136,7 +136,7 @@ class TestCrossProviderConsistency:
 
     def test_provider_capabilities_matrix(self):
         """Test provider capabilities matrix is defined."""
-        from backend.services.llm.llm_router import PROVIDER_CAPABILITIES
+        from services.llm.llm_router import PROVIDER_CAPABILITIES
 
         assert Provider.MOONSHOT in PROVIDER_CAPABILITIES
         assert Provider.DEEPSEEK in PROVIDER_CAPABILITIES

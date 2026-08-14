@@ -7,7 +7,7 @@ from tools.learning.style_learner import StyleLearner
 try:
     from brain.model_router import ModelRouter
 except ImportError:
-    from backend.brain.model_router import ModelRouter
+    from brain.model_router import ModelRouter
 
 # বাংলা মন্তব্য: স্টাইল লার্নার টুলটির ফাংশনালিটি যাচাই করার জন্য টেস্ট কেস লেখা হচ্ছে।
 

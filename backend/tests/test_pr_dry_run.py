@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backend.tools.devops.github_agent import create_autonomous_pr
+from tools.devops.github_agent import create_autonomous_pr
 
 
 @pytest.mark.asyncio

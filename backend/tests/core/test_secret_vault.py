@@ -74,13 +74,23 @@ class TestSecretVaultFallback:
         result = vault._fallback_to_env("MISSING_SECRET", "default-value")
         assert result == "default-value"
 
-    def test_fallback_production_missing_raises(self, monkeypatch):
-        monkeypatch.delenv("CRITICAL_SECRET", raising=False)
+    def test_fallback_production_missing_hard_required_raises(self, monkeypatch):
+        # বাংলা মন্তব্য: infra-critical secret production-এ missing থাকলে সেটি এখনও fail-closed (raise)।
+        monkeypatch.delenv("SUPABASE_DATABASE_URL_POOLER", raising=False)
         vault = ProductionSecretVault()
         vault.env = "production"
         vault.client = None
         with pytest.raises(RuntimeError):
-            vault._fallback_to_env("CRITICAL_SECRET", None)
+            vault._fallback_to_env("SUPABASE_DATABASE_URL_POOLER", None)
+
+    def test_fallback_production_noncritical_degrades(self, monkeypatch):
+        # বাংলা মন্তব্য: non-critical secret missing হলে আর crash না — খালি স্ট্রিং দিয়ে degrade।
+        monkeypatch.delenv("CRITICAL_SECRET", raising=False)
+        vault = ProductionSecretVault()
+        vault.env = "production"
+        vault.client = None
+        result = vault._fallback_to_env("CRITICAL_SECRET", None)
+        assert result == ""
 
 
 class TestSecretVaultCache:

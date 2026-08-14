@@ -66,16 +66,17 @@ def test_production_mode_fetch_secret(vault_production):
     vault_production.client.getSecret.assert_called_once()
 
 
-def test_production_mode_fetch_secret_error(monkeypatch, vault_production):
+def test_production_mode_fetch_hard_required_error(monkeypatch, vault_production):
+    # বাংলা মন্তব্য: infra-critical secret production-এ Infisical/env থেকে না পেলে এখনও fail-closed (RuntimeError)।
     monkeypatch.setenv("ENV", "production")
     monkeypatch.setenv("FAIL_CLOSED_SECRETS", "true")
-    monkeypatch.delenv("SECRET_ID", raising=False)
+    monkeypatch.delenv("SUPABASE_DATABASE_URL_POOLER", raising=False)
     vault_production.client.getSecret.side_effect = Exception("Infisical error")
 
     import pytest
 
     with pytest.raises(RuntimeError):
-        vault_production.fetch_secret("SECRET_ID")
+        vault_production.fetch_secret("SUPABASE_DATABASE_URL_POOLER")
 
 
 def test_production_mode_missing_client_and_project(monkeypatch, vault_production):

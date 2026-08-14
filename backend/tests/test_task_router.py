@@ -93,7 +93,7 @@ class TestSwarmLLMRouter:
     """বাংলা মন্তব্য: ৫টি কাস্টম HF ৩বি মডেলের রাউটিং এবং কী রোটেশন টেস্টের জন্য টেস্ট ক্লাস।"""
 
     def test_key_rotator_round_robin(self):
-        from backend.services.llm.llm_router import HFKeyRotator
+        from services.llm.llm_router import HFKeyRotator
 
         test_keys = ["key1", "key2", "key3"]
         rotator = HFKeyRotator(test_keys)
@@ -103,7 +103,7 @@ class TestSwarmLLMRouter:
         assert rotator.get_key() == "key1"
 
     def test_task_classification_routing(self):
-        from backend.services.llm.llm_router import HFSwarmRouter
+        from services.llm.llm_router import HFSwarmRouter
 
         swarm_router = HFSwarmRouter()
         assert swarm_router.classify_task("Write a python function to parse JSON") == "coding"

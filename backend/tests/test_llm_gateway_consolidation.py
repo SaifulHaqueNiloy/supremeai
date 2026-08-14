@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from backend.core.llm.llm_gateway import LLMGateway, get_llm_gateway
-from backend.services.llm.llm_router import LLMRouter
+from core.llm.llm_gateway import LLMGateway, get_llm_gateway
+from services.llm.llm_router import LLMRouter
 
 # বাংলা মন্তব্য: isinstance ফেইল হওয়ার কারণে core এর পরিবর্তে backend.core ব্যবহার করা হলো
 # কারণ llm_router.py ফাইলটি backend.core থেকেই ইম্পোর্ট করে। 
-from backend.core.resilience.circuit_breaker import CircuitBreaker
-from backend.core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
+from core.resilience.circuit_breaker import CircuitBreaker
+from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 
 
 @pytest.fixture

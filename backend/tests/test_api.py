@@ -60,7 +60,7 @@ def test_task_execute_allowed_and_success():
     try:
         from brain.model_router import ModelRouter
     except ImportError:
-        from backend.brain.model_router import ModelRouter
+        from brain.model_router import ModelRouter
 
     fake_intent_parser = MagicMock()
     fake_intent_parser.parse_intent.return_value = MagicMock(
