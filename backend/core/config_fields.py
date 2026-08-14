@@ -111,6 +111,8 @@ class SettingsFieldsMixin:
             "/actuator",
             "/api/admin/firebase-auth",
             "/api/admin/firebase-login",
+            "/api/admin/firebase-totp-setup",
+            "/api/admin/firebase-totp-verify",
             "/api/v1/health",
             "/api/v1/health/",
             "/api/v1/live",
