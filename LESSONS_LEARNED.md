@@ -30,7 +30,14 @@
 - **লেসন:** লোকাল স্টোরেজ কৌশলের client logout-এ JWT স্ট্যাটেলেস হলে ব্যাকএন্ড call না করলেই চলে — তবে soap key consistency মেনে চলতে হবে (ADMIN_TOKEN_KEY = `supreme_admin_jwt`)।
 
 ### Blindspot নোট
-- ~~`frontend/src/store/adminStore.ts`-য়ে login-এ token সেভ হয় `adminToken` key-তে, কিন্তু `adminTokenStore.getDecodedToken()` পড়ে `supreme_admin_jwt` — key mismatch এখনও বিদ্যমান~~ ✅ **ফিক্সড**
+- ~~`frontend/src/store/adminStore.ts`-য়ে login-এ token সেভ হয় `adminToken` key-তে~~ ✅ **ফিক্সড**
+
+## 2026-08-14 (৩য় ধাপ) — CORS Block (Firebase Proxy বাইপাস)
+
+### সমস্যা ৮: Firebase Hosting-এ CORS Error Storm
+- **উৎস:** `frontend/src/utils/api.ts`-এ `getApiBaseUrl()` Firebase hosting-এ (`web.app` / `firebaseapp.com`) relative path (`''`) ব্যবহারের কোড **comment out** করা ছিল। ফলে ব্রাউজার `supremeai-admin.onrender.com`-এ সরাসরি cross-origin fetch করত (Firebase proxy বাইপাস) → CORS policy block।
+- **ফিক্স:** `getApiBaseUrl()`-এ Firebase hosting detection পুনরুদ্ধার — `''` return করে, ব্রাউজার same-origin request পাঠায়, `firebase.json`-এর rewrite rules server-side proxy করে Render-এ (CORS সমস্যা নেই)। পাশাপাশি `getWebSocketBaseUrl()`-এ WebSocket-এর জন্য (যা Firebase rewrite proxy দিয়ে যায় না) `BACKEND_URL` থেকে `wss://` URL generate করা হচ্ছে।
+- **লেসন:** Firebase hosting + Render free tier-এ CORS এড়ানোর নির্ভরযোগ্য উপায় হলো `firebase.json` rewrite proxy। absolute backend URL ব্যবহার মানেই cross-origin CORS — বিশেষ করে Render-এ যেখানে CORS middleware-এর আগে `TrustedOriginMiddleware` OPTIONS request ব্লক করতে পারে। সর্বদা Firebase `web.app` -> `''` -> rewrite proxy পদ্ধতি অনুসরণ করুন।
 
 ## 2026-08-14 (২য় ধাপ) — Admin Auth Token Consistency
 
