@@ -7,8 +7,18 @@
    - যেকোনো এরর ফিক্স করার আগে বা নতুন কোনো কোড পুশ করার আগে **সবগুলো এনভায়রনমেন্ট (Local -> CI/CD -> Production) ধাপে ধাপে এবং ক্রমানুসারে (Sequentially & Time-wise) চেক করা বাধ্যতামূলক।** (Upstream Verification)
    - কোনো এরর সলভ করার পর অবশ্যই `docs/LESSONS_LEARNED.md` ফাইলটি নতুন লার্নিং দিয়ে আপডেট করতে হবে।
 
-3. **Development Guidelines (ডেভেলপমেন্ট গাইডলাইন):**
-   - প্রোজেক্ট ডেভেলপমেন্টের সময় সবসময় রুট ফোল্ডারে থাকা প্রোজেক্টের মেইন রুলস ফাইল `.blackboxrules` কঠোরভাবে অনুসরণ করতে হবে। (Location: `./.blackboxrules`)
-
-4. **Proactive Automation (অটোমেশন):**
+3. **Proactive Automation (অটোমেশন):**
    - ইউজারকে অহেতুক প্রশ্ন না করে, যেই কাজগুলো নিজে থেকে স্বয়ংক্রিয়ভাবে (automatically) করে ফেলা সম্ভব, তা সাথে সাথে করে ফেলতে হবে।
+
+4. **100+ Universal Rules Book (Core Philosophy & Execution Protocol):**
+   - **Zero Cost:** কঠোরভাবে ফ্রি-টিয়ার সার্ভিস এবং ওপেন-সোর্স লাইব্রেরি ব্যবহার করতে হবে।
+   - **High Scalability:** আর্কিটেকচার লাইটওয়েট এবং ল্যাগ-ফ্রি হতে হবে।
+   - **Zero Breakage:** রানিং প্রোডাকশন লজিক ব্রেক করা যাবে না; টার্গেটেড ডেল্টা প্যাচিং (Delta Patches) ব্যবহার করতে হবে।
+   - **Human-in-the-Loop:** ক্রিটিক্যাল কাজে মানুষের চূড়ান্ত নিয়ন্ত্রণ থাকবে, কিন্তু এর জন্য ম্যানুয়াল কাজ সর্বনিম্ন হতে হবে।
+   - **Malware Immunity:** সেনসিটিভ অপারেশনে On-spot Just-In-Time (JIT) OTP ভেরিফিকেশন মূলে থাকতে হবে।
+   - **Self-Healing Engine:** এরর হলে স্বয়ংক্রিয়ভাবে ত্রুটি সংশোধন এবং রিগ্রেশন টেস্টিং নিশ্চিত করতে হবে।
+   - **Failure-Aware Context:** আগের ব্যর্থতার ইতিহাস মনে রেখে ফল্ট-টলারেন্স দিয়ে হ্যান্ডেল করতে হবে।
+   - **Master Plan First (Phase 0):** কোড লেখার আগে ১-২ লাইনে 'Prioritized Execution Plan' তৈরি করতে হবে।
+   - **Senior Architect Autonomy:** সেরা আর্কিটেকচারাল প্যাটার্ন নির্ধারণ ও সরাসরি ইমপ্লিমেন্ট করার পূর্ণ স্বাধীনতা রয়েছে।
+   - **Architectural Self-Audit Checklist:** কোড দেওয়ার আগে ৫টি ব্লাইন্ডস্পট (Ripple-Effect, Anti-Silent Failure, Stateless Validation, Dependency Sync, Configuration Drift) চেক করে নিতে হবে।
+   - **DIRECT EXECUTION:** কোনো অনুমতির জন্য না থেমে ইমিডিয়েটলি Phase 0 প্ল্যান পেশ করে কাজ শুরু করতে হবে!
