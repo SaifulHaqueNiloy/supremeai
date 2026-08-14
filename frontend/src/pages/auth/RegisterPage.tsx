@@ -25,8 +25,13 @@ export const RegisterPage: React.FC = () => {
       // বাংলা মন্তব্য: আসল অথেনটিকেশন — authStore এর মাধ্যমে ব্যাকএন্ডে রেজিস্টার করছে
       await register(email, name, password);
       navigate('/workspace');
-    } catch (err) {
-      setError('রেজিস্ট্রেশন ব্যর্থ হয়েছে। ইমেইল বা পাসওয়ার্ড যাচাই করুন।');
+    } catch (err: any) {
+      if (err.status === 403 || (err.message && err.message.includes('confirmation'))) {
+        alert('রেজিস্ট্রেশন সফল হয়েছে! দয়া করে আপনার ইমেইলের ভেরিফিকেশন লিংকটিতে ক্লিক করে লগইন করুন।');
+        navigate('/login');
+      } else {
+        setError('রেজিস্ট্রেশন ব্যর্থ হয়েছে। ইমেইল বা পাসওয়ার্ড যাচাই করুন।');
+      }
     } finally {
       setIsLoading(false);
     }

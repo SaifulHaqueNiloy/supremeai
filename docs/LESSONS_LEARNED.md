@@ -64,3 +64,7 @@
 - **ভুল (Mistake):** ফ্রন্টএন্ডে যখনই রিয়েল-টাইম (SSE) স্ট্রিম কানেক্ট হয়, তখন `useStore.ts`-এর `fetchGateStatus()` ফাংশনটি অটোমেটিক্যালি `/api/admin/metrics/dashboard` এ রিকোয়েস্ট পাঠায় কোনো টোকেন চেক করা ছাড়াই।
 - **প্রভাব (Impact):** সাধারণ ইউজার বা পাবলিক পেজ (যেমন `/login`) ভিজিট করলে ব্যাকএন্ড এই রিকোয়েস্ট রিজেক্ট করে এবং কনসোলে ৪০১ আনঅথোরাইজড (401 Unauthorized) এরর স্প্যাম হতে থাকে।
 - **সমাধান (Solution):** `fetchGateStatus()` এ API কল করার আগে ক্লায়েন্ট-সাইডেই চেক করা যে লোকাল স্টোরেজে `supreme_admin_jwt` (অ্যাডমিন টোকেন) আছে কি না। টোকেন না থাকলে API কল বাইপাস করা।।
+
+### Email Confirmation Bypass Fix
+- **Issue**: Supabase requires email confirmation by default. Previously, our backend ignored es.session == None during sign up, generated a fake JWT, and the frontend automatically logged in the unverified user, which failed on reload/auth calls.
+- **Fix**: Backend egister endpoint now checks if es.session is None and raises a 403 Forbidden. Frontend RegisterPage catches this 403 and shows an alert asking the user to confirm their email before redirecting to login.
