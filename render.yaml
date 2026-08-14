@@ -22,6 +22,7 @@ services:
   - type: web
     name: supremeai-frontend
     env: static
+    rootDir: .
     buildCommand: "npm install -g pnpm@9 && pnpm install --no-frozen-lockfile && cd frontend && pnpm run build:user"
     staticPublishPath: "./frontend/dist-user"
     autoDeploy: true
