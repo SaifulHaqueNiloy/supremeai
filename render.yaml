@@ -29,6 +29,8 @@ services:
         value: 22.0.0
       - key: CI
         value: "false"
+      - key: PNPM_FLAGS
+        value: "--no-frozen-lockfile"
     routes:
       - type: rewrite
         source: /*
