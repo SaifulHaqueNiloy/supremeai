@@ -64,7 +64,7 @@ def test_offline_sync_logs_constraints():
 
 
 def test_sw_registers_service_worker():
-    index_path = os.path.join(os.path.dirname(__file__), "..", "..", "apps", "studio-client", "index.html")
+    index_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "index.html")
     html = open(index_path, encoding="utf-8").read()
     assert "register('/sw.js')" in html, "Service Worker must be registered in index.html"
 
@@ -74,8 +74,7 @@ def test_pwa_manifest_exists():
         os.path.dirname(__file__),
         "..",
         "..",
-        "apps",
-        "studio-client",
+        "frontend",
         "public",
         "manifest.json",
     )

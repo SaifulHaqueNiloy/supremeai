@@ -7,7 +7,7 @@ from tools.code.local_code_executor import LocalCodeExecutor
 
 
 @pytest.mark.asyncio
-@patch("backend.tools.code.local_code_executor.DockerSandbox")
+@patch("tools.code.local_code_executor.DockerSandbox")
 async def test_execute_local_code_with_docker_success(MockDockerSandbox):
     """
     বাংলা মন্তব্য: ডকার স্যান্ডবক্স সফলভাবে কোড এক্সিকিউট করতে পারলে তার আউটপুট যাচাই করা হচ্ছে।
@@ -32,7 +32,7 @@ async def test_execute_local_code_with_docker_success(MockDockerSandbox):
 
 
 @pytest.mark.asyncio
-@patch("backend.tools.code.local_code_executor.DockerSandbox")
+@patch("tools.code.local_code_executor.DockerSandbox")
 @patch("asyncio.create_subprocess_exec")
 async def test_execute_local_code_docker_fails_fallback_to_subprocess(mock_subprocess, MockDockerSandbox):
     """

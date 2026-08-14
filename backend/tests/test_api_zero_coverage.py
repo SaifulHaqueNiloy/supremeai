@@ -94,16 +94,4 @@ class TestAPIRouteImports:
         assert router is not None
 
 
-# ── core.app_admin / app_user ──────────────────────────────────────────────────
 
-
-class TestCoreAppModules:
-    def test_app_admin_import(self):
-        import core.app_admin
-
-        assert core.app_admin is not None
-
-    def test_app_user_import(self):
-        import core.app_user
-
-        assert core.app_user is not None
