@@ -160,7 +160,7 @@ class TestLLMRouter:
 
     def test_router_initialization(self):
         """Test LLMRouter initialization."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             assert router.providers is not None
@@ -169,7 +169,7 @@ class TestLLMRouter:
 
     def test_estimate_tokens(self):
         """Test token estimation."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             # English text: ~4 chars per token
@@ -182,7 +182,7 @@ class TestLLMRouter:
 
     def test_select_provider_chat(self):
         """Test provider selection for chat tasks."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             chain = router._select_provider(TaskType.CHAT)
@@ -192,7 +192,7 @@ class TestLLMRouter:
 
     def test_select_provider_code(self):
         """Test provider selection for code tasks."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             chain = router._select_provider(TaskType.CODE)
@@ -201,7 +201,7 @@ class TestLLMRouter:
 
     def test_select_provider_cost_sensitive(self):
         """Test cost-sensitive provider ordering."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             # Without cost-sensitive
@@ -216,7 +216,7 @@ class TestLLMRouter:
 
     def test_cache_key_generation(self):
         """Test deterministic cache key generation."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             key1 = router._cache_key("prompt", "chat", temperature=0.7)
@@ -228,7 +228,7 @@ class TestLLMRouter:
     @pytest.mark.asyncio
     async def test_health_check_all(self):
         """Test health check for all providers."""
-        with patch("backend.services.llm.llm_router.get_redis_client"), patch("backend.services.llm.llm_router._get_rules_engine", return_value=None):
+        with patch("services.llm.llm_router.get_redis_client"), patch("services.llm.llm_router._get_rules_engine", return_value=None):
             router = LLMRouter()
 
             # Mock health checks
@@ -245,8 +245,8 @@ class TestLLMRouter:
     async def test_route_uses_cache(self):
         """Test that route uses cache when available."""
         with (
-            patch("backend.services.llm.llm_router.get_redis_client") as mock_redis,
-            patch("backend.services.llm.llm_router._get_rules_engine", return_value=None),
+            patch("services.llm.llm_router.get_redis_client") as mock_redis,
+            patch("services.llm.llm_router._get_rules_engine", return_value=None),
         ):
             mock_redis_client = MagicMock()
             mock_redis.return_value = mock_redis_client
@@ -270,8 +270,8 @@ class TestLLMRouter:
     async def test_route_no_capable_provider(self):
         """Test route raises error when no provider is capable."""
         with (
-            patch("backend.services.llm.llm_router.get_redis_client") as mock_redis,
-            patch("backend.services.llm.llm_router._get_rules_engine", return_value=None),
+            patch("services.llm.llm_router.get_redis_client") as mock_redis,
+            patch("services.llm.llm_router._get_rules_engine", return_value=None),
         ):
             mock_redis_client = MagicMock()
             mock_redis.return_value = mock_redis_client

@@ -81,6 +81,7 @@ def test_production_mode_fetch_hard_required_error(monkeypatch, vault_production
 
 def test_production_mode_missing_client_and_project(monkeypatch, vault_production):
     monkeypatch.setenv("FAIL_CLOSED_SECRETS", "true")
+    monkeypatch.delenv("SUPABASE_KEY", raising=False)
     v = ProductionSecretVault()
     v.env = "production"
     v.client = None
