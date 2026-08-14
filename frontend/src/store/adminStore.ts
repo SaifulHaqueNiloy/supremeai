@@ -99,8 +99,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         try {
           const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
           idToken = await userCredential.user.getIdToken(true);
-        } catch {
-          set({ adminError: 'Invalid email or password.' });
+        } catch (authErr: any) {
+          console.error("Firebase Auth Error:", authErr);
+          set({ adminError: authErr?.message || 'Invalid email or password.' });
           return;
         }
 
