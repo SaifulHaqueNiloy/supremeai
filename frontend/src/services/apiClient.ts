@@ -50,8 +50,13 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
     cachedToken = localStorage.getItem('supremeai_auth_token') || '';
   }
 
-  if (cachedToken) {
-    headers['Authorization'] = `Bearer ${cachedToken}`;
+  // 🔥 ফিক্স: admin-api endpoint গুলো admin-role JWT (`supreme_admin_jwt`) চায়।
+  // admin dashboard ব্যবহার করলে admin token-ই Bearer হিসেবে পাঠানো হবে (প্রিফারেন্স), নচেৎ ইউজার token।
+  const adminToken = localStorage.getItem('supreme_admin_jwt');
+  const effectiveToken = adminToken || cachedToken;
+
+  if (effectiveToken) {
+    headers['Authorization'] = `Bearer ${effectiveToken}`;
   }
 
   // 🔐 CSRF Protection

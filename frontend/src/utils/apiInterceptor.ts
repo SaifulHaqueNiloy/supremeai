@@ -47,12 +47,17 @@ export function setupGlobalFetchInterceptor() {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          import('../store/adminStore').then(({ useAdminStore }) => {
-            const store = useAdminStore.getState();
-            if (store.adminAuthenticated) {
-              store.handleAdminLogout();
-            }
-          });
+          // 🔥 ফিক্স: logout endpoint নিজে 401 দিলে recursive loop এ না যেতে guard
+          if (typeof url === 'string' && url.includes('/api/admin/logout')) {
+            console.debug('[Interceptor] Logout endpoint returned 401 — user already logged out, skipping auto-logout.');
+          } else {
+            import('../store/adminStore').then(({ useAdminStore }) => {
+              const store = useAdminStore.getState();
+              if (store.adminAuthenticated) {
+                store.handleAdminLogout();
+              }
+            });
+          }
         }
 
         let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;

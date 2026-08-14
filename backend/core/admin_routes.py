@@ -242,7 +242,9 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         except Exception as e:
             logger.error(f"Failed to retrieve TOTP secret: {e}")
 
-    secret_to_use = totp_secret or temp_totp_secret
+    # বাংলা মন্তব্য: temp_totp_secret (সবচেয়ে নতুন setup request) আগে ব্যবহার করা হয়।
+    # পুরনো totp_secret থাকলেও reset/regenerate-এর পরে নতুন সিক্রেট দিয়েই OTP যাচাই হবে।
+    secret_to_use = temp_totp_secret or totp_secret
     if not secret_to_use:
         secret_to_use = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
         if not secret_to_use:
@@ -291,7 +293,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         except Exception as e:
             logger.debug(f"Failed to clear Redis attempts: {e}")
 
-    if temp_totp_secret and not totp_secret and db:
+    if temp_totp_secret and db:
         try:
             from google.cloud import firestore
 

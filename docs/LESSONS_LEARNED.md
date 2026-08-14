@@ -68,3 +68,16 @@
 ### Email Confirmation Bypass Fix
 - **Issue**: Supabase requires email confirmation by default. Previously, our backend ignored es.session == None during sign up, generated a fake JWT, and the frontend automatically logged in the unverified user, which failed on reload/auth calls.
 - **Fix**: Backend egister endpoint now checks if es.session is None and raises a 403 Forbidden. Frontend RegisterPage catches this 403 and shows an alert asking the user to confirm their email before redirecting to login.
+
+### Reload Logout on User Dashboard (offline-tolerant session restore)
+- **Mistake:** `authStore.initialize()` called `/api/v1/auth/me` on every reload and wiped the token + logged the user out on *any* error, including transient network errors, Render free-tier cold starts, or 5xx responses.
+- **Impact:** Users were booted to the login screen immediately after a page reload, even though their token was still valid.
+- **Solution:** `initialize()` now optimistically restores the session from the `localStorage` token (decoding the JWT payload client-side for an instant profile) and validates the token in the background. Only a definitive `401/403` invalidates the session; network/cold-start/5xx errors keep the user logged in. The user profile is also persisted to `localStorage` so the identity survives reload.
+
+### Wrong Identity After Reload (email missing from /me)
+- **Mistake:** `MeResponse` never included `email`, and `optional_current_user` did not carry the email claim from the JWT — so after reload the dashboard fell back to `unknown@example.com` and showed the role as the name, making it look like "email/password are not really verified".
+- **Fix:** `UserContext` now carries `email` (from the JWT `email` claim) and `/api/v1/auth/me` returns it, so the verified identity is consistent across sessions. (Backend auth tests green.)
+
+### Admin Dashboard QR Code Not Generating
+- **Mistake:** The admin 2FA QR was only offered to first-time admins (`totp_setup_required`). A returning admin whose Firestore doc already held a `totp_secret` got `totp_required` and was never offered a new QR, and the QR relied entirely on an external image service with no fallback. Also, `firebase-totp-verify` preferred the *old* `totp_secret` over the freshly generated `temp_totp_secret`, so regenerating a QR would not verify with the new code.
+- **Fix:** (a) Backend `admin_firebase_totp_verify` now prefers the newest `temp_totp_secret` and promotes it on success, enabling a real QR reset; (b) added a `resetTotpSetup()` store action + "Generate New QR Code" / "Lost your authenticator?" UI so a QR can always be (re)created; (c) QR rendering now falls back to the `otpauth://` URI + manual secret text on image error, and `buildProvisioningUri` builds a valid URI client-side. (Backend admin tests green.)

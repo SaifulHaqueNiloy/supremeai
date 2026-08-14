@@ -9,6 +9,8 @@ interface AdminConsoleProps {
   setAdminEmail: (val: string) => void;
   totpSetupRequired: boolean;
   provisioningUri: string;
+  totpSecret: string;
+  onResetTotp: () => void;
   adminError: string;
   handleAdminLogin: (password?: string) => void;
   handleAdminOtpVerify: () => void;
@@ -72,6 +74,8 @@ export function AdminConsole(props: AdminConsoleProps) {
             setAdminOtp={props.setAdminOtp}
             totpSetupRequired={props.totpSetupRequired}
             provisioningUri={props.provisioningUri}
+            totpSecret={props.totpSecret}
+            onResetTotp={props.onResetTotp}
           />
         ) : (
           <AuthenticatedView {...props} />

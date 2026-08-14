@@ -171,6 +171,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           const data = await res.json();
           // Token is returned from the backend in data.token
           if (data.token) {
+            // 🔥 ফিক্স: সঠিক key `supreme_admin_jwt`-এ সেভ (adminTokenStore/getDecodedToken এটাই পড়ে)।
+            // পুরনো `adminToken` key ব্যাকওয়ার্ড-কম্প্যাটের জন্য রেখে দেওয়া হলো।
+            localStorage.setItem('supreme_admin_jwt', data.token);
             localStorage.setItem('adminToken', data.token);
             const decoded = decodeJwt(data.token);
             if (decoded && typeof decoded.role === 'string') {
@@ -192,14 +195,19 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   handleAdminLogout: async () => {
     try {
       const auth = await getFirebaseAuth();
+      // 🔥 ফিক্স: সঠিক টোকেন keyগুলো পরিষ্কার করা হচ্ছে (আগে শুধু 'adminToken' remove হতো,
+      // অথচ adminTokenStore 'supreme_admin_jwt' পড়ে — ফলে স্টেল টোকেন জমে থাকত)
+      const TOKEN_KEYS = ['adminToken', 'supreme_admin_jwt', 'supremeai_auth_token'];
+      TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
+
+      // বাংলা মন্তব্য: backend-এ কোনো /api/admin/logout endpoint নাই (নিশ্চিত হয়ে দেখা গেছে)।
+      // তাই সুইচ ব্যাকএন্ড অল বেস্ট-এফোর্ট call এড়িয়ে সরাসরি Firebase client signOut করা হলো।
+      // JWT স্ট্যাটেলেস — client-side token মুছে ফেলাই যথেষ্ট।
       await signOut(auth);
-      const API_BASE = getApiBaseUrl();
-      await fetch(`${API_BASE}/api/admin/logout`, { method: 'POST', credentials: 'include' });
-      localStorage.removeItem('adminToken');
     } catch(e) {
       console.error('Logout failed:', e);
     }
-    set({ adminAuthenticated: false, adminRole: null, otpRequired: false, adminOtp: '', adminError: '' });
+    set({ adminAuthenticated: false, adminRole: null, otpRequired: false, adminOtp: '', adminError: '', totpSetupRequired: false, totpSecret: '', provisioningUri: '' });
   },
   resetTotpSetup: async () => {
     set({ adminError: '' });

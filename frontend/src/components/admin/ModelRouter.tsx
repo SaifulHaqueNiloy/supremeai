@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { GitBranch, ArrowRight, Settings } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
+import { adminTokenStore } from '../../services/adminTokenStore';
+
+// বাংলা মন্তব্য: টোকেন গার্ড — টোকেন ছাড়া admin-api কল হবে না, 401 storm ঠেকাতে
+const hasToken = (): boolean => !!adminTokenStore.getDecodedToken();
 
 interface ModelRouterConfig {
   override_active?: boolean;
@@ -22,10 +26,14 @@ export function ModelRouter() {
   const routerQuery = useQuery({
     queryKey: ['model-router'],
     queryFn: () => apiClient.get<ModelRouterConfig>('/admin-api/model-router'),
+    enabled: hasToken(),
+    staleTime: 30_000,
   });
   const providersQuery = useQuery({
     queryKey: ['providers'],
     queryFn: () => apiClient.get('/admin-api/providers'),
+    enabled: hasToken(),
+    staleTime: 30_000,
   });
 
   const config = routerQuery.data;

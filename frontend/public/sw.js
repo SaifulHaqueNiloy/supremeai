@@ -44,9 +44,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // বাংলা মন্তব্য: API রেসপন্স ক্যাশ করলে stale ডেটা দেখাবে — শুধু স্ট্যাটিক অ্যাসেট ক্যাশ করা হবে
   const url = new URL(event.request.url);
-  if (url.pathname.startsWith('/admin-api/') || url.pathname.startsWith('/api/')) {
+
+  // বাংলা মন্তব্য: API রেসপন্স ও থার্ড-পার্টি ডোমেইন ক্যাশ করলে stale বা CORS সমস্যা হবে — skip করা হলো
+  if (
+    url.pathname.startsWith('/admin-api/') ||
+    url.pathname.startsWith('/api/') ||
+    // থার্ড-পার্টি QR / external API কলগুলো SW intercept করলে CORS error হয় — তাই বাদ দেওয়া হলো
+    url.hostname === 'api.qrserver.com' ||
+    url.hostname === 'chart.googleapis.com' ||
+    url.hostname === 'www.google-analytics.com'
+  ) {
     return;
   }
 
@@ -64,14 +72,17 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         // Fallback to cache on network failure
-        return caches.match(event.request).then((response) => {
-          if (response) {
-            return response;
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
           }
           // বাংলা মন্তব্য: HTML রিকোয়েস্ট হলে ক্যাশ করা index.html ফেরত দেওয়া হবে (SPA ফলব্যাক)
           if (event.request.headers.get('accept')?.includes('text/html')) {
             return caches.match('/index.html');
           }
+          // 🔥 ফিক্স: ক্যাশেও না থাকলে একটি Response না দিয়ে undefined return করলে
+          // "Failed to convert value to 'Response'" error হয় — তাই একটি minimal Response দিন
+          return new Response('', { status: 503, statusText: 'Service Unavailable' });
         });
       })
   );

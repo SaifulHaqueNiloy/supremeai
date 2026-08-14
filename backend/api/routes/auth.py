@@ -49,7 +49,11 @@ async def optional_current_user(
         # বাংলা মন্তব্য: JWT ডিকোড সফল হলে UserContext তৈরি করে return করা হচ্ছে।
         user_id = payload.get("sub", "unknown")
         role = payload.get("role", "viewer")
-        return UserContext(user_id=user_id, role=role)
+        return UserContext(
+            user_id=user_id,
+            role=role,
+            email=payload.get("email") if isinstance(payload.get("email"), str) else None,
+        )
     except Exception:
         logger.exception("Unhandled exception")
         return None
@@ -77,6 +81,7 @@ class MeResponse(BaseModel):
     user_id: str
     role: str
     scopes: tuple[str, ...] = ()
+    email: str | None = None
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -162,7 +167,12 @@ async def me(current_user: UserContext | None = Depends(optional_current_user)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     # বাংলা মন্তব্য: scopes যদি None হয় তবে MeResponse ভ্যালিডেশন পাস করানোর জন্য খালি টুপল পাস করা হচ্ছে।
     scopes_val = current_user.scopes if current_user.scopes is not None else ()
-    return MeResponse(user_id=current_user.user_id, role=current_user.role, scopes=scopes_val)
+    return MeResponse(
+        user_id=current_user.user_id,
+        role=current_user.role,
+        scopes=scopes_val,
+        email=current_user.email,
+    )
 
 
 @router.get("/verify")

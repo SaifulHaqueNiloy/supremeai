@@ -186,6 +186,7 @@ class UserContext:
     roles: list[str] = field(default_factory=list)
     expires_at: str | None = None
     scopes: tuple[str, ...] | None = None
+    email: str | None = None
 
     def __post_init__(self) -> None:
         # বাংলা মন্তব্য: যদি roles প্রোভাইড করা থাকে কিন্তু role ডিফল্ট থাকে, তবে প্রথম role কে মূল role হিসেবে সেট করা হবে।

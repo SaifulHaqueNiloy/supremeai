@@ -18,9 +18,11 @@ export function AdminShell() {
     setAdminOtp,
     totpSetupRequired,
     provisioningUri,
+    totpSecret,
     handleAdminLogout,
     actionStatus,
     setActionStatus,
+    resetTotpSetup,
   } = useAdminStore();
 
   const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>("dashboard");
@@ -75,6 +77,10 @@ export function AdminShell() {
 
   const handleAdminOtpVerify = () => {
     handleAdminLogin();
+  };
+
+  const handleResetTotp = () => {
+    resetTotpSetup();
   };
 
   const handleInstallSkill = (name: string) => {
@@ -169,6 +175,8 @@ export function AdminShell() {
       setAdminEmail={setAdminEmail}
       totpSetupRequired={totpSetupRequired}
       provisioningUri={provisioningUri}
+      totpSecret={totpSecret}
+      onResetTotp={handleResetTotp}
       adminError={adminError}
       handleAdminLogin={handleAdminLogin}
       handleAdminOtpVerify={handleAdminOtpVerify}

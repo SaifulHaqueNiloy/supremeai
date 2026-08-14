@@ -168,13 +168,20 @@ export function LoginView({
               {provisioningUri ? (
                 <>
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(provisioningUri)}`}
+                    src={`https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=${encodeURIComponent(provisioningUri)}`}
                     alt="TOTP QR Code"
                     onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      setQrFailed(true);
+                      // Fallback to api.qrserver.com if Google Charts fails
+                      const fallbackSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(provisioningUri)}`;
+                      if (e.currentTarget.src !== fallbackSrc) {
+                        e.currentTarget.src = fallbackSrc;
+                      } else {
+                        e.currentTarget.style.display = 'none';
+                        setQrFailed(true);
+                      }
                     }}
                     className="rounded-lg w-40 h-40"
+                    loading="lazy"
                   />
                   {qrFailed && (
                     <p className="text-[10px] text-slate-500 font-mono break-all text-center max-w-[260px]">
