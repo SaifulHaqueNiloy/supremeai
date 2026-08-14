@@ -86,7 +86,10 @@ class ProductionSecretVault:
             return
 
         if InfisicalClient and (self.token or (self.client_id and self.client_secret)):
-            self._init_infisical_client()
+            try:
+                self._init_infisical_client()
+            except Exception as e:
+                logger.error(f"Infisical initialization failed (invalid token/credentials): {e}. Bypassing Cloud Vault.")
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
 
