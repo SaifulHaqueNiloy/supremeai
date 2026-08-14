@@ -214,23 +214,11 @@ class ProductionSecretVault:
         env_fallback = os.getenv(secret_id, default)
         if env_fallback is None:
             if self.env in ("production", "staging"):
-                logger.critical(f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert...")
-                try:
-                    error_event_bus.emit(
-                        ErrorEvent(
-                            module="secret_vault",
-                            error_type="CRITICAL_SECRET_MISSING",
-                            message=f"Secret '{secret_id}' not found in Infisical or env!",
-                            severity="CRITICAL",
-                            context={"secret_id": secret_id},
-                        )
-                    )
-                except Exception as exc:
-                    logger.debug(f"Failed to emit error event: {exc}")
                 OPTIONAL_SECRETS = {
                     "ADMIN_NOTIFICATION_EMAIL",
                     "DISCORD_OTP_WEBHOOK_URL",
                     "DISCORD_WEBHOOK_URL",
+                    "DISCORD_BOT_TOKEN",
                     "RESEND_API_KEY",
                     "NVIDIA_API_KEY",
                     "OPENAI_API_KEY",
@@ -240,10 +228,47 @@ class ProductionSecretVault:
                     "GROQ_API_KEY",
                     "GITHUB_CLIENT_ID",
                     "GITHUB_CLIENT_SECRET",
+                    "HF_API_KEY",
+                    "NEO4J_URI",
+                    "NEO4J_USER",
+                    "NEO4J_PASSWORD",
                 }
-                # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে যেকোনো অ-অপশনাল secret miss হলে
-                # RuntimeError "Fail-closed" হয়ে পুরো স্টার্ভার বুটেই মারা যেত (exit 3) —
-                # Render ডিপ্লয় update_failed + frontend connection error এটাই প্রধান কারণ ছিল।
+                HARD_REQUIRED_SECRETS = {
+                    "SUPABASE_DATABASE_URL_POOLER",
+                    "SUPABASE_URL",
+                    "SUPABASE_KEY",
+                    "REDIS_URL",
+                    "SUPREMEAI_JWT_SECRET",
+                    "ENCRYPTION_KEY",
+                    "SUPREMEAI_API_KEY",
+                }
+                
+                if default is None and secret_id in HARD_REQUIRED_SECRETS:
+                    logger.critical(f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert...")
+                    try:
+                        error_event_bus.emit(
+                            ErrorEvent(
+                                module="secret_vault",
+                                error_type="CRITICAL_SECRET_MISSING",
+                                message=f"Secret '{secret_id}' not found in Infisical or env!",
+                                severity="CRITICAL",
+                                context={"secret_id": secret_id},
+                            )
+                        )
+                    except Exception as exc:
+                        logger.debug(f"Failed to emit error event: {exc}")
+                    # বাংলা মন্তব্য: শুধুমাত্র infra-critical secret অনুপস্থিত হলেই Fail-closed।
+                    raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
+                elif default is None:
+                    if secret_id not in OPTIONAL_SECRETS:
+                        logger.warning(
+                            f"⚠️ Secret '{secret_id}' missing in {self.env} — degrading with empty value (unknown)."
+                        )
+                    else:
+                        logger.info(f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping.")
+                
+                env_fallback = default if default is not None else ""
+            else:াই প্রধান কারণ ছিল।
                 # এখন শুধু সত্যিই infra-critical ব্যাকএন্ড সেক্রেট miss হলে fail-closed থাকবে
                 # (এগুলো ডিপ্লয় env-এ guaranteed থাকে), বাকি অ-প্রয়োজনীয় секретগুলো
                 # (LLM key, NEO4J, webhook, admin email ইত্যাদি) গেলে খালি স্ট্রিং দিয়ে
