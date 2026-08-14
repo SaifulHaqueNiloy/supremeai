@@ -30,6 +30,10 @@ const decodeJwt = (token: string): Record<string, unknown> | null => {
   }
 };
 
+// বাংলা মন্তব্য: ব্যাকএন্ড provisioning_uri না দিলে ক্লায়েন্ট-সাইডে otpauth URI তৈরি করে QR দেখানো হয়।
+const buildProvisioningUri = (email: string, secret: string): string =>
+  `otpauth://totp/SupremeAI:${encodeURIComponent(email)}?secret=${secret}&issuer=SupremeAI&digits=6&period=30`;
+
 interface AdminState {
   adminAuthenticated: boolean;
   adminRole: string | null;
@@ -54,6 +58,7 @@ interface AdminState {
   setTotpSecret: (val: string) => void;
   provisioningUri: string;
   setProvisioningUri: (val: string) => void;
+  resetTotpSetup: () => Promise<void>;
 }
 
 export const useAdminStore = create<AdminState>((set, get) => ({
@@ -132,7 +137,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
                 totpSetupRequired: true,
                 otpRequired: true,
                 totpSecret: setupData.secret,
-                provisioningUri: setupData.provisioning_uri
+                provisioningUri: setupData.provisioning_uri || buildProvisioningUri(cleanEmail, setupData.secret || '')
               });
             } else {
               set({ adminError: setupData.detail || 'Failed to setup TOTP.' });
@@ -195,5 +200,41 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       console.error('Logout failed:', e);
     }
     set({ adminAuthenticated: false, adminRole: null, otpRequired: false, adminOtp: '', adminError: '' });
+  },
+  resetTotpSetup: async () => {
+    set({ adminError: '' });
+    try {
+      const auth = await getFirebaseAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        set({ adminError: 'Session expired. Please login again.' });
+        return;
+      }
+      const idToken = await user.getIdToken(true);
+      const API_BASE = getApiBaseUrl();
+      const email = (user.email || '').trim() || get().adminEmail.trim();
+
+      const res = await fetch(`${API_BASE}/api/admin/firebase-totp-setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id_token: idToken }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        set({
+          totpSetupRequired: true,
+          otpRequired: true,
+          totpSecret: data.secret,
+          provisioningUri: data.provisioning_uri || buildProvisioningUri(email, data.secret || ''),
+        });
+      } else {
+        const detail = typeof data.detail === 'string' ? data.detail : 'Failed to generate QR code.';
+        set({ adminError: detail });
+      }
+    } catch (err: any) {
+      const msg = err && typeof err === 'object' && err.message ? err.message : String(err);
+      set({ adminError: 'Connection failed: ' + msg });
+    }
   },
 }));

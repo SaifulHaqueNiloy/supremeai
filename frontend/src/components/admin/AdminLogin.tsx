@@ -10,6 +10,8 @@ interface LoginViewProps {
   setAdminOtp: (val: string) => void;
   totpSetupRequired: boolean;
   provisioningUri: string;
+  totpSecret: string;
+  onResetTotp: () => void;
 }
 
 const MAX_ATTEMPTS = 5;
@@ -25,9 +27,12 @@ export function LoginView({
   setAdminOtp,
   totpSetupRequired,
   provisioningUri,
+  totpSecret,
+  onResetTotp,
 }: LoginViewProps) {
   const [localPassword, setLocalPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const [qrFailed, setQrFailed] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -156,16 +161,62 @@ export function LoginView({
             </>
           )}
 
-          {totpSetupRequired && provisioningUri && (
+          {totpSetupRequired && (
             <div className="flex flex-col items-center gap-2 mb-2 bg-[#07090f] border border-slate-800 rounded-xl p-4">
               <p className="text-xs text-[#00f3ff] font-mono mb-1 text-center">SCAN TO SETUP 2FA (TOTP)</p>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(provisioningUri)}`}
-                alt="TOTP QR Code"
-                className="rounded-lg w-40 h-40"
-              />
+
+              {provisioningUri ? (
+                <>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(provisioningUri)}`}
+                    alt="TOTP QR Code"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      setQrFailed(true);
+                    }}
+                    className="rounded-lg w-40 h-40"
+                  />
+                  {qrFailed && (
+                    <p className="text-[10px] text-slate-500 font-mono break-all text-center max-w-[260px]">
+                      {provisioningUri}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-[10px] text-amber-400 font-mono text-center">
+                  No QR available yet — use the manual secret below.
+                </p>
+              )}
+
+              {totpSecret && (
+                <div className="w-full text-center">
+                  <p className="text-[10px] text-slate-500 font-mono mb-1">OR ENTER SECRET MANUALLY</p>
+                  <code className="text-[11px] text-[#00ff66] font-mono bg-slate-900 border border-slate-800 rounded px-2 py-1 block break-all select-all">
+                    {totpSecret}
+                  </code>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={onResetTotp}
+                className="text-[10px] font-mono text-[#00f3ff] underline underline-offset-2 hover:text-white"
+              >
+                {provisioningUri ? 'Generate New QR Code' : 'Generate QR Code'}
+              </button>
+
               <p className="text-[10px] text-slate-500 font-mono mt-1 text-center">Scan with Google Authenticator or Authy</p>
             </div>
+          )}
+
+          {otpRequired && !totpSetupRequired && (
+            <button
+              type="button"
+              onClick={onResetTotp}
+              className="text-[10px] font-mono text-[#00f3ff] underline underline-offset-2 hover:text-white mb-1"
+            >
+              Lost your authenticator? Generate a new QR code
+            </button>
           )}
 
           {otpRequired && (
