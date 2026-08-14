@@ -1,16 +1,11 @@
 # Stage 1: Builder
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim-bookworm AS builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# Install minimal build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libpq-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+    PYTHONUNBUFFERED=1 \
+    POETRY_HTTP_TIMEOUT=300
 
 WORKDIR /app
-RUN pip install --no-cache-dir poetry
+RUN pip install --no-cache-dir --default-timeout=120 poetry
 RUN poetry config virtualenvs.in-project true
 
 # Cache layer: install only main dependencies (tools group excluded to save space on Render free tier)
@@ -61,8 +56,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Security: read-only filesystem where possible
-RUN chmod -R go-w /app/.venv
+# বাংলা মন্তব্য: .venv-এ হাজার হাজার ফাইলের ওপর chmod -R চালানো overlayfs-এ ডিস্ক I/O হ্যাং করে,
+# আর এটি ইতিমধ্যেই --chown=appuser:appuser দিয়ে সুরক্ষিত, তাই অপ্রয়োজনীয় chmod বাদ দেওয়া হলো।
 
 # Expose port
 EXPOSE 8080

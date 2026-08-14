@@ -44,7 +44,8 @@ pydantic-extra-types = "^2.11.1"
 supabase = "^2.11.0"
 firebase-admin = "^6.5.0"
 qdrant-client = "^1.12.1"
-numpy = "^1.26.4"
+# বাংলা মন্তব্য: Python 3.13 compatibility-র জন্য prebuilt wheel সাপোর্ট করতে numpy >=1.26.4 করা হলো
+numpy = ">=1.26.4"
 opencv-python-headless = "^4.10.0"  # headless: no GTK/GUI libs needed in CI containers
 pandas = "^2.2.3"
 pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)

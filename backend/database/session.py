@@ -52,6 +52,7 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
         else:
             _pool_size, _max_overflow = 2, 13
 
+        # বাংলা মন্তব্য: asyncpg এর জন্য prepared statement সংক্রান্ত সেটিংস connect_args-এর ভেতরে থাকতে হবে
         engine_kwargs.update(
             {
                 "pool_size": _pool_size,
@@ -59,14 +60,11 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
                 "pool_timeout": 30,
                 "pool_recycle": 1800,
                 "pool_pre_ping": True,
-                # SQLAlchemy-এর asyncpg ডায়ালেক্টের আর্গুমেন্ট হিসেবে এগুলো সরাসরি engine_kwargs-এ থাকতে হবে
-                "prepared_statement_cache_size": 0,
-                "prepared_statement_name_func": lambda: f"__sai_{id(object())}_{__import__('secrets').token_hex(8)}__",
                 "connect_args": {
                     "command_timeout": 30,
                     "server_settings": {"application_name": f"supremeai_2_0_{_role}"},
-                    # asyncpg-এর নিজস্ব কানেকশন আর্গুমেন্ট হিসেবে statement_cache_size 0 করা হলো
                     "statement_cache_size": 0,
+                    "prepared_statement_cache_size": 0,
                     "max_cached_statement_lifetime": 0,
                 },
             }
