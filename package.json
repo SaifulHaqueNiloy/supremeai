@@ -60,5 +60,10 @@
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
     "rollup": "^4.62.2"
+  },
+  "pnpm": {
+    "neverBuiltDependencies": [
+      "electron"
+    ]
   }
 }
