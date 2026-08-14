@@ -11,6 +11,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -47,3 +49,11 @@ jobs:
         run: |
           cd frontend
           pnpm run build
+
+      - name: Auto-update Lockfile
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pnpm-lock.yaml
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update pnpm-lock.yaml" && git push)
