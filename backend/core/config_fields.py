@@ -118,6 +118,8 @@ class SettingsFieldsMixin:
             "/api/billing/webhook/sslcommerz",
             "/api/v1/markdown",
             "/api/config/public",
+            "/api/task/stream",
+            "/api/preferences/default/stream",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )

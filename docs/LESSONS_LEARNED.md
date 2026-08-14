@@ -37,7 +37,10 @@
 ### ২. Initial Frontend Load Failing with "Missing authentication token"
 - **ভুল (Mistake):** ফ্রন্টএন্ড স্টার্টআপের সময় ব্যাকএন্ডের `/api/config/public` কল করে, কিন্তু ঐ রাউটটি `SUPREMEAI_PUBLIC_PATHS` (config_fields.py)-এ অন্তর্ভুক্ত না থাকা। 
 - **প্রভাব (Impact):** গ্লোবাল AuthMiddleware একে প্রটেক্টেড রাউট হিসেবে ধরে নিয়ে `401 Unauthorized` দেয়। ফলে ফ্রন্টএন্ড রিয়েল কনফিগ না পেয়ে Safe-Default ফলব্যাকে চলে যায় এবং ইউজারের কাছে "Missing authentication token" টোস্ট দেখায়।
-- **সমাধান (Solution):** `backend/core/config_fields.py` এর `supremeai_public_paths` লিস্টে `/api/config/public` যোগ করা।
+### ৩. SSE Streams Failing with 401 Unauthorized on Load
+- **ভুল (Mistake):** ফ্রন্টএন্ড ইনিশিয়ালাইজ হওয়ার সময় `useServerStream` গ্লোবালি `/api/task/stream` এবং `/api/preferences/default/stream`-এ কানেক্ট করার চেষ্টা করে সার্ভারের হেলথ চেক করার জন্য, কিন্তু এই রাউটগুলো `SUPREMEAI_PUBLIC_PATHS`-এ ছিল না।
+- **প্রভাব (Impact):** `EventSource` হেডার পাঠাতে পারে না, এবং টোকেন না থাকায় `AuthMiddleware` 401 এরর থ্রো করে। এর ফলে ব্রাউজার কনসোলে বারবার `Failed to load resource: the server responded with a status of 401` স্প্যাম হতে থাকে।
+- **সমাধান (Solution):** যেহেতু এগুলো গ্লোবাল লাইফস্প্যান এবং ডিফল্ট স্ট্রিম, তাই `backend/core/config_fields.py`-এর `supremeai_public_paths` লিস্টে `/api/task/stream` এবং `/api/preferences/default/stream` রাউটগুলো অ্যাড করে দেওয়া।
 
 ---
 
