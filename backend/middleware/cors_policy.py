@@ -28,24 +28,11 @@ USER_ALLOWED_ORIGINS: tuple[str, ...] = (
 # বাংলা মন্তব্য: অ্যাডমিন কনসোল অরিজিন — শুধুমাত্র Firebase admin target।
 ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = ("https://supremeai-admin.web.app",)
 
-# বাংলা মন্তব্য: এই অরিজিনগুলো Admin API-তে কখনোই allow করা যাবে না (user surface)।
-USER_ORIGIN_DENYLIST: frozenset[str] = frozenset(
-    {
-        "https://supremeai-a.web.app",
-        "https://supremeai-studio.vercel.app",
-        "https://supremeai-lac.vercel.app",
-        "https://supremeai-backend.onrender.com",
-        "https://tiny-stroopwafel-2d981c.netlify.app",
-    }
-)
+# বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
+USER_ORIGIN_DENYLIST: frozenset[str] = frozenset()
 
-# বাংলা মন্তব্য: এই অরিজিনগুলো User API-তে কখনোই allow করা যাবে না (admin surface)।
-ADMIN_ORIGIN_DENYLIST: frozenset[str] = frozenset(
-    {
-        "https://supremeai-admin.web.app",
-        "https://supremeai-admin.onrender.com",
-    }
-)
+# বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
+ADMIN_ORIGIN_DENYLIST: frozenset[str] = frozenset()
 
 
 def _dedupe(origins: Iterable[str]) -> list[str]:

@@ -6,7 +6,7 @@
   "hosting": [
     {
       "target": "admin",
-      "public": "apps/studio-client/dist-admin",
+      "public": "frontend/dist-admin",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -20,12 +20,12 @@
         "package-lock.json"
       ],
       "rewrites": [
-        { "source": "/admin-api/**", "destination": "https://supremeai-admin.onrender.com/admin-api/**" },
-        { "source": "/api/v1/**", "destination": "https://supremeai-admin.onrender.com/api/v1/**" },
-        { "source": "/api/config/public", "destination": "https://supremeai-admin.onrender.com/api/config/public" },
-        { "source": "/api/task/stream", "destination": "https://supremeai-admin.onrender.com/api/task/stream" },
-        { "source": "/api/preferences/**", "destination": "https://supremeai-admin.onrender.com/api/preferences/**" },
-        { "source": "/api/**", "destination": "https://supremeai-admin.onrender.com/api/**" },
+        { "source": "/admin-api/**", "destination": "https://supremeai-backend-6nwi.onrender.com/admin-api/**" },
+        { "source": "/api/v1/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/v1/**" },
+        { "source": "/api/config/public", "destination": "https://supremeai-backend-6nwi.onrender.com/api/config/public" },
+        { "source": "/api/task/stream", "destination": "https://supremeai-backend-6nwi.onrender.com/api/task/stream" },
+        { "source": "/api/preferences/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/preferences/**" },
+        { "source": "/api/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/**" },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
@@ -51,7 +51,7 @@
     },
     {
       "target": "user",
-      "public": "apps/studio-client/dist-user",
+      "public": "frontend/dist-user",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -65,8 +65,8 @@
         "package-lock.json"
       ],
       "rewrites": [
-        { "source": "/api/v1/**", "destination": "https://supremeai-backend.onrender.com/api/v1/**" },
-        { "source": "/api/**", "destination": "https://supremeai-backend.onrender.com/api/**" },
+        { "source": "/api/v1/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/v1/**" },
+        { "source": "/api/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/**" },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
