@@ -65,9 +65,9 @@ class SettingsFieldsMixin:
     # বাংলা মন্তব্য: Admin email list সম্পূর্ণ env-driven
     # (Moved to Security & Auth Config section to avoid duplication)
 
-    # বালা মন্তব্য: Zero-Trust Host Validation — empty = crash
+    # বাংলা মন্তব্য: Zero-Trust Host Validation — empty = crash
     allowed_hosts: str | list[str] = Field(
-        default_factory=list,
+        default=["onrender.com", "web.app", "firebaseapp.com", "vercel.app", "supremeai-backend.onrender.com"],
         validation_alias="ALLOWED_HOSTS",
     )
 
