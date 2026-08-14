@@ -94,4 +94,4 @@ def test_production_mode_missing_client_and_project(monkeypatch, vault_productio
     import pytest
 
     with pytest.raises(RuntimeError):
-        v.fetch_secret("SECRET_ID")
+        v.fetch_secret("SUPABASE_KEY")
