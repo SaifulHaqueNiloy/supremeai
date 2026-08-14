@@ -2,8 +2,9 @@ services:
   - type: web
     name: supremeai-backend
     env: python
-    buildCommand: "cd backend && pip install poetry && poetry install --only main"
-    startCommand: "cd backend && poetry run uvicorn core.app:app --host 0.0.0.0 --port $PORT"
+    rootDir: backend
+    buildCommand: "pip install poetry && poetry install --only main"
+    startCommand: "poetry run uvicorn core.app:app --host 0.0.0.0 --port $PORT"
     region: singapore
     plan: free
     healthCheckPath: /health
@@ -21,8 +22,9 @@ services:
   - type: web
     name: supremeai-frontend
     env: static
-    buildCommand: "npm install -g pnpm@9 && pnpm install --no-frozen-lockfile && cd frontend && pnpm run build:user"
-    staticPublishPath: "./frontend/dist-user"
+    rootDir: frontend
+    buildCommand: "npm install -g pnpm@9 && pnpm install --no-frozen-lockfile && pnpm run build:user"
+    staticPublishPath: "./dist-user"
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
