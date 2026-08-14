@@ -160,7 +160,7 @@ export function LoginView({
             <div className="flex flex-col items-center gap-2 mb-2 bg-[#07090f] border border-slate-800 rounded-xl p-4">
               <p className="text-xs text-[#00f3ff] font-mono mb-1 text-center">SCAN TO SETUP 2FA (TOTP)</p>
               <img
-                src={`https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=${encodeURIComponent(provisioningUri)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(provisioningUri)}`}
                 alt="TOTP QR Code"
                 className="rounded-lg w-40 h-40"
               />
