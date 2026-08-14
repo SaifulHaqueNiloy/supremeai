@@ -268,28 +268,6 @@ class ProductionSecretVault:
                         logger.info(f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping.")
                 
                 env_fallback = default if default is not None else ""
-            else:াই প্রধান কারণ ছিল।
-                # এখন শুধু সত্যিই infra-critical ব্যাকএন্ড সেক্রেট miss হলে fail-closed থাকবে
-                # (এগুলো ডিপ্লয় env-এ guaranteed থাকে), বাকি অ-প্রয়োজনীয় секретগুলো
-                # (LLM key, NEO4J, webhook, admin email ইত্যাদি) গেলে খালি স্ট্রিং দিয়ে
-                # degrade — HTTP সার্ভার/health কখনো crash করবে না।
-                HARD_REQUIRED_SECRETS = {
-                    "SUPABASE_DATABASE_URL_POOLER",
-                    "SUPABASE_URL",
-                    "SUPABASE_KEY",
-                    "REDIS_URL",
-                    "SUPREMEAI_JWT_SECRET",
-                    "ENCRYPTION_KEY",
-                    "SUPREMEAI_API_KEY",
-                }
-                if default is None and secret_id in HARD_REQUIRED_SECRETS:
-                    # বাংলা মন্তব্য: শুধুমাত্র infra-critical secret অনুপস্থিত হলেই Fail-closed।
-                    raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
-                if default is None and secret_id not in OPTIONAL_SECRETS:
-                    logger.warning(
-                        f"⚠️ Secret '{secret_id}' missing in {self.env} — degrading with empty value (non-critical)."
-                    )
-                env_fallback = default if default is not None else ""
             else:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
                 if default is not None:
