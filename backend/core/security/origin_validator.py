@@ -58,21 +58,25 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
 
     @property
     def allowed_origins(self) -> set[str]:
-        # বাংলা মন্তব্য: আগে user + admin উভয় CORS origin একসাথে union করা হতো, ফলে User backend
-        # অ্যাডমিন কনসোলের preflight-এ (এবং উল্টোটাও) Access-Control-Allow-Origin ফেরত দিত।
-        # এখন শুধুমাত্র নিজের portal-এর অরিজিন সেট ট্রাস্ট করা হয় + বিপরীত পাশের denylist প্রয়োগ।
-        is_admin = self.portal_role == "admin"
-        allowed: set[str] = self._default_origins
-        try:
-            if is_admin:
-                configured = list(getattr(settings, "admin_cors_origins", None) or [])
-                allowed = allowed.union(resolve_admin_cors_origins(configured))
-            else:
-                configured = list(getattr(settings, "user_cors_origins", None) or [])
-                if not configured:
-                    configured = list(settings.cors_origins or [])
-                allowed = allowed.union(resolve_user_cors_origins(configured))
+        # বাংলা মন্তব্য: Unified backend আর্কিটেকচারে (যেখানে user ও admin উভয় রাউটার একসাথে থাকে),
+        # উভয় পোর্টালের অরিজিন ট্রাস্ট করা প্রয়োজন। আগে এটি strict isolation-এর জন্য আলাদা করা হয়েছিল,
+        # কিন্তু single backend deployment-এ তা Admin portal-কে ব্লক করে দেয় (403 Forbidden)।
+        
+        allowed: set[str] = set()
+        
+        # Add User Origins
+        allowed = allowed.union(USER_DEFAULT_TRUSTED_ORIGINS)
+        configured_user = list(getattr(settings, "user_cors_origins", None) or [])
+        if not configured_user:
+            configured_user = list(getattr(settings, "cors_origins", None) or [])
+        allowed = allowed.union(resolve_user_cors_origins(configured_user))
+        
+        # Add Admin Origins
+        allowed = allowed.union(ADMIN_DEFAULT_TRUSTED_ORIGINS)
+        configured_admin = list(getattr(settings, "admin_cors_origins", None) or [])
+        allowed = allowed.union(resolve_admin_cors_origins(configured_admin))
 
+        try:
             # বাংলা মন্তব্য: local/dev-এ localhost অরিজিন ব্লক হলে ডেভেলপমেন্ট অচল হয়ে যায় —
             # production/staging-এ এই ছাড় দেওয়া হয় না।
             env = str(getattr(settings, "env", "local") or "local").lower()
@@ -84,8 +88,8 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             # Defensive: never let a settings/parse error turn an OPTIONS preflight into a 500
             logger.warning(f"⚠️ TrustedOriginMiddleware failed to read CORS origins, using defaults only: {exc}")
 
-        # বাংলা মন্তব্য: চূড়ান্ত ধাপে বিপরীত portal-এর অরিজিন ও wildcard ছেঁকে ফেলা হয় (defense in depth)।
-        denylist = USER_ORIGIN_DENYLIST if is_admin else ADMIN_ORIGIN_DENYLIST
+        # বাংলা মন্তব্য: Denylist থেকে ছেঁকে ফেলা হচ্ছে
+        denylist = USER_ORIGIN_DENYLIST.union(ADMIN_ORIGIN_DENYLIST)
         return {o for o in allowed if o and o != "*" and o not in denylist}
 
     async def dispatch(self, request: Request, call_next):
@@ -122,6 +126,11 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                 headers=headers,
             )
 
+        # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় origin এবং হোস্ট ভেরিফিকেশন বাইপাস করবে।
+        public_paths = settings.supremeai_public_paths
+        if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
+            return await call_next(request)
+
         # বাংলা মন্তব্য: dynamic __import__("core.config") তুলে দিয়ে সরাসরি ইম্পোর্টেড settings অবজেক্ট ব্যবহার করা হলো, যাতে unit test-এর patching সঠিকভাবে কার্যকর থাকে।
         if getattr(settings, "is_origin_bypass_allowed", False) or _env in {"test", "testing", "ci"}:
             pass
@@ -134,16 +143,6 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "Cross-Origin Request Blocked. Device identity unauthorized."},
             )
-
-        # বাংলা মন্তব্য: পাবলিক পাথ (যেমন /api/v1/health) সবসময় হোস্ট ভেরিফিকেশন বাইপাস করবে।
-        public_paths = settings.supremeai_public_paths
-        if any(request.url.path == p or request.url.path.startswith(p) for p in public_paths):
-            # বাংলা মন্তব্য: এখানে আগে Access-Control-Allow-Origin ম্যানুয়ালি সেট করা হতো,
-            # কিন্তু app_user.py/app_admin.py-এর প্রকৃত CORSMiddleware এই middleware-এর
-            # চেয়ে বাইরে (outer) থাকায় ইতিমধ্যেই একই header যোগ করে। দুটো মিলে duplicate
-            # Access-Control-Allow-Origin header তৈরি হতো, যা ব্রাউজার invalid CORS ধরে
-            # response block করে দিত -- ঠিক frontend-backend connect ভাঙার মতো উপসর্গ।
-            return await call_next(request)
 
         # বাংলা মন্তব্য: হোস্ট হেডার ভ্যালিডেশন
         host_header = request.headers.get("Host")
