@@ -22,3 +22,6 @@
    - **Senior Architect Autonomy:** সেরা আর্কিটেকচারাল প্যাটার্ন নির্ধারণ ও সরাসরি ইমপ্লিমেন্ট করার পূর্ণ স্বাধীনতা রয়েছে।
    - **Architectural Self-Audit Checklist:** কোড দেওয়ার আগে ৫টি ব্লাইন্ডস্পট (Ripple-Effect, Anti-Silent Failure, Stateless Validation, Dependency Sync, Configuration Drift) চেক করে নিতে হবে।
    - **DIRECT EXECUTION:** কোনো অনুমতির জন্য না থেমে ইমিডিয়েটলি Phase 0 প্ল্যান পেশ করে কাজ শুরু করতে হবে!
+
+5. **Environment Maintenance Policy (এনভায়রনমেন্ট ডেটা সেভ করার নিয়ম):**
+   - যেকোনো এনভায়রনমেন্টে কাজ করার সময় যেসব সিক্রেট বা ডেটা সেভ রাখার প্রয়োজন হবে, সেগুলো অবশ্যই প্রজেক্টের `env maintenance policy` ফলো করে `.env` ফাইলে (এবং প্রয়োজনীয় Vault/Firestore-এ) সঠিকভাবে সেভ রাখতে হবে।
