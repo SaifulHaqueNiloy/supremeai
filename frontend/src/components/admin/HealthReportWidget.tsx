@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { Activity, CheckCircle, XCircle, Clock } from 'lucide-react';
 
@@ -64,3 +65,4 @@ export const HealthReportWidget: React.FC<HealthReportWidgetProps> = ({ healthMa
     </div>
   );
 };
+

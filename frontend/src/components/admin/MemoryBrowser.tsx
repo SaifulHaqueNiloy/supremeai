@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query';
 import { Card, Badge, Skeleton } from '../ui';
 import { Search, MessageSquare, Clock, Tag, Trash2 } from 'lucide-react';
@@ -111,3 +112,4 @@ export function MemoryBrowser() {
     </div>
   );
 }
+

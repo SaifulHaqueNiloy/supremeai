@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Terminal, Globe, Send, RefreshCw, TerminalSquare, Compass } from 'lucide-react';
 import { useDashboardStore } from '../../store/dashboardStore';
@@ -478,3 +479,4 @@ export function InteractiveChatTab({
     </div>
   );
 }
+

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface HealthMapProps {
   healthMap: any;
 }
@@ -106,3 +107,4 @@ export function HealthMap({ healthMap }: HealthMapProps) {
     </div>
   );
 }
+

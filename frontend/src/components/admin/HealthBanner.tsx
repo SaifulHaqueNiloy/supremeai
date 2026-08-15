@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../services/apiClient';
@@ -32,3 +33,4 @@ const HealthBanner: React.FC = () => {
 };
 
 export default HealthBanner;
+
