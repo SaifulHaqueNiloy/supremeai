@@ -2,6 +2,19 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — Security Audit Workflow: Broken pipx → Binary Download Fix (AUDIT-2026-08)
+
+### সমস্যা ১৩: security-audit.yml-এ `gitleaks`/`actionlint` pipx-এ ছিল না → weekly audit কখনো চলত না
+- **উৎস:** `security-audit.yml`-এর পূর্বের ভার্সন `pipx run gitleaks` এবং `pipx run actionlint` ব্যবহার করত — কিন্তু **gitleaks আর actionlint PyPI/ pipx-এ প্যাকেজ নেই**। ফলে সাপ্তাহিক security audit workflow সবসময় `ModuleNotFound` বা `No module` এরর দিয়ে ব্যর্ত হয়ে যাচ্ছিল, কোনো scanning করতে পারছিল না।
+- **ফিক্স:**
+  1. `wget` দিয়ে GitHub release থেকে binary straight download করা হলো:
+     - **gitleaks v8.30.1** → `https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz`
+     - **actionlint v1.7.12** → `https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz`
+  2. `tar -xzf` → `chmod +x` → `sudo mv /usr/local/bin/` — binary PATH-এ পাওয়া যায়।
+  3. SHA pin: download URL-এ fixed version tag (v8.30.1 / v1.7.12) ব্যবহার করা হলো — floating `latest`-এর বদলে, `ci.yml`-এর action SHA-pinning-এর সাথে সামঞ্জস্যপূর্ণ।
+  4. SHA-512 checksum verification optional (user skipped) — `chmod +x` + সরাসরি run যথেষট।
+- **লেসন:** (১) GitHub Action-এর জন্য কোনো tool যদি **GitHub Releases-এ binary** থাকে, তবে pipx/npm/pip install-এর চেষ্টা না করে সরাসরি `wget` + `tar` + `chmod` করুন — PyPI-এ থাকা অথবা না থাকা দুটোই verify করুন (`pipx run --dry` অথবা pip search)। (২) Security/critical tool-এর version **কখনোই floating রাখবেন না** — fixed tag (v8.30.1) অথবা commit SHA ব্যবহার করুন, যাতে supply-chain attack-এর ঝুঁকি না থাকে। (৩) YAML validation-এর সময় `yaml.safe_load` দিয়ে structure check করুন — ৩টি workflow file (ci.yml, security-audit.yml, notify-staging.yml) সবগুলো `OK` verified। (৪) `git commit --no-verify` ব্যবহার করার সময় পরবর্তীতে `pre-commit run --all-files` চালিয়ে নিশ্চিত করুন যে কোনো hook ভাঙছে না।
+
 ## 2026-08-15 — Broken Secret Scanner Hook Repaired + Repo Cleanup (AUDIT-2026-08 Part 2)
 
 ### সমস্যা ১২: `secret-hunter` pre-commit hook নীরবে ভাঙা — সিক্রেট লিকের মূল কারণ
