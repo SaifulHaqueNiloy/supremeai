@@ -137,6 +137,8 @@ jobs:
           scan-ref: '.'
           format: 'table'
           severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret,misconfig'
+          skip-dirs: '_archive,.kilo,frontend/node_modules,backend/.venv'
 
   bridge-boot-check:
     name: 🔌 Bridge Boot Check (Backend + DB)
