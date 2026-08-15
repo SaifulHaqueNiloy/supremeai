@@ -47,4 +47,20 @@ export default {
     // Default: pass through to origin
     return fetch(request);
   },
+
+  async scheduled(event, env, ctx) {
+    // 🛡️ Keep-Alive Ping for Render Free Tier (Zero Cold Start)
+    const urlsToPing = [
+      'https://supremeai-backend-6nwi.onrender.com/health/aggregated',
+      'https://supremeai-admin.onrender.com/health/aggregated'
+    ];
+    
+    const promises = urlsToPing.map(url => 
+      fetch(url, { headers: { 'User-Agent': 'Cloudflare-Worker-KeepAlive/1.0' } })
+        .then(res => console.log(`Pinged ${url} - Status: ${res.status}`))
+        .catch(err => console.error(`Failed to ping ${url}:`, err))
+    );
+    
+    ctx.waitUntil(Promise.allSettled(promises));
+  }
 };
