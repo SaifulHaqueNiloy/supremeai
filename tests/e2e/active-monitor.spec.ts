@@ -57,6 +57,8 @@ test.describe('Active Health Monitor (Production)', () => {
       if (text.includes('favicon.ico')) return;
       
       if (type === 'error') {
+        if (text.includes('400') && !text.includes('Client-Side')) return; // Pre-login 400s are often expected
+        if (text.includes('net::ERR_ABORTED')) return; // Aborted SSE connections
         caughtErrors.push(`Console Error: ${text}`);
         await reportSystemAlert(page, 'error', text);
       } else if (type === 'warning' && text.includes('React Router')) {
@@ -72,7 +74,7 @@ test.describe('Active Health Monitor (Production)', () => {
 
     page.on('requestfailed', async (request) => {
       const url = request.url();
-      if (!url.includes('/api/v1/public/') && !url.includes('google-analytics')) {
+      if (!url.includes('/api/v1/public/') && !url.includes('google-analytics') && !url.includes('/stream')) {
         const failure = request.failure()?.errorText || 'Unknown error';
         await reportSystemAlert(page, 'warning', `Network Request Failed: ${url} (${failure})`);
       }

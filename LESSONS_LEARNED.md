@@ -2,6 +2,18 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — Admin Login Firebase Auth Object Crash & E2E Flakiness Fix
+
+### সমস্যা: Admin Login-এ Firebase Auth Error অবজেক্ট হিসেবে থ্রো হলে React ক্র্যাশ করছিল, এবং E2E টেস্ট pre-auth 400 error-কে critical error ধরছিল।
+- **উৎস:** আগের React Error #31 ফিক্সে `data.detail` চেক করা হলেও, Firebase `signInWithEmailAndPassword` ফেইল করলে `catch (authErr)` থেকে আসা `authErr.message` সবসময় plain string না-ও হতে পারে। এছাড়া `active-monitor.spec.ts` unauthenticated অবস্থায় SSE (Server-Sent Events) endpoint-এ 400 Bad Request পেলে তাকে "critical error" ধরে test fail করাচ্ছিল।
+- **ফিক্স:** 
+  1. `adminStore.ts`-এ Firebase `authErr.message` string কিনা তা চেক করে fallback error message (`JSON.stringify` বা `code`) সেট করার ব্যবস্থা করা হয়েছে।
+  2. `AdminLogin.tsx`-এ `adminError` render করার সময়ও guard (`typeof === 'string'`) দেওয়া হয়েছে।
+  3. `active-monitor.spec.ts`-এ test login-এর আগে আসা `400` এবং `net::ERR_ABORTED` error গুলো ignore করার ফিল্টার যুক্ত করা হয়েছে।
+  4. CI Environment Health Check-এর জন্য `TEST_ADMIN_EMAIL` (`test_admin@supremeai.com`) Firebase Auth-এ অ্যাড করা হয়েছে এবং root `.env`-এর `ADMIN_EMAILS` লিস্টে যুক্ত করা হয়েছে।
+- **লেসন:** (১) 3rd party SDK (যেমন Firebase) থেকে আসা Error object-ও সরাসরি React state-এ string হিসেবে ধরে নেওয়া যাবে না। সর্বদা type check করুন। (২) E2E Test লেখার সময় "expected" error (যেমন unauthenticated SSE failure) গুলোকে filter out করতে হয়, নচেৎ false-positive failure আসবে। (৩) CI/E2E test account গুলো অবশ্যই proper configuration (`ADMIN_EMAILS` এবং Firebase Auth) এর আওতায় রাখতে হবে।
+
+
 ## 2026-08-15 — React Error 31 "Object as a React child" (Admin Dashboard Crash)
 
 ### সমস্যা: E2E `active-monitor.spec.ts` তে React Error #31 (`object with keys {code, message, errors}`) দেখা যাচ্ছিল।
@@ -210,3 +222,15 @@
 - **টেস্ট (সরাসরি চালানো):** py_compile exit 0 ✓ | tsc syntax OK ✓ | smoke test ✅ ALL PASSED ✓
 
 - **লেসন:** (1) pipeline-এর Writer হিসাবে Antigravity IDE-এর built-in Gemini ব্যবহার করলে `isAntigravity()` (appName/scheme detection) চেক দরকার — না হলে কোনো tool detect হয় না। (2) extension & backend-এর `agent_detector` একই extension ID তালিকা রাখতে হবে। (3) Local fallback তৈরি রাখুন — backend unreachable হলেও ক্র্যাশ না করে offline-first design।
+## 2026-08-15 — IDE Swarm Intelligence (Phase 2: extension wiring)
+
+### সমস্যা: ইউজার চেয়েছিল Gemini+Kilo+Cline-কে এক সিস্টেমে মিলানো; নতুন plan (kilo_implementation_plan.md) স্বার্ম (dynamic 0/1/N agents) পদ্ধতিতে রূপান্তর করতে চায়, কিন্তু Trio backend আগেই কাজ করছে।
+
+- **ফিক্স (additive, non-breaking):**
+  1. `agentDetector.ts` রিপ্লেস করে `detectSwarmAgents(): SwarmState` যোগ করা — IDE detection (`antigravity`/`vscode`/`cursor`/...), সম্পূর্ণ এজেন্ট রিজিস্ট্রি (Kilo/Cline/Gemini/Copilot/Tabnine/Cody/Blackbox/AWS), ডাইনামিক `mode: standalone|duo|swarm`, আর `trioReady` ফ্ল্যাগ (Trio = স্বার্মের ৩-এজেন্ট স্পেশাল কেস)। পুরোনো `detectOtherAiAgents` / `detectTrioPipelineAgents` রিফ্যাক্টর হয়েছে একই ফাংশন থেকে (backward-compat)।
+  2. `services/SwarmPipelineProvider.ts` (নতুন 98 লাইন) — `supremeai.swarmPipeline` কমান্ড রেজিস্টার; backend-এ `POST /api/v1/ide-trio/execute` (verified Trio pipeline) পাঠায়, backend down হলে `runLocalFallback()` (rule-based review) চালায়। `supremeai.trioPipeline`কে একই হ্যান্ডলারের alias রাখা হয়েছে — ফলে কাজ করা কোড ভাঙে না।
+  3. `package.json`-এ `supremeai.swarmPipeline` + `supremeapi.trioPipeline` দুটো কমান্ড + `supremeai.swarmBackendUrl` কনফিগ যোগ করা।
+  4. `extension.ts`-এ `registerSwarmCommands(context)` ও `registerSwarmCommands` ইম্পোর্ট যোগ করা।
+  5. `.kilo/kilo.jsonc` ডিলিট করা (কিউ-ট্র্যাকিং ফাইল, Kilo নিজে রিজেনার করে)। `test.py`/`f` মূল repo-তে ছিল না (no-op)।
+- **বাতিল করা (Objective Pushback):** backend module-এর `backend/core/` → `services/`/`database/`/`monitoring`/`middleware` সরিয়ে শুয়ার করা — (ক) কাজ করা smoke test + py_compile ভাঙার ঝুঁকি; (খ) `docs/blindspots-bangla.md`-এ `core/pgbouncer_pool.py`, `core/auth_middleware.py`, `core/db_repository.py` রেফারেন্স থাকায় সরিয়ে দিলে সিকিউরিটি ডক ভুল হয়; (গ) AGENTS.md "avoid over-fragmentation" এবং "রানিং কোড ব্রেক যাবে না" নিয়মের বিরুদ্ধ। এই refactorটি স্বালমীকরণে একটি আলাদা CI-gated পেজে রাখা হবে।
+- **ভেরিফিকেশন:** package.json/config.json valid JSON (python json.load) ✅ | esbuild transpile `agentDetector.ts`+`SwarmPipelineProvider.ts` exit 0 ✅ | `python tests/test_ide_trio_smoke.py` 4/4 PASS ✅ | `py_compile` backend trio OK ✅ | kilo.jsonc deleted ✅

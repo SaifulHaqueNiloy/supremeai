@@ -248,7 +248,8 @@ export function LoginView({
 
           {(adminError || localError) && (
             <div className="text-[#ff4d4f] text-xs mt-1 font-mono" role="alert">
-              {localError || adminError}
+              {localError ? (typeof localError === 'string' ? localError : JSON.stringify(localError)) : 
+               (typeof adminError === 'string' ? adminError : JSON.stringify(adminError))}
             </div>
           )}
 

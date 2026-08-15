@@ -108,7 +108,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (authErr: any) {
           console.error("Firebase Auth Error:", authErr);
-          set({ adminError: authErr?.message || 'Invalid email or password.' });
+          const firebaseErrMsg = typeof authErr?.message === 'string' 
+            ? authErr.message 
+            : (authErr?.code ? `Auth error: ${authErr.code}` : 'Invalid email or password.');
+          set({ adminError: firebaseErrMsg });
           return;
         }
 
