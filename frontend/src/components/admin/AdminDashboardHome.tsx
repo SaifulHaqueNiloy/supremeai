@@ -4,6 +4,7 @@ import { RealTimeMetricsPanel } from './RealTimeMetricsPanel';
 import { useMetrics, useHealthMap, useCIReports, useDashboardEvents } from '../../hooks/useDashboardData';
 import { HealthReportWidget } from './HealthReportWidget';
 import { GitHubCIWidget } from './GitHubCIWidget';
+import { SystemUptimeWidget } from './SystemUptimeWidget';
 
 // বাংলা মন্তব্য: এডমিন ড্যাশবোর্ডের মূল ৬টি প্যানেল গ্রিড লেআউট (Admin Dashboard Home)
 // এটি রেফারেন্স ইমেজ অনুযায়ী রিচ ভিজ্যুয়াল ও ডাটা ইন্ডিকেটর দিয়ে সাজানো হয়েছে।
@@ -347,8 +348,8 @@ export const AdminDashboardHome: React.FC = () => {
 
       </div>
 
-      {/* 3. BOTTOM ROW: 3 Columns Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 3. BOTTOM ROW: 4 Columns Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
         {/* Card D: Live Event Log */}
         <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-5 flex flex-col justify-between min-h-[300px] shadow-[0_0_15px_rgba(0,0,0,0.3)]">
@@ -379,7 +380,10 @@ export const AdminDashboardHome: React.FC = () => {
         {/* Card E: System Health Report */}
         <HealthReportWidget healthMap={healthMap || {}} isLoading={!healthMap} />
 
-        {/* Card F: GitHub CI Pipeline */}
+        {/* Card F: Service Uptime SLAs (New) */}
+        <SystemUptimeWidget healthMap={healthMap || {}} isLoading={!healthMap} />
+
+        {/* Card G: GitHub CI Pipeline */}
         <GitHubCIWidget reports={ciReports || []} isLoading={!ciReports} />
 
       </div>

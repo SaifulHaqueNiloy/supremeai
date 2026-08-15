@@ -177,16 +177,25 @@ def get_health_map():
             "status": "healthy" if gcp_configured else "offline",
             "latency": "42ms" if gcp_configured else "N/A",
             "region": getattr(settings, "gcp_region", "us-central1"),
+            "uptime_sla": "99.99%",
         },
         "railway": {
             "status": "healthy" if redis_configured else "offline",
             "latency": "78ms" if redis_configured else "N/A",
             "region": "us-east",
+            "uptime_sla": "99.95%",
         },
         "render": {
             "status": "healthy" if db_configured else "offline",
             "latency": "120ms" if db_configured else "N/A",
             "region": "singapore",
+            "uptime_sla": "99.90%",
+        },
+        "frontend": {
+            "status": "healthy",
+            "latency": "15ms",
+            "region": "global-cdn",
+            "uptime_sla": "99.99%",
         },
     }
 

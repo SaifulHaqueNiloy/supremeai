@@ -29,9 +29,10 @@ export interface CostReport {
 }
 
 export interface HealthMapData {
-  gcp: { region: string; status: string; latency?: number };
-  railway: { region: string; status: string; latency?: number };
-  render: { region: string; status: string; latency?: number };
+  gcp: { region: string; status: string; latency?: number; uptime_sla?: string };
+  railway: { region: string; status: string; latency?: number; uptime_sla?: string };
+  render: { region: string; status: string; latency?: number; uptime_sla?: string };
+  frontend?: { region: string; status: string; latency?: number; uptime_sla?: string };
 }
 
 export interface CIReport {
