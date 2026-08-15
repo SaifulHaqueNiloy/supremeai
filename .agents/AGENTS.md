@@ -37,7 +37,7 @@
 
    | কাজের ধরন | পড়ুন |
    |---|---|
-   | Bug fix / Debug | `LESSONS_LEARNED.md`, `KNOWN_ISSUES.md` |
+   | Bug fix / Debug | `LESSONS_LEARNED.md` (**শুধু শেষ ৩০টি entry** — grep করে পড়ুন), `KNOWN_ISSUES.md` |
    | New feature / Refactor | `DECISION_LOG.md`, `ARCHITECTURE.md` |
    | Planning / Roadmap | `ACTION_PLAN.md`, `TODO.md` |
    | Deploy / CI | `DEPLOYMENT_CHECKLIST.md`, `KNOWN_ISSUES.md` |
@@ -45,17 +45,25 @@
    - **Targeted Reading:** একসাথে সব ফাইল পড়ে কনটেক্সট ওভারলোড বা লুপে পড়া নিষিদ্ধ। ফোল্ডারে `_INDEX.md` থাকলে সেটা আগে পড়ুন — পুরো ফোল্ডার স্ক্যান করার দরকার নেই।
    - **Anti-Loop:** একই কমান্ড বা ফাইল বারবার পড়লে সাথে সাথে থেমে সাজেশন চান।
    - **Zero Repeat Errors:** একই ভুলের পুনরাবৃত্তি নিষিদ্ধ। কাজ শেষে ফাইন্ডিংস `LESSONS_LEARNED.md`-এ আপডেট করুন।
+   - **LESSONS_LEARNED Size Cap:** ফাইলটি **12KB (~30 entries) সীমা** পার হলে পুরানো entries `docs/archive/lessons_YYYY-MM.md`-এ move করুন। পুরো ফাইল কখনো কনটেক্সটে লোড করা নিষিদ্ধ।
    - **Session Handoff:** প্রতিটি বড় কাজ শেষে `CHECKPOINT.md` আপডেট করুন — Completed, Pending, Key Decisions, Next Agent Start Point।
-   - **Memory Query:** বড় কাজ শুরুর আগে `python scripts/ai/memory_read.py --task "..."` রান করুন এবং relevant past experience দেখুন।
+   - **Memory Query (Gated):** শুধু **high-risk / novel** কাজে (নতুন feature, production RCA, architecture change) `python scripts/ai/memory_read.py --task "..." --limit 2` রান করুন। Routine CRUD / typo fix / doc update-এ চালানো নিষিদ্ধ। ⚠️ `sentence-transformers` install না হলে fallback `[0.0]*384` দেয় — query আগে `pip list | grep sentence` দিয়ে verify করুন।
 
 3. **Production-Ready & $0 Cost:**
    - সলিউশন হতে হবে বাগ-ফ্রি (Zero Warnings), ফল্ট-টলারেন্ট এবং $0 কস্টের (ফ্রি-টিয়ার)।
    - রিগ্রেশন ব্রেক বা ডুপ্লিকেট কোড লেখা যাবে না।
-   - **Pro-Suggestion (Mandatory):** প্রতিটি কাজ শেষে নিচের format-এ ১টি high-impact suggestion দিন:
-     > **[PRO]** [Impact: HIGH/MED/LOW] — [১ লাইনে suggestion]
-     > Example: **[PRO] HIGH** — `ai_memory` টেবিলে `task_type` index যোগ করলে query ১০x দ্রুত হবে।
+   - **Pro-Suggestion (Milestone-only):** শুধু **বড় milestone শেষে** (নতুন feature, refactor, deploy) নিচের format-এ ১টি high-impact suggestion দিন। Typo fix / doc update / single-line change-এ skip করুন:
+      > **[PRO]** [Impact: HIGH/MED/LOW] — [১ লাইনে suggestion]
+      > Example: **[PRO] HIGH** — `ai_memory` টেবিলে `task_type` index যোগ করলে query ১০x দ্রুত হবে।
+   - **Model Routing (Token Saver):** কাজের জটিলতা অনুযায়ী AI মডেল বেছে নিন:
+
+   | কাজের ধরন | মডেল টায়ার |
+   |---|---|
+   | Architecture design, production RCA, security review | **Large** (Claude Sonnet/Opus, GPT-4) — দিনে ৩–৫ বার max |
+   | Boilerplate, refactor, test fix, doc update, CRUD | **Fast/Small** (Flash, Haiku, local Ollama) — ৯০% কাজ এখানে |
+   | Prototype draft → Large model review | **Hybrid** — ছোট মডেলে draft, বড় মডেলে final review |
 
 4. **Best Practices & Safety:**
    - রুল ছাড়াই Atomic Commits, Clean Code ও Env vault ফলো করুন।
-   - **Smart RCA:** প্রোডাকশন এররের জন্য ফুল-স্ট্যাক লগ চেক করুন। তবে ছোটখাটো সিনট্যাক্স এররে লুপে পড়বেন না। ব্লাইন্ড গেস নিষিদ্ধ।
+   - **Smart RCA (Scoped):** শুধু **production error / severity HIGH** কাজে full-stack log চেক করুন। Minor syntax error / warning-এ সরাসরি fix করুন — লুপে পড়া নিষিদ্ধ। ব্লাইন্ড গেস নিষিদ্ধ।
    - ক্রিটিক্যাল ডেটা মডিফাই করার আগে Failsafe ও Rollback Plan রাখুন।

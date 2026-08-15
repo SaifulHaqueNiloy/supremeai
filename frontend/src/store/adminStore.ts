@@ -110,8 +110,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           console.error("Firebase Auth Error:", authErr);
           const firebaseErrMsg = typeof authErr?.message === 'string' 
             ? authErr.message 
-            : (authErr?.code ? `Auth error: ${authErr.code}` : 'Invalid email or password.');
-          set({ adminError: firebaseErrMsg });
+            : (authErr?.code ? `Auth error: ${authErr.code}` : (authErr && typeof authErr === 'object' ? JSON.stringify(authErr) : 'Invalid email or password.'));
+          set({ adminError: String(firebaseErrMsg) });
           return;
         }
 
@@ -195,7 +195,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      const msg = err && typeof err === 'object' && err.message ? err.message : String(err);
+      const msg = err && typeof err === 'object' && err.message ? String(err.message) : (typeof err === 'object' ? JSON.stringify(err) : String(err));
       set({ adminError: 'Connection failed: ' + msg });
     }
   },
@@ -249,7 +249,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      const msg = err && typeof err === 'object' && err.message ? err.message : String(err);
+      const msg = err && typeof err === 'object' && err.message ? String(err.message) : (typeof err === 'object' ? JSON.stringify(err) : String(err));
       set({ adminError: 'Connection failed: ' + msg });
     }
   },

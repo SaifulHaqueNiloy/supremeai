@@ -21,6 +21,13 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR / "backend"))
 
+# Load .env
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT_DIR / ".env")
+except ImportError:
+    print("python-dotenv not installed, continuing with existing environment.")
+
 CHECKPOINT_FILE = ROOT_DIR / "CHECKPOINT.md"
 VALID_TASK_TYPES = ["bug-fix", "feature", "refactor", "deploy", "ci", "planning", "debug", "general"]
 
