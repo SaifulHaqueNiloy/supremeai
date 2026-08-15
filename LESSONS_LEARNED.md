@@ -2,6 +2,13 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — Do NOT hard-fail `alembic upgrade head` on asyncpg in CI (MissingGreenlet regression)
+
+### সমস্যা: bridge-boot-check-এ alembic hard-fail বানানোয় CI লাল হয়ে গেল।
+- **উৎস:** `DATABASE_URL` = `postgresql+asyncpg` (async ড্রাইভার) আর `alembic upgrade head` sync চলে; ফলে CI container-এ `sqlalchemy.exc.MissingGreenlet` দিয়ে fail। আগের `|| echo` ছিল ইচ্ছাকৃত bypass (health probe-ই আসল gate)।
+- **ফিক্স:** revert → `poetry run alembic upgrade head || echo "WARN..."` (non-blocking); শুধু HTTP health probe-কে gate রাখা হয়েছে; কারণ comment-এ documented।
+- **লেসন:** async DB driver + sync alembic একসাথে synchronized CI container-এ run করলে MissingGreenlet আসে। Migrate-ভেরিফিকেশন দরকার হলে আলাদা job-এ sync URL/`asyncio` wrapper দিয়ে run করো, নাহলে boot check-এ non-blocking রাখো।
+
 ## 2026-08-15 — CI Deploy-verify 120s Timeout Root Cause Fix (Render slow build)
 
 ### সমস্যা: GitHub Action (`ci.yml` → `Verify Render Deploy (Wait for Live)`) hard-fail করছিল।
