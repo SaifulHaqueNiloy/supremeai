@@ -124,51 +124,46 @@ def monitor_service(service):
 
     print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {service_id})...")
 
-    deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
-    try:
-        res = _http_get(deploys_url, headers=headers, timeout=10)
-        if res.status_code != 200:
-            print(f"❌ Failed to fetch deploys for {name}: HTTP {res.status_code} - {res.text}")
-            return check_http_health(service["url"], name)
+    deploy_id = None
+    status_str = ""
+    fetch_start = time.time()
+    
+    # Poll for a NEW deploy to appear in the API (up to 30 seconds)
+    while True:
+        deploys_url = f"https://api.render.com/v1/services/{service_id}/deploys"
+        try:
+            res = _http_get(deploys_url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                deploys = res.json()
+                if deploys:
+                    latest = deploys[0].get("deploy", deploys[0]) if isinstance(deploys[0], dict) else deploys[0]
+                    created_at_str = latest.get("createdAt", "")
+                    if created_at_str:
+                        created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                        now = datetime.now(timezone.utc)
+                        # If the deploy is newer than 10 minutes, we consider it our new deploy
+                        if (now - created_at) < timedelta(minutes=10):
+                            deploy_id = latest.get("id")
+                            status_str = (latest.get("status") or "").lower()
+                            print(f"📋 Found recent Deploy: ID={deploy_id}, Status={status_str}, CreatedAt={created_at_str}")
+                            break
+            
+            if time.time() - fetch_start > 30:
+                print("⚠️ Could not find a recent deploy (within last 10 mins) after 30s. Falling back to HTTP health check.")
+                return check_http_health(service["url"], name, retries=24)
+                
+        except Exception as e:
+            print(f"❌ Error fetching deploys: {e}")
+            return check_http_health(service["url"], name, retries=24)
+            
+        time.sleep(5)
 
-        deploys = res.json()
-        if not deploys:
-            print(f"⚠️ No deploys found for {name}. Checking HTTP health directly.")
-            return check_http_health(service["url"], name)
-
-        latest_deploy_item = deploys[0]
-        latest_deploy = latest_deploy_item.get("deploy", latest_deploy_item) if isinstance(latest_deploy_item, dict) else latest_deploy_item
-
-        deploy_id = latest_deploy.get("id")
-        status = latest_deploy.get("status")
-        created_at_str = latest_deploy.get("createdAt")
-
-        print(f"📋 Latest Deploy details: ID={deploy_id}, Status={status}, CreatedAt={created_at_str}")
-
-        if not created_at_str:
-            print(f"⚠️ createdAt timestamp is missing. Checking HTTP health directly.")
-            return check_http_health(service["url"], name)
-
-        status_str = (status or "").lower()
-        if status_str == "live":
-            print(f"🎉 Deploy {deploy_id} for {name} is already LIVE on Render!")
-            return check_http_health(service["url"], name)
-        elif any(f_word in status_str for f_word in ["fail", "cancel", "error"]):
-            # বাংলা মন্তব্য:Render-এ ডিপ্লয়মেন্ট ফেইল অবস্থা পাওয়া মাত্রই সঙ্গে সঙ্গে CI লাল করে দ্রুত রেসপন্স দেয়া হচ্ছে।
-            print(f"❌ Deploy {deploy_id} for {name} already in failure state ({status_str}). Failing immediately.")
-            return False
-
-        created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
-
-        if now - created_at > timedelta(minutes=3):
-            print(
-                f"⚠️ No active new deploy record for {name} within 3 minutes (latest status: {status_str})."
-            )
-
-    except Exception as e:
-        print(f"❌ Error communicating with Render API: {e}")
-        return check_http_health(service["url"], name)
+    if status_str == "live":
+        print(f"🎉 Deploy {deploy_id} for {name} is already LIVE on Render!")
+        return check_http_health(service["url"], name, retries=24)
+    elif any(f_word in status_str for f_word in ["fail", "cancel", "error"]):
+        print(f"❌ Deploy {deploy_id} for {name} failed ({status_str}). Failing immediately.")
+        return False
 
     start_time = time.time()
     deploy_url = f"https://api.render.com/v1/services/{service_id}/deploys/{deploy_id}"
