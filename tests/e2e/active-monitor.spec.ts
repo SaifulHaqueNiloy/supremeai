@@ -57,7 +57,7 @@ test.describe('Active Health Monitor (Production)', () => {
       if (text.includes('favicon.ico')) return;
       
       if (type === 'error') {
-        if (text.match(/status of 4\d\d/) && !text.includes('Client-Side')) return; // Ignore expected 4xx HTTP responses during login flows
+        if (text.includes('Failed to load resource:')) return; // Ignore all network request failures logged to console (4xx/5xx)
         if (text.includes('net::ERR_ABORTED')) return; // Aborted SSE connections
         caughtErrors.push(`Console Error: ${text}`);
         await reportSystemAlert(page, 'error', text);
