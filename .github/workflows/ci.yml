@@ -253,3 +253,60 @@ jobs:
           if [ -n "$RENDER_API_KEY_BACKUP" ]; then
             RENDER_API_KEY=$RENDER_API_KEY_BACKUP python .github/scripts/trigger_render_deploy.py
           fi
+
+  health-check:
+    name: 🩺 Environment Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.11'
+
+      - name: Run Environment Health Check Script
+        run: python scripts/check_env_health.py
+
+      - name: Install AI Observability Dependencies
+        if: always()
+        run: pip install httpx loguru
+
+      - name: Run AI Log Analyzer
+        if: always()
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
+          INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
+        run: python backend/scripts/devops/ai_log_analyzer.py
+
+      - name: Setup Node.js (For Browser Automation)
+        if: always()
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install pnpm
+        if: always()
+        run: npm install -g pnpm
+
+      - name: Install Playwright & Dependencies
+        if: always()
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Run Active Monitor (Admin & User Dashboards)
+        if: always()
+        env:
+          BASE_URL: ${{ secrets.MONITOR_BASE_URL || 'https://supremeai-admin.web.app' }}
+          TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
+          INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
+        run: pnpm exec playwright test tests/e2e/active-monitor.spec.ts --project=chromium
