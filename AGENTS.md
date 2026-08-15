@@ -3,11 +3,13 @@
 1. **Language:** সর্বদা স্পষ্ট বাংলায় বা সহজ Banglish-এ (Simple Language) উত্তর দিন।
 
 ## SupremeAI Core Philosophy
+>
 > "Build a highly scalable, fault-tolerant, and magical user experience with zero infrastructure cost. Code must be minimalistic, DRY, and self-healing. You are the Principal AI Engineer—make autonomous decisions using maximum intelligence."
 >
 > **The Eternal Brain Principle:** SupremeAI is an infrastructure built to forge its own independent "Eternal Brain" (vector memory, context, patterns). Third-party AIs (GPT-4, Gemini) are purely temporary "processing engines" used to train this brain.
 
 ### The 5 Pillars of Architecture
+
 1. **The True Brain:** SupremeAI's intelligence is its Continuous Learning Matrix.
 2. **Engines (Muscle), Not Brains:** Third-party AIs provide raw muscle. SupremeAI routes to them dynamically ($0 Cost) to fuel its own learning. The backend is the factory; external APIs are just electricity.
 3. **Brand Exclusivity:** The extension strictly markets the SupremeAI brand. Never expose third-party AI names or ask for their API keys directly. ("নিজে খেটে অন্যের দান বানানো যাবে না।")
@@ -36,7 +38,7 @@
    - **Cold Start:** প্রতিটি নতুন সেশনে শুধু `AGENTS.md` + `CHECKPOINT.md` পড়ুন। বাকি ফাইল কাজের ধরন অনুযায়ী পড়ুন:
 
    | কাজের ধরন | পড়ুন |
-   |---|---|
+   | --- | --- |
    | Bug fix / Debug | `LESSONS_LEARNED.md` (**শুধু শেষ ৩০টি entry** — grep করে পড়ুন), `KNOWN_ISSUES.md` |
    | New feature / Refactor | `DECISION_LOG.md`, `ARCHITECTURE.md` |
    | Planning / Roadmap | `ACTION_PLAN.md`, `TODO.md` |
@@ -58,7 +60,7 @@
    - **Model Routing (Token Saver):** কাজের জটিলতা অনুযায়ী AI মডেল বেছে নিন:
 
    | কাজের ধরন | মডেল টায়ার |
-   |---|---|
+   | --- | --- |
    | Architecture design, production RCA, security review | **Large** (Claude Sonnet/Opus, GPT-4) — দিনে ৩–৫ বার max |
    | Boilerplate, refactor, test fix, doc update, CRUD | **Fast/Small** (Flash, Haiku, local Ollama) — ৯০% কাজ এখানে |
    | Prototype draft → Large model review | **Hybrid** — ছোট মডেলে draft, বড় মডেলে final review |
@@ -68,56 +70,9 @@
    - **Smart RCA (Scoped):** শুধু **production error / severity HIGH** কাজে full-stack log চেক করুন। Minor syntax error / warning-এ সরাসরি fix করুন — লুপে পড়া নিষিদ্ধ। ব্লাইন্ড গেস নিষিদ্ধ।
    - ক্রিটিক্যাল ডেটা মডিফাই করার আগে Failsafe ও Rollback Plan রাখুন।
 
-## 5. Project Overview & Rules
-
-### Goal & Scope
-**Goal:** Build a $0-cost, highly scalable "Eternal AI Brain" infrastructure where the AI continuously learns, self-heals, and optimizes its own memory/knowledge matrix via Supabase pgvector. 
-**Scope:** SupremeAI acts as a meta-intelligence layer. Third-party AIs (GPT-4, Gemini) are used only as processing engines (muscle). The system must operate with zero-config for the end-user (VS Code extension as a 100% thin client).
-
-### Folder/File Structure (Matrix)
-- `frontend/`: React + Vite frontend (Admin dashboard, user UI). `src/components/`, `src/hooks/`, `src/services/` for modular logic.
-- `backend/`: FastAPI + Python backend. Core AI routing, memory vector ops, and API endpoints. 
-  - `core/`: Core middleware, error handlers, and routers.
-  - `scripts/ai/`: AI memory and operations scripts (e.g. `memory_write.py`).
-- `docs/`: Markdown files for planning, checkpoints (`CHECKPOINT.md`), lessons learned (`LESSONS_LEARNED.md`), and architecture.
-- `tests/`: End-to-end tests (Playwright) and unit tests.
-- `supabase/`: Migrations (e.g., `ai_memory_migration.sql`) and database setup.
-
-### Tech Stack + Versions
-- **Frontend:** React 18, Vite, TailwindCSS, TypeScript.
-- **Backend:** FastAPI, Python 3.11+, Pydantic V2, asyncpg, sentence-transformers.
-- **Database/Vector Store:** Supabase (PostgreSQL with pgvector).
-- **Testing:** Playwright (E2E), Pytest (Backend).
-- **Hosting/CI:** Render (Backend), Vercel (Frontend), GitHub Actions.
-
-### Database/API Contracts
-- API responses must follow `{ "success": boolean, "data": any, "message": string, "errors": any[] }` structure where possible.
-- Avoid exposing third-party LLM API keys directly to the frontend.
-- `ai_memory` table in Supabase stores embeddings for the AI's eternal brain.
-
-### Testing Requirements
-- **Local:** E2E tests (Playwright) must pass before pushing (`npx playwright test`).
-- **CI/CD:** GitHub Actions must greenlight the commit.
-- **Zero Warnings:** All warnings must be treated as errors and fixed proactively.
-
-### Security Rules
-- No secrets in codebase. All secrets must go in `.env` and Infisical vault.
-- Admin god-mode routes (`/admin-api/*`) require strict JIT OTP / TOTP verification.
-- Enforce strict CORS policies (`USER_CORS_ORIGINS`).
-
-### Git/Branch/PR/Commit Workflow
-- **Branching:** `main` is production. Feature branches should be short-lived.
-- **Commits:** Atomic commits only. (e.g. `feat: added sentence-transformers to memory_write.py`).
-- **Pre-commit:** Always verify code logic and run linters before committing. Update `CHECKPOINT.md`.
-
-### Deployment Rules
-- Gradual deployment (Local -> Staging -> Production).
-- Run `check_env_health.py` post-deployment to verify Supabase/Render/Cloudflare uptime.
-
-### Environment & Secrets Management
-- DO NOT hardcode keys. Use `os.getenv()` in Python and `import.meta.env` in Vite.
-- Fallback/default logic must not expose internal system details if a key is missing.
-
-### AI Specialized Role Directives
-- **Memory Optimization:** AI should always try to use vector memory (`ai_memory_migration.sql` / `memory_write.py`) to prevent "antiloops" and reduce prompt context token bloat.
-- **Token Saver:** When possible, process context locally before querying massive models. Add `_INDEX.md` summaries to large folders to limit file reads.
+## 5. Project Context (At a glance)
+- **Goal & Scope:** Build $0-cost, self-healing "Eternal AI Brain". Extension is a 100% thin client.
+- **Tech Stack:** React 18, Vite, Tailwind, FastAPI, Python 3.11+, Pydantic V2, asyncpg, Supabase (pgvector), Playwright.
+- **Matrix (Folders):** `frontend/` (UI/Admin), `backend/core/` (AI routing/APIs), `scripts/ai/` (Vector logic), `supabase/` (Migrations).
+- **Contracts & Security:** API format `{success, data, message, errors}`. No hardcoded secrets (`.env` only). JIT OTP for `/admin-api/*`.
+- **Git & Deploy:** Atomic commits. `main` is production. Playwright & Pytest must pass. Check `check_env_health.py` post-deploy.
