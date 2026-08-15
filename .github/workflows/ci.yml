@@ -51,6 +51,7 @@ jobs:
               - 'docker-compose.yml'
             frontend:
               - 'apps/**'
+              - 'frontend/**'
               - 'packages/**'
               - '.github/workflows/ci.yml'
 
