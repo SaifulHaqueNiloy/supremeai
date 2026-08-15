@@ -359,7 +359,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [github-actions, vercel-frontend, firebase-gcp, render-backend, render-admin]
+        env: [github-actions, vercel-frontend, firebase-gcp, render-backend]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Python
@@ -393,25 +393,24 @@ jobs:
       - name: Trigger Render Deploy (Backend)
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
           PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
           USE_GITHUB_BUILD: ${{ needs.check-render-quota.outputs.use_github_build }}
         run: |
-          # Set IMAGE_URL if quota is exceeded (GitHub build mode)
           if [ "$USE_GITHUB_BUILD" = "true" ]; then
             export IMAGE_URL="ghcr.io/saifulhaqueniloy/supremeai-backend:${{ github.sha }}"
             echo "⚠️ Render Free Limit reached! Deploying pre-built Docker Image: $IMAGE_URL"
           fi
-          
-          # Smart trigger: tries primary API key -> backup API key -> deploy hook fallback
-          python .github/scripts/trigger_render_deploy.py
+          if [ -f .github/scripts/trigger_render_deploy.py ]; then
+            python .github/scripts/trigger_render_deploy.py || curl --retry 3 -X POST "$RENDER_DEPLOY_HOOK_URL"
+          else
+            curl --retry 3 -X POST "$RENDER_DEPLOY_HOOK_URL"
+          fi
 
       - name: ⏳ Verify Render Deploy (Wait for Live)
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
-        run: python .github/scripts/verify-render-deploy.py
+        run: python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}" --name "Backend"
 
   health-check:
     name: 🩺 Environment Health Check
