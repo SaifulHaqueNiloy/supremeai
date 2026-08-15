@@ -142,12 +142,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
                 provisioningUri: setupData.provisioning_uri || buildProvisioningUri(cleanEmail, setupData.secret || '')
               });
             } else {
-              set({ adminError: setupData.detail || 'Failed to setup TOTP.' });
+              const errStr = typeof setupData.detail === 'string' ? setupData.detail : (setupData.detail && typeof setupData.detail === 'object' ? JSON.stringify(setupData.detail) : 'Failed to setup TOTP.');
+              set({ adminError: errStr });
             }
           }
         } else {
-          const detail = typeof data.detail === 'string' ? data.detail : (Array.isArray(data.detail) ? JSON.stringify(data.detail) : 'Not authorized as admin.');
-          set({ adminError: detail });
+          const errStr = typeof data.detail === 'string' ? data.detail : (data.detail && typeof data.detail === 'object' ? JSON.stringify(data.detail) : 'Not authorized as admin.');
+          set({ adminError: errStr });
         }
       } else {
         // Step 3: Verify TOTP
@@ -185,8 +186,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false, adminOtp: '' });
         } else {
           const data = await res.json();
-          const detail = typeof data.detail === 'string' ? data.detail : (Array.isArray(data.detail) ? JSON.stringify(data.detail) : 'Invalid verification code.');
-          set({ adminError: detail });
+          const errStr = typeof data.detail === 'string' ? data.detail : (data.detail && typeof data.detail === 'object' ? JSON.stringify(data.detail) : 'Invalid verification code.');
+          set({ adminError: errStr });
         }
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -240,8 +241,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           provisioningUri: data.provisioning_uri || buildProvisioningUri(email, data.secret || ''),
         });
       } else {
-        const detail = typeof data.detail === 'string' ? data.detail : 'Failed to generate QR code.';
-        set({ adminError: detail });
+        const errStr = typeof data.detail === 'string' ? data.detail : (data.detail && typeof data.detail === 'object' ? JSON.stringify(data.detail) : 'Failed to generate QR code.');
+        set({ adminError: errStr });
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
