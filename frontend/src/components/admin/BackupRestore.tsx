@@ -3,13 +3,22 @@ import { Database, RefreshCw, Download, Upload, Shield, Clock, HardDrive } from 
 import { useState, useEffect } from 'react';
 import { apiClient } from '../../services/apiClient';
 
+export interface Backup {
+  id: string;
+  timestamp: string;
+  size: string;
+  type: string;
+  status: string;
+  retention: string;
+}
+
 export function BackupRestore() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [backups, setBackups] = useState<Record<string, unknown>[]>([]);
+  const [backups, setBackups] = useState<Backup[]>([]);
 
   const fetchBackups = async () => {
     try {
-      const res = await apiClient.get<{ backups: Record<string, unknown>[] }>('/admin-api/backups');
+      const res = await apiClient.get<{ backups: Backup[] }>('/admin-api/backups');
       setBackups(res.backups || []);
     } catch (e: unknown) {
       console.error("Failed to fetch backups", e);

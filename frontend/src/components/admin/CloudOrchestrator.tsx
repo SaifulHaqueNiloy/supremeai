@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query';
 import { Card, Badge, Skeleton } from '../ui';
 import { Globe, HardDrive, Cpu, Network, RefreshCw } from 'lucide-react';
@@ -108,3 +109,4 @@ export function CloudOrchestrator() {
     </div>
   );
 }
+

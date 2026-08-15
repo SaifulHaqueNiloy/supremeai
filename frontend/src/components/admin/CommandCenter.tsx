@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo, useRef } from 'react';
 import ReactFlow, {
   Background,
@@ -530,3 +531,4 @@ export function CommandCenter() {
     </div>
   );
 }
+

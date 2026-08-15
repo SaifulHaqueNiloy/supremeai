@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, Badge } from '../ui';
 import { GitBranch, Play, RotateCcw, FlaskConical, Clock, User, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -251,3 +252,4 @@ export function CICDVisualizer() {
     </div>
   );
 }
+

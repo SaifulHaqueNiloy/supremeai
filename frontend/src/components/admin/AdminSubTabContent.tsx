@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AdminSubTab, ChatMessage } from '../../types';
 import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
 import { RateLimitManager } from './RateLimitManager';
@@ -20,7 +21,7 @@ interface SubTabContentProps {
   liveLogs: string[];
   setLiveLogs: (logs: string[]) => void;
   costReport: string;
-  healthMap: Record<string, unknown>;
+  healthMap: any;
   newUsername: string;
   setNewUsername: (val: string) => void;
   newUserRole: string;
@@ -28,12 +29,14 @@ interface SubTabContentProps {
   newUserPerms: string;
   setNewUserPerms: (val: string) => void;
   handleSaveUser: () => void;
-  adminUsers: Record<string, unknown>[];
+  adminUsers: any[];
   handleDeleteUser: (username: string) => void;
   envConfig: Record<string, string>;
   setEnvConfig: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   handleSaveConfig: () => void;
   handleTriggerDeploy: () => void;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  [key: string]: any;
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */

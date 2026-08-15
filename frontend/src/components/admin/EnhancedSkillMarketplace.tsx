@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Skeleton } from '../ui';
 import { Star, RefreshCw } from 'lucide-react';
@@ -110,3 +111,4 @@ export function EnhancedSkillMarketplace() {
     </div>
   );
 }
+

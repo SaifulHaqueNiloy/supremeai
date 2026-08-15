@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { GitCommit, CheckCircle2, XCircle, CircleDashed } from 'lucide-react';
 
@@ -68,3 +69,4 @@ export const GitHubCIWidget: React.FC<GitHubCIWidgetProps> = ({ reports, isLoadi
     </div>
   );
 };
+

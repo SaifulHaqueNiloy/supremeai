@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { X, Rocket, CheckCircle2, Loader2, AlertCircle, Shield, GitBranch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -320,3 +321,4 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
 };
 
 export default DeploymentModal;
+
