@@ -64,7 +64,7 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
 
     # Mock httpx.AsyncClient so it doesn't create real connections
     mocks["httpx_client"] = stack.enter_context(
-        patch("core.startup.services.httpx.AsyncClient", return_value=AsyncMock())
+        patch("core.lifespan.httpx.AsyncClient", return_value=AsyncMock())
     )
 
     # Services HTTP client mock (legacy, but keep for compatibility)
