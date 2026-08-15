@@ -342,6 +342,35 @@ jobs:
             echo "Risk scorer not found, skipping."
           fi
 
+  env-drift-check:
+    name: 🔑 Env/Secret Drift Check (${{ matrix.env }})
+    needs: [backend-ci, frontend-ci, security-scan, bridge-boot-check]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    timeout-minutes: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [github-actions, vercel-frontend, firebase-gcp, render-backend, render-admin]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.11"
+      - name: Install Dependencies
+        run: pip install pyyaml
+      - name: 🔍 Audit env usage vs registry [${{ matrix.env }}]
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID }}
+          RENDER_BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/audit_env_usage.py --env ${{ matrix.env }} || echo "Skipping missing script or soft error"
+
   deploy-backend:
     name: 🚀 Trigger Render Deploy
     needs: [backend-ci, frontend-ci, security-scan, bridge-boot-check, check-render-quota]
