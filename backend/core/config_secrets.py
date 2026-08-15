@@ -60,6 +60,7 @@ class SettingsSecretsMixin:
         "ENCRYPTION_KEY",
         "STRIPE_API_KEY",
         "STRIPE_WEBHOOK_SECRET",
+        "FIREBASE_SERVICE_ACCOUNT_JSON",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -256,6 +257,10 @@ class SettingsSecretsMixin:
     @property
     def supabase_key(self) -> str:
         return self._get_cached_secret("SUPABASE_KEY")
+
+    @property
+    def firebase_service_account_json(self) -> str:
+        return self._get_cached_secret("FIREBASE_SERVICE_ACCOUNT_JSON")
 
     # ── System API Token — settings-এ মাইগ্রেট করা হলো ──────────────────────
     # বাংলা মন্তব্য: আগে auth_middleware.py সরাসরি os.getenv("SUPREMEAI_API_KEY") করত।
@@ -469,6 +474,7 @@ class SettingsSecretsMixin:
         result["supremeai_api_token"] = redacted
         result["stripe_api_key"] = redacted
         result["stripe_webhook_secret"] = redacted
+        result["firebase_service_account_json"] = redacted
         # Include API keys (redacted)
         for key_field in [
             "openrouter_api_key",

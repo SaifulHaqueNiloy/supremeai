@@ -73,8 +73,9 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
         return _client_cache[resolved_project]
 
     try:
+        from core.config import settings
         credentials = None
-        sa_json_str = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+        sa_json_str = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or getattr(settings, "firebase_service_account_json", "")
         if sa_json_str:
             import json
             from google.oauth2 import service_account

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { AppDefaults } from '../../config/constants';
 import { apiClient, setApiConcurrency } from '../../services/apiClient';
@@ -52,6 +52,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
         if (cancelled) return;
         // বাংলা মন্তব্য: রিয়েল কনফিগ এসেছে — AppDefaults fallback-এর ওপর আপডেট করবে
         applyConfig(data);
+        setError(null); // Clear the error banner if the delayed fetch succeeded
       } catch (err) {
         if (cancelled) return;
         console.error("Config fetch error:", err);

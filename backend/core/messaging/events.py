@@ -16,8 +16,9 @@ def get_firebase_auth():
         from firebase_admin import credentials as fb_credentials
 
         if not firebase_admin._apps:
+            from core.config import settings
             _gac = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
-            _sa_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON", "")
+            _sa_json = getattr(settings, "firebase_service_account_json", "")
             _sa_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH") or "service-account.json"
 
             if _sa_json:

@@ -136,17 +136,33 @@ class SettingsValidationMixin:
                     f"⚠️ Production missing config vars: {', '.join(missing)}. Running in degraded zero-cost mode."
                 )
 
-        # General resilience guard for non-test environments
-        if self.env not in {"test"}:
+        # Core Infrastructure Guard - Fail Fast for non-test environments
+        if self.env in {"production", "staging"}:
+            critical_infrastructure = []
+            if not getattr(self, "supabase_url", None):
+                critical_infrastructure.append("SUPABASE_URL")
+            if not getattr(self, "supabase_key", None):
+                critical_infrastructure.append("SUPABASE_KEY")
+            if not getattr(self, "firebase_service_account_json", None):
+                critical_infrastructure.append("FIREBASE_SERVICE_ACCOUNT_JSON")
+            if not self.encryption_key.get_secret_value():
+                critical_infrastructure.append("ENCRYPTION_KEY")
+
+            if critical_infrastructure:
+                logger.critical(
+                    f"❌ CRITICAL INFRASTRUCTURE MISSING: {critical_infrastructure}. "
+                    "Server startup aborted (Fail-Fast enforced)."
+                )
+                raise ValueError(f"Production/Staging requires {critical_infrastructure} to be set.")
+        elif self.env not in {"test"}:
             missing: list[str] = []
-            # বাংলা মন্তব্য: ENCRYPTION_KEY ও CI_WEBHOOK_SECRET সিকিউরিটি-ক্রিটিক্যাল — এগুলো fail-fast থাকা সঠিক। AI keys ক্র্যাশ ঘটায় না।
             if not self.encryption_key.get_secret_value():
                 missing.append("ENCRYPTION_KEY")
-            if not self.ci_webhook_secret:
-                missing.append("CI_WEBHOOK_SECRET")
+            if not getattr(self, "firebase_service_account_json", None):
+                missing.append("FIREBASE_SERVICE_ACCOUNT_JSON")
             if missing:
                 logger.warning(
-                    f"⚠️ Missing config vars: {', '.join(missing)}. Bypassing hard crash for server resilience."
+                    f"⚠️ Missing local config vars: {', '.join(missing)}. Local/dev server may fail at runtime."
                 )
         return self
 

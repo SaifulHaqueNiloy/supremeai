@@ -2,6 +2,20 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — Environment Validation Fail-Fast Implementation
+
+### সমস্যা ১০: Production Environment-এ Critical Secrets ছাড়া Server Boot হওয়া
+- **উৎস:** `backend/core/config_validation.py`-এ `ENV=production` হওয়া সত্ত্বেও `SUPABASE_URL`, `SUPABASE_KEY` বা `FIREBASE_SERVICE_ACCOUNT_JSON` না থাকলে সার্ভার হার্ড ক্র্যাশ না করে শুধু ওয়ার্নিং দিত। ফলে সার্ভার "Zombie State"-এ চলে যেত এবং রানটাইমে 500 error থ্রো করত।
+- **ফিক্স:** `config_validation.py`-এর `validate_all` মেথডে Production এবং Staging-এর জন্য Strict Guard বসানো হয়েছে। এখন এই key-গুলো মিসিং থাকলে `sys.exit(1)` বা `ValueError` থ্রো করে সার্ভার সাথে সাথে (Fail-Fast) বন্ধ হয়ে যাবে। `FIREBASE_SERVICE_ACCOUNT_JSON` কে `os.getenv` থেকে সরিয়ে সরাসরি Pydantic `Settings`-এর সাথে ইন্টিগ্রেট করা হয়েছে।
+- **লেসন:** Critical infrastructure (DB, Auth) সিক্রেটস ছাড়া প্রোডাকশনে সার্ভার Boot করা উচিত নয়। Fail-fast প্রিন্সিপাল ব্যবহার করলে deployment stage-এই ভুল ধরা পড়ে এবং silent runtime errors প্রতিরোধ করা যায়।
+
+## 2026-08-15 — Render Cold Start UI Fix
+
+### সমস্যা ৯: "Connecting to SupremeAI core is taking longer than expected" banner persisting
+- **উৎস:** `frontend/src/components/core/GlobalConfigInitializer.tsx` — ৮ সেকেন্ডের `CONFIG_DEADLINE_MS` অতিক্রান্ত হলে UI-তে একটি fallback error banner দেখানো হতো। কিন্তু Render free tier cold start (৩০-৫০ সেকেন্ড) শেষে যখন আসল কনফিগারেশন এসে পৌঁছাতো, তখন `applyConfig(data)` কল হলেও error state (`setError(null)`) রিস্টোর করা হতো না।
+- **ফিক্স:** `fetchConfig`-এর successful try ব্লকের শেষে `setError(null)` যোগ করা হয়েছে, যাতে ব্যাকএন্ড সচল হওয়া মাত্রই warning banner স্বয়ংক্রিয়ভাবে দূর হয়ে যায়।
+- **লেসন:** Timeout fallback error মেসেজ দেখালে, পরবর্তীতে successful async response আসলে অবশ্যই সেই error state clear করতে হবে, নাহলে UI-তে stale error থেকে যাবে এবং ব্যবহারকারী বিভ্রান্ত হবে।
+
 ## 2026-08-14 — Admin Console Error Sweep
 
 ### সমস্যা ১: Service Worker — `Failed to convert value to 'Response'`
