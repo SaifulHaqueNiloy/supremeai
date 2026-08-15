@@ -54,3 +54,34 @@ async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
     except Exception as exc:
         logger.debug(f"Failed to persist evolution log to Supabase: {exc}")
     return report
+
+class SystemAlertPayload(BaseModel):
+    level: str
+    message: str
+
+@router.post("/api/v1/admin/alerts")
+async def report_system_alert(request: Request, payload: SystemAlertPayload):
+    # Allow if valid API key is present
+    if not hasattr(request.state, "api_key") or not request.state.api_key:
+        # Fallback to Admin Secret if API key is missing
+        _require_admin(request)
+        
+    logger.bind(alert_level=payload.level).warning(f"System Alert Received: {payload.message}")
+    
+    # Optionally store in DB/Redis or emit via ErrorEventBus
+    from core.messaging.event_bus import ErrorEvent, error_event_bus, ErrorContext
+    
+    error_event_bus.emit(
+        ErrorEvent(
+            module="ClientMonitor",
+            error_type="CLIENT_ALERT",
+            message=payload.message,
+            severity=payload.level.upper(),
+            structured_context=ErrorContext(
+                module="tests.e2e",
+                env=settings.env,
+            ),
+        )
+    )
+    
+    return {"status": "received", "level": payload.level}
