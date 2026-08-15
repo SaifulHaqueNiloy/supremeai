@@ -1,5 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
+import { getSupremeModelLabel } from '../../../../lib/modelBranding';
 
 // Custom data type for our Agent Node
 export type AgentNodeData = {
@@ -32,7 +34,7 @@ const AgentNode = ({ data, selected }: NodeProps<AgentFlowNode>) => {
             {data.label}
           </span>
           <span className="text-xs px-2 py-1 rounded-full bg-background border border-border-accent text-brand-primary">
-            {data.model}
+            {getSupremeModelLabel(data.model)}
           </span>
         </div>
         <p className="text-sm text-text-muted">{data.role}</p>

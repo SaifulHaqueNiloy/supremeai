@@ -71,7 +71,7 @@ export function ModelRouter() {
       <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#00f3ff]/15">
         <h2 className="text-lg font-bold font-['Space_Grotesk'] tracking-widest text-[#00f3ff] uppercase flex items-center gap-2">
           🔀 AI Model Router
-          <BanglaHint text="কোন রিকোয়েস্ট কোন AI মডেলে (GPT-4/Gemini) যাবে, তা এখান থেকে কন্ট্রোল করুন।" />
+          <BanglaHint text="কোন রিকোয়েস্ট কোন SupremeAI মডেলে (Core/Vision) যাবে, তা এখান থেকে কন্ট্রোল করুন।" />
         </h2>
         <Badge variant={config?.ab_test_active ? 'warning' : 'info'}>
           {config?.ab_test_active ? 'A/B TEST ACTIVE' : 'STANDARD MODE'}
@@ -112,7 +112,7 @@ export function ModelRouter() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] text-slate-400 uppercase flex items-center gap-1">
                   Provider
-                  <BanglaHint text="AI প্রোভাইডার নির্বাচন করুন (যেমন: OpenRouter, Gemini, Groq)।" />
+                  <BanglaHint text="SupremeAI প্রোভাইডার নির্বাচন করুন (যেমন: OpenRouter, Gemini, Groq)।" />
                 </label>
                 <select
                   value={overrideProvider}
@@ -128,13 +128,13 @@ export function ModelRouter() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] text-slate-400 uppercase flex items-center gap-1">
                   Model
-                  <BanglaHint text="মডেল আইডি লিখুন (যেমন: gpt-4o, gemini-pro)।" />
+                  <BanglaHint text="SupremeAI মডেল আইডি লিখুন (যেমন: supremeai-core, supremeai-vision)।" />
                 </label>
                 <input
                   type="text"
                   value={overrideModel}
                   onChange={e => setOverrideModel(e.target.value)}
-                  placeholder="e.g. gpt-4o"
+                  placeholder="e.g. supremeai-core"
                   className="bg-[#06080b] border border-slate-800 rounded px-3 py-1.5 text-white outline-none text-xs font-mono"
                 />
               </div>

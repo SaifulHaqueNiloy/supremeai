@@ -1,4 +1,6 @@
 import React from 'react';
+// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
+import { getSupremeModelLabel } from '../../../lib/modelBranding';
 
 // Pre-defined nodes that users can drag
 const AVAILABLE_NODES = [
@@ -44,7 +46,7 @@ export const ForgeSidebar = () => {
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-text-muted">{node.role}</span>
-              <span className="text-brand-primary font-mono">{node.model}</span>
+              <span className="text-brand-primary font-mono">{getSupremeModelLabel(node.model)}</span>
             </div>
           </div>
         ))}

@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import WebSocketManager from '../../services/realtime/WebSocketManager';
 import { getWebSocketBaseUrl } from '../../utils/api';
 
+interface AgentLogEntry {
+  timestamp: string;
+  level?: string;
+  message?: string;
+  msg?: string;
+}
+
 interface SujonCoreCockpitProps {
   authToken: string;
 }
@@ -10,7 +17,7 @@ const SujonCoreCockpit: React.FC<SujonCoreCockpitProps> = ({ authToken }) => {
   const [activeTab, setActiveTab] = useState<'fileTree' | 'executionShell' | 'agentLog'>('fileTree');
   const [files, setFiles] = useState<string[]>([]);
   const [shellHistory, setShellHistory] = useState<string[]>([]);
-  const [agentLogs, setAgentLogs] = useState<Record<string, unknown>[]>([]);
+  const [agentLogs, setAgentLogs] = useState<AgentLogEntry[]>([]);
   const [currentCommand, setCurrentCommand] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [executionState, setExecutionState] = useState<'idle' | 'running' | 'paused' | 'error' | 'completed'>('idle');

@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
-// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
-import { getSupremeModelLabel } from '../../lib/modelBranding';
+// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম + ক্যানোনিক্যাল মডেল লিস্ট
+import { getSupremeModelLabel, SUPREME_AVAILABLE_MODELS } from '../../lib/modelBranding';
 
 interface Preferences {
   theme: string;
@@ -21,7 +21,7 @@ const DEFAULT_PREFS: Preferences = {
   verbosity: 'normal',
 };
 
-const MODELS = ['gpt-4o', 'gpt-4o-mini', 'claude-3-5-sonnet', 'gemini-1.5-pro', 'deepseek-chat'];
+const MODELS = SUPREME_AVAILABLE_MODELS;
 
 interface SettingsPageProps {
   theme: 'dark' | 'light';

@@ -103,17 +103,17 @@ export const CommandBar: React.FC<CommandBarProps> = ({ isOpen: controlledOpen, 
     },
     {
       id: 'model-deepseek',
-      title: 'Switch to DeepSeek-V3 (Coding Expert)',
+      title: 'Switch to SupremeAI Deep (Coding Expert)',
       category: 'AI Models',
       icon: Cpu,
-      action: () => { console.warn('Switched to DeepSeek-V3'); handleClose(); }
+      action: () => { console.warn('Switched to SupremeAI Deep'); handleClose(); }
     },
     {
       id: 'model-kimi',
-      title: 'Switch to Kimi K2.5 (Bangla & Reasoning)',
+      title: 'Switch to SupremeAI Reason (Bangla & Reasoning)',
       category: 'AI Models',
       icon: Sparkles,
-      action: () => { console.warn('Switched to Kimi K2.5'); handleClose(); }
+      action: () => { console.warn('Switched to SupremeAI Reason'); handleClose(); }
     },
   ];
 

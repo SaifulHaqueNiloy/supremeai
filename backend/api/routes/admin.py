@@ -337,3 +337,19 @@ async def resolve_system_alert(alert_id: str, admin_user: dict = Depends(get_cur
         await session.execute(stmt)
         await session.commit()
         return {"status": "success", "message": "Alert resolved"}
+
+
+# ── Model branding (single source of truth for SupremeAI display names) ──
+from utils.branding import MODEL_DISPLAY, PROVIDER_DISPLAY  # noqa: E402
+
+
+@router.get("/model-branding")
+async def model_branding(admin_user: dict = Depends(get_current_admin)):
+    """Return the canonical SupremeAI model/provider branding maps.
+
+    The frontend can call this to stay in sync instead of hardcoding labels.
+    """
+    return {
+        "models": {k: v["label"] for k, v in MODEL_DISPLAY.items()},
+        "providers": PROVIDER_DISPLAY,
+    }

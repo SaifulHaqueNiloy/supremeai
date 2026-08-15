@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+// বাংলা মন্তব্য: বাহিরের প্রোভাইডার নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
+import { getSupremeProviderLabel } from '../../lib/modelBranding';
 
 interface CostMetrics {
   total_spent_usd: number;
@@ -88,7 +90,7 @@ export const CostDashboard: React.FC = () => {
         <div className="space-y-3">
           {Object.entries(metrics.provider_breakdown).map(([provider, cost]) => (
             <div key={provider} className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-              <span className="text-gray-300 font-medium">{provider}</span>
+              <span className="text-gray-300 font-medium">{getSupremeProviderLabel(provider)}</span>
               <span className="text-emerald-400 text-sm font-semibold">${cost.toFixed(4)} (Free Tier)</span>
             </div>
           ))}

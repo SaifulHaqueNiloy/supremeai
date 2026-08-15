@@ -257,7 +257,7 @@ export function InteractiveChatTab({
         output = 'SYSTEM POWER STATUS: ONLINE\nActive Nodes: 4/4\nAPI gateway: 0.05ms latency\nEncryption Key Status: VERIFIED\nLOCAL_CHAOS_MODE: false';
         break;
       case 'system-check':
-        output = 'Running diagnostics...\n[OK] Database (Redis Pub/Sub)\n[OK] Celery Workers\n[OK] Firebase Cloud Authentication\n[OK] OpenAI/Gemini/Anthropic Gateways\nAll subsystems normal.';
+        output = 'Running diagnostics...\n[OK] Database (Redis Pub/Sub)\n[OK] Celery Workers\n[OK] Firebase Cloud Authentication\n[OK] SupremeAI Core/Vision/Reason Gateways\nAll subsystems normal.';
         break;
       case 'neofetch':
         output = `

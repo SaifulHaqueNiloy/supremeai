@@ -1,9 +1,17 @@
 
-const models = [
-  { id: 'gpt-4o', name: 'SupremeAI Core', cost: 'High', speed: 'Fast' },
-  { id: 'llama-3-70b-versatile', name: 'SupremeAI Llama', cost: 'Free', speed: 'Blazing' },
-  { id: 'claude-3-5-sonnet', name: 'SupremeAI Reason', cost: 'High', speed: 'Fast' },
-];
+import { getSupremeModelLabel } from '../../lib/modelBranding';
+
+const MODEL_META: Record<string, { cost: string; speed: string }> = {
+  'gpt-4o': { cost: 'High', speed: 'Fast' },
+  'llama-3-70b-versatile': { cost: 'Free', speed: 'Blazing' },
+  'claude-3-5-sonnet': { cost: 'High', speed: 'Fast' },
+};
+
+const models = ['gpt-4o', 'llama-3-70b-versatile', 'claude-3-5-sonnet'].map((id) => ({
+  id,
+  name: getSupremeModelLabel(id),
+  ...MODEL_META[id],
+}));
 
 interface StepProps {
   data: Record<string, string>;

@@ -142,9 +142,9 @@ export const ProfilePage: React.FC = () => {
                     onChange={(e) => setPreferredModel(e.target.value)}
                     className="w-full rounded-xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500"
                   >
-                    <option value="DeepSeek-V3">DeepSeek-V3 (Coding & Math Specialist)</option>
-                    <option value="Kimi-K2.5">Moonshot Kimi K2.5 (Bangla & Complex Reasoning)</option>
-                    <option value="Together-Fallback">Together AI (Auto-Fallback)</option>
+                    <option value="DeepSeek-V3">SupremeAI Deep (Coding & Math Specialist)</option>
+                    <option value="Kimi-K2.5">SupremeAI Reason (Bangla & Complex Reasoning)</option>
+                    <option value="Together-Fallback">SupremeAI Collective (Auto-Fallback)</option>
                   </select>
                 </div>
               </div>

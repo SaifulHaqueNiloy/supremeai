@@ -15,7 +15,7 @@ export const BillingPage: React.FC = () => {
       description: 'Ideal for solo developers utilizing free AI provider quotas.',
       features: [
         '500 Free AI Executions / day',
-        'Access to DeepSeek-V3 & Kimi K2.5',
+        'Access to SupremeAI Deep & SupremeAI Reason',
         'Standard Rate Limiting (60 req/min)',
         'Community Discord Support',
       ],

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
+import { getSupremeModelLabel } from '../../lib/modelBranding';
 
 interface CostAuditorProps {
   costReport: string;
@@ -104,7 +106,7 @@ export function CostAuditor({ costReport }: CostAuditorProps) {
               <tr key={idx} className="hover:bg-slate-800/10">
                 <td className="p-3 text-slate-400">{chg.time}</td>
                 <td className="p-3 font-bold text-slate-200">{chg.user}</td>
-                <td className="p-3 text-cyan-400">{chg.model}</td>
+                 <td className="p-3 text-cyan-400">{getSupremeModelLabel(chg.model)}</td>
                 <td className="p-3">{chg.tokens.toLocaleString()}</td>
                 <td className="p-3 text-right text-[#00ff66] font-bold">${chg.cost.toFixed(4)}</td>
               </tr>

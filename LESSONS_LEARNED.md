@@ -2,6 +2,40 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — SupremeAI Model/Provider Branding (Third-Party Names → Own Brand)
+
+### সমস্যা: ইউজার/অ্যাডমিন UI-এ GPT/Claude/Gemini-এর মতো বাহিরের AI মডেল নাম সরাসরি দেখাচ্ছিল
+- **ফিক্স (সেন্ট্রালাইজড ব্র্যান্ডিং):**
+  1. **Frontend single source:** `frontend/src/lib/modelBranding.ts` তৈরি করা হয়েছে — `getSupremeModelLabel()`, `getSupremeProviderLabel()`, এবং ক্যানোনিক্যাল `SUPREME_AVAILABLE_MODELS` লিস্ট। মডেল আইডি → `SupremeAI Core / Reason / Vision / Deep / Llama` ম্যাপ করে।
+  2. **User-facing rebrand:** `UserDashboard` (প্রজেক্ট ব্যাজ), `SettingsPage` (ড্রপডাউন), `StepModelSelect` (Onboarding), `EvolutionForge` (`ForgeSidebar` + `AgentNode`), `CostAuditor` (চার্জ টেবিল), `CostDashboard` (প্রোভাইডার নাম), `CommandBar`, `ProfilePage`, `BillingPage` — সব জায়গায় ব্র্যান্ডেড নাম।
+  3. **Admin hints rebrand:** `ModelRouter.tsx` BanglaHint গুলো (`GPT-4/Gemini` → `Core/Vision`) এবং `InteractiveChatTab.tsx` ডায়াগনস্টিক (`OpenAI/Gemini/Anthropic Gateways` → `SupremeAI Core/Vision/Reason Gateways`)। ModelRouter-এর PROVIDER_LIST ও override provider id গুলো **literal রাখা হয়েছে** — কারণ সেগুলো ব্যাকএন্ড রাউটিং কনফিগ, রি-ব্র্যান্ড করলে ভুল কনফিগ হত।
+  4. **Backend single source:** `backend/utils/branding.py` — `MODEL_DISPLAY` / `PROVIDER_DISPLAY` ম্যাপ + `get_model_display_name()` / `get_provider_display_name()`। নতুন এন্ডপয়েন্ট `GET /api/admin/model-branding` ক্যানোনিক্যাল ম্যাপ রিটার্ন করে (ভবিষ্যতে ফ্রন্টএন্ড এটি থেকে ফেচ করতে পারে)।
+- **লেসন:** (১) ব্র্যান্ডিং লজিক এক জায়গায় রাখুন (`modelBranding.ts` / `branding.py`) — ডুপ্লিকেট লিস্ট এড়াতে `SUPREME_AVAILABLE_MODELS` কে সিঙ্গেল সোর্স করুন। (২) ডিসপ্লে টেক্সট ব্র্যান্ড করুন কিন্তু **রাউটিং/কনফিগ আইডি (raw provider id) অপরিবর্তিত রাখুন** — নচেৎ ব্যাকএন্ড কল ভাঙে। (৩) অ্যাডমিন কনফিগ UI-তে literal প্রোভাইডার নাম রাখাই নিরাপদ, শুধু হেল্প-টেক্সট ব্র্যান্ড করুন। (৪) `tsc --noEmit` 0 errors এবং `python -c ast.parse` দিয়ে ব্যাকএন্ড সিনট্যাক্স ভেরিফাই করা হয়েছে।
+
+## 2026-08-15 — Frontend TypeScript Typecheck Cleanup (0 errors) + Bad `sed` Proposal Pushback
+
+### সমস্যা: ৮টি ফাইলের জন্য একগুচ্ছ `sed` রিফ্যাক্টর প্রস্তাব এসেছিল যা বেশিরভাগই ভাঙা/ভুল ছিল
+- **পর্যালোচনা (Objective Pushback):** প্রস্তাবিত `sed` কমান্ডগুলো সরাসরি অ্যাপ্লাই না করে আগে আসল কোড পড়া হয়েছে। ফলাফল:
+  - `ModelRouter.tsx`: `payload` কে `provider`/`model`/`remaining_requests` দিয়ে বদলালে **undefined variable** → কোড ভাঙত। আসলে ইতিমধ্যেই ঠিক পাস হচ্ছিল।
+  - `AdminAlertsTab.tsx`: টার্গেট `hasToken`/`adminTokenStore` ফাংশনটিই ফাইলে নেই → `sed` **no-op**; আর `!!x && x !== null` লজিকভাবে redundancy।
+  - `OneClickPatch.tsx`: ফাংশনেই `try/catch/finally` আছে, নতুন `try{` যোগ করলে **brace অমিল** → syntax error।
+  - `RBACManager.tsx`: `role !== "Admin" && role !== "God"` চেক করলে Viewer/Operator/Developer **অ্যাডই করা যেত না** → ভুল লজিক (সঠিক ফিক্স = ব্যাকএন্ড RBAC এনফোর্সমেন্ট)।
+  - `RealTimeMetricsPanel.tsx`: `CONFIG_DEADLINE_MS` ভেরিয়েবলটিই এই ফাইলে নেই → **no-op**; আর `!metrics` ইতিমধ্যে "Metrics unavailable" দেখাচ্ছে।
+  - `ChatInterface.tsx`: `input.length < 3` ব্লক করলে "ok"/"hi"/"?"/ইমোজি পাঠানো যেত না → খারাপ UX। বর্তমান `Enter && !shiftKey` লজিকই স্ট্যান্ডার্ড।
+  - `GlobalConfigInitializer.tsx`: `sed` টি string-কে নিজের সাথে বদলাচ্ছে → **no-op**; ৮ সেকেন্ড ডেডলাইন ইচ্ছাকৃত (Render কোল্ড স্টার্ট 30-50s)।
+- **প্রকৃত নিরাপদ ফিক্স যা অ্যাপ্লাই করা হয়েছে:**
+  1. `AdminAlertsTab.tsx` — টোকেন না থাকলে fetch/resolve আগেই থামে; resolve-এর এরর এখন `alert()`-এর বদলে `supremeai-toast`।
+  2. `OneClickPatch.tsx` — প্যাচ অ্যাপ্লাইয়ের আগে `window.confirm` কনফির্মেশন।
+  3. `UnifiedChatBubble.tsx` — ক্লিপবোর্ড কপি `try/catch` + ইউজার ফিডব্যাক।
+  4. `RBACManager.tsx` — ইউজার ডিলিটের আগে কনফির্মেশন (accidental delete রোধ)।
+- **Pre-existing TypeScript এরর ক্লিনআপ (tsc --noEmit → 0 errors):**
+  - `AdminAlertsTab.tsx`: অব্যবহৃত `React` import সরানো (`import React, {...}` → `import {...}`); `unknown` হ্যান্ডলিং `instanceof Error` গার্ড দিয়ে (OneClickPatch/ChatInterface/UnifiedChatBubble ইতিমধ্যেই ঠিক ছিল)।
+  - `ModelRouter.tsx`: `providers` কে `ProviderStatus` ইন্টারফেস দিয়ে টাইপ করা (আগে inline `unknown`-সদৃশ অসম্পূর্ণ টাইপ)।
+  - `RealTimeMetricsPanel.tsx`: `mergeSeries(series: SeriesItem[])` টাইপ করা।
+  - `GlobalConfigInitializer.tsx`: `applyConfig`-এ `data` কে `RuntimeConfig`-সদৃশ কাস্ট করে `maxConcurrency`/`features.selfHealing` অ্যাক্সেস।
+  - `dashboard/HumanInTheLoopProtocol.tsx` + `dashboard/SujonCoreCockpit.tsx`: `actionDetails`/`auditTrail`/`agentLogs` এর `unknown` রেকর্ডগুলোকে লোকাল ইন্টারফেস (`ActionDetails`/`AuditEntry`/`AgentLogEntry`) দিয়ে টাইপ করা — prop signature না বদলে (কলার ভাঙা এড়াতে) লোকাল `as` কাস্ট ব্যবহার।
+- **লেসন:** (১) কোনো `sed -i`/বাল্ক রিফ্যাক্টর প্রস্তাব অন্ধভাবে অ্যাপ্লাই করবেন না — আগে ফাইল পড়ে pattern match, লজিক এবং side-effect যাচাই করুন (AGENTS.md Objective Pushback)। (২) `unknown` টাইপ সরাসরি string/ReactNode-এ ব্যবহার করবেন না; ইন্টারফেস দিয়ে টাইপ করুন বা `instanceof` গার্ড ব্যবহার করুন। (৩) `tsc --noEmit` রেজাল্ট "0 errors" পাওয়া পর্যন্ত Zero Warning Tolerance ধরে রাখুন। (৪) ফ্রন্টএন্ডে `sed` PowerShell-এ কাজ করে না — Edit টুল বা proper CLI ব্যবহার করুন।
+
 ## 2026-08-15 — Security Audit Workflow: Broken pipx → Binary Download Fix (AUDIT-2026-08)
 
 ### সমস্যা ১৩: security-audit.yml-এ `gitleaks`/`actionlint` pipx-এ ছিল না → weekly audit কখনো চলত না

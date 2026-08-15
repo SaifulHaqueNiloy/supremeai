@@ -3,6 +3,8 @@ import { useStore } from '../../store/useStore';
 import { AppDefaults } from '../../config/constants';
 import { apiClient, setApiConcurrency } from '../../services/apiClient';
 import { selfHealingState } from '../../core/stateManagement';
+// বাংলা মন্তব্য: অ্যাপ স্টার্টআপে ব্যাকএন্ড থেকে ক্যানোনিক্যাল ব্র্যান্ডিং ম্যাপ ফেচ করে লোকাল কপি ওভাররাইড করা হয়
+import { loadSupremeBranding } from '../../lib/modelBranding';
 
 interface GlobalConfigInitializerProps {
   children: React.ReactNode;
@@ -91,6 +93,8 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
 
     // বাংলা মন্তব্য: রিয়েল কনফিগ ব্যাকগ্রাউন্ডে আনবে (non-blocking) — UI আটকাবে না
     fetchConfig();
+    // বাংলা মন্তব্য: ব্যাকএন্ড থেকে ক্যানোনিক্যাল ব্র্যান্ডিং ম্যাপ ফেচ করে লোকাল কপি ওভাররাইড করবে (single source) — non-blocking
+    void loadSupremeBranding();
 
         // বাংলা মন্তব্য: ৮ সেকেন্ড ডেডলাইন — রিয়েল কনফিগ না এলে সাথে সাথে AppDefaults apply করে UI আনব্লক করব
         deadlineTimer = setTimeout(() => {

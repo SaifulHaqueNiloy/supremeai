@@ -7,10 +7,28 @@ interface HumanInTheLoopProtocolProps {
   actionDetails: Record<string, unknown>;
 }
 
+interface ActionDetails {
+  description?: string;
+  type?: string;
+  impact?: string;
+  priority?: string;
+  requiresOtp?: boolean;
+  actionId?: string;
+}
+
+interface AuditEntry {
+  step: number;
+  status: string;
+  timestamp: string;
+  actor: string;
+  action: string;
+}
+
 const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onApproval, onCancel, actionDetails }) => {
+  const details = actionDetails as ActionDetails;
   const [step, setStep] = useState<number>(1);
   const [reason, setReason] = useState<string>('');
-  const [auditTrail, setAuditTrail] = useState<Record<string, unknown>[]>([]);
+  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [otpCode, setOtpCode] = useState<string>('');
   const [showOtpInput, setShowOtpInput] = useState<boolean>(false);
@@ -50,11 +68,11 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
 
   const handleApprove = () => {
     if (step === protocolSteps.length) {
-      if (actionDetails.requiresOtp) {
+      if (details.requiresOtp) {
         setShowOtpInput(true);
       } else {
         setIsConfirmed(true);
-        onApproval(actionDetails.actionId);
+        onApproval(details.actionId);
       }
     }
   };
@@ -63,7 +81,7 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
     // In a real implementation, this would validate the OTP
     if (otpCode.length === 6) { // Simple validation
       setIsConfirmed(true);
-      onApproval(actionDetails.actionId);
+      onApproval(details.actionId);
     }
   };
 
@@ -89,11 +107,11 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
 
           <div className="mb-6 p-4 bg-gray-900 rounded-lg">
             <h3 className="text-lg font-semibold text-yellow-400 mb-2">Critical Action Pending</h3>
-            <p className="text-gray-300">{actionDetails.description || 'A critical action requires human authorization.'}</p>
+            <p className="text-gray-300">{details.description || 'A critical action requires human authorization.'}</p>
             <div className="mt-2 text-sm text-gray-400">
-              <p><span className="font-medium">Action Type:</span> {actionDetails.type || 'System Operation'}</p>
-              <p><span className="font-medium">Estimated Impact:</span> {actionDetails.impact || 'Medium'}</p>
-              <p><span className="font-medium">Priority:</span> {actionDetails.priority || 'High'}</p>
+              <p><span className="font-medium">Action Type:</span> {details.type || 'System Operation'}</p>
+              <p><span className="font-medium">Estimated Impact:</span> {details.impact || 'Medium'}</p>
+              <p><span className="font-medium">Priority:</span> {details.priority || 'High'}</p>
             </div>
           </div>
 
