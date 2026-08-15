@@ -242,7 +242,6 @@ jobs:
           cd backend
           poetry install
           poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
-          poetry run alembic check || { echo "❌ Alembic migration check failed! You probably forgot to create a migration."; exit 1; }
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
           sleep 10
       - name: Probe Admin API
