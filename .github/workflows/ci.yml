@@ -189,9 +189,27 @@ jobs:
           # Telemetry requires JWT auth, skipping in preflight
           # curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
 
+  check-render-quota:
+    name: 📊 Check Render Build Quota
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check Quota Usage
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+          PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}
+          BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}
+        run: python .github/scripts/check-render-quota.py
+
   deploy-backend:
     name: 🚀 Trigger Render Deploy
-    needs: [backend-ci, frontend-ci, security-scan, bridge-boot-check]
+    needs: [backend-ci, frontend-ci, security-scan, bridge-boot-check, check-render-quota]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
