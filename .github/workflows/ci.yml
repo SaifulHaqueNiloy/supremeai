@@ -186,3 +186,25 @@ jobs:
           curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
           # Telemetry requires JWT auth, skipping in preflight
           # curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
+
+  deploy-backend:
+    name: 🚀 Trigger Render Deploy
+    needs: [backend-ci, frontend-ci, security-scan, bridge-boot-check]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Primary Backend
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo "Primary Backend deployment triggered."
+          else
+            echo "RENDER_DEPLOY_HOOK_URL secret is not set. Skipping."
+          fi
+
+      - name: Trigger Admin/Backup Backend
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}" ]; then
+            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
+            echo "Admin/Backup deployment triggered."
+          fi
