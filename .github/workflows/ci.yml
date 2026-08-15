@@ -197,6 +197,8 @@ jobs:
     name: 📊 Check Render Build Quota
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      use_github_build: ${{ steps.quota.outputs.use_github_build }}
     steps:
       - uses: actions/checkout@v7
       - name: Set up Python
@@ -204,6 +206,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Check Quota Usage
+        id: quota
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
@@ -225,7 +228,14 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+          USE_GITHUB_BUILD: ${{ needs.check-render-quota.outputs.use_github_build }}
         run: |
+          # Set IMAGE_URL if quota is exceeded
+          if [ "$USE_GITHUB_BUILD" = "true" ]; then
+            export IMAGE_URL="ghcr.io/saifulhaqueniloy/supremeai-backend:${{ github.sha }}"
+            echo "⚠️ Render Free Limit reached! Deploying pre-built Docker Image: $IMAGE_URL"
+          fi
+          
           # Try primary API key first
           if [ -n "$RENDER_API_KEY" ]; then
             python .github/scripts/trigger_render_deploy.py

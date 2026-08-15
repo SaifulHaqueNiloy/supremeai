@@ -12,11 +12,17 @@ def main():
 
     def trigger_deploy(service_id):
         url = f"https://api.render.com/v1/services/{service_id}/deploys"
+        
+        payload = {"clearCache": "do_not_clear"}
+        image_url = os.environ.get("IMAGE_URL")
+        if image_url:
+            payload["imageUrl"] = image_url
+
         req = urllib.request.Request(url, method="POST", headers={
             "Authorization": f"Bearer {api_key}",
             "Accept": "application/json",
             "Content-Type": "application/json"
-        }, data=b'{"clearCache": "do_not_clear"}')
+        }, data=json.dumps(payload).encode("utf-8"))
         try:
             with urllib.request.urlopen(req) as response:
                 res = json.loads(response.read())
