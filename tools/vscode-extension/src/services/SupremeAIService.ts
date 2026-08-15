@@ -305,7 +305,7 @@ export class SupremeAIService {
           // বাংলা মন্তব্য: 'fullText' ভ্যারিয়েবল ডিক্লেয়ার করা হলো এবং 'no-constant-condition' এড়াতে 'for (;;)' ব্যবহার করা হলো
           let fullText = '';
           let buffer = '';
-          for (;;) {
+          for (; ;) {
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
@@ -376,7 +376,7 @@ export class SupremeAIService {
           let fullText = '';
           let buffer = '';
           // বাংলা মন্তব্য: 'no-constant-condition' এড়াতে 'for (;;)' ব্যবহার করা হলো
-          for (;;) {
+          for (; ;) {
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
@@ -458,7 +458,7 @@ export class SupremeAIService {
       let fullText = '';
 
       // বাংলা মন্তব্য: 'no-constant-condition' এড়াতে 'for (;;)' ব্যবহার করা হলো
-      for (;;) {
+      for (; ;) {
         const { done, value } = await reader.read();
         if (done) break;
 

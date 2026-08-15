@@ -547,3 +547,4 @@ verify_git_junk.ps1
 
 # Temporary reference repo clone
 scratch_supremeai_reference_2/
+context_snapshot.md
