@@ -9,7 +9,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const showToast = (message: string, type: ToastType = 'info') => {
     const id = Date.now().toString();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    // বাংলা মন্তব্য: React #31 crash রোধ — caller object পাঠালেও message সর্বদা string রাখি।
+    const safeMessage =
+      typeof message === 'string'
+        ? message
+        : message && typeof message === 'object'
+          ? JSON.stringify(message)
+          : String(message);
+    setToasts((prev) => [...prev, { id, message: safeMessage, type }]);
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));

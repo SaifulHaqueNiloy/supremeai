@@ -38,7 +38,15 @@ export const useErrorHandler = () => {
       // 🚨 Show global toast if available and not suppressed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (options?.showToast !== false && (window as any).showGlobalToast) {
-        const toastMessage = error?.message || 'An unexpected error occurred';
+        // বাংলা মন্তব্য: React #31 crash রোধ — error?.message object (যেমন `{code,message,errors}`)
+        // হলে সবসময় string-এ রূপান্তর করবো, যেন toast-এর message কখনো object না হয়।
+        const raw = error?.message ?? error ?? 'An unexpected error occurred';
+        const toastMessage =
+          typeof raw === 'string'
+            ? raw
+            : raw && typeof raw === 'object'
+              ? JSON.stringify(raw)
+              : String(raw);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).showGlobalToast('error', toastMessage);
       }

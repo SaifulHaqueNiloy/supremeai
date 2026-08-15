@@ -10,6 +10,7 @@ This file tracks non-critical bugs, warnings, and technical debt in the SupremeA
 Agents should refer to this list when looking for optimization opportunities or when fixing related components.
 
 ## Current Issues
+- [x] React error #31 crash on Admin Dashboard login (Active Monitor E2E) — raw error object `{code,message,errors}` passed to global toast and rendered as React child. Fixed in `apiInterceptor.ts` + `useErrorHandler.ts` + `ToastProvider.tsx` + `ui/Toast.tsx` (string coercion).
 - [ ] Example Issue: Describe the issue here.
 
 ## Technical Debt

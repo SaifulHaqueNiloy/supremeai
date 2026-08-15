@@ -66,10 +66,22 @@ export function setupGlobalFetchInterceptor() {
           const text = await clone.text();
           if (text) {
             const parsed = JSON.parse(text);
-            if (parsed.error) errorMsg = parsed.error;
-            else if (parsed.message) errorMsg = parsed.message;
-            else if (parsed.detail) errorMsg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
-            else errorMsg = text.slice(0, 50);
+            // বাংলা মন্তব্য: React #31 crash রোধ — backend/Google-স্টাইল `{code,message,errors}` envelope
+            // যদি object হয় তাহলে সেটাকে সর্বদা string-এ রূপান্তর করবো, যেন toast/render-এ
+            // "Objects are not valid as a React child (found: object with keys {code,message,errors})" না ঘটে।
+            const toMsgString = (v: unknown): string | null =>
+              typeof v === 'string'
+                ? v
+                : v && typeof v === 'object'
+                  ? JSON.stringify(v)
+                  : v === undefined || v === null
+                    ? null
+                    : String(v);
+            errorMsg =
+              toMsgString(parsed.error) ??
+              toMsgString(parsed.message) ??
+              toMsgString(parsed.detail) ??
+              text.slice(0, 50);
           }
         } catch (e) {
           console.error('🚨 [INTERCEPTOR_ERROR]: Failed to parse error response', e);

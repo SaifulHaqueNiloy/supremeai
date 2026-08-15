@@ -9,7 +9,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const showToast = useCallback((type: ToastType, message: string) => {
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, message }]);
+    // বাংলা মন্তব্য: React #31 crash রোধ — যেকোনো caller object পাঠালেও message সর্বদা string রাখি।
+    const safeMessage =
+      typeof message === 'string'
+        ? message
+        : message && typeof message === 'object'
+          ? JSON.stringify(message)
+          : String(message);
+    setToasts((prev) => [...prev, { id, type, message: safeMessage }]);
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
