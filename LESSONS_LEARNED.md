@@ -2,6 +2,16 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — Broken Secret Scanner Hook Repaired + Repo Cleanup (AUDIT-2026-08 Part 2)
+
+### সমস্যা ১২: `secret-hunter` pre-commit hook নীরবে ভাঙা — সিক্রেট লিকের মূল কারণ
+- **উৎস:** `.pre-commit-config.yaml`-এর hook entry `poetry -C backend run python scripts/devops/secret_scan_ci.py --staged` — কিন্তু `backend/scripts/devops/secret_scan_ci.py` ফাইলটি রিপো-তে **কখনোই ছিল না**। অস্তিত্বহীন স্ক্রিপ্টে কল করায় hook ব্যর্থ হচ্ছিল (আর বিকল্পে `--no-verify` ব্যবহার করা হচ্ছিল)। এছাড়া `packages/scripts/security_guard.py`-এর `rnd_[a-zA-Z0-9]{32}` প্যাটার্নও আসল Render key (২৭ অক্ষর) ধরতে পারত না।
+- **ফিক্স:**
+  1. `security_guard.py`-এর PATTERN সেট শক্তিশালী: `rnd_{16,}`, JWT (`eyJ...`), Firebase (`AIza...`), GitHub (`ghp_`/`github_pat_`), GitLab (`glpat-`), Slack (`xox`), AWS secret, Private Key block — রাখা হলো।
+  2. `.pre-commit-config.yaml`-এর entry → কাজ করা `python packages/scripts/security_guard.py`-তে পয়েন্ট করা হলো (stdlib-only, cross-platform)।
+  3. টেস্ট: fake Render key → BLOCKED ✅, fake JWT → BLOCKED ✅, placeholder-only → PASS ✅।
+  4. Root ক্লাটার ক্লিনআপ: ৩৭+ gitignored জাঙ্ক ফাইল (logs, `actionlint.exe/.zip`, `tmp_old_ci.yml`, `render_*.json`, scratch_scripts) → `scratch/_trash_2026-08/`-এ সরানো (কিছুই ডিলিট হয়নি, non-destructive)। `frontend/package.json` ভার্সন `0.0.1` → `2.0.0` (প্রজেক্টের সাথে সিঙ্ক)।
+- **লেসন:** (১) pre-commit hook-এর entry যে .py ফাইল আসলেই **অস্তিত্বমান** কিনা নিয়মিত চেক করুন (`Test-Path`/`ls`) — অস্তিত্বহীন hook-এ কল করলে hook নীরবে fail করে, সিক্রেট লিকের প্রধান কারণ হয়ে দাঁড়ায়। (২) Secret scan শুরু করার সময় **আসল সিক্রেট ফর্ম্যাটে** টেস্ট কেস চালান — প্যাটার্নের length/format mismatch ধরা পড়ে। (৩) hook failure দেখা দিলে `--no-verify` ব্যবহার না করে hook ঠিক করুন। (৪) gitignored ফাইল `git add` করলে নীরবে fail হয় — `git add -f` + টেস্টে `git diff --cached --name-only` দিয়ে নিশ্চিত করুন।
 ## 2026-08-15 — CRITICAL: Live Secrets Exposed in Git History (AUDIT-2026-08)
 
 ### সমস্যা ১১: Render API Keys ও Infisical Tokens গিট-এ কমিট-করা অবস্থায় পাওয়া গেছে

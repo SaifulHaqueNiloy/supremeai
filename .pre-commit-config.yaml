@@ -42,7 +42,11 @@ repos:
     hooks:
       - id: secret-hunter
         name: 🔍 SecretHunter (AI & Pattern Secret Scanner)
-        entry: poetry -C backend run python scripts/devops/secret_scan_ci.py --staged
+        # AUDIT-2026-08: আগের entry backend/scripts/devops/secret_scan_ci.py ফাইলটি
+        # রিপো-তে ছিলই না (নিখোঁজ) — তাই hook নীরবে কাজ করছিল না এবং রিয়েল
+        # RENDER_API_KEY / Infisical token কমিট হয়ে যায়। এখন কাজ করা
+        # packages/scripts/security_guard.py (stdlib-only, cross-platform) পয়েন্ট করা হলো।
+        entry: python packages/scripts/security_guard.py
         language: system
         pass_filenames: false
         always_run: true

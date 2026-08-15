@@ -19,14 +19,25 @@ import sys
 import subprocess
 
 # কমন সিক্রেটের জন্য রেজেক্স প্যাটার্ন
+# বাংলা মন্তব্য: AUDIT-2026-08 — Render API key (rnd_...) এবং Infisical JWT token
+# লিক হওয়ার পর এই প্যাটার্নগুলো শক্তিশালী করা হয়েছে। আগে rnd_[a-zA-Z0-9]{32}
+# ছিল, কিন্তু আসল Render key ২৭ অক্ষরের ছিল — ফলে স্ক্যানার তা ধরতে পারেনি।
+# এখন lenient কনফিগারেশন (min length 16) + JWT/generic token কভারেজ যোগ করা হলো।
 SECRET_PATTERNS = {
-    "OpenAI API Key": r"sk-[a-zA-Z0-9]{48}",
-    "Render Deploy Hook": r"rnd_[a-zA-Z0-9]{32}",
-    "Stripe Key": r"(sk_live|sk_test)_[a-zA-Z0-9]+",
-    "AWS Access Key": r"AKIA[0-9A-Z]{16}",
+    "OpenAI API Key": r"(sk-[a-zA-Z0-9]{20,})",
+    "Render API Key": r"\b(rnd_[a-zA-Z0-9]{16,})\b",
+    "Stripe Secret Key": r"(sk_(live|test)_[a-zA-Z0-9]{16,})",
+    "AWS Access Key": r"\b(AKIA[0-9A-Z]{16})\b",
+    "AWS Secret Access Key": r"(aws_secret_access_key\s*[=:]\s*['\"]?[a-zA-Z0-9/+=]{40})",
     "GCP Service Account": r"\"type\":\s*\"service_account\"",
-    "Generic Bearer Token": r"Bearer\s+[a-zA-Z0-9\-\._~+/]+=*",
-    "SupremeAI API Key": r"sk-sup-[a-zA-Z0-9]{20,}",
+    "Firebase API Key": r"\b(AIza[0-9A-Za-z\-_]{20,})\b",
+    "GitHub Token": r"\b(ghp_[a-zA-Z0-9]{20,}|github_pat_[a-zA-Z0-9_]{20,})\b",
+    "GitLab Token": r"\b(glpat-[a-zA-Z0-9\-_]{20,})\b",
+    "Slack Token": r"\b(xox[baprs]-[a-zA-Z0-9\-]{10,})\b",
+    "Generic JWT (Infisical/other)": r"\b(eyJ[A-Za-z0-9\-_]{10,}\.[A-Za-z0-9\-_]{10,}\.[A-Za-z0-9\-_]{10,})\b",
+    "Generic Bearer Token": r"Bearer\s+[a-zA-Z0-9\-\._~+/]{20,}=*",
+    "SupremeAI API Key": r"\b(sk-sup-[a-zA-Z0-9]{20,})\b",
+    "Private Key Block": r"-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----",
 }
 
 # স্ক্যান থেকে বাদ দেওয়া এক্সটেনশন (বাইনারি / লক ফাইল)
