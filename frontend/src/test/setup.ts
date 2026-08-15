@@ -24,6 +24,7 @@ Object.defineProperty(global, 'localStorage', {
 
 class EventSourceMock {
   onopen: (() => void) | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onmessage: ((event: any) => void) | null = null;
   onerror: (() => void) | null = null;
   close = vi.fn();

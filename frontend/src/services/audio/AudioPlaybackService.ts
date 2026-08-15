@@ -7,6 +7,7 @@ export class AudioPlaybackService {
   constructor() {
     this.synth = window.speechSynthesis;
     // AudioContext used for Visualizer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = 256;

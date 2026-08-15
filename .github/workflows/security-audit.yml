@@ -22,7 +22,7 @@ jobs:
         run: |
           pip install poetry pip-audit
           poetry export -f requirements.txt --without-hashes -o requirements.txt
-          pip-audit -r requirements.txt || echo "Backend dependencies have vulnerabilities"
+          pip-audit -r requirements.txt
 
   frontend-audit:
     name: 📦 Frontend Dependency Audit
@@ -39,7 +39,7 @@ jobs:
         working-directory: frontend
         run: |
           npm install -g pnpm
-          pnpm audit --audit-level high || echo "Frontend dependencies have high vulnerabilities"
+          pnpm audit --audit-level high
 
   secret-scan:
     name: 🔒 Secret Scan (Gitleaks)

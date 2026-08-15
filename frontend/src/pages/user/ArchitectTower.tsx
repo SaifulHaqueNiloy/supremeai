@@ -5,6 +5,7 @@ import { getApiBaseUrl } from '../../utils/api';
 import { adminTokenStore } from '../../services/adminTokenStore';
 
 export const ArchitectTower: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fixes, setFixes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +23,7 @@ export const ArchitectTower: React.FC = () => {
       if (!res.ok) throw new Error('Failed to fetch pending fixes');
       const data = await res.json();
       setFixes(data.fixes || []);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
     } finally {

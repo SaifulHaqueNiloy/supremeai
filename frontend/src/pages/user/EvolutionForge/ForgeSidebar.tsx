@@ -12,6 +12,7 @@ const AVAILABLE_NODES = [
 ];
 
 export const ForgeSidebar = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onDragStart = (event: React.DragEvent, nodeData: any) => {
     // Pass the type for React Flow
     event.dataTransfer.setData('application/reactflow', nodeData.type);

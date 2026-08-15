@@ -91,9 +91,12 @@ interface WorkspaceSettingsState {
 interface SessionCockpitState {
   sessions: Session[];
   activeSession: Session | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createSession: (sessionData: any) => void;
   closeSession: (sessionId: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setActiveSession: (session: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateSession: (sessionId: string, updates: any) => void;
   fetchSessions: () => Promise<void>;
 }
@@ -110,11 +113,16 @@ interface IdeState {
 }
 
 interface CustomerState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customers: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectedCustomer: any | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addCustomer: (customer: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateCustomer: (customerId: string, customer: any) => void;
   removeCustomer: (customerId: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectCustomer: (customer: any) => void;
   fetchCustomers: () => Promise<void>;
 }

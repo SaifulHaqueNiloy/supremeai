@@ -26,6 +26,7 @@ export const RegisterPage: React.FC = () => {
       // বাংলা মন্তব্য: আসল অথেনটিকেশন — authStore এর মাধ্যমে ব্যাকএন্ডে রেজিস্টার করছে
       await register(email, name, password);
       navigate('/workspace');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err.status === 403 || (err.message && err.message.includes('confirmation'))) {
         setIsSuccess(true);

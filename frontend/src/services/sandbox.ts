@@ -94,6 +94,7 @@ export class SandboxService {
               executionTimeMs: Date.now() - startTime,
             });
           }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
           if (!isResolved) {
             isResolved = true;

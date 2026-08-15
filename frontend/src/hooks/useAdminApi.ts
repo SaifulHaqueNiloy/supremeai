@@ -8,6 +8,7 @@ const hasToken = (): boolean => !!adminTokenStore.getDecodedToken();
 export function useAdminRules() {
   return useQuery({
     queryKey: ['admin', 'rules'],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queryFn: () => apiClient.get<any>('/api/admin/rules'),
     enabled: hasToken(),
     staleTime: 30_000,
@@ -59,6 +60,7 @@ export function useCostReport() {
   return useQuery({
     queryKey: ['dashboard', 'costs'],
     queryFn: () => apiClient.get<{ report: string }>('/admin-api/costs'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     refetchInterval: (query: any) => query.state.error ? false : 60000,
     enabled: hasToken(),
     staleTime: 30_000,
@@ -68,7 +70,9 @@ export function useCostReport() {
 export function useHealthMap() {
   return useQuery({
     queryKey: ['dashboard', 'health'],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queryFn: () => apiClient.get<any>('/admin-api/health-map'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     refetchInterval: (query: any) => query.state.error ? false : 45000,
     enabled: hasToken(),
     staleTime: 20_000,
@@ -78,6 +82,7 @@ export function useHealthMap() {
 export function useAdminUsers() {
   return useQuery({
     queryKey: ['admin', 'users'],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queryFn: () => apiClient.get<any[]>('/admin-api/users'),
     enabled: hasToken(),
     staleTime: 30_000,
@@ -128,6 +133,7 @@ export function useGcpHealth() {
   return useQuery({
     queryKey: ['gcp', 'health'],
     queryFn: () => apiClient.get<import('../types').GcpHealth>('/gcp/health'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     refetchInterval: (query: any) => query.state.error ? false : 45000,
     staleTime: 20_000,
   });
@@ -137,6 +143,7 @@ export function useCloudStats() {
   return useQuery({
     queryKey: ['cloud', 'distribution'],
     queryFn: () => apiClient.get<import('../types').CloudStats>('/admin/cloud-distribution'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     refetchInterval: (query: any) => query.state.error ? false : 45000,
     staleTime: 20_000,
   });
@@ -147,6 +154,7 @@ export function useCIReports(limit = 20) {
   return useQuery({
     queryKey: ['dashboard', 'ci-logs', limit],
     queryFn: () => apiClient.get<import('../types').CIReport[]>(`/admin-api/ci-logs?limit=${limit}`),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     refetchInterval: (query: any) => query.state.error ? false : 30000,
     enabled: hasToken(),
     staleTime: 15_000,

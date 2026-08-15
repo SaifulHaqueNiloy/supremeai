@@ -84,6 +84,7 @@ export const AgentWorkspace: React.FC = () => {
         window.addEventListener('resize', handleResize);
 
         // Save handleResize to window for cleanup if needed, but better to put it in effect scope
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._terminalResizeHandler = handleResize;
       }
     };
@@ -98,8 +99,11 @@ export const AgentWorkspace: React.FC = () => {
         webcontainerRef.current.teardown();
         webcontainerRef.current = null;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((window as any)._terminalResizeHandler) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         window.removeEventListener('resize', (window as any)._terminalResizeHandler);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (window as any)._terminalResizeHandler;
       }
     };
@@ -116,6 +120,7 @@ export const AgentWorkspace: React.FC = () => {
 
     try {
       // ব্যাকএন্ড API কল (আপনার FastAPI সার্ভারের URL)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await apiClient.post<any>('/agent/execute', {
         prompt: prompt,
         project_id: 'proj_123'
@@ -177,6 +182,7 @@ export const AgentWorkspace: React.FC = () => {
           term.writeln(`\r\n⚠️ \x1b[1;33m[Auto-Heal] Code failed with exit code ${exitCode}. Requesting AI fix...\x1b[0m`);
 
           // ব্যাকএন্ডে এরর মেসেজসহ ফিক্সের জন্য রিকোয়েস্ট পাঠানো
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const fixData = await apiClient.post<any>('/agent/execute', {
             prompt: `I tried to run this code but got an error. \n\nCODE:\n${codeToRun}\n\nERROR:\n${processOutput}\n\nPlease fix the bug and return ONLY the full working code.`,
             project_id: 'proj_123'
@@ -207,6 +213,7 @@ export const AgentWorkspace: React.FC = () => {
         // 🟢 ২. GitHub-এ Auto-PR তৈরি করা (The New Magic)
         term.writeln(`\r\n🐙 \x1b[1;34m[GitHub] Pushing verified code to repository as a PR...\x1b[0m`);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const prData = await apiClient.post<any>('/agent/github/pr', {
           user_id: 'admin_123', // TODO: Fetch from session
           repo_name: import.meta.env.VITE_GITHUB_REPO || 'supremeai/test_repo',

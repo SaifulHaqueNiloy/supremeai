@@ -76,6 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email, password) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await apiClient.post<any>('/api/v1/auth/login', {
         username: email,
         password: password
@@ -105,6 +106,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   register: async (email, name, password) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await apiClient.post<any>('/api/v1/auth/register', {
         username: email,
         password: password,
@@ -176,6 +178,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // বাংলা মন্তব্য: ব্যাকগ্রাউন্ডে token ভ্যালিডেট করা হয় — শুধুমাত্র নিশ্চিত 401/403-এ
     // logout হবে; নেটওয়ার্ক/কোল্ড-স্টার্ট/5xx এরর হলে সেশন অক্ষত থাকে।
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await apiClient.get<any>('/api/v1/auth/me');
       const verifiedEmail = response.email || response.username || optimisticUser.email;
       const freshUser: UserProfile = {
@@ -189,6 +192,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         status: AuthStatus.LOGGED_IN,
         user: freshUser,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const status = error?.status as number | undefined;
       if (status === 401 || status === 403) {

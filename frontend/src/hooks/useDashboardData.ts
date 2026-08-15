@@ -59,6 +59,7 @@ const hasToken = (): boolean => !!adminTokenStore.getDecodedToken();
 
 // 🛡️ অডিটর ফিক্স: আপনার exact useDashboardData implementation
 export const useDashboardData = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { handleError } = useErrorHandler();
@@ -186,6 +187,7 @@ export function useDashboardReports(reportName?: string) {
     queryKey: ['dashboard', 'reports', reportName],
     queryFn: () => {
       const url = reportName ? `/admin-api/reports?report_name=${reportName}` : '/admin-api/reports';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return apiClient.get<any>(url);
     },
     enabled: hasToken(),

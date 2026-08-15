@@ -25,6 +25,7 @@ describe('apiClient', () => {
 
   it('should include credentials and process successful response', async () => {
     const mockResponse = { data: 'success' };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
@@ -41,6 +42,7 @@ describe('apiClient', () => {
   });
 
   it('should throw ApiError with status 401 on unauthorized access', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 401,
@@ -51,6 +53,7 @@ describe('apiClient', () => {
   });
 
   it('should throw ApiError with status 429 on rate limit', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 429,

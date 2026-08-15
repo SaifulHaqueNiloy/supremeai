@@ -35,11 +35,11 @@ interface SubTabContentProps {
   setEnvConfig: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   handleSaveConfig: () => void;
   handleTriggerDeploy: () => void;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+   
   [key: string]: any;
 }
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+ 
 const MODULE_MAP: Record<string, React.FC<any>> = {
   'dashboard': Dashboard,
   'alerts': AdminAlertsTab,

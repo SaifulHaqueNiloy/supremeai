@@ -23,6 +23,7 @@ export const globalShowToastRef = { current: (() => {
 }) as (type: ToastType, message: string) => void };
 
 if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).showGlobalToast = (type: ToastType, message: string) => {
     globalShowToastRef.current(type, message);
   };

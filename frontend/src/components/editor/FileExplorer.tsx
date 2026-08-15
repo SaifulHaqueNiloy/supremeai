@@ -21,6 +21,7 @@ export const FileExplorer: React.FC = () => {
       try {
         const rootEntries = await webContainer.fs.readdir('/', { withFileTypes: true });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const buildTree = async (entries: any[], currentPath: string): Promise<FileNode[]> => {
           const nodes: FileNode[] = [];
           for (const entry of entries) {

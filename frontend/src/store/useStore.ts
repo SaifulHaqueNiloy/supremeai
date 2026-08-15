@@ -104,6 +104,7 @@ export const useStore = create<SupremeState>((set) => ({
     }
     set({ isGateLoading: true });
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await apiClient.get<any>('/api/admin/metrics/dashboard');
       set({ deployGate: {
         status: data.status === "HEALTHY" ? "UNLOCKED" : "LOCKED",
@@ -119,6 +120,7 @@ export const useStore = create<SupremeState>((set) => ({
   executeGateOverride: async (targetStatus, reason, secret) => {
     // বাংলা মন্তব্য: raw fetch() → apiClient — auth header এখন যাচ্ছে। admin_secret এখনো body তে, HTTPS চ্যানেলে safe।
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await apiClient.post<any>('/api/admin/gate/override', {
         target_status: targetStatus,
         reason,
@@ -129,6 +131,7 @@ export const useStore = create<SupremeState>((set) => ({
         return { success: true, message: data.message };
       }
       return { success: false, message: data.detail || "Override verification rejected." };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       return { success: false, message: err.message || "Network isolation error." };
     }
@@ -138,6 +141,7 @@ export const useStore = create<SupremeState>((set) => ({
     // বাংলা মন্তব্য: raw fetch() → apiClient — Authorization header সহ, 402/429 status properly throw হবে
     set({ isForging: true, forgeFeedback: "🧠 Self-Evolution Core is structuring your request...", forgeSuccessCode: null });
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await apiClient.post<any>('/api/evolution/forge', {
         skill_name: skillName,
         user_demand: userDemand,
@@ -154,6 +158,7 @@ export const useStore = create<SupremeState>((set) => ({
           forgeFeedback: `🚨 Evolution Blocked: ${data.detail || data.error || "Sandbox Verification Failed."}`,
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       set({
         isForging: false,

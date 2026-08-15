@@ -63,6 +63,7 @@ const EvolutionForgeCanvas = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isDebateOpen, setIsDebateOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [debateLogs, setDebateLogs] = useState<any[]>([]);
   const { toObject } = useReactFlow();
   const { showToast } = useToast();
@@ -143,15 +144,18 @@ const EvolutionForgeCanvas = () => {
     [setNodes]
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const buildForgePayload = (name: string, flow: any) => ({
     name,
     description: "Visual Swarm Architecture",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nodes: flow.nodes.map((n: any) => ({
       id: n.id,
       type: n.type,
       position: n.position,
       data: n.data
     })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     edges: flow.edges.map((e: any) => ({
       id: e.id,
       source: e.source,

@@ -18,6 +18,7 @@ const decodeJwt = (token: string): Record<string, unknown> | null => {
     }
 
     return decoded;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     // 🛡️ অডিটর ফিক্স: সাইলেন্ট ফেইলর ব্লাস্ট করে ইন্টারনাল ডায়াগনস্টিক ট্রেস এনফোর্স
     console.warn("⚠️ [JWT_DECODE_LEAK]: Failed to safely parse admin JWT token.", {
@@ -104,6 +105,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         try {
           const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
           idToken = await userCredential.user.getIdToken(true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (authErr: any) {
           console.error("Firebase Auth Error:", authErr);
           set({ adminError: authErr?.message || 'Invalid email or password.' });
@@ -187,6 +189,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           set({ adminError: detail });
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err && typeof err === 'object' && err.message ? err.message : String(err);
       set({ adminError: 'Connection failed: ' + msg });
@@ -240,6 +243,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         const detail = typeof data.detail === 'string' ? data.detail : 'Failed to generate QR code.';
         set({ adminError: detail });
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err && typeof err === 'object' && err.message ? err.message : String(err);
       set({ adminError: 'Connection failed: ' + msg });

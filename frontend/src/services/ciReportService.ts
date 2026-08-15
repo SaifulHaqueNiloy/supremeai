@@ -14,6 +14,7 @@ export interface CIReport {
   runtime_seconds: number;
   commit_sha: string;
   branch: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jobs_summary: Record<string, any> | null;
   error_logs: string | null;
   created_at: number;

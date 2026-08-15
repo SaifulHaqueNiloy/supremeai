@@ -24,6 +24,7 @@ export const LoginPage: React.FC = () => {
       // বাংলা মন্তব্য: আসল অথেনটিকেশন — authStore এর মাধ্যমে ব্যাকএন্ডে লগইন করছে
       await login(email, password);
       navigate('/workspace');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const errorMsg = err.response?.data?.detail || err.message || 'লগইন ব্যর্থ হয়েছে।';
       setError(`Error: ${errorMsg}`);

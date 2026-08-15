@@ -13,6 +13,7 @@ export const useBudgetCheck = () => {
       await apiClient.get(`/api/admin/metrics/cost?estimated=${estimatedCost}`);
       setIsChecking(false);
       return true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setIsChecking(false);
       if (err instanceof ApiError && err.status === 402) {

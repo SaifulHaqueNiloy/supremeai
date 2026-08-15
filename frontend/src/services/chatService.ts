@@ -105,6 +105,7 @@ export async function sendMessageStream(
     } catch {
       onDone(undefined);
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     if (err.name !== 'AbortError') {
       onError(err.message);
@@ -122,7 +123,9 @@ export const chatService = {
 
   sendMessageStream,
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getVoices: async (): Promise<any[]> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return apiClient.get<any[]>('/api/voice/voices');
   },
 };

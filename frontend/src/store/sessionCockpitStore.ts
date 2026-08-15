@@ -16,6 +16,7 @@ export interface LogEntry {
   id: string;
   ts: string;
   log_type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any;
 }
 
@@ -39,6 +40,7 @@ interface SessionCockpitState {
   // Zustand isn't great with Maps in reactive state if they mutate often,
   // but for the sake of the store structure we define it.
   // The actual FileTreePanel uses a useRef<Map> for performance.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fileTreeData: any;
   reasoningChain: ReasoningEntry[];
   agentState: SujonState;

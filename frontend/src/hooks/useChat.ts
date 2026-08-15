@@ -119,6 +119,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
         addCustomerMessage(finalMsg);
         addStoreMessage({ role: 'assistant', content: finalMsg.content });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           setError(err.message || 'Unknown error occurred');
@@ -155,6 +156,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setMessages(prev => [...prev, assistantMsg]);
         addCustomerMessage(assistantMsg);
         addStoreMessage({ role: 'assistant', content: assistantMsg.content });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(err.message || 'Unknown error occurred');
       } finally {

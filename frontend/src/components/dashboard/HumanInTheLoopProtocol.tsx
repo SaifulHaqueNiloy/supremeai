@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useSupremeStore from '../../store/useSupremeStore';
+import { apiClient } from '../../services/apiClient';
 
 interface HumanInTheLoopProtocolProps {
   onApproval: (action: string) => void;
@@ -32,6 +33,8 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [otpCode, setOtpCode] = useState<string>('');
   const [showOtpInput, setShowOtpInput] = useState<boolean>(false);
+  const [otpVerifying, setOtpVerifying] = useState<boolean>(false);
+  const [otpError, setOtpError] = useState<string>('');
   const { user } = useSupremeStore();
 
   const protocolSteps = [
@@ -77,11 +80,23 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
     }
   };
 
-  const handleOtpSubmit = () => {
-    // In a real implementation, this would validate the OTP
-    if (otpCode.length === 6) { // Simple validation
+  const handleOtpSubmit = async () => {
+    if (otpCode.length !== 6) return;
+
+    setOtpVerifying(true);
+    setOtpError('');
+    try {
+      await apiClient.post('/api/admin/verify-otp', { code: otpCode });
       setIsConfirmed(true);
       onApproval(details.actionId);
+    } catch (err) {
+      setOtpError(
+        err instanceof Error && err.message
+          ? err.message
+          : 'OTP verification failed. Please try again.'
+      );
+    } finally {
+      setOtpVerifying(false);
     }
   };
 
@@ -228,26 +243,32 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Enter 6-digit OTP"
                   maxLength={6}
-                  className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-cyan-500 mb-4"
+                  disabled={otpVerifying}
+                  className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-cyan-500 mb-4 disabled:opacity-60"
                 />
+
+                {otpError && (
+                  <p className="text-sm text-red-400 mb-4">{otpError}</p>
+                )}
 
                 <div className="flex justify-end space-x-2">
                   <button
                     onClick={() => setShowOtpInput(false)}
-                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded"
+                    disabled={otpVerifying}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded disabled:opacity-60"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleOtpSubmit}
-                    disabled={otpCode.length !== 6}
+                    disabled={otpCode.length !== 6 || otpVerifying}
                     className={`px-4 py-2 rounded ${
-                      otpCode.length !== 6
+                      otpCode.length !== 6 || otpVerifying
                         ? 'bg-gray-600 cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700'
                     }`}
                   >
-                    Submit OTP
+                    {otpVerifying ? 'Verifying...' : 'Submit OTP'}
                   </button>
                 </div>
               </div>

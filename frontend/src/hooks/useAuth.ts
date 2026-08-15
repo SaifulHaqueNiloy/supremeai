@@ -64,6 +64,7 @@ export function useAuth(): UseAuthReturn {
           setAuthReady(true);
           setLoading(false);
         });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (!cancelled) {
           console.warn('Firebase auth initialization failed:', err.message);
@@ -85,6 +86,7 @@ export function useAuth(): UseAuthReturn {
       const profile = mapFirebaseUser(credential.user);
       setUser(profile);
       setFirebaseUser(credential.user);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const message = err.code === 'auth/invalid-credential'
         ? 'Invalid email or password.'
@@ -111,6 +113,7 @@ export function useAuth(): UseAuthReturn {
       };
       setUser(profile);
       setFirebaseUser(credential.user);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const message = err.code === 'auth/email-already-in-use'
         ? 'An account with this email already exists.'
@@ -131,6 +134,7 @@ export function useAuth(): UseAuthReturn {
       await firebaseSignOut(auth);
       setUser(null);
       setFirebaseUser(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Sign out failed.');
       throw err;

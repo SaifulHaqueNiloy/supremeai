@@ -2,6 +2,16 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — Codebase Report Audit Fixes (HITL OTP + CI Security Gate)
+
+### সমস্যা: `supremeai_codebase_report.md` রিভিউ করে ৪টি critical issue চিহ্নিত; ভেরিফাই করে ২টি আসল, ২টি false alarm পাওয়া গেছে
+- **ফিক্স:**
+  1. **HITL OTP client-side-only ছিল (সত্যি):** `HumanInTheLoopProtocol.tsx` এর `handleOtpSubmit` শুধু `otpCode.length === 6` চেক করত → backend না ডাকায় OTP trivially bypass হত। এখন `apiClient.post('/api/admin/verify-otp', { code: otpCode })` কল করে, loading (`otpVerifying`) + error (`otpError`) স্টেট, আর backend `400/401` এ error মেসেজ দেখায়। `apiClient` নিজেই `supreme_admin_jwt` Bearer হিসেবে পাঠায়।
+  2. **`security-audit.yml` non-failing (সত্যি):** `pip-audit` ও `pnpm audit` এর শেষে `|| echo "..."` ছিল → audit fail করলেও build pass করত। সরিয়ে দেওয়া হয়েছে যাতে vulnerability-তে workflow fail করে।
+  3. **Migration `down_revision` false alarm:** রিপোর্ট দাবি করেছিল `a1b2c3d4e5f6` revision নেই — আসলে `a1b2c3d4e5f6_add_patch_telemetry_table.py` আছে, chain valid। কোনো ফিক্স লাগেনি।
+  4. **DashboardShell testid false alarm:** রিপোর্ট বলেছিল sidebar testid নেই — আসলে `Sidebar.tsx` এ `data-testid="dashboard-sidebar"` ও `nav-*` আছে, `DashboardShell.test.tsx` 5/5 pass করে। কোনো ফিক্স লাগেনি।
+- **লেসন:** (১) রিপোর্টের দাবি অন্ধভাবে বিশ্বাস না করে কোডবেসে ভেরিফাই করুন — এখানে ৪-এর ২টিই ভুল ছিল। (২) HITL/OTP-এর মতো সিকিউরিটি চেক ক্লায়েন্টে করা যাবে না, অবশ্যই backend-এ validate করতে হবে। (৩) CI audit-এ `|| echo` দিয়ে soft-fail করা production-এ নিরাপত্তা ঝুঁকি। (৪) ফিক্সের পর `tsc --noEmit` 0 errors + `eslint` clean + টেস্ট ৫/5 pass ভেরিফাই করা হয়েছে।
+
 ## 2026-08-15 — SupremeAI Model/Provider Branding (Third-Party Names → Own Brand)
 
 ### সমস্যা: ইউজার/অ্যাডমিন UI-এ GPT/Claude/Gemini-এর মতো বাহিরের AI মডেল নাম সরাসরি দেখাচ্ছিল

@@ -8,6 +8,7 @@ interface UseWebSocketOptions {
   autoConnect?: boolean;
   reconnectAttempts?: number;
   reconnectInterval?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onMessage?: (data: any) => void;
   onOpen?: () => void;
   onClose?: () => void;
@@ -16,6 +17,7 @@ interface UseWebSocketOptions {
 
 interface UseWebSocketReturn {
   status: ConnectionStatus;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any | null;
   send: (message: unknown) => void;
   connect: () => void;
@@ -36,6 +38,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   } = options;
 
   const [status, setStatus] = useState<ConnectionStatus>('closed');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any | null>(null);
   const [lastMessage, setLastMessage] = useState<MessageEvent | null>(null);
 

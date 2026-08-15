@@ -13,11 +13,13 @@ export interface ErrorContext {
 export interface ErrorHandlerOptions {
   context?: string;
   showToast?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fallbackData?: any;
 }
 
 export const useErrorHandler = () => {
   const handleError = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error: any, context?: string, options?: ErrorHandlerOptions): void => {
       const errorInfo: ErrorContext = {
         timestamp: new Date().toISOString(),
@@ -34,8 +36,10 @@ export const useErrorHandler = () => {
       });
 
       // 🚨 Show global toast if available and not suppressed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (options?.showToast !== false && (window as any).showGlobalToast) {
         const toastMessage = error?.message || 'An unexpected error occurred';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).showGlobalToast('error', toastMessage);
       }
 

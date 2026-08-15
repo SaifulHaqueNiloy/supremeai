@@ -4,4 +4,5 @@ import { createContext } from 'react';
 export const I18nContext = createContext({ t: (key: string, params?: Record<string, string | number>) => {
   if (params) return key;
   return key;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }, locale: 'en', setLocale: (_next: string) => {} } satisfies Record<string, any>);

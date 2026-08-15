@@ -12,6 +12,7 @@ describe('Budget Check & Cost Guard (402) Tests', () => {
   });
 
   it('should throw ApiError with status 402 when CostGuard rejects request', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 402,
