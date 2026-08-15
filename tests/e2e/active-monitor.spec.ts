@@ -47,7 +47,11 @@ test.describe('Active Health Monitor (Production)', () => {
     page.on('console', async (msg) => {
       const type = msg.type();
       const text = msg.text();
-      
+
+      // বাংলা মন্তব্য: ব্রাউজার এক্সটেনশন (Fatkun, Pinterest, Facebook ইত্যাদি) থেকে আসা কনসোল এরর বাদ দিন
+      const loc = msg.location();
+      if (loc && loc.url && /extension:\/\//.test(loc.url)) return;
+
       // Ignore some common benign warnings or tracking errors
       if (text.includes('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT')) return; // Adblock
       if (text.includes('favicon.ico')) return;
