@@ -1,6 +1,7 @@
 // বাংলা মন্তব্য: Portal-ভিত্তিক একক backend নির্ধারণ — কোনো cross-portal failover নেই।
 // Admin build (VITE_PORTAL_TYPE=admin) শুধু Admin backend-এ কথা বলে, User build শুধু User backend-এ।
-// Firebase hosting-এ relative path ('') রেখে CORS preflight সম্পূর্ণ এড়ানো হয় (firebase.json rewrite proxy)।
+// Firebase hosting external rewrite proxy সাপোর্ট করে না, তাই Firebase-এ সরাসরি backend URL ব্যবহার হয় (CORS allow)।
+// Vercel-এ relative path ('') রাখা হয় কারণ Vercel external rewrite proxy সাপোর্ট করে।
 
 /** Admin portal-এর canonical backend URL (build-time resolved) */
 export const ADMIN_BACKEND_URL: string =
@@ -38,15 +39,17 @@ export const getApiBaseUrl = (): string => {
     return BACKEND_URL;
   }
 
-  // 🔥 ফিক্স: Firebase hosting-এ (web.app/firebaseapp.com) relative path ব্যবহার।
-  // ব্রাউজার একই origin-এ request করে, Firebase server-side proxy করে Render-এ।
-  // CORS preflight সম্পূর্ণ বাদ — Render free tier-এ সবচেয়ে নির্ভরযোগ্য পদ্ধতি।
   const hostname = window.location.hostname;
-  if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+
+  // 🔥 ফিক্স: Firebase Hosting rewrite দিয়ে external URL-এ proxy করা যায় না,
+  // তাই Firebase (.web.app/.firebaseapp.com)-এ সরাসরি portal-নির্দিষ্ট backend URL ব্যবহার করি।
+  // Backend CORS ইতিমধ্যে supremeai-admin.web.app allow করে রেখেছে।
+  // Vercel (vercel.app) external rewrite proxy সাপোর্ট করে, তাই সেখানে relative path রাখি।
+  if (hostname.includes('vercel.app')) {
     return '';
   }
 
-  // বাংলা মন্তব্য: Vercel বা local dev-এ সরাসরি portal-নির্দিষ্ট backend URL
+  // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসরি backend URL
   return BACKEND_URL;
 };
 
