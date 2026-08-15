@@ -311,3 +311,16 @@ jobs:
           SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
           INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
         run: pnpm exec playwright test tests/e2e/active-monitor.spec.ts --project=chromium
+
+  deploy-cloudflare:
+    name: ⚡ Deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: 'infrastructure/cloudflare'
