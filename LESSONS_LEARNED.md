@@ -151,3 +151,10 @@
 - **উৎস:** `ci.yml`-এর `health-check` জবে `actions/setup-node` আগে চালানো হচ্ছিল, তারপর `npm install -g pnpm`। কিন্তু `setup-node` যখন `cache: 'pnpm'` ব্যবহার করে, তখন তার আগে `pnpm` ইনস্টল থাকা আবশ্যক, নচেৎ cache directory resolve করতে গিয়ে `Unable to locate executable file: pnpm` এরর দেয়।
 - **ফিক্স:** `ci.yml`-এ `health-check` জবের ভেতরে `Install pnpm` স্টেপটিকে `Setup Node.js` স্টেপের আগে নিয়ে আসা হয়েছে, ঠিক যেভাবে `frontend-ci` জবে করা ছিল।
 - **লেসন:** `actions/setup-node` এর সাথে `cache: 'pnpm'` ব্যবহার করলে অবশ্যই তার ঠিক আগের স্টেপে `pnpm` ইনস্টল করতে হবে (যেমন: `npm install -g pnpm` বা `pnpm/action-setup`)। Node setup-এর পরে ইনস্টল করলে caching mechanism কাজ করতে পারে না।
+
+## 2026-08-15 — pnpm v10 + Node.js Version Incompatibility (AUDIT-2026-08 Part 2)
+
+### সমস্যা ১৫: `health-check` জবে pnpm ইনস্টল করার পরেও `node:sqlite` built-in মডিউল না পেয়ে ক্র্যাশ করছিল।
+- **উৎস:** `npm install -g pnpm` সবসময় সর্বশেষ pnpm ইনস্টল করে, যা এখন **pnpm v10**। pnpm v10 এর জন্য **Node.js ≥ v22.13** প্রয়োজন (`node:sqlite` built-in Node 22-এ এসেছে)। কিন্তু `health-check` জবে `node-version: '20'` সেট ছিল → `ERR_UNKNOWN_BUILTIN_MODULE: node:sqlite` এরর।
+- **ফিক্স:** `ci.yml`-এর `health-check` জবে `node-version: '20'` → `'22'` আপগ্রেড করা হয়েছে। `frontend-ci` ইতোমধ্যে Node 24 ব্যবহার করে, তাই Node 22 সবচেয়ে safe minimum।
+- **লেসন:** (১) `npm install -g pnpm` সবসময় **latest** ইনস্টল করে। Major version bump হলে (pnpm 9→10) Node compatibility requirement পরিবর্তন হতে পারে। (২) pnpm ব্যবহার করলে সর্বদা **explicit version pin** করুন: `npm install -g pnpm@9` অথবা `pnpm/action-setup@v4` ব্যবহার করুন যেখানে `version` ফিল্ড থাকে। (৩) রিপোতে `package.json`-এ `"packageManager": "pnpm@9.x.x"` ফিল্ড থাকলে `pnpm/action-setup` সেটা অনুসরণ করে — ভবিষ্যতে এটি সেরা পদ্ধতি।
