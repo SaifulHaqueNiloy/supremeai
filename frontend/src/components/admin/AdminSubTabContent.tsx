@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import type { AdminSubTab, ChatMessage } from '../../types';
 import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
 import { RateLimitManager } from './RateLimitManager';
@@ -65,6 +67,48 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
   'interactive-chat': InteractiveChatTab,
 };
 
+// বাংলা মন্তব্য: প্রতিটি admin tab-কে isolation-এর জন্য root-level ErrorBoundary-তে মোড়ানো হয়।
+// কোনো module-এর render crash করলে পুরো dashboard নষ্ট না হয়ে শুধু সমস্যা module-টি graceful
+// fallback দেখায়; "Reboot Module" বাটন বা অন্য tab-এ যাওয়ায় automatically reset হয়।
+class ModuleErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[Dashboard Module ErrorBoundary] Module crashed:', error, info);
+  }
+
+  private reset = () => {
+    this.setState({ hasError: false });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-[320px] bg-[var(--bg-main)]">
+          <div className="text-[#ff0055] text-sm font-mono font-bold uppercase tracking-widest mb-2">
+            ⚠ Module Crash Detected
+          </div>
+          <p className="text-slate-400 text-xs font-mono mb-4 text-center max-w-md">
+            This dashboard module encountered a render error and was isolated.
+            The rest of the system remains intact. Click below to reboot it.
+          </p>
+          <button
+            onClick={this.reset}
+            className="bg-[#00f3ff]/20 hover:bg-[#00f3ff]/40 text-[#00f3ff] hover:text-white font-mono font-bold py-2 px-4 rounded-lg transition-colors border border-[#00f3ff] uppercase text-xs"
+          >
+            Reboot Module
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function SubTabContent(props: SubTabContentProps) {
   const { adminSubTab, setAdminSubTab } = props;
 
@@ -91,7 +135,10 @@ export function SubTabContent(props: SubTabContentProps) {
 
       <div className="flex-1 overflow-auto relative z-10 flex flex-col">
         {/* বাংলা মন্তব্য: শুধুমাত্র নির্বাচিত মডিউলটি মাউন্ট হবে, আগেরগুলো আনমাউন্ট হয়ে যাবে */}
-        <SelectedModule {...props} />
+<ModuleErrorBoundary key={adminSubTab}>
+          <SelectedModule {...props} />
+        </ModuleErrorBoundary>
+        
       </div>
     </div>
   );
