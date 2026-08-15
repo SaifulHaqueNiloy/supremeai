@@ -144,3 +144,10 @@
 - **উৎস:** `apiClient.getAuthHeaders()` শুধু `supremeai_auth_token` (user token) পড়ত, admin JWT নয় → `/admin-api/*` ও `/api/admin/*` (require_admin_token) 401।
 - **ফিক্স:** admin-role JWT (`supreme_admin_jwt`) থাকলে তাকে Bearer-preফারেন্স হিসেবে পাঠানো; নচেৎ user token fallback।
 - **লেসন:** getAuthHeaders সর্বদা admin token-কে অগ্রাধিকার দাও, কারণ এটি সবচেয়ে privileged; user flow-এ তা না থাকলে user token-ই যথেষ্ট।
+
+## 2026-08-15 — Environment Health Check CI: pnpm not found (AUDIT-2026-08)
+
+### সমস্যা ১৪: `health-check` workflow-এ `actions/setup-node` `cache: 'pnpm'` ব্যবহারের সময় `pnpm` খুঁজে না পাওয়ায় ফেইল করছিল।
+- **উৎস:** `ci.yml`-এর `health-check` জবে `actions/setup-node` আগে চালানো হচ্ছিল, তারপর `npm install -g pnpm`। কিন্তু `setup-node` যখন `cache: 'pnpm'` ব্যবহার করে, তখন তার আগে `pnpm` ইনস্টল থাকা আবশ্যক, নচেৎ cache directory resolve করতে গিয়ে `Unable to locate executable file: pnpm` এরর দেয়।
+- **ফিক্স:** `ci.yml`-এ `health-check` জবের ভেতরে `Install pnpm` স্টেপটিকে `Setup Node.js` স্টেপের আগে নিয়ে আসা হয়েছে, ঠিক যেভাবে `frontend-ci` জবে করা ছিল।
+- **লেসন:** `actions/setup-node` এর সাথে `cache: 'pnpm'` ব্যবহার করলে অবশ্যই তার ঠিক আগের স্টেপে `pnpm` ইনস্টল করতে হবে (যেমন: `npm install -g pnpm` বা `pnpm/action-setup`)। Node setup-এর পরে ইনস্টল করলে caching mechanism কাজ করতে পারে না।

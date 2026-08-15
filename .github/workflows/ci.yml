@@ -1,4 +1,4 @@
-﻿name: SupremeAI Simple CI
+name: SupremeAI Simple CI
 
 on:
   push:
@@ -284,6 +284,10 @@ jobs:
           INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
         run: python backend/scripts/devops/ai_log_analyzer.py
 
+      - name: Install pnpm
+        if: always()
+        run: npm install -g pnpm
+
       - name: Setup Node.js (For Browser Automation)
         if: always()
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -291,10 +295,6 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
-
-      - name: Install pnpm
-        if: always()
-        run: npm install -g pnpm
 
       - name: Install Playwright & Dependencies
         if: always()
