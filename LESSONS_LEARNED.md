@@ -7,7 +7,24 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-16 — ⚙️ Architecture Decision: Autonomous Execution Policy
+
+- **সমস্যা:** AI-এর code execution sandbox এবং auto-commit authority কোনো rule ছাড়াই চলছিল।
+- **সিদ্ধান্ত (Core Philosophy থেকে):**
+  - **Sandbox:** Python subprocess (timeout=30s) for safe tasks; Docker only for risky/unknown code — `$0 cost` principle।
+  - **Direct Push:** docs, `*.md`, AI memory files, lint-only commits।
+  - **PR Required:** backend logic, frontend, CI/CD, infra config, migrations, lock files।
+- **Lesson:** Core philosophy (`$0 cost` + `self-healing` + `reliability`) থেকে সরাসরি rules derive করলে admin-এর approval loop ছাড়াই সঠিক decision নেওয়া যায়।
+
+## 2026-08-16 — 🚨 Double Deploy Bug Fixed (render.yaml autoDeploy)
+
+- **সমস্যা:** `render.yaml`-এ `autoDeploy: true` ছিল। প্রতি `git push main`-এ Render তাৎক্ষণিক deploy করত। CI-ও আলাদাভাবে `deploy-backend` job চালাত। ফলে প্রতি push-এ **2টা deploy** → 500 min free quota দ্বিগুণ গতিতে শেষ।
+- **Fix:** `render.yaml` → `autoDeploy: false` (backend + frontend উভয়)। CI pipeline একমাত্র deploy authority।
+- **Effect:** `check-render-quota` → quota-based routing এখন কার্যকর। Resource waste বন্ধ।
+- **Lesson:** Render `autoDeploy: true` + CI deploy job একসাথে রাখা যাবে না। Always pick ONE deploy authority।
+
 ## 2026-08-16 — 🔥 React Error #31 (Active Monitor E2E) Root Cause: RAW ERROR OBJECT RENDERED IN TOAST
+
 
 ### সমস্যা: 🩺 Environment Health Check → Active Monitor E2E প্রোডাকশন বিল্ডে Admin Dashboard লগইন করার সময় `Minified React error #31` (object with keys `{code, message, errors}`) আনকট uncaught pageerror → `caughtErrors.length` 1 → CI fail।
 
@@ -17,6 +34,7 @@
 - **লেসন:** যেকোনো error মেসেজ toast/state→JSX child-এ বসানোর আগে MUST `typeof === 'string'` guard, নাহলে production (minified) বিল্ডে React #31 ধরা পড়ে। Commit `f71269c2` (adminStore-এ String()) CI-test হয়েও ফেল ছিল — আসল লিক ছিল interceptor→toast রুটে। CI ফেলের minified error args (`args[]=object with keys {code,message,errors}`) পড়ে object-shape ট্রেস করো।
 
 ## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
+
 ## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
 
 ### সমস্যা: এক্সটেনশনের ভেতরে থার্ড-পার্টি API (OpenRouter) ফলব্যাক লজিক থাকার কারণে মার্কেটিং ও আর্কিটেকচারাল কনফ্লিক্ট তৈরি হওয়া।
@@ -44,29 +62,3 @@
 - **উৎস:** `verify-render-deploy.py`-এ `TIMEOUT_LIMIT = 120`। Render free-tier-এ ভারী Python backend-এর build+deploy `update_in_progress` অবস্থায় ২-৬ মিনিট নেয়; ১২০s-এ সেই অবস্থাতেই step fail → পুরো push run লাল (বাকি সব job path-filter-এ skip থাকায় এরাই একমাত্র failer)।
 - **ফিক্স:** default ৩৬০s (৬ মিনিট), `RENDER_VERIFY_TIMEOUT` env দিয়ে overridable; `fail/cancel/error` status এখনও instant fail; deploy LIVE-এর পরে fresh-live HTTP health check-ও retries=১০ (app boot সময় পায়)।
 - **লেসন:** CI-তে polling/sleep-ভিত্তিক deploy verification-এ timeout কখনোই app-এর বাস্তব build/deploy সময়ের চেয়ে ছোট রাখো না — নাহলে false-negative fail আসবে। Status-ভিত্তিক fast-fail (fail/cancel/error) রাখো, কিন্তু "in-progress" অবস্থার জন্য generous টাইমআউট দাও এবং env-চালিত করো, যাতে CI-স্তর থেকে tune করা যায়।
-
-## 2026-08-15 — Simple CI Pipeline: Silent-Failure, Lockfile Auto-Push, Dual-Cache & Version Consistency Fix
-
-### সমস্যা: Simple CI (`ci.yml`) ও companion workflows-এ কিছু reliability/security দুর্বলতা ছিল।
-- **উৎস:**
-  1. `frontend-ci`-এ `pnpm install --no-frozen-lockfile` + main-এ lockfile-auto-push → PR-review/branch-protection bypass এবং push-triggered recursive CI run-এর ঝুঁকি।
-  2. `changes` filter-এ `apps/**` (mobile/desktop/docs) থাকলেও frontend-ci শুধু web build করত → false-green।
-  3. `check-render-quota`-এ hardcoded Render service ID fallback।
-  4. `intelligent-premerge-gate`-এ `service_preflight_check.py || echo` ও `env-drift-check`/`bridge-boot`-এ silent `||` swallow → blocking intent নষ্ট।
-  5. backend-এর দুই আলাদা dependency cache (`setup-python poetry` + `setup-backend` venv)।
-  6. `setup-backend` action এবং কয়েকটা workflow-এ floating action versions (`@v6`/`@v1`) — main CI-তে pinned থাকলেও এগুলো unpinned।
-  7. Node version অসামঞ্জস্য (frontend 24 vs health-check 22), এবং পুনরাবৃত্ত cron (02:00-তে maintenance+auto-fix, রবিবার 02:00-তে k6+dast)।
-- **ফিক্স:**
-  1. `frontend-ci` ও `health-check`: `pnpm install --frozen-lockfile`; main-এ lockfile auto-commit step অপসারণ (drift এখন frozen install-ই verify করে)।
-  2. `frontend` filter থেকে `apps/**` বাদ — apps শুধু tag-ভিত্তিক `release-builds.yml`-এ ship হয় (comment-এ নথিভুক্ত)।
-  3. `check-render-quota`: hardcoded service ID fallback বাদ → শুধু `secrets`/`vars`।
-  4. `premerge-gate` preflight-কে সত্যিকারের blocking (script fail হলে exit 1); risk scorer-এ গিটহাব-স্তরের `continue-on-error: true`; `bridge-boot`-এ `alembic` silent swallow বাদ।
-  5. `backend-ci` এখন `setup-backend` composite action ব্যবহার করে — Poetry+venv cache একটাই source of truth (dual-cache দূর)।
-  6. `setup-backend/action.yml`: `setup-python@v6`→pinned SHA, `cache@v6`→`cache@v4` (repo-র বাকি অংশের সাথে consistent)।
-  7. `health-check` Node 22→24 (web stack-এর সাথে match); cron staggering (maintenance 01:00, auto-fix 01:30, dast রবিবার 00:30)।
-- **লেসন:**
-  1. CI step-এ `|| echo`/`|| true` দিয়ে error গিলে ফেললে gate মিথ্যা। Blocking-এর জন্য fail-for-real, informational-এর জন্য গিটহাব-স্তরের `continue-on-error` ব্যবহার করো (UI-তে visible থাকে)।
-  2. `pnpm install` সর্বদা `--frozen-lockfile`; lockfile-drift ঠিক করতে main-এ পুশ না-করে dedicated bot PR।
-  3. Action versions একই repo-তে অভিন্নভাবে pin করো — শুধু main workflow-এ pin করে composite action-এ floating রাখা supply-chain risk।
-  4. path-filter এবং actual job scope মেলে কিনা মিলিয়ে দেখো, নাহলে false-green।
-  5. একই জিনিসের জন্য দুটো cache/logic রাখো না — একটাই source of truth।

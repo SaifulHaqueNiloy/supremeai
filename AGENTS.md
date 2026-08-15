@@ -30,3 +30,38 @@
 - **Pro-Suggestion (Milestone-only):** বড় milestone শেষে (Feature/Deploy) ১টি high-impact সাজেশন দিন:
   > **[PRO]** [Impact: HIGH/MED/LOW] — [১ লাইনে suggestion]
 - **Safety & Best Practices:** No secrets in codebase (use Vault/.env). Atomic commits. ক্রিটিক্যাল ডেটা মডিফাই করার আগে Failsafe ও Rollback Plan রাখুন।
+
+## 5. Autonomous Execution Policy (Tool Lab & Auto-Commit)
+
+### 🧪 Sandbox Environment — Python Subprocess (Hybrid)
+Core philosophy: `$0 cost` + `minimalism` → Docker overhead নিষিদ্ধ (free tier-এ resource নষ্ট করা যাবে না)।
+
+| কাজের ধরন | Sandbox |
+|-----------|---------|
+| Lint, format, unit test, script run | 🐍 Python subprocess + timeout=30s |
+| Dependency install, build, unknown code | 🐳 Docker isolated container |
+| DB migration, secrets access | 🔒 Docker + read-only mounts |
+
+### 🔀 Auto-Commit Authority — Smart Hybrid
+Admin কাজের risk level আগে থেকেই define করে দিয়েছেন:
+
+#### ✅ Direct Push to `main` — AI নিজেই push করতে পারবে:
+- `docs/**`, `*.md` — documentation, changelog
+- `LESSONS_LEARNED.md`, `CHECKPOINT.md`, `DECISION_LOG.md` — AI memory files
+- Auto-lint/format only commits (ruff/black/isort — no logic change)
+- `[skip ci]` tag দেওয়া commits যেখানে কোনো logic পরিবর্তন নেই
+
+#### 🔍 PR Required — Admin review করে merge করবেন:
+- `backend/**` — যেকোনো Python logic পরিবর্তন
+- `frontend/**` — UI/component পরিবর্তন
+- `.github/workflows/**` — CI/CD pipeline পরিবর্তন
+- `render.yaml`, `vercel.json`, `firebase.json` — infra config
+- `backend/alembic/**` — database migrations
+- `**/poetry.lock`, `**/pnpm-lock.yaml` — dependency lock files
+- Security-related files (`.gitleaks.toml`, secrets registry)
+
+#### ⚙️ Deployment Rule (Double Deploy Fix):
+- `render.yaml`-এ `autoDeploy: false` — CI pipeline একমাত্র deploy authority
+- Render-এ কোনো auto-deploy নেই — `ci.yml`-এর `deploy-backend` job-ই trigger করে
+- Quota check → routing decision → deploy এই ক্রমে হবে
+

@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-15 21:14 UTC
+- **Date:** 2026-08-15 21:34 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,11 @@
   - (see git log for details)
 
 ## Files Changed
-  - `AGENTS.md`
-  - `CHECKPOINT.md`
   - `frontend/src/components/admin/AdminSubTabContent.tsx`
+  - `AGENTS.md`
+  - `LESSONS_LEARNED.md`
+  - `render.yaml`
+  - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)
@@ -21,9 +23,9 @@
 - **LOW:** `scripts/checkpoint_update.py` git pre-commit hook হিসেবে setup করা
 
 ## Recent Lessons Learned
+  - 2026-08-15 — CI Deploy-verify Timeout Increase to 12 Minutes (Render Free-Tier Cold Start)
   - 2026-08-15 — Do NOT hard-fail `alembic upgrade head` on asyncpg in CI (MissingGreenlet regression)
   - 2026-08-15 — CI Deploy-verify 120s Timeout Root Cause Fix (Render slow build)
-  - 2026-08-15 — Simple CI Pipeline: Silent-Failure, Lockfile Auto-Push, Dual-Cache & Version Consistency Fix
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.
