@@ -305,16 +305,16 @@ async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
 
 @router.post("/alerts")
 async def create_system_alert(
-    payload: AlertCreate, 
+    payload: AlertCreate,
     x_api_key: str = Header(None)
 ):
     """Create a new system alert (Used by internal AI Log Analyzer)."""
     from core.config import settings
-    
+
     expected_key = settings.supremeai_api_key.get_secret_value() if settings.supremeai_api_key else None
     if not expected_key or x_api_key != expected_key:
         raise HTTPException(status_code=401, detail="Invalid internal API key")
-        
+
     async for session in get_db_session():
         import uuid
         new_alert = SystemAlert(
@@ -331,7 +331,7 @@ async def resolve_system_alert(alert_id: str, admin_user: dict = Depends(get_cur
     """Mark an alert as resolved."""
     async for session in get_db_session():
         stmt = update(SystemAlert).where(SystemAlert.id == alert_id).values(
-            resolved=True, 
+            resolved=True,
             resolved_at=datetime.now(UTC)
         )
         await session.execute(stmt)

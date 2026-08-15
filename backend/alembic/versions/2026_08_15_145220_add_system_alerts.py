@@ -1,7 +1,7 @@
 """add system alerts
 
 Revision ID: 2026_08_15_145220
-Revises: 
+Revises:
 Create Date: 2026-08-15 14:52:20.000000
 
 """
