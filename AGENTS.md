@@ -22,7 +22,7 @@
   | Feature / Refactor | `DECISION_LOG.md`, `ARCHITECTURE.md` |
   | Planning / Roadmap | `ACTION_PLAN.md`, `TODO.md` |
   | Deploy / CI | `DEPLOYMENT_CHECKLIST.md`, `KNOWN_ISSUES.md` |
-- **Controlled & Elite Brain Boosting:** মেমোরিতে (ai_memory) নতুন ডেটা ইনজেক্ট করা (Brain Boosting) শুধু তখনই হবে যখন Admin নির্দিষ্টভাবে ইনস্ট্রাকশন দেবে। ব্রেইনে কোনো সাধারণ জ্ঞান (যা গুগল বা বেস মডেলে থাকে) সেভ করা যাবে না। শুধুমাত্র সুপ্রিম-এআইয়ের স্পেসিফিক ট্রিকস, জটিল এরর সলভ করার ইউনিক প্যাটার্ন, এবং "কী করা যাবে না" (Anti-patterns)—এমন হাই-ভ্যালু নলেজ দিয়ে ব্রেইন বুস্ট করতে হবে, যাতে সিস্টেম নয়েজ-ফ্রি এবং ফোকাসড থাকে।
+- **Limitless Brain Boosting (The Possibility Engine):** SupremeAI-এর ব্রেইন (`ai_memory`) কোনো নির্দিষ্ট গণ্ডিতে আবদ্ধ নয়। ইউজার যা-ই চাক না কেন (এমনকি "ডিম পাড়া"র মতো অসম্ভব কিছু হলেও), AI-কে বাউন্ডারির বাইরে গিয়ে ০.০০০০০১% পসিবিলিটি বা ট্রিক বের করতে হবে। Admin-এর নির্দেশে ব্রেইন বুস্ট করার সময় এই ধরনের Extreme Creative Logic, আউট-অফ-দ্য-বক্স সলিউশন এবং যেকোনো আনপ্রেডিক্টেবল রিকোয়েস্ট হ্যান্ডেল করার ক্যাপাবিলিটি মেমোরিতে ইনজেক্ট করতে হবে।
 - **Zero Repeat Errors:** কাজ শেষে `LESSONS_LEARNED.md` (Max 12KB/30 entries) ও `CHECKPOINT.md` আপডেট করুন। 12KB পার হলে Archive করুন।
 - **Model Routing:** Token বাঁচাতে ছোট কাজে (CRUD/Fix/Doc) Flash/Haiku এবং জটিল কাজে (Architecture/RCA) Opus/GPT-4 ব্যবহার করুন।
 
