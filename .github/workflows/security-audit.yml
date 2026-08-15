@@ -1,73 +1,80 @@
-# ============================================================
+﻿# ============================================================
 # SupremeAI — Weekly Security & Dependency Audit
 # ------------------------------------------------------------
-# আগে সিস্টেমে কোনো scheduled workflow ছিল না (সব cron শূন্য), ফলে
-# dependency CVE scan / git history secret scan কোনোদিন স্বয়ংক্রিয়ভাবে
-# চলত না। এই ওয়ার্কফ্লো প্রতিটি সোমবার সকালে:
-#   1. pip-audit  — backend Python dependencies (CVE)
-#   2. pnpm audit — frontend npm dependencies (CVE)
-#   3. gitleaks   — git history-তে হার্ডকোড করা সিক্রেট
-#   4. actionlint — GitHub Actions workflow সিনট্যাক্স
-# চালায়। যেমন কোনো সমস্যা ধরা পড়লে non-zero exit → email/run-marked-failure।
-#
-# SHA-pinning policy:
-#   - checkout@v7.0.1 → 3d3c42e5aac5ba805825da76410c181273ba90b1
-#   - setup-python@v7  → 5fda3b95a4ea91299a34e894583c3862153e4b97
-#   - setup-node@v7    → 820762786026740c76f36085b0efc47a31fe5020
-#   - actions/cache@v4.2.4 → 0400d5f644dc74513175e3cd8d07132dd4860809
-#   - gitleaks binary  → v8.30.1 (SHA256 verified)
-#   - actionlint binary → v1.7.12 (SHA256 verified)
+# SHA-pinned: checkout@v7.0.1, setup-python@v7, setup-node@v7,
+#   actions/cache@v4.2.4, gitleaks v8.30.1 (SHA256), actionlint v1.7.12 (SHA256),
+#   pip-audit==2.6.2 (pinned)
 # ============================================================
 name: Weekly Security Audit
 
 on:
   schedule:
     - cron: "0 6 * * 1" # সোমবার সকাল ৬টা UTC
-  workflow_dispatch: {} # ম্যানুয়াল রানও সম্ভব
+  workflow_dispatch: {}
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
-  dependency-audit:
-    name: 🔒 Dependency & Secret Audit
+  # ──────────────────────────────────────────────────────────
+  # Job 1: Backend Python dependency CVE audit (parallel)
+  # ──────────────────────────────────────────────────────────
+  backend-audit:
+    name: 🐍 Backend Dependency Audit (pip-audit)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.11"
-          cache: "pipx"
-
-      - name: Set up Node.js (pnpm audit)
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: "24"
-
-      - name: Audit backend Python dependencies (pip-audit)
+      - name: Audit backend Python dependencies (pip-audit==2.6.2)
         working-directory: backend
         shell: bash
         run: |
           pip install -q poetry >/dev/null 2>&1 || true
           poetry export -f requirements.txt --without-hashes -o requirements-ci-audit.txt --quiet
           if [ -f requirements-ci-audit.txt ] && [ -s requirements-ci-audit.txt ]; then
-            pip install -q pip-audit==2.6.2 && pip-audit -r requirements-ci-audit.txt || echo "::warning::pip-audit found vulnerabilities in backend deps"
+            pip install -q pip-audit==2.6.2
+            pip-audit -r requirements-ci-audit.txt
           else
-            echo "poetry export failed — pip-audit skipped (check poetry.lock)"
+            echo "poetry export failed - pip-audit skipped"
+            exit 1
           fi
 
+  # ──────────────────────────────────────────────────────────
+  # Job 2: Frontend JS dependency CVE audit (parallel)
+  # ──────────────────────────────────────────────────────────
+  frontend-audit:
+    name: 📦 Frontend Dependency Audit (pnpm audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
       - name: Audit frontend dependencies (pnpm audit)
         working-directory: frontend
         shell: bash
         run: |
           npm install -g pnpm@9 >/dev/null 2>&1
-          pnpm audit --audit-level high || echo "::warning::pnpm audit found high-severity vulnerabilities"
+          pnpm audit --audit-level high
+
+  # ──────────────────────────────────────────────────────────
+  # Job 3: Secret scan + workflow lint (parallel)
+  # ──────────────────────────────────────────────────────────
+  secret-scan:
+    name: 🔒 Secret Scan + Workflow Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # ── Binary cache: gitleaks v8.30.1 + actionlint v1.7.12 ──
-      # Reuse across runs — skip download if cache hit
       - name: Cache security audit binaries
         id: cache-binaries
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -77,12 +84,10 @@ jobs:
             /usr/local/bin/actionlint
           key: security-binaries-gitleaks-v8.30.1-actionlint-v1.7.12-${{ runner.os }}
 
-      # gitleaks আর actionlint PyPI / pipx-এ নেই — GitHub release থেকে
-      # binary wget করে checksum verify + chmod +x করি।
-      # SHA-pinned: gitleaks v8.30.1, actionlint v1.7.12
-
-      - name: Install gitleaks v8.30.1 binary (GitHub release + SHA256 verify)
-        if: steps.cache-binaries.outputs.cache-hit != 'true'
+      # gitleaks/actionlint PyPI/নেই — GitHub release থেকে binary
+      # wget + SHA256 checksum verify + chmod +x
+      - name: Install gitleaks v8.30.1 (SHA256 verified)
+        if: steps.cache-binaries.outputs.cache-hit != "true"
         shell: bash
         run: |
           set -euo pipefail
@@ -90,7 +95,7 @@ jobs:
             https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
           wget -q -O /tmp/gitleaks_checksums.txt \
             https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt
-          cd /tmp && sha256sum -c <(grep 'linux_x64.tar.gz' gitleaks_checksums.txt)
+          cd /tmp && sha256sum -c <(grep "linux_x64.tar.gz" gitleaks_checksums.txt)
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp/
           chmod +x /tmp/gitleaks
           sudo mv /tmp/gitleaks /usr/local/bin/
@@ -98,12 +103,10 @@ jobs:
 
       - name: Scan git history for leaked secrets (gitleaks)
         shell: bash
-        run: |
-          gitleaks detect --source . --config .gitleaks.toml --log-opts="--all" --redact \
-            || echo "::warning::gitleaks found potential secrets in git history - rotate & purge!"
+        run: gitleaks detect --source . --config .gitleaks.toml --log-opts="--all" --redact
 
-      - name: Install actionlint v1.7.12 binary (GitHub release + SHA256 verify)
-        if: steps.cache-binaries.outputs.cache-hit != 'true'
+      - name: Install actionlint v1.7.12 (SHA256 verified)
+        if: steps.cache-binaries.outputs.cache-hit != "true"
         shell: bash
         run: |
           set -euo pipefail
@@ -111,7 +114,7 @@ jobs:
             https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
           wget -q -O /tmp/actionlint_checksums.txt \
             https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_checksums.txt
-          cd /tmp && sha256sum -c <(grep 'linux_amd64.tar.gz' actionlint_checksums.txt)
+          cd /tmp && sha256sum -c <(grep "linux_amd64.tar.gz" actionlint_checksums.txt)
           tar -xzf /tmp/actionlint.tar.gz -C /tmp/
           chmod +x /tmp/actionlint
           sudo mv /tmp/actionlint /usr/local/bin/
@@ -119,5 +122,23 @@ jobs:
 
       - name: Lint GitHub Actions workflows (actionlint)
         shell: bash
+        run: actionlint
+
+  # ──────────────────────────────────────────────────────────
+  # Job 4: Failure notification (runs only if any job fails)
+  # ──────────────────────────────────────────────────────────
+  notify-on-failure:
+    name: 📣 Notify — Security Audit Failed
+    runs-on: ubuntu-latest
+    needs: [backend-audit, frontend-audit, secret-scan]
+    if: failure()
+    steps:
+      - name: Create GitHub issue for failed audit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          actionlint || echo "::warning::actionlint found workflow issues"
+          DATE=$(date -u +%Y-%m-%d)
+          gh issue create --title "[Security Audit FAILED] ${{ github.workflow }} - ${{ github.ref_name }} (run #${{ github.run_number }})" --body "Audit **${{ github.workflow }}** failed.
+Commit: ${{ github.sha }}
+Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+Steps: (1) Check logs, (2) If secret scan failed rotate secrets + git filter-repo, (3) If dep audit failed update deps, (4) Re-run via workflow_dispatch after fixing."
