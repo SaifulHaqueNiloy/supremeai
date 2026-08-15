@@ -6,7 +6,7 @@
 import { useCallback, useState } from "react";
 import { getSharedServices } from "./supremeShared";
 import { promptForOtp } from "@supremeai/shared-services";
-import { desktopPrompt } from "../components/editor/JitOtpDialogHost";
+import { desktopPrompt } from "../components/editor/desktopPrompt";
 import type { AiOutput } from "../components/editor/AiOutputPanel";
 import type { IdeFile } from "../store/useIdeStore";
 
@@ -46,8 +46,8 @@ export function useAiActions() {
           context: { source: "desktop", language: ctx.language, filePath: ctx.path, timestamp: new Date().toISOString() },
         });
         onOutput({ title: "📘 Code Explanation", content: res.response, kind: "plain" });
-      } catch (e: any) {
-        onOutput({ title: "Explain Failed", content: String(e?.message || e), kind: "plain" });
+      } catch (e: unknown) {
+        onOutput({ title: "Explain Failed", content: String((e as Error)?.message ?? e), kind: "plain" });
       } finally {
         setLoading(false);
         onLoading(false);
@@ -68,8 +68,8 @@ export function useAiActions() {
           context: { source: "desktop", language: ctx.language, filePath: ctx.path, timestamp: new Date().toISOString() },
         });
         onOutput({ title: "🛡️ AI Code Review", content: res.response, kind: "plain" });
-      } catch (e: any) {
-        onOutput({ title: "Review Failed", content: String(e?.message || e), kind: "plain" });
+      } catch (e: unknown) {
+        onOutput({ title: "Review Failed", content: String((e as Error)?.message ?? e), kind: "plain" });
       } finally {
         setLoading(false);
         onLoading(false);
@@ -91,8 +91,8 @@ export function useAiActions() {
               .join("\n\n")
           : "✅ কোনো স্পষ্ট security issue পাওয়া যায়নি। (AI-আনুমানিক — রিভিউ করা আবশ্যক।)";
         onOutput({ title: "🛡️ Security Scan", content, kind: "plain", meta: `${issues.length} issue(s)` });
-      } catch (e: any) {
-        onOutput({ title: "Security Scan Failed", content: String(e?.message || e), kind: "plain" });
+      } catch (e: unknown) {
+        onOutput({ title: "Security Scan Failed", content: String((e as Error)?.message ?? e), kind: "plain" });
       } finally {
         setLoading(false);
         onLoading(false);
@@ -118,8 +118,8 @@ const analyzePerformance = useCallback(
           ...(insight.recommendations.length ? insight.recommendations.map((r) => `  • ${r}`) : ["  • None detected"]),
         ].join("\n");
         onOutput({ title: "⚡ Performance Analysis", content, kind: "plain" });
-      } catch (e: any) {
-        onOutput({ title: "Performance Analysis Failed", content: String(e?.message || e), kind: "plain" });
+      } catch (e: unknown) {
+        onOutput({ title: "Performance Analysis Failed", content: String((e as Error)?.message ?? e), kind: "plain" });
       } finally {
         setLoading(false);
         onLoading(false);
@@ -150,8 +150,8 @@ const analyzePerformance = useCallback(
         } else {
           onOutput({ title: "Self-Healing", content: "কোনো automatic fix পাওয়া যায়নি।", kind: "plain" });
         }
-      } catch (e: any) {
-        onOutput({ title: "Self-Healing Failed", content: String(e?.message || e), kind: "plain" });
+      } catch (e: unknown) {
+        onOutput({ title: "Self-Healing Failed", content: String((e as Error)?.message ?? e), kind: "plain" });
       } finally {
         setLoading(false);
         onLoading(false);
@@ -181,8 +181,8 @@ const analyzePerformance = useCallback(
             kind: "json",
           });
         }
-      } catch (e: any) {
-        onOutput({ title: "JIT OTP Failed", content: String(e?.message || e), kind: "plain" });
+      } catch (e: unknown) {
+        onOutput({ title: "JIT OTP Failed", content: String((e as Error)?.message ?? e), kind: "plain" });
       } finally {
         setLoading(false);
         onLoading(false);

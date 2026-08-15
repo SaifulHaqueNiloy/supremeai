@@ -71,8 +71,8 @@ export function setupMonacoAi(
         cmd === "explain" ? "📘 Explain" : cmd === "review" ? "🛡️ Review" : "🛡️ Security Scan",
         response
       );
-    } catch (e: any) {
-      callbacks.onOutput?.("SupremeAI Error", String(e?.message || e));
+    } catch (e: unknown) {
+      callbacks.onOutput?.("SupremeAI Error", String((e as Error)?.message ?? e));
     }
   };
 
@@ -122,6 +122,7 @@ export function setupMonacoAi(
       }
     },
     freeInlineCompletions: () => {},
+    disposeInlineCompletions: () => {},
   };
 
   const inlineDisposable = monaco.languages.registerInlineCompletionsProvider("*", inlineProvider);

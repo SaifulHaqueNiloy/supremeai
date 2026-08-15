@@ -1,5 +1,6 @@
 import React from "react";
 import { useAiActions } from "../../services/aiActions";
+import type { FileContext } from "../../services/aiActions";
 import type { AiOutput } from "./AiOutputPanel";
 import type { IdeFile } from "../../store/useIdeStore";
 
@@ -29,7 +30,7 @@ export const AiAssistantBar: React.FC<Props> = ({ activeFile, onOutput, onLoadin
     </button>
   );
 
-  const run = (handler: (ctx: any, out: (o: AiOutput) => void, loading: (b: boolean) => void) => Promise<void>) => {
+  const run = (handler: (ctx: FileContext, out: (o: AiOutput) => void, loading: (b: boolean) => void) => Promise<void>) => {
     runWithContext(activeFile, onOutput, (ctx) => handler(ctx, onOutput, onLoading));
   };
 
