@@ -30,7 +30,6 @@
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)
-- **MED:** `frontend/_INDEX.md` + `backend/core/_INDEX.md` তৈরি করা (token saving)
 - **MED:** Phase C — `sentence-transformers` install করে `memory_write.py` প্রথম real run test করা
 - **LOW:** `scripts/checkpoint_update.py` git pre-commit hook হিসেবে setup করা
 
