@@ -7,6 +7,16 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-16 — 🔥 React Error #31 (Active Monitor E2E) Root Cause: RAW ERROR OBJECT RENDERED IN TOAST
+
+### সমস্যা: 🩺 Environment Health Check → Active Monitor E2E প্রোডাকশন বিল্ডে Admin Dashboard লগইন করার সময় `Minified React error #31` (object with keys `{code, message, errors}`) আনকট uncaught pageerror → `caughtErrors.length` 1 → CI fail।
+
+- **উৎস:** `frontend/src/utils/apiInterceptor.ts`-এ `setupGlobalFetchInterceptor()` error body পার্স করে:
+  `if (parsed.error) errorMsg = parsed.error; else if (parsed.message) errorMsg = parsed.message;` — back-এর error envelope (`{code,message,errors}`) string-এ কনভার্ট না করে সরাসরি `window.showGlobalToast('error', errorMsg)`-এ পাঠায় → toast state `t.message`-এ object বসে → `{t.message}` render → React #31।
+- **ফিক্স (defense-in-depth, 4 layer):** (1) `apiInterceptor.ts`: `parsed.error/message/detail` সবকে `toMsgString()` দিয়ে string-এ; (2) `hooks/useErrorHandler.ts`: `error?.message` object হলে `JSON.stringify()`; (3) `contexts/ToastProvider.tsx`: `safeMessage` guard; (4) `components/ui/Toast.tsx`: একই guard।
+- **লেসন:** যেকোনো error মেসেজ toast/state→JSX child-এ বসানোর আগে MUST `typeof === 'string'` guard, নাহলে production (minified) বিল্ডে React #31 ধরা পড়ে। Commit `f71269c2` (adminStore-এ String()) CI-test হয়েও ফেল ছিল — আসল লিক ছিল interceptor→toast রুটে। CI ফেলের minified error args (`args[]=object with keys {code,message,errors}`) পড়ে object-shape ট্রেস করো।
+
+## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
 ## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
 
 ### সমস্যা: এক্সটেনশনের ভেতরে থার্ড-পার্টি API (OpenRouter) ফলব্যাক লজিক থাকার কারণে মার্কেটিং ও আর্কিটেকচারাল কনফ্লিক্ট তৈরি হওয়া।
