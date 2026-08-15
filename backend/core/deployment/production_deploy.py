@@ -45,7 +45,7 @@ except ImportError:
 import logging
 
 try:
-    import yaml
+    import yaml  # type: ignore
 except ImportError:
     yaml = None
 

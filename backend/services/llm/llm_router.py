@@ -328,7 +328,7 @@ class LLMRouter:
         estimated_tokens = self._estimate_tokens(prompt) + max_tokens
         if self.rules and not self.rules.check_token_budget(estimated_tokens):
             logger.error(f"❌ Token budget exceeded: {estimated_tokens}")
-            raise QuotaExceededError(
+            raise QuotaExceededError(  # type: ignore
                 message="Rules-engine token budget exceeded",
                 details={"estimated_tokens": estimated_tokens},
             )
@@ -360,7 +360,7 @@ class LLMRouter:
         # Budget check
         estimated_input = self._estimate_tokens(prompt)
         if not self.budget.check(estimated_input, max_tokens):
-            raise QuotaExceededError(
+            raise QuotaExceededError(  # type: ignore
                 message="Token budget exceeded",
                 details={
                     "estimated_input": estimated_input,

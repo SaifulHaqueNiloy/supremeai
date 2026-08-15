@@ -25,7 +25,7 @@ from core.persistence.write_behind import WriteBehindBatcher
 ROUTING_CACHE_TTL = 300
 
 # বাংলা ব্যাখ্যা: ডাটাবেস আউটবক্স ব্যাচার - ব্যাকগ্রাউন্ড সিঙ্ক ও ফেলওভার নিশ্চিত করার জন্য লোকালে রাইট-বিহাইন্ড মেমোরিতে পেন্ডিং ট্রানজ্যাকশন জমা রাখে।
-outbox_batcher = WriteBehindBatcher(name="multi_db_outbox", max_batch_size=50, flush_interval=2.0)
+outbox_batcher = WriteBehindBatcher(name="multi_db_outbox", max_batch_size=50, flush_interval=2.0)  # type: ignore
 
 
 class DatabaseType(StrEnum):

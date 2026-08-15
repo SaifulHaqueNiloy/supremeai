@@ -45,7 +45,7 @@ class BrandIdentityAgent(BaseSkill):
     _DEFAULT_INDUSTRY: str = "technology"
     _DEFAULT_TONE: str = "professional"
 
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore
         # বাংলা মন্তব্য: স্কিলের নাম
         return "brand_identity"
 

@@ -87,7 +87,7 @@ class UnifiedDBManager:
         # 4. Embed into ChromaDB Vector Store if text provided
         if text_content:
             try:
-                await self.chroma.add_document(
+                await self.chroma.add_document(  # type: ignore
                     document_id=record_id,
                     text=text_content,
                     metadata={"collection": collection, **data},

@@ -634,7 +634,7 @@ class SupabaseDB:
             return []
         try:
             res = self.client.table("system_config").select("*").eq("category", category).execute()
-            return res.data or []
+            return res.data or []  # type: ignore
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
             return []
@@ -756,7 +756,7 @@ class SupabaseDB:
             return []
         try:
             res = self.client.table("evolution_logs").select("*").order("created_at", desc=True).limit(limit).execute()
-            return res.data or []
+            return res.data or []  # type: ignore
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
             return []
@@ -798,7 +798,7 @@ class SupabaseDB:
             return []
         try:
             res = self.client.table("skills").select("*").execute()
-            return res.data or []
+            return res.data or []  # type: ignore
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
             return []
@@ -825,7 +825,7 @@ class SupabaseDB:
                 .order("priority", desc=False)
                 .execute()
             )
-            return res.data or []
+            return res.data or []  # type: ignore
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
             return []
@@ -852,7 +852,7 @@ class SupabaseDB:
                 .order("priority", desc=False)
                 .execute()
             )
-            return res.data or []
+            return res.data or []  # type: ignore
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
             return []

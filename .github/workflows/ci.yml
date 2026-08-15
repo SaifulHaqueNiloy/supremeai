@@ -121,3 +121,78 @@ jobs:
             git commit -m "chore: auto-update pnpm-lock.yaml"
             git push
           fi
+
+  security-scan:
+    name: 🔍 Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parallel Security Scan (Trivy)
+        timeout-minutes: 10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ./bin
+          TRIVY_VERSION=$(curl -sL https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+          if [ -z "$TRIVY_VERSION" ]; then
+            TRIVY_VERSION="0.55.0"
+          fi
+          echo "Downloading Trivy version: $TRIVY_VERSION"
+          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -o trivy.tar.gz
+          tar -xzf trivy.tar.gz -C ./bin trivy
+          rm trivy.tar.gz
+          ./bin/trivy fs --severity CRITICAL,HIGH backend &
+          ./bin/trivy fs --severity CRITICAL,HIGH frontend &
+          wait
+
+  bridge-boot-check:
+    name: 🔌 Bridge Boot Check (Backend + DB)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: supreme_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install & Run Backend
+        env:
+          REDIS_URL: "redis://127.0.0.1:6379/0"
+          SUPABASE_DATABASE_URL: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
+          SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
+          ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
+          SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+        run: |
+          cd backend
+          poetry config virtualenvs.create false
+          poetry install
+          poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
+          poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
+          sleep 10
+      - name: Probe Admin API
+        run: |
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1

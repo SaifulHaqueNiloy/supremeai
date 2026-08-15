@@ -147,7 +147,7 @@ async def execute_healing(payload: SelfHealingRequest, request: Request):
     Please fix the error and provide the corrected complete code content.
     """
 
-    orchestrator = SwarmOrchestrator(user_id="vscode_agent", session_id=session_id, task_prompt=task_prompt)
+    orchestrator = SwarmOrchestrator(user_id="vscode_agent", session_id=session_id, task_prompt=task_prompt)  # type: ignore
 
     # Execute swarm with 0 retries for speed in VS Code context
     workspace = await orchestrator.execute(max_retries=0)

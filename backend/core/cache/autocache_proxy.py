@@ -62,7 +62,7 @@ class AutoCacheProxy:
         if ttl == 0:
             return await compute_fn(*args, **kwargs)
 
-        cached_val = await self.cache.get(key)
+        cached_val = await self.cache.get(key)  # type: ignore
         if cached_val is not None:
             logger.debug(f"[AutoCacheProxy] Cache hit for key '{key}' (Category: {category})")
             return cached_val
@@ -70,7 +70,7 @@ class AutoCacheProxy:
         # Compute new value
         computed_val = await compute_fn(*args, **kwargs)
         if computed_val is not None:
-            await self.cache.set(key, computed_val, ttl_seconds=ttl)
+            await self.cache.set(key, computed_val, ttl_seconds=ttl)  # type: ignore
             logger.debug(f"[AutoCacheProxy] Cached key '{key}' with TTL {ttl}s")
 
     def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:

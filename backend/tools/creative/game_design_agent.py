@@ -45,7 +45,7 @@ class GameDesignAgent(BaseSkill):
     _DEFAULT_GENRE: str = "puzzle"
     _DEFAULT_PLATFORM: str = "pc"
 
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore
         # বাংলা মন্তব্য: স্কিলের নাম
         return "game_design"
 

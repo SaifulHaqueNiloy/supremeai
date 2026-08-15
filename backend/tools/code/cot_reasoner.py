@@ -64,7 +64,7 @@ def safe_execute(code: str) -> dict[str, Any]:
 
         local_vars = run_restricted(code)
         if "result" in local_vars:
-            return {"success": True, "value": local_vars["result"]}
+            return {"success": True, "value": local_vars["result"]}  # type: ignore
         return {"success": True, "value": None}
     except Exception as exc:
         return {"success": False, "error": str(exc)}

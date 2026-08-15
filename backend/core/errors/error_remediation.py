@@ -279,8 +279,8 @@ class ErrorRemediation:
                             ),
                         )
                     )
-                    return False
-            return True
+                    return False  # type: ignore
+            return True  # type: ignore
 
         except Exception as exc:
             logger.error(f"Error ensuring fallback file: {exc}")
@@ -296,7 +296,7 @@ class ErrorRemediation:
                     ),
                 )
             )
-            return False
+            return False  # type: ignore
 
     @with_error_bus("_load_local_fallback")
     def _load_local_fallback(self, error_sig: str | None = None) -> str | None:

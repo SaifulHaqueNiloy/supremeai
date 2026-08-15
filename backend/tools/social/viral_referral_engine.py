@@ -88,7 +88,7 @@ class ViralReferralEngine:
             for _code, rec in data.get("codes", {}).items():
                 if rec.get("referrer_id") == user_id:
                     out.append(rec)
-        return out
+        return out  # type: ignore
 
     async def process_signup(
         self, new_user_id: str, referral_code: str, meta: dict[str, Any] | None = None
@@ -271,7 +271,7 @@ class ViralReferralEngine:
                 res = db.client.table("credit_wallets").select("*").eq("user_id", user_id).execute()
                 rows = res.data
                 if rows:
-                    return rows[0]
+                    return rows[0]  # type: ignore
             except Exception as exc:
                 logger.debug(f"Wallet fetch failed: {exc}")
         else:

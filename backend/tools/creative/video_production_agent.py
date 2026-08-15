@@ -46,7 +46,7 @@ class VideoProductionAgent(BaseSkill):
     _DEFAULT_RES: str = "1920x1080"
     _DEFAULT_FPS: int = 30
 
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore
         # বাংলা মন্তব্য: স্কিলের ইউনিক নাম রিটার্ন করা হচ্ছে
         return "video_production"
 

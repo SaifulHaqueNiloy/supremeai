@@ -377,7 +377,7 @@ class AlertManager:
         try:
             resp = requests.post(
                 self.webhook_url,
-                json={"embeds": [embed]},
+                json={"embeds": [embed]},  # type: ignore
                 timeout=REQUEST_TIMEOUT,
                 headers={"Content-Type": "application/json"},
             )

@@ -5,7 +5,7 @@ from typing import Any
 from loguru import logger
 
 try:
-    import yaml
+    import yaml  # type: ignore
 
     _YAML_AVAILABLE = True
 except ImportError:

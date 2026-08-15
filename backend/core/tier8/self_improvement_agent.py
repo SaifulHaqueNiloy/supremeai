@@ -134,7 +134,7 @@ class SelfImprovementAgent(BaseSkill):
                 await self._dry_run_pending()
                 await self._apply_approved()
             except Exception as exc:
-                await self._feedback.record_error_report(
+                await self._feedback.record_error_report(  # type: ignore
                     agent="self_improvement",
                     error=str(exc),
                     context="improvement_loop",
@@ -317,7 +317,7 @@ class SelfImprovementAgent(BaseSkill):
         approved = [p for p in self._proposals if p.dry_run_passed and p.confidence >= self._min_confidence]
         for proposal in approved:
             # Log only — never auto-apply without human review
-            await self._feedback.record_suggestion_feedback(
+            await self._feedback.record_suggestion_feedback(  # type: ignore
                 agent="self_improvement",
                 suggestion=proposal.suggested_patch,
                 accepted=False,  # pending human approval

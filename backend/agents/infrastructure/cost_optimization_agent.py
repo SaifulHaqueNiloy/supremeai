@@ -730,7 +730,7 @@ class CostOptimizationAgent:
                     "count": len(opportunities),
                     "top_3_potential_savings": round(
                         (
-                            sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)
+                            sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)  # type: ignore
                             if opportunities
                             else 0
                         ),

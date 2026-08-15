@@ -22,7 +22,7 @@ class SelfHealerService:
             async with asyncio.timeout(timeout):
                 return await coro
         except TimeoutError:
-            await self.event_bus.emit(
+            await self.event_bus.emit(  # type: ignore
                 ErrorEvent(
                     module="self_healer",
                     error_type="TIMEOUT",
@@ -34,7 +34,7 @@ class SelfHealerService:
             )
             raise
         except asyncio.CancelledError:
-            await self.event_bus.emit(
+            await self.event_bus.emit(  # type: ignore
                 ErrorEvent(
                     module="self_healer",
                     error_type="CANCELLED",
@@ -46,7 +46,7 @@ class SelfHealerService:
             )
             raise
         except (RuntimeError, ValueError, TypeError, ConnectionError, OSError) as e:
-            await self.event_bus.emit(
+            await self.event_bus.emit(  # type: ignore
                 ErrorEvent(
                     module="self_healer",
                     error_type="ERROR",

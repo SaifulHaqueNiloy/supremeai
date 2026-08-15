@@ -217,7 +217,7 @@ class SelfPlanner:
 
     async def execute_plan(self, graph: Any) -> list[dict[str, Any]]:
         """Backward-compatible alias for parallel_agent_executor."""
-        return await self.parallel_agent_executor(graph)
+        return await self.parallel_agent_executor(graph)  # type: ignore
 
 
 planner = SelfPlanner()

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import redis.asyncio as redis
-import yaml
+import yaml  # type: ignore
 from loguru import logger
 
 from .tools import (

@@ -52,7 +52,7 @@ async def test_autocache_proxy_ttl_and_dynamic_costs():
     proxy = AutocacheProxy(mock_semantic)
 
     # Test request_history is a TTLCache
-    from cachetools import TTLCache
+    from cachetools import TTLCache  # type: ignore
 
     # Some environments can export TTLCache as a non-type symbol, so
     # guard the isinstance() assertion to prevent TypeError-based breakage.

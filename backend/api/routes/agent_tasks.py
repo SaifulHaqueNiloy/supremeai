@@ -110,7 +110,7 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
     and returns the final workspace state.
     """
     session_id = body.session_id or str(uuid.uuid4())
-    orchestrator = SwarmOrchestrator(user_id=body.user_id, session_id=session_id, task_prompt=body.task)
+    orchestrator = SwarmOrchestrator(user_id=body.user_id, session_id=session_id, task_prompt=body.task)  # type: ignore
 
     # We await the orchestrator execution.
     # In a real heavy system this might be a background task,

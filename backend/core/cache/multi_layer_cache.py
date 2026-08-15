@@ -19,7 +19,7 @@ import time  # - Added for performance metrics
 from typing import Any
 
 try:
-    from cachetools import TTLCache
+    from cachetools import TTLCache  # type: ignore
 except ImportError:
     TTLCache = dict  # fallback for lightweight environments lacking cachetools
 

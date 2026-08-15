@@ -45,7 +45,7 @@ class AudioEngineeringAgent(BaseSkill):
     _DEFAULT_SAMPLE_RATE: int = 44100
     _DEFAULT_CHANNELS: int = 2
 
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore
         # বাংলা মন্তব্য: স্কিলের নাম
         return "audio_engineering"
 

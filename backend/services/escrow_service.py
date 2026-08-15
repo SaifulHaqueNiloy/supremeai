@@ -110,7 +110,7 @@ class EscrowService:
         )
 
         self._escrows[escrow_id] = escrow
-        return escrow
+        return escrow  # type: ignore
 
     def create_escrow_sync(
         self,

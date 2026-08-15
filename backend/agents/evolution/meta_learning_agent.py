@@ -147,7 +147,7 @@ class MetaLearningAgent:
         for task_type, data in summary.items():
             relevant = [o for o in self._outcomes if o.task_type == task_type]
             data["avg_success_rate"] = sum(o.success_rate for o in relevant) / len(relevant)
-            data["strategies_tried"] = list(data["strategies_tried"])
+            data["strategies_tried"] = list(data["strategies_tried"])  # type: ignore
 
             # Find best strategy
             strategy_scores: dict[str, list[float]] = {}

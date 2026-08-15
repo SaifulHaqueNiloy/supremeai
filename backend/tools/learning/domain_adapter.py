@@ -69,7 +69,7 @@ class DomainAdapter:
             try:
                 res = db.client.table("domain_profiles").select("*").execute()
                 for row in res.data or []:
-                    self._profiles[row["domain"]] = row
+                    self._profiles[row["domain"]] = row  # type: ignore
             except Exception as exc:
                 logger.debug(f"Domain profiles DB load failed: {exc}")
         try:

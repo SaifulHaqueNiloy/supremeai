@@ -278,7 +278,7 @@ class TenantRateLimiter:
             # এখন Stripe থেকে real customer lookup করা হয়, না পেলে create করা হয়।
             if not customer_id:
                 # বাংলা মন্তব্য: Stripe Customer list-এ tenant_id দিয়ে existing customer খোঁজা
-                customers = stripe.Customer.list(
+                customers = stripe.Customer.list(  # type: ignore
                     metadata={"tenant_id": tenant_id},
                     limit=1,
                 )

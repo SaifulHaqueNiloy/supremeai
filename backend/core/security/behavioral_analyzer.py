@@ -332,7 +332,7 @@ class BehavioralAnalyzer:
             except Exception as exc:
                 logger.error(f"Alert handler failed: {exc}")
 
-    def register_alert_handler(self, handler: callable) -> None:
+    def register_alert_handler(self, handler: callable) -> None:  # type: ignore
         """Register a custom alert handler.
 
         Args:

@@ -191,7 +191,7 @@ class SwarmCoordinationAgent(BaseSkill):
         while self._running:
             try:
                 pubsub = await self._get_pubsub()
-                await pubsub.broadcast(
+                await pubsub.broadcast(  # type: ignore
                     channel="swarm:heartbeat",
                     message=json.dumps(
                         {

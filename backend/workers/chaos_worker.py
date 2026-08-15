@@ -39,7 +39,7 @@ class NightlyChaosAuditor:
         failures = 0
         try:
             # 🧪 টেস্ট ১: স্যান্ডবক্স ইন্টিগ্রিটি চেক (ফাস্ট এএসটি ভ্যালিডেশন)
-            if not generate_fuzz_payloads or not run_sandbox_ast_check:
+            if not generate_fuzz_payloads or not run_sandbox_ast_check:  # type: ignore
                 raise ImportError("fuzz_sandbox not available")
 
             payloads = generate_fuzz_payloads()

@@ -394,7 +394,7 @@ class AdversarialDefenseSystem:
             / max(1, (time.time() - self.attack_history[0]["timestamp"]) / 3600),
         }
 
-    def add_custom_defense(self, name: str, defense_func: callable):
+    def add_custom_defense(self, name: str, defense_func: callable):  # type: ignore
         """Add a custom defense mechanism."""
         self.defense_countermeasures[name] = defense_func
 

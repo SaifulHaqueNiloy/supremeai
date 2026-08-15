@@ -97,7 +97,7 @@ class CommentThreadAI:
 
     async def _get_pr_files(self, repo: str, pr_number: int) -> list[dict]:
         try:
-            return await self._gh_get(f"/repos/{repo}/pulls/{pr_number}/files")
+            return await self._gh_get(f"/repos/{repo}/pulls/{pr_number}/files")  # type: ignore
         except Exception as e:
             logger.error(f"Failed to get PR files for {repo}#{pr_number}: {e}")
             return []

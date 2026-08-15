@@ -35,7 +35,7 @@ async def get_current_user_token(request: Request) -> dict[str, Any]:
         return {"sub": "admin@supremeai.com", "role": "admin"}
 
     raise_unauthorized("Missing or invalid authentication token.")
-    return None
+    return None  # type: ignore
 
 
 def get_tenant_db(

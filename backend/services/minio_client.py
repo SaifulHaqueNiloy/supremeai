@@ -159,7 +159,7 @@ class MinIOClient:
             return ""  # No client available
 
         try:
-            if self._timedelta:
+            if self._timedelta:  # type: ignore
                 url = client.presigned_get_object(bucket, key, expires=self._timedelta(seconds=expires_seconds))
                 await self.cache.set(cache_key, url, ttl=URL_CACHE_TTL)
                 return url
@@ -181,7 +181,7 @@ class MinIOClient:
             return ""
 
         try:
-            if self._timedelta:
+            if self._timedelta:  # type: ignore
                 url = client.presigned_put_object(
                     bucket,
                     key,

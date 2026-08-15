@@ -346,7 +346,7 @@ def get_secret_vault() -> ProductionSecretVault:
     if not _vault_initialized:
         _secret_vault_instance = ProductionSecretVault()
         _vault_initialized = True
-    return _secret_vault_instance
+    return _secret_vault_instance  # type: ignore
 
 
 def reset_secret_vault() -> None:

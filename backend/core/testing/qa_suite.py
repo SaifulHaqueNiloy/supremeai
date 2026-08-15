@@ -102,7 +102,7 @@ class TestCase:
     category: TestCategory
     priority: TestPriority
     description: str
-    test_function: callable
+    test_function: callable  # type: ignore
     tags: list[str]
     timeout: int = 30  # seconds
 
