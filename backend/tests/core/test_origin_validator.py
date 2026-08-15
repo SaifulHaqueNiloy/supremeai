@@ -155,7 +155,7 @@ class TestTrustedOriginMiddleware:
         app = AsyncMock()
         middleware = TrustedOriginMiddleware(app, portal_role="user")
         origins = middleware.allowed_origins
-        assert "https://supremeai-backend.onrender.com" in origins
+        assert "https://supremeai-backend-docker.onrender.com" in origins
         assert "https://supremeai-a.web.app" in origins
         assert "https://supremeai-admin.web.app" in origins
         assert "https://supremeai-admin.onrender.com" in origins
@@ -168,4 +168,4 @@ class TestTrustedOriginMiddleware:
         assert "https://supremeai-admin.web.app" in origins
         assert "https://supremeai-a.web.app" in origins
         assert "https://supremeai-lac.vercel.app" in origins
-        assert "https://supremeai-backend.onrender.com" in origins
+        assert "https://supremeai-backend-docker.onrender.com" in origins

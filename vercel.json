@@ -11,23 +11,23 @@
   "rewrites": [
     {
       "source": "/api/config/public",
-      "destination": "https://supremeai-backend.onrender.com/api/config/public"
+      "destination": "https://supremeai-backend-docker.onrender.com/api/config/public"
     },
     {
       "source": "/api/task/stream",
-      "destination": "https://supremeai-backend.onrender.com/api/task/stream"
+      "destination": "https://supremeai-backend-docker.onrender.com/api/task/stream"
     },
     {
       "source": "/api/preferences/:userId/stream",
-      "destination": "https://supremeai-backend.onrender.com/api/preferences/:userId/stream"
+      "destination": "https://supremeai-backend-docker.onrender.com/api/preferences/:userId/stream"
     },
     {
       "source": "/api/v1/:path*",
-      "destination": "https://supremeai-backend.onrender.com/api/v1/:path*"
+      "destination": "https://supremeai-backend-docker.onrender.com/api/v1/:path*"
     },
     {
       "source": "/api/:path*",
-      "destination": "https://supremeai-backend.onrender.com/api/:path*"
+      "destination": "https://supremeai-backend-docker.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
