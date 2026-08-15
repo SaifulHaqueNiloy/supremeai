@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 vi.mock('../../services/apiClient', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionsStore: Record<string, any> = {};
   return {
     apiClient: {
@@ -10,12 +11,14 @@ vi.mock('../../services/apiClient', () => {
         if (path === '/api/browser/sessions') return Promise.resolve({ sessions: Object.values(sessionsStore) });
         return Promise.resolve({ items: [], keys: [], total: 0 });
       }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       post: vi.fn().mockImplementation((path: string, body?: any) => {
         if (path === '/api/browser/sessions' && body?.id) {
           sessionsStore[body.id] = body;
         }
         return Promise.resolve({});
       }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       put: vi.fn().mockImplementation((_path: string, body?: any) => {
         if (body?.id) sessionsStore[body.id] = body;
         return Promise.resolve({});

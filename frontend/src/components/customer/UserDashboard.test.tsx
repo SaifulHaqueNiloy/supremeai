@@ -6,6 +6,7 @@ import { translations } from '../../i18n/translations';
 
 // বাংলা মন্তব্য: i18n মক — I18nContext সরাসরি ইংরেজি ট্রান্সলেশন রিটার্ন করে
 const mockT = (key: string, params?: Record<string, string | number>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const en = (translations as any).en;
   let value = en[key] ?? key;
   if (params) {
@@ -18,6 +19,7 @@ const mockT = (key: string, params?: Record<string, string | number>) => {
 
 const renderWithI18n = (ui: React.ReactElement) => {
   return render(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <I18nContext.Provider value={{ t: mockT as any, locale: 'en', setLocale: vi.fn() }}>
       {ui}
     </I18nContext.Provider>

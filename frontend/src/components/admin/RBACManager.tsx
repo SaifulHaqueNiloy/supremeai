@@ -138,7 +138,11 @@ export function RBACManager() {
                 <div className="flex items-center gap-2">
                   <Badge variant={roleColors[user.role] || 'default'}>{user.role}</Badge>
                   <button
-                    onClick={() => deleteUser.mutate(user.username)}
+                     onClick={() => {
+                       if (window.confirm(`Delete user "${user.username}"? This action cannot be undone.`)) {
+                         deleteUser.mutate(user.username);
+                       }
+                     }}
                     className="text-red-400 hover:text-red-300 p-1 rounded"
                   >
                     <Trash2 size={12} />

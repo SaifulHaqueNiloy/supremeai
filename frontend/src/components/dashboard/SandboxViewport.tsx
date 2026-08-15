@@ -53,7 +53,7 @@ export const SandboxViewport: React.FC = () => {
         const canvas = canvasRef.current;
         if (!canvas || controlMode !== 'human' || !wsRef) return;
 
-        const sendDispatch = (method: string, params: any) => {
+        const sendDispatch = (method: string, params: unknown) => {
             if (wsRef.readyState === WebSocket.OPEN) {
                 wsRef.send(JSON.stringify({ method, params }));
             }

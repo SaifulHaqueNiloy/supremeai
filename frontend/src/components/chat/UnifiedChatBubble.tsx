@@ -104,14 +104,14 @@ export function UnifiedChatBubble({
             setActionStatus('❌ Deploy failed (unauthorized or server error).');
           }
         } catch (e: unknown) {
-          setActionStatus(`❌ Deploy failed: ${e.message}`);
+          setActionStatus(e instanceof Error ? `❌ Deploy failed: ${e.message}` : '❌ Deploy failed');
         }
       } else if (act.type === 'share') {
         setActionStatus('🔗 Share link copied!');
       }
       setTimeout(() => setActionStatus(''), 3500);
     } catch (err: unknown) {
-      setActionStatus(`❌ Error: ${err.message}`);
+      setActionStatus(err instanceof Error ? `❌ Error: ${err.message}` : '❌ Error');
       setTimeout(() => setActionStatus(''), 4000);
     }
   };
@@ -133,9 +133,14 @@ export function UnifiedChatBubble({
                   </span>
                   <button
                     onClick={async () => {
-                      await navigator.clipboard.writeText(parsed.content);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
+                      try {
+                        await navigator.clipboard.writeText(parsed.content);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      } catch {
+                        setActionStatus('❌ Clipboard copy failed. Copy manually.');
+                        setTimeout(() => setActionStatus(''), 3000);
+                      }
                     }}
                     className="text-[10px] text-[#bc13fe] hover:text-[#8b5cf6] font-mono font-semibold"
                   >

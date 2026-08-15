@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
+// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
+import { getSupremeModelLabel } from '../../lib/modelBranding';
 
 interface Preferences {
   theme: string;
@@ -108,7 +110,7 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
             >
               {MODELS.map((m) => (
                 <option key={m} value={m}>
-                  {m}
+                  {getSupremeModelLabel(m)}
                 </option>
               ))}
             </select>

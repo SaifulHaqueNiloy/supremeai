@@ -216,7 +216,12 @@ function Kpi({ label, value, accent, isSimple }: { label: string; value: string;
   );
 }
 
-function mergeSeries(series: unknown[]) {
+interface SeriesItem {
+  id: string;
+  data: { t: number; v: number }[];
+}
+
+function mergeSeries(series: SeriesItem[]) {
   const map = new Map<number, Record<string, unknown>>();
   for (const s of series) {
     for (const pt of s.data) {

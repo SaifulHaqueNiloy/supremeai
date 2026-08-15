@@ -34,13 +34,14 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
 
     const applyConfig = (data: unknown) => {
       if (cancelled) return;
+      const cfg = data as { maxConcurrency?: number; features?: { selfHealing?: boolean } } | null;
       setConfig(data);
-      if (data?.maxConcurrency) {
-        setApiConcurrency(data.maxConcurrency);
+      if (cfg?.maxConcurrency) {
+        setApiConcurrency(cfg.maxConcurrency);
       }
       // বাংলা মন্তব্য: selfHealing ফ্ল্যাগ backend/AppDefaults থেকে এসেছে কিনা তা স্টেট ম্যানেজারে রিপোর্ট করি
-      if (data?.features?.selfHealing !== undefined) {
-        selfHealingState.setEnabled(Boolean(data.features.selfHealing));
+      if (cfg?.features?.selfHealing !== undefined) {
+        selfHealingState.setEnabled(Boolean(cfg.features.selfHealing));
       }
     };
 

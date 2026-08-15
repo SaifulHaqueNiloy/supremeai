@@ -4,13 +4,13 @@ import useSupremeStore from '../../store/useSupremeStore';
 interface HumanInTheLoopProtocolProps {
   onApproval: (action: string) => void;
   onCancel: () => void;
-  actionDetails: any;
+  actionDetails: Record<string, unknown>;
 }
 
 const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onApproval, onCancel, actionDetails }) => {
   const [step, setStep] = useState<number>(1);
   const [reason, setReason] = useState<string>('');
-  const [auditTrail, setAuditTrail] = useState<any[]>([]);
+  const [auditTrail, setAuditTrail] = useState<Record<string, unknown>[]>([]);
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [otpCode, setOtpCode] = useState<string>('');
   const [showOtpInput, setShowOtpInput] = useState<boolean>(false);

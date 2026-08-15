@@ -20,13 +20,16 @@ export const OneClickPatch: React.FC<OneClickPatchProps> = ({ proposals, onPatch
   const [error, setError] = useState<string | null>(null);
 
   const handleApplyPatch = async (id: string) => {
+    if (!window.confirm('Apply this self-heal patch? It modifies production code and cannot be undone automatically.')) {
+      return;
+    }
     setApplyingId(id);
     setError(null);
     try {
       await apiClient.post(`/api/admin/fixes/apply`, { fixId: id });
       onPatchApplied();
     } catch (err: unknown) {
-      setError(err.message || 'Failed to apply patch.');
+      setError(err instanceof Error ? err.message : 'Failed to apply patch.');
     } finally {
       setApplyingId(null);
     }

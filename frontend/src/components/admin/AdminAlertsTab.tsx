@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, CheckCircle2, AlertTriangle, AlertOctagon, Info, RefreshCw } from 'lucide-react';
 import type { SystemAlert } from '../../types';
 
@@ -12,6 +12,11 @@ export function AdminAlertsTab() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('adminToken');
+      if (!token) {
+        setError('Admin authentication required. Please log in again.');
+        setLoading(false);
+        return;
+      }
       const response = await fetch('/api/admin/alerts', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -25,7 +30,7 @@ export function AdminAlertsTab() {
       const data = await response.json();
       setAlerts(data.alerts || []);
     } catch (err: unknown) {
-      setError(err.message || 'An error occurred');
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -41,6 +46,12 @@ export function AdminAlertsTab() {
   const handleResolve = async (id: string) => {
     try {
       const token = localStorage.getItem('adminToken');
+      if (!token) {
+        window.dispatchEvent(new CustomEvent('supremeai-toast', {
+          detail: { message: 'Admin authentication required.', type: 'error' }
+        }));
+        return;
+      }
       const response = await fetch(`/api/admin/alerts/${id}/resolve`, {
         method: 'POST',
         headers: {
@@ -56,7 +67,9 @@ export function AdminAlertsTab() {
       setAlerts(prev => prev.map(a => a.id === id ? { ...a, resolved: true } : a));
     } catch (err) {
       console.error(err);
-      alert('Failed to resolve alert');
+      window.dispatchEvent(new CustomEvent('supremeai-toast', {
+        detail: { message: 'Failed to resolve alert. Please try again.', type: 'error' }
+      }));
     }
   };
 

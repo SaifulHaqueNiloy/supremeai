@@ -15,6 +15,17 @@ interface ModelRouterConfig {
   ab_test_active?: boolean;
 }
 
+interface ProviderStatus {
+  id: string;
+  name: string;
+  status: string;
+  latency_ms: number;
+  api_key_valid: boolean;
+  rate_limit_remaining: number;
+  rate_limit_max: number;
+  models: string[];
+}
+
 const PROVIDER_LIST = [
   { id: 'openrouter', label: 'OpenRouter', color: 'bg-cyan-500' },
   { id: 'gemini', label: 'Gemini', color: 'bg-purple-500' },
@@ -37,7 +48,7 @@ export function ModelRouter() {
   });
 
   const config = routerQuery.data;
-  const providers = providersQuery.data as unknown[] | undefined;
+  const providers = providersQuery.data as ProviderStatus[] | undefined;
   const [overrideProvider, setOverrideProvider] = useState('');
   const [overrideModel, setOverrideModel] = useState('');
   const [overrideRemaining, setOverrideRemaining] = useState(10);

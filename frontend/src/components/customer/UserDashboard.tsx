@@ -28,6 +28,8 @@ import { BrowserPreview } from './BrowserPreview';
 import { MobileSimulator } from './MobileSimulator';
 // বাংলা মন্তব্য: i18n হুক ইম্পোর্ট করা হলো
 import { useI18n } from '../../i18n/useI18n';
+// বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
+import { getSupremeModelLabel } from '../../lib/modelBranding';
 import './UserDashboard.css';
 
 export interface UserProfile {
@@ -284,7 +286,7 @@ export function UserDashboard({
                         <p className="text-[10px] text-slate-400 font-mono">{formatDate(project.updated_at)}</p>
                       </div>
                     </div>
-                    <span className="text-[10px] px-2 py-1 rounded bg-slate-700 text-slate-300 font-mono">{project.settings.default_model}</span>
+                    <span className="text-[10px] px-2 py-1 rounded bg-slate-700 text-slate-300 font-mono">{getSupremeModelLabel(project.settings.default_model)}</span>
                   </div>
                 ))
               ) : (

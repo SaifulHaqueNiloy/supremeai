@@ -143,6 +143,7 @@ export function SiteActionsPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setField = (field: keyof DraftAction, value: any) =>
     setDraft((d) => ({ ...d, [field]: value }));
 

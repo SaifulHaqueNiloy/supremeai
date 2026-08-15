@@ -46,7 +46,7 @@ export const ChatInterface: React.FC = () => {
     } catch (error: unknown) {
       addMessage({
         role: 'assistant',
-        content: `Error: ${error.message || 'Failed to get response'}`
+        content: error instanceof Error ? `Error: ${error.message}` : 'Error: Failed to get response'
       });
     } finally {
       triggerOrchestration(false);
