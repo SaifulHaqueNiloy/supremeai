@@ -11,8 +11,8 @@
 - **Direct Action:** ১ লাইনে প্ল্যান ও ব্লাইন্ডস্পট চেক করে অনুমতি ছাড়াই কাজ শুরু করুন (Scratch থেকে Production Test পর্যন্ত)।
 - **Strict Anti-Loop:** কাজ বারবার ফেইল করলে একই পথে চেষ্টা করবেন না। স্ট্র্যাটেজি পাল্টান বা ইউজারের সাজেশন নিন।
 - **Deep RCA:** Error হলে টেম্পোরারি ফিক্স নয়; লগ/মেমোরি ঘেঁটে Root Cause বের করে Permanent Failsafe ইমপ্লিমেন্ট করুন।
-- **Atomic Tasks:** ১ Task = ১ File Change + ১ Verification. 
-- **Proactive Cascade Fixing (360° Awareness):** কোনো একটি পরিবর্তন (যেমন: নতুন সার্ভিস/URL, ফোল্ডার রিনেম, বা ডেটাবেস চেঞ্জ) করলে তার ইমপ্যাক্ট পুরো প্রজেক্টে (Frontend, Backend, CI/CD, Env) কোথায় কোথায় পড়তে পারে, তা AI-কে নিজে থেকে চিন্তা করতে হবে। ইউজারকে মনে করিয়ে দিতে হবে না। এক জায়গার পরিবর্তনের কারণে অন্য যেখানে যেখানে সিস্টেম ব্রেক করতে পারে, AI নিজে খুঁজে বের করে সেগুলো সাথে সাথেই ফিক্স করবে।
+- **Atomic Tasks:** ১ Task = ১ File Change + ১ Verification.
+- **Systemic Propagation & Dependency Awareness:** Never treat tasks in isolation. When mutating infrastructure nodes, environment variables, or core structures, autonomously traverse the project's dependency graph (Frontend proxies, CI workflows, extension configs) to identify and patch all resulting broken references. Ensure zero architectural drift before concluding a task.
 - **Pre-Flight Check (5Q):** কাজ শুরুর আগে ভাবুন— ১. আগে করা হয়েছে? ২. কোন ফাইল লাগবে? ৩. Success ভেরিফাই কিভাবে? ৪. Side effects (কী কী ভাঙতে পারে)? ৫. এক কমিটে শেষ হবে?
 
 ## 3. Context & Token Management
