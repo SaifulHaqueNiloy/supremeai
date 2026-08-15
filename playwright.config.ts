@@ -78,6 +78,11 @@ export default defineConfig({
       timeout: 120 * 1000,
       stdout: 'pipe',
       stderr: 'pipe',
+      env: {
+        VITE_USER_BACKEND: 'http://127.0.0.1:8000',
+        VITE_ADMIN_BACKEND: 'http://127.0.0.1:8000',
+        VITE_API_URL: 'http://127.0.0.1:8000'
+      }
     },
     {
       command: 'cd backend && poetry run uvicorn main:app --port 8000',
@@ -86,6 +91,9 @@ export default defineConfig({
       timeout: 120 * 1000,
       stdout: 'pipe',
       stderr: 'pipe',
+      env: {
+        USER_CORS_ORIGINS: 'http://localhost:5173,http://127.0.0.1:5173,https://supremeai-admin.web.app'
+      }
     }
     ]
     : undefined,
