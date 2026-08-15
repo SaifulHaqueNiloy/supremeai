@@ -67,12 +67,5 @@
 
 4. **Best Practices & Safety:**
    - রুল ছাড়াই Atomic Commits, Clean Code ও Env vault ফলো করুন।
-   - **Smart RCA (Scoped):** শুধু **production error / severity HIGH** কাজে full-stack log চেক করুন। Minor syntax error / warning-এ সরাসরি fix করুন — লুপে পড়া নিষিদ্ধ। ব্লাইন্ড গেস নিষিদ্ধ।
+   - **Deep & Permanent RCA:** Local, GitHub Workflow বা Production—যেখানেই হোক না কেন, একই ধরনের error যদি বারবার আসে, তবে সাধারণ চিন্তা বা টেম্পোরারি ফিক্স করবেন না। একদম গভীরে গিয়ে আসল কারণ (Root Cause) বের করুন এবং বেস্ট ও স্থায়ী (Permanent) সলিউশন দিন। Minor syntax error ছাড়া ব্লাইন্ড গেস নিষিদ্ধ।
    - ক্রিটিক্যাল ডেটা মডিফাই করার আগে Failsafe ও Rollback Plan রাখুন।
-
-## 5. Project Context (At a glance)
-- **Goal & Scope:** Build $0-cost, self-healing "Eternal AI Brain". Extension is a 100% thin client.
-- **Tech Stack:** React 18, Vite, Tailwind, FastAPI, Python 3.11+, Pydantic V2, asyncpg, Supabase (pgvector), Playwright.
-- **Matrix (Folders):** `frontend/` (UI/Admin), `backend/core/` (AI routing/APIs), `scripts/ai/` (Vector logic), `supabase/` (Migrations).
-- **Contracts & Security:** API format `{success, data, message, errors}`. No hardcoded secrets (`.env` only). JIT OTP for `/admin-api/*`.
-- **Git & Deploy:** Atomic commits. `main` is production. Playwright & Pytest must pass. Check `check_env_health.py` post-deploy.
