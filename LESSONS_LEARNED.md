@@ -7,6 +7,13 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-15 — CI Deploy-verify Timeout Increase to 12 Minutes (Render Free-Tier Cold Start)
+
+### সমস্যা: `Verify Render Deploy (Wait for Live)` স্টেপে ৬ মিনিট (360s) টাইমাউটেও ফেইল করছিল।
+- **উৎস:** Render free-tier এ ব্যাকএন্ড ডেপ্লয় এবং কোল্ড স্টার্ট হতে ৬ মিনিটের বেশি সময় লেগে যাচ্ছে। 
+- **ফিক্স:** `.github/scripts/verify-render-deploy.py` তে `TIMEOUT_LIMIT` ডিফল্ট 360s থেকে বাড়িয়ে 720s (১২ মিনিট) করা হয়েছে।
+- **লেসন:** ফ্রি-টিয়ার সার্ভিসের রিলায়াবিলিটির জন্য টাইমআউট লিমিট অনেক জেনারাস রাখতে হবে যাতে স্লো ডেপ্লয়মেন্টের কারণে ফলস-নেগেটিভ ফেইলিওর না আসে।
+
 ## 2026-08-15 — Do NOT hard-fail `alembic upgrade head` on asyncpg in CI (MissingGreenlet regression)
 
 ### সমস্যা: bridge-boot-check-এ alembic hard-fail বানানোয় CI লাল হয়ে গেল।
