@@ -340,7 +340,7 @@ async def resolve_system_alert(alert_id: str, admin_user: dict = Depends(get_cur
 
 
 # ── Model branding (single source of truth for SupremeAI display names) ──
-from utils.branding import MODEL_DISPLAY, PROVIDER_DISPLAY  # noqa: E402
+from utils.branding import MODEL_DISPLAY, PROVIDER_DISPLAY
 
 
 @router.get("/model-branding")
