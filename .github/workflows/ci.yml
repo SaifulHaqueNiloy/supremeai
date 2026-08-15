@@ -42,7 +42,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
-          pytest tests/ -q
+          poetry run pytest tests/ -q
 
       - name: Log in to the Container registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -77,8 +77,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: "frontend/pnpm-lock.yaml"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
@@ -186,4 +184,5 @@ jobs:
       - name: Probe Admin API
         run: |
           curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/health || exit 1
-          curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
+          # Telemetry requires JWT auth, skipping in preflight
+          # curl --retry 5 --retry-delay 2 --retry-connrefused -f --max-time 3 http://127.0.0.1:8000/api/v1/telemetry || exit 1
