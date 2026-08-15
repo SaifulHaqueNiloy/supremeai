@@ -2,6 +2,12 @@
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
 
+## 2026-08-15 — CRITICAL: Live Secrets Exposed in Git History (AUDIT-2026-08)
+
+### সমস্যা ১১: Render API Keys ও Infisical Tokens গিট-এ কমিট-করা অবস্থায় পাওয়া গেছে
+- **উৎস:** `render_env.json` (root) ও `docs/Enviorment vs secret key/env_security_auth.md`-এ লাইভ `RENDER_API_KEY`, `RENDER_API_KEY_BACKUP`, `INFISICAL_CLIENT_SECRET`, `INFISICAL_TOKEN` (JWT) কমিট-করা ছিল। আরও ১১টি `scripts/*.py`-তে হার্ডকোড করা লাইভ ভ্যালু ছিল। কারণ: `.gitignore`-এ `render_*.json` প্যাটার্ন থাকলেও ফাইলগুলো আগে থেকেই ট্র্যাক করা ছিল (ignore rule নতুন ফাইলে কাজ করে, ইতিমধ্যে-ট্র্যাক করা ফাইলে না), এবং `s c r a t c h _ * . p y` (স্পেসসহ ভাঙা প্যাটার্ন) কাজ করছিল না।
+- **ফিক্স:** `git rm --cached` দিয়ে ১৬টি ফাইল আনট্র্যাক; `.gitignore`-এ নির্দিষ্ট ফাইলের প্যাটার্ন (render_*.json, env_security_auth.md, ১১টি scripts, config.env, scratch) যোগ; ভাঙা scratch প্যাটার্ন ফিক্স; `LESSONS_LEARNED.md` আপডেট।
+- **লেসন:** (১) `.gitignore` যোগ করা মানেই ইতিমধ্যে-ট্র্যাক করা ফাইল ইগনোর হয় না — `git rm --cached` বাধ্যতামূলক। (২) ডকুমেন্টেশন/সোর্স কোডে কোনো সিক্রেটের **লাইভ ভ্যালু কখনোই** রাখা যাবে না — শুধু `{{PLACEHOLDER}}`। (৩) **গিট হিস্ট্রিতে সিক্রেট একবার ঢুকে গেলে `git rm` যথেষ্ট নয়** — আগের কমিটগুলোতে এখনো আছে। তাই: (ক) Infisical/Render ড্যাশবোর্ডে **সব লিকড কী রোটেট (rotate) করুন** (RENDER_API_KEY, RENDER_API_KEY_BACKUP, INFISICAL_CLIENT_SECRET/TOKEN), (খ) `git filter-repo` দিয়ে হিস্ট্রি পুরোপুরি পরিষ্কার করে force push করা উচিত।
 ## 2026-08-15 — Environment Validation Fail-Fast Implementation
 
 ### সমস্যা ১০: Production Environment-এ Critical Secrets ছাড়া Server Boot হওয়া

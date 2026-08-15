@@ -508,3 +508,40 @@ man/
 # Temporary scratch CI files
 tmp_old_ci.yml
 tmp_*.yml
+
+# ============================================
+# SECURITY HOTFIX (AUDIT-2026-08): LIVE SECRETS FOUND IN TRACKED FILES
+# These files contained REAL credentials committed to git history.
+# Keys MUST be rotated in Infisical/Render dashboards (see LESSONS_LEARNED.md).
+# ============================================
+# Render API responses (contain real API keys / Infisical tokens)
+render_*.json
+run.json
+
+# Docs that leaked live RENDER_API_KEY values
+docs/Enviorment vs secret key/env_security_auth.md
+
+# Deployment scripts that had hardcoded live secrets (moved to env-var based)
+scripts/check_deploys.py
+scripts/check_health_path.py
+scripts/check_key.py
+scripts/fetch_logs.py
+scripts/status.py
+scripts/sync_both.py
+scripts/sync_secrets_to_frontend.py
+scripts/sync_secrets_to_render.py
+scripts/test_render_api.py
+scripts/trigger.py
+scripts/trigger_deploys.py
+
+# Zero-cost infra config with placeholder secrets (should not be committed)
+infrastructure/zero_cost/config.env
+
+# Scratch scripts (fixed broken 's c r a t c h' pattern)
+scratch_*.py
+scratch_script*.py
+scratch/
+
+# Local verification scripts (machine-specific)
+verify_git_junk.ps1
+
