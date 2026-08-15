@@ -30,7 +30,8 @@ except ImportError:
 
 # --- Zero hardcoded configuration - all from environment/settings ---
 DEFAULT_CACHE_TTL_HOURS = int(os.getenv("BHASHA_CACHE_TTL_HOURS") or "24")
-MIN_QUALITY_THRESHOLD = float(os.getenv("BHASHA_MIN_QUALITY", "0.7"))
+_bhasha_min_quality_raw = os.getenv("BHASHA_MIN_QUALITY", "0.7")
+MIN_QUALITY_THRESHOLD = float(_bhasha_min_quality_raw) if _bhasha_min_quality_raw else 0.7
 MAX_CACHE_SIZE = int(os.getenv("BHASHA_MAX_CACHE") or "10000")
 
 
