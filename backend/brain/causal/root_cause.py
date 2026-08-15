@@ -6,7 +6,10 @@ Pinpoints underlying root causes from system anomalies using Pearl's Do-Calculus
 
 from typing import Any
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from loguru import logger
 
 from brain.causal.discovery import CausalDiscoveryEngine

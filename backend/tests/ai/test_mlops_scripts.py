@@ -5,8 +5,8 @@ import os
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
+np = pytest.importorskip("numpy")
 
 repo_root = Path(__file__).resolve().parents[3]
 

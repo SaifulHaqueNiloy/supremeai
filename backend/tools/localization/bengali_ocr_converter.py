@@ -1,6 +1,9 @@
 import os
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from google.cloud import vision
 from google.oauth2 import service_account
 from loguru import logger

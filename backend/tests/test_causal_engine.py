@@ -1,7 +1,7 @@
 from datetime import datetime
 
-import pandas as pd
 import pytest
+pd = pytest.importorskip("pandas")
 
 from brain.causal.discovery import CausalDiscoveryEngine
 from brain.causal.interventions import (
