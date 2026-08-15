@@ -13,13 +13,11 @@ Tools exposed:
 
 from __future__ import annotations
 
-import contextlib
-import sys
 from typing import Any
 
 from loguru import logger
 from mcp.server.fastmcp import FastMCP
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 mcp = FastMCP("ide_trio_mcp")
 
@@ -80,7 +78,7 @@ async def trio_execute_pipeline(
         )
         return result
 
-    except Exception as exc:  # noqa: BLE001 - MCP boundaries must not crash
+    except Exception as exc:  # BLE001 - MCP boundaries must not crash
         logger.exception("[TrioMCP] Pipeline execution failed")
         return {
             "pipeline_id": "error",

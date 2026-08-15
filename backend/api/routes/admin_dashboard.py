@@ -164,7 +164,7 @@ def get_costs():
 def get_health_map():
     import time
     from core.health_check import health_checker
-    
+
     gcp_configured = bool(getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID"))
     redis_configured = bool(
         getattr(settings, "upstash_redis_rest_url", None) or settings._get_cached_secret("UPSTASH_REDIS_REST_URL")

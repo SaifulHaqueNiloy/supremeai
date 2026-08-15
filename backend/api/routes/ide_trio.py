@@ -51,7 +51,7 @@ async def execute_trio(request: TrioExecuteRequest) -> dict[str, Any]:
         )
         return result
 
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # BLE001 - route boundaries must not crash the server
         raise HTTPException(status_code=500, detail=f"Trio pipeline failed: {exc}") from exc
 
 

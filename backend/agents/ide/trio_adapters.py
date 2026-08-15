@@ -10,9 +10,7 @@ Each adapter wraps its respective IDE AI tool and exposes a standardized
 
 from __future__ import annotations
 
-import asyncio
 import json
-import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -142,7 +140,8 @@ class GeminiWriter:
                         if code:
                             model = fallback_model
                             break
-                    except Exception:
+                    except Exception:  # noqa: BLE001
+                        logger.warning("Fallback model {} failed, trying next", fallback_model)
                         continue
 
             confidence = response.get("confidence", 0.9) if isinstance(response, dict) else 0.9
@@ -512,7 +511,7 @@ class ClineChecker:
             f"Code:\n{code}"
         )
 
-        full_cmd = args + [prompt]
+        full_cmd = [*args, prompt]
 
         try:
             result = subprocess.run(

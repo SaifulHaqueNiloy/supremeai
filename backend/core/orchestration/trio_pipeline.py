@@ -16,9 +16,7 @@ the generated code, review findings, and production-readiness report.
 from __future__ import annotations
 
 import hashlib
-import uuid
 from datetime import UTC, datetime
-from typing import Any
 
 from loguru import logger
 
