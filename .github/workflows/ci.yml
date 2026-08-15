@@ -213,18 +213,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Trigger Primary Backend
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Trigger Render Deploy (Backend)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
         run: |
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-            echo "Primary Backend deployment triggered."
-          else
-            echo "RENDER_DEPLOY_HOOK_URL secret is not set. Skipping."
+          # Try primary API key first
+          if [ -n "$RENDER_API_KEY" ]; then
+            python .github/scripts/trigger_render_deploy.py
           fi
-
-      - name: Trigger Admin/Backup Backend
-        run: |
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}" ]; then
-            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL_BACKUP }}"
-            echo "Admin/Backup deployment triggered."
+          
+          # Try backup API key if present
+          if [ -n "$RENDER_API_KEY_BACKUP" ]; then
+            RENDER_API_KEY=$RENDER_API_KEY_BACKUP python .github/scripts/trigger_render_deploy.py
           fi
