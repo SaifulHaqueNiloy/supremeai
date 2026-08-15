@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-15 19:43 UTC
+- **Date:** 2026-08-15 20:05 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,14 +11,13 @@
 
 ## Files Changed
   - `frontend/src/store/adminStore.ts`
+  - `.github/workflows/disaster-recovery-drill.yml`
   - `scripts/ai/memory_write.py`
-  - `CHECKPOINT.md`
   - `.agents/AGENTS.md`
-  - `scripts/checkpoint_update.py`
+  - `.github/workflows/workflow-janitor.yml`
+  - `CHECKPOINT.md`
   - `AGENTS.md`
-  - `scripts/pre_commit_hook.py`
-  - `scripts/rotate_lessons.py`
-  - `scripts/install_hooks.py`
+  - `.github/workflows/self-audit-scan.yml`
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)
