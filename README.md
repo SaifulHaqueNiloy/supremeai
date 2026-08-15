@@ -1,5 +1,10 @@
 # SupremeAI 
 
+> **[🤖 AI AGENT INSTRUCTION]** 
+> This is the central entry point for the SupremeAI project. When updating:
+> 1. Keep it high-level, clear, and up-to-date with the current architecture.
+> 2. Do not bloat this file with minor technical details (use other brain files for that).
+
 SupremeAI has been significantly simplified to prioritize development speed, reduce infrastructure costs, and streamline deployments. 
 
 ## Simplified Architecture (August 2026)

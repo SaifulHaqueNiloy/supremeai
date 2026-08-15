@@ -1,6 +1,11 @@
 # LESSONS_LEARNED
 
-<!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
+> **[🤖 AI AGENT INSTRUCTION]** 
+> This is a core SupremeAI "Brain" file. When adding a new lesson:
+> 1. Add it to the TOP of the list (reverse chronological).
+> 2. Include Date, Issue, Fix, and Lesson.
+> 3. DO NOT delete or overwrite past historical entries.
+> 4. Keep it concise and technical.
 
 ## 2026-08-15 — Do NOT hard-fail `alembic upgrade head` on asyncpg in CI (MissingGreenlet regression)
 
