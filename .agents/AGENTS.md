@@ -23,5 +23,6 @@
 
 4. **Industry Best Practices by Default (বেস্ট প্র্যাকটিস ও সেফটি):**
    - স্পেসিফিক রুলস ছাড়াই ইন্ডাস্ট্রির বেস্ট প্র্যাকটিসগুলো ফলো করুন (যেমন: Atomic & Conventional Commits, Clean Code, Environment-specific rules, Env vault usage)।
+   - **Root Cause Analysis (RCA) & Real-time Logs:** যেকোনো এরর ফিক্স করার আগে রিয়েল-টাইমে ফুল-স্ট্যাক (Frontend, Backend, CI/CD) লগ চেক করে মূল কারণ (Root Cause) খুঁজুন। সারফেস লেভেল ফিক্স বা ব্লাইন্ড গেস করা কড়াকড়িভাবে নিষিদ্ধ।
    - যেকোনো ক্রিটিক্যাল স্ক্রিপ্ট রান বা প্রোডাকশন ডেটা মডিফাই করার আগে **Failsafe ও Rollback Plan** মাথায় রাখুন।
    - এনভায়রনমেন্ট হেলথ চেক বা প্রোডাকশন ড্যাশবোর্ডে ক্লায়েন্ট-সাইড এরর প্রোঅ্যাক্টিভলি স্ক্যান ও সলভ করুন।
