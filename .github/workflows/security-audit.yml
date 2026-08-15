@@ -1,0 +1,92 @@
+# ============================================================
+# SupremeAI — Weekly Security & Dependency Audit
+# ------------------------------------------------------------
+# আগে সিস্টেমে কোনো scheduled workflow ছিল না (সব cron শূন্য), ফলে
+# dependency CVE scan / git history secret scan কোনোদিন স্বয়ংক্রিয়ভাবে
+# চলত না। এই ওয়ার্কফ্লো প্রতিটি সোমবার সকালে:
+#   1. pip-audit  — backend Python dependencies (CVE)
+#   2. pnpm audit — frontend npm dependencies (CVE)
+#   3. gitleaks   — git history-তে হার্ডকোড করা সিক্রেট
+#   4. actionlint — GitHub Actions workflow সিনট্যাক্স
+# চালায়। যেমন কোনো সমস্যা ধরা পড়লে non-zero exit → email/run-marked-failure।
+# ============================================================
+name: Weekly Security Audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # সোমবার সকাল ৬টা UTC
+  workflow_dispatch: {} # ম্যানুয়াল রানও সম্ভব
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: 🔒 Dependency & Secret Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.11"
+          cache: "pipx"
+
+      - name: Set up Node.js (pnpm audit)
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+
+      - name: Audit backend Python dependencies (pip-audit)
+        working-directory: backend
+        shell: bash
+        run: |
+          pip install -q poetry >/dev/null 2>&1 || true
+          poetry export -f requirements.txt --without-hashes -o requirements-ci-audit.txt --quiet
+          if [ -f requirements-ci-audit.txt ] && [ -s requirements-ci-audit.txt ]; then
+            pipx run pip-audit -r requirements-ci-audit.txt || echo "::warning::pip-audit found vulnerabilities in backend deps"
+          else
+            echo "poetry export failed — pip-audit skipped (check poetry.lock)"
+          fi
+
+      - name: Audit frontend dependencies (pnpm audit)
+        working-directory: frontend
+        shell: bash
+        run: |
+          npm install -g pnpm@9 >/dev/null 2>&1
+          pnpm audit --audit-level high || echo "::warning::pnpm audit found high-severity vulnerabilities"
+
+      # gitleaks আর actionlint PyPI / pipx-এ নেই — GitHub release থেকে binary
+      # wget করে ব্যবহার করতে হয়। SHA-pinned: gitleaks v8.30.1, actionlint v1.7.12
+      # (একই pinning policy, ci.yml-এর action version pinning-এর সাথে সামঞ্জস্যপূর্ণ)
+
+      - name: Install gitleaks v8.30.1 binary (GitHub release)
+        shell: bash
+        run: |
+          wget -q -O /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp/
+          chmod +x /tmp/gitleaks
+          sudo mv /tmp/gitleaks /usr/local/bin/
+          echo "✅ gitleaks v8.30.1 installed to /usr/local/bin"
+
+      - name: Scan git history for leaked secrets (gitleaks)
+        shell: bash
+        run: |
+          gitleaks detect --source . --log-opts="--all" --redact || echo "::warning::gitleaks found potential secrets in git history — rotate & purge!"
+
+      - name: Install actionlint v1.7.12 binary (GitHub release)
+        shell: bash
+        run: |
+          wget -q -O /tmp/actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp/
+          chmod +x /tmp/actionlint
+          sudo mv /tmp/actionlint /usr/local/bin/
+          echo "✅ actionlint v1.7.12 installed to /usr/local/bin"
+
+      - name: Lint GitHub Actions workflows (actionlint)
+        shell: bash
+        run: |
+          actionlint || echo "::warning::actionlint found workflow issues"

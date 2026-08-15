@@ -51,6 +51,15 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: api-contract-check
+        name: "🔗 Frontend–Backend API Contract Check"
+        description: frontend-এর প্রতিটি /api কল backend-এ নিবন্ধিত আছে কিনা যাচাই করে (AUDIT-018 prevention)। stdlib-only, ~220ms।
+        entry: python scripts/ci/verify_api_contract.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
   # ══════════════════════════════════════════════════════════════
   # ৩. Python কোড কোয়ালিটি এবং আনসেফ ফিক্স (Ruff Engine + Unsafe-fixes)
   # ══════════════════════════════════════════════════════════════
