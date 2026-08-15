@@ -68,15 +68,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
           cache-dependency-path: "frontend/pnpm-lock.yaml"
-
-      - name: Install pnpm
-        run: npm install -g pnpm@9
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
@@ -130,23 +132,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Parallel Security Scan (Trivy)
-        timeout-minutes: 10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p ./bin
-          TRIVY_VERSION=$(curl -sL https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-          if [ -z "$TRIVY_VERSION" ]; then
-            TRIVY_VERSION="0.55.0"
-          fi
-          echo "Downloading Trivy version: $TRIVY_VERSION"
-          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -o trivy.tar.gz
-          tar -xzf trivy.tar.gz -C ./bin trivy
-          rm trivy.tar.gz
-          ./bin/trivy fs --severity CRITICAL,HIGH backend &
-          ./bin/trivy fs --severity CRITICAL,HIGH frontend &
-          wait
+      - name: Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
 
   bridge-boot-check:
     name: 🔌 Bridge Boot Check (Backend + DB)
@@ -187,7 +179,6 @@ jobs:
           SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
         run: |
           cd backend
-          poetry config virtualenvs.create false
           poetry install
           poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &

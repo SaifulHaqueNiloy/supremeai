@@ -646,7 +646,7 @@ class TemporalAbstractionLayer:
             stats["avg_duration"] = np.mean(durations)
             stats["total_duration"] = sum(durations)
 
-        return stats
+        return stats  # type: ignore
 
     def _select_representative_events(self, events: list[TemporalEvent]) -> list[TemporalEvent]:
         """Select representative events from a group."""
@@ -682,7 +682,7 @@ class TemporalAbstractionLayer:
         # Combine measures
         complexity = (irregularity * 0.6) + (event_type_diversity * 0.4)
 
-        return min(1.0, complexity)
+        return min(1.0, complexity)  # type: ignore
 
 
 class TemporalAbstractionSystem:
