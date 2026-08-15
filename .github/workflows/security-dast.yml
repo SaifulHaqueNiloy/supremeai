@@ -2,7 +2,7 @@ name: OWASP ZAP DAST Scan
 
 on:
   schedule:
-    - cron: '0 2 * * 0' # Every Sunday at 2 AM
+    - cron: '30 0 * * 0' # Every Sunday at 00:30 UTC (k6 drill-এর 02:00-এর সাথে clash এড়ানো)
   workflow_dispatch:
     inputs:
       target_url:

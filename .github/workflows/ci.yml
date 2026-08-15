@@ -50,7 +50,9 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'docker-compose.yml'
             frontend:
-              - 'apps/**'
+              # NOTE: apps/** (mobile/desktop/docs) ইচ্ছাকৃতভাবে এখানে নেই — ওগুলো heavyweight build
+              # (Flutter APK, VSIX) যেগুলো শুধু tag-ভিত্তিক .github/workflows/release-builds.yml-এ ship হয়।
+              # এখানে রাখলে frontend-ci (শুধু web) apps change-এ false-green হয়ে যেত।
               - 'frontend/**'
               - 'packages/**'
               - '.github/workflows/ci.yml'
@@ -65,21 +67,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install Poetry
-        run: pipx install poetry
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      # বাংলা মন্তব্য: Poetry + cached venv একটাই source of truth — setup-backend action-এ
+      # unified cache (poetry + pip + .venv)। এতে backend-ci-এর আলাদা poetry cache/branch আর নেই।
+      - name: Setup Backend (Poetry + cached virtualenv)
+        uses: ./.github/actions/setup-backend
         with:
           python-version: "3.11"
-          cache: "poetry"
-          cache-dependency-path: "backend/poetry.lock"
-
-      - name: Install backend dependencies
-        run: |
-          cd backend
-          poetry config virtualenvs.create false
-          poetry install
 
       - name: Backend Pre-flight Checks (Lint & Typecheck)
         run: |
@@ -131,7 +124,7 @@ jobs:
           cache-dependency-path: "pnpm-lock.yaml"
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Frontend Pre-flight Checks (Lint & Typecheck)
         run: |
@@ -163,16 +156,9 @@ jobs:
           projectId: supremeai-a
           target: admin
 
-      - name: Auto-update Lockfile
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add pnpm-lock.yaml
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: auto-update pnpm-lock.yaml"
-            git push
-          fi
+      # বাংলা মন্তব্য: আগে main-এ lockfile auto-push হতো → এটা PR review/branch-protection bypass আর
+      # push-triggered recursive CI run তৈরি করত। এখন `--frozen-lockfile` install-ই drift-কে verify করে,
+      # তাই auto-commit আর দরকার নেই। lockfile sync দরকার হলে dedicated bot PR-এ আনুন।
 
   api-contract-check:
     name: 🔗 Frontend↔Backend API Contract Check
@@ -248,7 +234,8 @@ jobs:
         run: |
           cd backend
           poetry install
-          poetry run alembic upgrade head || echo "Alembic migrations failed or skipped"
+          # বাংলা মন্তব্য: migrations fail হলে boot check-ও fail হবে — silent swallow নেই।
+          poetry run alembic upgrade head
           poetry run python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
           sleep 10
       - name: Probe Admin API
@@ -286,8 +273,10 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
-          PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-d9d3n58js32c738n79k0' }}
-          BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID || 'srv-d9fg48bh523c73f63bb0' }}
+          # বাংলা মন্তব্য: Render service IDs এখন শুধু secrets/vars থেকে নেওয়া হয় — hardcoded fallback সরানো হলো।
+          # service_preflight_check.py নিজেও blocking check-এ identical default রাখে, তাই এখানে fallback দরকার নেই।
+          PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID }}
+          BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID || vars.RENDER_BACKUP_SVC_ID }}
         run: python .github/scripts/check-render-quota.py
 
       # ── [B] Step Summary — Quota Report ─────────────────────────────────────
@@ -333,19 +322,25 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.11"
-      - name: 🔌 Service Preflight Connectivity Check
+      - name: 🔌 Service Preflight Connectivity Check (Blocking)
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+        # বাংলা মন্তব্য: preflight script নিজেই repo-aware blocking (prod repo-তে fail হলে exit 1)।
+        # আগের `|| echo` দিয়ে সেই intent swallow হতো — এখন restore করা হলো, তাই credential ভুল হলে gate সত্যিই block করবে।
         run: |
-          echo "Running intelligent pre-merge connectivity and risk checks..."
           if [ -f .github/scripts/service_preflight_check.py ]; then
-            python .github/scripts/service_preflight_check.py || echo "Preflight check bypassed for local dev"
+            python .github/scripts/service_preflight_check.py
+          else
+            echo "❌ Preflight script not found — cannot verify connectivity."
+            exit 1
           fi
-      - name: 🛡️ Supreme Risk Scorer
+      - name: 🛡️ Supreme Risk Scorer (non-blocking)
+        # বাংলা মন্তব্য: risk scorer তথ্যগত — fail হলে job fail না করে continue-on-error-এ দেখায়।
+        continue-on-error: true
         run: |
           if [ -f scripts/supreme-risk-scorer.py ]; then
-            python scripts/supreme-risk-scorer.py || echo "Risk Scorer finished with warnings."
+            python scripts/supreme-risk-scorer.py
           else
             echo "Risk scorer not found, skipping."
           fi
@@ -451,7 +446,7 @@ jobs:
         if: always()
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
 
@@ -459,7 +454,7 @@ jobs:
         if: always()
         id: playwright-version
         run: |
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
           echo "version=$(pnpm list @playwright/test --depth=0 | grep @playwright/test | awk '{print $2}')" >> $GITHUB_OUTPUT || echo "version=latest" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright Browsers

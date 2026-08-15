@@ -31,10 +31,12 @@ SERVICES = {
     }
 }
 
-# Optimized timing: Poll interval 10s and timeout strictly set to 120s (2 minutes max) per CI rules
-# বাংলা মন্তব্য: সর্বোচ্চ ২ মিনিট পোলিং টাইমআউট রুল অনুযায়ী দ্রুত রেজাল্ট নিশ্চিতকরণ।
+# Timing: poll every 10s; timeout env-overridable (default 360s = 6 min).
+# বাংলা মন্তব্য: Render free-tier-এ ভারী backend build+deploy সহজেই ২-৬ মিনিট নেয়, তাই আগের ১২০s hard-cap ছিল
+# false-fail-এর root cause (deploy `update_in_progress`-এ থাকতেই fail হয়ে যেত)। default ৬ মিনিট;
 POLL_INTERVAL = 10  # poll every 10s for faster feedback
-TIMEOUT_LIMIT = 120  # 2 minutes maximum (fast fail per CI polling guidelines)
+# RENDER_VERIFY_TIMEOUT env দিয়ে CI ইচ্ছে করলে বাড়ায়/কমায়; `fail/cancel/error` status এখনও instant fail।
+TIMEOUT_LIMIT = int(os.environ.get("RENDER_VERIFY_TIMEOUT", "360"))  # seconds; 6 min default
 
 class _UrllibResponse:
     def __init__(self, resp):
@@ -183,7 +185,8 @@ def monitor_service(service):
 
                 if status == "live":
                     print(f"🎉 Deploy {deploy_id} is now LIVE on Render!")
-                    return check_http_health(service["url"], name)
+                    # বাংলা মন্তব্য: deploy LIVE হলেই app-কে boot হতে সময় লাগে — তাই fresh-live-ও ১০টি HTTP retry পায়।
+                    return check_http_health(service["url"], name, retries=10)
                 elif any(f_word in status for f_word in ["fail", "cancel", "error"]):
                     # বাংলা মন্তব্য: ডিপ্লয় ফেইল হলে সময় নষ্ট না করে সাথে সাথে HARD FAIL রিটার্ন করা হচ্ছে।
                     print(f"⚠️ Deploy {deploy_id} reported status: {status}. HARD FAIL — new build failed to deploy.")

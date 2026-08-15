@@ -8,9 +8,9 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # বাংলা মন্তব্য: প্রতিদিন রাত ২টায় (UTC) স্বয়ংক্রিয়ভাবে Smart Summary চালাবে
+  # বাংলা মন্তব্য: প্রতিদিন রাত ১টায় (UTC) স্বয়ংক্রিয়ভাবে Smart Summary চালাবে (auto-fix 01:30-এর সাথে collide এড়ানো)
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 1 * * *'
   workflow_dispatch:
     inputs:
       run_ci_failure_summary:
