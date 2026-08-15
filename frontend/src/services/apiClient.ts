@@ -92,7 +92,11 @@ const handleResponse = async (res: Response) => {
     let errMsg = `HTTP error! status: ${res.status}`;
     try {
       const errData = await res.json();
-      errMsg = errData.detail || errMsg;
+      if (errData.detail) {
+        errMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+      } else if (errData.message) {
+        errMsg = typeof errData.message === 'string' ? errData.message : JSON.stringify(errData.message);
+      }
     } catch {
       // JSON parsing failure fallback
     }
