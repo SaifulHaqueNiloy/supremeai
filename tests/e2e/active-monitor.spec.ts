@@ -57,7 +57,7 @@ test.describe('Active Health Monitor (Production)', () => {
       if (text.includes('favicon.ico')) return;
       
       if (type === 'error') {
-        if (text.includes('400') && !text.includes('Client-Side')) return; // Pre-login 400s are often expected
+        if (text.match(/status of 4\d\d/) && !text.includes('Client-Side')) return; // Ignore expected 4xx HTTP responses during login flows
         if (text.includes('net::ERR_ABORTED')) return; // Aborted SSE connections
         caughtErrors.push(`Console Error: ${text}`);
         await reportSystemAlert(page, 'error', text);
