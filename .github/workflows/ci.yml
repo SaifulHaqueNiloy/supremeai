@@ -39,6 +39,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "frontend/pnpm-lock.yaml"
 
       - name: Install pnpm
         run: npm install -g pnpm@9
@@ -50,6 +52,16 @@ jobs:
         run: |
           cd frontend
           pnpm run build
+
+      - name: Deploy Admin Portal to Firebase Hosting
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}'
+          channelId: live
+          projectId: supremeai-a
+          target: admin
 
       - name: Auto-update Lockfile
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
