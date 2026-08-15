@@ -9,24 +9,27 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  backend-ci:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
+          cache: "poetry"
+          cache-dependency-path: "backend/poetry.lock"
 
       - name: Install backend dependencies
         run: |
           cd backend
-          pip install poetry
           poetry config virtualenvs.create false
           poetry install
 
@@ -34,6 +37,30 @@ jobs:
         run: |
           cd backend
           pytest tests/ -q
+
+      - name: Log in to the Container registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/saifulhaqueniloy/supremeai-backend:latest
+
+  frontend-ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -53,7 +80,16 @@ jobs:
           cd frontend
           pnpm run build
 
-      - name: Deploy Admin Portal to Firebase Hosting
+      - name: Deploy PR Preview to Firebase Hosting
+        if: github.event_name == 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A }}'
+          projectId: supremeai-a
+          target: admin
+
+      - name: Deploy Live to Firebase Hosting
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -73,19 +109,3 @@ jobs:
             git commit -m "chore: auto-update pnpm-lock.yaml"
             git push
           fi
-
-      - name: Log in to the Container registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push backend Docker image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ghcr.io/saifulhaqueniloy/supremeai-backend:latest
