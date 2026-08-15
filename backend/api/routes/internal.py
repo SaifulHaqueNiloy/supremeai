@@ -65,12 +65,12 @@ async def report_system_alert(request: Request, payload: SystemAlertPayload):
     if not hasattr(request.state, "api_key") or not request.state.api_key:
         # Fallback to Admin Secret if API key is missing
         _require_admin(request)
-        
+
     logger.bind(alert_level=payload.level).warning(f"System Alert Received: {payload.message}")
-    
+
     # Optionally store in DB/Redis or emit via ErrorEventBus
     from core.messaging.event_bus import ErrorEvent, error_event_bus, ErrorContext
-    
+
     error_event_bus.emit(
         ErrorEvent(
             module="ClientMonitor",
@@ -83,5 +83,5 @@ async def report_system_alert(request: Request, payload: SystemAlertPayload):
             ),
         )
     )
-    
+
     return {"status": "received", "level": payload.level}
