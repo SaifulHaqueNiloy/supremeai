@@ -135,8 +135,8 @@ def update_checkpoint(completed: str, message: str = "") -> None:
     with open(CHECKPOINT_FILE, "w", encoding="utf-8") as f:
         f.write(new_content)
 
-    print(f"✅ CHECKPOINT.md updated at {now}")
-    print(f"📁 Files tracked: {len(changed_files)}")
+    print(f"[OK] CHECKPOINT.md updated at {now}")
+    print(f"[INFO] Files tracked: {len(changed_files)}")
 
 
 def main():
@@ -145,7 +145,7 @@ def main():
     parser.add_argument("--completed", "-c", type=str, default="", help="What was completed")
     args = parser.parse_args()
 
-    print("🔄 Updating CHECKPOINT.md...")
+    print("[INFO] Updating CHECKPOINT.md...")
     update_checkpoint(completed=args.completed, message=args.message)
 
 
