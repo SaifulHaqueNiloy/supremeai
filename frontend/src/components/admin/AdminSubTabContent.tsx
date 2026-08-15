@@ -20,7 +20,7 @@ interface SubTabContentProps {
   liveLogs: string[];
   setLiveLogs: (logs: string[]) => void;
   costReport: string;
-  healthMap: any;
+  healthMap: Record<string, unknown>;
   newUsername: string;
   setNewUsername: (val: string) => void;
   newUserRole: string;
@@ -28,7 +28,7 @@ interface SubTabContentProps {
   newUserPerms: string;
   setNewUserPerms: (val: string) => void;
   handleSaveUser: () => void;
-  adminUsers: any[];
+  adminUsers: Record<string, unknown>[];
   handleDeleteUser: (username: string) => void;
   envConfig: Record<string, string>;
   setEnvConfig: React.Dispatch<React.SetStateAction<Record<string, string>>>;
@@ -36,6 +36,7 @@ interface SubTabContentProps {
   handleTriggerDeploy: () => void;
 }
 
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 const MODULE_MAP: Record<string, React.FC<any>> = {
   'dashboard': Dashboard,
   'command-center': CommandCenter,

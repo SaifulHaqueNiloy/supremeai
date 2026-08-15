@@ -5,7 +5,14 @@ const models = [
   { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', cost: 'High', speed: 'Fast' },
 ];
 
-const StepModelSelect = ({ data, updateData, nextStep, prevStep }: any) => {
+interface StepProps {
+  data: Record<string, string>;
+  updateData: (updates: Record<string, string>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+}
+
+const StepModelSelect = ({ data, updateData, nextStep, prevStep }: StepProps) => {
   return (
     <div className="flex flex-col space-y-4 animate-fadeIn">
       <h3 className="text-xl font-semibold">Step 2: Choose your default brain</h3>

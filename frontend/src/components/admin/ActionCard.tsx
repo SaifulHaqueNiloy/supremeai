@@ -74,16 +74,18 @@ export function ActionCard({ rawContent, onSaveToProject, onPreview }: ActionCar
           } else {
             setActionStatus('❌ Deploy failed (unauthorized or server error).');
           }
-        } catch (e: any) {
-          setActionStatus(`❌ Deploy failed: ${e.message}`);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : 'Unknown error';
+          setActionStatus(`❌ Deploy failed: ${msg}`);
         }
         setTimeout(() => setActionStatus(''), 5000);
       } else if (action.type === 'share') {
         setActionStatus('🔗 Share link copied!');
         setTimeout(() => setActionStatus(''), 3000);
       }
-    } catch (err: any) {
-      setActionStatus(`❌ Error: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setActionStatus(`❌ Error: ${msg}`);
       setTimeout(() => setActionStatus(''), 4000);
     }
   };

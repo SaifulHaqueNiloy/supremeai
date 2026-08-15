@@ -5,13 +5,13 @@ import { apiClient } from '../../services/apiClient';
 
 export function BackupRestore() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [backups, setBackups] = useState<any[]>([]);
+  const [backups, setBackups] = useState<Record<string, unknown>[]>([]);
 
   const fetchBackups = async () => {
     try {
-      const res = await apiClient.get<{ backups: any[] }>('/admin-api/backups');
+      const res = await apiClient.get<{ backups: Record<string, unknown>[] }>('/admin-api/backups');
       setBackups(res.backups || []);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Failed to fetch backups", e);
     }
   };
@@ -35,9 +35,9 @@ export function BackupRestore() {
     try {
       await apiClient.post<{ status: string; backup_path: string }>('/admin-api/backup');
       await fetchBackups(); // Refresh the list
-    } catch (e: any) {
+    } catch (e: unknown) {
       setBackups(prev => prev.filter(b => b.id !== tempId));
-      alert(`❌ Backup failed: ${e.message}`);
+      alert(`❌ Backup failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   };
 
