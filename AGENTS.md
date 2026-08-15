@@ -22,6 +22,7 @@
   | Feature / Refactor | `DECISION_LOG.md`, `ARCHITECTURE.md` |
   | Planning / Roadmap | `ACTION_PLAN.md`, `TODO.md` |
   | Deploy / CI | `DEPLOYMENT_CHECKLIST.md`, `KNOWN_ISSUES.md` |
+- **Controlled & Elite Brain Boosting:** মেমোরিতে (ai_memory) নতুন ডেটা ইনজেক্ট করা (Brain Boosting) শুধু তখনই হবে যখন Admin নির্দিষ্টভাবে ইনস্ট্রাকশন দেবে। ব্রেইনে কোনো সাধারণ জ্ঞান (যা গুগল বা বেস মডেলে থাকে) সেভ করা যাবে না। শুধুমাত্র সুপ্রিম-এআইয়ের স্পেসিফিক ট্রিকস, জটিল এরর সলভ করার ইউনিক প্যাটার্ন, এবং "কী করা যাবে না" (Anti-patterns)—এমন হাই-ভ্যালু নলেজ দিয়ে ব্রেইন বুস্ট করতে হবে, যাতে সিস্টেম নয়েজ-ফ্রি এবং ফোকাসড থাকে।
 - **Zero Repeat Errors:** কাজ শেষে `LESSONS_LEARNED.md` (Max 12KB/30 entries) ও `CHECKPOINT.md` আপডেট করুন। 12KB পার হলে Archive করুন।
 - **Model Routing:** Token বাঁচাতে ছোট কাজে (CRUD/Fix/Doc) Flash/Haiku এবং জটিল কাজে (Architecture/RCA) Opus/GPT-4 ব্যবহার করুন।
 
