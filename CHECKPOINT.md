@@ -2,9 +2,9 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-16 01:02 UTC+6
+- **Date:** 2026-08-16 01:13 UTC+6
 - **Agent:** Antigravity (Claude Sonnet)
-- **Summary:** Context Mesh (Phase A/B/C) implementation + AGENTS.md overhaul + _INDEX.md files
+- **Summary:** AGENTS.md 5-patch overhaul — LESSONS_LEARNED size cap, Memory Query gating, Model Routing layer, Pro-Suggestion milestone-only, RCA scope fix
 
 ## Completed This Session
 - `AGENTS.md` + `.agents/AGENTS.md` — Context Matrix, Pre-Flight 5Q, Atomic Task Protocol, Pro-Suggestion format, Memory Query rule, Session Handoff rule
@@ -30,6 +30,7 @@
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)
+- **HIGH:** `LESSONS_LEARNED.md` এখন 64KB — শেষ 30 entry রেখে পুরানো entries `docs/archive/lessons_2026-07.md`-এ rotate করতে হবে (64KB → 12KB target)
 - **MED:** Phase C — `sentence-transformers` install করে `memory_write.py` প্রথম real run test করা
 - **LOW:** `scripts/checkpoint_update.py` git pre-commit hook হিসেবে setup করা
 
