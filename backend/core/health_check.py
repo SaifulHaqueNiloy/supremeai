@@ -62,6 +62,7 @@ class ComprehensiveHealthChecker:
     """Comprehensive health checker for the entire system and subsystems."""
 
     def __init__(self):
+        self._start_time = time.time()
         self.checks: list[str] = [
             "application",
             "redis",

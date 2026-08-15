@@ -25,6 +25,7 @@ import { CodeReviewService, getCodeReviewService, setCodeReviewService } from '.
 import { detectOtherAiAgents } from './agentDetector'; // এজেন্ট ডিটেক্টর ইম্পোর্ট করা হলো
 import { SupremeWebviewProvider } from './providers/SupremeWebviewProvider';
 import { CrossAiObserverService } from './services/CrossAiObserverService';
+import { registerSwarmCommands } from './services/SwarmPipelineProvider';
 import { SelfHealingService } from './services/SelfHealingService';
 import { BrowserPreviewProvider } from './providers/BrowserPreviewProvider';
 // New imports for enhanced features
@@ -134,6 +135,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register commands for additional features (only initialize services when commands are used)
   registerCommands(context);
+
+  // Swarm Intelligence: dynamically detect Gemini/Kilo/Cline + other AI agents
+  // and expose the collective-intelligence pipeline command.
+  registerSwarmCommands(context);
 
   // Auto-focus SupremeAI Chat panel on startup so user does not need to open it manually
   setTimeout(() => {

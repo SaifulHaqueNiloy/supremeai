@@ -44,7 +44,7 @@ def main():
     check_url("https://supremeai-frontend-6nwi.onrender.com/", "Frontend (Render)")
     check_url("https://supremeai-admin.web.app/", "Admin Panel (Firebase)")
     # Assuming backend onrender health endpoint
-    check_url("https://supremeai-backend.onrender.com/health/aggregated", "Backend (Render)")
+    check_url("https://supremeai-backend-docker.onrender.com/health/aggregated", "Backend (Render)")
     print("")
 
     # External Dependencies

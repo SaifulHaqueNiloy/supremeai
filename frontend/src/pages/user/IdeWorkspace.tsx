@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import Editor from '@monaco-editor/react';
 import { Terminal } from 'xterm';
@@ -6,6 +6,10 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebContainer } from '@webcontainer/api';
 import 'xterm/css/xterm.css';
 
+import { AiAssistantBar } from '../../components/editor/AiAssistantBar';
+import { AiOutputPanel, type AiOutput } from '../../components/editor/AiOutputPanel';
+import { JitOtpDialogHost } from '../../components/editor/JitOtpDialogHost';
+import { setupMonacoAi } from '../../components/editor/monacoAi';
 import { useIdeStore } from '../../store/useIdeStore';
 import { FileExplorer } from '../../components/editor/FileExplorer';
 import { EditorTabs } from '../../components/editor/EditorTabs';
@@ -18,6 +22,12 @@ export const IdeWorkspace: React.FC = () => {
   const fitAddonRef = useRef<FitAddon | null>(null);
 
   const [isBooting, setIsBooting] = useState(true);
+
+  // SupremeAI AI ইন্টারফেস স্টেট
+  const [aiOutput, setAiOutput] = useState<AiOutput | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleAiOutput = (output: AiOutput) => setAiOutput(output);
 
   // Initialize Terminal and WebContainer
   useEffect(() => {
@@ -111,6 +121,16 @@ export const IdeWorkspace: React.FC = () => {
     }
   };
 
+  // Monaco onMount — inline completion + context menu (VS Code extension equivalent)
+  const handleEditorMount = useCallback(
+    (editor: Parameters<React.ComponentProps<typeof Editor>['onMount']>[0], monaco: Parameters<React.ComponentProps<typeof Editor>['onMount']>[1]) => {
+      setupMonacoAi(editor, monaco, {
+        onOutput: (title, content) => setAiOutput({ title, content, kind: "plain" }),
+      });
+    },
+    []
+  );
+
   // Bind Ctrl+S
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -147,6 +167,9 @@ export const IdeWorkspace: React.FC = () => {
         </div>
       </div>
 
+      {/* SupremeAI AI Action Bar — VS Code extension-এর মতো */}
+      <AiAssistantBar activeFile={currentFileData} onOutput={handleAiOutput} onLoading={setAiLoading} />
+
       {/* Main Layout using react-resizable-panels */}
       <div className="flex-1 flex min-h-0">
         <PanelGroup orientation="horizontal">
@@ -174,6 +197,7 @@ export const IdeWorkspace: React.FC = () => {
                         language={currentFileData.language}
                         value={currentFileData.content}
                         onChange={handleEditorChange}
+                        onMount={handleEditorMount}
                         options={{ minimap: { enabled: false }, wordWrap: 'on' }}
                       />
                     ) : (
@@ -202,6 +226,12 @@ export const IdeWorkspace: React.FC = () => {
 
         </PanelGroup>
       </div>
+
+      {/* SupremeAI AI Output Overlay */}
+      <AiOutputPanel output={aiOutput} loading={aiLoading} onClose={() => setAiOutput(null)} />
+
+      {/* Global JIT OTP / prompt dialog host */}
+      <JitOtpDialogHost />
     </div>
   );
 };

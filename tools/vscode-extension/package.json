@@ -116,6 +116,16 @@
         "category": "SupremeAI"
       },
       {
+                "command": "supremeai.swarmPipeline",
+        "title": "Run Swarm Pipeline (SupremeAI + detected AIs)",
+        "category": "SupremeAI"
+      },
+      {
+        "command": "supremeai.trioPipeline",
+        "title": "Run Trio Pipeline (Gemini -> Kilo -> Cline)",
+        "category": "SupremeAI"
+      },
+      {
         "command": "supremeai.aiReview",
         "title": "AI Code Review",
         "category": "SupremeAI"
@@ -304,6 +314,11 @@
           "minimum": 100,
           "maximum": 2000,
           "description": "Debounce delay for inline completions in milliseconds (higher values reduce CPU usage)."
+        },
+                "supremeai.swarmBackendUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "SupremeAI Swarm pipeline backend URL. Falls back to backendUrl, then http://localhost:8080."
         },
         "supremeai.enableAgentDetection": {
           "type": "boolean",

@@ -1,11 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, XCircle, Globe, Server } from 'lucide-react';
 
 interface SystemUptimeWidgetProps {
   healthMap: Record<string, any>;
   isLoading?: boolean;
 }
+
+const formatUptime = (seconds: number) => {
+  if (!seconds || isNaN(seconds)) return '—';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  return `${m}m ${s}s`;
+};
 
 export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMap, isLoading }) => {
   // Extract render and frontend specifically
@@ -15,6 +27,23 @@ export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMa
   const renderIsHealthy = renderHealth?.status === 'healthy';
   const frontendIsHealthy = frontendHealth?.status === 'healthy';
 
+  const [localRenderTick, setLocalRenderTick] = useState(0);
+
+  // Sync with backend metric
+  useEffect(() => {
+    if (renderHealth?.live_uptime_seconds) {
+      setLocalRenderTick(renderHealth.live_uptime_seconds);
+    }
+  }, [renderHealth?.live_uptime_seconds]);
+
+  // Tick locally every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLocalRenderTick(prev => (prev > 0 ? prev + 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-5 flex flex-col justify-between min-h-[300px] shadow-[0_0_15px_rgba(0,0,0,0.3)]">
       <div className="flex justify-between items-center mb-4">
@@ -22,7 +51,7 @@ export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMa
           <Clock size={14} /> Service Uptime
         </span>
         <span className="text-[9px] text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 rounded">
-          SLA TRACKING
+          LIVE TRACKING
         </span>
       </div>
 
@@ -57,9 +86,11 @@ export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMa
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-slate-500 uppercase mb-1">Historical Uptime</div>
+                  <div className="text-[10px] text-slate-500 uppercase mb-1">
+                    {renderHealth?.live_uptime_seconds ? 'Process Uptime' : 'Historical Uptime'}
+                  </div>
                   <div className="text-xl font-bold text-[#00f3ff]">
-                    {renderHealth?.uptime_sla || '99.90%'}
+                    {renderHealth?.live_uptime_seconds ? formatUptime(localRenderTick) : renderHealth?.uptime_sla || '99.90%'}
                   </div>
                 </div>
               </div>
@@ -88,7 +119,7 @@ export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMa
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-slate-500 uppercase mb-1">Historical Uptime</div>
+                  <div className="text-[10px] text-slate-500 uppercase mb-1">Historical SLA</div>
                   <div className="text-xl font-bold text-[#b5179e]">
                     {frontendHealth?.uptime_sla || '99.99%'}
                   </div>

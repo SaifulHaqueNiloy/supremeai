@@ -20,12 +20,12 @@
         "package-lock.json"
       ],
       "rewrites": [
-        { "source": "/admin-api/**", "destination": "https://supremeai-backend-6nwi.onrender.com/admin-api/**" },
-        { "source": "/api/v1/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/v1/**" },
-        { "source": "/api/config/public", "destination": "https://supremeai-backend-6nwi.onrender.com/api/config/public" },
-        { "source": "/api/task/stream", "destination": "https://supremeai-backend-6nwi.onrender.com/api/task/stream" },
-        { "source": "/api/preferences/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/preferences/**" },
-        { "source": "/api/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/**" },
+        { "source": "/admin-api/**", "destination": "https://supremeai-backend-docker.onrender.com/admin-api/**" },
+        { "source": "/api/v1/**", "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**" },
+        { "source": "/api/config/public", "destination": "https://supremeai-backend-docker.onrender.com/api/config/public" },
+        { "source": "/api/task/stream", "destination": "https://supremeai-backend-docker.onrender.com/api/task/stream" },
+        { "source": "/api/preferences/**", "destination": "https://supremeai-backend-docker.onrender.com/api/preferences/**" },
+        { "source": "/api/**", "destination": "https://supremeai-backend-docker.onrender.com/api/**" },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
@@ -78,8 +78,8 @@
         "package-lock.json"
       ],
       "rewrites": [
-        { "source": "/api/v1/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/v1/**" },
-        { "source": "/api/**", "destination": "https://supremeai-backend-6nwi.onrender.com/api/**" },
+        { "source": "/api/v1/**", "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**" },
+        { "source": "/api/**", "destination": "https://supremeai-backend-docker.onrender.com/api/**" },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [

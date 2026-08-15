@@ -51,7 +51,7 @@ export default {
   async scheduled(event, env, ctx) {
     // 🛡️ Keep-Alive Ping for Render Free Tier (Zero Cold Start)
     const urlsToPing = [
-      'https://supremeai-backend-6nwi.onrender.com/api/v1/health',
+      'https://supremeai-backend-docker.onrender.com/api/v1/health',
       'https://supremeai-admin.onrender.com/api/v1/health'
     ];
     

@@ -34,9 +34,9 @@ services:
       - key: PNPM_FLAGS
         value: "--no-frozen-lockfile"
       - key: VITE_ADMIN_BACKEND
-        value: "https://supremeai-backend-6nwi.onrender.com"
+        value: "https://supremeai-backend-docker.onrender.com"
       - key: VITE_USER_BACKEND
-        value: "https://supremeai-backend-6nwi.onrender.com"
+        value: "https://supremeai-backend-docker.onrender.com"
     routes:
       - type: rewrite
         source: /*

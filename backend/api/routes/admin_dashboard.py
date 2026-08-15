@@ -162,6 +162,9 @@ def get_costs():
 
 @router.get("/health-map")
 def get_health_map():
+    import time
+    from core.health_check import health_checker
+    
     gcp_configured = bool(getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID"))
     redis_configured = bool(
         getattr(settings, "upstash_redis_rest_url", None) or settings._get_cached_secret("UPSTASH_REDIS_REST_URL")
@@ -190,6 +193,7 @@ def get_health_map():
             "latency": "120ms" if db_configured else "N/A",
             "region": "singapore",
             "uptime_sla": "99.90%",
+            "live_uptime_seconds": int(time.time() - health_checker._start_time),
         },
         "frontend": {
             "status": "healthy",
