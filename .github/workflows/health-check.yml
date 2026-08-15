@@ -41,18 +41,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install pnpm
+        if: always()
+        run: npm install -g pnpm
 
       - name: Install Playwright & Dependencies
         if: always()
         run: |
-          npm ci
-          npx playwright install --with-deps chromium
+          pnpm install --no-frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
 
       - name: Run Active Monitor (Admin & User Dashboards)
         if: always()
         env:
+          BASE_URL: ${{ secrets.MONITOR_BASE_URL || 'https://supremeai-admin.web.app' }}
           TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
           TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
           SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
           INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
-        run: npx playwright test tests/e2e/active-monitor.spec.ts --project=chromium
+        run: pnpm exec playwright test tests/e2e/active-monitor.spec.ts --project=chromium

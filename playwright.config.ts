@@ -8,6 +8,11 @@ import { defineConfig, devices } from '@playwright/test';
  * লোকালে চালানোর জন্য: pnpm exec playwright test --headed
  */
 
+// BASE_URL দূরবর্তী (production) হলে লোকাল ডেভ সার্ভার বুট না করে লাইভ সাইটেই টেস্ট চালায়।
+const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+const startLocalServers =
+  !/^https?:\/\//.test(baseURL) || baseURL.includes('localhost') || baseURL.includes('127.0.0.1');
+
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
@@ -27,7 +32,7 @@ export default defineConfig({
 
   use: {
     // বাংলা মন্তব্য: ডেভেলপমেন্ট সার্ভারের জন্য ডিফল্ট URL
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -63,7 +68,9 @@ export default defineConfig({
 
   // বাংলা মন্তব্য: ডেভেলপমেন্ট সার্ভার চালু করা, এটি ব্যাকগ্রাউন্ডে থাকবে সমস্ত টেস্ট জুড়ে
   // CI/CD-তে পোর্ট কনফ্লিক্ট এড়ানোর জন্য reuseExistingServer: true করা হয়েছে
-  webServer: [
+  // দূরবর্তী BASE_URL (production monitoring) হলে লোকাল সার্ভার বুট করবে না
+  webServer: startLocalServers
+    ? [
     {
       command: 'cd frontend && pnpm dev --host 0.0.0.0 --port 5173',
       url: 'http://127.0.0.1:5173',
@@ -80,5 +87,6 @@ export default defineConfig({
       stdout: 'pipe',
       stderr: 'pipe',
     }
-  ],
+    ]
+    : undefined,
 });
