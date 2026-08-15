@@ -24,7 +24,7 @@ import subprocess
 # ছিল, কিন্তু আসল Render key ২৭ অক্ষরের ছিল — ফলে স্ক্যানার তা ধরতে পারেনি।
 # এখন lenient কনফিগারেশন (min length 16) + JWT/generic token কভারেজ যোগ করা হলো।
 SECRET_PATTERNS = {
-    "OpenAI API Key": r"(sk-[a-zA-Z0-9]{20,})",
+    "OpenAI API Key": r"\b(sk-[a-zA-Z0-9]{20,}|sk-proj-[a-zA-Z0-9\-_]{16,}|sk-ant-[a-zA-Z0-9\-_]{16,})\b",
     "Render API Key": r"\b(rnd_[a-zA-Z0-9]{16,})\b",
     "Stripe Secret Key": r"(sk_(live|test)_[a-zA-Z0-9]{16,})",
     "AWS Access Key": r"\b(AKIA[0-9A-Z]{16})\b",
