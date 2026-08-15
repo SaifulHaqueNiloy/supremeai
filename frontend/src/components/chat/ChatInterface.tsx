@@ -43,7 +43,7 @@ export const ChatInterface: React.FC = () => {
         role: 'assistant',
         content: response.response || JSON.stringify(response)
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       addMessage({
         role: 'assistant',
         content: `Error: ${error.message || 'Failed to get response'}`

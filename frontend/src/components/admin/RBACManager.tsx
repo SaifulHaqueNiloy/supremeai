@@ -178,7 +178,7 @@ export function RBACManager() {
               ].map(([perm, ...access]) => (
                 <tr key={perm as string} className="border-b border-slate-800/50">
                   <td className="py-2 text-slate-300">{perm as string}</td>
-                  {access.map((a: any, i) => (
+                  {access.map((a: string, i) => (
                     <td key={i} className="py-2 text-center">
                       {a ? <CheckCircle2 size={12} className="text-emerald-400 inline" /> : <XCircle size={12} className="text-slate-600 inline" />}
                     </td>

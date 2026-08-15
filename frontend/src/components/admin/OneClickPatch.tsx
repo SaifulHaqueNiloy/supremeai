@@ -25,7 +25,7 @@ export const OneClickPatch: React.FC<OneClickPatchProps> = ({ proposals, onPatch
     try {
       await apiClient.post(`/api/admin/fixes/apply`, { fixId: id });
       onPatchApplied();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to apply patch.');
     } finally {
       setApplyingId(null);

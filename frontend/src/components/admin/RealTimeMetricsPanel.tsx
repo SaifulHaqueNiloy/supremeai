@@ -216,8 +216,8 @@ function Kpi({ label, value, accent, isSimple }: { label: string; value: string;
   );
 }
 
-function mergeSeries(series: any[]) {
-  const map = new Map<number, Record<string, any>>();
+function mergeSeries(series: unknown[]) {
+  const map = new Map<number, Record<string, unknown>>();
   for (const s of series) {
     for (const pt of s.data) {
       const row = map.get(pt.t) || { t: pt.t };

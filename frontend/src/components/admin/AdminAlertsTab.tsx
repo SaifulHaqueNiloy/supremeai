@@ -24,7 +24,7 @@ export function AdminAlertsTab() {
       
       const data = await response.json();
       setAlerts(data.alerts || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);

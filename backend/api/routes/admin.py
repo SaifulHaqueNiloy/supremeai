@@ -285,7 +285,7 @@ async def get_rules(admin_user: dict = Depends(get_current_admin)):
 
 
 # 🚨 System Alerts Endpoints
-from backend.models.system_alert import SystemAlert
+from models.system_alert import SystemAlert
 from database.session import get_db_session
 from sqlalchemy import select, update
 from fastapi import Header

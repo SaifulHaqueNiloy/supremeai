@@ -37,7 +37,7 @@ export function ModelRouter() {
   });
 
   const config = routerQuery.data;
-  const providers = providersQuery.data as any[] | undefined;
+  const providers = providersQuery.data as unknown[] | undefined;
   const [overrideProvider, setOverrideProvider] = useState('');
   const [overrideModel, setOverrideModel] = useState('');
   const [overrideRemaining, setOverrideRemaining] = useState(10);

@@ -32,7 +32,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
     let backoffTimer: ReturnType<typeof setTimeout> | null = null;
     let deadlineTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const applyConfig = (data: any) => {
+    const applyConfig = (data: unknown) => {
       if (cancelled) return;
       setConfig(data);
       if (data?.maxConcurrency) {
@@ -48,7 +48,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
       if (cancelled) return;
       setError(null);
       try {
-        const data = await apiClient.get<any>('/api/config/public');
+        const data = await apiClient.get<unknown>('/api/config/public');
         if (cancelled) return;
         // বাংলা মন্তব্য: রিয়েল কনফিগ এসেছে — AppDefaults fallback-এর ওপর আপডেট করবে
         applyConfig(data);

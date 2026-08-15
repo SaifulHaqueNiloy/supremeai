@@ -103,14 +103,14 @@ export function UnifiedChatBubble({
           } else {
             setActionStatus('❌ Deploy failed (unauthorized or server error).');
           }
-        } catch (e: any) {
+        } catch (e: unknown) {
           setActionStatus(`❌ Deploy failed: ${e.message}`);
         }
       } else if (act.type === 'share') {
         setActionStatus('🔗 Share link copied!');
       }
       setTimeout(() => setActionStatus(''), 3500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setActionStatus(`❌ Error: ${err.message}`);
       setTimeout(() => setActionStatus(''), 4000);
     }
