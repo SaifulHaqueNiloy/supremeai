@@ -1,6 +1,23 @@
 # LESSONS_LEARNED
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
+## 2026-08-15 — SupremeAI IDE Trio Pipeline (Gemini → Kilo → Cline) Build
+
+### Problem: IDE-তে Gemini, Kilo Code, Cline আলাদা এক্সটেনশন — এদের এক pipeline-এ যুক্ত করে Write → Review → Production-Check দরকার
+
+- **ফিক্স (নতুন কম্পোনেন্ট):**
+  1. `backend/agents/ide/trio_adapters.py` — `GeminiWriter` (Stage 1), `KiloReviewer` (Stage 2), `ClineChecker` (Stage 3); প্রতিটি `TrioAgentResult` রিটার্ন করে।
+  2. `backend/core/orchestration/trio_pipeline.py` — `TrioPipeline.execute()` three-stage chain।
+  3. `backend/api/routes/ide_trio.py` — `POST /api/v1/ide-trio/execute`; `backend/api/routers.py`-এ register। main repo ↔ worktree sync।
+  4. `backend/tools/mcp/mcp_ide_trio.py` — MCP tool; `.kilo/agent/config.json`-এ `ide-trio` server।
+  5. VS Code extension — `IdeTrioPipeline.ts`, `supremeai.trioPipeline` command, agentDetector-এ Kilo/Cline/Gemini detection।
+  6. `tests/test_ide_trio_smoke.py` — 4/4 pass।
+- **লেসন:**
+  1. worktree + main repo sync না করলে MCP config ও routing broken থাকে।
+  2. `loguru` bare-Python-এ না থাকলে import crash — try/except ImportError → logging stub fallback। `agents/__init__.py`-এর ভারি imports উপেক্ষা করতে smoke test-এ importlib direct file load।
+  3. Windows console cp1252-এ emoji print করলে UnicodeEncodeError — `sys.stdout.reconfigure(encoding='utf-8', errors='replace')`।
+  4. Hardcoded-secret check substring `secret=` দিয়ে fail — regex `(api[_-]?key|secret|password|token)\s*=\s*['\"][^'\"]+['\"]` ব্যবহার করলে স্পেস থাকলেও কাজ করে।
+  5. VS Code command add করলে package.json contributes.commands + extension.ts registerCommands + subscriptions.push — তিন জায়গা synchronized হওয়া চাই।
 
 ## 2026-08-15 — Codebase Report Audit Fixes (HITL OTP + CI Security Gate)
 
@@ -158,3 +175,10 @@
 - **উৎস:** `npm install -g pnpm` সবসময় সর্বশেষ pnpm ইনস্টল করে, যা এখন **pnpm v10**। pnpm v10 এর জন্য **Node.js ≥ v22.13** প্রয়োজন (`node:sqlite` built-in Node 22-এ এসেছে)। কিন্তু `health-check` জবে `node-version: '20'` সেট ছিল → `ERR_UNKNOWN_BUILTIN_MODULE: node:sqlite` এরর।
 - **ফিক্স:** `ci.yml`-এর `health-check` জবে `node-version: '20'` → `'22'` আপগ্রেড করা হয়েছে। `frontend-ci` ইতোমধ্যে Node 24 ব্যবহার করে, তাই Node 22 সবচেয়ে safe minimum।
 - **লেসন:** (১) `npm install -g pnpm` সবসময় **latest** ইনস্টল করে। Major version bump হলে (pnpm 9→10) Node compatibility requirement পরিবর্তন হতে পারে। (২) pnpm ব্যবহার করলে সর্বদা **explicit version pin** করুন: `npm install -g pnpm@9` অথবা `pnpm/action-setup@v4` ব্যবহার করুন যেখানে `version` ফিল্ড থাকে। (৩) রিপোতে `package.json`-এ `"packageManager": "pnpm@9.x.x"` ফিল্ড থাকলে `pnpm/action-setup` সেটা অনুসরণ করে — ভবিষ্যতে এটি সেরা পদ্ধতি।
+
+## 2026-08-15 — Playwright `networkidle` Timeout in Active Monitor
+
+### সমস্যা ১৬: `active-monitor.spec.ts` তে `page.goto` 30s timeout খাচ্ছিল।
+- **উৎস:** Playwright-এ `waitUntil: 'networkidle'` ব্যবহার করা হয়েছিল। কিন্তু React app বা Firebase-এর ক্ষেত্রে background API polling (যেমন auth checks, websockets) চলতে থাকায় নেটওয়ার্ক কখনো পুরোপুরি "idle" হয় না, ফলে 30 সেকেন্ড পর টেস্ট ক্র্যাশ করে।
+- **ফিক্স:** `waitUntil: 'networkidle'` সরিয়ে `domcontentloaded` দেওয়া হয়েছে এবং React রেন্ডারের জন্য `await page.waitForTimeout(3000)` যোগ করা হয়েছে।
+- **লেসন:** আধুনিক React/SPA প্রোজেক্টে Playwright দিয়ে টেস্টিং করার সময় কখনোই `waitUntil: 'networkidle'` ব্যবহার করা উচিত নয়। এর বদলে `domcontentloaded` ব্যবহার করে নির্দিষ্ট কোন এলিমেন্ট visible হওয়া পর্যন্ত (`waitForSelector` বা `expect().toBeVisible()`) অপেক্ষা করা বেস্ট প্র্যাকটিস।

@@ -80,7 +80,8 @@ test.describe('Active Health Monitor (Production)', () => {
 
     // 2. Navigate to Admin Portal
     console.log('[Active Monitor] Navigating to Admin Portal...');
-    await page.goto('/admin', { waitUntil: 'networkidle' });
+    await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000); // Allow React to render first
 
     // 3. Login Flow
     // If the login form is visible, we need to log in
