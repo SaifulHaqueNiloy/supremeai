@@ -423,7 +423,7 @@ class SettingsSecretsMixin:
         val = self._get_cached_secret("ENCRYPTION_KEY")
         if val:
             return SecretStr(val)
-            
+
         # Fallback: Generate a valid Fernet key from any available LLM API key
         import base64
         import hashlib

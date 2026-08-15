@@ -11,7 +11,6 @@ from datetime import UTC, datetime
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from core.cache.redis_manager import redis_manager
 from core.services import registry
 
 router = APIRouter()

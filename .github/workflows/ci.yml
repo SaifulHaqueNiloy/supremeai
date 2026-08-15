@@ -33,6 +33,12 @@ jobs:
           poetry config virtualenvs.create false
           poetry install
 
+      - name: Backend Pre-flight Checks (Lint & Typecheck)
+        run: |
+          cd backend
+          poetry run ruff check .
+          poetry run mypy .
+
       - name: Run backend tests
         run: |
           cd backend
@@ -74,6 +80,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+
+      - name: Frontend Pre-flight Checks (Lint & Typecheck)
+        run: |
+          cd frontend
+          pnpm run lint
+          pnpm run typecheck
 
       - name: Build frontend
         run: |

@@ -18,7 +18,6 @@ import pytest
 
 from core.lifespan import app_lifespan
 from core.startup.api_key_tables import ensure_api_key_tables
-import core.startup.services
 
 
 async def _run_lifespan(mock_app) -> None:

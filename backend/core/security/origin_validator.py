@@ -61,16 +61,16 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         # বাংলা মন্তব্য: Unified backend আর্কিটেকচারে (যেখানে user ও admin উভয় রাউটার একসাথে থাকে),
         # উভয় পোর্টালের অরিজিন ট্রাস্ট করা প্রয়োজন। আগে এটি strict isolation-এর জন্য আলাদা করা হয়েছিল,
         # কিন্তু single backend deployment-এ তা Admin portal-কে ব্লক করে দেয় (403 Forbidden)।
-        
+
         allowed: set[str] = set()
-        
+
         # Add User Origins
         allowed = allowed.union(USER_DEFAULT_TRUSTED_ORIGINS)
         configured_user = list(getattr(settings, "user_cors_origins", None) or [])
         if not configured_user:
             configured_user = list(getattr(settings, "cors_origins", None) or [])
         allowed = allowed.union(resolve_user_cors_origins(configured_user))
-        
+
         # Add Admin Origins
         allowed = allowed.union(ADMIN_DEFAULT_TRUSTED_ORIGINS)
         configured_admin = list(getattr(settings, "admin_cors_origins", None) or [])

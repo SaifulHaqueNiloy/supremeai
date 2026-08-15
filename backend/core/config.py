@@ -45,33 +45,22 @@ Dependencies:
 # সব ভ্যালু env var বা GCP Secret Manager থেকে আসে।
 # যেকোনো Environment-এ (Local/Staging/Prod) কোনো missing required var = startup crash (sys.exit(1)) — "resilient boot" সম্পূর্ণ নিষিদ্ধ।
 
-import json
 import os
-import secrets
 import sys
 from pathlib import Path
-from typing import Annotated, Any
 
 from dotenv import load_dotenv
 from loguru import logger
 from pydantic import (
     Field,
-    PrivateAttr,
-    SecretStr,
-    ValidationInfo,
-    field_validator,
-    model_serializer,
-    model_validator,
 )
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from utils.environment import is_test_environment
 
 from .config_fields import SettingsFieldsMixin
 from .config_secrets import SettingsSecretsMixin
 from .config_validation import SettingsValidationMixin
 
-from .security.secret_vault import secret_vault
 
 # বাংলা মন্তব্য: pytest environment-এ .env load করা হয় না — test isolation নিশ্চিত।
 if "pytest" not in sys.modules:
@@ -136,7 +125,6 @@ def get_production_env(var_name: str, default: str | None = None) -> str:
     যেকোনো এনভায়রনমেন্টে কোনো ক্রিটিক্যাল সিক্রেট মিসিং থাকলে সরাসরি হার্ড ক্র্যাশ করবে,
     যাতে সাইলেন্ট ফেইলর প্রতিরোধ করা যায়। ডিফল্ট ভ্যালু পাস করলে মিসিং ক্ষেত্রে fallback ব্যবহার হবে।
     """
-    import os
 
     value = os.getenv(var_name)
     if not value:

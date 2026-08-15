@@ -11,7 +11,7 @@ from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from services.llm.llm_router import LLMRouter
 
 # বাংলা মন্তব্য: isinstance ফেইল হওয়ার কারণে core এর পরিবর্তে backend.core ব্যবহার করা হলো
-# কারণ llm_router.py ফাইলটি backend.core থেকেই ইম্পোর্ট করে। 
+# কারণ llm_router.py ফাইলটি backend.core থেকেই ইম্পোর্ট করে।
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 

@@ -138,7 +138,7 @@ async def register(body: RegisterRequest):
         res = db.client.auth.sign_up({"email": body.username, "password": body.password})
         if not res.user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
-            
+
         # বাংলা মন্তব্য: যদি ইমেইল ভেরিফিকেশন অন থাকে, তাহলে res.session None হবে। সেক্ষেত্রে ফেক টোকেন না দিয়ে ইউজারকে ভেরিফাই করতে বলব।
         if res.session is None:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email confirmation required")

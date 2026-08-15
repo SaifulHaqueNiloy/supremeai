@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSwarmStream } from '../../hooks/useSwarmStream';
-import { SupremeCard } from '../../../../../packages/ui-components/src/components/SupremeCard';
-import { SupremeHeader } from '../../../../../packages/ui-components/src/components/SupremeHeader';
+import { SupremeCard, SupremeHeader } from '@supremeai/ui-components';
 import { HoldToKillButton } from './HoldToKillButton';
 import { ShieldAlert, Activity, Server, Cpu, Database } from 'lucide-react';
 

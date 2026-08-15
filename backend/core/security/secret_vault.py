@@ -245,7 +245,7 @@ class ProductionSecretVault:
                     "ENCRYPTION_KEY",
                     "SUPREMEAI_API_KEY",
                 }
-                
+
                 if default is None and secret_id in HARD_REQUIRED_SECRETS:
                     logger.critical(f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert...")
                     try:
@@ -269,7 +269,7 @@ class ProductionSecretVault:
                         )
                     else:
                         logger.info(f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping.")
-                
+
                 env_fallback = default if default is not None else ""
             else:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")

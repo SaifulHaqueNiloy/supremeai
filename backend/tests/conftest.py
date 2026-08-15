@@ -42,12 +42,12 @@ def pytest_configure(config):
         if "supreme_test_db" in db_url:
             os.environ["SUPABASE_DATABASE_URL"] = db_url.replace("supreme_test_db", f"supreme_test_db_{worker_id}")
             os.environ["SUPABASE_DATABASE_URL_POOLER"] = db_url.replace("supreme_test_db", f"supreme_test_db_{worker_id}")
-        
+
         try:
             worker_idx = int(worker_id.replace("gw", ""))
         except ValueError:
             worker_idx = 1
-            
+
         redis_url = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
         if redis_url.endswith("/0"):
             os.environ["REDIS_URL"] = redis_url[:-1] + str(worker_idx)

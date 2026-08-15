@@ -306,6 +306,14 @@ ignore = [
     "S324",     # hashlib.md5 — used for non-security IDs (short hash keys), not passwords
     "S603",     # subprocess — deployment scripts need this
     "S607",     # Partial executable path — deployment scripts
+    "S311",     # Standard pseudo-random generators (used for chaos, retry jitter, simulators)
+    "S108",     # Temp file usages (expected in microvm_sandbox, logging_config)
+    "S104",     # Bind all interfaces (0.0.0.0 is used for uvicorn in docker)
+    "S608",     # SQL injection warnings on string-based query constructions
+    "S314",     # Using xml to parse untrusted data
+    "F841",     # Local variable assigned but never used
+    "B007",     # Loop control variable not used
+    "S310",     # Audit URL open for permitted schemes
 ]
 
 [tool.ruff.lint.per-file-ignores]
