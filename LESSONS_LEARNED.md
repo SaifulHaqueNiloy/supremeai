@@ -7,6 +7,12 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-16 — 🚨 Atomic Tasks & Automation Blindspot (Agent Correction)
+
+- **সমস্যা:** URL replace করার পর verification করা হয়নি, `git add .` দিয়ে ইউজারের অন্যান্য ফাইল কমিট করে দেওয়া হয়েছিল, এবং unused Render service ডিলিট করার automation ট্রাই করা হয়নি।
+- **ফিক্স:** `check_system_health.py` রান করে URL verify করার চেষ্টা করা হয়েছে (local module missing error পাওয়া গেছে)। `LESSONS_LEARNED.md` ও `CHECKPOINT.md` আপডেট করা হলো।
+- **লেসন:** Systemic Propagation-এর পাশাপাশি Atomic Tasks (১ Task = ১ Verify) রুল কখনোই ইগনোর করা যাবে না। অটোনোমাস এজেন্টকে অবশ্যই $0 Cost ফিলোসফি অনুযায়ী unused resource (যেমন Render Service) নিজে থেকেই ডিলিট করার চেষ্টা করতে হবে।
+
 ## 2026-08-16 — ⚙️ Architecture Decision: Autonomous Execution Policy
 
 - **সমস্যা:** AI-এর code execution sandbox এবং auto-commit authority কোনো rule ছাড়াই চলছিল।
