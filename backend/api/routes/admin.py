@@ -282,3 +282,58 @@ async def get_rules(admin_user: dict = Depends(get_current_admin)):
     """Fetch all constitutional rules from God.py."""
     rules = god_layer.list_rules()
     return {"rules": rules}
+
+
+# 🚨 System Alerts Endpoints
+from backend.models.system_alert import SystemAlert
+from database.session import get_db_session
+from sqlalchemy import select, update
+from fastapi import Header
+
+class AlertCreate(BaseModel):
+    level: str
+    message: str
+
+@router.get("/alerts")
+async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
+    """Fetch all active system alerts."""
+    async for session in get_db_session():
+        stmt = select(SystemAlert).order_by(SystemAlert.created_at.desc()).limit(100)
+        result = await session.execute(stmt)
+        alerts = result.scalars().all()
+        return {"alerts": alerts}
+
+@router.post("/alerts")
+async def create_system_alert(
+    payload: AlertCreate, 
+    x_api_key: str = Header(None)
+):
+    """Create a new system alert (Used by internal AI Log Analyzer)."""
+    from core.config import settings
+    
+    expected_key = settings.supremeai_api_key.get_secret_value() if settings.supremeai_api_key else None
+    if not expected_key or x_api_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid internal API key")
+        
+    async for session in get_db_session():
+        import uuid
+        new_alert = SystemAlert(
+            id=str(uuid.uuid4()),
+            level=payload.level,
+            message=payload.message
+        )
+        session.add(new_alert)
+        await session.commit()
+        return {"status": "success", "id": new_alert.id}
+
+@router.post("/alerts/{alert_id}/resolve")
+async def resolve_system_alert(alert_id: str, admin_user: dict = Depends(get_current_admin)):
+    """Mark an alert as resolved."""
+    async for session in get_db_session():
+        stmt = update(SystemAlert).where(SystemAlert.id == alert_id).values(
+            resolved=True, 
+            resolved_at=datetime.now(UTC)
+        )
+        await session.execute(stmt)
+        await session.commit()
+        return {"status": "success", "message": "Alert resolved"}

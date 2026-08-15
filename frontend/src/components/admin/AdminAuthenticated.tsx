@@ -13,7 +13,8 @@ import {
   Terminal,
   Shield,
   BrainCircuit,
-  HardDrive
+  HardDrive,
+  Bell
 } from 'lucide-react';
 
 interface AuthenticatedViewProps {
@@ -93,6 +94,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
   // As per SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md, the sidebar is module-driven.
   const sidebarItems = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={16} /> },
+    { id: 'alerts', label: 'SYSTEM ALERTS', icon: <Bell size={16} /> },
     { id: 'model-router', label: 'AI CORE', icon: <BrainCircuit size={16} /> },
     { id: 'skills', label: 'SKILLS & AGENTS', icon: <Users size={16} /> },
     { id: 'memory', label: 'MEMORY', icon: <HardDrive size={16} /> },
@@ -107,6 +109,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
   // কমান্ড প্যালেট অপশনসমূহ
   const navigationOptions = [
     { id: 'dashboard', label: 'Dashboard Overview' },
+    { id: 'alerts', label: 'System Alerts & Diagnostics' },
     { id: 'interactive-chat', label: 'Interactive Chat (Browser & Terminal)' },
     { id: 'command-center', label: 'SupremeAI Nexus (Canvas)' },
     { id: 'logs', label: 'Real-time Logs' },

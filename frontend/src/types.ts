@@ -57,8 +57,17 @@ export interface AdminUser {
   permissions: string[];
 }
 
-// বাংলা মন্তব্য: অ্যাডমিন সাবট্যাব ইউনিয়নে 'interactive-chat' যোগ করা হলো
-export type AdminSubTab = 'dashboard' | 'sandbox' | 'logs' | 'costs' | 'health' | 'users' | 'config' | 'command-center' | 'model-router' | 'skills' | 'memory' | 'cloud' | 'observability' | 'threats' | 'rules' | 'cicd' | 'github' | 'backups' | 'rate-limits' | 'security-dashboard' | 'interactive-chat';
+export interface SystemAlert {
+  id: string;
+  level: 'info' | 'warning' | 'error' | 'critical';
+  message: string;
+  resolved: boolean;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+// বাংলা মন্তব্য: অ্যাডমিন সাবট্যাব ইউনিয়নে 'interactive-chat' ও 'alerts' যোগ করা হলো
+export type AdminSubTab = 'dashboard' | 'sandbox' | 'logs' | 'costs' | 'health' | 'users' | 'config' | 'command-center' | 'model-router' | 'skills' | 'memory' | 'cloud' | 'observability' | 'threats' | 'rules' | 'cicd' | 'github' | 'backups' | 'rate-limits' | 'security-dashboard' | 'interactive-chat' | 'alerts';
 
 export interface CIReport {
   id: number;

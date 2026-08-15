@@ -2,8 +2,8 @@
 import type { AdminSubTab, ChatMessage } from '../../types';
 import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
 import { RateLimitManager } from './RateLimitManager';
-// বাংলা মন্তব্য: ইন্টারেক্টিভ চ্যাট ট্যাব ইম্পোর্ট করা হলো
 import { InteractiveChatTab } from './InteractiveChatTab';
+import { AdminAlertsTab } from './AdminAlertsTab';
 import { X } from 'lucide-react';
 
 interface SubTabContentProps {
@@ -42,6 +42,7 @@ interface SubTabContentProps {
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 const MODULE_MAP: Record<string, React.FC<any>> = {
   'dashboard': Dashboard,
+  'alerts': AdminAlertsTab,
   'command-center': CommandCenter,
   'sandbox': SandboxView,
   'logs': LiveLogs,

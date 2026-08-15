@@ -54,15 +54,26 @@ function getBackends() {
   return list;
 }
 
+const FALLBACK_HTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>SupremeAI - Core Offline</title><style>body{background:#07090f;color:#fff;font-family:monospace;text-align:center;padding:50px}h1{color:#00f3ff;text-transform:uppercase;letter-spacing:2px}p{color:#bc13fe}.loader{margin:20px auto;border:2px solid #333;border-top:2px solid #00f3ff;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style></head><body><h1>⚡ SupremeAI Core Offline</h1><p>The neural network is currently running a self-healing protocol.</p><div class="loader"></div><p>Please wait a moment and try again.</p></body></html>`;
+
 async function handleRequest(request) {
   const url = new URL(request.url)
   const backends = getBackends()
 
   if (backends.length === 0) {
-    return new Response('No backends configured', { status: 503 })
+    return new Response(FALLBACK_HTML, { status: 503, headers: { 'Content-Type': 'text/html' } })
   }
 
-  // বাংলা মন্তব্য: P1 Fix — Cloudflare KV থেকে সার্কিট স্টেট রিড করা হচ্ছে রেস কন্ডিশন ও স্টেট ড্রিফট এড়াতে।
+  // Caching Layer for public APIs
+  if (request.method === 'GET' && url.pathname.includes('/api/v1/public/')) {
+    const cache = caches.default;
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+  }
+
+  // Circuit breaker state
   const kv = getKV();
   let localState = { ...circuitBreakerState };
   if (kv) {
@@ -77,16 +88,14 @@ async function handleRequest(request) {
   }
 
   if (Date.now() < localState.brokenUntil) {
-    // Circuit is open, return emergency response without hitting KV or origin
     console.error('Circuit Breaker is open. Returning emergency fallback response.');
-    return new Response('Service temporarily unavailable. Please try again shortly.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+    return new Response(FALLBACK_HTML, { status: 503, headers: { 'Content-Type': 'text/html' } });
   }
 
   const healthyBackends = await getHealthyBackendsFromKV(backends)
-  // Architectural Fix #1: Add a fallback to all backends if none are healthy.
   if (healthyBackends.length === 0) {
     console.warn('All backends reported as unhealthy. Attempting to route to a backend as a last resort.');
-    const backend = weightedPick(backends); // Fallback to all configured backends
+    const backend = weightedPick(backends); 
     return forwardRequest(request, backend, url);
   }
 
@@ -95,21 +104,28 @@ async function handleRequest(request) {
 
   try {
     const response = await fetch(target, {
-      // Architectural Fix #2: Use a separate signal for retries within the worker.
-      // This is a placeholder for a more complex retry logic if you were to implement it here.
-      // For now, we just use the backend's timeout.
       method: request.method,
       headers: omitWranglerHeaders(request.headers),
       body: request.method !== 'GET' ? await request.text() : null,
       signal: AbortSignal.timeout(backend.timeout),
     })
 
-    return new Response(response.body, {
+    const finalResponse = new Response(response.body, {
       status: response.status,
       headers: omitHopByHopHeaders(new Headers(response.headers)),
     })
+
+    // Store in Cache if successful and public
+    if (request.method === 'GET' && url.pathname.includes('/api/v1/public/') && response.status === 200) {
+      const cache = caches.default;
+      const responseToCache = finalResponse.clone();
+      responseToCache.headers.set('Cache-Control', 's-maxage=60'); // 1 minute edge cache
+      request.waitUntil(cache.put(request, responseToCache));
+    }
+
+    return finalResponse;
   } catch (err) {
-    return new Response(`Backend ${backend.name} error: ${err.message}`, { status: 502 })
+    return new Response(FALLBACK_HTML, { status: 502, headers: { 'Content-Type': 'text/html' } })
   }
 }
 

@@ -1,0 +1,58 @@
+name: Environment Health Check
+
+on:
+  schedule:
+    - cron: '0 0,12 * * *' # Runs at 00:00 and 12:00 UTC every day
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+  deployment_status: # Runs after deployment to any environment
+    
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    if: github.event.deployment_status.state == 'success' || github.event_name != 'deployment_status'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Run Environment Health Check Script
+        run: python scripts/check_env_health.py
+
+      - name: Install AI Observability Dependencies
+        if: always()
+        run: pip install httpx loguru
+
+      - name: Run AI Log Analyzer
+        if: always()
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
+          INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
+        run: python backend/scripts/devops/ai_log_analyzer.py
+
+      - name: Setup Node.js (For Browser Automation)
+        if: always()
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright & Dependencies
+        if: always()
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run Active Monitor (Admin & User Dashboards)
+        if: always()
+        env:
+          TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          SUPREMEAI_API_KEY: ${{ secrets.SUPREMEAI_API_KEY }}
+          INTERNAL_API_URL: ${{ secrets.INTERNAL_API_URL }}
+        run: npx playwright test tests/e2e/active-monitor.spec.ts --project=chromium

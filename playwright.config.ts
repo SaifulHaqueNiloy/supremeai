@@ -65,7 +65,7 @@ export default defineConfig({
   // CI/CD-তে পোর্ট কনফ্লিক্ট এড়ানোর জন্য reuseExistingServer: true করা হয়েছে
   webServer: [
     {
-      command: 'pnpm --dir apps/studio-client dev --host 0.0.0.0 --port 5173',
+      command: 'cd frontend && pnpm dev --host 0.0.0.0 --port 5173',
       url: 'http://127.0.0.1:5173',
       reuseExistingServer: true,
       timeout: 120 * 1000,

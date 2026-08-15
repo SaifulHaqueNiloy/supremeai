@@ -97,7 +97,7 @@ curl https://supremeai-admin.onrender.com/health
 ##📅 This Week's Tasks
 
 ### Day 1-2: Monitoring Setup
-- [ ] Deploy the existing Cloudflare Worker (`npx wrangler deploy` inside `cloudflare-worker/`)
+- [x] Deploy the existing Cloudflare Worker (`npx wrangler deploy` inside `cloudflare-worker/`)
 - [ ] Verify Cloudflare Worker logs to ensure it's successfully pinging the endpoints
 - [ ] Test the worker schedule (runs every 3 mins via cron)
 
