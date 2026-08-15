@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-15 20:51 UTC
+- **Date:** 2026-08-15 20:56 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,12 +11,11 @@
 
 ## Files Changed
   - `AGENTS.md`
+  - `frontend/src/utils/apiInterceptor.ts`
+  - `CHECKPOINT.md`
   - `frontend/src/contexts/ToastProvider.tsx`
   - `frontend/src/components/ui/Toast.tsx`
-  - `frontend/src/utils/apiInterceptor.ts`
   - `KNOWN_ISSUES.md`
-  - `CHECKPOINT.md`
-  - `LESSONS_LEARNED.md`
   - `frontend/src/hooks/useErrorHandler.ts`
 
 ## Pending (Carry Forward)
