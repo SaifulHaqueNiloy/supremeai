@@ -117,8 +117,11 @@ test.describe('Active Health Monitor (Production)', () => {
 
     // Give it a few seconds to catch any delayed React render errors
     await page.waitForTimeout(3000);
-
     // Fail the test if critical errors were found, so GitHub Actions knows
+    if (caughtErrors.length > 0) {
+      console.error('❌ CLIENT-SIDE ERRORS DETECTED:');
+      caughtErrors.forEach((err, i) => console.error(`${i + 1}. ${err}`));
+    }
     expect(caughtErrors.length, `Found ${caughtErrors.length} client-side errors during monitoring. Check Admin Dashboard Alerts for details.`).toBe(0);
   });
 });
