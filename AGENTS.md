@@ -24,6 +24,13 @@
    - **Benchmarking:** সর্বদা মডার্ন, কস্ট-ফ্রি এবং স্কেলেবল আর্কিটেকচার ডিজাইন করুন।
    - **Objective Pushback:** ইউজারের ভুল লজিকে ব্লাইন্ডলি ফলো না করে সঠিক বিকল্প সাজেস্ট করুন।
    - **Direct Execution:** ১ লাইনে প্ল্যান (Phase 0) ও ৫টি ব্লাইন্ডস্পট চেক করে অনুমতি ছাড়াই কাজ শুরু করুন!
+   - **Pre-Flight Check (5Q):** কাজ শুরুর আগে নিজেকে জিজ্ঞেস করুন:
+     1. এটা কি আগে করা হয়েছে? (`LESSONS_LEARNED.md`)
+     2. কোন ১টা ফাইল লাগবে, নাকি পুরো ফোল্ডার?
+     3. Success কীভাবে verify করব?
+     4. কোনো side effect হতে পারে?
+     5. এটা কি ১ commit-এ শেষ হবে?
+   - **Atomic Task Protocol:** ১ task = ১ ফাইল পরিবর্তন + ১ verification। বড় কাজ = ছোট atomic task-এ ভাগ করুন।
 
 2. **Smart Context & Anti-Loop:**
    - **Cold Start:** প্রতিটি নতুন সেশনে শুধু `AGENTS.md` + `CHECKPOINT.md` পড়ুন। বাকি ফাইল কাজের ধরন অনুযায়ী পড়ুন:
@@ -35,7 +42,7 @@
    | Planning / Roadmap | `ACTION_PLAN.md`, `TODO.md` |
    | Deploy / CI | `DEPLOYMENT_CHECKLIST.md`, `KNOWN_ISSUES.md` |
 
-   - **Targeted Reading:** একসাথে সব ফাইল পড়ে কনটেক্সট ওভারলোড বা লুপে পড়া নিষিদ্ধ।
+   - **Targeted Reading:** একসাথে সব ফাইল পড়ে কনটেক্সট ওভারলোড বা লুপে পড়া নিষিদ্ধ। ফোল্ডারে `_INDEX.md` থাকলে সেটা আগে পড়ুন — পুরো ফোল্ডার স্ক্যান করার দরকার নেই।
    - **Anti-Loop:** একই কমান্ড বা ফাইল বারবার পড়লে সাথে সাথে থেমে সাজেশন চান।
    - **Zero Repeat Errors:** একই ভুলের পুনরাবৃত্তি নিষিদ্ধ। কাজ শেষে ফাইন্ডিংস `LESSONS_LEARNED.md`-এ আপডেট করুন।
    - **Session Handoff:** প্রতিটি বড় কাজ শেষে `CHECKPOINT.md` আপডেট করুন — Completed, Pending, Key Decisions, Next Agent Start Point।
@@ -43,7 +50,10 @@
 
 3. **Production-Ready & $0 Cost:**
    - সলিউশন হতে হবে বাগ-ফ্রি (Zero Warnings), ফল্ট-টলারেন্ট এবং $0 কস্টের (ফ্রি-টিয়ার)।
-   - রিগ্রেশন ব্রেক বা ডুপ্লিকেট কোড লেখা যাবে না। কাজ শেষে "Pro-Suggestion" দিন।
+   - রিগ্রেশন ব্রেক বা ডুপ্লিকেট কোড লেখা যাবে না।
+   - **Pro-Suggestion (Mandatory):** প্রতিটি কাজ শেষে নিচের format-এ ১টি high-impact suggestion দিন:
+     > **[PRO]** [Impact: HIGH/MED/LOW] — [১ লাইনে suggestion]
+     > Example: **[PRO] HIGH** — `ai_memory` টেবিলে `task_type` index যোগ করলে query ১০x দ্রুত হবে।
 
 4. **Best Practices & Safety:**
    - রুল ছাড়াই Atomic Commits, Clean Code ও Env vault ফলো করুন।
