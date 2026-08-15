@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminTokenStore } from '../../services/adminTokenStore';
 import { useToast } from '../../contexts/useToast';
+import { getApiBaseUrl } from '../../utils/api';
 
 interface TenantLimit {
   tenant_id: string;
@@ -33,7 +34,7 @@ const TIER_LIMITS: Record<string, Partial<TenantLimit>> = {
   enterprise: { requests_per_minute: 999, max_tokens_per_day: 9999999, max_concurrent_sessions: 100 },
 };
 
-const API_BASE = '/api';
+const API_BASE = getApiBaseUrl();
 
 export const RateLimitManager: React.FC = () => {
   const [tenants, setTenants] = useState<TenantLimit[]>([]);

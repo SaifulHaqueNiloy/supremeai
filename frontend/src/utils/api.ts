@@ -5,14 +5,14 @@
 
 /** Admin portal-এর canonical backend URL (build-time resolved) */
 export const ADMIN_BACKEND_URL: string =
-  import.meta.env.VITE_ADMIN_BACKEND || 'https://supremeai-admin.onrender.com';
+  import.meta.env.VITE_ADMIN_BACKEND || 'https://supremeai-backend-6nwi.onrender.com';
 
 /** User portal-এর canonical backend URL (build-time resolved) */
 export const USER_BACKEND_URL: string =
   import.meta.env.VITE_USER_BACKEND ||
   import.meta.env.VITE_API_BASE ||
   import.meta.env.VITE_API_URL ||
-  'https://supremeai-backend.onrender.com';
+  'https://supremeai-backend-6nwi.onrender.com';
 
 /**
  * বর্তমান portal-এর canonical backend URL — heartbeat ও অন্যান্য সার্ভিস এটিই ব্যবহার করে।
