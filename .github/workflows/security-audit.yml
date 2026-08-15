@@ -138,7 +138,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DATE=$(date -u +%Y-%m-%d)
-          gh issue create --title "[Security Audit FAILED] ${{ github.workflow }} - ${{ github.ref_name }} (run #${{ github.run_number }})" --body "Audit **${{ github.workflow }}** failed.
-Commit: ${{ github.sha }}
-Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-Steps: (1) Check logs, (2) If secret scan failed rotate secrets + git filter-repo, (3) If dep audit failed update deps, (4) Re-run via workflow_dispatch after fixing."
+          gh issue create \
+            --title "[Security Audit FAILED] ${{ github.workflow }} - ${{ github.ref_name }} (run #${{ github.run_number }})" \
+            --body "Audit **${{ github.workflow }}** failed. Commit: ${{ github.sha }} | Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} | Steps: (1) Check logs, (2) If secret scan failed rotate secrets + git filter-repo, (3) If dep audit failed update deps, (4) Re-run via workflow_dispatch after fixing"
