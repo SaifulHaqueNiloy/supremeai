@@ -140,7 +140,7 @@ class GeminiWriter:
                         if code:
                             model = fallback_model
                             break
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         logger.warning("Fallback model {} failed, trying next", fallback_model)
                         continue
 
