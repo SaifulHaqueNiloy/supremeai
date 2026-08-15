@@ -1,6 +1,14 @@
 # LESSONS_LEARNED
 
 <!-- বাংলা নোট: প্রতিটি ফিক্স ব্লকই সংযোজনীয় — পুরনো এন্ট্রি মুছবেন না। -->
+
+## 2026-08-15 — React Error 31 "Object as a React child" (Admin Dashboard Crash)
+
+### সমস্যা: E2E `active-monitor.spec.ts` তে React Error #31 (`object with keys {code, message, errors}`) দেখা যাচ্ছিল।
+- **উৎস:** `frontend/src/store/adminStore.ts`-এ `handleAdminLogin` এবং `resetTotpSetup` কল করার সময়, যদি API 400 Bad Request দেয় এবং response payload-এ `detail` প্রপার্টি একটি object হয় (যেমন: Firebase বা FastAPI custom exception থেকে `{code, message, errors}`), তাহলে `adminStore` সরাসরি ঐ object কে `adminError` state-এ সেট করে দিচ্ছিল। React কোনো object কে সরাসরি render করতে পারে না, তাই `DashboardErrorBoundary` বা Alert component ক্র্যাশ করে Error #31 থ্রো করত।
+- **ফিক্স:** `adminStore.ts`-এ `setupData.detail` এবং `data.detail` থেকে error মেসেজ এক্সট্র্যাক্ট করার সময় টাইপ চেকিং স্ট্রং করা হয়েছে। এখন যদি API থেকে `detail` object রিটার্ন করে, তাহলে `JSON.stringify(data.detail)` ব্যবহার করে সেটিকে স্ট্রিংয়ে কনভার্ট করা হয়, যাতে React কখনোই ক্র্যাশ না করে। 
+- **লেসন:** (১) API error response handling করার সময় কখনোই সরাসরি `data.detail` বা `err.response.data` কে React state-এ সেট করা উচিত নয়, কারণ backend থেকে অপ্রত্যাশিত error shape (object/array) আসতে পারে। সর্বদা `typeof === 'string'` চেক করুন এবং fallback হিসেবে `JSON.stringify` বা `err.message` ব্যবহার করুন। (২) Client-side crash ডিবাগ করার সময় Unminified build-এ (local dev server) E2E টেস্ট চালালে component stack trace খুব সহজেই বের করা যায়।
+
 ## 2026-08-15 — SupremeAI IDE Trio Pipeline (Gemini → Kilo → Cline) Build
 
 ### Problem: IDE-তে Gemini, Kilo Code, Cline আলাদা এক্সটেনশন — এদের এক pipeline-এ যুক্ত করে Write → Review → Production-Check দরকার
@@ -182,3 +190,23 @@
 - **উৎস:** Playwright-এ `waitUntil: 'networkidle'` ব্যবহার করা হয়েছিল। কিন্তু React app বা Firebase-এর ক্ষেত্রে background API polling (যেমন auth checks, websockets) চলতে থাকায় নেটওয়ার্ক কখনো পুরোপুরি "idle" হয় না, ফলে 30 সেকেন্ড পর টেস্ট ক্র্যাশ করে।
 - **ফিক্স:** `waitUntil: 'networkidle'` সরিয়ে `domcontentloaded` দেওয়া হয়েছে এবং React রেন্ডারের জন্য `await page.waitForTimeout(3000)` যোগ করা হয়েছে।
 - **লেসন:** আধুনিক React/SPA প্রোজেক্টে Playwright দিয়ে টেস্টিং করার সময় কখনোই `waitUntil: 'networkidle'` ব্যবহার করা উচিত নয়। এর বদলে `domcontentloaded` ব্যবহার করে নির্দিষ্ট কোন এলিমেন্ট visible হওয়া পর্যন্ত (`waitForSelector` বা `expect().toBeVisible()`) অপেক্ষা করা বেস্ট প্র্যাকটিস।
+## 2026-08-15 — IDE Trio Pipeline: Local Device Verification (Antigravity + Kilo + Cline)
+
+### সমস্যা: ইউজার চেয়েছিল Gemini + Kilo + Cline কে এক pipeline-এ মার্জ করা — আইডিয়া ও ভেরিফাই করতে হবে।
+
+- **ডিভাইস ভেরিফিকেশন (সরাসরি কমান্ডে):**
+  1. **Antigravity IDE** `C:\Users\N\.antigravity-ide\` এ ইনস্টলড ✓ (Google-এর Gemini-native VS Code fork; Gemini কোরে বিল্ট-ইন — আলাদা extension লাগে না)।
+  2. **Kilo Code** — `...\extensions\kilocode.kilo-code-7.4.22-win32-x64` ✓
+  3. **Cline (Claude Dev)** — `...\extensions\saoudrizwan.claude-dev-4.1.10-universal` ✓
+  4. **Secrets** — `.env`-এ `GEMINI_API_KEY`, `ANTHROPIC_API_KEY` উপস্থিত ✓
+
+- **সংযুক্ত করার আর্কিটেকচার (3 স্তর):**
+  - **Stage 1 — Writer (Gemini):** `GeminiWriter` (trio_adapters.py) `GEMINI_API_KEY` দিয়ে `google-generativeai` কল করে কোড জনারেট। Antigravity IDE-এর built-in Gemini কে pipeline-এর সাথে ম্যাপ করা হয়েছে `agentDetector.ts`-এর `isAntigravity()` + `detectTrioPipelineAgents()`-এ।
+  - **Stage 2 — Reviewer (Kilo):** `KiloReviewer` Kilo Code CLI-এর মাধ্যমে review চালায়।
+  - **Stage 3 — Checker (Cline):** `ClineChecker` Cline CLI বা direct MCP tool-এর মাধ্যমে production-readiness চেক করে।
+  - **অর্কেস্ট্রেটর:** `TrioPipeline.execute()` three-stage chain চালায়; `POST /api/v1/ide-trio/execute` রুটে FastAPI/MCP সংযুক্ত।
+  - **Frontend:** `IdeTrioPipeline.ts` backend-এর পাশে local fallback (`runLocalFallback`) আছে + `supremeai.trioPipeline` কমান্ড registered।
+
+- **টেস্ট (সরাসরি চালানো):** py_compile exit 0 ✓ | tsc syntax OK ✓ | smoke test ✅ ALL PASSED ✓
+
+- **লেসন:** (1) pipeline-এর Writer হিসাবে Antigravity IDE-এর built-in Gemini ব্যবহার করলে `isAntigravity()` (appName/scheme detection) চেক দরকার — না হলে কোনো tool detect হয় না। (2) extension & backend-এর `agent_detector` একই extension ID তালিকা রাখতে হবে। (3) Local fallback তৈরি রাখুন — backend unreachable হলেও ক্র্যাশ না করে offline-first design।
