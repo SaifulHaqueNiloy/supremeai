@@ -176,7 +176,9 @@ jobs:
 
   api-contract-check:
     name: 🔗 Frontend↔Backend API Contract Check
+    needs: changes
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Run API contract verifier (AUDIT-018 prevention)
@@ -184,7 +186,9 @@ jobs:
 
   security-scan:
     name: 🔍 Security Scan (Trivy)
+    needs: changes
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' }}
     permissions:
       contents: read
     steps:
@@ -202,7 +206,9 @@ jobs:
 
   bridge-boot-check:
     name: 🔌 Bridge Boot Check (Backend + DB)
+    needs: changes
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' }}
     timeout-minutes: 5
     services:
       postgres:
@@ -253,8 +259,9 @@ jobs:
 
   check-render-quota:
     name: 📊 Check Render Build Quota
+    needs: changes
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_deploy == 'true') }}
     outputs:
       use_github_build: ${{ steps.quota.outputs.use_github_build }}
     steps:
