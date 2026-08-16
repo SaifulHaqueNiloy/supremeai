@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import os
-import secrets
 import ssl
 from contextlib import asynccontextmanager
 
@@ -67,9 +66,12 @@ class PgBouncerConnectionPool:
             # রেখে sslmode=require-এর সমতুল্য কনটেক্সট ব্যবহার করা হয়েছে (এনক্রিপ্ট করে, CA ভেরিফাই করে না)।
             ssl=_supabase_ssl_context(),
             # বাংলা মন্তব্য: PgBouncer (transaction/statement mode) এর সাথে সামঞ্জস্যের জন্য
-            # statement_cache_size=0 এবং ইউনিক prepared statement নাম — 'DuplicatePreparedStatementError' প্রতিরোধ করে।
+            # statement_cache_size=0 — asyncpg-এর FAQ অনুযায়ী prepared statement cache
+            # বন্ধ করলে 'DuplicatePreparedStatementError' পুরোপুরি প্রতিরোধ যায়।
+            # (নোট: asyncpg 0.30.0-এ prepared_statement_name_func প্যারামিন
+            # নেই; এটি create_pool()-এর **connect_kwargs হয়ে connect()-এ গিয়ে
+            # TypeError সৃষ্টি করে। statement_cache_size=0 যথেষ্ট।)
             statement_cache_size=0,
-            prepared_statement_name_func=lambda: f"__sai_{id(object())}_{secrets.token_hex(8)}__",
             command_timeout=30,
         )
         logger.info(

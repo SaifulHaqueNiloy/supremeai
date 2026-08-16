@@ -119,6 +119,10 @@ class SettingsSecretsMixin:
     def supabase_database_url(self) -> str:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
 
+    @property
+    def neon_database_url(self) -> str:
+        return self._get_cached_secret("NEON_DATABASE_URL")
+
     # বাংলা মন্তব্য: Anti-Hacking এবং OTP রাউটার সিক্রেটসমূহ (ঐচ্ছিক — মিসিং থাকলে সার্ভার ক্র্যাশ করবে না)
     @property
     def discord_otp_webhook_url(self) -> SecretStr | None:

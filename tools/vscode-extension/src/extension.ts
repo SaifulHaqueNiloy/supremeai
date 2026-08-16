@@ -78,7 +78,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Initialize services lazily and only when needed
   const config = vscode.workspace.getConfiguration('supremeai');
-  const backendUrl = config.get<string>('backendUrl', 'https://supremeai-backend-docker.onrender.com');
+  const backendUrl = config.get<string>('backendUrl', 'https://supremeai-worker.paykaribazaronline.workers.dev');
 
   const supremeConfig: SupremeAIConfig = {
     backendUrl,
@@ -102,10 +102,15 @@ export async function activate(context: vscode.ExtensionContext) {
   // Only initialize heavy services when user performs actions
   // Don't initialize CrossAiObserverService and SelfHealingService at startup to reduce resource usage
 
-  // Initialize authentication
+  // Initialize authentication — NON-BLOCKING (fire-and-forget with timeout)
+  // ⚠️ Do NOT await these — Render backend cold start can take 60+ seconds
   const auth = AuthService.getInstance(supremeConfig, context.secrets);
-  await auth.initialize();
-  await auth.loginAsGuest();
+  Promise.race([
+    auth.initialize().then(() => auth.loginAsGuest()),
+    new Promise<void>(resolve => setTimeout(resolve, 5000)) // 5s timeout
+  ]).catch(err => {
+    console.warn('[SupremeAI] Auth init warning (non-critical):', err);
+  });
 
   // Register URI handler for OAuth callback
   AuthHandler.registerAuthCallback(context);

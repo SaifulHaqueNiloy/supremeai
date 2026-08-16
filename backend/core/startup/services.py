@@ -42,24 +42,38 @@ async def initialize_independent_services(app):
                 )
                 app.state.db_pool = None
             else:
-                # Initialize connection pool with optimized settings
-                await init_db_pool(_db_url)
-
-                # Verify pool health with a quick test query
-                pool = await get_db_pool()
-                if pool:
-                    try:
-                        conn = await pool.acquire()
+                # Helper function to initialize and health check a specific DB pool
+                async def _try_connect_and_check(db_url: str) -> None:
+                    await init_db_pool(db_url)
+                    pool = await get_db_pool()
+                    if pool:
                         try:
-                            # Test connection with a simple query
-                            await conn.fetchval("SELECT 1")
-                            logger.info("✅ Database connection pool health check passed.")
-                        finally:
-                            await pool.release(conn)
-                    except Exception as health_exc:
-                        logger.error(f"❌ Database pool health check failed: {health_exc}")
-                        app.state.subsystem_status["db"] = "degraded"
-                        raise health_exc
+                            conn = await pool.acquire()
+                            try:
+                                await conn.fetchval("SELECT 1")
+                            finally:
+                                await pool.release(conn)
+                        except Exception as health_exc:
+                            raise health_exc
+                    return pool
+
+                # 1. Attempt Primary DB (Supabase)
+                try:
+                    pool = await _try_connect_and_check(_db_url)
+                    logger.info("✅ Database connection pool health check passed. Connected to Primary DB (Supabase).")
+                except Exception as primary_exc:
+                    logger.error(f"❌ Primary DB (Supabase) failed: {primary_exc}. Attempting fallback...")
+                    # 2. Attempt Secondary DB (Neon)
+                    _neon_url = getattr(settings, "neon_database_url", None)
+                    if not _neon_url:
+                        raise Exception(f"Primary DB failed and no neon_database_url found. Error: {primary_exc}")
+                    
+                    try:
+                        pool = await _try_connect_and_check(_neon_url)
+                        logger.warning("⚠️ Primary DB failed! Fallback to Secondary DB (Neon.tech) successful!")
+                        app.state.subsystem_status["db"] = "degraded" # Mark as degraded since we are on fallback
+                    except Exception as secondary_exc:
+                        raise Exception(f"Both Primary and Secondary DBs failed. Primary: {primary_exc}, Secondary: {secondary_exc}")
 
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()

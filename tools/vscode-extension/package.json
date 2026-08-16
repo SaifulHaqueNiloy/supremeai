@@ -264,7 +264,7 @@
       "properties": {
         "supremeai.backendUrl": {
           "type": "string",
-          "default": "https://supremeai-backend-docker.onrender.com",
+          "default": "https://supremeai-worker.paykaribazaronline.workers.dev",
           "description": "The production FastAPI backend URL used for AI Chat and services."
         },
         "supremeai.aiApiKey": {
@@ -398,14 +398,16 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run package-ext",
+    "vscode:prepublish": "node scripts/build.mjs",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src",
     "pretest": "pnpm run compile",
     "test": "vitest run",
     "unit": "vitest run",
-    "package-ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify"
+    "package-ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --external:openai --format=cjs --platform=node --minify --log-level=warning",
+    "build": "node scripts/build.mjs",
+    "package:vsix": "npx @vscode/vsce package --no-dependencies --skip-license"
   },
   "devDependencies": {
     "@types/fast-levenshtein": "^0.0.4",
@@ -416,13 +418,14 @@
     "axios": "^1.6.0",
     "esbuild": "^0.28.0",
     "eslint": "^8.0.0",
-    "openai": "^4.0.0",
+
     "typescript": "^5.0.0",
     "vitest": "^3.2.6",
     "vscode": "^1.1.37"
   },
   "dependencies": {
     "@supremeai/design-tokens": "workspace:^",
-    "fast-levenshtein": "^3.0.0"
+    "fast-levenshtein": "^3.0.0",
+    "openai": "^4.0.0"
   }
 }
