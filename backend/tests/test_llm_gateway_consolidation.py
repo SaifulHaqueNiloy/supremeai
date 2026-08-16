@@ -79,7 +79,7 @@ async def test_gateway_429_handling_simulation(llm_gateway):
     # Create a mock HTTPStatusError for 429
     mock_response = Mock()
     mock_response.status_code = 429
-    
+
     # Test 1: Fast fallback (OmniRoute logic) if pause is too long
     mock_response.headers = {"Retry-After": "30"}  # 30 second delay
     mock_exc = httpx.HTTPStatusError("Too Many Requests", response=mock_response, request=Mock())
@@ -99,7 +99,7 @@ async def test_gateway_429_handling_simulation(llm_gateway):
 
     with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         result = await llm_gateway._handle_rate_limit_error("test-model", mock_exc)
-        
+
         # Verify it returned True
         assert result is True, "Rate limit handler should return True to retry when pause is short"
         assert mock_sleep.called, "Should sleep for short backoff"
