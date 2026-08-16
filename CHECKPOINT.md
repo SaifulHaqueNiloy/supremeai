@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-16 00:32 UTC
+- **Date:** 2026-08-16 00:36 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,485 +10,485 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/project_management/FEATURE_STATUS.md`
-  - `docs/-01-admin's plan/01_implemented/causal_reasoning_engine.md`
-  - `docs/-01-admin's plan/03_not_implemented/headless,zro cost terminal base ai agent.md`
-  - `docs/plan/FINAL_ROADMAP.md`
-  - `docs/antigravity_brain_backup/87b0244d-bd78-4d10-8918-d35876f0e5d0_implementation_plan.md`
-  - `docs/bangla/03-development/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT_BANGLA.md`
-  - `docs/audit_reports/AUDIT_RUN_20260807_044231.md`
-  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_walkthrough_render_deployment.md`
-  - `docs/english/03-development/README-CI-PARITY-HOOKS.md`
-  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_implementation_plan.md`
-  - `docs/developer-guide/models_visualizations/supremeai2_top50_models.csv`
-  - `docs/antigravity_brain_backup/6e6fe62c-11ec-4e3e-a1ab-fb2a766fd90d_implementation_plan.md`
-  - `docs/architecture/DEPLOYMENT_STRATEGY.md`
-  - `docs/-01-admin's plan/01_implemented/SupremeAI_Zero_Cost_Implementation_Plan.md`
-  - `docs/01-admin-plans/modular_audits/PART_12_DEVICE_TELEMETRY.md`
-  - `docs/reports/LOCAL_SETUP_GUIDE.md`
-  - `docs/01-project/cloud_postgres_store.py`
-  - `docs/english/03-development/install.md`
-  - `docs/english/04-audit-reports/GITHUB_CI_1269_COMMIT_ANALYSIS_REPORT.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase8_temporal_abstraction.md`
-  - `docs/antigravity_brain_backup/d4ca0e6f-56c2-41db-9caa-1055d0dfeccd_task.md`
-  - `docs/Enviorment vs secret key/ENV_KEY_MATRIX_VERIFIED.md`
-  - `docs/antigravity_brain_backup/87de227b-3d3e-403c-9ed7-c7535ef4df94_task.md`
-  - `docs/knowledge-base/SUPREMEAI_MASTER_AUDIT_PLAN.md`
-  - `docs/-01-admin's plan/03_not_implemented/admin_dashboard_analysis.md`
-  - `docs/antigravity_brain_backup/35033bfe-91f3-4a21-a6b4-861825975bee_task.md`
-  - `docs/antigravity_brain_backup/ef0236aa-332a-4ef8-bce8-9495a65ae330_implementation_plan.md`
-  - `docs/security/blindspots-bangla.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_05_smart_cost_optimization_engine.md`
-  - `docs/api/openapi-spec.yaml`
-  - `docs/developer-guide/api_endpoints_specification.md`
-  - `docs/developer-guide/models_visualizations/supremeai2_top50_models_visual.png`
-  - `docs/audit_reports/LOCALHOST_OCCURRENCES.md`
-  - `docs/antigravity_brain_backup/f2d63430-59bf-4144-8317-e5f4d86d8c17_task.md`
-  - `docs/architecture/DFD-001-new-user-signup.md`
-  - `docs/bangla/04-audit-reports/mock-tests-documentation.md`
-  - `docs/Enviorment vs secret key/env_render_backend.md`
-  - `docs/antigravity_brain_backup/fcaa7e1e-4bc0-4a14-956d-b36bae5b7de7_walkthrough.md`
-  - `docs/-01-admin's plan/01_implemented/07-10_Scalability & BYOC.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_03_hitl_approval_workflow.md`
-  - `docs/antigravity_brain_backup/9d4d617d-5e57-422e-adb6-b4008bbdb6b2_implementation_plan.md`
-  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_maintenance_analysis.md`
-  - `docs/project_management/VERIFICATION_REPORT.md`
-  - `docs/04-ci-logs/ci_failure_run_30302440987_20260728_050927.md`
-  - `docs/governance/rerun-checklist.md`
-  - `docs/-01-admin's plan/02_partially_implemented/CODE_TO_DATABASE.md`
-  - `docs/english/02-architecture/DYNAMIC_REPO_BINDING_SPEC.md`
-  - `docs/project_management/installed_skill_in_supremeai.md`
-  - `docs/-01-admin's plan/03_not_implemented/autonomous-ai-engineer-dashboard-spec.md`
-  - `docs/plan/PHASE2_BACKEND_REFACTOR_PLAN.md`
-  - `docs/english/01-admin-plans/TODO_TRACKER.md`
-  - `docs/01-admin-plans/modular_audits/PART_14_CLOUD_INFRASTRUCTURE.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/README.md`
-  - `docs/project_management/installed_dependency_in_supremeai.md`
-  - `docs/-01-admin's plan/01_implemented/weekly_chaos_engineering.md`
-  - `docs/antigravity_brain_backup/0ad9ec7c-7167-4e29-b1ea-11b49e12f2ac_task.md`
-  - `docs/english/03-development/README.md`
-  - `docs/bangla/03-development/circuit_breaker_causes_bangla.md`
-  - `docs/antigravity_brain_backup/034c7b9a-6eec-4b84-98f3-a4721b9d53a3_task.md`
-  - `docs/english/01-admin-plans/auto_fix_in_github_implementation_plan.md`
-  - `docs/-01-admin's plan/02_partially_implemented/plan.md`
-  - `docs/Enviorment vs secret key/env_redis.md`
-  - `docs/english/01-admin-plans/CHANGELOG.md`
-  - `docs/plan/supremeai_documentation_plan.md`
-  - `docs/project_management/PROJECT_STATUS.md`
-  - `docs/english/05-operations/TROUBLESHOOTING.md`
-  - `docs/knowledge-base/02-PROJECT_VISION.md`
-  - `docs/antigravity_brain_backup/055ba1eb-0adc-4167-a4b8-f8c19beeb835_walkthrough.md`
-  - `docs/-01-admin's plan/03_not_implemented/updated_implementation_plan.md`
-  - `docs/01-project/turbo.json`
-  - `docs/antigravity_brain_backup/b5646dff-095c-4934-a5ed-1f89370852c8_task.md`
-  - `docs/Enviorment vs secret key/09-ENVIRONMENT_DOCUMENTATION.md`
-  - `docs/01-project/Learn from Human Fixes.yml`
-  - `docs/antigravity_brain_backup/6982f44d-e5fc-49e6-9cd4-483b34ab1af6_task.md`
-  - `docs/english/03-development/local-changes.md`
-  - `docs/antigravity_brain_backup/25e5d9c0-1bbd-4656-967f-71cf59e07c9b_walkthrough.md`
-  - `docs/antigravity_brain_backup/0493af3b-94a4-4487-96c8-cbcc0c1f2dc9_codebase_audit_report.md`
-  - `docs/developer-guide/architecture_and_design_blueprint.md`
-  - `docs/04-ci-logs/github_failure_analysis_30257897451_20260727_190923.json`
-  - `docs/knowledge-base/11-API_DOCUMENTATION_bn.md`
-  - `docs/01-admin-plans/modular_audits/PART_01_LLM_GATEWAY_ROUTER.md`
-  - `docs/antigravity_brain_backup/55_content.md`
-  - `docs/antigravity_brain_backup/034c7b9a-6eec-4b84-98f3-a4721b9d53a3_implementation_plan.md`
-  - `docs/antigravity_brain_backup/32198e5c-ec2b-4330-8c78-d76207bb6b0b_smart_ci_report_summary.md`
-  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_walkthrough.md`
-  - `docs/Enviorment vs secret key/env_admin_backend.md`
-  - `docs/-01-admin's plan/01_implemented/moe_expert_router.md`
-  - `docs/LESSONS_LEARNED.md`
-  - `docs/architecture/service_topology.yml`
-  - `docs/knowledge-base/INDEX_bn.md`
-  - `docs/bangla/03-development/CONFIGURATION_SYSTEM_DOCUMENTATION_BANGLA.md`
-  - `docs/-01-admin's plan/01_implemented/auto_pr_pipeline.md`
-  - `docs/Enviorment vs secret key/environment_config_dictionary.md`
-  - `docs/english/03-development/CONTRIBUTING.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase7_theory_of_mind.md`
-  - `docs/knowledge-base/05-MODULE_DOCUMENTATION_bn.md`
-  - `docs/antigravity_brain_backup/86038efe-3fc7-4e32-acc2-a2386d120863_task.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_1v60d70s.md`
-  - `docs/reports/full_modified_codebase.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_14_intelligent_model_routing.md`
-  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_walkthrough.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_iayte7f7.md`
-  - `docs/english/02-architecture/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT.md`
-  - `docs/security/blink_spots_gemini.md`
-  - `docs/english/04-audit-reports/PHASE2_SECURITY_AUDIT_IMPLEMENTATION.md`
-  - `docs/antigravity_brain_backup/35033bfe-91f3-4a21-a6b4-861825975bee_implementation_plan.md`
-  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_backend_changelog.md`
-  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_walkthrough.md`
-  - `docs/antigravity_brain_backup/56f9360b-59ae-48a5-aa90-59cfd08213e8_walkthrough.md`
-  - `docs/security/VULN-SSLCOMMERZ-WEBHOOK.md`
-  - `write_permission_cache.py`
-  - `docs/antigravity_brain_backup/6e6fe62c-11ec-4e3e-a1ab-fb2a766fd90d_walkthrough.md`
-  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_duplicate_analysis.md`
-  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_blindspot_analysis.md`
-  - `docs/antigravity_brain_backup/73ea9c48-95a6-4c9d-8dbd-1aa83f5092c1_implementation_plan.md`
-  - `docs/english/03-development/test_coverage.md`
-  - `docs/reports/project_gap_analysis.md`
-  - `docs/antigravity_brain_backup/35033bfe-91f3-4a21-a6b4-861825975bee_walkthrough.md`
-  - `docs/Enviorment vs secret key/INFISICAL_HYBRID_MIGRATION_PLAN.md`
-  - `docs/reports/implementation_plan.md`
-  - `docs/antigravity_brain_backup/c2563e75-c370-4d27-a244-78cbe00bcf36_implementation_plan.md`
-  - `docs/01-project/supremeai_tech_comparison.csv`
-  - `docs/bangla/04-audit-reports/github-actions-fix-summary.md`
-  - `docs/Enviorment vs secret key/env_frontend_studio.md`
-  - `docs/bangla/01-admin-plans/master-documentation-plan-and-benefits.md`
-  - `docs/antigravity_brain_backup/1173_content.md`
-  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_implementation_plan.md`
-  - `docs/english/01-admin-plans/admin_dashboard_upgrade_plan.md`
-  - `docs/knowledge-base/12-AUTHENTICATION_DOCUMENTATION.md`
-  - `docs/audit_reports/PENDING_APPROVALS.md`
-  - `docs/01-project/FRONTEND_STUDIO_CLIENT_DEEP_DIVE.md`
-  - `docs/antigravity_brain_backup/87de227b-3d3e-403c-9ed7-c7535ef4df94_walkthrough.md`
-  - `docs/-01-admin's plan/01_implemented/implementation_plan.md`
-  - `docs/governance/admin_rules_and_guidelines.md`
-  - `docs/antigravity_brain_backup/c6d81df2-0de6-47cc-aad7-9f8cf1c73997_task.md`
-  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_walkthrough.md`
-  - `docs/antigravity_brain_backup/748a63ee-6885-4822-afbe-ce62c31d714d_task.md`
-  - `docs/reports/core_engine_summary.md`
-  - `docs/english/02-architecture/SUPREMEAI_SYSTEM_MODULES_EXPLAINED.md`
-  - `docs/audit_reports/user_backend_env_variables.md`
-  - `docs/01-admin-plans/modular_audits/PART_04_TIER8_SELF_EVOLUTION.md`
-  - `docs/architecture/ADR-001-firestore-for-tenancy.md`
-  - `docs/operations/supabase_upstash_setup.md`
-  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_backend_endpoint_audit.md`
-  - `docs/01-project/create_finetune_pair.py`
-  - `docs/architecture/PROJECT_MODULES_COMPLETE_INVENTORY.md`
-  - `docs/-01-admin's plan/02_partially_implemented/slicing_and_combined_ai_model.md`
-  - `docs/antigravity_brain_backup/d28bf3f5-10a3-46f1-9bb1-4442a82434e4_smart_ci_report.md`
-  - `docs/audit_reports/README.md`
-  - `docs/reports/CHECK_GITHUB_PR_HISTORY.md`
-  - `docs/operations/workflow_jobs.md`
-  - `docs/antigravity_brain_backup/49e261d4-e123-45d1-923b-5b4afed2fbf0_implementation_plan.md`
-  - `docs/antigravity_brain_backup/748a63ee-6885-4822-afbe-ce62c31d714d_implementation_plan.md`
-  - `docs/01-admin-plans/modular_audits/PART_12_TEST_SUITE_PYTEST.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_01_pipeline_optimization.md`
-  - `docs/architecture/multi-platform-failover-strategy.md`
-  - `docs/developer-guide/domain_agents_and_hf_finetuning_plan.md`
-  - `docs/antigravity_brain_backup/b5ce6526-4cc5-4403-bebb-a4cf9d938165_walkthrough.md`
-  - `docs/governance/supremeai-ci-pipeline-analysis-bangla.md`
-  - `docs/Enviorment vs secret key/ENVIRONMENT_AND_API_KEYS_REGISTRY.md`
-  - `docs/antigravity_brain_backup/fcaa7e1e-4bc0-4a14-956d-b36bae5b7de7_task.md`
-  - `docs/antigravity_brain_backup/67729078-4593-4b2f-bd1a-3c1107ff76eb_walkthrough.md`
-  - `CHECKPOINT.md`
-  - `docs/bangla/04-audit-reports/desktop-app-audit-report.md`
-  - `docs/-01-admin's plan/01_implemented/01-03_foundation_security.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase3_continual_learning_ewc.md`
-  - `docs/english/02-architecture/AUTONOMOUS_ENTERPRISE_ARCHITECTURE.md`
-  - `docs/Enviorment vs secret key/all_environments_env_variables.md`
-  - `docs/Enviorment vs secret key/missing_env_keys_analysis.md`
-  - `docs/audit_reports/ACTIVE_CLAIMS.md`
-  - `docs/english/02-architecture/PROJECT_STRUCTURE.md`
-  - `docs/antigravity_brain_backup/70d5ff94-af0e-493b-b465-a54dc01e4cac_implementation_plan.md`
-  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_task.md`
-  - `docs/antigravity_brain_backup/7d4acdad-ec8c-4e2f-bddd-abab6f5b3b58_implementation_plan.md`
-  - `docs/project_management/100%_completed_tasks.md`
-  - `docs/04-ci-logs/ci_failure_run_30257897451_20260727_190732.md`
-  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_implementation_plan.md`
-  - `docs/-01-admin's plan/02_partially_implemented/IMPLEMENTATION_PLAN.md`
-  - `docs/english/02-architecture/AI_AGENT_SYSTEM_PROMPT.md`
-  - `docs/04-ci-logs/ci_failure_run_31697811490_20260813_182623.md`
-  - `docs/project_management/partially_completed_tasks.md`
-  - `docs/antigravity_brain_backup/fcaa7e1e-4bc0-4a14-956d-b36bae5b7de7_implementation_plan.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_09_skill_store_and_autoconfig.md`
-  - `docs/01-project/load_seed_data.py`
-  - `docs/01-admin-plans/modular_audits/PART_11_PACKAGES_SHARED_TYPES.md`
-  - `docs/security/THREAT-MODEL-001-authentication.md`
-  - `docs/Enviorment vs secret key/env_infisical.md`
-  - `docs/plan/intelligent_architect.md`
-  - `docs/-01-admin's plan/03_not_implemented/supremeai_dashboard_redesign_analysis.md`
-  - `docs/english/04-audit-reports/PHASE6_API_MIDDLEWARE_AUDIT.md`
-  - `docs/01-admin-plans/modular_audits/PART_02_SECURITY_GUARDRAILS.md`
-  - `docs/english/03-development/usage.md`
-  - `docs/antigravity_brain_backup/2842d6a1-0d63-4140-8a7f-5084fd874be9_implementation_plan.md`
-  - `docs/plan/IDE_TRIO_PIPELINE.md`
-  - `docs/01-admin-plans/modular_audits/PART_03_MULTI_DB_OUTBOX.md`
-  - `docs/antigravity_brain_backup/c744e287-8e15-42f9-b4d7-51fb658ee03a_walkthrough.md`
-  - `docs/developer-guide/setup_and_installation_guide.md`
-  - `docs/architecture/0002-self-evolution-security-boundaries.md`
-  - `docs/antigravity_brain_backup/b5ce6526-4cc5-4403-bebb-a4cf9d938165_implementation_plan.md`
-  - `docs/audit_reports/AUDIT_RUN_20260807_063939.md`
-  - `docs/-01-admin's plan/03_not_implemented/user_dashboard_analysis.md`
-  - `docs/antigravity_brain_backup/d28bf3f5-10a3-46f1-9bb1-4442a82434e4_dependency_audit_plan.md`
-  - `docs/Enviorment vs secret key/env_firebase_gcp.md`
-  - `docs/Enviorment vs secret key/env_cloudflare.md`
-  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_current_architecture.md`
-  - `docs/english/03-development/TESTING_GUIDELINES.md`
-  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_task.md`
-  - `docs/bangla/04-audit-reports/SYSTEM_IMPROVEMENT_ANALYSIS_BANGLA.md`
-  - `docs/audit_reports/AUDIT_RUN_20260807_044158.md`
-  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_implementation_plan.md`
-  - `docs/architecture/tri-pillar-distribution-strategy.md`
-  - `docs/bangla/01-admin-plans/final-project-summary.md`
-  - `docs/antigravity_brain_backup/b5646dff-095c-4934-a5ed-1f89370852c8_implementation_plan.md`
-  - `docs/knowledge-base/13-AUTHORIZATION_DOCUMENTATION.md`
-  - `docs/project_management/PHASE_LOG.md`
-  - `docs/01-project/gitignore`
-  - `docs/antigravity_brain_backup/c2563e75-c370-4d27-a244-78cbe00bcf36_task.md`
-  - `docs/operations/CI_PIPELINE.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase5_neural_symbolic_integration.md`
-  - `docs/audit_reports/AUDIT_FIX_TRACKER.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase4_adversarial_robustness.md`
-  - `docs/english/02-architecture/TEST_ECOSYSTEM.md`
-  - `docs/architecture/SYSTEM_DIAGRAMS_AND_FLOWS.md`
-  - `docs/reports/SupremeAI_Resource_Sites_Analysis_Bangla.md`
-  - `docs/knowledge-base/12-genome-and-impact-graphs/LIVING_IMPACT_ANALYSIS_GRAPH.md`
-  - `docs/-01-admin's plan/03_not_implemented/headless_zero_cost_terminal_agent.md`
-  - `FEATURE_TRACKING_LOG.md`
-  - `docs/project_management/manual_work_needed.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_12_automated_audit_and_cost_cutting.md`
-  - `docs/knowledge-base/12-AUTHENTICATION_DOCUMENTATION_bn.md`
-  - `docs/governance/SUPREMEAI_CUSTOMER_DASHBOARD_PLAN.md`
-  - `docs/architecture/system-overview.md`
-  - `docs/antigravity_brain_backup/14dccb9d-dd23-492f-a1ba-9c2dfa377a47_implementation_plan.md`
-  - `docs/project_management/task_progress.md`
-  - `LESSONS_LEARNED.md`
-  - `docs/04-ci-logs/github_failure_analysis_30516030873_20260731_015712.json`
-  - `docs/-01-admin's plan/03_not_implemented/IMPLEMENTATION_PLAN.md`
-  - `docs/antigravity_brain_backup/b5646dff-095c-4934-a5ed-1f89370852c8_walkthrough.md`
-  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_refactoring_round2.md`
-  - `docs/antigravity_brain_backup/26cc8f97-c4c0-4468-a8a1-3e5fed92e66e_implementation_plan.md`
-  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_task.md`
-  - `docs/english/04-audit-reports/TECH_DEBT.md`
-  - `docs/english/02-architecture/DEPLOYMENT_ARCHITECTURE.md`
-  - `docs/01-project/check_if_fix.py`
-  - `docs/bangla/01-admin-plans/CONFIGURATION_MANAGEMENT_IMPLEMENTATION_PLAN_BANGLA.md`
-  - `docs/antigravity_brain_backup/c744e287-8e15-42f9-b4d7-51fb658ee03a_implementation_plan.md`
-  - `docs/english/03-development/TEST_RELIABILITY_GUIDELINES.md`
-  - `.agents/AGENTS.md`
-  - `docs/english/06-api/api.md`
-  - `docs/operations/gcp_project_setup.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_02_user_profiling_and_goal_alignment.md`
-  - `docs/antigravity_brain_backup/9d4d617d-5e57-422e-adb6-b4008bbdb6b2_task.md`
-  - `docs/antigravity_brain_backup/1e1dd5f6-a0c4-4496-9afe-05ac2b35f242_task.md`
-  - `docs/governance/supremeai-ci-pipeline-diagram-bangla.md`
-  - `docs/antigravity_brain_backup/49e261d4-e123-45d1-923b-5b4afed2fbf0_walkthrough.md`
-  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_analysis_report.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_8opcfldj.md`
-  - `docs/knowledge-base/05-MODULE_DOCUMENTATION.md`
-  - `docs/plan/README.md`
-  - `docs/-01-admin's plan/03_not_implemented/dashboard_redesign_plan.md`
-  - `docs/antigravity_brain_backup/6982f44d-e5fc-49e6-9cd4-483b34ab1af6_implementation_plan.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_pxklq5il.md`
-  - `docs/antigravity_brain_backup/56f9360b-59ae-48a5-aa90-59cfd08213e8_implementation_plan.md`
-  - `docs/Enviorment vs secret key/env_llm_providers.md`
-  - `docs/antigravity_brain_backup/87b0244d-bd78-4d10-8918-d35876f0e5d0_task.md`
-  - `docs/antigravity_brain_backup/b39381c4-db90-47ff-81fa-6d5ef3a847ff_task.md`
-  - `docs/antigravity_brain_backup/d28bf3f5-10a3-46f1-9bb1-4442a82434e4_GITHUB_CI_1269_COMMIT_ANALYSIS_REPORT.md`
-  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_implementation_plan.md`
-  - `docs/01-admin-plans/modular_audits/PART_11_ADMIN_DASHBOARD_UPGRADE_PLAN.md`
-  - `docs/Enviorment vs secret key/env_supabase.md`
-  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_task.md`
-  - `docs/-01-admin's plan/03_not_implemented/master_analysis_summary.md`
-  - `docs/developer-guide/UPDATE_PLAN_ARCHIVE.md`
-  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_implementation_plan.md`
-  - `docs/reports/failure-report.md`
-  - `docs/operations/frontend-deployment.md`
-  - `docs/-01-admin's plan/03_not_implemented/flutter_app_analysis.md`
-  - `docs/antigravity_brain_backup/87de227b-3d3e-403c-9ed7-c7535ef4df94_implementation_plan.md`
-  - `docs/architecture/service_registry.yaml`
-  - `docs/01-admin-plans/modular_audits/PART_09_REACT_STUDIO_CLIENT.md`
-  - `docs/antigravity_brain_backup/73ea9c48-95a6-4c9d-8dbd-1aa83f5092c1_walkthrough.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_08_universal_byoc_hub.md`
-  - `docs/plan/02_PARTIALLY_IMPLEMENTED_MASTER_PLAN.md`
-  - `docs/bangla/01-admin-plans/github-action-work-plan.md`
-  - `docs/-01-admin's plan/01_implemented/supremeai_repo_optimization_report.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_mlj3mlw3.md`
-  - `docs/bangla/04-audit-reports/VSCODE_EXTENSION_FEATURES_AUDIT_BANGLA.md`
-  - `docs/knowledge-base/13-AUTHORIZATION_DOCUMENTATION_bn.md`
-  - `docs/english/03-development/limitations.md`
-  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_walkthrough.md`
-  - `docs/english/03-development/evolution_log.md`
-  - `docs/01-project/monorepo_ci_cd.yml`
-  - `docs/-01-admin's plan/02_partially_implemented/CODE_TO_DATABASE_PROGRESS.md`
-  - `docs/antigravity_brain_backup/b5ce6526-4cc5-4403-bebb-a4cf9d938165_task.md`
-  - `docs/antigravity_brain_backup/a2d54302-445c-4027-8818-99fe52370ca4_implementation_plan.md`
-  - `docs/audit_reports/target_repo_secrets.md`
-  - `docs/bangla/01-admin-plans/CONFIGURATION_IMPROVEMENT_SUMMARY_BANGLA.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_11_system_self_healing.md`
-  - `docs/plan/01_IMPLEMENTED_MASTER_PLAN.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase6_federated_learning.md`
-  - `docs/kb/INDEX.md`
-  - `docs/plan/SUPREMEAI_MASTER_ROADMAP_V3.md`
-  - `docs/antigravity_brain_backup/87b0244d-bd78-4d10-8918-d35876f0e5d0_supported_ai_list.md`
-  - `docs/reports/SMART_CI_ANALYSIS.md`
-  - `docs/governance/SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md`
-  - `docs/Enviorment vs secret key/API-key verification in github.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_5htjhn0i.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_10_resource_bridge_p2p_sharing.md`
-  - `docs/antigravity_brain_backup/9d4d617d-5e57-422e-adb6-b4008bbdb6b2_walkthrough.md`
-  - `docs/english/03-development/INDEX.md`
-  - `docs/reports/ci_run_comparison.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_06_autonomous_networking_vpn_proxy.md`
-  - `docs/01-project/backend_pyproject.toml`
-  - `docs/developer-guide/external_services_directory.md`
-  - `docs/-01-admin's plan/02_partially_implemented/plan_file_path.md`
-  - `docs/bangla/04-audit-reports/dashboard-analysis-bangla.md`
-  - `docs/english/05-operations/FREE_TIER_LLM_PROVIDERS.md`
-  - `docs/antigravity_brain_backup/1eecd295-d601-4156-a898-5d7e79937c26_implementation_plan.md`
-  - `docs/antigravity_brain_backup/034c7b9a-6eec-4b84-98f3-a4721b9d53a3_walkthrough.md`
-  - `docs/audit_reports/codebase_analysis_report.md`
-  - `docs/knowledge-base/02-architecture/SYSTEM_GENOME_AND_BLUEPRINT.md`
-  - `docs/01-admin-plans/modular_audits/PART_06_P2P_COMPUTE_MESH.md`
-  - `docs/antigravity_brain_backup/67729078-4593-4b2f-bd1a-3c1107ff76eb_implementation_plan.md`
-  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_task.md`
-  - `docs/operations/deployment-overview.md`
-  - `docs/english/03-development/config.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_hkwymhoe.md`
-  - `docs/antigravity_brain_backup/97232e0c-1329-4af9-b22e-0203ccd4d3c0_walkthrough.md`
-  - `docs/english/04-audit-reports/PHASE3_LLM_ORCHESTRATION_AUDIT.md`
-  - `docs/antigravity_brain_backup/7178e0e2-e9d4-4546-9c9f-9435858be3ce_task.md`
-  - `docs/antigravity_brain_backup/7d4acdad-ec8c-4e2f-bddd-abab6f5b3b58_task.md`
-  - `docs/01-project/IMPLEMENTATION_STATUS.md`
-  - `docs/knowledge-base/11-API_DOCUMENTATION.md`
-  - `docs/antigravity_brain_backup/70d5ff94-af0e-493b-b465-a54dc01e4cac_walkthrough.md`
-  - `docs/operations/clean-deploy-instructions.md`
-  - `docs/reports/MASTER_ANALYSIS_REPORTS.md`
-  - `docs/antigravity_brain_backup/f2d63430-59bf-4144-8317-e5f4d86d8c17_implementation_plan.md`
-  - `docs/-01-admin's plan/03_not_implemented/auto_gdrive_cloud_backup_pipeline.md`
-  - `docs/developer-guide/testing_and_qa_guide.md`
-  - `docs/antigravity_brain_backup/7178e0e2-e9d4-4546-9c9f-9435858be3ce_implementation_plan.md`
-  - `REAL_TESTING_LOG.md`
-  - `docs/Enviorment vs secret key/env_background_worker.md`
-  - `docs/antigravity_brain_backup/1159_content.md`
-  - `docs/-01-admin's plan/01_implemented/04-07_Brain & Efficiency.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_07_sandboxed_testing_logic.md`
-  - `docs/antigravity_brain_backup/c6d81df2-0de6-47cc-aad7-9f8cf1c73997_implementation_plan.md`
-  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_task.md`
-  - `docs/governance/supremeai_specialized_capabilities.md`
-  - `docs/01-admin-plans/modular_audits/PART_07_BACKEND_API_ROUTERS.md`
-  - `docs/knowledge-base/02-PROJECT_VISION_bn.md`
-  - `docs/antigravity_brain_backup/49e261d4-e123-45d1-923b-5b4afed2fbf0_task.md`
-  - `docs/antigravity_brain_backup/b39381c4-db90-47ff-81fa-6d5ef3a847ff_implementation_plan.md`
-  - `docs/reports/github_pipelines.md`
-  - `docs/english/01-admin-plans/PROJECT_STATUS.md`
-  - `docs/01-project/cloud_vector_store.py`
-  - `docs/-01-admin's plan/03_not_implemented/desktop_app_analysis.md`
-  - `docs/Enviorment vs secret key/env_vercel_netlify.md`
-  - `docs/developer-guide/environment_config_dictionary.md`
-  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_refactoring_analysis.md`
-  - `docs/governance/performance-benchmark.md`
-  - `docs/english/03-development/INTERNET_MONITOR_AGENT.md`
-  - `docs/knowledge-base/INDEX.md`
-  - `docs/plan/mcp_server.md`
-  - `docs/antigravity_brain_backup/9d65cf44-0c9e-44ac-9fbf-db8b1f361018_admin_plan_analysis.md`
-  - `docs/reports/IMPLEMENTATION_SUMMARY.md`
-  - `docs/antigravity_brain_backup/1e1dd5f6-a0c4-4496-9afe-05ac2b35f242_walkthrough.md`
-  - `docs/antigravity_brain_backup/a2d54302-445c-4027-8818-99fe52370ca4_task.md`
-  - `docs/developer-guide/cloudflare_and_bot_tokens_setup_guide.md`
-  - `docs/plan/ACTION_PLAN.md`
-  - `docs/01-admin-plans/modular_audits/PART_10_FLUTTER_MOBILE_APP.md`
-  - `docs/-01-admin's plan/02_partially_implemented/advanced_system_enhancement.md`
-  - `"docs/\340\246\211\340\246\250\340\247\215\340\246\250\340\246\244 AI \340\246\256\340\246\241\340\247\207\340\246\262 \340\246\252\340\247\215\340\246\260\340\246\225\340\246\262\340\247\215\340\246\252 \340\246\206\340\246\252\340\246\241\340\247\207\340\246\237 - V2.md"`
-  - `docs/audit_reports/AUDIT_RUN_20260807_064244.md`
-  - `docs/english/03-development/create_best_ai_model.md`
-  - `docs/-01-admin's plan/01_implemented/dynamic_ttl_caching.md`
-  - `docs/Enviorment vs secret key/env_stripe.md`
-  - `docs/-01-admin's plan/03_not_implemented/phase2_digital_twin_world_model.md`
-  - `docs/antigravity_brain_backup/67729078-4593-4b2f-bd1a-3c1107ff76eb_task.md`
-  - `docs/01-project/task_request.md`
-  - `docs/developer-guide/github_integration_and_deployment.md`
-  - `docs/english/03-development/reference.md`
-  - `docs/antigravity_brain_backup/005f9454-a185-4177-a9b0-6823dce6e3b8_implementation_plan.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_13_snapshot_learning_scout_scholar.md`
-  - `docs/english/05-operations/SECURITY.md`
-  - `docs/antigravity_brain_backup/7d4acdad-ec8c-4e2f-bddd-abab6f5b3b58_walkthrough.md`
-  - `docs/english/04-audit-reports/PHASE4_DATABASE_PERSISTENCE_AUDIT.md`
-  - `docs/project_management/TODO.md`
-  - `docs/security/secrets-management.md`
-  - `docs/reports/ENHANCEMENT_PATCH.md`
-  - `docs/-01-admin's plan/01_implemented/learning_brain_system.md`
-  - `docs/plan/AI_MISTAKE_PREVENTION_PLAN.md`
-  - `docs/knowledge-base/FREE_AI_PROVIDER_APIS_LIST.md`
-  - `docs/01-admin-plans/modular_audits/PART_05_SWARM_WEBSOCKETS.md`
-  - `docs/antigravity_brain_backup/73ea9c48-95a6-4c9d-8dbd-1aa83f5092c1_task.md`
-  - `docs/plan/INTELLIGENCE_PLAN_BN.md`
-  - `docs/antigravity_brain_backup/c744e287-8e15-42f9-b4d7-51fb658ee03a_task.md`
-  - `docs/english/03-development/session-summary.md`
-  - `docs/01-project/package.json`
-  - `docs/Enviorment vs secret key/env_user_backend.md`
-  - `docs/governance/test-environment.md`
-  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_walkthrough.md`
-  - `docs/knowledge-base/08-ai-and-tools/LLM_ROUTER_AND_PROVIDER_INTELLIGENCE.md`
-  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_implementation_plan.md`
-  - `docs/01-admin-plans/modular_audits/PART_13_INTEGRATIONS.md`
-  - `docs/Enviorment vs secret key/admin_backend_env_variables.md`
-  - `docs/knowledge-base/04-FOLDER_STRUCTURE_bn.md`
-  - `docs/english/03-development/pre-merge-vs-pre-commit.md`
-  - `docs/antigravity_brain_backup/a2d54302-445c-4027-8818-99fe52370ca4_maintenance_analysis.md`
-  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_codebase_summary.md`
-  - `"docs/\340\246\211\340\246\250\340\247\215\340\246\250\340\246\244 AI \340\246\256\340\246\241\340\247\207\340\246\262 \340\246\252\340\247\215\340\246\260\340\246\225\340\246\262\340\247\215\340\246\252 \340\246\206\340\246\252\340\246\241\340\247\207\340\246\237.md"`
-  - `docs/antigravity_brain_backup/70d5ff94-af0e-493b-b465-a54dc01e4cac_task.md`
-  - `docs/architecture/PRODUCTION_ENDPOINT_MAPPING.md`
-  - `docs/-01-admin's plan/01_implemented/telegram_interactive_webhook.md`
-  - `docs/audit_reports/github_unrelated_files_audit.md`
-  - `docs/Enviorment vs secret key/env_github_actions.md`
-  - `docs/-01-admin's plan/01_implemented/11-15_Evolution.txt`
-  - `docs/english/02-architecture/SUPREMEAI_MASTER_BLUEPRINT.md`
-  - `docs/knowledge-base/01-PROJECT_OVERVIEW.md`
-  - `docs/antigravity_brain_backup/c6d81df2-0de6-47cc-aad7-9f8cf1c73997_walkthrough.md`
-  - `docs/project_management/test_coverage_and_strategy.md`
-  - `docs/antigravity_brain_backup/d4ca0e6f-56c2-41db-9caa-1055d0dfeccd_implementation_plan.md`
-  - `docs/antigravity_brain_backup/f2d63430-59bf-4144-8317-e5f4d86d8c17_walkthrough.md`
-  - `docs/knowledge-base/03-ARCHITECTURE.md`
-  - `docs/antigravity_brain_backup/7e871e15-f50a-4791-a92b-ad3e373da8e5_implementation_plan.md`
-  - `docs/antigravity_brain_backup/d4ca0e6f-56c2-41db-9caa-1055d0dfeccd_walkthrough.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_15_autonomous_evolution.md`
-  - `docs/Enviorment vs secret key/env_github.md`
-  - `docs/governance/.antigravityrules`
-  - `docs/-01-admin's plan/01_implemented/GCLOUD WITH Cloudflare.md`
-  - `docs/antigravity_brain_backup/b39381c4-db90-47ff-81fa-6d5ef3a847ff_walkthrough.md`
-  - `docs/01-admin-plans/modular_audits/PART_08_BACKEND_AI_AGENT_TOOLS.md`
-  - `docs/01-admin-plans/modular_audits/PART_13_CICD_DEV_WORKFLOWS.md`
-  - `docs/knowledge-base/COMMON_TECHNICAL_ERRORS.md`
-  - `"docs/\340\246\211\340\246\250\340\247\215\340\246\250\340\246\244 AI \340\246\256\340\246\241\340\247\207\340\246\262 \340\246\252\340\247\215\340\246\260\340\246\225\340\246\262\340\247\215\340\246\252 \340\246\223 \340\246\227\340\246\254\340\247\207\340\246\267\340\246\243\340\246\276 \340\246\252\340\247\215\340\246\260\340\246\244\340\246\277\340\246\254\340\247\207\340\246\246\340\246\250 - \340\246\270\340\246\256\340\246\250\340\247\215\340\246\254\340\246\277\340\246\244 \340\246\270\340\246\202\340\246\270\340\247\215\340\246\225\340\246\260\340\246\243.md"`
-  - `docs/antigravity_brain_backup/7e871e15-f50a-4791-a92b-ad3e373da8e5_task.md`
-  - `docs/bangla/04-audit-reports/comprehensive-project-audit-checklist.md`
-  - `docs/knowledge-base/10-DATABASE_DOCUMENTATION_bn.md`
-  - `docs/english/05-operations/ENVIRONMENT_AND_API_KEYS_REGISTRY.md`
-  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_task.md`
-  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_implementation_plan.md`
-  - `docs/antigravity_brain_backup/browser_scratchpad_iibm59nn.md`
-  - `docs/plan/03_NOT_IMPLEMENTED_MASTER_PLAN.md`
-  - `docs/antigravity_brain_backup/1e1dd5f6-a0c4-4496-9afe-05ac2b35f242_implementation_plan.md`
-  - `docs/knowledge-base/04-FOLDER_STRUCTURE.md`
-  - `docs/english/03-development/checks.md`
-  - `docs/english/04-audit-reports/comprehensive-project-audit-checklist.md`
-  - `docs/antigravity_brain_backup/0ad9ec7c-7167-4e29-b1ea-11b49e12f2ac_implementation_plan.md`
-  - `docs/developer-guide/master_work_and_implementation_plan.md`
-  - `docs/operations/PRODUCTION_READINESS_GUIDE.md`
-  - `docs/knowledge-base/10-DATABASE_DOCUMENTATION.md`
-  - `docs/architecture/gcp-killer-stack.md`
-  - `AGENTS.md`
-  - `docs/antigravity_brain_backup/0493af3b-94a4-4487-96c8-cbcc0c1f2dc9_production_readiness_assessment.md`
-  - `docs/english/04-audit-reports/PHASE5_CACHING_PERFORMANCE_AUDIT.md`
-  - `docs/knowledge-base/03-ARCHITECTURE_bn.md`
-  - `docs/01-project/pnpm-workspace.yaml`
-  - `docs/knowledge-base/01-overview/PROJECT_CONSTITUTION.md`
-  - `docs/english/01-admin-plans/DESKTOP_APP_MASTER_PLAN.md`
-  - `docs/english/02-architecture/architecture-overview.md`
-  - `docs/plan/discovering and handling errors.md`
-  - `docs/antigravity_brain_backup/86038efe-3fc7-4e32-acc2-a2386d120863_implementation_plan.md`
-  - `docs/english/03-development/ci-backend-test-failure-rootcause.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan.md`
-  - `docs/knowledge-base/01-PROJECT_OVERVIEW_bn.md`
-  - `docs/english/01-admin-plans/voice-integration-plan.md`
-  - `docs/Enviorment vs secret key/env_dotenv.md`
-  - `docs/antigravity_brain_backup/6982f44d-e5fc-49e6-9cd4-483b34ab1af6_walkthrough.md`
-  - `docs/security/threat-model.md`
-  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_04_experience_database.md`
-  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_task.md`
-  - `docs/Enviorment vs secret key/env_render_admin.md`
-  - `docs/english/01-admin-plans/COMMAND_CENTER_MASTER_PLAN.md`
-  - `docs/antigravity_brain_backup/0493af3b-94a4-4487-96c8-cbcc0c1f2dc9_implementation_plan.md`
-  - `docs/architecture/THEORY_OF_MIND_AND_DIGITAL_TWIN_DEEP_DIVE.md`
-  - `docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md`
-  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_walkthrough.md`
-  - `docs/architecture/SEQ-001-canary-deployment.md`
   - `docs/english/03-development/DEVELOPER_GUIDE.md`
+  - `docs/knowledge-base/04-FOLDER_STRUCTURE_bn.md`
+  - `docs/antigravity_brain_backup/748a63ee-6885-4822-afbe-ce62c31d714d_implementation_plan.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase6_federated_learning.md`
+  - `docs/architecture/system-overview.md`
+  - `docs/audit_reports/LOCALHOST_OCCURRENCES.md`
+  - `docs/antigravity_brain_backup/56f9360b-59ae-48a5-aa90-59cfd08213e8_implementation_plan.md`
+  - `docs/01-admin-plans/modular_audits/PART_03_MULTI_DB_OUTBOX.md`
+  - `docs/01-project/turbo.json`
+  - `docs/bangla/04-audit-reports/VSCODE_EXTENSION_FEATURES_AUDIT_BANGLA.md`
+  - `docs/knowledge-base/02-PROJECT_VISION_bn.md`
+  - `docs/knowledge-base/SUPREMEAI_MASTER_AUDIT_PLAN.md`
+  - `docs/governance/supremeai-ci-pipeline-analysis-bangla.md`
+  - `docs/01-project/cloud_vector_store.py`
+  - `docs/reports/core_engine_summary.md`
+  - `docs/plan/INTELLIGENCE_PLAN_BN.md`
+  - `docs/antigravity_brain_backup/f2d63430-59bf-4144-8317-e5f4d86d8c17_walkthrough.md`
+  - `docs/antigravity_brain_backup/c2563e75-c370-4d27-a244-78cbe00bcf36_task.md`
+  - `docs/english/03-development/checks.md`
+  - `docs/knowledge-base/13-AUTHORIZATION_DOCUMENTATION.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_05_smart_cost_optimization_engine.md`
+  - `docs/project_management/manual_work_needed.md`
+  - `docs/developer-guide/domain_agents_and_hf_finetuning_plan.md`
+  - `docs/antigravity_brain_backup/fcaa7e1e-4bc0-4a14-956d-b36bae5b7de7_walkthrough.md`
+  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_walkthrough.md`
+  - `docs/Enviorment vs secret key/env_stripe.md`
+  - `docs/architecture/SEQ-001-canary-deployment.md`
+  - `docs/antigravity_brain_backup/67729078-4593-4b2f-bd1a-3c1107ff76eb_implementation_plan.md`
+  - `docs/-01-admin's plan/02_partially_implemented/plan.md`
+  - `docs/antigravity_brain_backup/0ad9ec7c-7167-4e29-b1ea-11b49e12f2ac_task.md`
+  - `docs/01-project/monorepo_ci_cd.yml`
+  - `docs/english/02-architecture/architecture-overview.md`
+  - `docs/antigravity_brain_backup/a2d54302-445c-4027-8818-99fe52370ca4_task.md`
+  - `docs/Enviorment vs secret key/env_supabase.md`
+  - `docs/antigravity_brain_backup/87b0244d-bd78-4d10-8918-d35876f0e5d0_implementation_plan.md`
+  - `docs/antigravity_brain_backup/b39381c4-db90-47ff-81fa-6d5ef3a847ff_walkthrough.md`
+  - `docs/antigravity_brain_backup/748a63ee-6885-4822-afbe-ce62c31d714d_task.md`
+  - `docs/-01-admin's plan/01_implemented/11-15_Evolution.txt`
+  - `docs/antigravity_brain_backup/49e261d4-e123-45d1-923b-5b4afed2fbf0_task.md`
+  - `docs/security/blindspots-bangla.md`
+  - `docs/english/04-audit-reports/PHASE4_DATABASE_PERSISTENCE_AUDIT.md`
+  - `docs/project_management/installed_skill_in_supremeai.md`
+  - `docs/-01-admin's plan/01_implemented/moe_expert_router.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase2_digital_twin_world_model.md`
+  - `docs/english/01-admin-plans/voice-integration-plan.md`
+  - `docs/antigravity_brain_backup/25e5d9c0-1bbd-4656-967f-71cf59e07c9b_walkthrough.md`
+  - `docs/01-admin-plans/modular_audits/PART_07_BACKEND_API_ROUTERS.md`
+  - `docs/bangla/04-audit-reports/mock-tests-documentation.md`
+  - `docs/antigravity_brain_backup/6e6fe62c-11ec-4e3e-a1ab-fb2a766fd90d_walkthrough.md`
+  - `docs/antigravity_brain_backup/87de227b-3d3e-403c-9ed7-c7535ef4df94_implementation_plan.md`
+  - `docs/-01-admin's plan/01_implemented/implementation_plan.md`
+  - `docs/01-project/IMPLEMENTATION_STATUS.md`
+  - `docs/antigravity_brain_backup/7178e0e2-e9d4-4546-9c9f-9435858be3ce_task.md`
+  - `docs/01-admin-plans/modular_audits/PART_09_REACT_STUDIO_CLIENT.md`
+  - `docs/reports/LOCAL_SETUP_GUIDE.md`
+  - `docs/audit_reports/user_backend_env_variables.md`
+  - `docs/kb/INDEX.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_11_system_self_healing.md`
+  - `docs/antigravity_brain_backup/49e261d4-e123-45d1-923b-5b4afed2fbf0_implementation_plan.md`
+  - `docs/-01-admin's plan/01_implemented/SupremeAI_Zero_Cost_Implementation_Plan.md`
+  - `docs/english/03-development/INDEX.md`
+  - `docs/architecture/ADR-001-firestore-for-tenancy.md`
+  - `docs/plan/02_PARTIALLY_IMPLEMENTED_MASTER_PLAN.md`
+  - `docs/-01-admin's plan/01_implemented/learning_brain_system.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase5_neural_symbolic_integration.md`
+  - `docs/english/03-development/usage.md`
+  - `docs/security/THREAT-MODEL-001-authentication.md`
+  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_walkthrough.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase4_adversarial_robustness.md`
+  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_walkthrough.md`
+  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_implementation_plan.md`
+  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_implementation_plan.md`
+  - `docs/01-project/gitignore`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/README.md`
+  - `docs/reports/ENHANCEMENT_PATCH.md`
+  - `docs/antigravity_brain_backup/32198e5c-ec2b-4330-8c78-d76207bb6b0b_smart_ci_report_summary.md`
+  - `docs/project_management/PHASE_LOG.md`
+  - `docs/knowledge-base/01-overview/PROJECT_CONSTITUTION.md`
+  - `docs/antigravity_brain_backup/6982f44d-e5fc-49e6-9cd4-483b34ab1af6_walkthrough.md`
+  - `docs/antigravity_brain_backup/a2d54302-445c-4027-8818-99fe52370ca4_implementation_plan.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_5htjhn0i.md`
+  - `docs/english/04-audit-reports/comprehensive-project-audit-checklist.md`
+  - `docs/security/secrets-management.md`
+  - `docs/antigravity_brain_backup/87de227b-3d3e-403c-9ed7-c7535ef4df94_walkthrough.md`
+  - `docs/english/03-development/ci-backend-test-failure-rootcause.md`
+  - `docs/Enviorment vs secret key/all_environments_env_variables.md`
+  - `docs/english/03-development/INTERNET_MONITOR_AGENT.md`
+  - `docs/antigravity_brain_backup/b5646dff-095c-4934-a5ed-1f89370852c8_task.md`
+  - `docs/reports/MASTER_ANALYSIS_REPORTS.md`
+  - `docs/reports/SMART_CI_ANALYSIS.md`
+  - `docs/english/04-audit-reports/PHASE3_LLM_ORCHESTRATION_AUDIT.md`
+  - `docs/antigravity_brain_backup/7d4acdad-ec8c-4e2f-bddd-abab6f5b3b58_task.md`
+  - `docs/english/04-audit-reports/PHASE2_SECURITY_AUDIT_IMPLEMENTATION.md`
+  - `docs/plan/SUPREMEAI_MASTER_ROADMAP_V3.md`
+  - `docs/01-project/load_seed_data.py`
+  - `docs/-01-admin's plan/01_implemented/GCLOUD WITH Cloudflare.md`
+  - `docs/english/01-admin-plans/COMMAND_CENTER_MASTER_PLAN.md`
+  - `docs/governance/supremeai_specialized_capabilities.md`
+  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_current_architecture.md`
+  - `docs/-01-admin's plan/03_not_implemented/master_analysis_summary.md`
+  - `docs/antigravity_brain_backup/b39381c4-db90-47ff-81fa-6d5ef3a847ff_task.md`
+  - `docs/plan/README.md`
+  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_backend_changelog.md`
+  - `docs/01-project/pnpm-workspace.yaml`
+  - `docs/01-admin-plans/modular_audits/PART_08_BACKEND_AI_AGENT_TOOLS.md`
+  - `docs/antigravity_brain_backup/86038efe-3fc7-4e32-acc2-a2386d120863_task.md`
+  - `docs/audit_reports/target_repo_secrets.md`
+  - `docs/project_management/100%_completed_tasks.md`
+  - `docs/english/01-admin-plans/DESKTOP_APP_MASTER_PLAN.md`
+  - `docs/english/03-development/pre-merge-vs-pre-commit.md`
+  - `docs/-01-admin's plan/02_partially_implemented/slicing_and_combined_ai_model.md`
+  - `docs/01-project/backend_pyproject.toml`
+  - `FEATURE_TRACKING_LOG.md`
+  - `docs/knowledge-base/01-PROJECT_OVERVIEW.md`
+  - `backend/core/permission_cache.py`
+  - `docs/antigravity_brain_backup/97232e0c-1329-4af9-b22e-0203ccd4d3c0_walkthrough.md`
+  - `docs/operations/gcp_project_setup.md`
+  - `docs/antigravity_brain_backup/55_content.md`
+  - `docs/reports/CHECK_GITHUB_PR_HISTORY.md`
+  - `docs/Enviorment vs secret key/missing_env_keys_analysis.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase8_temporal_abstraction.md`
+  - `docs/antigravity_brain_backup/fcaa7e1e-4bc0-4a14-956d-b36bae5b7de7_task.md`
+  - `docs/antigravity_brain_backup/034c7b9a-6eec-4b84-98f3-a4721b9d53a3_task.md`
+  - `docs/antigravity_brain_backup/70d5ff94-af0e-493b-b465-a54dc01e4cac_task.md`
+  - `docs/project_management/test_coverage_and_strategy.md`
+  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_task.md`
+  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_implementation_plan.md`
+  - `docs/LESSONS_LEARNED.md`
+  - `docs/english/02-architecture/AUTONOMOUS_ENTERPRISE_ARCHITECTURE.md`
+  - `docs/project_management/task_progress.md`
+  - `docs/operations/workflow_jobs.md`
+  - `docs/01-project/supremeai_tech_comparison.csv`
+  - `docs/-01-admin's plan/01_implemented/weekly_chaos_engineering.md`
+  - `docs/-01-admin's plan/02_partially_implemented/IMPLEMENTATION_PLAN.md`
+  - `docs/english/04-audit-reports/GITHUB_CI_1269_COMMIT_ANALYSIS_REPORT.md`
+  - `docs/bangla/01-admin-plans/CONFIGURATION_MANAGEMENT_IMPLEMENTATION_PLAN_BANGLA.md`
+  - `docs/-01-admin's plan/03_not_implemented/flutter_app_analysis.md`
+  - `docs/antigravity_brain_backup/fcaa7e1e-4bc0-4a14-956d-b36bae5b7de7_implementation_plan.md`
+  - `AGENTS.md`
+  - `docs/project_management/PROJECT_STATUS.md`
+  - `docs/antigravity_brain_backup/034c7b9a-6eec-4b84-98f3-a4721b9d53a3_walkthrough.md`
+  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_task.md`
+  - `docs/-01-admin's plan/01_implemented/04-07_Brain & Efficiency.md`
+  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_walkthrough_render_deployment.md`
+  - `docs/security/blink_spots_gemini.md`
+  - `docs/antigravity_brain_backup/2842d6a1-0d63-4140-8a7f-5084fd874be9_implementation_plan.md`
+  - `"docs/\340\246\211\340\246\250\340\247\215\340\246\250\340\246\244 AI \340\246\256\340\246\241\340\247\207\340\246\262 \340\246\252\340\247\215\340\246\260\340\246\225\340\246\262\340\247\215\340\246\252 \340\246\206\340\246\252\340\246\241\340\247\207\340\246\237 - V2.md"`
+  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_codebase_summary.md`
+  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_task.md`
+  - `docs/architecture/tri-pillar-distribution-strategy.md`
+  - `docs/-01-admin's plan/01_implemented/causal_reasoning_engine.md`
+  - `docs/plan/IDE_TRIO_PIPELINE.md`
+  - `docs/reports/full_modified_codebase.md`
+  - `docs/Enviorment vs secret key/env_admin_backend.md`
+  - `docs/audit_reports/PENDING_APPROVALS.md`
+  - `docs/antigravity_brain_backup/ef0236aa-332a-4ef8-bce8-9495a65ae330_implementation_plan.md`
+  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_task.md`
+  - `docs/knowledge-base/03-ARCHITECTURE_bn.md`
+  - `docs/antigravity_brain_backup/0493af3b-94a4-4487-96c8-cbcc0c1f2dc9_codebase_audit_report.md`
+  - `docs/knowledge-base/INDEX_bn.md`
+  - `docs/bangla/03-development/circuit_breaker_causes_bangla.md`
+  - `docs/Enviorment vs secret key/env_frontend_studio.md`
+  - `docs/governance/SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md`
+  - `docs/english/01-admin-plans/MASTER_DOCUMENTATION_PLAN_AND_BENEFITS.md`
+  - `docs/antigravity_brain_backup/70d5ff94-af0e-493b-b465-a54dc01e4cac_implementation_plan.md`
+  - `docs/antigravity_brain_backup/0493af3b-94a4-4487-96c8-cbcc0c1f2dc9_production_readiness_assessment.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_mlj3mlw3.md`
+  - `docs/antigravity_brain_backup/71f0e492-cf9e-4201-a574-077f40d74ec8_implementation_plan.md`
+  - `docs/antigravity_brain_backup/c744e287-8e15-42f9-b4d7-51fb658ee03a_implementation_plan.md`
+  - `docs/english/03-development/TESTING_GUIDELINES.md`
+  - `docs/antigravity_brain_backup/14dccb9d-dd23-492f-a1ba-9c2dfa377a47_implementation_plan.md`
+  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_walkthrough.md`
+  - `docs/audit_reports/AUDIT_RUN_20260807_064244.md`
+  - `docs/english/05-operations/SECURITY.md`
+  - `docs/security/VULN-SSLCOMMERZ-WEBHOOK.md`
+  - `docs/operations/deployment-overview.md`
+  - `docs/Enviorment vs secret key/environment_config_dictionary.md`
+  - `docs/antigravity_brain_backup/b5ce6526-4cc5-4403-bebb-a4cf9d938165_implementation_plan.md`
+  - `docs/developer-guide/models_visualizations/supremeai2_top50_models.csv`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_06_autonomous_networking_vpn_proxy.md`
+  - `docs/bangla/01-admin-plans/master-documentation-plan-and-benefits.md`
+  - `docs/01-admin-plans/modular_audits/PART_04_TIER8_SELF_EVOLUTION.md`
+  - `docs/english/03-development/session-summary.md`
+  - `docs/english/02-architecture/SUPREMEAI_SYSTEM_MODULES_EXPLAINED.md`
+  - `docs/antigravity_brain_backup/1eecd295-d601-4156-a898-5d7e79937c26_implementation_plan.md`
+  - `docs/developer-guide/architecture_and_design_blueprint.md`
+  - `docs/-01-admin's plan/03_not_implemented/auto_gdrive_cloud_backup_pipeline.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_hkwymhoe.md`
+  - `docs/01-admin-plans/modular_audits/PART_05_SWARM_WEBSOCKETS.md`
+  - `docs/antigravity_brain_backup/9d4d617d-5e57-422e-adb6-b4008bbdb6b2_task.md`
+  - `docs/english/02-architecture/DYNAMIC_REPO_BINDING_SPEC.md`
+  - `docs/plan/AI_MISTAKE_PREVENTION_PLAN.md`
+  - `docs/reports/github_pipelines.md`
+  - `docs/developer-guide/testing_and_qa_guide.md`
+  - `docs/-01-admin's plan/01_implemented/supremeai_repo_optimization_report.md`
+  - `docs/-01-admin's plan/03_not_implemented/admin_dashboard_analysis.md`
+  - `docs/antigravity_brain_backup/c744e287-8e15-42f9-b4d7-51fb658ee03a_walkthrough.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_15_autonomous_evolution.md`
+  - `docs/antigravity_brain_backup/7d4acdad-ec8c-4e2f-bddd-abab6f5b3b58_implementation_plan.md`
+  - `docs/operations/clean-deploy-instructions.md`
+  - `docs/knowledge-base/13-AUTHORIZATION_DOCUMENTATION_bn.md`
+  - `docs/plan/FINAL_ROADMAP.md`
+  - `docs/antigravity_brain_backup/1159_content.md`
+  - `docs/antigravity_brain_backup/56f9360b-59ae-48a5-aa90-59cfd08213e8_walkthrough.md`
+  - `docs/antigravity_brain_backup/7e871e15-f50a-4791-a92b-ad3e373da8e5_task.md`
+  - `docs/english/03-development/TEST_RELIABILITY_GUIDELINES.md`
+  - `docs/operations/CI_PIPELINE.md`
+  - `docs/plan/ACTION_PLAN.md`
+  - `docs/antigravity_brain_backup/b5646dff-095c-4934-a5ed-1f89370852c8_walkthrough.md`
+  - `docs/-01-admin's plan/02_partially_implemented/CODE_TO_DATABASE.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan.md`
+  - `REAL_TESTING_LOG.md`
+  - `docs/antigravity_brain_backup/92828e89-e5d8-4b37-b94b-9015e9352a9e_walkthrough.md`
+  - `docs/english/02-architecture/DEPLOYMENT_ARCHITECTURE.md`
+  - `docs/operations/supabase_upstash_setup.md`
+  - `docs/english/03-development/test_coverage.md`
+  - `docs/bangla/01-admin-plans/github-action-work-plan.md`
+  - `docs/01-project/FRONTEND_STUDIO_CLIENT_DEEP_DIVE.md`
+  - `docs/antigravity_brain_backup/67729078-4593-4b2f-bd1a-3c1107ff76eb_walkthrough.md`
+  - `docs/-01-admin's plan/02_partially_implemented/CODE_TO_DATABASE_PROGRESS.md`
+  - `docs/01-admin-plans/modular_audits/PART_12_TEST_SUITE_PYTEST.md`
+  - `docs/01-project/check_if_fix.py`
+  - `docs/english/03-development/reference.md`
+  - `docs/english/05-operations/ENVIRONMENT_AND_API_KEYS_REGISTRY.md`
+  - `docs/developer-guide/master_work_and_implementation_plan.md`
+  - `docs/developer-guide/environment_config_dictionary.md`
+  - `docs/knowledge-base/COMMON_TECHNICAL_ERRORS.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_14_intelligent_model_routing.md`
+  - `docs/Enviorment vs secret key/env_dotenv.md`
+  - `docs/antigravity_brain_backup/d4ca0e6f-56c2-41db-9caa-1055d0dfeccd_task.md`
+  - `docs/english/01-admin-plans/auto_fix_in_github_implementation_plan.md`
+  - `docs/governance/SUPREMEAI_CUSTOMER_DASHBOARD_PLAN.md`
+  - `docs/audit_reports/AUDIT_RUN_20260807_044231.md`
+  - `docs/governance/supremeai-ci-pipeline-diagram-bangla.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_pxklq5il.md`
+  - `docs/antigravity_brain_backup/87de227b-3d3e-403c-9ed7-c7535ef4df94_task.md`
+  - `docs/project_management/TODO.md`
+  - `docs/knowledge-base/12-genome-and-impact-graphs/LIVING_IMPACT_ANALYSIS_GRAPH.md`
+  - `docs/audit_reports/README.md`
+  - `docs/knowledge-base/08-ai-and-tools/LLM_ROUTER_AND_PROVIDER_INTELLIGENCE.md`
+  - `docs/04-ci-logs/ci_failure_run_30302440987_20260728_050927.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase7_theory_of_mind.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_1v60d70s.md`
+  - `docs/architecture/service_registry.yaml`
+  - `docs/english/03-development/CONTRIBUTING.md`
+  - `docs/project_management/VERIFICATION_REPORT.md`
+  - `docs/architecture/0002-self-evolution-security-boundaries.md`
+  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_walkthrough.md`
+  - `docs/english/03-development/limitations.md`
+  - `docs/antigravity_brain_backup/6e6fe62c-11ec-4e3e-a1ab-fb2a766fd90d_implementation_plan.md`
+  - `docs/-01-admin's plan/02_partially_implemented/advanced_system_enhancement.md`
+  - `docs/audit_reports/github_unrelated_files_audit.md`
+  - `docs/plan/mcp_server.md`
+  - `docs/-01-admin's plan/03_not_implemented/desktop_app_analysis.md`
+  - `docs/antigravity_brain_backup/f2d63430-59bf-4144-8317-e5f4d86d8c17_task.md`
+  - `docs/antigravity_brain_backup/73ea9c48-95a6-4c9d-8dbd-1aa83f5092c1_task.md`
+  - `docs/antigravity_brain_backup/9d4d617d-5e57-422e-adb6-b4008bbdb6b2_walkthrough.md`
+  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_backend_endpoint_audit.md`
+  - `docs/reports/IMPLEMENTATION_SUMMARY.md`
+  - `docs/Enviorment vs secret key/env_user_backend.md`
+  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_implementation_plan.md`
+  - `docs/antigravity_brain_backup/a2d54302-445c-4027-8818-99fe52370ca4_maintenance_analysis.md`
+  - `docs/Enviorment vs secret key/env_render_backend.md`
+  - `docs/01-admin-plans/modular_audits/PART_13_INTEGRATIONS.md`
+  - `docs/01-admin-plans/modular_audits/PART_13_CICD_DEV_WORKFLOWS.md`
+  - `docs/01-admin-plans/modular_audits/PART_12_DEVICE_TELEMETRY.md`
+  - `docs/antigravity_brain_backup/0ad9ec7c-7167-4e29-b1ea-11b49e12f2ac_implementation_plan.md`
+  - `docs/-01-admin's plan/01_implemented/dynamic_ttl_caching.md`
+  - `docs/antigravity_brain_backup/86038efe-3fc7-4e32-acc2-a2386d120863_implementation_plan.md`
+  - `docs/knowledge-base/05-MODULE_DOCUMENTATION_bn.md`
+  - `docs/audit_reports/AUDIT_RUN_20260807_044158.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_01_pipeline_optimization.md`
+  - `docs/knowledge-base/05-MODULE_DOCUMENTATION.md`
+  - `docs/english/03-development/config.md`
+  - `docs/bangla/04-audit-reports/dashboard-analysis-bangla.md`
+  - `docs/audit_reports/AUDIT_FIX_TRACKER.md`
+  - `docs/architecture/multi-platform-failover-strategy.md`
+  - `docs/developer-guide/api_endpoints_specification.md`
+  - `docs/antigravity_brain_backup/35033bfe-91f3-4a21-a6b4-861825975bee_walkthrough.md`
+  - `docs/developer-guide/cloudflare_and_bot_tokens_setup_guide.md`
+  - `docs/Enviorment vs secret key/09-ENVIRONMENT_DOCUMENTATION.md`
+  - `docs/Enviorment vs secret key/ENVIRONMENT_AND_API_KEYS_REGISTRY.md`
+  - `docs/bangla/03-development/CONFIGURATION_SYSTEM_DOCUMENTATION_BANGLA.md`
+  - `docs/reports/failure-report.md`
+  - `docs/antigravity_brain_backup/87b0244d-bd78-4d10-8918-d35876f0e5d0_task.md`
+  - `docs/english/03-development/README-CI-PARITY-HOOKS.md`
+  - `docs/english/03-development/evolution_log.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_12_automated_audit_and_cost_cutting.md`
+  - `docs/english/02-architecture/TEST_ECOSYSTEM.md`
+  - `docs/knowledge-base/03-ARCHITECTURE.md`
+  - `docs/04-ci-logs/github_failure_analysis_30257897451_20260727_190923.json`
+  - `docs/architecture/THEORY_OF_MIND_AND_DIGITAL_TWIN_DEEP_DIVE.md`
+  - `docs/antigravity_brain_backup/0493af3b-94a4-4487-96c8-cbcc0c1f2dc9_implementation_plan.md`
+  - `write_permission_cache.py`
+  - `docs/antigravity_brain_backup/125835dd-389a-4d78-a3ac-7b8dc3395564_implementation_plan.md`
+  - `docs/01-admin-plans/modular_audits/PART_11_ADMIN_DASHBOARD_UPGRADE_PLAN.md`
+  - `docs/bangla/04-audit-reports/github-actions-fix-summary.md`
+  - `docs/-01-admin's plan/01_implemented/auto_pr_pipeline.md`
+  - `docs/knowledge-base/11-API_DOCUMENTATION_bn.md`
+  - `docs/antigravity_brain_backup/c2563e75-c370-4d27-a244-78cbe00bcf36_implementation_plan.md`
+  - `docs/antigravity_brain_backup/c6d81df2-0de6-47cc-aad7-9f8cf1c73997_implementation_plan.md`
+  - `docs/antigravity_brain_backup/c744e287-8e15-42f9-b4d7-51fb658ee03a_task.md`
+  - `docs/english/02-architecture/PROJECT_STRUCTURE.md`
+  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_blindspot_analysis.md`
+  - `docs/antigravity_brain_backup/70d5ff94-af0e-493b-b465-a54dc01e4cac_walkthrough.md`
+  - `docs/antigravity_brain_backup/f2d63430-59bf-4144-8317-e5f4d86d8c17_implementation_plan.md`
+  - `docs/english/04-audit-reports/TECH_DEBT.md`
+  - `docs/Enviorment vs secret key/env_github.md`
+  - `docs/architecture/gcp-killer-stack.md`
+  - `docs/english/02-architecture/SUPREMEAI_MASTER_BLUEPRINT.md`
+  - `docs/english/04-audit-reports/PHASE5_CACHING_PERFORMANCE_AUDIT.md`
+  - `docs/reports/SupremeAI_Resource_Sites_Analysis_Bangla.md`
+  - `docs/developer-guide/setup_and_installation_guide.md`
+  - `docs/plan/supremeai_documentation_plan.md`
+  - `docs/antigravity_brain_backup/d28bf3f5-10a3-46f1-9bb1-4442a82434e4_dependency_audit_plan.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_03_hitl_approval_workflow.md`
+  - `docs/04-ci-logs/ci_failure_run_31697811490_20260813_182623.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_07_sandboxed_testing_logic.md`
+  - `docs/01-admin-plans/modular_audits/PART_06_P2P_COMPUTE_MESH.md`
+  - `docs/bangla/04-audit-reports/comprehensive-project-audit-checklist.md`
+  - `docs/knowledge-base/02-architecture/SYSTEM_GENOME_AND_BLUEPRINT.md`
+  - `docs/bangla/04-audit-reports/SYSTEM_IMPROVEMENT_ANALYSIS_BANGLA.md`
+  - `docs/knowledge-base/10-DATABASE_DOCUMENTATION.md`
+  - `docs/plan/PHASE2_BACKEND_REFACTOR_PLAN.md`
+  - `docs/-01-admin's plan/02_partially_implemented/plan_file_path.md`
+  - `docs/-01-admin's plan/03_not_implemented/dashboard_redesign_plan.md`
+  - `docs/english/02-architecture/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT.md`
+  - `docs/audit_reports/AUDIT_RUN_20260807_063939.md`
+  - `docs/knowledge-base/02-PROJECT_VISION.md`
+  - `docs/antigravity_brain_backup/b5646dff-095c-4934-a5ed-1f89370852c8_implementation_plan.md`
+  - `docs/english/01-admin-plans/TODO_TRACKER.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_iibm59nn.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_13_snapshot_learning_scout_scholar.md`
+  - `docs/antigravity_brain_backup/26cc8f97-c4c0-4468-a8a1-3e5fed92e66e_implementation_plan.md`
+  - `docs/operations/frontend-deployment.md`
+  - `docs/Enviorment vs secret key/API-key verification in github.md`
+  - `docs/bangla/01-admin-plans/final-project-summary.md`
+  - `docs/plan/intelligent_architect.md`
+  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_refactoring_round2.md`
+  - `docs/english/03-development/local-changes.md`
+  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_maintenance_analysis.md`
+  - `docs/governance/.antigravityrules`
+  - `docs/antigravity_brain_backup/d4ca0e6f-56c2-41db-9caa-1055d0dfeccd_implementation_plan.md`
+  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_task.md`
+  - `docs/architecture/SYSTEM_DIAGRAMS_AND_FLOWS.md`
+  - `"docs/\340\246\211\340\246\250\340\247\215\340\246\250\340\246\244 AI \340\246\256\340\246\241\340\247\207\340\246\262 \340\246\252\340\247\215\340\246\260\340\246\225\340\246\262\340\247\215\340\246\252 \340\246\206\340\246\252\340\246\241\340\247\207\340\246\237.md"`
+  - `docs/plan/03_NOT_IMPLEMENTED_MASTER_PLAN.md`
+  - `docs/-01-admin's plan/03_not_implemented/phase3_continual_learning_ewc.md`
+  - `docs/antigravity_brain_backup/c6d81df2-0de6-47cc-aad7-9f8cf1c73997_task.md`
+  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_task.md`
+  - `docs/Enviorment vs secret key/env_render_admin.md`
+  - `docs/-01-admin's plan/01_implemented/telegram_interactive_webhook.md`
+  - `docs/antigravity_brain_backup/35033bfe-91f3-4a21-a6b4-861825975bee_task.md`
+  - `docs/-01-admin's plan/03_not_implemented/user_dashboard_analysis.md`
+  - `docs/knowledge-base/04-FOLDER_STRUCTURE.md`
+  - `docs/antigravity_brain_backup/9d4d617d-5e57-422e-adb6-b4008bbdb6b2_implementation_plan.md`
+  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_walkthrough.md`
   - `docs/audit_reports/AUDIT_RUN_20260807_063839.md`
+  - `docs/knowledge-base/11-API_DOCUMENTATION.md`
+  - `docs/Enviorment vs secret key/env_background_worker.md`
+  - `docs/governance/rerun-checklist.md`
+  - `docs/Enviorment vs secret key/admin_backend_env_variables.md`
+  - `docs/01-project/Learn from Human Fixes.yml`
+  - `docs/antigravity_brain_backup/d28bf3f5-10a3-46f1-9bb1-4442a82434e4_smart_ci_report.md`
+  - `docs/project_management/FEATURE_STATUS.md`
+  - `docs/Enviorment vs secret key/env_cloudflare.md`
+  - `docs/01-admin-plans/modular_audits/PART_11_PACKAGES_SHARED_TYPES.md`
+  - `docs/developer-guide/github_integration_and_deployment.md`
+  - `docs/antigravity_brain_backup/b5ce6526-4cc5-4403-bebb-a4cf9d938165_task.md`
+  - `docs/antigravity_brain_backup/c6d81df2-0de6-47cc-aad7-9f8cf1c73997_walkthrough.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_02_user_profiling_and_goal_alignment.md`
+  - `docs/Enviorment vs secret key/env_llm_providers.md`
+  - `docs/Enviorment vs secret key/env_firebase_gcp.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_8opcfldj.md`
+  - `docs/antigravity_brain_backup/1e1dd5f6-a0c4-4496-9afe-05ac2b35f242_walkthrough.md`
+  - `docs/01-admin-plans/modular_audits/PART_02_SECURITY_GUARDRAILS.md`
+  - `docs/project_management/installed_dependency_in_supremeai.md`
+  - `docs/architecture/DEPLOYMENT_STRATEGY.md`
+  - `docs/english/02-architecture/AI_AGENT_SYSTEM_PROMPT.md`
+  - `docs/english/01-admin-plans/PROJECT_STATUS.md`
+  - `docs/knowledge-base/01-PROJECT_OVERVIEW_bn.md`
+  - `docs/knowledge-base/10-DATABASE_DOCUMENTATION_bn.md`
+  - `docs/knowledge-base/12-AUTHENTICATION_DOCUMENTATION.md`
+  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_analysis_report.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_09_skill_store_and_autoconfig.md`
+  - `docs/antigravity_brain_backup/73ea9c48-95a6-4c9d-8dbd-1aa83f5092c1_implementation_plan.md`
+  - `docs/antigravity_brain_backup/7d4acdad-ec8c-4e2f-bddd-abab6f5b3b58_walkthrough.md`
+  - `docs/-01-admin's plan/03_not_implemented/IMPLEMENTATION_PLAN.md`
+  - `docs/01-project/task_request.md`
+  - `docs/01-admin-plans/modular_audits/PART_14_CLOUD_INFRASTRUCTURE.md`
+  - `docs/01-project/package.json`
+  - `docs/bangla/01-admin-plans/CONFIGURATION_IMPROVEMENT_SUMMARY_BANGLA.md`
+  - `docs/antigravity_brain_backup/1e1dd5f6-a0c4-4496-9afe-05ac2b35f242_implementation_plan.md`
+  - `docs/-01-admin's plan/03_not_implemented/supremeai_dashboard_redesign_analysis.md`
+  - `docs/-01-admin's plan/01_implemented/01-03_foundation_security.md`
+  - `docs/01-project/create_finetune_pair.py`
+  - `docs/english/05-operations/TROUBLESHOOTING.md`
+  - `docs/Enviorment vs secret key/env_github_actions.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_08_universal_byoc_hub.md`
+  - `docs/antigravity_brain_backup/055ba1eb-0adc-4167-a4b8-f8c19beeb835_walkthrough.md`
+  - `docs/audit_reports/ACTIVE_CLAIMS.md`
+  - `docs/Enviorment vs secret key/env_infisical.md`
+  - `docs/api/openapi-spec.yaml`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_04_experience_database.md`
+  - `docs/developer-guide/external_services_directory.md`
+  - `docs/architecture/PROJECT_MODULES_COMPLETE_INVENTORY.md`
+  - `docs/english/01-admin-plans/CHANGELOG.md`
+  - `docs/antigravity_brain_backup/49e261d4-e123-45d1-923b-5b4afed2fbf0_walkthrough.md`
+  - `docs/developer-guide/UPDATE_PLAN_ARCHIVE.md`
+  - `docs/antigravity_brain_backup/9d65cf44-0c9e-44ac-9fbf-db8b1f361018_admin_plan_analysis.md`
+  - `docs/Enviorment vs secret key/env_vercel_netlify.md`
+  - `docs/antigravity_brain_backup/b5ce6526-4cc5-4403-bebb-a4cf9d938165_walkthrough.md`
+  - `docs/antigravity_brain_backup/browser_scratchpad_iayte7f7.md`
+  - `docs/04-ci-logs/ci_failure_run_30257897451_20260727_190732.md`
+  - `.agents/AGENTS.md`
+  - `CHECKPOINT.md`
+  - `docs/english/03-development/create_best_ai_model.md`
+  - `docs/antigravity_brain_backup/b39381c4-db90-47ff-81fa-6d5ef3a847ff_implementation_plan.md`
+  - `docs/antigravity_brain_backup/27c0e9ee-595d-4960-844c-cca88ba17c9f_refactoring_analysis.md`
+  - `docs/antigravity_brain_backup/6982f44d-e5fc-49e6-9cd4-483b34ab1af6_task.md`
+  - `docs/01-admin-plans/modular_audits/PART_10_FLUTTER_MOBILE_APP.md`
+  - `docs/audit_reports/codebase_analysis_report.md`
+  - `docs/Enviorment vs secret key/env_redis.md`
+  - `docs/-01-admin's plan/03_not_implemented/headless,zro cost terminal base ai agent.md`
+  - `"docs/\340\246\211\340\246\250\340\247\215\340\246\250\340\246\244 AI \340\246\256\340\246\241\340\247\207\340\246\262 \340\246\252\340\247\215\340\246\260\340\246\225\340\246\262\340\247\215\340\246\252 \340\246\223 \340\246\227\340\246\254\340\247\207\340\246\267\340\246\243\340\246\276 \340\246\252\340\247\215\340\246\260\340\246\244\340\246\277\340\246\254\340\247\207\340\246\246\340\246\250 - \340\246\270\340\246\256\340\246\250\340\247\215\340\246\254\340\246\277\340\246\244 \340\246\270\340\246\202\340\246\270\340\247\215\340\246\225\340\246\260\340\246\243.md"`
+  - `docs/english/06-api/api.md`
+  - `docs/antigravity_brain_backup/1e1dd5f6-a0c4-4496-9afe-05ac2b35f242_task.md`
+  - `docs/antigravity_brain_backup/7e871e15-f50a-4791-a92b-ad3e373da8e5_implementation_plan.md`
+  - `docs/plan/01_IMPLEMENTED_MASTER_PLAN.md`
+  - `docs/antigravity_brain_backup/e29e6522-a616-40f3-90bf-cb8784a3856b_implementation_plan.md`
+  - `docs/plan/discovering and handling errors.md`
+  - `docs/-01-admin's plan/03_not_implemented/updated_implementation_plan.md`
+  - `docs/antigravity_brain_backup/6982f44d-e5fc-49e6-9cd4-483b34ab1af6_implementation_plan.md`
+  - `docs/antigravity_brain_backup/d4ca0e6f-56c2-41db-9caa-1055d0dfeccd_walkthrough.md`
+  - `docs/english/04-audit-reports/PHASE6_API_MIDDLEWARE_AUDIT.md`
+  - `docs/knowledge-base/12-AUTHENTICATION_DOCUMENTATION_bn.md`
+  - `docs/english/03-development/README.md`
+  - `docs/architecture/service_topology.yml`
+  - `docs/antigravity_brain_backup/8fcf30ff-5180-42cb-bdba-ff8c05f6479d_task.md`
+  - `docs/knowledge-base/INDEX.md`
+  - `docs/reports/implementation_plan.md`
+  - `docs/antigravity_brain_backup/35033bfe-91f3-4a21-a6b4-861825975bee_implementation_plan.md`
+  - `docs/antigravity_brain_backup/73ea9c48-95a6-4c9d-8dbd-1aa83f5092c1_walkthrough.md`
+  - `docs/architecture/DFD-001-new-user-signup.md`
+  - `docs/Enviorment vs secret key/INFISICAL_HYBRID_MIGRATION_PLAN.md`
+  - `docs/knowledge-base/FREE_AI_PROVIDER_APIS_LIST.md`
+  - `docs/architecture/PRODUCTION_ENDPOINT_MAPPING.md`
+  - `docs/project_management/partially_completed_tasks.md`
+  - `docs/english/03-development/install.md`
+  - `docs/english/05-operations/FREE_TIER_LLM_PROVIDERS.md`
+  - `docs/governance/test-environment.md`
+  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_duplicate_analysis.md`
+  - `docs/antigravity_brain_backup/87b0244d-bd78-4d10-8918-d35876f0e5d0_supported_ai_list.md`
+  - `docs/developer-guide/models_visualizations/supremeai2_top50_models_visual.png`
+  - `docs/antigravity_brain_backup/034c7b9a-6eec-4b84-98f3-a4721b9d53a3_implementation_plan.md`
+  - `docs/antigravity_brain_backup/e2cb114a-12fd-442b-8c8c-3fcf1f244621_implementation_plan.md`
+  - `docs/04-ci-logs/github_failure_analysis_30516030873_20260731_015712.json`
+  - `docs/antigravity_brain_backup/efc80791-4f51-407c-b75d-97db1f431bb0_task.md`
+  - `docs/01-admin-plans/modular_audits/PART_01_LLM_GATEWAY_ROUTER.md`
+  - `docs/reports/project_gap_analysis.md`
+  - `docs/Enviorment vs secret key/ENV_KEY_MATRIX_VERIFIED.md`
+  - `docs/01-project/cloud_postgres_store.py`
+  - `docs/-01-admin's plan/03_not_implemented/autonomous-ai-engineer-dashboard-spec.md`
+  - `docs/reports/ci_run_comparison.md`
+  - `docs/-01-admin's plan/01_implemented/15_step_plan_parts/step_10_resource_bridge_p2p_sharing.md`
+  - `docs/governance/performance-benchmark.md`
+  - `docs/bangla/03-development/SUPREMEAI_2_0_COMPLETE_SYSTEM_DOCUMENT_BANGLA.md`
+  - `docs/-01-admin's plan/01_implemented/07-10_Scalability & BYOC.md`
+  - `docs/-01-admin's plan/03_not_implemented/headless_zero_cost_terminal_agent.md`
+  - `docs/antigravity_brain_backup/005f9454-a185-4177-a9b0-6823dce6e3b8_implementation_plan.md`
+  - `docs/governance/admin_rules_and_guidelines.md`
+  - `docs/english/01-admin-plans/admin_dashboard_upgrade_plan.md`
+  - `docs/antigravity_brain_backup/7178e0e2-e9d4-4546-9c9f-9435858be3ce_implementation_plan.md`
+  - `docs/antigravity_brain_backup/1173_content.md`
+  - `docs/bangla/04-audit-reports/desktop-app-audit-report.md`
+  - `docs/operations/PRODUCTION_READINESS_GUIDE.md`
+  - `docs/security/threat-model.md`
+  - `docs/antigravity_brain_backup/d28bf3f5-10a3-46f1-9bb1-4442a82434e4_GITHUB_CI_1269_COMMIT_ANALYSIS_REPORT.md`
+  - `docs/antigravity_brain_backup/67729078-4593-4b2f-bd1a-3c1107ff76eb_task.md`
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)

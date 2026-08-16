@@ -5,15 +5,11 @@ permission_cache.py - Tiered Permission Cache for Pillar 0
 
 from __future__ import annotations
 
-import asyncio
-import json
 import threading
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
-
-from loguru import logger
 
 _L1_TTL_SECONDS: int = 30
 _L2_TTL_SECONDS: int = 300
