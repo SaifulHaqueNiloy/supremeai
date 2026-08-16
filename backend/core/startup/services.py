@@ -1,5 +1,4 @@
 import asyncio
-from typing import Optional
 
 from loguru import logger
 from core.cache.redis_manager import redis_manager
@@ -45,7 +44,7 @@ async def initialize_independent_services(app):
                 app.state.db_pool = None
             else:
                 # Helper function to initialize and health check a specific DB pool
-                async def _try_connect_and_check(db_url: str) -> Optional[PgBouncerConnectionPool]:
+                async def _try_connect_and_check(db_url: str) -> PgBouncerConnectionPool | None:
                     await init_db_pool(db_url)
                     pool = await get_db_pool()
                     if pool:
