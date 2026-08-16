@@ -1,4 +1,0 @@
-- `[ ]` Update `utils/api.ts` to support multiple backends and backend switching.
-- `[ ]` Update `services/apiClient.ts` to intercept 50x errors, switch backend, and retry.
-- `[ ]` Create `services/heartbeat.ts` for Render keep-alive pings.
-- `[ ]` Integrate heartbeat startup in `App.tsx` or `main.tsx`.
