@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import secrets
+import ssl
 from contextlib import asynccontextmanager
 
 try:
@@ -33,6 +34,20 @@ def _role_pool_sizes() -> tuple[int, int]:
     return _ROLE_POOL_BRACKETS.get(role, _ROLE_POOL_BRACKETS["user"])
 
 
+def _supabase_ssl_context() -> ssl.SSLContext:
+    """Supabase (PgBouncer pooler 6543 / direct 5432) requires TLS for every connection.
+
+    asyncpg does not enable SSL by default, so we build an explicit context that encrypts
+    the session but does not enforce CA verification — equivalent to psycopg2's
+    ``sslmode=require`` (which is what the working bootstrap/schema path already uses).
+    This keeps the connection working across environments whose CA bundles differ.
+    """
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+
 class PgBouncerConnectionPool:
     def __init__(self, dsn: str):
         self._dsn = dsn
@@ -46,6 +61,11 @@ class PgBouncerConnectionPool:
             min_size=min_size,
             max_size=max_size,
             max_inactive_connection_lifetime=300,
+            # বাংলা মন্তব্য: Supabase (PgBouncer pooler 6543 এবং direct 5432 — উভয়ই) কানেকশনের
+            # জন্য TLS/SSL বাধ্যতামূলক। asyncpg ডিফল্টভাবে SSL চালু করে না, তাই স্পষ্টভাবে SSL কনটেক্সট
+            # দিতে হবে — নাহলে 'db: down' / PRODUCTION DB UNAVAILABLE হবে। psycopg2 পাথের সাথে সামঞ্জস্য
+            # রেখে sslmode=require-এর সমতুল্য কনটেক্সট ব্যবহার করা হয়েছে (এনক্রিপ্ট করে, CA ভেরিফাই করে না)।
+            ssl=_supabase_ssl_context(),
             # বাংলা মন্তব্য: PgBouncer (transaction/statement mode) এর সাথে সামঞ্জস্যের জন্য
             # statement_cache_size=0 এবং ইউনিক prepared statement নাম — 'DuplicatePreparedStatementError' প্রতিরোধ করে।
             statement_cache_size=0,
