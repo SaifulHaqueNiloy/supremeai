@@ -182,8 +182,6 @@ export function AdminShell() {
       handleAdminOtpVerify={handleAdminOtpVerify}
       handleAdminLogout={handleAdminLogout}
       actionStatus={actionStatus}
-      gcpHealth={null}
-      cloudStats={null}
       skillQuery={skillQuery}
       setSkillQuery={setSkillQuery}
       skills={skillsList}

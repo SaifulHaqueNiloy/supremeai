@@ -80,7 +80,7 @@ Command Palette-এ থাকা কিন্তু sidebar-এ নেই এম
 ### C. দ্রুত ফিক্স (low-effort, high-impact)
 1. `AdminShell` থেকে `gcpHealth`/`cloudStats` null props সরানো (dead code)।
 2. Dashboard-এর "Quick Action" বাটনগুলোকে সত্যি backend call-এ বাঁধা: "Restart Services" → `POST /admin-api/emergency-deploy`, "Security Scan" → `POST` trigger + refetch `/security-scan`, "Generate Report" → `/admin-api/reports` export। না হলে "Demo only" ব্যাজ দেওয়া।
-3. `CloudOrchestrator` Resource Utilization কে `/admin-api/metrics` (`cpu_percent`, `memory_percent`) দিয়ে বাঁধা।
+3. `CloudOrchestrator` Resource Utilization বর্তমানে `/admin-api/metrics` দিয়ে বাঁধা — কিন্তু backend ঐ endpoint-এ `cpu_percent`/`memory_percent` দেয় না (শুধু latency/RPS/cost), তাই frontend request throughput (`requests_per_second`) থেকে derived % দেখায় (live, কিন্তু সত্যি system CPU/Mem নয়)। সত্যি system CPU/Mem পেতে backend `/admin-api/metrics` এ এই ফিল্ডগুলো যোগ করতে হবে (P2)।
 4. Command Palette-এ যেসব tab backend ছাড়াই মক, সেগুলোকে "Beta / Not connected" ব্যাজ দেওয়া যাতে ইউজার বুঝে।
 
 ### D. Build required (backend নেই)

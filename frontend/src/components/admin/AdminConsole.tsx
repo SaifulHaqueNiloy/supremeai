@@ -1,4 +1,4 @@
-import type { ChatMessage, Skill, Checkpoint, CloudStats, GcpHealth, AdminSubTab, AdminUser, HealthMap } from '../../types';
+import type { ChatMessage, Skill, Checkpoint, AdminSubTab, AdminUser, HealthMap } from '../../types';
 import { LoginView } from './AdminLogin';
 import { AuthenticatedView } from './AdminAuthenticated';
 import DashboardErrorBoundary from './DashboardErrorBoundary';
@@ -16,8 +16,6 @@ interface AdminConsoleProps {
   handleAdminOtpVerify: () => void;
   handleAdminLogout: () => void;
   actionStatus: string;
-  gcpHealth: GcpHealth | null;
-  cloudStats: CloudStats | null;
   skillQuery: string;
   setSkillQuery: (val: string) => void;
   skills: Skill[];

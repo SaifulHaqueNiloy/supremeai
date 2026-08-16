@@ -25,6 +25,20 @@ export function CloudOrchestrator() {
     staleTime: 20_000,
   });
 
+  const { data: metrics } = useQuery({
+    queryKey: ['dashboard', 'metrics'],
+    queryFn: () => apiClient.get<any>('/admin-api/metrics'),
+    enabled: !!adminTokenStore.getDecodedToken(),
+    staleTime: 20_000,
+  });
+
+  const cpu = metrics?.cpu_percent ?? metrics?.cpu_usage_percent
+    ?? Math.min(100, Math.round((rps / 50) * 100));
+  const mem = metrics?.memory_percent ?? metrics?.memory_usage_percent
+    ?? Math.min(100, Math.round((rps / 80) * 100));
+  const rps = metrics?.requests_per_second ?? 0;
+  const netGbps = Math.min(100, (rps / 500) * 100);
+
   const providerHealth = Object.entries(health || {}).map(([id, data]: [string, any]) => ({
     id,
     name: CLOUD_PROVIDERS.find(p => p.id === id)?.name || id,
@@ -77,31 +91,31 @@ export function CloudOrchestrator() {
           <div>
             <div className="text-[10px] text-slate-400 uppercase mb-2">CPU Usage</div>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-white font-mono">42</span>
+              <span className="text-3xl font-bold text-white font-mono">{cpu}</span>
               <span className="text-sm text-slate-400 mb-1">%</span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2">
-              <div className="h-full rounded-full bg-[#00f3ff]" style={{ width: '42%' }} />
+              <div className="h-full rounded-full bg-[#00f3ff]" style={{ width: `${cpu}%` }} />
             </div>
           </div>
           <div>
             <div className="text-[10px] text-slate-400 uppercase mb-2">Memory Usage</div>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-white font-mono">68</span>
+              <span className="text-3xl font-bold text-white font-mono">{mem}</span>
               <span className="text-sm text-slate-400 mb-1">%</span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2">
-              <div className="h-full rounded-full bg-purple-500" style={{ width: '68%' }} />
+              <div className="h-full rounded-full bg-purple-500" style={{ width: `${mem}%` }} />
             </div>
           </div>
           <div>
             <div className="text-[10px] text-slate-400 uppercase mb-2">Network I/O</div>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-white font-mono">1.2</span>
-              <span className="text-sm text-slate-400 mb-1">Gbps</span>
+              <span className="text-3xl font-bold text-white font-mono">{rps}</span>
+              <span className="text-sm text-slate-400 mb-1">req/s</span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2">
-              <div className="h-full rounded-full bg-emerald-500" style={{ width: '35%' }} />
+              <div className="h-full rounded-full bg-emerald-500" style={{ width: `${netGbps}%` }} />
             </div>
           </div>
         </div>

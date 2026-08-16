@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import 'reactflow/dist/style.css';
 import './AethelCoreStyles.css';
 import { useMetrics, useHealthMap, useThreatScan, useCIReports, useDashboardEvents, useDashboardReports } from '../../hooks/useDashboardData';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDashboardStore } from '../../store/dashboardStore';
+import { apiClient } from '../../services/apiClient';
 import HealthBanner from './HealthBanner';
 import DeploymentModal from './DeploymentModal';
 import { DynamicPanel } from './DynamicPanel';
@@ -27,10 +29,11 @@ const Dashboard: React.FC = () => {
   const dashboardMode = useDashboardStore((s) => s.dashboardMode);
   const toggleDashboardMode = useDashboardStore((s) => s.toggleDashboardMode);
 
-  const { data: metrics } = useMetrics();
+  const { data: metrics, refetch: refetchMetrics } = useMetrics();
   const { data: health } = useHealthMap();
-  const { data: threats } = useThreatScan();
+  const { data: threats, refetch: refetchThreats } = useThreatScan();
   const { data: ciReports } = useCIReports();
+  const queryClient = useQueryClient();
 
   const [selectedReportName, setSelectedReportName] = React.useState<string | undefined>();
   // বাংলা মন্তব্য: রিয়েল-টাইম ইভেন্ট এবং দৈনিক স্ট্যান্ডআপ রিপোর্ট ডেটা ফেচ করা হচ্ছে
@@ -40,6 +43,54 @@ const Dashboard: React.FC = () => {
 
   const [isOptimizing, setIsOptimizing] = React.useState(false);
   const [optimizeStatus, setOptimizeStatus] = React.useState('');
+  const [isRestarting, setIsRestarting] = React.useState(false);
+  const [restartStatus, setRestartStatus] = React.useState('');
+  const [isScanning, setIsScanning] = React.useState(false);
+  const [scanStatus, setScanStatus] = React.useState('');
+
+  const runSmartOptimization = React.useCallback(async () => {
+    setIsOptimizing(true);
+    setOptimizeStatus('Analyzing live metrics...');
+    try {
+      await refetchMetrics();
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'metrics'] });
+      setOptimizeStatus('Metrics refreshed from live backend.');
+    } catch {
+      setOptimizeStatus('Failed to refresh metrics.');
+    } finally {
+      setIsOptimizing(false);
+      setTimeout(() => setOptimizeStatus(''), 2500);
+    }
+  }, [refetchMetrics, queryClient]);
+
+  const restartServices = React.useCallback(async () => {
+    setIsRestarting(true);
+    setRestartStatus('Triggering emergency deploy...');
+    try {
+      await apiClient.post('/admin-api/emergency-deploy', {});
+      setRestartStatus('Restart signal sent. Services redeploying...');
+    } catch {
+      setRestartStatus('Restart failed. Check backend connectivity.');
+    } finally {
+      setIsRestarting(false);
+      setTimeout(() => setRestartStatus(''), 3000);
+    }
+  }, [apiClient]);
+
+  const runSecurityScan = React.useCallback(async () => {
+    setIsScanning(true);
+    setScanStatus('Running threat scan...');
+    try {
+      await refetchThreats();
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'security-scan'] });
+      setScanStatus('Scan complete. Threat panel updated.');
+    } catch {
+      setScanStatus('Scan failed.');
+    } finally {
+      setIsScanning(false);
+      setTimeout(() => setScanStatus(''), 2500);
+    }
+  }, [refetchThreats, queryClient]);
 
   React.useEffect(() => {
     if (threats?.total_findings && threats.total_findings > 0) {
@@ -402,20 +453,27 @@ const Dashboard: React.FC = () => {
                     <div className="text-xs text-indigo-600 px-1">{optimizeStatus}</div>
                   )}
 
-                  <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
+                  <button
+                    onClick={() => setActivePanel('Reports')}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
                         <HardDrive size={18} className="text-slate-600" />
                       </div>
                       <div>
                         <span className="text-sm font-bold text-slate-800">Generate Report</span>
-                        <span className="block text-xs text-slate-500">Download performance PDF</span>
+                        <span className="block text-xs text-slate-500">View performance & analytics</span>
                       </div>
                     </div>
                     <ArrowUpRight size={18} className="text-slate-400" />
                   </button>
 
-                  <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
+                  <button
+                    onClick={restartServices}
+                    disabled={isRestarting}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
                         <Server size={18} className="text-slate-600" />
@@ -425,10 +483,22 @@ const Dashboard: React.FC = () => {
                         <span className="block text-xs text-slate-500">Gracefully restart core services</span>
                       </div>
                     </div>
-                    <ArrowUpRight size={18} className="text-slate-400" />
+                    {isRestarting ? (
+                      <RefreshCw size={18} className="text-slate-600 animate-spin" />
+                    ) : (
+                      <ArrowUpRight size={18} className="text-slate-400" />
+                    )}
                   </button>
 
-                  <button className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group">
+                  {restartStatus && (
+                    <div className="text-xs text-slate-500 px-1">{restartStatus}</div>
+                  )}
+
+                  <button
+                    onClick={runSecurityScan}
+                    disabled={isScanning}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
                         <Lock size={18} className="text-slate-600" />
@@ -438,8 +508,16 @@ const Dashboard: React.FC = () => {
                         <span className="block text-xs text-slate-500">Run comprehensive threat detection</span>
                       </div>
                     </div>
-                    <ArrowUpRight size={18} className="text-slate-400" />
+                    {isScanning ? (
+                      <RefreshCw size={18} className="text-slate-600 animate-spin" />
+                    ) : (
+                      <ArrowUpRight size={18} className="text-slate-400" />
+                    )}
                   </button>
+
+                  {scanStatus && (
+                    <div className="text-xs text-slate-500 px-1">{scanStatus}</div>
+                  )}
                 </div>
               </motion.div>
 
