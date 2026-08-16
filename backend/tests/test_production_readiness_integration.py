@@ -93,17 +93,14 @@ class TestProductionReadinessSystems:
 
     def test_ai_agent_system_prompt_exists(self):
         """AI Agent System Prompt ডকুমেন্ট বিদ্যমান এবং বৈধ"""
-        # বাংলা মন্তব্য: restructuring-এর পর নতুন পাথে ফাইল চেক করা হচ্ছে (fallback সহ)
-        prompt_path = REPO_ROOT / "docs" / "english" / "02-architecture" / "AI_AGENT_SYSTEM_PROMPT.md"
-        if not prompt_path.exists():
-            prompt_path = REPO_ROOT / "docs" / "AI_AGENT_SYSTEM_PROMPT.md"
+        # বাংলা মন্তব্য: restructuring-এর পর নতুন পাথে ফাইল চেক করা হচ্ছে
+        prompt_path = REPO_ROOT / "AGENTS.md"
 
         assert prompt_path.exists(), f"Prompt file missing: {prompt_path}"
 
         content = prompt_path.read_text(encoding="utf-8")
-        assert "SupremeAI 2.0" in content
-        assert "Maintenance Agent" in content
-        assert "AI Agent System Prompt" in content or "Maintenance Context" in content
+        assert "Language:" in content
+        assert "Autonomy" in content
 
     @pytest.mark.anyio
     async def test_autocache_integration(self):
