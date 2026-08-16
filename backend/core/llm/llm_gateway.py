@@ -29,6 +29,7 @@ from ..messaging.event_bus import (  # Fixed import path - using relative import
     error_event_bus,
 )
 from ..prompt_handler import (
+    compress_prompt_messages,
     normalize_prompt,  # Fixed import path - using relative import
 )
 from ..resilience.circuit_breaker import (
@@ -331,6 +332,11 @@ class LLMGateway:
             except Exception as tracker_exc:
                 logger.warning(f"[LLMGateway] Could not update tracker for rate limit: {tracker_exc}")
 
+            # Fail-fast OmniRoute logic: If pause is too long, skip to next model
+            if pause_seconds > 3:
+                logger.warning(f"[LLMGateway] Rate limit pause ({pause_seconds}s) is too long for {current_model}. Skipping to next model in combo.")
+                return False
+
             # Apply jittered backoff to avoid thundering herd
             jitter = random.uniform(0.1, 0.3) * pause_seconds  # Add 10-30% jitter
             backoff_time = pause_seconds + jitter
@@ -426,6 +432,9 @@ class LLMGateway:
             messages_payload = prompt
         else:
             messages_payload = [{"role": "user", "content": prompt}]
+
+        # Apply OmniRoute Caveman-lite compression to save tokens
+        messages_payload = compress_prompt_messages(messages_payload)
 
         if stream:
             return self._stream_completion(messages_payload, call_chain, timeout)

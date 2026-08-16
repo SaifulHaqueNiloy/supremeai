@@ -12,11 +12,15 @@
 এই ডকুমেন্টটি SupremeAI 2.0-এর "Hybrid Secret Architecture"-এর নির্দেশিকা — কোন কি (key) কোথায় থাকে তার প্রেক্ষাপট এখানে ব্যাখ্যা করা হলো।
 
 ## 🏗️ মূল আর্কিটেকচার (Hybrid Approach)
-সিকিউরিটি, স্কেলাবিলিটি এবং মেইনটেইনবিলিটির কথা মাথায় রেখে প্রোজেক্টের সিক্রেটগুলোকে **দুটি ভাগে** ভাগ করা হয়েছে:
+সিকিউরিটি, স্কেলাবিলিটি এবং মেইনটেইনবিলিটির কথা মাথায় রেখে প্রোজেক্টের সিক্রেটগুলোকে এখন **চারটি স্তরে (Four Tiers)** ভাগ করা হয়েছে:
 
-1. **Infisical Vault (Central Truth):** সমস্ত API Keys, Database URLs, Tokens, Webhook Secrets ইত্যাদি যা এনভায়রনমেন্ট ভেদে পরিবর্তন হয় না। 
-2. **Environment-Specific `.env` (Local to Service):** শুধুমাত্র সেই সব ভ্যালু যেগুলো সার্ভিস-স্পেসিফিক বা বুটস্ট্র্যাপ করার জন্য অপরিহার্য।
-3. **GitHub Actions Repo Secrets Sync:** প্রাইমারি ডেভেলপার রেপো (`SaifulHaqueNiloy/supremeai`) এবং প্রোডাকশন মীরর রেপো (`paykaribazaronline/supremeai`) উভয়েই প্রয়োজনীয় ২০টি বুটস্ট্র্যাপ ও ডিপ্লয়মেন্ট সিক্রেট (Infisical Token, Render API Key, Vercel Configs) সিঙ্ক্রোনাইজ করা আছে।
+1. **Firebase Primary Vault (Admin Truth):** অ্যাডমিন প্যানেল এবং ফুল এক্সেসের জন্য সমস্ত সিক্রেট Firebase Firestore (`primary_vault/secrets`) এ এনক্রিপ্টেড অবস্থায় রাখা হয়। এটি সেন্ট্রাল ব্যাকআপ হিসেবেও কাজ করে।
+2. **Infisical Vault (App Truth):** সমস্ত API Keys, Database URLs, Tokens, Webhook Secrets ইত্যাদি যা এনভায়রনমেন্ট ভেদে পরিবর্তন হয় না। (Dual DB-এর জন্য Supabase এবং Neon উভয়ের ক্রেডেনশিয়াল এখানে থাকে)।
+3. **Environment-Specific `.env` (Local to Service):** শুধুমাত্র সেই সব ভ্যালু যেগুলো সার্ভিস-স্পেসিফিক বা বুটস্ট্র্যাপ করার জন্য অপরিহার্য।
+4. **GitHub Actions Repo Secrets Sync:** CI/CD পাইপলাইনের জন্য প্রয়োজনীয় বুটস্ট্র্যাপ ও ডিপ্লয়মেন্ট সিক্রেট (Infisical Token, Render API Key, Vercel Configs) প্রাইমারি এবং মীরর রেপোতে সিঙ্ক্রোনাইজ করা থাকে।
+
+### 🛡️ Dual-Database Architecture (Active-Passive)
+সিস্টেমটি এখন ১০০% ফল্ট-টলারেন্ট। **Primary DB** হিসেবে `Supabase (Singapore)` ব্যবহৃত হয় এবং ফেইলওভারের জন্য **Secondary DB** হিসেবে `Neon.tech (Singapore)` কনফিগার করা আছে। Infisical বা `.env`-এ `SUPABASE_DATABASE_URL` এবং `NEON_DATABASE_URL` উভয়ই থাকতে হবে।
 
 ---
 
@@ -57,7 +61,6 @@
 - `JIT_OTP_SECRET`
 - `LAUNCHDARKLY_API_KEY`
 - `LOW_MEMORY_MODE`
-- `MIRROR_REPO_TOKEN`
 - `MISTRAL_API_KEY`
 - `OPENHANDS_API_KEY`
 - `OPENROUTER_API_KEY`
@@ -66,7 +69,6 @@
 - `QDRANT_URL`
 - `REDIS_URL`
 - `RENDER_API_KEY`
-- `RENDER_API_KEY_BACKUP`
 - `RENDER_BACKUP_SVC_ID`
 - `RENDER_DEPLOY_HOOK_URL`
 - `RENDER_PRIMARY_SVC_ID`
@@ -164,8 +166,6 @@
 - `R2_ACCESS_KEY`
 - `R2_SECRET_KEY`
 - `RAILWAY_TOKEN`
-- `RENDER_DEPLOY_HOOK_URL_BACKUP`
-- `SECONDARY_SERVICE_ACCOUNT_KEY`
 - `SECRET`
 - `SECRET_BACKEND`
 - `SECRET_CACHE_TTL`
@@ -173,7 +173,6 @@
 - `SENTRY_AUTH_TOKEN`
 - `SLACK_BOT_TOKEN`
 - `SMTP_PASSWORD`
-- `STAGING_REPO_TOKEN`
 - `SUPREMEAI_CREDENTIAL_ENC_KEY`
 - `SUPREMEAI_EMAIL_PASSWORD`
 - `TELEGRAM_BOT_TOKEN`
@@ -201,11 +200,11 @@
 
 **✅ এনভায়রনমেন্ট অনুযায়ী আলাদা থাকা সিক্রেটগুলোর পূর্ণাঙ্গ তালিকা:**
 
-### ১. Render Backend (`render-backend.env`)
+### ১. Render Unified Backend (`render.env`)
 - `PORT`
 - `ENV`
 - `NODE_ENV`
-- `SERVICE_ROLE` = `user`
+- `SERVICE_ROLE` = `unified` (বা `user,admin` ডুয়াল রোল)
 - `ALLOWED_HOSTS`
 - `CORS_ORIGINS`
 - `USER_CORS_ORIGINS`
@@ -217,26 +216,6 @@
 - `EXPERIENCE_DB_PATH`
 - `OLLAMA_URL`
 - `RENDER_DEPLOY_HOOK_URL`
-- `INFISICAL_CLIENT_ID`
-- `INFISICAL_CLIENT_SECRET`
-- `INFISICAL_PROJECT_ID`
-- `INFISICAL_TOKEN`
-
-### ২. Render Admin (`render-admin.env`)
-- `PORT`
-- `ENV`
-- `NODE_ENV`
-- `SERVICE_ROLE` = `admin`
-- `ALLOWED_HOSTS`
-- `CORS_ORIGINS`
-- `USER_CORS_ORIGINS`
-- `ADMIN_CORS_ORIGINS`
-- `SUPREMEAI_USER_BACKEND_URL`
-- `SUPREMEAI_ADMIN_BACKEND_URL`
-- `CHECKOUT_BASE_URL`
-- `CHROMADB_PATH`
-- `EXPERIENCE_DB_PATH`
-- `OLLAMA_URL`
 - `INFISICAL_CLIENT_ID`
 - `INFISICAL_CLIENT_SECRET`
 - `INFISICAL_PROJECT_ID`
@@ -263,16 +242,13 @@
 - `INFISICAL_PROJECT_ID`
 - `INFISICAL_ENV`
 
-### ৫. GitHub Actions Primary & Secondary
+### ৫. GitHub Actions
 - `INFISICAL_PROJECT_ID` — Infisical Project ID *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `INFISICAL_TOKEN` — Infisical Service Access Token *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `INFISICAL_CLIENT_ID` — Infisical Machine Identity Client ID *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
 - `INFISICAL_CLIENT_SECRET` — Infisical Machine Identity Client Secret *(⚠️ Bootstrap Key: Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
-- `MAIN_REPO_TOKEN` — Primary → Target রেপো পুশ/মিরর করার PAT *(⚠️ এটি Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
-- `MIRROR_REPO_TOKEN` — Secondary রেপো মিরর PAT
-- `STAGING_REPO_TOKEN` — Staging রেপো অ্যাক্সেস PAT
-- `RENDER_API_KEY` — Primary Render Account API Token *(CI-তে live env verifier & deploy validation-এর জন্য উভয় GitHub Repo Secrets-এ সেট করতে হবে)*
-- `RENDER_API_KEY_BACKUP` — Secondary/Backup Render Account API Token *(CI-তে backup account verifier-এর জন্য উভয় GitHub Repo Secrets-এ সেট করতে হবে)*
+- `GITHUB_PAT_AUTO_FIX` — অটোমেটেড স্ক্রিপ্ট বা এআই এজেন্টের মাধ্যমে সিক্রেট আপডেট করার PAT *(⚠️ এটি Infisical-এ নয়, GitHub Secrets-এ থাকবে)*
+- `RENDER_API_KEY` — Render Account API Token *(CI-তে live env verifier & deploy validation-এর জন্য GitHub Repo Secrets-এ সেট করতে হবে)*
 - `FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A` — Firebase Hosting CI Deploy Service Account JSON
 - `GCP_SA_KEY` — Google Cloud Platform Service Account Key
 - `GCP_PROJECT_ID` — GCP প্রজেক্ট ID
@@ -294,3 +270,16 @@
 > [!WARNING]
 > **Strict Restriction:** 
 > `PORT`, `NODE_ENV`, `INFISICAL_*` — এই প্রিফিক্স/নামের কোনো ভেরিয়েবল কখনোই Infisical Vault-এর ভেতরে সেভ করা যাবে না (কারণ এগুলো সার্ভিস বুটস্ট্র্যাপ করার জন্য ব্যবহার হয়)।
+
+---
+
+## 🤖 AI Agent Auto-Propagation Rule (Rule #1)
+
+অ্যাডমিন বা AI Agent দ্বারা যখনই লোকাল `.env` ফাইলে নতুন কোনো Key অ্যাড করা হবে বা আপডেট করা হবে, তখন AI Agent-কে অবশ্যই স্বয়ংক্রিয়ভাবে (Auto-propagate) তা নিচের এনভায়রনমেন্টগুলোতে সিঙ্ক করে দিতে হবে:
+
+1. **Render Services:** Render API ব্যবহার করে `supremeai-backend-docker` এবং `supremeai-backend-6nwi` সার্ভিসে সিক্রেট আপডেট করা।
+2. **Infisical Vault:** `infisical secrets set` ব্যবহার করে `SupremeAI` প্রোজেক্টে পুশ করা।
+3. **GitHub Actions:** `GITHUB_PAT_AUTO_FIX` ব্যবহার করে GitHub Secrets-এ (pynacl এনক্রিপশন সহ) পুশ করা।
+4. **Firebase Vault:** ফায়ারবেস সার্ভিস অ্যাকাউন্ট ব্যবহার করে Firestore এর `primary_vault/secrets`-এ আপডেট করা।
+
+**পাসওয়ার্ড জেনারেশন রুল:** অ্যাডমিন কর্তৃক জেনারেট করা বা সিস্টেম ইন্টারনাল যেকোনো পাসওয়ার্ড/কি (যেমন: JWT_SECRET, DB_PASSWORD) অবশ্যই `"njel.com.bd"` বা এর হ্যাশ বেস করে তৈরি হতে হবে (যেমন: `NjelComBd_2026_Prod!`)।

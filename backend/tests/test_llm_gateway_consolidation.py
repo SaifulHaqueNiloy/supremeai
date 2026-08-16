@@ -79,8 +79,9 @@ async def test_gateway_429_handling_simulation(llm_gateway):
     # Create a mock HTTPStatusError for 429
     mock_response = Mock()
     mock_response.status_code = 429
+    
+    # Test 1: Fast fallback (OmniRoute logic) if pause is too long
     mock_response.headers = {"Retry-After": "30"}  # 30 second delay
-
     mock_exc = httpx.HTTPStatusError("Too Many Requests", response=mock_response, request=Mock())
 
     # Mock the sleep function to avoid actual sleep
@@ -88,15 +89,20 @@ async def test_gateway_429_handling_simulation(llm_gateway):
         # Call the rate limit handler
         result = await llm_gateway._handle_rate_limit_error("test-model", mock_exc)
 
-        # Verify it returned True (indicating it handled the rate limit)
-        assert result is True, "Rate limit handler should return True when handling 429"
+        # Verify it returned False (fail-fast fallback)
+        assert result is False, "Rate limit handler should return False to trigger fast fallback"
+        assert not mock_sleep.called, "Should not sleep when triggering fast fallback"
 
-        # Verify sleep was called with jittered backoff
-        assert mock_sleep.called, "Should sleep after rate limit detection"
+    # Test 2: Retry if pause is short
+    mock_response.headers = {"Retry-After": "2"}  # 2 second delay
+    mock_exc = httpx.HTTPStatusError("Too Many Requests", response=mock_response, request=Mock())
 
-        # Verify tracker was called
-        # Note: We can't easily mock the tracker without knowing its import path
-        # But we can at least verify the flow logic worked
+    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        result = await llm_gateway._handle_rate_limit_error("test-model", mock_exc)
+        
+        # Verify it returned True
+        assert result is True, "Rate limit handler should return True to retry when pause is short"
+        assert mock_sleep.called, "Should sleep for short backoff"
 
 
 @pytest.mark.skip(reason="LLMGateway _MODEL_KEY_MAP refactored in core.llm")
