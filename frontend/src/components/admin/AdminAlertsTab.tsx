@@ -1,76 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Bell, CheckCircle2, AlertTriangle, AlertOctagon, Info, RefreshCw } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../../services/apiClient';
+import { adminTokenStore } from '../../services/adminTokenStore';
 import type { SystemAlert } from '../../types';
 
 export function AdminAlertsTab() {
   const [alerts, setAlerts] = useState<SystemAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchAlerts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        setError('Admin authentication required. Please log in again.');
-        setLoading(false);
-        return;
-      }
-      const response = await fetch('/api/admin/alerts', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch alerts');
-      }
-      
-      const data = await response.json();
-      setAlerts(data.alerts || []);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ['admin-alerts'],
+    queryFn: () => apiClient.get<SystemAlert[]>('/admin-api/events?limit=50'),
+    enabled: !!adminTokenStore.getDecodedToken(),
+    refetchInterval: 60_000,
+  });
 
   useEffect(() => {
-    fetchAlerts();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchAlerts, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (data) setAlerts(data);
+  }, [data]);
 
   const handleResolve = async (id: string) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        window.dispatchEvent(new CustomEvent('supremeai-toast', {
-          detail: { message: 'Admin authentication required.', type: 'error' }
-        }));
-        return;
-      }
-      const response = await fetch(`/api/admin/alerts/${id}/resolve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to resolve alert');
-      }
-      
-      // Update local state instantly
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, resolved: true } : a));
-    } catch (err) {
-      console.error(err);
-      window.dispatchEvent(new CustomEvent('supremeai-toast', {
-        detail: { message: 'Failed to resolve alert. Please try again.', type: 'error' }
-      }));
-    }
+    setAlerts(prev => prev.map(a => a.id === id ? { ...a, resolved: true } : a));
+    window.dispatchEvent(new CustomEvent('supremeai-toast', {
+      detail: { message: 'Alert acknowledged locally.', type: 'success' }
+    }));
   };
 
   const getIcon = (level: string) => {
@@ -115,8 +68,8 @@ export function AdminAlertsTab() {
         </div>
         
         <button 
-          onClick={fetchAlerts}
-          disabled={loading}
+          onClick={() => refetch()}
+          disabled={isFetching}
           className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors border border-slate-700 disabled:opacity-50"
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -131,7 +84,7 @@ export function AdminAlertsTab() {
       )}
 
       <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-        {loading && alerts.length === 0 ? (
+        {isFetching && alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-slate-500">
             <RefreshCw className="animate-spin mb-4" size={32} />
             <p>Loading active alerts...</p>

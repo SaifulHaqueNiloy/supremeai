@@ -3,7 +3,7 @@ import { useAdminStore } from "../../store/adminStore";
 import { AdminConsole } from "../../components/admin/AdminConsole";
 import { apiClient } from "../../services/apiClient";
 import { Shield } from "lucide-react";
-import type { AdminSubTab, AdminUser, Skill, Checkpoint, ChatMessage, HealthMap } from "../../types";
+import type { AdminSubTab, Skill, Checkpoint, ChatMessage, HealthMap } from "../../types";
 
 export function AdminShell() {
   const {
@@ -38,8 +38,6 @@ export function AdminShell() {
   const [newUsername, setNewUsername] = useState("");
   const [newUserRole, setNewUserRole] = useState("Operator");
   const [newUserPerms, setNewUserPerms] = useState("read,write");
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
-  const [envConfig, setEnvConfig] = useState<Record<string, string>>({});
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [adminInput, setAdminInput] = useState("");
   const [rulesJson, setRulesJson] = useState("");
@@ -60,17 +58,6 @@ export function AdminShell() {
     if (adminRole !== 'admin') {
       if (import.meta.env.DEV) console.warn("RBAC: User is not an admin.");
     }
-
-    const loadEnvConfig = async () => {
-      setEnvConfig({
-        "ENV": import.meta.env.VITE_ENV ?? "local",
-        "DEBUG": import.meta.env.VITE_DEBUG ?? "false",
-        "PORT": import.meta.env.VITE_PORT ?? "8000",
-        "GCP_REGION": import.meta.env.VITE_GCP_REGION ?? "us-central1"
-      });
-    };
-
-    loadEnvConfig();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminAuthenticated]);
@@ -112,42 +99,6 @@ export function AdminShell() {
   const handleSaveRules = () => {
     setSaveStatus("SAVING...");
     setTimeout(() => setSaveStatus("SAVED"), 1000);
-  };
-
-  const handleSaveUser = () => {
-    if (!newUsername) return;
-    apiClient.post('/admin-api/users', {
-      username: newUsername,
-      role: newUserRole,
-      permissions: newUserPerms.split(",")
-    })
-      .then(() => {
-        setAdminUsers(prev => [...prev, { username: newUsername, role: newUserRole, permissions: newUserPerms.split(",") }]);
-        setNewUsername("");
-      })
-      .catch(err => {
-        if (import.meta.env.DEV) console.error("Error creating user:", err);
-      });
-  };
-
-  const handleDeleteUser = (username: string) => {
-    apiClient.delete(`/admin-api/users/${encodeURIComponent(username)}`)
-      .then(() => {
-        setAdminUsers(prev => prev.filter(u => u.username !== username));
-      })
-      .catch(err => {
-        if (import.meta.env.DEV) console.error("Error deleting user:", err);
-      });
-  };
-
-  const handleSaveConfig = () => {
-    apiClient.post('/admin-api/config', envConfig)
-      .then(() => {
-        if (import.meta.env.DEV) console.warn("Environment config saved successfully.");
-      })
-      .catch(err => {
-        if (import.meta.env.DEV) console.error("Error saving environment config:", err);
-      });
   };
 
   if (adminAuthenticated && adminRole !== 'admin') {
@@ -210,12 +161,6 @@ export function AdminShell() {
       setNewUserRole={setNewUserRole}
       newUserPerms={newUserPerms}
       setNewUserPerms={setNewUserPerms}
-      handleSaveUser={handleSaveUser}
-      adminUsers={adminUsers}
-      handleDeleteUser={handleDeleteUser}
-      envConfig={envConfig}
-      setEnvConfig={setEnvConfig}
-      handleSaveConfig={handleSaveConfig}
       otpRequired={otpRequired}
       adminOtp={adminOtp}
       setAdminOtp={setAdminOtp}
