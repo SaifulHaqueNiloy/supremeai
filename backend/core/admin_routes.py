@@ -154,7 +154,10 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}
 
-    return {"status": "totp_required", "uid": uid}
+    # বাংলা মন্তব্য: Frontend (frontend/src/store/adminStore.ts) `otp_required` অনুযায়ী
+    # status check করে OTP স্ক্রিনে যায়। Backend আগে `totp_required` পাঠাত যা frontend দিয়ে
+    # মেল করত না — ফলে valid token-এর পরেও UI login gate-এ আটকে থাকত। Contract match করানো হলো।
+    return {"status": "otp_required", "uid": uid}
 
 
 @router.post("/api/admin/firebase-totp-setup")
