@@ -152,6 +152,64 @@ async def test_honeypot_blocks_ignore_instructions_prod():
 
 
 @pytest.mark.asyncio
+async def test_honeypot_allows_firebase_id_token_containing_double_dash():
+    """Regression: a Firebase ID token is base64url, so its signature can randomly contain
+    `--`. The old bare `--` SQL signature flagged ~8% of valid admin logins as malicious,
+    returning 418 and auto-blocking the admin's IP. Such a token must pass through."""
+    middleware = make_middleware()
+    with patch.dict(os.environ, {"ENV": "production", "ENABLE_HONEYPOT_TEST": "true"}):
+        scope = {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/admin/firebase-login",
+            "query_string": b"",
+            "client": ("127.0.0.1", 12345),
+        }
+        # base64url token whose signature segment contains `--` and `----`
+        token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYyJ9.eyJzdWIiOiJ1aWQxIn0.aa--bb__cc-dd_ee----ff"
+        body = f'{{"id_token": "{token}"}}'.encode()
+        receive = AsyncMock(
+            return_value={
+                "type": "http.request",
+                "body": body,
+                "more_body": False,
+            }
+        )
+        send = AsyncMock()
+        await middleware(scope, receive, send)
+        # must be forwarded downstream, not answered with 418
+        middleware.app.assert_called_once()
+        assert not send.await_args_list, "Honeypot must not short-circuit a valid Firebase ID token"
+
+
+@pytest.mark.asyncio
+async def test_honeypot_blocks_sql_comment_injection_prod():
+    """`admin'--` style SQL comment injection must still be trapped."""
+    middleware = make_middleware()
+    with patch.dict(os.environ, {"ENV": "production", "ENABLE_HONEYPOT_TEST": "true"}):
+        scope = {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/chat",
+            "query_string": b"",
+            "client": ("127.0.0.1", 12345),
+        }
+        body = b'{"user": "admin\'-- ", "pass": "x"}'
+        receive = AsyncMock(
+            return_value={
+                "type": "http.request",
+                "body": body,
+                "more_body": False,
+            }
+        )
+        send = AsyncMock()
+        await middleware(scope, receive, send)
+        middleware.app.assert_not_called()
+        assert send.await_args_list, "Expected the middleware to send a response"
+        assert send.await_args_list[0].args[0].get("status") == 418
+
+
+@pytest.mark.asyncio
 async def test_honeypot_allows_clean_body_after_cleanup():
     middleware = make_middleware()
     scope = {

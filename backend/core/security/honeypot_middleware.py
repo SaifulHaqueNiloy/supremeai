@@ -23,9 +23,15 @@ class HoneypotMiddleware:
 
         self.rules_mutator = RulesMutator()
         # পরিচিত অ্যাটাক সিগনেচার
+        # বাংলা মন্তব্য: SQL-injection সিগনেচারে আগের বেয়ার `--` প্যাটার্নটি Firebase ID token
+        # (JWT, base64url) এর signature অংশে র‍্যান্ডম ভাবে থাকা `--` কে ম্যাচ করে ফেলত এবং
+        # ভ্যালিড admin login কে 418 (honeypot) দিয়ে ব্লক করত। তাই `--` কে এখন শুধু আসল SQL
+        # comment context-এ ম্যাচ করানো হয়: whitespace/EOL দ্বারা অনুসরণ করা, অথবা quote/semicolon
+        # দ্বারা পূর্ববর্তী। এতে base64 টোকেনের false-positive দূর হয়, কিন্তু ক্লাসিক SQLi
+        # (যেমন `' OR 1=1--`, `admin'--`, `; --`) ঠিকই ধরা পড়ে।
         self.attack_signatures = [
             re.compile(r"(?i)(ignore previous instructions|system prompt)"),
-            re.compile(r"(?i)(union select|1=1|--|drop table)"),
+            re.compile(r"(?i)(union\s+select|\b1\s*=\s*1\b|--\s|--$|'\s*--|;\s*--|drop\s+table)"),
             re.compile(r"(?i)(<script>|javascript:)"),
         ]
 
