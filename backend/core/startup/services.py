@@ -67,7 +67,7 @@ async def initialize_independent_services(app):
                     _neon_url = getattr(settings, "neon_database_url", None)
                     if not _neon_url:
                         raise Exception(f"Primary DB failed and no neon_database_url found. Error: {primary_exc}")
-                    
+
                     try:
                         pool = await _try_connect_and_check(_neon_url)
                         logger.warning("⚠️ Primary DB failed! Fallback to Secondary DB (Neon.tech) successful!")
