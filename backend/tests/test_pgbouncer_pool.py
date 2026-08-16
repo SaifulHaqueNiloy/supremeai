@@ -28,9 +28,10 @@ async def test_connect():
             min_size=3,
             max_size=12,
             max_inactive_connection_lifetime=300,
-            statement_cache_size=0,
+            ssl=ANY,
             # বাংলা মন্তব্য: PgBouncer-এর সাথে সামঞ্জস্যের জন্য যোগ করা ইউনিক prepared statement নাম জেনারেটর
             # (lambda) — মান ANY দিয়ে চেক করা হচ্ছে যাতে এর বাস্তব মান পরিবর্তন করলেও টেস্ট ভেঙে না যায়।
+            statement_cache_size=0,
             prepared_statement_name_func=ANY,
             command_timeout=30,
         )
