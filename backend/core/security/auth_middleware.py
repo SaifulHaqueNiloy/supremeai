@@ -1,0 +1,297 @@
+"""Authentication Middleware — JWT Auth token validation with fail-closed behavior.
+
+বাংলা: অথেনটিকেশন মিডলওয়্যার — JWT বিয়ারার টোকেন ভ্যালিডেশন, Fail-Closed।
+"""
+
+from __future__ import annotations
+
+import hmac
+import json
+from collections.abc import Awaitable, Callable
+from typing import Any
+
+from jose import JWTError, jwt
+from jose.exceptions import ExpiredSignatureError
+from loguru import logger
+
+from core.config import settings
+from utils.environment import is_test_environment
+
+ASGIScope = dict[str, Any]
+ASGISend = Callable[[dict[str, Any]], Awaitable[None]]
+ASGIReceive = Callable[[], Awaitable[dict[str, Any]]]
+ASGIApp = Callable[[ASGIScope, ASGIReceive, ASGISend], Awaitable[None]]
+Headers = list[tuple[bytes, bytes]]
+
+
+def _get_bearer_token(headers: Headers) -> str | None:
+    """Extract an Auth token from the ASGI headers list.
+
+    বাংলা: ASGI হেডার থেকে Bearer টোকেন এক্সট্র্যাক্ট করে।
+    """
+    for key, value in headers:
+        if key.lower() == b"authorization":
+            raw = value.decode("utf-8", errors="replace")
+            if raw.startswith("Bearer "):
+                return raw[7:]
+    return None
+
+
+def _get_token_from_query(scope: ASGIScope) -> str | None:
+    """Extract an Auth token from the query string for SSE/EventSource.
+
+    EventSource (and <img>/<script>) cannot set an Authorization header, so
+    SSE endpoints must accept the token via a query parameter:
+        /api/dashboard/stream?token=<jwt>
+
+    বাংলা: EventSource Authorization হেডার পাঠাতে পারে না, তাই SSE এন্ডপয়েন্টে
+    টোকেন query parameter হিসাবে গ্রহণ করা হয়।
+    """
+    qs = scope.get("query_string", b"")
+    if not qs:
+        return None
+    try:
+        query = qs.decode("utf-8", errors="replace")
+    except Exception:
+        return None
+    for part in query.split("&"):
+        if "=" not in part:
+            continue
+        key, value = part.split("=", 1)
+        if key == "token" and value:
+            from urllib.parse import unquote
+
+            return unquote(value)
+    return None
+
+
+def _decode_jwt(token: str) -> dict[str, Any] | None:
+    """Decode and validate a JWT token.
+
+    বাংলা: JWT টোকেন ডিকোড এবং ভ্যালিডেট করে।
+
+    Returns:
+        Decoded payload dict, or None if invalid/expired.
+    """
+    if not settings.jwt_secret:
+        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        return None
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            options={"verify_exp": True},
+        )
+        return payload
+    except ExpiredSignatureError:
+        logger.warning("JWT token has expired")
+        return None
+    except JWTError as exc:
+        logger.warning(f"JWT token validation failed: {exc}")
+        return None
+
+
+def _is_public_path(path: str) -> bool:
+    """Check if a path is public (no auth required).
+
+    বাংলা: পাথটি পাবলিক কিনা চেক করে (কোনো অথের প্রয়োজন নেই)।
+    """
+    if getattr(settings, "docs_auth_enabled", True) is False and path in (
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        f"{settings.API_V1_STR}/openapi.json",
+    ):
+        return True
+
+    # বাংলা মন্তব্য: '/' দিয়ে শুরু হওয়া সব পাথকে এভয়েড করতে এবং সেগমেন্ট বাউন্ডারি চেক করতে কাস্টম ম্যাচিং লজিক ব্যবহার করা হচ্ছে।
+    for prefix in settings.supremeai_public_paths:
+        if prefix == "/":
+            if path == "/":
+                return True
+        elif path == prefix or path.startswith(prefix + "/"):
+            return True
+    return False
+
+
+async def _send_json_response(
+    send: ASGISend,
+    status_code: int,
+    body: dict[str, Any],
+    headers: dict[str, str] | None = None,
+) -> None:
+    """Send a raw ASGI JSON response.
+
+    বাংলা: কাঁচা ASGI JSON রেসপন্স পাঠায়।
+    """
+    response_headers: list[tuple[bytes, bytes]] = [
+        (b"content-type", b"application/json"),
+    ]
+    if headers:
+        for key, value in headers.items():
+            response_headers.append((key.lower().encode(), value.encode()))
+
+    body_bytes = json.dumps(body, separators=(",", ":")).encode("utf-8")
+    response_headers.append((b"content-length", str(len(body_bytes)).encode()))
+
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status_code,
+            "headers": response_headers,
+        }
+    )
+    await send(
+        {
+            "type": "http.response.body",
+            "body": body_bytes,
+        }
+    )
+
+
+class AuthMiddleware:
+    """ASGI middleware for JWT-based authentication.
+
+    বাংলা: JWT-ভিত্তিক অথেনটিকেশনের জন্য ASGI মিডলওয়্যার।
+
+    Skips authentication for public paths and test environment.
+    Attaches user info (sub, role, tenant_id) to scope on success.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: ASGIScope, receive: ASGIReceive, send: ASGISend) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+
+        if _is_public_path(path) or (is_test_environment() and settings.is_bypass_allowed):
+            await self.app(scope, receive, send)
+            return
+
+        headers: Headers = scope.get("headers", [])
+        token = _get_bearer_token(headers) or _get_token_from_query(scope)
+
+        # বাংলা: is_bypass_allowed production guard সহ check করে (ENV=production → always False)
+        allow_bypass = settings.is_bypass_allowed
+        if not isinstance(allow_bypass, bool):
+            allow_bypass = False
+        is_test_auth_bypassed = allow_bypass and is_test_environment()
+
+        if not token:
+            if is_test_auth_bypassed:
+                user_data = {
+                    "sub": "test_admin",
+                    "role": "admin",
+                    "tenant_id": "test_tenant",
+                }
+                scope["user"] = user_data
+                if "state" not in scope:
+                    scope["state"] = {}
+                scope["state"]["user"] = user_data
+                await self.app(scope, receive, send)
+                return
+
+            logger.warning(f"Missing Auth token for path: {path}")
+            await _send_json_response(
+                send,
+                status_code=401,
+                body={"detail": "Missing authentication token"},
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            return
+
+        # API Key validation for system components / testing
+        # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
+        if settings.supremeai_api_token and hmac.compare_digest(
+            token.encode("utf-8"), settings.supremeai_api_token.encode("utf-8")
+        ):
+            user_data = {
+                "sub": "system_api_key",
+                "role": "admin",
+                "tenant_id": None,
+            }
+            scope["user"] = user_data
+            if "state" not in scope:
+                scope["state"] = {}
+            scope["state"]["user"] = user_data
+            await self.app(scope, receive, send)
+            return
+
+        payload = _decode_jwt(token)
+        if not payload:
+            if is_test_auth_bypassed:
+                user_data = {
+                    "sub": "test_admin",
+                    "role": "admin",
+                    "tenant_id": "test_tenant",
+                }
+                scope["user"] = user_data
+                if "state" not in scope:
+                    scope["state"] = {}
+                scope["state"]["user"] = user_data
+                await self.app(scope, receive, send)
+                return
+
+            await _send_json_response(
+                send,
+                status_code=401,
+                body={"detail": "Invalid or expired token"},
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            return
+
+        # Attach user info to scope for downstream handlers
+        user_data = {
+            "sub": payload.get("sub"),
+            "role": payload.get("role", "viewer"),
+            "tenant_id": payload.get("tenant_id"),
+        }
+        scope["user"] = user_data
+        if "state" not in scope:
+            scope["state"] = {}
+        scope["state"]["user"] = user_data
+
+        await self.app(scope, receive, send)
+
+
+async def verify_admin_session_fail_closed(request: Any) -> dict[str, Any]:
+    """Verify admin session JWT token in a fail-closed manner.
+
+    বাংলা: অ্যাডমিন সেশন JWT টোকেন fail-closed উপায়ে ভ্যালিডেট করে।
+    Uses `_decode_jwt` to avoid duplicate JWT decode logic.
+    """
+    from fastapi import HTTPException
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        logger.warning("Missing Authorization header")
+        raise HTTPException(status_code=401, detail="Missing authorization header")
+
+    if not auth_header.startswith("Bearer "):
+        logger.warning("Malformed Authorization header scheme")
+        raise HTTPException(status_code=401, detail="Malformed authorization header")
+
+    token = auth_header[7:]
+
+    # Fail-closed check for JWT secret config
+    if not settings.jwt_secret:
+        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        raise HTTPException(status_code=500, detail="Authentication server configuration error")
+
+    # Reuse _decode_jwt to avoid duplicate JWT decode logic
+    payload = _decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    role = payload.get("role")
+    if role not in ("admin", "master_admin"):
+        logger.warning(f"Access denied: role '{role}' is not authorized for admin session")
+        raise HTTPException(status_code=401, detail="Not authorized")
+
+    return payload

@@ -1,0 +1,20 @@
+{
+  "complexity_rules": {
+    "easy": [
+      "ollama/qwen2.5-coder:1.5b",
+      "groq/llama-3.3-70b-versatile"
+    ],
+    "medium": [
+      "gemini/gemini-1.5-flash",
+      "groq/llama-3.3-70b-versatile"
+    ],
+    "hard": [
+      "groq/llama-3.3-70b-versatile",
+      "gemini/gemini-1.5-flash"
+    ]
+  },
+  "fallback_chain": [
+    "gemini/gemini-1.5-flash",
+    "groq/llama-3.3-70b-versatile"
+  ]
+}

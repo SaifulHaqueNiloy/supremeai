@@ -1,0 +1,135 @@
+# mypy: ignore-errors
+"""This module, `backend.core.config`, serves as the single, authoritative source
+for all application settings within the SupremeAI project. It implements a robust,
+"Fail-Fast" configuration layer using Pydantic, ensuring that all critical parameters
+are loaded from environment variables or a secret manager, with zero hardcoded values.
+It rigorously validates settings at startup, preventing the application from booting if
+essential configurations are missing or invalid, thereby guaranteeing a secure and
+predictable operational environment across all deployment stages.
+
+Key Components:
+- `Settings`: The central Pydantic model that defines and validates all application-wide
+  configuration parameters, fetching secrets and enforcing strict rules for different environments.
+- `settings`: A singleton instance of the `Settings` class, providing global access to the
+  validated application configuration.
+- `get_production_env()`: A utility function for strictly retrieving environment variables,
+  enforcing a fail-fast approach for critical missing values.
+
+Dependencies:
+- `os`: For interacting with the operating system, primarily environment variables.
+- `secrets`: For generating secure random numbers, used for JWT secret fallback.
+- `sys`: For system-specific parameters and functions, used for `sys.exit` and checking `sys.modules` for `pytest`.
+- `pathlib.Path`: For object-oriented filesystem paths, used for locating `.env` files.
+- `typing`: For type hints.
+- `json`: For parsing JSON strings, specifically for `cors_origins`.
+- `dotenv.load_dotenv`: For loading environment variables from `.env` files.
+- `loguru.logger`: For structured logging, especially for critical configuration errors.
+- `pydantic`: The core library for data validation and settings management.
+- `pydantic_settings.BaseSettings`: Pydantic's base class for managing settings from environment variables.
+- `pydantic_settings.SettingsConfigDict`: Configuration class for `BaseSettings`.
+- `pydantic.Field`: Used to define field properties and validation aliases.
+- `pydantic.PrivateAttr`: Used for private attributes not part of the model's data.
+- `pydantic.SecretStr`: For handling sensitive string data that should not be logged.
+- `pydantic.ValidationInfo`: Provides context during validation.
+- `pydantic.computed_field`: For fields whose values are computed dynamically.
+- `pydantic.field_validator`: Decorator for field-specific validation logic.
+- `pydantic.model_validator`: Decorator for model-level validation logic.
+- `core.security.secret_vault`: An internal module responsible for fetching secrets from a secure vault (e.g., GCP Secret Manager).
+"""
+
+# backend/core/config.py
+# ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
+# Moving this file will break relative paths, imports, and core configuration loading across the entire project.
+# বাংলা মন্তব্য: সম্পূর্ণ রি-ফ্যাক্টর — Fail-Fast, Zero-Hardcode, Pydantic-Enforced Config Layer।
+# কোনো API Key, hardcoded domain বা threshold এখানে নেই।
+# সব ভ্যালু env var বা GCP Secret Manager থেকে আসে।
+# যেকোনো Environment-এ (Local/Staging/Prod) কোনো missing required var = startup crash (sys.exit(1)) — "resilient boot" সম্পূর্ণ নিষিদ্ধ।
+
+import os
+import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
+from loguru import logger
+from pydantic import (
+    Field,
+)
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+from .config_fields import SettingsFieldsMixin
+from .config_secrets import SettingsSecretsMixin
+from .config_validation import SettingsValidationMixin
+
+
+# বাংলা মন্তব্য: pytest environment-এ .env load করা হয় না — test isolation নিশ্চিত।
+if "pytest" not in sys.modules:
+    root_env = Path(__file__).resolve().parents[2] / ".env"
+    load_dotenv(root_env)
+
+
+class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, SettingsValidationMixin):
+    """
+    বাংলা মন্তব্য: এটি সিস্টেমের একমাত্র সত্যের উৎস (Single Source of Truth)।
+    কোনো hardcoded value নেই। সব env-driven।
+    যেকোনো এনভায়রনমেন্টে missing required var = startup Fail-Fast (sys.exit(1))।
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=(
+            None if "pytest" in sys.modules else ["../.env", ".env", "/etc/secrets/.env", "/etc/secrets/render.env"]
+        ),
+        extra="ignore",
+    )
+
+    # বাংলা মন্তব্য: env validate হবে — invalid value = startup crash
+    env: str = Field(default="local", validation_alias="ENV")
+    debug: bool = Field(default=True)
+
+    # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে AuthMiddleware-এর JWT ভেরিফিকেশন বাইপাস করার জন্য
+    # বাংলা: CI pytest-এ ALLOW_TEST_AUTH_BYPASS=true সেট করা হয় — শুধু তখনই।
+    # Production guard: ENV=production হলে এই field সবসময় False থাকবে।
+    # auth_middleware.py এবং origin_validator.py এই field চেক করে।
+    allow_test_auth_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_AUTH_BYPASS")
+    allow_test_origin_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS")
+
+    @property
+    def is_bypass_allowed(self) -> bool:
+        """বাংলা: Production-এ bypass সম্পূর্ণ নিষিদ্ধ — ENV নির্বিশেষে।
+        শুধু test/ci/staging environment-এই bypass কাজ করবে।
+        field নাম: self.env (validation_alias="ENV"), self.environment নয়।"""
+        current_env = (self.env or "").lower()
+        if current_env in ("production", "prod"):
+            return False  # Production-এ সর্বদা False — hardcoded guard
+        return self.allow_test_auth_bypass
+
+    @property
+    def is_origin_bypass_allowed(self) -> bool:
+        """বাংলা: Production-এ origin bypass সম্পূর্ণ নিষিদ্ধ।"""
+        current_env = (self.env or "").lower()
+        if current_env in ("production", "prod"):
+            return False
+        return self.allow_test_origin_bypass
+
+try:
+    settings = Settings()
+except Exception as _boot_exc:
+    logger.critical(
+        f"🔥 FATAL CONFIG ERROR: {_boot_exc}\nServer startup ABORTED (Fail-Fast applied). Fix the configuration."
+    )
+    sys.exit(1)
+
+
+def get_production_env(var_name: str, default: str | None = None) -> str:
+    """বাংলা মন্তব্য: Strict Fail-Fast Config Guard.
+    যেকোনো এনভায়রনমেন্টে কোনো ক্রিটিক্যাল সিক্রেট মিসিং থাকলে সরাসরি হার্ড ক্র্যাশ করবে,
+    যাতে সাইলেন্ট ফেইলর প্রতিরোধ করা যায়। ডিফল্ট ভ্যালু পাস করলে মিসিং ক্ষেত্রে fallback ব্যবহার হবে।
+    """
+
+    value = os.getenv(var_name)
+    if not value:
+        if default is not None:
+            return default
+        logger.critical(f"❌ CRITICAL CONFIG ERROR: Missing required environment variable '{var_name}'!")
+        raise ValueError(f"Configuration Error: {var_name} must be explicitly defined.")
+    return value
