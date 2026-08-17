@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { getApiBaseUrl } from '../utils/api';
 
 interface Props {
   children?: ReactNode;
@@ -25,7 +26,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     console.error('Uncaught error:', error, errorInfo);
 
     try {
-      fetch('/api/telemetry/frontend-error', {
+      fetch(`${getApiBaseUrl()}/api/telemetry/frontend-error`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

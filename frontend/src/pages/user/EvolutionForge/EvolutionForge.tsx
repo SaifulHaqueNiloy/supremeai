@@ -70,7 +70,7 @@ const EvolutionForgeCanvas = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('supremeai_auth_token');
-    const sse = new EventSource(`/api/v1/swarm/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
+    const sse = new EventSource(`${getApiBaseUrl()}/api/v1/swarm/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
 
     sse.onmessage = (event) => {
       try {

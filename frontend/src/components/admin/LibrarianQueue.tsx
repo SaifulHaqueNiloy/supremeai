@@ -1,5 +1,7 @@
 // apps/studio-client/src/components/admin/LibrarianQueue.tsx
 import React, { useState, useEffect } from 'react';
+import { getApiBaseUrl } from '../../utils/api';
+import { getAuthHeaders } from '../../services/apiClient';
 
 interface SkillMetadata {
   skill_id: string;
@@ -19,17 +21,21 @@ export const LibrarianQueue: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch('/api/admin/librarian/queue')
-      .then(res => res.json())
-      .then(data => { setQueue(data); setLoading(false); })
-      .catch(err => console.error("Error fetching quarantine queue:", err));
+    (async () => {
+      fetch(`${getApiBaseUrl()}/api/admin/librarian/queue`, {
+        headers: await getAuthHeaders(),
+      })
+        .then(res => res.json())
+        .then(data => { setQueue(data); setLoading(false); })
+        .catch(err => console.error("Error fetching quarantine queue:", err));
+    })();
   }, []);
 
   const handleAction = async (skillId: string, action: 'APPROVE' | 'APPROVE_AS_EPHEMERAL' | 'REJECT') => {
     try {
-      const response = await fetch(`/api/admin/librarian/process`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/admin/librarian/process`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ skill_id: skillId, action })
       });
       const result = await response.json();

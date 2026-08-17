@@ -18,6 +18,8 @@ export interface MetricData {
 
 // Core hook for real-time metrics
 import { useEffect, useState } from 'react';
+import { getApiBaseUrl } from '../../utils/api';
+import { getAuthHeaders } from '../../services/apiClient';
 
 // বাংলা মন্তব্য: এই ফাইলটি হুক ও কনস্ট্যান্ট এক্সপোর্ট করে (শুধু কম্পোনেন্ট নয়) — react-refresh নিয়ম ইচ্ছাকৃতভাবে disable।
 /* eslint-disable-next-line react-refresh/only-export-components */
@@ -28,7 +30,9 @@ export function useSujonMetrics() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('/api/admin/metrics/realtime');
+        const response = await fetch(`${getApiBaseUrl()}/api/admin/metrics/realtime`, {
+          headers: await getAuthHeaders(),
+        });
         const data = await response.json();
         setMetrics(data.metrics || []);
       } catch (error) {

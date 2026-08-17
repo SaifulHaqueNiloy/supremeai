@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getWebSocketBaseUrl } from '../utils/api';
+import { getWebSocketBaseUrl, getApiBaseUrl } from '../utils/api';
 import { getRawToken } from '../services/apiClient';
 
 export type SujonState =
@@ -94,7 +94,7 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
   connectSSE: (sessionId: string) => {
     get().disconnectSSE(); // Ensure previous is closed
     const token = getRawToken();
-    const sse = new EventSource(`/api/session/${sessionId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
+    const sse = new EventSource(`${getApiBaseUrl()}/api/session/${sessionId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
     sse.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data);

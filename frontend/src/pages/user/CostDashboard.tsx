@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 // বাংলা মন্তব্য: বাহিরের প্রোভাইডার নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
 import { getSupremeProviderLabel } from '../../lib/modelBranding';
+import { getApiBaseUrl } from '../../utils/api';
+import { getAuthHeaders } from '../../services/apiClient';
 
 interface CostMetrics {
   total_spent_usd: number;
@@ -16,30 +18,34 @@ export const CostDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/billing/analytics')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch cost analytics');
-        return res.json();
+    (async () => {
+      fetch(`${getApiBaseUrl()}/api/billing/analytics`, {
+        headers: await getAuthHeaders(),
       })
-      .then((data) => {
-        setMetrics({
-          total_spent_usd: data.total_spent || 0.0,
-          total_saved_usd: data.total_saved || 42.5,
-          cached_queries: data.cached_queries || 1280,
-          free_tier_utilization_pct: data.free_tier_pct || 94.2,
-          provider_breakdown: data.provider_breakdown || {
-            Gemini: 0.0,
-            Groq: 0.0,
-            TogetherAI: 0.0,
-            Ollama: 0.0,
-          },
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch cost analytics');
+          return res.json();
+        })
+        .then((data) => {
+          setMetrics({
+            total_spent_usd: data.total_spent || 0.0,
+            total_saved_usd: data.total_saved || 42.5,
+            cached_queries: data.cached_queries || 1280,
+            free_tier_utilization_pct: data.free_tier_pct || 94.2,
+            provider_breakdown: data.provider_breakdown || {
+              Gemini: 0.0,
+              Groq: 0.0,
+              TogetherAI: 0.0,
+              Ollama: 0.0,
+            },
+          });
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setLoading(false);
         });
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    })();
   }, []);
 
   if (loading) {
