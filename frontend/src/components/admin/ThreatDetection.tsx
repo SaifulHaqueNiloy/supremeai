@@ -97,7 +97,7 @@ export function ThreatDetection() {
                 </button>
               </div>
             );
-          })}
+          })
           )}
         </div>
       </Card>

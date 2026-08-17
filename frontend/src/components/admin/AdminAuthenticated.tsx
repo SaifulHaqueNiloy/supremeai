@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 
 interface AuthenticatedViewProps {
-  gcpHealth: GcpHealth | null;
-  cloudStats: CloudStats | null;
+  gcpHealth?: GcpHealth | null;
+  cloudStats?: CloudStats | null;
   skillQuery: string;
   setSkillQuery: (val: string) => void;
   skills: Skill[];
@@ -48,12 +48,11 @@ interface AuthenticatedViewProps {
   setNewUserRole: (val: string) => void;
   newUserPerms: string;
   setNewUserPerms: (val: string) => void;
-  handleSaveUser: () => void;
-  adminUsers: AdminUser[];
-  handleDeleteUser: (username: string) => void;
-  envConfig: Record<string, string>;
-  setEnvConfig: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  handleSaveConfig: () => void;
+  handleSaveUser?: () => void;
+  adminUsers?: AdminUser[];
+  envConfig?: Record<string, string>;
+  setEnvConfig?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  handleSaveConfig?: () => void;
   actionStatus: string;
   handleAdminLogout: () => void;
   theme: 'dark' | 'light';

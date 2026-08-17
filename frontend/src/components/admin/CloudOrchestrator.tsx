@@ -32,11 +32,11 @@ export function CloudOrchestrator() {
     staleTime: 20_000,
   });
 
+  const rps = metrics?.requests_per_second ?? 0;
   const cpu = metrics?.cpu_percent ?? metrics?.cpu_usage_percent
     ?? Math.min(100, Math.round((rps / 50) * 100));
   const mem = metrics?.memory_percent ?? metrics?.memory_usage_percent
     ?? Math.min(100, Math.round((rps / 80) * 100));
-  const rps = metrics?.requests_per_second ?? 0;
   const netGbps = Math.min(100, (rps / 500) * 100);
 
   const providerHealth = Object.entries(health || {}).map(([id, data]: [string, any]) => ({

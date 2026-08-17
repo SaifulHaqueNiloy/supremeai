@@ -30,12 +30,12 @@ interface SubTabContentProps {
   setNewUserRole: (val: string) => void;
   newUserPerms: string;
   setNewUserPerms: (val: string) => void;
-  handleSaveUser: () => void;
-  adminUsers: any[];
-  handleDeleteUser: (username: string) => void;
-  envConfig: Record<string, string>;
-  setEnvConfig: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  handleSaveConfig: () => void;
+  handleSaveUser?: () => void;
+  adminUsers?: any[];
+  handleDeleteUser?: (username: string) => void;
+  envConfig?: Record<string, string>;
+  setEnvConfig?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  handleSaveConfig?: () => void;
   handleTriggerDeploy: () => void;
    
   [key: string]: any;

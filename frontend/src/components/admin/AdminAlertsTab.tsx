@@ -8,12 +8,16 @@ import type { SystemAlert } from '../../types';
 export function AdminAlertsTab() {
   const [alerts, setAlerts] = useState<SystemAlert[]>([]);
 
-  const { data, isFetching, refetch } = useQuery({
+  const { data, isFetching, refetch, error } = useQuery({
     queryKey: ['admin-alerts'],
     queryFn: () => apiClient.get<SystemAlert[]>('/admin-api/events?limit=50'),
     enabled: !!adminTokenStore.getDecodedToken(),
     refetchInterval: 60_000,
   });
+
+  const errorMessage = error
+    ? (error instanceof Error ? error.message : (typeof error === 'object' ? JSON.stringify(error) : String(error)))
+    : null;
 
   useEffect(() => {
     if (data) setAlerts(data);
@@ -72,14 +76,14 @@ export function AdminAlertsTab() {
           disabled={isFetching}
           className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors border border-slate-700 disabled:opacity-50"
         >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
           Refresh
         </button>
       </div>
 
-      {error && (
+      {errorMessage && (
         <div className="p-4 mb-6 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400">
-          {error}
+          {errorMessage}
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import type { ChatMessage, Skill, Checkpoint, AdminSubTab, AdminUser, HealthMap } from '../../types';
+import type { ChatMessage, Skill, Checkpoint, AdminSubTab, HealthMap } from '../../types';
 import { LoginView } from './AdminLogin';
 import { AuthenticatedView } from './AdminAuthenticated';
 import DashboardErrorBoundary from './DashboardErrorBoundary';
