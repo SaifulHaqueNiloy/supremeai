@@ -4,13 +4,16 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Response
 from loguru import logger
 from pydantic import BaseModel
+import hashlib
 import ipaddress
+import json
 import socket
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
 from api.routes.admin_dashboard import require_admin_token
+from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
@@ -518,6 +521,16 @@ from core.config import settings
 
 _SCRAPER_URL = settings.scraper_service_url.rstrip("/") if settings.scraper_service_url else None
 
+# Hybrid-plan cache: keep scraped results in Upstash Redis (L2) + in-memory (L1)
+# so the (off-Render, scale-to-zero) scraper microservice is invoked as rarely as
+# possible — directly cutting its compute/quota consumption.
+_SCRAPE_CACHE_TTL = 3600  # 1h
+_scrape_cache = MultiLevelCache(l2_ttl=_SCRAPE_CACHE_TTL)
+
+
+def _scrape_cache_key(url: str) -> str:
+    return "scrape_cache:" + hashlib.sha256(url.encode("utf-8")).hexdigest()
+
 
 async def _proxy_to_scraper(endpoint: str, payload: dict) -> dict:
     """Forward browser/scrape requests to the standalone scraper microservice."""
@@ -531,15 +544,32 @@ async def _proxy_to_scraper(endpoint: str, payload: dict) -> dict:
             resp = await client.post(f"{_SCRAPER_URL}/{endpoint}", json=payload)
             return resp.json()
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
-        from loguru import logger
         logger.error(f"Scraper service proxy failed: {e}")
         return {"success": False, "error": str(e)}
+
+
+async def _cached_scrape(payload: dict) -> dict:
+    """Scrape with a Redis-backed cache (idempotent fetch only)."""
+    url = payload.get("url", "")
+    if not url:
+        return await _proxy_to_scraper("scrape", payload)
+    key = _scrape_cache_key(url)
+    cached = await _scrape_cache.get(key)
+    if cached is not None:
+        try:
+            return json.loads(cached)
+        except (json.JSONDecodeError, TypeError):
+            pass
+    result = await _proxy_to_scraper("scrape", payload)
+    if isinstance(result, dict) and result.get("success"):
+        await _scrape_cache.set(key, json.dumps(result), ttl=_SCRAPE_CACHE_TTL)
+    return result
 
 
 @router.post("/scrape", dependencies=[Depends(require_admin_token)])
 async def scrape(request: ScrapeRequest):
     """Fetch URL and return cleaned content via the Scraper Microservice."""
-    result = await _proxy_to_scraper("scrape", {"url": request.url})
+    result = await _cached_scrape({"url": request.url})
     return result
 
 
@@ -554,8 +584,8 @@ async def browse(request: BrowseRequest):
         )
         return result
 
-    # Default action (fetch) — delegate to scraper service
-    result = await _proxy_to_scraper("scrape", {"url": request.url})
+    # Default action (fetch) — delegate to scraper service (cache-backed)
+    result = await _cached_scrape({"url": request.url})
     return result
 
 
