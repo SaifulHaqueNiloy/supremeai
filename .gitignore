@@ -463,6 +463,9 @@ archive/
 
 # Temporary test logs & scratch files
 *.txt
+!requirements.txt
+!**/requirements.txt
+!**/requirements*.txt
 *.ini
 *.bak
 backend/tmp_test_learning_data/
