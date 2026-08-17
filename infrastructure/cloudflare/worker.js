@@ -58,8 +58,16 @@ export default {
       return fetch(proxyReq);
     }
 
-    // Default: pass through to origin
-    return fetch(request);
+    // Default: proxy to backend origin
+    const backendUrl = env.RENDER_URL || 'https://supremeai-backend-docker.onrender.com';
+    const targetUrl = new URL(url.pathname + url.search, backendUrl);
+    const proxyReq = new Request(targetUrl, {
+      method: request.method,
+      headers: { ...Object.fromEntries(request.headers), 'User-Agent': 'SupremeAI-Edge-Gateway/1.0' },
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+      redirect: 'follow'
+    });
+    return fetch(proxyReq);
   },
 
   async scheduled(event, env, ctx) {
