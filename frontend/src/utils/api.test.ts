@@ -50,7 +50,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
     it('admin portal-এ admin backend রিটার্ন করে', async () => {
       env.VITE_PORTAL_TYPE = 'admin';
       const { BACKEND_URL } = await loadApi();
-      expect(BACKEND_URL).toBe('https://supremeai-admin.onrender.com');
+      expect(BACKEND_URL).toBe('https://supremeai-backend-docker.onrender.com');
     });
 
     it('VITE_USER_BACKEND override সম্মান করে', async () => {
@@ -93,7 +93,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
       env.VITE_PORTAL_TYPE = 'admin';
       setHostname('localhost');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('https://supremeai-admin.onrender.com');
+      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
     });
   });
 
@@ -137,7 +137,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
       env.VITE_PORTAL_TYPE = 'admin';
       setHostname('supremeai-admin.web.app');
       const { getWebSocketBaseUrl } = await loadApi();
-      expect(getWebSocketBaseUrl()).toBe('wss://supremeai-admin.onrender.com');
+      expect(getWebSocketBaseUrl()).toBe('wss://supremeai-backend-docker.onrender.com');
     });
 
     it('https backend URL কে wss-এ রূপান্তর করে', async () => {

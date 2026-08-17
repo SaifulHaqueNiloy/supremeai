@@ -7,6 +7,30 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-17 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
+
+- **সমস্যা:** `maintenance_pipeline.yml`-এর `cost-guard-defcon` job-এর `env:` block-এ সঠিক আছিল 6-space indent, কিন্তু `SUPABASE_DATABASE_URL`/`SUPABASE_DATABASE_URL_POOLER`/`SUPREMEAI_JWT_SECRET` লাইনগুলো 11-space indentation-এ লেখা ছিল → YAML parser error (`expected <block end>, but found '<block mapping start>'`)। GitHub Actions-ও এটি catch করত না কারণ job scheduling-এ ফেইল হয়েছিল।
+- **ফিক্স:** 11-space → 6-space indentation ঠিক করা। `yaml.safe_load()` দিয়ে verify করা — VALID।
+- **লেসন:** YAML-এর block mapping-এর indentation strict — editor স্বয়ংক্রিয়ভাবে indent করলে even-width সাপোর্ট দেয় না। CI YAML-এর syntax সর্বদা `yaml.safe_load()` দিয়ে pre-validate করতে হবে, বিশেষ করে যখন একটি বড় pre-existing file-এর মিধ্যে edit করা হয়।
+
+## 2026-08-17 — 🔄 CI Workflow Consolidation (11 → 6 workflows)
+
+- **সমস্যা:** ১টি মূল `ci.yml` + ৪টি ডুপ্লিকেট/অভিরুপ workflow ছিল: (1) `auto-fix.yml` — daily 01:30 UTC স্কিডুল + PR trigger, `maintenance_pipeline.yml`-এর `auto-lint-fix` + `ci-failure-smart-summary` জবগুলোর সম্পূর্ণ ডুপ্লিকেট; (2) `cache-janitor.yml` + `workflow-janitor.yml` — আলাদা workflow-এর জায়গে maintenance task হিসেবে maintenance_pipeline-এ যুক্ত করা যায়; (3) `security-audit.yml` + `security-dast.yml` — দুটোটি weekly security scan, একত্র করা যায়।
+- **ফিক্স:** এই 5টি workflow ডিলিট করে `maintenance_pipeline.yml`-এ তাদের জবগুলো যুক্ত করা (8টি নতুন জব + 6টি নতুন `workflow_dispatch` input)। `pull_request` trigger যোগ করা — gatekeeper ২৪ঘণ্টার সীমা PR trigger-এ bypass করে (`github.event_name != 'schedule'`)। `promotion/staging` PR-এর জন্য `!startsWith(github.head_ref, 'promotion/staging')` গার্ড যোগ করা।
+- **লেসন:** Multiple scheduled workflows একসাথে চালু হলে GitHub Actions free tier minutes ডুপ্লিকেট হয়। Consolidated workflow-এর `if` conditions-এ `github.event_name` check অপরিহার্য — gatekeeper `needs:` dependency only makes sense on `schedule` triggers, PR trigger-এ সরাসরি run করতে হয়।
+
+## 2026-08-17 — 🚨 Dead URL: supremeai-admin.onrender.com is SUSPENDED
+
+- **সমস্যা:** `supremeai-admin.onrender.com` (Admin Backend Render সার্ভিস) স্বামী কর্তৃ SUSPENDED — CORS headers রিটার্ন করে না, কোনো API কল 403 দেয়। 8টি অ্যাক্টিভ ফাইলে 36টি রেফারেন্স ছিল: vite.config.ts, api.test.ts, origin_validator.py, Cloudflare worker, render.admin.yaml, service_preflight_check.py, .env.example, DEPLOYMENT_CHECKLIST.md, scripts/check_admin_console.js। `api.ts` আগেই `supremeai-backend-docker.onrender.com`-এ আপডেট করে ছিল (অথরাইজ্ড), কিন্তু vite.config.ts ও test assertions পুরনো URL ব্যবহার করছিল → test failure + dev proxy 403।
+- **ফিক্স:** সব অ্যাক্টিভ ফাইলে `supremeai-admin.onrender.com` → `supremeai-backend-docker.onrender.com` রিপ্লেস। `_archive/` ও `docs/`-এর রেফারেন্সগুলো ডকুমেন্টেশন-ওয়েজি রাখা (historical reference)।
+- **লেসন:** Production URL পরিবর্তন/সাস্পেনশন হলে সক্রিয় কোড-এ সব রেফারেন্স আপডেট করতে হবে — environment variable, CORS allowlist, health check URLs, test assertions, deployment configs. `api.ts`-এর default আগেই আপডেট করা থাকায় সেটি source of truth হিসেবে ব্যবহার করা যায়।
+
+## 2026-08-17 — ⚠️ Initial Assumption Error: Storybook and Electron are NOT dead code
+
+- **সমস্যা:** প্রাথমিক বিশ্লেষণে `frontend/package.json`-এর Storybook এবং Electron depsকে "dead" বলে ধরা হয়েছিল — কিন্তু `.storybook/` config directory, 3টি `.stories.tsx` ফাইল, `eslint-plugin-storybook` eslint config, এবং Electron `main.js` + `preload.cjs` সবই ফাইলে বিদ্যমান ছিল। CI workflow থেকে রেফারেন্স না থাকাটা মানে হয়নি যে ডেভটা ডেড।
+- **ফিক্স:** স্ক্রিপ্টগুলো রান করতে ব্যবহার করা হয় না, কিন্তু রিমুভ করা হয়নি — ভবিষ্যৎতে রিঅনডার আর্টিফ্যাক্টের জন্য বা লোকালি dev হিসেবে দরকারী হতে পারে। শুধুমাত্র স্পষ্টভাবে মার্কি আর্কাইভড রিপোজিটরিতে রেফারেন্স থাকলে রিমুভ করা উচিত।
+- **লেসন:** কোনো ডিপেন্ডেন্সি/টুল রিমুভ করার সিদ্ধান্ত নেওয়ার আগে সর্বদা কোডবেসে তার কনফিগারেশন ফাইল, স্ক্রিপ্ট, এবং রেফারেন্সগুলো স্ক্যান করতে হবে। `grep` + `glob` ব্যবহার করে সঠিকভাবে যাচাই করুন।
+
 ## 2026-08-17 — 🧠 Scalable Agent Orchestration: LiteLLM, PydanticAI & MCP
 
 - **সমস্যা:** SupremeAI-তে একাধিক LLM প্রোভাইডার, রেট-লিমিটিং, ফলব্যাক, এবং রিয়েল-ওয়ার্ল্ড টুলের (MCP) জন্য কোনো স্কেলেবল বা ইউনিফাইড অর্কেস্ট্রেশন আর্কিটেকচার ছিল না। ডিপেন্ডেন্সি কনফ্লিক্টের কারণে `langfuse` ইন্সটলেশন ফেইল হচ্ছিল।
@@ -28,42 +52,3 @@
 - **উৎস:** `.gitignore`-এ `*.txt` গ্লোবাল প্যাটার্ন থাকায় `backend/services/scraper/requirements.txt` গিট ট্র্যাক করছিল না (ignored ছিল), ফলে রিমোট রিপোজিটরিতে ফাইলটি পুশ হয়নি।
 - **ফিক্স:** `.gitignore`-এ `!requirements.txt`, `!**/requirements.txt`, `!**/requirements*.txt` এক্সক্লুশন রুল যোগ করা হয়েছে এবং Scraper সার্ভিসের জন্য `Dockerfile` তৈরি করে গিটহাবে পুশ করা হয়েছে।
 - **লেসন:** `.gitignore`-এ ব্রড প্যাটার্ন যেমন `*.txt` ব্যবহারের সময় অবশ্যই প্রয়োজনীয় কনফিগারেশন ও ডিপেন্ডেন্সি ফাইলগুলোর জন্য এক্সপ্লিসিট হোয়াইটলিস্ট/নেগেশন (`!requirements.txt`) নিশ্চিত করতে হবে।
-
-## 2026-08-16 — 🚨 Atomic Tasks & Automation Blindspot (Agent Correction)
-
-- **সমস্যা:** URL replace করার পর verification করা হয়নি, `git add .` দিয়ে ইউজারের অন্যান্য ফাইল কমিট করে দেওয়া হয়েছিল, এবং unused Render service ডিলিট করার automation ট্রাই করা হয়নি।
-- **ফিক্স:** `check_system_health.py` রান করে URL verify করার চেষ্টা করা হয়েছে (local module missing error পাওয়া গেছে)। `LESSONS_LEARNED.md` ও `CHECKPOINT.md` আপডেট করা হলো।
-- **লেসন:** Systemic Propagation-এর পাশাপাশি Atomic Tasks (১ Task = ১ Verify) রুল কখনোই ইগনোর করা যাবে না। অটোনোমাস এজেন্টকে অবশ্যই $0 Cost ফিলোসফি অনুযায়ী unused resource (যেমন Render Service) নিজে থেকেই ডিলিট করার চেষ্টা করতে হবে।
-
-## 2026-08-16 — ⚙️ Architecture Decision: Autonomous Execution Policy
-
-- **সমস্যা:** AI-এর code execution sandbox এবং auto-commit authority কোনো rule ছাড়াই চলছিল।
-- **সিদ্ধান্ত (Core Philosophy থেকে):**
-  - **Sandbox:** Python subprocess (timeout=30s) for safe tasks; Docker only for risky/unknown code — `$0 cost` principle।
-  - **Direct Push:** docs, `*.md`, AI memory files, lint-only commits।
-  - **PR Required:** backend logic, frontend, CI/CD, infra config, migrations, lock files।
-- **Lesson:** Core philosophy (`$0 cost` + `self-healing` + `reliability`) থেকে সরাসরি rules derive করলে admin-এর approval loop ছাড়াই সঠিক decision নেওয়া যায়।
-
-## 2026-08-16 — 🚨 Double Deploy Bug Fixed (render.yaml autoDeploy)
-
-- **সমস্যা:** `render.yaml`-এ `autoDeploy: true` ছিল। প্রতি `git push main`-এ Render তাৎক্ষণিক deploy করত। CI-ও আলাদাভাবে `deploy-backend` job চালাত। ফলে প্রতি push-এ **2টা deploy** → 500 min free quota দ্বিগুণ গতিতে শেষ।
-- **Fix:** `render.yaml` → `autoDeploy: false` (backend + frontend উভয়)। CI pipeline একমাত্র deploy authority।
-- **Effect:** `check-render-quota` → quota-based routing এখন কার্যকর। Resource waste বন্ধ।
-- **Lesson:** Render `autoDeploy: true` + CI deploy job একসাথে রাখা যাবে না। Always pick ONE deploy authority।
-
-## 2026-08-16 — 🔥 React Error #31 (Active Monitor E2E) Root Cause: RAW ERROR OBJECT RENDERED IN TOAST
-
-
-### সমস্যা: 🩺 Environment Health Check → Active Monitor E2E প্রোডাকশন বিল্ডে Admin Dashboard লগইন করার সময় `Minified React error #31` (object with keys `{code, message, errors}`) আনকট uncaught pageerror → `caughtErrors.length` 1 → CI fail।
-
-- **উৎস:** `frontend/src/utils/apiInterceptor.ts`-এ `setupGlobalFetchInterceptor()` error body পার্স করে:
-  `if (parsed.error) errorMsg = parsed.error; else if (parsed.message) errorMsg = parsed.message;` — back-এর error envelope (`{code,message,errors}`) string-এ কনভার্ট না করে সরাসরি `window.showGlobalToast('error', errorMsg)`-এ পাঠায় → toast state `t.message`-এ object বসে → `{t.message}` render → React #31।
-- **ফিক্স (defense-in-depth, 4 layer):** (1) `apiInterceptor.ts`: `parsed.error/message/detail` সবকে `toMsgString()` দিয়ে string-এ; (2) `hooks/useErrorHandler.ts`: `error?.message` object হলে `JSON.stringify()`; (3) `contexts/ToastProvider.tsx`: `safeMessage` guard; (4) `components/ui/Toast.tsx`: একই guard।
-- **লেসন:** যেকোনো error মেসেজ toast/state→JSX child-এ বসানোর আগে MUST `typeof === 'string'` guard, নাহলে production (minified) বিল্ডে React #31 ধরা পড়ে। Commit `f71269c2` (adminStore-এ String()) CI-test হয়েও ফেল ছিল — আসল লিক ছিল interceptor→toast রুটে। CI ফেলের minified error args (`args[]=object with keys {code,message,errors}`) পড়ে object-shape ট্রেস করো।
-
-## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
-
-### সমস্যা: এক্সটেনশনের ভেতরে থার্ড-পার্টি API (OpenRouter) ফলব্যাক লজিক থাকার কারণে মার্কেটিং ও আর্কিটেকচারাল কনফ্লিক্ট তৈরি হওয়া।
-- **উৎস:** `SupremeAIService.ts` ফাইলে OpenRouter-এর API Key ব্যবহার করার লজিক ছিল। এটি একটি বিশাল ব্লান্ডার ছিল, কারণ এর ফলে ইউজার জানত যে আমরা অন্য এআই ব্যবহার করছি ("নিজে খেটে অন্যের দান বানানো")।
-- **ফিক্স:** ফিলোসফিটি রি-অ্যালাইন করা হয়েছে। এক্সটেনশনকে ১০০% থিন ক্লায়েন্ট হিসেবে আর্কিটেকচার করা হচ্ছে। ইউজার শুধু "SupremeAI API Key" এবং "SupremeAI Model" দেখবে। সব থার্ড-পার্টি মডেল কল (Groq/Gemini/OpenAI) অত্যন্ত গোপনে ব্যাকএন্ড (Render) থেকে হবে।
-- **লেসন:** মার্কেটিং এবং ব্র্যান্ডিং ঠিক রাখতে হলে ক্লায়েন্ট সাইডে (এক্সটেনশন) কখনোই থার্ড-পার্টি এআইয়ের নাম বা কনফিগারেশন এক্সপোজ করা যাবে না। এক্সটেনশনে শুধু SupremeAI-এর ব্র্যান্ডিং থাকবে, আর ব্রেইন এবং অর্কেস্ট্রেশন সর্বদা ব্যাকএন্ডে থাকবে।

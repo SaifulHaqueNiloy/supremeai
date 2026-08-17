@@ -158,7 +158,7 @@ class TestTrustedOriginMiddleware:
         assert "https://supremeai-backend.onrender.com" in origins
         assert "https://supremeai-a.web.app" in origins
         assert "https://supremeai-admin.web.app" in origins
-        assert "https://supremeai-admin.onrender.com" in origins
+        assert "https://supremeai-backend-docker.onrender.com" in origins
 
     def test_allowed_origins_property_admin_portal(self):
         """বাংলা: Unified backend আর্কিটেকচারে Admin instance সব অরিজিন ট্রাস্ট করবে।"""

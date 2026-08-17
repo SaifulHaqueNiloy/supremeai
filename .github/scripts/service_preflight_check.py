@@ -263,7 +263,7 @@ def main() -> None:
     primary_svc_id      = os.environ.get("PRIMARY_SVC_ID", "srv-d9d3n58js32c738n79k0")
     backup_svc_id       = os.environ.get("BACKUP_SVC_ID",  "srv-d9fg48bh523c73f63bb0")
     primary_svc_url     = os.environ.get("RENDER_PRIMARY_URL", "https://supremeai-backend.onrender.com")
-    backup_svc_url      = os.environ.get("RENDER_BACKUP_URL",  "https://supremeai-admin.onrender.com")
+    backup_svc_url      = os.environ.get("RENDER_BACKUP_URL",  "https://supremeai-backend-docker.onrender.com")
     vercel_token        = os.environ.get("VERCEL_TOKEN", "")
     firebase_sa         = os.environ.get("FIREBASE_SERVICE_ACCOUNT", "")
     mirror_token        = os.environ.get("MIRROR_REPO_TOKEN", "")

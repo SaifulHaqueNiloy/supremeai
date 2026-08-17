@@ -140,6 +140,36 @@ class LocalSearchRAG:
         return f"https://duckduckgo.com/html/?q={quote_plus(query)}"
 
     def search(self, query: str) -> dict[str, Any]:
+        # বাংলা মন্তব্য: ফ্রি DuckDuckGo (DDGS) সার্চ — কোনো API key বা ব্রাউজার লাগে না।
+        # প্যাকেজ না থাকলে পুরনো ব্রাউজার-স্ক্র্যাপিং ফলব্যাক ব্যবহার করে।
+        try:
+            from core.search import web_search
+
+            raw = web_search(query, max_results=self.max_pages)
+        except Exception as exc:
+            import loguru
+
+            loguru.logger.warning(f"DDGS search failed, falling back to browser scrape: {exc}")
+            raw = []
+
+        if raw:
+            results = [
+                SearchResult(
+                    title=r.get("title", ""),
+                    url=r.get("href") or r.get("url") or "",
+                    snippet=r.get("body", ""),
+                    content="",
+                )
+                for r in raw
+                if (r.get("href") or r.get("url"))
+            ]
+            return {
+                "status": "ok",
+                "query": query,
+                "results": [r.to_dict() for r in results[: self.max_pages]],
+            }
+
+        # ফলব্যাক: ব্রাউজার দিয়ে DuckDuckGo HTML স্ক্র্যাপিং
         search_url = self.build_search_url(query)
         page_result = self.browser.fetch_page(search_url)
         if not page_result.get("success"):
@@ -162,7 +192,7 @@ class LocalSearchRAG:
         summaries: list[str] = []
         stored: dict[str, list[str]] = {}
         for result in search_out.get("results", [])[: self.max_pages]:
-            fetched = self.browser.fetch_page(result["url"])
+            fetched = self._fetch_content(result["url"])
             if fetched.get("success"):
                 text = fetched.get("content", "")[: self.max_chars]
                 summaries.append(f"Title: {result['title']}\nURL: {result['url']}\n{text}")
@@ -175,6 +205,25 @@ class LocalSearchRAG:
             "sources": len(summaries),
             "storage_path": str(self.embeddings_path),
         }
+
+    def _fetch_content(self, url: str) -> dict[str, Any]:
+        """বাংলা মন্তব্য: Jina Reader (https://r.jina.ai/{url}) দিয়ে ফ্রি, লাইটওয়েট কন্টেন্ট
+        এক্সট্রাকশন — ব্রাউজার সার্ভারের মেমোরি/ওভারহেড ছাড়াই ক্লিন Markdown পাওয়া যায়।
+        ব্যর্থ হলে ব্রাউজার ফলব্যাক।"""
+        try:
+            import httpx
+
+            jina_url = f"https://r.jina.ai/{url}"
+            with httpx.Client(timeout=20.0, follow_redirects=True) as client:
+                resp = client.get(jina_url)
+                if resp.status_code == 200 and resp.text.strip():
+                    return {"success": True, "url": url, "content": resp.text}
+        except Exception as exc:
+            import loguru
+
+            loguru.logger.warning(f"Jina Reader fetch failed for {url}: {exc}")
+        # ফলব্যাক: ব্রাউজার দিয়ে পেজ ফেচ
+        return self.browser.fetch_page(url)
 
     async def afetch_and_summarize(self, query: str) -> dict[str, Any]:
         """Async version of fetch_and_summarize method"""

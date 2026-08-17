@@ -66,7 +66,7 @@ export default {
     // 🛡️ Keep-Alive Ping for Render Free Tier (Zero Cold Start)
     const urlsToPing = [
       'https://supremeai-backend-docker.onrender.com/api/v1/health',
-      'https://supremeai-admin.onrender.com/api/v1/health',
+      'https://supremeai-backend-docker.onrender.com/api/v1/health',
       'https://supremeai-scraper.onrender.com/health'
     ];
     

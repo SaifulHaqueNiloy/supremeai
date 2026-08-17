@@ -83,13 +83,14 @@ class SupabaseStore(SQLiteMemoryStore):
         return self.get_session_messages(session_id)
 
     def _generate_embedding(self, text: str) -> list[float] | None:
-        # বাংলা মন্তব্য: LiteLLM ব্যবহার করে টেক্সটের জন্য ১৫৩৬ ডাইমেনশনের ভেক্টর এমবেডিং তৈরি করা হচ্ছে।
+        # বাংলা মন্তব্য: লোকাল sentence-transformers (all-MiniLM-L6-v2, ৩৮৪-ডাইম, ফ্রি, অফলাইন)
+        # প্রাইমারি — ১৫৩৬-ডাইম pgvector কলামের সাথে সামঞ্জস্য রাখতে শূন্য-প্যাড করা হয়
+        # (কসাইন সিমিলারিটি অপরিবর্তিত থাকে)। sentence-transformers না থাকলে LiteLLM OpenAI
+        # text-embedding-3-small (১৫৩৬-ডাইম) ফলব্যাক করে। এতে এমবেডিং খরচ $0 হয়।
         try:
-            import litellm
+            from core.embeddings import embed_for_pgvector
 
-            # litellm.embedding() সিঙ্ক পদ্ধতিতে এমবেডিং জেনারেট করে যা আমাদের সিঙ্ক থ্রেডের জন্য উপযুক্ত
-            response = litellm.embedding(model="text-embedding-3-small", input=text)
-            return response.data[0]["embedding"]
+            return embed_for_pgvector(text, pg_dim=1536)
         except Exception as e:
             try:
                 from loguru import logger

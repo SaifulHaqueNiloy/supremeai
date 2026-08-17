@@ -30,7 +30,7 @@ USER_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
 ADMIN_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
     {
         "https://supremeai-admin.web.app",
-        "https://supremeai-admin.onrender.com",
+         "https://supremeai-backend-docker.onrender.com",
     }
 )
 

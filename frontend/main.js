@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const PRELOAD_PATH = path.join(__dirname, 'preload.cjs');
 const IS_DEV = !app.isPackaged;
-const API_BASE = process.env.VITE_API_URL || 'https://supremeai-backend.onrender.com';
+const API_BASE = process.env.VITE_API_URL || 'https://supremeai-backend-docker.onrender.com';
 
 let tray = null;
 

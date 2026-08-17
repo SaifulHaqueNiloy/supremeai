@@ -43,16 +43,27 @@ const { chromium } = require('@playwright/test');
     }
   });
 
-  // বাংলা মন্তব্য: Firebase এবং Render উভয় Host চেক করা
-  console.log('Testing https://supremeai-admin.onrender.com ...');
+  // বাংলা মন্তব্য: Firebase হোস্টেড অ্যাডমিন ফ্রন্টএন্ড ও Render-এর ব্যাকেন্ড চেক করা
+  console.log('Testing admin frontend at https://supremeai-admin.web.app ...');
   try {
-    await page.goto('https://supremeai-admin.onrender.com', {
+    await page.goto('https://supremeai-admin.web.app', {
       waitUntil: 'domcontentloaded',
       timeout: 15000
     });
     await page.waitForTimeout(3000);
   } catch (err) {
-    pageErrors.push(`Navigation to https://supremeai-admin.onrender.com failed: ${err.message}`);
+    pageErrors.push(`Navigation to https://supremeai-admin.web.app failed: ${err.message}`);
+  }
+
+  // বাংলা মন্তব্য: ব্যাকেন্ড হেলস চেক (supremeai-backend-docker.onrender.com)
+  console.log('Testing backend health at https://supremeai-backend-docker.onrender.com/api/v1/health ...');
+  try {
+    const healthResp = await page.request.get('https://supremeai-backend-docker.onrender.com/api/v1/health');
+    if (!healthResp.ok()) {
+      pageErrors.push(`Backend health check failed: HTTP ${healthResp.status()}`);
+    }
+  } catch (err) {
+    pageErrors.push(`Backend health check failed: ${err.message}`);
   }
 
   console.log('=== CONSOLE ERRORS ===');

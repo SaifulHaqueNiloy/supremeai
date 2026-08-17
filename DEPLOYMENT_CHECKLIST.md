@@ -56,7 +56,7 @@ Required Variables:
 - [ ] ENV = production
 - [ ] SERVICE_ROLE = admin
 - [ ] ADMIN_CORS_ORIGINS = ["https://supremeai-admin.web.app"]
-- [ ] ALLOWED_HOSTS = supremeai-admin.onrender.com
+- [ ] ALLOWED_HOSTS = supremeai-backend-docker.onrender.com
 - [ ] MIN_EXPECTED_ROUTES = 5
 - [ ] FIREBASE_SERVICE_ACCOUNT_JSON = (sync: false - verify in dashboard)
 
@@ -138,7 +138,7 @@ curl -f https://supremeai-backend.onrender.com/health
 # Expected: {"status":"healthy"} (HTTP 200)
 
 # Test 2: Admin Backend Health
-curl -f https://supremeai-admin.onrender.com/health
+curl -f https://supremeai-backend-docker.onrender.com/health
 # Expected: {"status":"healthy"} (HTTP 200)
 
 # Test 3: Health Check Timeout
@@ -159,7 +159,7 @@ curl -X OPTIONS https://supremeai-backend.onrender.com/api/v1/health \
 #   Access-Control-Allow-Credentials: true
 
 # Test 5: CORS Preflight (Admin Backend)
-curl -X OPTIONS https://supremeai-admin.onrender.com/api/v1/health \
+curl -X OPTIONS https://supremeai-backend-docker.onrender.com/api/v1/health \
   -H "Origin: https://supremeai-admin.web.app" \
   -H "Access-Control-Request-Method: GET" \
   -I
@@ -203,7 +203,7 @@ Service 1:
 
 Service 2:
 - Name: SupremeAI Admin Backend
-- URL: https://supremeai-admin.onrender.com/health
+- URL: https://supremeai-backend-docker.onrender.com/health
 - Interval: 5 minutes
 - Timeout: 30 seconds
 - Alert Contacts: [your email]

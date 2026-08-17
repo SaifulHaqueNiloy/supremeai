@@ -27,12 +27,12 @@ _gemini_qa_breaker: CircuitBreaker = CircuitBreaker(
 
 
 def _generate_embedding(text: str) -> list[float] | None:
-    """litellm দিয়ে real embedding তৈরি করে — memory/supabase_store.py-র একই প্যাটার্ন।"""
+    """লোকাল sentence-transformers (ফ্রি, অফলাইন) প্রাইমারি — LiteLLM OpenAI ফলব্যাক।
+    memory/supabase_store.py-র একই প্যাটার্ন (core.embeddings.embed_for_pgvector)।"""
     try:
-        import litellm
+        from core.embeddings import embed_for_pgvector
 
-        response = litellm.embedding(model="text-embedding-3-small", input=text)
-        return response.data[0]["embedding"]
+        return embed_for_pgvector(text, pg_dim=1536)
     except Exception as exc:
         logger.warning(f"Embedding generation failed: {exc}")
         return None

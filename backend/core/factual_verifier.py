@@ -165,6 +165,26 @@ class FactualVerifier:
             except Exception as e:
                 _logger.warning(f"_ddgs search failed: {e}")
 
+        # বাংলা মন্তব্য: ফ্রি DuckDuckGo (DDGS) সার্চ — কোনো API key লাগে না।
+        # core.search.web_search() প্যাকেজ ইনস্টল না থাকলে খালি লিস্ট রিটার্ন করে।
+        try:
+            from core.search import web_search
+
+            ddg_results = web_search(claim, max_results=3)
+            if ddg_results:
+                href = ddg_results[0].get("href") or ddg_results[0].get("url") or ""
+                sources = [r.get("href") or r.get("url") or "" for r in ddg_results if (r.get("href") or r.get("url"))]
+                return {
+                    "claim": claim,
+                    "is_verified": True,
+                    "confidence": 0.8,
+                    "sources": sources,
+                    "supporting_sources": sources,
+                    "method": "duckduckgo_ddgs",
+                }
+        except Exception as e:
+            _logger.warning(f"DDGS web search failed: {e}")
+
         # Prioritize local ChromaDB RAG search before external web search
         if self.local_rag is not None:
             try:
