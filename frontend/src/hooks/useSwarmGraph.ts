@@ -3,6 +3,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { Edge, EdgeChange, Node, NodeChange } from '@xyflow/react';
 import { getApiBaseUrl } from '../utils/api';
+import { getAuthHeaders } from '../services/apiClient';
 
 interface SwarmGraphDelta {
   added: { nodes: Node[]; edges: Edge[] };
@@ -18,7 +19,9 @@ export const useSwarmGraph = () => {
   const { data: delta } = useQuery<SwarmGraphDelta>({
     queryKey: ['swarm-graph'],
     queryFn: async () => {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/evolution/swarm-graph`);
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/evolution/swarm-graph`, {
+        headers: await getAuthHeaders(),
+      });
       return res.json(); // ব্যাকএন্ড থেকে {added: {nodes:[], edges:[]}, removed: {nodes:[], edges:[]}}
     },
     refetchInterval: 2000, // ২ সেকেন্ড পর পর পোলিং
@@ -51,7 +54,7 @@ export const useSwarmGraph = () => {
       if (agentIds.length === 0) return {};
       const res = await fetch(`${getApiBaseUrl()}/api/v1/health/agents`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({ agent_ids: agentIds })
       });
       return res.json();

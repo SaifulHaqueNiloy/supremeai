@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeSyncContext } from './ThemeSyncContext';
 import { getApiBaseUrl } from '../utils/api';
+import { getRawToken } from '../services/apiClient';
 
 
 // বাংলা মন্তব্য: ThemeSyncContext একে অপর ফাইল থেকে ইম্পোর্ট করা হয়েছে, যাতে react-refresh সতর্কতা দূর হয়
@@ -13,7 +14,8 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
 
   useEffect(() => {
     // Listen for Server-Sent Events from FastAPI
-    const eventSource = new EventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream`);
+    const token = getRawToken();
+    const eventSource = new EventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
 
     eventSource.onmessage = (event) => {
       try {

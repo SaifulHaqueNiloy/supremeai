@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Loader2, ListChecks, AlertOctagon, Terminal, Clock } from 'lucide-react';
-import { apiClient } from '../../services/apiClient';
+import { apiClient, getRawToken } from '../../services/apiClient';
 import { setSujonState } from '../sujon-utils';
 import { getApiBaseUrl } from '../../utils/api';
 
@@ -71,7 +71,8 @@ export function AutomationQueuePage() {
   useEffect(() => {
     refresh();
     const backendUrl = getApiBaseUrl();
-    const sse = new EventSource(`${backendUrl}/api/dashboard/stream`);
+    const token = getRawToken();
+    const sse = new EventSource(`${backendUrl}/api/dashboard/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
 
     sse.addEventListener('browser_tasks', () => {
       refresh();

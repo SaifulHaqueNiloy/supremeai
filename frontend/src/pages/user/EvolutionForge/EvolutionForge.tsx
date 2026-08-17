@@ -69,7 +69,8 @@ const EvolutionForgeCanvas = () => {
   const { showToast } = useToast();
 
   useEffect(() => {
-    const sse = new EventSource('/api/v1/swarm/stream');
+    const token = localStorage.getItem('supremeai_auth_token');
+    const sse = new EventSource(`/api/v1/swarm/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
 
     sse.onmessage = (event) => {
       try {

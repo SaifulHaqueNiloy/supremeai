@@ -28,6 +28,17 @@ export const updateTokenCache = (token: string | null) => {
   cachedToken = token;
 };
 
+// বাংলা মন্তব্য: SSE (EventSource) হেডার পাঠাতে পারে না, তাই টোকেন query param হিসেবে পাঠাতে হয়।
+// admin token (supreme_admin_jwt) থাকলে তা প্রিফার করি, নচেৎ ইউজার token (supremeai_auth_token)।
+export const getRawToken = (): string | null => {
+  if (typeof window === 'undefined') return cachedToken;
+  const admin = localStorage.getItem('supreme_admin_jwt');
+  if (admin) return admin;
+  const user = localStorage.getItem('supremeai_auth_token');
+  if (user) return user;
+  return cachedToken;
+};
+
 const isDev = () => {
   return typeof process !== 'undefined' && (process.env.NODE_ENV === 'development' || process.env.VITE_ENV === 'development');
 };

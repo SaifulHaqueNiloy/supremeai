@@ -12,7 +12,7 @@
     "dev:admin": "cross-env VITE_PORTAL_TYPE=admin vite",
     "dev:user": "cross-env VITE_PORTAL_TYPE=user vite",
     "build": "pnpm build:admin && pnpm build:user",
-    "build:admin": "cross-env VITE_PORTAL_TYPE=admin vite build",
+    "build:admin": "cross-env VITE_PORTAL_TYPE=admin vite build --mode admin",
     "build:user": "cross-env VITE_PORTAL_TYPE=user vite build && node -e \"const fs=require('fs'); if(fs.existsSync('dist-user')) fs.cpSync('dist-user', 'dist', {recursive: true});\"",
     "build:report": "vite build --mode production --reporter=json",
     "lint": "eslint .",

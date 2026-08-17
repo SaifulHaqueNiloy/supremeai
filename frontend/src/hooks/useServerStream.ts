@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getApiBaseUrl } from '../utils/api';
+import { getRawToken } from '../services/apiClient';
 
 export type ServerStreamStatus = 'connecting' | 'connected' | 'disconnected';
 
@@ -10,7 +11,8 @@ export const useServerStream = () => {
 
   useEffect(() => {
     const API_BASE_URL = getApiBaseUrl();
-    const sseEndpoint = `${API_BASE_URL}/api/task/stream`;
+    const token = getRawToken();
+    const sseEndpoint = `${API_BASE_URL}/api/task/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     let eventSource: EventSource | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
