@@ -7,6 +7,13 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-17 — 🚨 .gitignore *.txt Rule Masked requirements.txt in Scraper Microservice
+
+- **সমস্যা:** GitHub Actions CI-তে `🕷️ Scraper Service Build` ফেইল করছিল: `ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements.txt'`.
+- **উৎস:** `.gitignore`-এ `*.txt` গ্লোবাল প্যাটার্ন থাকায় `backend/services/scraper/requirements.txt` গিট ট্র্যাক করছিল না (ignored ছিল), ফলে রিমোট রিপোজিটরিতে ফাইলটি পুশ হয়নি।
+- **ফিক্স:** `.gitignore`-এ `!requirements.txt`, `!**/requirements.txt`, `!**/requirements*.txt` এক্সক্লুশন রুল যোগ করা হয়েছে এবং Scraper সার্ভিসের জন্য `Dockerfile` তৈরি করে গিটহাবে পুশ করা হয়েছে।
+- **লেসন:** `.gitignore`-এ ব্রড প্যাটার্ন যেমন `*.txt` ব্যবহারের সময় অবশ্যই প্রয়োজনীয় কনফিগারেশন ও ডিপেন্ডেন্সি ফাইলগুলোর জন্য এক্সপ্লিসিট হোয়াইটলিস্ট/নেগেশন (`!requirements.txt`) নিশ্চিত করতে হবে।
+
 ## 2026-08-16 — 🚨 Atomic Tasks & Automation Blindspot (Agent Correction)
 
 - **সমস্যা:** URL replace করার পর verification করা হয়নি, `git add .` দিয়ে ইউজারের অন্যান্য ফাইল কমিট করে দেওয়া হয়েছিল, এবং unused Render service ডিলিট করার automation ট্রাই করা হয়নি।

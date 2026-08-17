@@ -10,12 +10,11 @@
   - (see git log for details)
 
 ## Files Changed
+  - `LESSONS_LEARNED.md`
   - `CHECKPOINT.md`
-  - `backend/services/scraper/main.py`
+  - `.gitignore`
   - `backend/services/scraper/Dockerfile`
   - `backend/services/scraper/requirements.txt`
-  - `backend/services/scraper/security.py`
-  - `.gitignore`
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)
