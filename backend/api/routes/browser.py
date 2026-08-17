@@ -494,28 +494,73 @@ def delete_session(session_id: str):
     return {"success": True}
 
 
-from tools.ai_agents.browser_agent import BrowserAgent, BrowseRequest
+from tools.ai_agents.browser_agent import BrowseRequest
 
-_agent = BrowserAgent()
+from pydantic import BaseModel
+
+
+class ScrapeRequest(BaseModel):
+    url: str
+
+# বাংলা মন্তব্য: আগের BrowserAgent গ্লোবাল সিঙ্গলটন সরিয়ে দিয়েছি।
+# এখন ব্রাউজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
+# decoupled)। AGENTS.md §2: "Never treat tasks in isolation" — এই পরিবর্তনের পাশাপাশি
+# Cloudflare Worker (worker.js) এবং render.yaml-এ scraper route যোগ করতে হবে।
+
+import httpx
+from core.config import settings
+
+
+_SCRAPER_URL = settings.scraper_service_url.rstrip("/") if settings.scraper_service_url else None
+
+
+async def _proxy_to_scraper(endpoint: str, payload: dict) -> dict:
+    """Forward browser/scrape requests to the standalone scraper microservice."""
+    if not _SCRAPER_URL:
+        # Fallback: use local BrowserAgent (for local dev / when scraper service is not deployed)
+        from tools.ai_agents.browser_agent import BrowserAgent
+        agent = BrowserAgent()
+        return await agent.navigate_and_interact(**payload)
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(f"{_SCRAPER_URL}/{endpoint}", json=payload)
+            return resp.json()
+    except (httpx.RequestError, httpx.HTTPStatusError) as e:
+        from loguru import logger
+        logger.error(f"Scraper service proxy failed: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/scrape", dependencies=[Depends(require_admin_token)])
+async def scrape(request: ScrapeRequest):
+    """Fetch URL and return cleaned content via the Scraper Microservice."""
+    result = await _proxy_to_scraper("scrape", {"url": request.url})
+    return result
 
 
 @router.post("/browse", dependencies=[Depends(require_admin_token)])
 async def browse(request: BrowseRequest):
-    """Navigate to a URL and perform browser actions (Admin Only)."""
+    """Navigate to a URL and perform browser actions via the Scraper Microservice (Admin Only)."""
     if request.action in ("click", "type", "scroll", "screenshot"):
-        return await _agent.navigate_and_interact(
-            url=request.url,
-            action=request.action,
-            selector=request.selector,
-            text=request.text,
-            wait_for=request.wait_for,
+        result = await _proxy_to_scraper(
+            "browse",
+            {"url": request.url, "action": request.action, "selector": request.selector,
+             "text": request.text, "wait_for": request.wait_for},
         )
-    return _agent.scraper.fetch_page(request.url)
+        return result
+
+    # Default action (fetch) — delegate to scraper service
+    result = await _proxy_to_scraper("scrape", {"url": request.url})
+    return result
 
 
 @router.post("/extract", dependencies=[Depends(require_admin_token)])
 async def extract(url: str, extraction_prompt: str):
-    """Fetch page and extract structured data with AI (Admin Only)."""
+    """Fetch page and extract structured data with AI (Admin Only).
+
+    Now proxies to the standalone scraper microservice for browser automation,
+    then performs AI extraction on the returned content.
+    """
     from tools.browser.ai_web_extractor import AIWebExtractor
 
     extractor = AIWebExtractor()

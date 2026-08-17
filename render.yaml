@@ -1,3 +1,7 @@
+# SupremeAI 2.0 — Microservices Blueprint (Zero Cost Edition)
+# Phase 1: Main backend + Scraper service on Render (free tier, quota-aware)
+# Phase 2: Media processing on Cloud Run (free tier)
+# Phase 3: Edge gateway on Cloudflare Worker (free tier)
 services:
   - type: web
     name: supremeai-backend
@@ -18,6 +22,33 @@ services:
         value: 3.11.0
       - key: CARGO_HOME
         value: /opt/render/project/src/.cargo
+      # বাংলা মন্তব্য: Scraper মাইক্রোসার্ভিসের URL — browser.py থেকে proxy করতে হবে
+      - key: SCRAPER_SERVICE_URL
+        value: "https://supremeai-scraper.onrender.com"
+
+  # Phase 1: Scraper/Browser Automation Service (decoupled from main backend)
+  # Runs Playwright browser automation independently — keeps heavy browser
+  # workloads from blocking the main API worker. Deployed via CI quota-aware
+  # pipeline (scripts/ci/check-render-quota.py → GitHub build fallback).
+  - type: web
+    name: supremeai-scraper
+    env: python
+    rootDir: backend/services/scraper
+    buildCommand: "pip install -r requirements.txt && playwright install --with-deps chromium"
+    startCommand: "python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+    region: singapore
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: false  # CI pipeline is the single deploy authority
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: ENV
+        value: production
+      - key: SCRAPER_MAX_CONCURRENCY
+        value: "3"
+      - key: SCRAPER_TIMEOUT_SECONDS
+        value: "45"
 
   - type: web
     name: supremeai-frontend

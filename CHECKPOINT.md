@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-16 10:42 UTC
+- **Date:** 2026-08-17 01:07 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,25 +10,30 @@
   - (see git log for details)
 
 ## Files Changed
+  - `backend/services/scraper/pyproject.toml`
   - `backend/api/routes/browser.py`
-  - `backend/core/config_fields.py`
-  - `frontend/src/components/admin/ThreatDetection.tsx`
-  - `frontend/src/components/admin/CloudOrchestrator.tsx`
+  - `backend/services/scraper/main.py`
+  - `frontend/src/components/admin/AdminAlertsTab.tsx`
+  - `backend/services/scraper/security.py`
   - `docs/architecture/service_topology.yml`
-  - `docs/admin_dashboard_audit_plan.md`
+  - `backend/core/config_fields.py`
   - `render.yaml`
   - `frontend/src/components/admin/ConfigEditor.tsx`
-  - `frontend/src/components/admin/AdminAlertsTab.tsx`
-  - `FEATURE_TRACKING_LOG.md`
   - `frontend/src/components/admin/UserManager.tsx`
-  - `.env.example`
-  - `infrastructure/wrangler.toml`
   - `infrastructure/cloudflare/worker.js`
-  - `infrastructure/cloudflare/wrangler.toml`
+  - `backend/services/scraper/browser_agent.py`
+  - `frontend/src/components/admin/ThreatDetection.tsx`
   - `frontend/src/pages/admin/AdminShell.tsx`
+  - `infrastructure/cloudflare/wrangler.toml`
+  - `.env.example`
+  - `backend/services/scraper/__init__.py`
+  - `backend/services/scraper/tests/test_scraper_service.py`
+  - `infrastructure/wrangler.toml`
   - `CHECKPOINT.md`
+  - `FEATURE_TRACKING_LOG.md`
+  - `.github/workflows/scraper-ci.yml`
+  - `backend/services/scraper/web_scraper.py`
   - `frontend/src/components/admin/AdminConsole.tsx`
-  - `frontend/src/components/admin/Dashboard.tsx`
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)

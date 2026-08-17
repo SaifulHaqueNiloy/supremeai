@@ -44,6 +44,20 @@ export default {
       return response;
     }
 
+    // 🎯 Proxy /api/scraper/* to the standalone Scraper Microservice on Render
+    // Decouples Playwright browser automation from the main backend.
+    if (url.pathname.startsWith('/api/scraper/')) {
+      const scraperUrl = env.SCRAPER_SERVICE_URL || 'https://supremeai-scraper.onrender.com';
+      const targetUrl = scraperUrl + url.pathname.replace('/api/scraper', '');
+      const proxyReq = new Request(targetUrl, {
+        method: request.method,
+        headers: { ...Object.fromEntries(request.headers), 'User-Agent': 'SupremeAI-Edge-Gateway/1.0' },
+        body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+        redirect: 'follow'
+      });
+      return fetch(proxyReq);
+    }
+
     // Default: pass through to origin
     return fetch(request);
   },
@@ -52,7 +66,8 @@ export default {
     // 🛡️ Keep-Alive Ping for Render Free Tier (Zero Cold Start)
     const urlsToPing = [
       'https://supremeai-backend-docker.onrender.com/api/v1/health',
-      'https://supremeai-admin.onrender.com/api/v1/health'
+      'https://supremeai-admin.onrender.com/api/v1/health',
+      'https://supremeai-scraper.onrender.com/health'
     ];
     
     const promises = urlsToPing.map(url => 

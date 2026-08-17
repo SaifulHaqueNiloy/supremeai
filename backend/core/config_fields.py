@@ -222,3 +222,9 @@ class SettingsFieldsMixin:
     self_heal_approval_webhook: str = Field(default="", validation_alias="SELF_HEAL_APPROVAL_WEBHOOK")
     self_heal_approval_timeout_hours: int = Field(default=24, validation_alias="SELF_HEAL_APPROVAL_TIMEOUT_HOURS")
     auto_remediation_dry_run: bool = Field(default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN")
+
+    # ── Microservices Config — env-driven ─────────────────────────────────────
+    # বাংলা মন্তব্য: Scraper microservic-এর লিভ সেনেন, Cloudflare Worker থেকে proxy করে।
+    scraper_service_url: str = Field(default="", validation_alias="SCRAPER_SERVICE_URL")
+    # Media microservic-এর URL (Cloud Run)
+    media_service_url: str = Field(default="", validation_alias="MEDIA_SERVICE_URL")

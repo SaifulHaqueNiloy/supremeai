@@ -35,3 +35,14 @@ known_exceptions:
       hardcoded এবং shared SUPREMEAI_API_URL ব্যবহার করে — মানে user-portal
       variant কখনো এই job-এ test হয় না (CQ-005, severity P2)। fix না হওয়া
       পর্যন্ত এই checker script এখানে warning দেবে, hard-fail করবে না।
+
+# 🆕 Microservices deployed as separate services (Phase 1+)
+microservices:
+  - name: supremeai-scraper
+    workflow_job: scraper-ci
+    env_var: SCRAPER_SERVICE_URL
+    expected_endpoint: "https://supremeai-scraper.onrender.com"
+    portal_type: internal
+    platform: render-free-tier
+    deployed: true
+
