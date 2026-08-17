@@ -73,8 +73,6 @@ core_routers: list[tuple[str, str]] = [
     # ফলে /api/admin/execution-policies/* এন্ডপয়েন্টগুলো 404 দিচ্ছিল।
     # রাউটারটির নিজস্ব prefix="/api/admin/execution-policies" আছে, তাই "" prefix।
     ("api.routes.execution_policies", ""),
-    # IDE Trio Pipeline (Gemini → Kilo → Cline)
-    ("api.routes.ide_trio", ""),
     # বাংলা মন্তব্ব্য: এই রাউটারটি আগে এখানে যোগই করা হয়নি — ফলে /api/v1/swarm/*
     # (real-time SSE stream, patch-telemetry persistence, VSCode self-healing
     # endpoint, এবং নতুন emergency-stop /halt+/resume) সব HTTP 404 দিত।
@@ -195,11 +193,11 @@ def include_admin_routers(app: FastAPI) -> None:
 
 
 __all__ = [
-    "ADMIN_ROUTERS",
-    "USER_ROUTERS",
-    "core_routers",
-    "include_admin_routers",
-    "include_user_routers",
-    "optional_routers",
     "register_all_routers",
+    "include_user_routers",
+    "include_admin_routers",
+    "core_routers",
+    "optional_routers",
+    "USER_ROUTERS",
+    "ADMIN_ROUTERS",
 ]
