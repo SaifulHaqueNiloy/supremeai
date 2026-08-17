@@ -1,0 +1,52 @@
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+
+// Helper to fetch configuration dynamically or fallback to Vite env vars
+const getFirebaseConfig = async () => {
+  try {
+    const res = await fetch('/__/firebase/init.json');
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.projectId && data.authDomain) {
+        data.projectId = data.authDomain.replace('.firebaseapp.com', '');
+      }
+      return data;
+    }
+  } catch (e) {
+    if (import.meta.env.PROD) {
+      console.error("🔥 Failed to fetch Firebase init configuration in production:", e);
+      throw new Error("Firebase initialization failed: Configuration endpoint is unreachable.");
+    }
+  }
+  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  if (!apiKey) {
+    if (import.meta.env.PROD) {
+      console.error("🔥 VITE_FIREBASE_API_KEY is missing in production environment!");
+      throw new Error("VITE_FIREBASE_API_KEY missing in production.");
+    } else {
+      console.warn("⚠️ Using fake Firebase API key for local development. Please copy .env.example to .env and configure Firebase.");
+    }
+  }
+  return {
+    apiKey: apiKey || "AIzaSyFakeKeyForDevelopmentOnly",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "supremeai-a.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "supremeai-a",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "supremeai-a.appspot.com",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:fakeappid"
+  };
+};
+
+// Initialize Firebase app asynchronously or return existing instance
+export const initFirebase = async () => {
+  if (getApps().length > 0) {
+    return getApp();
+  }
+  const config = await getFirebaseConfig();
+  return initializeApp(config);
+};
+
+export const getFirebaseAuth = async () => {
+  const app = await initFirebase();
+  return getAuth(app);
+};

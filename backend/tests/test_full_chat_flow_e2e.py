@@ -1,0 +1,130 @@
+"""Integration/E2E tests for full chat flow.
+
+বাংলা: পুরো চ্যাট ফ্লো — ইন্টেন্ট রাউটিং থেকে স্ট্রিমিং রেসপন্স পর্যন্ত — একসাথে পরীক্ষা করা হয়েছে।
+"""
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+import pytest
+from fastapi import HTTPException
+
+from api.routes.chat import ChatPayload, get_completion, stream_chat
+
+
+class FakeCache:
+    def __init__(self, value=None):
+        self.value = value
+        self.saved = None
+
+    async def get(self, prompt: str, model_name: str, session_id: str):
+        return self.value
+
+    async def set(self, prompt: str, response: str, model_name: str, session_id: str):
+        self.saved = {
+            "prompt": prompt,
+            "response": response,
+            "model_name": model_name,
+            "session_id": session_id,
+        }
+
+
+class FakeModel:
+    def __init__(self, model_name: str):
+        self.model_name = model_name
+
+    async def generate_content_async(self, prompt: str, stream: bool = False):
+        if prompt == "raise-error":
+            raise RuntimeError("boom")
+        return SimpleNamespace(text=f"generated:{prompt}")
+
+
+@pytest.mark.asyncio
+async def test_full_chat_flow_e2e_cache_hit(monkeypatch):
+    """E2E: cached response returned end-to-end."""
+    fake_cache = FakeCache(
+        value={
+            "success": True,
+            "response": "cached-response",
+            "source": "L5_CACHE",
+            "latency_ms": 10,
+        }
+    )
+    monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
+    request = SimpleNamespace(headers={"X-Session-ID": "session-1"})
+    payload = ChatPayload(prompt="hello")
+    result = await get_completion(request, payload, db=SimpleNamespace(tenant_id="tenant-1"))
+
+    assert result["cached"] is True
+    assert result["response"] == "cached-response"
+    assert result["cache_source"] == "L5_CACHE"
+
+
+@pytest.mark.asyncio
+async def test_full_chat_flow_e2e_live_generation(monkeypatch):
+    """E2E: live generation with cache miss."""
+    fake_cache = FakeCache(value=None)
+    monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
+
+    async def mock_acompletion(prompt, task_type, stream):
+        if prompt == "raise-error":
+            raise RuntimeError("boom")
+        return {"text": f"generated:{prompt}"}
+
+    monkeypatch.setattr("api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion))
+
+    request = SimpleNamespace(headers={"X-Session-ID": "session-2"})
+    payload = ChatPayload(prompt="live-prompt")
+    result = await get_completion(request, payload, db=SimpleNamespace(tenant_id="tenant-2"))
+
+    assert result["cached"] is False
+    assert result["response"] == "generated:live-prompt"
+    assert fake_cache.saved is not None
+    assert fake_cache.saved["model_name"] == "gemini-2.5-pro"
+
+
+@pytest.mark.asyncio
+async def test_full_chat_flow_e2e_streaming(monkeypatch):
+    """E2E: streaming chat yields SSE chunks."""
+
+    async def mock_acompletion(prompt, task_type, stream):
+        class Response:
+            async def __aiter__(self):
+                yield "chunk-one"
+                yield "chunk-two"
+
+        return Response()
+
+    monkeypatch.setattr("api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion))
+    request_payload = ChatPayload(prompt="stream-prompt")
+    response = await stream_chat(request_payload, db=SimpleNamespace(tenant_id="tenant-4"))
+
+    assert response.media_type == "text/event-stream"
+
+    body = b""
+    async for chunk in response.body_iterator:
+        if isinstance(chunk, str):
+            chunk = chunk.encode("utf-8")
+        body += chunk
+
+    assert b"chunk-one" in body
+    assert b"chunk-two" in body
+
+
+@pytest.mark.asyncio
+async def test_full_chat_flow_e2e_model_failure(monkeypatch):
+    """E2E: model failure raises HTTPException."""
+    fake_cache = FakeCache(value=None)
+    monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
+
+    async def mock_acompletion(prompt, task_type, stream):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion))
+
+    request = SimpleNamespace(headers={"X-Session-ID": "session-3"})
+    payload = ChatPayload(prompt="raise-error")
+
+    with pytest.raises(HTTPException):
+        await get_completion(request, payload, db=SimpleNamespace(tenant_id="tenant-3"))

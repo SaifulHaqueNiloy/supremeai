@@ -1,0 +1,8 @@
+import { createContext } from 'react';
+
+// বাংলা মন্তব্য: I18nContext এখানে সরাসরি ডিফাইন করা হয়েছে, যাতে I18nProvider.tsx এ রেফ্রেশ সমস্যা না হয়
+export const I18nContext = createContext({ t: (key: string, params?: Record<string, string | number>) => {
+  if (params) return key;
+  return key;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}, locale: 'en', setLocale: (_next: string) => {} } satisfies Record<string, any>);

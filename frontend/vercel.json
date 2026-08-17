@@ -1,0 +1,17 @@
+{
+  "outputDirectory": "dist-user",
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://supremeai-backend.onrender.com/api/v1/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://supremeai-backend.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

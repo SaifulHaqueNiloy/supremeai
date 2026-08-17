@@ -1,0 +1,194 @@
+from __future__ import annotations
+
+import json
+import os
+from datetime import UTC, datetime
+from urllib.parse import urlparse
+
+from memory.sqlite_store import SQLiteMemoryStore
+
+
+class SupabaseStore(SQLiteMemoryStore):
+    def __init__(self, database_url: str | None = None, local_path: str | None = None):
+        self.database_url = (
+            database_url
+            or os.getenv("SUPABASE_DATABASE_URL_POOLER")
+            or os.getenv("SUPABASE_DATABASE_URL")
+            or os.getenv("SUPABASE_DB_URL")
+            or os.getenv("DATABASE_URL")
+        )
+        self.local_path = local_path or os.getenv("SQLITE_PATH", "data/supremeai.db")
+        self._provider = "supabase" if self.database_url else "sqlite"
+        self._supabase_client = None
+        super().__init__(str(self.local_path))
+
+    @property
+    def provider(self) -> str:
+        return self._provider
+
+    def _get_supabase_client(self):
+        if self._supabase_client is None:
+            try:
+                from supabase import create_client
+
+                url = os.getenv("SUPABASE_URL")
+                if not url and self.database_url:
+                    parsed = urlparse(self.database_url)
+                    hostname = parsed.hostname or ""
+                    if hostname.endswith("supabase.co"):
+                        if hostname.startswith("db."):
+                            hostname = hostname[3:]
+                        url = f"https://{hostname}"
+                    elif parsed.scheme in ("http", "https"):
+                        url = self.database_url.rstrip("/")
+
+                if not url:
+                    raise RuntimeError(
+                        "Unable to derive a valid Supabase URL. Set SUPABASE_URL or use a direct Supabase DB URL."
+                    )
+
+                key = os.getenv("SUPABASE_KEY", "")
+                if not key:
+                    raise RuntimeError("SUPABASE_KEY is required for Supabase client initialization")
+
+                self._supabase_client = create_client(url, key)
+            except Exception as exc:
+                raise RuntimeError(f"Supabase client init failed: {exc}") from exc
+        return self._supabase_client
+
+    def save_conversation(self, session_id: str, messages: list) -> None:
+        if self._provider == "supabase":
+            client = self._get_supabase_client()
+            client.table("conversations").upsert(
+                {
+                    "session_id": session_id,
+                    "messages": json.dumps(messages),
+                    "updated_at": datetime.now(UTC).isoformat(),
+                }
+            ).execute()
+        else:
+            self.get_session_messages(session_id)
+            for msg in messages:
+                if isinstance(msg, dict):
+                    self.save_message(session_id, msg.get("role", "user"), msg.get("content", ""))
+
+    def get_conversation(self, session_id: str) -> list:
+        if self._provider == "supabase":
+            client = self._get_supabase_client()
+            result = client.table("conversations").select("messages").eq("session_id", session_id).execute()
+            rows = result.data
+            if rows:
+                return json.loads(rows[0]["messages"])
+            return []
+        return self.get_session_messages(session_id)
+
+    def _generate_embedding(self, text: str) -> list[float] | None:
+        # বাংলা মন্তব্য: লোকাল sentence-transformers (all-MiniLM-L6-v2, ৩৮৪-ডাইম, ফ্রি, অফলাইন)
+        # প্রাইমারি — ১৫৩৬-ডাইম pgvector কলামের সাথে সামঞ্জস্য রাখতে শূন্য-প্যাড করা হয়
+        # (কসাইন সিমিলারিটি অপরিবর্তিত থাকে)। sentence-transformers না থাকলে LiteLLM OpenAI
+        # text-embedding-3-small (১৫৩৬-ডাইম) ফলব্যাক করে। এতে এমবেডিং খরচ $0 হয়।
+        try:
+            from core.embeddings import embed_for_pgvector
+
+            return embed_for_pgvector(text, pg_dim=1536)
+        except Exception as e:
+            try:
+                from loguru import logger
+
+                logger.error(f"Embedding generation failed: {e}")
+            except ImportError:
+                pass
+            return None
+
+    def _save_learned_fact_sqlite(self, fact_id: str, fact: dict) -> None:
+        # বাংলা মন্তব্য: SQLite-এ ফ্যাক্ট লেখার একমাত্র জায়গা — Supabase পাথ এবং fallback পাথ উভয়েই এটাই ব্যবহার করে
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO tasks (id, task_description, task_type, success, cost, outcome_text) VALUES (?, ?, ?, ?, ?, ?)",
+            (fact_id, json.dumps(fact), "learned_fact", 1, 0.0, json.dumps(fact)),
+        )
+        conn.commit()
+        self._close_connection(conn)
+
+    def save_learned_fact(self, fact: dict) -> None:
+        fact_id = fact.get("id")
+        if not fact_id:
+            fact_id = f"fact_{datetime.now(UTC).timestamp()}"
+            fact["id"] = fact_id
+        fact["created_at"] = fact.get("created_at", datetime.now(UTC).isoformat())
+        if self._provider == "supabase":
+            try:
+                content_text = fact.get("content", fact.get("text", ""))
+                embedding = self._generate_embedding(content_text)
+
+                client = self._get_supabase_client()
+                data = {
+                    "id": fact_id,
+                    "content": json.dumps(fact),
+                    "tags": json.dumps(fact.get("tags", [])),
+                    "created_at": fact["created_at"],
+                }
+                if embedding:
+                    data["embedding"] = embedding
+
+                client.table("learned_facts").upsert(data).execute()
+            except Exception as e:
+                # বাংলা মন্তব্য: CRITICAL FIX — আগে এখানে শুধু লগ করে fact silently হারিয়ে যেত।
+                # এখন ব্যর্থ হলে SQLite-এ fallback write হয়, যাতে কোনো fact অপ্রত্যাশিতভাবে বাদ না যায়।
+                from loguru import logger
+
+                logger.error(f"Failed to save fact to Supabase, falling back to local SQLite: {e}")
+                try:
+                    self._save_learned_fact_sqlite(fact_id, fact)
+                except Exception as fallback_error:
+                    logger.error(f"SQLite fallback also failed — fact '{fact_id}' was NOT persisted: {fallback_error}")
+                    raise
+        else:
+            self._save_learned_fact_sqlite(fact_id, fact)
+
+    def search_facts(self, query: str) -> list:
+        if self._provider == "supabase":
+            try:
+                # বাংলা মন্তব্য: সার্চ কুয়েরির জন্য এমবেডিং জেনারেট করে RPC-র সাহায্যে pgvector সেম্যান্টিক সার্চ চেষ্টা করা হচ্ছে।
+                query_embedding = self._generate_embedding(query)
+                if query_embedding:
+                    client = self._get_supabase_client()
+                    response = client.rpc(
+                        "match_learned_facts",
+                        {
+                            "query_embedding": query_embedding,
+                            "match_threshold": 0.3,
+                            "match_count": 5,
+                        },
+                    ).execute()
+                    if response.data:
+                        return [
+                            (json.loads(row["content"]) if isinstance(row["content"], str) else row["content"])
+                            for row in response.data
+                        ]
+            except Exception as e:
+                try:
+                    from loguru import logger
+
+                    logger.warning(f"pgvector RPC failed, falling back to ilike: {e}")
+                except ImportError:
+                    pass
+
+            # বাংলা মন্তব্য: রেজিলিয়েন্স ফলব্যাক - ভেক্টর সার্চ কাজ না করলে সাধারণ ilike সাবস্ট্রিং সার্চ চালানো হবে।
+            try:
+                client = self._get_supabase_client()
+                result = client.table("learned_facts").select("content").ilike("content", f"%{query}%").execute()
+                return [
+                    (json.loads(row["content"]) if isinstance(row["content"], str) else row["content"])
+                    for row in result.data
+                ]
+            except Exception as e:
+                try:
+                    from loguru import logger
+
+                    logger.error(f"Fallback search failed: {e}")
+                except ImportError:
+                    pass
+                return []
+        return []
