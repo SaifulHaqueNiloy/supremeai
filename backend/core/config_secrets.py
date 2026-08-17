@@ -61,6 +61,8 @@ class SettingsSecretsMixin:
         "STRIPE_API_KEY",
         "STRIPE_WEBHOOK_SECRET",
         "FIREBASE_SERVICE_ACCOUNT_JSON",
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_SECRET_KEY",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -230,6 +232,14 @@ class SettingsSecretsMixin:
     @property
     def firecrawl_api_key(self) -> str:
         return self._get_cached_secret("FIRECRAWL_API_KEY")
+
+    @property
+    def langfuse_public_key(self) -> str:
+        return self._get_cached_secret("LANGFUSE_PUBLIC_KEY")
+
+    @property
+    def langfuse_secret_key(self) -> str:
+        return self._get_cached_secret("LANGFUSE_SECRET_KEY")
 
     @property
     def discord_bot_token(self) -> str:
@@ -495,6 +505,8 @@ class SettingsSecretsMixin:
             "ci_webhook_secret",
             "supabase_url",
             "supabase_key",
+            "langfuse_public_key",
+            "langfuse_secret_key",
         ]:
             result[key_field] = redacted
         # Include non-secret properties

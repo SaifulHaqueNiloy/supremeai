@@ -405,12 +405,11 @@
     "pretest": "pnpm run compile",
     "test": "vitest run",
     "unit": "vitest run",
-    "package-ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --external:openai --format=cjs --platform=node --minify --log-level=warning",
+    "package-ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify --log-level=warning",
     "build": "node scripts/build.mjs",
     "package:vsix": "npx @vscode/vsce package --no-dependencies --skip-license"
   },
   "devDependencies": {
-    "@types/fast-levenshtein": "^0.0.4",
     "@types/node": "18.x",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -424,8 +423,6 @@
     "vscode": "^1.1.37"
   },
   "dependencies": {
-    "@supremeai/design-tokens": "workspace:^",
-    "fast-levenshtein": "^3.0.0",
-    "openai": "^4.0.0"
+    "@supremeai/design-tokens": "workspace:^"
   }
 }

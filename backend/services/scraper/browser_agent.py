@@ -113,7 +113,7 @@ class BrowserAgent:
 
                 title = await page.title()
                 content_html = await page.content()
-                if BeautifulSoup:
+                if BeautifulSoup is not None:
                     soup = BeautifulSoup(content_html, "html.parser")
                     for tag in soup(["script", "style"]):
                         tag.decompose()

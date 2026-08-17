@@ -156,6 +156,11 @@ class LLMGateway:
             litellm.drop_params = True
             litellm.telemetry = False
             litellm.use_litellm_proxy = False
+            
+            # Setup Redis Cache for LiteLLM built-in cache/rate-limiting
+            from ..config import settings
+            if getattr(settings, "redis_url", None):
+                litellm.cache = litellm.Cache(type="redis", url=settings.redis_url)
         except ImportError:
             pass
 
@@ -205,6 +210,15 @@ class LLMGateway:
         except ImportError:
             return
 
+        callbacks_success = []
+        callbacks_failure = []
+
+        # Integrate Langfuse Observability
+        from ..config import settings
+        if getattr(settings, "LANGFUSE_PUBLIC_KEY", None) and getattr(settings, "LANGFUSE_SECRET_KEY", None):
+            callbacks_success.append("langfuse")
+            callbacks_failure.append("langfuse")
+
         def success_callback(kwargs, response_obj, start_time, end_time):
             try:
                 model = kwargs.get("model", "unknown")
@@ -243,8 +257,11 @@ class LLMGateway:
                 )
             )
 
-        litellm.success_callback = [success_callback]
-        litellm.failure_callback = [failure_callback]
+        callbacks_success.append(success_callback)
+        callbacks_failure.append(failure_callback)
+
+        litellm.success_callback = callbacks_success
+        litellm.failure_callback = callbacks_failure
 
     def _build_call_chain(
         self,

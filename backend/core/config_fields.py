@@ -59,6 +59,24 @@ class SettingsFieldsMixin:
     # DB pool sizing (database/session.py) এই মানের উপর ভিত্তি করে User vs Admin instance-এ আলাদা limit প্রয়োগ করে।
     service_role: str = Field(default="user", validation_alias="SERVICE_ROLE")
 
+    # ── Open-Source Integrations Flags (backend/integrations/) ─────────────────
+    # প্রতিটি upstream (mem0, Graphiti, browser-use, E2B) optional dependency;
+    # flag false বা dependency absent থাকলে সিস্টেম zero-cost fallback দিয়ে চলে।
+    mem0_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_MEM0_ENABLED")
+    graphiti_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_GRAPHITI_ENABLED")
+    browser_use_enabled: bool = Field(
+        default=False, validation_alias="SUPREMEAI_BROWSER_USE_ENABLED"
+    )
+    e2b_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_E2B_ENABLED")
+    openhands_enabled: bool = Field(
+        default=False, validation_alias="SUPREMEAI_OPENHANDS_ENABLED"
+    )
+    openhands_server_url: str = Field(
+        default="", validation_alias="OPENHANDS_SERVER_URL"
+    )
+
+
+
     # বাংলা মন্তব্য: JIT OTP over-saturation protection — প্রতি admin প্রতি এই সেকেন্ডে সর্বোচ্চ ১টি OTP।
     otp_cooldown_seconds: int = Field(default=60, validation_alias="OTP_COOLDOWN_SECONDS")
 

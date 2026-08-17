@@ -53,6 +53,7 @@
 3. **Production-Ready & $0 Cost:**
    - সলিউশন হতে হবে বাগ-ফ্রি (Zero Warnings), ফল্ট-টলারেন্ট এবং $0 কস্টের (ফ্রি-টিয়ার)।
    - রিগ্রেশন ব্রেক বা ডুপ্লিকেট কোড লেখা যাবে না।
+   - **Zero-Cost Alternatives:** পেইড বা ভারী টুলগুলোর চমৎকার সব ফ্রি এবং জিরো-মেইনটেইনেন্স অল্টারনেটিভ  ব্যবহার করতে হবে, যাতে $0 cost ফিলোসফি বজায় থাকে।
    - **Pro-Suggestion (Milestone-only):** শুধু **বড় milestone শেষে** (নতুন feature, refactor, deploy) নিচের format-এ ১টি high-impact suggestion দিন। Typo fix / doc update / single-line change-এ skip করুন:
       > **[PRO]** [Impact: HIGH/MED/LOW] — [১ লাইনে suggestion]
       > Example: **[PRO] HIGH** — `ai_memory` টেবিলে `task_type` index যোগ করলে query ১০x দ্রুত হবে।

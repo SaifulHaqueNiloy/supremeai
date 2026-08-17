@@ -1,10 +1,34 @@
 import * as vscode from 'vscode';
-import * as levenshtein from 'fast-levenshtein';
 import { BaseDisposable } from '../utils/BaseDisposable';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type LevenshteinStatic = { get(a: string, b: string): number };
-const levenshteinImpl = (levenshtein as unknown as LevenshteinStatic);
+/**
+ * Thin Client নীতি: বাহ্যিক 'fast-levenshtein' ডিপেন্ডেন্সি বাদ দিয়ে ইনলাইন
+ * Levenshtein দূরত্ব অ্যালগরিদম ব্যবহার করা হলো (কম ডিপেন্ডেন্সি, কম বান্ডল সাইজ)।
+ */
+function levenshteinDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  let prev = new Array<number>(n + 1);
+  let curr = new Array<number>(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(
+        prev[j] + 1, // deletion
+        curr[j - 1] + 1, // insertion
+        prev[j - 1] + cost // substitution
+      );
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+}
 
 export class TelemetryTracker extends BaseDisposable {
     private activePatches: Map<string, { originalErrorId: string, proposedPatch: string }> = new Map();
@@ -42,8 +66,8 @@ export class TelemetryTracker extends BaseDisposable {
         const savedText = document.getText();
         const proposedText = patchData.proposedPatch;
 
-        // Calculate Levenshtein distance
-        const distance = levenshteinImpl.get(savedText, proposedText);
+        // Calculate Levenshtein distance (inline implementation)
+        const distance = levenshteinDistance(savedText, proposedText);
         const maxLength = Math.max(savedText.length, proposedText.length);
         const similarityScore = maxLength === 0 ? 1.0 : 1.0 - (distance / maxLength);
 

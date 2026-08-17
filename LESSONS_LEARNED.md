@@ -7,6 +7,21 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-17 — 🧠 Scalable Agent Orchestration: LiteLLM, PydanticAI & MCP
+
+- **সমস্যা:** SupremeAI-তে একাধিক LLM প্রোভাইডার, রেট-লিমিটিং, ফলব্যাক, এবং রিয়েল-ওয়ার্ল্ড টুলের (MCP) জন্য কোনো স্কেলেবল বা ইউনিফাইড অর্কেস্ট্রেশন আর্কিটেকচার ছিল না। ডিপেন্ডেন্সি কনফ্লিক্টের কারণে `langfuse` ইন্সটলেশন ফেইল হচ্ছিল।
+- **ফিক্স:** `LiteLLMGateway`-এ LiteLLM-এর built-in Redis cache এবং Langfuse observability যুক্ত করা হয়েছে। `BasePydanticAgent` তৈরি করে PydanticAI-এর মাধ্যমে স্ট্রাকচারড আউটপুট এবং `MCPRegistryClient`-এর মাধ্যমে ডাইনামিক টুল ইন্টিগ্রেশন সম্পন্ন করা হয়েছে। `poetry` দিয়ে `langfuse`, `pydantic-ai`, `opentelemetry` এর ভার্সন কনফ্লিক্ট ঠিক করে ইন্সটল করা হয়েছে।
+- **লেসন:** একাধিক LLM এবং টুল ইন্টিগ্রেট করতে LiteLLM এবং PydanticAI-এর কম্বিনেশন ব্যবহার করলে প্রচুর কাস্টম কোড এবং মেইনটেইনেন্স কমানো যায়। Langfuse-এর মতো observability টুল দিয়ে পুরো সিস্টেমের cost এবং latency ট্র্যাক করাটা প্রোডাকশন-লেভেলের এজেন্টদের জন্য অত্যন্ত জরুরি।
+
+## 2026-08-17 — ✅ Thin Client + Brand Exclusivity: VS Code Extension থেকে সরাসরি থার্ড-পার্টি LLM কল সম্পূর্ণ রিমুভ
+
+- **সমস্যা:** `SupremeAIService.tryFreeModelFallback`-এ সরাসরি OpenRouter কল (`openrouter.ai`) + user-supplied API key ছিল; লিগ্যাসি `AIService.ts` সরাসরি `openai` SDK + `aiApiKey`/`aiModel` user-config পড়ছিল → Thin Client ও Brand Exclusivity নীতি লঙ্ঘন + `TS2307` compile error।
+- **ফিক্স:**
+  - `tryFreeModelFallback`: OpenRouter/ইউজার key বাদ; অফলাইন ফলব্যাক = শুধু লোকাল Ollama। বহিরাগত provider কনফিগ হলে স্পষ্ট error throw।
+  - `AIService.ts`: `openai` import + ইউজার key বাদ; সব LLM এখন `getSupremeAIService().sendChatMessage()`-এর মাধ্যমে ব্যাকএন্ডে রাউট (offline static fallback সহ)। `CodeGenerationService` / `CodeReviewService` / `EnhancedAIService` (extends AIService) অক্ষত।
+  - `TelemetryTracker.ts`: মিসিং `fast-levenshtein` → inline Levenshtein; dep প্যাকেজ থেকে `openai`/`fast-levenshtein` বাদ।
+- **লেসন:** thin-client এক্সটেনশন কখনোই সরাসরি LLM provider-এ কল করবে না; key মানেই ব্যাকএন্ড (Render) এনভায়রনমেন্টে। ক্লায়েন্ট-সাইডে শুধু SupremeAI ব্র্যান্ড + ব্যাকএন্ড রাউটিং, আর লোকাল Ollama-ই একমাত্র অফলাইন ফলব্যাক।
+
 ## 2026-08-17 — 🚨 .gitignore *.txt Rule Masked requirements.txt in Scraper Microservice
 
 - **সমস্যা:** GitHub Actions CI-তে `🕷️ Scraper Service Build` ফেইল করছিল: `ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements.txt'`.
@@ -48,30 +63,7 @@
 
 ## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
 
-## 2026-08-16 — Brand Exclusivity and the Thin Client Extension
-
 ### সমস্যা: এক্সটেনশনের ভেতরে থার্ড-পার্টি API (OpenRouter) ফলব্যাক লজিক থাকার কারণে মার্কেটিং ও আর্কিটেকচারাল কনফ্লিক্ট তৈরি হওয়া।
 - **উৎস:** `SupremeAIService.ts` ফাইলে OpenRouter-এর API Key ব্যবহার করার লজিক ছিল। এটি একটি বিশাল ব্লান্ডার ছিল, কারণ এর ফলে ইউজার জানত যে আমরা অন্য এআই ব্যবহার করছি ("নিজে খেটে অন্যের দান বানানো")।
 - **ফিক্স:** ফিলোসফিটি রি-অ্যালাইন করা হয়েছে। এক্সটেনশনকে ১০০% থিন ক্লায়েন্ট হিসেবে আর্কিটেকচার করা হচ্ছে। ইউজার শুধু "SupremeAI API Key" এবং "SupremeAI Model" দেখবে। সব থার্ড-পার্টি মডেল কল (Groq/Gemini/OpenAI) অত্যন্ত গোপনে ব্যাকএন্ড (Render) থেকে হবে।
 - **লেসন:** মার্কেটিং এবং ব্র্যান্ডিং ঠিক রাখতে হলে ক্লায়েন্ট সাইডে (এক্সটেনশন) কখনোই থার্ড-পার্টি এআইয়ের নাম বা কনফিগারেশন এক্সপোজ করা যাবে না। এক্সটেনশনে শুধু SupremeAI-এর ব্র্যান্ডিং থাকবে, আর ব্রেইন এবং অর্কেস্ট্রেশন সর্বদা ব্যাকএন্ডে থাকবে।
-
-## 2026-08-15 — CI Deploy-verify Timeout Increase to 12 Minutes (Render Free-Tier Cold Start)
-
-### সমস্যা: `Verify Render Deploy (Wait for Live)` স্টেপে ৬ মিনিট (360s) টাইমাউটেও ফেইল করছিল।
-- **উৎস:** Render free-tier এ ব্যাকএন্ড ডেপ্লয় এবং কোল্ড স্টার্ট হতে ৬ মিনিটের বেশি সময় লেগে যাচ্ছে। 
-- **ফিক্স:** `.github/scripts/verify-render-deploy.py` তে `TIMEOUT_LIMIT` ডিফল্ট 360s থেকে বাড়িয়ে 720s (১২ মিনিট) করা হয়েছে।
-- **লেসন:** ফ্রি-টিয়ার সার্ভিসের রিলায়াবিলিটির জন্য টাইমআউট লিমিট অনেক জেনারাস রাখতে হবে যাতে স্লো ডেপ্লয়মেন্টের কারণে ফলস-নেগেটিভ ফেইলিওর না আসে।
-
-## 2026-08-15 — Do NOT hard-fail `alembic upgrade head` on asyncpg in CI (MissingGreenlet regression)
-
-### সমস্যা: bridge-boot-check-এ alembic hard-fail বানানোয় CI লাল হয়ে গেল।
-- **উৎস:** `DATABASE_URL` = `postgresql+asyncpg` (async ড্রাইভার) আর `alembic upgrade head` sync চলে; ফলে CI container-এ `sqlalchemy.exc.MissingGreenlet` দিয়ে fail। আগের `|| echo` ছিল ইচ্ছাকৃত bypass (health probe-ই আসল gate)।
-- **ফিক্স:** revert → `poetry run alembic upgrade head || echo "WARN..."` (non-blocking); শুধু HTTP health probe-কে gate রাখা হয়েছে; কারণ comment-এ documented।
-- **লেসন:** async DB driver + sync alembic একসাথে synchronized CI container-এ run করলে MissingGreenlet আসে। Migrate-ভেরিফিকেশন দরকার হলে আলাদা job-এ sync URL/`asyncio` wrapper দিয়ে run করো, নাহলে boot check-এ non-blocking রাখো।
-
-## 2026-08-15 — CI Deploy-verify 120s Timeout Root Cause Fix (Render slow build)
-
-### সমস্যা: GitHub Action (`ci.yml` → `Verify Render Deploy (Wait for Live)`) hard-fail করছিল।
-- **উৎস:** `verify-render-deploy.py`-এ `TIMEOUT_LIMIT = 120`। Render free-tier-এ ভারী Python backend-এর build+deploy `update_in_progress` অবস্থায় ২-৬ মিনিট নেয়; ১২০s-এ সেই অবস্থাতেই step fail → পুরো push run লাল (বাকি সব job path-filter-এ skip থাকায় এরাই একমাত্র failer)।
-- **ফিক্স:** default ৩৬০s (৬ মিনিট), `RENDER_VERIFY_TIMEOUT` env দিয়ে overridable; `fail/cancel/error` status এখনও instant fail; deploy LIVE-এর পরে fresh-live HTTP health check-ও retries=১০ (app boot সময় পায়)।
-- **লেসন:** CI-তে polling/sleep-ভিত্তিক deploy verification-এ timeout কখনোই app-এর বাস্তব build/deploy সময়ের চেয়ে ছোট রাখো না — নাহলে false-negative fail আসবে। Status-ভিত্তিক fast-fail (fail/cancel/error) রাখো, কিন্তু "in-progress" অবস্থার জন্য generous টাইমআউট দাও এবং env-চালিত করো, যাতে CI-স্তর থেকে tune করা যায়।
