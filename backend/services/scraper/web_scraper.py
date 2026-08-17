@@ -28,7 +28,7 @@ class WebScraper:
             response = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
-            title = soup.title.string.strip() if soup.title else "No Title"
+            title = soup.title.get_text(strip=True) if soup.title else "No Title"
             for tag in soup(["script", "style", "nav", "footer", "header"]):
                 tag.decompose()
             text = " ".join(soup.get_text(separator=" ").split())[:3000]
