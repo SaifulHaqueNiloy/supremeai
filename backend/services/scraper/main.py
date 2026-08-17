@@ -14,11 +14,9 @@ Endpoints:
 from __future__ import annotations
 
 import os
-import signal
 import sys
 
 from fastapi import FastAPI, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from browser_agent import BrowseRequest, BrowserAgent
