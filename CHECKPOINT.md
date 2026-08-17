@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-17 12:28 UTC
+- **Date:** 2026-08-17 12:36 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,58 +11,40 @@
 
 ## Files Changed
   - `.github/workflows/self-audit-scan.yml`
-  - `LESSONS_LEARNED.md`
-  - `.env.example`
-  - `CHECKPOINT.md`
-  - `backend/pyproject.toml`
-  - `backend/core/llm/llm_gateway.py`
-  - `tools/vscode-extension/src/services/TelemetryTracker.ts`
-  - `backend/services/scraper/browser_agent.py`
-  - `.github/workflows/security-dast.yml`
-  - `backend/core/embeddings.py`
-  - `.github/workflows/maintenance_pipeline.yml`
-  - `DEPLOYMENT_CHECKLIST.md`
-  - `scripts/check_admin_console.js`
-  - `.agents/AGENTS.md`
-  - `infrastructure/cloudflare/worker.js`
-  - `.github/workflows/security-audit.yml`
-  - `backend/integrations/e2b_adapter.py`
-  - `infrastructure/render.admin.yaml`
-  - `backend/core/feature_flags.py`
-  - `tools/vscode-extension/package.json`
-  - `backend/core/factual_verifier.py`
-  - `FEATURE_TRACKING_LOG.md`
-  - `docs/OPEN_SOURCE_INTEGRATIONS.md`
-  - `backend/integrations/mem0_adapter.py`
-  - `.github/scripts/service_preflight_check.py`
-  - `backend/core/config_fields.py`
-  - `backend/integrations/openhands_adapter.py`
-  - `backend/engine/embedding.py`
-  - `backend/integrations/graphiti_adapter.py`
-  - `backend/tests/core/test_origin_validator.py`
+  - `backend/services/scraper/security.py`
+  - `backend/services/scraper/main.py`
   - `backend/tools/knowledge/local_search_rag.py`
-  - `backend/memory/supabase_store.py`
-  - `backend/poetry.lock`
-  - `tools/vscode-extension/src/services/SupremeAIService.ts`
-  - `REAL_TESTING_LOG.md`
+  - `.github/workflows/maintenance_pipeline.yml`
+  - `.github/workflows/cache-janitor.yml`
+  - `infrastructure/render.admin.yaml`
   - `frontend/main.js`
-  - `backend/core/search.py`
-  - `AGENTS.md`
-  - `backend/core/config_secrets.py`
-  - `tools/vscode-extension/src/ai/AIService.ts`
-  - `tools/vscode-extension/src/services/AutonomousCodingAgent.ts`
+  - `DEPLOYMENT_CHECKLIST.md`
+  - `REAL_TESTING_LOG.md`
+  - `.env.example`
+  - `.github/workflows/security-dast.yml`
+  - `CHECKPOINT.md`
+  - `backend/core/embeddings.py`
+  - `.github/workflows/security-audit.yml`
   - `backend/core/security/origin_validator.py`
+  - `.github/scripts/service_preflight_check.py`
+  - `frontend/src/utils/api.test.ts`
+  - `infrastructure/cloudflare/worker.js`
+  - `backend/services/scraper/browser_agent.py`
+  - `frontend/vite.config.ts`
+  - `backend/core/search.py`
   - `backend/agents/base_pydantic_agent.py`
-  - `backend/integrations/_flags.py`
+  - `LESSONS_LEARNED.md`
+  - `backend/memory/supabase_store.py`
+  - `backend/integrations/browser_use_adapter.py`
+  - `backend/core/factual_verifier.py`
+  - `scripts/check_admin_console.js`
   - `.github/workflows/workflow-janitor.yml`
   - `.github/workflows/auto-fix.yml`
-  - `frontend/src/utils/api.test.ts`
-  - `backend/integrations/__init__.py`
+  - `backend/core/feature_flags.py`
   - `backend/skills/core_knowledge_qa.py`
-  - `tools/vscode-extension/test/autonomous-coding-agent.test.ts`
-  - `.github/workflows/cache-janitor.yml`
-  - `frontend/vite.config.ts`
-  - `backend/integrations/browser_use_adapter.py`
+  - `backend/tests/core/test_origin_validator.py`
+  - `backend/engine/embedding.py`
+  - `backend/core/llm/llm_gateway.py`
 
 ## Pending (Carry Forward)
 - **MED:** Phase C — `sentence-transformers` install করে `memory_write.py` প্রথম real run test করা (embed pipeline দুই ধাপে; থিন-ক্লায়েন্ট ভাঙবে না)

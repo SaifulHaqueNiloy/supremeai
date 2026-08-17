@@ -19,7 +19,7 @@ import sys
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from browser_agent import BrowseRequest, BrowserAgent
+from browser_agent import BrowserAgent, BrowseRequest
 from web_scraper import WebScraper
 
 MAX_CONCURRENCY = int(os.getenv("SCRAPER_MAX_CONCURRENCY", "3"))

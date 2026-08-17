@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import os
-from typing import Any
 
 from loguru import logger
 
@@ -132,11 +131,11 @@ class FeatureFlags:
 feature_flags = FeatureFlags()
 
 __all__ = [
-    "feature_flags",
-    "FeatureFlags",
-    "MEM0_FLAG",
-    "GRAPHITI_FLAG",
     "BROWSER_USE_FLAG",
     "E2B_FLAG",
+    "GRAPHITI_FLAG",
+    "MEM0_FLAG",
     "OPENHANDS_FLAG",
+    "FeatureFlags",
+    "feature_flags",
 ]

@@ -1,6 +1,4 @@
-import asyncio
-import os
-from typing import Any, Callable
+from typing import Any
 
 from loguru import logger
 from pydantic import BaseModel
@@ -50,14 +48,14 @@ class BasePydanticAgent:
         # In a full implementation, we would dynamically generate
         # python functions that call the MCP server endpoints and
         # register them via `self.agent.tool()` decorator.
-        
+
         for tool_name in tools:
             # Create a dynamic function closure
             async def mcp_tool_wrapper(query: str, __tool_name=tool_name) -> str:
                 """Dynamically dispatched tool to MCP backend."""
                 logger.debug(f"[{self.name}] Calling MCP tool: {__tool_name} with args: {query}")
                 return f"Executed {__tool_name} with {query}"
-            
+
             # Pydantic AI uses decorators to register tools or the tool() function
             self.agent.tool(name=tool_name)(mcp_tool_wrapper)
 
@@ -66,7 +64,7 @@ class BasePydanticAgent:
         Execute the PydanticAI agent with the given user input.
         """
         logger.info(f"[{self.name}] Executing agent run...")
-        
+
         # PydanticAI handles the orchestration
         try:
             result = await self.agent.run(user_input)

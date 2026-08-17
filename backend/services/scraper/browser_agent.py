@@ -132,7 +132,7 @@ class BrowserAgent:
                     "links": links,
                     "action": action,
                 }
-            except (TimeoutError, Exception) as e:
+            except (TimeoutError, Exception) as e:  # noqa: BLE001
                 logger.error(f"Playwright action failed: {e}")
                 return {"success": False, "error": str(e), "url": url}
             finally:
@@ -195,7 +195,7 @@ class BrowserAgent:
                         logger.success(f"Extracted data from: {selector}")
 
                 return {"status": "success", "data": extracted_data}
-            except (TimeoutError, Exception) as e:
+            except (TimeoutError, Exception) as e:  # noqa: BLE001
                 logger.error(f"Recipe Interpreter crashed: {e!s}")
                 return {"status": "failed", "error": str(e), "step": index + 1}
             finally:

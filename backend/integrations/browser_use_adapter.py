@@ -88,7 +88,7 @@ def _firecrawl_scrape(url: str, api_key: str, timeout: float = 15.0) -> dict[str
 def _webscraper_fallback(url: str) -> dict[str, Any]:
     """Last-resort: use the project's existing WebScraper (httpx + BeautifulSoup)."""
     try:
-        from tools.browser.web_scraper import WebScraper  # noqa: PLC0415
+        from tools.browser.web_scraper import WebScraper
 
         scraper = WebScraper()
         result = scraper.fetch_page(url)
@@ -104,7 +104,7 @@ def _webscraper_fallback(url: str) -> dict[str, Any]:
 def _try_extract_with_llm(content: str, task: str) -> str | None:
     """Use the free-tier LLM router to extract structured data from scraped content."""
     try:
-        from brain.model_router import ModelRouter  # noqa: PLC0415
+        from brain.model_router import ModelRouter
 
         router = ModelRouter()
         prompt = (
@@ -239,7 +239,7 @@ class BrowserUseAdapter:
                 return {"status": "ok", "engine": "upstream", "result": result}
             except Exception as exc:  # pragma: no cover - defensive
                 logger.warning(f"BrowserUseAdapter: run failed: {exc}")
-                                                                return {"status": "error", "engine": "upstream", "error": str(exc)}
+                return {"status": "error", "engine": "upstream", "error": str(exc)}
 
         # zero-cost fallback: real web scraping without a browser
         return _free_browse(task, max_steps)

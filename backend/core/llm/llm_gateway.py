@@ -156,7 +156,7 @@ class LLMGateway:
             litellm.drop_params = True
             litellm.telemetry = False
             litellm.use_litellm_proxy = False
-            
+
             # Setup Redis Cache for LiteLLM built-in cache/rate-limiting
             from ..config import settings
             if getattr(settings, "redis_url", None):
