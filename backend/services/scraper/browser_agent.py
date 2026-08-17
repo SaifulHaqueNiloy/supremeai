@@ -13,7 +13,7 @@ from typing import Any
 try:
     from bs4 import BeautifulSoup
 except ImportError:
-    BeautifulSoup = None
+    BeautifulSoup = None  # type: ignore[misc, assignment]
 
 from loguru import logger
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ from web_scraper import WebScraper
 try:
     from playwright.async_api import async_playwright
 except ImportError:
-    async_playwright = None
+    async_playwright = None  # type: ignore[assignment]
 
 
 class BrowseRequest(BaseModel):
@@ -153,7 +153,7 @@ class BrowserAgent:
             return {"status": "success", "data": {}}
 
         logger.info(f"Initializing Recipe Interpreter with {len(steps)} steps.")
-        extracted_data = {}
+        extracted_data: dict[str, Any] = {}
 
         async with self._semaphore, async_playwright() as p:
             browser = await p.chromium.launch(
