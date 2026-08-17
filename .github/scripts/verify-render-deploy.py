@@ -83,16 +83,22 @@ def check_http_health(url, label, retries=3, timeout_per_try=10):
     print(f"❌ {label} HTTP check failed after {retries} retries.")
     return False
 
-def monitor_service(service):
+def monitor_service(service, skip_health=False):
     name = service["name"]
     service_id = service["service_id"]
+
+    def do_health(url, n=name, retries=3, timeout_per_try=10):
+        if skip_health:
+            print(f"ℹ️ Skipping HTTP health check for {n} (--skip-health). Verifying deploy status only.")
+            return True
+        return check_http_health(url, n, retries=retries, timeout_per_try=timeout_per_try)
 
     primary_key = os.getenv("RENDER_API_KEY")
     candidate_keys = [k for k in [primary_key] if k]
 
     if not candidate_keys:
         print(f"ℹ️ No API keys configured in environment. Checking HTTP health directly for {name}.")
-        return check_http_health(service["url"], name)
+        return do_health(service["url"])
 
     headers = None
     for key in candidate_keys:
@@ -116,7 +122,7 @@ def monitor_service(service):
 
     if not headers:
         print(f"⚠️ No valid API key found for service {service_id} ({name}). Falling back to HTTP health check.")
-        return check_http_health(service["url"], name)
+        return do_health(service["url"])
 
     print(f"\n🔍 Tracking latest deploy for {name} (Service ID: {service_id})...")
 
@@ -146,7 +152,7 @@ def monitor_service(service):
             
             if time.time() - fetch_start > 30:
                 print("⚠️ Could not find a recent deploy (within last 10 mins) after 30s. Falling back to HTTP health check.")
-                return check_http_health(service["url"], name, retries=24)
+                return do_health(service["url"], retries=24)
                 
         except Exception as e:
             print(f"❌ Error fetching deploys: {e}")
@@ -156,7 +162,7 @@ def monitor_service(service):
 
     if status_str == "live":
         print(f"🎉 Deploy {deploy_id} for {name} is already LIVE on Render!")
-        return check_http_health(service["url"], name, retries=24)
+        return do_health(service["url"], retries=24)
     elif any(f_word in status_str for f_word in ["fail", "cancel", "error"]):
         print(f"❌ Deploy {deploy_id} for {name} failed ({status_str}). Failing immediately.")
         return False
@@ -186,7 +192,7 @@ def monitor_service(service):
                 if status == "live":
                     print(f"🎉 Deploy {deploy_id} is now LIVE on Render!")
                     # বাংলা মন্তব্য: deploy LIVE হলেই app-কে boot হতে সময় লাগে — তাই fresh-live-ও ১০টি HTTP retry পায়।
-                    return check_http_health(service["url"], name, retries=10)
+                    return do_health(service["url"], retries=10)
                 elif any(f_word in status for f_word in ["fail", "cancel", "error"]):
                     # বাংলা মন্তব্য: ডিপ্লয় ফেইল হলে সময় নষ্ট না করে সাথে সাথে HARD FAIL রিটার্ন করা হচ্ছে।
                     print(f"⚠️ Deploy {deploy_id} reported status: {status}. HARD FAIL — new build failed to deploy.")
@@ -202,6 +208,7 @@ def main():
     parser = argparse.ArgumentParser(description="Verify Render Deploy Status")
     parser.add_argument("--service-id", type=str, help="Specific Render Service ID to verify")
     parser.add_argument("--name", type=str, help="Custom Service Name label")
+    parser.add_argument("--skip-health", action="store_true", help="Skip HTTP /health probe (use for static sites with no health endpoint)")
     args = parser.parse_args()
 
     if args.service_id:
@@ -216,7 +223,7 @@ def main():
 
     results = {}
     for svc in targets:
-        results[svc["name"]] = monitor_service(svc)
+        results[svc["name"]] = monitor_service(svc, skip_health=args.skip_health)
 
     print("\n================ DEPLOY SUMMARY ================")
     all_ok = True

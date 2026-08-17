@@ -432,9 +432,31 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}" --name "Backend"
 
+  deploy-frontend:
+    name: 🚀 Trigger Render Frontend Deploy
+    needs: [changes, backend-ci, frontend-ci, security-scan, bridge-boot-check, check-render-quota]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_deploy == 'true')) && needs.changes.outputs.frontend == 'true' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.11"
+      - name: Trigger Render Deploy (Frontend Static Site)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+          PRIMARY_SVC_ID: ${{ secrets.RENDER_FRONTEND_SVC_ID || vars.RENDER_FRONTEND_SVC_ID || 'srv-d9vbvoc9v7es738m3ts0' }}
+        run: python .github/scripts/trigger_render_deploy.py
+      - name: ⏳ Verify Render Frontend Deploy (Wait for Live)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: python .github/scripts/verify-render-deploy.py --service-id "${{ secrets.RENDER_FRONTEND_SVC_ID || vars.RENDER_FRONTEND_SVC_ID || 'srv-d9vbvoc9v7es738m3ts0' }}" --name "Frontend" --skip-health
+
   health-check:
     name: 🩺 Environment Health Check
-    needs: [deploy-backend]
+    needs: [deploy-backend, deploy-frontend]
     runs-on: ubuntu-latest
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'true')) }}
     steps:
@@ -520,6 +542,7 @@ jobs:
       - bridge-boot-check
       - check-render-quota
       - deploy-backend
+      - deploy-frontend
       - health-check
     if: failure()
     steps:
@@ -545,6 +568,7 @@ jobs:
       - bridge-boot-check
       - check-render-quota
       - deploy-backend
+      - deploy-frontend
       - health-check
     if: always()
     steps:
@@ -563,6 +587,7 @@ jobs:
           STAGES["Bridge Boot"]="${{ needs.bridge-boot-check.result }}"
           STAGES["Render Quota"]="${{ needs.check-render-quota.result }}"
           STAGES["Deploy Backend"]="${{ needs.deploy-backend.result }}"
+          STAGES["Deploy Frontend"]="${{ needs.deploy-frontend.result }}"
           STAGES["Health Check"]="${{ needs.health-check.result }}"
 
           ALL_GREEN=true
