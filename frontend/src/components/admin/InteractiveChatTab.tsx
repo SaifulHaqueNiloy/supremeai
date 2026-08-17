@@ -33,6 +33,7 @@ interface InteractiveChatTabProps {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
+import { getRawToken } from '../../services/apiClient';
 
 
 export function InteractiveChatTab({
@@ -466,8 +467,8 @@ export function InteractiveChatTab({
             <div className="flex-1 bg-white overflow-y-auto">
               <iframe
                 title="Browser sandbox"
-                src={browserUrl}
-                sandbox="allow-scripts allow-same-origin"
+                src={`${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(browserUrl)}&token=${encodeURIComponent(getRawToken() || '')}`}
+                sandbox="allow-scripts allow-forms allow-popups"
                 className="w-full h-full border-none bg-white"
                 onError={() => console.error('Iframe load error')}
               />

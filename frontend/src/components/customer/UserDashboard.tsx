@@ -30,6 +30,7 @@ import { MobileSimulator } from './MobileSimulator';
 import { useI18n } from '../../i18n/useI18n';
 // বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম দেখানোর ইউটিলিটি
 import { getSupremeModelLabel } from '../../lib/modelBranding';
+import { useDashboardStore } from '../../store/dashboardStore';
 import './UserDashboard.css';
 
 export interface UserProfile {
@@ -134,6 +135,8 @@ export function UserDashboard({
   const [activeTab, setActiveTab] = useState<'overview' | 'feed' | 'presets' | 'chat' | 'browser' | 'mobile' | 'analytics' | 'team' | 'security'>('overview');
   // বাংলা মন্তব্য: i18n হুক
   const { t } = useI18n();
+  // বাংলা মন্তব্য: অ্যাডভান্সড মোড টগল — এটি ছাড়া ইন-চ্যাট টার্মিনাল/ব্রাউজার বাটন ইউজারের কাছে পৌঁছানোই যেত না
+  const { dashboardMode, toggleDashboardMode } = useDashboardStore();
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -201,6 +204,17 @@ export function UserDashboard({
             {tab === 'security' && <><Shield size={10} className="inline mr-1" /> Security</>}
           </button>
         ))}
+        <button
+          onClick={toggleDashboardMode}
+          data-testid="toggle-dashboard-mode"
+          className={`ml-auto px-4 py-2 text-xs font-bold tracking-wider rounded-lg transition-all border ${
+            dashboardMode === 'advanced'
+              ? 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/30'
+              : 'text-text-secondary hover:text-foreground border border-transparent hover:border-border-accent'
+          }`}
+        >
+          {dashboardMode === 'advanced' ? '🔧 Advanced Mode' : '🧩 Simple Mode'}
+        </button>
       </div>
 
       {activeTab === 'overview' && (

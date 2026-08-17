@@ -1,9 +1,13 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from loguru import logger
 from pydantic import BaseModel
+import aiohttp
+import ipaddress
+import socket
+from urllib.parse import urlparse
 
 from api.routes.admin_dashboard import require_admin_token
 from core.error_bus import with_error_bus
@@ -565,3 +569,80 @@ async def extract(url: str, extraction_prompt: str):
 
     extractor = AIWebExtractor()
     return await extractor.extract_data(url, extraction_prompt)
+
+
+# বাংলা মন্তব্য: ইন-অ্যাপ ব্রাউজার proxy (public) — বাহিরের সাইট X-Frame-Options/frame-ancestors দিয়ে
+# iframe ব্লক করে, তাই সার্ভার-সাইড ফেচ করে iframe-এ রেন্ডার করা হয়। SSRF প্রতিরোধ জরুরি।
+_BLOCKED_NETS = [
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]
+
+
+def _host_is_blocked(hostname: str) -> bool:
+    try:
+        infos = socket.getaddrinfo(hostname, 80)
+    except Exception:
+        return True
+    for info in infos:
+        raw_ip = info[4][0].split("%")[0]
+        try:
+            addr = ipaddress.ip_address(raw_ip)
+        except ValueError:
+            return True
+        if addr.is_loopback or addr.is_private or addr.is_reserved or addr.is_link_local:
+            return True
+        for net in _BLOCKED_NETS:
+            if addr in net:
+                return True
+    return False
+
+
+@router.get("/render")
+async def render_proxy(url: str):
+    """Server-side web proxy so the in-app browser can render sites that block iframes."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise HTTPException(status_code=400, detail="Only absolute http(s) URLs are supported.")
+    if _host_is_blocked(parsed.hostname):
+        raise HTTPException(status_code=400, detail="Blocked or unresolvable host.")
+    timeout = aiohttp.ClientTimeout(total=20)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(
+                url,
+                headers={"User-Agent": "SupremeAI-Browser/1.0"},
+                max_redirects=5,
+                allow_redirects=True,
+            ) as resp:
+                ctype = resp.headers.get("Content-Type", "") or ""
+                data = await resp.read()
+                if len(data) > 5 * 1024 * 1024:
+                    raise HTTPException(status_code=502, detail="Response too large to proxy.")
+                if "text/html" in ctype:
+                    text = data.decode("utf-8", errors="replace")
+                    base_tag = f'<base href="{url}">'
+                    if "<head" in text:
+                        text = text.replace("<head", f"<head>{base_tag}", 1)
+                    elif "<HEAD" in text:
+                        text = text.replace("<HEAD", f"<HEAD>{base_tag}", 1)
+                    else:
+                        text = base_tag + text
+                    return Response(
+                        content=text,
+                        media_type="text/html; charset=utf-8",
+                        headers={"Cache-Control": "no-store", "X-Frame-Options": "ALLOWALL"},
+                    )
+                return Response(content=data, media_type=ctype or "application/octet-stream")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Render proxy error: {e!s}")
+        raise HTTPException(status_code=502, detail="Failed to fetch the requested URL.")
