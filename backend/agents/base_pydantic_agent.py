@@ -28,7 +28,7 @@ class BasePydanticAgent:
         self.result_type = result_type
 
         # PydanticAI Agent
-        self.agent = Agent(
+        self.agent = Agent(  # type: ignore[call-overload]
             self.model_name,
             system_prompt=self.system_prompt,
             result_type=self.result_type,

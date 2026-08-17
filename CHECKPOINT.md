@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-17 13:26 UTC
+- **Date:** 2026-08-17 13:38 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,18 +10,17 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/services/scraper/pyproject.toml`
   - `LESSONS_LEARNED.md`
-  - `REAL_TESTING_LOG.md`
-  - `CHECKPOINT.md`
-  - `backend/services/scraper/browser_agent.py`
-  - `FEATURE_TRACKING_LOG.md`
   - `backend/services/scraper/main.py`
-  - `infrastructure/cloudflare/worker.js`
-  - `.github/workflows/scraper-ci.yml`
-  - `infrastructure/cloudflare/wrangler.toml`
-  - `backend/services/scraper/tests/conftest.py`
   - `backend/services/scraper/tests/test_scraper_service.py`
+  - `backend/services/scraper/tests/conftest.py`
+  - `CHECKPOINT.md`
+  - `backend/services/scraper/pyproject.toml`
+  - `backend/agents/base_pydantic_agent.py`
+  - `REAL_TESTING_LOG.md`
+  - `FEATURE_TRACKING_LOG.md`
+  - `.github/workflows/scraper-ci.yml`
+  - `backend/services/scraper/browser_agent.py`
 
 ## Pending (Carry Forward)
 - **MED:** Phase C — `sentence-transformers` install করে `memory_write.py` প্রথম real run test করা (embed pipeline দুই ধাপে; থিন-ক্লায়েন্ট ভাঙবে না)
