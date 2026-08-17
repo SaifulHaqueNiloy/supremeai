@@ -135,7 +135,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
   );
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#030407]">
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* ১. টপ নেভিগেশন বার */}
       <AdminTopNav onLogout={handleAdminLogout} />
 
@@ -143,7 +143,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
       <div className="flex-1 flex overflow-hidden relative">
 
         {/* ২. বাম পাশের নেভিগেশন সাইডবার */}
-        <aside className="w-56 bg-[#040814]/90 border-r border-[#00f3ff]/15 flex flex-col justify-between py-6 font-sans text-slate-400 select-none z-20">
+        <aside className="w-56 bg-[#040814]/55 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between py-6 font-sans text-slate-400 select-none z-20">
           <div className="space-y-1 px-3">
             {sidebarItems.map(item => {
               const isActive = adminSubTab === item.id;
@@ -182,7 +182,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
         </aside>
 
         {/* ৩. মূল কন্টেন্ট প্যানেল */}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#030611] overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <SubTabContent {...props} />
         </main>
       </div>

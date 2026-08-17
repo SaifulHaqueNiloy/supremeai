@@ -66,7 +66,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         {/* Right Column - Server Status */}
         <div className="space-y-6">
           {/* Server Status */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-4">
+          <div className="supreme-card p-4">
             <div className="flex items-center">
               <div className={`w-3 h-3 rounded-full mr-2 ${isServerOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
@@ -77,18 +77,18 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-4">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Projects</h3>
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">24</p>
+            <div className="supreme-card supreme-stat supreme-card-hover">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider supreme-stat-label">Active Projects</h3>
+              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white supreme-stat-value">24</p>
             </div>
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-4">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tasks Completed</h3>
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">142</p>
+            <div className="supreme-card supreme-stat supreme-card-hover">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider supreme-stat-label">Tasks Completed</h3>
+              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white supreme-stat-value">142</p>
             </div>
           </div>
 
           {/* AI Assistant */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 flex flex-col h-[400px]">
+          <div className="supreme-card flex flex-col h-[400px]">
             <div className="p-4 border-b border-gray-200 dark:border-slate-800">
               <h3 className="font-semibold text-gray-900 dark:text-white">AI Assistant</h3>
             </div>

@@ -51,7 +51,7 @@ export function LivingDashboardShell({ chatPanel, resolveDraggedContent, onOpenS
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <HITLModal pendingAction={pendingAction} onConfirm={confirmAction} onCancel={cancelAction} />
-      <div className="relative min-h-screen w-full flex bg-[var(--supremeai-color-bg-void-dark)] text-foreground overflow-hidden">
+      <div className="dashboard-aurora relative min-h-screen w-full flex text-foreground overflow-hidden">
         {/* কোল্যাপসিবল লেফট সাইডবার — spring-based width animation, no layout thrash */}
         <motion.aside
           data-testid="living-sidebar"

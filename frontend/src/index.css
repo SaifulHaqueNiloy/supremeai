@@ -599,3 +599,227 @@ body.matrix {
   0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
   40% { transform: scale(1); opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   ELEGANT DASHBOARD SYSTEM (Aurora Sky + Glass Cards)
+   বাংলা মন্তব্য: ড্যাশবোর্ড/অ্যাডমিন কনসোলের জন্য শান্ত অ্যানিমেটেড
+   পিসফুল-স্কাই অরোরা ব্যাকগ্রাউন্ড ও গ্লাসমরফিজম কার্ড।
+   সব টোকেন-ভিত্তিক — নতুন হার্ডকোডেড রঙ নেই, থিম-অ্যাওয়ার।
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Peaceful Aurora/স্কাই ব্যাকগ্রাউন্ড (লাইট) ── */
+.dashboard-aurora {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 800px at 8% -12%, rgba(147, 197, 253, 0.18), transparent 60%),
+    radial-gradient(1000px 750px at 108% 8%, rgba(216, 180, 254, 0.16), transparent 55%),
+    radial-gradient(900px 720px at 50% 125%, rgba(125, 211, 252, 0.14), transparent 60%),
+    var(--background, #f8fafc);
+  background-attachment: fixed;
+  background-size: cover;
+  transition: background 0.5s ease;
+}
+
+.dark .dashboard-aurora {
+  background:
+    radial-gradient(1100px 780px at 12% -14%, rgba(0, 243, 255, 0.10), transparent 60%),
+    radial-gradient(950px 720px at 112% 12%, rgba(188, 19, 254, 0.12), transparent 55%),
+    radial-gradient(1050px 820px at 52% 128%, rgba(99, 102, 241, 0.12), transparent 60%),
+    var(--background, #0a0e1a);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+/* ভাসমান "স্কাই" অরব — ধীর, GPU-ফ্রেন্ডলি ট্রান্সফর্ম অ্যানিমেশন */
+.dashboard-aurora::before,
+.dashboard-aurora::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.dashboard-aurora::before {
+  width: 55vw;
+  height: 55vw;
+  left: -14vw;
+  top: -16vw;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.5), transparent 68%);
+  animation: aurora-drift-a 30s ease-in-out infinite;
+}
+
+.dashboard-aurora::after {
+  width: 48vw;
+  height: 48vw;
+  right: -12vw;
+  bottom: -14vw;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.45), transparent 68%);
+  animation: aurora-drift-b 36s ease-in-out infinite;
+}
+
+.dark .dashboard-aurora::before {
+  background: radial-gradient(circle, rgba(0, 243, 255, 0.35), transparent 68%);
+}
+
+.dark .dashboard-aurora::after {
+  background: radial-gradient(circle, rgba(188, 19, 254, 0.38), transparent 68%);
+}
+
+@keyframes aurora-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(9vw, 5vh) scale(1.15); }
+}
+
+@keyframes aurora-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1.1); }
+  50%      { transform: translate(-7vw, -5vh) scale(0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-aurora::before,
+  .dashboard-aurora::after {
+    animation: none;
+  }
+}
+
+
+/* ── ইলিগ্যান্ট গ্লাস কার্ড ── */
+.supreme-card {
+  position: relative;
+  background: var(--card-bg, rgba(255, 255, 255, 0.7));
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--card-border, rgba(148, 163, 184, 0.18));
+  border-radius: var(--sa-radius-lg, 16px);
+  box-shadow: var(--sa-card-shadow, 0 8px 28px -12px rgba(0, 0, 0, 0.18));
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s ease;
+}
+
+.supreme-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--neon-blue, #6366f1) 45%, transparent);
+  box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.3),
+    0 0 0 1px color-mix(in srgb, var(--neon-blue, #6366f1) 18%, transparent);
+}
+
+/* মেট্রিক কার্ড */
+.supreme-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+}
+
+.supreme-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #64748b);
+}
+
+.supreme-stat-value {
+  font-weight: 800;
+
+/* হেডার ব্যান্ড — গ্র্যাডিয়েন্ট অ্যাকসেন্ট ব্যান্ড */
+.supreme-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-accent, #cbd5e1) 35%, transparent);
+}
+
+.supreme-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: var(--text-main, #0f172a);
+}
+
+/* গ্লো-চিপ / স্ট্যাটাস ব্যাজ */
+.supreme-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.supreme-chip-cyan {
+  background: rgba(0, 243, 255, 0.12);
+  color: var(--neon-blue, #0891b2);
+  border: 1px solid rgba(0, 243, 255, 0.28);
+}
+
+.supreme-chip-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success, #059669);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.supreme-chip-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning, #d97706);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.supreme-chip-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger, #dc2626);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+/* ড্যাশবোর্ড গ্রিড — বেন্টো-হাইব্রিড রেসপনসিভ */
+.supreme-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+/* অরোরা বল-ব্যাকড্রপ যেন ভেতরের প্যানেলও গ্লাসি দেখায় */
+.supreme-panel {
+  position: relative;
+  background: var(--panel-bg, rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--border-accent, rgba(148, 163, 184, 0.18));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+  line-height: 1.1;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  background: var(--supreme-gradient-primary, linear-gradient(135deg, #6366f1, #a855f7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.dark .supreme-stat-value {
+  background: var(--supreme-gradient-primary, linear-gradient(135deg, #818cf8, #e879f9));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}

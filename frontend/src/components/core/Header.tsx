@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
 
   return (
-    <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-6 py-4">
+    <header className="bg-white/70 dark:bg-slate-900/55 backdrop-blur-md border-b border-gray-200/60 dark:border-white/5 px-6 py-4 sticky top-0 z-30">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </svg>
           </button>
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-slate-200">{title}</h1>
+          <h1 className="text-xl font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-500 bg-clip-text text-transparent">{title}</h1>
         </div>
 
         <div className="flex items-center space-x-4">

@@ -56,7 +56,7 @@ export const AdminDashboardHome: React.FC = () => {
     : metricsLoading ? [null, null, null, null, null, null] : [20, 30, 40, 45, 50, 20];
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#030611] p-6 font-mono text-slate-300">
+    <div className="flex-1 overflow-y-auto p-6 font-mono text-slate-300">
 
       {/* 1. TOP SECTION: AI Fleet Status */}
       <section className="mb-6 bg-slate-950/60 border border-[#00f3ff]/15 rounded-xl p-5 shadow-[0_0_15px_rgba(0,243,255,0.02)]">

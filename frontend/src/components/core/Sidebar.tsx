@@ -42,10 +42,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       >
         <div className="p-4">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-[0_0_14px_rgba(139,92,246,0.55)]">
               <span className="text-white font-bold">S</span>
             </div>
-            <span className="font-bold text-lg text-gray-800 dark:text-slate-200">SupremeAI</span>
+            <span className="font-bold text-lg bg-gradient-to-r from-indigo-500 to-fuchsia-500 bg-clip-text text-transparent dark:text-transparent">SupremeAI</span>
           </div>
         </div>
 
@@ -56,10 +56,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <Link
                   to={item.path}
                   data-testid={`nav-${item.id}`}
-                  className={`flex items-center px-4 py-3 text-base font-medium rounded-lg transition-colors ${
+                  className={`flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
                     location.pathname === item.path
-                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-r-2 border-blue-600"
-                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
+                      ? "bg-gradient-to-r from-indigo-500/20 to-fuchsia-500/10 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-500 shadow-[inset_0_0_12px_rgba(99,102,241,0.12)]"
+                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:translate-x-0.5"
                   }`}
                 >
                   <svg

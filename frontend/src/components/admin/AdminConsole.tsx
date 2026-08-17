@@ -53,7 +53,7 @@ interface AdminConsoleProps {
 
 export function AdminConsole(props: AdminConsoleProps) {
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#030407]">
+    <div className="dashboard-aurora h-screen w-screen flex flex-col overflow-hidden">
       <DashboardErrorBoundary>
         {!props.adminAuthenticated ? (
           <LoginView

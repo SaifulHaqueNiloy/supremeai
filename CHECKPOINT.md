@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-17 08:54 UTC
+- **Date:** 2026-08-17 09:34 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,13 +10,20 @@
   - (see git log for details)
 
 ## Files Changed
-  - `CHECKPOINT.md`
-  - `frontend/src/components/customer/BrowserPreview.tsx`
-  - `.github/workflows/ci.yml`
-  - `.github/scripts/verify-render-deploy.py`
-  - `frontend/src/components/customer/UserDashboard.tsx`
-  - `backend/api/routes/browser.py`
   - `frontend/src/components/admin/InteractiveChatTab.tsx`
+  - `frontend/src/index.css`
+  - `frontend/src/components/admin/AdminAuthenticated.tsx`
+  - `frontend/src/components/customer/UserDashboard.tsx`
+  - `frontend/src/components/dashboard/DashboardShell.tsx`
+  - `frontend/src/components/dashboard/LivingDashboardShell.tsx`
+  - `frontend/src/components/core/Sidebar.tsx`
+  - `frontend/src/components/customer/BrowserPreview.tsx`
+  - `frontend/src/components/admin/AdminDashboardHome.tsx`
+  - `CHECKPOINT.md`
+  - `frontend/src/components/dashboard/DashboardLayout.tsx`
+  - `frontend/src/components/admin/AdminConsole.tsx`
+  - `frontend/src/components/core/Header.tsx`
+  - `backend/api/routes/browser.py`
 
 ## Pending (Carry Forward)
 - **HIGH:** `SupremeAIService.ts` lines 350-424 — OpenRouter fetch fallback রিমুভ করতে হবে (Brand Exclusivity)
