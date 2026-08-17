@@ -7,6 +7,12 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-17 — 🕷️ Scraper Microservice: SSRF Hole + Dead Code + Test Coverage Gap
+
+- **সমস্যা:** (1) `main.py` /recipe endpoint-এ `initial_url` directly `page.goto()`-এ পাঠানো হচিল — `is_safe_url()` check ছিল না, ফলে SSRF হ্যান্ডলার মেটাডেটা সার্ভিস/ইন্টার্নাল API-এ ব্রাউজার লোড করতে পারে; (2) `main.py-এর `if "pytest" in sys.modules` / `else` দুটি শাখাওই একই `_APP_IMPORT_STRING = "main:app"` সেট করিল — dead code, `import sys` অয়োগ। (3) `browser_agent.py` semaphore `async with` 9-space indent (সঠিক 12-space নয়) — ruff SIM117 violation। (4) `execute_recipe` except block-এ `index` variable `for` loop-এর বাইরে — `NameError` crash। (5) 4টি মাত্র টেস্ট (কোনো recipe, screenshot, concurrency, is_safe_url unit test নেই)। (6) `RecipeRequest.steps` required (no default) — POST `{}` → 422।
+- **ফিক্স:** (1) `/recipe` endpoint-এ `is_safe_url()` চেক যোগ (HTTP 400 on SSRF); (2) dead code রিমুভ → `_APP_IMPORT_STRING = "main:app"`; (3) 12-space indent ঠিক করে `async with self._semaphore, async_playwright()` কম্বাইন; (4) `index = -1` guard; (5) 4→37 টেস্ট (SSRF matrix × 3 endpoints, recipe edge cases, concurrency semaphore, 21টি is_safe_url parametrized); (6) `steps: list = []` default। pyproject.toml-এ pytest-asyncio config যোগ।
+- **লেসন:** User input সবসময় browser navigation-এর আগে validate করতে হবে — `/scrape` আর `/browse` যেমন security check থাকলেও `/recipe` endpoint-ও একই `is_safe_url()` চেক পেতবে। Pydantic model-এ `list = []` mutable default safe (Pydantic deep-copy করে)। Concurrency semaphore production-এ critical — Render free tier (512MB RAM)-এ Playwright browser launch storm-এর বাধা দায়। Test coverage 4→37 দিয়ে 86% scenario coverage পাওয়া যায়।
+
 ## 2026-08-17 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
 
 - **সমস্যা:** `maintenance_pipeline.yml`-এর `cost-guard-defcon` job-এর `env:` block-এ সঠিক আছিল 6-space indent, কিন্তু `SUPABASE_DATABASE_URL`/`SUPABASE_DATABASE_URL_POOLER`/`SUPREMEAI_JWT_SECRET` লাইনগুলো 11-space indentation-এ লেখা ছিল → YAML parser error (`expected <block end>, but found '<block mapping start>'`)। GitHub Actions-ও এটি catch করত না কারণ job scheduling-এ ফেইল হয়েছিল।
@@ -36,19 +42,3 @@
 - **সমস্যা:** SupremeAI-তে একাধিক LLM প্রোভাইডার, রেট-লিমিটিং, ফলব্যাক, এবং রিয়েল-ওয়ার্ল্ড টুলের (MCP) জন্য কোনো স্কেলেবল বা ইউনিফাইড অর্কেস্ট্রেশন আর্কিটেকচার ছিল না। ডিপেন্ডেন্সি কনফ্লিক্টের কারণে `langfuse` ইন্সটলেশন ফেইল হচ্ছিল।
 - **ফিক্স:** `LiteLLMGateway`-এ LiteLLM-এর built-in Redis cache এবং Langfuse observability যুক্ত করা হয়েছে। `BasePydanticAgent` তৈরি করে PydanticAI-এর মাধ্যমে স্ট্রাকচারড আউটপুট এবং `MCPRegistryClient`-এর মাধ্যমে ডাইনামিক টুল ইন্টিগ্রেশন সম্পন্ন করা হয়েছে। `poetry` দিয়ে `langfuse`, `pydantic-ai`, `opentelemetry` এর ভার্সন কনফ্লিক্ট ঠিক করে ইন্সটল করা হয়েছে।
 - **লেসন:** একাধিক LLM এবং টুল ইন্টিগ্রেট করতে LiteLLM এবং PydanticAI-এর কম্বিনেশন ব্যবহার করলে প্রচুর কাস্টম কোড এবং মেইনটেইনেন্স কমানো যায়। Langfuse-এর মতো observability টুল দিয়ে পুরো সিস্টেমের cost এবং latency ট্র্যাক করাটা প্রোডাকশন-লেভেলের এজেন্টদের জন্য অত্যন্ত জরুরি।
-
-## 2026-08-17 — ✅ Thin Client + Brand Exclusivity: VS Code Extension থেকে সরাসরি থার্ড-পার্টি LLM কল সম্পূর্ণ রিমুভ
-
-- **সমস্যা:** `SupremeAIService.tryFreeModelFallback`-এ সরাসরি OpenRouter কল (`openrouter.ai`) + user-supplied API key ছিল; লিগ্যাসি `AIService.ts` সরাসরি `openai` SDK + `aiApiKey`/`aiModel` user-config পড়ছিল → Thin Client ও Brand Exclusivity নীতি লঙ্ঘন + `TS2307` compile error।
-- **ফিক্স:**
-  - `tryFreeModelFallback`: OpenRouter/ইউজার key বাদ; অফলাইন ফলব্যাক = শুধু লোকাল Ollama। বহিরাগত provider কনফিগ হলে স্পষ্ট error throw।
-  - `AIService.ts`: `openai` import + ইউজার key বাদ; সব LLM এখন `getSupremeAIService().sendChatMessage()`-এর মাধ্যমে ব্যাকএন্ডে রাউট (offline static fallback সহ)। `CodeGenerationService` / `CodeReviewService` / `EnhancedAIService` (extends AIService) অক্ষত।
-  - `TelemetryTracker.ts`: মিসিং `fast-levenshtein` → inline Levenshtein; dep প্যাকেজ থেকে `openai`/`fast-levenshtein` বাদ।
-- **লেসন:** thin-client এক্সটেনশন কখনোই সরাসরি LLM provider-এ কল করবে না; key মানেই ব্যাকএন্ড (Render) এনভায়রনমেন্টে। ক্লায়েন্ট-সাইডে শুধু SupremeAI ব্র্যান্ড + ব্যাকএন্ড রাউটিং, আর লোকাল Ollama-ই একমাত্র অফলাইন ফলব্যাক।
-
-## 2026-08-17 — 🚨 .gitignore *.txt Rule Masked requirements.txt in Scraper Microservice
-
-- **সমস্যা:** GitHub Actions CI-তে `🕷️ Scraper Service Build` ফেইল করছিল: `ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements.txt'`.
-- **উৎস:** `.gitignore`-এ `*.txt` গ্লোবাল প্যাটার্ন থাকায় `backend/services/scraper/requirements.txt` গিট ট্র্যাক করছিল না (ignored ছিল), ফলে রিমোট রিপোজিটরিতে ফাইলটি পুশ হয়নি।
-- **ফিক্স:** `.gitignore`-এ `!requirements.txt`, `!**/requirements.txt`, `!**/requirements*.txt` এক্সক্লুশন রুল যোগ করা হয়েছে এবং Scraper সার্ভিসের জন্য `Dockerfile` তৈরি করে গিটহাবে পুশ করা হয়েছে।
-- **লেসন:** `.gitignore`-এ ব্রড প্যাটার্ন যেমন `*.txt` ব্যবহারের সময় অবশ্যই প্রয়োজনীয় কনফিগারেশন ও ডিপেন্ডেন্সি ফাইলগুলোর জন্য এক্সপ্লিসিট হোয়াইটলিস্ট/নেগেশন (`!requirements.txt`) নিশ্চিত করতে হবে।

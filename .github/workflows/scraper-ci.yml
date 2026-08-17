@@ -46,9 +46,9 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install pytest
+          pip install pytest pytest-asyncio
           cd backend/services/scraper
-          pytest tests/ -q || echo "No scraper tests yet — will add in Phase 2"
+          pytest tests/ -q
 
       - name: Build and push Docker image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

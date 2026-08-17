@@ -7,6 +7,7 @@ blocking the main backend worker.
 
 import asyncio
 import base64
+import os
 from typing import Any
 
 try:
@@ -45,7 +46,10 @@ class BrowserAgent:
         self._pw_browser = None
         self.headless = headless
         self.scraper = WebScraper()
-        logger.info("Initialized BrowserAgent for scraper microservice")
+        # Concurrency guard — prevent OOM on Render free tier (512MB RAM)
+        _max = int(os.getenv("SCRAPER_MAX_CONCURRENCY", "3"))
+        self._semaphore = asyncio.Semaphore(_max)
+        logger.info(f"Initialized BrowserAgent (max_concurrency={_max}) for scraper microservice")
 
     async def navigate_and_interact(
         self,
@@ -68,7 +72,7 @@ class BrowserAgent:
             return self.scraper.fetch_page(url)
 
         # Per-request sandbox — no shared global state
-        async with async_playwright() as p:
+        async with self._semaphore, async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=self.headless,
                 args=[
@@ -145,10 +149,13 @@ class BrowserAgent:
         if not callable(async_playwright):
             return {"status": "failed", "error": "Playwright is not installed"}
 
+        if not steps:
+            return {"status": "success", "data": {}}
+
         logger.info(f"Initializing Recipe Interpreter with {len(steps)} steps.")
         extracted_data = {}
 
-        async with async_playwright() as p:
+        async with self._semaphore, async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=self.headless,
                 args=[
@@ -162,6 +169,7 @@ class BrowserAgent:
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             )
             page = await context.new_page()
+            index = -1  # Guard: prevents NameError in except if loop never runs
 
             try:
                 if initial_url:
@@ -196,7 +204,7 @@ class BrowserAgent:
 
                 return {"status": "success", "data": extracted_data}
             except (TimeoutError, Exception) as e:  # noqa: BLE001
-                logger.error(f"Recipe Interpreter crashed: {e!s}")
+                logger.error(f"Recipe Interpreter crashed at step {index + 1}: {e!s}")
                 return {"status": "failed", "error": str(e), "step": index + 1}
             finally:
                 await page.close()

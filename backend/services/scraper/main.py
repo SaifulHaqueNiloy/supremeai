@@ -14,12 +14,12 @@ Endpoints:
 from __future__ import annotations
 
 import os
-import sys
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from browser_agent import BrowserAgent, BrowseRequest
+from security import is_safe_url
 from web_scraper import WebScraper
 
 MAX_CONCURRENCY = int(os.getenv("SCRAPER_MAX_CONCURRENCY", "3"))
@@ -80,20 +80,19 @@ async def browse(request: BrowseRequest):
 
 
 class RecipeRequest(BaseModel):
-    steps: list
+    steps: list = []
     initial_url: str | None = None
 
 
 @app.post("/recipe")
 async def recipe(request: RecipeRequest):
+    if request.initial_url and not is_safe_url(request.initial_url):
+        raise HTTPException(status_code=400, detail="SSRF check failed: Unauthorized internal access")
     result = await _agent.execute_recipe(steps=request.steps, initial_url=request.initial_url)
     return result
 
 
-if "pytest" in sys.modules:
-    _APP_IMPORT_STRING = "main:app"
-else:
-    _APP_IMPORT_STRING = "main:app"
+_APP_IMPORT_STRING = "main:app"
 
 if __name__ == "__main__":
     import uvicorn
