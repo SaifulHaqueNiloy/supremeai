@@ -3,6 +3,7 @@ import { Sparkles, Layers, Cpu, Terminal, Shield, GitPullRequest } from 'lucide-
 import { FloatingAssistantBar } from './components/FloatingAssistantBar';
 import { MultiWorkspaceCanvas } from './components/MultiWorkspaceCanvas';
 import { LocalLlmManager } from './components/LocalLlmManager';
+import { BackendStatus } from './components/BackendStatus';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SupremeAI 2.0 — Native Desktop Studio App ("AETHEL Studio")
@@ -32,6 +33,7 @@ export default function App() {
 
         {/* Global Action Trigger Button */}
         <div className="flex items-center gap-3">
+          <BackendStatus />
           <button
             onClick={() => setShowFloatingBar(!showFloatingBar)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#00f3ff]/10 text-[#00f3ff] border border-[#00f3ff]/30 hover:bg-[#00f3ff]/20 text-xs font-mono font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)]"

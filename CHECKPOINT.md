@@ -10,9 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `CHECKPOINT.md`
-  - `.github/workflows/supreme-core-ci.yml`
+  - `apps/desktop/src/vite-env.d.ts`
+  - `apps/desktop/src/config.ts`
   - `apps/desktop/src/App.tsx`
+  - `CHECKPOINT.md`
+  - `apps/desktop/src/api/backend.ts`
+  - `apps/desktop/src/components/BackendStatus.tsx`
   - `backend/api/deps.py`
 
 ## Pending (Carry Forward)
