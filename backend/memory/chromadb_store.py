@@ -110,6 +110,7 @@ class ChromaDBStore:
         self.add_documents([{"id": doc_id, "text": text, "metadata": metadata or {}}])
 
     def add_documents(self, documents: list[dict[str, Any]]) -> None:
+        # Best-effort write to the real ChromaDB collection (skipped if unavailable).
         if self._collection is not None:
             ids = []
             texts = []
@@ -124,12 +125,14 @@ class ChromaDBStore:
                 metadatas.append(metadata)
             try:
                 self._collection.upsert(ids=ids, documents=texts, metadatas=metadatas)
-                return
             except Exception as e:
                 # বাংলা মন্তব্য: রিয়েল ChromaDB upsert ব্যর্থ হলে (embedding/model সমস্যা)
                 # ডেটা হারানো যাবে না — ফলব্যাক লোকাল স্টোরেজে সেভ করে (self-healing)।
                 _logger.warning(f"ChromaDB upsert failed, falling back to local storage: {e}")
-        # Local TF-IDF fallback path (used when ChromaDB is unavailable OR failed above).
+
+        # Always mirror into the local TF-IDF fallback so reads (get_all_documents /
+        # get_document / self-evolve clustering) never silently lose data, even when
+        # the real vector store reports success but fails to persist on retrieval.
         for doc in documents:
             doc_id = doc.get("id") or str(uuid.uuid4())
             text = doc.get("text") or doc.get("content") or ""
