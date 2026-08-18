@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 19:01 UTC
+- **Date:** 2026-08-18 19:11 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,17 +10,22 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/api/routes/task.py`
-  - `backend/core/observability/__init__.py`
-  - `frontend/src/services/realtime/WebSocketManager.ts`
   - `.github/workflows/supreme-core-ci.yml`
-  - `DEVELOPMENT_ROADMAP.md`
-  - `frontend/src/App.test.tsx`
-  - `backend/workers/load_test.py`
-  - `backend/core/resilience/rollback_monitor.py`
-  - `backend/core/observability/telemetry.py`
-  - `FEATURE_TRACKING_LOG.md`
   - `CHECKPOINT.md`
+  - `DEVELOPMENT_ROADMAP.md`
+  - `backend/baselines/test-model_baseline.pkl`
+  - `backend/tests/api/test_public_and_preferences.py`
+  - `frontend/src/services/realtime/WebSocketManager.ts`
+  - `backend/core/resilience/rollback_monitor.py`
+  - `backend/workers/load_test.py`
+  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
+  - `FEATURE_TRACKING_LOG.md`
+  - `backend/core/observability/__init__.py`
+  - `reports/codebase_issues_report.md`
+  - `backend/api/routes/task.py`
+  - `backend/tests/core/test_core_resilience_and_guards.py`
+  - `backend/poetry.lock`
+  - `backend/core/observability/telemetry.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**
