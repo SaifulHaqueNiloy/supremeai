@@ -38,7 +38,7 @@ def _table_exists(bind, table_name: str) -> bool:
     inspection দিয়ে যাচাই করে তবেই index তৈরি করা হয় (idempotent + safe)।"""
     try:
         insp = sa.inspect(bind)
-        return insp.has_table(table_name)
+        return (table_name in set(insp.get_table_names())) or insp.has_table(table_name)
     except Exception:
         return False
 
