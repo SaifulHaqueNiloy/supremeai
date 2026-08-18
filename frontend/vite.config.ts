@@ -50,21 +50,46 @@ export default defineConfig({
   },
   preview: {
     proxy: devProxy
-  },
+    },
   build: {
     outDir: process.env.VITE_PORTAL_TYPE === 'admin' ? 'dist-admin' : 'dist-user',
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-ui': ['framer-motion', 'lucide-react', 'recharts'],
-          'vendor-flow': ['reactflow'],
-          'vendor-query': ['@tanstack/react-query'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react/') || id.includes('react-dom/') || id.includes('react-router-dom/')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('reactflow') || id.includes('@xyflow')) {
+              return 'vendor-flow';
+            }
+            if (id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
+          }
         },
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 250,
     sourcemap: 'hidden',
+    minify: 'esbuild',
+    esbuild: {
+      pure: ['console.debug', 'console.info'],
+      drop: ['console', 'debugger'],
+    },
   },
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
 })
