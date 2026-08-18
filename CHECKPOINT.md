@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 19:43 UTC
+- **Date:** 2026-08-18 19:48 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,31 +10,36 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/api/routers.py`
-  - `DEVELOPMENT_ROADMAP.md`
   - `backend/memory/__init__.py`
-  - `backend/alembic/versions/2026_08_19_000000_add_performance_indexes.py`
-  - `scripts/benchmark/synthetic_m32_benchmark.py`
-  - `backend/api/routes/admin_brain.py`
-  - `CHECKPOINT.md`
-  - `backend/memory/context_graph_service.py`
-  - `backend/tests/test_context_graph_service.py`
-  - `LESSONS_LEARNED.md`
-  - `backend/tests/test_meta_project_manager_agent.py`
-  - `backend/workers/synthetic_load_benchmark.py`
-  - `backend/baselines/benchmark_baseline.json`
-  - `backend/core/observability/telemetry_events.py`
-  - `backend/tests/test_m32_synthetic_benchmarks.py`
   - `frontend/src/tests/m32_integration.test.ts`
-  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
-  - `REAL_TESTING_LOG.md`
+  - `frontend/src/pages/auth/LoginPage.tsx`
+  - `frontend/src/pages/auth/RegisterPage.tsx`
+  - `frontend/src/tests/accessibility.test.tsx`
+  - `CHECKPOINT.md`
+  - `backend/tests/test_m32_synthetic_benchmarks.py`
   - `backend/baselines/test-model_baseline.pkl`
-  - `backend/api/routes/aod.py`
-  - `FEATURE_TRACKING_LOG.md`
-  - `.github/workflows/nightly-synthetic-benchmark.yml`
-  - `scripts/ci/check_benchmark_regression.py`
+  - `backend/core/observability/telemetry_events.py`
+  - `backend/api/routes/admin_brain.py`
+  - `frontend/package.json`
+  - `DEVELOPMENT_ROADMAP.md`
+  - `REAL_TESTING_LOG.md`
   - `backend/memory/unified_db_manager.py`
+  - `backend/workers/synthetic_load_benchmark.py`
+  - `pnpm-lock.yaml`
   - `backend/agents/meta_project_manager_agent.py`
+  - `backend/baselines/benchmark_baseline.json`
+  - `scripts/ci/check_benchmark_regression.py`
+  - `scripts/benchmark/synthetic_m32_benchmark.py`
+  - `backend/tests/test_context_graph_service.py`
+  - `frontend/src/test/setup.ts`
+  - `backend/tests/test_meta_project_manager_agent.py`
+  - `backend/memory/context_graph_service.py`
+  - `backend/api/routers.py`
+  - `FEATURE_TRACKING_LOG.md`
+  - `frontend/src/tests/degraded_ui_state.test.tsx`
+  - `.github/workflows/nightly-synthetic-benchmark.yml`
+  - `backend/api/routes/aod.py`
+  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**

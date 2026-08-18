@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
+import * as matchers from 'vitest-axe/matchers';
+
+expect.extend(matchers);
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};

@@ -80,6 +80,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Full Name"
+                  aria-label="Full Name"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
@@ -89,6 +90,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="email"
                   placeholder="Email / Identity"
+                  aria-label="Email or Identity"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
@@ -98,6 +100,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="password"
                   placeholder="Passphrase"
+                  aria-label="Passphrase"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"

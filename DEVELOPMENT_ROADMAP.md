@@ -50,9 +50,10 @@ Supabase/pgvector + Redis + Infisical + Cloudflare)।
   এবং `BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md` (`BLUEPRINT-GRAPH-002`) তৈরি ও রোডম্যাপে সংযুক্ত।
 
 - **Phase 3 M3.2 E2E Integration & Synthetic Benchmark Scenarios (100% Done):** ডেমো এজেন্ট সোয়ার্ম (Swarm DAG, concurrency, circuit breaker trip/recovery), কস্ট গার্ড এক্সিড ব্রিচ সিমুলেশন (multi-tier budget caps, Redis fail-safe $0 cost degradation), এবং JIT OTP পূর্ণাঙ্গ লাইফসাইকেল ভ্যালিডেশন (multi-channel dispatch, email fallback, escalation token, brute-force lock, replay prevention) ইঞ্জিন, CLI রানার এবং Pytest/Vitest স্যুট সম্পন্ন ✅।
+- **Phase 3 M3.5 Accessibility & Degraded-State UI Resilience (100% Done):** axe-core ও vitest-axe স্বয়ংক্রিয় এক্সেসিবিলিটি অডিট স্যুট (LoginPage, RegisterPage, QuickPresets, DashboardShell, ChatPanel - ০টি ভায়োলেশন) এবং ৫০৩ ডাউনটাইম, ৪০২ কস্ট গার্ড লিমিট, ৪২৯ থ্রটলিং ও ২০২ JIT-OTP ইন্টারসেপশনের জন্য ডেডিকেটেড ডিগ্রেডেড-স্টেট রেজিলিয়েন্স টেস্ট (১৩/১৩ টেস্ট ফাইল, ৮৯/৮৯ টেস্ট পাস) নিশ্চিত করা হয়েছে ✅।
 
 **যা চলছে / পরবর্তী ফোকাস:**
-- Phase 3 M3.5: axe-core accessibility (0 known) + degraded-state (WS/SSE fail) UI tests.
+- Phase 4: Production Polish & CI/CD Staging Gate verification.
 
 ---
 
