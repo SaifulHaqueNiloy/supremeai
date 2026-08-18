@@ -11,10 +11,9 @@
 
 ## Files Changed
   - `CHECKPOINT.md`
-  - `backend/api/deps.py`
-  - `DEVELOPMENT_ROADMAP.md`
   - `.github/workflows/supreme-core-ci.yml`
   - `apps/desktop/src/App.tsx`
+  - `backend/api/deps.py`
 
 ## Pending (Carry Forward)
 - **⚠️ Concurrent agent (python-jose→PyJWT migration) active** — same working tree-তে 20+ ফাইল
