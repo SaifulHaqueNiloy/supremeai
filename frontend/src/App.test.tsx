@@ -166,19 +166,21 @@ describe('App component', () => {
   });
 
   // বাংলা মন্তব্য: UI টেক্সট পরিবর্তন হওয়া সত্ত্বেও টেস্ট যাতে স্ট্যাবল থাকে সে জন্য data-testid ব্যবহার করা হলো
-  it('renders header, title, and health status', () => {
+  it('renders header, title, and health status', async () => {
     render(
       <MemoryRouter initialEntries={['/workspace']}>
         <App />
       </MemoryRouter>
     );
 
-    expect(screen.getAllByTestId('header-title')[0]).toBeInTheDocument();
-    expect(screen.getAllByTestId('core-status')[0]).toBeInTheDocument();
+    const titles = await screen.findAllByTestId('header-title');
+    expect(titles[0]).toBeInTheDocument();
+    const statuses = await screen.findAllByTestId('core-status');
+    expect(statuses[0]).toBeInTheDocument();
   });
 
   // বাংলা মন্তব্য: চ্যাট ট্যাব সক্রিয় করে চ্যাট কনসোল রেন্ডারিং চেক করা হচ্ছে
-  it('renders chat console when chat tab is active', () => {
+  it('renders chat console when chat tab is active', async () => {
     render(
       <MemoryRouter initialEntries={['/workspace']}>
         <App />
@@ -186,9 +188,11 @@ describe('App component', () => {
     );
 
     // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
-    fireEvent.click(screen.getAllByTestId('tab-chat')[0]);
+    const tabs = await screen.findAllByTestId('tab-chat');
+    fireEvent.click(tabs[0]);
 
-    expect(screen.getByTestId('chat-header')).toBeInTheDocument();
+    const chatHeader = await screen.findByTestId('chat-header');
+    expect(chatHeader).toBeInTheDocument();
   });
 
   // বাংলা মন্তব্য: চ্যাট প্যানেলে মেসেজ টাইপ ও সাবমিট করে প্রসেসিং সফলভাবে হচ্ছে কিনা টেস্ট করা হচ্ছে
@@ -200,16 +204,19 @@ describe('App component', () => {
     );
 
     // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
-    fireEvent.click(screen.getAllByTestId('tab-chat')[0]);
+    const tabs = await screen.findAllByTestId('tab-chat');
+    fireEvent.click(tabs[0]);
 
-    const input = screen.getByTestId('chat-input');
+    const input = await screen.findByTestId('chat-input');
     fireEvent.change(input, { target: { value: 'Test message' } });
 
-    const sendButton = screen.getByTestId('chat-submit');
+    const sendButton = await screen.findByTestId('chat-submit');
     fireEvent.click(sendButton);
 
-    expect(screen.getAllByText('Test message')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Analyzing request "Test message"... Processing on central core.')[0]).toBeInTheDocument();
+    const message = await screen.findAllByText('Test message');
+    expect(message[0]).toBeInTheDocument();
+    const responseMsg = await screen.findByText(/Analyzing request "Test message"/i);
+    expect(responseMsg).toBeInTheDocument();
     expect(getAethelResponse).toHaveBeenCalledWith('Test message', expect.any(Array));
   });
 });

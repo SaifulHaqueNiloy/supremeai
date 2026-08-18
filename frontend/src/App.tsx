@@ -8,12 +8,12 @@ import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializ
 import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { ToastProvider } from './components/ui/Toast';
 
-// Pages (Core Layouts & Auth) - Lazy loaded for bundle optimization
+// Pages (Core Layouts & Auth)
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
-const DashboardShell = React.lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
-const LivingDashboardShell = React.lazy(() => import("./components/dashboard/LivingDashboardShell").then(m => ({ default: m.LivingDashboardShell })));
-const UserDashboard = React.lazy(() => import("./components/customer/UserDashboard").then(m => ({ default: m.UserDashboard })));
+import { DashboardShell } from "./components/dashboard/DashboardShell";
+import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
+import { UserDashboard } from "./components/customer/UserDashboard";
 import type { ChatMessage } from "./components/customer/UserDashboard";
 
 // বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।

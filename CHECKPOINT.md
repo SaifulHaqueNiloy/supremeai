@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 18:54 UTC
+- **Date:** 2026-08-18 18:58 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,15 +10,18 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/App.tsx`
-  - `DEVELOPMENT_ROADMAP.md`
-  - `backend/api/routes/task.py`
-  - `frontend/src/services/realtime/WebSocketManager.ts`
+  - `backend/core/observability/__init__.py`
   - `CHECKPOINT.md`
-  - `FEATURE_TRACKING_LOG.md`
-  - `frontend/vite.config.ts`
+  - `frontend/src/App.tsx`
+  - `backend/api/routes/task.py`
+  - `frontend/src/App.test.tsx`
   - `backend/workers/load_test.py`
-  - `LESSONS_LEARNED.md`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `backend/core/resilience/rollback_monitor.py`
+  - `frontend/src/services/realtime/WebSocketManager.ts`
+  - `frontend/vite.config.ts`
+  - `backend/core/observability/telemetry.py`
+  - `FEATURE_TRACKING_LOG.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**
