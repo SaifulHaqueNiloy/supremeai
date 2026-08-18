@@ -486,6 +486,146 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /unified-memory/long-term/store:
+    post:
+      tags:
+      - Unified Memory
+      summary: Store Long Term Memory Endpoint
+      description: Store information in the long-term 'Eternal Brain' memory.
+      operationId: store_long_term_memory_endpoint_unified_memory_long_term_store_post
+      parameters:
+      - name: session_id
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Session or Task ID
+          title: Session Id
+        description: Session or Task ID
+      - name: agent_type
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Type of the agent (e.g., SyncGuard)
+          title: Agent Type
+        description: Type of the agent (e.g., SyncGuard)
+      - name: task_type
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Type of the task (e.g., System_Audit)
+          title: Task Type
+        description: Type of the task (e.g., System_Audit)
+      - name: content
+        in: query
+        required: true
+        schema:
+          type: string
+          description: The content to store
+          title: Content
+        description: The content to store
+      - name: metadata
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Optional metadata as JSON string
+          title: Metadata
+        description: Optional metadata as JSON string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /unified-memory/long-term/query:
+    get:
+      tags:
+      - Unified Memory
+      summary: Query Long Term Memory Endpoint
+      description: Query the long-term 'Eternal Brain' memory.
+      operationId: query_long_term_memory_endpoint_unified_memory_long_term_query_get
+      parameters:
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Query to search for in memory
+          title: Query
+        description: Query to search for in memory
+      - name: top_k
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 20
+          description: Number of top results to return
+          default: 5
+          title: Top K
+        description: Number of top results to return
+      - name: session_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by session ID
+          title: Session Id
+        description: Filter by session ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /unified-memory/long-term/multi-needle-query:
+    post:
+      tags:
+      - Unified Memory
+      summary: Multi Needle Query Endpoint
+      description: 'Multi-hop cross-referenced context retrieval from long-term memory.
+
+
+        Evaluates semantic coherence across multiple memory snippets, filtering
+
+        out irrelevant ''haystack'' noise to return dense, verified ''needles''.'
+      operationId: multi_needle_query_endpoint_unified_memory_long_term_multi_needle_query_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MultiNeedleQueryRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/chat/completion:
     post:
       summary: Get Completion
@@ -518,6 +658,28 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ChatStreamRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/task/execute:
+    post:
+      summary: Execute Task
+      operationId: execute_task_api_task_execute_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
         required: true
       responses:
         '200':
@@ -2065,12 +2227,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/browser/scrape:
+    post:
+      tags:
+      - browser
+      summary: Scrape
+      description: Fetch URL and return cleaned content via the Scraper Microservice.
+      operationId: scrape_api_browser_scrape_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScrapeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /api/browser/browse:
     post:
       tags:
       - browser
       summary: Browse
-      description: Navigate to a URL and perform browser actions (Admin Only).
+      description: Navigate to a URL and perform browser actions via the Scraper Microservice
+        (Admin Only).
       operationId: browse_api_browser_browse_post
       requestBody:
         content:
@@ -2097,7 +2287,12 @@ paths:
       tags:
       - browser
       summary: Extract
-      description: Fetch page and extract structured data with AI (Admin Only).
+      description: 'Fetch page and extract structured data with AI (Admin Only).
+
+
+        Now proxies to the standalone scraper microservice for browser automation,
+
+        then performs AI extraction on the returned content.'
       operationId: extract_api_browser_extract_post
       security:
       - HTTPBearer: []
@@ -2114,6 +2309,72 @@ paths:
         schema:
           type: string
           title: Extraction Prompt
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/browser/browse_stagehand:
+    post:
+      tags:
+      - browser
+      summary: Browse Stagehand
+      description: "Self-healing browser automation via Stagehand (flagged via ENABLE_STAGEHAND).\n\
+        \n\u09AC\u09BE\u0982\u09B2\u09BE \u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\u09AF\
+        : \u09AB\u09CD\u09B2\u09CD\u09AF\u09BE\u0997 \u09AC\u09A8\u09CD\u09A7 \u09A5\
+        \u09BE\u0995\u09B2\u09C7 \u09B8\u09CD\u099F\u09CD\u09AF\u09BE\u09A8\u09CD\u09A1\
+        \u09BE\u09B0\u09CD\u09A1 Playwright-backed browse-\u098F\ngraceful fallback\
+        \ \u0995\u09B0\u09C7 \u2014 \u0995\u09CB\u09A8\u09CB behavior \u09AA\u09B0\
+        \u09BF\u09AC\u09B0\u09CD\u09A4\u09A8 \u09B9\u09DF \u09A8\u09BE (zero regression)\u0964"
+      operationId: browse_stagehand_api_browser_browse_stagehand_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StagehandRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/browser/render:
+    get:
+      tags:
+      - browser
+      summary: Render Proxy
+      description: 'Server-side web proxy so the in-app browser can render sites that
+        block iframes.
+
+
+        Uses stdlib urllib only (no third-party http client) so the route cannot be
+        dropped
+
+        because of a missing optional dependency at import time.'
+      operationId: render_proxy_api_browser_render_get
+      parameters:
+      - name: url
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Url
       responses:
         '200':
           description: Successful Response
@@ -2672,6 +2933,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /api/v1/evolution/evaluate-performance:
     post:
       tags:
@@ -2698,6 +2961,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /api/v1/meta-ai/breed:
     post:
       tags:
@@ -3798,6 +4063,49 @@ paths:
               schema: {}
       security:
       - HTTPBearer: []
+  /admin-api/config:
+    get:
+      tags:
+      - admin-dashboard
+      summary: Get Config
+      description: Get environment configuration for the admin dashboard.
+      operationId: get_config_admin_api_config_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - admin-dashboard
+      summary: Update Config
+      description: Update environment configuration (writes to settings.json).
+      operationId: update_config_admin_api_config_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+              title: Payload
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /integrations/email/gmail:
     post:
       tags:
@@ -4019,6 +4327,28 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RunEvolutionRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/alerts:
+    post:
+      summary: Report System Alert
+      operationId: report_system_alert_api_v1_admin_alerts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemAlertPayload'
         required: true
       responses:
         '200':
@@ -4395,6 +4725,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/agents/:
+    get:
+      tags:
+      - specialized-agents
+      - specialized-agents
+      summary: List Agents
+      description: List all available specialized agent types.
+      operationId: list_agents_api_agents__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/agents/{agent_id}/status:
+    get:
+      tags:
+      - specialized-agents
+      - specialized-agents
+      summary: Get Agent Status
+      description: "Get status of a specific agent \u2014 honest, no hardcoded 'active'."
+      operationId: get_agent_status_api_agents__agent_id__status_get
+      parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Agent Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/agents/legal/analyze:
     post:
       tags:
@@ -4624,43 +4995,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/agents/execute:
-    post:
+  /api/admin/rules:
+    get:
       tags:
-      - Autonomous Agents
-      summary: Execute Agent Task
-      description: "Triggers an autonomous agent task safely.\n\n\u09AC\u09BE\u0982\
-        \u09B2\u09BE \u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\u09AF: API \u09B0\u09BE\u0989\
-        \u099F\u09BE\u09B0\u099F\u09BF \u09B9\u09AC\u09C7 \u098F\u0995\u09A6\u09AE\
-        \ \u09AA\u09B0\u09BF\u09B7\u09CD\u0995\u09BE\u09B0 (Clean Architecture)\u0964\
-        \n\u098F\u099F\u09BF \u09B8\u09B0\u09BE\u09B8\u09B0\u09BF \u09B2\u099C\u09BF\
-        \u0995 \u098F\u0995\u09CD\u09B8\u09BF\u0995\u09BF\u0989\u099F \u09A8\u09BE\
-        \ \u0995\u09B0\u09C7 \u09B8\u09BE\u09B0\u09CD\u09AD\u09BF\u09B8\u09C7\u09B0\
-        \ \u0995\u09BE\u099B\u09C7 \u0995\u09BE\u099C \u09A1\u09C7\u09B2\u09BF\u0997\
-        \u09C7\u099F \u0995\u09B0\u09AC\u09C7\u0964"
-      operationId: execute_agent_task_api_v1_agents_execute_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AgentTaskRequest'
-        required: true
+      - Core Admin
+      summary: Get Rules
+      description: Fetch all constitutional rules from God.py.
+      operationId: get_rules_api_admin_rules_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/AgentTaskResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-      security:
-      - HTTPBearer: []
-  /api/admin/rules:
+              schema: {}
     post:
       tags:
       - Core Admin
@@ -4846,6 +5193,92 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/admin/alerts:
+    get:
+      tags:
+      - Core Admin
+      summary: Get System Alerts
+      description: Fetch all active system alerts.
+      operationId: get_system_alerts_api_admin_alerts_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+    post:
+      tags:
+      - Core Admin
+      summary: Create System Alert
+      description: Create a new system alert (Used by internal AI Log Analyzer).
+      operationId: create_system_alert_api_admin_alerts_post
+      parameters:
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          type: string
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/admin/alerts/{alert_id}/resolve:
+    post:
+      tags:
+      - Core Admin
+      summary: Resolve System Alert
+      description: Mark an alert as resolved.
+      operationId: resolve_system_alert_api_admin_alerts__alert_id__resolve_post
+      parameters:
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Alert Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/admin/model-branding:
+    get:
+      tags:
+      - Core Admin
+      summary: Model Branding
+      description: 'Return the canonical SupremeAI model/provider branding maps.
+
+
+        The frontend can call this to stay in sync instead of hardcoding labels.'
+      operationId: model_branding_api_admin_model_branding_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/v1/tools-registry/:
     get:
       tags:
@@ -4961,6 +5394,164 @@ paths:
         schema:
           type: string
           title: Tool Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/skills/catalog:
+    get:
+      tags:
+      - Skill Catalog Infrastructure
+      summary: Get Active Skill Catalog
+      description: "\u09AB\u09BE\u0987\u09B2 \u09B8\u09BF\u09B8\u09CD\u099F\u09C7\u09AE\
+        \u09C7\u09B0 manifests/ \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09B8\u09CD\
+        \u0995\u09CD\u09AF\u09BE\u09A8 \u0995\u09B0\u09C7 \u09A1\u09CD\u09AF\u09BE\
+        \u09B6\u09AC\u09CB\u09B0\u09CD\u09A1\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF\n\
+        \u09B8\u09AE\u09B8\u09CD\u09A4 \u09AD\u09C7\u09B0\u09BF\u09AB\u09BE\u0987\u09A1\
+        \ \u09B8\u09CD\u0995\u09BF\u09B2 \u09AE\u09CD\u09AF\u09BE\u09A8\u09BF\u09AB\
+        \u09C7\u09B8\u09CD\u099F \u09A1\u09BE\u0987\u09A8\u09BE\u09AE\u09BF\u0995\u09BE\
+        \u09B2\u09BF \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0 \u0995\u09B0\u09C7\
+        \u0964"
+      operationId: get_active_skill_catalog_api_skills_catalog_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+                title: Response Get Active Skill Catalog Api Skills Catalog Get
+  /api/skills/search:
+    post:
+      tags:
+      - Skill Catalog Infrastructure
+      - Skill Catalog Infrastructure
+      summary: Search Skills
+      description: Search skill manifests by keyword query.
+      operationId: search_skills_api_skills_search_post
+      parameters:
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ''
+          title: Query
+      - name: installed_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Installed Only
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Search Skills Api Skills Search Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/skills/install:
+    post:
+      tags:
+      - Skill Catalog Infrastructure
+      - Skill Catalog Infrastructure
+      summary: Install Skill
+      description: Install a skill by its ID into the user workspace.
+      operationId: install_skill_api_skills_install_post
+      parameters:
+      - name: skill
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ''
+          title: Skill
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/files/{file_path}:
+    put:
+      tags:
+      - Workspace Files
+      summary: Write File
+      description: "\u09AC\u09BE\u0982\u09B2\u09BE \u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\
+        \u09AF: IDE editor \u09A5\u09C7\u0995\u09C7 save \u2014 \u09B6\u09C1\u09A7\
+        \u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 caller-\u098F\u09B0 \u09A8\u09BF\u099C\
+        \u09C7\u09B0 tenant-scoped\nworkspace-\u098F, path-traversal protection \u09B8\
+        \u09B9\u0964"
+      operationId: write_file_api_files__file_path__put
+      parameters:
+      - name: file_path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: File Path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileWriteRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Workspace Files
+      summary: Read File
+      description: "\u09AC\u09BE\u0982\u09B2\u09BE \u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\
+        \u09AF: write_file-\u098F\u09B0 \u09B8\u0999\u09CD\u0997\u09C0 GET \u2014\
+        \ \u098F\u0995\u0987 safety boundary \u09AA\u09C1\u09A8\u09B0\u09CD\u09AC\u09CD\
+        \u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C7\u0964"
+      operationId: read_file_api_files__file_path__get
+      parameters:
+      - name: file_path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: File Path
       responses:
         '200':
           description: Successful Response
@@ -5277,8 +5868,8 @@ paths:
   /api/v1/health:
     get:
       summary: Health Check
-      description: "Primary health check endpoint \u2014 checks actual database, redis\
-        \ and config health."
+      description: "Primary health check endpoint \u2014 always returns HTTP 200 for\
+        \ Render health probe."
       operationId: health_check_api_v1_health_get
       responses:
         '200':
@@ -5878,6 +6469,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicConfigResponse'
+  /api/config/public/branding:
+    get:
+      tags:
+      - public_config
+      summary: Get Public Branding
+      description: 'Return the canonical SupremeAI model/provider branding maps.
+
+
+        Public (no auth) so the customer dashboard can brand model names without
+
+        an admin token. The frontend uses this as the single source of truth,
+
+        falling back to its local copy when offline.'
+      operationId: get_public_branding_api_config_public_branding_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/admin/traffic/live:
     get:
       tags:
@@ -5994,6 +6605,76 @@ paths:
             schema:
               $ref: '#/components/schemas/ApprovalRequest'
         required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/session/{session_id}/stream:
+    get:
+      summary: Stream Session
+      description: 'SSE endpoint for multiplexed session logs, state changes, and
+        filetree diffs.
+
+        Heartbeat every 15 seconds.'
+      operationId: stream_session_api_session__session_id__stream_get
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: The ID of the session to stream
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/admin/execution-policies/:
+    get:
+      tags:
+      - Execution Policies
+      summary: Get Policies
+      operationId: get_policies_api_admin_execution_policies__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/admin/execution-policies/{policy_id}:
+    put:
+      tags:
+      - Execution Policies
+      summary: Update Policy
+      operationId: update_policy_api_admin_execution_policies__policy_id__put
+      parameters:
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Policy Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionPolicyUpdate'
       responses:
         '200':
           description: Successful Response
@@ -6270,14 +6951,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /knowledge/ask:
+  /api/knowledge/ask:
     post:
       tags:
       - Knowledge Base
       summary: Ask Company Knowledge
       description: Return a tenant-filtered, source-cited answer from approved knowledge
         only.
-      operationId: ask_company_knowledge_knowledge_ask_post
+      operationId: ask_company_knowledge_api_knowledge_ask_post
       parameters:
       - name: limit
         in: query
@@ -6306,7 +6987,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /knowledge/ask-scribe:
+  /api/knowledge/ask-scribe:
     post:
       tags:
       - Knowledge Base
@@ -6314,13 +6995,78 @@ paths:
       description: 'Asks a question to the AI Scribe about the codebase.
 
         The Scribe uses a RAG approach on the indexed documentation.'
-      operationId: ask_the_scribe_knowledge_ask_scribe_post
+      operationId: ask_the_scribe_api_knowledge_ask_scribe_post
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ScribeQuestion'
         required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/knowledge/search:
+    post:
+      tags:
+      - Knowledge Base
+      summary: Search Knowledge
+      description: Search the knowledge base for relevant documents matching the query.
+      operationId: search_knowledge_api_knowledge_search_post
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 10
+          title: Limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KnowledgeQuestion'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/knowledge/seed:
+    post:
+      tags:
+      - Knowledge Base
+      summary: Seed Knowledge
+      description: Seed initial knowledge documents into the knowledge base.
+      operationId: seed_knowledge_api_knowledge_seed_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - items:
+                  additionalProperties: true
+                  type: object
+                type: array
+              - type: 'null'
+              title: Documents
       responses:
         '200':
           description: Successful Response
@@ -6691,6 +7437,18 @@ paths:
       summary: Clear Cache
       description: Clear TTS audio cache.
       operationId: clear_cache_api_tts_cache_delete
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/voice/voices:
+    get:
+      summary: List Voices
+      description: List available TTS voices (ElevenLabs, requires API key; falls
+        back gracefully).
+      operationId: list_voices_api_voice_voices_get
       responses:
         '200':
           description: Successful Response
@@ -7230,6 +7988,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/admin/metrics/realtime:
+    get:
+      tags:
+      - infrastructure-metrics
+      - infrastructure-metrics
+      summary: Get Realtime Metrics
+      description: Get real-time system metrics for dashboard widgets.
+      operationId: get_realtime_metrics_api_admin_metrics_realtime_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/admin/cloud-mesh/kill-switch:
     post:
       tags:
@@ -7608,97 +8380,125 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/telemetry/health:
+  /api/telemetry/health:
     get:
       tags:
       - telemetry
       summary: Get System Health
       description: Get comprehensive system health metrics.
-      operationId: get_system_health_api_v1_telemetry_health_get
+      operationId: get_system_health_api_telemetry_health_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/v1/telemetry/metrics/cache:
+  /api/telemetry/metrics/cache:
     get:
       tags:
       - telemetry
       summary: Get Cache Metrics
       description: Get detailed cache performance metrics.
-      operationId: get_cache_metrics_api_v1_telemetry_metrics_cache_get
+      operationId: get_cache_metrics_api_telemetry_metrics_cache_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/v1/telemetry/metrics/db:
+  /api/telemetry/metrics/db:
     get:
       tags:
       - telemetry
       summary: Get Db Metrics
       description: Get database performance metrics.
-      operationId: get_db_metrics_api_v1_telemetry_metrics_db_get
+      operationId: get_db_metrics_api_telemetry_metrics_db_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/v1/telemetry/metrics/ai:
+  /api/telemetry/metrics/ai:
     get:
       tags:
       - telemetry
       summary: Get Ai Metrics
       description: Get AI model usage and cost metrics.
-      operationId: get_ai_metrics_api_v1_telemetry_metrics_ai_get
+      operationId: get_ai_metrics_api_telemetry_metrics_ai_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/v1/telemetry/metrics/security:
+  /api/telemetry/metrics/security:
     get:
       tags:
       - telemetry
       summary: Get Security Metrics
       description: Get security event metrics.
-      operationId: get_security_metrics_api_v1_telemetry_metrics_security_get
+      operationId: get_security_metrics_api_telemetry_metrics_security_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/v1/telemetry/performance/overview:
+  /api/telemetry/performance/overview:
     get:
       tags:
       - telemetry
       summary: Get Performance Overview
       description: Get a comprehensive overview of system performance.
-      operationId: get_performance_overview_api_v1_telemetry_performance_overview_get
+      operationId: get_performance_overview_api_telemetry_performance_overview_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/v1/telemetry/status:
+  /api/telemetry/status:
     get:
       tags:
       - telemetry
       summary: Get Detailed Status
       description: Get detailed system status including subsystem health.
-      operationId: get_detailed_status_api_v1_telemetry_status_get
+      operationId: get_detailed_status_api_telemetry_status_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+  /api/telemetry/frontend-error:
+    post:
+      tags:
+      - telemetry
+      - telemetry
+      summary: Report Frontend Error
+      description: Receive and log frontend error reports from the Studio Client.
+      operationId: report_frontend_error_api_telemetry_frontend_error_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+              title: Payload
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/byoc/credentials:
     post:
       tags:
@@ -7862,39 +8662,19 @@ components:
       - agent_name
       - stats
       title: AgentStatsResponse
-    AgentTaskRequest:
+    AlertCreate:
       properties:
-        task_id:
+        level:
           type: string
-          title: Task Id
-          description: Unique ID for the task
-        prompt:
+          title: Level
+        message:
           type: string
-          maxLength: 5000
-          minLength: 10
-          title: Prompt
-        auto_execute:
-          type: boolean
-          title: Auto Execute
-          default: false
+          title: Message
       type: object
       required:
-      - task_id
-      - prompt
-      title: AgentTaskRequest
-    AgentTaskResponse:
-      properties:
-        status:
-          type: string
-          title: Status
-        result:
-          type: string
-          title: Result
-      type: object
-      required:
-      - status
-      - result
-      title: AgentTaskResponse
+      - level
+      - message
+      title: AlertCreate
     ApprovalRequest:
       properties:
         skill_id:
@@ -8798,6 +9578,41 @@ components:
       required:
       - command
       title: ExecuteRequest
+    ExecutionPolicyUpdate:
+      properties:
+        max_timeout_ms:
+          anyOf:
+          - type: integer
+            minimum: 1000.0
+          - type: 'null'
+          title: Max Timeout Ms
+          description: Max timeout in ms
+        max_compute_usd:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Max Compute Usd
+        max_retries:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Max Retries
+        cb_failure_threshold:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Cb Failure Threshold
+        cooldown_window_sec:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Cooldown Window Sec
+      type: object
+      title: ExecutionPolicyUpdate
     FeedbackEvent:
       properties:
         event_type:
@@ -8827,6 +9642,16 @@ components:
       required:
       - success
       title: FeedbackResponse
+    FileWriteRequest:
+      properties:
+        content:
+          type: string
+          title: Content
+          description: Full file content to write
+      type: object
+      required:
+      - content
+      title: FileWriteRequest
     FillRequest:
       properties:
         selector:
@@ -9185,6 +10010,11 @@ components:
           type: array
           title: Scopes
           default: []
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
       type: object
       required:
       - user_id
@@ -9262,6 +10092,28 @@ components:
       required:
       - message
       title: MobileChatRequest
+    MultiNeedleQueryRequest:
+      properties:
+        query:
+          type: string
+          title: Query
+        top_k:
+          type: integer
+          title: Top K
+          default: 5
+        session_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Session Id
+        needles_count:
+          type: integer
+          title: Needles Count
+          default: 3
+      type: object
+      required:
+      - query
+      title: MultiNeedleQueryRequest
     NavigateRequest:
       properties:
         url:
@@ -9935,6 +10787,15 @@ components:
       - email
       - method
       title: SSOLoginResponse
+    ScrapeRequest:
+      properties:
+        url:
+          type: string
+          title: Url
+      type: object
+      required:
+      - url
+      title: ScrapeRequest
     ScribeQuestion:
       properties:
         question:
@@ -10187,6 +11048,23 @@ components:
       - smells
       - summary
       title: SmellCheckResponse
+    StagehandRequest:
+      properties:
+        url:
+          type: string
+          title: Url
+        primitive:
+          type: string
+          title: Primitive
+          default: act
+        instruction:
+          type: string
+          title: Instruction
+          default: ''
+      type: object
+      required:
+      - url
+      title: StagehandRequest
     StreamRequest:
       properties:
         prompt:
@@ -10252,6 +11130,19 @@ components:
       required:
       - symptoms
       title: SymptomRequest
+    SystemAlertPayload:
+      properties:
+        level:
+          type: string
+          title: Level
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - level
+      - message
+      title: SystemAlertPayload
     TTSRequest:
       properties:
         text:

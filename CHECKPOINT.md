@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 14:19 UTC
+- **Date:** 2026-08-18 14:22 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,14 +11,15 @@
 
 ## Files Changed
   - `backend/core/llm/llm_gateway.py`
+  - `scripts/audit_gitignores.py`
+  - `backend/services/scraper/stagehand_agent.py`
   - `LESSONS_LEARNED.md`
   - `.env.example`
   - `backend/core/admin_routes.py`
-  - `backend/services/scraper/tests/test_stagehand.py`
   - `CHECKPOINT.md`
-  - `scripts/audit_gitignores.py`
-  - `backend/services/scraper/stagehand_agent.py`
+  - `backend/services/scraper/tests/test_stagehand.py`
   - `backend/services/scraper/tests/test_scraper_service.py`
+  - `backend/API-swagger.yaml`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints (M0.1).
