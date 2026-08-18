@@ -81,7 +81,7 @@ class ModelDriftDetector:
         try:
             from scipy import stats
             statistic, pvalue = stats.ks_2samp(baseline, current)
-        except ImportError:
+        except (ImportError, AttributeError):
             # Fallback implementation without scipy
             n1, n2 = len(baseline), len(current)
             combined = np.concatenate([baseline, current])
