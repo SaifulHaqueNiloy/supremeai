@@ -1907,49 +1907,96 @@ jobs:
           echo "🚀 Pushing staging HEAD to target repository ($PR_BRANCH)..."
           git push target HEAD:refs/heads/$PR_BRANCH --force -o ci.skip
 
-          # gh CLI — GITHUB_TOKEN env auto-detected করে cross-repo কাজ করে
-          EXISTING_PR=$(gh pr list \
-            --repo "$TARGET_REPO" \
-            --head "$PR_BRANCH" \
-            --base main \
-            --state open \
-            --json number \
-            --jq '.[0].number // empty')
+          # REST API ব্যবহার করে PR তৈরি/আপডেট এবং মার্জ করা (GraphQL read:org স্কোপজনিত জটিলতা এড়াতে)
+          python3 - << 'EOF'
+          import urllib.request, json, os, sys
 
-          PR_BODY="## 🛡️ Staging CI Pass Report
+          token = os.environ.get("GITHUB_TOKEN")
+          staging_head = os.environ.get("STAGING_HEAD", "")[:7]
+          target_repo = "paykaribazaronline/supremeai"
+          pr_branch = "promotion/staging-latest"
 
-          All quality gates passed on \`SaifulHaqueNiloy/supremeai\`:
-          - 🟢 Pytest & Backend Unit Tests
-          - 🟢 Vitest & Web Client Tests
-          - 🟢 Flutter Unit & Widget Tests
-          - 🟢 Preflight & Security Audit
+          headers = {
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+              "User-Agent": "SupremeAI-Bot",
+              "X-GitHub-Api-Version": "2022-11-28"
+          }
 
-          **Commit:** \`${STAGING_HEAD:0:7}\`
-          **Status:** Automated Promotion & Auto-Merge Initiated."
+          pr_title = f"🟢 [Staging Promotion] Verified CI Green Build ({staging_head})"
+          pr_body = (
+              "## 🛡️ Staging CI Pass Report\n\n"
+              "All quality gates passed on `SaifulHaqueNiloy/supremeai`:\n"
+              "- 🟢 Pytest & Backend Unit Tests\n"
+              "- 🟢 Vitest & Web Client Tests\n"
+              "- 🟢 Flutter Unit & Widget Tests\n"
+              "- 🟢 Preflight & Security Audit\n\n"
+              f"**Commit:** `{staging_head}`\n"
+              "**Status:** Automated Promotion & Auto-Merge Initiated."
+          )
 
-          if [ -z "$EXISTING_PR" ]; then
-            echo "🚀 Opening new automated Staging Promotion PR..."
-            PR_URL=$(gh pr create \
-              --repo "$TARGET_REPO" \
-              --head "$PR_BRANCH" \
-              --base main \
-              --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
-              --body "$PR_BODY")
-            echo "✅ Created PR: $PR_URL"
-            EXISTING_PR=$(gh pr list --repo "$TARGET_REPO" --head "$PR_BRANCH" --base main --state open --json number --jq '.[0].number')
-          else
-            echo "ℹ️ Existing promotion PR #$EXISTING_PR found. Updating title/body..."
-            gh pr edit "$EXISTING_PR" \
-              --repo "$TARGET_REPO" \
-              --title "🟢 [Staging Promotion] Verified CI Green Build (${STAGING_HEAD:0:7})" \
-              --body "$PR_BODY"
-          fi
+          # 1. Check existing open PR
+          list_url = f"https://api.github.com/repos/{target_repo}/pulls?state=open"
+          req = urllib.request.Request(list_url, headers=headers)
+          pr_number = None
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  prs = json.loads(resp.read().decode())
+                  for pr in prs:
+                      if pr.get("head", {}).get("ref") == pr_branch:
+                          pr_number = pr.get("number")
+                          break
+          except Exception as e:
+              print(f"⚠️ Error checking PRs: {e}")
 
-          if [ -n "$EXISTING_PR" ]; then
-            echo "⚡ Auto-merging PR #$EXISTING_PR directly to target main branch..."
-            gh pr merge "$EXISTING_PR" --repo "$TARGET_REPO" --admin --squash --delete-branch=false || \
-            gh pr merge "$EXISTING_PR" --repo "$TARGET_REPO" --squash --delete-branch=false
-          fi
+          # 2. Create or Update PR
+          if pr_number:
+              print(f"ℹ️ Existing promotion PR #{pr_number} found. Updating title/body...")
+              update_url = f"https://api.github.com/repos/{target_repo}/pulls/{pr_number}"
+              data = json.dumps({"title": pr_title, "body": pr_body}).encode("utf-8")
+              req = urllib.request.Request(update_url, data=data, headers=headers, method="PATCH")
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      print(f"✅ Updated PR #{pr_number}")
+              except Exception as e:
+                  print(f"⚠️ PR update note: {e}")
+          else:
+              print("🚀 Opening new automated Staging Promotion PR...")
+              create_url = f"https://api.github.com/repos/{target_repo}/pulls"
+              data = json.dumps({
+                  "title": pr_title,
+                  "body": pr_body,
+                  "head": pr_branch,
+                  "base": "main"
+              }).encode("utf-8")
+              req = urllib.request.Request(create_url, data=data, headers=headers, method="POST")
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      pr_data = json.loads(resp.read().decode())
+                      pr_number = pr_data.get("number")
+                      print(f"✅ Created PR #{pr_number}: {pr_data.get('html_url')}")
+              except Exception as e:
+                  print(f"⚠️ PR creation note: {e}")
+
+          # 3. Auto-merge PR (Squash merge via REST API)
+          if pr_number:
+              print(f"⚡ Attempting auto-merge on PR #{pr_number} to target main branch...")
+              merge_url = f"https://api.github.com/repos/{target_repo}/pulls/{pr_number}/merge"
+              merge_data = json.dumps({
+                  "commit_title": f"🟢 [Staging Promotion] Merge PR #{pr_number} ({staging_head})",
+                  "merge_method": "squash"
+              }).encode("utf-8")
+              req = urllib.request.Request(merge_url, data=merge_data, headers=headers, method="PUT")
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      res = json.loads(resp.read().decode())
+                      if res.get("merged"):
+                          print(f"✅ Successfully auto-merged PR #{pr_number}!")
+                      else:
+                          print(f"ℹ️ Auto-merge status: {res.get('message')}")
+              except Exception as e:
+                  print(f"ℹ️ Auto-merge info (PR is active, review/conflict resolution may be needed): {e}")
+          EOF
 
   canary-deploy:
     name: "🚀 Canary Deploy Backend (Cloud Run)"

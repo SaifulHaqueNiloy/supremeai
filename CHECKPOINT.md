@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 14:22 UTC
+- **Date:** 2026-08-18 14:39 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,16 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/core/llm/llm_gateway.py`
-  - `scripts/audit_gitignores.py`
-  - `backend/services/scraper/stagehand_agent.py`
-  - `LESSONS_LEARNED.md`
-  - `.env.example`
-  - `backend/core/admin_routes.py`
-  - `CHECKPOINT.md`
-  - `backend/services/scraper/tests/test_stagehand.py`
-  - `backend/services/scraper/tests/test_scraper_service.py`
+  - `.github/workflows/supreme-core-ci.yml`
   - `backend/API-swagger.yaml`
+  - `CHECKPOINT.md`
+  - `.pre-commit-config.yaml`
+  - `scripts/audit_gitignores.py`
+  - `LESSONS_LEARNED.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints (M0.1).
@@ -30,9 +26,9 @@
 - **P2:** Add logging to bare `except Exception:` clauses (QUAL-001) — 4 clauses pending.
 
 ## Recent Lessons Learned
+  - 2026-08-18 — 🐛 PyJWT Migration: `JWTError` → `PyJWTError` (Systemic Import Break)
   - 2026-08-18 — 🐛 GitHub Actions YAML Error: `dorny/paths-filter` mapping scalar syntax
   - 2026-08-18 — 📋 Feature Feasibility Audit: 16 Features Assessed
-  - 2026-08-18 — 🔴 Tier 0 Confidence Gate: Consolidation Over Duplication
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.
