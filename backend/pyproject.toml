@@ -7,10 +7,12 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
-# বাংলা মন্তব্য (AUDIT-014): "ecdsa" প্যাকেজে known CVE আছে (Minerva timing side-channel)
-# কিন্তু upstream-এ কোনো ফিক্স নেই (maintainer অস্বীকার করেছে এটাকে security issue হিসেবে)।
-# এটা transitive dependency (python-jose -> ecdsa), তাই accepted risk হিসেবে ডকুমেন্টেড রাখা হলো,
-# পরবর্তী audit cycle-এ পুনরায় চেক করতে হবে upstream fix এসেছে কিনা।
+# বাংলা মন্তব্য (AUDIT-014): "ecdsa" প্যাকেজে known CVE ছিল (Minerva timing side-channel)।
+# আগে এটা transitive dependency (python-jose -> ecdsa) ছিল এবং accepted risk হিসেবে ডকুমেন্টেড ছিল।
+# P3 #12-এ python-jose -> PyJWT মাইগ্রেশন করায় ecdsa সম্পূর্ণ dependency graph থেকে বাদ পড়েছে
+# (poetry.lock পুনরায় generate করে যাচাই করা হয়েছে — ecdsa/python-jose আর lock-এ নেই)। তাই #13-এর
+# accepted-risk CVE টি resolved। পরবর্তী audit cycle-এ পুনরায় চেক করতে হবে নতুন কোনো প্যাকেজ
+# ecdsa টানছে কিনা।
 fastapi = {extras = ["all"], version = "^0.136.0"}
 uvicorn = {extras = ["standard"], version = "^0.51.0"}
 starlette-context = "^0.3"

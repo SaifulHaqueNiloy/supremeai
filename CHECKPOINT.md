@@ -10,19 +10,10 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tests/llm/test_constrained_decoder.py`
-  - `backend/tests/tools/test_checkpoint_replay.py`
-  - `backend/tests/test_audit018_contracts.py`
-  - `backend/services/scraper/tests/test_stagehand.py`
-  - `backend/tests/test_multi_needle.py`
   - `backend/poetry.lock`
-  - `LESSONS_LEARNED.md`
-  - `backend/tests/test_skill_structured.py`
-  - `backend/tests/test_integrations_adapters.py`
-  - `backend/tests/tools/test_repo_map.py`
-  - `backend/tests/test_task_router_cost_guard.py`
-  - `backend/tests/test_confidence_gate.py`
   - `CHECKPOINT.md`
+  - `backend/pyproject.toml`
+  - `LESSONS_LEARNED.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints (M0.1).
