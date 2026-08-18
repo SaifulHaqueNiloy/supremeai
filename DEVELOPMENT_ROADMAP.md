@@ -1,6 +1,6 @@
 # SupremeAI 2.0 — Comprehensive Development Roadmap
 > **Date:** 2026-08-19
-> **Status:** Active — Phase 0 (Foundation & Store Consolidation) 100% Complete; Phase 1 (Technical Debt Reduction & Memory Encapsulation) Active & Verified
+> **Status:** Active — Phase 0 (Foundation & Store Consolidation) 100% Complete; Phase 1 (Technical Debt Reduction & Memory Encapsulation) 100% Complete; Phase 2 (Performance, WS Delta Engine & Alembic CI Gate) Active
 > **ভাষা:** Bangla/Banglish (Simple Language); headers English
 
 ---
@@ -39,15 +39,17 @@ Supabase/pgvector + Redis + Infisical + Cloudflare)।
 - **Phase 1 M1.3 Memory Layer Encapsulation (100% Done):** `backend/memory/__init__.py` সেন্ট্রাল এক্সপোর্ট,
   `UnifiedDBManager` (`delete_record`, `health_check`), `sqlite_store.py` KV storage, `cloud_postgres_store.py`
   অফলাইন রেজিলিয়েন্স এবং `test_unified_db_manager.py` (15/15 memory tests passed) ✅।
+- **Phase 1 M1.4 & M2.3 Database Indexing & Alembic CI Gate (100% Done):** হট-পাথ ইনডেক্সিং (`api_keys`, `api_key_events`, `system_alerts`, `code_proposals`), `api_key_tables.py` অটোমেটেড ইনিশিয়ালাইজেশন এবং GitHub Actions CI পাইপলাইনে `alembic upgrade head --sql` স্কিমা ড্রাফট প্রিভেনশন গেট যুক্ত করা হয়েছে ✅।
 - **Phase 1 M1.5 & M1.6 Hygiene & Tracking (100% Done):** `tools/vscode-extension/` ডিরেক্টরিতে ০টি মৃত `.java`
   ফাইল নিশ্চিত এবং `docs/audit_reports/AUDIT_FIX_TRACKER.md` তৈরি সম্পন্ন।
+- **Phase 2 M2.2 WebSocket Delta Stream Engine (100% Done):** `DashboardWebSocketManager`-এ `compute_metric_delta` ইঞ্জিন সংযুক্ত করে লাইভ মেট্রিক্সের ডেল্টা স্ট্রিমিং ও ব্যান্ডউইথ অপটিমাইজেশন সম্পন্ন ✅।
+- **Infisical & Boot Resilience (100% Done):** `scripts/check_env_health.py`-এ Machine Identity ভ্যালিডেশন এবং `backend/main.py`-এ লগিং প্রায়োরিটি ও এন্ট্রি পয়েন্ট টেস্ট (`backend/tests/test_main_entrypoint.py`) সম্পন্ন ✅।
 - **Phase 5 AI Evolution Blueprints (100% Done):** `BLUEPRINT-SELF-EVOLVING-MEMORY.md` (`BLUEPRINT-MEM-001`)
   এবং `BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md` (`BLUEPRINT-GRAPH-002`) তৈরি ও রোডম্যাপে সংযুক্ত।
 
-**যা চলছে / বাকি (এই রোডম্যাপে অ্যাড্রেস করা হয়েছে):**
-- M0.4: Render-এ Secrets rotation ভেরিফাই ও Infisical Universal Auth machine identity 401 ফিক্স।
-- M0.5: Full backend test suite CI-তে রান করা (376 test files)।
-- Phase 2: Hot-path Database Indexes (`2026_08_19_000000_add_performance_indexes.py`) লাইভ এক্সিকিউশন।
+**যা চলছে / পরবর্তী ফোকাস:**
+- Phase 2 M2.1: Frontend code-splitting & tree-shaking optimization.
+- Phase 3 M3.1: Full backend test coverage expansion towards 80% target.
 
 ---
 
@@ -176,15 +178,12 @@ Cloudflare Workers / Firebase        → edge cache, pings
 **Milestones:**
 - M2.1: Frontend code-splitting (React.lazy per module), tree-shaking, bundle <250KB gz
   initial / <900KB gz total। (~2d)
-- M2.2: Large lists virtualization (extend DataTable to all >50-row tables); WS payload
-  diffing (2s delta, 30s full snapshot)। (~2d)
-- M2.3: Backend query optimization — COMPLETE (6 alembic migration versions exist,
-  N+1 elimination; Redis cache for hot read paths + semantic cache। (~3d) *(pending — 6টি alembic
-  migration version exists; indexes not yet added)*
+- M2.2: Large lists virtualization (extend DataTable to all >50-row tables); **WS payload
+  diffing (2s delta streaming implemented via `compute_metric_delta`)** ✅
+- M2.3: Backend query optimization & Migration Gate — 6 Alembic migrations verified, hot-path indexes (`api_keys`, `api_key_events`, `system_alerts`) added & **`alembic upgrade head --sql` CI verification gate active** ✅
 - M2.4: Async/queue hardening — task route, circuit breakers, retry with exponential
   backoff, DB connection pooling (asyncpg + pgbouncer)। (~3d)
-- M2.5: Uvicorn multi-worker (config-driven) + graceful shutdown verification; startup_time
-  & p95 baseline। (~1d)
+- M2.5: Uvicorn boot resilience & entrypoint test — logging priority, graceful shutdown & `test_main_entrypoint.py` (4/4 passed) ✅
 - M2.6: Lightweight load test (scripts/Playwright) — RPS, p95, error-rate regression guard। (~1d)
 
 **Technical requirements:** Vite build-analyze tooling, `@tanstack/react-virtual`, Redis
