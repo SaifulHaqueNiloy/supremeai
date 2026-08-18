@@ -2095,6 +2095,52 @@ jobs:
           print("TypeSyncBus singleton created successfully")
           PY
 
+  # ==============================================================================
+  # OPENAPI DRIFT CHECK (M1.4): backend routes/schemas বদলালে API-swagger.yaml-কে
+  # re-generate করে committed spec-এর সাথে compare করে; drift থাকলে job fail হয়।
+  # fail-on-drift gate — dev-দের commit করার আগে regen করতে বাধ্য করে।
+  # ==============================================================================
+  openapi-drift-check:
+    name: 📜 OpenAPI Drift Check (app.openapi → API-swagger.yaml)
+    needs: [changes, service-preflight]
+    if: |
+      always() &&
+      needs.changes.result == 'success' &&
+      needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Backend
+        uses: ./.github/actions/setup-backend
+        with:
+          python-version: '3.11'
+
+      - name: 🔐 Iron Curtain SecretHunter Scan
+        working-directory: backend
+        run: |
+          poetry run python ../scripts/devops/secret_scan_ci.py --path ../backend/ --json
+
+      - name: Generate OpenAPI schema from running app
+        working-directory: backend
+        run: |
+          poetry run python ../scripts/generate_openapi.py
+
+      - name: Fail on OpenAPI drift
+        working-directory: backend
+        run: |
+          if [ -n "$(git status --porcelain -- API-swagger.yaml)" ]; then
+            echo "❌ OpenAPI spec is out of date. Commit regenerated spec:"
+            echo "   cd backend && poetry run python ../scripts/generate_openapi.py"
+            git diff --stat -- API-swagger.yaml
+            exit 1
+          fi
+          echo "✅ API-swagger.yaml matches app.openapi() — no drift."
+
   smart-summary:
     name: "🧠 Smart Pipeline Summary"
     runs-on: ubuntu-latest
