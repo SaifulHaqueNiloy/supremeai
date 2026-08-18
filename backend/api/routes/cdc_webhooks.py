@@ -75,8 +75,8 @@ async def handle_cdc_webhook(request: Request, background_tasks: BackgroundTasks
 
     event_type = event.get("type")
     table = event.get("table")
-    record = event.get("record", {})
-    old_record = event.get("old_record", {})
+    record = event.get("record") or {}
+    old_record = event.get("old_record") or {}
 
     logger.info(f"CDC Event received: {event_type} on {table}")
 

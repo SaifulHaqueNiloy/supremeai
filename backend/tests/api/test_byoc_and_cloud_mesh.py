@@ -39,14 +39,14 @@ def test_cloud_mesh_purge_cache(override_admin):
     assert response.json()["action"] == "purge_cache"
 
 def test_traffic_monitor_no_redis(override_admin):
-    with patch("api.routes.traffic_monitor.redis_manager.client", None):
+    with patch("api.routes.traffic_monitor.redis_manager._client", None):
         response = client.get("/api/admin/traffic/live", headers={"X-Testing-Bypass-Auth": "true"})
         assert response.status_code in [503, 200]
 
 def test_traffic_monitor_with_redis(override_admin):
     mock_redis = MagicMock()
     mock_redis.lrange = AsyncMock(return_value=['{"status": 200, "duration": 0.05}', '{"status": 500, "duration": 0.12, "error": "Internal"}'])
-    with patch("api.routes.traffic_monitor.redis_manager.client", mock_redis):
+    with patch("api.routes.traffic_monitor.redis_manager._client", mock_redis):
         response = client.get("/api/admin/traffic/live", headers={"X-Testing-Bypass-Auth": "true"})
         if response.status_code == 200:
             data = response.json()
