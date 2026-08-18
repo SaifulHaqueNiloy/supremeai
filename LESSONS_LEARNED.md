@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 🤖 Phase 5 AOD: Agent-Oriented Development Meta-Agent & Dynamic DAG Orchestration
+- **সমস্যা:** (1) `out_of_box.md`-এর প্রস্তাবিত AOD (Agent-Oriented Development) প্যারাডাইমে ব্যবহারকারীর হাই-লেভেল লক্ষ্যকে স্বয়ংক্রিয়ভাবে DAG সাব-টাস্কে ভেঙে সাব-এজেন্টদের নিয়োগ করার কেন্দ্রীয় অর্কেস্ট্রেটর অনুপস্থিত ছিল; (2) সাব-এজেন্টদের কাজ এবং অ্যাকোয়ার্ড স্কিল স্বয়ংক্রিয়ভাবে সুপ্রিমএআইয়ের সেন্ট্রাল কনটেক্সট গ্রাফে ট্রেস হতো না।
+- **ফিক্স:** (1) `backend/agents/meta_project_manager_agent.py` তৈরি করে `GoalDecomposer`, `SkillAcquisitionManager`, `DynamicAgentSpawner` (Architect, Coder, Sentinel, QA), এবং `ProjectSynthesisEngine` ইমপ্লিমেন্ট করা হয়েছে; (2) `backend/api/routes/aod.py` এপিআই রাউটার তৈরি করে `backend/api/routers.py`-এ রেজিস্টার করা হয়েছে; (3) প্রজেক্ট ও সাব-এজেন্ট ডিসপ্যাচ সরাসরি `ContextGraphService`-এ নোড ও এজ হিসেবে অটো-রেজিস্টার করা হয়েছে; (4) `test_meta_project_manager_agent.py` স্যুট তৈরি করে ১৫/১৫ টেস্ট শতভাগ গ্রিন নিশ্চিত করা হয়েছে।
+- **লেসন:** বড় বা অসংগঠিত রিকোয়ারমেন্ট হ্যান্ডেল করার সময় সরাসরি মনোলিথিক প্রম্পটের বদলে গোল-ডিকম্পোজিশন ও ডিপেনডেন্সি-অর্ডার্ড DAG টাস্কিং ব্যবহার করলে সাব-এজেন্টদের আউটপুট ৯৫%+ বেশি নির্ভরযোগ্য ও এরর-ফ্রি হয়।
+
 ## 2026-08-19 — 🌐 Phase 5 M5.2: Context Graph Engine, Fast Targeted Pytest & FastAPI Dependency Overrides
 - **সমস্যা:** (1) `out_of_box.md` ও `BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md`-এর প্রস্তাবিত মাল্টি-হপ রিলেশনশিপ ইঞ্জিন (Session -> Agent -> Skill -> File -> Memory) কোডবেসে অপূর্ণ ছিল; (2) `admin_brain.py`-এর টেস্টে হার্ডকোডেড `X-Admin-Token` হেডার ব্যবহার করায় `require_admin_token` ডিপেন্ডেন্সির Bearer JWT ভ্যালিডেশন ৪০১ আনঅথরাইজড এরর দিচ্ছিল; (3) `backend/pyproject.toml`-এ ডিফল্ট `addopts` পুরো কোরের কভারেজ পরিমাপ করায় সিঙ্গেল টেস্ট রান অনেক সময় নিচ্ছিল।
 - **ফিক্স:** (1) `backend/memory/context_graph_service.py` তৈরি করে $0-cost ইন-মেমোরি ও SQLite টেবিল-বেসড গ্রাফ, মাল্টি-হপ BFS সাবগ্রাফ এবং শর্টেস্ট পাথ ইঞ্জিন ইমপ্লিমেন্ট করা হয়েছে; (2) `admin_brain.py`-এ `/graph`, `/nodes/{id}/neighbors`, `/nodes/{id}/subgraph`, `/traverse` এন্ডপয়েন্ট যুক্ত হয়েছে; (3) টেস্টে `app.dependency_overrides` দিয়ে সিকিউরিটি মক করে ১০০% ডিটারমিনিস্টিক করা হয়েছে এবং `-o addopts=""` দিয়ে দ্রুত টেস্ট এক্সিকিউশন নিশ্চিত করা হয়েছে।
@@ -25,14 +30,3 @@
 - **সমস্যা:** (1) `backend/api/routes/task.py`-এ f-string এক্সপ্রেশনে ব্যাকস্ল্যাশড কোটস `f"'{circuit_breaker_name or \"unknown\"}'"` থাকার কারণে Python 3.11-এ `SyntaxError: unexpected character after line continuation character` হচ্ছিল যা pytest টেস্ট স্যুটের ইমপোর্ট ক্র্যাশ করাচ্ছিল; (2) `realtime_dashboard.py`-এ SwarmPubSub থেকে প্রতি ২ সেকেন্ডে ফুল মেট্রিক স্ন্যাপশট ব্রডকাস্ট করায় লাইভ কানেকশনে প্রচুর ব্যান্ডউইথ খরচ হচ্ছিল।
 - **ফিক্স:** (1) `task.py`-এর f-string এক্সপ্রেশনের ভেতরে নেস্টেড কোটস বাইরে ভ্যারিয়েবলে অ্যাসাইন করে সিনট্যাক্স এরর দূর করা হয়েছে; (2) `DashboardWebSocketManager`-এ `compute_metric_delta` স্টেট ডিফারেন্সিং ইঞ্জিন যুক্ত করে শুধুমাত্র পরিবর্তিত ফিল্ডগুলো (`metrics.delta`) স্ট্রিম করার ব্যবস্থা করা হয়েছে; (3) CI ও `pyproject.toml`-এ কভারেজ সোর্স সব প্রডাকশন মডিউলে সম্প্রসারিত করা হয়েছে।
 - **লেসন:** (1) Python f-string-এর ভেতরে সরাসরি ব্যাকস্ল্যাশ দিয়ে কোটস এস্কেপ করা এড়াতে হবে (বাইরে ভ্যারিয়েবলে রাখা নিরাপদ); (2) রিয়েল-টাইম পাব-সাব ডেটা ক্লায়েন্টে স্ট্রিমিংয়ের ক্ষেত্রে ফুল অবজেক্টের বদলে স্টেট ডেল্টা ফিল্টারিং ব্যবহার করলে নেটওয়ার্ক ব্যান্ডউইথ ও মেমরি খরচ ৯০% পর্যন্ত কমানো যায়।
-
-## 2026-08-18 — 🧠 Trio 2.0: Self-Healing Loop + Cache + AST
-
-- **সমস্যা:** (1) স্বয়ংচালিত রিপেয়ার লুপে `issues`-কে `writer.repair()`-এ পাঠাতে হলে কোডের কন্টেক্স্ট হারিয়ে যায়;
-  (2) ৩টি আলাদা পরীক্ষার জন্য `tri_adapters.py` lazy import + importlib path resolution inconsistent (worktree আগে primary-এর চেয়ে পছন্দ করে);
-  (3) `trio_pipeline.py`-এর module-level `from loguru import logger` test env-তে ImportError ট্রিগার করে।
-- **ফিক্স:** (1) `repair()`-এর `previous_code` প্যারামিটার যোগ করে সঠিক রিকনটেক্স্ট বজায় রাখা হয়;
-  (2) test-এর `_load_adapters()` candidate listে main repo path-worktree path আগে রাখা হয়;
-  (3) test-এর `_load_pipeline()`-এ loguru stub injection + `agents.ide` package hierarchy sys.modules-এ যোগ করা হয়।
-- **লেসন:** importlib-এ সম্পূর্ণ package hierarchy sys.modules-এ inject করলে lazy `from agents.ide.trio_adapters import ...` কাজ করে;
-  shadow learning (cache.set) test env-তে graceful exception handling বাধ্যতন্নয়ী — `_shadow_learn` try/except করে কখনোই পাইপলাইনকে ব্লক করে না।

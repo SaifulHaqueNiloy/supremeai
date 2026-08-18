@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 19:40 UTC
+- **Date:** 2026-08-18 19:41 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,21 +10,20 @@
   - (see git log for details)
 
 ## Files Changed
+  - `LESSONS_LEARNED.md`
+  - `backend/memory/unified_db_manager.py`
+  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
+  - `backend/core/observability/telemetry_events.py`
+  - `backend/api/routes/admin_brain.py`
   - `backend/memory/__init__.py`
-  - `backend/tests/test_auth_routes.py`
-  - `DEVELOPMENT_ROADMAP.md`
-  - `REAL_TESTING_LOG.md`
   - `FEATURE_TRACKING_LOG.md`
   - `backend/api/routers.py`
+  - `REAL_TESTING_LOG.md`
   - `backend/baselines/test-model_baseline.pkl`
-  - `backend/core/observability/telemetry_events.py`
-  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
+  - `DEVELOPMENT_ROADMAP.md`
   - `CHECKPOINT.md`
-  - `backend/tests/test_api_new_endpoints.py`
-  - `LESSONS_LEARNED.md`
+  - `backend/tests/test_auth_routes.py`
   - `backend/alembic/versions/2026_08_19_000000_add_performance_indexes.py`
-  - `backend/memory/unified_db_manager.py`
-  - `backend/api/routes/admin_brain.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**
@@ -33,9 +32,9 @@
 - Run live Postgres Alembic migration head on deployment.
 
 ## Recent Lessons Learned
+  - 2026-08-19 — 🔭 Phase 3: Error-Bus Telemetry, Coverage Gate & Windows cp1252 Pitfall
   - 2026-08-19 — 🚀 Phase 2 Implementation: Index Deployment, Retry, Bundle Optimization
   - 2026-08-19 — ⚡ Python f-string Backslash Syntax & WebSocket Delta Streaming Optimization
-  - 2026-08-18 — 🧠 Trio 2.0: Self-Healing Loop + Cache + AST
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.

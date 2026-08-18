@@ -36,11 +36,13 @@ def _table_exists(bind, table_name: str) -> bool:
     """বাংলা মন্তব্য: create_all-ভিত্তিক টেবিলগুলো (execution_logs, agent_performance_logs ইত্যাদি)
     alembic chain-এ নেই — fresh DB-তে migration আগে চলে, তাই table থাকার গ্যারান্টি নেই।
     inspection দিয়ে যাচাই করে তবেই index তৈরি করা হয় (idempotent + safe)।"""
+    if bind is None:
+        return True
     try:
         insp = sa.inspect(bind)
         return (table_name in set(insp.get_table_names())) or insp.has_table(table_name)
     except Exception:
-        return False
+        return True
 
 
 def upgrade() -> None:
