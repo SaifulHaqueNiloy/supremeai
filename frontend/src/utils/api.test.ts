@@ -44,7 +44,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
     it('user portal-এ ডিফল্ট user backend রিটার্ন করে', async () => {
       env.VITE_PORTAL_TYPE = 'user';
       const { BACKEND_URL } = await loadApi();
-      expect(BACKEND_URL).toBe('https://supremeai-backend.onrender.com');
+      expect(BACKEND_URL).toBe('https://supremeai-backend-docker.onrender.com');
     });
 
     it('admin portal-এ admin backend রিটার্ন করে', async () => {
@@ -98,31 +98,31 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
   });
 
   describe('getApiBaseUrl', () => {
-    it('Firebase hosting (web.app)-এ relative path রিটার্ন করে — CORS preflight এড়াতে', async () => {
+    it('Firebase hosting (web.app)-এ সরাসরি portal backend URL রিটার্ন করে — Firebase rewrite external proxy সাপোর্ট করে না', async () => {
       env.VITE_PORTAL_TYPE = 'user';
       setHostname('supremeai-a.web.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('');
+      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
     });
 
-    it('admin Firebase hosting-এও relative path রিটার্ন করে', async () => {
+    it('admin Firebase hosting-এও সরাসরি portal backend URL রিটার্ন করে', async () => {
       env.VITE_PORTAL_TYPE = 'admin';
       setHostname('supremeai-admin.web.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('');
+      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
     });
 
-    it('firebaseapp.com ডোমেইনেও relative path রিটার্ন করে', async () => {
+    it('firebaseapp.com ডোমেইনেও সরাসরি portal backend URL রিটার্ন করে', async () => {
       setHostname('supremeai-a.firebaseapp.com');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('');
+      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
     });
 
-    it('Vercel ডোমেইনে সরাসরি user backend URL রিটার্ন করে', async () => {
+    it('Vercel ডোমেইনে relative path (\u0027\u0027) রিটার্ন করে — Vercel proxy rewrite-এর জন্য', async () => {
       env.VITE_PORTAL_TYPE = 'user';
       setHostname('supremeai-lac.vercel.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('https://supremeai-backend.onrender.com');
+      expect(getApiBaseUrl()).toBe('');
     });
   });
 
@@ -144,7 +144,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
       env.VITE_PORTAL_TYPE = 'user';
       setHostname('supremeai-lac.vercel.app');
       const { getWebSocketBaseUrl } = await loadApi();
-      expect(getWebSocketBaseUrl()).toBe('wss://supremeai-backend.onrender.com');
+      expect(getWebSocketBaseUrl()).toBe('wss://supremeai-backend-docker.onrender.com');
     });
   });
 });

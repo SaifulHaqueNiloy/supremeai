@@ -16,6 +16,7 @@ vi.mock('./services/apiClient', () => ({
     put: vi.fn().mockResolvedValue({}),
     delete: vi.fn().mockResolvedValue({}),
   },
+  getRawToken: vi.fn().mockReturnValue(null),
 }));
 
 import { App } from './App';

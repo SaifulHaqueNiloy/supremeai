@@ -114,8 +114,9 @@ class CheckpointManager:
             # বাংলা মন্তব্য: পুরনো DB-তে step_log কলাম থাকতে পারে না — নিরাপদে যোগ করি।
             try:
                 conn.execute("ALTER TABLE checkpoints ADD COLUMN step_log TEXT")
-            except Exception:
-                pass
+            except sqlite3.OperationalError:
+                # Column already exists from a prior migration — idempotent no-op.
+                logger.debug("checkpoints.step_log column already exists; skipping ALTER.")
             conn.commit()
         finally:
             conn.close()
