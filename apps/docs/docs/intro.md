@@ -27,7 +27,7 @@ cp backend/.env.example backend/.env
 # Edit backend/.env with your API keys
 
 # 4. Install dependencies
-cd backend && poetry install && cd ../apps/studio-client && pnpm install
+cd backend && poetry install && cd ../frontend && pnpm install
 
 # 5. Run migrations
 cd ../../backend
@@ -38,7 +38,7 @@ poetry run python scripts/run_migrations.py
 cd backend && poetry run uvicorn main:app --reload
 
 # Frontend (terminal 2):
-cd apps/studio-client && pnpm dev
+cd frontend && pnpm dev
 ```
 
 ### API Key Setup
@@ -94,7 +94,7 @@ cp backend/.env.example backend/.env
 # আপনার API কী斋ের সাথে backend/.env এডিট করুন
 
 # ৪. ডিপেন্ডেন্সি ইন্সটল
-cd backend && poetry install && cd ../apps/studio-client && pnpm install
+cd backend && poetry install && cd ../frontend && pnpm install
 
 # ৫. মাইগ্রেশন চালান
 cd ../../backend
@@ -105,7 +105,7 @@ poetry run python scripts/run_migrations.py
 cd backend && poetry run uvicorn main:app --reload
 
 # ফ্রন্টএন্ড (টার্মিনাল ২):
-cd apps/studio-client && pnpm dev
+cd frontend && pnpm dev
 ```
 
 ### API Key সেটআপ

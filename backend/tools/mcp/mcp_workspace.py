@@ -89,7 +89,7 @@ def _get_workspace_path(project_type: WorkspaceType) -> Path:
 
     path_mapping = {
         WorkspaceType.ECOMMERCE_BACKEND: workspace_config.get("ecommerce_backend", "backend"),
-        WorkspaceType.ECOMMERCE_FRONTEND: workspace_config.get("ecommerce_frontend", "apps/studio-client"),
+        WorkspaceType.ECOMMERCE_FRONTEND: workspace_config.get("ecommerce_frontend", "frontend"),
         WorkspaceType.MOBILE_FLUTTER: workspace_config.get("mobile_flutter", "apps/mobile"),
         WorkspaceType.ANDROID_JAVA: workspace_config.get("android_java", "apps/android"),
         WorkspaceType.ADMIN_PANEL: workspace_config.get("admin_panel", "admin"),

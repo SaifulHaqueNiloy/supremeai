@@ -51,7 +51,7 @@ class SettingsFieldsMixin:
         validation_alias="ADMIN_CORS_ORIGINS",
     )
     enforce_anti_hacking: bool = Field(
-        default=False,
+        default=True,
         validation_alias="ENFORCE_ANTI_HACKING",
     )
 

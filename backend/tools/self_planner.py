@@ -212,7 +212,8 @@ class SelfPlanner:
         """Backward-compatible alias for basic validation."""
         try:
             return bool(nx.is_directed_acyclic_graph(graph))
-        except Exception:
+        except Exception as e:
+            logger.error(f"validate_plan failed: {e}")
             return False
 
     async def execute_plan(self, graph: Any) -> list[dict[str, Any]]:

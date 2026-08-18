@@ -44,7 +44,7 @@ class OnPremiseDeployer:
                 "frontend": {
                     "image": "supremeai/frontend:latest",
                     "build": {
-                        "context": "./apps/studio-client",
+                        "context": "./frontend",
                         "dockerfile": "Dockerfile",
                     },
                     "ports": ["3000:3000"],

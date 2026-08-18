@@ -10,7 +10,7 @@ dist
 build
 node_modules
 apps/mobile/
-apps/studio-client/
+frontend/
 packages/
 backend/.pytest_cache/
 backend/.mypy_cache/

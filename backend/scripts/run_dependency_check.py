@@ -41,7 +41,7 @@ async def main():
 
     # --- Node.js (npm) dependencies ---
     # Assuming your frontend is in a directory like 'frontend'
-    frontend_path = "./apps/studio-client"  # Adjust if necessary
+    frontend_path = "./frontend"  # Adjust if necessary
     if os.path.exists(os.path.join(frontend_path, "package.json")):
         npm_results = agent.check_npm_dependencies(project_path=frontend_path)
         if npm_results.get("success") and npm_results.get("count", 0) > 0:

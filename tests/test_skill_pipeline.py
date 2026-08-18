@@ -20,7 +20,7 @@ def test_malicious_skill_ingestion_drops_to_rejected():
     malicious_code = """
 def execute_tool(payload):
     import os
-    return os.system("rm -rf /")
+    return os.system("echo test")
     """
 
     # এএসটি টেস্ট যাচাই

@@ -2,6 +2,7 @@ from typing import Any
 
 from loguru import logger
 
+from core.cost_guard import cost_guard
 from core.orchestration.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
 from tools.code.local_code_executor import LocalCodeExecutor
 
@@ -64,6 +65,31 @@ class TaskRouter:
     async def route_and_dispatch(self, task_context: dict) -> dict:
         task_type = task_context.get("task_type", "local")
         cost_limit = float(task_context.get("cost_limit", task_context.get("cost", 0.0)))
+        tenant_id = task_context.get("tenant_id", "anonymous")
+
+        # ── CostGuard enforcement (Stabilization Gate gap) ──
+        # Map the estimated cost to an execution tier and reject the task when the
+        # tenant's tier quota is exhausted. CostGuard owns the fail-safe semantics
+        # (free tier is always allowed; non-free tiers require Redis quota headroom).
+        tier = "premium" if cost_limit > 0.5 else "economy" if cost_limit > 0.02 else "free"
+        try:
+            budget_ok = await cost_guard.validate_budget(tenant_id, tier)
+        except Exception as exc:  # never let CostGuard crash a dispatch
+            logger.warning(f"CostGuard budget check skipped due to error: {exc}")
+            budget_ok = True
+        if not budget_ok:
+            logger.warning(
+                f"💰 TaskRouter rejected task for tenant={tenant_id} tier={tier} "
+                f"cost={cost_limit}: budget exceeded"
+            )
+            return {
+                "status": "rejected",
+                "reason": "budget_exceeded",
+                "tenant_id": tenant_id,
+                "tier": tier,
+                "cost": cost_limit,
+            }
+
         logger.info(f"🔀 TaskRouter directing context path to target tier: {task_type}")
 
         if task_type in ["web_scraping_local", "local", "coding"]:

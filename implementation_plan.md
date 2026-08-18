@@ -36,7 +36,7 @@
 
 ### Group 1 — Mini Infra Topology (P3 CommandDeck)
 
-#### [NEW] [InfraTopology.tsx](file:///g:/supremeai backup/apps/studio-client/src/commandcenter/modules/deck/InfraTopology.tsx)
+#### [NEW] [InfraTopology.tsx](file:///g:/supremeai backup/frontend/src/commandcenter/modules/deck/InfraTopology.tsx)
 
 A ReactFlow canvas rendering the live infra node graph. Nodes sourced from `useHealthMap` data. Each node shows status color/glow matching `StatusPill` tone system. Edges represent dependency connections.
 
@@ -51,7 +51,7 @@ A ReactFlow canvas rendering the live infra node graph. Nodes sourced from `useH
 - Click a node → navigates to relevant module (`health`, `providers`, etc.)
 - Auto-layout using dagre (already in Swarm.tsx transitive deps)
 
-#### [MODIFY] [CommandDeck.tsx](file:///g:/supremeai backup/apps/studio-client/src/commandcenter/modules/deck/CommandDeck.tsx)
+#### [MODIFY] [CommandDeck.tsx](file:///g:/supremeai backup/frontend/src/commandcenter/modules/deck/CommandDeck.tsx)
 
 Add `InfraTopology` import and render it as the final section below the Live Event Feed.
 
@@ -71,7 +71,7 @@ Add `InfraTopology` import and render it as the final section below the Live Eve
 
 ### Group 2 — WS Payload Diffing
 
-#### [MODIFY] [websocketManager.ts](file:///g:/supremeai backup/apps/studio-client/src/commandcenter/realtime/websocketManager.ts)
+#### [MODIFY] [websocketManager.ts](file:///g:/supremeai backup/frontend/src/commandcenter/realtime/websocketManager.ts)
 
 Add a `PayloadDiffer` class with:
 - **Delta mode (2s interval):** Server sends `{ type: "delta", channel: "...", patch: {...} }` — apply shallow merge onto cached snapshot
@@ -105,7 +105,7 @@ private applyPayload(type: string, payload: unknown) {
 
 ### Group 3 — True Row Virtualization in DataTable
 
-#### [MODIFY] [DataTable.tsx](file:///g:/supremeai backup/apps/studio-client/src/commandcenter/kit/DataTable.tsx)
+#### [MODIFY] [DataTable.tsx](file:///g:/supremeai backup/frontend/src/commandcenter/kit/DataTable.tsx)
 
 Current implementation renders all rows in DOM. Replace `<tbody>` rendering with a windowed virtual scroller using `useVirtualizer` from `@tanstack/react-virtual` (already part of TanStack family, zero-cost addition since it's free/OSS).
 
@@ -124,13 +124,13 @@ const virtualizer = useVirtualizer({
 ```
 
 > [!WARNING]
-> `@tanstack/react-virtual` must be added to `package.json`. Run `pnpm add @tanstack/react-virtual` in `apps/studio-client/`.
+> `@tanstack/react-virtual` must be added to `package.json`. Run `pnpm add @tanstack/react-virtual` in `frontend/`.
 
 ---
 
 ### Group 4 — Bundle Size Check
 
-#### [NEW] [scripts/bundle-check.sh](file:///g:/supremeai backup/apps/studio-client/scripts/bundle-check.sh)
+#### [NEW] [scripts/bundle-check.sh](file:///g:/supremeai backup/frontend/scripts/bundle-check.sh)
 
 Post-build script that greps Vite build output, extracts gzipped sizes, and fails if:
 - Initial chunk > 250KB gz

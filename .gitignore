@@ -203,7 +203,7 @@ coverage/
 apps/_archive_web-chat/
 dist-admin/
 dist-user/
-apps/studio-client/dist-user/
+frontend/dist-user/
 *.env
 .git_backup/
 
@@ -249,7 +249,7 @@ pytest_full_run_results.txt
 error.txt
 trace.txt
 dist-user/
-apps/studio-client/dist-user/
+frontend/dist-user/
 backend/requirements.txt
 
 # Docusaurus build artifacts, coverage_new, and archive directories
@@ -410,7 +410,7 @@ coverage/
 apps/_archive_web-chat/
 dist-admin/
 dist-user/
-apps/studio-client/dist-user/
+frontend/dist-user/
 *.env
 .git_backup/
 
@@ -456,7 +456,7 @@ pytest_full_run_results.txt
 error.txt
 trace.txt
 dist-user/
-apps/studio-client/dist-user/
+frontend/dist-user/
 backend/requirements.txt
 
 # Docusaurus build artifacts, coverage_new, and archive directories
