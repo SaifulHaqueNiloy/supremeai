@@ -10,36 +10,26 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/models/evolution.py`
-  - `backend/memory/sqlite_store.py`
-  - `backend/api/routes/admin_auth.py`
-  - `backend/api/routers.py`
-  - `backend/api/routes/session_takeover.py`
-  - `backend/memory/unified_db_manager.py`
-  - `backend/memory/self_evolve_service.py`
-  - `REAL_TESTING_LOG.md`
-  - `backend/core/unified_memory.py`
-  - `backend/api/routes/cdc_webhooks.py`
-  - `backend/memory/__init__.py`
-  - `backend/tests/test_self_evolve_service.py`
-  - `backend/models/execution_log.py`
-  - `backend/tests/test_unified_db_manager.py`
-  - `backend/api/routes/admin_brain.py`
   - `DEVELOPMENT_ROADMAP.md`
-  - `backend/api/routes/unified_memory_api.py`
-  - `backend/tests/api/test_realtime_dashboard.py`
+  - `REAL_TESTING_LOG.md`
   - `backend/api/routes/self_evolve.py`
+  - `backend/memory/unified_db_manager.py`
   - `backend/memory/supabase_store.py`
-  - `backend/api/routes/websocket_agent.py`
-  - `backend/api/routes/admin_dashboard.py`
-  - `backend/api/routes/byoc_api.py`
   - `backend/memory/chromadb_store.py`
-  - `backend/memory/cloud_postgres_store.py`
-  - `backend/api/routes/simulator.py`
-  - `backend/api/routes/auth.py`
-  - `FEATURE_TRACKING_LOG.md`
-  - `backend/api/routes/tenant_admin.py`
+  - `backend/memory/__init__.py`
+  - `backend/tests/test_unified_db_manager.py`
+  - `backend/api/routers.py`
   - `CHECKPOINT.md`
+  - `backend/memory/self_evolve_service.py`
+  - `backend/tests/test_self_evolve_service.py`
+  - `backend/alembic/versions/2026_08_19_000000_add_performance_indexes.py`
+  - `backend/memory/cloud_postgres_store.py`
+  - `FEATURE_TRACKING_LOG.md`
+  - `backend/memory/sqlite_store.py`
+  - `backend/models/evolution.py`
+  - `backend/core/unified_memory.py`
+  - `backend/tests/test_perf_indexes.py`
+  - `backend/models/execution_log.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**

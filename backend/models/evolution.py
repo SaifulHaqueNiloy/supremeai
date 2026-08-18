@@ -4,7 +4,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -61,9 +61,13 @@ class AgentPerformanceLog(Base):
     """PerformanceOracle: Time-series performance metrics per agent."""
 
     __tablename__ = "agent_performance_logs"
+    # বাংলা মন্তব্য (M2.3): per-agent time-series query (WHERE agent_name=? ORDER BY timestamp)
+    # এর জন্য (agent_name, timestamp) composite index — agent_name alone-এর তুলনায় অনেক দ্রুত।
+    __table_args__ = (Index("idx_agent_perf_name_ts", "agent_name", "timestamp"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    agent_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # বাংলা মন্তব্য (M2.3): index=True সরানো — composite leftmost prefix cover করে।
+    agent_name: Mapped[str] = mapped_column(String(255), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
     # Core metrics
@@ -89,9 +93,13 @@ class PerformanceAlert(Base):
     """PerformanceOracle: Alerts when agents fall below thresholds."""
 
     __tablename__ = "performance_alerts"
+    # বাংলা মন্তব্য (M2.3): open-alert list + per-agent history query-এর জন্য
+    # (agent_name, created_at) composite index।
+    __table_args__ = (Index("idx_performance_alerts_agent_created", "agent_name", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    agent_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # বাংলা মন্তব্য (M2.3): index=True সরানো — composite leftmost prefix cover করে।
+    agent_name: Mapped[str] = mapped_column(String(255), nullable=False)
     alert_type: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # latency_spike, accuracy_drop, cost_surge, error_rate_high
