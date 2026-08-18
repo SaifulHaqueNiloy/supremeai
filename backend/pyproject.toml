@@ -139,7 +139,7 @@ build-backend = "poetry.core.masonry.api"
 # ছিল। এখন সব প্রডাকশন প্যাকেজ একসাথে মাপা হয় যাতে রিপোর্ট সত্যিকারের কভারেজ দেখায়।
 # CI এর সাথে consistent। পুরো backend/ স্ক্যান করলে pytest ধীর হয়, তাই শুধু
 # প্রডাকশন প্যাকেজগুলো source হিসেবে রাখা হলো।
-source = ["core", "api", "tools", "ws", "workers"]
+source = ["core", "api", "agents", "memory", "monitoring", "tools", "ws", "workers"]
 omit = [
     "*/tests/*",
     "*/venv/*",

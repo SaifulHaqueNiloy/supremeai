@@ -35,6 +35,7 @@ class DashboardWebSocketManager:
         self.active_connections: dict[WebSocket, dict] = {}
         self.swarm_streamer = get_swarm_streamer()
         self.subscription_task = None
+        self._last_metrics_state: dict = {}
 
     async def connect(self, websocket: WebSocket, user_auth: dict):
         """Accept WebSocket connection and register user."""
@@ -43,6 +44,7 @@ class DashboardWebSocketManager:
             "auth": user_auth,
             "channels": set(),  # Which channels the client wants to receive
             "connected_at": asyncio.get_event_loop().time(),
+            "initial_snapshot_sent": False,
         }
         logger.info(f"📈 Dashboard WebSocket connected for user {user_auth.get('sub', 'unknown')}")
 
@@ -79,9 +81,15 @@ class DashboardWebSocketManager:
             logger.error(f"Error sending message to WebSocket: {e}")
             self.disconnect(websocket)
 
+    def compute_metric_delta(self, new_data: dict) -> dict:
+        """Compute delta between new metrics payload and last known state."""
+        delta = {k: v for k, v in new_data.items() if self._last_metrics_state.get(k) != v}
+        self._last_metrics_state = new_data.copy()
+        return delta
+
     @with_error_bus("broadcast_to_clients")
     async def broadcast_to_clients(self):
-        """Listen to SwarmPubSub and broadcast to interested WebSocket clients."""
+        """Listen to SwarmPubSub and broadcast to interested WebSocket clients with delta optimization."""
         try:
             async for raw_message in self.swarm_streamer.subscribe():
                 try:
@@ -89,20 +97,33 @@ class DashboardWebSocketManager:
                     message_data = json.loads(raw_message)
                     event_type = message_data.get("type", "unknown")
 
+                    # Map event types to channels
+                    event_channel = self._get_event_channel(event_type)
+
+                    # Optimize metrics updates by computing delta
+                    payload_to_send = raw_message
+                    if event_channel == "metrics.update" and isinstance(message_data.get("data"), dict):
+                        delta = self.compute_metric_delta(message_data["data"])
+                        delta_payload = json.dumps({
+                            "type": "metrics.delta",
+                            "delta": delta,
+                            "timestamp": message_data.get("timestamp", asyncio.get_event_loop().time())
+                        })
+
                     # Filter and forward to interested clients
                     for websocket, conn_info in list(self.active_connections.items()):
-                        # Check if client is interested in this event type
                         interested_channels = conn_info["channels"]
-
-                        # Map event types to channels
-                        event_channel = self._get_event_channel(event_type)
 
                         if event_channel in interested_channels or "all" in interested_channels:
                             try:
-                                # Forward the message to the client
-                                await self.send_personal_message(websocket, raw_message)
+                                if event_channel == "metrics.update" and conn_info.get("initial_snapshot_sent"):
+                                    # Send lightweight delta update
+                                    await self.send_personal_message(websocket, delta_payload)
+                                else:
+                                    # Send full snapshot and flag initial snapshot sent
+                                    await self.send_personal_message(websocket, payload_to_send)
+                                    conn_info["initial_snapshot_sent"] = True
                             except Exception:
-                                # Client disconnected, remove from active connections
                                 self.disconnect(websocket)
 
                 except json.JSONDecodeError:

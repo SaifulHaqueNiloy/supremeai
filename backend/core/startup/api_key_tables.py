@@ -66,9 +66,13 @@ async def ensure_api_key_tables() -> None:
                 """
             )
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_user_created ON api_keys(user_id, created_at DESC)")
             await conn.execute("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_window INTEGER DEFAULT 60")
             await conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_key_events_key ON api_key_events(api_key_id, created_at DESC)"
             )
     except Exception:
         success = False

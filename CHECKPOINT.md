@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 18:06 UTC
+- **Date:** 2026-08-18 18:29 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,26 +10,29 @@
   - (see git log for details)
 
 ## Files Changed
-  - `DEVELOPMENT_ROADMAP.md`
-  - `REAL_TESTING_LOG.md`
-  - `docs/audit_reports/AUDIT_FIX_TRACKER.md`
-  - `CHECKPOINT.md`
+  - `backend/api/routes/realtime_dashboard.py`
   - `backend/memory/chromadb_store.py`
-  - `FEATURE_TRACKING_LOG.md`
-  - `docs/architecture/BLUEPRINT-SELF-EVOLVING-MEMORY.md`
-  - `out_of_box.md`
-  - `docs/architecture/BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md`
+  - `frontend/src/lib/VirtualTable.tsx`
+  - `backend/pyproject.toml`
+  - `LESSONS_LEARNED.md`
+  - `backend/main.py`
+  - `scripts/check_env_health.py`
+  - `frontend/src/lib/useVirtualList.ts`
+  - `backend/api/routes/task.py`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `backend/core/startup/api_key_tables.py`
+  - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**
 - M1.4: Auto-check schema determinism in CI.
 - **Phase 2 (Performance & Indexing):**
-- Execute index migrations on live environments.
+- Run live Postgres Alembic migration head on deployment.
 
 ## Recent Lessons Learned
+  - 2026-08-19 — 📋 SSE Auth: EventSource can't send Authorization headers
   - 2026-08-19 — 🐛 TypeScript Immutability: React state mutation in canvas handlers
   - 2026-08-19 — 🐛 TypeScript: useWorkspaceStore shim doesn't re-export useSupremeStore
-  - 2026-08-19 — 📋 Roadmap Metric Validation: Codebase drift in DEVELOPMENT_ROADMAP.md
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.

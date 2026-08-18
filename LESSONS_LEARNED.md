@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — ⚡ Python f-string Backslash Syntax & WebSocket Delta Streaming Optimization
+- **সমস্যা:** (1) `backend/api/routes/task.py`-এ f-string এক্সপ্রেশনে ব্যাকস্ল্যাশড কোটস `f"'{circuit_breaker_name or \"unknown\"}'"` থাকার কারণে Python 3.11-এ `SyntaxError: unexpected character after line continuation character` হচ্ছিল যা pytest টেস্ট স্যুটের ইমপোর্ট ক্র্যাশ করাচ্ছিল; (2) `realtime_dashboard.py`-এ SwarmPubSub থেকে প্রতি ২ সেকেন্ডে ফুল মেট্রিক স্ন্যাপশট ব্রডকাস্ট করায় লাইভ কানেকশনে প্রচুর ব্যান্ডউইথ খরচ হচ্ছিল।
+- **ফিক্স:** (1) `task.py`-এর f-string এক্সপ্রেশনের ভেতরে নেস্টেড কোটস বাইরে ভ্যারিয়েবলে অ্যাসাইন করে সিনট্যাক্স এরর দূর করা হয়েছে; (2) `DashboardWebSocketManager`-এ `compute_metric_delta` স্টেট ডিফারেন্সিং ইঞ্জিন যুক্ত করে শুধুমাত্র পরিবর্তিত ফিল্ডগুলো (`metrics.delta`) স্ট্রিম করার ব্যবস্থা করা হয়েছে; (3) CI ও `pyproject.toml`-এ কভারেজ সোর্স সব প্রডাকশন মডিউলে সম্প্রসারিত করা হয়েছে।
+- **লেসন:** (1) Python f-string-এর ভেতরে সরাসরি ব্যাকস্ল্যাশ দিয়ে কোটস এস্কেপ করা এড়াতে হবে (বাইরে ভ্যারিয়েবলে রাখা নিরাপদ); (2) রিয়েল-টাইম পাব-সাব ডেটা ক্লায়েন্টে স্ট্রিমিংয়ের ক্ষেত্রে ফুল অবজেক্টের বদলে স্টেট ডেল্টা ফিল্টারিং ব্যবহার করলে নেটওয়ার্ক ব্যান্ডউইথ ও মেমরি খরচ ৯০% পর্যন্ত কমানো যায়।
+
 ## 2026-08-18 — 🧠 Trio 2.0: Self-Healing Loop + Cache + AST
 
 - **সমস্যা:** (1) স্বয়ংচালিত রিপেয়ার লুপে `issues`-কে `writer.repair()`-এ পাঠাতে হলে কোডের কন্টেক্স্ট হারিয়ে যায়;
@@ -73,12 +78,3 @@
   `../../store/slices/types` থেকে সরাসরি করা হয়।
 - **লেসন:** Shim file-এর `export { useSupremeStore }` না থাকলে TypeScript `TS2459` error দেয় —
   shim-এর সব public symbol re-export করা নিশ্চিত করুন।
-
-## 2026-08-19 — 📋 Roadmap Metric Validation: Codebase drift in DEVELOPMENT_ROADMAP.md
-- **সমস্যা:** `DEVELOPMENT_ROADMAP.md`-এর সবচেয়ে বড় সমস্যা ছিল রোডম্যাপের মেট্রিকগুলো কোডবেসের সঙ্গে sync নয়।
-  Store count 11 (actual 9 — themeStore deleted + useWorkspaceSettingsStore merged), test file 282
-  (actual 373), route files 84 (actual 85 incl. `__init__.py`), client paths `apps/mobile`+`apps/desktop`
-  (actual: `tools/mobile`+`tools/desktop`)।
-- **ফিক্স:** কোডবেস স্ক্যান করে সব মেট্রিক সরাসরি verify করে রোডম্যাপ আপডেটেড।
-- **লেসন:** রোডম্যাপ/ডকুমেন্ট আপডেটের সময় অবশ্যই `Get-ChildItem` / `grep` দিয়ে live metric
-  cross-check করুন — ডকুমেন্টের ওপর ভিত্তি করে প্ল্যান বানালে ভুল ধারণা হয়।

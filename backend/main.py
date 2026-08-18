@@ -87,6 +87,7 @@ def run_server() -> None:
         "log_level": os.getenv("UVICORN_LOG_LEVEL", "info"),
         "access_log": os.getenv("UVICORN_ACCESS_LOG", "true").lower() == "true",
         "timeout_keep_alive": int(os.getenv("UVICORN_KEEP_ALIVE_TIMEOUT") or "30"),
+        "timeout_graceful_shutdown": int(os.getenv("UVICORN_GRACEFUL_SHUTDOWN") or "30"),
     }
     if is_local:
         uvicorn_kwargs["reload"] = True

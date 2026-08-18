@@ -23,6 +23,92 @@ from adaptive_engine.experience_db import Experience
 from core.intent_router import PromptAction, intent_router
 from core.prompt_handler import format_unified_chat_prompt
 
+# --- Retry & Circuit Breaker Utilities ---
+import asyncio
+import time
+from typing import Callable, Optional, TypeVar
+
+from loguru import logger
+
+T = TypeVar("T")
+
+async def retry_with_exponential_backoff(
+    func: Callable[[], T],
+    *,
+    max_retries: int = 5,
+    base_delay: float = 1.0,
+    max_delay: float = 30.0,
+    exceptions: tuple[type, ...] = (Exception,),
+    circuit_breaker_name: Optional[str] = None,
+) -> T:
+    """
+    Execute a function with exponential backoff retry logic.
+    
+    Bangladesh: এক্সপোনেনশiaal বেকঅফ সেখানকার সাথে ফাংশন accomplished।
+    
+    Args:
+        func: The async function to execute
+        max_retries: Maximum number of retry attempts
+        base_delay: Initial delay in seconds
+        max_delay: Maximum delay in seconds
+        exceptions: Exception types to catch and retry on
+        circuit_breaker_name: Optional circuit breaker name for external service calls
+    
+    Returns:
+        The function result
+    
+    Raises:
+        The last exception if all retries exhausted
+    """
+    import threading
+    
+    # Use thread-safe circuit breaker if name provided
+    cb_manager = None
+    if circuit_breaker_name:
+        from backend.core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
+        # Note: This is a simplified check - in production would use proper async CB
+        pass
+    
+    last_exception: Optional[Exception] = None
+    
+    for attempt in range(max_retries + 1):
+        try:
+            result = await func()
+            # Reset circuit breaker on success
+            if circuit_breaker_name:
+                from backend.core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
+                manager = get_circuit_breaker_manager()
+                cb = manager.get_circuit_breaker(circuit_breaker_name)
+                if cb.state.name == "OPEN":
+                    cb.reset()
+            return result
+        except exceptions as e:
+            last_exception = e
+            failure_count = getattr(e, 'failure_count', getattr(e, 'code', 0))
+            
+            if attempt < max_retries:
+                # Calculate exponential delay
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                # Add jitter to prevent thundering herd
+                jitter = delay * 0.1 * (attempt + 1)
+                total_delay = delay + jitter
+                
+                cb_name = circuit_breaker_name or "unknown"
+                logger.warning(
+                    f"Retry {attempt + 1}/{max_retries} after {total_delay:.2f}s for "
+                    f"'{cb_name}': {str(e)[:100]}"
+                )
+                
+                await asyncio.sleep(total_delay)
+            else:
+                cb_name = circuit_breaker_name or "unknown"
+                logger.error(
+                    f"All {max_retries + 1} retries exhausted for "
+                    f"'{cb_name}': {str(e)[:200]}"
+                )
+    
+    raise last_exception or RuntimeError("Retry loop exhausted without result")
+
 router = APIRouter()
 
 _semantic_cache = None
@@ -313,10 +399,16 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
             }
 
     if not raw:
-        raw = await model_router.async_route_and_generate(
-            prompt=prompt,
-            task_type=task_type,
-            max_cost=req.max_cost,
+        raw = await retry_with_exponential_backoff(
+            lambda: model_router.async_route_and_generate(
+                prompt=prompt,
+                task_type=task_type,
+                max_cost=req.max_cost,
+            ),
+            max_retries=3,
+            base_delay=0.5,
+            max_delay=5.0,
+            circuit_breaker_name="model_router",
         )
         if raw.get("success") and sem_cache:
             try:

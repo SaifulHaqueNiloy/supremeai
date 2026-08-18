@@ -34,6 +34,26 @@ def check_url(url, name, is_json_status=False, json_key_path=None):
     except Exception as e:
         print(f"[FAIL] {name}: Error {e} ({url})")
 
+def check_infisical_auth():
+    import os
+    client_id = os.getenv("INFISICAL_CLIENT_ID")
+    client_secret = os.getenv("INFISICAL_CLIENT_SECRET")
+    token = os.getenv("INFISICAL_TOKEN")
+    project_id = os.getenv("INFISICAL_PROJECT_ID")
+
+    print("\n--- Infisical Vault Integration ---")
+    if token:
+        print("[OK] Infisical Token: Configured via INFISICAL_TOKEN")
+    elif client_id and client_secret:
+        print(f"[OK] Infisical Universal Machine Identity: Configured (Client ID: {client_id[:6]}...)")
+    else:
+        print("[WARN] Infisical Credentials: Missing INFISICAL_CLIENT_ID/SECRET or INFISICAL_TOKEN. Vault operates in fallback mode.")
+    
+    if project_id:
+        print(f"[OK] Infisical Project ID: Configured ({project_id})")
+    else:
+        print("[WARN] Infisical Project ID: INFISICAL_PROJECT_ID not set.")
+
 def main():
     print("======================================")
     print(" SupremeAI Environment Health Check")
@@ -47,8 +67,11 @@ def main():
     check_url("https://supremeai-backend-docker.onrender.com/health/aggregated", "Backend (Render)")
     print("")
 
+    # Infisical Auth Status
+    check_infisical_auth()
+
     # External Dependencies
-    print("--- External Dependencies ---")
+    print("\n--- External Dependencies ---")
     check_url("https://status.render.com/api/v2/status.json", "Render Platform", True, ["status", "indicator"])
     check_url("https://status.supabase.com/api/v2/status.json", "Supabase Platform", True, ["status", "indicator"])
     check_url("https://status.infisical.com/api/v2/status.json", "Infisical Platform", True, ["status", "indicator"])

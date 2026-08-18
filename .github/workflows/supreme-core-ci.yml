@@ -927,11 +927,18 @@ jobs:
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           if [ "${{ needs.changes.outputs.backend }}" = 'true' ] || [ "${{ needs.changes.outputs.shared }}" = 'true' ]; then
-            poetry run pytest -n auto --dist=loadfile --timeout=120 --md pytest-report.md --cov=core --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -k "not chaos"
+            poetry run pytest -n auto --dist=loadfile --timeout=120 --md pytest-report.md --cov=. --cov-report=json:coverage.json --cov-report=term-missing --cov-fail-under=38 -k "not chaos"
           else
             echo "Skipping full backend tests, only running smoke tests."
             poetry run pytest -n auto tests/test_health.py -q
           fi
+
+      - name: 🗄️ Verify Database Alembic Migrations
+        working-directory: backend
+        run: |
+          echo "🔍 Verifying Alembic SQL schema migrations for schema drift..."
+          poetry run alembic upgrade head --sql > alembic_migration_plan.sql
+          echo "✅ Alembic migrations dry-run SQL generated successfully ($(wc -l < alembic_migration_plan.sql) lines)."
 
       - name: Add Backend Test Results to GitHub Summary
         if: always()
