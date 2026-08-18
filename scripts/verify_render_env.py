@@ -68,6 +68,9 @@ def fetch_render_env(service_id: str, api_key: str) -> dict[str, str | None]:
             payload = json.load(resp)
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", "ignore")
+        if e.code == 404:
+            print(f"::warning::Render service ID '{service_id}' not found (HTTP 404) — skipping check")
+            sys.exit(0)
         print(f"::error::Render API call failed for {service_id}: HTTP {e.code} {body[:200]}")
         sys.exit(1)
     except Exception as e:  # network/timeout

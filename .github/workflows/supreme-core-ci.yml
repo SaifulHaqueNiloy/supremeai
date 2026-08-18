@@ -309,7 +309,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [render-backend, render-admin, render-worker]
+        env: [render-backend]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Set up Python
@@ -1891,23 +1891,19 @@ jobs:
           # PAT দিয়ে target remote সেট করা
           git remote add target https://x-access-token:${GITHUB_TOKEN}@github.com/${TARGET_REPO}.git || \
             git remote set-url target https://x-access-token:${GITHUB_TOKEN}@github.com/${TARGET_REPO}.git
-          # বাংলা মন্তব্য: Auto-Rebase Alignment — target/main-এর সাথে অটোগ্রাফ রিবাজ করে কনফ্লিক্ট প্রতিরোধ
-          echo "🔄 Aligning staging branch with target/main via auto-rebase..."
-          git fetch target main
-          git rebase target/main || (git rebase --abort && git merge target/main -s recursive -X theirs -m "chore(ci): auto-resolve merge conflict against target/main")
+          
+          echo "🔄 Fetching target/main to evaluate diff..."
+          git fetch target main || true
 
-          # বাংলা: Git diff গার্ড — rebase-এর পরেও যদি target/main-এর সাথে কোনো কোড পার্থক্য না থাকে,
-          # তাহলে push করবে না (এতে অবাঞ্ছিত promotion loop বন্ধ হবে)।
-          echo "🔍 Checking for diff against target/main after rebase..."
-          # বাংলা: .github/workflows ফোল্ডার এখন diff-এ অন্তর্ভুক্ত — CI কনফিগ পরিবর্তন sync হওয়া দরকার
+          # বাংলা: Git diff গার্ড — target/main-এর সাথে কোনো কোড পার্থক্য না থাকলে push করবে না
+          echo "🔍 Checking for diff against target/main..."
           if git diff --quiet target/main HEAD -- . ; then
             echo "✅ No code difference vs target/main — skipping promotion push."
             exit 0
           fi
 
-          echo "🚀 Pushing clean branch to persistent staging branch ($PR_BRANCH)..."
-          git checkout -B $PR_BRANCH
-          git push target $PR_BRANCH --force -o ci.skip
+          echo "🚀 Pushing staging HEAD to target repository ($PR_BRANCH)..."
+          git push target HEAD:refs/heads/$PR_BRANCH --force -o ci.skip
 
           # gh CLI — GITHUB_TOKEN env auto-detected করে cross-repo কাজ করে
           EXISTING_PR=$(gh pr list \

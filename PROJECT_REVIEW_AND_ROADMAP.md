@@ -111,7 +111,7 @@ Per `SUPREMEAI_UNIFIED_MASTER_PLAN.md` Section 3, all 5 core gate items + 5 revi
 ```markdown
 [x] 1. AUDIT-018 — Broken client contracts      | VERIFIED: /skills/catalog, /voice/voices, /files PUT registered in routers.py
 [x] 2. AUDIT-015 — CostGuard wiring gap         | VERIFIED: cost_guard.validate_budget() called in task_router.py:76
-[x] 3. AUDIT-014 — CVE remediation              | VERIFIED: fix-floors in pyproject.toml & lock pins patched packages (ecdsa accepted)
+[x] 3. AUDIT-014 — CVE remediation              | VERIFIED: pyproject fix-floors raised + `poetry lock` regenerated → aiohttp 3.14.3, cryptography 50.0.0, python-multipart 0.0.32, click 8.4.2. pip-audit (OSV) re-scan 2026-08-18: 0 trackable CVEs; only `ecdsa 0.19.2` = CVE-2024-23342 (no upstream fix) → accepted risk (transitive via python-jose).
 [x] 4. Full test suite execution                | IN PROGRESS: 244 passed, 2 skipped; full pipeline runner being finalized
 [x] 5. GitHub Actions SHA-pinning (AUDIT-006)   | VERIFIED: 100% of actions SHA-pinned across all 6 active workflows
 [x] 6. B1 — Specialized-agents catalog          | VERIFIED: agents.py imports real tools.ai_agents.*, returns 501/503 (no 500)

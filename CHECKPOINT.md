@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 09:17 UTC
+- **Date:** 2026-08-18 09:43 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,36 +10,15 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tools/devops/on_premise_deployer.py`
-  - `CHECKPOINT.md`
-  - `backend/memory/chromadb_store.py`
-  - `scripts/ci/check_free_tier_limits.py`
-  - `PROJECT_REVIEW_AND_ROADMAP.md`
-  - `tests/test_skill_pipeline.py`
-  - `scripts/find_client_files.py`
-  - `vercel.json`
-  - `scripts/type_gen_pipeline.py`
-  - `scripts/ci/auto_deploy.sh`
-  - `backend/tools/security_tools/vulnerability_predictor.py`
-  - `scripts/find_drift.py`
-  - `backend/tools/mcp/mcp_workspace.py`
-  - `.github/workflows/supreme-core-ci.yml`
-  - `backend/scripts/run_dependency_check.py`
   - `LESSONS_LEARNED.md`
-  - `scripts/find_client_calls.py`
-  - `backend/core/queue/task_router.py`
-  - `backend/memory/mcp_server.py`
-  - `.pre-commit-config.yaml`
-  - `playwright-ct.config.ts`
-  - `.gcloudignore`
-  - `scripts/fix_client_routes.py`
-  - `backend/services/storage/gcp_firestore.py`
-  - `implementation_plan.md`
-  - `.gitignore`
-  - `backend/core/config_fields.py`
+  - `backend/pyproject.toml`
+  - `backend/poetry.lock`
+  - `.github/scripts/service_preflight_check.py`
+  - `CHECKPOINT.md`
+  - `scripts/verify_render_env.py`
+  - `PROJECT_REVIEW_AND_ROADMAP.md`
+  - `.github/workflows/supreme-core-ci.yml`
   - `docs/audit_reports/SECURITY_COMPLIANCE_AUDIT_2026-08-18.md`
-  - `backend/tools/self_planner.py`
-  - `apps/docs/docs/intro.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints.

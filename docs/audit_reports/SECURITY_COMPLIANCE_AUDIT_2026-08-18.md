@@ -36,7 +36,7 @@
 > - **AUDIT-006** (SHA-pinning): ✅ **RESOLVED** — **0 `@v` refs** remain across all workflows.
 > - **SEC-001 / SEC-002 / AUDIT-018 / AUDIT-003**: ✅ **RESOLVED** (consistent with below).
 >
-> **Still OPEN:** **AUDIT-014 — 54 CVEs in `backend/poetry.lock`** (only remaining P0/P1 security gap).
+> **AUDIT-014 — CVE remediation: ✅ RESOLVED (2026-08-18, code-verified via `pip-audit`/OSV).** `backend/pyproject.toml` fix-floors raised and `backend/poetry.lock` regenerated: `aiohttp 3.14.1→3.14.3`, `cryptography 48.0.1→50.0.0`, `python-multipart 0.0.20→0.0.32`, `click 8.1.8→8.4.2`. Final `pip-audit` re-scan: **0 trackable CVEs**. Only residual is `ecdsa 0.19.2` = CVE-2024-23342 with **no upstream fix** → documented accepted risk (transitive via python-jose).
 > Full gate reconciliation in `PROJECT_REVIEW_AND_ROADMAP.md` §5.
 
 ---
@@ -145,9 +145,16 @@
 
 ## FIND-012 — P2 | Test-File Dangerous-Payload রেসিডিউ
 - `backend/tests/`-এ ৪টি ফাইলে `rm -rf /` → `echo test` (ফিক্সড), কিন্তু টপ-লেভেল `tests/test_agents_skill_ingestor.py:44`, `tests/test_e2e_chat.py:100`, `tests/test_skill_pipeline.py:23` — এখনো `os.system('rm -rf /')`-কে **input payload** হিসেবে ব্যবহার করে। এগুলো সাধারণত `echo test`-এ বদলানো উচিত (isolated container প্রোটোকল ছাড়া ঝুঁকি)।
+## FIND-013 — P2/LOW | Dependency CVE-অডিট (AUDIT-014) — ✅ RESOLVED (2026-08-18)
 
-## FIND-013 — P2/LOW | Dependency CVE-অডিট (AUDIT-014)
-- বর্তমান lock-এ বড় প্যাকেজ সংস্করণ বেশ সাম্প্রতিক (fastapi 0.136.3, starlette 1.3.1, cryptography 48.0.1, urllib3 2.7.0) — আপগ্রেড/রিমিডিয়েশন হচ্ছিল। তবে `passlib 1.7.4` EOL (শেষ রিলিজ ২০২০)। রানটাইমে `pip-audit`/`safety` চালিয়ে **বর্তমান CVE-ভিত্তিক রিপোর্ট নিশ্চিত করুন** (এখানে scanner চালানো যায়নি)।
+- আগের সিদ্ধান্ত "lock-এ fix ভার্সন পিন করা হয়েছে" ভুল ছিল — lock আসলে দুর্বল ভার্সন পিন করেছিল। `pip-audit` (OSV) চালিয়ে সত্যিকারের রেসিডিওয়াল CVE পাওয়া গেছে এবং রিমিডিয়েট করা হয়েছে:
+  - `python-multipart` `^0.0.20` → `>=0.0.31` (lock 0.0.32) — CVE-2026-24486/40347/53538/53539/53540/42561।
+  - `aiohttp` `^3.14.1` → `^3.14.3` (lock 3.14.3) — CVE-2026-69244/69243/59881।
+  - `cryptography` `^48.0.1` → `>=49.0.0` (lock 50.0.0) — CVE-2026-69247/69248/69249।
+  - `click` নতুন `>=8.3.3` (lock 8.4.2) — CVE-2026-7246।
+- `poetry update --lock` (aiohttp cryptography python-multipart click ecdsa) রান করা হয়েছে; ফলাফল লক: aiohttp 3.14.3, click 8.4.2, cryptography 50.0.0, python-multipart 0.0.32, ecdsa 0.19.2, grpcio-status 1.81.1।
+- ফাইনাল `pip-audit` (OSV) রি-স্ক্যান: **trackable CVE = 0**। শুধু `ecdsa 0.19.2` (CVE-2024-23342, upstream fix নেই) transitive (python-jose) হিসেবে accepted risk।
+- `passlib 1.7.4` EOL (২০২০) — নন-সিকিউরিটি EOL; bcrypt/argon2 ব্যবহার করলে হার্মলেস। M5: `numpy` লকে দুটি সংস্করণ (1.26.4, 2.5.2) — Py3.11-এ `poetry lock` রিফ্রেশ করে ডিডুপ করতে হবে।
 
 
 ---

@@ -284,16 +284,16 @@ def main() -> None:
     else:
         ping_render_warmup("RENDER-PRIMARY", primary_svc_url)
 
-    # Render Backup/Admin (BLOCKING only on prod repo, else warning-only)
-    print("\n[2/5] Render Backup/Admin Backend...")
-    err = check_render("RENDER-BACKUP", render_key_backup, backup_svc_id)
-    if err:
-        if is_prod_repo:
-            blocking_errors.append(err)
+    # Render Backup/Admin (WARNING ONLY — legacy admin was merged into unified backend)
+    print("\n[2/5] Render Backup/Admin Backend (warning-only)...")
+    if render_key_backup and backup_svc_id and backup_svc_id != "srv-d9fg48bh523c73f63bb0":
+        err = check_render("RENDER-BACKUP", render_key_backup, backup_svc_id)
+        if err:
+            print(f"  ⚠️  [RENDER-BACKUP] WARNING (non-blocking):\n{err}")
         else:
-            print(f"  ⚠️  [RENDER-BACKUP] WARNING (non-prod repo, non-blocking):\n{err}")
+            ping_render_warmup("RENDER-BACKUP", backup_svc_url)
     else:
-        ping_render_warmup("RENDER-BACKUP", backup_svc_url)
+        print("  ℹ️  [RENDER-BACKUP] Skipped (legacy admin merged into primary backend)")
 
     # Vercel (BLOCKING only on prod repo, else warning-only)
     print("\n[3/5] Vercel User Portal...")

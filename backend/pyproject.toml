@@ -22,7 +22,7 @@ pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
 loguru = "^0.7.3"
 psutil = "^6.1.0"
 redis = {extras = ["hiredis"], version = "^5.2.0"}
-python-multipart = "^0.0.20"
+python-multipart = ">=0.0.31"  # CVE fix floor (AUDIT-014: CVE-2026-24486/40347/53538/53539/53540/42561)
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 # python-jose deprecated; migrated to PyJWT
@@ -37,7 +37,8 @@ posthog = "^7.29.0"
 mcp = "^1.28.1"
 stripe = "^15.3.1"
 neo4j = "^6.2.0"
-aiohttp = "^3.14.1"  # CVE fix floor (AUDIT-014)
+aiohttp = "^3.14.3"  # CVE fix floor (AUDIT-014: CVE-2026-69244/69243/59881)
+click = ">=8.3.3"  # CVE fix floor (AUDIT-014: CVE-2026-7246)
 websockets = "^13.1"
 pygithub = "^2.5.0"
 pydantic-extra-types = "^2.11.1"
@@ -46,7 +47,7 @@ firebase-admin = "^6.5.0"
 qdrant-client = "^1.12.1"
 
 pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)
-cryptography = "^48.0.1"  # CVE fix floor (AUDIT-014)
+cryptography = ">=49.0.0"  # CVE fix floor (AUDIT-014: CVE-2026-69247/69248/69249)
 pybreaker = "^1.4.1"
 pytz = "^2024.2"
 python-dateutil = "^2.9.0.post0"
