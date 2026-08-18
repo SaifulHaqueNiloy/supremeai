@@ -10,49 +10,44 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/api/routes/tenant_admin.py`
-  - `frontend/src/store/customerStore.ts`
-  - `frontend/src/store/slices/ideSlice.ts`
-  - `frontend/src/store/dashboardStore.ts`
-  - `backend/api/routes/admin_brain.py`
-  - `frontend/src/store/slices/customerSlice.ts`
+  - `backend/memory/chromadb_store.py`
   - `backend/memory/cloud_postgres_store.py`
-  - `backend/api/routes/ide_trio.py`
-  - `frontend/src/store/authStore.ts`
-  - `frontend/src/store/slices/dashboardSlice.ts`
-  - `backend/api/routes/auth.py`
-  - `backend/models/evolution.py`
-  - `frontend/src/store/slices/authSlice.ts`
-  - `backend/api/routes/admin_auth.py`
   - `backend/api/routes/cdc_webhooks.py`
-  - `backend/api/routes/websocket_agent.py`
-  - `backend/memory/supabase_store.py`
   - `CHECKPOINT.md`
-  - `tools/vscode-extension/src/services/SwarmPipelineProvider.ts`
-  - `frontend/src/store/sessionCockpitStore.ts`
-  - `REAL_TESTING_LOG.md`
-  - `backend/api/routes/admin_dashboard.py`
-  - `frontend/src/store/useStore.ts`
+  - `backend/api/routes/websocket_agent.py`
+  - `backend/api/routes/auth.py`
+  - `backend/core/unified_memory.py`
+  - `backend/api/routes/simulator.py`
+  - `backend/memory/supabase_store.py`
+  - `backend/models/execution_log.py`
   - `backend/memory/unified_db_manager.py`
+  - `frontend/src/store/slices/ideSlice.ts`
+  - `backend/api/routes/admin_dashboard.py`
+  - `backend/tests/api/test_realtime_dashboard.py`
+  - `backend/memory/__init__.py`
+  - `backend/api/routes/session_takeover.py`
+  - `frontend/src/store/slices/customerSlice.ts`
+  - `frontend/src/store/slices/dashboardSlice.ts`
+  - `backend/memory/sqlite_store.py`
+  - `frontend/src/store/sessionCockpitStore.ts`
+  - `backend/api/routes/byoc_api.py`
+  - `frontend/src/store/authStore.ts`
+  - `frontend/src/store/customerStore.ts`
   - `frontend/src/store/slices/coreSlice.ts`
   - `backend/api/routers.py`
-  - `frontend/src/store/useIdeStore.ts`
-  - `backend/core/unified_memory.py`
-  - `backend/memory/chromadb_store.py`
-  - `tests/test_ide_trio_smoke.py`
-  - `LESSONS_LEARNED.md`
-  - `backend/models/execution_log.py`
-  - `DEVELOPMENT_ROADMAP.md`
+  - `frontend/src/store/dashboardStore.ts`
   - `FEATURE_TRACKING_LOG.md`
-  - `backend/agents/ide/trio_adapters.py`
-  - `backend/api/routes/session_takeover.py`
-  - `backend/core/orchestration/trio_pipeline.py`
-  - `backend/memory/sqlite_store.py`
+  - `backend/api/routes/admin_auth.py`
+  - `REAL_TESTING_LOG.md`
+  - `frontend/src/store/useIdeStore.ts`
   - `frontend/src/store/slices/sessionCockpitSlice.ts`
-  - `backend/api/routes/simulator.py`
-  - `backend/api/routes/byoc_api.py`
+  - `frontend/src/store/slices/authSlice.ts`
+  - `backend/api/routes/admin_brain.py`
+  - `backend/api/routes/tenant_admin.py`
+  - `frontend/src/store/useStore.ts`
   - `backend/api/routes/unified_memory_api.py`
-  - `backend/memory/__init__.py`
+  - `backend/models/evolution.py`
+  - `DEVELOPMENT_ROADMAP.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**

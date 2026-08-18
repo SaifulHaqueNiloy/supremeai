@@ -7,7 +7,6 @@ through a single, consistent API.
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional
 
 from core.unified_memory import unified_memory
 # Removed auth import as it seems to be non-standard or located elsewhere
@@ -17,7 +16,7 @@ router = APIRouter(prefix="/unified-memory", tags=["Unified Memory"])
 class MultiNeedleQueryRequest(BaseModel):
     query: str
     top_k: int = 5
-    session_id: Optional[str] = None
+    session_id: str | None = None
     needles_count: int = 3
 
 @router.post("/long-term/store")
@@ -27,7 +26,7 @@ async def store_long_term_memory_endpoint(
     agent_type: str = Query(..., description="Type of the agent (e.g., SyncGuard)"),
     task_type: str = Query(..., description="Type of the task (e.g., System_Audit)"),
     content: str = Query(..., description="The content to store"),
-    metadata: Optional[str] = Query(None, description="Optional metadata as JSON string")
+    metadata: str | None = Query(None, description="Optional metadata as JSON string")
 ):
     """
     Store information in the long-term 'Eternal Brain' memory.
@@ -57,7 +56,7 @@ async def store_long_term_memory_endpoint(
 async def query_long_term_memory_endpoint(
     query: str = Query(..., description="Query to search for in memory"),
     top_k: int = Query(default=5, le=20, description="Number of top results to return"),
-    session_id: Optional[str] = Query(None, description="Filter by session ID")
+    session_id: str | None = Query(None, description="Filter by session ID")
 ):
     """
     Query the long-term 'Eternal Brain' memory.

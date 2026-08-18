@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from loguru import logger
 from pydantic import BaseModel
 
 from core.cache.redis_manager import redis_manager
@@ -80,7 +81,8 @@ def _use_redis() -> bool:
         if not url or "mock" in url.lower():
             return False
         return True
-    except Exception:
+    except Exception as err:
+        logger.debug(f"Simulator redis availability check failed: {err}")
         return False
 
 

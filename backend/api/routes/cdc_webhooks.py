@@ -69,8 +69,8 @@ async def handle_cdc_webhook(request: Request, background_tasks: BackgroundTasks
         import json
 
         event = json.loads(body)
-    except Exception:
-        logger.exception("Unhandled exception")
+    except (json.JSONDecodeError, ValueError) as err:
+        logger.warning(f"Invalid JSON in webhook payload: {err}")
         raise HTTPException(status_code=400, detail="Invalid JSON payload") from None
 
     event_type = event.get("type")

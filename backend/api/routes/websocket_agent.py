@@ -139,7 +139,7 @@ async def websocket_chat_endpoint(
         await websocket.accept()
         try:
             first_message = await asyncio.wait_for(websocket.receive_text(), timeout=15)
-        except (asyncio.TimeoutError, WebSocketDisconnect):
+        except (TimeoutError, WebSocketDisconnect):
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 

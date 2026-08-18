@@ -9,17 +9,15 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import random
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
-from core.persistence import pooled_pg
 from services.memory_service import CascadeMemoryService, hash_vectorize
 
 router = APIRouter(
@@ -186,24 +184,24 @@ async def get_brain_visual_graph() -> dict[str, Any]:
     """
     memory_service = CascadeMemoryService()
     raw_memories = []
-    
+
     try:
         raw_memories = memory_service.retrieve_memories()
     except Exception as e:
         logger.warning(f"Error reading memories for visual graph: {e}")
 
     nodes: list[dict[str, Any]] = []
-    
+
     # Combine live memories with foundational seed memories if DB has few entries
     combined: list[dict[str, Any]] = list(FOUNDATIONAL_SEEDS)
-    
+
     for idx, mem in enumerate(raw_memories):
         summary_text = mem.get("summary") or mem.get("content") or "Memory Node"
         task_type = mem.get("task_type") or "general"
         agent_type = mem.get("agent_type") or "SupremeAgent"
         cluster = _map_task_type_to_cluster(task_type)
         session_id = mem.get("session_id") or f"mem-{idx}"
-        
+
         combined.append({
             "id": f"db-{idx}-{session_id[:12]}",
             "session_id": session_id,
@@ -213,7 +211,7 @@ async def get_brain_visual_graph() -> dict[str, Any]:
             "cluster": cluster,
             "importance": float(mem.get("metadata", {}).get("importance", 0.88)),
             "tags": mem.get("metadata", {}).get("tags", [task_type, agent_type.lower()]),
-            "created_at": str(mem.get("created_at") or datetime.now(timezone.utc).isoformat()),
+            "created_at": str(mem.get("created_at") or datetime.now(UTC).isoformat()),
         })
 
     cluster_counts: dict[str, int] = {}
@@ -221,10 +219,10 @@ async def get_brain_visual_graph() -> dict[str, Any]:
         cluster = item.get("cluster", "General")
         cluster_idx = cluster_counts.get(cluster, 0)
         cluster_counts[cluster] = cluster_idx + 1
-        
+
         coords = _get_cluster_coordinates(cluster, cluster_idx, len(combined))
         color = CLUSTER_COLORS.get(cluster, "#00f3ff")
-        
+
         nodes.append({
             "id": item["id"],
             "session_id": item["session_id"],
@@ -256,7 +254,7 @@ async def get_brain_visual_graph() -> dict[str, Any]:
                     "strength": round(random.uniform(0.65, 0.95), 2),
                     "type": "intra-cluster",
                 })
-        
+
         # Link cross-cluster to central Architecture node (hub)
         if nodes[i]["cluster"] != "Architecture" and nodes[i]["importance"] >= 0.92:
             arch_nodes = [n for n in nodes if n["cluster"] == "Architecture"]
@@ -283,7 +281,7 @@ async def get_brain_visual_graph() -> dict[str, Any]:
             "zero_repeat_accuracy": "99.6%",
             "retention_rate": "100%",
             "active_clusters": len(cluster_counts),
-            "last_synapse_pulse": datetime.now(timezone.utc).isoformat(),
+            "last_synapse_pulse": datetime.now(UTC).isoformat(),
         },
     }
 
@@ -305,7 +303,7 @@ async def get_brain_stats() -> dict[str, Any]:
         "vector_dimensions": 384,
         "engine_type": "pgvector / Local Hash Cascading",
         "sovereign_retention": "100% Independent",
-        "last_sync": datetime.now(timezone.utc).isoformat(),
+        "last_sync": datetime.now(UTC).isoformat(),
     }
 
 
@@ -316,11 +314,11 @@ async def simulate_memory_recall(req: RecallSimulateRequest) -> dict[str, Any]:
     weights so the UI can illuminate activated synapses and memory pathways.
     """
     query_vec = hash_vectorize(req.query)
-    
+
     # Run graph retrieval
     graph_data = await get_brain_visual_graph()
     nodes = graph_data.get("nodes", [])
-    
+
     scored_nodes: list[dict[str, Any]] = []
     for node in nodes:
         node_vec = hash_vectorize(node["summary"] + " " + " ".join(node.get("tags", [])))
@@ -331,7 +329,7 @@ async def simulate_memory_recall(req: RecallSimulateRequest) -> dict[str, Any]:
         match_count = sum(1 for kw in keywords if kw in node["summary"].lower())
         boost = min(0.35, match_count * 0.12)
         score = min(0.99, max(0.1, dot + boost))
-        
+
         scored_nodes.append({
             "node_id": node["id"],
             "label": node["label"],
@@ -340,15 +338,15 @@ async def simulate_memory_recall(req: RecallSimulateRequest) -> dict[str, Any]:
             "similarity_score": round(score, 3),
             "is_activated": score >= 0.45,
         })
-        
+
     scored_nodes.sort(key=lambda x: x["similarity_score"], reverse=True)
     top_matches = scored_nodes[: req.limit]
-    
+
     return {
         "query": req.query,
         "activated_count": sum(1 for n in top_matches if n["is_activated"]),
         "matches": top_matches,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -358,7 +356,7 @@ async def inject_admin_memory(req: MemoryInjectRequest) -> dict[str, Any]:
     try:
         memory_service = CascadeMemoryService()
         session_id = f"admin-inject-{int(datetime.now().timestamp())}"
-        
+
         memory_service.store_memory(
             file_path=session_id,
             content=req.summary,

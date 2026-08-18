@@ -55,8 +55,11 @@ async def optional_current_user(
             role=role,
             email=payload.get("email") if isinstance(payload.get("email"), str) else None,
         )
-    except Exception:
-        logger.exception("Unhandled exception")
+    except (jwt.PyJWTError, ValueError) as err:
+        logger.warning(f"Failed to decode auth JWT: {err}")
+        return None
+    except Exception as err:
+        logger.error(f"Unexpected error decoding auth JWT: {err}")
         return None
 
 

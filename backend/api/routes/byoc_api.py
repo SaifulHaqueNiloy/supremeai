@@ -86,8 +86,8 @@ async def deploy_container(
         with open(config_path, encoding="utf-8") as f:
             limits = json.load(f)["limits"]
             user_limits = limits.get(user_tier, limits["free"])
-    except Exception:
-        logger.exception("Unhandled exception")
+    except Exception as err:
+        logger.warning(f"Failed to read byoc_limits.json: {err}, falling back to defaults")
         user_limits = {"max_containers": 1, "max_memory": "256Mi", "max_cpu": "500m"}
 
     # Count active containers (simulation check)

@@ -83,8 +83,8 @@ def _get_db():
         from database.supabase_client import db
 
         return db.client if db and db.client else None
-    except Exception:
-        logger.exception("Unhandled exception")
+    except Exception as err:
+        logger.warning(f"Failed to acquire db client in tenant_admin: {err}")
         return None
 
 

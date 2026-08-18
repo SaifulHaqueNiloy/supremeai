@@ -275,7 +275,7 @@ async def get_health_map():
 
     try:
         all_checks = await health_checker.check_all()
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Health map check failed: {e}")
         all_checks = {}
 

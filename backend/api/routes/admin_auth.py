@@ -53,9 +53,14 @@ def validate_sse_token(token: str = Query(..., description="Admin JWT token from
         if decoded.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
         return decoded
-    except Exception:
-        logger.warning("SSE/WebSocket token validation failed", exc_info=True)
-        raise HTTPException(status_code=401, detail="Authentication failed.")
+    except HTTPException:
+        raise
+    except (jwt.PyJWTError, ValueError) as err:
+        logger.warning(f"SSE/WebSocket token validation rejected: {err}")
+        raise HTTPException(status_code=401, detail="Authentication failed.") from err
+    except Exception as err:
+        logger.warning(f"Unexpected error during SSE token validation: {err}", exc_info=True)
+        raise HTTPException(status_code=401, detail="Authentication failed.") from err
 
 
 def admin_rate_limit(request: Request):
