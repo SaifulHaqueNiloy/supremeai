@@ -34,6 +34,7 @@
 
 ### 3. Verification & Memory Protocols
 - **Hard Test:** পিং নয়, রিয়েল লাইফ সিনারিও টেস্ট করুন ও `REAL_TESTING_LOG.md` আপডেট রাখুন।
+- **Scoped Post-Push Check:** পুশের পর শুধু সংশ্লিষ্ট স্কোপ (Frontend হলে Frontend, Backend হলে Backend) ভেরিফাই করুন। ৫–১০ মিনিটের CI প্রসেসের জন্য আইডল ওয়েটিং (লুপে টোকেন অপচয়) নিষিদ্ধ; প্রয়োজনে অন-ডিমান্ড ক্যানারি প্রোব ব্যবহার করুন।
 - **Feature Log:** নতুন ফিচারে `FEATURE_TRACKING_LOG.md`-এর ৪-স্টেপ পাইপলাইন বাংলায় মেইনটেইন করুন।
 - **Topology:** API/URL চেঞ্জে `docs/SYSTEM_TOPOLOGY_AND_URL_REGISTRY.md` সিঙ্ক রাখুন।
 - **Memory Query:** শুধু হাই-রিস্ক আর্কিটেকচারাল কাজে `python scripts/ai/memory_read.py` চালান।

@@ -9,8 +9,11 @@ Reduces token payload across client-backend bridges by up to 80%.
 from __future__ import annotations
 
 import ast
+import logging
 import re
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ASTContextSlicer:
@@ -59,8 +62,8 @@ class ASTContextSlicer:
                     "token_reduction_pct": round(reduction, 1),
                 }
 
-        except Exception:
-            pass  # Fallback to line window
+        except Exception as exc:
+            logger.debug(f"AST parse fallback for Python block: {exc}")
 
         # Fallback: window slice
         start_idx = max(0, target_line - 1 - 25)

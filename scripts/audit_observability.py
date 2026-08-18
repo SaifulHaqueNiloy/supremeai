@@ -84,7 +84,11 @@ class SilentErrorDetector(ast.NodeVisitor):
 
         has_logger_call = any(
             isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call) and (
-                (isinstance(stmt.value.func, ast.Attribute) and 'log' in stmt.value.func.attr.lower()) or
+                (isinstance(stmt.value.func, ast.Attribute) and (
+                    'log' in stmt.value.func.attr.lower() or
+                    any(lvl in stmt.value.func.attr.lower() for lvl in ('warning', 'error', 'info', 'debug', 'critical', 'exception')) or
+                    (isinstance(stmt.value.func.value, ast.Name) and 'log' in stmt.value.func.value.id.lower())
+                )) or
                 (isinstance(stmt.value.func, ast.Name) and 'log' in stmt.value.func.id.lower())
             )
             for stmt in node.body

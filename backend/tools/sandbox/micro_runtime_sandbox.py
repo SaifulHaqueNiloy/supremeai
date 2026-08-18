@@ -89,13 +89,15 @@ class MicroRuntimeSandbox:
             )
 
         # Step 2: Prepare isolated sandbox environment
-        stdout_buf = io.StringIO()
+        def _sandbox_print(*args: Any, sep: str = " ", end: str = "\n", **_kwargs: Any) -> None:
+            stdout_buf.write(sep.join(str(arg) for arg in args) + end)
+
         safe_builtins = {
             "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
             "enumerate": enumerate, "float": float, "int": int, "len": len,
             "list": list, "max": max, "min": min, "range": range, "round": round,
             "set": set, "str": str, "sum": sum, "tuple": tuple, "zip": zip,
-            "print": lambda *args, **kwargs: print(*args, file=stdout_buf, **kwargs),
+            "print": _sandbox_print,
         }
 
         exec_globals = {"__builtins__": safe_builtins}

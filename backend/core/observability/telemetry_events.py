@@ -84,9 +84,9 @@ def record_error_telemetry(event: Any, attributes: dict[str, Any] | None = None)
                 for k, v in attributes.items():
                     try:
                         span.set_attribute(k, v)
-                    except Exception:
+                    except Exception as exc:
                         # Non-serializable attribute — skip, never break the span.
-                        pass
+                        logger.debug(f"[telemetry] Non-serializable attribute {k}: {exc}")
             span.set_status(Status(StatusCode.ERROR))
             span.record_exception(
                 _TelemetryError(
@@ -102,15 +102,15 @@ def record_error_telemetry(event: Any, attributes: dict[str, Any] | None = None)
                     ctx["trace_id"] = format(span_ctx.trace_id, "032x")
                 if isinstance(getattr(span_ctx, "span_id", None), int):
                     ctx["span_id"] = format(span_ctx.span_id, "016x")
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug(f"[telemetry] Failed extracting span context: {exc}")
             # Optional: stitch trace id back onto the event for downstream correlation.
             try:
                 event_context = getattr(event, "context", None)
                 if isinstance(event_context, dict):
                     event_context["telemetry_trace_id"] = ctx["trace_id"]
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug(f"[telemetry] Failed stitching event context: {exc}")
     except Exception as exc:  # Never let telemetry crash the caller path.
         logger.warning(f"[telemetry] record_error_telemetry failed: {exc}")
     return ctx
