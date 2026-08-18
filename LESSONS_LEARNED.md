@@ -6,10 +6,12 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
-## 2026-08-19 — 🎨 Frontend TypeScript & Full Test Suite Zero-Warning Hardening
-- **সমস্যা:** Frontend typecheck-এ `useAuth` স্টোর টাইপিং মিসম্যাচ (`setCustomerUser`), `useVirtualList` আনইউজড ভ্যারিয়েবল, `WebSocketManager` প্রাইভেট আনরিড ফিল্ডস, `ui-components` আনইউজড রিয়্যাক্ট ইমপোর্টস এবং `vitest-axe` টাইপ মডিউল অগমেন্টেশন মিসিং থাকার কারণে `tsc -p tsconfig.app.json` টাইপচেক ফেইল করছিল।
-- **ফিক্স:** (1) `useAuth.ts`-এ `useCustomerStore` থেকে টাইপ-সেইফ `setCustomerUser` সিলেক্টর ব্যবহার করা হয়েছে; (2) `useVirtualList.ts`, `WebSocketManager.ts`, `DashboardShell.tsx` ও `LiveSujonBackground.tsx` থেকে আনইউজড ভ্যারিয়েবল ও ডিক্লারেশন ক্লিন করা হয়েছে; (3) `accessibility.test.tsx`-এ `vitest-axe` Assertion অগমেন্টেশন এবং `ChatMessage` ইন্টারফেস ইমপোর্ট করা হয়েছে; (4) `tsc --noEmit` এবং ১৪টি টেস্ট ফাইলের ৯৮/৯৮ টেস্ট ১০০% গ্রিন পাস করেছে এবং `dist-admin` ও `dist-user` প্রোডাকশন বান্ডল সফলভাবে বিল্ড হয়েছে।
-- **লেসন:** ফ্রন্টএন্ড স্লাইস স্টোর বা টেস্ট সুইট আপডেট করার সাথে সাথে গ্লোবাল টাইপচেক (`tsc -p tsconfig.app.json --noEmit`) রান করে টাইপ ইনটিগ্রিটি বজায় রাখা আবশ্যক, যাতে কোনো রিগ্রেশন প্রোডাকশনে না পৌঁছায়।
+## 2026-08-19 — 🛠️ CI/CD Full Pipeline Stabilization & Alembic Package Shadowing Resolution
+- **সমস্যা:** (1) VS Code Extension-এ `SwarmPipelineProvider.ts:144` ESLint singlequote violation এবং `turbo.json` মিসিং `out/**` আউটপুট বিল্ড ফেইল করছিল; (2) `backend/alembic/__init__.py` ও `versions/__init__.py` থাকার কারণে Python-এর মডিউল রেজোলিউশনে রিয়েল সাইট-প্যাকেজ `alembic` শ্যাডো হয়ে `test_perf_indexes.py` ফেইল করছিল; (3) `scripts/audit_observability.py` সাইলেন্ট পাস ও আনসেফ প্রিন্ট স্টেটমেন্ট ফ্ল্যাগ করছিল; (4) `Type Sync Check`-এ `SecretHunter` ইমপোর্টে অপ্রয়োজনীয় হেভি `llm_gateway` ডিপেন্ডেন্সি থাকায় সিআই জবে ইমপোর্ট এরর হচ্ছিল।
+- **ফিক্স:** (1) `SwarmPipelineProvider.ts` কোট ফিক্স ও `turbo.json` বিল্ড আউটপুট আপডেট করা হয়েছে; (2) `backend/alembic` প্যাকেজ ইনিট ফাইলগুলো মুছে দিয়ে `StaticPool` ও ফ্রেশ ইনস্পেক্টরে `tests/test_perf_indexes.py` ৭/৭ পাস করানো হয়েছে; (3) স্যান্ডবক্সে `stdout_buf` ক্রাফট ও লগিং এনহ্যান্স করে `audit_observability.py` ০ ভায়োলেশনে পাস করানো হয়েছে; (4) `SecretHunter`-এ লেজি গেটওয়ে লোডিং যুক্ত করে `Type Sync Check` সম্পূর্ণ সফল করা হয়েছে। GitHub Actions CI কারেন্ট রান `32198523572` **১০০% SUCCESS / GREEN** হয়েছে।
+- **লেসন:** মাইগ্রেশন ডিরেক্টরিগুলোতে কখনোই `__init__.py` রাখা যাবে না যা টপ-লেভেল প্যাকেজকে শ্যাডো করতে পারে, এবং সিআই সিকিউরিটি ও টাইপ সিঙ্ক ইউটিলিটিগুলোকে সবসময় হেভি রানটাইম ডিপেন্ডেন্সি থেকে মুক্ত (লাইটওয়েট ও রেসিলিয়েন্ট) রাখতে হবে।
+
+
 
 ## 2026-08-19 — 🛡️ Long-Term Autonomous Governance & Self-Tracking Matrix
 - **সমস্যা:** দীর্ঘমেয়াদে কোডবেস বড় হলে আনডকুমেন্টেড "Ghost" এনভায়রনমেন্ট ভ্যারিয়েবল, Pydantic ও TypeScript টাইপ ডিসিঙ্ক, এবং আনমনিটরড মেমোরি ব্লোটের কারণে সিস্টেম আনপ্রেডিক্টেবল হয়ে পড়ত।
