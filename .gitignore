@@ -179,8 +179,8 @@ fix_bare_yields.py
 fix_flutter_deps.ps1
 fix_flutter_deps.sh
 *_env.py
-test_*.py
-sync_*.py
+/test_*.py
+/sync_*.py
 
 # ---------- MISC LOCAL FOLDERS ----------
 .ollama/

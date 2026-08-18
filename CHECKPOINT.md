@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 13:41 UTC
+- **Date:** 2026-08-18 13:43 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,20 +10,17 @@
   - (see git log for details)
 
 ## Files Changed
+  - `CHECKPOINT.md`
   - `tools/vscode-extension/AdminMetricsController.java`
-  - `tools/vscode-extension/CodebaseAuditService.java`
-  - `tools/vscode-extension/GlobalMetrics.java`
-  - `apps/desktop/src/App.tsx`
-  - `apps/desktop/src/config.ts`
-  - `backend/models/pending_tasks.py`
   - `tools/vscode-extension/FeatureDefinition.java`
   - `tools/vscode-extension/FeatureRegistryController.java`
-  - `CHECKPOINT.md`
-  - `apps/desktop/src/vite-env.d.ts`
   - `tools/vscode-extension/GlobalMetricsService.java`
-  - `apps/desktop/src/api/backend.ts`
+  - `.gitignore`
+  - `tools/vscode-extension/CodebaseAuditService.java`
   - `tools/vscode-extension/FeatureRegistryService.java`
-  - `apps/desktop/src/components/BackendStatus.tsx`
+  - `backend/models/pending_tasks.py`
+  - `tools/vscode-extension/GlobalMetrics.java`
+  - `backend/tests/test_pending_tasks_indexes.py`
 
 ## Pending (Carry Forward)
 - **⚠️ Concurrent agent (python-jose→PyJWT migration) active** — same working tree-তে 20+ ফাইল
