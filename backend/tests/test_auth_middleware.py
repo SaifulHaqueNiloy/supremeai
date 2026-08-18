@@ -195,7 +195,7 @@ class TestVerifyAdminSessionFailClosed:
     def test_expired_jwt_token(self):
         """এক্সপায়ার্ড JWT টোকেন রিজেক্স করা হচ্ছে।"""
         from fastapi import HTTPException
-        from jose import ExpiredSignatureError
+        from jwt.exceptions import ExpiredSignatureError
 
         mock_request = MagicMock()
         mock_request.headers.get.return_value = "Bearer expired-token"
@@ -215,7 +215,7 @@ class TestVerifyAdminSessionFailClosed:
     def test_invalid_jwt_token(self):
         """অবৈধ JWT টোকেন রিজেক্স করা হচ্ছে।"""
         from fastapi import HTTPException
-        from jose import JWTError
+        from jwt.exceptions import PyJWTError
 
         mock_request = MagicMock()
         mock_request.headers.get.return_value = "Bearer invalid-token"
@@ -224,7 +224,7 @@ class TestVerifyAdminSessionFailClosed:
             # বাংলা মন্তব্য: সিকিউরিটি স্ক্যানার এলার্ট এড়াতে ডায়নামিক সিক্রেট জেনারেট করা হচ্ছে।
             mock_settings.jwt_secret = secrets.token_hex(32)
             with patch("core.security.auth_middleware.jwt.decode") as mock_decode:
-                mock_decode.side_effect = JWTError("Invalid")
+                mock_decode.side_effect = PyJWTError("Invalid")
                 with pytest.raises(HTTPException) as exc_info:
                     import asyncio
 

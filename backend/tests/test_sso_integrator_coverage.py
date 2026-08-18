@@ -193,7 +193,7 @@ class TestValidateToken:
         integrator = SSOIntegrator.__new__(SSOIntegrator)
         integrator.onelogin = False
 
-        with patch("tools.sso_integrator.jose_jwt") as mock_jwt:
+        with patch("tools.sso_integrator.jwt") as mock_jwt:
             mock_jwt.decode.return_value = {"sub": "user1", "email": "test@example.com"}
             result = integrator.validate_token("valid-token", "secret")
             assert result is not None
@@ -205,7 +205,7 @@ class TestValidateToken:
         integrator = SSOIntegrator.__new__(SSOIntegrator)
         integrator.onelogin = False
 
-        with patch("tools.sso_integrator.jose_jwt", None):
+        with patch("tools.sso_integrator.jwt", None):
             result = integrator.validate_token("test-token", "secret")
             assert "error" in result
 

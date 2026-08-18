@@ -309,7 +309,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         except Exception as e:
             logger.error(f"Failed to promote temp TOTP secret: {e}")
 
-    from jose import jwt
+    import jwt
 
     now = int(time.time())
     # বাংলা মন্তব্য: jti (JWT ID) + sub + iat যোগ করা হলো — JWT replay attack প্রতিরোধ (Patch 6 fix)

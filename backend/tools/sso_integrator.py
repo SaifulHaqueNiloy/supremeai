@@ -5,14 +5,14 @@ import defusedxml.ElementTree as ET  # -- standard idiom (mirrors stdlib xml.etr
 from loguru import logger
 
 try:
-    from jose import JWTError
-    from jose import jwt as jose_jwt
+    import jwt
+    from jwt.exceptions import PyJWTError
 
-    _JOSE_AVAILABLE = True
+    _PYJWT_AVAILABLE = True
 except ImportError:
-    _JOSE_AVAILABLE = False
-    JWTError = Exception  # type: ignore[misc,assignment]
-    jose_jwt = None  # type: ignore[assignment]
+    _PYJWT_AVAILABLE = False
+    PyJWTError = Exception  # type: ignore[misc,assignment]
+    jwt = None  # type: ignore[assignment]
 
 
 class SSOIntegrator:
@@ -255,10 +255,10 @@ class SSOIntegrator:
 
     def validate_token(self, token: str, secret: str) -> dict[str, Any]:
         """Backward-compatible JWT validation."""
-        if not _JOSE_AVAILABLE or jose_jwt is None:
-            return {"error": "jose not available"}
+        if not _PYJWT_AVAILABLE or jwt is None:
+            return {"error": "PyJWT not available"}
         try:
-            payload = jose_jwt.decode(token, secret, algorithms=["HS256"])
+            payload = jwt.decode(token, secret, algorithms=["HS256"])
             return payload
         except Exception as exc:
             return {"error": str(exc)}
@@ -368,10 +368,12 @@ class SSOIntegrator:
                 resp.raise_for_status()
                 tokens = resp.json()
             id_token = tokens.get("id_token", "")
-            if id_token and _JOSE_AVAILABLE and jose_jwt is not None:
+            if id_token and _PYJWT_AVAILABLE and jwt is not None:
                 # Verify basic structure; real apps should verify signature via jwks_uri
-                header = jose_jwt.get_unverified_header(id_token)
-                payload = jose_jwt.get_unverified_claims(id_token)
+                header = jwt.get_unverified_header(id_token)
+                payload = jwt.decode(
+                    id_token, options={"verify_signature": False, "verify_exp": False}
+                )
                 return {
                     "status": "success",
                     "id_token": id_token,

@@ -10,8 +10,8 @@ import json
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from jose import JWTError, jwt
-from jose.exceptions import ExpiredSignatureError
+import jwt
+from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from loguru import logger
 
 from core.config import settings
@@ -88,7 +88,7 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
     except ExpiredSignatureError:
         logger.warning("JWT token has expired")
         return None
-    except JWTError as exc:
+    except PyJWTError as exc:
         logger.warning(f"JWT token validation failed: {exc}")
         return None
 

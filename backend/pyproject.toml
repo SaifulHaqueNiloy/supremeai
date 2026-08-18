@@ -24,9 +24,10 @@ psutil = "^6.1.0"
 redis = {extras = ["hiredis"], version = "^5.2.0"}
 python-multipart = ">=0.0.31"  # CVE fix floor (AUDIT-014: CVE-2026-24486/40347/53538/53539/53540/42561)
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-# python-jose deprecated; migrated to PyJWT
-# PyJWT = "2.10+" # added below when migration complete
+# python-jose deprecated -> migrated to PyJWT (planned in roadmap P3 #12).
+# Migration also drops the python-jose -> ecdsa transitive dependency tracked as
+# accepted-risk CVE in AUDIT-014 (#13). Re-verify ecdsa is no longer pulled in.
+pyjwt = {extras = ["cryptography"], version = "^2.10.0"}
 python-dotenv = "^1.2.2"  # CVE fix floor (AUDIT-014)
 requests = "^2.32.3"
 uuid6 = "^2025.0.1"

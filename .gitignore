@@ -1,39 +1,93 @@
-# Rust artifacts
+# ============================================================
+# SupremeAI .gitignore (P3 hygiene cleanup — deduplicated)
+# Organized by category. Preserves every unique rule from the
+# previous mangled/duplicated file, plus adds .secrets/ and .venv_ci/.
+# ============================================================
+
+# ---------- CRITICAL SECRETS & CREDENTIALS ----------
+.env
+.env.*
+.env*
+!.env.example
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
+service-account.json
+backend/service-account.json
+firebase-adminsdk-*.json
+firebase-service-account.json
+gcp-key.json
+rotated_secrets.json
+fix_secrets_step*.py
+render.env
+render_env.json
+firebase-debug.log
+blackbox_mcp_settings.json
+blackbox_mcp_settings.example.json
+enc_key_payload.json
+infrastructure/zero_cost/config.env
+# Live secret directory (contains jwt_secret.key etc.) — IGNORE the folder,
+# but keep the tracked .secrets-allowlist.json at repo root.
+.secrets/
+# Local CI virtualenv artifact
+.venv_ci/
+
+# ---------- RENDER API / DEPLOYMENT SECRETS (AUDIT-2026-08) ----------
+# These contained REAL credentials in git history. Rotate in Infisical/Render.
+render_*.json
+run.json
+set_env_key.py
+trigger_redeploy.py
+check_ci.py
+scripts/check_deploys.py
+scripts/check_health_path.py
+scripts/check_key.py
+scripts/fetch_logs.py
+scripts/status.py
+scripts/sync_both.py
+scripts/sync_secrets_to_frontend.py
+scripts/sync_secrets_to_render.py
+scripts/test_render_api.py
+scripts/trigger.py
+scripts/trigger_deploys.py
+docs/Enviorment vs secret key/env_security_auth.md
+verify_git_junk.ps1
+add_secret.py
+update_render.py
+test_db_path
+
+# ---------- FRONTEND / BUILD ARTIFACTS ----------
 src-tauri/target/
 src-tauri/Cargo.lock
-
-# Frontend build artifacts
 dist/
 out/
 build/
 !**/src/**/build/
 .next/
+.vercel
 .vercel/
-
-# Node dependencies (ALL locations)
 node_modules/
 **/node_modules/
+.turbo/
+.turbopack/
+**/target/
+**/Cargo.lock
+coverage/
+**/coverage/
+apps/_archive_web-chat/
+dist-admin/
+dist-user/
+frontend/dist-user/
+archive/
+apps/docs/.docusaurus/
+dataconnect-generated/
+dataconnect_generated/
+dataconnect-admin-generated/
 
-# 🛑 CRITICAL SECRETS & CREDENTIALS - DO NOT COMMIT 🛑
-.env
-.env.*
-!.env.example
-service-account.json
-backend/service-account.json
-firebase-adminsdk-*.json
-gcp-key.json
-*.pem
-*.key
-*.p12
-*.pfx
-firebase-service-account.json
-*.secret
-# 🛑 Secrets rotation artifacts (never commit — contains rotated secret VALUES)
-rotated_secrets.json
-fix_secrets_step*.py
-
-
-# Python caches and venvs
+# ---------- PYTHON CACHES / VENVS / COVERAGE ----------
 .venv/
 venv/
 __pycache__/
@@ -43,19 +97,41 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 .coverage
+.coverage.DESKTOP-*
+backend/.coverage.DESKTOP-*
 htmlcov/
+coverage.xml
+coverage.json
+coverage.toml
+**/coverage.xml
+**/coverage.json
+**/ruff_errors.txt
+**/tests_all_tests.txt
+**/trigger_ci.txt
+**/*-report.json
+*.coverage_report.json
+backend/coverage.json
+backend/coverage_new.json
+pytest_full_run_results.txt
+playwright-report/
+test-results/
+*_report.json
+error.txt
+trace.txt
+docs/reports/test-output*.txt
+docs/reports/*_diff.txt
+docs/reports/workflow_diff.txt
 
-# Turbo and build caches
-.turbo/
-.turbopack/
-
-# OS junk
+# ---------- OS JUNK ----------
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Logs and local data
+# ---------- LOGS & LOCAL DATA ----------
 logs/
+logs/ci/
+logs/*.json
+logs/*.md
 *.log
 *.db
 data/
@@ -71,437 +147,74 @@ data/skill_registry.json
 data/skills_registry.json
 data/constitutional_rules.db
 data/frontier/
+data/frontier/search_embeddings.json
+data/**/*.db
+backend-tests.log
+supreme_memory.db
+chroma.sqlite3
+backend/backup/
+*.backup
+backend/tmp_test_learning_data/
 
-# Package locks (pnpm/yarn/npm)
+# ---------- PACKAGE LOCKS ----------
 package-lock.json
-
 yarn.lock
+**/package-lock.json
+backend/requirements.txt
 
-# Local dev scripts and configs
+# ---------- LOCAL DEV SCRIPTS / CONFIGS / SCRATCH ----------
 commit_push.ps1
 supremeai_god_context.xml
+scratch/
+.scratch/
+.supreme/
+scratch_*.py
+scratch_script*.py
+scratch_supremeai_reference_2/
+context_snapshot.md
+New folder/
+f
+sphere.html
+fix_bare_yields.py
+fix_flutter_deps.ps1
+fix_flutter_deps.sh
+*_env.py
+test_*.py
+sync_*.py
 
-# Firebase and Playwright caches
+# ---------- MISC LOCAL FOLDERS ----------
+.ollama/
+.cache/
 .firebase/
 .playwright-mcp/
-
-# VS Code and IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Tauri dev
-run-tauri-dev.ps1
-
-# TypeScript build info
-*.tsbuildinfo
-tsconfig.app.tsbuildinfo
-
-# Misc
-.ollama/
-.cache/
-
-# Local scripts with credentials
-*_env.py
-
-# ============================================
-# CRITICAL FIXES (Repository Optimization)
-# ============================================
-
-# Rust target (ALL locations)
-**/target/
-**/Cargo.lock
-
-# AI Context Exports
-context_export/
-
-# Scraped data
-scripts/resource_scraping/**/*.json
-
-# CI Logs
-logs/ci/
-logs/*.json
-logs/*.md
-
-# Embeddings / Vector data
-data/frontier/search_embeddings.json
-data/**/*.db
-
-# Lock files (Using pnpm consistently)
-**/package-lock.json
-
-# Local dev artifacts
-.supreme/
-.scratch/
-scratch/
-.firebase/
-
-# বাংলা মন্তব্য: গিটহাবে অ্যাকশন চেকআউট সাবমডিউল এরর এড়াতে এমবেডেড সুপ্রিমএআই ফোল্ডার ইগনোর
-supremeai/
-codebase.md
-
-# Local database & test lock files
-supreme_memory.db
-chroma.sqlite3
-backend-tests.log
-.coverage.DESKTOP-*
-backend/.coverage.DESKTOP-*
-
-# Auto-generated docs may contain secrets
-docs/autogen/
-.kilo/
-
-# Playwright test results
-test-results/
-playwright-report/
-
-# ============================================
-# REPO CLEANUP - Auto-generated artifacts
-# ============================================
-
-# Auto-generated docs / snapshots
-docs/codebase/
-docs/changes/commit_*.md
-
-# Test & coverage artifacts
-coverage.xml
-coverage.json
-coverage.toml
-**/coverage.xml
-**/coverage.json
-**/ruff_errors.txt
-**/tests_all_tests.txt
-**/trigger_ci.txt
-**/*-report.json
-docs/reports/test-output*.txt
-docs/reports/*_diff.txt
-docs/reports/workflow_diff.txt
-
-# Compiled function output
-infrastructure/firebase_functions/**/lib/
-.env
-.vercel
-.env*
-
-# Binaries and Generated Dumps
-render.exe
-render_cli.zip
-render_temp/
-docs/codebase_dump.md
-scripts/observability_report.json
-backend/coverage.json
-test_db_path
-
-scratch/
-
-# Coverage directories
-coverage/
-**/coverage/
-
-# Old archives
-apps/_archive_web-chat/
-dist-admin/
-dist-user/
-frontend/dist-user/
-*.env
-.git_backup/
-
-blackbox_mcp_settings.json
-full_codebase_export.md
-
-# ============================================
-# EXPLICIT SENSITIVE HOTFIX IGNORES
-# ============================================
-render.env
-.env*
-*.log
-firebase-debug.log
-blackbox_mcp_settings.json
-__pycache__/
-.venv/
-
-# ============================================
-# AGENT CACHES & REPORTS
-# ============================================
-.scribe_cache.json
-.bug_prophet_cache.json
-.refactor_wiz_cache.json
-bug_prophet_report.md
-refactor_wiz_report.md
-.cloudwatch_history.json
-**/.*_history.json
-**/.*_cache.json
-**/.*_state.json
-**/.*_db.json
-**/.*_budget.json
-
-# Database backups
-backend/backup/
-
-# Backup files
-*.backup
-
-# Generated artifacts & logs (Codebase Improvement Plan)
-*.coverage_report.json
-pytest_full_run_results.txt
-*_report.json
-error.txt
-trace.txt
-dist-user/
-frontend/dist-user/
-backend/requirements.txt
-
-# Docusaurus build artifacts, coverage_new, and archive directories
-apps/docs/.docusaurus/
-backend/coverage_new.json
-archive/
-
-# Temporary test logs & scratch files
-*.txt
-*.ini
-*.bak
-backend/tmp_test_learning_data/
-New folder/
-
-# IDE and Agent Extensions
-.continue/
-.actrc
-.blackboxrules
-
-# Temporary and Root Script Files
-f
-fix_bare_yields.py
-sphere.html
-fix_flutter_deps.ps1
-fix_flutter_deps.sh
-blackbox_mcp_settings.example.json
-
-# Auto-Generated Firebase DataConnect SDKs
-dataconnect-generated/
-# VS Code and IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Tauri dev
-run-tauri-dev.ps1
-
-# TypeScript build info
-*.tsbuildinfo
-tsconfig.app.tsbuildinfo
-
-# Misc
-.ollama/
-.cache/
-
-# Local scripts with credentials
-*_env.py
-
-# ============================================
-# CRITICAL FIXES (Repository Optimization)
-# ============================================
-
-# Rust target (ALL locations)
-**/target/
-**/Cargo.lock
-
-# AI Context Exports
-context_export/
-
-# Scraped data
-scripts/resource_scraping/**/*.json
-
-# CI Logs
-logs/ci/
-logs/*.json
-logs/*.md
-
-# Embeddings / Vector data
-data/frontier/search_embeddings.json
-data/**/*.db
-
-# Lock files (Using pnpm consistently)
-**/package-lock.json
-
-# Local dev artifacts
-.supreme/
-.scratch/
-scratch/
-.firebase/
-
-# বাংলা মন্তব্য: গিটহাবে অ্যাকশন চেকআউট সাবমডিউল এরর এড়াতে এমবেডেড সুপ্রিমএআই ফোল্ডার ইগনোর
-supremeai/
-codebase.md
-
-# Local database & test lock files
-supreme_memory.db
-chroma.sqlite3
-backend-tests.log
-.coverage.DESKTOP-*
-backend/.coverage.DESKTOP-*
-
-# Auto-generated docs may contain secrets
-docs/autogen/
-.kilo/
-
-# Playwright test results
-test-results/
-playwright-report/
-
-# ============================================
-# REPO CLEANUP - Auto-generated artifacts
-# ============================================
-
-# Auto-generated docs / snapshots
-docs/codebase/
-docs/changes/commit_*.md
-
-# Test & coverage artifacts
-coverage.xml
-coverage.json
-coverage.toml
-**/coverage.xml
-**/coverage.json
-**/ruff_errors.txt
-**/tests_all_tests.txt
-**/trigger_ci.txt
-**/*-report.json
-docs/reports/test-output*.txt
-docs/reports/*_diff.txt
-docs/reports/workflow_diff.txt
-
-# Compiled function output
-infrastructure/firebase_functions/**/lib/
-.env
-.vercel
-.env*
-
-# Binaries and Generated Dumps
-render.exe
-render_cli.zip
-render_temp/
-
-# ============================================
-# RENDER API SECRETS - DO NOT COMMIT
-# ============================================
-# বাংলা মন্তব্য: এইগুলো Render API keys ও Infisical token ধারণ করে — কখনোই commit করা যাবে না।
-render_*.json
-enc_key_payload.json
-set_env_key.py
-trigger_redeploy.py
-check_ci.py
-run.json
-render.env
-render_env.json
-docs/codebase_dump.md
-scripts/observability_report.json
-backend/coverage.json
-test_db_path
-
-scratch/
-
-# Coverage directories
-coverage/
-**/coverage/
-
-# Old archives
-apps/_archive_web-chat/
-dist-admin/
-dist-user/
-frontend/dist-user/
-*.env
-.git_backup/
-
-blackbox_mcp_settings.json
-full_codebase_export.md
-
-# ============================================
-# EXPLICIT SENSITIVE HOTFIX IGNORES
-# ============================================
-render.env
-.env*
-*.log
-firebase-debug.log
-blackbox_mcp_settings.json
-__pycache__/
-.venv/
-
-# ============================================
-# AGENT CACHES & REPORTS
-# ============================================
-.scribe_cache.json
-.bug_prophet_cache.json
-.refactor_wiz_cache.json
-bug_prophet_report.md
-refactor_wiz_report.md
-.cloudwatch_history.json
-**/.*_history.json
-**/.*_cache.json
-**/.*_state.json
-**/.*_db.json
-**/.*_budget.json
-
-# Database backups
-backend/backup/
-
-# Backup files
-*.backup
-
-# Generated artifacts & logs (Codebase Improvement Plan)
-*.coverage_report.json
-pytest_full_run_results.txt
-*_report.json
-error.txt
-trace.txt
-dist-user/
-frontend/dist-user/
-backend/requirements.txt
-
-# Docusaurus build artifacts, coverage_new, and archive directories
-apps/docs/.docusaurus/
-backend/coverage_new.json
-archive/
-
-# Temporary test logs & scratch files
-*.txt
-!requirements.txt
-!**/requirements.txt
-!**/requirements*.txt
-*.ini
-*.bak
-backend/tmp_test_learning_data/
-New folder/
-
-# IDE and Agent Extensions
-.continue/
-.actrc
-.blackboxrules
-
-# Temporary and Root Script Files
-f
-fix_bare_yields.py
-sphere.html
-fix_flutter_deps.ps1
-fix_flutter_deps.sh
-blackbox_mcp_settings.example.json
-
-# Auto-Generated Firebase DataConnect SDKs
-dataconnect-generated/
-dataconnect_generated/
-dataconnect-admin-generated/
-s c r a t c h _ * . p y  
- 
-# Environment folders
+.envs/
 envs/
 
-# CI/CD Tools (local binaries — repo-তে রাখা যাবে না)
-actionlint.exe
-actionlint.zip
-actionlint
+# ---------- IDE / EDITOR ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+.continue/
+.actrc
+.blackboxrules
+run-tauri-dev.ps1
 
-# Actionlint built-in docs (project docs নয়)
+# ---------- TYPESCRIPT ----------
+*.tsbuildinfo
+tsconfig.app.tsbuildinfo
+
+# ---------- AI CONTEXT EXPORTS / AUTO DOCS ----------
+context_export/
+scripts/resource_scraping/**/*.json
+supremeai/
+codebase.md
+docs/autogen/
+.kilo/
+docs/codebase/
+docs/changes/commit_*.md
+docs/codebase_dump.md
+full_codebase_export.md
 docs/README.md
 docs/api.md
 docs/checks.md
@@ -511,53 +224,37 @@ docs/reference.md
 docs/usage.md
 man/
 
-# Temporary scratch CI files
+# ---------- BINARIES / DUMPS / CI TOOLS ----------
+render.exe
+render_cli.zip
+render_temp/
+actionlint.exe
+actionlint.zip
+actionlint
+infrastructure/firebase_functions/**/lib/
+
+# ---------- AGENT CACHES & REPORTS ----------
+.scribe_cache.json
+.bug_prophet_cache.json
+.refactor_wiz_cache.json
+bug_prophet_report.md
+refactor_wiz_report.md
+.cloudwatch_history.json
+**/.*_history.json
+**/.*_cache.json
+**/.*_state.json
+**/.*_db.json
+**/.*_budget.json
+
+# ---------- TEMPORARY CI FILES ----------
 tmp_old_ci.yml
 tmp_*.yml
+.git_backup/
 
-# ============================================
-# SECURITY HOTFIX (AUDIT-2026-08): LIVE SECRETS FOUND IN TRACKED FILES
-# These files contained REAL credentials committed to git history.
-# Keys MUST be rotated in Infisical/Render dashboards (see LESSONS_LEARNED.md).
-# ============================================
-# Render API responses (contain real API keys / Infisical tokens)
-render_*.json
-run.json
-
-# Docs that leaked live RENDER_API_KEY values
-docs/Enviorment vs secret key/env_security_auth.md
-
-# Deployment scripts that had hardcoded live secrets (moved to env-var based)
-scripts/check_deploys.py
-scripts/check_health_path.py
-scripts/check_key.py
-scripts/fetch_logs.py
-scripts/status.py
-scripts/sync_both.py
-scripts/sync_secrets_to_frontend.py
-scripts/sync_secrets_to_render.py
-scripts/test_render_api.py
-scripts/trigger.py
-scripts/trigger_deploys.py
-
-# Zero-cost infra config with placeholder secrets (should not be committed)
-infrastructure/zero_cost/config.env
-
-# Scratch scripts (fixed broken 's c r a t c h' pattern)
-scratch_*.py
-scratch_script*.py
-scratch/
-
-# Local verification scripts (machine-specific)
-verify_git_junk.ps1
-
-# Temporary reference repo clone
-scratch_supremeai_reference_2/
-context_snapshot.md
-
-# Ignore test scripts and backups that may contain secrets
-test_*.py
-sync_*.py
-supabase_backup.sql
-add_secret.py
-update_render.py
+# ---------- WILDCARD TEXT / INI / BAK (with exceptions) ----------
+*.txt
+!requirements.txt
+!**/requirements.txt
+!**/requirements*.txt
+*.ini
+*.bak

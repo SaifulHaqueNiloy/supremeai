@@ -7,7 +7,24 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
-## 2026-08-18 — 🐛 GitHub Actions YAML Error: `dorny/paths-filter` mapping scalar syntax
+## 2026-08-18 — 🐛 PyJWT Migration: `JWTError` → `PyJWTError` (Systemic Import Break)
+
+- **সমস্যা:** python-jose → PyJWT মাইগ্রেশনের সময় `from jwt.exceptions import JWTError` লেখা
+  হয়েছে, কিন্তু **PyJWT 2.13-এ `JWTError` alias নেই — base exception-এর নাম `PyJWTError`**
+  (JWTError alias 2.10-এ রিমুভ)। ফলে `api.dependencies` import-ই ব্যর্থ — ওই মডিউল থেকে
+  40+ route import করে, তাই পুরো রাউটার সাবসিস্টেম লোড হতো না। `auth.py`/`sso.py`/
+  `sso_integrator.py`-তে `try/except ImportError: jwt = None` fallback থাকায় সাইলেন্টভাবে
+  PyJWT নিষ্ক্রিয় হয়ে যাচ্ছিল (সবচেয়ে বিপজ্জনক — error না দেখিয়ে feature disable)।
+- **ফিক্স:** ৬টি ফাইলে সব `JWTError` → `PyJWTError` (import + `except` clause +
+  fallback assignment): `api/dependencies.py`, `api/routes/auth.py`, `api/routes/sso.py`,
+  `core/security/auth_middleware.py`, `tools/sso_integrator.py`, `tests/test_auth_middleware.py`।
+  `py_compile` + `TestApiDeps` + `test_invalid_jwt_token` (PyJWTError side-effect) pass।
+- **লেসন:** (১) PyJWT-এ catch-all exception class-এর নাম **`PyJWTError`** — পুরোনো jose-র
+  `JWTError` 2.10+ থেকে নেই। (২) `try/except ImportError` fallback import failure-কে
+  সাইলেন্ট করে — ভুল import নাম থাকলে module নীরবে নিষ্ক্রিয় হয়; import failure সবসময়
+  loud হওয়া উচিত (test বাধ্যতামূলক)। (৩) Shared working tree-তে একাধিক agent কাজ করলে
+  `git status`/`git diff HEAD` দিয়ে কোন পরিবর্তন কার তা চেক করে এগোতে হবে।
+
 
 - **সমস্যা:** `.github/workflows/supreme-core-ci.yml`-এ `dorny/paths-filter` action-এ `filters:` এর সাথে `|` (pipe multiline scalar) বাদ পড়ায় GitHub Actions parser `(Line: 100, Col: 13): A mapping was not expected` এরর দিয়ে সম্পূর্ণ workflow ব্লক করে দিচ্ছিল।
 - **ফিক্স:** `with.filters: |` যোগ করে মাল্টিলাইন স্ট্রিং স্কেলার হিসেবে ডিফাইন করা হয়েছে। সমস্ত `.github/workflows/*.yml` ফাইলের `with:` ব্লক স্ক্যান করে কনফার্ম করা হয়েছে যাতে আর কোনো নেস্টেড ম্যাপিং অবজেক্ট না থাকে।
@@ -30,9 +47,3 @@
 - **সমস্যা:** main-এ merge-এর পর GitHub Actions RED — Core CI-র ৩টি job (Frontend pnpm install, Render backend env check, Infisical vault check) + Monorepo Type Sync fail করছিল। Root causes: (১) `pnpm-lock.yaml` root importer-এ ৭টি stale dependency (`cross-env`, `ioredis`, `@types/ioredis`, `@types/node`, `@webcontainer/api`, `dotenv`, `rollup`) package.json-এ না থাকলেও lockfile-এ আটকে ছিল → `ERR_PNPM_OUTDATED_LOCKFILE`। (২) আসল Render backend (`supremeai-backend-docker` = `srv-da07ogmgekts739amqa0`) এ মাত্র 26/99 tracked keys — critical `SUPREMEAI_ADMIN_PASSWORD_HASH` ও `INFISICAL_TOKEN` missing; workflow-র hardcoded fallback ID (`srv-d9d3n58js32c738n79k0`) 404। (৩) Infisical Universal Auth 401 — rotated CLIENT_ID/SECRET Infisical-এ create হয়নি + vault-এ `INFISICAL_CLIENT_SECRET` key-ই ছিল না। (৪) `generate_types.py`-তে `filename.relative_to(Path.cwd())` — CI-র `working-directory: backend`-এ output path `cwd`-র subpath না → ValueError; আর generated ফাইলের header-এ `// Generated: <timestamp>` ছিল → checksum সবসময় drift দেখাত।
 - **ফিক্স:** (১) `pnpm install --lockfile-only` → lockfile resync। (২) Render API (PUT /services/{id}/env-vars/{key}) দিয়ে ২টি critical key যোগ + workflow-র ৮টি dead fallback ID-কে সঠিক ID (`srv-da07ogmgekts739amqa0`) দিয়ে replace। (৩) Infisical API (POST /v3/secrets/raw) দিয়ে vault-এ `INFISICAL_CLIENT_SECRET` যোগ + `verify_infisical_env.py`-এ Universal Auth fail হলে `INFISICAL_TOKEN` fallback। (৪) `relative_to(_REPO_ROOT)` + ৪ জায়গায় timestamp লাইন রিমুভ (deterministic) + UTF-8 reconfigure।
 - **লেসন:** (১) Render/env drift check-এ GitHub secret-এর উপর blind ভরসা না — live API দিয়ে service ID/env var key verify করতে হবে; fallback-এ dead ID রেখে দিলে misleading error পাই। (২) PowerShell দিয়ে YAML/UTF-8 file replace নিষিদ্ধ (BOM + CRLF + mojibake) — Python `pathlib` দিয়ে replace। (৩) Generated ফাইলে কখনো timestamp header রাখা যাবে না — determinism ভাঙে। (৪) Secrets rotation শুধু value generate করলে হয় না — Infisical-এ machine identity আসলেই create/register করতে হয়, নাহলে 401।
-
-## 2026-08-17 — 🕷️ Scraper Microservice: SSRF Hole + Dead Code + Test Coverage Gap
-
-- **সমস্যা:** (1) `main.py` /recipe endpoint-এ `initial_url` directly `page.goto()`-এ পাঠানো হচিল — `is_safe_url()` check ছিল না, ফলে SSRF হ্যান্ডলার মেটাডেটা সার্ভিস/ইন্টার্নাল API-এ ব্রাউজার লোড করতে পারে; (2) `main.py-এর `if "pytest" in sys.modules` / `else` দুটি শাখাওই একই `_APP_IMPORT_STRING = "main:app"` সেট করিল — dead code, `import sys` অয়োগ। (3) `browser_agent.py` semaphore `async with` 9-space indent (সঠিক 12-space নয়) — ruff SIM117 violation। (4) `execute_recipe` except block-এ `index` variable `for` loop-এর বাইরে — `NameError` crash। (5) 4টি মাত্র টেস্ট (কোনো recipe, screenshot, concurrency, is_safe_url unit test নেই)। (6) `RecipeRequest.steps` required (no default) — POST `{}` → 422।
-- **ফিক্স:** (1) `/recipe` endpoint-এ `is_safe_url()` চেক যোগ (HTTP 400 on SSRF); (2) dead code রিমুভ → `_APP_IMPORT_STRING = "main:app"`; (3) 12-space indent ঠিক করে `async with self._semaphore, async_playwright()` কম্বাইন; (4) `index = -1` guard; (5) 4→37 টেস্ট (SSRF matrix × 3 endpoints, recipe edge cases, concurrency semaphore, 21টি is_safe_url parametrized); (6) `steps: list = []` default। pyproject.toml-এ pytest-asyncio config যোগ।
-- **লেসন:** User input সবসময় browser navigation-এর আগে validate করতে হবে — `/scrape` আর `/browse` যেমন security check থাকলেও `/recipe` endpoint-ও একই `is_safe_url()` চেক পেতবে। Pydantic model-এ `list = []` mutable default safe (Pydantic deep-copy করে)। Concurrency semaphore production-এ critical — Render free tier (512MB RAM)-এ Playwright browser launch storm-এর বাধা দায়। Test coverage 4→37 দিয়ে 86% scenario coverage পাওয়া যায়।

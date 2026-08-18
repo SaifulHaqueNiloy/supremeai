@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
-from jose.exceptions import ExpiredSignatureError
+import jwt
+from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from loguru import logger
 
 from core.config import settings
@@ -62,7 +62,7 @@ async def verify_autonomous_agent_token(
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
-    except JWTError as e:
+    except PyJWTError as e:
         # Potential intrusion or configuration issue, alert ErrorBus
         error_event_bus.emit(
             ErrorEvent(

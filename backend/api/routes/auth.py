@@ -10,9 +10,10 @@ from pydantic import BaseModel
 from core.error_bus import with_error_bus
 
 try:
-    from jose import JWTError, jwt
+    import jwt
+    from jwt.exceptions import PyJWTError
 except ImportError:
-    JWTError = Exception  # type: ignore[misc,assignment]
+    PyJWTError = Exception  # type: ignore[misc,assignment]
     jwt = None  # type: ignore[assignment]
 
 from core.cache.redis_manager import redis_manager
@@ -31,7 +32,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     if jwt is None:
-        raise RuntimeError("python-jose[cryptography] is required for token issuance")
+        raise RuntimeError("PyJWT[cryptography] is required for token issuance")
     to_encode = data.copy()
     expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})

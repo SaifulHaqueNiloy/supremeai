@@ -51,7 +51,7 @@ class TestCreateAccessToken:
         old_jwt = auth_module.jwt
         try:
             auth_module.jwt = None
-            with pytest.raises(RuntimeError, match="python-jose"):
+            with pytest.raises(RuntimeError, match="PyJWT"):
                 create_access_token({"sub": "u"})
         finally:
             auth_module.jwt = old_jwt

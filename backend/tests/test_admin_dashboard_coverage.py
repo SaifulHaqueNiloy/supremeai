@@ -18,7 +18,7 @@ class TestRequireAdminToken:
 
     def test_valid_admin_token(self):
         """Valid admin JWT should be accepted."""
-        from jose import jwt
+        import jwt
 
         from core.config import settings
 
@@ -31,7 +31,7 @@ class TestRequireAdminToken:
 
     def test_non_admin_role_raises_401(self):
         """Token without admin role must be rejected with 401."""
-        from jose import jwt
+        import jwt
 
         from core.config import settings
 
@@ -45,7 +45,7 @@ class TestRequireAdminToken:
 
     def test_revoked_jti_raises_401(self):
         """Revoked jti must raise 401 from in-memory blacklist."""
-        from jose import jwt
+        import jwt
 
         from core.config import settings
 
