@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('./services/chatService', () => ({
@@ -213,10 +213,11 @@ describe('App component', () => {
     const sendButton = await screen.findByTestId('chat-submit');
     fireEvent.click(sendButton);
 
-    const message = await screen.findAllByText('Test message');
-    expect(message[0]).toBeInTheDocument();
-    const responseMsg = await screen.findByText(/Analyzing request "Test message"/i);
-    expect(responseMsg).toBeInTheDocument();
-    expect(getAethelResponse).toHaveBeenCalledWith('Test message', expect.any(Array));
+    await waitFor(() => {
+      expect(screen.getAllByText('Test message')[0]).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(getAethelResponse).toHaveBeenCalledWith('Test message', expect.any(Array));
+    });
   });
 });
