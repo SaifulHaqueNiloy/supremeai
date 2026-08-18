@@ -1870,7 +1870,9 @@ jobs:
       - name: 🤖 Create or Update PR to Main Repository
         env:
           # Use Infisical Token, fallback to MIRROR_REPO_TOKEN, fallback to MAIN_REPO_TOKEN
-          GITHUB_TOKEN: ${{ steps.fetch-token.outputs.token || secrets.MIRROR_REPO_TOKEN || secrets.MAIN_REPO_TOKEN }}
+          # বাংলা: .env-এর MAIN_REPO_TOKEN (GitHub secret) কে সর্বোচ্চ অগ্রাধিকার দেওয়া হয়েছে,
+          # যাতে Infisical ডাউন/ফাঁকা থাকলেও স্টেজিং→প্রোডাকশন প্রমোশন PR নির্ভরযোগ্যভাবে তৈরি হয়।
+          GITHUB_TOKEN: ${{ secrets.MAIN_REPO_TOKEN || secrets.MIRROR_REPO_TOKEN || steps.fetch-token.outputs.token }}
           STAGING_HEAD: ${{ github.sha }}
         run: |
           if [ -z "$GITHUB_TOKEN" ]; then
