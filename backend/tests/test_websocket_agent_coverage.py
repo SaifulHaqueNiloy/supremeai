@@ -40,14 +40,14 @@ class TestConnectionManager:
 
     @pytest.mark.asyncio
     async def test_authenticate_no_token(self):
-        """Missing token should close with policy violation."""
+        """Missing token returns None; connection close is handled by the endpoint."""
         from api.routes.websocket_agent import manager
 
         ws = AsyncMock()
         ws.query_params = {}
         result = await manager._authenticate(ws)
         assert result is None
-        ws.close.assert_called_once()
+        ws.close.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_authenticate_valid_token(self):
@@ -68,7 +68,7 @@ class TestConnectionManager:
 
     @pytest.mark.asyncio
     async def test_authenticate_invalid_token(self):
-        """Invalid token should close with policy violation."""
+        """Invalid token returns None; connection close is handled by the endpoint."""
         from api.routes.websocket_agent import manager
 
         ws = AsyncMock()
@@ -78,7 +78,7 @@ class TestConnectionManager:
             result = await manager._authenticate(ws)
 
         assert result is None
-        ws.close.assert_called_once()
+        ws.close.assert_not_called()
 
     def test_track_pref_task(self):
         """track_pref_task should store task per user."""

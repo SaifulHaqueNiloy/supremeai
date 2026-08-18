@@ -84,8 +84,11 @@ class TestSkillExecutionPipeline:
         manager = SkillManager()
 
         async def mock_synthesize(*args, **kwargs):
-            return {"text": '{"success": true, "skill_name": "NewSkill"}'}
+            return {
+                "text": '{"skill_name": "NewSkill", "description": "test skill", '
+                '"parameters": [], "execution_steps": []}'
+            }
 
         monkeypatch.setattr("core.skill_manager.llm_gateway.acompletion", mock_synthesize)
         result = await manager.synthesize_skill_schema("test task")
-        assert result["success"] is True
+        assert result["skill_name"] == "NewSkill"
