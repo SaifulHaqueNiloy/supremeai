@@ -25,7 +25,6 @@ from core.prompt_handler import format_unified_chat_prompt
 
 # --- Retry & Circuit Breaker Utilities ---
 import asyncio
-import time
 from typing import Callable, Optional, TypeVar
 
 from loguru import logger
@@ -41,11 +40,10 @@ async def retry_with_exponential_backoff(
     exceptions: tuple[type, ...] = (Exception,),
     circuit_breaker_name: Optional[str] = None,
 ) -> T:
-    """
-    Execute a function with exponential backoff retry logic.
-    
-    Bangladesh: এক্সপোনেনশiaal বেকঅফ সেখানকার সাথে ফাংশন accomplished।
-    
+    """Execute a function with exponential backoff retry logic.
+
+    Bangladesh: এক্সপোনেনশিয়াল বেকঅফ সহ ফাংশন এক্সিকিউশন।
+
     Args:
         func: The async function to execute
         max_retries: Maximum number of retry attempts
@@ -53,15 +51,16 @@ async def retry_with_exponential_backoff(
         max_delay: Maximum delay in seconds
         exceptions: Exception types to catch and retry on
         circuit_breaker_name: Optional circuit breaker name for external service calls
-    
+
     Returns:
         The function result
-    
+
     Raises:
         The last exception if all retries exhausted
     """
-        last_exception: Optional[Exception] = None
-    
+    last_exception: Optional[Exception] = None
+    cb_name = circuit_breaker_name or "unknown"
+
     for attempt in range(max_retries + 1):
         try:
             result = await func()
@@ -75,29 +74,23 @@ async def retry_with_exponential_backoff(
             return result
         except exceptions as e:
             last_exception = e
-            failure_count = getattr(e, 'failure_count', getattr(e, 'code', 0))
-            
+
             if attempt < max_retries:
-                # Calculate exponential delay
+                # Calculate exponential delay with jitter to prevent thundering herd
                 delay = min(base_delay * (2 ** attempt), max_delay)
-                # Add jitter to prevent thundering herd
                 jitter = delay * 0.1 * (attempt + 1)
                 total_delay = delay + jitter
-                
-                cb_name = circuit_breaker_name or "unknown"
+
                 logger.warning(
-                    f"Retry {attempt + 1}/{max_retries} after {total_delay:.2f}s for "
-                    f"'{cb_name}': {str(e)[:100]}"
+                    f"Retry {attempt + 1}/{max_retries} after {total_delay:.2f}s for '{cb_name}': {str(e)[:100]}"
                 )
-                
+
                 await asyncio.sleep(total_delay)
             else:
-                cb_name = circuit_breaker_name or "unknown"
                 logger.error(
-                    f"All {max_retries + 1} retries exhausted for "
-                    f"'{cb_name}': {str(e)[:200]}"
+                    f"All {max_retries + 1} retries exhausted for '{cb_name}': {str(e)[:200]}"
                 )
-    
+
     raise last_exception or RuntimeError("Retry loop exhausted without result")
 
 router = APIRouter()

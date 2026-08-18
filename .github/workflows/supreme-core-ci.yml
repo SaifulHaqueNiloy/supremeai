@@ -949,6 +949,27 @@ jobs:
             --pytest-json pytest-report.md \
             --coverage-json coverage.json \
             --label Backend
+
+      # ==============================================================================
+      # PHASE 3 / M3.1 — COVERAGE DEGRADATION GATE ("slow: warning → hard")
+      # বাংলা মন্তব্য: এই গেটটি coverage regression রুখে। প্রথমে warning মোড
+      # (continue-on-error: true) — বাসলাইন থেকে বেশি কমে গেলে শুধু সতর্ক করবে,
+      # পরে --fail-on-regression সক্রিয় করে hard fail-এ রূপান্তর করা হবে।
+      # বেসলাইন ফাইল: backend/coverage-baseline.json
+      # ==============================================================================
+      - name: 📊 Coverage Degradation Gate (Phase 3 M3.1)
+        if: always() && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.shared_backend == 'true' || needs.changes.outputs.shared == 'true')
+        continue-on-error: true
+        working-directory: backend
+        run: |
+          poetry run python ../scripts/ci/check_coverage_gate.py \
+            --coverage-json coverage.json \
+            --baseline coverage-baseline.json \
+            --allowed-degradation 2.0 \
+            --fail-on-regression
+        # বাংলা: continue-on-error: true → regression হলে step লাল হয় (warning) কিন্তু
+        # পুরো pipeline block করে না। Hard fail-এ রূপান্তর করতে পরে এই flag সরাতে হবে।
+
       - name: GCP Auth for Artifact Registry
         # বাংলা মন্তব্য: রেন্ডার-এ স্থানান্তরের কারণে জিসিপি বিল্ড ও পুশ নিষ্ক্রিয় করা হলো।
         if: false

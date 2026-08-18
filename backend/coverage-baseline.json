@@ -1,0 +1,5 @@
+{
+  "overall": 35.0,
+  "seeded_by": "manual",
+  "note": "Phase 3 M3.1 initial baseline (conservative seed near existing --cov-fail-under=38). Raise toward 80% target as coverage grows. The degradation gate fails only when coverage drops beyond allowed-degradation below this value."
+}

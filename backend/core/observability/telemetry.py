@@ -13,6 +13,11 @@ _tracer: Tracer | None = None
 
 def setup_tracing(service_name: str = "supremeai", otlp_endpoint: str | None = None) -> None:
     global _tracer
+    # বাংলা: Idempotent — পুনরায় setup ডাকলে OTel "Overriding of current Tracer
+    # Provider is not allowed" warning দেয় (যা CI-তে filterwarnings=error-এর কারণে
+    # ফেইল করে)। তাই আগেই tracer সেট থাকলে সরাসরি ফেরত দেওয়া হচ্ছে।
+    if _tracer is not None:
+        return
     endpoint = otlp_endpoint or os.getenv("OTLP_ENDPOINT", "")
     provider = TracerProvider()
     if endpoint:

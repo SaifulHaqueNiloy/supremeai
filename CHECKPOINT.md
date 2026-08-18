@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 19:20 UTC
+- **Date:** 2026-08-18 19:24 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,19 +10,23 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/services/realtime/WebSocketManager.ts`
+  - `backend/core/observability/telemetry_events.py`
+  - `backend/tests/core/test_telemetry_events.py`
+  - `scripts/ci/check_coverage_gate.py`
   - `CHECKPOINT.md`
-  - `reports/codebase_issues_report.md`
-  - `backend/core/observability/telemetry.py`
-  - `backend/core/resilience/rollback_monitor.py`
-  - `backend/api/routes/cdc_webhooks.py`
   - `backend/tests/api/test_byoc_and_cloud_mesh.py`
-  - `backend/workers/load_test.py`
-  - `FEATURE_TRACKING_LOG.md`
-  - `.github/workflows/supreme-core-ci.yml`
-  - `backend/poetry.lock`
   - `backend/core/observability/__init__.py`
+  - `backend/coverage-baseline.json`
+  - `backend/api/routes/cdc_webhooks.py`
+  - `backend/core/observability/telemetry.py`
+  - `backend/flowchart.png`
+  - `backend/core/resilience/rollback_monitor.py`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `backend/tests/core/test_task_router.py`
   - `backend/api/routes/task.py`
+  - `backend/workers/load_test.py`
+  - `frontend/src/services/realtime/WebSocketManager.ts`
+  - `FEATURE_TRACKING_LOG.md`
   - `backend/baselines/test-model_baseline.pkl`
 
 ## Pending (Carry Forward)
