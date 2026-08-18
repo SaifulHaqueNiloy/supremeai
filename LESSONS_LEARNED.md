@@ -1,11 +1,43 @@
 # LESSONS_LEARNED
-
 > **[🤖 AI AGENT INSTRUCTION]** 
 > This is a core SupremeAI "Brain" file. When adding a new lesson:
 > 1. Add it to the TOP of the list (reverse chronological).
 > 2. Include Date, Issue, Fix, and Lesson.
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
+
+## 2026-08-19 — 📋 SSE Auth: EventSource can't send Authorization headers
+- **সমস্যা:** Command Center-এর SSE bridges (`sseBridges.ts`) EventSource ব্যবহার করে
+  `/admin-api/logs/stream?token=...` ও `/admin-api/events/stream?token=...` এ CONNECT করে। কিন্তু
+  backend-এর `admin_dashboard.py` router-এর level-এ `require_admin_token` (HTTP Bearer) dependency
+  ছিল — EventSource কখনোই Authorization header পাঠাতে পারে না → 401। আর `/events/stream` endpoint
+  আসলে backend-এ একদমই ছিল না → 404।
+- **ফিক্স:** (A) `admin_auth.py`-এ `validate_sse_token()` ফাংশন যোগ করে JWT query param থেকে
+  verify করে; (B) `admin_dashboard.py`-এ `sse_router` নামে আলাদা APIRouter তৈরি করে
+  `validate_sse_token` dependency দিয়ে; (C) `/logs/stream`-কে `@sse_router` এ সরিয়ে দেওয়া হয়;
+  (D) নতুন `/events/stream` SSE endpoint যোগ করা হয়; (E) `api/__init__.py`-এর
+  `register_router`-এ `sse_router` attribute auto-registration যোগ করা হয়।
+- **লেসন:** SSE/WebSocket transport-এর জন্য Authorization header না পাঠানোর কারণে query-param
+  token validation প্রয়োজন — router-level `HTTPBearer` dependency কাজ করে না। SSE endpoints-ই
+  আলাদা router-এ `validate_sse_token` dependency দিয়ে স্বাধীনভাবে register করুন।
+
+## 2026-08-19 — 🐛 TypeScript Immutability: React state mutation in canvas handlers
+- **সমস্যা:** `BrainVisualizer.tsx`-এ `draggedNode` state variable-এর `.x`/`.y` সরাসরি
+  mutate করা হয়েছিল (React immutability lint rule violation)।
+- **ফিক্স:** `draggedNode` state-টি `draggedNodeId` (string|null) এ পরিবর্তন করে,
+  `handleMouseMove`-এ `physicsNodesRef`-এর মাধ্যমে node object খুঁজে mutation করে
+  (ref mutation is safe — not tracked by React)。
+- **লেসন:** Canvas drag handlers-এ state object-এর property mutate করবেন না;
+  ref-based lookup + state-based ID tracking ব্যবহার করুন।
+
+## 2026-08-19 — 🐛 TypeScript: useWorkspaceStore shim doesn't re-export useSupremeStore
+- **সমস্যা:** `ActionDock.tsx` `import { useSupremeStore } from '../../store/useWorkspaceStore'`
+  করে — কিন্তু `useWorkspaceStore.ts` shim-এ `useSupremeStore` re-export করে নি (কেবলমাত্র
+  `DockIntegration`, `Notification` types re-export করে)।
+- **ফিক্স:** Type import-টি `../../store/useSupremeStore` থেকে এবং `DockIntegration` type import-টি
+  `../../store/slices/types` থেকে সরাসরি করা হয়।
+- **লেসন:** Shim file-এর `export { useSupremeStore }` না থাকলে TypeScript `TS2459` error দেয় —
+  shim-এর সব public symbol re-export করা নিশ্চিত করুন।
 
 ## 2026-08-19 — 📋 Roadmap Metric Validation: Codebase drift in DEVELOPMENT_ROADMAP.md
 - **সমস্যা:** `DEVELOPMENT_ROADMAP.md`-এর সবচেয়ে বড় সমস্যা ছিল রোডম্যাপের মেট্রিকগুলো কোডবেসের সঙ্গে sync নয়।
