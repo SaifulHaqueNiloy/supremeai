@@ -52,9 +52,8 @@ async def get_active_skill_catalog():
 # বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর useAdminApi.ts এবং
 # EnhancedSkillMarketplace.tsx-এর /api/skills/install এবং /api/skills/search
 # কলগুলো এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
-@router.post("/search", response_model=list[dict[str, Any]], tags=["Skill Catalog Infrastructure"])
-async def search_skills(query: str = "", installed_only: bool = False):
-    """Search skill manifests by keyword query."""
+def _search_skill_manifests(query: str = "", installed_only: bool = False) -> list[dict[str, Any]]:
+    """Shared search logic for both GET and POST /search endpoints."""
     if not MANIFEST_DIR.exists():
         raise HTTPException(status_code=500, detail="Skill catalog repository is unavailable.")
     results = []
@@ -69,6 +68,18 @@ async def search_skills(query: str = "", installed_only: bool = False):
             logger.warning(f"[skills-search] Skipping malformed manifest '{json_file.name}': {e!s}")
             continue
     return results
+
+
+@router.get("/search", response_model=list[dict[str, Any]], tags=["Skill Catalog Infrastructure"])
+async def search_skills_get(query: str = "", installed_only: bool = False):
+    """Search skill manifests by keyword query (GET)."""
+    return _search_skill_manifests(query=query, installed_only=installed_only)
+
+
+@router.post("/search", response_model=list[dict[str, Any]], tags=["Skill Catalog Infrastructure"])
+async def search_skills(query: str = "", installed_only: bool = False):
+    """Search skill manifests by keyword query (POST)."""
+    return _search_skill_manifests(query=query, installed_only=installed_only)
 
 
 @router.post("/install", tags=["Skill Catalog Infrastructure"])

@@ -27,7 +27,16 @@ export const adminTokenStore = {
           .join('')
       );
 
-      return JSON.parse(jsonPayload);
+      const decoded = JSON.parse(jsonPayload);
+
+      // 🛡️ অডিটর ফিক্স: exp (expiry) চেক — টোকেন এক্সপায়ার হলে null রিটার্ন করে স্টেল টোকেন না ব্যবহার করা যায়
+      const now = Math.floor(Date.now() / 1000);
+      if (typeof decoded.exp !== 'number' || decoded.exp < now) {
+        console.warn("⚠️ [TOKEN_STORE_EXPIRED]: Admin JWT token has expired.");
+        return null;
+      }
+
+      return decoded;
     } catch (error: unknown) {
       const errObj = error as { message?: string };
       console.warn("⚠️ [TOKEN_STORE_LEAK]: Failed to safely parse or decode admin JWT token natively.", {

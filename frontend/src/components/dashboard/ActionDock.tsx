@@ -1,5 +1,5 @@
 // বাংলা মন্তব্য: Bottom Action-Dock — dnd-kit দিয়ে ড্র্যাগেবল, শুধু user-enabled ইন্টিগ্রেশনগুলো রেন্ডার করে
-// (hardcoded নয়, useWorkspaceSettingsStore থেকে ডাইনামিকভাবে আসে)
+// (hardcoded নয়, useWorkspaceStore থেকে ডাইনামিকভাবে আসে)
 import { useState } from 'react';
 import {
   DndContext,
@@ -29,7 +29,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { useWorkspaceSettingsStore, type DockIntegration } from '../../store/useWorkspaceSettingsStore';
+import { useWorkspaceStore, type DockIntegration } from '../../store/useWorkspaceStore';
 import { useDashboardActions } from '../../hooks/useDashboardActions';
 
 // বাংলা মন্তব্য: icon name (string, store-এ persist হয়) থেকে আসল lucide কম্পোনেন্টে ম্যাপ করা হয়
@@ -108,8 +108,8 @@ function DockButton({
 }
 
 export function ActionDock() {
-  const integrations = useWorkspaceSettingsStore((s) => s.integrations);
-  const reorderIntegrations = useWorkspaceSettingsStore((s) => s.reorderIntegrations);
+  const integrations = useWorkspaceStore((s) => s.integrations);
+  const reorderIntegrations = useWorkspaceStore((s) => s.reorderIntegrations);
   const { runIntegrationAction } = useDashboardActions();
   const [statuses, setStatuses] = useState<Record<string, RunStatus>>({});
   const [configOpen, setConfigOpen] = useState(false);
@@ -187,8 +187,8 @@ export function ActionDock() {
 }
 
 function DockConfigPanel({ onClose }: { onClose: () => void }) {
-  const integrations = useWorkspaceSettingsStore((s) => s.integrations);
-  const toggleIntegration = useWorkspaceSettingsStore((s) => s.toggleIntegration);
+  const integrations = useWorkspaceStore((s) => s.integrations);
+  const toggleIntegration = useWorkspaceStore((s) => s.toggleIntegration);
 
   return (
     <motion.div

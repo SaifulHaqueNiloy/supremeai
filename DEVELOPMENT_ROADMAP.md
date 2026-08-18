@@ -1,6 +1,6 @@
 # SupremeAI 2.0 — Comprehensive Development Roadmap
-> **Date:** 2026-08-18
-> **Status:** Active — Phase 1 (Command Center) in progress
+> **Date:** 2026-08-19
+> **Status:** Active — Phase 0/Phase 1 (Command Center Live + Technical Debt Reduction) in progress
 > **ভাষা:** Bangla/Banglish (Simple Language); headers English
 
 ---
@@ -20,12 +20,21 @@ Supabase/pgvector + Redis + Infisical + Cloudflare)।
   (চারটি Needle-2 feature) implemented + টেস্টেড (24/24, 14/14, 46/46)।
 - RBAC bypass, WS token leak, PII/OTP log leak, brand direct-call fix সম্পন্ন।
 - Type-gen pipeline (Pydantic → TS/Dart) deterministic বানানো হয়েছে।
+- Admin Session Restore + Skills Tab 405 Fix — 3টি frontend/backend bug ফিক্সড (session restore via JWT
+  exp-check, apiInterceptor auto-logout scoped to `/api/admin`+`/api/skills` paths, GET `/skills/search`
+  endpoint যোগ)। Hard Test: Playwright E2E login→OTP→dashboard ✅।
+- OpenAPI drift gate CI job যোগ + Render-এ ~90 env key reconciled (env drift gate live)।
+- Zustand store consolidation সেশন ১: `themeStore` ডিলিট (0 consumers); `useWorkspaceSettingsStore` →
+  `useWorkspaceStore`-এ ম্যার্জ (toggleIntegration syncs `activeIntegrations` + `integrations[].enabled`)।
+  Store count 11 → 9।
 
 **যা চলছে / বাকি (এই রোডম্যাপে অ্যাড্রেস করা হয়েছে):**
 - Command Center-এর mock panels → real backend data মাইগ্রেশন।
-- একাধিক Zustand store-কে একীভূতকরণ।
+- 6টি বাকি Zustand store consolidation (API-shape mismatch এজন্য deferred);
+  2টি সম্পন্ন (themeStore deleted, useWorkspaceSettingsStore merged)।
 - SwarmPubSub → WebSocket/SSE real-time bridge।
-- Full backend test suite CI-তে রান করা (আংশিক; 244 passed)।
+- Full backend test suite CI-তে রান করা (আংশিক; 373 test file, 244 passed + 2 skip,
+  `test_headless_terminal_agent.py` = FF)।
 - Secrets rotation অসম্পূর্ণ + Render-এ ~90 important/optional key missing।
 - একাধিক কোড-কোয়ালিটি debt (ডুপ্লিকেট module, bare `except`, memory store ভগ্ন)।
 
@@ -64,8 +73,9 @@ Cloudflare Workers / Firebase        → edge cache, pings
   (observe, operate, build, secure, money, system, deck). সব P0–P9 module built, কিন্তু
   data এখনো অনেক জায়গায় mock/hardcoded।
 - **State:** একাধিক Zustand store — `useSupremeStore` (520 lines), `adminStore`, `authStore`,
-  `dashboardStore`, `customerStore`, `themeStore`, `sessionCockpitStore`,
-  `useWorkspaceStore`, `useWorkspaceSettingsStore`, `useIdeStore`, `useStore`।
+  `dashboardStore`, `customerStore`, `sessionCockpitStore`,
+  `useWorkspaceStore`, `useIdeStore`, `useStore`। (`themeStore` ডিলিট,
+  `useWorkspaceSettingsStore` → `useWorkspaceStore`-এ ম্যার্জ করা হয়েছে — 11 → 9 stores)。
 - **Data:** React Query (queryClient), axios + apiInterceptor, services/ সুইট
   (admin, agent, auth, chat, skills, storage, sandbox, ...)।
 - **Realtime:** `services/realtime/WebSocketManager.ts`, SSE bridges, SwarmProvider।
@@ -73,11 +83,13 @@ Cloudflare Workers / Firebase        → edge cache, pings
 ### 2.4. Clients (Thin Client Philosophy)
 - **VS Code Extension** (`tools/vscode-extension/`) — providers/services AI routing শুধু backend-এর
   মাধ্যমে; কোনো 3rd-party LLM key client-এ নেই (OpenRouter fallback রিমুভড)। ⚠️ root-এ
-  dead **Java** files (`AdminMetricsController.java` ইত্যাদি) পড়ে আছে → cleanup দরকার।
-- **Mobile (Flutter)** (`apps/mobile/`) — খুব thin; direct Gemini call রিমুভড, এখন backend route-এর
-  মাধ্যমে। Overall আর্কাইভ-কাছাকাছি, low priority।
-- **Desktop (Electron)** (`apps/desktop/`, `frontend/main.js` + `preload.cjs`) — `electron:build`
-  script + electron-builder config আছে; live backend REST/WS wiring প্রায় না থাকায় partial।
+  dead **Java** files (`AdminMetricsController.java` ইত্যাদি, 22টি) পড়ে আছে → M1.5 cleanup দরকার।
+- **Mobile (Flutter)** (`tools/mobile/` — root এ `apps/mobile/` ছিল, সরিয়ে নেওয়া হয়েছে) — খুব thin;
+  direct Gemini call রিমুভড, এখন backend route-এর মাধ্যমে। Overall আর্কাইভ-কাছাকাছি।
+- **Desktop (Electron)** (`tools/desktop/` — root এ `apps/desktop/` ছিল, সরিয়ে নেওয়া হয়েছে;
+  `frontend/main.js` + `preload.cjs`) — `electron:build` script + electron-builder config আছে;
+  live backend REST/WS wiring প্রায় না থাকায় partial।
+- **Apps directory** — `apps/` ফোল্ডার বর্তমানে খালি; mobile/desktop client `tools/`-এ সরিয়ে নেওয়া হয়েছে।
 
 ---
 ---
@@ -109,11 +121,12 @@ Cloudflare Workers / Firebase        → edge cache, pings
    করছে কিন্তু production feature degrade (KNOWN_ISSUES P1)।
 3. **Infisical Universal Auth 401** — `verify_infisical_env.py` এখন INFISICAL_TOKEN fallback-এ
    চলে; machine identity আসলে register করা হয়নি।
-4. **Full backend test suite CI-তে শেষ হয়নি** — 282টি test file; চলতি রানে interruptions
+4. **Full backend test suite CI-তে শেষ হয়নি** — 373টি test file; চলতি রানে interruptions
    (কিছু FF), task_router-এর কোভারেজ একসময় 0% ছিল।
 
 ### 🟠 P2 — Medium debt
-5. **একাধিক Zustand store** — 11টি store file; উল্লেখযোগ্য duplication + inconsistent state।
+5. **একাধিক Zustand store** — ৯টি store file (`themeStore` deleted, `useWorkspaceSettingsStore`
+   merged into `useWorkspaceStore`); উল্লেখযোগ্য duplication + inconsistent state।
 6. **Duplicate/parallel modules** — `backend/core/app.py` vs `app_builder.py` (ভালো, কিন্তু
    confusion); `backend/api/deps.py` (36 lines) vs `dependencies.py` (172 lines) ফাংশনালি
    overlapped; `memory/`-এ chroma/sqlite/supabase/cloud_postgres store আলাদা।
@@ -135,12 +148,17 @@ real-time bridge, এবং প্রতিটি P1 debt ফিক্স।
 
 **Milestones:**
 - M0.1: Admin Command Center-এর প্রতিটি module-এ backend endpoint সংযুক্ত; `grep`-এ
-  0 mock/hardcoded value। (effort ~3d)
-- M0.2: 11টি Zustand store → 1 unified `useSupremeStore` (slice pattern)। (effort ~2d)
-- M0.3: SwarmPubSub → WebSocket/SSE bridge লাইভ; <1s metric update। (effort ~2d)
+  0 mock/hardcoded value। (effort ~3d) *(অংশিক — Admin Session Restore + Skills 405 সম্পন্ন;
+  `/api/chat/history` GET endpoint এখনো নেই)*
+- M0.2: 9টি Zustand store → 1 unified `useSupremeStore` (slice pattern)। (effort ~2d)
+  *(2টি সম্পন্ন: `themeStore` deleted, `useWorkspaceSettingsStore` merged; 6টি বাকি
+  API-shape mismatch জন্য deferred)*
+- M0.3: SwarmPubSub → WebSocket/SSE bridge লাইভ; <1s metric update। (effort ~2d) *(pending)*
 - M0.4: Render-এ ~90 missing env key ভেরিফাই + populate; secrets rotation সম্পূর্ণ;
-  Infisical machine identity register (401 মুছে)। (effort ~2d)
+  Infisical machine identity register (401 মুছে)। (effort ~2d) *(আংশিক — env drift gate live,
+  OpenAPI gate যোগ, কিন্তু Infisical 401 + full rotation বাকি)*
 - M0.5: Full backend suite CI-তে green — flaky tests বিচ্ছিন্ন + retry/বাগ fix। (effort ~1.5d)
+  *(373 test file, 244 passed + 2 skip; `test_headless_terminal_agent.py` = FF)*
 
 **Technical requirements:**
 - Frontend: React Query + `useSupremeStore` slices; `WebSocketManager.ts` + SSE bridges;
@@ -165,15 +183,15 @@ CI full suite green; secrets verified on live Render/Infisical; browser E2E (log
 product behavior না বদলে maintainability বাড়ানো।
 
 **Milestones:**
-- M1.1: `backend/api/deps.py` vs `dependencies.py` একীভূত; একটি সুস্পষ্ট DI/overrides layer। (~1d)
+- M1.1: `backend/api/deps.py` vs `dependencies.py` একীভূত; একটি সুস্পষ্ট DI/overrides layer। (~1d) *(pending)*
 - M1.2: Bare `except Exception:` → structured logging + `core.error_bus`/`error_remediation`-এ
-  রুট; enforced by `ruff` rule। (~2d)
+  রুট; enforced by `ruff` rule। (~2d) *(pending — 4 clauses per CHECKPOINT)*
 - M1.3: `memory/` store হিসেবে single manager (`unified_db_manager`) করে client
-  select (pgvector/sqlite) encapsulate; dead chroma store deprecate। (~2d)
+  select (pgvector/sqlite) encapsulate; dead chroma store deprecate। (~2d) *(pending)*
 - M1.4: OpenAPI spec auto-generate commit + **CI drift gate** (app.openapi() vs committed
-  spec) + Pydantic→TS/Dart auto-check। (~1–2d)
-- M1.5: VS Code extension থেকে dead Java files সরানো; `.gitignore`/`.vscodeignore` সঠিক।
-  `python-jose` → PyJWT migration (bonus)। (~1d)
+  spec) + Pydantic→TS/Dart auto-check। (~1–2d) *(✅ DONE — drift gate CI job live)*
+- M1.5: VS Code extension থেকে dead Java files (22টি) সরানো; `.gitignore`/`.vscodeignore` সঠিক।
+  `python-jose` → PyJWT migration (bonus)। (~1d) *(pending)*
 - M1.6: Repo hygiene — `__pycache__`, htmlcov, `.coverage`, `.secrets/`, `.venv_ci`
   বিচ্ছেদ/ignore। (~0.5d)
 
@@ -195,8 +213,8 @@ docs/spec in sync (drift gate green); repo clean; backend + frontend builds && t
    OpenAPI drift gate নেই।
 9. **Docs ↔ code drift** — cost_guard docstring-এ tier routing overstatement; type-gen
    determinism ঠিক হয়েছে কিন্তু CI auto-check এখনো নেই।
-10. **VS Code extension root-এ dead Java files** — TS extension-এর ভেতরে `.java` ফাইল →
-    cleanup + `.gitignore`।
+10. **VS Code extension root-এ dead Java files** — 22টি `.java` ফাইল → (M1.5) cleanup +
+    `.gitignore`/`.vscodeignore` সঠিক। *(pending)*
 
 ### 🟡 P3 — Low-priority / housekeeping
 11. **Mobile (Flutter) ও Desktop (Electron)** — মূলত un-wired; partial thin client।

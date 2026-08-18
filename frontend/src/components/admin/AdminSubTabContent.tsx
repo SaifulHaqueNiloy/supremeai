@@ -2,7 +2,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import type { AdminSubTab, ChatMessage } from '../../types';
-import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
+import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, MemoryBrowser, BrainVisualizer, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
 import { RateLimitManager } from './RateLimitManager';
 import { InteractiveChatTab } from './InteractiveChatTab';
 import { AdminAlertsTab } from './AdminAlertsTab';
@@ -54,7 +54,7 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
   'config': ConfigEditor,
   'model-router': ModelRouter,
   'skills': EnhancedSkillMarketplace,
-  'memory': MemoryBrowser,
+  'memory': BrainVisualizer,
   'cloud': CloudOrchestrator,
   'observability': ObservabilityDashboard,
   'threats': ThreatDetection,

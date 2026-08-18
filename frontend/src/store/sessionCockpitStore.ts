@@ -61,6 +61,8 @@ interface SessionCockpitState {
 
 const MAX_LOGS = 10000;
 
+// 🔻 @deprecated Consolidate agent-cockpit state into the unified `useSupremeStore`.
+// Kept for backward compatibility — do not add new usages; migrate consumers to useSupremeStore.
 export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => ({
   sessionId: null,
   logBuffer: [],

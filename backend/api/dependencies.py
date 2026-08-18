@@ -88,17 +88,20 @@ async def verify_autonomous_agent_token(
         ) from e
 
 
-def get_current_user_token(request: Request) -> dict:
-    # 1. Check context injected by AuthMiddleware
+@with_error_bus(component_name="AuthDependency")
+async def get_current_user_token(request: Request) -> dict:
+    """Async user-token extractor (ErrorEventBus-integrated).
+
+    AuthMiddleware-ইনজেক্ট করা ``request.state.user`` আগে চেক করা হয়;
+    না থাকলে test-environment fallback, নাহলে 401।
+    """
     user = getattr(request.state, "user", None)
     if user:
         return user
 
-    # 2. Test Environment fallback
     if is_test_environment():
         return {"sub": "admin@supremeai.com", "role": "admin"}
 
-    # 3. Fallback check
     raise HTTPException(status_code=401, detail="Unauthorized")
 
 

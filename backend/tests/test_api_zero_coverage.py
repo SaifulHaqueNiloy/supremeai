@@ -49,19 +49,19 @@ class TestApiErrors:
         assert exc.value.status_code == 409
 
 
-# ── api.deps ───────────────────────────────────────────────────────────────────
+# ── api.dependencies ───────────────────────────────────────────────────────────
 
 
 class TestApiDeps:
     def test_get_fitness_engine(self):
-        from api.deps import get_fitness_engine
+        from api.dependencies import get_fitness_engine
 
         engine = get_fitness_engine()
         assert engine is not None
 
     @pytest.mark.asyncio
     async def test_get_current_user_token(self):
-        from api.deps import get_current_user_token
+        from api.dependencies import get_current_user_token
 
         req = MagicMock(spec=Request)
         req.state.user = {"sub": "test@user.com", "role": "admin"}

@@ -18,6 +18,8 @@ import { SecurityDashboard } from './SecurityDashboard';
 // বাংলা মন্তব্য: রিডিজাইনকৃত ককপিট ড্যাশবোর্ড ইম্পোর্ট করা হলো
 import Dashboard from './Dashboard';
 
+import { BrainVisualizer } from './BrainVisualizer';
+
 export {
   CommandCenter,
   LiveLogs,
@@ -28,6 +30,7 @@ export {
   ModelRouter,
   EnhancedSkillMarketplace,
   MemoryBrowser,
+  BrainVisualizer,
   CloudOrchestrator,
   ObservabilityDashboard,
   ThreatDetection,

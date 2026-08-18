@@ -160,47 +160,77 @@ def get_costs():
         }
 
 
+@router.get("/skills", response_model=list[dict[str, Any]])
+async def get_admin_skills():
+    """
+    বাংলা মন্তব্য: CommandCenter-এর Skills মডিউলের জন্য — স্কিল ম্যানিফেস্টগুলোকে
+    CommandCenter Skill টাইপের shape-এ (id, name, version, installed, enabled, source) রিটার্ন করে।
+    ম্যানিফেস্টগুলো /api/skills/catalog থেকে স্ক্যান করে।
+    """
+    from pathlib import Path
+
+    manifest_dir = Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
+    if not manifest_dir.exists():
+        return []
+
+    catalog = []
+    for json_file in manifest_dir.glob("*.json"):
+        try:
+            manifest = json.loads(json_file.read_text(encoding="utf-8"))
+            skill_id = manifest.get("skill_id", json_file.stem)
+            catalog.append({
+                "id": skill_id,
+                "name": manifest.get("name", skill_id),
+                "version": manifest.get("version", "1.0.0"),
+                "installed": manifest.get("installed", True),
+                "enabled": manifest.get("enabled", True),
+                "source": manifest.get("source", "builtin"),
+            })
+        except (json.JSONDecodeError, OSError):
+            continue
+
+    return catalog
+
+
 @router.get("/health-map")
-def get_health_map():
-    import time
+async def get_health_map():
+    """বাংলা মন্তব্য: রিয়েল ইনফ্রা হেল্থ — কোনো hardcoded latency/SLA নেই।
+    core.health_check.health_checker.check_all() থেকে আসল status + response_time_ms নেওয়া হয়।"""
+
     from core.health_check import health_checker
 
-    gcp_configured = bool(getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID"))
-    redis_configured = bool(
-        getattr(settings, "upstash_redis_rest_url", None) or settings._get_cached_secret("UPSTASH_REDIS_REST_URL")
-    )
-    db_configured = bool(
-        getattr(settings, "supabase_database_url", None)
-        or settings._get_cached_secret("SUPABASE_DATABASE_URL")
-        or settings._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
-    )
+    try:
+        all_checks = await health_checker.check_all()
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Health map check failed: {e}")
+        all_checks = {}
+
+    checks = all_checks.get("checks", {})
+
+    def _node(name: str) -> dict:
+        c = checks.get(name, {})
+        return {
+            "status": c.get("status", "unknown"),
+            "latency": c.get("response_time_ms"),
+        }
+
+    summary = all_checks.get("summary", {})
+    total = summary.get("total_checks", 0) or 1
+    healthy = summary.get("healthy", 0)
+    degraded = summary.get("degraded", 0)
+    overall_health_percent = round(((healthy + 0.5 * degraded) / total) * 100)
 
     return {
-        "gcp": {
-            "status": "healthy" if gcp_configured else "offline",
-            "latency": "42ms" if gcp_configured else "N/A",
-            "region": getattr(settings, "gcp_region", "us-central1"),
-            "uptime_sla": "99.99%",
+        "gcp": _node("external_services"),
+        "railway": _node("redis"),
+        "render": _node("database"),
+        "frontend": _node("application"),
+        "core_services": {
+            name: {"status": c.get("status", "unknown"), "latency": c.get("response_time_ms")}
+            for name, c in checks.items()
+            if name not in ("external_services", "redis", "database", "application")
         },
-        "railway": {
-            "status": "healthy" if redis_configured else "offline",
-            "latency": "78ms" if redis_configured else "N/A",
-            "region": "us-east",
-            "uptime_sla": "99.95%",
-        },
-        "render": {
-            "status": "healthy" if db_configured else "offline",
-            "latency": "120ms" if db_configured else "N/A",
-            "region": "singapore",
-            "uptime_sla": "99.90%",
-            "live_uptime_seconds": int(time.time() - health_checker._start_time),
-        },
-        "frontend": {
-            "status": "healthy",
-            "latency": "15ms",
-            "region": "global-cdn",
-            "uptime_sla": "99.99%",
-        },
+        "overall_health_percent": overall_health_percent,
     }
 
 
@@ -713,7 +743,7 @@ async def admin_websocket(websocket: WebSocket):
             try:
                 metrics = get_metrics()
                 providers_status = {p["id"]: p["status"] for p in get_providers()}
-                health = get_health_map()
+                health = await get_health_map()
                 await websocket.send_json(
                     {
                         "type": "dashboard_update",

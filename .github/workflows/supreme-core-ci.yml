@@ -1547,61 +1547,6 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
 
-
-
-  deploy-backend:
-    name: 🚀 Deploy Backend (Cloud Run)
-    needs: [backend-core]
-    # TEMPORARILY DISABLED: Remove `false` and restore conditions to reactivate Cloud Run deployment
-    if: false
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: GCP Auth
-        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Authenticate Docker to GCP Artifact Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-        with:
-          driver-opts: image=moby/buildkit:buildx-stable-1
-
-      - name: Build & Push API Image
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
-        with:
-          context: .
-          file: ./backend/Dockerfile
-          push: true
-          tags: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/supremeai-repo/supremeai-api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=min
-
-      - name: 🚀 Deploy API to Cloud Run
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
-          INFISICAL_ENV: "prod"
-          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
-          SUPABASE_DATABASE_URL_POOLER: ${{ secrets.SUPABASE_DATABASE_URL_POOLER }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SERVICE_ROLE: ${{ vars.SERVICE_ROLE || 'user' }}
-        run: python .github/scripts/supreme_ci.py deploy
-
-
-
   flutter-unit-widget-tests:
     name: 📱 Flutter Unit & Widget Tests
     needs: [changes]
@@ -1998,40 +1943,6 @@ jobs:
                   print(f"ℹ️ Auto-merge info (PR is active, review/conflict resolution may be needed): {e}")
           EOF
 
-  canary-deploy:
-    name: "🚀 Canary Deploy Backend (Cloud Run)"
-    runs-on: ubuntu-latest
-    # TEMPORARILY DISABLED: রেন্ডার-এ স্থানান্তরের কারণে জিসিপি ক্যানারি ডিপ্লয়মেন্ট নিষ্ক্রিয় করা হলো।
-    if: false
-    needs: [backend-core]
-    # backend-core এবং security-audit সফল হলে তবেই এটি চলবে
-    # deploy-backend এর পরিবর্তে এই জবটি ব্যবহার করা হবে
-    environment: production
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: GCP Auth
-        uses: 'google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed' # v2
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: 🐤 Run Canary Deployment Script
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-          # CANDIDATE_REVISION: Cloud Build থেকে পাওয়া নতুন রিভিশন এখানে পাস করতে হবে
-          # আপাতত, সর্বশেষ রিভিশন স্বয়ংক্রিয়ভাবে পাওয়ার লজিক canary-deploy.py-তে থাকবে
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          ERROR_RATE_THRESHOLD: "0.01" # 1%
-          LATENCY_P99_THRESHOLD_MS: "2000" # 2000ms
-        run: |
-          python .github/scripts/canary-deploy.py
-
   # ==============================================================================
   # TYPE SYNC (ported from monorepo_ci_cd.yml -> merged here to avoid duplicate workflow)
   # backend/schemas বা generate_types.py বা type_sync_bus.py বদলালে Pydantic->TS/Dart
@@ -2205,14 +2116,12 @@ jobs:
       - deploy-user-backend
       - deploy-admin-backend
       - deploy-combined-backend
-      - deploy-backend
       - flutter-unit-widget-tests
       - build-and-release-desktop
       - deploy-admin-firebase
       - deploy-user-vercel
       - sync-mirror
       - staging-pr-promotion
-      - canary-deploy
       - type-sync-check
       - type-sync-integration-test
     permissions:

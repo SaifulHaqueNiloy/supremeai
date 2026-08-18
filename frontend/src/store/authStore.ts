@@ -70,6 +70,8 @@ function restoreUser(): UserProfile | null {
 const avatarUrl = (label: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(label)}&background=random`;
 
+// 🔻 @deprecated Consolidate auth state into the unified `useSupremeStore` (see slices/authSlice).
+// Kept for backward compatibility — do not add new usages; migrate consumers to useSupremeStore.
 export const useAuthStore = create<AuthState>((set) => ({
   status: AuthStatus.UNINITIALIZED,
   user: null,

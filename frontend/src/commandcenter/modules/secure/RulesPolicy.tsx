@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
+import { adminTokenStore } from '../../../services/adminTokenStore';
 import { useUpdateRules } from '../../data/hooks';
 import { JsonViewer, ConfirmModal, EmptyState } from '../../kit';
 
@@ -8,7 +9,7 @@ export function RulesPolicy() {
   const { data: rules, isLoading } = useQuery({
     queryKey: ['cmd', 'rules'],
     queryFn: () => apiClient.get<Record<string, unknown>>('/admin-api/rules'),
-    enabled: !!localStorage.getItem('admin_token'),
+    enabled: !!adminTokenStore.getDecodedToken(),
     staleTime: 60_000,
   });
   const updateRules = useUpdateRules();

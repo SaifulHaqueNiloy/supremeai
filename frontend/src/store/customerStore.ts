@@ -21,6 +21,8 @@ interface CustomerStoreState extends CustomerState {
   setHydrated: (val: boolean) => void;
 }
 
+// 🔻 @deprecated Consolidate customer-portal state into the unified `useSupremeStore`.
+// Kept for backward compatibility — do not add new usages; migrate consumers to useSupremeStore.
 export const useCustomerStore = create<CustomerStoreState>()(
   persist(
     (set) => ({

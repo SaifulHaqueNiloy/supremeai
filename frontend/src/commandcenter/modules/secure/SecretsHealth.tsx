@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
+import { adminTokenStore } from '../../../services/adminTokenStore';
 import { StatusPill, EmptyState } from '../../kit';
 
 export function SecretsHealth() {
   const { data: secrets, isLoading } = useQuery({
     queryKey: ['cmd', 'secrets'],
     queryFn: () => apiClient.get<{ status: string; secrets: Array<{ name: string; healthy: boolean; last_rotated?: string }> }>('/admin-api/secrets-health'),
-    enabled: !!localStorage.getItem('admin_token'),
+    enabled: !!adminTokenStore.getDecodedToken(),
     staleTime: 60_000,
   });
 

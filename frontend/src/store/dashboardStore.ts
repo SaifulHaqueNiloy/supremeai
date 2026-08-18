@@ -17,6 +17,8 @@ interface DashboardState {
   toggleBrowser: () => void;
 }
 
+// 🔻 @deprecated Consolidate dashboard UI state into the unified `useSupremeStore`.
+// Kept for backward compatibility — do not add new usages; migrate consumers to useSupremeStore.
 export const useDashboardStore = create<DashboardState>((set) => ({
   isDeploymentModalOpen: false,
   systemStatus: 'healthy',

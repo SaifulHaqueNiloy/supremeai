@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
+import { adminTokenStore } from '../../../services/adminTokenStore';
 import { LogStream, EmptyState } from '../../kit';
 
 interface LogEntry {
@@ -19,7 +20,7 @@ export function LiveLogs() {
     queryKey: ['cmd', 'logs'],
     queryFn: () => apiClient.get<LogEntry[]>('/admin-api/logs?limit=200'),
     refetchInterval: 5000,
-    enabled: !!localStorage.getItem('admin_token'),
+    enabled: !!adminTokenStore.getDecodedToken(),
   });
 
   const filtered = logs?.filter((log) => {

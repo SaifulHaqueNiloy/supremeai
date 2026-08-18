@@ -494,6 +494,18 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for internet_monitor_router: {traceback.format_exc()}")
     internet_monitor_router = None
 
+try:
+    from .admin_brain import router as admin_brain_router
+
+    _safe_imports["admin_brain_router"] = admin_brain_router
+except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
+    import traceback
+
+    from loguru import logger
+
+    logger.warning(f"Router import failed for admin_brain_router: {traceback.format_exc()}")
+    admin_brain_router = None
+
 # বাংলা মন্তব্য: নিচের ৫টা router (voice, websocket_voice, integrations, swarm,
 # internet_monitor) আগে explicit list-এও duplicate ছিল, অথচ এগুলো ইতিমধ্যে
 # উপরের try/except ব্লকগুলোর মাধ্যমে _safe_imports-এ যোগ হয়ে যায় — dict-এ

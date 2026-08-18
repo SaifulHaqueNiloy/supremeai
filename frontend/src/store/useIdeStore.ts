@@ -24,6 +24,8 @@ interface IdeState {
   markFileSaved: (path: string) => void;
 }
 
+// 🔻 @deprecated Consolidate IDE state into the unified `useSupremeStore` (see slices/ideSlice).
+// Kept for backward compatibility — do not add new usages; migrate consumers to useSupremeStore.
 export const useIdeStore = create<IdeState>((set) => ({
   webContainer: null,
   setWebContainer: (instance) => set({ webContainer: instance }),

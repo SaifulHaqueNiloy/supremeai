@@ -59,6 +59,8 @@ interface SupremeState extends EvolutionState, ConfigState {
   executeGateOverride: (targetStatus: string, reason: string, secret: string) => Promise<{ success: boolean; message: string }>;
 }
 
+// 🔻 @deprecated Consolidate app/chat/gate state into the unified `useSupremeStore` (coreSlice).
+// Kept for backward compatibility — do not add new usages; migrate consumers to useSupremeStore.
 export const useStore = create<SupremeState>((set) => ({
   systemConfig: AppDefaults,
   isConfigLoaded: false,

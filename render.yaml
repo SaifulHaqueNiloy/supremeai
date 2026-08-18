@@ -25,6 +25,9 @@ services:
       # বাংলা মন্তব্য: Scraper মাইক্রোসার্ভিসের URL — browser.py থেকে proxy করতে হবে
       - key: SCRAPER_SERVICE_URL
         value: "https://supremeai-scraper-6nwi.onrender.com"
+      # Firebase Admin SDK credentials — value MUST be set in the Render dashboard
+      # (secret JSON, never committed here). Required for /api/admin/* token verification.
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
 
   # Phase 1: Scraper/Browser Automation Service (decoupled from main backend)
   # Docker runtime: the Python buildpack runs non-root and `playwright install

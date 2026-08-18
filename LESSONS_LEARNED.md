@@ -7,6 +7,61 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-18 — 🐛 Admin Session Fix: 3 frontend/backend bugs causing forced-logout & 405 on Skills tab
+
+- **সমস্যা:** (A) Admin পেজ রিফ্রেশ করলে সেশন হারায় — `adminStore.ts`-এ কোনো session restore নেই,
+  `adminAuthenticated: false` ডিফল্ট; (B) apiInterceptor global fetch wrapper-এ 401/403 হলে সবার জন্যে
+  `handleAdminLogout()` call করে — ইউজার-ফেসিং API-এর 401ও অ্যাডমিন সেশন ভাঙায়; (C) Skills & Agents
+  ট্যাবে `apiClient.get('/api/skills/search')` কল করে কিন্তু backend-এ POST-only route ছিল → 405।
+- **ফিক্স:** (A) `restoreAdminSession()` যোগ করে localStorage-এর `supreme_admin_jwt`-কে decode +
+  exp চেক করে `adminAuthenticated`/`adminRole` restore; (B) `isAdminApiPath()` helper যোগ করে
+  শুধু `/api/admin` + `/api/skills` পাথ-এর 401/403-ই auto-logout ট্রিগার করে; (C) backend-এ
+  GET `/skills/search` endpoint যোগ করে (shared `_search_skill_manifests` helper) +
+  `adminTokenStore.ts`-এ exp validation যোগ করে।
+- **লেসন:** (1) Zustand store-এর initial state পুনঃস্থাপন (session restore) ছাড়া
+  JWT-based auth সবসময় refresh-এ ভাঙবে; (2) Global fetch interceptor override করলে
+  auto-logout logic-কে কি পাথে scope করা যাচ্ছে তা explicitly check করুন; (3) Frontend
+  GET কলের জন্য backend-এ GET endpoint আছে কিনা code-level ভেরিফাই করুন — POST-only route
+  থাকলে 405 Method Not Allowed পাওয়া যায়।
+
+- **সমস্যা:** consolidate করতে গিয়ে দেখা গেল যে `useSupremeStore` (generic ১-কনসামার স্কাফোল্ড) আসল store-গুলোর
+  সাথে **আংশিক shape match** করে — ফলে blind re-export shim বা সরাসরি রিনেম করলে কনসামার ব্ল্যাক হয়।
+  যেম: `authStore.login(email,password)` বাস্তব apiClient POST করে, কিন্তু
+  `useSupremeStore.login(userData)` সরাসরি set করে (signature ভিন্ন)।
+- **ফিক্স/লেসন:**
+  (১) `themeStore`-এর কনসামার **শূন্য** (frontend/src + apps/ দুটোখানেই 0 import) → dead code, সরিয়ে
+  ফেলা হয়েছে (useSupremeStore-এর `theme` fieldটা আছে)। (২) Store merge-এর সময় কেবলমাত্র স্টোরের নাম,
+  consumer count দেখে না বাঁচানো যায় — **field shape + action signature match** করে নি কিন্তে
+  typecheck-এ ব্যরক্তিকরণ ধরা দেয়। (৩) `useSupremeStore` একটি generic scaffold (১টি কনসামার, শুধু `user`)
+  — সেজন্য এর মধ্যে merge করার আগে আসল logic port করতে হবে; staged migration + typecheck gate জরুরি।
+
+## 2026-08-18 — 🧩 M0.2 Store Consolidation: `useWorkspaceSettingsStore` → `useWorkspaceStore` (single source of truth)
+
+- **সমস্যা:** দুইটি workspace store (`useWorkspaceStore` + `useWorkspaceSettingsStore`) আলাদা আলাদা
+  integration state রাখত — `activeIntegrations: string[]` vs `integrations: DockIntegration[]`; উভয়েই
+  আলাদা `toggleIntegration` ও আলাদা persist key ছিল। ফলে এক জায়গায় toggle করলে অন্যটায় সিঙ্ক হতো না
+  (duplication + inconsistent state)।
+- **ফিক্স:** `useWorkspaceSettingsStore`-কে `useWorkspaceStore`-তে একীভূত করা হয়েছে —
+  `toggleIntegration` এখন `activeIntegrations` ও `integrations[].enabled` দুটোই সিঙ্ক করে। `DockIntegration`
+  type export, `reorderIntegrations`, merged `partialize` (persist)। ActionDock-এর import re-point, redundant
+  store file delete। **Store count 11 → 10।** Typecheck clean (store-সংক্রান্ত 0 error)।
+- **লেসন:** (১) একই ডোমেইনের duplicated state ২টা store-এ রাখা যাবে না — merge করে single source of truth
+  বানাতে হবে; (২) store merge-এর আগে consumer blast radius স্ক্যান করুন (ActionDock / DynamicActionDock /
+  DashboardShell — মাত্র ৩ ফাইল) — ছোট, নিরাপদ consolidation দিয়ে শুরু করা ভালো; (৩) shared working tree-তে
+  unrelated files অন্য agent-modify করলে (BrainVisualizer.tsx untracked, AdminSubTabContent.tsx modified)
+  typecheck-এ unrelated error আসতে পারে — নিজের changed files-এর error-ই যাচাই করুন।
+
+## 2026-08-18 — 🐛 M0.1 Mistake: Frontend wired to non-existent `/api/chat/history` endpoint
+
+- **সমস্যা:** `InteractiveChatTab.tsx`-এ chat history-র জন্য `useEffect` + `isLoadingMessages` state যোগ করে
+  `${getApiBaseUrl()}/api/chat/history`-তে fetch করার প্ল্যান করা হয়েছিল — কিন্তু **backend-এ ওই GET endpoint
+  exists-ই করে না** (chat routes সব POST-only: `/stream_chat`, `/api/chat/stream`, `/api/chat/completion`)।
+  ফলে সবসময় fallback hit হতো + unused state-র জন্য typecheck error (TS6133)।
+- **ফিক্স:** backend route scan করে নিশ্চিত হওয়া গেল endpoint নেই; তাই unused `isLoadingMessages`/
+  `setIsLoadingMessages` বাদ দিয়ে welcome message-কে legitimate static UI initial state হিসেবে রাখা হয়েছে।
+- **লেসন:** ফ্রন্টএন্ডে `fetch()` wire করার **আগে** backend-এ ওই endpoint কোড-লেভেল ভেরিফাই করো
+  (route scan), নতুবা dead-endpoint wiring + unused state-র debt হয়।
+
 ## 2026-08-18 — 🔄 GitHub Actions: `gh pr edit` GraphQL `read:org` Scope Failure → REST API Failsafe
 
 - **সমস্যা:** Staging CI workflow-তে `gh pr edit` কমান্ড দিয়ে প্রমোশন পিআর আপডেট করতে গিয়ে GitHub GraphQL API ফেইল করছিল: `The 'login'/'name'/'slug' field requires one of the following scopes: ['read:org'], but your token has only been granted the: ['repo', 'workflow'] scopes`। ক্লাসিক PAT-এ `read:org` স্কোপ না থাকলে `gh pr edit` ফেইল করে সম্পূর্ণ সিআই ব্লক করে দেয়।
@@ -38,29 +93,3 @@
 - **লেসন:** (১) `.gitignore` প্যাটার্ন সবসময় `/` দিয়ে root-scope করো — নতুবা `test_*.py` nested
   টেস্ট সাইলেন্ট exclude হয় (version control + CI থেকে হারায়); (২) "verified পাস" দাবি
   `git ls-files` দিয়ে যাচাই করো।
-
-## 2026-08-18 — 🐛 PyJWT Migration: `JWTError` → `PyJWTError` (Systemic Import Break)
-
-- **সমস্যা:** python-jose → PyJWT মাইগ্রেশনের সময় `from jwt.exceptions import JWTError` লেখা
-  হয়েছে, কিন্তু **PyJWT 2.13-এ `JWTError` alias নেই — base exception-এর নাম `PyJWTError`**
-  (JWTError alias 2.10-এ রিমুভ)। ফলে `api.dependencies` import-ই ব্যর্থ — ওই মডিউল থেকে
-  40+ route import করে, তাই পুরো রাউটার সাবসিস্টেম লোড হতো না। `auth.py`/`sso.py`/
-  `sso_integrator.py`-তে `try/except ImportError: jwt = None` fallback থাকায় সাইলেন্টভাবে
-  PyJWT নিষ্ক্রিয় হয়ে যাচ্ছিল (সবচেয়ে বিপজ্জনক — error না দেখিয়ে feature disable)।
-- **ফিক্স:** ৬টি ফাইলে সব `JWTError` → `PyJWTError` (import + `except` clause +
-  fallback assignment): `api/dependencies.py`, `api/routes/auth.py`, `api/routes/sso.py`,
-  `core/security/auth_middleware.py`, `tools/sso_integrator.py`, `tests/test_auth_middleware.py`।
-  `py_compile` + `TestApiDeps` + `test_invalid_jwt_token` (PyJWTError side-effect) pass।
-- **লেসন:** (১) PyJWT-এ base exception **`PyJWTError`** (jose-র `JWTError` 2.10+ নেই); (২) `try/except ImportError` fallback import-ফেইলকে quiet করে — import error সবসময় loud হওয়া উচিত (test বাধ্যতামূলক); (৩) shared working tree-তে multiple agent হলে `git diff HEAD` দিয়ে পরিবর্তনের মালিকানা চেক করো।
-
-## 2026-08-18 — 🐛 GitHub Actions YAML Error: `dorny/paths-filter` mapping scalar syntax
-
-- **সমস্যা:** `.github/workflows/supreme-core-ci.yml`-এ `dorny/paths-filter` action-এ `filters:` এর সাথে `|` (pipe multiline scalar) বাদ পড়ায় GitHub Actions parser `(Line: 100, Col: 13): A mapping was not expected` এরর দিয়ে সম্পূর্ণ workflow ব্লক করে দিচ্ছিল।
-- **ফিক্স:** `with.filters: |` যোগ করে মাল্টিলাইন স্ট্রিং স্কেলার হিসেবে ডিফাইন করা হয়েছে। সমস্ত `.github/workflows/*.yml` ফাইলের `with:` ব্লক স্ক্যান করে কনফার্ম করা হয়েছে যাতে আর কোনো নেস্টেড ম্যাপিং অবজেক্ট না থাকে।
-- **লেসন:** GitHub Actions action inputs শুধুমাত্র scalar (string/number/boolean) অ্যাকসেপ্ট করে; `paths-filter`-এর ফিল্টার স্পেসিফিকেশন অবশ্যই `filters: |` স্ট্রিং ফরম্যাটে পাস করতে হবে।
-
-## 2026-08-18 — 📋 Feature Feasibility Audit: 16 Features Assessed
-
-- **সমস্যা:** প্রজেক্টের প্রস্তাবিত সকল ফিচারের (plan docs + code + deploy config) পূর্ণ প্রজেক্টবিশ্বীয় ভেরিফাইকেশন ছিল না। কিছু ফিচার তত্ত্বাবদ্ধ কিন্তু $0 ফ্রি-টিয়ার ও সার্ভারলেস সীমাবদ্ধতায় টেকনিক্যালি অসম্ভব। কিছু "FIXED" দাবি আছে কিন্তু কোডে এখনও খুলে।
-- **ফিক্স:** `docs/audit_reports/FEATURE_FEASIBILITY_AND_VIABILITY_AUDIT.md`-এ 16টি ফিচারের পূর্ণ অডিট — Viable (10), Non-Viable/Rejected (7), Conditionally Viable/Blocked (5)। কোড-লেভেল প্রমাণ, ডেপ্লয় অ্যার্কি (`render.yaml`), ও `codebase_issues_report.md`-এর ভেরিফাইড খোলা ইস্যুগুলোর ভিত্তিতে সিদ্ধান্ত নেওয়া হয়েছে।
-- **লেসন:** (১) থিওরিটিক্যাল ML ট্রেনিং ফিচার (EWC, FGSM, P2P Federated Learning) সর্বদা $0 ফ্রি-টিয়ার পরিবেশে অসম্ভব — Vector Memory (pgvector/mem0/Graphiti) পিভর্ট করুন। (২) যেকোনো "FIXED"/"Done" দাবি কোড-লেভেল ভেরিফিকেশন ছাড়া বিশ্বস্ত করা যায় না। (৩) 6 সংযুক্ত রেপো তৈরি করলে CI path-filters, pnpm workspace, shared types ভাঙে — মনোরেখা মেনে থাকা (monorepo) ভাগ্য রাখুন। (৪) স্ক্র্যাপার সার্ভিসের জন্য HF Spaces (PRO-only) ও Koyeb (paid-only) ব্যবহার করা যায় না — Render `env: docker` হওয়াই সঠিক পথ।

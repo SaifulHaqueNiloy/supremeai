@@ -202,33 +202,52 @@ class TestGetCosts:
 
 
 class TestGetHealthMap:
-    def test_all_offline(self, monkeypatch):
-        """No services configured → all offline."""
-        from core.config import settings
+    async def test_all_offline(self, monkeypatch):
+        """No services reachable → nodes report offline/unknown."""
+        from core.health_check import health_checker
 
-        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "")
-        result = get_health_map()
+        async def fake_check_all():
+            return {
+                "checks": {
+                    "external_services": {"status": "offline", "response_time_ms": None},
+                    "redis": {"status": "offline", "response_time_ms": None},
+                    "database": {"status": "offline", "response_time_ms": None},
+                    "application": {"status": "offline", "response_time_ms": None},
+                },
+                "summary": {"total_checks": 4, "healthy": 0, "degraded": 0},
+            }
+
+        monkeypatch.setattr(health_checker, "check_all", fake_check_all)
+        result = await get_health_map()
         assert result["gcp"]["status"] == "offline"
         assert result["railway"]["status"] == "offline"
         assert result["render"]["status"] == "offline"
+        assert result["overall_health_percent"] == 0
 
-    def test_all_healthy(self, monkeypatch):
-        """All services configured → all healthy."""
-        from core.config import settings
+    async def test_all_healthy(self, monkeypatch):
+        """All services healthy → nodes report healthy with real latencies."""
+        from core.health_check import health_checker
 
-        secrets_map = {
-            "GCP_PROJECT_ID": "my-project",
-            "UPSTASH_REDIS_REST_URL": "https://redis.upstash.com",
-            "SUPABASE_DATABASE_URL_POOLER": "postgresql://db",
-        }
-        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: secrets_map.get(k, ""))
-        result = get_health_map()
+        async def fake_check_all():
+            return {
+                "checks": {
+                    "external_services": {"status": "healthy", "response_time_ms": 42},
+                    "redis": {"status": "healthy", "response_time_ms": 78},
+                    "database": {"status": "healthy", "response_time_ms": 120},
+                    "application": {"status": "healthy", "response_time_ms": 10},
+                },
+                "summary": {"total_checks": 4, "healthy": 4, "degraded": 0},
+            }
+
+        monkeypatch.setattr(health_checker, "check_all", fake_check_all)
+        result = await get_health_map()
         assert result["gcp"]["status"] == "healthy"
         assert result["railway"]["status"] == "healthy"
         assert result["render"]["status"] == "healthy"
-        assert result["gcp"]["latency"] == "42ms"
-        assert result["railway"]["latency"] == "78ms"
-        assert result["render"]["latency"] == "120ms"
+        assert result["gcp"]["latency"] == 42
+        assert result["railway"]["latency"] == 78
+        assert result["render"]["latency"] == 120
+        assert result["overall_health_percent"] == 100
 
 
 # ── trigger_deploy ─────────────────────────────────────────────────────

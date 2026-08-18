@@ -1,8 +1,27 @@
 import os
+import sys
 import requests
 from base64 import b64encode
 from nacl import encoding, public
 import argparse
+
+
+def validate_infisical_machine_identity(client_id, client_secret, project_id):
+    """বাংলা: Infisical Machine Identity (Universal Auth) ভ্যালিড কিনা final sync-এর আগে চেক করে।
+    ভ্যালিড না হলে sync ব্লক করে, যাতে stale/ভুল credential GitHub/Vercel-এ চলে না যায়।"""
+    if not (client_id and client_secret and project_id):
+        return False, "INFISICAL_CLIENT_ID/SECRET/PROJECT_ID missing — Machine Identity validation skipped"
+    try:
+        r = requests.post(
+            "https://app.infisical.com/api/v1/auth/universal-auth/login",
+            json={"clientId": client_id, "clientSecret": client_secret},
+            timeout=30,
+        )
+        if r.status_code == 200 and r.json().get("accessToken"):
+            return True, "Infisical Machine Identity valid"
+        return False, f"Universal Auth rejected: HTTP {r.status_code} {r.text[:200]}"
+    except Exception as e:
+        return False, f"Machine Identity validation error: {e}"
 
 def parse_env_file(filepath):
     env_vars = {}
@@ -101,7 +120,21 @@ if __name__ == "__main__":
     repo = "SaifulHaqueNiloy/supremeai"
     
     keys_to_sync = ["INFISICAL_TOKEN", "INFISICAL_PROJECT_ID", "INFISICAL_CLIENT_ID", "INFISICAL_CLIENT_SECRET"]
-    
+
+    # বাংলা: final sync-এর আগে Machine Identity ভ্যালিডেশন — invalid হলে abort
+    ok, msg = validate_infisical_machine_identity(
+        env_vars.get("INFISICAL_CLIENT_ID"),
+        env_vars.get("INFISICAL_CLIENT_SECRET"),
+        env_vars.get("INFISICAL_PROJECT_ID"),
+    )
+    if ok and "skipped" not in msg:
+        print(f"[info] {msg}")
+    elif not ok:
+        print(f"::error::Infisical Machine Identity validation failed — aborting sync. {msg}")
+        sys.exit(1)
+    else:
+        print(f"[info] {msg}")
+
     print("🚀 Starting sync to GitHub and Vercel...")
     for key in keys_to_sync:
         val = env_vars.get(key)

@@ -25,6 +25,20 @@ export const apiInterceptor = async <T = unknown>(response: Response): Promise<T
   return rawText as unknown as T;
 };
 
+// বাংলা মন্তব্য: শুধুমাত্র admin-API পাথ-এ 401/403 হলে auto-logout ট্রিগার করা হয়;
+// ইউজার-ফেসিং API-এর 401/403 (যেমন লাইসেন্স/API-কী সংক্রেত) অ্যাডমিন সেশন না ভাঙায়।
+const ADMIN_API_PATH_PREFIXES = ['/api/admin', '/api/skills'];
+
+function isAdminApiPath(url: string | URL): boolean {
+  let pathname: string;
+  try {
+    pathname = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost').pathname;
+  } catch {
+    pathname = typeof url === 'string' ? url : '';
+  }
+  return ADMIN_API_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 // Legacy support: Keep existing fetch interceptor for backward compatibility
 export function setupGlobalFetchInterceptor() {
   if (typeof window === 'undefined') return;
@@ -50,7 +64,8 @@ export function setupGlobalFetchInterceptor() {
           // 🔥 ফিক্স: logout endpoint নিজে 401 দিলে recursive loop এ না যেতে guard
           if (typeof url === 'string' && url.includes('/api/admin/logout')) {
             console.warn('[Interceptor] Logout endpoint returned 401 — user already logged out, skipping auto-logout.');
-          } else {
+          } else if (isAdminApiPath(url)) {
+            // শুধুমাত্র admin-API পাথ-এ 401/403 হলে অ্যাডমিন সেশন থেকে বের করা হয়
             import('../store/adminStore').then(({ useAdminStore }) => {
               const store = useAdminStore.getState();
               if (store.adminAuthenticated) {
