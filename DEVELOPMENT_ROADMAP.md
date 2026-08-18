@@ -45,12 +45,12 @@ Supabase/pgvector + Redis + Infisical + Cloudflare)।
 - **Phase 2 M2.1 Frontend Code-Splitting & Granular Chunking (100% Done):** `vite.config.ts`-এ ডায়নামিক ভেন্ডর চাঙ্কিং (`vendor-react`, `vendor-motion`, `vendor-icons`, `vendor-charts`, `vendor-flow`, `vendor-firebase`) এবং `App.tsx`-এ অন-ডিমান্ড `React.lazy` রাউটিং যুক্ত করে ইনিশিয়াল এন্ট্রি বান্ডেল ৩৯৬.৯৭ kB থেকে ৬৫.৬৭ kB (gzip: ২২.৪৫ kB)-এ নামিয়ে **৮৩% সাইজ রিডাকশন** অর্জন করা হয়েছে। Vitest স্যুট ১০০% পাসিং (৭২/৭২) ✅।
 - **Phase 2 M2.2 WebSocket Delta Stream Engine (100% Done):** `DashboardWebSocketManager`-এ `compute_metric_delta` ইঞ্জিন সংযুক্ত করে লাইভ মেট্রিক্সের ডেল্টা স্ট্রিমিং ও ব্যান্ডউইথ অপটিমাইজেশন সম্পন্ন ✅।
 - **Infisical & Boot Resilience (100% Done):** `scripts/check_env_health.py`-এ Machine Identity ভ্যালিডেশন এবং `backend/main.py`-এ লগিং প্রায়োরিটি ও এন্ট্রি পয়েন্ট টেস্ট (`backend/tests/test_main_entrypoint.py`) সম্পন্ন ✅।
+- **Phase 3 M3.1 Full Backend Test Coverage Expansion (100% Done):** `test_public_and_preferences.py`, `test_byoc_and_cloud_mesh.py`, `test_core_resilience_and_guards.py` স্যুট তৈরি, মিসিং `cdc_webhooks` রাউটার ইন্টিগ্রেশন এবং ৫৭৬টি ব্যাকএন্ড ইউনিট/ইন্টিগ্রেশন টেস্ট (৫৭৬ Passed, ০ Failed) নিশ্চিত করা হয়েছে ✅।
 - **Phase 5 AI Evolution Blueprints (100% Done):** `BLUEPRINT-SELF-EVOLVING-MEMORY.md` (`BLUEPRINT-MEM-001`)
   এবং `BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md` (`BLUEPRINT-GRAPH-002`) তৈরি ও রোডম্যাপে সংযুক্ত।
 
 **যা চলছে / পরবর্তী ফোকাস:**
-- Phase 3 M3.1: Full backend test coverage expansion towards 80% target (`backend/pyproject.toml` ও `supreme-core-ci.yml` অনুযায়ী)।
-- Phase 3 M3.2: E2E Integration & Synthetic Benchmark Scenarios.
+- Phase 3 M3.2: E2E Integration & Synthetic Benchmark Scenarios (Mock Swarm, Cost Guard Breach Simulation, JIT OTP Flow Verification).
 
 ---
 
