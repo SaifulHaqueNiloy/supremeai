@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 22:06 UTC
+- **Date:** 2026-08-18 22:13 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,55 +11,96 @@
 
 ## Files Changed
   - `backend/tests/test_self_evolve_service.py`
-  - `CHECKPOINT.md`
-  - `tools/vscode-extension/src/services/SupremeAIService.ts`
-  - `pnpm-lock.yaml`
-  - `backend/tests/test_mcp_server.py`
-  - `pnpm-workspace.yaml`
-  - `backend/memory/memory_evolution_loop.py`
-  - `scripts/verify_infisical_env.py`
-  - `LESSONS_LEARNED.md`
-  - `frontend/package.json`
-  - `backend/memory/unified_db_manager.py`
-  - `backend/tests/test_mcp_allowlist.py`
-  - `frontend/preload.cjs`
-  - `packages/shared-services/src/services/apiBridge.ts`
-  - `backend/tests/test_cost_guard_coverage_full.py`
-  - `backend/memory/__init__.py`
-  - `backend/tools/mcp/mcp_server.py`
-  - `packages/ui-components/src/utils/api.ts`
-  - `baselines/test-model_baseline.pkl`
-  - `backend/services/memory_service.py`
-  - `backend/core/startup/agents.py`
-  - `backend/api/routes/chat.py`
-  - `backend/api/routers.py`
-  - `backend/memory/chromadb_store.py`
-  - `frontend/src/components/chat/ChatInterface.tsx`
-  - `apps/desktop/src/App.tsx`
-  - `backend/core/mcp_allowlist.py`
-  - `tools/vscode-extension/src/providers/SupremeAICustomerDashboardProvider.ts`
-  - `backend/api/routes/self_evolve.py`
-  - `tools/vscode-extension/src/services/CrossAiObserverService.ts`
-  - `apps/desktop/src/components/FloatingAssistantBar.tsx`
-  - `backend/tests/test_self_evolve_routes.py`
   - `.github/workflows/supreme-release-builds.yml`
-  - `tools/vscode-extension/package.json`
-  - `tools/vscode-extension/src/services/apiBridge.ts`
-  - `.agents/AGENTS.md`
+  - `tools/vscode-extension/src/providers/SupremeAICustomerDashboardProvider.ts`
+  - `tools/vscode-extension/src/services/SupremeAIService.ts`
+  - `scripts/audit_env_drift.py`
+  - `packages/shared-services/src/services/apiBridge.ts`
+  - `backend/api/routes/brain_visualizer_bridge.py`
+  - `apps/desktop/src/index.css`
+  - `scripts/feature_fuse_map.py`
+  - `frontend/scripts/generate-desktop-icons.mjs`
+  - `scripts/verify_infisical_env.py`
+  - `tools/vscode-extension/src/services/CrossAiObserverService.ts`
   - `AGENTS.md`
-  - `backend/memory/self_evolve_service.py`
-  - `backend/baselines/test-model_baseline.pkl`
-  - `frontend/main.js`
-  - `packages/ui-components/src/index.ts`
-  - `tools/vscode-extension/src/services/SwarmPipelineProvider.ts`
-  - `tools/vscode-extension/src/services/TelemetryTracker.ts`
-  - `DEVELOPMENT_ROADMAP.md`
-  - `FEATURE_TRACKING_LOG.md`
-  - `packages/shared-services/src/services/CrossAiObserverService.ts`
+  - `frontend/src/types/generated_contracts.ts`
+  - `frontend/src/types/desktop.d.ts`
+  - `frontend/src/components/BrainVisualizer/LiveBrainVisualizer.tsx`
+  - `pnpm-workspace.yaml`
+  - `scripts/audit_topology_urls.py`
+  - `backend/tools/mcp/speculative_warmer.py`
   - `tools/vscode-extension/src/providers/SupremeWebviewProvider.ts`
+  - `backend/core/llm/free_tier_quota_balancer.py`
+  - `frontend/main.js`
+  - `frontend/src/components/chat/ChatInterface.tsx`
+  - `backend/core/mcp_allowlist.py`
+  - `backend/api/routes/chat.py`
+  - `tools/vscode-extension/package.json`
   - `apps/desktop/src-tauri/tauri.conf.json`
-  - `backend/core/config.py`
+  - `frontend/media/icon-256.png`
+  - `tools/vscode-extension/src/services/TelemetryTracker.ts`
+  - `frontend/electron/electron-config.mjs`
+  - `tools/vscode-extension/src/types/generated_contracts.ts`
+  - `LESSONS_LEARNED.md`
+  - `pnpm-lock.yaml`
+  - `docs/SYSTEM_TOPOLOGY_AND_URL_REGISTRY.md`
+  - `backend/api/routers.py`
+  - `backend/tests/test_mcp_server.py`
+  - `baselines/test-model_baseline.pkl`
+  - `frontend/src/utils/electronConfig.test.ts`
+  - `apps/desktop/postcss.config.js`
+  - `CHECKPOINT.md`
+  - `backend/memory/unified_db_manager.py`
   - `apps/desktop/package.json`
+  - `scripts/canary_health_probe.py`
+  - `backend/services/memory_service.py`
+  - `docs/ENV_AND_SECRET_REGISTRY.md`
+  - `backend/tests/test_mcp_allowlist.py`
+  - `backend/tests/test_mcp_advanced_mesh.py`
+  - `frontend/media/icon-64.png`
+  - `packages/ui-components/src/utils/api.ts`
+  - `apps/desktop/src/components/FloatingAssistantBar.tsx`
+  - `scripts/sync_contracts.py`
+  - `backend/tools/sandbox/micro_runtime_sandbox.py`
+  - `backend/tools/mcp/mcp_mesh_engine.py`
+  - `backend/memory/recency_decay_filter.py`
+  - `frontend/package.json`
+  - `tools/vscode-extension/src/services/apiBridge.ts`
+  - `backend/memory/memory_evolution_loop.py`
+  - `FEATURE_TRACKING_LOG.md`
+  - `backend/api/routes/self_assemble.py`
+  - `backend/baselines/test-model_baseline.pkl`
+  - `.agents/AGENTS.md`
+  - `apps/desktop/src/main.tsx`
+  - `frontend/media/icon.png`
+  - `backend/tools/code/ast_context_slicer.py`
+  - `backend/engine/self_assembling_orchestrator.py`
+  - `apps/desktop/index.html`
+  - `tools/vscode-extension/src/services/SwarmPipelineProvider.ts`
+  - `backend/tests/test_cost_guard_coverage_full.py`
+  - `frontend/media/icon-512.png`
+  - `packages/shared-services/src/services/CrossAiObserverService.ts`
+  - `frontend/preload.cjs`
+  - `backend/core/llm/prompt_cache_anchor.py`
+  - `DEVELOPMENT_ROADMAP.md`
+  - `apps/desktop/tailwind.config.js`
+  - `backend/tests/test_out_of_box_leverage.py`
+  - `scripts/ai/compact_brain_memory.py`
+  - `backend/memory/__init__.py`
+  - `frontend/src/components/chat/SessionRestorePrompt.tsx`
+  - `backend/memory/knowledge_distiller.py`
+  - `packages/ui-components/src/index.ts`
+  - `backend/tests/test_improvised_matrix.py`
+  - `apps/desktop/src/App.tsx`
+  - `.github/workflows/supreme-vscode-cd.yml`
+  - `backend/memory/chromadb_store.py`
+  - `backend/core/startup/agents.py`
+  - `backend/core/config.py`
+  - `backend/tools/mcp/mcp_server.py`
+  - `backend/api/routes/self_evolve.py`
+  - `frontend/media/icon-32.png`
+  - `backend/tests/test_self_evolve_routes.py`
+  - `backend/memory/self_evolve_service.py`
 
 ## Pending (Carry Forward)
 - **Phase 4 (Active):** M4.2 VS Code extension production hardening; desktop Playwright `_electron` E2E hard-test; `electron-builder` release build CI gate

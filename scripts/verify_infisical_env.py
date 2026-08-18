@@ -115,8 +115,8 @@ def fetch_infisical_secrets(project_id: Optional[str], token: str, env: str = "p
 
 
 def main() -> int:
-    client_id = load_env_fallback("INFISICAL_CLIENT_ID")
-    client_secret = load_env_fallback("INFISICAL_CLIENT_SECRET")
+    client_id = load_env_fallback("INFISICAL_MACHINE_IDENTITY_CLIENT_ID") or load_env_fallback("INFISICAL_CLIENT_ID")
+    client_secret = load_env_fallback("INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET") or load_env_fallback("INFISICAL_CLIENT_SECRET")
     project_id = load_env_fallback("INFISICAL_PROJECT_ID")
     env = load_env_fallback("INFISICAL_ENV") or "prod"
 
@@ -124,7 +124,7 @@ def main() -> int:
         # Fallback to Service Token if Universal Auth is not available
         service_token = load_env_fallback("INFISICAL_TOKEN")
         if not service_token:
-            print("::error::INFISICAL_CLIENT_ID/SECRET or INFISICAL_TOKEN is missing!")
+            print("::error::INFISICAL_MACHINE_IDENTITY_CLIENT_ID/SECRET or INFISICAL_TOKEN is missing!")
             sys.exit(1)
         print("[info] Using INFISICAL_TOKEN (Service Token) for authentication.")
         access_token = service_token

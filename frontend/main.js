@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, Menu, session, shell, Tray } from 'electron';
 import path from 'path';
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
+import { DEV_SERVER_URL, resolveRuntimeConfig } from './electron/electron-config.mjs';
 
 // বাংলা: ES module সোপে __dirname সংজ্ঞায়িত না থাকায় fileURLToPath দিয়ে তা তৈরি করা হয়েছে
 const __filename = fileURLToPath(import.meta.url);
@@ -8,9 +10,73 @@ const __dirname = path.dirname(__filename);
 
 const PRELOAD_PATH = path.join(__dirname, 'preload.cjs');
 const IS_DEV = !app.isPackaged;
-const API_BASE = process.env.VITE_API_URL || 'https://supremeai-backend-docker.onrender.com';
+const require = createRequire(import.meta.url);
+
+// বাংলা: Portal-aware live backend target — vite.config.ts/api.ts-এর সাথে identical precedence
+const RUNTIME_CONFIG = resolveRuntimeConfig();
+const API_BASE = RUNTIME_CONFIG.apiBaseUrl;
+const WS_BASE = RUNTIME_CONFIG.wsBaseUrl;
 
 let tray = null;
+
+/**
+ * বাংলা: প্রোডাকশন desktop build-এ strict CSP + dangerous permission ব্লক।
+ * CSP শুধু packaged (file://) অ্যাপে প্রয়োগ হয় — dev-এ Vite HMR/React-refresh ইনলাইন
+ * স্ক্রিপ্ট ভাঙা যাবে না। connect-src-এ live backend (REST) ও WSS (realtime) উভয়ই থাকে।
+ */
+function hardenSession() {
+  const policy = [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    `connect-src 'self' ${API_BASE} ${WS_BASE} wss://* ws://*`,
+    "manifest-src 'self'",
+    "base-uri 'self'",
+    "form-action 'none'",
+    "frame-src 'none'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const headers = { ...(details.responseHeaders || {}) };
+    const existing = Object.keys(headers).find((k) => k.toLowerCase() === 'content-security-policy');
+    if (existing) delete headers[existing];
+    headers['Content-Security-Policy'] = [policy];
+    callback({ responseHeaders: headers });
+  });
+
+  // বাংলা: শুধু voice (media) পারমিশন allow — বাকি সব deny (thin-client surface minimize)
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === 'media');
+  });
+}
+
+/**
+ * বাংলা: window.open / _blank target → ডিফল্ট ব্রাউজারে open (in-app popup নয়)।
+ */
+function restrictWindowOpen(win) {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  // বাংলা: renderer-এর রাজধানী শুধু dev server/file প্রোটোকলে সীমাবদ্ধ —
+  // বাইরের এক্সটার্নাল অরিজিনে navigation ব্লক (ডেস্কটপ অ্যাপের scope-escape রোধ)।
+  win.webContents.on('will-navigate', (event, url) => {
+    const isAllowedDev = IS_DEV && url.startsWith(DEV_SERVER_URL);
+    const isAllowedFile = !IS_DEV && url.startsWith('file://');
+    if (isAllowedDev || isAllowedFile) return;
+    event.preventDefault();
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url);
+    }
+  });
+}
 
 function createWindow() {
   const isDark = nativeTheme.shouldUseDarkColors;
@@ -64,6 +130,8 @@ function createWindow() {
       win.hide();
     }
   });
+
+  restrictWindowOpen(win);
 
   return win;
 }
@@ -158,6 +226,19 @@ function setupIPC(win) {
     isDev: IS_DEV,
   }));
 
+  // বাংলা: renderer-কে main-process-এর runtime truth (REST + WS target) জানায় —
+  // build-time baked URL আর runtime env drift হলে renderer main-এর কনফিগ recover করতে পারে।
+  ipcMain.handle('app:get-runtime-config', () => ({
+    portalType: RUNTIME_CONFIG.portalType,
+    apiBaseUrl: API_BASE,
+    wsBaseUrl: WS_BASE,
+    version: app.getVersion(),
+    platform: process.platform,
+    isDev: IS_DEV,
+  }));
+
+  ipcMain.handle('app:get-current-version', () => app.getVersion());
+
   ipcMain.handle('theme:get-system', () => nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
   ipcMain.handle('theme:set', (event, theme) => {
     nativeTheme.themeSource = theme;
@@ -194,18 +275,35 @@ function setupIPC(win) {
   });
 }
 
-app.whenReady().then(() => {
-  const win = createWindow();
-  setupMenu(win);
-  setupIPC(win);
-  setupTray(win);
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    else win.show();
+if (!app.requestSingleInstanceLock()) {
+  // বাংলা: দ্বিতীয় instance হলে এই instance quit — একই ডেস্কটপ অ্যাপ একাধিক window নয়
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const [win] = BrowserWindow.getAllWindows();
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    }
   });
 
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
+  app.whenReady().then(() => {
+    // বাংলা: packaged (production) build-এ strict CSP + permission gate
+    if (!IS_DEV) hardenSession();
+
+    const win = createWindow();
+    setupMenu(win);
+    setupIPC(win);
+    setupTray(win);
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      else win.show();
+    });
+
+    app.on('window-all-closed', () => {
+      if (process.platform !== 'darwin') app.quit();
+    });
   });
-});
+}

@@ -2,3 +2,4 @@ packages:
   - 'packages/*'
   - 'frontend'
   - 'tools/vscode-extension'
+  - 'apps/desktop'

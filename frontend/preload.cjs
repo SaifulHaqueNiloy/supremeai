@@ -13,6 +13,12 @@ contextBridge.exposeInMainWorld('supremeDesktopAPI', {
   getAppInfo: () =>
     ipcRenderer.invoke('app:get-info'),
 
+  getRuntimeConfig: () =>
+    ipcRenderer.invoke('app:get-runtime-config'),
+
+  getCurrentVersion: () =>
+    ipcRenderer.invoke('app:get-current-version'),
+
   getSystemTheme: () =>
     ipcRenderer.invoke('theme:get-system'),
 

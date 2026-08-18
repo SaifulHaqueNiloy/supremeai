@@ -1,5 +1,5 @@
 # tests/test_cost_guard_coverage_full.py
-"""Comprehensive unit tests for backend/core/cost_guard.py targeting 80%+ line coverage."""
+"""Comprehensive unit tests for backend/core/cost_guard.py targeting 100% line coverage."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -10,10 +10,19 @@ from core.cost_guard import CostGuard
 
 
 @pytest.mark.asyncio
-async def test_connect():
+async def test_connect_success():
     cg = CostGuard()
     res = await cg.connect()
     assert res == cg
+
+
+@pytest.mark.asyncio
+async def test_connect_failure():
+    # Force self to raise an exception by overriding logger
+    cg = CostGuard()
+    with patch("core.cost_guard.logger.info", side_effect=Exception("mocked error")):
+        with pytest.raises(Exception):
+            await cg.connect()
 
 
 @pytest.mark.asyncio
@@ -30,12 +39,35 @@ async def test_check_budget_with_db_success():
     mock_snapshot = MagicMock()
     mock_snapshot.exists = True
     mock_snapshot.to_dict.return_value = {"monthly_limit": 10.0, "spent_amount": 2.0}
-    mock_doc.get.return_value = mock_snapshot
+    
+    # Mocking both get and the async behavior
+    async def mock_get(): return mock_snapshot
+    mock_doc.get = mock_get
+    
     mock_db.collection.return_value.document.return_value = mock_doc
 
     cg = CostGuard(db=mock_db)
     res = await cg.check_budget("tenant_1", 1.0)
     assert res is True
+
+
+@pytest.mark.asyncio
+async def test_check_budget_snapshot_not_exists():
+    mock_db = MagicMock()
+    mock_doc = MagicMock()
+    mock_snapshot = MagicMock()
+    mock_snapshot.exists = False
+    
+    async def mock_get(): return mock_snapshot
+    mock_doc.get = mock_get
+    
+    mock_db.collection.return_value.document.return_value = mock_doc
+
+    cg = CostGuard(db=mock_db)
+    with pytest.raises(HTTPException) as exc_info:
+        await cg.check_budget("tenant_1", 1.0)
+    assert exc_info.value.status_code == 402
+    assert "No budget configured" in exc_info.value.detail
 
 
 @pytest.mark.asyncio
@@ -45,13 +77,29 @@ async def test_check_budget_exceeded_raises_http_exception():
     mock_snapshot = MagicMock()
     mock_snapshot.exists = True
     mock_snapshot.to_dict.return_value = {"monthly_limit": 5.0, "spent_amount": 4.5}
-    mock_doc.get.return_value = mock_snapshot
+    
+    async def mock_get(): return mock_snapshot
+    mock_doc.get = mock_get
+    
     mock_db.collection.return_value.document.return_value = mock_doc
 
     cg = CostGuard(db=mock_db)
     with pytest.raises(HTTPException) as exc_info:
         await cg.check_budget("tenant_1", 1.0)
     assert exc_info.value.status_code == 402
+    assert "Budget Exceeded" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_check_budget_db_exception():
+    mock_db = MagicMock()
+    mock_db.collection.side_effect = Exception("DB error")
+    cg = CostGuard(db=mock_db)
+
+    with patch("core.messaging.event_bus.error_event_bus.emit") as mock_emit:
+        with pytest.raises(RuntimeError):
+            await cg.check_budget("tenant_1", 1.0)
+        mock_emit.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -64,15 +112,58 @@ async def test_validate_budget_free_tier():
 @pytest.mark.asyncio
 async def test_validate_budget_economy_tier_success():
     cg = CostGuard()
-    with patch("core.cache.redis_manager.redis_manager.get_cache", new_callable=AsyncMock) as mock_redis:
+    from core.cache.redis_manager import redis_manager
+    with patch.object(redis_manager, "get_cache", new_callable=AsyncMock) as mock_redis:
         mock_redis.return_value = "0.05"
         res = await cg.validate_budget("tenant_1", "economy")
         assert res is True
 
 
 @pytest.mark.asyncio
+async def test_validate_budget_redis_unavailable_fallback():
+    cg = CostGuard()
+    from core.cache.redis_manager import redis_manager
+    with patch.object(redis_manager, "get_cache", side_effect=Exception("Redis down")):
+        with patch("core.messaging.event_bus.error_event_bus.emit") as mock_emit:
+            res = await cg.validate_budget("tenant_1", "economy")
+            assert res is False
+            mock_emit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_validate_budget_exhausted():
+    cg = CostGuard()
+    from core.cache.redis_manager import redis_manager
+    with patch.object(redis_manager, "get_cache", new_callable=AsyncMock) as mock_redis:
+        mock_redis.return_value = "0.2"
+        res = await cg.validate_budget("tenant_1", "economy")
+        assert res is False
+
+
+@pytest.mark.asyncio
+async def test_validate_budget_exceeds_cap():
+    cg = CostGuard()
+    from core.cache.redis_manager import redis_manager
+    with patch.object(redis_manager, "get_cache", new_callable=AsyncMock) as mock_redis:
+        mock_redis.return_value = "0.19"
+        res = await cg.validate_budget("tenant_1", "economy")
+        assert res is False
+
+
+@pytest.mark.asyncio
 async def test_record_spend():
     cg = CostGuard()
-    with patch("core.cache.redis_manager.redis_manager.incrbyfloat", new_callable=AsyncMock) as mock_incr:
+    from core.cache.redis_manager import redis_manager
+    with patch.object(redis_manager, "incrbyfloat", new_callable=AsyncMock) as mock_incr:
         await cg.record_spend("tenant_1", "economy", 0.02)
         mock_incr.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_record_spend_failure():
+    cg = CostGuard()
+    from core.cache.redis_manager import redis_manager
+    with patch.object(redis_manager, "incrbyfloat", side_effect=Exception("Redis down")):
+        with patch("core.messaging.event_bus.error_event_bus.emit") as mock_emit:
+            await cg.record_spend("tenant_1", "economy", 0.02)
+            mock_emit.assert_called_once()

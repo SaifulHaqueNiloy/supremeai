@@ -88,3 +88,28 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
 
     # ইভেন্ট লুপ ব্লক না করে স্ট্রিমিং রেসপন্স থ্রো করা
     return StreamingResponse(async_generator(), media_type="text/event-stream")
+
+# ⚡ ৩. Session Intelligence: Get Session DNA
+@router.get("/session-dna")
+async def get_session_dna(request: Request, db=Depends(get_tenant_db)):
+    """Fetch summarized context of the last active session to provide Continuous Thread experience."""
+    session_id = request.headers.get("X-Session-ID") or "default_session"
+    tenant_id = db.tenant_id
+    logger.info(f"🧬 Fetching Session DNA for session: {session_id}, tenant: {tenant_id}")
+    
+    try:
+        # In a full implementation, we'd fetch the latest conversation thread from memory
+        # Here we mock it for the frontend to build the UI
+        dna = {
+            "session_id": session_id,
+            "last_active": "2 hours ago",
+            "summary": "Discussed system architecture, Redis caching layer, and optimized the backend routing logic. You asked about improving test coverage for the cost guard module.",
+            "topics": ["Architecture", "Redis", "Testing"],
+            "memories_count": 4,
+            "context_nodes": ["cost_guard", "cache_layer"]
+        }
+        
+        return {"success": True, "dna": dna}
+    except Exception as e:
+        logger.error(f"Error fetching session DNA: {e}")
+        return {"success": False, "dna": None, "error": str(e)}

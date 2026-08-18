@@ -2,7 +2,11 @@ import * as vscode from 'vscode';
 import axios from 'axios';
 
 export class CrossAiObserverService {
-    private static _backendUrl = 'https://supremeai-api-lhlwyikwlq-uc.a.run.app/api/evolution/learn';
+    private static _getBackendUrl(): string {
+        const config = vscode.workspace.getConfiguration('supremeai');
+        const base = config.get<string>('backendUrl', 'https://supremeai-worker.paykaribazaronline.workers.dev').replace(/\/$/, '');
+        return `${base}/api/evolution/learn`;
+    }
 
     public static initialize(context: vscode.ExtensionContext) {
         console.log('📡 [Cross-AI Observer] Standby Mode.');
@@ -33,7 +37,8 @@ export class CrossAiObserverService {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            await axios.post(this._backendUrl, payload, { headers });
+            const targetUrl = this._getBackendUrl();
+            await axios.post(targetUrl, payload, { headers });
             console.log('💾 [Cross-AI Learned] Intercepted workflow synced to Supreme Database Pool.');
         } catch (error) {
             console.error('❌ Failed to stream cross-AI observed metrics to backend:', error);

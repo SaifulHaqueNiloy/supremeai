@@ -197,6 +197,69 @@ def get_mcp_servers() -> dict[str, Any]:
                 "search_code",
             ],
         },
+        # bangla: ব্রাউজার অটোমেশন, UI ভেরিফিকেশন ও এন্ড-টু-এন্ড রিয়েল টেস্টিং
+        "playwright": {
+            "command": "npx",
+            "args": ["-y", "@playwright/mcp@latest"],
+            "env": {
+                "PLAYWRIGHT_MCP_EXTENSION_TOKEN": os.getenv("PLAYWRIGHT_MCP_EXTENSION_TOKEN", ""),
+            },
+            "allowed_paths": ["/api/v1/gateway"],
+            "allowed_tools": [
+                "navigate",
+                "click",
+                "fill",
+                "screenshot",
+                "evaluate",
+                "get_html",
+                "hover",
+                "press",
+                "wait_for_selector",
+            ],
+        },
+        # bangla: আপ-টু-ডেট লাইভ ডকুমেন্টেশন ও কন্টেক্সট রিট্রিভাল সার্ভার
+        "context7": {
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp@latest"],
+            "env": {
+                "UPSTASH_REDIS_REST_URL": os.getenv("UPSTASH_REDIS_REST_URL", ""),
+                "UPSTASH_REDIS_REST_TOKEN": os.getenv("UPSTASH_REDIS_REST_TOKEN", ""),
+            },
+            "allowed_paths": ["/api/v1/gateway"],
+            "allowed_tools": [
+                "query_docs",
+                "search_context",
+                "get_context",
+            ],
+        },
+        # bangla: ডিপ টেকনিক্যাল রিসার্চ ও ওপেন-সোর্স উইকি নলেজ সার্চ
+        "mcp-deepwiki": {
+            "command": "npx",
+            "args": ["-y", "mcp-deepwiki@latest"],
+            "env": {},
+            "allowed_paths": ["/api/v1/gateway"],
+            "allowed_tools": [
+                "search_wiki",
+                "get_page",
+                "deep_search",
+            ],
+        },
+        # bangla: Node.js/npx বেসড অফিশিয়াল GitHub MCP সার্ভার
+        "github-npx": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_TOKEN", "") or os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN", ""),
+            },
+            "allowed_paths": ["/api/v1/gateway"],
+            "allowed_tools": [
+                "search_repositories",
+                "get_file_contents",
+                "create_issue",
+                "create_pull_request",
+                "create_or_update_file",
+            ],
+        },
     }
     return settings
 

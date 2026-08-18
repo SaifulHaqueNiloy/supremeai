@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 import axios, { AxiosInstance } from 'axios';
+import WebSocket from 'ws';
 import { AuthService } from './AuthService';
 import {
   LearningUpload,
@@ -359,8 +360,95 @@ export class SupremeAIService {
    * Stream chat response
    * POST /api/chat/stream
    */
+  /**
+   * Chat streaming entry point. Prefer the /ws/chat WebSocket (auth sent as the
+   * first message — never in the URL, see security fix FIND-004) and fall back to the
+   * REST SSE endpoint (/api/chat/stream) on any WebSocket failure.
+   */
   async streamChatResponse(request: ChatRequest, onToken?: (token: string) => void): Promise<string> {
+    const authService = AuthService.getInstance();
+    if (authService && authService.isAuthenticated()) {
+      try {
+        return await this.streamChatOverWs(request, onToken);
+      } catch (err: any) {
+        console.warn(`[SupremeAI] /ws/chat failed, falling back to REST: ${err?.message}`);
+      }
+    }
     return this.streamChatCompletion(request, onToken);
+  }
+
+  /**
+   * Stream chat over the /ws/chat WebSocket with auth-first-message handshake.
+   * বাংলা: টোকেন URL-এ নয়, সংযোগের পর প্রথম মেসেজে {"type":"auth","token":...} পাঠানো হয়।
+   */
+  async streamChatOverWs(request: ChatRequest, onToken?: (token: string) => void): Promise<string> {
+    const token = AuthService.getInstance()?.getToken();
+    if (!token) {
+      throw new Error('No auth token available for /ws/chat');
+    }
+
+    const wsUrl = `${this.getWsBaseUrl()}/ws/chat`;
+    const socket = new WebSocket(wsUrl);
+
+    return new Promise<string>((resolve, reject) => {
+      let fullText = '';
+      let settled = false;
+      const finish = (action: 'resolve' | 'reject', value?: any) => {
+        if (settled) return;
+        settled = true;
+        if (action === 'resolve') {
+          resolve(value);
+        } else {
+          reject(value instanceof Error ? value : new Error(String(value)));
+        }
+      };
+
+      const timer = setTimeout(() => {
+        finish('reject', new Error('WebSocket chat timed out'));
+        socket.close();
+      }, 60000);
+
+      socket.on('open', () => {
+        socket.send(JSON.stringify({ type: 'auth', token }));
+      });
+
+      socket.on('message', (data: Buffer | string) => {
+        const text = data.toString();
+        if (text.includes('[DONE]')) {
+          clearTimeout(timer);
+          finish('resolve', fullText);
+          socket.close();
+          return;
+        }
+        if (text.includes('[Error:')) {
+          clearTimeout(timer);
+          finish('reject', new Error(text));
+          socket.close();
+          return;
+        }
+        if (text.trim()) {
+          fullText += text;
+          onToken?.(text);
+        }
+      });
+
+      socket.on('error', (err: any) => {
+        clearTimeout(timer);
+        finish('reject', err);
+      });
+
+      socket.on('close', () => {
+        clearTimeout(timer);
+        finish('resolve', fullText);
+      });
+    });
+  }
+
+  private getWsBaseUrl(): string {
+    const base = (this.config.backendUrl || '').replace(/\/$/, '');
+    if (base.startsWith('https://')) return 'wss://' + base.slice('https://'.length);
+    if (base.startsWith('http://')) return 'ws://' + base.slice('http://'.length);
+    return base;
   }
 
   async streamChatCompletion(request: ChatRequest, onToken?: (token: string) => void): Promise<string> {

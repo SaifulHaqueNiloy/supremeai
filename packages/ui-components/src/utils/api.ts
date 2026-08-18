@@ -16,7 +16,7 @@
 export const getApiBaseUrl = (): string => {
   // SSR বা বিল্ড-টাইমে window থাকে না, তাই কেবল env ভেরিয়েবলের ওপর নির্ভর করতে হয়
   if (typeof window === 'undefined') {
-    return import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    return import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || 'https://supremeai-backend-docker.onrender.com';
   }
 
   if (import.meta.env.VITE_API_BASE) {

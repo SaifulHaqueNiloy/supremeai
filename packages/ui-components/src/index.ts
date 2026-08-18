@@ -1,4 +1,5 @@
 export { ChatBubble } from './ChatBubble';
+export { DashboardShell } from './components/DashboardShell';
 export { getApiBaseUrl } from './utils/api';
 export { SupremeCard } from './components/SupremeCard';
 export { SupremeHeader } from './components/SupremeHeader';

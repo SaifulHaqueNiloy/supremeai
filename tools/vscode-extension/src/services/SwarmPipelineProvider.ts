@@ -19,7 +19,7 @@ interface TrioPipelineResult {
 
 function getBackendUrl(): string {
   const cfg = vscode.workspace.getConfiguration('supremeai');
-  return cfg.get<string>('swarmBackendUrl') || cfg.get<string>('backendUrl') || 'http://localhost:8080';
+  return cfg.get<string>('swarmBackendUrl') || cfg.get<string>('backendUrl') || 'https://supremeai-worker.paykaribazaronline.workers.dev';
 }
 
 /**

@@ -18,7 +18,7 @@ import { AuthService } from './AuthService';
 import { SupremeAIConfig } from '../types';
 
 // ব্যাকএন্ডের প্রোডাকশন এন্ডপয়েন্ট (package.json এর ডিফল্ট ভ্যালুর সাথে মিল রাখা হয়েছে)
-const DEFAULT_BACKEND_URL = 'https://supremeai-api-lhlwyikwlq-uc.a.run.app';
+const DEFAULT_BACKEND_URL = 'https://supremeai-worker.paykaribazaronline.workers.dev';
 
 // টাইপ-সেফ রেস্পন্স কন্ট্রাক্ট
 export interface EvolveCodeResult {
@@ -194,9 +194,3 @@ export function getApiBridge(config?: SupremeAIConfig): SupremeExtensionBridge {
   }
   return _apiBridgeSingleton;
 }
-
-// মডিউল লোডের সময় ইন্সট্যান্স তৈরি করা হয় না — getApiBridge() কল করলেই তৈরি হবে (লেজি ইনিশিয়ালাইজেশন)
-// export const apiBridge = getApiBridge();
-// export const apiBridgeInstance = apiBridge;
-
-

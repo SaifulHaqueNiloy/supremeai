@@ -315,10 +315,10 @@
           "maximum": 2000,
           "description": "Debounce delay for inline completions in milliseconds (higher values reduce CPU usage)."
         },
-                "supremeai.swarmBackendUrl": {
+        "supremeai.swarmBackendUrl": {
           "type": "string",
-          "default": "http://localhost:8080",
-          "description": "SupremeAI Swarm pipeline backend URL. Falls back to backendUrl, then http://localhost:8080."
+          "default": "https://supremeai-worker.paykaribazaronline.workers.dev",
+          "description": "SupremeAI Swarm pipeline backend URL. Falls back to backendUrl."
         },
         "supremeai.enableAgentDetection": {
           "type": "boolean",
@@ -412,6 +412,7 @@
   "devDependencies": {
     "@types/node": "18.x",
     "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "axios": "^1.6.0",
@@ -423,6 +424,7 @@
     "vscode": "^1.1.37"
   },
   "dependencies": {
-    "@supremeai/design-tokens": "workspace:^"
+    "@supremeai/design-tokens": "workspace:^",
+    "ws": "^8.18.0"
   }
 }

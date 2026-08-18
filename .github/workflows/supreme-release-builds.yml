@@ -107,25 +107,33 @@ jobs:
           retention-days: 7
 
       # ----------------------------------------------------
-      # 🪟 3. WINDOWS EXE BUILD (Electron)
+      # 🪟 3. WINDOWS DESKTOP BUILD (Tauri — apps/desktop)
       # ----------------------------------------------------
-      - name: Build Windows EXE
+      - name: Install Rust toolchain
+        if: matrix.target == 'EXE'
+        # বাংলা: Tauri Rust বিল্ডের জন্য stable toolchain দরকার
+        uses: dtolnay/rust-toolchain@stable # TODO(AUDIT-006): SHA-pin করুন
+
+      - name: Rust cache
+        if: matrix.target == 'EXE'
+        uses: swatinem/rust-cache@v2 # TODO(AUDIT-006): SHA-pin করুন
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - name: Build Windows Desktop (Tauri)
         if: matrix.target == 'EXE'
         run: |
           pnpm install --frozen-lockfile --prefer-offline
-          pnpm turbo run build --filter=supremeai-studio-client
-          cd frontend
-          pnpm exec electron-builder --publish=never --config.compression=store
+          pnpm --filter @supremeai/desktop-app tauri build
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload EXE Artifact
         if: matrix.target == 'EXE'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: supremeai-studio-windows-exe
-          path: frontend/release/*.exe
-          compression-level: 0
+          name: supremeai-desktop-windows
+          path: apps/desktop/src-tauri/target/release/bundle/**/*
           retention-days: 7
 
   # ----------------------------------------------------

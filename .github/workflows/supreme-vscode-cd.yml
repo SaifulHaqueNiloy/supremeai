@@ -1,0 +1,63 @@
+name: 🔌 SupremeAI VS Code Extension CD
+
+on:
+  push:
+    tags: ['v*'] # শুধুমাত্র v1.0.0, v2.1.0 ইত্যাদি ট্যাগ পুশ করলে
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to VS Code Marketplace?'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+  PNPM_VERSION: '9.0.0'
+
+jobs:
+  build-and-publish:
+    name: 📦 Build & Publish VSIX
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          lfs: true
+
+      - name: Setup Node & PNPM
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile || pnpm install --prefer-offline
+
+      - name: Build extension
+        run: pnpm turbo run build --filter=supremeai-vscode
+
+      - name: Package VSIX
+        working-directory: tools/vscode-extension
+        run: npx @vscode/vsce package --no-dependencies
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: supremeai-vscode-vsix
+          path: tools/vscode-extension/*.vsix
+          retention-days: 30
+
+      - name: Publish to VS Code Marketplace
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish == 'true'
+        working-directory: tools/vscode-extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx @vscode/vsce publish --no-dependencies

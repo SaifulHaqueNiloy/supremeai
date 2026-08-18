@@ -86,8 +86,7 @@ export class TelemetryTracker extends BaseDisposable {
 
     private static async sendTelemetry(errorId: string, filePath: string, status: string, score: number) {
         try {
-            // Replace with your actual backend URL from config
-            const backendUrl = vscode.workspace.getConfiguration('supremeai').get('backendUrl', 'https://supremeai-api-lhlwyikwlq-uc.a.run.app');
+            const backendUrl = vscode.workspace.getConfiguration('supremeai').get('backendUrl', 'https://supremeai-worker.paykaribazaronline.workers.dev');
 
             await fetch(`${backendUrl}/api/v1/swarm/telemetry/patch-result`, {
                 method: 'POST',

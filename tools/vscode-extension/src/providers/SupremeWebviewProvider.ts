@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
+
 export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'supremeai.sidebarViews';
     constructor(private readonly _extensionUri: vscode.Uri) {}
@@ -10,7 +11,7 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
         _token: vscode.CancellationToken,
     ) {
         webviewView.webview.options = {
-            enableScripts: true, // স্ক্রিপ্ট এক্সিকিউশন এনাবল করা
+            enableScripts: true,
             localResourceRoots: [this._extensionUri]
         };
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
@@ -18,7 +19,6 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
         // 📡 IPC মেসেজ লিসেনার
         this._setupMessageListener(webviewView.webview);
 
-        // resolveWebviewView মেথডের ভেতরে HTML রেন্ডার হওয়ার ঠিক নিচে যোগ করা হলো:
         this._fetchLiveRecipes().then(recipes => {
             webviewView.webview.postMessage({
                 command: 'hydrateRecipes',
@@ -29,9 +29,11 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
 
     private async _fetchLiveRecipes(): Promise<any[]> {
         try {
-            // আমাদের স্ট্রেস টেস্টে গ্রিন প্রমাণিত হওয়া ব্যাকএন্ড এন্ডপয়েন্ট
-            const backendUrl = 'https://supremeai-api-lhlwyikwlq-uc.a.run.app/api/skills';
-            // AuthService থেকে বর্তমান টোকেন ব্যবহার করা হলো (হার্ডকোডেড টোকেন নয়)
+            const config = vscode.workspace.getConfiguration('supremeai');
+            const base = config.get<string>('backendUrl', 'https://supremeai-worker.paykaribazaronline.workers.dev').replace(/\/$/, '');
+            const backendUrl = `${base}/api/skills`;
+
+            // AuthService থেকে বর্তমান টোকেন ব্যবহার করা হলো
             const { AuthService } = require('../services/AuthService');
             const authService = AuthService.getInstance();
             const token = authService?.getToken();
@@ -42,7 +44,7 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
             const response = await axios.get(backendUrl, { headers });
 
             if (response.status === 200 && response.data) {
-                return response.data.skills || response.data; // ডিবি স্কিল অ্যারে
+                return response.data.skills || response.data;
             }
             return [];
         } catch (error) {
@@ -72,7 +74,6 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
                     const vscode = acquireVsCodeApi();
                     const container = document.getElementById('recipe-container');
 
-                    // 📡 এক্সটেনশন থেকে আসা ডাটা শোনার লিসেনার
                     window.addEventListener('message', event => {
                         const message = event.data;
                         if (message.command === 'hydrateRecipes') {
@@ -82,7 +83,7 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
                                 return;
                             }
 
-                            container.innerHTML = ''; // ক্লিয়ার বাফার
+                            container.innerHTML = '';
                             recipes.forEach(recipe => {
                                 const card = document.createElement('div');
                                 card.className = 'recipe-card';
@@ -112,7 +113,6 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
         webview.onDidReceiveMessage(async (message) => {
             switch (message.command) {
                 case 'executeLocalRecipe':
-                    // আমাদের সদ্য ফিক্স করা ক্লাউড রান ব্যাকএন্ড এপিআই-তে টাস্ক পুশ করবে
                     vscode.window.showInformationMessage(`🚀 Triggering Recipe: ${message.recipeName}`);
                     break;
                 case 'showError':
@@ -122,4 +122,3 @@ export class SupremeWebviewProvider implements vscode.WebviewViewProvider {
         });
     }
 }
-

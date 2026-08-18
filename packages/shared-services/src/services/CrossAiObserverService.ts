@@ -11,7 +11,7 @@
 const AGENT_KEYWORDS = ['copilot', 'gemini', 'kilo', 'cline', 'aider', 'continue', 'cursor', 'windsurf'];
 
 export class CrossAiObserverService {
-  private static _backendUrl = 'https://supremeai-api-lhlwyikwlq-uc.a.run.app/api/evolution/learn';
+  private static _backendUrl = 'https://supremeai-worker.paykaribazaronline.workers.dev/api/evolution/learn';
 
   public static initialize(): void {
     // eslint-disable-next-line no-console

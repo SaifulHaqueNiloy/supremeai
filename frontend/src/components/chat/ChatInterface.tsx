@@ -5,6 +5,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { UnifiedChatBubble } from './UnifiedChatBubble';
+import { SessionRestorePrompt } from './SessionRestorePrompt';
 import { apiClient } from '../../services/apiClient';
 
 export const ChatInterface: React.FC = () => {
@@ -61,7 +62,16 @@ export const ChatInterface: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      <SessionRestorePrompt 
+        onRestore={(dna) => {
+          // This would typically rehydrate the zustand store or backend context
+          addMessage({ role: 'assistant', content: `Restoring context: ${dna.summary}` });
+        }}
+        onDismiss={() => {
+          console.log('Session restore dismissed');
+        }}
+      />
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {chatHistory.map((msg) => (

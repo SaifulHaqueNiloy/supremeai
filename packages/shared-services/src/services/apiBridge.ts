@@ -9,7 +9,7 @@ import type { AxiosInstance, AxiosError } from 'axios';
 import type { SupremeAIConfig } from './../types';
 import type { PlatformNotification } from '../platform';
 
-const DEFAULT_BACKEND_URL = 'https://supremeai-api-lhlwyikwlq-uc.a.run.app';
+const DEFAULT_BACKEND_URL = 'https://supremeai-worker.paykaribazaronline.workers.dev';
 
 export interface EvolveCodeResult {
   evolvedCode: string;

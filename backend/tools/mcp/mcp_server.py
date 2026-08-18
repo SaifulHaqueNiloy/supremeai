@@ -7,15 +7,16 @@ from mcp import types
 from mcp.server import Server
 
 from tools.graph_service import GraphService
+from tools.mcp.mcp_mesh_engine import mesh_executor, mesh_registry
 
-# বাংলা মন্তব্য: নলেজ গ্রাফের জন্য একটি অফিসিয়াল MCP সার্ভার ইনিশিয়ালাইজ করা হচ্ছে
+# বাংলা মন্তব্য: নলেজ গ্রাফ ও অ্যাডাপ্টিভ মেশের জন্য একটি অফিসিয়াল MCP সার্ভার ইনিশিয়ালাইজ করা হচ্ছে
 app = Server("supremeai-knowledge-graph")
 graph_service = GraphService()
 
 
 @app.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
-    """বাংলা মন্তব্য: এআই এজেন্টের কাছে এভেইলেবল গ্রাফ টুলসগুলোর তালিকা প্রকাশ করবে।"""
+    """বাংলা মন্তব্য: এআই এজেন্টের কাছে এভেইলেবল গ্রাফ ও অ্যাডাপ্টিভ মেশ টুলসগুলোর তালিকা প্রকাশ করবে।"""
     return [
         types.Tool(
             name="get_skill_dependencies",
@@ -43,12 +44,57 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["start_skill", "end_skill"],
             },
         ),
+        types.Tool(
+            name="semantic_tool_search",
+            description="Performs $0-cost semantic vector search to find only relevant tools for a user prompt.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The user query or intention to find tools for",
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Maximum number of tools to return",
+                        "default": 3,
+                    },
+                },
+                "required": ["query"],
+            },
+        ),
+        types.Tool(
+            name="synthesize_custom_tool",
+            description="JIT synthesizes, validates, and registers a brand new Python MCP tool on the fly.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Unique tool name"},
+                    "code": {"type": "string", "description": "Python source code defining the entrypoint function"},
+                    "entrypoint": {"type": "string", "description": "Function name to call"},
+                    "description": {"type": "string", "description": "Tool functionality description"},
+                },
+                "required": ["name", "code", "entrypoint", "description"],
+            },
+        ),
+        types.Tool(
+            name="execute_smart_tool",
+            description="Executes an MCP tool with automated argument sanitization and self-healing fallback.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "tool_name": {"type": "string", "description": "The name of the tool to execute"},
+                    "arguments": {"type": "object", "description": "Arguments dictionary for the tool"},
+                },
+                "required": ["tool_name"],
+            },
+        ),
     ]
 
 
 @app.call_tool()
 async def handle_call_tool(name: str, arguments: dict | None) -> list[types.TextContent]:
-    """বাংলা মন্তব্য: এআই এজেন্টের রিকোয়েস্ট অনুযায়ী নির্দিষ্ট গ্রাফ কোয়েরি এক্সিকিউট করে কনটেক্সট রিটার্ন করবে।"""
+    """বাংলা মন্তব্য: এআই এজেন্টের রিকোয়েস্ট অনুযায়ী নির্দিষ্ট গ্রাফ ও মেশ কোয়েরি এক্সিকিউট করে কনটেক্সট রিটার্ন করবে।"""
     if not arguments:
         arguments = {}
 
@@ -82,6 +128,41 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 types.TextContent(
                     type="text",
                     text=f"Optimal execution path from {start} to {end}:\n{' -> '.join(path) if path else 'No path found.'}",
+                )
+            ]
+
+        elif name == "semantic_tool_search":
+            query = arguments.get("query", "")
+            top_k = arguments.get("top_k", 3)
+            matched = mesh_registry.router.search_relevant_tools(query=query, top_k=int(top_k))
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Semantic Tool Search Results for '{query}':\n{json.dumps(matched, indent=2)}",
+                )
+            ]
+
+        elif name == "synthesize_custom_tool":
+            tool_name = arguments.get("name", "")
+            code = arguments.get("code", "")
+            entrypoint = arguments.get("entrypoint", "")
+            desc = arguments.get("description", "")
+            res = mesh_registry.synthesize_tool(name=tool_name, code=code, entrypoint=entrypoint, description=desc)
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"JIT Synthesis Result:\n{json.dumps(res, indent=2)}",
+                )
+            ]
+
+        elif name == "execute_smart_tool":
+            target_tool = arguments.get("tool_name", "")
+            target_args = arguments.get("arguments", {})
+            exec_res = await mesh_executor.execute(tool_name=target_tool, arguments=target_args)
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Smart Tool Execution Result:\n{json.dumps(exec_res, indent=2)}",
                 )
             ]
 
