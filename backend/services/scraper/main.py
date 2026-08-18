@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 from browser_agent import BrowserAgent, BrowseRequest
 from security import is_safe_url
+from stagehand_agent import StagehandAgent, stagehand_enabled
 from web_scraper import WebScraper
 
 MAX_CONCURRENCY = int(os.getenv("SCRAPER_MAX_CONCURRENCY", "3"))
@@ -54,6 +55,7 @@ async def health_check():
         "max_concurrency": MAX_CONCURRENCY,
         "timeout_seconds": TIMEOUT_SECONDS,
         "playwright_available": playwright_ok,
+        "stagehand_enabled": stagehand_enabled(),
     }
 
 
@@ -90,6 +92,29 @@ async def recipe(request: RecipeRequest):
         raise HTTPException(status_code=400, detail="SSRF check failed: Unauthorized internal access")
     result = await _agent.execute_recipe(steps=request.steps, initial_url=request.initial_url)
     return result
+
+
+class StagehandRequest(BaseModel):
+    url: str
+    primitive: str = "act"  # act | extract | observe
+    instruction: str = ""
+
+
+@app.post("/browse_stagehand")
+async def browse_stagehand(request: StagehandRequest):
+    """Self-healing browser automation (Stagehand) with Playwright fallback.
+
+    Flagged via ENABLE_STAGEHAND; when disabled the call transparently falls
+    back to the standard Playwright path so behavior is unchanged.
+    """
+    if not request.url:
+        raise HTTPException(status_code=400, detail="URL is required")
+    agent = StagehandAgent(headless=True)
+    if request.primitive == "extract":
+        return await agent.extract(request.url, request.instruction)
+    if request.primitive == "observe":
+        return await agent.observe(request.url, request.instruction)
+    return await agent.act(request.url, request.instruction)
 
 
 _APP_IMPORT_STRING = "main:app"

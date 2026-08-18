@@ -7,7 +7,19 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
-## 2026-08-18 — 🔴 CI Red After Merge: 4 রকম Root Cause + Live Fix
+## 2026-08-18 — 📋 Feature Feasibility Audit: 16 Features Assessed
+
+- **সমস্যা:** প্রজেক্টের প্রস্তাবিত সকল ফিচারের (plan docs + code + deploy config) পূর্ণ প্রজেক্টবিশ্বীয় ভেরিফাইকেশন ছিল না। কিছু ফিচার তত্ত্বাবদ্ধ কিন্তু $0 ফ্রি-টিয়ার ও সার্ভারলেস সীমাবদ্ধতায় টেকনিক্যালি অসম্ভব। কিছু "FIXED" দাবি আছে কিন্তু কোডে এখনও খুলে।
+- **ফিক্স:** `docs/audit_reports/FEATURE_FEASIBILITY_AND_VIABILITY_AUDIT.md`-এ 16টি ফিচারের পূর্ণ অডিট — Viable (10), Non-Viable/Rejected (7), Conditionally Viable/Blocked (5)। কোড-লেভেল প্রমাণ, ডেপ্লয় অ্যার্কি (`render.yaml`), ও `codebase_issues_report.md`-এর ভেরিফাইড খোলা ইস্যুগুলোর ভিত্তিতে সিদ্ধান্ত নেওয়া হয়েছে।
+- **লেসন:** (১) থিওরিটিক্যাল ML ট্রেনিং ফিচার (EWC, FGSM, P2P Federated Learning) সর্বদা $0 ফ্রি-টিয়ার পরিবেশে অসম্ভব — Vector Memory (pgvector/mem0/Graphiti) পিভর্ট করুন। (২) যেকোনো "FIXED"/"Done" দাবি কোড-লেভেল ভেরিফিকেশন ছাড়া বিশ্বস্ত করা যায় না। (৩) 6 সংযুক্ত রেপো তৈরি করলে CI path-filters, pnpm workspace, shared types ভাঙে — মনোরেখা মেনে থাকা (monorepo) ভাগ্য রাখুন। (৪) স্ক্র্যাপার সার্ভিসের জন্য HF Spaces (PRO-only) ও Koyeb (paid-only) ব্যবহার করা যায় না — Render `env: docker` হওয়াই সঠিক পথ।
+
+## 2026-08-18 — 🔴 Tier 0 Confidence Gate: Consolidation Over Duplication
+
+- **সমস্যা:** Needle 2 প্ল্যানটি 4রা স্ট্যান্ডঅ্যালোন `CloudConfidenceGate` ক্লাস প্রস্তাব করে, যাকে `AdvancedModelRouter` + `LatencyAwareWeightedRouter` + `PerformanceOptimizer`-এর সাথে ডুপ্লিকেট। একই routing logic তিন জায়গায় — রক্ষণাবেক্ষণযোগ্য নয়। কাল্পনিক 0.85 threshold কোনো ক্যালিব্রেশন ছাড়া।
+- **ফিক্স:** `route_with_confidence()` পদ্ধতিটি `AdvancedModelRouter`-এ যুক্ত করে `analyze_prompt_complexity()`-এর `overall` স্কোরকে কনফিডেন্স ইনপুট হিসেবে পুনরায় ব্যবহার করা হয়েছে। Tier0Dispatcher-এর 4টি প্যাটার্ন (pypi_search, list_files, regex_format, schema_lookup) pure-Python stdlib-এ ভিত্তি করে — কোনো LLM কল নেই। LLMGateway.acompletion()-এ semantic cache-check এবং cost-guard-এর মধ্যবর্তীতে hook সন্নিবেশ করে, litellm কল একদম বাদ যায়।
+- **লেসন:** Needle 2-এর "confidence score" কনসেপ্টটি আগে থেকেই `analyze_prompt_complexity()`-এ আছে — নতুন ক্লাস না বানিয়ে বিদ্যমান স্কোরকে কালিয়ান্ট ব্যবহার করা উচিত। Hash-vectorize fallback (pure Python feature hashing) 384-ডাইমেনশনাল embedding দেয় কিন্তু sentence-transformers না থাকলে সিমিলারিটি স্কোর 0-0.22 পর্যন্ত খুব কম হয় — মাল্টি-নিডেল cross-score-এর থ্রেশহোল্ড আপেক্ষিক (needle_avg * 0.3) হওয়া দরকার। স্কিমা validation-এর জন্য BaseSkill দুই রকম import path আছে (`core.skills.base` এবং `core.base`) — দুটোতেরাই `parameters` আর `validate_args()` যোগ করা প্রয়োগ। SQLite `ON CONFLICT(file_path)`-এ একই `file_path` দিয়ে store করলে overwrite হয় — টেস্টে আলাদা `file_path` ব্যবহার করতে হবে।
+
+## 2026-08-18 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
 
 - **সমস্যা:** main-এ merge-এর পর GitHub Actions RED — Core CI-র ৩টি job (Frontend pnpm install, Render backend env check, Infisical vault check) + Monorepo Type Sync fail করছিল। Root causes: (১) `pnpm-lock.yaml` root importer-এ ৭টি stale dependency (`cross-env`, `ioredis`, `@types/ioredis`, `@types/node`, `@webcontainer/api`, `dotenv`, `rollup`) package.json-এ না থাকলেও lockfile-এ আটকে ছিল → `ERR_PNPM_OUTDATED_LOCKFILE`। (২) আসল Render backend (`supremeai-backend-docker` = `srv-da07ogmgekts739amqa0`) এ মাত্র 26/99 tracked keys — critical `SUPREMEAI_ADMIN_PASSWORD_HASH` ও `INFISICAL_TOKEN` missing; workflow-র hardcoded fallback ID (`srv-d9d3n58js32c738n79k0`) 404। (৩) Infisical Universal Auth 401 — rotated CLIENT_ID/SECRET Infisical-এ create হয়নি + vault-এ `INFISICAL_CLIENT_SECRET` key-ই ছিল না। (৪) `generate_types.py`-তে `filename.relative_to(Path.cwd())` — CI-র `working-directory: backend`-এ output path `cwd`-র subpath না → ValueError; আর generated ফাইলের header-এ `// Generated: <timestamp>` ছিল → checksum সবসময় drift দেখাত।
 - **ফিক্স:** (১) `pnpm install --lockfile-only` → lockfile resync। (২) Render API (PUT /services/{id}/env-vars/{key}) দিয়ে ২টি critical key যোগ + workflow-র ৮টি dead fallback ID-কে সঠিক ID (`srv-da07ogmgekts739amqa0`) দিয়ে replace। (৩) Infisical API (POST /v3/secrets/raw) দিয়ে vault-এ `INFISICAL_CLIENT_SECRET` যোগ + `verify_infisical_env.py`-এ Universal Auth fail হলে `INFISICAL_TOKEN` fallback। (৪) `relative_to(_REPO_ROOT)` + ৪ জায়গায় timestamp লাইন রিমুভ (deterministic) + UTF-8 reconfigure।
@@ -24,21 +36,3 @@
 - **সমস্যা:** `maintenance_pipeline.yml`-এর `cost-guard-defcon` job-এর `env:` block-এ সঠিক আছিল 6-space indent, কিন্তু `SUPABASE_DATABASE_URL`/`SUPABASE_DATABASE_URL_POOLER`/`SUPREMEAI_JWT_SECRET` লাইনগুলো 11-space indentation-এ লেখা ছিল → YAML parser error (`expected <block end>, but found '<block mapping start>'`)। GitHub Actions-ও এটি catch করত না কারণ job scheduling-এ ফেইল হয়েছিল।
 - **ফিক্স:** 11-space → 6-space indentation ঠিক করা। `yaml.safe_load()` দিয়ে verify করা — VALID।
 - **লেসন:** YAML-এর block mapping-এর indentation strict — editor স্বয়ংক্রিয়ভাবে indent করলে even-width সাপোর্ট দেয় না। CI YAML-এর syntax সর্বদা `yaml.safe_load()` দিয়ে pre-validate করতে হবে, বিশেষ করে যখন একটি বড় pre-existing file-এর মিধ্যে edit করা হয়।
-
-## 2026-08-17 — 🔄 CI Workflow Consolidation (11 → 6 workflows)
-
-- **সমস্যা:** ১টি মূল `ci.yml` + ৪টি ডুপ্লিকেট/অভিরুপ workflow ছিল: (1) `auto-fix.yml` — daily 01:30 UTC স্কিডুল + PR trigger, `maintenance_pipeline.yml`-এর `auto-lint-fix` + `ci-failure-smart-summary` জবগুলোর সম্পূর্ণ ডুপ্লিকেট; (2) `cache-janitor.yml` + `workflow-janitor.yml` — আলাদা workflow-এর জায়গে maintenance task হিসেবে maintenance_pipeline-এ যুক্ত করা যায়; (3) `security-audit.yml` + `security-dast.yml` — দুটোটি weekly security scan, একত্র করা যায়।
-- **ফিক্স:** এই 5টি workflow ডিলিট করে `maintenance_pipeline.yml`-এ তাদের জবগুলো যুক্ত করা (8টি নতুন জব + 6টি নতুন `workflow_dispatch` input)। `pull_request` trigger যোগ করা — gatekeeper ২৪ঘণ্টার সীমা PR trigger-এ bypass করে (`github.event_name != 'schedule'`)। `promotion/staging` PR-এর জন্য `!startsWith(github.head_ref, 'promotion/staging')` গার্ড যোগ করা।
-- **লেসন:** Multiple scheduled workflows একসাথে চালু হলে GitHub Actions free tier minutes ডুপ্লিকেট হয়। Consolidated workflow-এর `if` conditions-এ `github.event_name` check অপরিহার্য — gatekeeper `needs:` dependency only makes sense on `schedule` triggers, PR trigger-এ সরাসরি run করতে হয়।
-
-## 2026-08-17 — 🚨 Dead URL: supremeai-admin.onrender.com is SUSPENDED
-
-- **সমস্যা:** `supremeai-admin.onrender.com` (Admin Backend Render সার্ভিস) স্বামী কর্তৃ SUSPENDED — CORS headers রিটার্ন করে না, কোনো API কল 403 দেয়। 8টি অ্যাক্টিভ ফাইলে 36টি রেফারেন্স ছিল: vite.config.ts, api.test.ts, origin_validator.py, Cloudflare worker, render.admin.yaml, service_preflight_check.py, .env.example, DEPLOYMENT_CHECKLIST.md, scripts/check_admin_console.js। `api.ts` আগেই `supremeai-backend-docker.onrender.com`-এ আপডেট করে ছিল (অথরাইজ্ড), কিন্তু vite.config.ts ও test assertions পুরনো URL ব্যবহার করছিল → test failure + dev proxy 403।
-- **ফিক্স:** সব অ্যাক্টিভ ফাইলে `supremeai-admin.onrender.com` → `supremeai-backend-docker.onrender.com` রিপ্লেস। `_archive/` ও `docs/`-এর রেফারেন্সগুলো ডকুমেন্টেশন-ওয়েজি রাখা (historical reference)।
-- **লেসন:** Production URL পরিবর্তন/সাস্পেনশন হলে সক্রিয় কোড-এ সব রেফারেন্স আপডেট করতে হবে — environment variable, CORS allowlist, health check URLs, test assertions, deployment configs. `api.ts`-এর default আগেই আপডেট করা থাকায় সেটি source of truth হিসেবে ব্যবহার করা যায়।
-
-## 2026-08-17 — ⚠️ Initial Assumption Error: Storybook and Electron are NOT dead code
-
-- **সমস্যা:** প্রাথমিক বিশ্লেষণে `frontend/package.json`-এর Storybook এবং Electron depsকে "dead" বলে ধরা হয়েছিল — কিন্তু `.storybook/` config directory, 3টি `.stories.tsx` ফাইল, `eslint-plugin-storybook` eslint config, এবং Electron `main.js` + `preload.cjs` সবই ফাইলে বিদ্যমান ছিল। CI workflow থেকে রেফারেন্স না থাকাটা মানে হয়নি যে ডেভটা ডেড।
-- **ফিক্স:** স্ক্রিপ্টগুলো রান করতে ব্যবহার করা হয় না, কিন্তু রিমুভ করা হয়নি — ভবিষ্যৎতে রিঅনডার আর্টিফ্যাক্টের জন্য বা লোকালি dev হিসেবে দরকারী হতে পারে। শুধুমাত্র স্পষ্টভাবে মার্কি আর্কাইভড রিপোজিটরিতে রেফারেন্স থাকলে রিমুভ করা উচিত।
-- **লেসন:** কোনো ডিপেন্ডেন্সি/টুল রিমুভ করার সিদ্ধান্ত নেওয়ার আগে সর্বদা কোডবেসে তার কনফিগারেশন ফাইল, স্ক্রিপ্ট, এবং রেফারেন্সগুলো স্ক্যান করতে হবে। `grep` + `glob` ব্যবহার করে সঠিকভাবে যাচাই করুন।

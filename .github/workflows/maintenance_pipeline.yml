@@ -370,7 +370,7 @@ jobs:
           workflow: supreme-core-ci.yml
           branch: main
           name: frontend-dist
-          path: apps/studio-client/dist
+                    path: frontend/dist
         continue-on-error: true
 
       - name: 🩹 Fallback — Build Frontend Locally (if artifact unavailable)

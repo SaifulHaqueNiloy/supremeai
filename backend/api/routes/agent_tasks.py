@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
+from api.dependencies import verify_autonomous_agent_token
 from brain.agent_departments import AgentDepartment
 from brain.autonomous_agent import AutonomousAgent
 from brain.langgraph_agent import SupremeOrchestrator
@@ -24,12 +25,23 @@ monitor = GenerationMonitor()
 
 
 class AgentExecuteRequest(BaseModel):
-    task: str
+    task: str | None = None
+    instruction: str | None = None
     task_type: str = "general"
     role: str | None = None
     department: str | None = None
     autonomous: bool = False
     user_context: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _resolve_task(self):
+        """AUDIT FIX: frontend পাঠায় {instruction}, real schema চায় {task} — alias হ্যান্ডলিং।"""
+        if not self.task:
+            if self.instruction:
+                self.task = self.instruction
+            else:
+                raise ValueError("Either 'task' or 'instruction' is required.")
+        return self
 
 
 class SwarmExecuteRequest(BaseModel):
@@ -55,7 +67,11 @@ def _user_context(request: Request) -> dict[str, Any]:
 
 
 @agent_router.post("/execute", response_model=AgentExecuteResponse)
-async def execute_agent(request: Request, body: AgentExecuteRequest):
+async def execute_agent(
+    request: Request,
+    body: AgentExecuteRequest,
+    user: dict = Depends(verify_autonomous_agent_token),
+):
     _user_context(request)
     if body.autonomous:
         run = autonomous_agent.run(body.task, body.task_type)

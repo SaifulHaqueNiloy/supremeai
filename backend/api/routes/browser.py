@@ -602,6 +602,28 @@ async def extract(url: str, extraction_prompt: str):
     return await extractor.extract_data(url, extraction_prompt)
 
 
+class StagehandRequest(BaseModel):
+    url: str
+    primitive: str = "act"  # act | extract | observe
+    instruction: str = ""
+
+
+@router.post("/browse_stagehand", dependencies=[Depends(require_admin_token)])
+async def browse_stagehand(request: StagehandRequest):
+    """Self-healing browser automation via Stagehand (flagged via ENABLE_STAGEHAND).
+
+    বাংলা মন্তব্য: ফ্ল্যাগ বন্ধ থাকলে স্ট্যান্ডার্ড Playwright-backed browse-এ
+    graceful fallback করে — কোনো behavior পরিবর্তন হয় না (zero regression)।
+    """
+    if not settings.enable_stagehand:
+        logger.info("Stagehand disabled (ENABLE_STAGEHAND=false); using standard browse fallback.")
+        return await browse(BrowseRequest(url=request.url, action="fetch"))
+    if not _SCRAPER_URL:
+        return {"success": False, "error": "Scraper service not configured"}
+    result = await _proxy_to_scraper("browse_stagehand", request.model_dump())
+    return result
+
+
 # বাংলা মন্তব্য: ইন-অ্যাপ ব্রাউজার proxy (public) — বাহিরের সাইট X-Frame-Options/frame-ancestors দিয়ে
 # iframe ব্লক করে, তাই সার্ভার-সাইড ফেচ করে iframe-এ রেন্ডার করা হয়। SSRF প্রতিরোধ জরুরি।
 _BLOCKED_NETS = [

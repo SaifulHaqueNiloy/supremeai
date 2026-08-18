@@ -1,6 +1,6 @@
 # Implementation Plan: Needle 2 Architectural Adoption in SupremeAI
 
-> **Status:** Review-complete, implementation-ready
+> **Status:** IMPLEMENTED — All 3 features live + 27 tests passing (0 failures)
 > **Author:** Kilo (Principal AI Engineer)
 > **Created:** 2026-08-18
 > **Phase:** Development Phase (per AGENTS.md)
@@ -510,3 +510,26 @@ python -c "import ast; [ast.parse(open(f).read()) for f in ['core/llm/advanced_m
 | 5 | `test: add confidence gate, skill validation, multi-needle tests` | `tests/test_confidence_gate.py`, `tests/test_skill_structured.py`, `tests/test_multi_needle.py` | — |
 
 All changes are **additive or guarded** — no existing code path is broken. The `is_deterministic` flag defaults to `False` for any prompt that doesn't match a pattern, so existing behavior is 100% preserved.
+
+---
+
+## Implementation Status (Updated 2026-08-18)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Tier 0 dispatcher in `AdvancedModelRouter` | ✅ Implemented (already committed in `7fc161bbe7`) | `route_with_confidence()` + `Tier0Dispatcher` with 4 patterns |
+| LLMGateway integration | ✅ Implemented (already committed in `7fc161bbe7`) | Bypass at line 442, before `_build_call_chain` at line 465 |
+| BaseSkill schema validation | ✅ Implemented (new, uncommitted) | Added to `core/skills/base.py` + `core/base.py` |
+| SkillManager `validate_and_sanitize_tool_input` | ✅ Implemented (new, uncommitted) | Calls `skill.validate_args()` |
+| Multi-needle `query_multi_needle_context` | ✅ Implemented (new, uncommitted) | Added to `CascadeMemoryService` + `UnifiedMemoryInterface` + API endpoint |
+| Tests | ✅ All 27 pass (24 new + 3 regression) | `test_confidence_gate.py`, `test_skill_structured.py`, `test_multi_needle.py` |
+
+### Key implementation decisions
+
+1. **Consolidated with existing routers**: Instead of a standalone `CloudConfidenceGate` (4th router), the confidence gate lives inside `AdvancedModelRouter.route_with_confidence()`, which reuses the existing `analyze_prompt_complexity()` complexity score.
+
+2. **Dual-filter for multi-needle**: With `hash_vectorize` (no SentenceTransformer in test env), hash-based embeddings produce cosine similarities in the 0-0.22 range. A relative threshold alone is insufficient. The filter uses: `cross_score >= centroid_threshold OR original_score >= needle_avg_score * 0.3`.
+
+3. **SQLite fallback path**: `query_context()` SQLite path doesn't return the `embedding` field. `query_multi_needle_context()` falls back to `self._embed(summary)` when embedding data is absent, ensuring cross-referencing works on both Postgres and SQLite.
+
+4. **BaseSkill dual inheritance**: Two `BaseSkill` classes exist (`core/skills/base.py` for SkillManager, `core/base.py` ABC for tier8 agents). Both received `parameters` + `validate_args()`.

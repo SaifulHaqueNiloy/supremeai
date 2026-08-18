@@ -7,7 +7,7 @@ echo "🛡️ SyncGuard Agent: Initiating Pre-Push Audit..."
 
 # We run the agent from the backend folder using python
 export PYTHONPATH=backend:$PYTHONPATH
-python -m backend.src.agents.syncguard.syncguard_agent
+python -m backend.agents.syncguard.syncguard_agent
 
 if [ $? -ne 0 ]; then
     echo "❌ [SyncGuard] System Audit FAILED. Push aborted."

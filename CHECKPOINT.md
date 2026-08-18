@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-17 22:30 UTC
+- **Date:** 2026-08-18 01:28 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,35 +10,191 @@
   - (see git log for details)
 
 ## Files Changed
-  - `tools/vscode-extension/_INDEX.md`
-  - `backend/api/routes/unified_memory_api.py`
-  - `backend/core/unified_memory.py`
-  - `backend/services/memory_service.py`
-  - `backend/api/routers.py`
-  - `backend/memory/checkpoint_resume.py`
-  - `tools/vscode-extension/README.md`
-  - `backend/core/llm/llm_gateway.py`
-  - `backend/core/llm/advanced_model_router.py`
-  - `backend/evolution/__init__.py`
-  - `backend/src/agents/syncguard/syncguard_agent.py`
-  - `tools/vscode-extension/src/providers/SupremeAIAdminDashboardProvider.ts`
-  - `CHECKPOINT.md`
+  - `backend/core/llm/__init__.py`
+  - `env_key_scan_results.json`
   - `backend/core/__init__.py`
+  - `_archive/old-workflows/developer_agent.md`
+  - `backend/tools/checkpoint_manager.py`
+  - `_archive/old-workflows/_production-readiness.yml`
+  - `_archive/old-workflows/_final-summary.yml`
+  - `backend/agents/syncguard/syncguard_agent.py`
+  - `src/infrastructure/self-healing-engine.ts`
+  - `CHECKPOINT.md`
+  - `_archive/old-workflows/_preflight.yml`
+  - `docs/guidelines/05-BACKEND-ARCHITECTURE.md`
+  - `src/infrastructure/resilient-executor.ts`
+  - `scripts/generate_codebase_markdown.py`
+  - `scripts/sync_all_render_secrets.py`
+  - `src/services/realtime/WebSocketManager.ts`
+  - `src/infrastructure/error-bus.ts`
+  - `backend/api/routes/unified_memory_api.py`
+  - `backend/integrations/openhands_adapter.py`
+  - `backend/integrations/graphiti_adapter.py`
+  - `_archive/hf-space/D`
+  - `_archive/old-workflows/legal_expert.md`
+  - `_archive/old-workflows/_check-render-quota.yml`
+  - `fetch_logs.py`
+  - `admin-dashboard-after-fix.png`
+  - `scripts/_gen_a11y.py`
+  - `docs/guidelines/03-CI-CD-PIPELINE.md`
+  - `_archive/old-workflows/_deploy-frontend.yml`
+  - `_archive/old-workflows/001-zero-bloat-capsule-for-telegram.md`
   - `FEATURE_TRACKING_LOG.md`
-  - `docs/plan_needle2_implementation.md`
-  - `tools/vscode-extension/README_BN.md`
-  - `TODO.md`
+  - `_archive/old-workflows/sentinel_agent.md`
+  - `scripts/patch_render.py`
+  - `_archive/old-workflows/supreme-mobile-cd.yml`
+  - `_archive/old-workflows/trading_expert.md`
+  - `backend/core/config_validation.py`
+  - `scripts/find_duplicate_files.py`
   - `backend/core/errors/error_remediation.py`
+  - `backend/memory/checkpoint_resume.py`
+  - `scripts/generate_md.py`
+  - `frontend/src/services/agentService.ts`
+  - `scripts/_analyze_project.py`
+  - `scripts/_remaining_fixes.py`
+  - `backend/evolution/__init__.py`
+  - `_archive/hf-space/server.py`
+  - `scripts/test_bangla.py`
+  - `backend/api/routes/agent_tasks.py`
+  - `backend/core/llm/advanced_model_router.py`
+  - `firebase-admin-dashboard.png`
+  - `backend/agents/syncguard/__init__.py`
+  - `_archive/Dockerfile.ci`
+  - `parse_env.ps1`
+  - `backend/api/routes/browser.py`
+  - `tools/firebase_functions_v1/.env.example`
+  - `_archive/hf-space/Dockerfile`
+  - `.github/workflows/monorepo_ci_cd.yml`
+  - `_archive/pnpm-workspace.yaml`
+  - `backend/tools/repo_map.py`
+  - `backend/api/routes/agents.py`
+  - `_archive/app_user.py`
+  - `backend/services/llm/providers.py`
+  - `scripts/_fix_issues.py`
+  - `docs/audit_reports/FEATURE_FEASIBILITY_AND_VIABILITY_AUDIT.md`
+  - `backend/api/routes/agent.py`
+  - `_archive/old-workflows/architect_agent.md`
+  - `tools/vscode-extension/src/providers/SupremeAIAdminDashboardProvider.ts`
+  - `_archive/old-workflows/performance_guardian_agent.md`
+  - `backend/pyproject.toml`
+  - `_archive/app_admin.py`
+  - `.github/workflows/release-builds.yml`
+  - `_archive/old-workflows/k6-load-testing.yml`
+  - `scripts/export_codebase.py`
+  - `_archive/java-worker/pom.xml`
+  - `backend/core/unified_memory.py`
+  - `docs/guidelines/04-SECURITY-HARDENING.md`
+  - `_archive/old-workflows/maintenance_pipeline.yml`
+  - `backend/integrations/__init__.py`
+  - `_archive/old-workflows/research_assistant.md`
+  - `scripts/generate_full_codebase_md.py`
+  - `backend/services/memory_service.py`
+  - `backend/integrations/mem0_adapter.py`
+  - `scripts/_writer.py`
+  - `_archive/turbo.json`
+  - `cleanup.py`
+  - `scripts/generate_ai_codebase_docs.py`
+  - `_archive/old-workflows/weekly-fine-tuning.yml`
+  - `scripts/col`
+  - `src/services/external-api.ts`
+  - `backend/api/routes/websocket_agent.py`
+  - `backend/core/skill_manager.py`
+  - `_archive/java-worker/src/main/resources/application.yml`
+  - `_archive/cloudflare-worker/src/index.js`
+  - `_archive/old-workflows/auto-fix.yml`
+  - `_archive/old-workflows/learner_agent.md`
+  - `fix_pkg.cjs`
+  - `scripts/update_render.py`
+  - `tools/vscode-extension/README_BN.md`
+  - `backend/api/routers.py`
+  - `apps/mobile/lib/providers/orchestration_provider.dart`
+  - `_archive/cloudflare-worker/wrangler.toml`
+  - `docs/plan/INNOVATION_TOOLS_ADOPTION_PLAN.md`
+  - `_archive/old-workflows/001-machine-readable-schemas-for-agents.md`
+  - `backend/services/scraper/main.py`
+  - `backend/core/config_fields.py`
+  - `REAL_TESTING_LOG.md`
+  - `_archive/old-workflows/_deploy-render.yml`
+  - `_archive/old-workflows/cost_auditor_agent.md`
+  - `_archive/tests/test_app_isolation.py`
+  - `_archive/old-workflows/_frontend-test.yml`
+  - `backend/SUPREMEAI_FW_ADOPTION_PLAN.md`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `tools/vscode-extension/README.md`
+  - `backend/services/scraper/stagehand_agent.py`
+  - `_archive/old-workflows/supreme-release-builds.yml`
+  - `apps/mobile/lib/main.dart`
+  - `docs/governance/rerun-checklist.md`
+  - `backend/core/llm/constrained_decoder.py`
+  - `scripts/generate_codebase_single_markdown.py`
+  - `scripts/codebase_to_md.py`
+  - `docs/guidelines/06-FRONTEND-DEVELOPMENT.md`
+  - `generate_secrets.py`
+  - `scripts/_final_fix.py`
+  - `_archive/old-workflows/_post-deploy-verify.yml`
+  - `.github/workflows/maintenance_pipeline.yml`
+  - `scripts/test_read.py`
+  - `scripts/git/pre-push`
+  - `_archive/worker_main.py`
+  - `_archive/old-workflows/ui_compliance_agent.md`
+  - `docs/audit_reports/SECURITY_COMPLIANCE_AUDIT_2026-08-18.md`
+  - `backend/agents/syncguard/tools.py`
+  - `fix_eslint_any.py`
+  - `_archive/old-workflows/supreme-core-ci.yml`
+  - `docs/guidelines/02-TESTING-STRATEGY.md`
+  - `scripts/sync_render.py`
+  - `docs/guidelines/01-PROJECT-SETUP.md`
+  - `fix_mypy.py`
+  - `backend/api/routes/syncguard.py`
+  - `TODO.md`
+  - `cov_analysis.ipynb`
+  - `_archive/old-workflows/_security.yml`
+  - `backend/core/llm/llm_gateway.py`
+  - `scripts/_gen_fb.py`
+  - `scripts/find_duplicate_tests.py`
+  - `tools/vscode-extension/_INDEX.md`
+  - `src/security/jit-defense.ts`
+  - `backend/services/scraper/pyproject.toml`
+  - `docs/FEATURE_FEASIBILITY_ANALYSIS.md`
+  - `backend/flowchart.png`
+  - `src/infrastructure/circuit-breaker.ts`
+  - `_archive/old-workflows/cache-janitor.yml`
+  - `src/config/index.ts`
+  - `_archive/old-workflows/medical_expert.md`
+  - `render_deployment_failure_logs.md`
+  - `scripts/sync_firebase_render.py`
+  - `_archive/old-workflows/_backend-test.yml`
+  - `_archive/old-workflows/monorepo_ci_cd.yml`
+  - `_archive/render.yaml`
+  - `backend/core/base.py`
+  - `scripts/_scan_errors.py`
+  - `_archive/old-workflows/connector_agent.md`
+  - `fix_electron.cjs`
+  - `_archive/old-workflows/_build-backend.yml`
+  - `backend/core/skills/base.py`
+  - `LESSONS_LEARNED.md`
+  - `_archive/old-workflows/guardian_expert.md`
+  - `_archive/Dockerfile`
+  - `docs/plan_needle2_implementation.md`
+  - `backend/agents/syncguard/config.yaml`
+  - `scripts/_complete_remaining.py`
 
 ## Pending (Carry Forward)
-- **MED:** Supabase `ai_memory` টেবিলে ভেক্টর স্কিমা ভ্যালিডেশন এবং `memory_write.py` লাইভ ভেক্টর ইনসার্ট টেস্ট।
-- **MED:** Render backend-docker এ missing envs (`SUPABASE_DATABASE_URL`, `STRIPE_*`, `REDIS_URL`) সিঙ্ক করা।
-- **LOW:** `scripts/checkpoint_update.py` git pre-commit hook হিসেবে setup করা।
+- **P0:** Remove `bypass_rbac` flag from `backend/core/security/rbac.py:172-174`
+- **P0:** Fix WebSocket token leakage in `apps/mobile/lib/main.dart:72-73` (send via header, not URL)
+- **P1:** Resolve AUDIT-018 (broken client contracts for `/skills/catalog`, `/voice/voices`, `/files/{path}`)
+- **P1:** Wire `CostGuard.validate_budget()` into `task_router.py` (AUDIT-015)
+- **P1:** Remediate 54 CVEs in 9 packages (AUDIT-014)
+- **P1:** Replace dangerous `os.system('rm -rf /')` test mocks in 4 test files (SEC-004)
+- **P2:** Add logging to 95 bare `except Exception:` clauses (QUAL-001)
+- **P2:** Replace 300+ `print()` with structured logging in production code (QUAL-002)
+- **P2:** Pin 151 GitHub Actions to SHA commits (AUDIT-006)
+- **P3:** Standardize Python version in CI, remove unused imports, use pathlib.Path in scripts
 
 ## Recent Lessons Learned
-  - 2026-08-17 — 🔄 CI Workflow Consolidation (11 → 6 workflows)
-  - 2026-08-17 — 🚨 Dead URL: supremeai-admin.onrender.com is SUSPENDED
-  - 2026-08-17 — ⚠️ Initial Assumption Error: Storybook and Electron are NOT dead code
+  - 2026-08-18 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
+  - 2026-08-17 — 🕷️ Scraper Microservice: SSRF Hole + Dead Code + Test Coverage Gap
+  - 2026-08-17 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.

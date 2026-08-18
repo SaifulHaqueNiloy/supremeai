@@ -75,14 +75,17 @@ class SettingsValidationMixin:
         if "pytest" in sys.modules or os.getenv("CI") == "true":
             return self  # Test isolation — boot-time check skip
 
-        # Docs auth fallback for production/staging
+        # Docs auth fallback for production/staging — SECURITY FIX (AUDIT):
+        # hardcoded static password "supreme-admin-2026-prod" বাদ।
+        # ফিল্ড-ভ্যালিডেটর (validate_docs_password) আগেই secure random password জেনারেট করে;
+        # এখানে দ্বিতীয় fallback-এও একই secure random ব্যবহার করা হয়, কোনো known constant নয়।
         if self.env in {"production", "staging"} and self.docs_auth_enabled:
             pwd = self.docs_password.get_secret_value() if self.docs_password else ""
             if not pwd:
                 logger.warning(
-                    f"⚠️ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing — using fallback production password."
+                    f"⚠️ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing — using auto-generated secure password."
                 )
-                self.docs_password = SecretStr("supreme-admin-2026-prod")
+                self.docs_password = SecretStr(secrets.token_urlsafe(32))
 
         # Boot-time LLM secret check — silent failure প্রতিরোধ করে
         if self.env in {"production", "staging"}:

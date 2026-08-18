@@ -29,14 +29,23 @@ def _words(text: str) -> set[str]:
 
 
 def _asyncio_run(coro: Any) -> Any:
-    """Run an async coroutine from a sync context safely (no nested loop)."""
+    """Run an async coroutine from a sync context safely (no nested loop).
+
+    When called from within an async event loop (where asyncio.run() would raise),
+    we schedule the coroutine on the running loop and block until it completes,
+    so upstream operations are NOT silently dropped.
+    """
     try:
         asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(coro)
-    # nested loop → যেকোনো sync caller-এ পাল কিউ করা হয় না; upstream-কে async-থেকেই call করুন
-    logger.warning("GraphitiMemoryAdapter: called from async context — returning None.")
-    return None
+
+    # nested loop → cannot use asyncio.run() here without deadlocking;
+    # raise so the caller knows to use the upstream async API directly.
+    raise RuntimeError(
+        "GraphitiMemoryAdapter.add_episode() called from async context — "
+        "use await self._graphiti.build_episode(text) directly in async code."
+    )
 
 
 class GraphitiMemoryAdapter:

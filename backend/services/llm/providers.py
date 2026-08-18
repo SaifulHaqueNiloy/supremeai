@@ -91,6 +91,13 @@ class MoonshotProvider:
                 {"type": "json_object"} if kwargs.get("json_mode", False) else None
             ),  # AI-098: Structured outputs
         }
+        # বাংলা মন্তব্য: json_schema kwarg (OpenAI-style response_format JSON schema)
+        # যোগ করা হয়েছে — Outlines-inspired constrained generation।
+        if kwargs.get("json_schema"):
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": kwargs["json_schema"],
+            }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
 
@@ -162,6 +169,11 @@ class DeepSeekProvider:
             "stream": stream,
             "response_format": ({"type": "json_object"} if kwargs.get("json_mode", False) else None),
         }
+        if kwargs.get("json_schema"):
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": kwargs["json_schema"],
+            }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
 

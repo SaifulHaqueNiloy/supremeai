@@ -16,6 +16,14 @@ playwright = ">=1.45.0"
 loguru = ">=0.7.0"
 pydantic = ">=2.0.0"
 
+[tool.poetry.group.stagehand]
+optional = true
+
+[tool.poetry.group.stagehand.dependencies]
+# বাংলা মন্তব্য: Stagehand self-healing browser primitives। ENABLE_STAGEHAND
+# env দিয়ে চালু করতে হয়। SDK lazy import করা হয়, তাই না থাকলেও সার্ভিস crash করে না।
+stagehand = "*"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

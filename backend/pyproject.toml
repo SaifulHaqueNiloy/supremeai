@@ -92,6 +92,11 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.44.0"
 # নামে, তার জন্য torch-কে explicit `https://download.pytorch.org/whl/cpu` source-এ
 # পিন করে `poetry lock` রিজেনারেট করা।
 pydantic-ai = "^2.31.0"
+# বাংলা মন্তব্য: Tree-sitter Repo Map (tools/repo_map.py) — কোডবেসের কম্প্যাক্ট
+# আর্কিটেকচার ম্যাপ জেনারেট করে। language-pack prebuilt grammar দেয় (compile লাগে না,
+# zero-cost)। tree_sitter lazy import করা হয়, তাই প্যাকেজ না থাকলেও app crash করে না।
+tree-sitter = "^0.26"
+tree-sitter-language-pack = ">=0.1"
 langfuse = "^4.14.4"
 [tool.poetry.group.ml]
 optional = true

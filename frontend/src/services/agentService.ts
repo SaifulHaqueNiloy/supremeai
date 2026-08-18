@@ -13,8 +13,10 @@ export interface AgentTask {
 export const agentService = {
   // বাংলা মন্তব্য: agentId প্যারামিটার বর্তমানে ব্যবহৃত হচ্ছে না, তাই tsc/eslint warning এড়াতে '_' প্রিফিক্স দেওয়া হলো।
   executeAgentTask: async (_agentId: string, instruction: string): Promise<AgentTask> => {
+    // বাংলা মন্তব্য: AUDIT FIX — backend real schema ({task}) এর সাথে মিলিয়ে payload পাঠানো হয়।
     return apiClient.post<AgentTask>('/api/v1/agents/execute', {
-      instruction,
+      task: instruction,
+      task_type: 'general',
     });
   },
 

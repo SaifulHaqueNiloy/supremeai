@@ -244,5 +244,8 @@ class SettingsFieldsMixin:
     # ── Microservices Config — env-driven ─────────────────────────────────────
     # বাংলা মন্তব্য: Scraper microservic-এর লিভ সেনেন, Cloudflare Worker থেকে proxy করে।
     scraper_service_url: str = Field(default="", validation_alias="SCRAPER_SERVICE_URL")
+    # বাংলা মন্তব্য: Stagehand self-healing browser primitives (scraper microservice)।
+    # Default False — পুরনো Playwright path ব্যবহার করে, zero regression।
+    enable_stagehand: bool = Field(default=False, validation_alias="ENABLE_STAGEHAND")
     # Media microservic-এর URL (Cloud Run)
     media_service_url: str = Field(default="", validation_alias="MEDIA_SERVICE_URL")

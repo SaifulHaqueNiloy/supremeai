@@ -106,6 +106,21 @@ class LLMGateway:
         # Performance Optimization: Lazy initialize cache on demand to prevent circular imports
         self._cache = None
         self._router_obj = None
+        self._langfuse: Any = None
+
+    def start_trace(self, name: str, metadata: dict[str, Any] | None = None) -> Any | None:
+        """Start a Langfuse trace for cross-agent span propagation.
+
+        Pass the returned trace object to spawned agents so their litellm calls
+        inherit the parent trace context. Returns None if Langfuse is unavailable.
+        """
+        if self._langfuse is None:
+            return None
+        try:
+            return self._langfuse.trace(name=name, metadata=metadata or {})
+        except Exception as exc:
+            logger.debug(f"[LLMGateway] Langfuse trace start failed: {exc}")
+            return None
 
     @property
     def _router(self):
@@ -213,11 +228,30 @@ class LLMGateway:
         callbacks_success = []
         callbacks_failure = []
 
-        # Integrate Langfuse Observability
+        # Integrate Langfuse Observability — initialize actual Langfuse client
         from ..config import settings
+
         if getattr(settings, "LANGFUSE_PUBLIC_KEY", None) and getattr(settings, "LANGFUSE_SECRET_KEY", None):
-            callbacks_success.append("langfuse")
-            callbacks_failure.append("langfuse")
+            try:
+                from langfuse import Langfuse  # type: ignore[import-not-found]
+
+                self._langfuse = Langfuse(
+                    public_key=settings.LANGFUSE_PUBLIC_KEY,
+                    secret_key=settings.LANGFUSE_SECRET_KEY,
+                    run_name="supremeai-gateway",
+                )
+                logger.info("[LLMGateway] Langfuse observability initialized.")
+            except ImportError:
+                logger.warning(
+                    "[LLMGateway] Langfuse keys present but 'langfuse' package not installed — "
+                    "observability disabled."
+                )
+                self._langfuse = None
+            except Exception as exc:
+                logger.warning(f"[LLMGateway] Langfuse init failed: {exc}")
+                self._langfuse = None
+        else:
+            self._langfuse = None
 
         def success_callback(kwargs, response_obj, start_time, end_time):
             try:

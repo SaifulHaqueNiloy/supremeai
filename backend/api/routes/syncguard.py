@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from src.agents.syncguard.syncguard_agent import SyncGuardAgent
+from agents.syncguard.syncguard_agent import SyncGuardAgent
 
 router = APIRouter(
     prefix="/syncguard",

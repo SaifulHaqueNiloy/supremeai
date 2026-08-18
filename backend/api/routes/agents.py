@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/agents", tags=["specialized-agents"])
@@ -40,10 +41,24 @@ class SummarizeRequest(BaseModel):
     style: str = "apa"
 
 
+# বাংলা মন্তব্য: AUDIT FIX (2026-08) — আগে nonexistent `agents.legal_agent` ইত্যাদি
+# import করে এই endpoints 500 দিত। এখন real `tools.ai_agents.*` ব্যবহার করা হয়;
+# যেসব sub-action-এর real implementation নেই সেগুলো 501 (Not Implemented) return করে —
+# কোনো fake/misleading data বা crash নয়।
+
+_IMPLEMENTED_AGENTS = {"legal", "medical", "trading"}
 
 
-# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.listAgents()
-# GET /api/v1/agents কল করে (আগে এই endpoint ছিল না, 404 পেত)।
+def _not_implemented(action: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=501,
+        content={
+            "error": "not_implemented",
+            "detail": f"'{action}' is not implemented yet. Use the main chat/orchestration API instead.",
+        },
+    )
+
+
 @router.get("/", tags=["specialized-agents"])
 async def list_agents():
     """List all available specialized agent types."""
@@ -57,130 +72,85 @@ async def list_agents():
     }
 
 
-# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.getAgentStatus()
-# GET /api/v1/agents/{agentId}/status কল করে (আগে এই endpoint ছিল না, 404 পেত)।
 @router.get("/{agent_id}/status", tags=["specialized-agents"])
 async def get_agent_status(agent_id: str):
-    """Get status of a specific agent by its ID."""
+    """Get status of a specific agent — honest, no hardcoded 'active'."""
+    if agent_id in _IMPLEMENTED_AGENTS:
+        return {"agent_id": agent_id, "status": "available"}
     return {
         "agent_id": agent_id,
-        "status": "active",
-        "last_activity": "2026-01-01T00:00:00Z",
+        "status": "unavailable",
+        "detail": "No backend implementation registered for this agent type.",
     }
+
+
 @router.post("/legal/analyze")
 async def legal_analyze(payload: LegalAnalysisRequest):
     try:
-        from agents.legal_agent import LegalAgent
+        from tools.ai_agents.legal_agent import LegalAgent
 
         agent = LegalAgent()
-        result = agent.analyze(payload.document_text, doc_type=payload.doc_type)
-        return result
+        result = await agent.analyze_clause(clause_text=payload.document_text, jurisdiction="BD")
+        return {"success": True, "result": result}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=f"Legal analysis service unavailable: {exc}") from exc
 
 
 @router.post("/medical/symptoms")
 async def medical_symptoms(payload: SymptomRequest):
     try:
-        from agents.medical_agent import MedicalAgent
+        from tools.ai_agents.medical_agent import MedicalAgent
 
         agent = MedicalAgent()
-        result = agent.symptom_analysis(payload.symptoms, age=payload.age, medical_history=payload.medical_history)
-        return result
+        context = {"age": payload.age, "medical_history": payload.medical_history}
+        result = await agent.analyze_symptoms(payload.symptoms, context=context)
+        return {"success": True, "result": result}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=f"Medical analysis service unavailable: {exc}") from exc
 
 
 @router.post("/medical/drug-interactions")
 async def medical_drug_interactions(payload: DrugInteractionRequest):
-    try:
-        from agents.medical_agent import MedicalAgent
-
-        agent = MedicalAgent()
-        result = agent.drug_interaction(payload.medications)
-        return result
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("medical/drug-interactions")
 
 
 @router.post("/trading/analyze")
 async def trading_analyze(symbol: str):
     try:
-        from agents.trading_agent import TradingAgent
+        from tools.ai_agents.trading_agent import TradingAgent
 
         agent = TradingAgent()
-        return agent.analyze_trend(symbol)
+        result = await agent.generate_strategy(prompt=f"Analyze trading trend for {symbol}")
+        return {"success": True, "result": result}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=f"Trading analysis service unavailable: {exc}") from exc
 
 
 @router.post("/trading/buy")
 async def trading_buy(payload: TradeRequest):
-    try:
-        from agents.trading_agent import TradingAgent
-
-        agent = TradingAgent()
-        return agent.buy(payload.symbol, payload.quantity, price=payload.price)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("trading/buy")
 
 
 @router.post("/trading/sell")
 async def trading_sell(payload: TradeRequest):
-    try:
-        from agents.trading_agent import TradingAgent
-
-        agent = TradingAgent()
-        return agent.sell(payload.symbol, payload.quantity, price=payload.price)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("trading/sell")
 
 
 @router.get("/trading/portfolio")
 async def trading_portfolio():
-    try:
-        from agents.trading_agent import TradingAgent
-
-        agent = TradingAgent()
-        return agent.portfolio()
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("trading/portfolio")
 
 
 @router.post("/research/search")
 async def research_search(payload: ResearchRequest):
-    try:
-        from agents.research_assistant import ResearchAssistant
-
-        assistant = ResearchAssistant()
-        results = assistant.search(payload.query, source=payload.source, max_results=payload.max_results)
-        return {
-            "query": payload.query,
-            "source": payload.source,
-            "papers": results,
-            "count": len(results),
-        }
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("research/search")
 
 
 @router.post("/research/summarize")
 async def research_summarize(payload: SummarizeRequest):
-    try:
-        from agents.research_assistant import ResearchAssistant
-
-        assistant = ResearchAssistant()
-        return assistant.summarize(payload.paper)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("research/summarize")
 
 
 @router.post("/research/cite")
 async def research_cite(payload: SummarizeRequest):
-    try:
-        from agents.research_assistant import ResearchAssistant
-
-        assistant = ResearchAssistant()
-        return {"citation": assistant.citations(payload.paper, style=payload.style)}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _not_implemented("research/cite")

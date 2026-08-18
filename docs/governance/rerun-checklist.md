@@ -64,7 +64,7 @@ curl -s "$BASE/api/v1/metrics/usage" | jq .
 - [ ] `docker ps` shows expected containers
 
 ## 9. CI/CD
-- [ ] Push to `main` triggers `.github/workflows/monorepo_ci_cd.yml`
+- [ ] Push to `main` triggers `.github/workflows/supreme-core-ci.yml` (type-sync jobs included there)
 - [ ] All jobs pass: `detect-changes`, `backend-test`, `studio-build`, `deploy-backend`, `deploy-frontend`
 - [ ] Discord notification sent on success/failure
 

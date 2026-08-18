@@ -6,12 +6,19 @@ through a single, consistent API.
 """
 
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional
+from pydantic import BaseModel
+from typing import Optional
 
 from core.unified_memory import unified_memory
 # Removed auth import as it seems to be non-standard or located elsewhere
 
 router = APIRouter(prefix="/unified-memory", tags=["Unified Memory"])
+
+class MultiNeedleQueryRequest(BaseModel):
+    query: str
+    top_k: int = 5
+    session_id: Optional[str] = None
+    needles_count: int = 3
 
 @router.post("/long-term/store")
 # @auth_required([Role.USER, Role.ADMIN]) # Removed for import test
@@ -57,6 +64,22 @@ async def query_long_term_memory_endpoint(
     """
     results = unified_memory.query_long_term_memory(query=query, top_k=top_k, session_id=session_id)
     return {"results": results}
+
+
+@router.post("/long-term/multi-needle-query")
+async def multi_needle_query_endpoint(req: MultiNeedleQueryRequest):
+    """Multi-hop cross-referenced context retrieval from long-term memory.
+
+    Evaluates semantic coherence across multiple memory snippets, filtering
+    out irrelevant 'haystack' noise to return dense, verified 'needles'.
+    """
+    results = unified_memory.query_multi_needle_context(
+        query=req.query,
+        top_k=req.top_k,
+        session_id=req.session_id,
+        needles_count=req.needles_count,
+    )
+    return {"results": results, "count": len(results)}
 
 
 # Example endpoints for short-term memory and checkpoints could be added here similarly.

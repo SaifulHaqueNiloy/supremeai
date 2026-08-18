@@ -28,11 +28,13 @@ def _tokens(text: str) -> list[str]:
 class Mem0MemoryAdapter:
     """Self-learning memory layer bridging optional mem0 with zero-cost fallback."""
 
-    def __init__(self) -> None:
+    def __init__(self, persist_path: str | None = None) -> None:
         self.enabled_flag = _ENABLED_FLAG
         self._memory = None
+        self._persist_path = persist_path
         self._entries: list[dict[str, Any]] = []
-        # flag + dependency দুটোই লাগবে আসল mem0 ব্যবহার করতে
+        self._load_fallback()
+        # flag + dependency দুটোই লাগবে আসল mem0 ব্যবহার কর�ে
         if flag(_ENABLED_FLAG) and import_available("mem0"):
             try:
                 from mem0 import Memory  # type: ignore[import-not-found]
@@ -65,7 +67,43 @@ class Mem0MemoryAdapter:
         # zero-cost fallback: atomic snippet caching
         text = " ".join(m.get("content", "") for m in messages).strip()
         if text:
-            self._entries.append({"text": text, "tokens": _tokens(text)})
+            entry = {"text": text, "tokens": _tokens(text)}
+            self._entries.append(entry)
+            self._save_fallback()
+
+    def _load_fallback(self) -> None:
+        """Load persisted fallback entries from disk (JSONL)."""
+        if not self._persist_path:
+            return
+        try:
+            import json as _json
+            from pathlib import Path
+
+            p = Path(self._persist_path)
+            if p.exists():
+                self._entries = []
+                for line in p.read_text(encoding="utf-8").splitlines():
+                    if line.strip():
+                        self._entries.append(_json.loads(line))
+                logger.info(f"Mem0MemoryAdapter: loaded {len(self._entries)} fallback entries.")
+        except Exception as exc:
+            logger.debug(f"Mem0MemoryAdapter: fallback load failed: {exc}")
+
+    def _save_fallback(self) -> None:
+        """Persist fallback entries to disk (JSONL) for survival across restarts."""
+        if not self._persist_path:
+            return
+        try:
+            import json as _json
+            from pathlib import Path
+
+            p = Path(self._persist_path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with p.open("w", encoding="utf-8") as f:
+                for entry in self._entries[-1000:]:
+                    f.write(_json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception as exc:
+            logger.debug(f"Mem0MemoryAdapter: fallback save failed: {exc}")
 
     def search(self, query: str, user_id: str = "default", top_k: int = 3) -> list[str]:
         """Return the most relevant past memories by hybrid (semantic/keyword) ranking."""

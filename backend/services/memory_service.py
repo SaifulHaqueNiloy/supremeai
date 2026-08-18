@@ -383,6 +383,104 @@ class CascadeMemoryService:
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:top_k]
 
+    def query_multi_needle_context(
+        self,
+        prompt: str,
+        top_k: int = 5,
+        session_id: str | None = None,
+        needles_count: int = 3,
+    ) -> list[dict[str, Any]]:
+        """Multi-hop cross-referencing: retrieve top_k, then score subsets for coherence.
+
+        Instead of returning isolated similarity-ranked results, this method
+        evaluates cross-references across multiple memory snippets — filtering
+        out irrelevant "haystack" noise and returning dense, verified context
+        "needles".
+
+        Algorithm:
+        1. Retrieve top_k candidates via standard vector similarity (query_context)
+        2. Select top `needles_count` most relevant as primary needles
+        3. Compute the centroid of primary needle embeddings
+        4. Score remaining candidates by cross-similarity to the centroid
+        5. Only keep candidates whose cross-similarity >= 50% of query-to-centroid score
+        6. Merge needles + filtered candidates, re-sort by score, return top_k
+        """
+        raw_results = self.query_context(prompt=prompt, top_k=top_k, session_id=session_id)
+        if len(raw_results) <= 1:
+            return raw_results
+
+        needles = raw_results[:needles_count]
+        candidates = raw_results[needles_count:]
+        if not candidates:
+            return raw_results
+
+        # Collect primary needle vectors — fall back to re-embedding summary
+        # when the embedding field is not included in query_context results (SQLite path)
+        needle_vectors: list[list[float]] = []
+        for needle in needles:
+            emb = needle.get("embedding")
+            if emb:
+                try:
+                    vec = json.loads(emb) if isinstance(emb, str) else emb
+                    needle_vectors.append(vec)
+                except (json.JSONDecodeError, TypeError):
+                    vec = self._embed(needle.get("summary", ""))
+                    needle_vectors.append(vec)
+            else:
+                # SQLite path: embedding not returned — re-derive from summary
+                needle_vectors.append(self._embed(needle.get("summary", "")))
+
+        if not needle_vectors:
+            # Cannot compute centroid — fallback to raw results
+            return raw_results
+
+        # Centroid of primary needles
+        vec_dim = len(needle_vectors[0])
+        centroid = [0.0] * vec_dim
+        for vec in needle_vectors:
+            for i in range(min(len(vec), vec_dim)):
+                centroid[i] += vec[i]
+        centroid = [c / len(needle_vectors) for c in centroid]
+
+        # Query-to-centroid similarity (the "cluster coherence" threshold)
+        query_vector = self._embed(prompt)
+        query_centroid_score = self._cosine_similarity(query_vector, centroid)
+
+        # Average needle cross-similarity — used as an adaptive threshold
+        needle_scores = [self._cosine_similarity(self._embed(n.get("summary", "")), centroid) for n in needles]
+        needle_avg_cross = sum(needle_scores) / len(needle_scores) if needle_scores else 0.0
+
+        # Average original score of needles (from query_context cosine similarity)
+        needle_avg_score = sum(n.get("score", 0.0) for n in needles) / len(needles)
+
+        filtered: list[dict[str, Any]] = []
+        for candidate in candidates:
+            emb = candidate.get("embedding")
+            if emb:
+                try:
+                    cand_vec = json.loads(emb) if isinstance(emb, str) else emb
+                except (json.JSONDecodeError, TypeError):
+                    cand_vec = self._embed(candidate.get("summary", ""))
+            else:
+                # SQLite path: re-derive from summary text
+                cand_vec = self._embed(candidate.get("summary", ""))
+
+            cross_score = self._cosine_similarity(cand_vec, centroid)
+            cand_orig_score = candidate.get("score", 0.0)
+
+            # Dual filter: (1) semantic coherence with needle cluster,
+            # (2) relevance to original query (score not far below needle avg)
+            coherence_threshold = max(query_centroid_score * 0.5, needle_avg_cross * 0.5)
+            score_threshold = needle_avg_score * 0.3
+            passes_coherence = cross_score >= coherence_threshold
+            passes_relevance = cand_orig_score >= score_threshold
+            if passes_coherence or passes_relevance:
+                filtered.append(candidate)
+
+        combined = needles + filtered
+        combined.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+        return combined[:top_k]
+
     # Backward-compatible aliases for test compatibility
     def store(self, user_id: str, agent_id: str, content: str, metadata: dict[str, Any]) -> None:
         """Backward-compatible alias for store_memory."""

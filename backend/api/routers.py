@@ -106,6 +106,9 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.cloud_mesh", ""),
     ("api.routes.events", "/api"),
     ("api.routes.payments", ""),
+    # বাংলা মন্তব্য: AUDIT FIX — real /api/v1/agents/execute (agent_tasks.py) optional-রেজিস্টার।
+    # ব্যর্থ হলে optional-loader warn করে, app crash করে না।
+    ("api.routes.agent_tasks", ""),
     ("api.routes.maintenance", "/api/v1"),
     ("api.routes.sandbox_api", ""),
     ("api.routes.pr_review_api", ""),

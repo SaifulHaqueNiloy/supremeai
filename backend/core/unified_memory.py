@@ -71,6 +71,30 @@ class UnifiedMemoryInterface:
             logger.error(f"Failed to query long-term memory: {e}")
             return []
 
+    def query_multi_needle_context(
+        self,
+        query: str,
+        top_k: int = 5,
+        session_id: Optional[str] = None,
+        needles_count: int = 3
+    ) -> List[Dict[str, Any]]:
+        """Multi-hop cross-reference context retrieval across long-term memory.
+
+        Filters out irrelevant 'haystack' noise by evaluating semantic coherence
+        across multiple retrieved memory snippets — returns only dense, verified
+        context 'needles' suitable for efficient LLM consumption.
+        """
+        try:
+            return self.long_term_memory.query_multi_needle_context(
+                prompt=query,
+                top_k=top_k,
+                session_id=session_id,
+                needles_count=needles_count,
+            )
+        except Exception as e:
+            logger.error(f"Failed to query multi-needle context: {e}")
+            return []
+
     # --- Short-term Memory (Context Window) ---
     def store_short_term_memory(
         self,

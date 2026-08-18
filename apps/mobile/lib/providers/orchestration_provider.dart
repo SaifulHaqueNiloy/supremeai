@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+    // AUDIT FIX (FIND-005): Raw LLM API keys must never be held or called from
+// calls prohibited; routing is backend-only.
 
 
 enum OrchestrationErrorType {
@@ -282,28 +283,12 @@ class OrchestrationProvider with ChangeNotifier {
       }
     }
 
-    if (geminiKey != null && geminiKey.isNotEmpty) {
-      try {
-        final model = GenerativeModel(model: activeModel ?? 'gemini-1.5-flash', apiKey: geminiKey);
-        final content = [Content.text('As an AI Orchestrator for SupremeAI, analyze this requirement and provide a structured JSON response with "tasks", "priority", and "estimatedComplexity": $requirement')];
-        final response = await model.generateContent(content);
-        if (response.text != null) {
-          final jsonStr = _extractJson(response.text!);
-          _lastResult = {
-            'status': 'COMPLETED',
-            'mode': 'NativeGemini',
-            'answer': response.text,
-            ...json.decode(jsonStr),
-          };
-          await _cacheResult(_lastResult!);
-          _isLoading = false;
-          notifyListeners();
-          return;
-        }
-      } catch (e) {
-        _error = OrchestrationError(message: 'Native Gemini failed: $e', type: OrchestrationErrorType.unknown);
-      }
-    }
+    // AUDIT FIX (FIND-005): Raw LLM API keys must never be held or called from
+    // the mobile client. All model routing happens server-side via the backend
+    // orchestrator above (/api/orchestrate/requirement). If that backend path
+    // failed, we fall through to the honest offline/online error below instead
+    // of silently calling Google directly with a user-supplied Gemini key.
+
 
     if (!_isOnline) {
       await _queueOfflineOperation({

@@ -72,9 +72,14 @@ class ConnectionManager:
         self._pref_tasks: dict[str, set[asyncio.Task]] = {}
 
     async def connect(self, websocket: WebSocket):
-        await websocket.accept()
+        # AUDIT FIX: accept made idempotent.
+        # first-message auth flow accepts before connect; double-accept raises.
+        # Only accept when still in CONNECTING state.
+        from starlette.websockets import WebSocketState
+        if websocket.application_state == WebSocketState.CONNECTING:
+            await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info("🟢 [WS] New Client Connected to Neural Engine.")
+        logger.info("[WS] New Client Connected to Neural Engine.")
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
@@ -83,18 +88,16 @@ class ConnectionManager:
 
     async def _authenticate(self, websocket: WebSocket) -> dict | None:
         # বাংলা মন্তব্য: P0 Fix — Anonymous WebSocket access সম্পূর্ণ নিষিদ্ধ।
-        # Token না থাকলে বা invalid হলে WS_1008 (Policy Violation) দিয়ে তাৎক্ষণিক reject।
-        # আগে anonymous user-কে {"sub": "anonymous"} দিয়ে LLM access দেওয়া হতো — এটি বন্ধ করা হয়েছে।
+        # Token query param-এ থাকলে verify করা হয়; না থাকলে None (endpoint-এ প্রথম
+        # মেসেজ auth-flow চেষ্টা করা হয়)। URL-এ token না পাঠিয়ে auth-message-এ
+        # পাঠানোই preferred (mobile main.dart সেভাবেই পাঠায়)।
         token = websocket.query_params.get("token")
         if not token:
-            logger.warning("[WS] Rejected unauthenticated WebSocket connection — no token provided.")
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
         try:
             return verify_token(token)
         except Exception as e:
             logger.warning(f"[WS] Invalid token — closing WebSocket connection: {e}")
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
 
     def track_pref_task(self, user_id: str, task: asyncio.Task) -> None:
@@ -119,18 +122,55 @@ async def websocket_chat_endpoint(
     """
     Real-time bidirectional WebSocket for Token-by-Token streaming and Agentic Tool execution.
     Supports both plain text (Flutter) and JSON payloads with base64 images (Web Chat).
+
+    AUDIT FIX: Authentication now works two ways:
+      1. URL query ?token= (legacy/backward-compatible)
+      2. First JSON message after connect: {"type":"auth","token":...} (mobile flow)
+    Token is never required in URL — first-message auth is preferred to avoid
+    log / referrer leakage.
     """
-    # বাংলা মন্তব্য: _authenticate ব্যর্থ হলে সরাসরি return — double-close এড়াতে
+    # Step 1: query-param token (legacy)
     auth_payload = await manager._authenticate(websocket)
+    # `first_message` is read-and-consumed when used for auth; None otherwise.
+    first_message: str | None = None
+
     if not auth_payload:
-        return
+        # Step 2: No query token — accept then require an auth JSON message (mobile flow)
+        await websocket.accept()
+        try:
+            first_message = await asyncio.wait_for(websocket.receive_text(), timeout=15)
+        except (asyncio.TimeoutError, WebSocketDisconnect):
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
 
+        try:
+            parsed_first = json.loads(first_message) if first_message else None
+        except json.JSONDecodeError:
+            parsed_first = None
+
+        if isinstance(parsed_first, dict) and parsed_first.get("type") == "auth":
+            candidate = parsed_first.get("token")
+            if candidate:
+                try:
+                    auth_payload = verify_token(candidate)
+                except Exception as e:
+                    logger.warning(f"[WS] Invalid token in auth message: {e}")
+                    auth_payload = None
+            if not auth_payload:
+                logger.warning("[WS] Rejected unauthenticated WebSocket connection — invalid auth message token.")
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                return
+            # Auth message consumed — subsequent messages are chat prompts.
+        else:
+            logger.warning("[WS] Rejected unauthenticated WebSocket connection — no auth token provided.")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+    # Connection is now authenticated (accept happened via connect() or earlier).
     await manager.connect(websocket)
-
-    # সেশন হিস্ট্রি মেইনটেইন করার জন্য চ্যাট অবজেক্ট তৈরি করা
+    # Session history
     chat_history = []
 
-    # বাংলা মন্তব্য: কানেক্টেড ইউজারের পূর্ববর্তী প্রেফারেন্স ডাটাবেজ থেকে রিড করা হচ্ছে
     user_id = auth_payload.get("sub", "unknown")
     db = SupabaseDB()
     user_pref_record = await asyncio.to_thread(db.get_user_preferences, user_id)
@@ -139,23 +179,24 @@ async def websocket_chat_endpoint(
 
     try:
         while True:
-            # ১. ফ্রন্টএন্ড থেকে ইউজার প্রম্পট রিসিভ করা
+            # 1. Receive user prompt
             user_message = await websocket.receive_text()
 
-            # ==========================================
-            # 👁️ MULTI-MODAL PAYLOAD PARSING
-            # ==========================================
+            # MULTI-MODAL PAYLOAD PARSING
             try:
                 payload = json.loads(user_message)
-                text_prompt = payload.get("text", "")
+                content_to_send = payload.get("text", "")
                 image_base64 = payload.get("image_base64", None)
-
-                content_to_send = text_prompt
                 if image_base64:
-                    logger.info("📸 [WS] Image payload received and decoded.")
-
-            except json.JSONDecodeError:
+                    logger.info("[WS] Image payload received and decoded.")
+            except (json.JSONDecodeError, ValueError):
                 content_to_send = user_message
+
+            # AUDIT FIX: skip empty payloads to avoid wasted LLM calls / crashes.
+            if not isinstance(content_to_send, str) or not content_to_send.strip():
+                logger.warning("[WS] Empty message received — skipping LLM call.")
+                await websocket.send_text("\n[DONE]")
+                continue
 
             try:
                 chat_history.append({"role": "user", "content": content_to_send})
@@ -170,7 +211,9 @@ async def websocket_chat_endpoint(
 
                 messages_payload = [{"role": "system", "content": system_instructions}, *chat_history]
 
-                response_stream = await llm_gateway.acompletion(prompt=messages_payload, task_type="chat", stream=True)
+                response_stream = await llm_gateway.acompletion(
+                    prompt=messages_payload, task_type="chat", stream=True
+                )
 
                 response_content = ""
                 async for chunk in response_stream:
@@ -182,14 +225,13 @@ async def websocket_chat_endpoint(
                 chat_history.append({"role": "assistant", "content": response_content})
 
                 await websocket.send_text("[DONE]")
-                logger.info("✅ [AI]: Stream completed.")
+                logger.info("[AI]: Stream completed.")
 
                 pref_task = asyncio.create_task(analyze_and_save_preferences(user_id, content_to_send))
                 manager.track_pref_task(user_id, pref_task)
 
             except Exception as e:
-                # বাংলা মন্তব্য: P1 Fix — সকল exception সম্পূর্ণ log করা হচ্ছে।
-                # আগে শুধু logger.info("❌ [GENERATION ERROR]") ছিল — production debugging অসম্ভব ছিল।
+                # P1 Fix: log full exception for production debugging.
                 logger.error(
                     f"[WS] Neural pipeline error for user={user_id}: {type(e).__name__}: {e}",
                     exc_info=True,
@@ -199,8 +241,7 @@ async def websocket_chat_endpoint(
     except WebSocketDisconnect:
         pass
     finally:
-        # বাংলা মন্তব্য: P1 Fix — finally block নিশ্চিত করে যে যেকোনো কারণে exit হলেও
-        # (WebSocketDisconnect, Exception, বা CancelledError) zombie task cancel হবে এবং disconnect হবে।
+        # P1 Fix: ensure zombie tasks are cancelled and connection cleaned up on any exit path.
         manager.disconnect(websocket)
         if user_id:
             manager.cancel_pref_tasks(user_id)

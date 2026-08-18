@@ -88,7 +88,8 @@ class OpenHandsAdapter:
                 timeout=self.timeout,
             )
             resp.raise_for_status()
-            events = resp.json() if isinstance(resp.json(), list) else []
+            parsed = resp.json()
+            events = parsed if isinstance(parsed, list) else []
             for ev in events:
                 text = self._extract_text(ev)
                 if text:

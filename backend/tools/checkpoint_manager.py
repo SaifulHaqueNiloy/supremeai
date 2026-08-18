@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
@@ -18,17 +18,24 @@ _PG_SCHEMA = """
         task_id TEXT PRIMARY KEY,
         step_index INTEGER,
         state TEXT,
+        step_log TEXT,
         created_at TIMESTAMPTZ DEFAULT now(),
         resumed BOOLEAN DEFAULT FALSE
     )
 """
 
+# বাংলা মন্তব্য: পুরনো টেবিলে step_log কলাম না থাকতে পারে — নিরাপদে যোগ করি।
+_PG_ADD_STEP_LOG = """
+    ALTER TABLE task_checkpoints ADD COLUMN IF NOT EXISTS step_log TEXT
+"""
+
 _UPSERT_SQL = """
-    INSERT INTO task_checkpoints (task_id, step_index, state, resumed)
-    VALUES (%s, %s, %s, %s)
+    INSERT INTO task_checkpoints (task_id, step_index, state, step_log, resumed)
+    VALUES (%s, %s, %s, %s, %s)
     ON CONFLICT (task_id) DO UPDATE SET
         step_index = EXCLUDED.step_index,
         state = EXCLUDED.state,
+        step_log = EXCLUDED.step_log,
         created_at = now()
 """
 
@@ -40,6 +47,9 @@ class Checkpoint:
     state: dict[str, Any]
     created_at: str
     resumed: bool = False
+    # বাংলা মন্তব্য: Event-sourced step log — প্রতিটি স্টেপের ইনপুট/আউটপুট/ts,
+    # যাতে ক্র্যাশের পর ঠিক যে স্টেপে আটকেছিল সেখান থেকে resume করা যায় (Zero Redundant Work)।
+    step_log: list[dict[str, Any]] = field(default_factory=list)
 
 
 class CheckpointManager:
@@ -63,6 +73,7 @@ class CheckpointManager:
         elif pooled_pg.is_available():
             try:
                 pooled_pg.execute(_PG_SCHEMA)
+                pooled_pg.execute(_PG_ADD_STEP_LOG)
                 if CheckpointManager._batcher is None:
                     CheckpointManager._batcher = WriteBehindBatcher(
                         name="task_checkpoints", flush_interval=1.0, max_batch=100
@@ -95,21 +106,37 @@ class CheckpointManager:
                     task_id TEXT PRIMARY KEY,
                     step_index INTEGER,
                     state TEXT,
+                    step_log TEXT,
                     created_at TEXT,
                     resumed INTEGER DEFAULT 0
                 )
             """)
+            # বাংলা মন্তব্য: পুরনো DB-তে step_log কলাম থাকতে পারে না — নিরাপদে যোগ করি।
+            try:
+                conn.execute("ALTER TABLE checkpoints ADD COLUMN step_log TEXT")
+            except Exception:
+                pass
             conn.commit()
         finally:
             conn.close()
 
-    def save(self, task_id: str, step_index: int, state: dict[str, Any]) -> bool:
+    def save(
+        self,
+        task_id: str,
+        step_index: int,
+        state: dict[str, Any],
+        step_log: list[dict[str, Any]] | None = None,
+    ) -> bool:
+        step_log = step_log or []
         if self.mode == "pg":
             try:
                 # `resumed` intentionally not reset here — ON CONFLICT preserves
                 # whatever value is already in the row, matching prior SQLite semantics
                 # where an existing row's `resumed` flag was read-then-reused.
-                CheckpointManager._batcher.submit(_UPSERT_SQL, (task_id, step_index, json.dumps(state), False))
+                CheckpointManager._batcher.submit(
+                    _UPSERT_SQL,
+                    (task_id, step_index, json.dumps(state), json.dumps(step_log), False),
+                )
                 return True
             except Exception as exc:
                 logger.error(f"Failed to save Postgres checkpoint: {exc}")
@@ -125,13 +152,14 @@ class CheckpointManager:
 
                 cursor.execute(
                     """
-                    INSERT OR REPLACE INTO checkpoints (task_id, step_index, state, created_at, resumed)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT OR REPLACE INTO checkpoints (task_id, step_index, state, step_log, created_at, resumed)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """,
                     (
                         task_id,
                         step_index,
                         json.dumps(state),
+                        json.dumps(step_log),
                         datetime.now(UTC).isoformat(),
                         resumed,
                     ),
@@ -155,6 +183,7 @@ class CheckpointManager:
                     "task_id": task_id,
                     "step_index": step_index,
                     "state": json.dumps(state),
+                    "step_log": json.dumps(step_log),
                     "created_at": datetime.now(UTC).isoformat(),
                     "resumed": resumed,
                 }
@@ -172,7 +201,7 @@ class CheckpointManager:
                 # process, e.g. crash-recovery retry loop) must see its own write.
                 CheckpointManager._batcher.flush()
                 rows = pooled_pg.query(
-                    "SELECT task_id, step_index, state, created_at, resumed FROM task_checkpoints WHERE task_id = %s",
+                    "SELECT task_id, step_index, state, step_log, created_at, resumed FROM task_checkpoints WHERE task_id = %s",
                     (task_id,),
                 )
                 if not rows:
@@ -182,8 +211,9 @@ class CheckpointManager:
                     task_id=row[0],
                     step_index=row[1],
                     state=json.loads(row[2]),
-                    created_at=str(row[3]),
-                    resumed=bool(row[4]),
+                    created_at=str(row[4]),
+                    resumed=bool(row[5]),
+                    step_log=json.loads(row[3]) if row[3] else [],
                 )
                 pooled_pg.execute(
                     "UPDATE task_checkpoints SET resumed = TRUE WHERE task_id = %s",
@@ -198,21 +228,33 @@ class CheckpointManager:
             try:
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT task_id, step_index, state, created_at, resumed FROM checkpoints WHERE task_id = ?",
-                    (task_id,),
-                )
-                row = cursor.fetchone()
+                try:
+                    cursor.execute(
+                        "SELECT task_id, step_index, state, step_log, created_at, resumed FROM checkpoints WHERE task_id = ?",
+                        (task_id,),
+                    )
+                    row = cursor.fetchone()
+                    has_log = True
+                except sqlite3.OperationalError:
+                    # legacy DB without step_log column
+                    cursor.execute(
+                        "SELECT task_id, step_index, state, created_at, resumed FROM checkpoints WHERE task_id = ?",
+                        (task_id,),
+                    )
+                    row = cursor.fetchone()
+                    has_log = False
                 if not row:
                     conn.close()
                     return None
 
+                step_log = json.loads(row[3]) if has_log and row[3] else []
                 cp = Checkpoint(
                     task_id=row[0],
                     step_index=row[1],
                     state=json.loads(row[2]),
-                    created_at=row[3],
-                    resumed=bool(row[4]),
+                    created_at=row[4] if has_log else row[3],
+                    resumed=bool(row[5] if has_log else row[4]),
+                    step_log=step_log,
                 )
                 cursor.execute("UPDATE checkpoints SET resumed = 1 WHERE task_id = ?", (task_id,))
                 conn.commit()
@@ -237,6 +279,7 @@ class CheckpointManager:
                 state=json.loads(data["state"]),
                 created_at=data["created_at"],
                 resumed=bool(data.get("resumed", False)),
+                step_log=json.loads(data["step_log"]) if data.get("step_log") else [],
             )
             # Mark as resumed
             doc_ref.update({"resumed": True})
@@ -307,6 +350,44 @@ class CheckpointManager:
         except Exception as exc:
             logger.error(f"Failed to list Firestore checkpoints: {exc}")
             return []
+
+    # ── Event-sourced step replay (Tree-sitter/Durable-execution enhancement) ──
+    def log_step(self, task_id: str, step: dict[str, Any], step_index: int | None = None) -> bool:
+        """Append one event-sourced step to the task's step_log and bump step_index.
+
+        বাংলা মন্তব্য: প্রতিটি স্টেপের ইনপুট/আউটপুট এখানে সেভ হয়, যাতে ক্র্যাশের পর
+        ঠিক যে স্টেপে আটকেছিল সেখান থেকে resume করা যায় (Zero Redundant Work)।
+        """
+        cp = self.load(task_id)
+        state = cp.state if cp else {}
+        log = list(cp.step_log) if cp else []
+        idx = step_index if step_index is not None else (cp.step_index if cp else 0)
+        entry = dict(step)
+        entry.setdefault("index", idx)
+        log.append(entry)
+        return self.save(task_id, idx, state, step_log=log)
+
+    def get_step_log(self, task_id: str) -> list[dict[str, Any]]:
+        """Return the event-sourced step log for a task (empty if none)."""
+        cp = self.load(task_id)
+        return list(cp.step_log) if cp else []
+
+    def replay_from(
+        self, task_id: str, from_index: int
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]] | None:
+        """Return (state, pending_steps) where pending_steps have index >= from_index.
+
+        Caller replays only the pending steps instead of re-running the whole task.
+        """
+        cp = self.load(task_id)
+        if cp is None:
+            return None
+        pending = [s for s in cp.step_log if s.get("index", 0) >= from_index]
+        return cp.state, pending
+
+    def resume_interrupted_tasks(self) -> list[str]:
+        """Crash-recovery hook: task_ids with a checkpoint that were never resumed."""
+        return [c["task_id"] for c in self.list_all() if not c.get("resumed")]
 
     def clear(self, task_id: str) -> bool:
         if self.mode == "pg":

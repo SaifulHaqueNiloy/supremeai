@@ -26,6 +26,10 @@ from typing import Any
 
 from loguru import logger
 
+from core.llm.constrained_decoder import (
+    SKILL_SCHEMA,
+    get_constrained_decoder,
+)
 from core.llm.llm_gateway import llm_gateway
 from core.mcp_client import MCPRegistryClient
 from core.skills.base import BaseSkill
@@ -43,6 +47,22 @@ class SkillManager:
         self._skills: dict[str, BaseSkill] = {}
         self.mcp_client = MCPRegistryClient()
         logger.info("SkillManager initialized for dynamic skill dispatch.")
+
+    async def validate_and_sanitize_tool_input(self, skill_name: str, args: dict[str, Any]) -> dict[str, Any]:
+        """Validate tool arguments against the skill's registered parameter schema.
+
+        Enforces strict JSON schema compliance for all agent skills (SyncGuard,
+        MarketplaceAgent, CheckpointManager), preventing hallucinated or malformed
+        tool inputs from causing downstream runtime failures.
+
+        Raises ValueError if a required parameter is missing or a type
+        coercion fails. Returns a sanitized dict with only schema-defined keys.
+        """
+        skill = await self.get_skill(skill_name)
+        if hasattr(skill, "validate_args"):
+            return skill.validate_args(args)
+        logger.warning(f"Skill '{skill_name}' has no parameter schema — skipping validation")
+        return args
 
     def register_skill(self, skill: BaseSkill, name: str | None = None):
         """
@@ -194,16 +214,21 @@ class SkillManager:
         )
 
         raw_text = response.get("text", "{}").strip()
-        if raw_text.startswith("```"):
-            lines = raw_text.splitlines()
-            raw_text = "\n".join(lines[1:-1] if lines.startswith("```") and lines[-1].startswith("```") else lines)
-            raw_text = "\n".join(lines).strip()
-
+        # বাংলা মন্তব্য: পুরোনো কোড `lines.startswith("```")` ব্যবহার করত list-এ (যা list method নয়) —
+        # ফলে কোডব্লক স্ট্রিপিং কখনো কাজ করত না। এখন ConstrainedJSONDecoder দিয়ে
+        # repair + schema validation এক সাথে করা হয়।
+        decoder = get_constrained_decoder()
+        corrective_prompt = (
+            "You previously returned malformed JSON. Please re-output ONLY a valid JSON object "
+            "matching this exact schema: " + json.dumps(SKILL_SCHEMA, ensure_ascii=False)
+        )
         try:
-            new_skill = json.loads(raw_text)
+            new_skill = decoder.decode_with_schema(
+                raw_text, SKILL_SCHEMA, max_retries=2, corrective_prompt=corrective_prompt
+            )
             logger.success(f"Synthesized new skill schema: '{new_skill.get('skill_name')}'")
             return new_skill
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to parse synthesized skill schema: {e!s}")
             raise ValueError("Invalid JSON configuration from Skill Factory.")
 
