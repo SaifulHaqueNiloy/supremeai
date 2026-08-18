@@ -73,12 +73,12 @@ describe('Phase 3 M3.5: axe-core Automated Accessibility Audits', () => {
   it('DashboardShell navigation should have zero accessibility violations', async () => {
     const { container } = render(
       <BrowserRouter>
-        <DashboardShell>
-          <main>
-            <h1>Dashboard Content</h1>
-            <p>Operational overview</p>
-          </main>
-        </DashboardShell>
+        <DashboardShell
+          theme="dark"
+          toggleTheme={vi.fn()}
+          isServerOnline={true}
+          workspace={<div><h2>Workspace Active</h2><p>Operational overview</p></div>}
+        />
       </BrowserRouter>
     );
     const results = await axe(container);
@@ -86,8 +86,18 @@ describe('Phase 3 M3.5: axe-core Automated Accessibility Audits', () => {
   });
 
   it('ChatPanel interface should have zero accessibility violations', async () => {
+    const mockMessages = [
+      { id: '1', sender: 'assistant', text: 'Hello! How can I assist you?', timestamp: '12:00' },
+      { id: '2', sender: 'user', text: 'Run synthetic benchmark', timestamp: '12:01' },
+    ];
     const { container } = render(
-      <ChatPanel />
+      <ChatPanel
+        messages={mockMessages}
+        input="test input"
+        onInputChange={vi.fn()}
+        onSend={vi.fn()}
+        loading={false}
+      />
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();

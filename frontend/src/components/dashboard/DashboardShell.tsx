@@ -78,11 +78,11 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4">
             <div className="supreme-card supreme-stat supreme-card-hover">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider supreme-stat-label">Active Projects</h3>
+              <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider supreme-stat-label">Active Projects</h2>
               <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white supreme-stat-value">24</p>
             </div>
             <div className="supreme-card supreme-stat supreme-card-hover">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider supreme-stat-label">Tasks Completed</h3>
+              <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider supreme-stat-label">Tasks Completed</h2>
               <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white supreme-stat-value">142</p>
             </div>
           </div>
@@ -90,7 +90,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           {/* AI Assistant */}
           <div className="supreme-card flex flex-col h-[400px]">
             <div className="p-4 border-b border-gray-200 dark:border-slate-800">
-              <h3 className="font-semibold text-gray-900 dark:text-white">AI Assistant</h3>
+              <h2 className="font-semibold text-gray-900 dark:text-white">AI Assistant</h2>
             </div>
             <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
               {chatMessages.map((msg) => (

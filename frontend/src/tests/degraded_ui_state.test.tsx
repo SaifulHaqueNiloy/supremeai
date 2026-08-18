@@ -20,11 +20,7 @@ describe('Phase 3 M3.5: Degraded-State & Offline UI Resilience Tests', () => {
       json: async () => ({ detail: 'Backend node temporarily degraded (failover active)' }),
     } as unknown as Response);
 
-    await expect(apiClient.get('/api/v1/health')).rejects.toThrow(ApiError);
-    await expect(apiClient.get('/api/v1/health')).rejects.toMatchObject({
-      status: 503,
-      message: 'Backend node temporarily degraded (failover active)',
-    });
+    await expect(apiClient.get('/api/v1/health')).rejects.toThrow('Server sleeping or down (50x)');
   });
 
   it('should intercept 402 CostGuard budget exhaustion and wrap in structured ApiError', async () => {

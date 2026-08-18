@@ -23,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-4">
           <button
             onClick={onToggleSidebar}
+            aria-label="Toggle Sidebar"
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
           >
             <svg
@@ -44,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-4">
           <button
             onClick={onToggleTheme}
+            aria-label="Toggle Theme"
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
           >
             {theme === 'dark' ? (
@@ -76,6 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
+              aria-label="Notifications"
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
             >
               <svg
