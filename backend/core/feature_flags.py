@@ -26,6 +26,9 @@ GRAPHITI_FLAG = "SUPREMEAI_GRAPHITI_ENABLED"
 BROWSER_USE_FLAG = "SUPREMEAI_BROWSER_USE_ENABLED"
 E2B_FLAG = "SUPREMEAI_E2B_ENABLED"
 OPENHANDS_FLAG = "SUPREMEAI_OPENHANDS_ENABLED"
+# 🆕 Model-router experimentation flags (A/B + Shadow routing)
+MODEL_SHADOW_FLAG = "SUPREMEAI_MODEL_SHADOW_ENABLED"
+MODEL_AB_FLAG = "SUPREMEAI_MODEL_AB_ENABLED"
 
 # Supabase DB feature_flags টেবিলের feature_name কলামের জন্য ম্যাপিং
 _DB_FLAG_NAMES: dict[str, str] = {
@@ -34,6 +37,8 @@ _DB_FLAG_NAMES: dict[str, str] = {
     BROWSER_USE_FLAG: "browser_use_enabled",
     E2B_FLAG: "e2b_enabled",
     OPENHANDS_FLAG: "openhands_enabled",
+    MODEL_SHADOW_FLAG: "model_shadow_enabled",
+    MODEL_AB_FLAG: "model_ab_enabled",
 }
 
 _TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})
@@ -100,6 +105,14 @@ class FeatureFlags:
         """True when the premium OpenHands agent should be used."""
         return self._check(OPENHANDS_FLAG, user_id)
 
+    def model_shadow_enabled(self, user_id: str | None = None) -> bool:
+        """True when a shadow model should be run alongside the primary for quality/cost observability."""
+        return self._check(MODEL_SHADOW_FLAG, user_id)
+
+    def model_ab_enabled(self, user_id: str | None = None) -> bool:
+        """True when traffic should be split between primary and candidate model (A/B)."""
+        return self._check(MODEL_AB_FLAG, user_id)
+
     def _check(self, flag_name: str, user_id: str | None = None) -> bool:
         """Two-tier check: env-var → DB, cache result."""
         if flag_name in self._cache:
@@ -124,6 +137,8 @@ class FeatureFlags:
             "browser_use": self.browser_use_enabled(),
             "e2b": self.e2b_enabled(),
             "openhands": self.openhands_enabled(),
+            "model_shadow": self.model_shadow_enabled(),
+            "model_ab": self.model_ab_enabled(),
         }
 
 
@@ -136,6 +151,8 @@ __all__ = [
     "GRAPHITI_FLAG",
     "MEM0_FLAG",
     "OPENHANDS_FLAG",
+    "MODEL_SHADOW_FLAG",
+    "MODEL_AB_FLAG",
     "FeatureFlags",
     "feature_flags",
 ]

@@ -60,16 +60,7 @@ async def retry_with_exponential_backoff(
     Raises:
         The last exception if all retries exhausted
     """
-    import threading
-    
-    # Use thread-safe circuit breaker if name provided
-    cb_manager = None
-    if circuit_breaker_name:
-        from backend.core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
-        # Note: This is a simplified check - in production would use proper async CB
-        pass
-    
-    last_exception: Optional[Exception] = None
+        last_exception: Optional[Exception] = None
     
     for attempt in range(max_retries + 1):
         try:

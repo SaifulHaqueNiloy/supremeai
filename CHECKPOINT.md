@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 18:29 UTC
+- **Date:** 2026-08-18 18:37 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,18 +10,24 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/api/routes/realtime_dashboard.py`
-  - `backend/memory/chromadb_store.py`
-  - `frontend/src/lib/VirtualTable.tsx`
-  - `backend/pyproject.toml`
-  - `LESSONS_LEARNED.md`
-  - `backend/main.py`
-  - `scripts/check_env_health.py`
-  - `frontend/src/lib/useVirtualList.ts`
   - `backend/api/routes/task.py`
+  - `frontend/src/lib/useVirtualList.ts`
+  - `backend/main.py`
   - `.github/workflows/supreme-core-ci.yml`
+  - `backend/api/routes/realtime_dashboard.py`
+  - `frontend/src/lib/VirtualTable.tsx`
+  - `tests/llm/test_model_experiments.py`
   - `backend/core/startup/api_key_tables.py`
+  - `backend/core/llm/advanced_model_router.py`
+  - `backend/tests/test_main_entrypoint.py`
+  - `backend/core/app_builder.py`
+  - `LESSONS_LEARNED.md`
+  - `backend/core/feature_flags.py`
   - `CHECKPOINT.md`
+  - `scripts/check_env_health.py`
+  - `FEATURE_TRACKING_LOG.md`
+  - `backend/pyproject.toml`
+  - `backend/workers/load_test.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**

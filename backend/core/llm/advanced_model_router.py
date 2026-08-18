@@ -2,14 +2,19 @@
 # বাংলা মন্তব্য: এটি টাস্ক টাইপ, প্রম্পট কমপ্লেক্সিটি এবং পারফরম্যান্স স্কোর অনুযায়ী সর্বাধুনিক মডেল নির্বাচন করে খরচ ৭০-৯০% সাশ্রয় করে।
 # Tier 0 Fast-Path: Needle 2-inspired confidence gate — bypasses ALL LLM calls for deterministic tasks.
 
+import hashlib
 import json
 import re
 import urllib.request
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from enum import Enum
+from threading import Lock
 from typing import Any
 
 from loguru import logger
+
+from core.feature_flags import feature_flags
 
 
 # বাংলা মন্তব্ট: টিয়ার 0 deterministic টাস্ক প্যাটার্ন — pure-Python, শূন্য টোকেন খরচ।
@@ -156,6 +161,92 @@ class RouteDecision:
     expected_latency: float
 
 
+@dataclass
+class ModelExperimentPlan:
+    """Result of select_experiment(): tells the caller how to route this request.
+
+    - primary: the RouteDecision actually served to the user.
+    - shadow_model: candidate model to run silently (response discarded) when
+      shadow routing is enabled; None otherwise.
+    - run_shadow: whether a shadow candidate should be executed.
+    - ab_active: whether A/B traffic splitting is enabled.
+    - ab_variant: "primary" or "candidate" — which model the user is served
+      when A/B is active.
+    """
+
+    primary: RouteDecision
+    shadow_model: str | None = None
+    run_shadow: bool = False
+    ab_active: bool = False
+    ab_variant: str = "primary"
+
+
+@dataclass
+class ShadowMetric:
+    runs: int = 0
+    errors: int = 0
+    total_cost: float = 0.0
+    total_latency: float = 0.0
+    total_quality: float = 0.0
+    quality_samples: int = 0
+
+    def record(self, *, cost: float, latency: float, quality: float | None, success: bool) -> None:
+        self.runs += 1
+        if not success:
+            self.errors += 1
+            return
+        self.total_cost += cost
+        self.total_latency += latency
+        if quality is not None:
+            self.total_quality += quality
+            self.quality_samples += 1
+
+    def snapshot(self) -> dict[str, float]:
+        runs = max(self.runs, 1)
+        return {
+            "runs": self.runs,
+            "errors": self.errors,
+            "error_rate": round(self.errors / runs, 4),
+            "avg_cost": round(self.total_cost / runs, 6),
+            "avg_latency": round(self.total_latency / runs, 4),
+            "avg_quality": round(self.total_quality / max(self.quality_samples, 1), 4),
+        }
+
+
+class ShadowMetricsCollector:
+    """In-memory, thread-safe aggregation of shadow-model runs.
+
+    $0-cost by design — pure in-process storage, no DB/Redis dependency.
+    Exposes cost/quality/latency aggregates for the observability dashboard.
+    """
+
+    def __init__(self) -> None:
+        self._lock = Lock()
+        self._metrics: dict[str, ShadowMetric] = defaultdict(ShadowMetric)
+
+    def record(
+        self,
+        model: str,
+        *,
+        cost: float = 0.0,
+        latency: float = 0.0,
+        quality: float | None = None,
+        success: bool = True,
+    ) -> None:
+        with self._lock:
+            self._metrics[model].record(
+                cost=cost, latency=latency, quality=quality, success=success
+            )
+
+    def snapshot(self) -> dict[str, dict[str, float]]:
+        with self._lock:
+            return {model: metric.snapshot() for model, metric in self._metrics.items()}
+
+    def reset(self) -> None:
+        with self._lock:
+            self._metrics.clear()
+
+
 class AdvancedModelRouter:
     """
     Advanced model router with intelligent traffic distribution,
@@ -165,6 +256,12 @@ class AdvancedModelRouter:
     def __init__(self):
         self.performance_metrics: dict[str, ModelPerformanceMetrics] = {}
         self.model_preferences = self._load_model_preferences()
+        # 🆕 Experimentation: feature-flag driven shadow + A/B routing.
+        self.shadow_collector = ShadowMetricsCollector()
+        # Candidate model silently evaluated in shadow mode (response discarded).
+        self.shadow_candidate = "openai/gpt-4o-mini"
+        # Fraction (0.0-1.0) of traffic routed to the candidate under A/B mode.
+        self.ab_split_ratio = 0.1
 
     def _load_model_preferences(self) -> dict[str, dict]:
         """Load model preferences and capabilities from configuration."""
@@ -371,6 +468,73 @@ class AdvancedModelRouter:
             matched_pattern=matched,
             deterministic_result=result,
         )
+
+    # ── 🆕 Feature-flag driven experimentation (A/B + Shadow routing) ──────
+    async def select_experiment(
+        self,
+        prompt: str,
+        task_type: str = "general",
+        user_id: str | None = None,
+    ) -> ModelExperimentPlan:
+        """Decide primary + optional shadow/candidate routing for one request.
+
+        Driven entirely by feature flags (core.feature_flags):
+        - SUPREMEAI_MODEL_SHADOW_ENABLED → run `shadow_candidate` silently.
+        - SUPREMEAI_MODEL_AB_ENABLED → split a fraction of traffic to candidate.
+
+        The caller serves `primary` (or the A/B `candidate` when ab_variant ==
+        "candidate"); shadow responses are discarded and only metrics are kept.
+        """
+        primary = await self.route_request(prompt, task_type, user_id)
+
+        run_shadow = feature_flags.model_shadow_enabled(user_id)
+        ab_active = feature_flags.model_ab_enabled(user_id)
+        ab_variant = "primary"
+
+        if ab_active:
+            # Deterministic, stable-per-(prompt,user) bucket so a user keeps a
+            # consistent variant across retries.
+            digest = hashlib.sha256(f"{prompt}:{user_id or ''}".encode()).hexdigest()
+            bucket = int(digest, 16) % 100
+            if bucket < int(self.ab_split_ratio * 100):
+                ab_variant = "candidate"
+
+        return ModelExperimentPlan(
+            primary=primary,
+            shadow_model=self.shadow_candidate if run_shadow else None,
+            run_shadow=run_shadow,
+            ab_active=ab_active,
+            ab_variant=ab_variant,
+        )
+
+    def record_shadow_result(
+        self,
+        model: str,
+        *,
+        cost: float = 0.0,
+        latency: float = 0.0,
+        quality: float | None = None,
+        success: bool = True,
+    ) -> None:
+        """Log a shadow run's cost/quality/latency into the collector.
+
+        Called by the execution layer after the silent shadow candidate
+        finishes. Never affects the user-facing response.
+        """
+        self.shadow_collector.record(
+            model, cost=cost, latency=latency, quality=quality, success=success
+        )
+        logger.debug(
+            f"[AdvancedModelRouter] shadow recorded model={model} success={success}"
+        )
+
+    def get_experiment_metrics(self) -> dict[str, Any]:
+        """Snapshot of shadow metrics for the observability dashboard."""
+        return {
+            "shadow_candidate": self.shadow_candidate,
+            "ab_split_ratio": self.ab_split_ratio,
+            "shadow_metrics": self.shadow_collector.snapshot(),
+        }
 
 
 # ── Lazy Singleton ────────────────────────────────────────────────────────

@@ -11,7 +11,11 @@ from typing import Any
 if not os.getenv("ENV"):
     os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
 
-# Initialize global silent catcher before any other imports that might spawn threads
+from core.logging_config import setup_logging
+
+setup_logging()
+
+# Initialize global silent catcher with logging active
 from core.intelligent_silent_catcher import setup_silent_catcher
 
 setup_silent_catcher()
@@ -19,13 +23,9 @@ setup_silent_catcher()
 import uvicorn
 from loguru import logger
 
-# বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে সম্পূর্ণ অ্যাপ এবং প্রোডাকশনে রোল অনুযায়ী ইউজার/অ্যাডমিন এন্ট্রি পয়েন্ট লোড করা হচ্ছে
 # বাংলা: _APP_IMPORT_STRING ট্র্যাক করা হয় যাতে uvicorn.run()-এ app object-এর বদলে
 # import string পাস করা যায় — reload=True বা workers>1 উভয় ক্ষেত্রেই সঠিকভাবে কাজ করে।
-if "pytest" in sys.modules:
-    _APP_IMPORT_STRING = "core.app:app"
-else:
-    _APP_IMPORT_STRING = "core.app:app"
+_APP_IMPORT_STRING = "core.app:app"
 
 # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে `from core.app import app` করে মডিউল-লেভেলে
 # সম্পূর্ণ (all-routers) অ্যাপ তৈরি হতো।
@@ -49,9 +49,6 @@ def __getattr__(name: str) -> Any:
 
 
 from core.config import settings
-from core.logging_config import setup_logging
-
-setup_logging()
 
 
 def _handle_sigterm(signum: int, frame: object) -> None:

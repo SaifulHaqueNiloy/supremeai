@@ -18,6 +18,7 @@ import logging
 import os
 import re
 import sys
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -27,6 +28,10 @@ from loguru import logger
 
 from core.config import settings
 from core.logging_config import setup_logging
+
+# বাংলা মন্তব্ব্ট: স্টার্টআপ টাইমার — M2.5 baseline পরিমাপের জন্য
+_startup_time = time.monotonic()
+_logger = logging.getLogger(__name__)
 
 # বাংলা মন্তব্ব্য: মিডলওয়্যার ইম্পোর্ট লেজি-লোডেড — create_app()-এর ভিতরে ইম্পোর্ট হবে
 # এর ফলে কোল্ড স্টার্ট ২০% দ্রুত হবে এবং modularity বাড়বে।
