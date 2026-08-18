@@ -2068,19 +2068,30 @@ jobs:
           pip install pydantic loguru pytest
 
       - name: Test type sync bus
+        # বাংলা মন্তব্য: backend/core/__init__.py হুকুম করে অনেক ভারী ডিপেন্ডেন্সি
+        # (aiohttp, psutil ইত্যাদি) আমদানি করে, তাই এই হালকা জবে (শুধু pydantic/loguru/pytest)
+        # `from backend.core.type_sync_bus import ...` করলে ImportError হয়। তাই মডিউলটি
+        # সরাসরি importlib দিয়ে লোড করা হচ্ছে যাতে প্যাকেজ __init__ চেইন এড়ানো যায়
+        # আর শুধু type_sync_bus-এর লজিক (loguru-এর ওপর নির্ভরশীল) যাচাই করা যায়।
         run: |
-          python -c "
-          from backend.core.type_sync_bus import TypeSyncBus
-          print('TypeSyncBus imported successfully')
-          "
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
 
-          python -c "
-          import asyncio
-          from backend.core.type_sync_bus import get_type_sync_bus
+          spec = importlib.util.spec_from_file_location(
+              "type_sync_bus",
+              str(Path("backend/core/type_sync_bus.py").resolve()),
+          )
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+
+          TypeSyncBus = module.TypeSyncBus
+          get_type_sync_bus = module.get_type_sync_bus
+          print("TypeSyncBus imported successfully")
 
           bus = get_type_sync_bus()
-          print('TypeSyncBus singleton created successfully')
-          "
+          print("TypeSyncBus singleton created successfully")
+          PY
 
   smart-summary:
     name: "🧠 Smart Pipeline Summary"
